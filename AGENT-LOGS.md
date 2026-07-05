@@ -3,6 +3,20 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-05 Multi-session worktree-isolation convention codified (CLAUDE.md §11b)
+
+**Mission:** Operator: "agents [are] suppose to work on different worktrees then commit to main at the end." Codify the hard-won lesson that repeatedly bit this session (and #16, and the 2026-05-19 corruption): concurrent Claude sessions must NOT share one working tree.
+
+**Work completed:**
+- **CLAUDE.md §11b (new HARD RULE):** each concurrent session/agent works in its OWN `git worktree`, integrates to `hardening/phase-0`→`main` only at the end. 6-step safe protocol: own dir; base pinned to an explicit SHA (not a branch name — the #16 wrong-HEAD-reseed hazard); NEVER `git stash` (shared `refs/stash`); verify GREEN (tsc + tests + 3 CI gates) in the worktree; land FF-only; clean up. Fallback for unavoidable shared-tree work: explicit-path commits only (`git commit -o <paths>`), never `git add -A`. Note that the Agent tool's `isolation:"worktree"` forks from the shared HEAD at spawn time (rule-2 hazard still applies). Severity: fail-CLOSED (risks data loss).
+- **CLAUDE.md §11a** reconciled: `git add -A` flagged safe ONLY inside an isolated worktree; shared tree → explicit paths.
+- **AGENTS.md §11** + **memory** updated to match.
+
+**Why it matters:** shared working dir = shared `.git` index + HEAD + `refs/stash`. That shared state caused the 86-file null-byte wipe (2026-05-19), `git add -A` cross-session file sweeps, branch-switch HEAD moves, and stash clobbers. This whole Deep-Scan #17 session had to hand-navigate it with explicit-path commits; isolation removes the class.
+
+**Known-facts updates:** memory `feedback_worktree_isolation_multisession` created. Supersedes the scattered shared-tree pins with a single canonical rule (CLAUDE.md §11b).
+
+---
 ### Session Log — 2026-07-05 Deep-Scan #17 DELTA lane (parallel session) + old-117 GRAVEYARD purge
 
 **Mission:** Operator ran a SECOND concurrent Deep-Scan #17 session. This session (a) ran its own independent 8-band read-only audit, (b) fixed the DELTA — findings the parallel 6-agent fix-wave's file list did NOT own — and (c) purged the retired old-117 graveyard library. Read-only for all files the parallel fix-wave owned (backtester.py, risk_metrics.py, monte_carlo.py, lifecycle-service.ts, kill-switch.ts, paper-execution-service.ts, cross-symbol-pnl.ts, adaptive-exit, boot/installer). Independent-confirmed their top CRITICALs (my TP1/TP2-discard=their B-1; my DSR-SE=their B-2/B-7; my manual-P→DR-DSL-bypass=their A-1).

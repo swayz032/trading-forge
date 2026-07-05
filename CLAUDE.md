@@ -579,7 +579,7 @@ The graduation hot-path gained 4 new audit-action namespaces. Future agents shou
 ## §11a. Commit-and-Push Discipline (HARD RULE)
 
 After EVERY parallel-subagent dispatch that returns GREEN (all tracks pass tests + CI gates), parent claude MUST:
-1. `git add -A && git commit -m "<descriptive message>" --no-verify`
+1. `git add -A && git commit -m "<descriptive message>" --no-verify` — **but `git add -A` is safe ONLY in an isolated worktree (§11b). If another session shares this working tree, commit explicit paths instead (`git commit -o <paths>`) — `git add -A` on a shared tree sweeps the other session's files.**
 2. `git push origin <current-branch>`
 3. THEN dispatch the next pass / next task
 
@@ -608,6 +608,28 @@ e.g. `wave23-recovery-phase1: Wave 21 engine guardrails + 23.D promotion gates (
 
 ### Severity
 Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-map:sync`.
+
+---
+
+## §11b. Multi-Session Worktree Isolation (HARD RULE — pinned 2026-07-05)
+
+**When two or more Claude sessions/agents work this repo at the same time, each MUST operate in its OWN `git worktree` (a separate checkout directory), and integrate to the shared branch (`hardening/phase-0` → `main`) only at the END of its work — never edit/commit concurrently in the one shared working tree.**
+
+Why: sessions that share ONE working directory also share ONE `.git` index, ONE `HEAD`, and ONE `refs/stash`. That shared state caused, repeatedly: (a) the 2026-05-19 86-file null-byte corruption that wiped weeks of uncommitted work; (b) `git add -A` in one session sweeping another's half-written files into the wrong commit; (c) a branch switch in one session silently moving the other's `HEAD`; (d) a `git stash` in one worktree wiping another's edits (stash is shared). Isolation removes the entire class.
+
+**The safe worktree protocol (all six are load-bearing):**
+1. **Own directory per session.** `git worktree add <path> <base>` — one working dir per concurrent session/agent. Do NOT run two sessions against the same checkout.
+2. **Pin the base to an explicit SHA, not a branch name.** `git worktree add ../wt-mytask <sha>` — a branch-name base tracks the *moving* shared HEAD, so a concurrent branch switch reseeds your worktree from the wrong commit (the Deep-Scan #16 incident). Capture the intended SHA first (`git rev-parse hardening/phase-0`) and pin to it.
+3. **NEVER `git stash` in a worktree.** `refs/stash` is shared across all worktrees of one repo — a stash in one clobbers another. Use a WIP commit or a patch file instead.
+4. **Verify GREEN in the worktree before landing:** `tsc --noEmit` clean on touched files + relevant vitest/pytest + the 3 CI gates (`check:production-isolation`, `check:2026-compliance`, `system-map:check`).
+5. **Land at the end via fast-forward-only merge:** rebase/merge your worktree branch onto the current `hardening/phase-0` tip and `git merge --ff-only` (or `git rebase` then push). If FF is impossible (the branch advanced under you), re-verify your diff still applies cleanly before force-integrating — never blind-merge over a concurrent session's work.
+6. **Clean up:** `git worktree remove <path>` when done (unchanged worktrees auto-clean).
+
+**The Agent/Task tool's `isolation: "worktree"`** does step 1 automatically — but it forks from whatever the shared `HEAD` points at *at spawn time*, so rule 2's hazard still applies: confirm the base SHA is what you intend before dispatching, and never spawn worktree agents across a concurrent branch switch.
+
+**Fallback when you genuinely cannot isolate** (must edit the shared tree live): commit ONLY explicit paths — `git commit -o <paths>` / `git commit -- <paths>` — NEVER `git add -A` and NEVER a bare `git commit`, and `git status -sb` before every push to confirm the branch. `git add -A` is safe ONLY inside an isolated worktree (rule 1); on a shared tree it is banned. This fallback is strictly worse than isolation — use it only when isolation is impossible.
+
+**Severity:** violating worktree isolation on a live multi-session repo is **fail-CLOSED**, same tier as skipping commit-and-push — it risks silent data loss, not just drift.
 
 ---
 
