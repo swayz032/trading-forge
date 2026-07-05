@@ -813,6 +813,8 @@
       var OF_CARDS = [
         { id: 'carter', connect: true, eyebrow: 'Your AI', title: 'Carter',
           cover: '/slumhouse/images/carter-cover.png?v=3', connectLabel: 'Connect to Carter' },
+        { id: 'reporting', connect: true, eyebrow: 'GPT-5 Analyst', title: 'Reporting Room',
+          cover: '/slumhouse/images/office-reporting.png', connectLabel: 'Enter Room' },
         { id: 'bot_power', eyebrow: 'Main switch', title: 'Bot Power',
           on: 'The bot makes trades.',
           off: 'The bot stops — no new trades. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
@@ -863,6 +865,17 @@
       }
       function ofGo(i) { var n = OF_CARDS.length; ofCur = ((i % n) + n) % n; ofLayout(); }
 
+      // Reporting Room — the room UI is being designed next; the door is wired,
+      // this is a placeholder toast until the room build lands.
+      function enterReportingRoom() {
+        var t = document.createElement('div');
+        t.textContent = 'Reporting Room — building this next.';
+        t.style.cssText = 'position:fixed;left:50%;bottom:40px;transform:translateX(-50%);z-index:99999;background:rgba(0,0,0,0.88);color:#a3ff12;border:1px solid rgba(163,255,18,0.4);padding:12px 22px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 0 26px rgba(163,255,18,0.22);opacity:0;transition:opacity 0.2s;';
+        document.body.appendChild(t);
+        requestAnimationFrame(function () { t.style.opacity = '1'; });
+        setTimeout(function () { t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 260); }, 1800);
+      }
+
       function initCarousel() {
         if (ofInited) return; ofInited = true;
         OF_CARDS.forEach(function (cd, i) {
@@ -880,7 +893,7 @@
               '</div>';
             el.addEventListener('click', function () { if (i !== ofCur) ofGo(i); });
             var cbtn = el.querySelector('[data-connect]');
-            cbtn.addEventListener('click', function (e) { e.stopPropagation(); connectCarter(); });
+            cbtn.addEventListener('click', function (e) { e.stopPropagation(); if (cd.id === 'reporting') enterReportingRoom(); else connectCarter(); });
             ofTrack.appendChild(el);
             var cdot = document.createElement('button');
             cdot.className = 'of-dot'; cdot.type = 'button';
