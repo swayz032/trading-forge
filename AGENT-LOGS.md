@@ -3,6 +3,26 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-05 Deep-Scan #16 Wave 3 (remaining findings) LANDED on phase-0
+
+**Mission:** Operator "execute your findings" — close the remaining Deep-Scan #16 items after Waves 1+2.
+
+**Wave 3 — 2 pinned-worktree tracks, MERGED to `hardening/phase-0` + PUSHED (`494542a..08faa0b`):**
+- **W3-A (dead auto-demotion HIGH, `f8fbcad`):** investigated + fixed the silently-dead n8n auto-demotion. Verdict: NEITHER dead trigger was covered server-side (Daily Portfolio Monitor demoted on `rolling_sharpe_30d<1.0`; Monthly Robustness on `sharpeDrop>20% OR winRateDrop>10%`; existing crons key on regime-mismatch / 2σ-global-halt / age — orthogonal). Built `src/server/services/portfolio-drift-demotion-service.ts` — daily in-process cron reproducing the Sharpe-floor trigger via real `strategies.rolling_sharpe_30d`, two-step DEPLOYED→DECLINING→TESTING via `lifecycleService.promoteStrategy` (bypasses the HMAC gate that broke the n8n path). **Fail-SAFE on null Sharpe** (skip — NOT n8n's dangerous `||0` mass-demote) + **DEFAULT-OFF** (`PORTFOLIO_DRIFT_DEMOTION_ENABLED`; telemetry-first, 0 DEPLOYED today). Deliberately DROPPED the win-rate half of trigger (b) — the dead n8n node encoded a BANNED pattern (CLAUDE.md §13 win-rate-never-a-gate). New counter `tf_portfolio_drift_demotions_total`, SSE `lifecycle:portfolio_drift_demoted`, scheduler cron `portfolio-drift-demotion` (43 21,22 * * *, ET==17 guard, `_PIPELINE_GATE_EXEMPT`, `_tryAcquireJobLock`), registry entry.
+- **W3-B (office labels + trivial LOWs, `a3d4c03`):** H-6 Bot Power card copy now says OFF pauses the WHOLE bot (trades+discovery+promotions+crons). H-7 tapping a NEEDS-SETUP toggle now pops an office toast (was silent no-op). #26 exchange-status sim-path now logs. H-4 pending_archetype fixed in the single-source `isHandlerDrivenEntry` leaf (parked "both" markers stay "both", no long-coercion) + regression test. #25b base `/api/health` DOCUMENTED as intentional-minimal (fast k8s liveness — diagnostic fields belong on `/health/dashboard`).
+
+**Verification:** integration worktree — full `tsc --noEmit` 0 new errors (only pre-existing menu-route.test.ts ×10); production-isolation CLEAN; 2026-compliance OK; registry JSON valid; clean 2-branch merge. **★ vitest could NOT run — the shared `node_modules` is now a PARTIAL install (missing `@vitest/*` dev-deps, likely pruned by the concurrent session / null-cal sharing it); did NOT `npm install` into it while null_gate_calibration.py runs.** So Wave-3's authored tests (7 portfolio-drift + 3 handler-driven parked-marker) are type-consistent + tsx-verified (handler-driven 8/8) but NOT executed — RUN them once `@vitest` is restored. Waves 1+2 tests WERE executed by their agents.
+
+**Deep-Scan #16 — ALL WAVES DONE.** Wave 1 (CRIT+HIGH `9dc5589..126ef6e`) + Wave 2 (MED+most-LOW `ed9cf0a..4265ab9`) + Wave 3 (remaining `494542a..08faa0b`). Every actionable finding fixed or explicitly deferred-with-reason.
+
+**Carry-forward (operator actions, NOT code-blocked):**
+- **Retire the 2 dead live n8n DECLINING PATCH nodes** (Daily Portfolio Monitor "Log Drift Alert and Transition" + Monthly Robustness Check "Transition to DECLINING") — now redundant with W3-A's server-side cron; showing false-green. Live-node retirement needs operator sign-off. (Journaling nodes in both workflows still work — keep.)
+- **Flip `PORTFOLIO_DRIFT_DEMOTION_ENABLED=true`** only after reviewing `tf_portfolio_drift_demotions_total{outcome=detected_dry_run}` telemetry vs real DEPLOYED strategies (validate annualized rolling-Sharpe scale vs the 1.0 floor; tune `PORTFOLIO_DRIFT_SHARPE_FLOOR`).
+- **`npm run system-map:sync`** — pending (registers W3-A's new subsystem/cron + clears the 5 pre-existing Wave 29 SSE drift). Deferred all session because it rewrites `Trading Forge System Map v2.md` which the concurrent session has UNCOMMITTED — run once that settles; `system-map:check` may show W3-A's cron + the 5 SSE events as drift until then.
+- **Run Wave-3 vitest** once `@vitest/*` is back in node_modules.
+- **office.html H-6/H-7** were done this wave (concurrent session went idle) — eyeball the Bot Power copy + the new setup toast.
+
+---
 ### Session Log — 2026-07-05 Deep-Scan #16 Wave 2 (MEDIUM + most LOW) LANDED on phase-0
 
 **Mission:** Continue "FIX EVERYTHING" — close the Deep-Scan #16 MEDIUM + LOW tier after Wave 1 (CRITICAL+HIGH) landed.
