@@ -3,6 +3,29 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-05 Deep-Scan #16 Wave 2 (MEDIUM + most LOW) LANDED on phase-0
+
+**Mission:** Continue "FIX EVERYTHING" — close the Deep-Scan #16 MEDIUM + LOW tier after Wave 1 (CRITICAL+HIGH) landed.
+
+**Wave 2 — 3 pinned-worktree tracks, MERGED to `hardening/phase-0` + PUSHED (`ed9cf0a..4265ab9`, 19 files):**
+- **G1 (lifecycle-ledger + graduation, `78e5236`):** D-1 graduator NEEDS_REVISION now writes audit + typed `lifecycle_transitions` row ONLY on a real state change (`RETURNING id`-gated txn) — no more invertible audit/DB mismatch. D-2 all THREE raw-SQL stale-detector writers (demoteToNeedsRevision/setNeedsArchetype/setNeedsRevision) + graduator now write typed ledger rows atomically (90-day reconstruction complete). H-1 spec-onboarding runs DSL critic BY DEFAULT now (`--skip-dsl-critic` escape). H-2 overlay resolves nested `cfg.strategy?.entry_indicator`. H-3 `check:archetype-lockstep` now covers live-order's archetype set (39/39/39). H-5 decorative cross-validated guard made honest.
+- **G2 (E-1 block + audit MEDs, `531e7b6`):** ★ COMPLETED the E-1 CRITICAL — a HARD gate at TESTING→PAPER, SHADOW→PAPER, PAPER→DEPLOY_READY now reads persisted `backtests.result_extras.dsl_guards.guards_failed` and BLOCKS (fail-closed, legacy-grandfathered). An unguarded backtest can no longer promote to live capital. + 8 silent-failure audit MEDs (#14-#25: paper.ts failed_to_stream, mcl-pre-eia audit, agent.ts ×5 incl. one with no `.catch()` at all, idempotency DELETE, critic-optimizer success+recovery audit, candidate-conveyor rejection, paper-trading-stream teardown, health-dashboard migration-version + last-backtest-age). 39 new tests, 5 new counters.
+- **G3 (n8n safe, `8a42c3e`):** runtime-failure family-grade Discord alert in n8n-execution-scraper-service.ts (was SSE-only). LIVE additive hardening: 5 Analyst-Gateway webhook nodes got `onError:continueRegularOutput`; `idempotency_key` moved top-level in Daily Portfolio Monitor + Monthly Robustness Check (activates built-in dedup).
+
+**Stale-finding corrections (Wave 2):** the n8n `3A-workflow-backup` "fake-success" HIGH is STALE — the durable-sink route (mig 0184 + `/api/admin/workflow-backup`) is on phase-0 and the live 3A workflow is ALREADY wired to it (Railway n8n wipe recoverable today). The 7 "inactive" research workflows are actually ARCHIVED (n8n blocks PUT) → their retired-model refs + inverted SIB are INERT (zero drift risk); NOT force-edited (conservatism) — exact repoint/rewire diffs staged for if the operator ever restores them (note: nomic-embed-text refs are in EMBEDDING nodes — need a real embedder decision, not a blind swap to the chat model).
+
+**Verification:** integration worktree at live phase-0 tip — tsc 0 new errors (only pre-existing menu-route.test.ts ×10); production-isolation CLEAN; 2026-compliance OK; clean 3-branch merge (no conflicts). E-1 persist↔read seam confirmed aligned (`result_extras.dsl_guards`).
+
+**★ NEW HIGH surfaced (needs operator decision — NOT fixed):** the active n8n auto-demotion workflows (Daily Portfolio Monitor "Log Drift Alert and Transition" + Monthly Robustness Check "Transition to DECLINING") PATCH `/api/strategies/{id}/lifecycle` WITHOUT the required HMAC (`ADMIN_PROMOTE_HMAC_SECRET`, 60s drift) → every call 401s (or 503 if secret unset), swallowed by `onError:continueRegularOutput` → workflow shows GREEN while NO demotion ever occurs. Autonomous portfolio-drift/monthly-robustness demotion has been silently dead. The server-side `regime-drift-detector` cron (Wave 29 Pass B) covers REGIME-drift demotion in-process, but portfolio-drift + monthly-robustness triggers may be uncovered — needs a coverage check. Recommended fix: move these demotions server-side to a cron calling `lifecycleService.promoteStrategy` in-process (authoritative, source-controlled, no secret-in-n8n) OR retire the dead nodes if regime-drift-detector already covers them.
+
+**Carry-forward for next session:**
+- **DEFERRED (concurrent-collision):** office.html H-6 (Bot Power label under-describes blast radius — also freezes discovery/promotion/crons) + H-7 (Live Execution toggle silent no-op when unconfigured). A parallel session commits office.html every few minutes — do these once it settles. LOW/label-clarity only.
+- **NEW HIGH above:** decide dead-auto-demotion fix (server-side cron vs retire nodes) — needs a coverage check vs regime-drift-detector.
+- **system-map:sync** the 5 pre-existing Wave 29 SSE events (`lifecycle:pbo_evaluated`, `shadow_divergence_evaluated`, `quantum_rl:training_completed`, `signal:rl_ab_routed`, `signal:shadow_logged`) to green the 3rd CI gate — COORDINATE (rewrites System Map, which the concurrent session has uncommitted). My new SSE events introduced NO new drift.
+- **Trivial LOW leftovers:** #26 exchange-status simulated-outage swallow (no prod caller), H-4 pending_archetype marker (cosmetic parked-rows), base `/api/health` liveness migration-version field (G2 did health-dashboard only).
+- **Cosmetic:** leftover `tf-ds16*` dirs on disk (branches deleted; node_modules junction blocks dir removal) — `rm -rf` when convenient.
+
+---
 ### Session Log — 2026-07-05 Deep-Scan #16 (8-band full-system audit) + Wave 1 fix wave (all CRITICAL + HIGH) LANDED on phase-0
 
 **Mission:** Operator: "deep scan for all bugs and blockers, wiring… all systems institutional grade… bug free to be 10/10." Then "FIX EVERYTHING." Ran an 8-band read-only adversarial audit, then a fix wave.
