@@ -131,6 +131,24 @@ def composition_bundle_enabled() -> bool:
     return os.environ.get("TF_COMPOSITION_BUNDLE_ENABLED", "false").strip().lower() == "true"
 
 
+# ─── OR-Branches Honoring Fix (docs/designs/or-branches-honoring-fix-2026-07-05.md) ────────────
+# Confirmed defect: extraction preserves OR structure (726 `or_branches` groups across 108/117
+# strategies, graph-to-engine.ts "condition-id sets where ANY holds"), but execution ignores it —
+# `spec.or_branches` is consumed by 0 engine files; spec_condition_compiler.py's gating loop ANDs
+# every spine condition individually, including the 576 spine-role condition-ids that are OR
+# alternatives to each other (93/117 strategies over-conjoined: "A or B or C" compiled as
+# "A and B and C"). This flag gates the fix: when enabled, spec_condition_compiler.py combines
+# conditions that share an or_branch via ANY-holds (OR) before that branch's single OR-result
+# enters the spine conjunction — see SpecConditionStrategy._combine_spine_or_branches. Default OFF
+# so production binding/gating behavior stays byte-identical until the falsification re-run
+# (docs/designs/composition-fidelity-experiment-2026-07-05.md) is reviewed — same "ship gates
+# STRICT, default OFF" pattern as TF_FVG_IDENTITY_ENABLED / TF_COMPOSITION_BUNDLE_ENABLED above.
+def or_branches_enabled() -> bool:
+    """Read at call time (not cached), same live-read contract as fvg_identity_enabled() and
+    composition_bundle_enabled() — lets a before/after comparison run in the SAME process."""
+    return os.environ.get("TF_OR_BRANCHES_ENABLED", "false").strip().lower() == "true"
+
+
 def resolve_sweep_object(object_text: str) -> bool:
     if not object_text:
         return False

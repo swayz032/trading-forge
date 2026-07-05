@@ -48,7 +48,12 @@ from src.engine.indicators.market_structure import detect_swings
 from src.engine.indicators.mss_native import compute_mss_signal
 from src.engine.indicators.sweep_native import compute_sweep_signal
 from src.engine.session_windows import is_in_killzone
-from src.engine.spec_family_bindings import BindingPlan, ConditionBinding, compile_binding_plan
+from src.engine.spec_family_bindings import (
+    BindingPlan,
+    ConditionBinding,
+    compile_binding_plan,
+    or_branches_enabled,
+)
 from src.engine.strategy_base import BaseStrategy
 
 FVG_PRIMITIVE_NAME: str = "fvg_native.compute_fvg_signal"
@@ -194,6 +199,22 @@ class SpecConditionStrategy(BaseStrategy):
         # spec_family_bindings.compile_binding_plan's restore_condition_ids docstring).
         self.restore_condition_ids = restore_condition_ids
         self.binding_plan = binding_plan or compile_binding_plan(self.spec, restore_condition_ids=restore_condition_ids)
+        # OR-Branches Honoring Fix (docs/designs/or-branches-honoring-fix-2026-07-05.md): map every
+        # condition_id that is a member of an or_branch group to that group's index. Built
+        # unconditionally (cheap — pure dict construction over an already-parsed spec) regardless
+        # of TF_OR_BRANCHES_ENABLED, so the flag alone (checked at gating time in compute(), not
+        # here) decides whether the mapping is ACTED on — same "always compute, flag-gate the
+        # effect" discipline as self.approximation. `setdefault` means a condition_id that
+        # (incorrectly) appears in more than one branch keeps its FIRST branch assignment rather
+        # than raising — an honest defensive fallback for a malformed spec, never a crash.
+        self._or_branch_of_condition: dict[str, int] = {}
+        or_branches_raw = self.spec.get("or_branches")
+        if isinstance(or_branches_raw, list):
+            for branch_idx, branch_ids in enumerate(or_branches_raw):
+                if not isinstance(branch_ids, list):
+                    continue
+                for cid in branch_ids:
+                    self._or_branch_of_condition.setdefault(str(cid), branch_idx)
         # OVERLAY-VISIBILITY CONTRACT (Band C follow-up, closes the same bug
         # class B2 closed for archetype-mapped onboards): `apply_eligibility_gate()`
         # in backtester.py checks `strategy_name` against playbook_router.py's
@@ -331,6 +352,76 @@ class SpecConditionStrategy(BaseStrategy):
             return result.bullish_active
         return result.any_active
 
+    @staticmethod
+    def _select_directional_arrays(bullish: np.ndarray, bearish: np.ndarray, object_text: str) -> np.ndarray:
+        """BUG FIX 2 (docs/designs/or-branches-honoring-fix-2026-07-05.md): the legacy
+        WAIT_CONFIRMATION path (`candle_confirmation_check`, predates the confirmation_native.py
+        Result dataclass) OR-blended `bullish_confirm | bearish_confirm` unconditionally — a
+        short-side confirmation condition was satisfied by a BULLISH rejection candle just as
+        readily as a bearish one, discarding direction entirely. This selects directionally the
+        SAME way `_select_directional` already does for the native-bundle Result objects (object
+        text keyword match, no spec.direction fallback — mirrors confirmation_native.py's own
+        bullish_active/bearish_active split): a condition whose object names a direction binds to
+        the matching raw array; a condition that names no direction falls back to the OR (any
+        confirmation candle, either direction) — the same honest fallback `_select_directional`
+        uses for `any_active`."""
+        norm = f" {(object_text or '').strip().lower()} "
+        if any(kw in norm for kw in BUNDLE_BEARISH_KEYWORDS):
+            return bearish
+        if any(kw in norm for kw in BUNDLE_BULLISH_KEYWORDS):
+            return bullish
+        return bullish | bearish
+
+    def _resolve_wait_bias_bearish(self, object_text: str) -> bool:
+        """BUG FIX 1 (docs/designs/or-branches-honoring-fix-2026-07-05.md): `_eval_wait_bias` used
+        to be called with `want_bearish=False` hard-coded at every call site — every WAIT_BIAS /
+        CONFIRM_DIRECTION condition was treated bullish regardless of what its object actually
+        named (a condition whose object literally says "bearish bias" still got the bullish-lean
+        EMA check). Resolves want_bearish the same way bias_native.py's directional split would:
+        object-text keyword first (same BUNDLE_BEARISH/BULLISH_KEYWORDS convention as
+        `_select_directional`) — falling back to the strategy's spec-level `direction` field only
+        when the object names no direction of its own (short -> bearish; long/both -> bullish-lean,
+        matching the pre-fix default for the common long/both case while correcting the short
+        case, which was silently wrong 100% of the time before this fix)."""
+        norm = f" {(object_text or '').strip().lower()} "
+        if any(kw in norm for kw in BUNDLE_BEARISH_KEYWORDS):
+            return True
+        if any(kw in norm for kw in BUNDLE_BULLISH_KEYWORDS):
+            return False
+        return str(self.spec.get("direction", "long")) == "short"
+
+    def _combine_spine_or_branches(self, per_condition_bool: dict[str, np.ndarray], n: int) -> np.ndarray:
+        """OR-Branches Honoring Fix (docs/designs/or-branches-honoring-fix-2026-07-05.md): only
+        called when `or_branches_enabled()` is True AND this spec has >=1 or_branch group. Spine
+        conditions that are members of the SAME or_branch combine via ANY-holds (logical OR); each
+        branch's single OR-result then enters the spine conjunction as ONE term — exactly where an
+        individual AND'd condition would have sat — replacing the previous per-alternative AND that
+        silently required every alternative to hold simultaneously (the confirmed 726-groups/
+        576-spine-alternatives/93-strategies over-conjunction defect). Spine conditions with no
+        or_branch membership are completely unaffected (still individually ANDed, same as the
+        flag-off path) — this is what makes nested and_groups-containing-or_branches correct "per
+        the extracted structure" without any special-case code: an and_group's members that also
+        belong to an or_branch are folded into that branch's OR term before the final AND runs, and
+        every other and_group member (no or_branch membership) is ANDed exactly as before."""
+        branch_results: dict[int, np.ndarray] = {}
+        standalone_ids: list[str] = []
+        for cid, arr in per_condition_bool.items():
+            branch_idx = self._or_branch_of_condition.get(cid)
+            if branch_idx is None:
+                standalone_ids.append(cid)
+                continue
+            if branch_idx in branch_results:
+                branch_results[branch_idx] = branch_results[branch_idx] | arr
+            else:
+                branch_results[branch_idx] = arr.copy()
+
+        spine_satisfied = np.ones(n, dtype=bool)
+        for cid in standalone_ids:
+            spine_satisfied &= per_condition_bool[cid]
+        for arr in branch_results.values():
+            spine_satisfied &= arr
+        return spine_satisfied
+
     def _eval_wait_retest(self, close: np.ndarray, high: np.ndarray, low: np.ndarray, n: int) -> np.ndarray:
         if n < RETEST_LEVEL_EMA_PERIOD + 2:
             return np.zeros(n, dtype=bool)
@@ -362,7 +453,13 @@ class SpecConditionStrategy(BaseStrategy):
         ts_list = _bars_to_ts_list(df)
 
         bullish_confirm, bearish_confirm = candle_confirmation_check(open_, high, low, close)
-        wait_bias_bull = None
+        # BUG FIX 1 cache: want_bearish is now resolved PER-BINDING (object text + spec.direction
+        # fallback, see _resolve_wait_bias_bearish) rather than hard-coded False — different
+        # WAIT_BIAS/CONFIRM_DIRECTION bindings on the same spec can therefore legitimately need
+        # different directions, so this caches the EMA-slope proxy array per want_bearish value
+        # (at most 2 entries: True and False) instead of the single `wait_bias_bull` variable the
+        # pre-fix code relied on.
+        wait_bias_cache: dict[bool, np.ndarray] = {}
         wait_structure = None
         wait_retest = None
         fvg_signal = None
@@ -431,15 +528,16 @@ class SpecConditionStrategy(BaseStrategy):
                     wait_structure = self._eval_wait_structure(n, df)
                 per_condition_bool[b.condition_id] = wait_structure
             elif b.type in ("WAIT_BIAS", "CONFIRM_DIRECTION"):
-                if wait_bias_bull is None:
-                    wait_bias_bull = self._eval_wait_bias(close, n, want_bearish=False)
-                per_condition_bool[b.condition_id] = wait_bias_bull
+                want_bearish = self._resolve_wait_bias_bearish(b.object)
+                if want_bearish not in wait_bias_cache:
+                    wait_bias_cache[want_bearish] = self._eval_wait_bias(close, n, want_bearish=want_bearish)
+                per_condition_bool[b.condition_id] = wait_bias_cache[want_bearish]
             elif b.type == "WAIT_RETEST":
                 if wait_retest is None:
                     wait_retest = self._eval_wait_retest(close, high, low, n)
                 per_condition_bool[b.condition_id] = wait_retest
             elif b.type == "WAIT_CONFIRMATION":
-                per_condition_bool[b.condition_id] = bullish_confirm | bearish_confirm
+                per_condition_bool[b.condition_id] = self._select_directional_arrays(bullish_confirm, bearish_confirm, b.object)
             elif b.type == "FILTER":
                 # Static presence-only pass-through — see module docstring
                 # ("no standalone per-bar confluence primitive exists").
@@ -450,9 +548,15 @@ class SpecConditionStrategy(BaseStrategy):
         self.last_per_condition_bool = per_condition_bool
 
         if per_condition_bool:
-            spine_satisfied = np.ones(n, dtype=bool)
-            for arr in per_condition_bool.values():
-                spine_satisfied &= arr
+            # OR-Branches Honoring Fix: flag-gated (default OFF — byte-identical to the pre-fix
+            # strict-AND path). Also byte-identical ON for any spec with zero or_branch groups
+            # (self._or_branch_of_condition empty falls straight to the strict-AND branch below).
+            if or_branches_enabled() and self._or_branch_of_condition:
+                spine_satisfied = self._combine_spine_or_branches(per_condition_bool, n)
+            else:
+                spine_satisfied = np.ones(n, dtype=bool)
+                for arr in per_condition_bool.values():
+                    spine_satisfied &= arr
         else:
             spine_satisfied = np.ones(n, dtype=bool)
 
@@ -469,9 +573,10 @@ class SpecConditionStrategy(BaseStrategy):
             entry_long = entry_signal
         elif direction == "short":
             entry_short = entry_signal
-        else:  # "both" — direct via EMA-slope proxy at the firing bar
-            if wait_bias_bull is None:
-                wait_bias_bull = self._eval_wait_bias(close, n, want_bearish=False)
+        else:  # "both" — direct via EMA-slope proxy (bullish lean) at the firing bar
+            if False not in wait_bias_cache:
+                wait_bias_cache[False] = self._eval_wait_bias(close, n, want_bearish=False)
+            wait_bias_bull = wait_bias_cache[False]
             entry_long = entry_signal & wait_bias_bull
             entry_short = entry_signal & ~wait_bias_bull
 
