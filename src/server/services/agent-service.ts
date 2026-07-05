@@ -1156,7 +1156,11 @@ export class AgentService {
     // 3a. C9: Persist DSL feature vector for future diversity checks (fire-and-forget).
     // Written AFTER strategy DB insert so the feature table only contains accepted candidates.
     // Failures are non-blocking — the strategy was already accepted and will be backtested.
-    persistDslFeatureVector(strategyId, dsl).catch(() => {});
+    persistDslFeatureVector(strategyId, dsl).catch((err) =>
+      // deepscan17: silent failure here silently drops this strategy from the C9 diversity
+      // gate's future similarity checks (mode-collapse coverage gap) with no trace.
+      logger.warn({ err, strategyId }, "persistDslFeatureVector failed — C9 diversity-gate coverage gap for this strategy"),
+    );
 
     // Pass 19: When pipeline is paused AND source=graduated_bucket, skip backtest.
     // Insert audit row for the pause-gated CANDIDATE and return early.

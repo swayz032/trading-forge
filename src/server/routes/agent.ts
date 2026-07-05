@@ -2461,7 +2461,7 @@ agentRoutes.post("/robustness", async (req, res) => {
         status: "success",
         decisionAuthority: "agent",
         correlationId,
-      }).catch(() => undefined);
+      }).catch((auditErr) => logger.warn({ auditErr, strategyId: parsed.data.strategy_id, correlationId }, "agent.robustness.completed audit write failed (deepscan17)")); // §10b: don't drop the terminal audit silently
     })
     .catch(async (err) => {
       logger.error({ err, strategyId: parsed.data.strategy_id, jobId: job.id }, "Fire-and-forget robustness test failed");
@@ -2482,7 +2482,7 @@ agentRoutes.post("/robustness", async (req, res) => {
         errorMessage: errorMsg,
         decisionAuthority: "agent",
         correlationId,
-      }).catch(() => undefined);
+      }).catch((auditErr) => logger.warn({ auditErr, strategyId: parsed.data.strategy_id, correlationId }, "agent.robustness.failed audit write failed (deepscan17)")); // §10b: don't drop the terminal audit silently
     });
 
   res.status(202).json({ job_id: job.id, message: "Robustness test submitted" });

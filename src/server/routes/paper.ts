@@ -131,7 +131,7 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
           status: "warning",
           decisionAuthority: "system",
           correlationId: req.id ?? null,
-        }).catch(() => {});
+        }).catch((auditErr) => req.log.warn({ auditErr, sessionId: session.id }, "paper.session_advisory_lock_collision audit write failed (deepscan17)"));
         res.status(409).json({
           error: "paper_session_start_collision",
           message: "A concurrent session start was detected for this session. Retry in a moment.",
@@ -170,7 +170,7 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
         status: "failure",
         decisionAuthority: "system",
         correlationId: req.id ?? null,
-      }).catch(() => {});
+      }).catch((auditErr) => req.log.warn({ auditErr, sessionId: session.id }, "paper.session_stream_failed audit write failed (deepscan17)"));
       notifyWarning(
         `Paper Stream Failed: session ${session.id.slice(0, 8)} could not start live data`,
         appendFamilyGradePostscript(

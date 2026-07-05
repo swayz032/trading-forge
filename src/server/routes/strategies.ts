@@ -523,7 +523,10 @@ strategyRoutes.post("/", async (req, res) => {
       result: { reason: "operator_exempt_source" } as Record<string, unknown>,
       status: "accepted",
       decisionAuthority: "operator",
-    }).catch(() => void 0);
+      // deepscan17: this is the SOLE compliance record that a cross-validation-EXEMPT
+      // (operator_manual/backfill) strategy entered the system unguarded — swallowing it
+      // let an unguarded strategy go live traceless. Log loudly on failure (§10b).
+    }).catch((auditErr) => logger.warn({ auditErr, name, source }, "strategies.operator_insert_unguarded audit write failed — unguarded-insert compliance record dropped"));
   } else {
     // All other sources must satisfy cross-validation provenance
     const insertTags: string[] = Array.isArray(tags) ? tags : [];
