@@ -60,6 +60,7 @@
 
 import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
+import { lifecycleTransitions, auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { getMode } from "./pipeline-control-service.js";
@@ -220,28 +221,45 @@ async function demoteToNeedsRevision(
       return false;
     }
 
-    await db.execute(sql`
-      UPDATE strategies
-      SET lifecycle_state = 'NEEDS_REVISION',
-          lifecycle_changed_at = NOW(),
-          updated_at = NOW()
-      WHERE id = ${strategyId}::uuid
-    `);
+    // Deep-scan #16 Wave 2 (D-2, 2026-07-04): the raw-SQL state change now writes a
+    // typed lifecycle_transitions ledger row alongside the audit row inside one
+    // db.transaction(), so 90-day reconstruction from the typed ledger is complete
+    // (this demotion previously bypassed the ledger entirely — a phantom-origin gap).
+    const fromState = row.lifecycle_state;
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`
+        UPDATE strategies
+        SET lifecycle_state = 'NEEDS_REVISION',
+            lifecycle_changed_at = NOW(),
+            updated_at = NOW()
+        WHERE id = ${strategyId}::uuid
+      `);
 
-    await insertAuditRowSafe({
-      action: "lifecycle.strategy_demoted_to_needs_revision",
-      entityType: "strategy",
-      entityId: strategyId,
-      decisionAuthority: "scheduler",
-      result: {
-        strategyName,
-        staleSinceDays: Math.floor((Date.now() - staleSince.getTime()) / 86_400_000),
-        staleSince: staleSince.toISOString(),
-        demotionThresholdDays: DEMOTION_THRESHOLD_DAYS,
-        note: "GRAVEYARD never written; NEEDS_REVISION is max demotion (operator mandate)",
-      } as Record<string, unknown>,
-      status: "success",
-      correlationId,
+      await tx.insert(lifecycleTransitions).values({
+        strategyId,
+        fromState,
+        toState: "NEEDS_REVISION",
+        decisionAuthority: "scheduler",
+        reason: `stale_demotion: stale_since=${staleSince.toISOString()}`,
+        correlationId: correlationId ?? null,
+      });
+
+      await tx.insert(auditLog).values({
+        action: "lifecycle.strategy_demoted_to_needs_revision",
+        entityType: "strategy",
+        entityId: strategyId,
+        decisionAuthority: "scheduler",
+        result: {
+          strategyName,
+          fromState,
+          staleSinceDays: Math.floor((Date.now() - staleSince.getTime()) / 86_400_000),
+          staleSince: staleSince.toISOString(),
+          demotionThresholdDays: DEMOTION_THRESHOLD_DAYS,
+          note: "GRAVEYARD never written; NEEDS_REVISION is max demotion (operator mandate)",
+        } as Record<string, unknown>,
+        status: "success",
+        correlationId: correlationId ?? null,
+      });
     });
 
     logger.info(
@@ -504,33 +522,66 @@ export async function setNeedsArchetype(
   missingArchetype: string,
   correlationId?: string,
 ): Promise<void> {
-  await db.execute(sql`
-    UPDATE strategies
-    SET lifecycle_state = 'NEEDS_ARCHETYPE',
-        lifecycle_changed_at = NOW(),
-        updated_at = NOW()
-    WHERE id = ${strategyId}::uuid
-      AND lifecycle_state NOT IN ('DEPLOYED', 'PILOT')
-  `);
+  // Deep-scan #16 Wave 2 (D-2, 2026-07-04): write the typed lifecycle_transitions
+  // ledger row alongside the raw-SQL state change (one db.transaction()), and only
+  // claim the transition when a row actually changed — the DEPLOYED/PILOT guard could
+  // affect 0 rows while the audit still fired, teleporting the ledger's phantom origin.
+  let changed = false;
+  let fromState: string | null = null;
+  await db.transaction(async (tx) => {
+    const priorRows = await tx.execute(sql`
+      SELECT lifecycle_state FROM strategies WHERE id = ${strategyId}::uuid
+    `);
+    fromState = ((priorRows as unknown) as Array<{ lifecycle_state: string }>)[0]?.lifecycle_state ?? null;
 
-  await insertAuditRowSafe({
-    action: "lifecycle.needs_archetype_set",
-    entityType: "strategy",
-    entityId: strategyId,
-    decisionAuthority: "scheduler",
-    result: {
-      strategyName,
-      missingArchetype,
-      note: "Strategy in library; not eligible for backtest/paper until archetype registered",
-    } as Record<string, unknown>,
-    status: "success",
-    correlationId: correlationId ?? null,
+    const updated = await tx.execute(sql`
+      UPDATE strategies
+      SET lifecycle_state = 'NEEDS_ARCHETYPE',
+          lifecycle_changed_at = NOW(),
+          updated_at = NOW()
+      WHERE id = ${strategyId}::uuid
+        AND lifecycle_state NOT IN ('DEPLOYED', 'PILOT')
+      RETURNING id
+    `);
+    if (((updated as unknown) as Array<unknown>).length === 0) return;
+    changed = true;
+
+    await tx.insert(lifecycleTransitions).values({
+      strategyId,
+      fromState: fromState ?? "CANDIDATE",
+      toState: "NEEDS_ARCHETYPE",
+      decisionAuthority: "scheduler",
+      reason: `needs_archetype: ${missingArchetype}`,
+      correlationId: correlationId ?? null,
+    });
+
+    await tx.insert(auditLog).values({
+      action: "lifecycle.needs_archetype_set",
+      entityType: "strategy",
+      entityId: strategyId,
+      decisionAuthority: "scheduler",
+      result: {
+        strategyName,
+        fromState,
+        missingArchetype,
+        note: "Strategy in library; not eligible for backtest/paper until archetype registered",
+      } as Record<string, unknown>,
+      status: "success",
+      correlationId: correlationId ?? null,
+    });
   });
 
-  logger.info(
-    { strategyId, strategyName, missingArchetype },
-    "strategy-stale-detector: NEEDS_ARCHETYPE set",
-  );
+  if (changed) {
+    logger.info(
+      { strategyId, strategyName, missingArchetype, fromState },
+      "strategy-stale-detector: NEEDS_ARCHETYPE set",
+    );
+  } else {
+    logger.warn(
+      { strategyId, strategyName, missingArchetype, fromState },
+      "strategy-stale-detector: NEEDS_ARCHETYPE NOT applied (protected state or missing row) — no ledger/audit claimed",
+    );
+  }
 }
 
 /**
@@ -546,31 +597,64 @@ export async function setNeedsRevision(
   reason: string,
   correlationId?: string,
 ): Promise<void> {
-  await db.execute(sql`
-    UPDATE strategies
-    SET lifecycle_state = 'NEEDS_REVISION',
-        lifecycle_changed_at = NOW(),
-        updated_at = NOW()
-    WHERE id = ${strategyId}::uuid
-      AND lifecycle_state NOT IN ('DEPLOYED', 'PILOT')
-  `);
+  // Deep-scan #16 Wave 2 (D-2, 2026-07-04): typed lifecycle_transitions ledger row
+  // written alongside the raw-SQL state change (one db.transaction()); transition is
+  // claimed only when a row actually changed (DEPLOYED/PILOT guard could no-op while
+  // the audit fired, leaving a phantom-origin gap in the typed ledger).
+  let changed = false;
+  let fromState: string | null = null;
+  await db.transaction(async (tx) => {
+    const priorRows = await tx.execute(sql`
+      SELECT lifecycle_state FROM strategies WHERE id = ${strategyId}::uuid
+    `);
+    fromState = ((priorRows as unknown) as Array<{ lifecycle_state: string }>)[0]?.lifecycle_state ?? null;
 
-  await insertAuditRowSafe({
-    action: "lifecycle.needs_revision_set",
-    entityType: "strategy",
-    entityId: strategyId,
-    decisionAuthority: "scheduler",
-    result: {
-      strategyName,
-      reason,
-      note: "Strategy in library; not eligible for backtest/paper until revised",
-    } as Record<string, unknown>,
-    status: "success",
-    correlationId: correlationId ?? null,
+    const updated = await tx.execute(sql`
+      UPDATE strategies
+      SET lifecycle_state = 'NEEDS_REVISION',
+          lifecycle_changed_at = NOW(),
+          updated_at = NOW()
+      WHERE id = ${strategyId}::uuid
+        AND lifecycle_state NOT IN ('DEPLOYED', 'PILOT')
+      RETURNING id
+    `);
+    if (((updated as unknown) as Array<unknown>).length === 0) return;
+    changed = true;
+
+    await tx.insert(lifecycleTransitions).values({
+      strategyId,
+      fromState: fromState ?? "CANDIDATE",
+      toState: "NEEDS_REVISION",
+      decisionAuthority: "scheduler",
+      reason: `needs_revision: ${reason}`,
+      correlationId: correlationId ?? null,
+    });
+
+    await tx.insert(auditLog).values({
+      action: "lifecycle.needs_revision_set",
+      entityType: "strategy",
+      entityId: strategyId,
+      decisionAuthority: "scheduler",
+      result: {
+        strategyName,
+        fromState,
+        reason,
+        note: "Strategy in library; not eligible for backtest/paper until revised",
+      } as Record<string, unknown>,
+      status: "success",
+      correlationId: correlationId ?? null,
+    });
   });
 
-  logger.info(
-    { strategyId, strategyName, reason },
-    "strategy-stale-detector: NEEDS_REVISION set",
-  );
+  if (changed) {
+    logger.info(
+      { strategyId, strategyName, reason, fromState },
+      "strategy-stale-detector: NEEDS_REVISION set",
+    );
+  } else {
+    logger.warn(
+      { strategyId, strategyName, reason, fromState },
+      "strategy-stale-detector: NEEDS_REVISION NOT applied (protected state or missing row) — no ledger/audit claimed",
+    );
+  }
 }

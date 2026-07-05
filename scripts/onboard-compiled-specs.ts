@@ -11,6 +11,13 @@
  *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --apply          # writes to DB
  *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --manifest <path.json>
  *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --timeframe 15m   # EXPLICIT override for a known-uniform batch only
+ *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --skip-dsl-critic # escape hatch — skip the LLM DSL critic (offline/quota reruns only)
+ *
+ * DSL CRITIC (Deep-scan #16 Wave 2 H-1, 2026-07-04): the DSL quality critic now
+ * runs by DEFAULT on this path (gate parity with direct-bucket-graduator, which
+ * runs it unconditionally). It is fail-OPEN on any infra error, so it never
+ * hard-blocks onboarding when the LLM is unreachable. Pass --skip-dsl-critic to
+ * opt out (the old default). The removed --with-dsl-critic opt-in flag is gone.
  *
  * TIMEFRAME (Timeframe Integrity Fix, 2026-07-03): --timeframe is now an
  * EXPLICIT operator override for a known-uniform batch ONLY. When omitted, the
@@ -119,11 +126,17 @@ async function main(): Promise<number> {
       dryRun: !args.apply,
       timeframe: args.timeframe ?? undefined,
       playbookRouterPath: args.playbookRouterPath,
-      // Batch CLI runs skip the live LLM critic by default to keep a 40-video
-      // batch from making 40+ network calls to Ollama/OpenAI on every run;
-      // the auditor + Gate 1/2/3 (deterministic, no LLM) still fully gate.
-      // Set --with-dsl-critic to opt in.
-      skipDslCritic: !process.argv.includes("--with-dsl-critic"),
+      // Deep-scan #16 Wave 2 (H-1, 2026-07-04): the DSL quality critic now runs
+      // by DEFAULT on the spec-onboarding path to restore gate parity with the
+      // direct-bucket-graduator path (which runs the critic unconditionally).
+      // Previously this CLI skipped the critic by default (--with-dsl-critic to
+      // opt in), so the live spec-onboarded library was onboarded WITHOUT it —
+      // a gate-parity asymmetry. The critic is fail-OPEN on any infra error
+      // (spec-onboarding-service.ts dsl_critic_fail_open), so running it by
+      // default does NOT hard-block onboarding when Ollama/OpenAI is unreachable;
+      // it only rejects genuine anti-pattern DSL. Escape hatch --skip-dsl-critic
+      // preserves the old behavior for offline/quota-constrained batch reruns.
+      skipDslCritic: process.argv.includes("--skip-dsl-critic"),
     });
     results.push(result);
 

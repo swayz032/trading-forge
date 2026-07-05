@@ -119,21 +119,38 @@ async function getAgentServiceModule(): Promise<AgentServiceModule> {
 // on an infra/import error — so it is not routed through the same
 // dynamic-import-inside-try/catch pattern.
 //
-// This is a DELIBERATE, DOCUMENTED, BYTE-IDENTICAL mirror of
-// agent-service.ts's exported `assertCrossValidatedSource` (verified against
-// its source at the time of writing) — not a divergent reimplementation. If
-// agent-service.ts's version changes, this one must change with it. Fixing
-// this properly means applying the SAME "sever static edge, dynamic-import
-// at call time" pattern one level deeper inside agent-service.ts itself
-// (its own edge to backtest-service.ts) — a legitimate, larger architectural
-// fix flagged in docs/spec-onboarding-runbook.md, out of scope for this band.
+// This began as a DELIBERATE, DOCUMENTED mirror of agent-service.ts's exported
+// `assertCrossValidatedSource`. Deep-scan #16 Wave 2 (H-6, 2026-07-04)
+// INTENTIONALLY DIVERGED it: the canonical version's `tags.includes("cross-validated")`
+// branch is a legitimate signal for its multi-layer graduation callers, but it was a
+// false guarantee here — this file's sole caller self-stamps "cross-validated" on
+// every insert, so the tag branch verified nothing. The local guard now trusts the
+// spec_onboarding path by SOURCE IDENTITY (provenance = certified-compiler artifact +
+// auditor + DSL critic), not by a self-stamped tag. The larger architectural fix
+// (sever the static edge to backtest-service.ts, dynamic-import at call time) remains
+// flagged in docs/spec-onboarding-runbook.md, out of scope for this band.
 function assertCrossValidatedSourceLocal(source: string, tags: string[]): void {
   const EXEMPT_SOURCES = new Set(["clone", "b4_regen", "evolved"]);
   if (EXEMPT_SOURCES.has(source)) return;
   if (source === "graduated_bucket") return;
-  if (tags.includes("cross-validated")) return;
+  // Deep-scan #16 Wave 2 (H-6, 2026-07-04): the spec-onboarding path is trusted
+  // by SOURCE IDENTITY, not by a self-stamped tag. Previously this guard passed
+  // whenever `tags` contained "cross-validated" — but the sole caller
+  // (onboardSpecArtifact, source always "spec_onboarding") stamps that exact tag
+  // UNCONDITIONALLY on every insert, so the tag branch was a decorative no-op that
+  // guaranteed nothing (any junk config could pass by self-stamping the string).
+  // The spec_onboarding path's real provenance is the certified-compiler artifact
+  // contract + the graduated-strategy auditor + the DSL quality critic (now run by
+  // DEFAULT per H-1) — NOT the presence of a caller-controlled tag. So we allow it
+  // by explicit source identity and DROP the circular tag-based escape for this
+  // local guard. NOTE: this is a DELIBERATE divergence from agent-service.ts's
+  // exported assertCrossValidatedSource (whose "cross-validated" tag is meaningful
+  // for its own multi-layer graduation callers); `tags` is retained in the
+  // signature for call-site symmetry and future diagnostics.
+  if (source === "spec_onboarding") return;
+  void tags;
   throw new Error(
-    `strategy_insert_violation: only graduated_bucket source or cross-validated tag is allowed; got source=${source}`,
+    `strategy_insert_violation: only graduated_bucket / spec_onboarding source (or exempt clone/regen source) is allowed; got source=${source}`,
   );
 }
 
