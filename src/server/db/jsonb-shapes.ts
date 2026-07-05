@@ -170,6 +170,43 @@ export interface ExitPlanWithRuntimeState {
   runtime_state: ExitPlanRuntimeState;
 }
 
+/**
+ * Trade-critique data-bridge (2026-07-05): entry-time decision context captured
+ * by paper-signal-service.ts at signal time and merged into paper_positions.exit_plan
+ * JSONB at position-open — same pattern F9 already established for `entryRegime`
+ * (an extra key living alongside the typed ExitPlan fields, no migration needed).
+ *
+ * Read by trade-critique-service.ts at close time so the 8-dimension attribution
+ * degrades gracefully toward 'partial'/'full' instead of always 'minimal'. Every
+ * field is optional/nullable by design — only what the deciding signal actually
+ * knew at entry is populated; nothing here is ever fabricated or backfilled.
+ *
+ * - `structureState` / `confluenceScore` / `confluenceFactorsActive` /
+ *   `nearestLiquidityLevel` are only populated on Path C (Wave 25
+ *   `entry_quality.use_weighted_scoring=true`) strategies, since Path A/B
+ *   (boolean confluence) never computes a numeric score or fetches liquidity.
+ *   Path A/B strategies still get `confluenceFactorsActive` (the satisfied
+ *   canonical/per-strategy factor list) and `regimeAtEntry`/`atrAtEntry`.
+ * - `narrativePhase` and `backtestExpectedRByRegime` are NOT populated here —
+ *   the Wave 25 Pass 6 A/M/E narrative-state machine and per-regime expected-R
+ *   are genuinely disconnected from the live signal path today (see CLAUDE.md
+ *   §2 Wave 25 Pass 6 + Pass 2.5 notes). Left absent rather than fabricated;
+ *   trade-critique-service.ts's existing missingFields/data_completeness
+ *   degradation handles this exactly as before.
+ */
+export interface EntryDecisionContext {
+  regimeAtEntry?: string | null;
+  structureState?: unknown | null;
+  confluenceScore?: number | null;
+  confluenceFactorsActive?: string[] | null;
+  nearestLiquidityLevel?: {
+    price: number;
+    levelType: string;
+    distancePoints: number;
+  } | null;
+  atrAtEntry?: number | null;
+}
+
 // ─── Backtest Result Extras Shape (Wave 23 F-4) ──────────────────────────────
 
 /**

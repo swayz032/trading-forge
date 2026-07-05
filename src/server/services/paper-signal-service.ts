@@ -26,6 +26,9 @@ import {
 } from "../../shared/firm-config.js";
 // Wave 23.C: bias engine + A+ gate consumer wiring
 import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateForSignal } from "./bias-state-service.js";
+// Trade-critique data bridge (2026-07-05): entry-time decision context carried
+// through pendingEntryQueue to openPosition() -> paper_positions.exit_plan JSONB.
+import type { EntryDecisionContext } from "../db/jsonb-shapes.js";
 import { getSessionShapeScore } from "./volume-profile-service.js";
 // Wave 23H.D: per-strategy confirming_indicators evaluator
 import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confirming-indicator-evaluator.js";
@@ -611,6 +614,11 @@ interface PendingEntry {
   medianBarVolume: number | undefined;
   signalBarTimestamp: string; // bar N timestamp (for audit trail)
   correlationId: string | undefined;
+  // Trade-critique data bridge (2026-07-05): entry-time decision context captured
+  // at signal time (bar N), carried across the deferred fill to bar N+1's
+  // openPosition() call. Absent/undefined when nothing was known at signal time —
+  // never fabricated. See EntryDecisionContext in jsonb-shapes.ts.
+  entryContext: EntryDecisionContext | undefined;
 }
 
 const pendingEntryQueue = new Map<string, PendingEntry>();
@@ -1930,6 +1938,20 @@ export async function evaluateSignals(
   // Not pipeline-gated: bias computation is an observability/promotion-gate input
   // that must run even when the trading pipeline is paused (same pattern as crons).
   let biasState: BiasStateForSignal | null = null;
+
+  // ─── Trade-critique data bridge (2026-07-05) ─────────────────────────────
+  // Captures whichever entry-time decision-context fields the deciding signal
+  // actually knows during Stage 2 evaluation below, so a passing signal can carry
+  // them into pendingEntryQueue -> openPosition() -> paper_positions.exit_plan.
+  // Declared at the same top-of-function scope as `biasState` (not inside the
+  // Stage 2 if/else nesting) so they remain readable at the pendingEntryQueue.set()
+  // call site several hundred lines below. Populated only on the path that
+  // actually computed them (Path C sets score + liquidity; Path A/B only sets the
+  // satisfied-factor list). Never fabricated — stays null when the evaluating
+  // path doesn't compute that field.
+  let entryCtxConfluenceScore: number | null = null;
+  let entryCtxConfluenceFactorsActive: string[] | null = null;
+  let entryCtxNearestLiquidityLevel: EntryDecisionContext["nearestLiquidityLevel"] = null;
   try {
     biasState = await getOrComputeBiasStateForDay(
       bar.timestamp,
@@ -2754,6 +2776,9 @@ export async function evaluateSignals(
       atr: pendingEntry.atr,
       barVolume: bar.volume,            // use bar N+1's volume for fill probability
       medianBarVolume: pendingEntry.medianBarVolume,
+      // Trade-critique data bridge (2026-07-05): entry-time decision context captured
+      // at signal time (bar N) — see PendingEntry.entryContext.
+      entryContext: pendingEntry.entryContext,
     }, { correlationId: pendingEntry.correlationId });
 
     if (deferredResult.position) {
@@ -4238,6 +4263,9 @@ export async function evaluateSignals(
       //        signal.a_plus_factor_evaluated (per-factor, with factor_source)
       // SSE: signal:a_plus_rejected on block
       let stage2Blocked = false;
+      // Trade-critique data bridge (2026-07-05): entryCtx* captures declared at
+      // function top-of-scope (alongside `biasState`) — populated below, read at
+      // the pendingEntryQueue.set() call site further down this function.
       if (!stage1Blocked) {
         if (isLegacyStrategy) {
           // Bypass: legacy strategy has no confluence factors defined
@@ -4400,6 +4428,26 @@ export async function evaluateSignals(
             };
 
             const weightedResult = evaluateWeightedConfluence(scoringStrategy, weightedCtx);
+
+            // Trade-critique data bridge (2026-07-05): capture Path C's numeric score,
+            // satisfied-factor list, and the directional liquidity target (mirrors
+            // evalLiquidityTargetClear()'s own direction -> above/below selection) so a
+            // passing signal carries real confluence context through to the position.
+            entryCtxConfluenceScore = weightedResult.score;
+            entryCtxConfluenceFactorsActive = weightedResult.factorContributions
+              .filter((fc) => fc.satisfied)
+              .map((fc) => fc.factor);
+            {
+              const _directionalLevels = signalDir === "long" ? liquidityNearestAbove : liquidityNearestBelow;
+              const _nearestLevel = _directionalLevels?.[0] ?? null;
+              entryCtxNearestLiquidityLevel = _nearestLevel
+                ? {
+                    price: _nearestLevel.price,
+                    levelType: _nearestLevel.level_type,
+                    distancePoints: _nearestLevel.distance_points,
+                  }
+                : null;
+            }
 
             // Per-factor audit rows (fire-and-forget)
             for (const fc of weightedResult.factorContributions) {
@@ -4907,6 +4955,11 @@ export async function evaluateSignals(
               }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist A+ passed log"));
             }
           }
+
+          // Trade-critique data bridge (2026-07-05): Path A/B never computes a numeric
+          // score or fetches liquidity, but it does know which factors were satisfied —
+          // capture that list so the critique isn't limited to Path-C-only strategies.
+          entryCtxConfluenceFactorsActive = factorResults.filter((r) => r.satisfied).map((r) => r.factor);
           } // end if (!useWeightedScoring || pathCFailed) — Path B (Path A / canonical 5)
         }
       }
@@ -5728,6 +5781,18 @@ export async function evaluateSignals(
           medianBarVolume,
           signalBarTimestamp: bar.timestamp,
           correlationId,
+          // Trade-critique data bridge (2026-07-05): whatever this signal actually knew
+          // at bar N, carried to bar N+1's openPosition() call. `biasState` may be null
+          // (legacy bypass strategy) — every field below degrades to null gracefully,
+          // never throws, never fabricates.
+          entryContext: {
+            regimeAtEntry: biasState?.regimeLabel ?? null,
+            structureState: biasState?.structureState ?? null,
+            confluenceScore: entryCtxConfluenceScore,
+            confluenceFactorsActive: entryCtxConfluenceFactorsActive,
+            nearestLiquidityLevel: entryCtxNearestLiquidityLevel,
+            atrAtEntry: currentAtrForEntry ?? null,
+          },
         });
 
         // ─── Wave 26 Pass G A.4: Archetype signal-fire audit hook ────────────

@@ -35,7 +35,7 @@ vi.mock("../db/index.js", () => ({
 vi.mock("../db/schema.js", () => ({
   paperPositions: { id: "id", sessionId: "sessionId", symbol: "symbol", side: "side",
     contracts: "contracts", entryPrice: "entryPrice", stopPrice: "stopPrice",
-    entryTime: "entryTime" },
+    entryTime: "entryTime", exitPlan: "exitPlan" },
   paperSessions: { id: "id", strategyId: "strategyId", firmId: "firmId",
     metricsSnapshot: "metricsSnapshot" },
   strategies: { id: "id", name: "name", symbol: "symbol", positionSize: "positionSize" },
@@ -47,6 +47,8 @@ vi.mock("../db/schema.js", () => ({
     correlationId: "correlationId", createdAt: "createdAt" },
   systemParameters: { paramName: "paramName", currentValue: "currentValue" },
   auditLog: { action: "action" },
+  // Data bridge (2026-07-05): accountId resolution reads brokerAccounts.
+  brokerAccounts: { accountId: "accountId", firmId: "firmId", enabled: "enabled" },
 }));
 
 vi.mock("../services/notification-service.js", () => ({
@@ -66,12 +68,23 @@ vi.mock("../services/ollama-client.js", () => ({
   })),
 }));
 
+// Data bridge (2026-07-05): mocked so accountId-resolution warn logs are assertable.
+vi.mock("../lib/logger.js", () => ({
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
+}));
+
 // ─── Imports ──────────────────────────────────────────────────────────────────
 
 import { eq, and, gte, desc } from "drizzle-orm";
 import { callOpenAI, getFallback, loadSystemPrompt } from "../services/model-router.js";
 import { OllamaClient } from "../services/ollama-client.js";
 import { notifyWarning } from "../services/notification-service.js";
+import { logger } from "../lib/logger.js";
 import { db } from "../db/index.js";
 
 // Matches the key used in trade-critique-service.ts
@@ -492,7 +505,12 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "2" }]).then(resolve); // had 2 failures
+        // (4) Data bridge (2026-07-05): resolveAccountIdForCritique's brokerAccounts
+        // lookup — no matching row in this fixture, resolves accountId to null.
+        if (currentCall === 4) return Promise.resolve([]).then(resolve);
+        // (5) upsertSystemParameter "exists" check for resetConsecutiveFailures() —
+        // must resolve truthy so the UPDATE (not INSERT) branch fires currentValue="0".
+        if (currentCall === 5) return Promise.resolve([{ currentValue: "2" }]).then(resolve); // had 2 failures
         return Promise.resolve([]).then(resolve);
       };
       return chain;
@@ -868,5 +886,265 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
     expect(schema.tradeCritique).toBeDefined();
     // In test environment the mock returns the mock object; verify the key exists
     expect("tradeCritique" in schema).toBe(true);
+  });
+});
+
+// ─── Trade-Critique Data Bridge (2026-07-05) ──────────────────────────────────
+//
+// Covers: (a) accountId resolution from session.firmId -> broker_accounts,
+// (b) the paper_positions.exit_plan.entryContext -> wave25Context bridge that lets
+// data_completeness rise above 'minimal' for Path C / Path A/B strategies, and
+// (c) graceful degradation (never throws) when the bridge is partially or fully
+// absent. Select-call order for the SUCCESS path (LLM succeeds, validation passes):
+//   0 = idempotency check, 1 = position, 2 = session, 3 = strategy,
+//   4 = resolveAccountIdForCritique's brokerAccounts lookup (SKIPPED — no DB call —
+//       when session.firmId is null/undefined),
+//   5 = upsertSystemParameter "exists" check inside resetConsecutiveFailures().
+describe("Trade-critique data bridge — accountId + entryContext (2026-07-05)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    void import("../services/trade-critique-service.js").then(({ _resetActiveCount }) => {
+      _resetActiveCount();
+    });
+  });
+
+  function mockSuccessSelectSequence(opts: {
+    position: Record<string, unknown>;
+    session: Record<string, unknown>;
+    strategy: Record<string, unknown>;
+    brokerAccountRow?: Record<string, unknown> | null;
+  }) {
+    const mockDb = db as any;
+    let selectCallCount = 0;
+    mockDb.select = vi.fn().mockImplementation(() => {
+      const chain: any = { from: () => chain, where: vi.fn(() => chain), orderBy: vi.fn(() => chain), limit: vi.fn(() => chain) };
+      const currentCall = selectCallCount++;
+      chain.then = (resolve: any) => {
+        if (currentCall === 0) return Promise.resolve([]).then(resolve); // idempotency
+        if (currentCall === 1) return Promise.resolve([opts.position]).then(resolve);
+        if (currentCall === 2) return Promise.resolve([opts.session]).then(resolve);
+        if (currentCall === 3) return Promise.resolve([opts.strategy]).then(resolve);
+        if (currentCall === 4) {
+          // resolveAccountIdForCritique's brokerAccounts lookup — only reached
+          // when session.firmId is truthy (the function short-circuits to null
+          // without any DB call otherwise, so this branch is simply never hit
+          // in that case; harmless either way).
+          return Promise.resolve(opts.brokerAccountRow ? [opts.brokerAccountRow] : []).then(resolve);
+        }
+        // upsertSystemParameter exists-check (reset path) — truthy so UPDATE fires,
+        // matching the pre-existing convention in the other success-path tests above.
+        if (currentCall === 5) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
+        return Promise.resolve([]).then(resolve);
+      };
+      return chain;
+    });
+    mockDb.insert = vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "critique-bridge" }]) }),
+    }));
+    mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
+    return mockDb;
+  }
+
+  // ── accountId resolution ──────────────────────────────────────────────────
+
+  it("(19) accountId resolves from session.firmId via the first enabled broker_accounts row", async () => {
+    vi.mocked(callOpenAI).mockResolvedValue(VALID_CRITIQUE_JSON);
+    const mockDb = mockSuccessSelectSequence({
+      position: makePosition(),
+      session: makeSession({ firmId: "topstep" }),
+      strategy: makeStrategy(),
+      brokerAccountRow: { accountId: "acct-topstep-001" },
+    });
+
+    const { runTradeCritique } = await import("../services/trade-critique-service.js");
+    await runTradeCritique("pos-uuid-001");
+
+    const dbRow = (mockDb.insert as any).mock.results
+      .map((r: any) => r.value.values.mock.calls)
+      .flat()
+      .map((c: any[]) => c[0])
+      .find((v: any) => v?.positionId !== undefined);
+
+    expect(dbRow?.accountId).toBe("acct-topstep-001");
+    expect(logger.warn).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining("no enabled broker_accounts row"),
+    );
+  });
+
+  it("(20) accountId stays null and logs a structured warn when firmId has no matching enabled broker_accounts row", async () => {
+    vi.mocked(callOpenAI).mockResolvedValue(VALID_CRITIQUE_JSON);
+    const mockDb = mockSuccessSelectSequence({
+      position: makePosition(),
+      session: makeSession({ firmId: "mffu" }),
+      strategy: makeStrategy(),
+      brokerAccountRow: null, // no enabled broker_accounts row for this firm
+    });
+
+    const { runTradeCritique } = await import("../services/trade-critique-service.js");
+    await runTradeCritique("pos-uuid-001");
+
+    const dbRow = (mockDb.insert as any).mock.results
+      .map((r: any) => r.value.values.mock.calls)
+      .flat()
+      .map((c: any[]) => c[0])
+      .find((v: any) => v?.positionId !== undefined);
+
+    expect(dbRow?.accountId).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ firmId: "mffu" }),
+      expect.stringContaining("no enabled broker_accounts row"),
+    );
+  });
+
+  it("(21) accountId stays null WITHOUT a warn log when the session has no firmId at all", async () => {
+    vi.mocked(callOpenAI).mockResolvedValue(VALID_CRITIQUE_JSON);
+    const mockDb = mockSuccessSelectSequence({
+      position: makePosition(),
+      session: makeSession({ firmId: null }),
+      strategy: makeStrategy(),
+      brokerAccountRow: null,
+    });
+
+    const { runTradeCritique } = await import("../services/trade-critique-service.js");
+    await runTradeCritique("pos-uuid-001");
+
+    const dbRow = (mockDb.insert as any).mock.results
+      .map((r: any) => r.value.values.mock.calls)
+      .flat()
+      .map((c: any[]) => c[0])
+      .find((v: any) => v?.positionId !== undefined);
+
+    expect(dbRow?.accountId).toBeNull();
+    // Nothing to warn about — a session genuinely without a firm is not the same
+    // gap as "firm assigned but no broker account row exists for it".
+    expect(logger.warn).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining("no enabled broker_accounts row"),
+    );
+  });
+
+  // ── entryContext bridge (paper-signal-service -> paper_positions.exit_plan -> critique) ──
+
+  it("(22) exit_plan.entryContext bridges structure/confluence/liquidity into the LLM context payload and raises data_completeness from 'minimal' toward 'partial'", async () => {
+    vi.mocked(callOpenAI).mockResolvedValue(VALID_CRITIQUE_JSON);
+    const positionWithEntryContext = makePosition({
+      exitPlan: {
+        entryContext: {
+          regimeAtEntry: "TRENDING_UP",
+          structureState: { bos: true, choch: false },
+          confluenceScore: 0.81,
+          confluenceFactorsActive: ["market_structure_aligned", "vwap_alignment"],
+          nearestLiquidityLevel: { price: 4510, levelType: "PDH", distancePoints: 5.25 },
+          atrAtEntry: 4.2,
+        },
+      },
+    });
+    const mockDb = mockSuccessSelectSequence({
+      position: positionWithEntryContext,
+      session: makeSession({ firmId: null }), // firmId irrelevant to this test
+      strategy: makeStrategy(), // no backtestExpectedRByRegime — genuinely unavailable
+    });
+
+    const { runTradeCritique } = await import("../services/trade-critique-service.js");
+    const result = await runTradeCritique("pos-uuid-001");
+
+    // narrative_phase + backtest_expected_r_by_regime remain genuinely unavailable
+    // (never fabricated) — every other Wave-25 field is now bridged.
+    const dbRow = (mockDb.insert as any).mock.results
+      .map((r: any) => r.value.values.mock.calls)
+      .flat()
+      .map((c: any[]) => c[0])
+      .find((v: any) => v?.positionId !== undefined);
+    expect(dbRow?.missingFields).toEqual(
+      expect.arrayContaining(["narrative_phase", "backtest_expected_r_by_regime"]),
+    );
+    expect(dbRow?.missingFields).not.toContain("structure_state");
+    expect(dbRow?.missingFields).not.toContain("confluence_score");
+    expect(dbRow?.missingFields).not.toContain("confluence_factors_active");
+    expect(dbRow?.missingFields).not.toContain("nearest_liquidity_level");
+    expect(dbRow?.missingFields?.length).toBe(2);
+    expect(result.dataCompleteness).toBe("partial");
+
+    // Verify the actual LLM input payload carries the bridged values (not just
+    // that missingFields shrank) — parse the JSON prompt sent to callOpenAI.
+    const [, cloudMessages] = vi.mocked(callOpenAI).mock.calls[0];
+    const sentPayload = JSON.parse((cloudMessages as any)[0].content);
+    expect(sentPayload.context.confluence_score).toBe(0.81);
+    expect(sentPayload.context.regime_at_entry).toBe("TRENDING_UP");
+    expect(sentPayload.context.atr_at_entry).toBe(4.2);
+    expect(sentPayload.context.nearest_liquidity_level).toEqual({
+      price: 4510, levelType: "PDH", distancePoints: 5.25,
+    });
+  });
+
+  it("(23) entryContext with only a partial subset of fields known still degrades gracefully — never throws, missing fields stay honest", async () => {
+    vi.mocked(callOpenAI).mockResolvedValue(VALID_CRITIQUE_JSON);
+    // Path A/B strategies only ever populate regimeAtEntry + confluenceFactorsActive
+    // (no numeric score, no liquidity fetch) — everything else must stay absent.
+    const positionPathB = makePosition({
+      exitPlan: {
+        entryContext: {
+          regimeAtEntry: "RANGE_BOUND",
+          confluenceFactorsActive: ["regime_match", "structural_setup"],
+        },
+      },
+    });
+    const mockDb = mockSuccessSelectSequence({
+      position: positionPathB,
+      session: makeSession({ firmId: null }),
+      strategy: makeStrategy(),
+    });
+
+    const { runTradeCritique } = await import("../services/trade-critique-service.js");
+    const result = await runTradeCritique("pos-uuid-001");
+
+    const dbRow = (mockDb.insert as any).mock.results
+      .map((r: any) => r.value.values.mock.calls)
+      .flat()
+      .map((c: any[]) => c[0])
+      .find((v: any) => v?.positionId !== undefined);
+    // structure_state / confluence_score / nearest_liquidity_level / narrative_phase /
+    // backtest_expected_r_by_regime all remain unknown on this path — 5 missing fields.
+    expect(dbRow?.missingFields).toContain("structure_state");
+    expect(dbRow?.missingFields).toContain("confluence_score");
+    expect(dbRow?.missingFields).toContain("nearest_liquidity_level");
+    expect(dbRow?.missingFields).not.toContain("confluence_factors_active");
+    expect(result.status).not.toBe("failed");
+  });
+
+  it("(24) exit_plan is entirely absent (null) — data bridge degrades to the pre-bridge 'minimal' behavior without throwing", async () => {
+    vi.mocked(callOpenAI).mockResolvedValue(VALID_CRITIQUE_JSON);
+    const positionNoExitPlan = makePosition({ exitPlan: null });
+    mockSuccessSelectSequence({
+      position: positionNoExitPlan,
+      session: makeSession({ firmId: null }),
+      strategy: makeStrategy(),
+    });
+
+    const { runTradeCritique } = await import("../services/trade-critique-service.js");
+    const result = await runTradeCritique("pos-uuid-001");
+
+    expect(result.status).not.toBe("failed");
+    expect(result.dataCompleteness).toBe("minimal");
+  });
+
+  it("(25) legacy exitPlan.entryRegime (pre-bridge F9 field) still populates regime_at_entry for old positions", async () => {
+    vi.mocked(callOpenAI).mockResolvedValue(VALID_CRITIQUE_JSON);
+    // Positions written before this data bridge only ever carried `entryRegime`
+    // (F9), never the new `entryContext` blob. Must still surface in the payload.
+    const legacyPosition = makePosition({ exitPlan: { entryRegime: "COMPRESSION" } });
+    mockSuccessSelectSequence({
+      position: legacyPosition,
+      session: makeSession({ firmId: null }),
+      strategy: makeStrategy(),
+    });
+
+    const { runTradeCritique } = await import("../services/trade-critique-service.js");
+    await runTradeCritique("pos-uuid-001");
+
+    const [, cloudMessages] = vi.mocked(callOpenAI).mock.calls[0];
+    const sentPayload = JSON.parse((cloudMessages as any)[0].content);
+    expect(sentPayload.context.regime_at_entry).toBe("COMPRESSION");
   });
 });

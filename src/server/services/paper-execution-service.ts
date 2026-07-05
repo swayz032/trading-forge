@@ -40,7 +40,7 @@ import { isConnectivityDegraded } from "../lib/network-failover.js";
 import { getActiveAssignment } from "./strategy-assignment-service.js";
 // Wave 25.5 Track 1: adaptive exit plan wiring
 import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
-import type { ExitPlanWithRuntimeState } from "../db/jsonb-shapes.js";
+import type { ExitPlanWithRuntimeState, EntryDecisionContext } from "../db/jsonb-shapes.js";
 // Pass 6 Track D: per-call exit-handler Discord visibility
 import { notifyWarning, notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
@@ -705,6 +705,12 @@ export async function openPosition(sessionId: string, params: {
     marketState: { regime: string; narrativePhase: string | null };
     weightedScore?: import("./confluence-score.js").WeightedScoreResult;
   };
+  // Trade-critique data bridge (2026-07-05): entry-time decision context captured by
+  // paper-signal-service.ts at signal time (bar N). Merged into paper_positions.exit_plan
+  // JSONB at INSERT (alongside the existing F9 entryRegime field) so trade-critique-service.ts
+  // can read it at close. Optional — absent when the caller didn't compute it (e.g. manual
+  // opens, other automation) or when nothing was known at signal time; never fabricated.
+  entryContext?: EntryDecisionContext;
 }, context?: { correlationId?: string; accountId?: string }) {
   // FIX 4: generate a per-call correlationId when caller does not supply one.
   // This ensures every audit row from openPosition has a reconstructable trace root
@@ -2133,11 +2139,19 @@ export async function openPosition(sessionId: string, params: {
     entryMacroRegimeCapture = macroSnap?.macroRegime ?? null;
   } catch { /* non-blocking — journal enrichment degrades gracefully */ }
 
-  // Merge entryRegime into the exitPlan JSONB blob. JSONB accepts arbitrary JSON;
-  // the extra field sits alongside the typed ExitPlan fields with no migration needed.
-  const exitPlanForDb: ExitPlanWithRuntimeState | undefined = entryMacroRegimeCapture != null
-    ? ({ ...(exitPlanForInsert ?? {}), entryRegime: entryMacroRegimeCapture } as unknown as ExitPlanWithRuntimeState)
-    : (exitPlanForInsert ?? undefined);
+  // Merge entryRegime + entryContext into the exitPlan JSONB blob. JSONB accepts
+  // arbitrary JSON; both extra fields sit alongside the typed ExitPlan fields with
+  // no migration needed (entryRegime is the pre-existing F9 pattern; entryContext is
+  // the trade-critique data bridge added 2026-07-05 — see EntryDecisionContext in
+  // jsonb-shapes.ts). Byte-identical to prior behavior when both are absent.
+  const exitPlanForDb: ExitPlanWithRuntimeState | undefined =
+    (entryMacroRegimeCapture != null || params.entryContext != null)
+      ? ({
+          ...(exitPlanForInsert ?? {}),
+          ...(entryMacroRegimeCapture != null ? { entryRegime: entryMacroRegimeCapture } : {}),
+          ...(params.entryContext != null ? { entryContext: params.entryContext } : {}),
+        } as unknown as ExitPlanWithRuntimeState)
+      : (exitPlanForInsert ?? undefined);
 
   // FIX 3 (Track M): wrap position INSERT + paper.trade_open audit INSERT in a single
   // transaction so they are atomic. Previously a crash between the two writes left an
