@@ -4856,6 +4856,82 @@
     "criticality": "high"
   },
   {
+    "id": "portfolio_drift_demotion",
+    "domain": "lifecycle",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Deep-Scan #16 Wave 3. Daily 17:00 ET cron (DST-safe double-fire at 21,22 UTC minute :43 with ET-hour==17 guard, mirrors regime-drift-detector + strategy-age-revalidation patterns) that restores the demotion the live n8n 'Daily Portfolio Monitor' workflow (node 'Log Drift Alert and Transition') was SUPPOSED to do but silently did NOT — its PATCH /api/strategies/:id/lifecycle sent no HMAC timestamp+signature so every call 401'd (or 503 with secret unset) and onError:continueRegularOutput swallowed it into a false-green. Scans every DEPLOYED strategy; any whose persisted strategies.rolling_sharpe_30d (refreshed 4-hourly by the rolling-sharpe cron via metrics-aggregator) is below PORTFOLIO_DRIFT_SHARPE_FLOOR (default 1.0) is auto-demoted DEPLOYED -> DECLINING -> TESTING (two-step preserves transition observability). FAIL-SAFE on NULL rolling Sharpe (skip via portfolio_drift_demotion.no_sharpe_data_skipped info audit, NEVER demote) — the dead n8n node's ||0 default would have demoted everything. DEFAULT-OFF: with PORTFOLIO_DRIFT_DEMOTION_ENABLED unset/false the sweep runs in effective dry-run (detect + tf_portfolio_drift_demotions_total telemetry + advisory Discord + portfolio_drift_demotion.dry_run audit, NO lifecycle mutation) so the operator validates the rolling-Sharpe scale on real DEPLOYED strategies before flipping to live demotion. Zombie DECLINING (step2 DECLINING->TESTING fails) is recovered by the regime-drift-detector's existing zombie-DECLINING compensating sweep (not duplicated). _PIPELINE_GATE_EXEMPT (runs even when pipeline paused); _tryAcquireJobLock prevents overlap re-entry. Closes the silent-dead-auto-demotion failure mode where the n8n portfolio-drift demotion showed GREEN while no demotion ever occurred.",
+    "data_sources": [
+      "strategies.rolling_sharpe_30d"
+    ],
+    "reads_from": [
+      "strategies"
+    ],
+    "writes_to": [
+      "strategies",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "portfolio_drift_demotion.no_sharpe_data_skipped",
+      "portfolio_drift_demotion.dry_run",
+      "portfolio_drift_demotion.strategy_eval_failed",
+      "portfolio_drift_demotion.completed",
+      "strategy.portfolio_drift_detected",
+      "lifecycle.portfolio_drift_demotion",
+      "lifecycle.portfolio_drift_zombie_declining"
+    ],
+    "metrics_surfaces": [
+      "tf_portfolio_drift_demotions_total"
+    ],
+    "telemetry_sources": [
+      "audit_log.portfolio_drift_demotion.*",
+      "audit_log.strategy.portfolio_drift_detected",
+      "audit_log.lifecycle.portfolio_drift_demotion",
+      "scheduler:portfolio-drift-demotion:21,22-utc",
+      "sse:lifecycle:portfolio_drift_demoted",
+      "prometheus:tf_portfolio_drift_demotions_total"
+    ],
+    "scheduler_jobs": [
+      "portfolio-drift-demotion"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "src/server/services/portfolio-drift-demotion-service.ts::runPortfolioDriftDemotion",
+      "scheduler.ts::portfolio-drift-demotion-cron"
+    ],
+    "database_tables": [
+      "strategies",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-soft",
+    "health_check": "src/server/__tests__/ds16w3-portfolio-drift-demotion.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log.portfolio_drift_demotion.completed",
+      "scheduler:portfolio-drift-demotion:21,22-utc"
+    ],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+      "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "high"
+  },
+  {
     "id": "ab_comparison",
     "domain": "observability",
     "owner_surface": "node-frontend",

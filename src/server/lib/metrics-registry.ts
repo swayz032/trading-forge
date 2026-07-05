@@ -376,6 +376,20 @@ export const regimeDriftDetectionsTotal = new Counter({
   registers: [promRegistry],
 });
 
+// tf_portfolio_drift_demotions_total{outcome}
+//   Deep-Scan #16 Wave 3. Incremented per DEPLOYED strategy whose rolling_sharpe_30d
+//   fell below PORTFOLIO_DRIFT_SHARPE_FLOOR during the daily portfolio-drift sweep.
+//   outcome: "demoted" (live two-step demotion executed) | "detected_dry_run"
+//   (drift found but demotion suppressed — master flag OFF or explicit dry-run).
+//   Lets the operator watch detection telemetry BEFORE enabling live demotion.
+//   Cardinality: 2 — safe.
+export const portfolioDriftDemotionsTotal = new Counter({
+  name: "tf_portfolio_drift_demotions_total",
+  help: "Total portfolio-drift demotions/detections, labelled by outcome (demoted|detected_dry_run)",
+  labelNames: ["outcome"] as const,
+  registers: [promRegistry],
+});
+
 // tf_lifecycle_shadow_promotions_total{outcome}
 //   Incremented at the SHADOW → PAPER gate evaluation (Pass A.3).
 //   outcome: passed | blocked_divergence | blocked_insufficient_samples (closed set).
