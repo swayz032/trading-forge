@@ -577,6 +577,29 @@ export const parameterDriftGateTotal = new Counter({
   registers: [promRegistry],
 });
 
+// ─── Deep-scan #16 Wave 2 Track G2 (E-1) — DSL guards_failed lifecycle HARD gate ──
+//
+// Wave 1 stamped result["dsl_guards"]["guards_failed"]=true in the Python engine
+// when the E.3/E.4/E.5 risk-guard block (stop-ceiling / time-stop / DLL-halt)
+// threw mid-backtest, meaning none of those guards ran for that run.
+// backtest-service.ts already persists the whole dsl_guards object into
+// backtests.result_extras.dsl_guards and counts tf_backtest_dsl_guards_failed_total
+// (producer-side signal), but nothing blocked promotion on it — an unguarded
+// backtest could still reach PAPER/DEPLOY_READY. This counter tracks the NEW
+// CONSUMER-side lifecycle gate (lifecycle-service.ts::evaluateDslGuardsGate)
+// wired at TESTING→PAPER, SHADOW→PAPER, and PAPER→DEPLOY_READY that hard-blocks
+// promotion when guards_failed===true.
+//
+// Same label shape as the b14/wfe/parameter-drift gate counters above:
+//   transition — "TESTING_TO_PAPER" | "SHADOW_TO_PAPER" | "PAPER_TO_DEPLOY_READY"
+//   outcome    — "pass" | "block" | "legacy" | "error"
+export const dslGuardsGateTotal = new Counter({
+  name: "tf_dsl_guards_gate_total",
+  help: "Total DSL guards_failed lifecycle promotion-gate evaluations, labelled by lifecycle transition and outcome",
+  labelNames: ["transition", "outcome"] as const,
+  registers: [promRegistry],
+});
+
 (function _zeroInitHardGateCounters() {
   const TRANSITIONS = ["TESTING_TO_PAPER", "SHADOW_TO_PAPER", "PAPER_TO_DEPLOY_READY"] as const;
   const OUTCOMES = ["pass", "block", "legacy", "error"] as const;
@@ -585,6 +608,7 @@ export const parameterDriftGateTotal = new Counter({
       b14GateTotal.labels({ transition, outcome }).inc(0);
       wfeGateTotal.labels({ transition, outcome }).inc(0);
       parameterDriftGateTotal.labels({ transition, outcome }).inc(0);
+      dslGuardsGateTotal.labels({ transition, outcome }).inc(0);
     }
   }
 })();
@@ -669,6 +693,45 @@ export const backtestDslGuardsFailedTotal = new Counter({
   registers: [promRegistry],
 });
 
+// ─── Deep-scan #16 Wave 2 Track G2 — silent-failure audit MEDs (#14/#15/#16/#17) ──
+//
+// A cluster of fire-and-forget DB writes (status updates, audit_log inserts,
+// expired-row deletes) across paper.ts / mcl-pre-eia-stop-tighten-service.ts /
+// idempotency.ts previously used a bare `.catch(() => {})` (or, in one agent.ts
+// case, no `.catch()` at all) — a genuine DB hiccup at any of these sites
+// vanished with ZERO log line, audit row, or counter, silently breaking the
+// specific downstream contract each site exists to serve:
+//   paper_session_failed_to_stream_update — auto-restart cron matches on
+//     paper_sessions.status='failed_to_stream'; if the UPDATE never persists,
+//     the cron never finds the dead stream.
+//   mcl_pre_eia_stop_tighten_audit — the ONLY durable trace of a live-risk
+//     stop-tighten applied to an open MCL position; losing it breaks 90-day
+//     reconstruction of what happened to that position's stop.
+//   idempotency_expired_key_delete — an un-deleted expired row survives with
+//     its OLD createdAt; combined with onConflictDoNothing() on the refreshed
+//     INSERT, that key can permanently lose idempotency caching.
+//
+// `site` is a closed, small enumerated set (one value per finding) so
+// cardinality stays bounded and a single Grafana panel answers "is ANY Track G2
+// fire-and-forget write silently failing right now?".
+export const trackG2SilentFailuresTotal = new Counter({
+  name: "tf_track_g2_silent_failures_total",
+  help: "Total previously-silent fire-and-forget DB write failures now observable, labelled by call site",
+  labelNames: ["site"] as const,
+  registers: [promRegistry],
+});
+
+(function _zeroInitTrackG2SilentFailures() {
+  const SITES = [
+    "paper_session_failed_to_stream_update",
+    "mcl_pre_eia_stop_tighten_audit",
+    "idempotency_expired_key_delete",
+  ] as const;
+  for (const site of SITES) {
+    trackG2SilentFailuresTotal.labels({ site }).inc(0);
+  }
+})();
+
 // Zero-init all 6 × 3 = 18 label combinations so Prometheus sees value=0 from
 // first scrape. prom-client Counters do not pre-register label sets automatically;
 // without this, Grafana shows "no data" for categories that have not yet fired.
@@ -715,6 +778,68 @@ export const candidateConveyorEnqueuedTotal = new Counter({
   help: "Total backtests enqueued by the candidate backtest conveyor",
   registers: [promRegistry],
 });
+
+// ─── Deep-scan #16 Wave 2 Track G2 (#20) — candidate conveyor rejection counter ──
+//
+// tf_candidate_conveyor_rejections_total
+//   Incremented by candidate-backtest-conveyor-service.ts whenever a per-strategy
+//   Promise.allSettled entry in the enqueue batch rejects. Previously this branch
+//   only logged via logger.error — no audit_log row, no metric — so a strategy
+//   that silently and repeatedly failed to enqueue had NO durable or dashboard
+//   trace distinguishing it from a healthy tick. No labels (single time series);
+//   the accompanying `candidate_conveyor.strategy_rejected` audit_log row (keyed
+//   by entityId=strategyId) carries the per-strategy detail.
+export const candidateConveyorRejectionsTotal = new Counter({
+  name: "tf_candidate_conveyor_rejections_total",
+  help: "Total per-strategy rejections in the candidate backtest conveyor's enqueue batch",
+  registers: [promRegistry],
+});
+
+// ─── Deep-scan #16 Wave 2 Track G2 (#18/#22) — critic-optimizer recovery counter ──
+//
+// tf_critic_optimizer_recovery_force_fail_total
+//   Incremented by critic-optimizer-service.ts whenever the post-replay-loop
+//   recovery step finds candidates still stuck in replayStatus='pending' (server
+//   crashed mid-replay on a previous attempt) and force-marks them 'failed'.
+//   Previously traced ONLY via logger.warn — no counter, no dedicated audit row —
+//   so a recurring crash-recovery pattern for a given strategy was invisible on
+//   the metrics dashboard. No labels (single time series); the accompanying
+//   `critic-optimizer.stuck_candidates_force_failed` audit_log row carries the
+//   per-run detail (stuck candidate IDs, count).
+export const criticOptimizerRecoveryForceFailTotal = new Counter({
+  name: "tf_critic_optimizer_recovery_force_fail_total",
+  help: "Total critic-optimizer replay runs where stuck 'pending' candidates were force-failed during crash recovery",
+  registers: [promRegistry],
+});
+
+// ─── Deep-scan #16 Wave 2 Track G2 (#21) — paper stream lifecycle counter ────────
+//
+// tf_paper_stream_lifecycle_total{event}
+//   Incremented by paper-trading-stream.ts's startStream / stopStream /
+//   stopAllStreams — previously these safety-critical TESTING→PAPER stream
+//   start/stop/teardown functions had NO audit_log row and NO Prometheus counter,
+//   only an in-process logger line. A stream that silently failed to start (or
+//   was unexpectedly stopped) left no durable, queryable trace.
+//
+//   event label (closed set):
+//     "start"    — startStream() called for a session
+//     "stop"     — stopStream() called for a session with an active stream
+//     "stop_all" — stopAllStreams() called (each underlying session also emits
+//                  its own "stop", so stop_all is the batch-level marker)
+//
+//   Cardinality: 3 event values — safe.
+export const paperStreamLifecycleTotal = new Counter({
+  name: "tf_paper_stream_lifecycle_total",
+  help: "Total paper trading stream lifecycle events, labelled by event type",
+  labelNames: ["event"] as const,
+  registers: [promRegistry],
+});
+
+(function _zeroInitPaperStreamLifecycle() {
+  for (const event of ["start", "stop", "stop_all"] as const) {
+    paperStreamLifecycleTotal.labels({ event }).inc(0);
+  }
+})();
 
 // ─── Wave 4 Track 4B — BIF gate evaluation counter (2026-06-28) ───────────────
 //

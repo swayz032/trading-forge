@@ -41,6 +41,7 @@ import { db } from "../db/index.js";
 import { paperPositions } from "../db/schema.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { logger } from "../index.js";
+import { trackG2SilentFailuresTotal } from "../lib/metrics-registry.js";
 
 interface OpenPosition {
   id: string;
@@ -284,7 +285,18 @@ export async function runMclPreEiaStopTighten(): Promise<PreEiaTightenSummary> {
         status: "info",
         input: { sessionId: pos.sessionId, direction, entryPrice, currentStop, currentR: decision.currentR },
         result: { newStop: decision.newStop, reason: decision.reason, atr14: marketRow.atr14 },
-      }).catch(() => {});
+      }).catch((auditErr) => {
+        // Deep-scan #16 Wave 2 Track G2 (#15): this audit row is the ONLY durable
+        // trace that a live-risk stop-tighten was applied to this open MCL position.
+        // The DB write to paper_positions.trailHwm above already committed — losing
+        // THIS row doesn't undo the tighten, but it breaks 90-day reconstruction of
+        // why/when the stop moved. Log loudly + count so the gap is discoverable.
+        logger.error(
+          { err: auditErr, positionId: pos.id, newStop: decision.newStop, sessionId: pos.sessionId },
+          "mcl-pre-eia-stop-tighten: FAILED to write mcl_pre_eia.stop_tightened audit row — stop WAS tightened in the DB but has no durable audit trace",
+        );
+        try { trackG2SilentFailuresTotal.labels({ site: "mcl_pre_eia_stop_tighten_audit" }).inc(); } catch { /* non-blocking counter */ }
+      });
     } catch (posErr) {
       summary.errors += 1;
       logger.warn({ err: posErr, positionId: pos.id }, "mcl-pre-eia-stop-tighten: per-position error");

@@ -32,7 +32,7 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { auditLog, backtests, strategies } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
-import { candidateConveyorEnqueuedTotal } from "../lib/metrics-registry.js";
+import { candidateConveyorEnqueuedTotal, candidateConveyorRejectionsTotal } from "../lib/metrics-registry.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning } from "./notification-service.js";
 import { getMode as getPipelineMode } from "./pipeline-control-service.js";
@@ -257,10 +257,32 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
     if (o.status === "fulfilled") {
       enqueued += o.value;
     } else {
+      // Deep-scan #16 Wave 2 Track G2 (#20): previously logger.error-only — no
+      // audit_log row, no metric. A strategy that repeatedly fails to enqueue had
+      // zero durable/dashboard trace distinguishing it from a healthy tick.
+      const rejectReason = o.reason instanceof Error ? o.reason.message : String(o.reason);
       logger.error(
         { err: o.reason, strategyId: candidates[i].id },
         "candidate-backtest-conveyor: per-strategy error (non-blocking)",
       );
+      try { candidateConveyorRejectionsTotal.inc(); } catch { /* non-blocking counter */ }
+      db.insert(auditLog)
+        .values({
+          action: "candidate_conveyor.strategy_rejected",
+          entityType: "strategy",
+          entityId: candidates[i].id,
+          status: "failure",
+          decisionAuthority: "scheduler",
+          input: { strategyName: candidates[i].name, symbol: candidates[i].symbol } as Record<string, unknown>,
+          result: { error: rejectReason } as Record<string, unknown>,
+          correlationId,
+        })
+        .catch((auditErr: unknown) => {
+          logger.warn(
+            { auditErr, strategyId: candidates[i].id },
+            "candidate-backtest-conveyor: candidate_conveyor.strategy_rejected audit write failed (non-blocking)",
+          );
+        });
     }
   });
 
