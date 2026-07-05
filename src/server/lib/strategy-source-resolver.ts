@@ -222,7 +222,7 @@ async function resolveViaScoutAudit(strategyName: string): Promise<string[]> {
  */
 function emitResolvedAudit(
   strategyName: string,
-  resolutionPath: "direct" | "variant_inheritance" | "audit_fallback" | "multi_source",
+  resolutionPath: "config_metadata" | "direct" | "variant_inheritance" | "audit_fallback" | "multi_source",
   urlCount: number,
 ): void {
   // Prometheus counter — synchronous, never throws
@@ -294,14 +294,33 @@ export async function getStrategySourceUrl(
   strategyName: string,
 ): Promise<string[] | null> {
   try {
-    // Look up the strategy id first (needed for paths a, c on leader)
+    // Look up the strategy id + config first (needed for path 0 and paths a, c on leader)
     const strategyRows = await db
-      .select({ id: strategies.id })
+      .select({ id: strategies.id, config: strategies.config })
       .from(strategies)
       .where(eq(strategies.name, strategyName))
       .limit(1);
 
     const strategyId = strategyRows[0]?.id ?? null;
+
+    // Path (0) — deepscan17 H-1: spec_onboarding rows (the entire live library) store the
+    // canonical YouTube URL in config.metadata.source_url and NEVER write a strategy_pending_bucket
+    // or scout audit row — so paths (a)-(d) below all miss them, making every spec-onboarded
+    // strategy resolve as an orphan (null URL + a spurious source_url_unresolved WARN per strategy).
+    // Read the authoritative field first; paths (a)-(d) remain the fallback for legacy graduated_bucket rows.
+    const cfg = strategyRows[0]?.config as { metadata?: { source_url?: unknown } } | null | undefined;
+    const metaUrl = cfg?.metadata?.source_url;
+    if (typeof metaUrl === "string" && metaUrl.trim().length > 0) {
+      emitResolvedAudit(strategyName, "config_metadata", 1);
+      return [metaUrl.trim()];
+    }
+    if (Array.isArray(metaUrl)) {
+      const urls = dedup(metaUrl.filter((u): u is string => typeof u === "string" && u.trim().length > 0).map(u => u.trim()));
+      if (urls.length > 0) {
+        emitResolvedAudit(strategyName, "config_metadata", urls.length);
+        return urls;
+      }
+    }
 
     // Path (a) — direct bucket join (works when this strategy IS the leader)
     if (strategyId !== null) {
@@ -380,7 +399,9 @@ export async function getAllStrategiesWithUrls(): Promise<
       .where(
         inArray(strategies.lifecycleState, [
           "CANDIDATE",
+          "NEEDS_ARCHETYPE", // deepscan17 H-2: 3 live spec-onboarded parked strategies were excluded
           "TESTING",
+          "SHADOW", // deepscan17 H-2: Wave-29 shadow stage was excluded from library/provenance surfaces
           "PAPER",
           "DEPLOY_READY",
           "PILOT",

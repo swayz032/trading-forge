@@ -162,6 +162,35 @@ describe("stripMarketSuffix", () => {
   });
 });
 
+// ─── Path (0): config.metadata.source_url (deepscan17 H-1) ───────────────────
+
+describe("getStrategySourceUrl — path (0) config.metadata.source_url", () => {
+  it("resolves the live spec_onboarding library via config.metadata.source_url (no bucket needed)", async () => {
+    // Call 0: strategies.select returns id + config with the authoritative URL.
+    mockState.selectResults[0] = [
+      { id: "spec-uuid", config: { metadata: { source_url: "https://www.youtube.com/watch?v=spec123" } } },
+    ];
+    // No selectResults[1] — path-0 must short-circuit before any bucket/audit query.
+    const result = await getStrategySourceUrl("long_entry_or_short_entry_mes_5m");
+    expect(result).toEqual(["https://www.youtube.com/watch?v=spec123"]);
+  });
+
+  it("handles an array of source_url values (deduped)", async () => {
+    mockState.selectResults[0] = [
+      { id: "spec-uuid", config: { metadata: { source_url: ["https://yt.com/a", "https://yt.com/a", "https://yt.com/b"] } } },
+    ];
+    const result = await getStrategySourceUrl("multi_source_spec_mes_5m");
+    expect(result).toEqual(["https://yt.com/a", "https://yt.com/b"]);
+  });
+
+  it("falls through to bucket paths when config has no source_url", async () => {
+    mockState.selectResults[0] = [{ id: "leader-uuid", config: { metadata: {} } }];
+    mockState.selectResults[1] = [{ sourceUrl: "https://yt.com/from-bucket" }];
+    const result = await getStrategySourceUrl("legacy_bucket_mes_15m");
+    expect(result).toContain("https://yt.com/from-bucket");
+  });
+});
+
 // ─── Path (a): direct bucket join for leader strategy ────────────────────────
 
 describe("getStrategySourceUrl — path (a) direct bucket", () => {
