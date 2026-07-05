@@ -12,11 +12,12 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 import { db } from "../db/index.js";
-import { complianceRulesets, complianceDriftLog } from "../db/schema.js";
-import { eq, desc } from "drizzle-orm";
+import { complianceRulesets, complianceDriftLog, strategies, paperSessions } from "../db/schema.js";
+import { eq, desc, and, inArray, sql as drizzleSql } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { broadcastSSE } from "../routes/sse.js";
 
 // F-5: Use lowercase firm IDs matching paper-execution-service queries.
 // Legacy firms (Apex, FFN, Alpha, Tradeify, Earn2Trade, TPT) were removed via
@@ -139,6 +140,48 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
       ),
       { oldHash, newHash, affectedFirms: driftDetails.map((d) => d.firm) },
     );
+
+    // deepscan18 (E-E1): `compliance:drift_detected` has been a typed, subscribed
+    // frontend dashboard tile (useSSE.ts) since it was catalogued — but this
+    // function, the ONLY documented emitter of that event, never actually
+    // called broadcastSSE. The tile was dead by omission (Discord got the
+    // alert; the live dashboard never did). affectedStrategyCount + severity
+    // are derived fail-soft — a count-query failure must never mask the
+    // drift alert itself, so it defaults to the safe (critical/unknown-count)
+    // reading rather than silently reporting "0 affected".
+    const affectedFirms = driftDetails.map((d) => d.firm);
+    let affectedStrategyCount = 0;
+    let severity: "warning" | "critical" = "warning";
+    try {
+      const [{ count }] = await db
+        .select({ count: drizzleSql<number>`count(distinct ${strategies.id})::int` })
+        .from(strategies)
+        .innerJoin(paperSessions, eq(paperSessions.strategyId, strategies.id))
+        .where(
+          and(
+            inArray(strategies.lifecycleState, ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"]),
+            inArray(paperSessions.firmId, affectedFirms),
+          ),
+        );
+      affectedStrategyCount = count ?? 0;
+      severity = affectedStrategyCount > 0 ? "critical" : "warning";
+    } catch (countErr) {
+      logger.warn(
+        { countErr, affectedFirms },
+        "compliance-refresh-service: affected-strategy count query failed (deepscan18) — broadcasting drift with severity=critical (fail-safe, count unknown)",
+      );
+      severity = "critical"; // fail-safe: don't understate risk when we can't measure it
+    }
+
+    broadcastSSE("compliance:drift_detected", {
+      affectedFirms,
+      oldHash,
+      newHash,
+      affectedStrategyCount,
+      severity,
+      correlationId: null,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   return { drifted: driftDetails.length > 0, details: driftDetails };

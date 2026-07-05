@@ -30,6 +30,7 @@ import { logger } from "../index.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { broadcastSSE } from "../routes/sse.js";
+import { auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 
 // ─── Constants (no magic numbers) ─────────────────────────────────────────────
 
@@ -248,7 +249,16 @@ export async function generateNeMoBatch(
           errorMessage: errMsg,
         })
         .where(eq(quantumRunCosts.id, costRunId))
-        .catch(() => undefined);
+        .catch((updateErr) => {
+          // deepscan18: without this update, the cost row is stuck reporting
+          // its pre-failure status forever (e.g. "running") — the challenger
+          // cost-tracking ledger silently loses this batch's true outcome.
+          logger.warn(
+            { updateErr, costRunId, batchId, errMsg },
+            "nemo-scenario-service: failed to mark quantum_run_costs row as failed (deepscan18) — cost row STUCK on stale status",
+          );
+          auditWriteFailuresTotal.labels({ action: "nemo_scenario.cost_row_update_failed" }).inc();
+        });
     }
 
     // Audit + alert SSE on failure
@@ -268,8 +278,15 @@ export async function generateNeMoBatch(
           decisionAuthority: "challenger_only",
           durationMs: wallClockMs,
         });
-    } catch {
-      // audit log failure is non-blocking
+    } catch (auditErr) {
+      // deepscan18: this audit row is the ONLY durable record that a NeMo
+      // scenario-generation batch failed — losing it silently means a
+      // challenger-only batch failure leaves no trace at all.
+      logger.error(
+        { auditErr, batchId, errMsg },
+        "nemo-scenario-service: nemo_scenario_batch_failed audit write failed (deepscan18)",
+      );
+      auditWriteFailuresTotal.labels({ action: "nemo_scenario_batch_failed" }).inc();
     }
 
     broadcastSSE("nemo:scenario-error", {

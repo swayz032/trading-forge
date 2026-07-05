@@ -51,6 +51,7 @@ import {
   crossValidatorLatencySeconds,
   pendingBucketsGraduatedTotal,
   pendingBucketsTotal,
+  auditWriteFailuresTotal,
 } from "../lib/metrics-registry.js";
 
 // ─── Correlation ID helper ───────────────────────────────────────
@@ -1489,7 +1490,12 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
           status: "info",
           input: { source_url: sourceUrl, raw_symbol: rawSymbol },
           result: { defaulted_to: "MES", reason: "cross_market_mechanic_portable" },
-        }).catch(() => {});
+        }).catch((auditErr) => {
+          // deepscan18: this is the ONLY record of a cross-market symbol remap —
+          // if it silently drops, a strategy shows up as MES with no trace of why.
+          logger.warn({ auditErr, sourceUrl, rawSymbol }, "scout.cross_market_demo_remap audit write failed (deepscan18)");
+          auditWriteFailuresTotal.labels({ action: "scout.cross_market_demo_remap" }).inc();
+        });
       } else if (!remapped && !rawSymbol && portability.portable) {
         // Gemma extracted a strategy with NO symbol field at all (common when
         // the speaker never names a market or uses generic "the chart" language).
@@ -1502,7 +1508,11 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
           status: "info",
           input: { source_url: sourceUrl },
           result: { defaulted_to: "MES", reason: "no_symbol_emitted_but_mechanic_portable" },
-        }).catch(() => {});
+        }).catch((auditErr) => {
+          // deepscan18: same reconstructability gap as the cross-market remap above.
+          logger.warn({ auditErr, sourceUrl }, "scout.no_symbol_defaulted_to_mes audit write failed (deepscan18)");
+          auditWriteFailuresTotal.labels({ action: "scout.no_symbol_defaulted_to_mes" }).inc();
+        });
       }
 
       if (!remapped) continue; // truly unmapped + non-portable — drop
@@ -2635,7 +2645,12 @@ Output ONLY the DSL JSON object, nothing else.`;
       decisionAuthority: "agent",
       correlationId: findStrategiesCorrelationId,
       result: { strategies: results } as unknown as Record<string, unknown>,
-    }).catch(() => undefined);
+    }).catch((auditErr) => {
+      // deepscan18: the sibling of the terminal-failure audit below — this is
+      // the ONLY reconstructable record of a find-strategies job's outcome.
+      logger.error({ auditErr, jobId: job.id, aggregatedStatus, correlationId: findStrategiesCorrelationId }, `agent.find-strategies.${aggregatedStatus === "success" ? "completed" : aggregatedStatus} audit write failed (deepscan18)`);
+      auditWriteFailuresTotal.labels({ action: "agent.find-strategies.terminal" }).inc();
+    });
 
     logger.info({ jobId: job.id, results }, "find-strategies completed");
   })().catch((err) => {
@@ -2656,7 +2671,10 @@ Output ONLY the DSL JSON object, nothing else.`;
       errorMessage: errMsg,
       decisionAuthority: "agent",
       correlationId: findStrategiesCorrelationId,
-    }).catch(() => undefined);
+    }).catch((auditErr) => {
+      logger.error({ auditErr, jobId: job.id, correlationId: findStrategiesCorrelationId }, "agent.find-strategies.failed audit write failed (deepscan18)");
+      auditWriteFailuresTotal.labels({ action: "agent.find-strategies.terminal" }).inc();
+    });
   });
 
   res.status(202).json({ job_id: job.id, message: "Strategy search submitted" });
@@ -3820,11 +3838,20 @@ agentRoutes.get("/pending-buckets", async (req, res) => {
   try {
     // Lazy backfill — bounded — so this list endpoint also drives
     // graduated_strategy_id reconciliation as a side effect when the operator
-    // visits the tab. Fire-and-forget; failures non-fatal.
-    backfillGraduatedStrategyIds(25).catch(() => undefined);
+    // visits the tab. Fire-and-forget; failures non-fatal but must be visible
+    // (deepscan18) — a silently-failing backfill means graduated_strategy_id
+    // never reconciles and the operator has no signal why the tab looks stale.
+    backfillGraduatedStrategyIds(25).catch((err) => {
+      logger.warn({ err }, "pending-buckets: lazy backfillGraduatedStrategyIds failed (deepscan18)");
+      auditWriteFailuresTotal.labels({ action: "pending_bucket.lazy_backfill_failed" }).inc();
+    });
 
     // Refresh the Prometheus gauge from authoritative DB counts (bounded query,
-    // cheap — runs whenever the operator pulls the list). Fire-and-forget.
+    // cheap — runs whenever the operator pulls the list). Fire-and-forget, but
+    // deepscan18: a silent failure here means the gauge FREEZES at its last
+    // value with no indication it stopped updating — log loud + count so a
+    // frozen `tf_pending_buckets_total` is distinguishable from a genuinely
+    // stable one.
     db.execute(sql`
       SELECT status, COUNT(*)::int AS n
       FROM strategy_pending_buckets
@@ -3836,7 +3863,10 @@ agentRoutes.get("/pending-buckets", async (req, res) => {
         const found = rowsAll.find((r) => r.status === s);
         pendingBucketsTotal.set({ status: s }, found?.n ?? 0);
       }
-    }).catch(() => undefined);
+    }).catch((err) => {
+      logger.warn({ err }, "pending-buckets: gauge refresh from DB failed — tf_pending_buckets_total is now STALE (deepscan18)");
+      auditWriteFailuresTotal.labels({ action: "pending_bucket.gauge_refresh_failed" }).inc();
+    });
 
     // Pass 21 (2026-05-12) — surface conceptName + layerCoverageJson on the
     // list payload so the new Scout page can render layer chips + humanized

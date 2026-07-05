@@ -41,7 +41,7 @@ import { db } from "../db/index.js";
 import { paperPositions } from "../db/schema.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { logger } from "../index.js";
-import { trackG2SilentFailuresTotal } from "../lib/metrics-registry.js";
+import { trackG2SilentFailuresTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 
 interface OpenPosition {
   id: string;
@@ -246,7 +246,12 @@ export async function runMclPreEiaStopTighten(): Promise<PreEiaTightenSummary> {
           entityId: pos.id,
           status: "info",
           result: { reason: "missing_atr_or_close" },
-        }).catch(() => {});
+        }).catch((auditErr) => {
+          // deepscan18: without this row, a skipped pre-EIA tighten pass for this
+          // MCL position is unreconstructable — looks identical to "nothing to do".
+          logger.warn({ auditErr, positionId: pos.id }, "mcl_pre_eia.skip_no_market_data audit write failed (deepscan18)");
+          auditWriteFailuresTotal.labels({ action: "mcl_pre_eia.skip_no_market_data" }).inc();
+        });
         continue;
       }
 
@@ -267,7 +272,13 @@ export async function runMclPreEiaStopTighten(): Promise<PreEiaTightenSummary> {
           entityId: pos.id,
           status: "info",
           result: { reason: decision.reason, currentR: decision.currentR },
-        }).catch(() => {});
+        }).catch((auditErr) => {
+          // deepscan18: same reconstructability gap as skip_no_market_data above —
+          // this is the only record of WHY the pre-EIA tighten was skipped for a
+          // still-losing/unprofitable open MCL position.
+          logger.warn({ auditErr, positionId: pos.id, reason: decision.reason }, "mcl_pre_eia.skip_not_profitable audit write failed (deepscan18)");
+          auditWriteFailuresTotal.labels({ action: "mcl_pre_eia.skip_not_profitable" }).inc();
+        });
         continue;
       }
 

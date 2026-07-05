@@ -76,6 +76,22 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       qc.invalidateQueries({ queryKey: ["backtests"] });
       break;
 
+    // deepscan18 (E-E1 sweep): GROUNDED 2026-07-05 — these two look like a
+    // dead tile (no `broadcastSSE()` call site anywhere in src/server), but
+    // the real emitter is EXTERNAL: the n8n workflow "Strategy Deep Analysis
+    // Pipeline" (id 40q1SdSjUxyZ9Jux) posts `{type:"strategy:analyzed"|
+    // "strategy:analysis-error", data:{...}}` to POST /api/sse/broadcast
+    // (src/server/routes/sse.ts's generic n8n bridge) on completion/failure.
+    // Payload verified against workflows/n8n/_archived/Strategy_Deep_Analysis_
+    // Pipeline_40q1SdSjUxyZ9Jux.json — matches StrategyAnalyzedData /
+    // StrategyAnalysisErrorData exactly. CURRENTLY DORMANT: the 2026-06-29
+    // live-fleet snapshot (workflows/n8n/_live-snapshot-2026-06-29.json)
+    // records this workflow's `active` flag as `false`, and the file now
+    // lives under `_archived/` — consistent with the ongoing n8n archival
+    // cleanup (see AGENT-LOGS deepscan15). Kept wired (harmless — cache
+    // invalidation only, no toast) so the tile lights up the moment an
+    // operator reactivates the workflow; not removed, since a real working
+    // emitter exists, just not currently turned on.
     case "strategy:analyzed":
       qc.invalidateQueries({ queryKey: ["strategies"] });
       qc.invalidateQueries({ queryKey: ["backtests"] });
@@ -710,9 +726,17 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       qc.invalidateQueries({ queryKey: ["pine"] });
       break;
 
-    case "pending_bucket.expired":
-      qc.invalidateQueries({ queryKey: ["pending-buckets"] });
-      break;
+    // deepscan18 (E-E1 sweep): `pending_bucket.expired` REMOVED 2026-07-05.
+    // Grounded check: the only server-side reference to this event was its own
+    // test file (pending-bucket-expiry.test.ts), which mocks a
+    // `runPendingBucketExpiry()` function that does not exist anywhere in
+    // src/server — the implementation was never written (or was lost). The
+    // event genuinely cannot fire today. Removed from the catalog rather than
+    // wired, since implementing the missing expiry-sweep cron is new business
+    // logic, out of scope for an observability pass. Flagged as a carry-forward
+    // for whoever owns the pending-bucket lifecycle: either build
+    // runPendingBucketExpiry() (the test already specifies its contract) or
+    // delete the orphaned test.
 
     case "auction:imbalance-updated":
       qc.invalidateQueries({ queryKey: ["auction"] });
@@ -734,28 +758,51 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       qc.invalidateQueries({ queryKey: ["volume-profile"] });
       break;
 
+    // deepscan18 (E-E1 sweep): `windows:health-check-ram-warning` and
+    // `windows:real-reboot-pending` REMOVED 2026-07-05. Grounded check:
+    // windows-health-check-service.ts folds BOTH RAM/disk degradation and
+    // pending-reboot into the single unified `windows:health-check-failed`
+    // event, discriminated by a `status` field ("degraded" | "pending_reboot"
+    // | "failed_updates" | "script_error") — there is no separate emit site
+    // for either dedicated event name; they were speculative catalog entries
+    // that never matched the server's actual (deliberately unified) design.
     case "windows:health-check-failed":
-    case "windows:health-check-ram-warning":
-    case "windows:real-reboot-pending":
       qc.invalidateQueries({ queryKey: ["health"] });
       break;
 
-    case "compliance:violation_detected":
-      qc.invalidateQueries({ queryKey: ["compliance"] });
-      qc.invalidateQueries({ queryKey: ["alerts"] });
-      break;
+    // deepscan18 (E-E1 sweep): `compliance:violation_detected` REMOVED
+    // 2026-07-05. Grounded check: no server-side code constructs this event
+    // name or a matching payload shape ({rule, strategy_id, position_id, firm,
+    // details}) anywhere in src/server. Existing specific compliance-violation
+    // paths (cross-account hedge, price-lock, 2%-rule, daily-cap, lunch
+    // blackout) already broadcast their own distinctly-named events, all
+    // handled elsewhere in this switch — this was a speculative generic
+    // catch-all that nothing ever emits.
 
-    case "migration:legacy_firm_cleanup_complete":
-    case "firm_count_changed":
-      qc.invalidateQueries({ queryKey: ["compliance"] });
-      break;
+    // deepscan18 (E-E1 sweep): `migration:legacy_firm_cleanup_complete`
+    // REMOVED 2026-07-05. Grounded check: this commemorates one-time
+    // migration 0097 (legacy prop-firm data cleanup), applied historically on
+    // 2026-05-10 — a one-shot DB migration, not a live runtime event. It can
+    // never fire again; no dashboard could ever have observed it live.
+    //
+    // `firm_count_changed` REMOVED 2026-07-05. Grounded check: `enabled_firms`
+    // (instanceConfig.enabledFirms) is read-only at runtime — no route or
+    // service in src/server ever mutates it, so nothing can trigger a
+    // "count changed" event. Speculative entry, never wired to any writer.
 
-    case "paper:exit:tp1_filled":
-    case "paper:exit:tp2_filled":
-    case "paper:exit:be_stop_moved":
-    case "paper:exit:trail_tightened":
-    case "paper:exit:time_stop_flattened":
-    case "paper:exit:handler_error":
+    // deepscan18 (E-E1 sweep): these 6 discriminants were previously
+    // `paper:exit:tp1_filled` etc (with a `:exit:` infix) — a name that never
+    // matched anything broadcast server-side. The real events, per
+    // PAPER_EXIT_EVENTS in src/server/routes/sse.ts (broadcast from
+    // paper-execution-service.ts), have NO `:exit:` infix. Flagged as a
+    // carry-forward in sse-events.ts's PaperExitTp1FilledData doc comment;
+    // fixed here now that this session has frontend-hook edit scope.
+    case "paper:tp1_filled":
+    case "paper:tp2_filled":
+    case "paper:be_stop_moved":
+    case "paper:trail_tightened":
+    case "paper:time_stop_flattened":
+    case "paper:handler_error":
       qc.invalidateQueries({ queryKey: ["paper"] });
       break;
 

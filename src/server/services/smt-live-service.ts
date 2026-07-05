@@ -27,6 +27,7 @@
 import { logger } from "../lib/logger.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { runPythonModule } from "../lib/python-runner.js";
+import { auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 
 // ─── Bar buffer provider (injected to break circular dependency) ───────────────
 // paper-trading-stream.ts imports paper-signal-service.ts which imports this module.
@@ -257,6 +258,7 @@ export async function getSmtLiveSnapshot(
     if (isStaleRecompute && _cache != null) {
       // Return stale snapshot rather than null — at least has prior direction
       const staleSnapshot: SmtLiveSnapshot = { ..._cache.snapshot, stale: true };
+      const staleAgeMs = now - _cache.cachedAt;
       insertAuditRow({
         action: "smt.snapshot_stale_skipped",
         entityType: "signal",
@@ -264,13 +266,19 @@ export async function getSmtLiveSnapshot(
         decisionAuthority: "system",
         status: "info",
         result: {
-          stale_age_ms: now - _cache.cachedAt,
+          stale_age_ms: staleAgeMs,
           cache_ttl_ms: CACHE_TTL_MS,
           prior_score: _cache.snapshot.score,
           prior_direction: _cache.snapshot.direction,
         } as Record<string, unknown>,
         correlationId: correlationId ?? null,
-      }).catch(() => void 0);
+      }).catch((auditErr) => {
+        // deepscan18: this row is the only record of WHY a live paper decision
+        // used a stale SMT snapshot instead of a fresh one — silently dropping
+        // it removes the ability to reconstruct a signal that fired on stale data.
+        logger.warn({ auditErr, correlationId, staleAgeMs }, "smt.snapshot_stale_skipped audit write failed (deepscan18)");
+        auditWriteFailuresTotal.labels({ action: "smt.snapshot_stale_skipped" }).inc();
+      });
       return staleSnapshot;
     }
 
