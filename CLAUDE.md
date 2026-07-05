@@ -19,6 +19,8 @@ Trading Forge is a production-grade, family-distributable futures trading bot in
 
 Agents must never fake profitability. The gates decide.
 
+**Agents must never fake a grade, either.** Any score / band / readiness verdict ("X/10", "production-ready", "all gates pass", "10/10", "fixed", "complete") MUST follow the `grading-integrity` skill (`.claude/skills/grading-integrity`): a self-reported score is a CLAIM, not a VERDICT; every band cites reproducible evidence (command+output, `file:line`, test counts) or is recorded UNVERIFIED; the agent that did the work never certifies it — only the independent `accuracy-validator` issues VERIFIED; 10 is effectively unreachable and 7–8 is the realistic ceiling, so a jump of >1 band in one wave is implausible → UNVERIFIED; re-measure from current artifacts every scan, never credit "I fixed it earlier". This is why the same system scores 6.5 cold, "10/10" from its own fixer, and 7.5 on independent re-scan — the fixer's 10 was never verified. Report scores only as a `System | Band | Status | Evidence | Open risks` table.
+
 ---
 
 ## §2. Current Phase: Production Hardening ONLY

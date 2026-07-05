@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
+Updated automatically from the repo on `2026-07-03T23:33:08.661Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1094,6 +1094,31 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 ### signal:macro_gate_eval_failed
 ### monte_carlo:trades_fallback_used
 ### pending_bucket:killed
+
+### lifecycle:pbo_evaluated
+- **Emitter:** `src/server/routes/sse.ts` `WAVE29_EVENTS` + `lifecycle-service.ts` (PBO overfit gate, Wave 29 Pass A.2)
+- **Listeners:** `useSSE.ts` cache-invalidation (frontend catalog completed deepscan15, 2026-07-03); future operator dashboard panel.
+- **Purpose:** PBO overfit gate evaluated at a TESTING→SHADOW/PAPER transition.
+
+### lifecycle:shadow_divergence_evaluated
+- **Emitter:** `src/server/routes/sse.ts` `WAVE29_EVENTS` + `lifecycle-service.ts` (shadow-signal divergence gate, Wave 29 Pass A.3)
+- **Listeners:** `useSSE.ts` cache-invalidation (deepscan15, 2026-07-03); future dashboard panel.
+- **Purpose:** SHADOW→PAPER shadow-signal divergence gate evaluated.
+
+### quantum_rl:training_completed
+- **Emitter:** `src/server/routes/sse.ts` `WAVE29_EVENTS` (quantum RL training window, Wave 29 Pass C)
+- **Listeners:** `useSSE.ts` cache-invalidation (deepscan15, 2026-07-03); future dashboard panel.
+- **Purpose:** Challenger-only quantum RL training run finished (advisory subsystem, never gates).
+
+### signal:rl_ab_routed
+- **Emitter:** `src/server/routes/sse.ts` `WAVE29_EVENTS` (A/B paper routing, Wave 29 Pass C, migration 0159)
+- **Listeners:** `useSSE.ts` cache-invalidation (deepscan15, 2026-07-03); `AbSharpeComparisonTile.tsx`.
+- **Purpose:** Paper signal routed to slumdawg-baseline vs slumdawg-rl-challenger sub-account.
+
+### signal:shadow_logged
+- **Emitter:** `src/server/routes/sse.ts` `WAVE29_EVENTS` (SHADOW-stage signal logging, Wave 29 Pass A)
+- **Listeners:** `useSSE.ts` cache-invalidation (deepscan15, 2026-07-03); future dashboard panel.
+- **Purpose:** A SHADOW-lifecycle strategy logged a signal for divergence measurement (no capital risk).
 
 ---
 
