@@ -189,6 +189,10 @@
     const KILL_STALE_MS = 45000;  // older than this (or poll failing) ⇒ degrade
     let killLastState = "red";    // last known kill-switch color
     let killLastOkTs = 0;         // ms epoch of last SUCCESSFUL /api/crib poll
+    // deepscan18 H-F2 (2026-07-05): tracks whether the initial full render succeeded.
+    // When the tower is down AT LOAD the render IIFE bails before building any tiles, so
+    // a later recovery poll has nothing to update — it must reload to run the full render.
+    let cribInitialRenderOk = false;
 
     function updateStaleBanner(stale, ageSecs) {
       const banner = document.getElementById("sh-stale-banner");
@@ -227,6 +231,10 @@
       const data = await SH.fetchJSON("/slumhouse/api/crib");
       const ks = data && data.banner && data.banner.killSwitch;
       if (ks === "green" || ks === "red") {
+        // deepscan18 H-F2: if the initial cold-load failed (blank crib — the kill tile
+        // and banner content were never built), recover by reloading to run the full
+        // render now that the tower is reachable again. Otherwise update in place.
+        if (!cribInitialRenderOk) { location.reload(); return; }
         killLastState = ks;
         killLastOkTs = Date.now();
         renderKillTile(killLastState, false, 0);
@@ -236,7 +244,18 @@
 
     (async () => {
       const data = await SH.fetchJSON("/slumhouse/api/crib");
-      if (!data) return;
+      if (!data) {
+        // deepscan18 H-F2 (2026-07-05): tower down AT LOAD. Previously this early-return
+        // left a blank crib with NO disconnect banner and NO recovery (the watchdog +
+        // re-poll intervals used to be registered further down inside this IIFE, so a
+        // first-fetch failure skipped them entirely). Surface the disconnect banner
+        // immediately so a family member never stares at a blank page thinking all is
+        // well; the killPoll interval (registered unconditionally below) reloads on
+        // recovery. Mirrors office-risk.js start(), which polls unconditionally.
+        updateStaleBanner(true, 0);
+        return;
+      }
+      cribInitialRenderOk = true;
       const { el, sparkline, sparkTrend } = SH;
 
       // ─── Execution mode badge ───────────────────────────────────────
@@ -314,9 +333,10 @@
       killLastState = bag.killSwitch === "green" ? "green" : "red";
       killLastOkTs = Date.now();
       b.appendChild(killStat(killLastState));
-      // Start the staleness watchdog (deepscan17-wave2) now that the tile exists.
-      setInterval(killTick, KILL_TICK_MS);
-      setInterval(killPoll, KILL_POLL_MS);
+      // deepscan18 H-F2: the staleness watchdog + re-poll intervals are now registered
+      // UNCONDITIONALLY after this IIFE (see below) so a tower-down-at-load still gets a
+      // disconnect banner + recovery. They used to be registered here, inside the IIFE,
+      // which the cold-load early-return skipped — leaving a blank, silent, dead crib.
 
       // ─── Discord feed — premium intake list ─────────────────────────
       const df = document.getElementById("sh-discord-feed");
@@ -447,6 +467,15 @@
         }
       });
     })();
+
+    // deepscan18 H-F2 (2026-07-05): register the staleness watchdog + re-poll intervals
+    // UNCONDITIONALLY, outside the async render IIFE above. This runs even when the initial
+    // /api/crib fetch fails (tower down at load) — so the crib always re-polls, always shows
+    // the disconnect banner while unreachable, and always recovers when the tower returns
+    // (killPoll reloads the page on the first successful poll if the cold-load render bailed).
+    // Mirrors office-risk.js start() which polls unconditionally regardless of first-fetch.
+    setInterval(killTick, KILL_TICK_MS);
+    setInterval(killPoll, KILL_POLL_MS);
 
     function stat(opts) {
       const { el, sparkline, sparkTrend } = SH;
