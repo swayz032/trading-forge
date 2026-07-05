@@ -22,7 +22,7 @@ import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCach
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 import { tracer } from "../lib/tracing.js";
 import { withSessionLock } from "../lib/db-locks.js";
-import { paperTrades as paperTradesCounter } from "../lib/metrics-registry.js";
+import { paperTrades as paperTradesCounter, dllHaltTotal } from "../lib/metrics-registry.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 // Phase 4C: production kill switch — checked FIRST in openPosition (fail-CLOSED)
 import { killSwitch } from "../production/kill-switch.js";
@@ -1332,6 +1332,13 @@ export async function openPosition(sessionId: string, params: {
             // Force-close (95%) sessions already have positions flattened; the sticky
             // flag provides defense-in-depth but the primary protection is forceClose.
             if (!killResult.force_close) {
+              // HIGH E-3 fix (deep-scan #16 wave-1 track-3, 2026-07-04): the 67% halt-only
+              // trip previously had ZERO Prometheus visibility — no positions close at
+              // halt, so nothing else counts this event. reason mirrors the Python
+              // KILL_REASON_* constant that fired (approaching_daily_loss_limit is the
+              // 67% band; max_trades_per_session / consecutive_loss_limit are the other
+              // halt-only reasons from the same check_kill_switch() gate).
+              dllHaltTotal.labels({ reason: killResult.reason ?? "unknown" }).inc();
               const todayKeyForSticky = toFuturesTradingDayString();
               // FIX 5 (Track M): retry sticky DLL halt flag write once. If the retry
               // also fails, treat the current entry as fail-closed (return early with
@@ -2267,7 +2274,7 @@ export async function openPosition(sessionId: string, params: {
  *                         Omit for manual/force-close — falls back to base-tick
  *                         slippage (prior behaviour).
  */
-export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number; forceClosePriceUnconfirmed?: boolean }) {
+export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number; forceClosePriceUnconfirmed?: boolean; outcomeOverride?: string }) {
   // BL-9: declared as let so it can be resolved from the position row after the DB read.
   // Callers that do supply context.correlationId (inline signal processing) use that value;
   // external callers (force-close, time-stop) fall back to pos.correlationId persisted at open.
@@ -2280,6 +2287,11 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // was contaminated by proxy-priced closes. A future TradersPost fill-confirmation
   // webhook would reconcile the real broker exit price and clear this flag.
   const forceClosePriceUnconfirmed = context?.forceClosePriceUnconfirmed === true;
+  // HIGH E-2 fix (deep-scan #16 wave-1 track-3, 2026-07-04): callers that need a more
+  // specific outcome label than the default win/loss classification (TIME_STOP_FLATTEN,
+  // intrabar stop breach, force-close) pass outcomeOverride instead of incrementing
+  // paperTradesCounter a SECOND time themselves — see the single increment site below.
+  const outcomeOverride = context?.outcomeOverride;
   const closeSpan = tracer.startSpan("paper.position_close");
   try {
   // Read position outside the lock to get the sessionId for the lock key
@@ -2700,10 +2712,14 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   }
 
   // Prometheus counter — incremented after transaction commits so partial writes don't count.
+  // HIGH E-2 fix: this is the ONE canonical increment site for a full/final close.
+  // Callers that need a specific reason (time_stop/stop_loss/force_close) pass
+  // context.outcomeOverride instead of incrementing again themselves — counting this
+  // leg twice with two different outcome labels was the double-count bug.
   paperTradesCounter.labels({
     symbol: pos.symbol,
     side: pos.side,
-    outcome: netPnl >= 0 ? "win" : "loss",
+    outcome: outcomeOverride ?? (netPnl >= 0 ? "win" : "loss"),
   }).inc();
 
   // Fix 4.6: Drift detection is independently try/caught and awaited.
@@ -3565,6 +3581,19 @@ async function bookPartialClose(
       });
     });
 
+    // HIGH E-2 fix (deep-scan #16 wave-1 track-3, 2026-07-04): partial closes (TP1/TP2 —
+    // the DEFAULT Style C legs and the most common winning-trade path) previously never
+    // incremented tf_paper_trades_total at all, systematically undercounting winners
+    // opposite to the double-counted stop/time-stop/force-close legs. The counter counts
+    // LEGS (one paper_trades row = one increment, see the doc comment on paperTrades in
+    // metrics-registry.ts) — each partial is its own paper_trades row (inserted above),
+    // so it gets its own increment here, exactly once, after the transaction commits.
+    paperTradesCounter.labels({
+      symbol: pos.symbol,
+      side: pos.side,
+      outcome: `partial_${exitReason.toLowerCase()}`,
+    }).inc();
+
     logger.info(
       {
         positionId: pos.id, exitReason, contractsToClose,
@@ -3945,13 +3974,10 @@ async function applyExitDecision(
       const pnlAtFlatten = spec
         ? direction * (currentPrice - entryPx) * spec.pointValue * pos.contracts
         : null;
-      await closePosition(pos.id, currentPrice, atr, { medianAtr });
-      // FIX 6: count time-stop close in paperTradesCounter
-      paperTradesCounter.labels({
-        symbol: pos.symbol,
-        side: pos.side,
-        outcome: "time_stop",
-      }).inc();
+      // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="time_stop" is
+      // now passed INTO closePosition() instead of incrementing paperTradesCounter a
+      // second time here — this call site was double-counting every time-stop close.
+      await closePosition(pos.id, currentPrice, atr, { medianAtr, outcomeOverride: "time_stop" });
       logger.info(
         {
           positionId: pos.id, strategyId, exitStyle, currentPrice, pnlAtFlatten,
@@ -4132,12 +4158,10 @@ export async function updatePositionPrices(
           const atrForClose = exitBarContext?.atr14[pos.symbol];
           const medianAtrForClose = exitBarContext?.medianAtr14?.[pos.symbol];
           try {
-            await closePosition(pos.id, stopLevel, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose });
-            paperTradesCounter.labels({
-              symbol: pos.symbol,
-              side: pos.side,
-              outcome: "stop_loss",
-            }).inc();
+            // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="stop_loss" is
+            // now passed INTO closePosition() instead of incrementing paperTradesCounter a
+            // second time here — this call site was double-counting every intrabar stop.
+            await closePosition(pos.id, stopLevel, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: "stop_loss" });
             closedByExitHandler.add(pos.id);
             totalUnrealizedDelta -= unrealizedDelta;
             totalUnrealizedPnl   -= unrealizedPnl;
@@ -4995,14 +5019,11 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
         try {
           // M-4: thread the unconfirmed-price marker into the trade_close write so
           // the paper_trades close row's audit carries the contamination flag too.
-          await closePosition(pos.id, rawEntry, derivedAtr, { correlationId: batchCorrelationId, forceClosePriceUnconfirmed: true });
+          // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="force_close" is
+          // now passed INTO closePosition() instead of incrementing paperTradesCounter a
+          // second time here — this call site was double-counting every force-close.
+          await closePosition(pos.id, rawEntry, derivedAtr, { correlationId: batchCorrelationId, forceClosePriceUnconfirmed: true, outcomeOverride: "force_close" });
           closedCount++;
-          // FIX 6: count force-close in paperTradesCounter
-          paperTradesCounter.labels({
-            symbol: pos.symbol,
-            side: pos.side ?? "unknown",
-            outcome: "force_close",
-          }).inc();
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           errors.push(`pos:${pos.id} err:${msg}`);
@@ -5056,14 +5077,11 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
     try {
       // Close at mark-to-market (currentPrice). Thread the batchCorrelationId so
       // this close is linkable to the halt event in the audit_log.
-      await closePosition(pos.id, rawCurrent, derivedAtr, { correlationId: batchCorrelationId });
+      // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="force_close" is
+      // now passed INTO closePosition() instead of incrementing paperTradesCounter a
+      // second time here — this call site was double-counting every force-close.
+      await closePosition(pos.id, rawCurrent, derivedAtr, { correlationId: batchCorrelationId, outcomeOverride: "force_close" });
       closedCount++;
-      // FIX 6: count force-close in paperTradesCounter
-      paperTradesCounter.labels({
-        symbol: pos.symbol,
-        side: pos.side ?? "unknown",
-        outcome: "force_close",
-      }).inc();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`pos:${pos.id} err:${msg}`);

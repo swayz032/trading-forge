@@ -887,7 +887,22 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // small, forcing base_contracts would violate the 1%-of-room safety contract.
   let pyramidFloorApplied = false;
   if (!drawdownRoomCapBinding && accountIsHealthy && finalContracts < cfg.base_contracts) {
-    finalContracts = cfg.base_contracts;
+    // MED C-2 fix (deep-scan #16 wave-1 track-3, 2026-07-04): this floor previously
+    // force-set finalContracts = cfg.base_contracts UNCLAMPED — unlike the early-return
+    // branch above (F-7/F-4), which was patched to min([base, liquidityCap, firmCap?,
+    // drawdownRoomCap?]). A misconfigured strategy (or overlay drift writing an oversized
+    // base_contracts) could bypass firmCap/liquidityCap here even though the early-return
+    // path already guards against exactly that. Apply the SAME clamp for consistency —
+    // drawdownRoomCap is deliberately excluded from this min() because entering this branch
+    // already requires !drawdownRoomCapBinding (drawdownRoomCap did not constrain the
+    // pre-floor finalContracts), so re-including it here would only matter in the edge case
+    // where drawdownRoomCap sits between the pre-floor finalContracts and base_contracts —
+    // guard against that edge case too by including it when present, mirroring the
+    // early-return floor's [base_contracts, liquidityCap, firmCap?, drawdownRoomCap?] set.
+    const flooredCandidates: number[] = [cfg.base_contracts, liquidityCap];
+    if (effectiveFirmCap !== null) flooredCandidates.push(effectiveFirmCap);
+    if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
+    finalContracts = Math.min(...flooredCandidates);
     pyramidFloorApplied = true;
   }
 

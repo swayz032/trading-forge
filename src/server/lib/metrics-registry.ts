@@ -735,3 +735,46 @@ export const sseClientsConnected = new Gauge({
   // label (the only value ever emitted by the increment site; see audit note F-2).
   rlTrainingEpochsTotal.labels({ regime: "combined" }).inc(0);
 })();
+
+// ─── Deep-scan #16 Wave-1 Track-3 — DLL halt visibility counter (2026-07-04) ──
+//
+// tf_dll_halt_total{reason}
+//   HIGH E-3 fix: at 67% personal-DLL, new entries are HALTED but no positions
+//   close — so before this counter existed, the single most safety-critical
+//   daily event had ZERO Prometheus visibility (not even an accidental proxy
+//   via tf_paper_trades_total, since nothing closes at halt).
+//
+//   Incremented at TWO independent halt-only (force_close=false) sites:
+//     1. paper-execution-service.ts — the per-session Python kill switch
+//        (check_kill_switch) trips at a halt-only threshold.
+//     2. paper-signal-service.ts — the cross-symbol-pnl.ts coordinator's
+//        67% account-level halt (evaluateCrossSymbolDll action="halt").
+//
+//   reason label (closed set):
+//     approaching_daily_loss_limit | max_trades_per_session |
+//     consecutive_loss_limit | invalid_daily_loss_limit | cross_symbol_dll_halt
+//   (daily_loss_limit_breached is EXCLUDED — that is force_close=true, the 95%
+//    band, which already has visibility via the force-close paperTradesCounter path)
+//
+//   Cardinality: 5 reason values = 5 time series — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana before the first halt event).
+export const dllHaltTotal = new Counter({
+  name: "tf_dll_halt_total",
+  help: "Total kill-switch HALT-only trips (force_close=false), labelled by reason — the 67% personal-DLL halt is the primary case",
+  labelNames: ["reason"] as const,
+  registers: [promRegistry],
+});
+
+(function _zeroInitDllHaltLabels() {
+  const DLL_HALT_REASONS = [
+    "approaching_daily_loss_limit",
+    "max_trades_per_session",
+    "consecutive_loss_limit",
+    "invalid_daily_loss_limit",
+    "cross_symbol_dll_halt",
+  ] as const;
+  for (const reason of DLL_HALT_REASONS) {
+    dllHaltTotal.labels({ reason }).inc(0);
+  }
+})();

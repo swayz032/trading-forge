@@ -68,7 +68,16 @@ import { checkCmeHolidayFallback } from "../lib/cme-holidays.js";
 import { checkCrossAccountHedge, checkIntraAccountHedge, symbolToUnderlying } from "../lib/cross-account-hedge-gate.js";
 import { checkPriceLockLimit } from "../lib/price-lock-limit-gate.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
-import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
+import {
+  getAccountSessionCumulativePnL,
+  evaluateCrossSymbolDll,
+  // HIGH C-1 fix (deep-scan #16 wave-1 track-3): per-account scoping + per-account DLL base.
+  // DEFAULT_PERSONAL_DLL_DOLLARS is no longer imported directly here — both DLL call
+  // sites now resolve a per-account personal DLL via resolvePersonalDllDollars(), which
+  // falls back to that same constant internally for non-Topstep firms.
+  resolveAccountKey,
+  resolvePersonalDllDollars,
+} from "./cross-symbol-pnl.js";
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
 // Wave 25 W25.1: weighted confluence scoring (Path C)
 import { evaluateWeightedConfluence, type ScoringStrategy, type SignalContext as WeightedSignalContext } from "./confluence-score.js";
@@ -79,7 +88,7 @@ import { getDecayTelemetryThreshold } from "../lib/confluence-decay.js";
 import { getNearestLiquidity } from "./liquidity-map-service.js";
 import { notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
-import { shadowSignalsTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
+import { shadowSignalsTotal, auditWriteFailuresTotal, dllHaltTotal } from "../lib/metrics-registry.js";
 // Wave 26 Group B Task 3: SMT live bridge — wires Python compute_smt_divergence()
 // into Path C SignalContext. Fail-soft: returns null snapshot on any error →
 // evalSmtConfirmation returns reason="smt_unavailable" (same fail-open as before).
@@ -2607,10 +2616,22 @@ export async function evaluateSignals(
       // Gate 5: DLL re-check at fill time — current combined P&L may have shifted
       if (!pendingDropReason) {
         try {
-          const firmId = sessionRow.firmId ?? "default";
+          // HIGH C-1 fix (deep-scan #16 wave-1 track-3): scope by the resolved
+          // per-account key (config.account_key, falling back to firmId) instead
+          // of the raw firmId string, and derive this account's OWN personal DLL
+          // dollar base instead of the single global DEFAULT_PERSONAL_DLL_DOLLARS
+          // constant — so two Topstep accounts on the same firm never net together.
+          const accountKey = resolveAccountKey(sessionRow);
           const sessionDate = toFuturesTradingDayString(fillTs);
-          const cumPnL = await getAccountSessionCumulativePnL(firmId, sessionDate);
-          const dllResult = evaluateCrossSymbolDll(cumPnL, DEFAULT_PERSONAL_DLL_DOLLARS);
+          const cumPnL = await getAccountSessionCumulativePnL(accountKey, sessionDate);
+          const trailingDdOverride = (sessionRow.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
+          const accountStartingFloor = parseFloat(sessionRow.startingCapital as string) || 50_000;
+          const personalDllDollars = resolvePersonalDllDollars({
+            firmId: sessionRow.firmId,
+            trailingDdOverride,
+            accountStartingFloor,
+          });
+          const dllResult = evaluateCrossSymbolDll(cumPnL, personalDllDollars);
           if (dllResult.action === "halt" || dllResult.action === "force_close") {
             pendingDropReason = "dll_halt";
           }
@@ -3303,10 +3324,25 @@ export async function evaluateSignals(
     let dllReduceSizeFactor = 1;
     if (!blackoutBlocked) {
       try {
+        // HIGH C-1 fix (deep-scan #16 wave-1 track-3): scope by the resolved
+        // per-account key (config.account_key, falling back to firmId) instead
+        // of the raw firmId string, and derive this account's OWN personal DLL
+        // dollar base instead of the single global DEFAULT_PERSONAL_DLL_DOLLARS
+        // constant — so two Topstep accounts on the same firm never net together
+        // (A's real breach hidden behind B's gains) and a healthy account is
+        // never falsely halted by a sibling account's losses.
         const firmId = sessionRow.firmId ?? "default";
+        const accountKey = resolveAccountKey(sessionRow);
         const sessionDate = toFuturesTradingDayString(new Date(bar.timestamp));
-        const cumPnL = await getAccountSessionCumulativePnL(firmId, sessionDate);
-        const dllResult = evaluateCrossSymbolDll(cumPnL, DEFAULT_PERSONAL_DLL_DOLLARS);
+        const cumPnL = await getAccountSessionCumulativePnL(accountKey, sessionDate);
+        const trailingDdOverride = (sessionRow.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
+        const accountStartingFloorForDll = parseFloat(sessionRow.startingCapital as string) || 50_000;
+        const personalDllDollars = resolvePersonalDllDollars({
+          firmId: sessionRow.firmId,
+          trailingDdOverride,
+          accountStartingFloor: accountStartingFloorForDll,
+        });
+        const dllResult = evaluateCrossSymbolDll(cumPnL, personalDllDollars);
 
         if (dllResult.action === "force_close") {
           dllForceCloseTriggered = true;
@@ -3376,6 +3412,12 @@ export async function evaluateSignals(
           dllHaltBlocked = true;
           span.setAttribute("cross_symbol_dll_halt", true);
           span.setAttribute("cross_symbol_dll_pct", dllResult.dllPct);
+          // HIGH E-3 fix (deep-scan #16 wave-1 track-3): the 67% DLL halt previously
+          // had zero Prometheus visibility — no positions close at halt, so nothing
+          // else counts it. This is the cross-symbol coordinator's halt path (the
+          // per-session kill-switch halt in paper-execution-service.ts is counted
+          // separately with its own KILL_REASON_* label).
+          dllHaltTotal.labels({ reason: "cross_symbol_dll_halt" }).inc();
           logger.warn(
             { sessionId, symbol, firmId, combinedPnL: dllResult.combinedPnL, dllPct: dllResult.dllPct, bySymbol: dllResult.pnLBySymbol },
             "W23H.F: cross-symbol DLL 67% threshold — HALTING new entries for this account",
