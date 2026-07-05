@@ -44,13 +44,16 @@ Coverage:
 from __future__ import annotations
 
 import math
-from typing import List
 
 import numpy as np
 import pytest
-from hypothesis import assume, given, settings, HealthCheck
-from hypothesis import strategies as st
 
+# deepscan17: hypothesis is an optional test-only dep not declared in requirements — skip this
+# property suite cleanly when it is absent rather than ERROR at collection (which interrupts the
+# whole src/engine suite). Install `hypothesis` to run these property-based tests.
+pytest.importorskip("hypothesis")
+from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import strategies as st
 
 # ─── Determinism: Hypothesis seed ─────────────────────────────────────────────
 #
@@ -76,7 +79,7 @@ from hypothesis import strategies as st
 # (point-fixtures vs fuzzing).
 
 
-def _sharpe(pnls: List[float], periods_per_year: float = 252.0) -> float:
+def _sharpe(pnls: list[float], periods_per_year: float = 252.0) -> float:
     """Annualized Sharpe ratio from a list of trade/period P&Ls.
 
     Formula: mean(pnl) / std(pnl, ddof=1) * sqrt(periods_per_year)
@@ -94,7 +97,7 @@ def _sharpe(pnls: List[float], periods_per_year: float = 252.0) -> float:
     return mean / std * math.sqrt(periods_per_year)
 
 
-def _profit_factor(pnls: List[float]) -> float:
+def _profit_factor(pnls: list[float]) -> float:
     """Profit factor = sum(winners) / |sum(losers)|.
 
     Returns float('inf') if there are no losing trades (perfect record).
@@ -114,7 +117,7 @@ def _profit_factor(pnls: List[float]) -> float:
     return total_wins / total_losses
 
 
-def _max_drawdown(pnls: List[float]) -> float:
+def _max_drawdown(pnls: list[float]) -> float:
     """Max drawdown from a cumulative P&L equity curve.
 
     Equity starts at 0 (no initial capital offset — relative drawdown).
@@ -131,7 +134,7 @@ def _max_drawdown(pnls: List[float]) -> float:
     return float(np.max(drawdowns))
 
 
-def _win_rate(pnls: List[float]) -> float:
+def _win_rate(pnls: list[float]) -> float:
     """Win rate = n_winners / n_trades. Wins are strictly positive P&L.
 
     Returns 0.0 for empty list.
@@ -142,7 +145,7 @@ def _win_rate(pnls: List[float]) -> float:
     return n_winners / len(pnls)
 
 
-def _net_pnl(pnls: List[float], fees: float = 0.0) -> float:
+def _net_pnl(pnls: list[float], fees: float = 0.0) -> float:
     """Net P&L = sum(gross_pnls) - total_fees.
 
     This is the PnL conservation law: the net of all trades minus fees
@@ -190,7 +193,7 @@ class TestSharpeProperties:
 
     @given(_pnl_list_2plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_zero_returns_zero_sharpe(self, pnls: List[float]):
+    def test_zero_returns_zero_sharpe(self, pnls: list[float]):
         """P&L series of all zeros: Sharpe is 0.0 (zero mean, zero std).
 
         This catches off-by-one in std computation (ddof) that could produce
@@ -204,7 +207,7 @@ class TestSharpeProperties:
 
     @given(_pnl_list_2plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_constant_positive_mean_positive_sharpe(self, pnls: List[float]):
+    def test_constant_positive_mean_positive_sharpe(self, pnls: list[float]):
         """Constant positive P&L (mean > 0, std = 0) returns Sharpe = 0.
 
         When std == 0 (flat equity growth), our convention is Sharpe = 0,
@@ -225,7 +228,7 @@ class TestSharpeProperties:
         st.floats(min_value=1.0, max_value=1_000_000.0, allow_nan=False, allow_infinity=False),
     )
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_sharpe_sign_matches_mean_sign(self, pnls: List[float], std_scale: float):
+    def test_sharpe_sign_matches_mean_sign(self, pnls: list[float], std_scale: float):
         """Sign of Sharpe matches sign of mean return (when std > 0).
 
         If mean(pnls) > 0 => Sharpe > 0.
@@ -283,7 +286,7 @@ class TestSharpeProperties:
 
     @given(_pnl_list_2plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_sharpe_finite_for_bounded_inputs(self, pnls: List[float]):
+    def test_sharpe_finite_for_bounded_inputs(self, pnls: list[float]):
         """Sharpe must be finite for any bounded (non-NaN, non-inf) input list.
 
         This catches overflow or NaN propagation in the formula for large values.
@@ -302,7 +305,7 @@ class TestProfitFactorProperties:
 
     @given(_pnl_list_1plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_pf_non_negative(self, pnls: List[float]):
+    def test_pf_non_negative(self, pnls: list[float]):
         """Profit factor is always >= 0.
 
         This is trivially true from the definition (sum of positives /
@@ -319,7 +322,7 @@ class TestProfitFactorProperties:
         max_size=10_000,
     ))
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_pf_infinity_iff_no_losers(self, winners: List[float]):
+    def test_pf_infinity_iff_no_losers(self, winners: list[float]):
         """PF == infinity if and only if there are no losing trades.
 
         All-positive P&L list => PF = infinity (perfect record).
@@ -337,7 +340,7 @@ class TestProfitFactorProperties:
         max_size=10_000,
     ))
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_pf_zero_iff_no_winners(self, losers: List[float]):
+    def test_pf_zero_iff_no_winners(self, losers: list[float]):
         """PF == 0 if and only if there are no winning trades.
 
         All-negative P&L list => PF = 0.0.
@@ -351,7 +354,7 @@ class TestProfitFactorProperties:
 
     @given(_pnl_list_1plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_pf_order_invariant(self, pnls: List[float]):
+    def test_pf_order_invariant(self, pnls: list[float]):
         """PF is invariant under reordering (commutative under permutation).
 
         PF(trades) == PF(reversed(trades)) == PF(shuffled(trades)).
@@ -376,7 +379,7 @@ class TestProfitFactorProperties:
 
     @given(_pnl_mixed)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_pf_greater_than_one_iff_more_wins_than_losses(self, pnls: List[float]):
+    def test_pf_greater_than_one_iff_more_wins_than_losses(self, pnls: list[float]):
         """PF > 1.0 iff total winning P&L exceeds total losing P&L in absolute terms.
 
         This is the semantic definition of PF: a value > 1.0 means the strategy
@@ -415,7 +418,7 @@ class TestMaxDrawdownProperties:
 
     @given(_pnl_list_1plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_max_dd_non_negative(self, pnls: List[float]):
+    def test_max_dd_non_negative(self, pnls: list[float]):
         """Max drawdown is always >= 0.
 
         A drawdown is by definition a decline from a peak — it is always
@@ -434,7 +437,7 @@ class TestMaxDrawdownProperties:
         max_size=10_000,
     ))
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_monotone_up_means_zero_drawdown(self, increments: List[float]):
+    def test_monotone_up_means_zero_drawdown(self, increments: list[float]):
         """Monotonically increasing equity (all positive P&Ls) => MaxDD == 0.
 
         If every bar is positive, the equity curve never declines, so
@@ -448,7 +451,7 @@ class TestMaxDrawdownProperties:
 
     @given(_pnl_list_1plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_max_dd_bounded_by_total_losses(self, pnls: List[float]):
+    def test_max_dd_bounded_by_total_losses(self, pnls: list[float]):
         """MaxDD <= |sum of all negative P&L values|.
 
         The worst possible drawdown is if every loser hits in sequence from a
@@ -471,7 +474,7 @@ class TestMaxDrawdownProperties:
     )
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
     def test_max_dd_monotone_nondecreasing_with_added_loser(
-        self, pnls: List[float], extra_loss: float
+        self, pnls: list[float], extra_loss: float
     ):
         """Appending a losing trade to a series can only keep or increase MaxDD.
 
@@ -496,7 +499,7 @@ class TestMaxDrawdownProperties:
 
     @given(_pnl_list_1plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_max_dd_finite_for_bounded_inputs(self, pnls: List[float]):
+    def test_max_dd_finite_for_bounded_inputs(self, pnls: list[float]):
         """MaxDD must be finite for any bounded (non-NaN, non-inf) input list.
 
         Catches overflow in cumsum for large input values.
@@ -519,7 +522,7 @@ class TestPnlAccountingProperties:
 
     @given(_pnl_list_1plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_pnl_sum_equals_final_minus_start_equity(self, pnls: List[float]):
+    def test_pnl_sum_equals_final_minus_start_equity(self, pnls: list[float]):
         """Sum of all trade P&Ls equals final equity minus starting equity.
 
         Mass conservation: no money is created or destroyed by the accounting.
@@ -544,7 +547,7 @@ class TestPnlAccountingProperties:
         _fee_value,
     )
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_net_pnl_equals_gross_minus_fees(self, gross_pnls: List[float], total_fees: float):
+    def test_net_pnl_equals_gross_minus_fees(self, gross_pnls: list[float], total_fees: float):
         """Net P&L = Gross P&L - Total Fees.
 
         Fees are costs, not revenue. They reduce net P&L monotonically.
@@ -568,7 +571,7 @@ class TestPnlAccountingProperties:
         _fee_value,
     )
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_fees_only_reduce_net_pnl(self, pnls: List[float], fees: float):
+    def test_fees_only_reduce_net_pnl(self, pnls: list[float], fees: float):
         """Fees can only reduce (or maintain) net P&L — never increase it.
 
         net_pnl(fees > 0) <= gross_pnl.
@@ -622,7 +625,7 @@ class TestWinRateProperties:
 
     @given(_pnl_list_1plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_win_rate_in_unit_interval(self, pnls: List[float]):
+    def test_win_rate_in_unit_interval(self, pnls: list[float]):
         """Win rate is always in [0.0, 1.0].
 
         Catches division errors, sign errors, or off-by-one in n_trades.
@@ -638,7 +641,7 @@ class TestWinRateProperties:
         max_size=10_000,
     ))
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_all_winners_gives_win_rate_one(self, winners: List[float]):
+    def test_all_winners_gives_win_rate_one(self, winners: list[float]):
         """All positive trades => win rate = 1.0 exactly."""
         result = _win_rate(winners)
         assert result == pytest.approx(1.0, abs=1e-12), (
@@ -651,7 +654,7 @@ class TestWinRateProperties:
         max_size=10_000,
     ))
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_all_losers_gives_win_rate_zero(self, losers: List[float]):
+    def test_all_losers_gives_win_rate_zero(self, losers: list[float]):
         """All negative trades => win rate = 0.0 exactly."""
         result = _win_rate(losers)
         assert result == pytest.approx(0.0, abs=1e-12), (
@@ -672,7 +675,7 @@ class TestCrossMetricConsistency:
     @given(_pnl_mixed)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
     def test_pf_greater_than_one_correlates_with_positive_net_pnl(
-        self, pnls: List[float]
+        self, pnls: list[float]
     ):
         """PF > 1 implies positive net P&L (assuming zero fees).
 
@@ -697,7 +700,7 @@ class TestCrossMetricConsistency:
 
     @given(_pnl_list_2plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_sharpe_positive_iff_mean_positive_when_std_nonzero(self, pnls: List[float]):
+    def test_sharpe_positive_iff_mean_positive_when_std_nonzero(self, pnls: list[float]):
         """Sharpe sign == mean(pnls) sign when std(pnls) != 0.
 
         This is a consistency check between the Sharpe formula and the
@@ -724,7 +727,7 @@ class TestCrossMetricConsistency:
 
     @given(_pnl_list_1plus)
     @settings(max_examples=200, deadline=5000, suppress_health_check=[HealthCheck.too_slow])
-    def test_max_dd_zero_implies_monotone_equity(self, pnls: List[float]):
+    def test_max_dd_zero_implies_monotone_equity(self, pnls: list[float]):
         """MaxDD == 0 implies all partial sums are non-decreasing.
 
         Equivalently: if MaxDD is zero, the equity curve never went down.
