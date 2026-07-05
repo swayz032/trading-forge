@@ -2514,6 +2514,15 @@ export const productionTrades = pgTable(
   (table) => [
     index("production_trades_strategy_idx").on(table.strategyId),
     index("production_trades_bar_timestamp_idx").on(table.barTimestamp.desc()),
+    // Deep-Scan #18b X-1 option a (2026-07-05, migration 0194): idempotency guard for
+    // broker-router.ts's production_trades writer. traderspost_webhook_id is the
+    // deterministic bar-scoped idempotency key (see traderspost/client.ts::
+    // buildDeterministicIdempotencyKey) — a retry of the same bar/signal event
+    // produces the SAME key, so ON CONFLICT DO NOTHING against this index prevents
+    // a duplicate row. Partial (WHERE NOT NULL) mirrors smo_broker_fill_id_uq above.
+    uniqueIndex("production_trades_traderspost_webhook_id_uq")
+      .on(table.traderspostWebhookId)
+      .where(sql`traderspost_webhook_id IS NOT NULL`),
   ],
 );
 

@@ -36,6 +36,12 @@ vi.mock("../db/index.js", () => ({
 vi.mock("../db/schema.js", () => ({
   brokerAccounts: {},
   auditLog: {},
+  // X-1 option a (Deep-Scan #18b): production_trades writer + strategy-version-hash
+  // lookup references. Dedicated coverage lives in x1-production-trades-writer.test.ts;
+  // these are just enough shape for writeProductionTradeRow's fail-soft paths to not
+  // throw a stray "no export" error in this file's broader routeOrder() coverage.
+  productionTrades: { tableName: "production_trades", traderspostWebhookId: "traderspostWebhookId" },
+  strategies: { tableName: "strategies", id: "id", config: "config" },
 }));
 
 vi.mock("drizzle-orm", () => ({
@@ -93,6 +99,7 @@ vi.mock("../lib/credential-loader.js", () => ({
 
 vi.mock("../integrations/traderspost/client.js", () => ({
   submitWebhookOrder: vi.fn().mockResolvedValue({ success: true, statusCode: 200, responseBody: { ok: true } }),
+  buildDeterministicIdempotencyKey: vi.fn(() => "test-idempotency-key"),
 }));
 
 vi.mock("../integrations/traderspost/webhook-builder.js", () => ({

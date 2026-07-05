@@ -70,6 +70,7 @@ vi.mock("../lib/credential-loader.js", () => ({
 }));
 vi.mock("../integrations/traderspost/client.js", () => ({
   submitWebhookOrder: vi.fn().mockResolvedValue({ success: true, statusCode: 200, responseBody: { ok: true } }),
+  buildDeterministicIdempotencyKey: vi.fn(() => "test-idempotency-key"),
 }));
 vi.mock("../integrations/traderspost/webhook-builder.js", () => ({
   buildWebhookPayload: vi.fn().mockReturnValue({ apiKey: "k", action: "buy", ticker: "MES", orderType: "market" }),

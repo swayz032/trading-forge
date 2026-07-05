@@ -1374,6 +1374,13 @@
       "when": 1783392618000,
       "tag": "0193_compliance_reviews_invalidation",
       "breakpoints": true
+    },
+    {
+      "idx": 197,
+      "version": "7",
+      "when": 1783392618100,
+      "tag": "0194_production_trades_writer_idempotency",
+      "breakpoints": true
     }
   ]
 }
