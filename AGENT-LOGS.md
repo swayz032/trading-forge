@@ -3,7 +3,27 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
-### Session Log — 2026-07-05 Deep-Scan #18 (8-band audit) + coverage-diff vs concurrent session + 1 clean fix
+### Session Log — 2026-07-05 Deep-Scan #18b (gap panel) + anti-lie root-cause + fix-wave batch 1
+
+**Mission:** Operator: scan the domains the concurrent session's fix wave does NOT cover, and "make all systems 10/10 no lie — because agents say 10/10 then another scan says 6.5." Also corrected the exec-path fact: live path = TradingView→TradersPost→Tradovate (NOT TF-direct).
+
+**Work completed:**
+- **6-band gap panel** (READ-ONLY, no worktrees, seeded with the other agent's T1-T6 exclusion set + what #18 already covered). Clean run, zero rate-limit deaths. Scores: P Pine 3.5 · Q Quantum-compute 4.5 · X Broker 6.0 · W Data 6.5 · Z DB/migration 7.0 · U Frontend 7.5 (avg ~5.8 — WORSE than the covered domains' ~6.5).
+- **CRITICALs:** P-1 every archetype `.pine` syntactically invalid (nested declarations; the LIVE TradingView→TradersPost path; 39 keys = majority of library; reproduced by running the compiler); P-2 `faithful` gate is a no-op for archetypes AND feeds a live lifecycle promotion gate; X-1 broker-fill recon reads `production_trades` (zero writers) → false-green on the PRIMARY ProductionStatusPanel; Q-1 `QUANTUM_CLOUD_ENABLED` fail-OPEN (real IBM QPU cost); Q-2 QUBO greedy fallback labeled `method="sqa"`; Z-1 pilot_sessions column drift (PILOT→DEPLOYED never fired since 0077); Z-2 `agent_health_reports` no migration.
+- **★★ Anti-lie root cause (the operator's real question):** ONE cause, three forms — (1) checks fail-GREEN not fail-CLOSED on empty/stale/unrun inputs; (2) tests assert PRESENCE not CORRECTNESS; (3) agents claim done on happy-path with no adversarial re-verify. "Green" has meant "the check didn't run." Real 10/10 = fix the meters + fix what's broken + re-verify the real path + report the TRUE number. **Recommend codifying as a CLAUDE.md hard rule.**
+- **Fix-wave batch 1 LANDED (commit 4b11946, branch only):** Q-1 cloud gate fail-OPEN→CLOSED (5 sites + 4 comments) + Z-1/2/3 migrations 0191/0192/0193 (idempotent; journal 194-96).
+
+**Verification:** Q-1 — syntax OK, ruff (exact pre-commit hook args `--select=E,F,W,I`) exit 0, fail-closed behavior verified (`_check_cloud_gates` twin: unset→blocked, `true`→allowed). Migrations — valid idempotent DDL, journal-wired; NOT applied to a live DB (boot-runner/db:migrate on deploy). Prior branch commits' tests (menu-tsc 3/3, RL-CPCV TS 5/5 + Py 5/5) still green.
+
+**Known-facts updates:** live exec path = TradingView→TradersPost→Tradovate (Pine-driven) — makes P-1 the #1 real-capital priority. `system-map:check` RED at HEAD is pre-existing (not us).
+
+**Carry-forward (next batch — highest-value gap CRITICALs, all need end-to-end verification):**
+- **P-1** archetype Pine compiler short-circuit (emit standalone artifact, not spliced) — the live execution path is broken for the majority of the library.
+- **P-2** run exportability Style-C/confluence/multi-TF checks unconditionally so the live promotion gate stops rubber-stamping archetypes.
+- **X-1** make broker-fill recon fail-CLOSED/UNKNOWN when `production_trades` is empty-but-should-have-data (or wire the writers / retire the cron) — stop the primary panel showing fiction-green.
+- Then re-scan and report the HONEST number (do NOT claim 10/10 by fiat).
+
+
 
 **Mission:** Operator: "deep scan for all bugs and blockers, wiring — all systems institutional-grade, bug-free, 10/10." Ran as an 8-band parallel READ-ONLY auditor panel (Team Mode). Then discovered a **concurrent Claude session** running its own 6-track fix wave on `hardening/phase-0`, re-scoped to avoid collision per §11b.
 
