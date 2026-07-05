@@ -3,6 +3,64 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-05 Corpus-collapse causal investigation → context-misclassification MILESTONE + Problem B characterized
+
+**Mission:** Determine why the 117-strategy YouTube-educator corpus barely trades (Corpus v2), with falsifiable
+experiments, before touching the extractor. Research arc, not a fix wave — GPT (operator's remote advisor) co-designed
+the pre-registrations; every claim held to evidence level.
+
+**Research outcomes (FROZEN — supported by completed pre-registered experiments):**
+- **ESTABLISHED — Context discourse misclassification is the DOMINANT IDENTIFIED cause of the MAJORITY collapse.**
+  The extractor mis-maps discourse-modality cues (scene-setting/narrative/UI-click/refuted-strawman) into hard spine-AND
+  gates. DRI audit: median 2.79, inflation 53% (`dri-audit-2026-07-05.json`). Demotion experiment: context-only demotion
+  cut conjunction depth −47% and revived **9 of 15** dead strategies; **context-only revival set == combined set**
+  (sufficiency proof), OPTIONAL-only revived 0, `exec==struct` 42/42 (not an artifact). MILESTONE frozen commit `1ab7321`.
+  Wording held exact: *sufficient* for the observed revival subset, *dominant identified* for the majority — NOT "the root cause."
+- **ESTABLISHED — Bidirectional role-assignment defects exist.** Residual probe (`residual-probe-2026-07-05.json`, commit
+  `240c933`) resolved the 6 strategies that stay dead under full demotion — two UNRELATED mechanisms:
+  - **B1 (`5m_support_level` ×3) — role UNDER-assignment (mirror of the majority defect):** real entry conditions all
+    mis-filed as `confluence` at Band B extraction, spine left EMPTY (`conjunction_depth==0` all arms), only spine
+    condition an unbindable ALTERNATIVE → no executable gate. Demotion cannot act.
+  - **B2 (`hammer_candle` ×3) — stateful/multi-phase, NOT extraction:** 3-phase state machine; the instantaneous-AND spine
+    ANDs complementary bearish+bullish EMA conditions onto one bar (`joint_rate==0.0` verified all 3) and has no memory of
+    the specific hammer's high. Confirms a real Layer-2/interaction-semantics gap.
+- **ESTABLISHED — Execution layer substantially DE-RISKED (not "cleared") as the primary explanation.** Falsified in
+  order: FVG single-object (not dominant), composition/gating-bundle (inconclusive), OR→AND flattening (real, CCR 0→42%,
+  but NOT dominant — commit `5e25625`), + 2 directional correctness bugs fixed (bias always-bullish, confirmation
+  direction-blind). Prior phase frozen `phase-execution-semantics-COMPLETE-2026-07-05.md`.
+- **SCOPE (rigor):** all currently-observed dead strategies have a mechanistic explanation **under the present
+  extraction/execution architecture** — characterized to the current architecture boundary, not a claim that Corpus v3
+  can introduce no new mechanisms.
+
+**Verification:** every verdict independently re-checked from raw artifacts before certification (grading-integrity /
+doer≠grader): demotion depth −47% + revival sets + joint_rate==0 all re-computed by parent, not taken from builder
+self-report. Demotion mechanism 116 tests GREEN, flag `TF_ROLE_DEMOTION_MODE` default OFF, 0 byte-identical violations.
+All engine changes flag-gated default-off; nothing changes default backtest behavior except the 2 directional bug fixes
+(genuine correctness, documented drift → full re-baseline required before trusting any P&L number).
+
+**Open work (NOT established results):**
+- **Product — Corpus v3 extractor redesign (Track #24):** BIDIRECTIONAL role classification — fix BOTH over-promotion
+  (context→spine) AND under-assignment (real-gates→confluence). Touches `gemma4:e4b-it-qat` extraction prompt + graduator;
+  MUST pass the 5-fixture parity gate; preserve provenance guarantees. Leads to Corpus v3.
+- **Future research — Layer-2 stateful execution (Track #26):** the instantaneous-AND spine cannot represent multi-phase
+  educator strategies (sequencing + level-memory). Treat as a NEW architectural capability, not a bug fix. Separate track.
+- Full corpus re-baseline (null-cal → Mode A/B) on the fully-corrected engine before any profitability claim.
+
+**Architectural implications:** the corpus does not fail in evaluation/execution — it fails in constraint-transcription
+fidelity (linguistic→executable role mapping). Corpus v3 = context-aware bidirectional role classification (v1 baseline →
+v2 corrected onboarding → v3 validated discourse-role classification). Layer-2 is a distinct, later architecture initiative.
+
+**Known-facts updates:** none pinned this session (research, not a misdiagnosis correction).
+
+**Carry-forward — starting conditions for next session:**
+> **Objective:** Design the bidirectional extractor role-classification redesign for Corpus v3. Begin from the frozen
+> findings in commits `1ab7321` (context-misclassification milestone) and `240c933` (Problem B characterized), plus specs
+> `docs/designs/MILESTONE-context-misclassification-2026-07-05.md` + `residual-findings-FROZEN-2026-07-05.md`. **Do NOT
+> reopen the execution-layer investigations** unless new evidence contradicts the frozen results. **Stateful execution
+> (Track #26) is a separate architectural initiative — do NOT mix it into the Corpus v3 extractor redesign.** Start with a
+> dedicated design pass (brainstorm → spec → parity-gated build), not a tail-end dispatch.
+
+---
 ### Session Log — 2026-07-05 Deep-Scan #18 (8-band re-audit ~7.2/10) + 6-track fix wave LANDED phase-0
 
 **Mission:** Operator: "deep scan for all bugs and blockers, wiring… all systems institutional grade… bug free to be 10/10." Ran an 8-band read-only adversarial re-audit (Deep-Scan #18, day after #17), then a full fix wave (operator chose: full code wave + build the heavy G-2 self-heal auto-apply + fix the multi-account isolation cluster NOW).
