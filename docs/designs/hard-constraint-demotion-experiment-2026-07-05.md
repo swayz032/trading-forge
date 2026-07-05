@@ -1,50 +1,91 @@
-# Hard-Constraint Demotion Experiment (Semantic Role Reclassification Intervention) — PRE-REGISTERED
+# Hard-Constraint Demotion Experiment — FORMALIZED v2 (PRE-REGISTERED, dispatch-grade)
 
-**Status:** pre-registered (operator + GPT, 2026-07-05). The falsification the DRI audit triggered.
+**Status:** pre-registered, GPT-tightened v2 (operator + GPT, 2026-07-05). A **causal attribution** experiment —
+NOT a behavior tweak. Answers exactly one question: **is the corpus collapse driven by constraint INFLATION
+(count) or by constraint INTERACTION (temporal/state/ordering) semantics?**
 
-## What is conclusively established (going in)
-- Execution layer is substantially de-risked: OR-defect (real, not dominant), directional bugs (fixed), P&L/gate (#17). Correct execution of correct logic did NOT resolve the collapse (27/30 dead strategies persist).
-- **Extraction over-specification CONFIRMED** (DRI 2.79, inflation 53%): the extractor mis-types discourse functions — scene-setting/narrative/UI-artifact/refuted-strawman cues become mandatory spine-AND conditions. The educator gates on ~3; the extractor emits ~8. This is a **semantic-role-labeling failure**, not a modeling failure.
+## Established going in
+Execution layer substantially de-risked (OR, direction, P&L fixed — none dominant). Extraction
+over-specification CONFIRMED (DRI 2.79, inflation 53%): extractor mis-types discourse functions as hard gates
+(a semantic-role-labeling failure). This experiment tests whether correcting that mis-typing behaviorally
+resolves the collapse.
 
-## The question (sharpened)
-NOT "does the system improve?" — **"Is semantic-role compression (mis-typing discourse functions as hard gates) the ROOT constraint bottleneck behind the corpus collapse?"**
-
-## The structural bug this targets
-The compiler collapses THREE distinct discourse functions into one `spine AND` node:
-| True role | Currently | Should be |
+## 1. Classification — mutual-exclusive, deterministic, evidence-anchored
+Each spine condition maps to **exactly one** class. **Source = the committed `docs/replay-results/dri-audit-2026-07-05.json`**
+single-label classification (already mutually exclusive, already quote-anchored — do NOT re-judge). Classes:
+| Audit class | Role | Intervention |
 |---|---|---|
-| Optional confluence ("ideally", "helps") | hard AND gate | soft factor (entry_quality), not gating |
-| Alternative route ("A or B") | hard AND gate | OR-branch (any-holds) |
-| Context / scene-setting / narrative / UI-artifact / refuted-strawman | hard AND gate | NOT an entry gate at all (drop from gating) |
+| `JUSTIFIED_MANDATORY` | real GATE | **KEEP** (never demoted) |
+| `ALTERNATIVE` | either/or route | Arm-ALT |
+| `OPTIONAL` | soft confluence | Arm-CONF |
+| `CONTEXTUAL` (incl. UI-artifact, refuted-strawman) | not a gate | Arm-CTX |
+| `UNRESOLVED` | uncertain | **HELD OUT** of primary; separate sensitivity arm |
 
-## THREE isolated transformations (each run SEPARATELY, then combined — for attribution)
-Demotions are DETERMINISTIC, sourced from the committed `docs/replay-results/dri-audit-2026-07-05.json` per-condition classification (evidence-backed, not re-judged):
-- **T1 — Gate→Confluence:** conditions classed `OPTIONAL` → demote spine→confluence (leave entry_quality, remove from spine AND).
-- **T2 — Gate→Alternative:** conditions classed `ALTERNATIVE` → route into or_branches (any-holds) instead of AND.
-- **T3 — Gate→Context:** conditions classed `CONTEXTUAL` (incl. UI-artifact / refuted-strawman) → remove from entry-gating entirely.
-- `JUSTIFIED_MANDATORY` → UNCHANGED (never demoted — the real gates stay). `UNRESOLVED` → held OUT of the primary demotion set (conservative), reported as a separate sensitivity arm.
-Runs: **{baseline, T1-only, T2-only, T3-only, T1+T2+T3}** on the same strategies/rig/seed, flag-gated (`TF_ROLE_DEMOTION_MODE`), default OFF, non-demoted conditions byte-identical.
+**Tie-break (already applied in the audit, restated for provenance):** precedence GATE > ALTERNATIVE > OPTIONAL >
+CONTEXTUAL, **OVERRIDE:** any transcript negation / pedagogical refutation → **CONTEXTUAL** regardless.
+Every assignment carries its verbatim transcript quote (from the audit) — reproducible, not vibes.
 
-## Causal DAG (so a null is unambiguous)
+## 2. Demotion operators — STRUCTURAL vs EXECUTION (never mixed in one run)
+**PRIMARY = STRUCTURAL** `D_struct(node, class)` — alters graph topology, THEREFORE changes conjunction depth
+(the DAG mediator this experiment is built to move):
+- ALTERNATIVE → merge into an OR_GROUP node (ANY-holds); depth ↓.
+- OPTIONAL → move to CONFLUENCE node (entry_quality soft factor, removed from spine AND); depth ↓.
+- CONTEXTUAL → removed from the execution graph entirely (metadata only); depth ↓.
+- JUSTIFIED_MANDATORY → unchanged spine.
+
+**SECONDARY (validation only) = EXECUTION MASKING** `D_exec(node, class)` — preserves structure, alters
+evaluation (ALTERNATIVE→ANY short-circuit, OPTIONAL→skip-in-gate, CONTEXTUAL→never-evaluated). Confirms the
+structural result isn't a topology artifact. **Structural and execution demotion MUST NOT be combined in the
+same run.** Flag: `TF_ROLE_DEMOTION_MODE ∈ {off, struct_conf, struct_alt, struct_ctx, struct_all, exec_all}`,
+default `off`, byte-identical when off and for non-demoted conditions.
+
+## 3. Experimental arms — one class per arm (this is what enables attribution)
+PRIMARY (structural): **{baseline, Arm-CONF, Arm-ALT, Arm-CTX, Arm-ALL}** — each of the three single-class arms
+modifies **exactly one** class; Arm-ALL = all three. SECONDARY: **exec_all** (structure-preserving replication of
+Arm-ALL). **No primary arm modifies more than one class.** Same strategies / rig / seed / engine version /
+gating config across all arms.
+
+## 4. Causal DAG — normalized, windowed (so a null is unambiguous)
 ```
-role demotion → hard-conjunction depth ↓ → (a) trade frequency ↑ → zero-trade revival ↑
-                                          → (b) behavioral diversity ↑ → SDS ↑
+Role-demotion(arm)
+   ↓  [conjunction depth: per-strategy, full graph]
+Conjunction Depth
+   ↓  [firing rate: rolling 100-bar blocks, normalized per instrument]
+Firing Rate
+   ├──↓ [zero-trade: per family, binary threshold]  Zero-Trade Count
+   └──↓ [revival: binary 0→>0 over full run]         Revival Count
+                                                          ↓ [SDS: post-filter, active strategies only]
+                                                        SDS (behavioral entropy)
 ```
-Every arrow is measured. A break in any arrow localizes the failure.
+**DAG constraints:** no edge skips its normalization layer; every edge computed on the SAME data slice, engine
+version, and gating config; per-family normalization to prevent Simpson-style reversals.
 
-## PRE-REGISTERED decision (fixed before looking; applied ONCE)
-Primary metric per the DAG, on the combined T1+T2+T3 arm vs baseline:
-- **Mediator check (must hold or the intervention didn't fire):** hard-conjunction depth ↓ materially (report mean depth before/after).
-- **DOMINANT CONFIRMED** iff: **zero-trade revival ≥ 50%** of baseline-dead strategies AND median trade frequency ↑ ≥ 2× AND SDS paired-delta 90% CI entirely **> +0.20** (reuse the pre-registered SDS instrument + floor ≥15 strategies/≥5 families).
-- **NOT DOMINANT (the meaningful falsifier)** iff: conjunction depth ↓ materially (intervention fired) BUT zero-trade revival < 20% AND SDS CI includes/below +0.20 → **over-specification is real but NOT the dominant behavioral cause** → the bottleneck is **constraint INTERACTION semantics** (temporal/state coupling, evaluation ordering — WAIT_RETEST sequencing, stateful-treated-as-instantaneous) → that becomes the next phase.
-- **INCONCLUSIVE** otherwise / below floor.
-- **Attribution (secondary):** compare T1/T2/T3-only arms → which discourse-mis-typing drives the effect. Actionable extractor-fix priority.
+## 5. Fixed measurement windows
+| Metric | Window |
+|---|---|
+| DRI | per strategy (static, from audit) |
+| Conjunction depth | full strategy graph |
+| Firing rate | rolling 100-bar blocks, per-instrument normalized |
+| Zero-trade / Revival | binary event over full run |
+| SDS | post-filter (active strategies only), pre-registered paired-delta instrument |
 
-## Scope + purity
-Semantic-role reassignment ONLY (role field per the audit map), flag-gated default OFF, single-variable per arm, non-demoted conditions byte-identical (prove corpus-wide). Reuse `signature-divergence.py` + the controlled-run rig + paired-delta. Same instrument as increments 2–3 (comparable). Fresh corrected engine (#17 + direction + OR fixes). No new evaluators. Do NOT commit until reviewed.
+## 6. PRE-REGISTERED decision (applied ONCE, on Arm-ALL vs baseline)
+**Mediator gate (must hold or the intervention didn't fire → INVALID, not a result):** mean conjunction depth
+↓ materially (report before/after).
+- **FALSIFIER C — CONFIRMED (over-specification dominant):** DRI↓ AND firing rate↑ AND revival↑ AND SDS paired-delta 90% CI entirely **> +0.20** (floor ≥15 strategies/≥5 families).
+- **FALSIFIER B — INTERACTION DOMINANT:** depth↓ AND firing rate↑ BUT SDS ~unchanged (CI includes/below +0.20) → constraints are not the issue, their **interaction/ordering/state coupling** is → next phase = interaction semantics (WAIT_RETEST sequencing, stateful-as-instantaneous).
+- **FALSIFIER A — COUNT NOT DOMINANT:** depth↓ significantly BUT firing rate ~unchanged AND SDS ~unchanged → reject "constraint count" as the driver entirely.
+- Else INCONCLUSIVE.
+**Attribution (secondary):** rank Arm-CONF / Arm-ALT / Arm-CTX by revival + firing-rate lift → which discourse
+mis-typing dominates → extractor-fix priority. Report `exec_all` vs `struct_all` agreement (topology-artifact check).
 
-## Why this design can FAIL meaningfully
-If demotion drops conjunction depth (DRI-effect confirmed) yet the dead strategies stay dead and SDS stays flat, the count of constraints was never the issue — the **interaction/ordering** of constraints is. That would eliminate the entire "how many conditions" class of hypotheses and pivot to constraint-coupling semantics — a different, well-defined next phase. Either outcome is a clean, publishable result.
+## 7. Scope / purity
+Semantic-role reassignment only, sourced from the audit; flag-gated default OFF; single-class-per-arm; non-demoted
+conditions byte-identical corpus-wide (prove it). Reuse `signature-divergence.py` + controlled-run rig + paired-delta,
+same instrument as increments 2–3. Fresh corrected engine. No new evaluators. Do NOT commit until reviewed.
 
-## Open refinement (offered by GPT — optional next tightening)
-A formal causal-DAG diagram + exact demotion-rule table per misclassification subtype can be layered in before dispatch if we want the null result to be even more surgical; the above is sufficient to run.
+## 8. Why this can fail meaningfully
+If structural demotion drops depth (DRI-effect real) but the dead strategies stay dead and SDS stays flat
+(Falsifier A/B), the *count* of constraints was never the bottleneck — their *interaction* is. That eliminates
+the entire "how many conditions" hypothesis class and pivots cleanly to constraint-coupling semantics. Every
+one of the three falsifiers is a real, publishable outcome.
