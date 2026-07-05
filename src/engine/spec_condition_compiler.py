@@ -41,10 +41,22 @@ import polars as pl
 
 from src.engine.context.structural_stops import compute_structural_stop
 from src.engine.indicators.core import compute_atr, compute_ema
+from src.engine.indicators.fvg_native import compute_fvg_signal
 from src.engine.indicators.market_structure import detect_swings
 from src.engine.session_windows import is_in_killzone
 from src.engine.spec_family_bindings import BindingPlan, ConditionBinding, compile_binding_plan
 from src.engine.strategy_base import BaseStrategy
+
+FVG_PRIMITIVE_NAME: str = "fvg_native.compute_fvg_signal"
+"""Binding-plan primitive marker used by spec_family_bindings.bind_condition() when
+TF_FVG_IDENTITY_ENABLED routes a WAIT_STRUCTURE/FILTER FVG-family condition to the fresh
+fvg_native detector (see that module's FVG Identity Dispatch Experiment docstring). Checked
+HERE (not just `b.type in (WAIT_STRUCTURE, FILTER)`) so the FVG-bound conditions get their OWN
+evaluator result — a distinct object into per_condition_bool / spec_trace — instead of being
+silently folded back into the shared generic structure/confluence array every other
+WAIT_STRUCTURE/FILTER condition uses. This is the whole point of the experiment (point-8:
+routing to a DIFFERENT primitive is not the same as PRESERVING identity unless the executable
+path actually evaluates that primitive)."""
 
 # ─── Named constants (CLAUDE.md §13: no magic numbers inline) ────────────────
 STRUCTURE_RECOMPUTE_CADENCE_BARS: int = 10   # perf: structure state is slow-changing
@@ -267,6 +279,16 @@ class SpecConditionStrategy(BaseStrategy):
             out[i] = (not bullish_lean) if want_bearish else bullish_lean
         return out
 
+    def _eval_fvg(self, open_: np.ndarray, high: np.ndarray, low: np.ndarray, close: np.ndarray) -> np.ndarray:
+        """FVG identity dispatch (experiment): evaluate via the fresh, isolated
+        fvg_native detector rather than the generic structure_engine activity check.
+        `any_active` (bullish OR bearish) is the per-bar gating signal — directional FVG
+        selection (long vs short) is out of scope for this experiment; direction is still
+        decided the same way as every other spec (self.spec['direction'] + the EMA-slope
+        proxy for "both"), unchanged by this evaluator."""
+        result = compute_fvg_signal(open_, high, low, close)
+        return result.any_active
+
     def _eval_wait_retest(self, close: np.ndarray, high: np.ndarray, low: np.ndarray, n: int) -> np.ndarray:
         if n < RETEST_LEVEL_EMA_PERIOD + 2:
             return np.zeros(n, dtype=bool)
@@ -300,6 +322,7 @@ class SpecConditionStrategy(BaseStrategy):
         wait_bias_bull = None
         wait_structure = None
         wait_retest = None
+        fvg_signal = None
 
         spine_bindings = [b for b in self.binding_plan.bindings if b.role == "spine"]
         per_condition_bool: dict[str, np.ndarray] = {}
@@ -318,7 +341,16 @@ class SpecConditionStrategy(BaseStrategy):
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
                 continue
 
-            if b.type == "WAIT_SESSION":
+            if b.primitive == FVG_PRIMITIVE_NAME:
+                # FVG identity dispatch (experiment) — checked BEFORE the generic
+                # WAIT_STRUCTURE/FILTER type dispatch below so an FVG-family binding
+                # never falls through to the shared generic structure/confluence
+                # array, regardless of whether its condition `type` is WAIT_STRUCTURE
+                # or FILTER. Distinct object into per_condition_bool / spec_trace.
+                if fvg_signal is None:
+                    fvg_signal = self._eval_fvg(open_, high, low, close)
+                per_condition_bool[b.condition_id] = fvg_signal
+            elif b.type == "WAIT_SESSION":
                 per_condition_bool[b.condition_id] = self._eval_wait_session(b, ts_list, n)
             elif b.type in ("WAIT_STRUCTURE", "VERIFY_STRUCTURE"):
                 if wait_structure is None:

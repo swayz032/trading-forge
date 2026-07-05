@@ -43,7 +43,48 @@ decision record with citations):
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
+
+# ─── FVG Identity Dispatch Experiment (docs/designs/fvg-identity-dispatch-
+# experiment-2026-07-05.md, Part B item 1) ──────────────────────────────────
+# Single-variable, env-gated toggle: WHEN ENABLED, a WAIT_STRUCTURE/FILTER
+# condition whose object names the FVG family binds to the fresh, isolated
+# `fvg_native.compute_fvg_signal` primitive (approximation=False) instead of
+# the generic structure_engine/confluence-presence primitive every other
+# WAIT_STRUCTURE/FILTER condition still uses. Default OFF so production
+# binding plans stay byte-identical until the controlled experiment (Part C,
+# the Signature Divergence Score harness) is reviewed — mirrors the
+# established "ship gates STRICT, default OFF" pattern (CLAUDE.md §13) used
+# for every other new-behavior flag in this codebase (slippage-survival gate,
+# structural-stop parity, etc). Set TF_FVG_IDENTITY_ENABLED=true to activate.
+FVG_OBJECT_KEYWORDS: tuple[str, ...] = (
+    "fvg",
+    "fair value gap",
+    "imbalance",
+    "put limit order right fvg",
+)
+
+
+def fvg_identity_enabled() -> bool:
+    """Read at call time (not cached at import) so a controlled before/after
+    comparison run in the SAME process (e.g. the SDS harness building a Mode-A
+    strategy instance, flipping the env var, then building a Mode-B instance)
+    sees the flag change immediately — same pattern as
+    apply_eligibility_gate()'s live TF_CONFLUENCE_OVERLAY_DISABLED read."""
+    return os.environ.get("TF_FVG_IDENTITY_ENABLED", "false").strip().lower() == "true"
+
+
+def resolve_fvg_object(object_text: str) -> bool:
+    """True iff `object_text` names an object in the FVG family (fair value
+    gap / imbalance). Pure substring match — no word-boundary padding needed
+    here (unlike resolve_session_keyword) since these are multi-word phrases
+    unlikely to appear as an accidental substring of an unrelated object."""
+    if not object_text:
+        return False
+    norm = object_text.strip().lower()
+    return any(kw in norm for kw in FVG_OBJECT_KEYWORDS)
+
 
 # ─── Session keyword table (duplicated verbatim in the TS mirror — see module
 # docstring). Kept identical to session_windows.SESSION_KEYWORDS so a spec's
@@ -218,6 +259,24 @@ def bind_condition(condition: dict) -> ConditionBinding:
             approximation=False,
             executed=False,
             reason=meta.unbound_reason,
+        )
+
+    # FVG identity dispatch (experiment, env-gated — see module docstring
+    # above SESSION_KEYWORDS). Only WAIT_STRUCTURE/FILTER conditions are in
+    # scope per the locked spec's Part B item 1; every other condition type,
+    # and every WAIT_STRUCTURE/FILTER whose object is NOT in the FVG family,
+    # falls through unchanged to the generic dispatch below.
+    if cond_type in ("WAIT_STRUCTURE", "FILTER") and fvg_identity_enabled() and resolve_fvg_object(obj):
+        return ConditionBinding(
+            condition_id=cond_id,
+            type=cond_type,
+            role=role,
+            object=obj,
+            bindable=True,
+            primitive="fvg_native.compute_fvg_signal",
+            approximation=False,
+            executed=True,
+            reason=None,
         )
 
     if meta.requires_session_keyword:
