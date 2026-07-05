@@ -745,6 +745,195 @@ function runMinimalModeParityTests(): boolean {
   return allPass;
 }
 
+// ─── Corpus v3 Step 1 (Gate 2) — entry_conditions[].role domain gate ─────────
+// docs/designs/corpus-v3-IMPLEMENTATION-PLAN-2026-07-05.md Step 1: "the ruler
+// before measuring" — extend this harness to validate entry_conditions[].role
+// BEFORE the Step 3 classifier exists, so the classifier's first baseline is
+// cut against an already-green gate.
+//
+// Surface note (load-bearing — read before changing this section): the two
+// LLM-extractor fixture surfaces already validated in this file — the minimal
+// schema (MINIMAL_PARITY_FIXTURE_OUTPUTS, `strategies[].confluences[]`) and the
+// legacy v12 few-shot JSON fixtures (`strategies[].speaker_concepts[].role`) —
+// do NOT carry `entry_conditions[].role` at all. That field does not exist on
+// either extractor output shape. `entry_conditions[].role` is assigned
+// DOWNSTREAM of extraction, by the graph-to-engine.ts compiler (today only in
+// `.claude/worktrees/extraction-100/src/server/lib/graph-to-engine.ts:86`) from
+// DecisionAtoms — it is a compiler artifact, not something the transcript-
+// extractor LLM emits. The only surface on the main tree that carries
+// `entry_conditions[].role` is the compiled SpecArtifact persisted via
+// `src/server/services/spec-onboarding-service.ts` (source='spec_onboarding';
+// see `SpecEntryCondition` in that file: `role: "spine"|"confluence"|"trigger"|
+// "invalidation"`). This gate is therefore wired to a frozen real-corpus
+// snapshot of THAT surface — `docs/replay-results/or-branches-full-corpus-
+// specs-2026-07-05.json` (120 onboarded specs, 6450 entry_conditions + 603
+// invalidations, captured 2026-07-05; confirmed via inline audit: every role
+// value observed today is one of {spine, confluence, trigger, invalidation} —
+// the exact v2 subset the design doc predicts) — rather than to either
+// extractor fixture surface, which cannot carry this field. Querying the live
+// DB here was considered and rejected: every other check in this file
+// (--parity-only / --legacy-parity) is deliberately DB-free and deterministic;
+// making Gate 2 depend on Postgres reachability would make "green on the v2
+// baseline" flaky by infrastructure availability rather than by data.
+
+/** v3 TARGET domain (superset) — the classifier (Step 3, later, different
+ * worktree) will start emitting or_branch/context; this gate must already
+ * accept the superset so landing the classifier doesn't require touching
+ * this gate again. */
+const ENTRY_CONDITION_ROLE_DOMAIN_V3 = new Set([
+  "spine", "confluence", "or_branch", "context", "trigger", "invalidation",
+]);
+
+/** v2-observed subset — informational only (printed for operator visibility),
+ * never enforced as an upper bound. */
+const ENTRY_CONDITION_ROLE_DOMAIN_V2_OBSERVED = new Set([
+  "spine", "confluence", "trigger", "invalidation",
+]);
+
+const CORPUS_V3_BASELINE_SNAPSHOT = resolve(
+  PROJECT_ROOT,
+  "docs/replay-results/or-branches-full-corpus-specs-2026-07-05.json",
+);
+
+interface EntryConditionRoleGateResult {
+  pass: boolean;
+  specsChecked: number;
+  conditionsChecked: number;
+  invalidationsChecked: number;
+  roleHistogram: Record<string, number>;
+  violations: string[];
+  source: "corpus_snapshot" | "inline_fallback_fixture";
+}
+
+function validateRoleTaggedArray(
+  items: Array<Record<string, unknown>>,
+  specLabel: string,
+  arrayLabel: string,
+  histogram: Record<string, number>,
+  violations: string[],
+): void {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]!;
+    const roleRaw = item["role"];
+    const hasRole = "role" in item && roleRaw !== null && roleRaw !== undefined && String(roleRaw).length > 0;
+    if (!hasRole) {
+      violations.push(`${specLabel}.${arrayLabel}[${i}] (id=${String(item["id"] ?? "?")}): missing role`);
+      continue;
+    }
+    const role = String(roleRaw);
+    histogram[role] = (histogram[role] ?? 0) + 1;
+    if (!ENTRY_CONDITION_ROLE_DOMAIN_V3.has(role)) {
+      violations.push(
+        `${specLabel}.${arrayLabel}[${i}] (id=${String(item["id"] ?? "?")}): role="${role}" not in domain {${[...ENTRY_CONDITION_ROLE_DOMAIN_V3].join("|")}}`,
+      );
+    }
+  }
+}
+
+// Small hand-authored fallback mirroring the real SpecArtifact shape
+// (src/server/services/spec-onboarding-service.ts::SpecEntryCondition) — used
+// ONLY if the frozen corpus snapshot file is unavailable (e.g. archived away
+// in a future session), so this gate never silently no-ops into a trivial pass.
+const INLINE_FALLBACK_SPECS: Array<{
+  name: string;
+  spec: { entry_conditions: Array<Record<string, unknown>>; invalidations: Array<Record<string, unknown>> };
+}> = [
+  {
+    name: "inline_fallback_v2_shape",
+    spec: {
+      entry_conditions: [
+        { id: "WAIT_STRUCTURE:orb_break#0", type: "WAIT_STRUCTURE", object: "orb_break", role: "spine", span: { start: 0, end: 10 }, evidence: "fallback fixture" },
+        { id: "FILTER:htf_bias#0", type: "FILTER", object: "htf_bias", role: "confluence", span: { start: 10, end: 20 }, evidence: "fallback fixture" },
+        { id: "ENABLE_ENTRY:entry_trigger#0", type: "ENABLE_ENTRY", object: "entry_trigger", role: "trigger", span: { start: 20, end: 30 }, evidence: "fallback fixture" },
+      ],
+      invalidations: [
+        { id: "INVALIDATE:opposing_sweep#0", type: "INVALIDATE", object: "opposing_sweep", role: "invalidation", span: { start: 30, end: 40 }, evidence: "fallback fixture" },
+      ],
+    },
+  },
+];
+
+function runEntryConditionsRoleDomainGate(): EntryConditionRoleGateResult {
+  const histogram: Record<string, number> = {};
+  const violations: string[] = [];
+  let specsChecked = 0;
+  let conditionsChecked = 0;
+  let invalidationsChecked = 0;
+  let source: EntryConditionRoleGateResult["source"] = "inline_fallback_fixture";
+
+  type CorpusSpecEntry = { name?: string; spec?: { entry_conditions?: unknown[]; invalidations?: unknown[] } };
+  let specs: Record<string, CorpusSpecEntry> | null = null;
+  try {
+    specs = JSON.parse(readFileSync(CORPUS_V3_BASELINE_SNAPSHOT, "utf-8")) as Record<string, CorpusSpecEntry>;
+    source = "corpus_snapshot";
+  } catch (err) {
+    console.warn(
+      `[entry-conditions-role-gate] Could not read ${CORPUS_V3_BASELINE_SNAPSHOT} (${(err as Error).message}); falling back to inline fixture.`,
+    );
+  }
+
+  if (specs) {
+    for (const [id, entry] of Object.entries(specs)) {
+      const spec = entry?.spec;
+      if (!spec) continue;
+      specsChecked++;
+      const label = entry.name ? `${entry.name}(${id})` : id;
+      const conditions = Array.isArray(spec.entry_conditions) ? (spec.entry_conditions as Array<Record<string, unknown>>) : [];
+      const invalidations = Array.isArray(spec.invalidations) ? (spec.invalidations as Array<Record<string, unknown>>) : [];
+      conditionsChecked += conditions.length;
+      invalidationsChecked += invalidations.length;
+      validateRoleTaggedArray(conditions, label, "entry_conditions", histogram, violations);
+      validateRoleTaggedArray(invalidations, label, "invalidations", histogram, violations);
+    }
+  } else {
+    for (const entry of INLINE_FALLBACK_SPECS) {
+      specsChecked++;
+      conditionsChecked += entry.spec.entry_conditions.length;
+      invalidationsChecked += entry.spec.invalidations.length;
+      validateRoleTaggedArray(entry.spec.entry_conditions, entry.name, "entry_conditions", histogram, violations);
+      validateRoleTaggedArray(entry.spec.invalidations, entry.name, "invalidations", histogram, violations);
+    }
+  }
+
+  return {
+    pass: violations.length === 0 && specsChecked > 0,
+    specsChecked,
+    conditionsChecked,
+    invalidationsChecked,
+    roleHistogram: histogram,
+    violations,
+    source,
+  };
+}
+
+function printEntryConditionsRoleDomainGate(): boolean {
+  console.log("\n─────────────────────────────────────────────────────");
+  console.log("CORPUS V3 STEP 1 (GATE 2) — entry_conditions[].role DOMAIN VALIDATION");
+  console.log("─────────────────────────────────────────────────────");
+  console.log(`Target v3 domain (superset): {${[...ENTRY_CONDITION_ROLE_DOMAIN_V3].join(", ")}}`);
+  console.log(`v2-observed subset (today):  {${[...ENTRY_CONDITION_ROLE_DOMAIN_V2_OBSERVED].join(", ")}}`);
+
+  const result = runEntryConditionsRoleDomainGate();
+
+  console.log(
+    `Source: ${result.source === "corpus_snapshot" ? CORPUS_V3_BASELINE_SNAPSHOT : "inline fallback fixture (corpus snapshot unavailable)"}`,
+  );
+  console.log(`Specs checked: ${result.specsChecked}`);
+  console.log(`entry_conditions checked: ${result.conditionsChecked}`);
+  console.log(`invalidations checked: ${result.invalidationsChecked}`);
+  console.log(`Role histogram: ${JSON.stringify(result.roleHistogram)}`);
+
+  if (result.violations.length > 0) {
+    console.log(`FAIL: ${result.violations.length} role violations (showing first 20):`);
+    for (const v of result.violations.slice(0, 20)) console.log(`  FAIL: ${v}`);
+  }
+
+  console.log(`GATE 2 (entry_conditions[].role domain): ${result.pass ? "PASS" : "FAIL"}`);
+  console.log("─────────────────────────────────────────────────────");
+
+  return result.pass;
+}
+
 function runStaticParityTests(): boolean {
   console.log("\n─────────────────────────────────────────────────────");
   console.log("PASS 8 TRACK C — 5-FIXTURE PARITY TEST v12 (STATIC SPEC VALIDATION)");
@@ -1061,6 +1250,12 @@ async function runSmoke(): Promise<void> {
   // --legacy-parity flag. Both can run together when neither flag is provided.
   const minimalParityPass = runMinimalModeParityTests();
 
+  // Corpus v3 Step 1 (Gate 2) — entry_conditions[].role domain gate. Runs
+  // unconditionally (not gated behind --legacy-parity) because it validates a
+  // distinct surface (compiled SpecArtifact) from both extractor fixture modes
+  // above, and is DB-free/deterministic like the rest of this harness.
+  const entryConditionsRolePass = printEntryConditionsRoleDomainGate();
+
   // Legacy v12 check: runs when --legacy-parity is explicit OR when doing a full
   // smoke run (no --parity-only). The legacy check validates the KB few-shot
   // fixtures have the correct v12 shape for the escape-hatch legacy path.
@@ -1068,8 +1263,8 @@ async function runSmoke(): Promise<void> {
 
   if (PARITY_ONLY) {
     // Emit audit stamp for minimal parity result
-    await emitV12ParityAudit(minimalParityPass && paritySpecPass);
-    process.exit(minimalParityPass ? 0 : 1);
+    await emitV12ParityAudit(minimalParityPass && paritySpecPass && entryConditionsRolePass);
+    process.exit(minimalParityPass && entryConditionsRolePass ? 0 : 1);
   }
 
   console.log("\n─────────────────────────────────────────────────────");
@@ -1215,7 +1410,7 @@ async function runSmoke(): Promise<void> {
 
   // ── 7. Summary ──────────────────────────────────────────────────────────────
   console.log("\n─────────────────────────────────────────────────────");
-  const overallPass = allFieldsOK && paritySpecPass && liveLlmParityPass;
+  const overallPass = allFieldsOK && paritySpecPass && liveLlmParityPass && entryConditionsRolePass;
   console.log(`[smoke] RESULT: ${overallPass ? "PASS" : "WARN — some checks failed"}`);
   console.log(`[smoke] Duration: ${durationMs}ms`);
   console.log(`[smoke] Strategies extracted: ${strategies.length}`);
@@ -1226,6 +1421,7 @@ async function runSmoke(): Promise<void> {
   }`);
   console.log(`[smoke] Parity spec (v10 prompt spec validation): ${paritySpecPass ? "PASS" : "FAIL"}`);
   console.log(`[smoke] Live LLM parity (5-fixture extraction depth): ${liveLlmParityPass ? "PASS" : "FAIL"}`);
+  console.log(`[smoke] Corpus v3 Gate 2 (entry_conditions[].role domain): ${entryConditionsRolePass ? "PASS" : "FAIL"}`);
 
   if (overallPass) {
     console.log("[smoke] Transcript extractor v10 prompt is ready. SHIP IT.");
@@ -1235,7 +1431,7 @@ async function runSmoke(): Promise<void> {
     const w23hOK = W23H_REQUIRED_FIELDS.every(
       (f) => strategies.some((s) => f in (s as Record<string, unknown>)),
     );
-    process.exit(w23hOK && paritySpecPass ? 0 : 1);
+    process.exit(w23hOK && paritySpecPass && entryConditionsRolePass ? 0 : 1);
   }
 }
 
