@@ -94,10 +94,9 @@
     .kv-gates-title span { font-size: 11px; color: var(--mute); font-family: ui-monospace, monospace; }
     .kv-gates {
       display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px;
-      scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+      scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;
     }
-    .kv-gates::-webkit-scrollbar { height: 6px; }
-    .kv-gates::-webkit-scrollbar-thumb { background: rgba(163,255,18,0.25); border-radius: 3px; }
+    .kv-gates::-webkit-scrollbar { display: none; width: 0; height: 0; }
     .kv-gate {
       flex: 0 0 148px; scroll-snap-align: start; position: relative;
       background: #000; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px;
@@ -118,7 +117,7 @@
     .kv-gate-orb .b { position: absolute; inset: -2px; border-radius: 50%; background: conic-gradient(from 215deg,#333a33,#545c54 24%,#333a33 50%,#454d45 74%,#333a33); box-shadow: 0 6px 14px rgba(0,0,0,0.55); }
     .kv-gate-orb .o { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: #454d45;
       background: radial-gradient(circle at 50% 32%,#1b1f1a,#121611 34%,#0a0d0a 66%,#060806 100%);
-      box-shadow: inset 0 -8px 14px rgba(0,0,0,0.9), inset 0 6px 12px rgba(255,255,255,0.02), inset 0 0 0 1px rgba(255,255,255,0.03); }
+      box-shadow: inset 0 -8px 14px rgba(0,0,0,0.9), inset 0 6px 12px rgba(255,255,255,0.02), inset 0 0 0 1px rgba(255,255,255,0.03); overflow: hidden; }
     .kv-gate.pass .kv-gate-orb .b { background: conic-gradient(from 215deg,#2f4a08,#b4ff2e 26%,#2f4a08 52%,#a6f21e 76%,#2f4a08); }
     .kv-gate.pass .kv-gate-orb .o { color: #b4ff2e; } .kv-gate.pass .kv-gate-title { color: #b4ff2e; } .kv-gate.pass .kv-gate-state { color: #7fae2a; }
     .kv-gate.now .kv-gate-orb .b { background: conic-gradient(from 215deg,#5c3f0d,#ffce5c 26%,#5c3f0d 52%,#ffe08a 76%,#5c3f0d); }
@@ -127,6 +126,14 @@
     @keyframes kv-orb-cook { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
     .kv-gate.fail .kv-gate-orb .b { background: conic-gradient(from 215deg,#4a1010,#ff6b6b 26%,#4a1010 52%,#ff9a9a 76%,#4a1010); }
     .kv-gate.fail .kv-gate-orb .o { color: #ff6b6b; } .kv-gate.fail .kv-gate-title { color: #ff6b6b; } .kv-gate.fail .kv-gate-state { color: #c65656; }
+    /* Flowing energy inside the orb — a moving gradient wave tinted by the gate state */
+    .kv-gate-orb .o .ic { position: relative; z-index: 2; }
+    .kv-gate-orb .o .fl { position: absolute; inset: 0; border-radius: 50%; opacity: 0; pointer-events: none; mix-blend-mode: screen;
+      background: linear-gradient(115deg, transparent 20%, currentColor 50%, transparent 80%); background-size: 240% 240%; }
+    .kv-gate.pass .kv-gate-orb .o .fl { opacity: 0.4; animation: kv-orb-flow 3s linear infinite; }
+    .kv-gate.now  .kv-gate-orb .o .fl { opacity: 0.55; animation: kv-orb-flow 2.1s linear infinite; }
+    .kv-gate.fail .kv-gate-orb .o .fl { opacity: 0.34; animation: kv-orb-flow 3.4s linear infinite; }
+    @keyframes kv-orb-flow { 0% { background-position: 0% 100%; } 100% { background-position: 200% -100%; } }
 
     /* Menu category tabs (chalkboard-themed) */
     .kv-menu-tabs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 22px; }
@@ -545,7 +552,7 @@
         gates.forEach(function (g, i) {
           const orb = document.createElement("div");
           orb.className = "kv-gate-orb";
-          orb.innerHTML = '<div class="b"></div><div class="o">' + (ICON[g.status] || "·") + '</div>';
+          orb.innerHTML = '<div class="b"></div><div class="o"><i class="fl"></i><span class="ic">' + (ICON[g.status] || "·") + '</span></div>';
           const card = SH.el("div", { class: "kv-gate " + g.status },
             SH.el("div", { class: "kv-gate-num" }, "Gate " + (i + 1)),
             orb,
