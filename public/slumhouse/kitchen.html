@@ -126,14 +126,20 @@
     @keyframes kv-orb-cook { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
     .kv-gate.fail .kv-gate-orb .b { background: conic-gradient(from 215deg,#4a1010,#ff6b6b 26%,#4a1010 52%,#ff9a9a 76%,#4a1010); }
     .kv-gate.fail .kv-gate-orb .o { color: #ff6b6b; } .kv-gate.fail .kv-gate-title { color: #ff6b6b; } .kv-gate.fail .kv-gate-state { color: #c65656; }
-    /* Flowing energy inside the orb — a moving gradient wave tinted by the gate state */
-    .kv-gate-orb .o .ic { position: relative; z-index: 2; }
-    .kv-gate-orb .o .fl { position: absolute; inset: 0; border-radius: 50%; opacity: 0; pointer-events: none; mix-blend-mode: screen;
-      background: linear-gradient(115deg, transparent 20%, currentColor 50%, transparent 80%); background-size: 240% 240%; }
-    .kv-gate.pass .kv-gate-orb .o .fl { opacity: 0.4; animation: kv-orb-flow 3s linear infinite; }
-    .kv-gate.now  .kv-gate-orb .o .fl { opacity: 0.55; animation: kv-orb-flow 2.1s linear infinite; }
-    .kv-gate.fail .kv-gate-orb .o .fl { opacity: 0.34; animation: kv-orb-flow 3.4s linear infinite; }
-    @keyframes kv-orb-flow { 0% { background-position: 0% 100%; } 100% { background-position: 200% -100%; } }
+    /* Liquid/ocean inside the orb — two rotating rounded blobs whose curved edges
+       undulate like a water surface, tinted by the gate state, layered for depth. */
+    .kv-gate-orb .o .ic { position: relative; z-index: 3; }
+    .kv-gate-orb .o .fl { position: absolute; inset: 0; border-radius: 50%; opacity: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+    .kv-gate-orb .o .fl::before, .kv-gate-orb .o .fl::after {
+      content: ""; position: absolute; left: -60%; width: 220%; height: 220%; background: currentColor; mix-blend-mode: screen; }
+    .kv-gate-orb .o .fl::before { top: 18%; border-radius: 43%; opacity: 0.6; animation: kv-wave 5s linear infinite; }
+    .kv-gate-orb .o .fl::after  { top: 30%; border-radius: 47%; opacity: 0.38; animation: kv-wave 7.5s linear infinite reverse; }
+    .kv-gate.pass .kv-gate-orb .o .fl { opacity: 0.6; }
+    .kv-gate.now  .kv-gate-orb .o .fl { opacity: 0.82; }
+    .kv-gate.now  .kv-gate-orb .o .fl::before { animation-duration: 3.2s; }
+    .kv-gate.now  .kv-gate-orb .o .fl::after  { animation-duration: 4.6s; }
+    .kv-gate.fail .kv-gate-orb .o .fl { opacity: 0.5; }
+    @keyframes kv-wave { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* Menu category tabs (chalkboard-themed) */
     .kv-menu-tabs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 22px; }
