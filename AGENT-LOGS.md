@@ -3,6 +3,32 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-05 Deep-Scan #17 DELTA lane (parallel session) + old-117 GRAVEYARD purge
+
+**Mission:** Operator ran a SECOND concurrent Deep-Scan #17 session. This session (a) ran its own independent 8-band read-only audit, (b) fixed the DELTA — findings the parallel 6-agent fix-wave's file list did NOT own — and (c) purged the retired old-117 graveyard library. Read-only for all files the parallel fix-wave owned (backtester.py, risk_metrics.py, monte_carlo.py, lifecycle-service.ts, kill-switch.ts, paper-execution-service.ts, cross-symbol-pnl.ts, adaptive-exit, boot/installer). Independent-confirmed their top CRITICALs (my TP1/TP2-discard=their B-1; my DSR-SE=their B-2/B-7; my manual-P→DR-DSL-bypass=their A-1).
+
+**Work completed (5 commits `e75f337..75012bb`, PUSHED):**
+- **CRITICAL self-restart mount-order** (`auth.ts`): `/api/admin/self-restart` + `/ollama-health-recheck` self-HMAC routes were mounted AFTER authMiddleware → 503 auth_not_configured before their own HMAC ran when API_KEY unset → dead-man's-heartbeat + n8n watchdog self-restart was dead on any deployment without API_KEY. Exempted (POST-only, suffix-matched); +4 regression tests (11 pass). Corroborated by Band F (n8n watchdog hits same route) + Band G.
+- **7 observability audit swallows** (`admin-workflow-backup.ts`, `strategies.ts` operator_insert_unguarded, `agent-service.ts` C9 persistDslFeatureVector, `agent.ts` ×2 robustness terminal, `paper.ts` ×2 session audits): bare `.catch(()=>{})` on audit_log writes now log loudly (§10b).
+- **forge_score ci_high** (`performance_gate.py:328`): read banned scalar `probability_of_ruin` → now `probability_of_ruin_ci.ci_high` (§13), legacy fallback. **DSR consumer** (`deploy-approvals.ts`): treated nested `deflated_sharpe` dict as scalar → NaN → Office card always "deflated_sharpe missing"; now unwraps `.dsr` (shape-robust).
+- **H-1 live-library URLs** (`strategy-source-resolver.ts`): 4-path resolver never read `config.metadata.source_url` (where all 120 spec_onboarding rows store the YouTube URL, verified 120/120 live) → whole library resolved as orphan/null. Added path-0. **H-2**: added NEEDS_ARCHETYPE + SHADOW to allowlist. +3 tests (25 pass).
+- **H-3 factor-quality telemetry** (`spec-onboarding-service.ts`): emitted Gate-2/Gate-3 (factor_quality_classified + thin_confluence_warning) the graduator fires but spec-onboarding never did → 120-corpus had zero factor-quality observability.
+
+**GRAVEYARD purge (live DB, snapshot-backed):** old 117 `graduated_bucket` GRAVEYARD strategies (May 19-26) hard-purged transactionally — grandchild-aware (`strategies←backtests←backtest_provenance`): strategies=117, strategy_graveyard=117, lifecycle_transitions=117, backtests=4, buckets=43; NULLed 45 stale `bias_state.active_strategy_id` (frozen May 23, not live). Snapshot `backups/gv-purge-snapshot-2026-07-05T07-13-16-941Z.json`; audit `library.graveyard_purged`. AFTER: library = clean 120 (CANDIDATE 117 + NEEDS_ARCHETYPE 3), all source=spec_onboarding. Append-only audit_log history preserved.
+
+**Verification:** tsc clean on all touched files (only pre-existing menu-route.test.ts ×10); production-isolation CLEAN; 2026-compliance OK; auth 11/11, resolver 25/25, spec-onboarding 3/3, performance_gate 29/30 (1 pre-existing unrelated avg_trade_risk fixture). D-2 CAS-guard + backtest-service DLQ swallows were ALREADY fixed by the parallel session (verified, skipped).
+
+**Bonus finding:** 45 `bias_state` rows still pointed at retired strategies as active_strategy_id (not cleaned at May retirement) — nulled during purge.
+
+**Carry-forward (deferred — coordination/coupling, NOT fixed):**
+- `picker-metrics.ts` DSR `/3` divisor — semantically coupled to the fix-wave's DSR-formula unification; reconcile AFTER their FIX-STATS settles the canonical `deflated_sharpe` shape.
+- `sse-events.ts` D-3 catalog drift (`backtest:complete` vs server `backtest:completed` → tile never fires; +19 uncatalogued events) — coordinate with the System-Map session (owns sse-events.ts + has System Map uncommitted).
+- `office.html` H-4/H-5 (switch cards one-shot snapshot → GREEN Bot Power while backend halted; silent catch) — concurrent session commits office.html frequently; do once it settles.
+- pytest 4 collection errors (test_mini_safety_guard + test_weight_trainer import nonexistent symbols; test_playbook_router_hysteresis = concurrent session's file; test_risk_metrics_properties = missing `hypothesis` env).
+- MC GPU/CPU RNG cross-device non-reproducibility (monte_carlo.py — may be in fix-wave's FIX-STATS scope).
+- **Handed to fix-wave:** force-close caller site `paper-signal-service.ts:3402-3404` is OUTSIDE their FIX-KILLSWITCH file list — must thread accountKey when forceCloseAllPositions gets a scope param.
+
+---
 ### Session Log — 2026-07-05 Deep-Scan #17 (8-band full-system re-audit) + Wave 1 (CRITICAL) + Wave 2 (MED/LOW) LANDED on phase-0
 
 **Mission:** Operator: "deep scan for all bugs and blockers, wiring… all systems institutional grade… bug free to be 10/10." Then (scope decision) "everything, all tiers." Ran an 8-band read-only adversarial re-audit (Deep-Scan #17, day after #16 closed), then a full fix wave.
