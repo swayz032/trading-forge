@@ -3,6 +3,28 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-05 Deep-Scan #18 (8-band audit) + coverage-diff vs concurrent session + 1 clean fix
+
+**Mission:** Operator: "deep scan for all bugs and blockers, wiring — all systems institutional-grade, bug-free, 10/10." Ran as an 8-band parallel READ-ONLY auditor panel (Team Mode). Then discovered a **concurrent Claude session** running its own 6-track fix wave on `hardening/phase-0`, re-scoped to avoid collision per §11b.
+
+**Work completed:**
+- **Deep-Scan #18 — 8 bands, all READ-ONLY (no worktrees for scan; avoided concurrent-HEAD hazard).** Overall ~6.5/10. Rate-limit killed 6/8 bands mid-run; resumed all via SendMessage with zero loss (same recovery as #17). Per-band: A(arch) 6.5, B(backtest) 6.0, C(paper/lifecycle) 6.5, D(observability) 7.0, E(accuracy) 5.5, F(autonomy) 6.5, G(n8n) 8.5, H(critic/security) 8.0.
+- **Headline CRITICALs (deduped, cross-confirmed):** (C-1, A+C double-confirmed 95%) live paper eligibility gate is passed `strategy.id` UUID where `eligibility_gate.py` expects the concept NAME → every live signal SKIPs in a non-NO_TRADE playbook; backtest passes the real name → promotion-critical paper/backtest divergence (`paper-signal-service.ts:5436` CachedSession has no `name`). (C-2, D+E+G triple-confirmed) `system-topology.ts::normalizeWorkflowHealth` reports workflows "healthy" off a 93-day-stale April manifest — no staleness ceiling; `system-map:check` self-referential (E F-2). (C-3, A+B) playbook_router ~48-name expansion flips backtests passthrough→gated with no comparability flag + `gate_stats.mode` dropped in both `run_backtest` and `buildResultExtras` allowlist.
+- **Verified institutional-grade (credit side):** challenger isolation intact end-to-end (H); auth fail-closed, no AUTH_DEV_BYPASS, no secrets, public-Ollama closed (H); 9-gate PAPER→DEPLOY_READY evaluator honest fail-posture (C); audit_log immutability trigger + replay-uniqueness + broker circuit breakers + no dead Prometheus counters (D); n8n structurally enterprise-grade 20/20 errorWorkflow + 77/77 retry (G, live-REST verified); look-ahead shift + 15:55 flatten + BE+1 + futures P&L + <4-window fix all correct (B).
+- **Coverage diff vs the concurrent session's 6-track wave:** their wave covers H-2 swallowed-audits (T4), dsr landmine (T2), WAVE29 SSE constants (T4), watchdog HMAC (T6). **Gaps NOT in their plan:** C-1 (on their T1 file `paper-signal` — must be added there), C-2/H-4 (no system-topology track), C-3/H-1 (their spec WIP), RL-CPCV-dead-code, production-isolation-transitive, menu-route tsc.
+- **Fix landed (branch `hardening/ds18-menu-tsc-fix`, pushed, ready for FF):** `menu-route.test.ts` 10 tsc errors (only errors in repo) — layer-undefined guard + 3-arg handler call. `tsc --noEmit` now 0 errors (so `npm run build` passes); menu-route 3/3 pass; all 3 CI gates green in worktree `tf-ds18-observ` (pinned c7ea635).
+
+**Verification:** `tsc --noEmit` = 0 errors (was 10). `vitest run menu-route.test.ts` = 3/3 pass. `check-production-isolation` + `check:2026-compliance` + `system-map:check` all exit 0 in the worktree.
+
+**Known-facts updates (corrections surfaced this scan):** (1) Band C confirmed AVWAP trail cushion (1×tick, `paper-execution-service.ts:4253`) + static_styleC TP2 (flat +2.0R, :2051) parity gaps are now FIXED on HEAD — scrub `avwap_trail_cushion_parity_gap` / `static_stylec_tp2_liquidity_divergence` from active gap-tracking. (2) Band F confirmed `DB_BACKUP_ENABLED=false` already 24h-deduped-alerted (`db-backup-service.ts:65`) — the deep-scan #9 `CRIT-1 DB_BACKUP silent` note is CLOSED. (3) Band B confirmed the plain-WF <4-window UnboundLocalError is FIXED (`walk_forward.py:1768`, deepscan15 C2) — memory flagging it open is stale.
+
+**Carry-forward for next session:**
+- **C-1 (CRITICAL) → concurrent session's T1** must add the CachedSession.name fix (its wave touches `paper-signal` but does NOT fix this). Or hand to me after its `paper-signal` edits land.
+- **C-2/H-4** system-map false-green: fix is staleness-ceiling in `normalizeWorkflowHealth` **+** manifest regen from live n8n REST — regen belongs with the concurrent session's T6 (n8n). Staleness-alone leaves readiness stuck "blocked" (staleWorkflowBlockers folds into productionConvergenceBlockers). Do both together. (I built + reverted the ceiling-only edit for this reason.)
+- **C-3/H-1** playbook_router comparability + gate_stats persistence + archetype-consistency: coordinate with the concurrent OR-branches session (its uncommitted `playbook_router.py`/`spec_*` WIP).
+- **Uncontested MED still open (safe for me next):** RL-training CPCV gate is dead code (`rl-training-cpcv-gate.ts` 0 callers; wire audit or delete+correct docs); `check-production-isolation.mjs` has no transitive-import awareness (run transitive walk first — could surface a real violation).
+
+---
 ### Session Log — 2026-07-05 Multi-session worktree-isolation convention codified (CLAUDE.md §11b)
 
 **Mission:** Operator: "agents [are] suppose to work on different worktrees then commit to main at the end." Codify the hard-won lesson that repeatedly bit this session (and #16, and the 2026-05-19 corruption): concurrent Claude sessions must NOT share one working tree.
