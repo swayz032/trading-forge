@@ -84,6 +84,19 @@ describe("isHandlerDrivenEntry (shared helper, src/server/lib/handler-driven-ent
     ).toBe(true);
   });
 
+  it("recognizes identical pending_archetype:<tok> parked markers on both sides (H-4, deep-scan #16 Wave 3)", () => {
+    // Parked NEEDS_ARCHETYPE spec (direction='both', no archetype/binding match).
+    // Not a live dispatch, but coercing it to long-only would disagree with the
+    // nested spec.direction='both' used when the archetype later lands.
+    expect(
+      isHandlerDrivenEntry("pending_archetype:ny_am_sweep", "pending_archetype:ny_am_sweep", null),
+    ).toBe(true);
+  });
+
+  it("does NOT exempt a mixed pending_archetype/empty parked state (degenerate one-sided spec)", () => {
+    expect(isHandlerDrivenEntry("pending_archetype:ny_am_sweep", "", null)).toBe(false);
+  });
+
   it("does NOT exempt genuinely-ambiguous duplicated grammar text (guard must stay intact)", () => {
     expect(isHandlerDrivenEntry("close > sma_20", "close > sma_20", null)).toBe(false);
   });
@@ -139,6 +152,16 @@ describe("applyFrameworkOverlay — direction='both' dispatch-marker fix", () =>
     });
     expect(result.config.direction).toBe("both");
     expect(result.config.strategy?.entry_short).toBe("archetype_dispatch:bounce_off_level");
+  });
+
+  it("PRESERVES both sides for a pending_archetype parked marker (H-4 — was silently coerced pre-fix)", () => {
+    const result = applyFrameworkOverlay({
+      compiled: makeBothConfig("pending_archetype:ny_am_sweep", "pending_archetype:ny_am_sweep"),
+      source: "graduated_bucket",
+      symbol: "MES",
+    });
+    expect(result.config.direction).toBe("both");
+    expect(result.config.strategy?.entry_short).toBe("pending_archetype:ny_am_sweep");
   });
 
   it("PRESERVES both sides for the 'high < low' archetype sentinel (unchanged legacy behavior)", () => {
