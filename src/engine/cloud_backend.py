@@ -544,12 +544,15 @@ def resolve_backend(
         logger.debug("resolve_backend: opt_in_cloud=False → local (%s)", label)
         return ("local", None, label)
 
-    # ── Gate 2: environment kill-switch ─────────────────────────────────────
+    # ── Gate 2: environment kill-switch (Deep-Scan #18b: FAIL-CLOSED) ─────────
+    # Was `== "false"` (fail-OPEN: unset/typo/stripped env → cloud enabled). The
+    # documented contract is opt-IN, so require an explicit "true" — anything else
+    # (unset, "0", typo, deploy-stripped) resolves local. Mirrors _check_cloud_gates().
     env_flag = os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower()
-    if env_flag == "false":
+    if env_flag != "true":
         label = local_select_backend(problem_size)
         logger.debug(
-            "resolve_backend: QUANTUM_CLOUD_ENABLED=false → local (%s)", label
+            "resolve_backend: QUANTUM_CLOUD_ENABLED!=true → local (%s)", label
         )
         return ("local", None, label)
 

@@ -900,7 +900,7 @@ def build_vqc_policy(config: VQCConfig):
     # ── Cloud device selection — routed through resolve_backend() ────────────
     # Both gates must pass before any cloud QPU is used:
     #   Gate 1: config.opt_in_cloud must be True  (per-request opt-in)
-    #   Gate 2: QUANTUM_CLOUD_ENABLED env var must not be "false"  (kill-switch)
+    #   Gate 2: QUANTUM_CLOUD_ENABLED env var must be "true"  (kill-switch, fail-closed)
     # If either gate is closed, resolve_backend returns ("local", None, label)
     # and we fall through to default.qubit below.
     #
@@ -1088,7 +1088,7 @@ def train_quantum_agent(
     # Cache only local simulation runs — cloud Braket/IBM runs must re-execute.
     _rl_is_cloud = (
         config.opt_in_cloud
-        and os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
+        and os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() == "true"
         and config.device.startswith("braket.aws")
     )
     _rl_cache_key: Optional[dict] = None
@@ -1132,9 +1132,9 @@ def train_quantum_agent(
     # local after max_cloud_evaluations circuit calls to control cost.  The counter is
     # approximate: each select_action call that hits the circuit counts as one evaluation.
     # Both gates must be open for cloud to actually be active:
-    #   Gate 1: config.opt_in_cloud=True, Gate 2: QUANTUM_CLOUD_ENABLED != "false"
+    #   Gate 1: config.opt_in_cloud=True, Gate 2: QUANTUM_CLOUD_ENABLED == "true" (fail-closed)
     _cloud_evals: int = 0
-    _env_cloud_enabled = os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
+    _env_cloud_enabled = os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() == "true"
     _cloud_device_active: bool = (
         config.device.startswith("braket.aws")
         and BRAKET_PENNYLANE_AVAILABLE
@@ -1379,7 +1379,7 @@ def _build_vqc_policy_ibm(n_qubits: int, n_layers: int, opt_in_cloud: bool) -> t
 
     All three gates must pass before any IBM cloud QPU path is engaged:
       Gate 1: opt_in_cloud=True  — per-call explicit opt-in (caller must pass explicitly)
-      Gate 2: QUANTUM_CLOUD_ENABLED env != "false"  — system kill-switch
+      Gate 2: QUANTUM_CLOUD_ENABLED env == "true"  — system kill-switch (fail-closed)
       Gate 3: IBM_QUANTUM_TOKEN env is set  — credential present
 
     If any gate is closed, falls through to local PennyLane default.qubit.
@@ -1391,7 +1391,7 @@ def _build_vqc_policy_ibm(n_qubits: int, n_layers: int, opt_in_cloud: bool) -> t
     is queryable via audit_log alongside the cloud_path_engaged success case.
 
     Env vars read (documented for env inventory):
-      QUANTUM_CLOUD_ENABLED   — if "false", cloud is disabled (gate 2)
+      QUANTUM_CLOUD_ENABLED   — must be "true" to enable cloud; anything else (unset/typo) disables (gate 2, fail-closed)
       IBM_QUANTUM_TOKEN       — IBM credential (gate 3)
       IBM_QUANTUM_CHANNEL     — channel passed to QiskitRuntimeService;
                                 defaults "ibm_cloud" (post-2023 IBM Cloud CRN
@@ -1410,7 +1410,7 @@ def _build_vqc_policy_ibm(n_qubits: int, n_layers: int, opt_in_cloud: bool) -> t
     if not PENNYLANE_AVAILABLE:
         return None, 0, "unavailable"
 
-    cloud_enabled = os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
+    cloud_enabled = os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() == "true"
     ibm_token = os.environ.get("IBM_QUANTUM_TOKEN", "")
 
     # Three-gate AND: all must pass before touching IBM cloud
@@ -1778,7 +1778,7 @@ def train_regime_conditioned_policies(
         try:
             _ibm_attempted = (
                 opt_in_cloud
-                and os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
+                and os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() == "true"
                 and bool(os.environ.get("IBM_QUANTUM_TOKEN", ""))
             )
             if _ibm_attempted and backend_label in ("default.qubit", "unavailable", "local"):
