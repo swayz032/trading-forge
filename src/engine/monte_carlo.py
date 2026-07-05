@@ -488,16 +488,47 @@ def block_bootstrap(
 
     n_trades = len(trades)
     p = 1.0 / expected_block_length
-    # F-1: Use PCG64DXSM (same family as every other MC path) instead of SFC64.
-    rng = create_authoritative_rng(seed)[0]
 
     # GPU path: use CuPy vectorized bootstrap when available
+    #
+    # FIX (deepscan18 B-E1, 2026-07-05): previously this called
+    # `block_bootstrap_gpu(trades, n_sims, expected_block_length, seed)`, which
+    # internally seeded `xp.random.default_rng(seed)` ON THE GPU (cupy's own RNG
+    # algorithm/stream) — a DIFFERENT generator family than the authoritative
+    # PCG64DXSM (`create_authoritative_rng`) the CPU/Numba path below uses. Same
+    # seed therefore produced a DIFFERENT bootstrap resample on GPU (tower) vs
+    # CPU (CI / non-GPU dev boxes), and hence a different
+    # `probability_of_ruin_ci.ci_high` straddling the B14 0.20 hard-gate
+    # threshold depending on which machine happened to run the backtest.
+    # `use_gpu` defaults true end-to-end, so this was the common path in prod,
+    # not an edge case.
+    #
+    # FIX: generate the resample INDICES (start_pos/block_draws/restart_pos) on
+    # CPU with the authoritative RNG — the exact same call sequence/shapes the
+    # Numba core below uses — and hand only those (cheap) index arrays to the
+    # GPU for the gather + cumsum. The random DRAWS are now identical CPU vs
+    # GPU for a given seed; only the vectorized gather runs on device. See
+    # gpu_pipeline.block_bootstrap_gpu() and test_mc_gpu_cpu_determinism.py.
     if GPU_AVAILABLE and n_sims >= 1000:
         try:
             from src.engine.gpu_pipeline import block_bootstrap_gpu
-            return block_bootstrap_gpu(trades, n_sims, expected_block_length, seed)
+            _idx_rng = create_authoritative_rng(seed)[0]
+            _start_pos = _idx_rng.integers(0, n_trades, size=n_sims)
+            _block_draws = _idx_rng.random(size=(n_sims, n_trades))
+            _restart_pos = _idx_rng.integers(0, n_trades, size=(n_sims, n_trades))
+            return block_bootstrap_gpu(
+                trades, n_sims, expected_block_length, seed,
+                start_pos=_start_pos, block_draws=_block_draws, restart_pos=_restart_pos,
+            )
         except Exception:
             pass  # Fall through to CPU
+
+    # F-1: Use PCG64DXSM (same family as every other MC path) instead of SFC64.
+    # NOTE: created here (not before the GPU attempt above) so the CPU-only
+    # code path below is byte-identical to pre-deepscan18 behavior — the GPU
+    # branch now derives its own index arrays from a fresh, independently-seeded
+    # authoritative RNG rather than sharing/consuming this one.
+    rng = create_authoritative_rng(seed)[0]
 
     if NUMBA_AVAILABLE:
         # Pre-generate all random numbers (Numba doesn't support default_rng)

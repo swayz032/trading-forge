@@ -79,11 +79,41 @@ export interface AccountSessionPnL {
  * one `config.account_key` == exactly one funded account. Reusing the same key
  * across two different funded accounts silently defeats DLL isolation again.
  */
+// deepscan18 C-C4 (2026-07-05): dedup set so the fallback WARN below fires
+// ONCE per distinct fallback key per process lifetime, not on every call —
+// resolveAccountKey() is invoked on the hot signal-evaluation path (once or
+// more per bar per session), so an un-deduped WARN would flood the logs
+// under today's normal single-account operation (where the fallback path is
+// the EXPECTED/safe default, not an error).
+const _accountKeyFallbackWarnedKeys = new Set<string>();
+
 export function resolveAccountKey(session: { firmId?: string | null; config?: unknown }): string {
   const cfg = session.config as { account_key?: unknown } | null | undefined;
   const rawKey = cfg && typeof cfg.account_key === "string" ? cfg.account_key.trim() : "";
   if (rawKey.length > 0) return rawKey;
-  return session.firmId ?? "default";
+
+  const fallbackKey = session.firmId ?? "default";
+  // deepscan18 C-C4 fix: a 2nd real account on the SAME firm that never gets
+  // config.account_key set silently re-merges its DLL bucket with every other
+  // session on this fallback key (the exact isolation failure the C-1 fix
+  // above solves for accounts that DID set the key). The daily
+  // account-key-uniqueness-sanity cron (scheduler.ts) is the authoritative
+  // detector for that condition, but it only runs once a day — this loud,
+  // deduped WARN is the FIRST visible signal, fired the moment the fallback
+  // path is actually exercised. Safe/expected today (operator runs a single
+  // account per firm), so it fires once per fallback key, not on every call.
+  if (!_accountKeyFallbackWarnedKeys.has(fallbackKey)) {
+    _accountKeyFallbackWarnedKeys.add(fallbackKey);
+    logger.warn(
+      { firm_id: fallbackKey },
+      `cross-symbol-pnl.resolveAccountKey: falling back to firmId="${fallbackKey}" — no config.account_key set. ` +
+        `DLL isolation currently assumes only ONE funded account maps to this key. If a second account on ` +
+        `"${fallbackKey}" begins trading without its own distinct config.account_key, its P&L will silently ` +
+        `merge with every other session sharing this fallback (see account-key-uniqueness-sanity cron for the ` +
+        `daily audit of this condition).`,
+    );
+  }
+  return fallbackKey;
 }
 
 /**
@@ -380,12 +410,16 @@ export function checkAccountKeyUniquenessSanity(
 }
 
 /**
- * Live DB-backed wrapper around checkAccountKeyUniquenessSanity(). NOT wired to
- * a scheduler in this fix wave — scheduler.ts cron registration is outside the
- * kill-switch/paper-execution/paper-signal/cross-symbol-pnl file-ownership
- * boundary for deepscan17 FIX-KILLSWITCH. Call this from a boot task or daily
- * cron to activate the WARN. Fail-open: a DB error logs and returns [] rather
- * than blocking anything (this is a sanity WARN, never a trading gate).
+ * Live DB-backed wrapper around checkAccountKeyUniquenessSanity().
+ *
+ * deepscan18 (2026-07-05) C-C3 correction: this docstring previously read "NOT
+ * wired to a scheduler in this fix wave" (true at deepscan17 Wave 1 time). It
+ * WAS subsequently wired in deepscan17 Wave 2 — see scheduler.ts's
+ * `registerJob("account-key-uniqueness-sanity", ...)` (daily, 24h interval,
+ * pinned to 7:37 AM ET via the `cron.schedule("37 11,12 * * *", ...)` DST-aware
+ * guard). Verified live at deepscan18 audit time — this is genuinely wired,
+ * not a dangling TODO. Fail-open: a DB error logs and returns [] rather than
+ * blocking anything (this is a sanity WARN, never a trading gate).
  */
 export async function runAccountKeyUniquenessSanityCheck(): Promise<AccountKeyUniquenessWarning[]> {
   try {

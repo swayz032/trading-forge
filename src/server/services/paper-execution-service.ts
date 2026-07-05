@@ -715,7 +715,20 @@ export async function openPosition(sessionId: string, params: {
   // can read it at close. Optional — absent when the caller didn't compute it (e.g. manual
   // opens, other automation) or when nothing was known at signal time; never fabricated.
   entryContext?: EntryDecisionContext;
-}, context?: { correlationId?: string; accountId?: string }) {
+}, context?: {
+  correlationId?: string;
+  accountId?: string;
+  // deepscan18 (2026-07-05) C-C1: OPTIONAL account/firm scope for the kill-
+  // switch halt gate below. Threaded through by callers that already know the
+  // evaluating session's resolved account key (see cross-symbol-pnl.ts::
+  // resolveAccountKey) — today, paper-signal-service.ts's deferred-entry call
+  // site. Distinct from `accountId` above (broker-account assignment id, an
+  // unrelated concept). Omitting it preserves the exact legacy GLOBAL
+  // isHaltedForProduction() behavior byte-for-byte (e.g. the manual
+  // /api/paper/execute/open route, which doesn't pass one).
+  accountKey?: string;
+  firmId?: string | null;
+}) {
   // FIX 4: generate a per-call correlationId when caller does not supply one.
   // This ensures every audit row from openPosition has a reconstructable trace root
   // even for callers that don't thread correlationId (manual opens, automation).
@@ -730,8 +743,13 @@ export async function openPosition(sessionId: string, params: {
   // production_mode='HALT' means the operator has explicitly halted all
   // paper trading activity — no new positions may be opened until they set
   // production_mode back to 'PAPER' or 'LIVE'.
+  //
+  // deepscan18 C-C1: pass through context.accountKey/firmId so a breach on a
+  // SIBLING account/firm doesn't block this account's entry. Both are
+  // undefined for callers that don't supply them, which is the exact legacy
+  // (global) evaluation — byte-identical for those callers.
   try {
-    if (await killSwitch.isHaltedForProduction({ correlationId })) {
+    if (await killSwitch.isHaltedForProduction({ correlationId, accountKey: context?.accountKey, firmId: context?.firmId })) {
       logger.warn(
         { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side, reason: "production_mode_halt" },
         "paper-execution.production-halted: new entry blocked by production kill switch",

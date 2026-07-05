@@ -2495,9 +2495,16 @@ export async function evaluateSignals(
       let pendingDropReason: string | null = null;
 
       // Gate 1: Kill switch (H6 layered, fail-CLOSED)
+      // deepscan18 (2026-07-05) C-C1: pass this session's resolved account/firm
+      // scope so a sibling account's breach doesn't drop THIS account's
+      // already-queued fill. See kill-switch.ts::evaluateAllKillSwitchLayers.
       if (!pendingDropReason) {
         try {
-          const halted = await killSwitch.isHaltedForProduction({ correlationId: pendingEntry.correlationId });
+          const halted = await killSwitch.isHaltedForProduction({
+            correlationId: pendingEntry.correlationId,
+            accountKey: resolveAccountKey(sessionRow),
+            firmId: sessionRow.firmId,
+          });
           if (halted) {
             pendingDropReason = "kill_switch";
           }
@@ -2779,7 +2786,14 @@ export async function evaluateSignals(
       // Trade-critique data bridge (2026-07-05): entry-time decision context captured
       // at signal time (bar N) — see PendingEntry.entryContext.
       entryContext: pendingEntry.entryContext,
-    }, { correlationId: pendingEntry.correlationId });
+    }, {
+      correlationId: pendingEntry.correlationId,
+      // deepscan18 C-C1: forward this session's account/firm scope into
+      // openPosition()'s own kill-switch gate (paper-execution-service.ts
+      // ~734) so a sibling account's breach doesn't block THIS fill.
+      accountKey: resolveAccountKey(sessionRow),
+      firmId: sessionRow.firmId,
+    });
 
     if (deferredResult.position) {
       action = "open";
@@ -3144,8 +3158,15 @@ export async function evaluateSignals(
     // run in the `if (openPos)` branch ABOVE and must continue unaffected.
     // Only new-entry evaluation is blocked here.
     // isHaltedForProduction() has a 5s internal cache — cheap per-bar call.
+    // deepscan18 (2026-07-05) C-C1: scope to this session's resolved account/
+    // firm so a sibling account's breach doesn't block THIS account's new
+    // entries. See kill-switch.ts::evaluateAllKillSwitchLayers.
     {
-      const haltedAtEntry = await killSwitch.isHaltedForProduction({ correlationId: correlationId ?? undefined });
+      const haltedAtEntry = await killSwitch.isHaltedForProduction({
+        correlationId: correlationId ?? undefined,
+        accountKey: resolveAccountKey(sessionRow),
+        firmId: sessionRow.firmId,
+      });
       if (haltedAtEntry) {
         logger.debug(
           { sessionId, symbol },

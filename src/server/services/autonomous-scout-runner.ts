@@ -1799,7 +1799,7 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
             status: "info",
             decisionAuthority: "autonomous_scout",
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr) => logger.warn({ auditErr, videoId: v.videoId, conceptName: c.conceptName, correlationId }, "scout.reddit_enrichment_attempted audit write failed (deepscan18) — Layer-2 Reddit-enrichment provenance not recorded")); // §10b: don't drop this audit silently
         } catch { /* non-blocking */ }
 
         const enrichment = await fetchRedditEnrichment(c.conceptName).catch(() => null);
@@ -1833,7 +1833,7 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
               status: "success",
               decisionAuthority: "autonomous_scout",
               correlationId,
-            }).catch(() => {});
+            }).catch((auditErr) => logger.warn({ auditErr, videoId: v.videoId, conceptName: c.conceptName, correlationId }, "scout.reddit_enriched audit write failed (deepscan18) — Layer-2 Reddit-enrichment provenance not recorded")); // §10b: don't drop this audit silently
 
             const enrichedOk = await postLayerMention({
               conceptName: c.conceptName,
@@ -1873,7 +1873,7 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
             status: "rejected",
             decisionAuthority: "autonomous_scout",
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr) => logger.warn({ auditErr, videoId: v.videoId, conceptName: c.conceptName, correlationId }, "scout.reddit_enriched_but_extract_failed audit write failed (deepscan18) — Layer-2 Reddit-enrichment provenance not recorded")); // §10b: don't drop this audit silently
           // fall through to CV-only fallback below
         }
       }

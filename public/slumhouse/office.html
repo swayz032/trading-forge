@@ -347,6 +347,9 @@
     .of-status.alert { color: var(--red); text-shadow: 0 0 16px rgba(255,90,90,0.45); }
     .of-status.paused { color: var(--dim); }   /* PAUSED = blank/neutral, not red */
     .of-status.on { color: var(--lime); }
+    /* deepscan18 H-F3: explicit STALE state (amber) when /admin/switches is unreachable —
+       a dimmed green toggle must never be mistaken for a live "ON". */
+    .of-status.stale { color: #ffbe5a; text-shadow: 0 0 16px rgba(255,190,90,0.4); }
     .of-status.off { color: var(--red); }
     .of-card3d.is-active {
       transform: translate(-50%, -50%) translateZ(60px) scale(1) rotateY(0deg); opacity: 1; z-index: 5;
@@ -1239,9 +1242,27 @@
         fetch('/slumhouse/admin/switches', { credentials: 'same-origin' })
           .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
           .then(function (d) { ofSwitches = (d && d.switches) || {}; if (ofTrack) ofTrack.style.opacity = ''; applySwitches(); })
-          // deepscan17 H-5: on fetch failure, dim the switch cards so a frozen toggle is not
-          // mistaken for live state (the Risk-Truth card carries the authoritative halt banner).
-          .catch(function () { if (ofTrack) ofTrack.style.opacity = '0.45'; });
+          // deepscan18 H-F3 (2026-07-05): on fetch failure, mark the switch cards an EXPLICIT
+          // stale state (amber "Unknown / stale" label + neutralized toggle), not just a
+          // 45%-opacity dim. deepscan17 H-5 only dimmed the track, so a glancing operator could
+          // read a 45%-opacity GREEN toggle as "ON" while the tower was unreachable. The label
+          // flip + drop of the green/red pulse makes the unknown state unmistakable. (The
+          // Risk-Truth card still carries the authoritative halt banner.) On the next successful
+          // poll, applySwitches() fully reassigns each status className, dropping the 'stale' class.
+          .catch(function () { if (ofTrack) ofTrack.style.opacity = '0.45'; markSwitchesStale(); });
+      }
+      // deepscan18 H-F3: paint every switch card as "Unknown / stale" (amber) and strip the
+      // green/red live pulse when the switches endpoint can't be reached.
+      function markSwitchesStale() {
+        if (!ofTrack) return;
+        OF_CARDS.forEach(function (cd, i) {
+          if (cd.connect) return;                    // Carter connect card has no toggle/status
+          var el = ofTrack.children[i]; if (!el) return;
+          var tg = el.querySelector('[data-toggle]');
+          var st = el.querySelector('[data-status]');
+          if (tg) tg.classList.remove('on', 'alert');  // drop the live pulse — no ON/OFF claim
+          if (st) { st.textContent = 'Unknown / stale'; st.className = 'of-status stale'; }
+        });
       }
       function applySwitches() {
         OF_CARDS.forEach(function (cd, i) {

@@ -1,0 +1,1320 @@
+{
+  "before": {
+    "enabled": false,
+    "n_strategies_total": 120,
+    "n_strategies_with_or_branches": 108,
+    "total_expected_or_groups": 726,
+    "total_executed_or_groups": 0,
+    "ccr": 0.0,
+    "ccr_pct": 0.0,
+    "per_strategy": [
+      {
+        "name": "ae7a2560-3569-4f29-b297-a4f3a60d1ca3",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "6c755822-713d-48f9-867e-cf399722e69a",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "97fabc41-f55b-4a20-a020-c28d6b7ffb54",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "9f38ab7a-9a3d-4771-bdfb-13c1cd067536",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "47b1c45a-de30-498b-b630-0ab957395204",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "b2deddcb-57d4-4bc9-b750-39be0f8fe12a",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "5b9fefce-ea5a-490c-a80e-8136272ddcf7",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "fb2e92ab-feda-4327-a524-4a557e859da7",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "5591c0ba-a4ac-44eb-81c1-f26011774013",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "971826d6-defb-4882-a634-5deeecad712f",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "0dfd11ee-d227-4ff0-a839-c1c78356d5e5",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "39eba5ec-6939-434a-a1cc-bcb19bee4606",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "594186e5-3249-40d7-8791-b46ea2c01b20",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "cce3d9f0-e23e-473d-b841-8af2db3eab1a",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "9d133b69-55ea-4eab-969f-c385eacbba21",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "1771442d-0138-4c22-8993-8acfe4c79fd3",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "d36f9a97-ebbc-423b-b7a8-a1f06271f689",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "ebc8fff7-5459-427f-a4ad-a68a6366f6e0",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "b18952c0-ae56-411c-ae06-017051083658",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "4be0db1d-b6fe-46c4-8251-fd721b1b0992",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "a1d641ff-e35c-48f8-899f-9401e0c2c839",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "913f40c4-6d3d-4c71-81da-109631f38873",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "63d50af3-5629-437d-9271-0b242b212458",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "43d73bbc-2710-4d8f-89d0-bac8e60688c4",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "8a047fd8-148c-46b0-a268-717f826ff4d4",
+        "expected": 11,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "a2644bb7-943e-4247-8cc7-6ee385c53595",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "05b069a6-a8e4-49bb-a933-846d6b4b6f02",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "8936bb44-8a0a-4a62-87fa-e8461215066e",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "b5871142-d5e4-4d8b-a7da-3033719d762f",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "e27546e4-fd8d-49d1-a359-5a0ed9a9411b",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "58de00c3-308d-4f7a-9223-be161168e9ec",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "2c64c7c5-5d5d-4ba3-9995-cc5ab2fcfa1f",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "69b64551-05ad-41f6-b736-aeaab16d6bfb",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "b238477c-71a4-4fa0-bb50-5f67c1b2c865",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "81663564-e5bc-42b6-8a51-548ba0bc55c3",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "ad9811b7-10db-482e-afb8-d1158d5054ce",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "edbe2372-05b6-4388-afce-b99e754b7e04",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "81002a32-98fc-4a49-9079-14742224122a",
+        "expected": 40,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "c029e162-ecf9-4709-9820-baf60c6b7af0",
+        "expected": 40,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "c45b4718-07b1-4bea-baa3-1ee0a8e209b4",
+        "expected": 40,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "3c6d439a-d49c-4124-a215-ff2577361480",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "6a03c714-45c5-4efe-81e2-5a6af5e554c0",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "321ef3d8-b0db-47ee-a365-7e9090fbfcee",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "a20ecb89-a119-4c4c-958a-6558abb08a17",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "06ea64d3-155a-45a4-a233-53cac8a3584d",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "3af883fa-9c50-45de-9076-214136f44b8a",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "5e5803d1-e255-4ee9-943f-02328deb5f14",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "4be1fb85-0c34-4f2e-b326-9053440bdc64",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "6304525a-81a6-41ea-9bdc-d768ee5e9ee1",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "543874f8-21ad-4bc8-b298-4f8c62a35f87",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "d3d2d55f-30b1-4587-915e-af87e2dc2953",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "b2f4630d-3540-4a33-94c9-ebbafdd9346f",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "338f7e39-4932-48b3-a993-10afa1ed9b3e",
+        "expected": 15,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411",
+        "expected": 15,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "f43088ac-49dc-4503-947f-6badf004a9e6",
+        "expected": 15,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "67d67ba0-c0b4-4dab-ba00-a25c331ae4d5",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "331fe15a-8560-4b46-88bb-4b01119b725a",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "c98d373d-fa40-4f87-b6ef-e6cb2d595d8d",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "93fe89cf-7491-4cfd-a645-e7291db36523",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "1b256347-a65c-4ec0-a73b-77c2c01cc29e",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "534ca8ea-32d8-4c94-8f09-d851a78d795f",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "0f3a1418-992a-427e-818a-6d427fe11173",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "f3babbdd-2e2e-4adb-b449-dc1590f569e2",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "162e6fdd-e4c9-4335-b6da-bb8c3f8cb59d",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "979ba21b-66ca-4071-8e5e-ca96911a4cbd",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "9b871b65-3a50-456d-accc-5269d59a3992",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "67c762e4-d2e0-4b57-ae72-6b8755007d36",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "91bfb9e4-bb54-4a80-842e-3522bb1b0527",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "710a9ed3-a3d0-4eb3-baa1-69085bf87dd1",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "c1217b13-f0a5-4fa9-afaa-35da4ce3998f",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "942f83cc-0a84-41d7-b11d-b3f3b88a6f2b",
+        "expected": 8,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "232d9540-cbda-478e-93c4-9a35f6cf8a86",
+        "expected": 8,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "d8fe9ad2-da9a-463f-bcea-2b742601b028",
+        "expected": 8,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "fc4bf082-41d0-4030-b5a7-5494889139c0",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "9955f721-7644-4e31-8d01-f34a109289b6",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "1dd66daa-5066-4755-ba3a-4ca76017e57a",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "2c7e78e7-0663-44f6-af18-0a5c68ad2f1d",
+        "expected": 20,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "e135491b-dedf-4c30-8614-9c74acc6055f",
+        "expected": 6,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "d916b245-1562-4e82-9530-d7a79bc2c04c",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "e28f6ea8-fbd1-4926-a68b-e2d7de48ba46",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "326fe955-50cc-4246-bdab-8976438b7c06",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "f8795a5d-2341-433a-bf77-6dc8dae4e32c",
+        "expected": 20,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "562decbf-034d-412b-9210-4f87b7f86179",
+        "expected": 20,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "aae789b5-2d29-4558-a58b-7950ce5b9c0a",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "8ec7f48d-59e8-4888-8ac7-9cdd875a78e2",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "52f9921d-619c-4cab-b845-bef642c7585f",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "589ec512-eecf-4d49-879f-7ec0e8d2b8f2",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "ca5564d8-f6a2-46f5-9f2f-e678572ccf48",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "4c61be86-5940-4bec-a8a0-87328b2cafe8",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "8148f3b5-8bc7-4d36-a1d4-0ed5e2802185",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "7ea22e05-b1b2-4be5-bd35-5f5f1bba5805",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "1489bf44-a7de-4a68-b6c9-d4d4fe9ff390",
+        "expected": 5,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "a18406a7-4f63-4d10-948b-228b9473ad5f",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "93534762-1b88-41c8-b5bf-32ba8584bc0e",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "ac4fe99d-1c97-42ee-8ce2-dafd6f18e0ea",
+        "expected": 9,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "88626172-8b82-4607-938c-fab7c8b9b3a9",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "29a5a070-24e6-4fc4-ac0b-284d314039b6",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "229770b3-860c-49c3-820e-0d3ff1348704",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "3f63d906-ce8e-4a9f-9e97-c3b6b075642d",
+        "expected": 4,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "a71fb739-41de-45f3-af8f-1bec87338107",
+        "expected": 4,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "3e91ffe4-bd68-41bb-a364-d35968c0778f",
+        "expected": 4,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "f6ff3004-361f-4c00-9235-fa233a57bac5",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "84928232-2e58-4e6c-92d3-5e8631eb2138",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "30024153-c7ea-43bb-a430-7a900ddde667",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      }
+    ]
+  },
+  "after": {
+    "enabled": true,
+    "n_strategies_total": 120,
+    "n_strategies_with_or_branches": 108,
+    "total_expected_or_groups": 726,
+    "total_executed_or_groups": 306,
+    "ccr": 0.4214876033057851,
+    "ccr_pct": 42.1488,
+    "per_strategy": [
+      {
+        "name": "ae7a2560-3569-4f29-b297-a4f3a60d1ca3",
+        "expected": 5,
+        "executed": 1,
+        "ccr": 0.2
+      },
+      {
+        "name": "6c755822-713d-48f9-867e-cf399722e69a",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "97fabc41-f55b-4a20-a020-c28d6b7ffb54",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "9f38ab7a-9a3d-4771-bdfb-13c1cd067536",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90",
+        "expected": 3,
+        "executed": 3,
+        "ccr": 1.0
+      },
+      {
+        "name": "47b1c45a-de30-498b-b630-0ab957395204",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "b2deddcb-57d4-4bc9-b750-39be0f8fe12a",
+        "expected": 5,
+        "executed": 1,
+        "ccr": 0.2
+      },
+      {
+        "name": "5b9fefce-ea5a-490c-a80e-8136272ddcf7",
+        "expected": 5,
+        "executed": 1,
+        "ccr": 0.2
+      },
+      {
+        "name": "fb2e92ab-feda-4327-a524-4a557e859da7",
+        "expected": 11,
+        "executed": 5,
+        "ccr": 0.45454545454545453
+      },
+      {
+        "name": "5591c0ba-a4ac-44eb-81c1-f26011774013",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "971826d6-defb-4882-a634-5deeecad712f",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "0dfd11ee-d227-4ff0-a839-c1c78356d5e5",
+        "expected": 11,
+        "executed": 5,
+        "ccr": 0.45454545454545453
+      },
+      {
+        "name": "39eba5ec-6939-434a-a1cc-bcb19bee4606",
+        "expected": 11,
+        "executed": 5,
+        "ccr": 0.45454545454545453
+      },
+      {
+        "name": "594186e5-3249-40d7-8791-b46ea2c01b20",
+        "expected": 3,
+        "executed": 3,
+        "ccr": 1.0
+      },
+      {
+        "name": "cce3d9f0-e23e-473d-b841-8af2db3eab1a",
+        "expected": 3,
+        "executed": 1,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "9d133b69-55ea-4eab-969f-c385eacbba21",
+        "expected": 3,
+        "executed": 1,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "1771442d-0138-4c22-8993-8acfe4c79fd3",
+        "expected": 11,
+        "executed": 9,
+        "ccr": 0.8181818181818182
+      },
+      {
+        "name": "d36f9a97-ebbc-423b-b7a8-a1f06271f689",
+        "expected": 11,
+        "executed": 9,
+        "ccr": 0.8181818181818182
+      },
+      {
+        "name": "ebc8fff7-5459-427f-a4ad-a68a6366f6e0",
+        "expected": 11,
+        "executed": 9,
+        "ccr": 0.8181818181818182
+      },
+      {
+        "name": "b18952c0-ae56-411c-ae06-017051083658",
+        "expected": 3,
+        "executed": 3,
+        "ccr": 1.0
+      },
+      {
+        "name": "4be0db1d-b6fe-46c4-8251-fd721b1b0992",
+        "expected": 3,
+        "executed": 1,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "a1d641ff-e35c-48f8-899f-9401e0c2c839",
+        "expected": 3,
+        "executed": 1,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3",
+        "expected": 9,
+        "executed": 3,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "913f40c4-6d3d-4c71-81da-109631f38873",
+        "expected": 3,
+        "executed": 1,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "63d50af3-5629-437d-9271-0b242b212458",
+        "expected": 11,
+        "executed": 2,
+        "ccr": 0.18181818181818182
+      },
+      {
+        "name": "43d73bbc-2710-4d8f-89d0-bac8e60688c4",
+        "expected": 11,
+        "executed": 2,
+        "ccr": 0.18181818181818182
+      },
+      {
+        "name": "8a047fd8-148c-46b0-a268-717f826ff4d4",
+        "expected": 11,
+        "executed": 2,
+        "ccr": 0.18181818181818182
+      },
+      {
+        "name": "a2644bb7-943e-4247-8cc7-6ee385c53595",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "05b069a6-a8e4-49bb-a933-846d6b4b6f02",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "8936bb44-8a0a-4a62-87fa-e8461215066e",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "b5871142-d5e4-4d8b-a7da-3033719d762f",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "e27546e4-fd8d-49d1-a359-5a0ed9a9411b",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "58de00c3-308d-4f7a-9223-be161168e9ec",
+        "expected": 9,
+        "executed": 3,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
+        "expected": 9,
+        "executed": 3,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "2c64c7c5-5d5d-4ba3-9995-cc5ab2fcfa1f",
+        "expected": 6,
+        "executed": 4,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "69b64551-05ad-41f6-b736-aeaab16d6bfb",
+        "expected": 1,
+        "executed": 1,
+        "ccr": 1.0
+      },
+      {
+        "name": "b238477c-71a4-4fa0-bb50-5f67c1b2c865",
+        "expected": 6,
+        "executed": 4,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "81663564-e5bc-42b6-8a51-548ba0bc55c3",
+        "expected": 5,
+        "executed": 2,
+        "ccr": 0.4
+      },
+      {
+        "name": "ad9811b7-10db-482e-afb8-d1158d5054ce",
+        "expected": 5,
+        "executed": 2,
+        "ccr": 0.4
+      },
+      {
+        "name": "edbe2372-05b6-4388-afce-b99e754b7e04",
+        "expected": 5,
+        "executed": 2,
+        "ccr": 0.4
+      },
+      {
+        "name": "81002a32-98fc-4a49-9079-14742224122a",
+        "expected": 40,
+        "executed": 16,
+        "ccr": 0.4
+      },
+      {
+        "name": "c029e162-ecf9-4709-9820-baf60c6b7af0",
+        "expected": 40,
+        "executed": 16,
+        "ccr": 0.4
+      },
+      {
+        "name": "c45b4718-07b1-4bea-baa3-1ee0a8e209b4",
+        "expected": 40,
+        "executed": 16,
+        "ccr": 0.4
+      },
+      {
+        "name": "3c6d439a-d49c-4124-a215-ff2577361480",
+        "expected": 5,
+        "executed": 3,
+        "ccr": 0.6
+      },
+      {
+        "name": "6a03c714-45c5-4efe-81e2-5a6af5e554c0",
+        "expected": 5,
+        "executed": 3,
+        "ccr": 0.6
+      },
+      {
+        "name": "321ef3d8-b0db-47ee-a365-7e9090fbfcee",
+        "expected": 5,
+        "executed": 3,
+        "ccr": 0.6
+      },
+      {
+        "name": "a20ecb89-a119-4c4c-958a-6558abb08a17",
+        "expected": 6,
+        "executed": 3,
+        "ccr": 0.5
+      },
+      {
+        "name": "06ea64d3-155a-45a4-a233-53cac8a3584d",
+        "expected": 6,
+        "executed": 3,
+        "ccr": 0.5
+      },
+      {
+        "name": "3af883fa-9c50-45de-9076-214136f44b8a",
+        "expected": 3,
+        "executed": 1,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "5e5803d1-e255-4ee9-943f-02328deb5f14",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "4be1fb85-0c34-4f2e-b326-9053440bdc64",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "6304525a-81a6-41ea-9bdc-d768ee5e9ee1",
+        "expected": 6,
+        "executed": 1,
+        "ccr": 0.16666666666666666
+      },
+      {
+        "name": "543874f8-21ad-4bc8-b298-4f8c62a35f87",
+        "expected": 9,
+        "executed": 6,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "d3d2d55f-30b1-4587-915e-af87e2dc2953",
+        "expected": 9,
+        "executed": 6,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "b2f4630d-3540-4a33-94c9-ebbafdd9346f",
+        "expected": 9,
+        "executed": 6,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "338f7e39-4932-48b3-a993-10afa1ed9b3e",
+        "expected": 15,
+        "executed": 8,
+        "ccr": 0.5333333333333333
+      },
+      {
+        "name": "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411",
+        "expected": 15,
+        "executed": 8,
+        "ccr": 0.5333333333333333
+      },
+      {
+        "name": "f43088ac-49dc-4503-947f-6badf004a9e6",
+        "expected": 15,
+        "executed": 8,
+        "ccr": 0.5333333333333333
+      },
+      {
+        "name": "67d67ba0-c0b4-4dab-ba00-a25c331ae4d5",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "331fe15a-8560-4b46-88bb-4b01119b725a",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "c98d373d-fa40-4f87-b6ef-e6cb2d595d8d",
+        "expected": 6,
+        "executed": 1,
+        "ccr": 0.16666666666666666
+      },
+      {
+        "name": "93fe89cf-7491-4cfd-a645-e7291db36523",
+        "expected": 6,
+        "executed": 1,
+        "ccr": 0.16666666666666666
+      },
+      {
+        "name": "1b256347-a65c-4ec0-a73b-77c2c01cc29e",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "534ca8ea-32d8-4c94-8f09-d851a78d795f",
+        "expected": 6,
+        "executed": 1,
+        "ccr": 0.16666666666666666
+      },
+      {
+        "name": "0f3a1418-992a-427e-818a-6d427fe11173",
+        "expected": 6,
+        "executed": 1,
+        "ccr": 0.16666666666666666
+      },
+      {
+        "name": "f3babbdd-2e2e-4adb-b449-dc1590f569e2",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "162e6fdd-e4c9-4335-b6da-bb8c3f8cb59d",
+        "expected": 6,
+        "executed": 1,
+        "ccr": 0.16666666666666666
+      },
+      {
+        "name": "979ba21b-66ca-4071-8e5e-ca96911a4cbd",
+        "expected": 1,
+        "executed": 1,
+        "ccr": 1.0
+      },
+      {
+        "name": "9b871b65-3a50-456d-accc-5269d59a3992",
+        "expected": 1,
+        "executed": 1,
+        "ccr": 1.0
+      },
+      {
+        "name": "67c762e4-d2e0-4b57-ae72-6b8755007d36",
+        "expected": 6,
+        "executed": 3,
+        "ccr": 0.5
+      },
+      {
+        "name": "91bfb9e4-bb54-4a80-842e-3522bb1b0527",
+        "expected": 6,
+        "executed": 4,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "710a9ed3-a3d0-4eb3-baa1-69085bf87dd1",
+        "expected": 6,
+        "executed": 4,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "c1217b13-f0a5-4fa9-afaa-35da4ce3998f",
+        "expected": 6,
+        "executed": 4,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "942f83cc-0a84-41d7-b11d-b3f3b88a6f2b",
+        "expected": 8,
+        "executed": 4,
+        "ccr": 0.5
+      },
+      {
+        "name": "232d9540-cbda-478e-93c4-9a35f6cf8a86",
+        "expected": 8,
+        "executed": 4,
+        "ccr": 0.5
+      },
+      {
+        "name": "d8fe9ad2-da9a-463f-bcea-2b742601b028",
+        "expected": 8,
+        "executed": 4,
+        "ccr": 0.5
+      },
+      {
+        "name": "fc4bf082-41d0-4030-b5a7-5494889139c0",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "9955f721-7644-4e31-8d01-f34a109289b6",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "1dd66daa-5066-4755-ba3a-4ca76017e57a",
+        "expected": 6,
+        "executed": 2,
+        "ccr": 0.3333333333333333
+      },
+      {
+        "name": "2c7e78e7-0663-44f6-af18-0a5c68ad2f1d",
+        "expected": 20,
+        "executed": 7,
+        "ccr": 0.35
+      },
+      {
+        "name": "e135491b-dedf-4c30-8614-9c74acc6055f",
+        "expected": 6,
+        "executed": 4,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "d916b245-1562-4e82-9530-d7a79bc2c04c",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "e28f6ea8-fbd1-4926-a68b-e2d7de48ba46",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "326fe955-50cc-4246-bdab-8976438b7c06",
+        "expected": 2,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "f8795a5d-2341-433a-bf77-6dc8dae4e32c",
+        "expected": 20,
+        "executed": 7,
+        "ccr": 0.35
+      },
+      {
+        "name": "562decbf-034d-412b-9210-4f87b7f86179",
+        "expected": 20,
+        "executed": 7,
+        "ccr": 0.35
+      },
+      {
+        "name": "aae789b5-2d29-4558-a58b-7950ce5b9c0a",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "8ec7f48d-59e8-4888-8ac7-9cdd875a78e2",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "52f9921d-619c-4cab-b845-bef642c7585f",
+        "expected": 1,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "589ec512-eecf-4d49-879f-7ec0e8d2b8f2",
+        "expected": 3,
+        "executed": 2,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "ca5564d8-f6a2-46f5-9f2f-e678572ccf48",
+        "expected": 3,
+        "executed": 2,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "4c61be86-5940-4bec-a8a0-87328b2cafe8",
+        "expected": 3,
+        "executed": 2,
+        "ccr": 0.6666666666666666
+      },
+      {
+        "name": "8148f3b5-8bc7-4d36-a1d4-0ed5e2802185",
+        "expected": 5,
+        "executed": 2,
+        "ccr": 0.4
+      },
+      {
+        "name": "7ea22e05-b1b2-4be5-bd35-5f5f1bba5805",
+        "expected": 5,
+        "executed": 2,
+        "ccr": 0.4
+      },
+      {
+        "name": "1489bf44-a7de-4a68-b6c9-d4d4fe9ff390",
+        "expected": 5,
+        "executed": 2,
+        "ccr": 0.4
+      },
+      {
+        "name": "a18406a7-4f63-4d10-948b-228b9473ad5f",
+        "expected": 9,
+        "executed": 5,
+        "ccr": 0.5555555555555556
+      },
+      {
+        "name": "93534762-1b88-41c8-b5bf-32ba8584bc0e",
+        "expected": 9,
+        "executed": 5,
+        "ccr": 0.5555555555555556
+      },
+      {
+        "name": "ac4fe99d-1c97-42ee-8ce2-dafd6f18e0ea",
+        "expected": 9,
+        "executed": 5,
+        "ccr": 0.5555555555555556
+      },
+      {
+        "name": "88626172-8b82-4607-938c-fab7c8b9b3a9",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "29a5a070-24e6-4fc4-ac0b-284d314039b6",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "229770b3-860c-49c3-820e-0d3ff1348704",
+        "expected": 3,
+        "executed": 0,
+        "ccr": 0.0
+      },
+      {
+        "name": "3f63d906-ce8e-4a9f-9e97-c3b6b075642d",
+        "expected": 4,
+        "executed": 1,
+        "ccr": 0.25
+      },
+      {
+        "name": "a71fb739-41de-45f3-af8f-1bec87338107",
+        "expected": 4,
+        "executed": 1,
+        "ccr": 0.25
+      },
+      {
+        "name": "3e91ffe4-bd68-41bb-a364-d35968c0778f",
+        "expected": 4,
+        "executed": 1,
+        "ccr": 0.25
+      },
+      {
+        "name": "f6ff3004-361f-4c00-9235-fa233a57bac5",
+        "expected": 2,
+        "executed": 1,
+        "ccr": 0.5
+      },
+      {
+        "name": "84928232-2e58-4e6c-92d3-5e8631eb2138",
+        "expected": 2,
+        "executed": 1,
+        "ccr": 0.5
+      },
+      {
+        "name": "30024153-c7ea-43bb-a430-7a900ddde667",
+        "expected": 2,
+        "executed": 1,
+        "ccr": 0.5
+      }
+    ]
+  }
+}

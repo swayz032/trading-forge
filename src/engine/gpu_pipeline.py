@@ -86,32 +86,79 @@ def find_similar_gpu(query_vector: np.ndarray, corpus_vectors: np.ndarray, top_k
     return top_indices, similarities[top_indices]
 
 
-def block_bootstrap_gpu(trades: np.ndarray, n_sims: int, block_length: int, seed: int = 42) -> np.ndarray:
-    """GPU block bootstrap using CuPy. Falls back to CPU numpy."""
+def block_bootstrap_gpu(
+    trades: np.ndarray,
+    n_sims: int,
+    block_length: int,
+    seed: int = 42,
+    start_pos: np.ndarray | None = None,
+    block_draws: np.ndarray | None = None,
+    restart_pos: np.ndarray | None = None,
+) -> np.ndarray:
+    """GPU block bootstrap using CuPy. Falls back to CPU numpy.
+
+    FIX (deepscan18 B-E1, 2026-07-05): resample INDICES are generated on CPU
+    via the authoritative PCG64DXSM RNG (`create_authoritative_rng` in
+    monte_carlo.py — the same generator family as every other MC path,
+    including this function's CPU sibling `monte_carlo._block_bootstrap_core`),
+    never on-device. This function used to call `xp.random.default_rng(seed)`
+    directly, which — when `xp is cp` (CuPy) — is CuPy's OWN RNG algorithm and
+    stream, a different sequence than PCG64DXSM for the identical seed. Same
+    seed thus produced a different resample (and a different
+    `probability_of_ruin_ci.ci_high`) on GPU vs CPU, straddling the B14 0.20
+    hard-gate threshold depending on which machine ran the backtest.
+
+    `monte_carlo.block_bootstrap()` pre-generates start_pos/block_draws/
+    restart_pos from `create_authoritative_rng(seed)` using the EXACT same
+    call sequence and shapes the CPU/Numba core (`_block_bootstrap_core`)
+    consumes, and passes them in here — guaranteeing byte-identical resample
+    indices whether the walk below executes on CPU or GPU. If called standalone
+    without those arrays (e.g. from a test), this function derives them itself
+    from `seed` so it is never silently non-deterministic across devices.
+
+    Only the (cheap) integer/float index arrays cross the CPU->GPU boundary;
+    the heavy gather + cumsum still run on device.
+    """
     n_trades = len(trades)
     if n_trades == 0:
         raise ValueError("Cannot bootstrap empty trades array")
 
+    if start_pos is None or block_draws is None or restart_pos is None:
+        # Local import: avoids any module-load-order coupling with monte_carlo.py.
+        from src.engine.monte_carlo import create_authoritative_rng
+
+        _idx_rng = create_authoritative_rng(seed)[0]
+        start_pos = _idx_rng.integers(0, n_trades, size=n_sims)
+        block_draws = _idx_rng.random(size=(n_sims, n_trades))
+        restart_pos = _idx_rng.integers(0, n_trades, size=(n_sims, n_trades))
+
     if CUPY_AVAILABLE:
         xp = cp
         trades_gpu = cp.asarray(trades)
+        start_pos_xp = cp.asarray(start_pos)
+        block_draws_xp = cp.asarray(block_draws)
+        restart_pos_xp = cp.asarray(restart_pos)
     else:
         xp = np
         trades_gpu = trades
+        start_pos_xp = start_pos
+        block_draws_xp = block_draws
+        restart_pos_xp = restart_pos
 
-    rng = xp.random.default_rng(seed)
     p = 1.0 / max(block_length, 1)
 
-    # Vectorized stationary bootstrap on GPU
+    # Vectorized stationary bootstrap — walk driven entirely by the
+    # pre-generated CPU-authoritative index arrays. Recurrence is identical to
+    # monte_carlo._block_bootstrap_core's Numba loop (same start_pos/
+    # block_draws/restart_pos, same per-step transition), just vectorized
+    # across sims per column instead of a per-sim Python loop.
     paths = xp.zeros((n_sims, n_trades), dtype=xp.float64)
-    positions = rng.integers(0, n_trades, size=n_sims)  # start positions
+    positions = start_pos_xp
 
     for idx in range(n_trades):
         paths[:, idx] = trades_gpu[positions % n_trades]
-        # Geometric restart: with probability p, jump to random position
-        restart_mask = rng.random(n_sims) < p
-        new_positions = rng.integers(0, n_trades, size=n_sims)
-        positions = xp.where(restart_mask, new_positions, positions + 1)
+        restart_mask = block_draws_xp[:, idx] < p
+        positions = xp.where(restart_mask, restart_pos_xp[:, idx], positions + 1)
 
     cum_paths = xp.cumsum(paths, axis=1)
 

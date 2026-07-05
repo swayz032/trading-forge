@@ -314,8 +314,18 @@ const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
   // Wave 29 Pass A.1: SHADOW → PAPER after A.3 divergence gate clears (≥20 signals, <5% divergence).
   // SHADOW → DEPLOY_READY direct is INVALID — must go through PAPER first (full paper history required).
   SHADOW: ["PAPER", "DECLINING", "GRAVEYARD"],
-  PAPER: ["DEPLOY_READY", "DECLINING", "GRAVEYARD"],  // Demotable on drift
-  DEPLOY_READY: ["PILOT", "DEPLOYED", "PAPER", "GRAVEYARD"],  // Human approves PILOT canary OR legacy direct deploy OR back to paper
+  // (deepscan18 D-D2 2026-07-05) NEEDS_REVISION added as a valid target from PAPER and
+  // DEPLOY_READY. The stale-detector cron (strategy-stale-detector.ts demoteToNeedsRevision)
+  // demotes stale PAPER / DEPLOY_READY strategies to NEEDS_REVISION via raw SQL and writes a
+  // TYPED lifecycle_transitions ledger row for that edge. VALID_TRANSITIONS previously omitted
+  // these two edges, so the ledger accumulated rows for transitions the contract declared
+  // impossible — a contract/ledger inconsistency that any transition-validity audit would flag.
+  // NEEDS_REVISION is a research-side rework detour (loops back to CANDIDATE only, or GRAVEYARD);
+  // it is NOT a capital-ward state, so no gate logic rides these demotion edges by design.
+  // PILOT / DEPLOYED are intentionally NOT given this edge — they are DEMOTION_EXEMPT_STATES
+  // (real capital) and the stale-detector CAS explicitly excludes them (NOT IN DEPLOYED/PILOT).
+  PAPER: ["DEPLOY_READY", "DECLINING", "NEEDS_REVISION", "GRAVEYARD"],  // Demotable on drift; NEEDS_REVISION = stale-detector rework detour
+  DEPLOY_READY: ["PILOT", "DEPLOYED", "PAPER", "NEEDS_REVISION", "GRAVEYARD"],  // Human approves PILOT canary OR legacy direct deploy OR back to paper; NEEDS_REVISION = stale-detector rework detour
   // B8: PILOT canary state — 5 sessions, 1 contract.
   // PILOT → DEPLOYED: automatic after 5 sessions (rolling Sharpe > 1.0, no compliance violations).
   // PILOT → GRAVEYARD: automatic if any kill switch fires.
@@ -2008,8 +2018,48 @@ export class LifecycleService {
           });
         }
       } catch (pboW29Err) {
-        // Non-blocking: PBO gate failure must not abort a promotion.
-        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: pboW29Err }, "lifecycle.pbo_gate (Wave 29): read/eval failed (non-blocking — promotion continues)");
+        // (deepscan18 D-D3 2026-07-05) FAIL-CLOSED per CLAUDE.md §12 ("there is no
+        // PBO-bypass path"). Previously this catch logged a warn and CONTINUED, so any
+        // read/eval error (DB blip, malformed walk_forward_results shape, evaluatePboGate
+        // throw) silently BYPASSED the Wave 29 Pass A.2 PBO overfit HARD gate at
+        // TESTING → SHADOW/PAPER — the exact fail-OPEN posture every sibling HARD gate on
+        // this transition rejects (the B14 CI gate, DSL-guards gate, and A7 gate all
+        // fail-CLOSED on infra error). Now blocks the promotion with a loud audit row +
+        // Prom counter + SSE, matching the sibling gates. Additive-signal gates elsewhere
+        // (BIF read-error) legitimately fail-OPEN, but PBO is a §12 HARD gate with no
+        // bypass path, so an unreadable PBO must hold the strategy, not wave it through.
+        const pboErrMsg = pboW29Err instanceof Error ? pboW29Err.message : String(pboW29Err);
+        logger.error(
+          { strategyId: id, fromState, toState, backtestId: promotionEvidence.backtestId, err: pboW29Err },
+          "lifecycle.pbo_gate (Wave 29): read/eval error — BLOCKING promotion (fail-CLOSED per §12, no PBO-bypass path)",
+        );
+        insertAuditRow({
+          action: "lifecycle.pbo_gate_error_fail_closed",
+          entityType: "strategy",
+          entityId: id,
+          decisionAuthority: "gate",
+          status: "failure",
+          input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+          result: {
+            reason: "pbo_gate_infrastructure_error",
+            error: pboErrMsg,
+            note: "PBO read/eval threw — promotion blocked fail-CLOSED (§12: no PBO-bypass path). Re-run the backtest to produce a measurable PBO, then retry.",
+          } as Record<string, unknown>,
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_gate_error_fail_closed audit row write failed"));
+        try {
+          broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            strategyId: id,
+            fromState,
+            toState,
+            pbo: null,
+            threshold: null,
+            blocked: true,
+            error: true,
+          });
+        } catch { /* non-blocking SSE */ }
+        try { pboBlocksTotal.labels({ regime: "gate_error" }).inc(); } catch { /* non-blocking counter */ }
+        return { success: false, error: `lifecycle.pbo_gate_error_fail_closed: ${pboErrMsg}` };
       }
     }
 
@@ -2979,6 +3029,20 @@ export class LifecycleService {
       { strategyId, failureModes, name: strategy.name },
       "Strategy auto-buried in graveyard",
     );
+
+    // deepscan18 (E-E1): the frontend has carried a `strategy:graveyard_burial`
+    // dashboard tile (useSSE.ts) since it was catalogued, but this — the ONLY
+    // production call site of buryInGraveyard() — never actually broadcast it.
+    // The tile was dead: correctly typed, correctly subscribed, never fired.
+    // Payload matches the pre-existing StrategyGraveyardBurialData contract
+    // (Trading_forge_frontend/.../types/sse-events.ts) exactly.
+    broadcastSSE("strategy:graveyard_burial", {
+      strategyId,
+      name: strategy.name,
+      failureModes,
+      deathReason: `Auto-retired: ${failureModes.join(", ")}`,
+      correlationId: correlationId ?? null,
+    });
   }
 
   /**

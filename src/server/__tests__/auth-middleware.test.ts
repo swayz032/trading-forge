@@ -122,4 +122,50 @@ describe("authMiddleware (deep-scan #13 Track A)", () => {
     expect(next).not.toHaveBeenCalled();
     expect(res.statusCode).toBe(503);
   });
+
+  // deep-scan #18 G-1: e75f337 (deep-scan #17) fixed self-restart + ollama-health-recheck
+  // but left the SAME 401/503-before-own-HMAC bug on three sibling self-authenticating
+  // admin-recovery / frozen-policy-override routes — these were live-broken (curl-able
+  // only with a distributed API_KEY, defeating the whole point of a phone-only HMAC
+  // recovery path) until this pass added them to the same suffix-match allowlist.
+  it("POST /api/admin/clear-kill-switch-cache bypasses the Bearer gate (self-HMAC) even when API_KEY is unset", async () => {
+    const res = mockRes(); const next = vi.fn();
+    await authMiddleware(mockReq({ method: "POST", path: "/admin/clear-kill-switch-cache" }), res, next);
+    expect(next).toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("POST /api/admin/clear-stuck-session bypasses the Bearer gate (self-HMAC) even when API_KEY is unset", async () => {
+    const res = mockRes(); const next = vi.fn();
+    await authMiddleware(mockReq({ method: "POST", path: "/admin/clear-stuck-session" }), res, next);
+    expect(next).toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("POST /api/admin/frozen-policy-override bypasses the Bearer gate (self-HMAC) even when API_KEY is unset", async () => {
+    const res = mockRes(); const next = vi.fn();
+    await authMiddleware(mockReq({ method: "POST", path: "/admin/frozen-policy-override" }), res, next);
+    expect(next).toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("does NOT exempt GET on the three new self-HMAC paths (POST-only exemption)", async () => {
+    for (const path of [
+      "/admin/clear-kill-switch-cache",
+      "/admin/clear-stuck-session",
+      "/admin/frozen-policy-override",
+    ]) {
+      const res = mockRes(); const next = vi.fn();
+      await authMiddleware(mockReq({ method: "GET", path }), res, next);
+      expect(next).not.toHaveBeenCalled();
+      expect(res.statusCode).toBe(503);
+    }
+  });
+
+  it("still does NOT exempt an unrelated /api/admin POST path (allowlist is exact-suffix, not prefix)", async () => {
+    const res = mockRes(); const next = vi.fn();
+    await authMiddleware(mockReq({ method: "POST", path: "/admin/some-other-mutating-route" }), res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(503);
+  });
 });

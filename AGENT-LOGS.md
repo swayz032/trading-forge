@@ -66,6 +66,88 @@
 - **Uncontested MED — INVESTIGATED + DECLINED (both are architecturally non-trivial, not clean drop-ins; empirical evidence below):**
   - **production-isolation transitive-import (Band E F-4): UNSOUND for this monolith — do NOT ship.** Implemented a BFS over the resolved local import graph; it surfaced violations but ALL route `kill-switch.ts → paper-execution-service.ts → scheduler.ts → {agent-service, quantum-*, critic-optimizer, scout-runner}`. `scheduler.ts` is the cron hub that wires every job (incl. all research crons), so ANY production file transitively "reaches" every research module in a single-process monolith. A full transitive walk floods false-positives and would red the gate with meaningless violations. The single-hop check is INTENTIONAL. Reverted. Narrow future option (needs design + operator input): detect direct thin-wrapper re-exports only, excluding hub modules.
   - **RL-training CPCV gate (Band H MED): BUILT the audit bridge (commit e193430).** `load_backtest_bar_data` (db_loader.py:729, RL-only sole caller quantum_rl_agent.py:1661) correctly purges OOS-overlap bars (NO leakage — safety was always intact) but was SILENT (logger.warning only) — the documented `quantum_rl.training_cpcv_purge_violation` audit never fired. Fix: db_loader now counts purged bars + collects malformed folds (oos_start<=is_end) and emits an `AUDIT_EVENT_JSON {event:"quantum_rl.training_cpcv_purge_violation", status:"warning", purged_bar_count, bars_retained, malformed_folds}` stderr sentinel (canonical Python→TS bridge, mirrors backtester.py). NEW `quantum-rl-training-runner.ts::_writeStderrAuditEvents` parses the child's stderr on close (both exit paths) and writes the audit row (subprocess can't write audit_log directly; 50-event flood guard; strips event/status into action/status columns). Records the purge HONESTLY (does NOT "refuse" — purge-and-continue is the safe behavior; payload states purged/retained counts). No new action string (uses the already-documented one) → no registry drift. Tests: TS 5/5 (`deepscan18-rl-cpcv-audit-bridge.test.ts`: parse/default-status/malformed-JSON/flood-cap/empty) + Python 5/5 (2 new in `test_wave29_pass_c1_trading_env.py`: purge→sentinel, clean-run→no-sentinel). tsc 0 errors. Drift-neutral (A/B proved system-map's 4 pre-existing driftItems unchanged). `rl-training-cpcv-gate.ts` remains dead code — left in place (correct tested pure fn, wire-able later; not deleted to avoid a doc edit + preserve the option).
+### Session Log — 2026-07-05 Corpus-collapse causal investigation → context-misclassification MILESTONE + Problem B characterized
+
+**Mission:** Determine why the 117-strategy YouTube-educator corpus barely trades (Corpus v2), with falsifiable
+experiments, before touching the extractor. Research arc, not a fix wave — GPT (operator's remote advisor) co-designed
+the pre-registrations; every claim held to evidence level.
+
+**Research outcomes (FROZEN — supported by completed pre-registered experiments):**
+- **ESTABLISHED — Context discourse misclassification is the DOMINANT IDENTIFIED cause of the MAJORITY collapse.**
+  The extractor mis-maps discourse-modality cues (scene-setting/narrative/UI-click/refuted-strawman) into hard spine-AND
+  gates. DRI audit: median 2.79, inflation 53% (`dri-audit-2026-07-05.json`). Demotion experiment: context-only demotion
+  cut conjunction depth −47% and revived **9 of 15** dead strategies; **context-only revival set == combined set**
+  (sufficiency proof), OPTIONAL-only revived 0, `exec==struct` 42/42 (not an artifact). MILESTONE frozen commit `1ab7321`.
+  Wording held exact: *sufficient* for the observed revival subset, *dominant identified* for the majority — NOT "the root cause."
+- **ESTABLISHED — Bidirectional role-assignment defects exist.** Residual probe (`residual-probe-2026-07-05.json`, commit
+  `240c933`) resolved the 6 strategies that stay dead under full demotion — two UNRELATED mechanisms:
+  - **B1 (`5m_support_level` ×3) — role UNDER-assignment (mirror of the majority defect):** real entry conditions all
+    mis-filed as `confluence` at Band B extraction, spine left EMPTY (`conjunction_depth==0` all arms), only spine
+    condition an unbindable ALTERNATIVE → no executable gate. Demotion cannot act.
+  - **B2 (`hammer_candle` ×3) — stateful/multi-phase, NOT extraction:** 3-phase state machine; the instantaneous-AND spine
+    ANDs complementary bearish+bullish EMA conditions onto one bar (`joint_rate==0.0` verified all 3) and has no memory of
+    the specific hammer's high. Confirms a real Layer-2/interaction-semantics gap.
+- **ESTABLISHED — Execution layer substantially DE-RISKED (not "cleared") as the primary explanation.** Falsified in
+  order: FVG single-object (not dominant), composition/gating-bundle (inconclusive), OR→AND flattening (real, CCR 0→42%,
+  but NOT dominant — commit `5e25625`), + 2 directional correctness bugs fixed (bias always-bullish, confirmation
+  direction-blind). Prior phase frozen `phase-execution-semantics-COMPLETE-2026-07-05.md`.
+- **SCOPE (rigor):** all currently-observed dead strategies have a mechanistic explanation **under the present
+  extraction/execution architecture** — characterized to the current architecture boundary, not a claim that Corpus v3
+  can introduce no new mechanisms.
+
+**Verification:** every verdict independently re-checked from raw artifacts before certification (grading-integrity /
+doer≠grader): demotion depth −47% + revival sets + joint_rate==0 all re-computed by parent, not taken from builder
+self-report. Demotion mechanism 116 tests GREEN, flag `TF_ROLE_DEMOTION_MODE` default OFF, 0 byte-identical violations.
+All engine changes flag-gated default-off; nothing changes default backtest behavior except the 2 directional bug fixes
+(genuine correctness, documented drift → full re-baseline required before trusting any P&L number).
+
+**Open work (NOT established results):**
+- **Product — Corpus v3 extractor redesign (Track #24):** BIDIRECTIONAL role classification — fix BOTH over-promotion
+  (context→spine) AND under-assignment (real-gates→confluence). Touches `gemma4:e4b-it-qat` extraction prompt + graduator;
+  MUST pass the 5-fixture parity gate; preserve provenance guarantees. Leads to Corpus v3.
+- **Future research — Layer-2 stateful execution (Track #26):** the instantaneous-AND spine cannot represent multi-phase
+  educator strategies (sequencing + level-memory). Treat as a NEW architectural capability, not a bug fix. Separate track.
+- Full corpus re-baseline (null-cal → Mode A/B) on the fully-corrected engine before any profitability claim.
+
+**Architectural implications:** the corpus does not fail in evaluation/execution — it fails in constraint-transcription
+fidelity (linguistic→executable role mapping). Corpus v3 = context-aware bidirectional role classification (v1 baseline →
+v2 corrected onboarding → v3 validated discourse-role classification). Layer-2 is a distinct, later architecture initiative.
+
+**Known-facts updates:** none pinned this session (research, not a misdiagnosis correction).
+
+**Carry-forward — starting conditions for next session:**
+> **Objective:** Design the bidirectional extractor role-classification redesign for Corpus v3. Begin from the frozen
+> findings in commits `1ab7321` (context-misclassification milestone) and `240c933` (Problem B characterized), plus specs
+> `docs/designs/MILESTONE-context-misclassification-2026-07-05.md` + `residual-findings-FROZEN-2026-07-05.md`. **Do NOT
+> reopen the execution-layer investigations** unless new evidence contradicts the frozen results. **Stateful execution
+> (Track #26) is a separate architectural initiative — do NOT mix it into the Corpus v3 extractor redesign.** Start with a
+> dedicated design pass (brainstorm → spec → parity-gated build), not a tail-end dispatch.
+
+---
+### Session Log — 2026-07-05 Deep-Scan #18 (8-band re-audit ~7.2/10) + 6-track fix wave LANDED phase-0
+
+**Mission:** Operator: "deep scan for all bugs and blockers, wiring… all systems institutional grade… bug free to be 10/10." Ran an 8-band read-only adversarial re-audit (Deep-Scan #18, day after #17), then a full fix wave (operator chose: full code wave + build the heavy G-2 self-heal auto-apply + fix the multi-account isolation cluster NOW).
+
+**Deep-Scan #18 (read-only, 8 parallel grounded auditors) — overall ~7.2/10** (up from #17's 6.8). Bands: A cross-system-truth 6.5 · B backtest-engine 8.5 · C paper/execution 6.0 · D architecture/lifecycle 9.0 · E observability 7.0 · F n8n 7.0 · G autonomy 5.5 · H extraction/frontend 8.3. **All #17 fixes independently re-verified HELD** (B-1/B-2/B-3/B-5 confirmed end-to-end through DB/gate layer; A-1/A7 at all 4 edges; C-1 force-close scope + the `:3402` caller which #17's carry-forward wrongly listed as unfixed — it was already fixed). **MARQUEE:** #17's own "hunt the second implementation" lesson turned on #17 itself — the multi-account isolation cluster (C-1 fixed the force-close ACTION but the halt-decision + concurrency-guard + a 3rd loss-gate stayed globally scoped) and an un-hunted DSR duplicate. Transient server-side rate-limit killed 5/8 audit agents at ~5min → resumed via SendMessage, zero loss (same as #17).
+
+**Fix wave — SHA-pinned worktree `tf-ds18` off `2e68d3e`, rebased onto phase-0 `c7ea635`, FF-landed. Commits `1517edb..2c260cd` (5 in-tree) + live n8n (out-of-tree):**
+- **T1 multi-account isolation (CRITICAL, capital-safety):** threaded optional `{accountKey,firmId}` scope through `isHaltedForProduction`/`evaluateAllKillSwitchLayers` → Layer2/3/7 (per-layer cache keyed `layer:scope`); `_forceCloseInFlight` boolean → per-account Map; `paper-risk-gate` daily-loss gate per-account (household cap via explicit `RISK_GATE_HOUSEHOLD_LOSS_SCOPE` opt-in); resolveAccountKey fallback WARN. **Unscoped path byte-identical → single-account paper today unaffected; unblocks §5 Phase 3/4.** +26 tests. (kill-switch.ts, paper-risk-gate.ts, cross-symbol-pnl.ts, paper-signal-service.ts, paper-execution-service.ts)
+- **T2 DSR dup + MC RNG (CRITICAL/HIGH):** `cross_validation.deflated_sharpe_ratio` now delegates to the deepscan17-corrected `risk_metrics.compute_deflated_sharpe_ratio` (norm.cdf → [0,1] contract preserved) so picker-metrics/Office DSR == promotion-gate DSR for the first time; MC block_bootstrap derives resample indices from `create_authoritative_rng(seed)` on CPU + transfers to GPU (gather-only) → same seed = identical ruin CI on GPU/CPU. +22 tests. **★ Historical `deflated_sharpe.dsr` values + GPU-computed ruin CIs are now superseded.**
+- **T3 auth + autonomy + G-2 (CRITICAL):** e75f337's mount-order bug was live on 2 sibling self-HMAC routes — added `clear-kill-switch-cache`/`clear-stuck-session`/`frozen-policy-override` to the Bearer-bypass allowlist (each self-authenticates; verified); **built `attemptBootLauncherAutoApply()`** — process repoints NSSM (`set`→`get` read-back) + HMAC self-restart when the launcher is inactive under win32+prod, 24h fail-closed cap, audit before/after, VITEST guard (this box has a real nssm.exe); G-3 localhost-gateway WARN. +44 tests. (auth.ts, startup-config-check.ts)
+- **T4 observability (HIGH):** 12 bare `.catch(()=>{})` on audit-spine writes → log-loud + `tf_audit_write_failures_total`; wired `strategy:graveyard_burial` + `compliance:drift_detected` SSE (2 dead tiles now live); frontend catalog cleanup (6 dead labels removed, 6 `paper:exit:*`→`paper:*` mislabels fixed, `strategy:analyzed` grounded as dormant-n8n emitter). +10 tests.
+- **T5 lifecycle + gate-parity + frontend (MED-HIGH):** **built `check:gate-parity`** static enumerator (negative-control tested — the automated net that would have caught A-1/A7 cron-only-vs-manual at CI); PBO gate → fail-CLOSED per §12; `NEEDS_REVISION` added to PAPER/DEPLOY_READY VALID_TRANSITIONS; schema SHADOW comment; crib.html cold-load banner (was blank-on-tower-down-at-load); office switch-card explicit stale state. +12 tests. (scripts/check-gate-parity.mjs, lifecycle-service.ts, schema.ts, crib.html, office.html, package.json)
+- **T6 n8n (HIGH, out-of-tree, live REST):** relay `/__oc/*` proxy_token root-caused = `OLLAMA_PROXY_TOKEN` sent via `X-Relay-Proxy-Token` header (mirrored from the working Check-Ollama node); applied to all 16 live `/__oc/alert/*` nodes across 7 workflows (401→200 confirmed incl. a real delivered Discord alert) + hardened the watchdog HMAC node to fail-loud. Secondary advisory/compliance/skip alert channel RESTORED.
+
+**Verification:** union `tsc --noEmit` 0 non-baseline errors (only known menu-route.test.ts ×10); `check:production-isolation` CLEAN; `check:2026-compliance` OK; new `check:gate-parity` PASS (12 HARD gates on both promotion paths); 123 deepscan18 vitest + 23/1-skip pytest all GREEN on the rebased tip. Formula CRITICALs re-derived; rebase onto phase-0 conflict-free (disjoint files). Two audit agents exceeded assigned file sets (T4→lifecycle SSE + compliance-refresh) — caught + reconciled coherently (no partial writes).
+
+**Known-facts updates:** NEW pin below — relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the `OLLAMA_PROXY_TOKEN` gate; n8n nodes must send `X-Relay-Proxy-Token`. Corrected #17's stale carry-forward (the `:3402` force-close caller was already fixed).
+
+**Carry-forward for next session:**
+- **★ RE-RUN Corpus v2 + null-cal on the fixed engine** — T2 DSR reconciliation + MC RNG determinism (plus #17's B-1/B-2/B-3) mean historical `deflated_sharpe.dsr` and GPU ruin CIs are superseded; re-score before any live-selection cycle.
+- **Operator: add `npm run check:gate-parity` to the CI hard-gate set** (it exits 1 on drift; designed to sit alongside the existing 3).
+- **Operator n8n actions** (T6): (1) set `ADMIN_RESTART_HMAC_SECRET` in the n8n Railway service env = tower `.env` value (watchdog self-restart still 401s until then, but now fails LOUD); (2) n8n ephemeral sqlite → a `railway redeploy` of the n8n service reverts the 16 node edits.
+- **Not fixed (flagged):** H-F1 fidelity collapse (`approximation_used` computed but ungated — the corpus-v2 fidelity-first roadmap, not a bug-fix); disk-full/ENOSPC handling absent; `DB_BACKUP_ENABLED` absent in .env; `runPendingBucketExpiry()` referenced by tests but doesn't exist; F-F3 `/api/journal/pipeline-stats` 500.
+- **`system-map:sync`** (coordinated) — the new `check:gate-parity` script + package.json aren't System-Map surfaces (no route/table/cron) so no new drift, but run a coordinated sync once the concurrent session's System Map settles.
 
 ---
 ### Session Log — 2026-07-05 Multi-session worktree-isolation convention codified (CLAUDE.md §11b)
@@ -13055,6 +13137,11 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
+
+The tf-relay reverse tunnel (`railway-relay/server.js`) gates BOTH `/__ollama/*` and `/__oc/*` (regex `/^\/(__ollama|__oc)\b/i`) on the relay-side env `OLLAMA_PROXY_TOKEN` — shipped Deep-Scan #6 S1 (2026-07-01), activated ~2026-07-03 when the token was set on the relay. Callers MUST send header `X-Relay-Proxy-Token: <OLLAMA_PROXY_TOKEN>` or the relay returns `401 {"error":"proxy_token_required"}` BEFORE forwarding — this is SEPARATE from the tower Bearer/`API_KEY` auth (a single-header httpHeaderAuth credential can't carry both). `/__ocg/*` (OpenClaw Gateway) is NOT gated. Path routing: `/__oc/*`→tower :4100 Discord alert sidecar, `/__ollama/*`→:11434, `/__ocg/*`→:18789, `/*`→:4000. Do NOT re-diagnose a 401 on `/__oc/alert/*` or `/__ollama/api/tags` as "tower auth broken" or "endpoint down" — it's the missing proxy token. The live n8n nodes were fixed 2026-07-05 (16 `/__oc/*` nodes across 7 workflows now carry the header, mirrored from the working `0A / Check Ollama` node), but n8n on Railway uses ephemeral sqlite so a `railway redeploy` reverts them — re-apply the header if the advisory/compliance/skip Discord channel goes silent again.
+
 
 ### Tower `/api` is AUTH-GATED as of the 2026-07-03 restart — `503 auth_not_configured` is EXPECTED, not a bug (pinned 2026-07-03)
 
