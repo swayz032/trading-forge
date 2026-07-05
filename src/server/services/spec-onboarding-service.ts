@@ -49,6 +49,8 @@ import {
   type PlaybookCategory,
 } from "../lib/playbook-registration.js";
 import { logger } from "../lib/logger.js";
+// deepscan17 H-3: factor-quality observability (leaf lib — no service cycle).
+import { emitFactorQualityClassified, emitThinConfluenceWarning } from "../lib/confluence-quality-audit.js";
 import { recoverSpecTimeframe } from "../lib/spec-timeframe-recovery.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
@@ -774,6 +776,35 @@ export async function onboardSpecArtifact(
         reason: regResult.reason,
       });
       continue;
+    }
+
+    // ── deepscan17 H-3: factor-quality telemetry (Gate 2 always; Gate 3 on fallback_only) ──
+    // The graduator emits these for bucket-graduated strategies; spec-onboarding computed
+    // factor_quality above but never emitted the observability — so the entire live 120-strategy
+    // library had ZERO factor-quality signal (no graduation.factor_quality_classified audit, no
+    // tf_graduation_factor_quality_total Prometheus, no thin-confluence Discord advisory). Emit here,
+    // after the row is durably registered, so library debt is visible for the whole corpus.
+    try {
+      emitFactorQualityClassified({
+        strategy_id: inserted.id,
+        strategy_name: strategyName,
+        correlation_id: null,
+        factor_quality,
+        factor_sources: factor_sources as Record<string, "extracted" | "auto_floor" | "kb_inferred">,
+        confluence_factors: mergedFactors,
+      });
+      if (factor_quality === "fallback_only") {
+        emitThinConfluenceWarning({
+          strategy_id: inserted.id,
+          strategy_name: strategyName,
+          correlation_id: null,
+          factor_quality: "fallback_only",
+          confluence_factors: mergedFactors,
+          source_url: sourceUrl ?? null,
+        });
+      }
+    } catch (helperErr: unknown) {
+      logger.warn({ err: String(helperErr), strategyId: inserted.id, strategyName }, "deepscan17 H-3: factor-quality telemetry emit failed (non-blocking)");
     }
 
     // ── needs_archetype_queue routing (honest parking, never silently dropped) ──
