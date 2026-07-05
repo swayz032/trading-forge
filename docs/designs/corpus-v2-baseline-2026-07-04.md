@@ -126,10 +126,39 @@ Success is these metrics moving on re-runs — **not** a single profitable strat
 | **★ Distinct behavioral signatures** | **17 / 47** | **→ 47 / 47** |
 
 **The leading indicator is distinct behavioral signatures.** As native evaluators replace generic proxies,
-different educators should produce increasingly DISTINCT trade behavior (signatures approach n/n). If
-fidelity rises but signatures DON'T diverge, that signals another bottleneck downstream of execution —
-investigate before continuing. Only after fidelity ↑ **and** behavior diversifies should edge improvements
-be trusted as evidence about the educators' ideas rather than the engine's approximations.
+different educators should produce increasingly DISTINCT trade behavior (signatures approach n/n).
+
+### The fidelity hypothesis — stated so it can be REFUTED
+
+**Hypothesis:** *If execution fidelity increases, distinct strategies exhibit increasingly distinct behavior.*
+(Not the vague "higher fidelity is better" — a specific, testable causal claim.)
+
+- **Prediction 1 (SUPPORTS):** native coverage ↑ → signatures 17/47 → toward 47/47, trade distributions
+  diversify, educators stop collapsing onto the same outcomes, strategy-specific strengths/weaknesses appear.
+  ⇒ approximation *was* masking genuine differences.
+- **Prediction 2 (REFUTES):** native coverage rises substantially (e.g. ~3% → much higher) BUT signatures
+  stay clustered, distributions stay near-identical, strategies still converge. ⇒ execution fidelity is
+  **NOT** the dominant bottleneck — investigate something deeper: over-compression during extraction,
+  normalization removing distinctions, evaluator semantics, or an over-restrictive execution model.
+  **Do NOT keep adding evaluators if this is what the data shows.**
+
+### Leading indicators (process metrics — must move BEFORE outcome metrics mean anything)
+
+| Leading indicator | Direction | Today |
+|---|---|---|
+| Native evaluator coverage | ↑ | ~3% |
+| Approximation rate | ↓ | ~97% |
+| Median execution fidelity | ↑ | 0.44 |
+| Behavioral signature uniqueness | ↑ | 17/47 |
+| Execution trace diversity | ↑ | (baseline TBD) |
+
+Only AFTER these move do OUTCOME metrics (expectancy, Sharpe, drawdown, gate survival) become meaningful
+research results rather than artifacts of a generic execution engine.
+
+**Future refinement (once fidelity work is underway):** track signature *uniqueness over time*, not just a
+count — unique-signature count, average inter-signature distance, cluster-size distribution, and **stability
+across reruns** (each strategy should develop a stable, repeatable behavioral identity that persists across
+reruns UNLESS the execution semantics genuinely changed). Goal isn't "47 unique" — it's *stable distinct identity*.
 
 See [[project_onboarding_leak_hunt_direction_fix_2026_07_04]], [[project_timeframe_integrity_fix_2026_07_03]],
 [[project_layer4_research_conveyor_2026_07_02]].
