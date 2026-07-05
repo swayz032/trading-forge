@@ -195,47 +195,43 @@
       background: rgba(8,10,8,0.55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(163,255,18,0.18); border-radius: 18px; padding: 30px 28px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 60px rgba(0,0,0,0.55); }
 
-    /* Reporting Room — summary strip + 3D thin premium report cards */
-    .rr-summary { max-width: 960px; margin: 0 auto 20px; background: rgba(8,10,8,0.55); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    /* Reporting Room — summary strip + longer 3D premium report cards */
+    .rr-summary { max-width: 720px; margin: 0 auto 20px; background: rgba(8,10,8,0.55); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
       border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 18px 24px; text-align: center; color: rgba(255,255,255,0.72); font-size: 13px; line-height: 1.6;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 20px 50px rgba(0,0,0,0.5); }
-    .rr-example-tag { max-width: 960px; margin: 0 auto 12px; text-align: center; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--warm); opacity: 0.85; }
-    .rr-cards { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; perspective: 1600px; }
-    .rr-card { position: relative; transform-style: preserve-3d; cursor: pointer;
-      background: rgba(8,10,8,0.62); backdrop-filter: blur(22px) saturate(1.15); -webkit-backdrop-filter: blur(22px) saturate(1.15);
-      border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 15px 18px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.4), 0 22px 55px rgba(0,0,0,0.6);
-      transition: transform 0.28s cubic-bezier(0.2,0.7,0.3,1), box-shadow 0.28s; }
-    .rr-card::before { content: ""; position: absolute; top: 0; left: 16px; right: 16px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent); }
-    .rr-card:hover { transform: rotateX(4deg) translateY(-4px) translateZ(6px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 34px 72px rgba(0,0,0,0.68), 0 0 46px rgba(163,255,18,0.07); }
-    .rr-card-top { display: flex; align-items: center; gap: 14px; }
-    .rr-grade { flex: 0 0 auto; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800;
-      background: radial-gradient(circle at 50% 32%, #1b1f1a, #0a0d0a 70%); color: #6a746a; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 -6px 12px rgba(0,0,0,0.7); }
-    .rr-grade.g-a { color: #b4ff2e; box-shadow: inset 0 0 0 1px rgba(180,255,46,0.45), inset 0 -6px 12px rgba(0,0,0,0.7), 0 0 22px rgba(163,255,18,0.16); }
-    .rr-grade.g-b { color: #d6ff9a; box-shadow: inset 0 0 0 1px rgba(180,255,46,0.25), inset 0 -6px 12px rgba(0,0,0,0.7); }
-    .rr-grade.g-c { color: #ffce5c; box-shadow: inset 0 0 0 1px rgba(255,206,92,0.35), inset 0 -6px 12px rgba(0,0,0,0.7); }
-    .rr-grade.g-d { color: #ff6b6b; box-shadow: inset 0 0 0 1px rgba(255,107,107,0.4), inset 0 -6px 12px rgba(0,0,0,0.7); }
-    .rr-mid { flex: 1; min-width: 0; }
-    .rr-name { font-size: 15px; font-weight: 800; color: var(--ink); }
+    .rr-example-tag { max-width: 720px; margin: 0 auto 12px; text-align: center; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--warm); opacity: 0.85; }
+    .rr-cards { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; perspective: 1700px; }
+    .rr-card { position: relative; transform-style: preserve-3d;
+      background: rgba(8,10,8,0.64); backdrop-filter: blur(24px) saturate(1.18); -webkit-backdrop-filter: blur(24px) saturate(1.18);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 22px 26px 26px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.45), 0 26px 64px rgba(0,0,0,0.62);
+      transition: transform 0.3s cubic-bezier(0.2,0.7,0.3,1), box-shadow 0.3s; }
+    .rr-card::before { content: ""; position: absolute; top: 0; left: 18px; right: 18px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent); }
+    .rr-card:hover { transform: rotateX(2.5deg) translateY(-4px) translateZ(6px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 40px 84px rgba(0,0,0,0.7), 0 0 52px rgba(163,255,18,0.07); }
+    .rr-head { display: flex; align-items: center; gap: 15px; }
+    .rr-grade { flex: 0 0 auto; width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 800;
+      background: radial-gradient(circle at 50% 32%, #1b1f1a, #0a0d0a 70%); color: #6a746a; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 -7px 14px rgba(0,0,0,0.72); }
+    .rr-grade.g-a { color: #b4ff2e; box-shadow: inset 0 0 0 1px rgba(180,255,46,0.45), inset 0 -7px 14px rgba(0,0,0,0.72), 0 0 24px rgba(163,255,18,0.18); }
+    .rr-grade.g-b { color: #d6ff9a; box-shadow: inset 0 0 0 1px rgba(180,255,46,0.25), inset 0 -7px 14px rgba(0,0,0,0.72); }
+    .rr-grade.g-c { color: #ffce5c; box-shadow: inset 0 0 0 1px rgba(255,206,92,0.35), inset 0 -7px 14px rgba(0,0,0,0.72); }
+    .rr-grade.g-d { color: #ff6b6b; box-shadow: inset 0 0 0 1px rgba(255,107,107,0.4), inset 0 -7px 14px rgba(0,0,0,0.72); }
+    .rr-hname { flex: 1; min-width: 0; }
+    .rr-name { font-size: 17px; font-weight: 800; color: var(--ink); }
     .rr-name .sym { font-size: 11px; color: var(--mute); font-family: ui-monospace, monospace; margin-left: 8px; }
-    .rr-oneliner { font-size: 12.5px; color: var(--dim); margin-top: 3px; line-height: 1.4; }
-    .rr-right { flex: 0 0 auto; text-align: right; }
-    .rr-r { font-size: 17px; font-weight: 800; }
+    .rr-hmeta { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
+    .rr-r { flex: 0 0 auto; font-size: 22px; font-weight: 800; }
     .rr-r.pos { color: var(--lime); } .rr-r.neg { color: var(--red); }
-    .rr-time { font-size: 10px; color: var(--mute); margin-top: 2px; }
-    .rr-model { font-size: 9px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
-    .rr-caret { position: absolute; right: 14px; bottom: 10px; font-size: 10px; color: var(--mute); transition: transform 0.25s; }
-    .rr-card.open .rr-caret { transform: rotate(180deg); }
-    .rr-attr { display: flex; height: 6px; border-radius: 4px; overflow: hidden; margin-top: 13px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4); }
+    .rr-oneliner { font-size: 15px; font-style: italic; color: rgba(245,255,235,0.92); line-height: 1.5; margin: 16px 0 2px; }
+    .rr-div { height: 1px; background: rgba(255,255,255,0.08); margin: 16px 0; }
+    .rr-sec { margin-top: 13px; }
+    .rr-sec.first { margin-top: 0; }
+    .rr-sec b { display: block; font-size: 10px; color: var(--lime); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 5px; text-shadow: 0 0 10px rgba(163,255,18,0.3); }
+    .rr-sec p { font-size: 13.5px; color: var(--ink); line-height: 1.6; margin: 0; }
+    .rr-attr { display: flex; height: 8px; border-radius: 5px; overflow: hidden; margin: 8px 0 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4); }
     .rr-attr i { display: block; height: 100%; }
-    .rr-detail { max-height: 0; overflow: hidden; transition: max-height 0.32s ease; }
-    .rr-card.open .rr-detail { max-height: 440px; }
-    .rr-detail-inner { padding-top: 14px; margin-top: 12px; border-top: 1px dashed rgba(255,255,255,0.08); display: grid; gap: 11px; }
-    .rr-d-row b { display: block; font-size: 10px; color: var(--lime); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
-    .rr-d-row span { font-size: 13px; color: var(--ink); line-height: 1.5; }
-    .rr-attr-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; }
-    .rr-attr-legend span { font-size: 10.5px; color: var(--dim); }
-    .rr-attr-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+    .rr-attr-legend { display: flex; flex-wrap: wrap; gap: 7px 14px; }
+    .rr-attr-legend span { font-size: 11px; color: var(--dim); }
+    .rr-attr-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
     /* explicit ON / OFF meanings (color-coded) */
     .of-onoff { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
     .of-on, .of-off { display: flex; gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.4; color: var(--ink); }
@@ -967,7 +963,7 @@
         whatToWatch: 'Fill was ~2 ticks early vs the ideal price — small slippage that shaved a sliver off the R.',
         actionNeeded: 'Nothing to fix — this is the shape you want. Keep the exit discipline exactly like this.',
         attribution: { regime: 0.15, structure: 0.22, narrative: 0.10, confluence: 0.20, decay: 0.05, liquidity: 0.13, fill: 0.05, exit_plan: 0.10 },
-        model: 'GPT-5.4', critiquedAt: '3:04 AM'
+        entryQuality: 0.82, model: 'GPT-5.4', critiquedAt: '3:04 AM'
       };
       function rrGradeClass(g) { var c = String(g || '').charAt(0).toUpperCase(); return c === 'A' ? 'g-a' : c === 'B' ? 'g-b' : c === 'C' ? 'g-c' : 'g-d'; }
       function rrCard(r) {
@@ -976,20 +972,20 @@
         var legend = RR_ATTR.filter(function (k) { return (attr[k] || 0) > 0; }).map(function (k) { return '<span><i style="background:' + RR_ATTR_C[k] + '"></i>' + k.replace('_', ' ') + ' ' + Math.round((attr[k] || 0) * 100) + '%</span>'; }).join('');
         var pos = (r.realizedR || 0) >= 0;
         var rTxt = r.realizedR != null ? (pos ? '+' : '') + Number(r.realizedR).toFixed(1) + 'R' : '—';
-        return '<div class="rr-card" data-card>' +
-          '<div class="rr-card-top">' +
+        var eq = r.entryQuality != null ? ' &middot; entry quality ' + Math.round(r.entryQuality * 100) + '%' : '';
+        return '<div class="rr-card">' +
+          '<div class="rr-head">' +
             '<div class="rr-grade ' + rrGradeClass(r.grade) + '">' + rrEsc(r.grade || '—') + '</div>' +
-            '<div class="rr-mid"><div class="rr-name">' + rrEsc(r.strategy) + '<span class="sym">' + rrEsc(r.symbol || '') + '</span></div><div class="rr-oneliner">' + rrEsc(r.oneLiner || '') + '</div></div>' +
-            '<div class="rr-right"><div class="rr-r ' + (pos ? 'pos' : 'neg') + '">' + rTxt + '</div><div class="rr-time">' + rrEsc(r.critiquedAt || '') + '</div><div class="rr-model">' + rrEsc(r.model || '') + '</div></div>' +
+            '<div class="rr-hname"><div class="rr-name">' + rrEsc(r.strategy) + '<span class="sym">' + rrEsc(r.symbol || '') + '</span></div><div class="rr-hmeta">' + rrEsc(r.model || '') + ' &middot; ' + rrEsc(r.critiquedAt || '') + '</div></div>' +
+            '<div class="rr-r ' + (pos ? 'pos' : 'neg') + '">' + rTxt + '</div>' +
           '</div>' +
-          '<div class="rr-attr">' + bars + '</div>' +
-          '<div class="rr-caret">&#9660;</div>' +
-          '<div class="rr-detail"><div class="rr-detail-inner">' +
-            '<div class="rr-d-row"><b>What went right</b><span>' + rrEsc(r.whatWentRight || '—') + '</span></div>' +
-            '<div class="rr-d-row"><b>What to watch</b><span>' + rrEsc(r.whatToWatch || '—') + '</span></div>' +
-            '<div class="rr-d-row"><b>Action needed</b><span>' + rrEsc(r.actionNeeded || '—') + '</span></div>' +
-            '<div class="rr-d-row"><b>Why — the 8-way breakdown</b><div class="rr-attr-legend">' + legend + '</div></div>' +
-          '</div></div>' +
+          '<div class="rr-oneliner">&ldquo;' + rrEsc(r.oneLiner || '') + '&rdquo;</div>' +
+          '<div class="rr-div"></div>' +
+          '<div class="rr-sec first"><b>What went right</b><p>' + rrEsc(r.whatWentRight || '—') + '</p></div>' +
+          '<div class="rr-sec"><b>What to watch</b><p>' + rrEsc(r.whatToWatch || '—') + '</p></div>' +
+          '<div class="rr-sec"><b>Action needed</b><p>' + rrEsc(r.actionNeeded || '—') + '</p></div>' +
+          '<div class="rr-div"></div>' +
+          '<div class="rr-sec first"><b>Why it did what it did' + eq + '</b><div class="rr-attr">' + bars + '</div><div class="rr-attr-legend">' + legend + '</div></div>' +
         '</div>';
       }
       function renderReports() {
@@ -1005,7 +1001,6 @@
             '<div class="rr-example-tag">Example report</div>' +
             '<div class="rr-cards">' + rrCard(RR_EXAMPLE) + '</div>';
         }
-        body.querySelectorAll('[data-card]').forEach(function (c) { c.addEventListener('click', function () { c.classList.toggle('open'); }); });
       }
       function exitReportingRoom() {
         var room = document.getElementById('reporting-room');
