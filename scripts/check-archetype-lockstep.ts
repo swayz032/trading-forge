@@ -2,15 +2,19 @@
 /**
  * FIX 5 (2026-07-02): Archetype registry lockstep CI guard.
  *
- * Parses both:
+ * Parses three sources:
  *   - TypeScript: src/server/services/direct-bucket-graduator.ts  ARCHETYPE_REGISTRY
  *   - Python:     src/engine/archetype_evaluator.py              ARCHETYPE_CLASS_MAP
+ *   - TypeScript: src/server/routes/live-order.ts                ARCHETYPE_REGISTRY_KEYS
+ *                 (H-3, 2026-07-04 — the live-order acceptance set)
  *
  * Asserts:
- *   1. Key sets are identical (same archetype names in both files)
+ *   1. Key sets are identical (same archetype names in graduator + engine)
  *   2. strategyClass dotted-paths match for every shared key
  *      TS: strategyClass: "src.engine.strategies.X.Y"
  *      Python: derived from the import + class assignment in _get_archetype_class_map()
+ *   3. live-order.ts ARCHETYPE_REGISTRY_KEYS matches the graduator registry key set
+ *      (a missing key rejects LIVE orders as unknown_archetype → 0 LIVE trades)
  *
  * Exits non-zero on any drift so CI fails loudly.
  *
@@ -169,16 +173,64 @@ function parsePythonArchetypeClassMap(filePath: string): Map<string, string> {
   return result;
 }
 
+// ─── Parse live-order.ts ARCHETYPE_REGISTRY_KEYS ──────────────────────────────
+// Deep-scan #16 Wave 2 (H-3, 2026-07-04): live-order.ts keeps a hand-maintained
+// duplicate Set of archetype keys used to accept/reject inbound live orders. It
+// was NOT covered by this lockstep check (only graduator ↔ engine were compared),
+// so a future archetype added to the graduator registry + engine but forgotten
+// here would silently reject live orders as `unknown_archetype` (0 LIVE trades).
+// Parse the Set literal and compare its keys against the graduator registry.
+function parseLiveOrderArchetypeKeys(filePath: string): Set<string> {
+  const src = fs.readFileSync(filePath, "utf8");
+
+  const startMarker = "const ARCHETYPE_REGISTRY_KEYS: ReadonlySet<string> = new Set([";
+  const startIdx = src.indexOf(startMarker);
+  if (startIdx === -1) {
+    throw new Error(`Could not find ARCHETYPE_REGISTRY_KEYS in ${filePath}`);
+  }
+
+  // Balanced-bracket scan from the opening [ of new Set([...])
+  const arrStart = src.indexOf("[", startIdx);
+  let depth = 0;
+  let i = arrStart;
+  let arrEnd = -1;
+  while (i < src.length) {
+    if (src[i] === "[") depth++;
+    else if (src[i] === "]") {
+      depth--;
+      if (depth === 0) { arrEnd = i; break; }
+    }
+    i++;
+  }
+  if (arrEnd === -1) throw new Error("Could not find end of ARCHETYPE_REGISTRY_KEYS array");
+
+  const block = src.slice(arrStart, arrEnd + 1);
+  const keyRe = /"([^"]+)"/g;
+  const result = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = keyRe.exec(block)) !== null) {
+    result.add(m[1]);
+  }
+
+  if (result.size === 0) {
+    throw new Error(`No keys found in ARCHETYPE_REGISTRY_KEYS in ${filePath}`);
+  }
+
+  return result;
+}
+
 // ─── Main comparison ──────────────────────────────────────────────────────────
 
 function main(): void {
   const tsFile = path.join(ROOT, "src/server/services/direct-bucket-graduator.ts");
   const pyFile = path.join(ROOT, "src/engine/archetype_evaluator.py");
+  const liveOrderFile = path.join(ROOT, "src/server/routes/live-order.ts");
 
   console.log("check-archetype-lockstep: parsing files...");
 
   let tsRegistry: Map<string, string>;
   let pyRegistry: Map<string, string>;
+  let liveOrderKeys: Set<string>;
 
   try {
     tsRegistry = parseTsArchetypeRegistry(tsFile);
@@ -193,6 +245,14 @@ function main(): void {
     console.log(`  Python ARCHETYPE_CLASS_MAP: ${pyRegistry.size} keys`);
   } catch (e) {
     console.error(`ERROR parsing Python file: ${(e as Error).message}`);
+    process.exit(1);
+  }
+
+  try {
+    liveOrderKeys = parseLiveOrderArchetypeKeys(liveOrderFile);
+    console.log(`  live-order.ts ARCHETYPE_REGISTRY_KEYS: ${liveOrderKeys.size} keys`);
+  } catch (e) {
+    console.error(`ERROR parsing live-order file: ${(e as Error).message}`);
     process.exit(1);
   }
 
@@ -224,6 +284,26 @@ function main(): void {
     }
   }
 
+  // Check 4 (H-3): live-order.ts ARCHETYPE_REGISTRY_KEYS must match the graduator
+  // registry key set. A graduator/engine archetype missing here rejects LIVE orders
+  // (`unknown_archetype`, 0 LIVE trades); a stale key here is dead weight.
+  for (const [key] of tsRegistry) {
+    if (!liveOrderKeys.has(key)) {
+      driftFound.push(
+        `KEY MISSING FROM LIVE-ORDER: '${key}' is in graduator ARCHETYPE_REGISTRY but NOT in ` +
+        `live-order.ts ARCHETYPE_REGISTRY_KEYS — live orders for this archetype would be rejected as unknown_archetype`,
+      );
+    }
+  }
+  for (const key of liveOrderKeys) {
+    if (!tsRegistry.has(key)) {
+      driftFound.push(
+        `STALE KEY IN LIVE-ORDER: '${key}' is in live-order.ts ARCHETYPE_REGISTRY_KEYS but NOT in ` +
+        `graduator ARCHETYPE_REGISTRY — remove it or add the missing registry+engine entry`,
+      );
+    }
+  }
+
   if (driftFound.length > 0) {
     console.error("\ncheck-archetype-lockstep: DRIFT DETECTED\n");
     for (const d of driftFound) {
@@ -233,7 +313,10 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(`\ncheck-archetype-lockstep: PASS — ${tsRegistry.size} keys, all in lockstep.`);
+  console.log(
+    `\ncheck-archetype-lockstep: PASS — ${tsRegistry.size} graduator keys, ` +
+    `${pyRegistry.size} engine keys, ${liveOrderKeys.size} live-order keys, all in lockstep.`,
+  );
   process.exit(0);
 }
 

@@ -27,7 +27,7 @@
 import { RAW_ARCHETYPES_RESPECTED as RAW_ARCHETYPES_RESPECTED_CANONICAL } from "../lib/archetype-registry-keys.js";
 import { isHandlerDrivenEntry } from "../lib/handler-driven-entry.js";
 import { db } from "../db/index.js";
-import { strategies, strategyPendingBuckets, auditLog, deadLetterQueue } from "../db/schema.js";
+import { strategies, strategyPendingBuckets, auditLog, deadLetterQueue, lifecycleTransitions } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
 import { applyFrameworkOverlay } from "./framework-overlay.js";
 import { compileDslToEngine, compileDslWithConfluence } from "../lib/dsl-compiler.js";
@@ -2860,33 +2860,105 @@ export async function graduateBucketDirectly(opts: {
     // known gaps. Mark lifecycle_state = NEEDS_REVISION so the operator dashboard
     // surfaces these as re-extract debt.
     if (v11ExtractionGapReason) {
-      await db.execute(sql`
-        UPDATE strategies SET lifecycle_state = 'NEEDS_REVISION'
-        WHERE id = ${inserted.id}::uuid
-          AND lifecycle_state NOT IN ('GRAVEYARD', 'RETIRED', 'DEPLOYED', 'PILOT', 'DEPLOY_READY')
-      `).catch((revErr: unknown) =>
-        logger.warn({ err: revErr, strategyId: inserted.id }, "Pass I: NEEDS_REVISION lifecycle update failed (non-blocking)")
-      );
-      insertAuditRowSafe({
-        action: "lifecycle.needs_revision_set",
-        entityType: "strategy",
-        entityId: inserted.id,
-        input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
-        result: {
-          extraction_gap_reason: v11ExtractionGapReason,
-          strategy_name: strategyName,
-          v11_fields_present: v11EntrySequence.length > 0 || v11Targets.length > 0,
-        } as Record<string, unknown>,
-        status: "warning",
-        decisionAuthority: "system",
-        correlationId: correlationId ?? null,
-      }).catch((auditErr: unknown) =>
-        logger.warn({ err: auditErr }, "Pass I: lifecycle.needs_revision_set audit write failed (non-blocking)")
-      );
-      logger.warn(
-        { strategyId: inserted.id, strategyName, extractionGapReason: v11ExtractionGapReason },
-        "direct-graduator Pass I: strategy marked NEEDS_REVISION due to extraction_gap_reason",
-      );
+      // Deep-scan #16 Wave 2 (D-1 + D-2, 2026-07-04):
+      //  D-1: the NEEDS_REVISION UPDATE was previously .catch()-swallowed while the
+      //       `lifecycle.needs_revision_set` audit row was written UNCONDITIONALLY —
+      //       so the audit could claim the transition while the DB row stayed CANDIDATE
+      //       (the conveyor picks it up while the operator's debt view parks it). We now
+      //       run the UPDATE with RETURNING id and only claim the transition (audit +
+      //       ledger) when a row actually changed.
+      //  D-2: the state change + typed `lifecycle_transitions` ledger row + audit row
+      //       are written together in one db.transaction() so 90-day reconstruction from
+      //       the typed ledger is complete (no raw-SQL-only phantom-origin teleport).
+      let transitioned = false;
+      let priorState: string | null = null;
+      try {
+        await db.transaction(async (tx) => {
+          const priorRows = await tx.execute(sql`
+            SELECT lifecycle_state FROM strategies WHERE id = ${inserted.id}::uuid
+          `);
+          priorState = ((priorRows as unknown) as Array<{ lifecycle_state: string }>)[0]?.lifecycle_state ?? null;
+
+          const updated = await tx.execute(sql`
+            UPDATE strategies SET lifecycle_state = 'NEEDS_REVISION'
+            WHERE id = ${inserted.id}::uuid
+              AND lifecycle_state NOT IN ('GRAVEYARD', 'RETIRED', 'DEPLOYED', 'PILOT', 'DEPLOY_READY')
+            RETURNING id
+          `);
+          if (((updated as unknown) as Array<unknown>).length === 0) {
+            // Protected/terminal state or row vanished — the transition did NOT happen.
+            // Do NOT write the ledger/audit inside this tx; the outer branch alerts.
+            return;
+          }
+          transitioned = true;
+
+          // D-2: typed ledger row matching the canonical promoteStrategy shape
+          // (strategyId/fromState/toState/decisionAuthority/reason/correlationId).
+          await tx.insert(lifecycleTransitions).values({
+            strategyId: inserted.id,
+            fromState: priorState ?? "CANDIDATE",
+            toState: "NEEDS_REVISION",
+            decisionAuthority: "gate",
+            reason: `extraction_gap: ${v11ExtractionGapReason}`,
+            correlationId: correlationId ?? null,
+          });
+
+          // Audit row written in the SAME tx so audit + state + ledger are atomic.
+          await tx.insert(auditLog).values({
+            action: "lifecycle.needs_revision_set",
+            entityType: "strategy",
+            entityId: inserted.id,
+            input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+            result: {
+              extraction_gap_reason: v11ExtractionGapReason,
+              strategy_name: strategyName,
+              from_state: priorState ?? "CANDIDATE",
+              v11_fields_present: v11EntrySequence.length > 0 || v11Targets.length > 0,
+            } as Record<string, unknown>,
+            status: "warning",
+            decisionAuthority: "gate",
+            correlationId: correlationId ?? null,
+          });
+        });
+      } catch (revErr: unknown) {
+        transitioned = false;
+        logger.error(
+          { err: revErr, strategyId: inserted.id, strategyName },
+          "Pass I: NEEDS_REVISION transition (state + ledger + audit) failed — NOT claiming the transition",
+        );
+      }
+
+      if (transitioned) {
+        logger.warn(
+          { strategyId: inserted.id, strategyName, extractionGapReason: v11ExtractionGapReason, fromState: priorState },
+          "direct-graduator Pass I: strategy marked NEEDS_REVISION due to extraction_gap_reason",
+        );
+      } else {
+        // D-1: the UPDATE did NOT change the DB (protected state, or it threw).
+        // Emit a distinct failure audit so the mismatch is observable, and DO NOT
+        // claim NEEDS_REVISION. Fire-and-forget (outside the rolled-back tx).
+        insertAuditRowSafe({
+          action: "lifecycle.needs_revision_set_failed",
+          entityType: "strategy",
+          entityId: inserted.id,
+          input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+          result: {
+            extraction_gap_reason: v11ExtractionGapReason,
+            strategy_name: strategyName,
+            prior_state: priorState,
+            note: "NEEDS_REVISION UPDATE affected 0 rows or threw — transition NOT applied; DB state unchanged",
+          } as Record<string, unknown>,
+          status: "failure",
+          decisionAuthority: "gate",
+          correlationId: correlationId ?? null,
+        }).catch((auditErr: unknown) =>
+          logger.warn({ err: auditErr }, "Pass I: lifecycle.needs_revision_set_failed audit write failed (non-blocking)"),
+        );
+        logger.warn(
+          { strategyId: inserted.id, strategyName, extractionGapReason: v11ExtractionGapReason, priorState },
+          "direct-graduator Pass I: NEEDS_REVISION NOT applied (protected state or error) — audit reflects unchanged DB",
+        );
+      }
     }
 
     // ─── Wave 26 Pass G B4 (2026-05-26): GATE 2 — Factor Quality Telemetry ─

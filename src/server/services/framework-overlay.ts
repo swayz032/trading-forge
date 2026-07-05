@@ -464,7 +464,18 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
     // short signals at runtime. Duplicate handler-driven markers must NOT be
     // treated as "duplicate L/S text" — that downgrade would mask real
     // bidirectional strategies as long-only.
-    const handlerDriven = isHandlerDrivenEntry(el, es, cfg.entry_indicator as string | null | undefined);
+    // Deep-scan #16 Wave 2 (H-2, 2026-07-04): resolve entry_indicator from BOTH
+    // the top-level (compiled DSL shape) AND the nested strategy.* (spec-onboarded
+    // shape). Spec configs nest it at cfg.strategy.entry_indicator, so reading only
+    // the top-level left this re-drift guard surviving purely on the identical-marker
+    // branch — a spec "both" strategy with distinct dispatch markers could have been
+    // silently coerced to long-only. Resolving both makes the guard robust on the
+    // spec path.
+    const resolvedEntryIndicator = (cfg.entry_indicator ?? cfg.strategy?.entry_indicator) as
+      | string
+      | null
+      | undefined;
+    const handlerDriven = isHandlerDrivenEntry(el, es, resolvedEntryIndicator);
     if (el && es && el === es && !handlerDriven) {
       warnings.push("entry_long === entry_short with direction='both' — backtester ambiguity. Defaulting to direction='long' with original entry_condition. Manually flip to 'short' or split entry texts to fire both sides.");
       cfg.direction = "long";
