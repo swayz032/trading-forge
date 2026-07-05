@@ -187,21 +187,32 @@ beforeEach(() => {
 
 describe("ReconciliationService — runDailyReconciliation", () => {
 
-  // ── Test 1: Happy path ──────────────────────────────────────────────────────
-  it("returns severity=green when all source counts match and no PnL delta", async () => {
-    // All DB selects return count=3
+  // ── Test 1 (Deep-Scan #18b X-1): a zero-source run is UNVERIFIABLE, not green ──
+  // This test PREVIOUSLY asserted severity=green with a mock that "looked like" count=3
+  // but actually fed the service ZERO rows — fetchProxyCountsFromProductionTrades AWAITS
+  // `.select().from().where()` directly, so a `.where().limit()`-only mock never delivered
+  // the count. So it was asserting green on all-zeros: exactly the false-green X-1 fixes
+  // (production_trades has no writer wired → the recon verifies NOTHING). Corrected: a
+  // zero-source reconciliation now reports "yellow" (degraded/unverifiable), never a
+  // confirmed-clean green.
+  //
+  // COVERAGE GAP (honest): a genuine "green" requires ≥1 independent source to actually
+  // produce data (X-1 fix-sketch option a: wire the production_trades writers). That path
+  // cannot be exercised through this proxy mock today; when the writers land, add a test
+  // that feeds real non-zero counts and asserts green.
+  it("returns severity=yellow (UNVERIFIABLE), not a false-green, when the production_trades proxy yields zero rows", async () => {
     const { db } = await import("../db/index.js");
     vi.mocked(db.select).mockReturnValue({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
-          limit: vi.fn(async () => [{ cnt: 3, total: "450" }]),
+          limit: vi.fn(async () => [{ cnt: 0, total: "0" }]),
           orderBy: vi.fn(() => ({ limit: vi.fn(async () => []) })),
         })),
       })),
     } as unknown as ReturnType<typeof db.select>);
 
     const result = await reconModule.runDailyReconciliation(new Date("2026-05-09"));
-    expect(result.severity).toBe("green");
+    expect(result.severity).toBe("yellow");
     expect(result.mismatchCount).toBe(0);
     expect(result.alertFired).toBe(false);
   });

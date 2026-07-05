@@ -491,8 +491,36 @@ export async function runDailyReconciliation(
 
     // ── Derive severity ────────────────────────────────────────────────────
     const mismatchCount = mismatches.length;
+    // Deep-Scan #18b X-1 (2026-07-05): "green" must mean VERIFIED agreement, not the
+    // all-zeros tautology. production_trades has no writer wired (Phase 4C incomplete),
+    // so productionTradesCount is structurally always 0; when every source is empty the
+    // reconciliation verified NOTHING — reporting green off 0/0/0/null was a false-green
+    // on the operator's primary ProductionStatusPanel (the panel §3 tells the operator to
+    // trust). Require ≥1 independent source to have actually produced data before a
+    // zero-mismatch run can be called green; otherwise it is UNVERIFIABLE → yellow
+    // (degraded), never green. Green becomes meaningful again once the production_trades
+    // writers are wired (X-1 fix sketch option a) or a real broker source produces rows.
+    const hasVerifiableData =
+      productionTradesCount > 0 ||
+      traderspostLogCount > 0 ||
+      tradovateFillsCount > 0 ||
+      (tradingviewMarkerCount !== null && tradingviewMarkerCount > 0) ||
+      mffuDashboardPnl !== null;
     let severity: ReconSeverity;
-    if (mismatchCount === 0) {
+    if (mismatchCount === 0 && !hasVerifiableData) {
+      severity = "yellow";
+      logger.warn(
+        {
+          reconDate: reconDateStr,
+          productionTradesCount,
+          traderspostLogCount,
+          tradovateFillsCount,
+          tradingviewMarkerCount,
+          mffuDashboardPnl,
+        },
+        "reconciliation UNVERIFIABLE — all data sources empty/null (production_trades has no writer wired); reporting yellow (degraded), NOT a confirmed-clean green"
+      );
+    } else if (mismatchCount === 0) {
       severity = "green";
     } else if (mismatchCount < RECON_CONFIG.RED_MISMATCH_COUNT) {
       severity = "yellow";
