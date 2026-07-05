@@ -249,7 +249,19 @@ app.use("/api", correlationMiddleware);
 // Rate limiting (before auth gate)
 app.use("/api", standardRateLimit);
 
-// Health check (no auth) — enhanced with DB connectivity + system metrics
+// Health check (no auth) — enhanced with DB connectivity + system metrics.
+//
+// Deep-scan #16 Wave 3 (#25b): the DB migration version + time-since-last-
+// successful-backtest fields added in Wave 2 (Track G2, #25) live ONLY on
+// `/api/health/dashboard` — the operator-facing diagnostic endpoint — and are
+// INTENTIONALLY NOT mirrored onto this base route. This is a k8s/load-balancer
+// LIVENESS probe: it is hit at high frequency and must stay fast + bounded (note
+// the Promise.race 2s cap on the single SELECT 1 below, added precisely so an
+// exhausted pool can't cascade into restart loops). The migration check is 2 more
+// DB round-trips and the backtest-freshness check is a 3rd — adding DB query load
+// proportional to probe frequency to a liveness probe is the wrong trade-off, and
+// those helpers are diagnostic (schema-drift / dead-conveyor detection), not
+// liveness signals. Read them from `/api/health/dashboard`, not here.
 app.get("/api/health", async (_req, res) => {
   const startMs = Date.now();
   let dbStatus = "ok";

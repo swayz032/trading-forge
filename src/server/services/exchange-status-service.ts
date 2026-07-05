@@ -382,7 +382,7 @@ export async function simulateOutage(exchange: string, reason: string, affectedS
     await db.update(exchangeOutages)
       .set({ responseTaken: "simulated_engine_notified" })
       .where(eq(exchangeOutages.id, outageId))
-      .catch(() => {});
+      .catch((dbErr: unknown) => logger.error({ err: dbErr, outageId }, "exchange-status: failed to update simulated outage responseTaken"));
   }
 
   broadcastSSE("exchange:outage-detected", {

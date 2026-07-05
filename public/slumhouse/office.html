@@ -284,6 +284,15 @@
     .of-3mode .of-mode[data-mode="2"] .lbl { color: var(--lime); }
     .of-3mode .of-mode.active { opacity: 1; background: rgba(255,255,255,0.06); }
     .of-locknote { margin-top: 14px; font-size: 13px; color: var(--warm); letter-spacing: 0.01em; }
+    /* ── Transient office toast (switch feedback — e.g. tapping a not-yet-wired switch) ── */
+    .of-toast {
+      position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 26px); transform: translate(-50%, 8px);
+      z-index: 60; max-width: 84%; padding: 11px 18px; border-radius: 14px; font-size: 14px; color: #eafff0; text-align: center;
+      background: linear-gradient(145deg, rgba(163,255,18,0.18), rgba(25,195,125,0.10));
+      border: 1px solid rgba(163,255,18,0.30); box-shadow: 0 8px 22px rgba(0,0,0,0.5), 0 0 24px rgba(163,255,18,0.12);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .of-toast.on { opacity: 1; transform: translate(-50%, 0); }
     .of-card-slot {
       margin-top: auto; display: flex; align-items: center; gap: 9px;
       font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute);
@@ -819,6 +828,10 @@
          /slumhouse/office-conveyor.js (polls /api/scout/health same-origin). -->
     <section id="of-conveyor" class="of-hide"></section>
     <section id="of-approvals" class="of-hide"></section>
+    <!-- deep-scan #16 (H-7): transient feedback when tapping a not-yet-wired switch
+         (e.g. Live Execution before broker setup) so the fail-closed state is legible
+         instead of a silent no-op. Driven by ofToast() in the switch script below. -->
+    <div id="of-toast" class="of-toast" aria-live="polite"></div>
   </div>
 
   <!-- ═══ CARTER CONNECT OVERLAY (full-screen, hidden by default) ═══ -->
@@ -928,8 +941,8 @@
         { id: 'reporting', connect: true, eyebrow: 'GPT-5 Analyst', title: 'Reporting Room',
           cover: '/slumhouse/images/office-reporting.png?v=2', connectLabel: 'Enter Reporting Room' },
         { id: 'bot_power', eyebrow: 'Main switch', title: 'Bot Power',
-          on: 'The bot makes trades.',
-          off: 'The bot stops — no new trades. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
+          on: 'The whole bot runs — it makes trades, finds and promotes new strategies, and runs its scheduled jobs.',
+          off: 'The whole bot pauses — no new trades AND no strategy discovery, no promotions, no scheduled jobs. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
         { id: 'learning_loop', eyebrow: 'Smart mode', title: 'Learning Loop', threeMode: true,
           modes: [
             { key: 0, label: 'OFF', desc: 'Brain asleep — no overnight study, no changes. Everything stays frozen.' },
@@ -1267,9 +1280,21 @@
           }
         });
       }
+      var ofToastEl = document.getElementById('of-toast');
+      var ofToastTimer = null;
+      function ofToast(text) {
+        if (!ofToastEl) return;
+        ofToastEl.textContent = text;
+        ofToastEl.classList.add('on');
+        if (ofToastTimer) clearTimeout(ofToastTimer);
+        ofToastTimer = setTimeout(function () { ofToastEl.classList.remove('on'); }, 3200);
+      }
       function onToggle(cd) {
         var s = ofSwitches[cd.id] || {};
-        if (!s.wired) return;                                  // not wired yet
+        if (!s.wired) {                                        // not wired yet — say so instead of a silent no-op
+          ofToast(cd.lockNote || (cd.title + ' isn’t set up yet — nothing to switch on.'));
+          return;
+        }
         if (cd.threeMode) {                                    // 3-mode dial: OFF → OBSERVE → AUTOPILOT → OFF
           var cur = (typeof s.mode === 'number') ? s.mode : 0;
           var nextMode = (cur + 1) % 3;

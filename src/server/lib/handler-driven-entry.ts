@@ -51,6 +51,20 @@
 const BIDIR_SENTINEL = "high < low";
 const DISPATCH_MARKER_PREFIXES = ["archetype_dispatch:", "spec_conditions:"];
 
+// Parked-state marker — NOT a live dispatch. `buildDirectionalEntries()`
+// (spec-onboarding-service.ts) stamps `pending_archetype:<tok>` onto BOTH sides
+// when a direction="both" spec matched NO archetype and cleared NO binding plan.
+// These rows land NEEDS_ARCHETYPE and never backtest until an archetype is
+// assigned (at which point the marker becomes `archetype_dispatch:<key>` and the
+// config is re-overlaid). No engine handler evaluates `pending_archetype:` today,
+// so it is deliberately separate from DISPATCH_MARKER_PREFIXES. But for the
+// coercion guard it must behave the same: identical `pending_archetype:` on both
+// sides is a PARKED bidirectional spec, not a genuinely-ambiguous duplicated
+// grammar expression. Coercing it to long-only would silently disagree with the
+// nested compiled_spec.spec.direction="both" (the source of truth used when the
+// archetype later lands) — a cosmetic drift H-4 (deep-scan #16 Wave 3) closes.
+const PARKED_MARKER_PREFIX = "pending_archetype:";
+
 export function isHandlerDrivenEntry(
   entryLong: string | null | undefined,
   entryShort: string | null | undefined,
@@ -73,6 +87,14 @@ export function isHandlerDrivenEntry(
   // entry_long and entry_short independently at runtime from
   // spec.direction=='both'", not a single duplicated boolean expression.
   if (el && es && el === es && DISPATCH_MARKER_PREFIXES.some((prefix) => el.startsWith(prefix))) {
+    return true;
+  }
+
+  // Parked-state marker — identical `pending_archetype:<tok>` on both sides is a
+  // NEEDS_ARCHETYPE parked bidirectional spec, not grammar ambiguity. Preserve
+  // direction="both" so the compiled config stays consistent with the nested
+  // spec.direction until an archetype is assigned (H-4, deep-scan #16 Wave 3).
+  if (el && es && el === es && el.startsWith(PARKED_MARKER_PREFIX)) {
     return true;
   }
 
