@@ -1,0 +1,812 @@
+{
+  "results": {
+    "5m_minute_support_level_mes_5m": {
+      "name": "5m_minute_support_level_mes_5m",
+      "symbol": "MES",
+      "timeframe": "5m",
+      "video": "75DJN5UVQnw",
+      "n_bars": 23786,
+      "conjunction_depth_struct_all": 0,
+      "n_spine_role_conditions_total": 1,
+      "n_spine_role_conditions_executed": 0,
+      "n_entry_signals": 1,
+      "zero_trade": false,
+      "per_condition": [],
+      "evaluator_collapse_groups": [],
+      "pairwise_co_satisfaction": [],
+      "joint_rate_all_executed_conditions": 1.0,
+      "extraction_audit_note": "Spine role=='spine' has exactly 1 condition total across the whole compiled spec: WAIT_SESSION:'timeframe selection'#0, DRI-classified ALTERNATIVE (NOT JUSTIFIED_MANDATORY -- there are zero JUSTIFIED_MANDATORY spine conditions for this concept). That single condition fails session-keyword resolution (object text 'timeframe selection' does not match any SESSION_KEYWORDS phrase -- it describes the 30m/4h top-down zone-analysis hierarchy the transcript discusses, not a time-of-day session/killzone), so spec_family_bindings marks it bindable=False, executed=False UNCONDITIONALLY (independent of TF_ROLE_DEMOTION_MODE -- confirmed conjunction_depth==0 in every one of the 6 demotion arms per the existing role-demotion-checkpoint.jsonl, not just struct_all). Every semantically load-bearing transcript concept (supply/demand zone location+boundary, 30m/4h timeframe hierarchy, rejection-confirmation-twice, area FVG, TP level) was role-assigned 'confluence' (non-gating) at Band B extraction time, never 'spine'. Net effect: the executable spine is EMPTY in every arm including baseline 'off' -- struct_all cannot revive this strategy because there is nothing DRI-classified as OPTIONAL/ALTERNATIVE/CONTEXTUAL/JUSTIFIED_MANDATORY on the spine to act on. The single entry_signal recorded (n=1, at absolute bar_idx=0 of the loaded frame, 2025-11-03 00:00:00) is a zero-conjunction-depth compute() artifact (empty AND is vacuously True from bar 0, rising-edge detector fires exactly once at the start of the frame and never again since spine_satisfied is constant True) -- NOT a genuine trading signal. Bar 0 of the loaded frame has no ATR/structural-stop warmup (needs >=14-30 prior bars), so this artifact does not survive the real production backtest's stop-placement/eligibility path -- reconciling with the task's premise that this concept is genuinely ZERO-TRADE end-to-end.",
+      "binding_blocker": "NONE (no gating condition exists -- spine is structurally empty in every demotion arm; the concept's real content was role-assigned 'confluence' at extraction time, and the sole spine slot is a mistyped WAIT_SESSION that never binds)",
+      "classified_outcome": "EXTRACTION_ROLE_ASSIGNMENT_DEFECT (not cleanly one of the 4 pre-registered rows -- caught at Stage 1, earliest stage; struct_all cannot act because there is no DRI-classified spine content to demote in the first place)",
+      "earliest_stage_that_explains_it": 1
+    },
+    "5m_minute_support_level_mnq_5m": {
+      "name": "5m_minute_support_level_mnq_5m",
+      "symbol": "MNQ",
+      "timeframe": "5m",
+      "video": "75DJN5UVQnw",
+      "n_bars": 23780,
+      "conjunction_depth_struct_all": 0,
+      "n_spine_role_conditions_total": 1,
+      "n_spine_role_conditions_executed": 0,
+      "n_entry_signals": 1,
+      "zero_trade": false,
+      "per_condition": [],
+      "evaluator_collapse_groups": [],
+      "pairwise_co_satisfaction": [],
+      "joint_rate_all_executed_conditions": 1.0,
+      "extraction_audit_note": "Spine role=='spine' has exactly 1 condition total across the whole compiled spec: WAIT_SESSION:'timeframe selection'#0, DRI-classified ALTERNATIVE (NOT JUSTIFIED_MANDATORY -- there are zero JUSTIFIED_MANDATORY spine conditions for this concept). That single condition fails session-keyword resolution (object text 'timeframe selection' does not match any SESSION_KEYWORDS phrase -- it describes the 30m/4h top-down zone-analysis hierarchy the transcript discusses, not a time-of-day session/killzone), so spec_family_bindings marks it bindable=False, executed=False UNCONDITIONALLY (independent of TF_ROLE_DEMOTION_MODE -- confirmed conjunction_depth==0 in every one of the 6 demotion arms per the existing role-demotion-checkpoint.jsonl, not just struct_all). Every semantically load-bearing transcript concept (supply/demand zone location+boundary, 30m/4h timeframe hierarchy, rejection-confirmation-twice, area FVG, TP level) was role-assigned 'confluence' (non-gating) at Band B extraction time, never 'spine'. Net effect: the executable spine is EMPTY in every arm including baseline 'off' -- struct_all cannot revive this strategy because there is nothing DRI-classified as OPTIONAL/ALTERNATIVE/CONTEXTUAL/JUSTIFIED_MANDATORY on the spine to act on. The single entry_signal recorded (n=1, at absolute bar_idx=0 of the loaded frame, 2025-11-03 00:00:00) is a zero-conjunction-depth compute() artifact (empty AND is vacuously True from bar 0, rising-edge detector fires exactly once at the start of the frame and never again since spine_satisfied is constant True) -- NOT a genuine trading signal. Bar 0 of the loaded frame has no ATR/structural-stop warmup (needs >=14-30 prior bars), so this artifact does not survive the real production backtest's stop-placement/eligibility path -- reconciling with the task's premise that this concept is genuinely ZERO-TRADE end-to-end.",
+      "binding_blocker": "NONE (no gating condition exists -- spine is structurally empty in every demotion arm; the concept's real content was role-assigned 'confluence' at extraction time, and the sole spine slot is a mistyped WAIT_SESSION that never binds)",
+      "classified_outcome": "EXTRACTION_ROLE_ASSIGNMENT_DEFECT (not cleanly one of the 4 pre-registered rows -- caught at Stage 1, earliest stage; struct_all cannot act because there is no DRI-classified spine content to demote in the first place)",
+      "earliest_stage_that_explains_it": 1
+    },
+    "5m_minute_support_level_mcl_5m": {
+      "name": "5m_minute_support_level_mcl_5m",
+      "symbol": "MCL",
+      "timeframe": "5m",
+      "video": "75DJN5UVQnw",
+      "n_bars": 22992,
+      "conjunction_depth_struct_all": 0,
+      "n_spine_role_conditions_total": 1,
+      "n_spine_role_conditions_executed": 0,
+      "n_entry_signals": 1,
+      "zero_trade": false,
+      "per_condition": [],
+      "evaluator_collapse_groups": [],
+      "pairwise_co_satisfaction": [],
+      "joint_rate_all_executed_conditions": 1.0,
+      "extraction_audit_note": "Spine role=='spine' has exactly 1 condition total across the whole compiled spec: WAIT_SESSION:'timeframe selection'#0, DRI-classified ALTERNATIVE (NOT JUSTIFIED_MANDATORY -- there are zero JUSTIFIED_MANDATORY spine conditions for this concept). That single condition fails session-keyword resolution (object text 'timeframe selection' does not match any SESSION_KEYWORDS phrase -- it describes the 30m/4h top-down zone-analysis hierarchy the transcript discusses, not a time-of-day session/killzone), so spec_family_bindings marks it bindable=False, executed=False UNCONDITIONALLY (independent of TF_ROLE_DEMOTION_MODE -- confirmed conjunction_depth==0 in every one of the 6 demotion arms per the existing role-demotion-checkpoint.jsonl, not just struct_all). Every semantically load-bearing transcript concept (supply/demand zone location+boundary, 30m/4h timeframe hierarchy, rejection-confirmation-twice, area FVG, TP level) was role-assigned 'confluence' (non-gating) at Band B extraction time, never 'spine'. Net effect: the executable spine is EMPTY in every arm including baseline 'off' -- struct_all cannot revive this strategy because there is nothing DRI-classified as OPTIONAL/ALTERNATIVE/CONTEXTUAL/JUSTIFIED_MANDATORY on the spine to act on. The single entry_signal recorded (n=1, at absolute bar_idx=0 of the loaded frame, 2025-11-03 00:00:00) is a zero-conjunction-depth compute() artifact (empty AND is vacuously True from bar 0, rising-edge detector fires exactly once at the start of the frame and never again since spine_satisfied is constant True) -- NOT a genuine trading signal. Bar 0 of the loaded frame has no ATR/structural-stop warmup (needs >=14-30 prior bars), so this artifact does not survive the real production backtest's stop-placement/eligibility path -- reconciling with the task's premise that this concept is genuinely ZERO-TRADE end-to-end.",
+      "binding_blocker": "NONE (no gating condition exists -- spine is structurally empty in every demotion arm; the concept's real content was role-assigned 'confluence' at extraction time, and the sole spine slot is a mistyped WAIT_SESSION that never binds)",
+      "classified_outcome": "EXTRACTION_ROLE_ASSIGNMENT_DEFECT (not cleanly one of the 4 pre-registered rows -- caught at Stage 1, earliest stage; struct_all cannot act because there is no DRI-classified spine content to demote in the first place)",
+      "earliest_stage_that_explains_it": 1
+    },
+    "hammer_candle_long_side_mes_5m": {
+      "name": "hammer_candle_long_side_mes_5m",
+      "symbol": "MES",
+      "timeframe": "5m",
+      "video": "NMUd0oX_7Pg",
+      "n_bars": 23786,
+      "conjunction_depth_struct_all": 12,
+      "n_spine_role_conditions_total": 20,
+      "n_spine_role_conditions_executed": 12,
+      "n_entry_signals": 0,
+      "zero_trade": true,
+      "per_condition": [
+        {
+          "condition_id": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "type": "WAIT_STRUCTURE",
+          "object": "first 15 minutes candle formed today",
+          "primitive": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.760321
+        },
+        {
+          "condition_id": "FILTER:15 minutes candle closure#0",
+          "type": "FILTER",
+          "object": "15 minutes candle closure",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "opening candle qualification",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.443244
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:reversal candles#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "reversal candles",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.443244
+        },
+        {
+          "condition_id": "FILTER:time window location#0",
+          "type": "FILTER",
+          "object": "time window location",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_BIAS:sharp red move downward#0",
+          "type": "WAIT_BIAS",
+          "object": "sharp red move downward",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.476373
+        },
+        {
+          "condition_id": "WAIT_STRUCTURE:next candle to break above hammer high#0",
+          "type": "WAIT_STRUCTURE",
+          "object": "next candle to break above hammer high",
+          "primitive": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.760321
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:reversal pattern#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "reversal pattern",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.443244
+        },
+        {
+          "condition_id": "WAIT_BIAS:bullish reversal#0",
+          "type": "WAIT_BIAS",
+          "object": "bullish reversal",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.523627
+        },
+        {
+          "condition_id": "FILTER:reversal formation#0",
+          "type": "FILTER",
+          "object": "reversal formation",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_BIAS:directional push#0",
+          "type": "WAIT_BIAS",
+          "object": "directional push",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.523627
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:wait reversal candle signal in step three before doing anything#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "wait reversal candle signal in step three before doing anything",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.443244
+        }
+      ],
+      "evaluator_collapse_groups": [
+        {
+          "condition_ids": [
+            "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+            "WAIT_STRUCTURE:next candle to break above hammer high#0"
+          ],
+          "n_conditions": 2,
+          "shared_satisfaction_rate": 0.760321
+        },
+        {
+          "condition_ids": [
+            "FILTER:15 minutes candle closure#0",
+            "FILTER:time window location#0",
+            "FILTER:reversal formation#0"
+          ],
+          "n_conditions": 3,
+          "shared_satisfaction_rate": 1.0
+        },
+        {
+          "condition_ids": [
+            "WAIT_CONFIRMATION:opening candle qualification#0",
+            "WAIT_CONFIRMATION:reversal candles#0",
+            "WAIT_CONFIRMATION:reversal pattern#0",
+            "WAIT_CONFIRMATION:wait reversal candle signal in step three before doing anything#0"
+          ],
+          "n_conditions": 4,
+          "shared_satisfaction_rate": 0.443244
+        },
+        {
+          "condition_ids": [
+            "WAIT_BIAS:bullish reversal#0",
+            "WAIT_BIAS:directional push#0"
+          ],
+          "n_conditions": 2,
+          "shared_satisfaction_rate": 0.523627
+        }
+      ],
+      "pairwise_co_satisfaction": [
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "FILTER:15 minutes candle closure#0",
+          "a_individual_rate": 0.760321,
+          "b_individual_rate": 1.0,
+          "joint_rate": 0.760321,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "a_individual_rate": 0.760321,
+          "b_individual_rate": 0.443244,
+          "joint_rate": 0.333936,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 0.760321,
+          "b_individual_rate": 0.476373,
+          "joint_rate": 0.360758,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.760321,
+          "b_individual_rate": 0.523627,
+          "joint_rate": 0.399563,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.443244,
+          "joint_rate": 0.443244,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.476373,
+          "joint_rate": 0.476373,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.523627,
+          "joint_rate": 0.523627,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 0.443244,
+          "b_individual_rate": 0.476373,
+          "joint_rate": 0.205079,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.443244,
+          "b_individual_rate": 0.523627,
+          "joint_rate": 0.238165,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_BIAS:sharp red move downward#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.476373,
+          "b_individual_rate": 0.523627,
+          "joint_rate": 0.0,
+          "never_cosatisfied_despite_both_individually_true": true
+        }
+      ],
+      "joint_rate_all_executed_conditions": 0.0,
+      "extraction_audit_note": "12 JUSTIFIED_MANDATORY spine conditions remain executed under struct_all (matches conjunction_depth=12 exactly). Checked against transcript NMUd0oX_7Pg: 'sharp red move downward' <- \"Take the hammer on the long side. This needs to appear after a clear sharp red move downward\" (genuinely transcript-supported, describes the manipulation-candle PHASE 1 event). 'next candle to break above hammer high' <- \"Wait for the next candle to break above the hammer high\" (genuinely transcript-supported, describes PHASE 3: a specific level-break relative to the hammer candle's OWN high, drawn earlier). Both are real, non-inflated concepts per the DRI audit -- the audit did not over-classify. The problem is entirely at the BINDING layer, not the classification layer (see execution trace).",
+      "binding_blocker": "WAIT_BIAS:'sharp red move downward' (bearish EMA-lean proxy, fast<slow) vs WAIT_BIAS:'bullish reversal'+'directional push' (bullish EMA-lean proxy, fast>slow, identical shared array) -- pairwise joint_rate == 0.0 exactly while each individually >0.42-0.53. These are logical complements of the SAME instantaneous fast/slow EMA comparison evaluated with opposite polarity, so their conjunction is mathematically impossible on any single bar, not merely empirically rare.",
+      "classified_outcome": "TEMPORAL_INTERACTION (primary, Stage 3) with REPRESENTATION_LIMIT as the causal secondary (Stage 4): the transcript concept is an explicit 3-phase state machine (1: box+confirm the opening manipulation candle via ATR%; 2: wait, OUTSIDE the box, within a 60-90min window, for a hammer/engulfing reversal candle; 3: enter on the break of the NEXT candle above THAT SPECIFIC hammer candle's own high) requiring a bearish move to occur EARLIER and a bullish reversal LATER plus a session-anchored specific price level (the hammer's own high) carried forward across bars. The instantaneous-AND representation evaluates 'sharp red move downward' and 'bullish reversal'/'directional push' via the SAME same-bar EMA-slope proxy with opposite required polarity (structurally 0 joint probability) and evaluates 'next candle to break above hammer high' via the SAME generic structure_engine activity array as 'first 15 minutes candle formed today' (no memory of which specific candle or level is being broken). No amount of demotion can fix this -- it requires stateful/sequential execution semantics the current instantaneous-AND spine cannot express.",
+      "earliest_stage_that_explains_it": 3
+    },
+    "hammer_candle_long_side_mnq_5m": {
+      "name": "hammer_candle_long_side_mnq_5m",
+      "symbol": "MNQ",
+      "timeframe": "5m",
+      "video": "NMUd0oX_7Pg",
+      "n_bars": 23780,
+      "conjunction_depth_struct_all": 12,
+      "n_spine_role_conditions_total": 20,
+      "n_spine_role_conditions_executed": 12,
+      "n_entry_signals": 0,
+      "zero_trade": true,
+      "per_condition": [
+        {
+          "condition_id": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "type": "WAIT_STRUCTURE",
+          "object": "first 15 minutes candle formed today",
+          "primitive": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.755677
+        },
+        {
+          "condition_id": "FILTER:15 minutes candle closure#0",
+          "type": "FILTER",
+          "object": "15 minutes candle closure",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "opening candle qualification",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.424769
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:reversal candles#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "reversal candles",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.424769
+        },
+        {
+          "condition_id": "FILTER:time window location#0",
+          "type": "FILTER",
+          "object": "time window location",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_BIAS:sharp red move downward#0",
+          "type": "WAIT_BIAS",
+          "object": "sharp red move downward",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.474769
+        },
+        {
+          "condition_id": "WAIT_STRUCTURE:next candle to break above hammer high#0",
+          "type": "WAIT_STRUCTURE",
+          "object": "next candle to break above hammer high",
+          "primitive": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.755677
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:reversal pattern#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "reversal pattern",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.424769
+        },
+        {
+          "condition_id": "WAIT_BIAS:bullish reversal#0",
+          "type": "WAIT_BIAS",
+          "object": "bullish reversal",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.525231
+        },
+        {
+          "condition_id": "FILTER:reversal formation#0",
+          "type": "FILTER",
+          "object": "reversal formation",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_BIAS:directional push#0",
+          "type": "WAIT_BIAS",
+          "object": "directional push",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.525231
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:wait reversal candle signal in step three before doing anything#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "wait reversal candle signal in step three before doing anything",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.424769
+        }
+      ],
+      "evaluator_collapse_groups": [
+        {
+          "condition_ids": [
+            "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+            "WAIT_STRUCTURE:next candle to break above hammer high#0"
+          ],
+          "n_conditions": 2,
+          "shared_satisfaction_rate": 0.755677
+        },
+        {
+          "condition_ids": [
+            "FILTER:15 minutes candle closure#0",
+            "FILTER:time window location#0",
+            "FILTER:reversal formation#0"
+          ],
+          "n_conditions": 3,
+          "shared_satisfaction_rate": 1.0
+        },
+        {
+          "condition_ids": [
+            "WAIT_CONFIRMATION:opening candle qualification#0",
+            "WAIT_CONFIRMATION:reversal candles#0",
+            "WAIT_CONFIRMATION:reversal pattern#0",
+            "WAIT_CONFIRMATION:wait reversal candle signal in step three before doing anything#0"
+          ],
+          "n_conditions": 4,
+          "shared_satisfaction_rate": 0.424769
+        },
+        {
+          "condition_ids": [
+            "WAIT_BIAS:bullish reversal#0",
+            "WAIT_BIAS:directional push#0"
+          ],
+          "n_conditions": 2,
+          "shared_satisfaction_rate": 0.525231
+        }
+      ],
+      "pairwise_co_satisfaction": [
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "FILTER:15 minutes candle closure#0",
+          "a_individual_rate": 0.755677,
+          "b_individual_rate": 1.0,
+          "joint_rate": 0.755677,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "a_individual_rate": 0.755677,
+          "b_individual_rate": 0.424769,
+          "joint_rate": 0.323129,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 0.755677,
+          "b_individual_rate": 0.474769,
+          "joint_rate": 0.350841,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.755677,
+          "b_individual_rate": 0.525231,
+          "joint_rate": 0.404836,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.424769,
+          "joint_rate": 0.424769,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.474769,
+          "joint_rate": 0.474769,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.525231,
+          "joint_rate": 0.525231,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 0.424769,
+          "b_individual_rate": 0.474769,
+          "joint_rate": 0.19878,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.424769,
+          "b_individual_rate": 0.525231,
+          "joint_rate": 0.225988,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_BIAS:sharp red move downward#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.474769,
+          "b_individual_rate": 0.525231,
+          "joint_rate": 0.0,
+          "never_cosatisfied_despite_both_individually_true": true
+        }
+      ],
+      "joint_rate_all_executed_conditions": 0.0,
+      "extraction_audit_note": "12 JUSTIFIED_MANDATORY spine conditions remain executed under struct_all (matches conjunction_depth=12 exactly). Checked against transcript NMUd0oX_7Pg: 'sharp red move downward' <- \"Take the hammer on the long side. This needs to appear after a clear sharp red move downward\" (genuinely transcript-supported, describes the manipulation-candle PHASE 1 event). 'next candle to break above hammer high' <- \"Wait for the next candle to break above the hammer high\" (genuinely transcript-supported, describes PHASE 3: a specific level-break relative to the hammer candle's OWN high, drawn earlier). Both are real, non-inflated concepts per the DRI audit -- the audit did not over-classify. The problem is entirely at the BINDING layer, not the classification layer (see execution trace).",
+      "binding_blocker": "WAIT_BIAS:'sharp red move downward' (bearish EMA-lean proxy, fast<slow) vs WAIT_BIAS:'bullish reversal'+'directional push' (bullish EMA-lean proxy, fast>slow, identical shared array) -- pairwise joint_rate == 0.0 exactly while each individually >0.42-0.53. These are logical complements of the SAME instantaneous fast/slow EMA comparison evaluated with opposite polarity, so their conjunction is mathematically impossible on any single bar, not merely empirically rare.",
+      "classified_outcome": "TEMPORAL_INTERACTION (primary, Stage 3) with REPRESENTATION_LIMIT as the causal secondary (Stage 4): the transcript concept is an explicit 3-phase state machine (1: box+confirm the opening manipulation candle via ATR%; 2: wait, OUTSIDE the box, within a 60-90min window, for a hammer/engulfing reversal candle; 3: enter on the break of the NEXT candle above THAT SPECIFIC hammer candle's own high) requiring a bearish move to occur EARLIER and a bullish reversal LATER plus a session-anchored specific price level (the hammer's own high) carried forward across bars. The instantaneous-AND representation evaluates 'sharp red move downward' and 'bullish reversal'/'directional push' via the SAME same-bar EMA-slope proxy with opposite required polarity (structurally 0 joint probability) and evaluates 'next candle to break above hammer high' via the SAME generic structure_engine activity array as 'first 15 minutes candle formed today' (no memory of which specific candle or level is being broken). No amount of demotion can fix this -- it requires stateful/sequential execution semantics the current instantaneous-AND spine cannot express.",
+      "earliest_stage_that_explains_it": 3
+    },
+    "hammer_candle_long_side_mcl_5m": {
+      "name": "hammer_candle_long_side_mcl_5m",
+      "symbol": "MCL",
+      "timeframe": "5m",
+      "video": "NMUd0oX_7Pg",
+      "n_bars": 22992,
+      "conjunction_depth_struct_all": 12,
+      "n_spine_role_conditions_total": 20,
+      "n_spine_role_conditions_executed": 12,
+      "n_entry_signals": 0,
+      "zero_trade": true,
+      "per_condition": [
+        {
+          "condition_id": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "type": "WAIT_STRUCTURE",
+          "object": "first 15 minutes candle formed today",
+          "primitive": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.768528
+        },
+        {
+          "condition_id": "FILTER:15 minutes candle closure#0",
+          "type": "FILTER",
+          "object": "15 minutes candle closure",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "opening candle qualification",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.415623
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:reversal candles#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "reversal candles",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.415623
+        },
+        {
+          "condition_id": "FILTER:time window location#0",
+          "type": "FILTER",
+          "object": "time window location",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_BIAS:sharp red move downward#0",
+          "type": "WAIT_BIAS",
+          "object": "sharp red move downward",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.466641
+        },
+        {
+          "condition_id": "WAIT_STRUCTURE:next candle to break above hammer high#0",
+          "type": "WAIT_STRUCTURE",
+          "object": "next candle to break above hammer high",
+          "primitive": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.768528
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:reversal pattern#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "reversal pattern",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.415623
+        },
+        {
+          "condition_id": "WAIT_BIAS:bullish reversal#0",
+          "type": "WAIT_BIAS",
+          "object": "bullish reversal",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.533359
+        },
+        {
+          "condition_id": "FILTER:reversal formation#0",
+          "type": "FILTER",
+          "object": "reversal formation",
+          "primitive": "entry_quality.confluence_factor_presence",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 1.0
+        },
+        {
+          "condition_id": "WAIT_BIAS:directional push#0",
+          "type": "WAIT_BIAS",
+          "object": "directional push",
+          "primitive": "bias_engine.classify_institutional_regime",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.533359
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:wait reversal candle signal in step three before doing anything#0",
+          "type": "WAIT_CONFIRMATION",
+          "object": "wait reversal candle signal in step three before doing anything",
+          "primitive": "spec_condition_compiler.candle_confirmation_check",
+          "approximation": true,
+          "dri_classification": "JUSTIFIED_MANDATORY",
+          "individual_satisfaction_rate": 0.415623
+        }
+      ],
+      "evaluator_collapse_groups": [
+        {
+          "condition_ids": [
+            "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+            "WAIT_STRUCTURE:next candle to break above hammer high#0"
+          ],
+          "n_conditions": 2,
+          "shared_satisfaction_rate": 0.768528
+        },
+        {
+          "condition_ids": [
+            "FILTER:15 minutes candle closure#0",
+            "FILTER:time window location#0",
+            "FILTER:reversal formation#0"
+          ],
+          "n_conditions": 3,
+          "shared_satisfaction_rate": 1.0
+        },
+        {
+          "condition_ids": [
+            "WAIT_CONFIRMATION:opening candle qualification#0",
+            "WAIT_CONFIRMATION:reversal candles#0",
+            "WAIT_CONFIRMATION:reversal pattern#0",
+            "WAIT_CONFIRMATION:wait reversal candle signal in step three before doing anything#0"
+          ],
+          "n_conditions": 4,
+          "shared_satisfaction_rate": 0.415623
+        },
+        {
+          "condition_ids": [
+            "WAIT_BIAS:bullish reversal#0",
+            "WAIT_BIAS:directional push#0"
+          ],
+          "n_conditions": 2,
+          "shared_satisfaction_rate": 0.533359
+        }
+      ],
+      "pairwise_co_satisfaction": [
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "FILTER:15 minutes candle closure#0",
+          "a_individual_rate": 0.768528,
+          "b_individual_rate": 1.0,
+          "joint_rate": 0.768528,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "a_individual_rate": 0.768528,
+          "b_individual_rate": 0.415623,
+          "joint_rate": 0.315805,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 0.768528,
+          "b_individual_rate": 0.466641,
+          "joint_rate": 0.359951,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.768528,
+          "b_individual_rate": 0.533359,
+          "joint_rate": 0.408577,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.415623,
+          "joint_rate": 0.415623,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.466641,
+          "joint_rate": 0.466641,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "FILTER:15 minutes candle closure#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 1.0,
+          "b_individual_rate": 0.533359,
+          "joint_rate": 0.533359,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "b": "WAIT_BIAS:sharp red move downward#0",
+          "a_individual_rate": 0.415623,
+          "b_individual_rate": 0.466641,
+          "joint_rate": 0.194633,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_CONFIRMATION:opening candle qualification#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.415623,
+          "b_individual_rate": 0.533359,
+          "joint_rate": 0.22099,
+          "never_cosatisfied_despite_both_individually_true": false
+        },
+        {
+          "a": "WAIT_BIAS:sharp red move downward#0",
+          "b": "WAIT_BIAS:bullish reversal#0",
+          "a_individual_rate": 0.466641,
+          "b_individual_rate": 0.533359,
+          "joint_rate": 0.0,
+          "never_cosatisfied_despite_both_individually_true": true
+        }
+      ],
+      "joint_rate_all_executed_conditions": 0.0,
+      "extraction_audit_note": "12 JUSTIFIED_MANDATORY spine conditions remain executed under struct_all (matches conjunction_depth=12 exactly). Checked against transcript NMUd0oX_7Pg: 'sharp red move downward' <- \"Take the hammer on the long side. This needs to appear after a clear sharp red move downward\" (genuinely transcript-supported, describes the manipulation-candle PHASE 1 event). 'next candle to break above hammer high' <- \"Wait for the next candle to break above the hammer high\" (genuinely transcript-supported, describes PHASE 3: a specific level-break relative to the hammer candle's OWN high, drawn earlier). Both are real, non-inflated concepts per the DRI audit -- the audit did not over-classify. The problem is entirely at the BINDING layer, not the classification layer (see execution trace).",
+      "binding_blocker": "WAIT_BIAS:'sharp red move downward' (bearish EMA-lean proxy, fast<slow) vs WAIT_BIAS:'bullish reversal'+'directional push' (bullish EMA-lean proxy, fast>slow, identical shared array) -- pairwise joint_rate == 0.0 exactly while each individually >0.42-0.53. These are logical complements of the SAME instantaneous fast/slow EMA comparison evaluated with opposite polarity, so their conjunction is mathematically impossible on any single bar, not merely empirically rare.",
+      "classified_outcome": "TEMPORAL_INTERACTION (primary, Stage 3) with REPRESENTATION_LIMIT as the causal secondary (Stage 4): the transcript concept is an explicit 3-phase state machine (1: box+confirm the opening manipulation candle via ATR%; 2: wait, OUTSIDE the box, within a 60-90min window, for a hammer/engulfing reversal candle; 3: enter on the break of the NEXT candle above THAT SPECIFIC hammer candle's own high) requiring a bearish move to occur EARLIER and a bullish reversal LATER plus a session-anchored specific price level (the hammer's own high) carried forward across bars. The instantaneous-AND representation evaluates 'sharp red move downward' and 'bullish reversal'/'directional push' via the SAME same-bar EMA-slope proxy with opposite required polarity (structurally 0 joint probability) and evaluates 'next candle to break above hammer high' via the SAME generic structure_engine activity array as 'first 15 minutes candle formed today' (no memory of which specific candle or level is being broken). No amount of demotion can fix this -- it requires stateful/sequential execution semantics the current instantaneous-AND spine cannot express.",
+      "earliest_stage_that_explains_it": 3
+    }
+  },
+  "corpus_verdict": {
+    "same_condition_blocks_all_six": false,
+    "note": "The two concepts fail via ENTIRELY DIFFERENT mechanisms (3 instances each), not merely different individual conditions within the same mechanism class -- so per the letter of the pre-registered table the closest single row is 'Different conditions block each' (RESIDUAL_DRI_INFLATION / extend the DRI taxonomy), but that label is only a partial fit: 5m_minute_support_level's blocker is NOT a DRI-classification-inflation issue at all (the DRI audit correctly found zero JUSTIFIED_MANDATORY content on its 1-member spine -- the defect is a Stage-1 ROLE-ASSIGNMENT gap upstream of the DRI classification layer: genuine transcript content was filed role='confluence' instead of role='spine', and the sole spine slot is a type-mismatched WAIT_SESSION that never binds). hammer_candle_long_side's blocker IS well-classified by the DRI audit (12 genuinely JUSTIFIED_MANDATORY, transcript-confirmed) but fails at Stage 3/4: TEMPORAL_INTERACTION (co-satisfaction structurally 0.0 for the bearish/bullish EMA-lean pair) caused by REPRESENTATION_LIMIT (the concept is an explicit sequential 3-phase state machine with a session-anchored specific price level that the instantaneous-AND spine cannot express).",
+    "per_concept": {
+      "5m_minute_support_level (3 instances)": "EXTRACTION_ROLE_ASSIGNMENT_DEFECT -- caught at Stage 1 (earliest), not one of the 4 pre-registered rows; recommend extending the taxonomy with a 5th class for role-assignment gaps that precede the DRI classification layer entirely.",
+      "hammer_candle_long_side (3 instances)": "TEMPORAL_INTERACTION (primary, Stage 3) + REPRESENTATION_LIMIT (causal secondary, Stage 4) -- matches pre-registered row 3, with row 4 as the underlying mechanism."
+    },
+    "recommended_next_step": "(a) Add a 5th DRI-adjacent taxonomy class for role-assignment defects (spine structurally empty/mistyped despite real transcript content existing) -- this is invisible to the existing OPTIONAL/ALTERNATIVE/CONTEXTUAL/JUSTIFIED_MANDATORY/UNRESOLVED classification because it operates one layer above it (role, not classification). (b) hammer_candle_long_side is a clean, concrete case for the Layer-2 sequencing/state work GPT flagged: needs (i) a session-anchored level store (remember the opening 15m candle's own high/low across subsequent bars) and (ii) phase-ordered condition evaluation (bearish-phase THEN bullish-phase, not same-bar AND) rather than a purely instantaneous per-bar AND of all spine conditions."
+  },
+  "summary": "6/6 instances traced on real S3 5m data (23786/23780/22992 bars MES/MNQ/MCL respectively) under TF_ROLE_DEMOTION_MODE=struct_all via the production SpecConditionStrategy path (from_compiled_spec + compute()). NEITHER concept's zero-trade symptom is explained by genuinely-mandatory conditions surviving demotion in the way the experiment's design anticipated for both concepts equally: (1) 5m_minute_support_level x3 -- spine is EMPTY (conjunction_depth==0) in ALL 6 demotion arms including baseline; the only spine-role condition is DRI-classified ALTERNATIVE (not JUSTIFIED_MANDATORY) and fails to bind (mistyped WAIT_SESSION); real concept content lives entirely in role='confluence' conditions the demotion axis cannot promote. Caught at Stage 1 (Extraction Audit) -- a role-assignment defect, not a condition-survives-demotion story. (2) hammer_candle_long_side x3 -- 12 JUSTIFIED_MANDATORY conditions survive struct_all exactly as expected, transcript-confirmed genuine, but collapse to only 4 DISTINCT executable arrays (structure-activity x2, candle-confirmation x4, bearish-EMA-lean x1, bullish-EMA-lean x2). The bearish-lean and bullish-lean arrays are exact logical complements of the SAME same-bar EMA comparison -- pairwise joint_rate == 0.0 exactly (confirmed on real data: e.g. MES rates 0.476 and 0.524, joint 0.0) -- a structural impossibility, not empirical rarity. Caught at Stage 3 (Temporal Audit), with Stage 4 (Representation Limit) as the causal mechanism: the transcript concept is an explicit multi-phase, session-anchored state machine the instantaneous-AND spine architecturally cannot express."
+}
