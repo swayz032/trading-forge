@@ -100,7 +100,12 @@ describe("H3 — structural: gate re-check block exists in paper-signal-service.
   });
 
   it("drops queued entry when kill switch halts — gate 1 check present", () => {
-    expect(SRC).toContain("killSwitch.isHaltedForProduction({ correlationId: pendingEntry.correlationId })");
+    // deepscan18 (2026-07-05) C-C1: the call now also threads this session's
+    // resolved account/firm scope (see kill-switch.ts::evaluateAllKillSwitchLayers)
+    // so a sibling account's breach doesn't drop THIS account's queued fill.
+    expect(SRC).toContain("const halted = await killSwitch.isHaltedForProduction({");
+    expect(SRC).toContain("correlationId: pendingEntry.correlationId,");
+    expect(SRC).toContain("accountKey: resolveAccountKey(sessionRow),");
     expect(SRC).toContain('pendingDropReason = "kill_switch"');
   });
 
