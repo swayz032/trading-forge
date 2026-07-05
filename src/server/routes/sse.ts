@@ -488,6 +488,10 @@ export const LIFECYCLE_GATE_EVENTS = {
   // Strategy successfully promoted between lifecycle states (CANDIDATE→TESTING, TESTING→PAPER, SHADOW→PAPER, PAPER→DEPLOY_READY, PILOT→DEPLOYED, PILOT→GRAVEYARD)
   // Payload: { strategyId, from, to, name, ...transition-specific fields }
   PROMOTED: "lifecycle:promoted",
+  // Deep-Scan #16 Wave 3 — portfolio-drift auto-demotion (DEPLOYED → DECLINING → TESTING)
+  // fired when a DEPLOYED strategy's rolling_sharpe_30d falls below the floor.
+  // Payload: { strategyId, strategyName, rollingSharpe30d, floor, from, to, correlationId }
+  PORTFOLIO_DRIFT_DEMOTED: "lifecycle:portfolio_drift_demoted",
 } as const;
 
 export type LifecycleGateEventName =

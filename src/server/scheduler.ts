@@ -75,6 +75,8 @@ import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
 // W29 Pass B.3: Regime drift detector — daily 18:00 ET sweep
 import { runRegimeDriftDetector } from "./services/regime-drift-detector-service.js";
 import { runStrategyAgeRevalidation } from "./services/strategy-revalidation-service.js";
+// DS16W3: Portfolio drift auto-demotion — daily 17:00 ET rolling-Sharpe-floor sweep
+import { runPortfolioDriftDemotion } from "./services/portfolio-drift-demotion-service.js";
 // W29 Pass D.3: A/B comparison weekly digest — Friday 17:00 ET
 import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
 // W0.1: Nightly off-tower database backup (hardware-failure safety net)
@@ -678,6 +680,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // dangerous — the operator must be alerted and the strategy demoted regardless
   // of the pipeline gate state.
   "regime-drift-detector",              // W29B.3: daily regime drift sweep
+  // DS16W3: portfolio-drift auto-demotion must fire even when the pipeline is
+  // paused. A DEPLOYED strategy whose live rolling Sharpe collapses is dangerous
+  // regardless of operator intent to pause research — mirrors regime-drift-detector.
+  "portfolio-drift-demotion",           // DS16W3: daily rolling-Sharpe-floor demotion
   // W29 Pass D.3: A/B comparison weekly digest must fire even when pipeline is
   // paused. The operator needs weekly A/B performance visibility regardless of
   // whether the research pipeline is paused — pausing research does not stop
@@ -5351,6 +5357,60 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("regime-drift-detector");
+
+  // ─── DS16W3: Portfolio Drift Auto-Demotion — 17:00 ET daily ───────────────────
+  //
+  // Restores the demotion the live n8n "Daily Portfolio Monitor" workflow was
+  // SUPPOSED to do but silently did NOT (its PATCH /api/strategies/:id/lifecycle
+  // node sent no HMAC → 401/503 swallowed by continueRegularOutput → false-green).
+  //
+  // Scans all DEPLOYED strategies; any whose persisted strategies.rolling_sharpe_30d
+  // (refreshed 4-hourly by the rolling-sharpe cron) is below PORTFOLIO_DRIFT_SHARPE_FLOOR
+  // (default 1.0) is demoted DEPLOYED → DECLINING → TESTING for re-validation.
+  // Fail-SAFE on a NULL rolling Sharpe (skip, never demote) — unlike the dead n8n
+  // node which defaulted to 0 and would have demoted everything.
+  //
+  // DEFAULT-OFF: with PORTFOLIO_DRIFT_DEMOTION_ENABLED unset/false the sweep runs
+  // in effective dry-run (detect + telemetry + advisory Discord, NO lifecycle
+  // mutation) so the operator can validate the rolling-Sharpe scale on real
+  // DEPLOYED strategies before flipping it to live demotion.
+  //
+  // Schedule: 17:00 ET = 21:00 UTC (EDT) or 22:00 UTC (EST). Double-fire
+  // "43 21,22 * * *" + ET-hour==17 guard fires exactly once. Minute :43 dodges the
+  // 17:00 ET cluster (consistency :07, composite :13) and the 18:00 ET cluster
+  // (regime-drift :23). _PIPELINE_GATE_EXEMPT (registered above); _tryAcquireJobLock
+  // prevents overlap re-entry.
+  _PIPELINE_GATE_EXEMPT.add("portfolio-drift-demotion");
+
+  registerJob("portfolio-drift-demotion", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "portfolio-drift-demotion" }, "cron tick start");
+    await runPortfolioDriftDemotion();
+  });
+
+  cron.schedule("43 21,22 * * *", async () => {
+    if (!_tryAcquireJobLock("portfolio-drift-demotion")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 17) {
+        logger.debug({ etHour }, "Scheduler: portfolio-drift-demotion cron fired but not 17:00 ET — skipping (DST guard)");
+        return;
+      }
+      // NOT pipeline-gated — in _PIPELINE_GATE_EXEMPT
+      logger.info("Scheduler: portfolio-drift-demotion (17:00 ET confirmed)");
+      const t0pdd = Date.now();
+      await withRetry("portfolio-drift-demotion", SCHEDULER_JOBS["portfolio-drift-demotion"].run, 1);
+      markJobRun("portfolio-drift-demotion");
+      emitJobComplete("portfolio-drift-demotion", Date.now() - t0pdd);
+    } finally {
+      _releaseJobLock("portfolio-drift-demotion");
+    }
+  });
+  _scheduledJobs.add("portfolio-drift-demotion");
 
   // deepscan6 R2: strategy-age re-validation gate — daily 07:00 ET sweep of DEPLOYED
   // strategies; WARN at > 365d since last CPCV+PBO+WFE freeze, force re-validation (demote
