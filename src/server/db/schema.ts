@@ -3097,7 +3097,11 @@ export const quantumRlRuns = pgTable(
     // Surrogate key — bigserial for high-volume append workload
     id:                   bigserial("id", { mode: "bigint" }).primaryKey(),
     // FK to the strategy being evaluated. Cascade on strategy deletion.
-    strategyId:           integer("strategy_id")
+    // F-2 fix (deepscan16 W1 T4): was declared INTEGER against the real UUID
+    // migration (0158 line 35: `strategy_id UUID NOT NULL REFERENCES
+    // strategies(id)`) — every Drizzle-typed read/write on this column was
+    // silently type-mismatched against the live DB column.
+    strategyId:           uuid("strategy_id")
                             .notNull()
                             .references(() => strategies.id, { onDelete: "cascade" }),
     // When this RL decision was produced (wall-clock UTC)

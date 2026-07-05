@@ -1564,13 +1564,17 @@ def _emit_audit_row(
         finally:
             conn.close()
     except Exception as exc:
-        _rl_logger.debug("_emit_audit_row: failed to insert audit row for %s: %s", action, exc)
+        # Band E fix: DEBUG silently hid every audit-write failure. WARN so a
+        # persistently-broken audit_log path (bad DATABASE_URL, schema drift,
+        # etc.) is visible in normal log output instead of requiring a debug
+        # log level flip to notice.
+        _rl_logger.warning("_emit_audit_row: failed to insert audit row for %s: %s", action, exc)
 
 
 # ─── Regime-conditioned training loop ────────────────────────────────────────
 
 def train_regime_conditioned_policies(
-    strategy_id: int,
+    strategy_id: str,
     training_epochs: int = 200,
     cpcv_purge: bool = True,
     seed: int = 42,
@@ -1596,14 +1600,22 @@ def train_regime_conditioned_policies(
       - CANNOT write to quantum_mc_runs (writes to quantum_rl_runs only)
 
     Args:
-        strategy_id: integer strategy ID (used to load latest backtest)
+        strategy_id: strategy UUID string (used to load latest backtest).
+                     F-4 fix: previously typed/cast as int at the CLI boundary,
+                     but strategies.id (and quantum_rl_runs.strategy_id) are
+                     UUID columns — an int cast raised SystemExit(2) at argparse
+                     for every real invocation.
         training_epochs: number of training episodes per regime policy (default 200)
         cpcv_purge: enforce CPCV purge on training data (default True; hard constraint)
         seed: RNG seed for reproducibility
 
     Returns:
-        dict: {regime_name -> {trained_epochs, final_sharpe, final_reward, weights_hash}}
+        dict: {regime_name -> {trained_epochs, final_sharpe, final_reward, weights_hash,
+                                dsr_passed, db_write_failed}}
               Regimes with < _REGIME_MIN_BARS bars are absent from the result dict.
+              db_write_failed=True on any regime whose quantum_rl_runs persistence
+              failed for one or more training batches (F-1 fix — see write_failures
+              tracking below).
     """
     import hashlib
 
@@ -1611,7 +1623,12 @@ def train_regime_conditioned_policies(
     opt_in_cloud = os.environ.get("QUANTUM_RL_IBM_CLOUD_OPT_IN", "").lower() == "true"
 
     # ── 1. Find latest completed backtest for this strategy ───────────────────
-    backtest_id: Optional[int] = None
+    # F-1b fix: backtests.id is a UUID column (schema.ts:149) — casting via
+    # int() on a real UUID string raised ValueError on every production
+    # invocation, which was swallowed by the except below and silently left
+    # backtest_id=None, guaranteeing `bars` stayed empty regardless of the F-1
+    # INSERT-shape bug. Keep the DB-native UUID string as-is.
+    backtest_id: Optional[str] = None
     if db_url:
         try:
             import psycopg2
@@ -1629,7 +1646,7 @@ def train_regime_conditioned_policies(
                     )
                     row = cur.fetchone()
                     if row:
-                        backtest_id = int(row["id"])
+                        backtest_id = str(row["id"])
             finally:
                 conn.close()
         except Exception as exc:
@@ -1667,6 +1684,11 @@ def train_regime_conditioned_policies(
 
     # ── 5. Train per-regime policies ──────────────────────────────────────────
     results: dict[str, dict] = {}
+    # F-1 fix: tracks DB write failures per regime so the __main__ CLI can
+    # surface them via a non-zero exit code instead of a silently-swallowed
+    # warning log line (previously, a totally-broken INSERT looked identical
+    # to a clean training run from the caller's point of view).
+    write_failures: list[dict] = []
     rng = np.random.default_rng(seed)
 
     for regime in _INSTITUTIONAL_REGIMES:
@@ -1784,6 +1806,12 @@ def train_regime_conditioned_policies(
         for epoch_batch_start in range(0, training_epochs, 20):
             batch_end = min(epoch_batch_start + 20, training_epochs)
             batch_rewards: list[float] = []
+            # F-1 fix: track per-step actions + confidences so the batch-level
+            # quantum_rl_runs row can populate the real 'action' + confidence
+            # columns (previously untracked at this granularity — the old
+            # INSERT didn't reference them at all).
+            batch_actions: list[int] = []
+            batch_confidences: list[float] = []
 
             for _ep in range(epoch_batch_start, batch_end):
                 env = TradingEnv(
@@ -1805,11 +1833,27 @@ def train_regime_conditioned_policies(
                             exp_vals = np.exp(np.array(exps, dtype=np.float64))
                             probs = exp_vals / exp_vals.sum()
                             action = int(rng.choice(2, p=probs))
+                            batch_confidences.append(float(np.max(probs)))
                         except Exception:
+                            # Band E #27 fix: previously silently substituted a
+                            # random action with zero visibility. Non-fatal —
+                            # training must continue — but now logged at DEBUG
+                            # so a persistently-failing circuit is diagnosable
+                            # instead of masquerading as normal exploration.
+                            _rl_logger.debug(
+                                "train_regime_conditioned_policies: VQC circuit "
+                                "evaluation failed for regime=%s — falling back "
+                                "to random action",
+                                regime,
+                                exc_info=True,
+                            )
                             action = int(rng.integers(0, 2))
+                            batch_confidences.append(0.5)
                     else:
                         action = int(rng.integers(0, 2))
+                        batch_confidences.append(0.5)
 
+                    batch_actions.append(action)
                     next_state, reward, done = env.step(action)
                     ep_rewards.append(reward)
                     state = next_state
@@ -1826,12 +1870,80 @@ def train_regime_conditioned_policies(
 
             all_episode_rewards.extend(batch_rewards)
 
-            # Persist batch to quantum_rl_runs
+            # Persist batch to quantum_rl_runs — REAL migration 0158/0165 columns.
+            #
+            # F-1 fix (deepscan16 W1 T4): the previous INSERT targeted columns
+            # that do not exist on quantum_rl_runs (status/method/total_return/
+            # sharpe_ratio) and omitted 6 real NOT-NULL columns (regime,
+            # state_vector, action, confidence_score, effective_confidence,
+            # reward) — every INSERT silently failed at the DB and was
+            # swallowed by the bare `except Exception` below, while
+            # 'quantum_rl.training_completed' still fired with status=success.
+            # quantum_rl_runs had therefore never held a real production row.
             if db_url and n_params > 0:
                 weights_hash = hashlib.sha256(params.tobytes()).hexdigest()[:16]
                 batch_sharpe = 0.0
                 if len(batch_rewards) > 1 and np.std(batch_rewards) > 0:
                     batch_sharpe = float(np.mean(batch_rewards) / np.std(batch_rewards))
+
+                # ── Batch-representative state / action / confidence ─────────
+                # state_vector: last production state observed this batch (or {}
+                # in toy/synthetic mode where no production states are wired).
+                batch_state_vector = prod_states[-1] if prod_states else {}
+                # action: majority vote across the batch's per-step decisions.
+                # 0 = 'act' (take the trade), 1 = 'skip' (pass) — matches
+                # migration 0158's COMMENT ON COLUMN quantum_rl_runs.action.
+                batch_action = (
+                    "act"
+                    if batch_actions and sum(1 for a in batch_actions if a == 0) >= len(batch_actions) / 2
+                    else "skip"
+                )
+                batch_confidence_score = (
+                    float(np.mean(batch_confidences)) if batch_confidences else 0.5
+                )
+                batch_effective_confidence = compute_effective_confidence(
+                    batch_confidence_score, batch_end
+                )
+
+                # F-5 fix: sr_is/sr_oos/n_training_iterations — documented
+                # in-batch IS/OOS proxy. rl-signal-fetcher.ts::fetchRlSignal
+                # reads these three governance_labels keys to run the
+                # authoritative TS probit DSR gate (evaluateRlDsrGate);
+                # without them it silently fell back to the avgEffectiveConf×2
+                # proxy on every call. Proxy split: first half of the rewards
+                # accumulated so far in this regime = IS, second half = OOS.
+                # This is a WITHIN-RUN proxy (not a true held-out CPCV fold) —
+                # documented via 'sr_proxy_method' in the payload itself.
+                _n_cum = len(all_episode_rewards)
+                _half = _n_cum // 2
+                _is_rewards = all_episode_rewards[:_half] if _half > 1 else all_episode_rewards
+                _oos_rewards = all_episode_rewards[_half:] if _half > 1 else all_episode_rewards
+
+                def _proxy_sharpe(vals: list[float]) -> float:
+                    if len(vals) > 1 and np.std(vals) > 0:
+                        return float(np.mean(vals) / np.std(vals))
+                    return 0.0
+
+                sr_is = _proxy_sharpe(_is_rewards)
+                sr_oos = _proxy_sharpe(_oos_rewards)
+
+                # ci_high snapshot: mean of the regime's ci_high series (best
+                # available proxy for "at decision time" at batch granularity).
+                batch_ci_high = float(np.mean(ci_highs)) if ci_highs else None
+
+                governance_payload = {
+                    **RL_RUNS_GOVERNANCE,
+                    "regime": regime,
+                    "epoch_batch_start": epoch_batch_start,
+                    "epoch_batch_end": batch_end,
+                    "weights_hash": weights_hash,
+                    "backend_label": backend_label,
+                    "batch_sharpe": batch_sharpe,
+                    "sr_is": sr_is,
+                    "sr_oos": sr_oos,
+                    "n_training_iterations": batch_end,
+                    "sr_proxy_method": "in_batch_cumulative_reward_half_split",
+                }
 
                 try:
                     import psycopg2
@@ -1841,23 +1953,24 @@ def train_regime_conditioned_policies(
                             cur.execute(
                                 """
                                 INSERT INTO quantum_rl_runs
-                                    (strategy_id, status, method, total_return, sharpe_ratio,
-                                     governance_labels, seed, created_at)
-                                VALUES (%s, 'completed', %s, %s, %s, %s, %s, NOW())
+                                    (strategy_id, regime, state_vector, action,
+                                     confidence_score, effective_confidence, reward,
+                                     ci_high_at_evaluation, drawdown_penalty,
+                                     governance_labels, cpcv_fold_id, seed)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                                 """,
                                 (
                                     strategy_id,
-                                    f"pennylane_vqc_regime_{regime.lower()}",
-                                    str(sum(batch_rewards)),
-                                    str(batch_sharpe),
-                                    json.dumps({
-                                        **RL_RUNS_GOVERNANCE,
-                                        "regime": regime,
-                                        "epoch_batch_start": epoch_batch_start,
-                                        "epoch_batch_end": batch_end,
-                                        "weights_hash": weights_hash,
-                                        "backend_label": backend_label,
-                                    }),
+                                    regime,
+                                    json.dumps(batch_state_vector),
+                                    batch_action,
+                                    batch_confidence_score,
+                                    batch_effective_confidence,
+                                    float(np.mean(batch_rewards)) if batch_rewards else 0.0,
+                                    batch_ci_high,
+                                    None,  # drawdown_penalty — not tracked at batch granularity
+                                    json.dumps(governance_payload),
+                                    None,  # cpcv_fold_id — bar-level fold join not wired here
                                     regime_seed,  # Fix 8: persist seed for replay reproducibility
                                 ),
                             )
@@ -1865,10 +1978,20 @@ def train_regime_conditioned_policies(
                     finally:
                         conn.close()
                 except Exception as db_exc:
+                    # F-1 fix: upgraded from a swallowed warning to a tracked
+                    # failure — write_failures feeds results[regime].db_write_failed
+                    # so both the training_completed audit status and the CLI
+                    # exit code reflect a real persistence failure.
                     _rl_logger.warning(
                         "train_regime_conditioned_policies: DB insert failed for regime=%s epoch_batch=%d: %s",
                         regime, epoch_batch_start, db_exc,
                     )
+                    write_failures.append({
+                        "regime": regime,
+                        "epoch_batch_start": epoch_batch_start,
+                        "epoch_batch_end": batch_end,
+                        "error": str(db_exc),
+                    })
 
         # Final Sharpe + result summary
         final_reward = float(np.mean(all_episode_rewards)) if all_episode_rewards else 0.0
@@ -1922,19 +2045,28 @@ def train_regime_conditioned_policies(
                 regime, final_sharpe, _dsr_floor,
             )
 
+        # F-1 fix: never claim a clean success for this regime when one or
+        # more of its training-batch quantum_rl_runs INSERTs failed — the
+        # policy may have trained fine in-memory but left no queryable
+        # evidence row, which is not a clean success from an evidence-quality
+        # standpoint.
+        regime_db_write_failed = any(f["regime"] == regime for f in write_failures)
+        regime_write_failure_count = sum(1 for f in write_failures if f["regime"] == regime)
+
         results[regime] = {
             "trained_epochs": training_epochs,
             "final_sharpe": final_sharpe,
             "final_reward": final_reward,
             "weights_hash": weights_hash,
             "dsr_passed": _dsr_passed,
+            "db_write_failed": regime_db_write_failed,
         }
 
         _emit_audit_row(
             action="quantum_rl.training_completed",
             entity_type="strategy",
             entity_id=str(strategy_id),
-            status="success",
+            status="degraded" if regime_db_write_failed else "success",
             result={
                 "regime": regime,
                 "n_bars": n_bars,
@@ -1945,6 +2077,8 @@ def train_regime_conditioned_policies(
                 "dsr_passed": _dsr_passed,
                 "dsr_floor": _dsr_floor,
                 "governance_labels": {**RL_RUNS_GOVERNANCE, "dsr_passed": _dsr_passed},
+                "db_write_failed": regime_db_write_failed,
+                "write_failure_count": regime_write_failure_count,
             },
         )
 
@@ -2146,7 +2280,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", required=True, choices=["train", "evaluate", "compare"])
     parser.add_argument("--input-json", default=None)
-    parser.add_argument("--strategy-id", type=int, default=None)
+    # F-4 fix: strategy_id is a UUID string (strategies.id / quantum_rl_runs.strategy_id
+    # are both UUID columns) — type=int raised SystemExit(2) at argparse for every
+    # real invocation from quantum-rl-training-runner.ts, which the TS circuit
+    # breaker recorded as a training failure without any Python-side traceback.
+    parser.add_argument("--strategy-id", type=str, default=None)
     parser.add_argument("--training-epochs", type=int, default=200)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
@@ -2159,8 +2297,20 @@ if __name__ == "__main__":
             cpcv_purge=True,
             seed=args.seed,
         )
-        print(json.dumps({"mode": "train", "strategy_id": args.strategy_id, "results": training_results}, indent=2))
-        sys.exit(0)
+        # F-1 fix: surface any regime's quantum_rl_runs persistence failure as
+        # a non-zero CLI exit code instead of a swallowed warning — previously
+        # a totally-broken INSERT looked identical to a clean training run.
+        _any_write_failed = any(
+            isinstance(info, dict) and info.get("db_write_failed")
+            for info in training_results.values()
+        )
+        print(json.dumps({
+            "mode": "train",
+            "strategy_id": args.strategy_id,
+            "results": training_results,
+            "write_failures_present": _any_write_failed,
+        }, indent=2))
+        sys.exit(1 if _any_write_failed else 0)
 
     # ── Legacy modes (backward-compat) ────────────────────────────────────────
     if args.input_json is None:

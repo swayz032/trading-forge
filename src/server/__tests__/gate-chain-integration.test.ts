@@ -56,6 +56,7 @@ import {
   backtests,
   strategies,
   lifecycleShadowSignals,
+  quantumRlRuns,
 } from "../db/schema.js";
 import {
   compareShadowToBacktest,
@@ -2398,6 +2399,103 @@ describe("FIX M3: broker_accounts firm↔broker_type topology CHECK constraint (
       ctx.pg.query(
         `UPDATE broker_accounts SET broker_type = 'traderspost' WHERE account_id = $1`,
         [row.account_id],
+      ),
+    ).rejects.toThrow();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 15 — deepscan16 W1 T4: quantum_rl_runs producer/schema/consumer round-trip
+//
+// F-1/F-2/F-3/F-4 fixed the quantum_rl_agent.py INSERT shape, schema.ts
+// strategy_id type (INTEGER -> UUID), and rl-signal-fetcher.ts's Number(uuid)
+// bug. This suite proves the FIXED producer shape round-trips through the
+// real quantum_rl_runs DDL (mirrors migration 0158/0165 exactly — see
+// helpers/pglite-db.ts), and that both known pre-fix breakage shapes
+// (nonexistent columns; non-UUID strategy_id) are rejected by the real DDL,
+// not silently accepted.
+// ════════════════════════════════════════════════════════════════════════════════
+
+describe("quantum_rl_runs — producer/schema/consumer round-trip (PGlite, deepscan16 W1 T4)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID = "aa150001-0000-0000-0000-000000000001";
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "rl-suite-15-strategy",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+  });
+  afterAll(async () => { await ctx.close(); });
+
+  it("ACCEPTS the FIXED quantum_rl_agent.py INSERT shape and reads it back via Drizzle", async () => {
+    // Exact column set quantum_rl_agent.py's fixed INSERT now targets (F-1 fix).
+    await ctx.db.insert(quantumRlRuns).values({
+      strategyId: STRAT_ID,
+      regime: "TRENDING",
+      stateVector: { daily_atr: 4.2, institutional_regime: "TRENDING" },
+      action: "act",
+      confidenceScore: 0.62,
+      effectiveConfidence: 0.31,
+      reward: 1.25,
+      ciHighAtEvaluation: 0.18,
+      drawdownPenalty: null,
+      governanceLabels: {
+        experimental: true,
+        authoritative: false,
+        decision_role: "challenger_only",
+        training_mode: true,
+        sr_is: 0.8,
+        sr_oos: 0.6,
+        n_training_iterations: 20,
+      },
+      cpcvFoldId: null,
+      seed: 42,
+    });
+
+    const [row] = await ctx.db
+      .select()
+      .from(quantumRlRuns)
+      .where(eq(quantumRlRuns.strategyId, STRAT_ID));
+
+    expect(row).toBeDefined();
+    expect(row.regime).toBe("TRENDING");
+    expect(row.action).toBe("act");
+    expect(Number(row.reward)).toBeCloseTo(1.25, 5);
+    // F-3 regression guard: consumer-side lookup must use the UUID string
+    // directly (Number(uuid) => NaN would have returned zero rows here).
+    const gl = row.governanceLabels as Record<string, unknown>;
+    expect(gl.sr_is).toBe(0.8);
+    expect(gl.sr_oos).toBe(0.6);
+    expect(gl.n_training_iterations).toBe(20);
+    expect(gl.training_mode).toBe(true);
+  });
+
+  it("REJECTS the PRE-FIX column shape (status/method/total_return/sharpe_ratio do not exist)", async () => {
+    // Exact column list the broken INSERT used before the F-1 fix.
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO quantum_rl_runs
+           (strategy_id, status, method, total_return, sharpe_ratio, governance_labels, seed, created_at)
+         VALUES ($1, 'completed', $2, $3, $4, $5, $6, NOW())`,
+        [STRAT_ID, "pennylane_vqc_regime_trending", "10.0", "1.5", JSON.stringify({ training_mode: true }), 42],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("REJECTS a non-UUID strategy_id (the pre-F-2 INTEGER-typed shape)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO quantum_rl_runs
+           (strategy_id, regime, state_vector, action, confidence_score,
+            effective_confidence, reward, governance_labels)
+         VALUES ($1, 'TRENDING', '{}'::jsonb, 'act', 0.5, 0.5, 1.0, '{}'::jsonb)`,
+        [12345],
       ),
     ).rejects.toThrow();
   });
