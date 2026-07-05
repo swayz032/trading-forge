@@ -534,6 +534,141 @@ export const layer15LeakDetectionsTotal = new Counter({
   registers: [promRegistry],
 });
 
+// ─── Deep-scan #16 Wave-1 Track 5 — institutional hard-gate counters (2026-07-04) ──
+//
+// HIGH E-6 finding: B14 ci_high, WFE, and parameter-drift gates in lifecycle-service.ts
+// write audit_log + SSE on every evaluation but incremented NO Prometheus counter —
+// a promotion pipeline could sit blocked for weeks with no Grafana panel moving.
+//
+// All three counters share the same label shape:
+//   transition — which lifecycle hop the gate fired on (closed set, 3 values):
+//     "TESTING_TO_PAPER" | "SHADOW_TO_PAPER" | "PAPER_TO_DEPLOY_READY"
+//   outcome — closed set, 4 values:
+//     "pass"  — gate evaluated real data and allowed promotion
+//     "block" — gate evaluated real data and blocked promotion
+//     "legacy" — gate exempted the strategy (legacy_null / cpcv_exempt / data
+//                unavailable) — advisory-visible but not a hard pass/fail
+//     "error" — gate infrastructure (DB read) threw; caller fail-closed
+//
+// Cardinality per counter: 3 transitions × 4 outcomes = 12 time series — safe.
+// Zero-initialised below so Grafana never shows "no data" for an outcome that
+// simply hasn't fired yet (e.g. "error" before the first DB hiccup).
+//
+// Operational question answered: "Is the B14/WFE/parameter-drift gate stack
+// actually evaluating strategies, and is a promotion pipeline stuck blocked?"
+export const b14GateTotal = new Counter({
+  name: "tf_b14_gate_total",
+  help: "Total B14 Survival Twin ci_high gate evaluations, labelled by lifecycle transition and outcome",
+  labelNames: ["transition", "outcome"] as const,
+  registers: [promRegistry],
+});
+
+export const wfeGateTotal = new Counter({
+  name: "tf_wfe_gate_total",
+  help: "Total Walk-Forward Efficiency (WFE) gate evaluations, labelled by lifecycle transition and outcome",
+  labelNames: ["transition", "outcome"] as const,
+  registers: [promRegistry],
+});
+
+export const parameterDriftGateTotal = new Counter({
+  name: "tf_parameter_drift_gate_total",
+  help: "Total parameter-drift overfit gate evaluations, labelled by lifecycle transition and outcome",
+  labelNames: ["transition", "outcome"] as const,
+  registers: [promRegistry],
+});
+
+(function _zeroInitHardGateCounters() {
+  const TRANSITIONS = ["TESTING_TO_PAPER", "SHADOW_TO_PAPER", "PAPER_TO_DEPLOY_READY"] as const;
+  const OUTCOMES = ["pass", "block", "legacy", "error"] as const;
+  for (const transition of TRANSITIONS) {
+    for (const outcome of OUTCOMES) {
+      b14GateTotal.labels({ transition, outcome }).inc(0);
+      wfeGateTotal.labels({ transition, outcome }).inc(0);
+      parameterDriftGateTotal.labels({ transition, outcome }).inc(0);
+    }
+  }
+})();
+
+// ─── Deep-scan #16 Wave-1 Track 5 — backtest completion-write failure counter ──
+//
+// HIGH E-7 finding: backtest-service.ts's completion-write transaction has no
+// local catch; if the outer catch's recovery write ALSO throws, the row sits
+// status="running" forever with zero DB trace.
+//
+// tf_backtest_completion_write_failed_total{stage}
+//   stage = "completion_write" — the primary db.transaction() persisting engine
+//            results failed (outer catch's recovery write is expected to run next).
+//   stage = "recovery_write"   — the OUTER catch's own status="failed" write (and/or
+//            its audit_log insert) ALSO failed. This is the E-7 worst case: a
+//            "running" row with genuinely zero DB trace. This counter (in-memory,
+//            survives DB outages) plus the accompanying structured log are the
+//            ONLY discoverability signal left in that scenario.
+//
+// Cardinality: 2 stage values — safe.
+export const backtestCompletionWriteFailedTotal = new Counter({
+  name: "tf_backtest_completion_write_failed_total",
+  help: "Total backtest completion-write failures, labelled by failure stage (completion_write vs recovery_write)",
+  labelNames: ["stage"] as const,
+  registers: [promRegistry],
+});
+
+(function _zeroInitBacktestCompletionWriteFailed() {
+  for (const stage of ["completion_write", "recovery_write"] as const) {
+    backtestCompletionWriteFailedTotal.labels({ stage }).inc(0);
+  }
+})();
+
+// ─── Deep-scan #16 Wave-1 Track 5 — quantum MC run outcome counter ────────────
+//
+// HIGH E-8 finding: backtest-service.ts's auto quantum-MC fire-and-forget hook
+// caught failures with logger.error only — no audit_log, no counter, no Discord.
+// quantum-mc-service.ts:runQuantumMC() could also throw BEFORE its own qmcRow
+// insert (pre-insert DB error), leaving no row to attach a failure audit to.
+//
+// tf_quantum_mc_runs_total{outcome}
+//   "completed"       — Python quantum MC ran and the DB write succeeded.
+//   "failed"          — runQuantumMC's internal try/catch handled a Python/DB
+//                       failure AFTER the running row was created (existing
+//                       "quantum-mc.run" failure audit row covers this case).
+//   "pre_insert_error" — the initial backtest-fetch or "running"-row insert threw
+//                       BEFORE a quantumMcRuns row existed to attach an audit to.
+//   "auto_fire_uncaught" — the fire-and-forget auto-trigger in backtest-service.ts
+//                       caught an error from the circuit breaker or an unexpected
+//                       throw (distinct from the two internal outcomes above).
+//
+// Cardinality: 4 outcome values — safe. Advisory/challenger-only per CLAUDE.md —
+// this counter is purely for observability, never a gate signal.
+export const quantumMcRunsTotal = new Counter({
+  name: "tf_quantum_mc_runs_total",
+  help: "Total quantum Monte Carlo runs, labelled by outcome (challenger-only, advisory)",
+  labelNames: ["outcome"] as const,
+  registers: [promRegistry],
+});
+
+(function _zeroInitQuantumMcRunsTotal() {
+  for (const outcome of ["completed", "failed", "pre_insert_error", "auto_fire_uncaught"] as const) {
+    quantumMcRunsTotal.labels({ outcome }).inc(0);
+  }
+})();
+
+// ─── Deep-scan #16 Wave-1 Track 5 — cross-track dsl_guards.guards_failed consumer ──
+//
+// Cross-track contract note: Track 2 is adding result["dsl_guards"]["guards_failed"]
+// to the Python engine (backtester.py already emits result["dsl_guards"] with
+// stop_ceiling_skips/time_stop_exits/dll_halt_blocks — see _dsl_guards_meta — but
+// guards_failed did not exist yet at the time this counter shipped). backtest-service.ts
+// reads it back out of the raw Python result (forward-compatible, zero-cost until the
+// producer field lands) and increments this counter + a dedicated
+// backtest.dsl_guards_failed audit row whenever the list is non-empty, so a backtest
+// with a failed DSL guard is discoverable as NOT clean for promotion even though no
+// lifecycle gate reads this field yet (that wiring is out of scope for this track —
+// see the "E-1 guards_failed consumer" note in the deep-scan #16 Track 5 report).
+export const backtestDslGuardsFailedTotal = new Counter({
+  name: "tf_backtest_dsl_guards_failed_total",
+  help: "Total backtests where result.dsl_guards.guards_failed was non-empty (invalid for promotion, cross-track Track 2 contract)",
+  registers: [promRegistry],
+});
+
 // Zero-init all 6 × 3 = 18 label combinations so Prometheus sees value=0 from
 // first scrape. prom-client Counters do not pre-register label sets automatically;
 // without this, Grafana shows "no data" for categories that have not yet fired.

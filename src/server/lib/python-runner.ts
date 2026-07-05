@@ -401,6 +401,53 @@ export async function runPythonModule<T = Record<string, unknown>>(
       // These are emitted by B-1 (parity-shadow) and B-2 (invariant-harness).
       const truthinessEvents: TruthinessSentinelEvent[] = [];
 
+      // HIGH #12 (deep-scan #16 Wave-1 Track 5): a raw stderr `data` event chunk boundary
+      // does NOT respect line boundaries — Node's pipe delivers data in arbitrary
+      // buffer-sized chunks. The previous implementation split EACH chunk independently
+      // on "\n", so a PARITY_SHADOW_DRIFT_JSON / INVARIANT_FAILURE_JSON / B15_BATTERY_JSON
+      // sentinel line that straddled two chunks would have its JSON payload truncated in
+      // BOTH halves — parseTruthinessSentinel() fails to parse either half, and the
+      // sentinel silently vanishes (only a generic logger.warn on each half-line, no
+      // elevation, no truthinessEvents entry). This buffer holds the trailing partial
+      // line across chunk boundaries and prepends it to the next chunk before splitting,
+      // so a straddling sentinel line is reassembled before being parsed.
+      let stderrLineBuffer = "";
+
+      const handleStderrLine = (line: string): void => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        stderr += trimmed + "\n";
+
+        // Check for truthiness sentinel lines BEFORE generic warn log.
+        // Sentinel lines carry structured evidence and are elevated to error
+        // so they surface above normal Python diagnostic noise.
+        const sentinel = parseTruthinessSentinel(trimmed);
+        if (sentinel) {
+          truthinessEvents.push(sentinel);
+          const eventName = sentinel.type === "parity_shadow_drift"
+            ? "backtest.parity_shadow_drift_detected"
+            : sentinel.type === "invariant_failure"
+            ? "backtest.invariant_failure_detected"
+            : "backtest.b15_battery_result";
+          logger.error(
+            {
+              event: eventName,
+              sentinelType: sentinel.type,
+              component: componentName,
+              module,
+              correlationId,
+              payload: sentinel.payload,
+            },
+            `python-runner: truthiness sentinel captured — ${sentinel.type}`,
+          );
+        } else {
+          // Log at warn so Python tracebacks are always visible in production (LOG_LEVEL=info).
+          // correlationId is included here so Python stderr lines are linkable to the HTTP
+          // request that spawned this subprocess.
+          logger.warn({ component: componentName, module, correlationId }, trimmed);
+        }
+      };
+
       let killTimer: ReturnType<typeof setTimeout> | null = null;
       const timer = setTimeout(() => {
         if (settled) return;
@@ -416,45 +463,27 @@ export async function runPythonModule<T = Record<string, unknown>>(
       proc.stdout.on("data", (data) => (stdout += data.toString()));
       proc.stderr.on("data", (data) => {
         const chunk = data.toString();
-        for (const line of chunk.split("\n")) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-          stderr += trimmed + "\n";
-
-          // Check for truthiness sentinel lines BEFORE generic warn log.
-          // Sentinel lines carry structured evidence and are elevated to error
-          // so they surface above normal Python diagnostic noise.
-          const sentinel = parseTruthinessSentinel(trimmed);
-          if (sentinel) {
-            truthinessEvents.push(sentinel);
-            const eventName = sentinel.type === "parity_shadow_drift"
-              ? "backtest.parity_shadow_drift_detected"
-              : sentinel.type === "invariant_failure"
-              ? "backtest.invariant_failure_detected"
-              : "backtest.b15_battery_result";
-            logger.error(
-              {
-                event: eventName,
-                sentinelType: sentinel.type,
-                component: componentName,
-                module,
-                correlationId,
-                payload: sentinel.payload,
-              },
-              `python-runner: truthiness sentinel captured — ${sentinel.type}`,
-            );
-          } else {
-            // Log at warn so Python tracebacks are always visible in production (LOG_LEVEL=info).
-            // correlationId is included here so Python stderr lines are linkable to the HTTP
-            // request that spawned this subprocess.
-            logger.warn({ component: componentName, module, correlationId }, trimmed);
-          }
-        }
+        // Prepend any partial line left over from the previous chunk before splitting —
+        // this is what reassembles a sentinel line straddling a chunk boundary.
+        const combined = stderrLineBuffer + chunk;
+        const parts = combined.split("\n");
+        // The last element is a partial line (no trailing "\n" seen yet) — hold it for
+        // the next "data" event (or the close-time flush below if the process exits
+        // before another chunk arrives).
+        stderrLineBuffer = parts.pop() ?? "";
+        for (const line of parts) handleStderrLine(line);
       });
 
       proc.on("close", (code) => {
         clearTimeout(timer);
         if (killTimer) clearTimeout(killTimer);
+        // Flush any trailing partial line that never received a terminating "\n"
+        // (e.g. the process's final stderr write, or a sentinel line as the very
+        // last bytes written before exit).
+        if (stderrLineBuffer) {
+          handleStderrLine(stderrLineBuffer);
+          stderrLineBuffer = "";
+        }
         if (settled) return;
         settled = true;
 

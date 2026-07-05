@@ -10,11 +10,21 @@ Rate limit: 120 requests/minute for FRED.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from datetime import datetime, timedelta
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+# Deep-scan #16 Wave-1 Track 5 (HIGH E-9): this module previously had a comment
+# claiming "log but don't fail" at the fetch_all_macro() swallow point below, but
+# never imported logging or called it -- the claim was aspirational, not real. An
+# expired/rate-limited FRED_API_KEY (or any per-series fetch failure) degraded the
+# macro/regime confluence factor to an empty series with ZERO signal that anything
+# went wrong. Fail-soft behavior (return [] and keep going) is preserved -- only the
+# silence is fixed.
+logger = logging.getLogger(__name__)
 
 FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 
@@ -155,8 +165,15 @@ def fetch_all_macro(
                 api_key=key,
             )
             results[name] = observations
-        except Exception:
-            # Log but don't fail -- partial data is better than none
+        except Exception as exc:
+            # Log but don't fail -- partial data is better than none. WARN (not
+            # DEBUG/INFO) so a dark feed -- e.g. an expired FRED_API_KEY silently
+            # zeroing out every series -- surfaces in the tower's log stream instead
+            # of degrading macro/regime confluence invisibly.
+            logger.warning(
+                "FRED fetch failed for series '%s' (%s) -- returning empty series (fail-soft): %s",
+                name, series_id, exc,
+            )
             results[name] = []
 
     return results
