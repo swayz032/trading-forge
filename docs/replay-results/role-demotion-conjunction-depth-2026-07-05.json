@@ -1,0 +1,613 @@
+{
+  "n_strategies": 42,
+  "n_families": 14,
+  "arms": {
+    "off": {
+      "mean_depth": 12.428571428571429,
+      "n_strategies": 42
+    },
+    "struct_conf": {
+      "mean_depth": 11.357142857142858,
+      "n_strategies": 42,
+      "mean_delta_vs_off": -1.0714285714285714,
+      "n_strategies_depth_dropped": 21,
+      "n_strategies_depth_unchanged": 21,
+      "n_strategies_depth_increased": 0,
+      "mean_pct_drop_vs_off": 0.08620689655172412,
+      "is_mediator_gate_subject": true,
+      "mediator_gate_note": null
+    },
+    "struct_alt": {
+      "mean_depth": 12.428571428571429,
+      "n_strategies": 42,
+      "mean_delta_vs_off": 0,
+      "n_strategies_depth_dropped": 0,
+      "n_strategies_depth_unchanged": 42,
+      "n_strategies_depth_increased": 0,
+      "mean_pct_drop_vs_off": 0.0,
+      "is_mediator_gate_subject": true,
+      "mediator_gate_note": null
+    },
+    "struct_ctx": {
+      "mean_depth": 7.642857142857143,
+      "n_strategies": 42,
+      "mean_delta_vs_off": -4.785714285714286,
+      "n_strategies_depth_dropped": 39,
+      "n_strategies_depth_unchanged": 3,
+      "n_strategies_depth_increased": 0,
+      "mean_pct_drop_vs_off": 0.3850574712643678,
+      "is_mediator_gate_subject": true,
+      "mediator_gate_note": null
+    },
+    "struct_all": {
+      "mean_depth": 6.571428571428571,
+      "n_strategies": 42,
+      "mean_delta_vs_off": -5.857142857142857,
+      "n_strategies_depth_dropped": 39,
+      "n_strategies_depth_unchanged": 3,
+      "n_strategies_depth_increased": 0,
+      "mean_pct_drop_vs_off": 0.471264367816092,
+      "is_mediator_gate_subject": true,
+      "mediator_gate_note": null
+    },
+    "exec_all": {
+      "mean_depth": 12.428571428571429,
+      "n_strategies": 42,
+      "mean_delta_vs_off": 0,
+      "n_strategies_depth_dropped": 0,
+      "n_strategies_depth_unchanged": 42,
+      "n_strategies_depth_increased": 0,
+      "mean_pct_drop_vs_off": 0.0,
+      "is_mediator_gate_subject": false,
+      "mediator_gate_note": "exec_all preserves structure BY DESIGN \u2014 never a mediator-gate subject; reported here for the topology-artifact cross-check only (spec \u00a76/\u00a78)."
+    }
+  },
+  "per_strategy": [
+    {
+      "name": "vwap_cross_mnq_15m",
+      "family_video": "ktkqq7QsN9Q",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 28,
+        "struct_conf": 27,
+        "struct_alt": 28,
+        "struct_ctx": 14,
+        "struct_all": 13,
+        "exec_all": 28
+      }
+    },
+    {
+      "name": "vwap_cross_mes_15m",
+      "family_video": "ktkqq7QsN9Q",
+      "symbol": "MES",
+      "depths": {
+        "off": 28,
+        "struct_conf": 27,
+        "struct_alt": 28,
+        "struct_ctx": 14,
+        "struct_all": 13,
+        "exec_all": 28
+      }
+    },
+    {
+      "name": "long_entry_or_short_entry_mnq_15m",
+      "family_video": "c8VLqF0XDR4",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 8,
+        "struct_conf": 6,
+        "struct_alt": 8,
+        "struct_ctx": 5,
+        "struct_all": 3,
+        "exec_all": 8
+      }
+    },
+    {
+      "name": "long_entry_or_short_entry_mcl_15m",
+      "family_video": "c8VLqF0XDR4",
+      "symbol": "MCL",
+      "depths": {
+        "off": 8,
+        "struct_conf": 6,
+        "struct_alt": 8,
+        "struct_ctx": 5,
+        "struct_all": 3,
+        "exec_all": 8
+      }
+    },
+    {
+      "name": "long_entry_or_short_entry_mes_15m",
+      "family_video": "c8VLqF0XDR4",
+      "symbol": "MES",
+      "depths": {
+        "off": 8,
+        "struct_conf": 6,
+        "struct_alt": 8,
+        "struct_ctx": 5,
+        "struct_all": 3,
+        "exec_all": 8
+      }
+    },
+    {
+      "name": "vwap_cross_mcl_15m",
+      "family_video": "ktkqq7QsN9Q",
+      "symbol": "MCL",
+      "depths": {
+        "off": 28,
+        "struct_conf": 27,
+        "struct_alt": 28,
+        "struct_ctx": 14,
+        "struct_all": 13,
+        "exec_all": 28
+      }
+    },
+    {
+      "name": "entry_condition_mnq_1h",
+      "family_video": "UBvfsImdI2U",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 13,
+        "struct_conf": 13,
+        "struct_alt": 13,
+        "struct_ctx": 6,
+        "struct_all": 6,
+        "exec_all": 13
+      }
+    },
+    {
+      "name": "entry_condition_mes_1h",
+      "family_video": "UBvfsImdI2U",
+      "symbol": "MES",
+      "depths": {
+        "off": 13,
+        "struct_conf": 13,
+        "struct_alt": 13,
+        "struct_ctx": 6,
+        "struct_all": 6,
+        "exec_all": 13
+      }
+    },
+    {
+      "name": "entry_condition_mcl_1h",
+      "family_video": "UBvfsImdI2U",
+      "symbol": "MCL",
+      "depths": {
+        "off": 13,
+        "struct_conf": 13,
+        "struct_alt": 13,
+        "struct_ctx": 6,
+        "struct_all": 6,
+        "exec_all": 13
+      }
+    },
+    {
+      "name": "avoiding_two_mistakes_mcl_1m",
+      "family_video": "sVkmZklJDHI",
+      "symbol": "MCL",
+      "depths": {
+        "off": 8,
+        "struct_conf": 8,
+        "struct_alt": 8,
+        "struct_ctx": 5,
+        "struct_all": 5,
+        "exec_all": 8
+      }
+    },
+    {
+      "name": "avoiding_two_mistakes_mes_1m",
+      "family_video": "sVkmZklJDHI",
+      "symbol": "MES",
+      "depths": {
+        "off": 8,
+        "struct_conf": 8,
+        "struct_alt": 8,
+        "struct_ctx": 5,
+        "struct_all": 5,
+        "exec_all": 8
+      }
+    },
+    {
+      "name": "avoiding_two_mistakes_mnq_1m",
+      "family_video": "sVkmZklJDHI",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 8,
+        "struct_conf": 8,
+        "struct_alt": 8,
+        "struct_ctx": 5,
+        "struct_all": 5,
+        "exec_all": 8
+      }
+    },
+    {
+      "name": "discount_price_to_buy_from_mcl_30m",
+      "family_video": "m-G1ag77aVc",
+      "symbol": "MCL",
+      "depths": {
+        "off": 15,
+        "struct_conf": 12,
+        "struct_alt": 15,
+        "struct_ctx": 6,
+        "struct_all": 3,
+        "exec_all": 15
+      }
+    },
+    {
+      "name": "discount_price_to_buy_from_mes_30m",
+      "family_video": "m-G1ag77aVc",
+      "symbol": "MES",
+      "depths": {
+        "off": 15,
+        "struct_conf": 12,
+        "struct_alt": 15,
+        "struct_ctx": 6,
+        "struct_all": 3,
+        "exec_all": 15
+      }
+    },
+    {
+      "name": "discount_price_to_buy_from_mnq_30m",
+      "family_video": "m-G1ag77aVc",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 15,
+        "struct_conf": 12,
+        "struct_alt": 15,
+        "struct_ctx": 6,
+        "struct_all": 3,
+        "exec_all": 15
+      }
+    },
+    {
+      "name": "long_opportunities_mnq_4h",
+      "family_video": "HfZTCZTDfWk",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 5,
+        "struct_conf": 5,
+        "struct_alt": 5,
+        "struct_ctx": 2,
+        "struct_all": 2,
+        "exec_all": 5
+      }
+    },
+    {
+      "name": "long_opportunities_mes_4h",
+      "family_video": "HfZTCZTDfWk",
+      "symbol": "MES",
+      "depths": {
+        "off": 5,
+        "struct_conf": 5,
+        "struct_alt": 5,
+        "struct_ctx": 2,
+        "struct_all": 2,
+        "exec_all": 5
+      }
+    },
+    {
+      "name": "long_opportunities_mcl_4h",
+      "family_video": "HfZTCZTDfWk",
+      "symbol": "MCL",
+      "depths": {
+        "off": 5,
+        "struct_conf": 5,
+        "struct_alt": 5,
+        "struct_ctx": 2,
+        "struct_all": 2,
+        "exec_all": 5
+      }
+    },
+    {
+      "name": "opening_range_breakout_orb_mes_5m",
+      "family_video": "oDLt9zh33LE",
+      "symbol": "MES",
+      "depths": {
+        "off": 29,
+        "struct_conf": 28,
+        "struct_alt": 29,
+        "struct_ctx": 17,
+        "struct_all": 16,
+        "exec_all": 29
+      }
+    },
+    {
+      "name": "opening_range_breakout_orb_mnq_5m",
+      "family_video": "oDLt9zh33LE",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 29,
+        "struct_conf": 28,
+        "struct_alt": 29,
+        "struct_ctx": 17,
+        "struct_all": 16,
+        "exec_all": 29
+      }
+    },
+    {
+      "name": "opening_range_breakout_orb_mcl_5m",
+      "family_video": "oDLt9zh33LE",
+      "symbol": "MCL",
+      "depths": {
+        "off": 29,
+        "struct_conf": 28,
+        "struct_alt": 29,
+        "struct_ctx": 17,
+        "struct_all": 16,
+        "exec_all": 29
+      }
+    },
+    {
+      "name": "hammer_candle_long_side_mcl_5m",
+      "family_video": "NMUd0oX_7Pg",
+      "symbol": "MCL",
+      "depths": {
+        "off": 21,
+        "struct_conf": 17,
+        "struct_alt": 21,
+        "struct_ctx": 16,
+        "struct_all": 12,
+        "exec_all": 21
+      }
+    },
+    {
+      "name": "ema_period_mcl_5m",
+      "family_video": "N7uP9V0Iktc",
+      "symbol": "MCL",
+      "depths": {
+        "off": 15,
+        "struct_conf": 13,
+        "struct_alt": 15,
+        "struct_ctx": 14,
+        "struct_all": 12,
+        "exec_all": 15
+      }
+    },
+    {
+      "name": "ema_period_mnq_5m",
+      "family_video": "N7uP9V0Iktc",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 15,
+        "struct_conf": 13,
+        "struct_alt": 15,
+        "struct_ctx": 14,
+        "struct_all": 12,
+        "exec_all": 15
+      }
+    },
+    {
+      "name": "ema_period_mes_5m",
+      "family_video": "N7uP9V0Iktc",
+      "symbol": "MES",
+      "depths": {
+        "off": 15,
+        "struct_conf": 13,
+        "struct_alt": 15,
+        "struct_ctx": 14,
+        "struct_all": 12,
+        "exec_all": 15
+      }
+    },
+    {
+      "name": "5m_minute_support_level_mes_5m",
+      "family_video": "75DJN5UVQnw",
+      "symbol": "MES",
+      "depths": {
+        "off": 0,
+        "struct_conf": 0,
+        "struct_alt": 0,
+        "struct_ctx": 0,
+        "struct_all": 0,
+        "exec_all": 0
+      }
+    },
+    {
+      "name": "5m_minute_support_level_mcl_5m",
+      "family_video": "75DJN5UVQnw",
+      "symbol": "MCL",
+      "depths": {
+        "off": 0,
+        "struct_conf": 0,
+        "struct_alt": 0,
+        "struct_ctx": 0,
+        "struct_all": 0,
+        "exec_all": 0
+      }
+    },
+    {
+      "name": "5m_minute_support_level_mnq_5m",
+      "family_video": "75DJN5UVQnw",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 0,
+        "struct_conf": 0,
+        "struct_alt": 0,
+        "struct_ctx": 0,
+        "struct_all": 0,
+        "exec_all": 0
+      }
+    },
+    {
+      "name": "hammer_candle_long_side_mes_5m",
+      "family_video": "NMUd0oX_7Pg",
+      "symbol": "MES",
+      "depths": {
+        "off": 21,
+        "struct_conf": 17,
+        "struct_alt": 21,
+        "struct_ctx": 16,
+        "struct_all": 12,
+        "exec_all": 21
+      }
+    },
+    {
+      "name": "hammer_candle_long_side_mnq_5m",
+      "family_video": "NMUd0oX_7Pg",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 21,
+        "struct_conf": 17,
+        "struct_alt": 21,
+        "struct_ctx": 16,
+        "struct_all": 12,
+        "exec_all": 21
+      }
+    },
+    {
+      "name": "ballinger_bands_mcl_5m",
+      "family_video": "FqxEKDxemtI",
+      "symbol": "MCL",
+      "depths": {
+        "off": 9,
+        "struct_conf": 9,
+        "struct_alt": 9,
+        "struct_ctx": 4,
+        "struct_all": 4,
+        "exec_all": 9
+      }
+    },
+    {
+      "name": "ballinger_bands_mes_5m",
+      "family_video": "FqxEKDxemtI",
+      "symbol": "MES",
+      "depths": {
+        "off": 9,
+        "struct_conf": 9,
+        "struct_alt": 9,
+        "struct_ctx": 4,
+        "struct_all": 4,
+        "exec_all": 9
+      }
+    },
+    {
+      "name": "ballinger_bands_mnq_5m",
+      "family_video": "FqxEKDxemtI",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 9,
+        "struct_conf": 9,
+        "struct_alt": 9,
+        "struct_ctx": 4,
+        "struct_all": 4,
+        "exec_all": 9
+      }
+    },
+    {
+      "name": "order_block_entry_trigger_mcl_5m",
+      "family_video": "KXWRtV2LOVc",
+      "symbol": "MCL",
+      "depths": {
+        "off": 10,
+        "struct_conf": 10,
+        "struct_alt": 10,
+        "struct_ctx": 9,
+        "struct_all": 9,
+        "exec_all": 10
+      }
+    },
+    {
+      "name": "order_block_entry_trigger_mes_5m",
+      "family_video": "KXWRtV2LOVc",
+      "symbol": "MES",
+      "depths": {
+        "off": 10,
+        "struct_conf": 10,
+        "struct_alt": 10,
+        "struct_ctx": 9,
+        "struct_all": 9,
+        "exec_all": 10
+      }
+    },
+    {
+      "name": "order_block_entry_trigger_mnq_5m",
+      "family_video": "KXWRtV2LOVc",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 10,
+        "struct_conf": 10,
+        "struct_alt": 10,
+        "struct_ctx": 9,
+        "struct_all": 9,
+        "exec_all": 10
+      }
+    },
+    {
+      "name": "price_break_above_below_high_low_mcl_5m",
+      "family_video": "jlShztsY3oA",
+      "symbol": "MCL",
+      "depths": {
+        "off": 4,
+        "struct_conf": 2,
+        "struct_alt": 4,
+        "struct_ctx": 3,
+        "struct_all": 1,
+        "exec_all": 4
+      }
+    },
+    {
+      "name": "price_break_above_below_high_low_mes_5m",
+      "family_video": "jlShztsY3oA",
+      "symbol": "MES",
+      "depths": {
+        "off": 4,
+        "struct_conf": 2,
+        "struct_alt": 4,
+        "struct_ctx": 3,
+        "struct_all": 1,
+        "exec_all": 4
+      }
+    },
+    {
+      "name": "price_break_above_below_high_low_mnq_5m",
+      "family_video": "jlShztsY3oA",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 4,
+        "struct_conf": 2,
+        "struct_alt": 4,
+        "struct_ctx": 3,
+        "struct_all": 1,
+        "exec_all": 4
+      }
+    },
+    {
+      "name": "crossover_mcl_5m",
+      "family_video": "snNkQSyWX4k",
+      "symbol": "MCL",
+      "depths": {
+        "off": 9,
+        "struct_conf": 9,
+        "struct_alt": 9,
+        "struct_ctx": 6,
+        "struct_all": 6,
+        "exec_all": 9
+      }
+    },
+    {
+      "name": "crossover_mes_5m",
+      "family_video": "snNkQSyWX4k",
+      "symbol": "MES",
+      "depths": {
+        "off": 9,
+        "struct_conf": 9,
+        "struct_alt": 9,
+        "struct_ctx": 6,
+        "struct_all": 6,
+        "exec_all": 9
+      }
+    },
+    {
+      "name": "crossover_mnq_5m",
+      "family_video": "snNkQSyWX4k",
+      "symbol": "MNQ",
+      "depths": {
+        "off": 9,
+        "struct_conf": 9,
+        "struct_alt": 9,
+        "struct_ctx": 6,
+        "struct_all": 6,
+        "exec_all": 9
+      }
+    }
+  ]
+}

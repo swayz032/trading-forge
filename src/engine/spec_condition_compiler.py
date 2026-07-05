@@ -47,12 +47,14 @@ from src.engine.indicators.fvg_native import compute_fvg_signal
 from src.engine.indicators.market_structure import detect_swings
 from src.engine.indicators.mss_native import compute_mss_signal
 from src.engine.indicators.sweep_native import compute_sweep_signal
+from src.engine.role_demotion_audit import get_classifications_for_video, is_demotable
 from src.engine.session_windows import is_in_killzone
 from src.engine.spec_family_bindings import (
     BindingPlan,
     ConditionBinding,
     compile_binding_plan,
     or_branches_enabled,
+    role_demotion_mode,
 )
 from src.engine.strategy_base import BaseStrategy
 
@@ -88,6 +90,10 @@ CANDLE_WICK_RATIO_THRESHOLD: float = 0.4
 MIN_BARS_REQUIRED: int = 30
 ATR_PERIOD: int = 14
 TICK_SIZE_BY_SYMBOL: dict[str, float] = {"MES": 0.25, "MNQ": 0.25, "MCL": 0.01}
+_DEMOTION_GROUP_OFFSET: int = 1_000_000
+"""Hard-Constraint Demotion Experiment: offset added to struct_alt/struct_all's synthetic
+per-strategy ALTERNATIVE OR-group index so it can never collide with the spec's own 0-based
+or_branches indices in `_effective_or_branch_map()` (see that method's docstring)."""
 
 
 def retest_touch_check(
@@ -198,7 +204,30 @@ class SpecConditionStrategy(BaseStrategy):
         # Composition Fidelity Experiment (default None — 100% backward compatible; see
         # spec_family_bindings.compile_binding_plan's restore_condition_ids docstring).
         self.restore_condition_ids = restore_condition_ids
-        self.binding_plan = binding_plan or compile_binding_plan(self.spec, restore_condition_ids=restore_condition_ids)
+
+        # ─── Hard-Constraint Demotion Experiment (docs/designs/hard-constraint-demotion-
+        # experiment-2026-07-05.md) ──────────────────────────────────────────────────
+        # Resolve TF_ROLE_DEMOTION_MODE + the audited (video, condition_id) -> classification
+        # map ONCE per instance, up front, so both compile_binding_plan() (structural modes) and
+        # compute() (exec_all masking) share the SAME resolved map — never re-read from disk per
+        # bar/call. `video` comes straight off compiled_spec (present on every spec_onboarding
+        # artifact; see role_demotion_audit.py). mode="off" (every pre-experiment caller and any
+        # spec with no `video`) means demotion_classifications stays empty and every downstream
+        # check (struct_demotes / is_demotable) is a guaranteed no-op — byte-identical to
+        # pre-experiment behavior with zero avoidable file I/O.
+        self.role_demotion_mode: str = role_demotion_mode()
+        self._demotion_classifications: dict[str, str] = {}
+        video = compiled_spec.get("video")
+        if self.role_demotion_mode != "off" and video:
+            all_condition_ids = [str(c.get("id", "")) for c in (self.spec.get("entry_conditions") or [])]
+            all_condition_ids += [str(c.get("id", "")) for c in (self.spec.get("invalidations") or [])]
+            self._demotion_classifications = get_classifications_for_video(str(video), all_condition_ids)
+
+        self.binding_plan = binding_plan or compile_binding_plan(
+            self.spec,
+            restore_condition_ids=restore_condition_ids,
+            demotion_classifications=self._demotion_classifications or None,
+        )
         # OR-Branches Honoring Fix (docs/designs/or-branches-honoring-fix-2026-07-05.md): map every
         # condition_id that is a member of an or_branch group to that group's index. Built
         # unconditionally (cheap — pure dict construction over an already-parsed spec) regardless
@@ -215,6 +244,30 @@ class SpecConditionStrategy(BaseStrategy):
                     continue
                 for cid in branch_ids:
                     self._or_branch_of_condition.setdefault(str(cid), branch_idx)
+
+        # Hard-Constraint Demotion Experiment, struct_alt / struct_all: every condition_id this
+        # STRATEGY (video) had classified ALTERNATIVE is grouped into ONE per-strategy OR_GROUP —
+        # "any alternative route holding is enough." Deliberately a SEPARATE dict from
+        # `_or_branch_of_condition` above (disjoint mechanism, disjoint flag: TF_ROLE_DEMOTION_MODE
+        # vs TF_OR_BRANCHES_ENABLED — see _effective_or_branch_map()) so the two experiments can be
+        # measured independently and never silently interact. When a video has only ONE
+        # ALTERNATIVE-classified condition (the common case in the 14-video audited sample — no
+        # sibling alternative exists to OR with), this degenerates to a single-member "group" that
+        # is mathematically a no-op on conjunction depth for THAT condition — an honest, real
+        # limitation of the current audit sample, not a bug, and not synthetically patched with a
+        # fabricated always-true filler (see module-level design note in
+        # docs/designs/hard-constraint-demotion-experiment-2026-07-05.md).
+        self._demotion_alternative_ids: frozenset[str] = frozenset(
+            cid for cid, cls in self._demotion_classifications.items() if cls == "ALTERNATIVE"
+        )
+        self._demotion_or_active: bool = self.role_demotion_mode in ("struct_alt", "struct_all") and bool(
+            self._demotion_alternative_ids
+        )
+        self._demotion_or_branch_of_condition: dict[str, int] = {}
+        if self._demotion_or_active:
+            for cid in self._demotion_alternative_ids:
+                self._demotion_or_branch_of_condition[cid] = 0  # single per-strategy group
+
         # OVERLAY-VISIBILITY CONTRACT (Band C follow-up, closes the same bug
         # class B2 closed for archetype-mapped onboards): `apply_eligibility_gate()`
         # in backtester.py checks `strategy_name` against playbook_router.py's
@@ -390,23 +443,48 @@ class SpecConditionStrategy(BaseStrategy):
             return False
         return str(self.spec.get("direction", "long")) == "short"
 
-    def _combine_spine_or_branches(self, per_condition_bool: dict[str, np.ndarray], n: int) -> np.ndarray:
-        """OR-Branches Honoring Fix (docs/designs/or-branches-honoring-fix-2026-07-05.md): only
-        called when `or_branches_enabled()` is True AND this spec has >=1 or_branch group. Spine
-        conditions that are members of the SAME or_branch combine via ANY-holds (logical OR); each
-        branch's single OR-result then enters the spine conjunction as ONE term — exactly where an
+    def _effective_or_branch_map(self) -> dict[str, int]:
+        """Union of the two INDEPENDENT OR-grouping mechanisms this class supports, each gated by
+        its own flag so the two experiments never silently interact:
+          - `_or_branch_of_condition` (OR-Branches Honoring Fix, TF_OR_BRANCHES_ENABLED) — the
+            spec's OWN `or_branches` groups, as extracted.
+          - `_demotion_or_branch_of_condition` (Hard-Constraint Demotion Experiment, struct_alt /
+            struct_all under TF_ROLE_DEMOTION_MODE) — ALTERNATIVE-classified conditions of THIS
+            strategy, grouped together.
+        Demotion group indices are offset into a disjoint namespace (`_DEMOTION_GROUP_OFFSET`) so
+        they can never collide with the spec's own 0-based or_branches indices even when both
+        mechanisms are (independently) active in the same process. `setdefault` on the demotion
+        side mirrors the same "first assignment wins, never crash on overlap" defensiveness as the
+        or_branches map's own construction — a condition_id that is BOTH a native or_branch member
+        AND demotion-classified ALTERNATIVE keeps its native (or_branches_enabled) group when that
+        mechanism is active, since it is checked first below."""
+        merged: dict[str, int] = {}
+        if or_branches_enabled():
+            merged.update(self._or_branch_of_condition)
+        if self._demotion_or_active:
+            for cid, idx in self._demotion_or_branch_of_condition.items():
+                merged.setdefault(cid, _DEMOTION_GROUP_OFFSET + idx)
+        return merged
+
+    def _combine_spine_or_branches(self, per_condition_bool: dict[str, np.ndarray], n: int, or_map: dict[str, int]) -> np.ndarray:
+        """OR-Branches Honoring Fix (docs/designs/or-branches-honoring-fix-2026-07-05.md) +
+        Hard-Constraint Demotion Experiment struct_alt/struct_all (docs/designs/hard-constraint-
+        demotion-experiment-2026-07-05.md): generalized to accept ANY condition_id->group-index
+        map (see `_effective_or_branch_map()`), not just the spec's own or_branches. Spine
+        conditions that are members of the SAME group combine via ANY-holds (logical OR); each
+        group's single OR-result then enters the spine conjunction as ONE term — exactly where an
         individual AND'd condition would have sat — replacing the previous per-alternative AND that
         silently required every alternative to hold simultaneously (the confirmed 726-groups/
-        576-spine-alternatives/93-strategies over-conjunction defect). Spine conditions with no
-        or_branch membership are completely unaffected (still individually ANDed, same as the
-        flag-off path) — this is what makes nested and_groups-containing-or_branches correct "per
-        the extracted structure" without any special-case code: an and_group's members that also
-        belong to an or_branch are folded into that branch's OR term before the final AND runs, and
-        every other and_group member (no or_branch membership) is ANDed exactly as before."""
+        576-spine-alternatives/93-strategies over-conjunction defect). Conditions with no group
+        membership are completely unaffected (still individually ANDed, same as neither-flag-on)
+        — this is what makes nested and_groups-containing-or_branches correct "per the extracted
+        structure" without any special-case code: an and_group's members that also belong to a
+        group are folded into that group's OR term before the final AND runs, and every other
+        and_group member (no group membership) is ANDed exactly as before."""
         branch_results: dict[int, np.ndarray] = {}
         standalone_ids: list[str] = []
         for cid, arr in per_condition_bool.items():
-            branch_idx = self._or_branch_of_condition.get(cid)
+            branch_idx = or_map.get(cid)
             if branch_idx is None:
                 standalone_ids.append(cid)
                 continue
@@ -421,6 +499,57 @@ class SpecConditionStrategy(BaseStrategy):
         for arr in branch_results.values():
             spine_satisfied &= arr
         return spine_satisfied
+
+    def _apply_exec_all_masking(self, per_condition_bool: dict[str, np.ndarray], n: int) -> dict[str, np.ndarray]:
+        """Hard-Constraint Demotion Experiment, exec_all arm (docs/designs/hard-constraint-
+        demotion-experiment-2026-07-05.md Section 2, EXECUTION masking `D_exec`): produces the SAME
+        net per-bar masking effect as struct_all (OPTIONAL/CONTEXTUAL -> vacuously-true; ALTERNATIVE
+        -> ANY-holds across this strategy's OTHER ALTERNATIVE-classified conditions), applied
+        directly to the already-computed per-condition boolean arrays — WITHOUT touching
+        binding_plan.role/executed or any or_branch/group topology (spine_total/spine_bound/
+        conjunction_depth() are therefore IDENTICAL to baseline for this arm, by design — see
+        conjunction_depth()'s docstring). This validates that struct_all's result isn't merely a
+        topology artifact of the role/executed rewrite; it is never the primary decision (spec
+        Section 6 applies the pre-registered decision to struct_all, not exec_all)."""
+        if not self._demotion_classifications:
+            return per_condition_bool
+        out = dict(per_condition_bool)
+        alt_arrays = [out[cid] for cid in self._demotion_alternative_ids if cid in out]
+        alt_any: np.ndarray | None = None
+        if alt_arrays:
+            alt_any = alt_arrays[0].copy()
+            for arr in alt_arrays[1:]:
+                alt_any |= arr
+        for cid in list(out.keys()):
+            cls = self._demotion_classifications.get(cid)
+            if cls in ("OPTIONAL", "CONTEXTUAL"):
+                out[cid] = np.ones(n, dtype=bool)
+            elif cls == "ALTERNATIVE" and alt_any is not None:
+                out[cid] = alt_any
+        return out
+
+    def conjunction_depth(self) -> int:
+        """The DAG mediator the Hard-Constraint Demotion Experiment measures per arm (docs/designs/
+        hard-constraint-demotion-experiment-2026-07-05.md Section 4): the number of distinct
+        AND-connected terms in the EXECUTED spine, after OR-merging. A structural arm (struct_conf/
+        struct_alt/struct_ctx/struct_all) MUST drop this materially relative to "off" for the same
+        strategy or the intervention did not fire for that strategy — INVALID, not a null result
+        (spec Section 6 + Section 8). `exec_all` and "off" ALWAYS report the identical depth for
+        the same spec — exec_all is execution-masking only and never touches binding_plan.role/
+        executed or or_branch/group membership (see _apply_exec_all_masking's docstring); this is
+        expected and by design, not a measurement bug."""
+        executed_spine_ids = [b.condition_id for b in self.binding_plan.bindings if b.role == "spine" and b.executed]
+        or_map = self._effective_or_branch_map()
+        seen_groups: set[int] = set()
+        depth = 0
+        for cid in executed_spine_ids:
+            grp = or_map.get(cid)
+            if grp is None:
+                depth += 1
+            elif grp not in seen_groups:
+                seen_groups.add(grp)
+                depth += 1
+        return depth
 
     def _eval_wait_retest(self, close: np.ndarray, high: np.ndarray, low: np.ndarray, n: int) -> np.ndarray:
         if n < RETEST_LEVEL_EMA_PERIOD + 2:
@@ -545,14 +674,24 @@ class SpecConditionStrategy(BaseStrategy):
             else:
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
 
+        # Hard-Constraint Demotion Experiment, exec_all arm ONLY (docs/designs/hard-constraint-
+        # demotion-experiment-2026-07-05.md Section 2): mask the per-bar arrays post-hoc, WITHOUT
+        # touching binding_plan.role/executed or any or_branch/group topology (see
+        # _apply_exec_all_masking's docstring). No-op for every other mode, including "off".
+        if self.role_demotion_mode == "exec_all":
+            per_condition_bool = self._apply_exec_all_masking(per_condition_bool, n)
+
         self.last_per_condition_bool = per_condition_bool
 
         if per_condition_bool:
-            # OR-Branches Honoring Fix: flag-gated (default OFF — byte-identical to the pre-fix
-            # strict-AND path). Also byte-identical ON for any spec with zero or_branch groups
-            # (self._or_branch_of_condition empty falls straight to the strict-AND branch below).
-            if or_branches_enabled() and self._or_branch_of_condition:
-                spine_satisfied = self._combine_spine_or_branches(per_condition_bool, n)
+            # OR-Branches Honoring Fix + Hard-Constraint Demotion Experiment struct_alt/struct_all:
+            # both flag-gated, both byte-identical OFF (default). _effective_or_branch_map() is
+            # empty unless at least one of the two independent flags is active AND has a non-empty
+            # group map for THIS spec — in which case it falls straight to the strict-AND branch
+            # below, same as neither-flag-on.
+            or_map = self._effective_or_branch_map()
+            if or_map:
+                spine_satisfied = self._combine_spine_or_branches(per_condition_bool, n, or_map)
             else:
                 spine_satisfied = np.ones(n, dtype=bool)
                 for arr in per_condition_bool.values():

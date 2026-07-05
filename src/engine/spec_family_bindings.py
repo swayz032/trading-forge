@@ -44,7 +44,7 @@ decision record with citations):
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 # ─── FVG Identity Dispatch Experiment (docs/designs/fvg-identity-dispatch-
 # experiment-2026-07-05.md, Part B item 1) ──────────────────────────────────
@@ -147,6 +147,79 @@ def or_branches_enabled() -> bool:
     """Read at call time (not cached), same live-read contract as fvg_identity_enabled() and
     composition_bundle_enabled() — lets a before/after comparison run in the SAME process."""
     return os.environ.get("TF_OR_BRANCHES_ENABLED", "false").strip().lower() == "true"
+
+
+# ─── Hard-Constraint Demotion Experiment (docs/designs/hard-constraint-demotion-
+# experiment-2026-07-05.md) ─────────────────────────────────────────────────
+# Causal-attribution experiment over the DRI audit's (docs/replay-results/dri-
+# audit-2026-07-05.json) per-condition classification: is corpus collapse driven
+# by constraint INFLATION (raw count of hard conditions) or constraint
+# INTERACTION (temporal/state/ordering semantics)? Six modes, one env var,
+# never combined in one run:
+#   off          -- byte-identical to pre-experiment behavior (default).
+#   struct_conf  -- OPTIONAL only:    role -> "confluence" (drops out of the
+#                    spine AND into the existing soft-confluence bucket).
+#   struct_alt   -- ALTERNATIVE only: grouped into a per-strategy OR_GROUP
+#                    (ANY-holds) — see spec_condition_compiler.py's
+#                    _demotion_or_branch_of_condition / _effective_or_branch_map.
+#                    NOT a role/executed change (stays role="spine",
+#                    executed=True) — the OR-merge is what removes it from the
+#                    strict per-term AND.
+#   struct_ctx   -- CONTEXTUAL only:  executed forced False. Role is left
+#                    UNCHANGED (stays "spine" for provenance/spine_total
+#                    counting) — "removed from the execution graph entirely,
+#                    metadata only" per the spec, distinct from OPTIONAL's
+#                    confluence-node move (which changes ROLE, not executed).
+#   struct_all   -- union of the three classes above, single-variable (NOT
+#                    three flags flipped simultaneously — one mode value).
+#   exec_all     -- SECONDARY, execution-masking validation arm. Same three
+#                    classes, same net per-bar masking effect, but WITHOUT
+#                    touching role/executed/or_branch topology — applied
+#                    post-hoc to the per-condition boolean arrays inside
+#                    spec_condition_compiler.compute(). Confirms struct_all's
+#                    result isn't a topology artifact (spec Section 2). This
+#                    module (structure-only) never acts on exec_all; it is
+#                    entirely handled in spec_condition_compiler.py.
+# JUSTIFIED_MANDATORY is NEVER demoted by any mode (real gate). UNRESOLVED is
+# HELD OUT of every mode here — it is simply absent from the lookup a caller
+# passes in (see role_demotion_audit.DEMOTABLE_CLASSES), so an UNRESOLVED
+# classification behaves identically to "no classification" (unchanged spine).
+ROLE_DEMOTION_MODES: tuple[str, ...] = (
+    "off",
+    "struct_conf",
+    "struct_alt",
+    "struct_ctx",
+    "struct_all",
+    "exec_all",
+)
+
+_STRUCTURAL_MODE_CLASSES: dict[str, frozenset[str]] = {
+    "struct_conf": frozenset({"OPTIONAL"}),
+    "struct_alt": frozenset({"ALTERNATIVE"}),
+    "struct_ctx": frozenset({"CONTEXTUAL"}),
+    "struct_all": frozenset({"OPTIONAL", "ALTERNATIVE", "CONTEXTUAL"}),
+}
+
+
+def role_demotion_mode() -> str:
+    """Read at call time (not cached), same live-read contract as
+    or_branches_enabled() / composition_bundle_enabled() above. Falls back to
+    "off" for any unrecognized value — a typo in the env var fails CLOSED to
+    baseline behavior rather than silently landing on some other arm."""
+    raw = os.environ.get("TF_ROLE_DEMOTION_MODE", "off").strip().lower()
+    return raw if raw in ROLE_DEMOTION_MODES else "off"
+
+
+def struct_demotes(mode: str, classification: str | None) -> bool:
+    """True iff `mode` is a STRUCTURAL demotion mode (struct_*) that demotes
+    conditions classified `classification`. Always False for "off" and for
+    "exec_all" — execution-masking is applied elsewhere (spec_condition_
+    compiler.py only); this module stays structure-only so its zero-I/O
+    purity contract and TS-mirror parity are unaffected by the exec_all arm."""
+    if classification is None:
+        return False
+    classes = _STRUCTURAL_MODE_CLASSES.get(mode)
+    return bool(classes and classification in classes)
 
 
 def resolve_sweep_object(object_text: str) -> bool:
@@ -334,10 +407,13 @@ def resolve_session_keyword(object_text: str) -> str | None:
     return None
 
 
-def bind_condition(condition: dict, restore: bool = False) -> ConditionBinding:
+def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> ConditionBinding:
     """Bind a single spec condition {id, type, object, role, span, evidence} to
     a primitive descriptor. Never raises; unknown condition types are honestly
-    unbindable rather than defaulted to some guessed family.
+    unbindable rather than defaulted to some guessed family. `role` is passed
+    in explicitly by the public `bind_condition()` wrapper below (which
+    resolves any Hard-Constraint Demotion Experiment role override BEFORE
+    calling here) rather than read straight off `condition["role"]`.
 
     `restore` (Composition Fidelity Experiment, default False — 100% backward compatible):
     True iff the CALLER has already determined this specific condition_id is a member of its
@@ -350,7 +426,6 @@ def bind_condition(condition: dict, restore: bool = False) -> ConditionBinding:
     targeting is the more specific signal and should win)."""
     cond_id = str(condition.get("id", ""))
     cond_type = str(condition.get("type", ""))
-    role = str(condition.get("role", ""))
     obj = str(condition.get("object", "") or "")
 
     meta = FAMILY_META.get(cond_type)
@@ -459,6 +534,38 @@ def bind_condition(condition: dict, restore: bool = False) -> ConditionBinding:
     )
 
 
+def bind_condition(
+    condition: dict,
+    restore: bool = False,
+    demoted_role: str | None = None,
+    force_unexecuted: bool = False,
+) -> ConditionBinding:
+    """Public entry point — resolves the graph's own `role` field (or a Hard-
+    Constraint Demotion Experiment override) and dispatches to
+    `_bind_condition_dispatch()`, then applies `force_unexecuted` as a final
+    post-hoc override. Both new parameters default to their inert value
+    (None / False) so every pre-existing caller is 100% byte-identical.
+
+    `demoted_role` / `force_unexecuted` (Hard-Constraint Demotion Experiment, docs/designs/
+    hard-constraint-demotion-experiment-2026-07-05.md): the CALLER (compile_binding_plan) has
+    already resolved, for THIS condition_id, whether the active TF_ROLE_DEMOTION_MODE structurally
+    demotes it (via struct_demotes()) and passes the concrete override down. `demoted_role`
+    replaces the graph's own `role` field (OPTIONAL -> "confluence") BEFORE dispatch — so it
+    participates in the confluence/spine split and every other role-conditioned decision below
+    exactly as if the graph had shipped that role natively. `force_unexecuted` flips `executed` to
+    False AFTER dispatch (CONTEXTUAL -> "removed from the execution graph entirely, metadata
+    only" — role is left at whatever `_bind_condition_dispatch` decided; only `executed` changes,
+    which is the distinction from OPTIONAL's role-based move). Neither parameter touches
+    ALTERNATIVE conditions — those are demoted via OR-group merging in spec_condition_compiler.py,
+    not via a role/executed override, so this function is a no-op for them (role/executed pass
+    through exactly as the base FAMILY_META dispatch would produce)."""
+    role = demoted_role if demoted_role is not None else str(condition.get("role", "") or "")
+    binding = _bind_condition_dispatch(condition, restore=restore, role=role)
+    if force_unexecuted and binding.executed:
+        binding = replace(binding, executed=False, reason=binding.reason or "role_demotion_contextual_removed")
+    return binding
+
+
 @dataclass
 class BindingPlan:
     bindings: list[ConditionBinding]
@@ -489,7 +596,11 @@ class BindingPlan:
         }
 
 
-def compile_binding_plan(spec: dict, restore_condition_ids: frozenset[str] | None = None) -> BindingPlan:
+def compile_binding_plan(
+    spec: dict,
+    restore_condition_ids: frozenset[str] | None = None,
+    demotion_classifications: dict[str, str] | None = None,
+) -> BindingPlan:
     """Compile a full spec artifact body {entry_conditions, invalidations,
     entry_trigger_id, ...} into a BindingPlan.
 
@@ -499,6 +610,17 @@ def compile_binding_plan(spec: dict, restore_condition_ids: frozenset[str] | Non
     restored regardless of TF_COMPOSITION_BUNDLE_ENABLED — the experiment's harness is the only
     caller expected to ever pass a non-None value.
 
+    `demotion_classifications` (Hard-Constraint Demotion Experiment, default None — 100% backward
+    compatible): a pre-resolved `{condition_id: DRI_audit_classification}` map for THIS spec's
+    video (built by the CALLER — this module stays zero-I/O per its purity contract, so it never
+    loads docs/replay-results/dri-audit-2026-07-05.json itself; see src/engine/role_demotion_audit.py
+    for the loader and spec_condition_compiler.SpecConditionStrategy.__init__ for the caller that
+    builds this map from `compiled_spec["video"]`). None (every pre-experiment caller) means no
+    condition is demoted regardless of TF_ROLE_DEMOTION_MODE. Only OPTIONAL (-> role="confluence")
+    and CONTEXTUAL (-> executed=False) are applied here; ALTERNATIVE is intentionally NOT looked
+    up in this map — its OR-group merge happens entirely in spec_condition_compiler.py, never as a
+    role/executed override (see bind_condition's docstring).
+
     Deterministic: iterates entry_conditions in-order, no randomness, no
     wall-clock reads — same spec always produces the same plan (replay
     determinism contract).
@@ -506,14 +628,35 @@ def compile_binding_plan(spec: dict, restore_condition_ids: frozenset[str] | Non
     entry_conditions = spec.get("entry_conditions", []) or []
     invalidations = spec.get("invalidations", []) or []
     trigger_id = str(spec.get("entry_trigger_id", "") or "")
+    mode = role_demotion_mode()
 
     def _restore(c: dict) -> bool:
         if restore_condition_ids is None:
             return False
         return str(c.get("id", "")) in restore_condition_ids
 
-    bindings = [bind_condition(c, restore=_restore(c)) for c in entry_conditions]
-    invalidation_bindings = [bind_condition(c, restore=_restore(c)) for c in invalidations]
+    def _demoted_role(c: dict) -> str | None:
+        if demotion_classifications is None:
+            return None
+        cls = demotion_classifications.get(str(c.get("id", "")))
+        if cls == "OPTIONAL" and struct_demotes(mode, cls):
+            return "confluence"
+        return None
+
+    def _force_unexecuted(c: dict) -> bool:
+        if demotion_classifications is None:
+            return False
+        cls = demotion_classifications.get(str(c.get("id", "")))
+        return cls == "CONTEXTUAL" and struct_demotes(mode, cls)
+
+    bindings = [
+        bind_condition(c, restore=_restore(c), demoted_role=_demoted_role(c), force_unexecuted=_force_unexecuted(c))
+        for c in entry_conditions
+    ]
+    invalidation_bindings = [
+        bind_condition(c, restore=_restore(c), demoted_role=_demoted_role(c), force_unexecuted=_force_unexecuted(c))
+        for c in invalidations
+    ]
 
     spine = [b for b in bindings if b.role == "spine"]
     confluence = [b for b in bindings if b.role == "confluence"]
