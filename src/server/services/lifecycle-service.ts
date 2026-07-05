@@ -795,6 +795,91 @@ export class LifecycleService {
           this._resetHardGateCounter(id, "dsl_guards_failed", correlationId);
         }
 
+        // ── A7 (deepscan17-wave2 2026-07-05) — Signal Correlation HARD gate: PAPER → DEPLOY_READY (manual) ──
+        // Cron parity: checkAutoPromotions gates PAPER→DEPLOY_READY on checkSignalCorrelationGate
+        // (cosine similarity > 0.85 vs ANY DEPLOYED strategy — also blocks when no signal vector
+        // exists). The manual PATCH path delegated PAPER→DEPLOY_READY to evaluatePaperToDeployReadyGates,
+        // which has ZERO A7 references — so a correctly-signed manual/n8n/Carter promotion of a
+        // signal-duplicate strategy reached DEPLOY_READY and, downstream, live capital (same class as
+        // the A-1 DSL-guards manual-path gap just closed). Enforced inline here (dual-call-site pattern)
+        // BEFORE the on-demand survival-twin Python replay so a duplicate never spends a subprocess.
+        // Ramp-up/legacy behavior lives inside checkSignalCorrelationGate (the SAME helper the cron
+        // calls). Fail-CLOSED on infra error. Manual-path convention: NO _maybeAutoGraveyard.
+        try {
+          const { checkSignalCorrelationGate } = await import("./signal-correlation-service.js");
+          const sigCorrelationResultP2D = await checkSignalCorrelationGate(id);
+
+          if (!sigCorrelationResultP2D.allowed) {
+            logger.warn(
+              {
+                strategyId: id,
+                reason: sigCorrelationResultP2D.reason,
+                maxSimilarity: sigCorrelationResultP2D.maxSimilarity,
+                blockingStrategyId: sigCorrelationResultP2D.blockingStrategyId,
+                transition: "PAPER→DEPLOY_READY",
+              },
+              "A7 signal correlation gate: BLOCKED PAPER→DEPLOY_READY promotion (manual path)",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.promotion_blocked_signal_correlation",
+              entityId: id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: {
+                reason: sigCorrelationResultP2D.reason,
+                max_similarity: sigCorrelationResultP2D.maxSimilarity,
+                blocking_strategy_id: sigCorrelationResultP2D.blockingStrategyId,
+                threshold: 0.85,
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: id, err: auditErr }, "A7 audit insert (manual path) failed (non-blocking)");
+            });
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            return { success: false, error: "lifecycle.promotion_blocked_signal_correlation" };
+          }
+
+          logger.info(
+            {
+              strategyId: id,
+              reason: sigCorrelationResultP2D.reason,
+              maxSimilarity: sigCorrelationResultP2D.maxSimilarity,
+              transition: "PAPER→DEPLOY_READY",
+            },
+            "A7 signal correlation gate: PASSED (manual path)",
+          );
+          this._resetHardGateCounter(id, "signal_correlation", correlationId);
+        } catch (sigCorrelationErr) {
+          // Fail-closed on infra error — same policy as the cron A7 site + the manual DSL-guards gate.
+          const msg = sigCorrelationErr instanceof Error ? sigCorrelationErr.message : String(sigCorrelationErr);
+          logger.warn(
+            { strategyId: id, err: sigCorrelationErr },
+            "A7 signal correlation gate: infrastructure error — blocking promotion (fail-closed, manual path)",
+          );
+          await db.insert(auditLog).values({
+            action: "lifecycle.promotion_blocked_signal_correlation",
+            entityId: id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState, toState },
+            result: {
+              reason: `A7 gate infrastructure error (fail-closed): ${msg}`,
+              max_similarity: null,
+              blocking_strategy_id: null,
+              threshold: 0.85,
+            },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ err: auditErr, correlationId }, "A7 gate fail-closed audit insert (manual path) failed (non-blocking)");
+            auditWriteFailuresTotal.labels({ action: "lifecycle.a7_gate_error" }).inc();
+          });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          return { success: false, error: "lifecycle.promotion_blocked_signal_correlation" };
+        }
+
         const [latestMcP2D] = latestBtP2D ? await db.select({
           probabilityOfRuin: monteCarloRuns.probabilityOfRuin,
           riskMetrics: monteCarloRuns.riskMetrics,
@@ -1959,7 +2044,10 @@ export class LifecycleService {
             const dsrPassed = dsrHonest.dsr_passed as boolean | undefined;
             const dsrValue = dsrHonest.dsr as number | null ?? null;
             const nTrials = dsrHonest.n_trials as number | null ?? null;
-            const dsrThreshold = parseFloat(process.env.DSR_HONEST_THRESHOLD ?? "1.5");
+            // deepscan17-wave2 (2026-07-05): Wave-1 moved the engine DSR default to 1.645;
+            // this is the audit-log MESSAGE STRING default only (the gate decision reads the
+            // persisted dsr_passed boolean), kept in sync so the reason text is not misleading.
+            const dsrThreshold = parseFloat(process.env.DSR_HONEST_THRESHOLD ?? "1.645");
 
             if (dsrPassed === false) {
               const error =

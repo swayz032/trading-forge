@@ -4283,6 +4283,55 @@ except Exception as e:
   });
   _scheduledJobs.add("regime-coverage-check");
 
+  // ─── deepscan17 Wave 2, A-2 (2026-07-05): account_key uniqueness sanity ─────
+  // Wave 1 shipped `runAccountKeyUniquenessSanityCheck()` in cross-symbol-pnl.ts
+  // (the DB-backed wrapper) but explicitly left it un-wired — "NOT wired to a
+  // scheduler in this fix wave" per that file's own docstring. Without a cron,
+  // a firm silently re-merging DLL isolation across 2+ broker accounts (the same
+  // class of bug C-1 fixed for resolveAccountKey()) would never surface. WARN
+  // only — never a trading gate; the check itself is fail-open on DB error.
+  registerJob("account-key-uniqueness-sanity", 24 * 60 * 60 * 1000, async () => {
+    const { runAccountKeyUniquenessSanityCheck } = await import(
+      "./services/cross-symbol-pnl.js"
+    );
+    const warnings = await runAccountKeyUniquenessSanityCheck();
+    logger.info(
+      { warningCount: warnings.length },
+      "account-key-uniqueness-sanity: tick complete",
+    );
+  });
+
+  // Daily at 7 AM ET = 11:00 UTC (EDT) or 12:00 UTC (EST). Minute :37 dodges the
+  // :33 slot already used by strategy-age-revalidation in the same 11,12 UTC hour.
+  cron.schedule("37 11,12 * * *", async () => {
+    if (!_tryAcquireJobLock("account-key-uniqueness-sanity")) return;
+    try {
+      const now = new Date();
+      const etHourStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: false,
+      });
+      const [etHStr, etMStr] = etHourStr.split(":");
+      const etH = parseInt(etHStr, 10);
+      const etM = parseInt(etMStr, 10);
+      if (etH !== 7 || etM !== 37) {
+        logger.debug({ etH, etM }, "Scheduler: account-key-uniqueness-sanity — not 7:37 AM ET, skipping (DST guard)");
+        return;
+      }
+      // Not pipeline-gated: sanity WARN is an observability surface, mirrors
+      // regime-coverage-check / webhook-latency-check (never a trading gate).
+      const t0 = Date.now();
+      await withRetry("account-key-uniqueness-sanity", SCHEDULER_JOBS["account-key-uniqueness-sanity"].run, 1);
+      markJobRun("account-key-uniqueness-sanity");
+      emitJobComplete("account-key-uniqueness-sanity", Date.now() - t0);
+    } finally {
+      _releaseJobLock("account-key-uniqueness-sanity");
+    }
+  });
+  _scheduledJobs.add("account-key-uniqueness-sanity");
+
   // ─── Wave 25 Pass 2 A-2: n8n drift detector — weekly (Sun 19:00 ET) ─────────
   // Spawns `npm run audit:n8n` as a child process. Captures stdout + stderr +
   // exit code. Writes audit row on every outcome so the operator can see that

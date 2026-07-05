@@ -226,14 +226,27 @@ async function demoteToNeedsRevision(
     // db.transaction(), so 90-day reconstruction from the typed ledger is complete
     // (this demotion previously bypassed the ledger entirely — a phantom-origin gap).
     const fromState = row.lifecycle_state;
+    // deepscan17-wave2 (2026-07-05) CAS guard: the idempotency/protected-state SELECT above
+    // runs OUTSIDE this tx, so a concurrent promotion (or a second demotion) can move the
+    // strategy out of `fromState` between that read and this UPDATE. The blind WHERE id UPDATE
+    // would clobber that concurrent write and record a stale fromState in the ledger. Mirror
+    // promoteStrategy's race guard (lifecycle-service.ts writeBlock): gate on lifecycle_state =
+    // fromState + RETURNING, and treat an empty result as a lost race (no ledger/audit claimed).
+    // NOT IN (DEPLOYED,PILOT) stays as belt-and-suspenders against a race INTO a protected state.
+    let changed = false;
     await db.transaction(async (tx) => {
-      await tx.execute(sql`
+      const updated = await tx.execute(sql`
         UPDATE strategies
         SET lifecycle_state = 'NEEDS_REVISION',
             lifecycle_changed_at = NOW(),
             updated_at = NOW()
         WHERE id = ${strategyId}::uuid
+          AND lifecycle_state = ${fromState}
+          AND lifecycle_state NOT IN ('DEPLOYED', 'PILOT')
+        RETURNING id
       `);
+      if (((updated as unknown) as Array<unknown>).length === 0) return;
+      changed = true;
 
       await tx.insert(lifecycleTransitions).values({
         strategyId,
@@ -261,6 +274,14 @@ async function demoteToNeedsRevision(
         correlationId: correlationId ?? null,
       });
     });
+
+    if (!changed) {
+      logger.warn(
+        { strategyId, strategyName, fromState },
+        "strategy-stale-detector: demoteToNeedsRevision NOT applied (concurrent transition or protected state) — no ledger/audit claimed",
+      );
+      return false;
+    }
 
     logger.info(
       { strategyId, strategyName, staleSince: staleSince.toISOString() },
@@ -534,12 +555,17 @@ export async function setNeedsArchetype(
     `);
     fromState = ((priorRows as unknown) as Array<{ lifecycle_state: string }>)[0]?.lifecycle_state ?? null;
 
+    // deepscan17-wave2 (2026-07-05): add the from-state CAS (lifecycle_state = fromState)
+    // alongside the existing NOT IN (DEPLOYED,PILOT) guard so a concurrent transition landing
+    // between the in-tx SELECT above and this UPDATE loses the race (0 rows → changed=false)
+    // instead of clobbering it + recording a stale fromState in the ledger.
     const updated = await tx.execute(sql`
       UPDATE strategies
       SET lifecycle_state = 'NEEDS_ARCHETYPE',
           lifecycle_changed_at = NOW(),
           updated_at = NOW()
       WHERE id = ${strategyId}::uuid
+        AND lifecycle_state = ${fromState}
         AND lifecycle_state NOT IN ('DEPLOYED', 'PILOT')
       RETURNING id
     `);
@@ -609,12 +635,17 @@ export async function setNeedsRevision(
     `);
     fromState = ((priorRows as unknown) as Array<{ lifecycle_state: string }>)[0]?.lifecycle_state ?? null;
 
+    // deepscan17-wave2 (2026-07-05): add the from-state CAS (lifecycle_state = fromState)
+    // alongside the existing NOT IN (DEPLOYED,PILOT) guard so a concurrent transition landing
+    // between the in-tx SELECT above and this UPDATE loses the race (0 rows → changed=false)
+    // instead of clobbering it + recording a stale fromState in the ledger.
     const updated = await tx.execute(sql`
       UPDATE strategies
       SET lifecycle_state = 'NEEDS_REVISION',
           lifecycle_changed_at = NOW(),
           updated_at = NOW()
       WHERE id = ${strategyId}::uuid
+        AND lifecycle_state = ${fromState}
         AND lifecycle_state NOT IN ('DEPLOYED', 'PILOT')
       RETURNING id
     `);

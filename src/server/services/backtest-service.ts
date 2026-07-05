@@ -24,7 +24,7 @@ import { captureToDLQ } from "../lib/dlq-service.js";
 import { db } from "../db/index.js";
 import { tracer } from "../lib/tracing.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
-import { backtestRuns, backtestScoredTotal, rlTrainingEpochsTotal, backtestCompletionWriteFailedTotal, quantumMcRunsTotal, backtestDslGuardsFailedTotal } from "../lib/metrics-registry.js";
+import { backtestRuns, backtestScoredTotal, rlTrainingEpochsTotal, backtestCompletionWriteFailedTotal, quantumMcRunsTotal, backtestDslGuardsFailedTotal, trackG2SilentFailuresTotal } from "../lib/metrics-registry.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
 import { computeResultHash, computeDataHash, computeStrategyHash } from "../lib/result-hasher.js";
 // Track A F-6: insertAuditRowSafe added. Remaining db.insert(auditLog) call
@@ -1969,13 +1969,20 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // Mark any running SQA rows for this backtest as failed
           await db.update(sqaOptimizationRuns).set({ status: "failed" })
             .where(and(eq(sqaOptimizationRuns.backtestId, backtestId), eq(sqaOptimizationRuns.status, "running")));
+          // FIX (deepscan17-wave2 E-3, 2026-07-05): captureToDLQ does a bare
+          // db.insert with no internal try/catch — a bare `.catch(() => {})`
+          // here meant a double-failure (sub-run fails AND the last-resort DLQ
+          // write fails) vanished with zero log/counter/audit trace.
           await captureToDLQ({
             operationType: "sqa_optimization:failure",
             entityType: "backtest",
             entityId: backtestId,
             errorMessage: sqaErrMsg,
             metadata: { backtestId, strategyId, correlationId: correlationId ?? null },
-          }).catch(() => {});
+          }).catch((dlqErr) => {
+            logger.warn({ dlqErr, backtestId, strategyId }, "backtest-service: DLQ capture failed for sqa_optimization failure");
+            trackG2SilentFailuresTotal.labels({ site: "backtest_dlq_capture_sqa" }).inc();
+          });
         }
       })();
       // Register promise AFTER spawn so critic can await it with bounded timeout.
@@ -2147,13 +2154,18 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           const quboErrMsg = quboErr instanceof Error ? quboErr.message : String(quboErr);
           logger.error({ backtestId, err: quboErr }, "Auto QUBO timing failed (non-blocking)");
           await db.update(quboTimingRuns).set({ status: "failed" }).where(eq(quboTimingRuns.id, quboRow.id));
+          // FIX (deepscan17-wave2 E-3, 2026-07-05): see sqa_optimization DLQ
+          // capture above — same silent-double-failure risk.
           await captureToDLQ({
             operationType: "qubo_timing:failure",
             entityType: "backtest",
             entityId: backtestId,
             errorMessage: quboErrMsg,
             metadata: { backtestId, strategyId, quboRowId: quboRow.id, correlationId: correlationId ?? null },
-          }).catch(() => {});
+          }).catch((dlqErr) => {
+            logger.warn({ dlqErr, backtestId, strategyId }, "backtest-service: DLQ capture failed for qubo_timing failure");
+            trackG2SilentFailuresTotal.labels({ site: "backtest_dlq_capture_qubo" }).inc();
+          });
         }
         // FIX 3 (deepscan8): catch applied inside IIFE, but outer catch guards
         // against any rejection that escapes the inner try/catch (e.g. db.insert).
@@ -2262,13 +2274,18 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             status: "failed",
             errorMessage: tensorErrMsg,
           });
+          // FIX (deepscan17-wave2 E-3, 2026-07-05): see sqa_optimization DLQ
+          // capture above — same silent-double-failure risk.
           await captureToDLQ({
             operationType: "tensor_prediction:failure",
             entityType: "backtest",
             entityId: backtestId,
             errorMessage: tensorErrMsg,
             metadata: { backtestId, strategyId, tensorRowId: tensorRow.id, correlationId: correlationId ?? null },
-          }).catch(() => {});
+          }).catch((dlqErr) => {
+            logger.warn({ dlqErr, backtestId, strategyId }, "backtest-service: DLQ capture failed for tensor_prediction failure");
+            trackG2SilentFailuresTotal.labels({ site: "backtest_dlq_capture_tensor" }).inc();
+          });
         }
       })();
     }
@@ -2375,13 +2392,18 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             status: "failed",
             errorMessage: rlErrMsg,
           });
+          // FIX (deepscan17-wave2 E-3, 2026-07-05): see sqa_optimization DLQ
+          // capture above — same silent-double-failure risk.
           await captureToDLQ({
             operationType: "rl_training:failure",
             entityType: "strategy",
             entityId: strategyId,
             errorMessage: rlErrMsg,
             metadata: { backtestId, strategyId, rlRowId: rlRow.id, correlationId: correlationId ?? null },
-          }).catch(() => {});
+          }).catch((dlqErr) => {
+            logger.warn({ dlqErr, backtestId, strategyId }, "backtest-service: DLQ capture failed for rl_training failure");
+            trackG2SilentFailuresTotal.labels({ site: "backtest_dlq_capture_rl" }).inc();
+          });
         }
         // FIX 3 (deepscan8): catch unhandled rejections from the legacy RL IIFE
       })().catch((e: unknown) =>

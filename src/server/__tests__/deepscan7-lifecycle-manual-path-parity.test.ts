@@ -162,6 +162,15 @@ vi.mock("../lib/bif-gate.js", () => ({
 }));
 vi.mock("../services/multi-firm-promotion-service.js", () => ({ evaluateMultiFirmEligibility: vi.fn() }));
 
+// deepscan17-wave2 (2026-07-05): the manual PAPER→DEPLOY_READY path now runs the A7 signal
+// correlation gate (checkSignalCorrelationGate) after DSL guards. These parity tests target
+// the compliance-drift / freeze / evidence-governor gates, so mock A7 to PASS.
+vi.mock("../services/signal-correlation-service.js", () => ({
+  checkSignalCorrelationGate: vi.fn(async () => ({
+    allowed: true, reason: "A7 pass (mocked)", maxSimilarity: 0.1, blockingStrategyId: null,
+  })),
+}));
+
 // The PAPER→DEPLOY_READY branch dynamically imports the evaluator module.
 vi.mock("../lib/paper-to-deploy-ready-gates.js", () => ({
   evaluatePaperToDeployReadyGates: (...args: unknown[]) => mockEvaluateGates(...args),

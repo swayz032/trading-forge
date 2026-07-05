@@ -63,6 +63,30 @@ const DYNAMIC_BROADCAST_ALLOWLIST = new Set([
   // src/server/routes/sse.ts — lifecycle gate events emitted via LIFECYCLE_GATE_EVENTS
   // constants in lifecycle-service.ts (broadcastSSE(LIFECYCLE_GATE_EVENTS.X, ...))
   "lifecycle:promoted",
+  // deepscan17-wave2 (2026-07-05) — src/server/routes/sse.ts WAVE29_EVENTS constant.
+  // lifecycle-service.ts calls broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, ...) and
+  // broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, ...) — verified both
+  // constants resolve to these exact literals; no other WAVE29_EVENTS member needs
+  // an entry here because the other 4 (SHADOW_LOGGED / RL_AB_ROUTED /
+  // RL_TRAINING_COMPLETED / RL_KILL_SWITCH_ENGAGED) are ALSO broadcast via a
+  // separate literal string call site elsewhere, so the literal-matching regex
+  // already finds them.
+  "lifecycle:pbo_evaluated",
+  "lifecycle:shadow_divergence_evaluated",
+  // deepscan17-wave2 (2026-07-05) — src/server/routes/sse.ts PAPER_EXIT_EVENTS
+  // constant, consumed exclusively via PAPER_EXIT_EVENTS.* in
+  // paper-execution-service.ts. VERIFIED the real constant values are
+  // "paper:tp1_filled" etc. (NO ":exit:" infix) — the frontend catalog
+  // previously typed these as "paper:exit:tp1_filled" etc., a real name
+  // mismatch (not just a checker gap) that made the events untypeable on the
+  // frontend; corrected in sse-events.ts in the same pass that added this
+  // allowlist entry set.
+  "paper:tp1_filled",
+  "paper:tp2_filled",
+  "paper:be_stop_moved",
+  "paper:trail_tightened",
+  "paper:time_stop_flattened",
+  "paper:handler_error",
 ]);
 
 function walk(dir, out = []) {
@@ -92,12 +116,46 @@ for (const f of walk(SERVER_DIR)) {
 }
 
 // Frontend catalog: type: "event" discriminants in the SSEEvent union.
+//
+// deepscan17-wave2 (2026-07-05) fix: the old regex scanned the WHOLE file, so
+// it also matched `type:` fields on unrelated interfaces that happen to share
+// the field name "type" — e.g. `BacktestTruthinessFailureData.type: "invariant"
+// | "parity" | "parity_skip"` (a data-shape field, not an SSE discriminant)
+// leaked in as a phantom "invariant" catalog-only-unknown entry. Scoping the
+// scan to the `export type SSEEvent =` ... `;` block only (the actual
+// discriminated union) eliminates that whole class of false positive without
+// needing a per-string allowlist entry.
 const catalogEvents = new Set();
 try {
   const cat = readFileSync(CATALOG, "utf8");
+  // Strip `//` line comments before depth-scanning — a comment that happens to
+  // contain a brace or semicolon (e.g. a code example, or a file path like
+  // "foo.ts:123") would otherwise desync the brace-depth counter below.
+  // Replaced with equal-length spaces so all character offsets stay aligned
+  // with the original text (needed because unionStart/indexOf are computed
+  // against `cat`, not the stripped copy).
+  const catNoComments = cat.replace(/\/\/[^\n]*/g, (s) => " ".repeat(s.length));
+  const unionStart = catNoComments.indexOf("export type SSEEvent =");
+  if (unionStart === -1) {
+    console.error(`[sse-contract] could not find "export type SSEEvent =" in ${CATALOG} — catalog parse aborted`);
+    process.exit(1);
+  }
+  // Each union member is `| { type: "..."; data: ... }` — the `;` between
+  // `type` and `data` is INSIDE the object literal, so a naive indexOf(";")
+  // would truncate after the first member. Brace-depth-scan for the real
+  // terminating `;` (depth 0, i.e. outside every `{...}`) instead.
+  let depth = 0;
+  let unionEnd = -1;
+  for (let i = unionStart; i < catNoComments.length; i++) {
+    const ch = catNoComments[i];
+    if (ch === "{") depth++;
+    else if (ch === "}") depth--;
+    else if (ch === ";" && depth === 0) { unionEnd = i; break; }
+  }
+  const unionBlock = unionEnd === -1 ? catNoComments.slice(unionStart) : catNoComments.slice(unionStart, unionEnd);
   const catRe = /type:\s*["']([a-zA-Z0-9:_.-]+)["']/g;
   let m;
-  while ((m = catRe.exec(cat)) !== null) catalogEvents.add(m[1]);
+  while ((m = catRe.exec(unionBlock)) !== null) catalogEvents.add(m[1]);
 } catch {
   console.error(`[sse-contract] catalog not found at ${CATALOG} — skipping (frontend not present?)`);
   process.exit(0);

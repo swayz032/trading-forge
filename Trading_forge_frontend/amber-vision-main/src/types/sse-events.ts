@@ -947,7 +947,23 @@ export interface FirmCountChangedData {
   active_firms: string[];
 }
 
-/** `paper:exit:tp1_filled` — TP1 fill in Style D exit handler */
+/**
+ * `paper:tp1_filled` — TP1 fill in the Style C exit handler.
+ *
+ * CORRECTED 2026-07-05 (deepscan17-wave2): this catalog previously typed the
+ * discriminant as `paper:exit:tp1_filled` (and siblings below with an
+ * `:exit:` infix). Verified against the actual broadcast site
+ * (paper-execution-service.ts via `PAPER_EXIT_EVENTS.TP1_FILLED`, defined in
+ * src/server/routes/sse.ts) — the real constant values have NO `:exit:`
+ * infix (`"paper:tp1_filled"`, not `"paper:exit:tp1_filled"`). The old
+ * `:exit:` names never matched anything the server actually broadcasts, so
+ * these 6 dashboard events (TP1/TP2 fill, BE-stop move, trail tighten,
+ * time-stop flatten, handler error) were silently un-typeable — a real
+ * silent-tile bug, not a checker false-positive. `useSSE.ts`'s
+ * `dispatchSideEffects` switch (src/hooks/useSSE.ts ~line 753) still
+ * references the stale `paper:exit:*` names and needs a coordinated fix in a
+ * session with frontend-hook edit scope — flagged as a carry-forward.
+ */
 export interface PaperExitTp1FilledData {
   position_id: string;
   strategy_id: string | null;
@@ -957,15 +973,15 @@ export interface PaperExitTp1FilledData {
   correlation_id: string | null;
 }
 
-/** `paper:exit:tp2_filled` — TP2 fill in Style D/C exit handler */
+/** `paper:tp2_filled` — TP2 fill in the Style C exit handler. See `PaperExitTp1FilledData` naming-correction note. */
 export type PaperExitTp2FilledData = PaperExitTp1FilledData;
-/** `paper:exit:be_stop_moved` — BE+1 tick stop move in exit handler */
+/** `paper:be_stop_moved` — BE+1 tick stop move in exit handler. See `PaperExitTp1FilledData` naming-correction note. */
 export type PaperExitBeStopMovedData = PaperExitTp1FilledData;
-/** `paper:exit:trail_tightened` — Chandelier trail tightened */
+/** `paper:trail_tightened` — Chandelier trail tightened. See `PaperExitTp1FilledData` naming-correction note. */
 export type PaperExitTrailTightenedData = PaperExitTp1FilledData;
-/** `paper:exit:time_stop_flattened` — 15:55 ET time-stop flatten */
+/** `paper:time_stop_flattened` — 15:55 ET time-stop flatten. See `PaperExitTp1FilledData` naming-correction note. */
 export type PaperExitTimeStopFlattenedData = PaperExitTp1FilledData;
-/** `paper:exit:handler_error` — exit handler threw an error */
+/** `paper:handler_error` — exit handler threw an error. See `PaperExitTp1FilledData` naming-correction note. */
 export type PaperExitHandlerErrorData = PaperExitTp1FilledData;
 
 /** `a-plus-auditor:scan-complete` — A+ auditor noise scan done */
@@ -1378,6 +1394,251 @@ export interface QuantumRlTrainingCompletedData {
   correlation_id: string | null;
 }
 
+// ─── Deep-scan #17 Wave 2 (2026-07-05): server-only advisory events ─────────
+// `npm run check:sse-contract` reported these as broadcast by the server but
+// absent from this catalog (silent-tile risk — frontend cannot type/subscribe).
+// Shapes derived directly from the broadcastSSE() call sites, not guessed.
+
+/** `alert:broker_error_budget` — broker rejection-class error-budget threshold
+ *  breached (broker-error-budget-service.ts). */
+export interface AlertBrokerErrorBudgetData {
+  broker: string;
+  rejectionClass: string;
+  pct: number;
+  count: number;
+  totalAttempts: number;
+  computedAt: string;
+}
+
+/** `alert:path_c_error` — Wave 25 Path C weighted-confluence evaluation threw;
+ *  signal flow fell back to Path B for this bar (paper-signal-service.ts). */
+export interface AlertPathCErrorData {
+  sessionId?: string;
+  strategyId: number | string;
+  symbol: string;
+  error: string;
+  fallback: "path_b" | string;
+  correlationId: string | null;
+}
+
+/** `alert:regime_coverage_gap` — no PILOT/DEPLOYED strategy covers one or more
+ *  regimes; a regime shift into the gap would produce zero trades
+ *  (regime-coverage-monitor-service.ts). */
+export interface AlertRegimeCoverageGapData {
+  gapRegimes: string[];
+  coverage: Record<string, number>;
+  allRegimesChecked: string[];
+  timestamp: string;
+}
+
+/** `alert:webhook_latency_high` — rolling p95 Pine→TradingView→TradersPost→broker
+ *  webhook latency exceeded threshold (webhook-latency-monitor-service.ts). */
+export interface AlertWebhookLatencyHighData {
+  p50Ms: number;
+  p95Ms: number;
+  sampleCount: number;
+  thresholdMs: number;
+  windowHours: number;
+  timestamp: string;
+}
+
+/** `backtest:completion_write_failed` — the final backtest-completion DB write
+ *  threw; backtest is re-thrown to the outer catch to be marked failed
+ *  (backtest-service.ts). Distinct from `backtest:failed` (a run-time failure) —
+ *  this is a persistence-layer failure on an otherwise-completed run. */
+export interface BacktestCompletionWriteFailedData {
+  backtestId: string;
+  strategyId: number | string;
+  error: string;
+}
+
+/**
+ * `bias_engine:refreshed` — bias engine recomputed a session's regime/playbook.
+ * TWO DISTINCT BROADCAST SITES emit under this same event name with DIFFERENT
+ * field sets — consumers must treat every field as optional and branch on which
+ * are present, not assume both shapes simultaneously:
+ *   - bias-state-service.ts (per-symbol refresh): symbol/regimeLabel/playbook/
+ *     activeStrategyId/computedAt/priorRegimeLabel/priorActiveStrategyId/
+ *     regimeChanged/strategyChanged
+ *   - scheduler.ts `bias-engine-refresh-10am-et` cron (all-symbols batch):
+ *     correlationId/symbolCount/symbols/forceRefresh/timestamp
+ */
+export interface BiasEngineRefreshedData {
+  sessionDate: string;
+  // Per-symbol refresh shape (bias-state-service.ts)
+  symbol?: string;
+  regimeLabel?: string;
+  playbook?: string;
+  activeStrategyId?: string | null;
+  computedAt?: string;
+  priorRegimeLabel?: string | null;
+  priorActiveStrategyId?: string | null;
+  regimeChanged?: boolean;
+  strategyChanged?: boolean;
+  // All-symbols batch cron shape (scheduler.ts bias-engine-refresh-10am-et)
+  correlationId?: string;
+  symbolCount?: number;
+  symbols?: string[];
+  forceRefresh?: boolean;
+  timestamp?: string;
+}
+
+/** `bias_engine:session_start` — daily 9:30 AM ET bias computation completed
+ *  for all symbols (scheduler.ts `bias-engine-session-start` cron). */
+export interface BiasEngineSessionStartData {
+  sessionDate: string;
+  correlationId: string;
+  symbolCount: number;
+  symbols: string[];
+  timestamp: string;
+}
+
+/** `factory:candidate_backtest_enqueued` — autonomous conveyor enqueued a
+ *  backtest for a CANDIDATE strategy (candidate-backtest-conveyor-service.ts). */
+export interface FactoryCandidateBacktestEnqueuedData {
+  strategyId: number | string;
+  strategyName: string;
+  backtestId: string;
+  correlationId: string;
+}
+
+/** `factory:graduation_entry_quality` — direct-bucket-graduator.ts graduation
+ *  completed with an entry_quality block attached. Mirrors the server-side
+ *  `FactoryGraduationEntryQualityPayload` shape in src/server/routes/sse.ts. */
+export interface FactoryGraduationEntryQualityData {
+  strategy_id: number;
+  name: string;
+  symbols: string[];
+  confluence_factor_count: number;
+  extraction_provenance: string;
+  has_source_claim_win_rate: boolean;
+  has_source_claim_avg_r: boolean;
+  correlation_id: string | null;
+}
+
+/** `factory:multi_market_bucket` — cross-symbol concept bucket converged across
+ *  ≥2 symbols at graduation (direct-bucket-graduator.ts). Mirrors the
+ *  server-side `FactoryMultiMarketBucketPayload` shape in src/server/routes/sse.ts. */
+export interface FactoryMultiMarketBucketData {
+  bucket_fingerprint: string;
+  concept_name: string;
+  symbols: string[];
+  layer_coverage: {
+    web: boolean;
+    youtube: boolean;
+    reddit: boolean;
+  };
+  correlation_id: string | null;
+}
+
+/** `fill_reconciliation:fill_ingested` — a broker fill event was matched to a
+ *  server-mediated order and applied (fill-reconciliation-service.ts). */
+export interface FillReconciliationFillIngestedData {
+  orderId: string;
+  newStatus: string;
+  newFilledQty: number;
+  intendedQty: number;
+  correlationId: string | null;
+}
+
+/** `fill_reconciliation:reconcile_cleared` — operator/automation cleared all
+ *  `needs_reconcile` orders for an account (fill-reconciliation-service.ts). */
+export interface FillReconciliationReconcileClearedData {
+  accountId: string;
+  cleared: number;
+  resolvedBy: string;
+  correlationId: string | null;
+}
+
+/**
+ * `lifecycle:dsl_guards_evaluated` — DSL guards gate evaluated at a lifecycle
+ * promotion checkpoint (lifecycle-service.ts, 6 call sites across
+ * TESTING→PAPER / SHADOW→PAPER / PAPER→DEPLOY_READY). `...auditPayload` is
+ * spread from `evaluateDslGuardsGate()` and its exact keys vary by guard —
+ * kept as an index signature rather than enumerated.
+ */
+export interface LifecycleDslGuardsEvaluatedData {
+  strategyId: number | string;
+  passed: boolean;
+  reason?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * `macro:regime-updated` — daily macro regime classification refreshed
+ * (scheduler.ts `macro-data-sync` cron, `runMacroDailySync()`). NOTE: the
+ * System Map's manual SSE inventory section marks this "removed" from a
+ * Wave 11 cleanup pass, but verified 2026-07-05 (deepscan17-wave2) that the
+ * scheduler cron still actively calls broadcastSSE() with this literal on
+ * every successful daily run — the emission is live, only the System Map
+ * inventory doc and this frontend catalog were stale. Left the System Map
+ * inventory untouched (separate file, out of this session's scope).
+ */
+export interface MacroRegimeUpdatedData {
+  date: string;
+  regime: string;
+  confidence: number;
+}
+
+/** `risk:dd_velocity_vacation_auto_recovered` — DD-velocity autopause was
+ *  auto-cleared during operator-absent vacation mode (dd-velocity-gate.ts). */
+export interface RiskDdVelocityVacationAutoRecoveredData {
+  sessionId: string | null;
+  operatorAbsentSince: string;
+  pauseAgeHours: number;
+  timestamp: string;
+}
+
+/** `signal:weighted_score_rejected` — Wave 25 Path C weighted-confluence score
+ *  fell below threshold (or hit a hard-block); signal rejected
+ *  (paper-signal-service.ts). */
+export interface SignalWeightedScoreRejectedData {
+  sessionId: string;
+  strategyId: number | string;
+  symbol: string;
+  score: number;
+  threshold: number;
+  hardBlock: boolean;
+  weightsSource: string;
+  topUnsatisfiedFactors: Array<{ factor: string; weight: number; reason?: string }>;
+  price: number;
+  timestamp: string | number;
+  correlationId: string | null;
+}
+
+/** `strategy:exportability_infra_error` — Pine exportability pre-check threw
+ *  an infra error (dynamic-import / subprocess failure) during a lifecycle
+ *  promotion tick; strategy skipped this cycle, not blocked outright
+ *  (lifecycle-service.ts, TESTING→PAPER and SHADOW→PAPER call sites). */
+export interface StrategyExportabilityInfraErrorData {
+  strategyId: number | string;
+  name: string | null;
+  reason: "infra_failure_in_outer_catch" | string;
+  errorMessage: string;
+  correlationId: string | null;
+}
+
+/** `tradingview:marker-received` — inbound TradingView alert marker accepted
+ *  and persisted (tradingview-webhook.ts). */
+export interface TradingviewMarkerReceivedData {
+  markerId: string | null;
+  strategyId: number | string | null;
+  accountId: string | null;
+  barTimestamp: string | number;
+  signal: string;
+  firmId: string | null;
+  correlationId: string | null;
+  receivedAt: string;
+}
+
+/** `windows:health-check-auto-resumed` — pipeline auto-resumed after a
+ *  Windows pending-reboot pause was confirmed cleared
+ *  (windows-health-check-service.ts). */
+export interface WindowsHealthCheckAutoResumedData {
+  reason: "reboot_pending_flag_cleared" | string;
+  timestamp: string;
+}
+
 // ─── Discriminated union ──────────────────────────────────────────────
 
 export type SSEEvent =
@@ -1408,7 +1669,14 @@ export type SSEEvent =
   | { type: "critic:replay_complete"; data: CriticReplayCompleteData }
   | { type: "critic:evaluation_complete"; data: CriticEvaluationCompleteData }
   | { type: "backtest:completed"; data: BacktestCompletedData }
-  | { type: "backtest:complete"; data: BacktestCompletedData }
+  // NOTE (deepscan17-wave2, 2026-07-05): the legacy `backtest:complete` (no "d")
+  // catalog entry was REMOVED here — verified the server only ever emits
+  // "backtest:completed" (backtest-service.ts:~1202); "backtest:complete" had
+  // no broadcast site anywhere in src/server/. `Backtests.tsx:40` subscribes
+  // to both names defensively and `useSSE.ts`'s dispatch switch still has a
+  // dead `case "backtest:complete":` — both are harmless (the case can never
+  // match; the extra subscription string is a no-op) but are stale and should
+  // be cleaned up in a session with frontend-file edit scope.
   | { type: "backtest:scored"; data: BacktestScoredData }
   | { type: "backtest:failed"; data: BacktestFailedData }
   | { type: "backtest:matrix-progress"; data: BacktestMatrixProgressData }
@@ -1518,12 +1786,12 @@ export type SSEEvent =
   | { type: "compliance:violation_detected"; data: ComplianceViolationDetectedData }
   | { type: "migration:legacy_firm_cleanup_complete"; data: MigrationLegacyFirmCleanupCompleteData }
   | { type: "firm_count_changed"; data: FirmCountChangedData }
-  | { type: "paper:exit:tp1_filled"; data: PaperExitTp1FilledData }
-  | { type: "paper:exit:tp2_filled"; data: PaperExitTp2FilledData }
-  | { type: "paper:exit:be_stop_moved"; data: PaperExitBeStopMovedData }
-  | { type: "paper:exit:trail_tightened"; data: PaperExitTrailTightenedData }
-  | { type: "paper:exit:time_stop_flattened"; data: PaperExitTimeStopFlattenedData }
-  | { type: "paper:exit:handler_error"; data: PaperExitHandlerErrorData }
+  | { type: "paper:tp1_filled"; data: PaperExitTp1FilledData }
+  | { type: "paper:tp2_filled"; data: PaperExitTp2FilledData }
+  | { type: "paper:be_stop_moved"; data: PaperExitBeStopMovedData }
+  | { type: "paper:trail_tightened"; data: PaperExitTrailTightenedData }
+  | { type: "paper:time_stop_flattened"; data: PaperExitTimeStopFlattenedData }
+  | { type: "paper:handler_error"; data: PaperExitHandlerErrorData }
   | { type: "a-plus-auditor:scan-complete"; data: APlusAuditorScanCompleteData }
   | { type: "nemo:scenario-generated"; data: NemoScenarioGeneratedData }
   | { type: "nemo:scenario-error"; data: NemoScenarioErrorData }
@@ -1568,7 +1836,27 @@ export type SSEEvent =
   | { type: "lifecycle:pbo_evaluated"; data: LifecyclePboEvaluatedData }
   | { type: "lifecycle:shadow_divergence_evaluated"; data: LifecycleShadowDivergenceEvaluatedData }
   | { type: "signal:rl_ab_routed"; data: SignalRlAbRoutedData }
-  | { type: "quantum_rl:training_completed"; data: QuantumRlTrainingCompletedData };
+  | { type: "quantum_rl:training_completed"; data: QuantumRlTrainingCompletedData }
+  // ─── Deep-scan #17 Wave 2 (2026-07-05): server-only advisory events ────
+  | { type: "alert:broker_error_budget"; data: AlertBrokerErrorBudgetData }
+  | { type: "alert:path_c_error"; data: AlertPathCErrorData }
+  | { type: "alert:regime_coverage_gap"; data: AlertRegimeCoverageGapData }
+  | { type: "alert:webhook_latency_high"; data: AlertWebhookLatencyHighData }
+  | { type: "backtest:completion_write_failed"; data: BacktestCompletionWriteFailedData }
+  | { type: "bias_engine:refreshed"; data: BiasEngineRefreshedData }
+  | { type: "bias_engine:session_start"; data: BiasEngineSessionStartData }
+  | { type: "factory:candidate_backtest_enqueued"; data: FactoryCandidateBacktestEnqueuedData }
+  | { type: "factory:graduation_entry_quality"; data: FactoryGraduationEntryQualityData }
+  | { type: "factory:multi_market_bucket"; data: FactoryMultiMarketBucketData }
+  | { type: "fill_reconciliation:fill_ingested"; data: FillReconciliationFillIngestedData }
+  | { type: "fill_reconciliation:reconcile_cleared"; data: FillReconciliationReconcileClearedData }
+  | { type: "lifecycle:dsl_guards_evaluated"; data: LifecycleDslGuardsEvaluatedData }
+  | { type: "macro:regime-updated"; data: MacroRegimeUpdatedData }
+  | { type: "risk:dd_velocity_vacation_auto_recovered"; data: RiskDdVelocityVacationAutoRecoveredData }
+  | { type: "signal:weighted_score_rejected"; data: SignalWeightedScoreRejectedData }
+  | { type: "strategy:exportability_infra_error"; data: StrategyExportabilityInfraErrorData }
+  | { type: "tradingview:marker-received"; data: TradingviewMarkerReceivedData }
+  | { type: "windows:health-check-auto-resumed"; data: WindowsHealthCheckAutoResumedData };
 
 export type SSEEventType = SSEEvent["type"];
 

@@ -74,6 +74,10 @@ interface ProductionStatusResponse {
       firmLimit: number | null;
       usedPct: number | null;
       severity: OverallSeverity;
+      // deepscan17-wave2 (2026-07-05): which DLL model produced firmLimit — the
+      // backend already emits this (production-status route). Rendering it fixes
+      // the mislabel where an MFFU daily-DLL account read as "trailing DD".
+      dllModel: "trailing_dd_hwm" | "daily_dll_pct" | "estimate_5pct" | null;
     };
     lastCleanReconciliation: {
       lastCleanDate: string | null;
@@ -120,6 +124,18 @@ function severityBorder(s: OverallSeverity): string {
 function fmtPnl(v: number | null): string {
   if (v === null) return "—";
   return (v >= 0 ? "+" : "") + "$" + Math.abs(v).toFixed(0);
+}
+
+// deepscan17-wave2 (2026-07-05): map the wire dllModel to plain-English copy so
+// Q3 names the ACTUAL loss-limit model instead of a hardcoded "trailing DD".
+// Topstep = EOD trailing DD; MFFU = fixed daily loss limit; unknown = estimate.
+export function dllModelLabel(m: ProductionStatusResponse["sixQuestions"]["drawdownDistance"]["dllModel"]): string {
+  switch (m) {
+    case "trailing_dd_hwm": return "trailing DD";
+    case "daily_dll_pct":   return "daily loss limit";
+    case "estimate_5pct":   return "est. loss limit";
+    default:                return "loss limit";
+  }
 }
 
 function fmtAgeHours(h: number | null): string {
@@ -179,7 +195,7 @@ function DrawdownCard({ q }: { q: ProductionStatusResponse["sixQuestions"]["draw
         {q.bufferRemaining !== null
           ? (
             <p className={`text-sm mt-0.5 ${severityColor(q.severity)}`}>
-              ${q.bufferRemaining.toFixed(0)} buffer left of ${q.firmLimit?.toFixed(0)} trailing DD
+              ${q.bufferRemaining.toFixed(0)} buffer left of ${q.firmLimit?.toFixed(0)} {dllModelLabel(q.dllModel)}
               {q.usedPct !== null && ` (${(q.usedPct * 100).toFixed(0)}% used)`}
             </p>
           )

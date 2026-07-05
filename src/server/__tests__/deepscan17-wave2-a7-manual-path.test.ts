@@ -1,22 +1,21 @@
 /**
- * deepscan17-dsl-guards-manual-path.test.ts — Deep-scan #17 Fix Wave 1 (A-1)
+ * deepscan17-wave2-a7-manual-path.test.ts — Deep-scan #17 Fix Wave 2 (A7)
  *
- * A-1 CRITICAL — the E-1 DSL guards_failed HARD gate was wired ONLY inside
- * checkAutoPromotions (the autonomous cron): all 3 cron call sites (TESTING→PAPER,
- * SHADOW→PAPER, PAPER→DEPLOY_READY) gate on backtests.result_extras.dsl_guards.guards_failed,
- * but the MANUAL promotion path (_promoteStrategyInner, backing the HMAC-authenticated
- * PATCH /api/strategies/:id/lifecycle route) had NO such gate. A correctly-signed
- * manual/n8n/Carter promotion of a strategy whose latest completed backtest had
- * guards_failed=true (an UNGUARDED backtest — E.3/E.4/E.5 stop-ceiling / time-stop /
- * DLL enforcement never ran) reached PAPER and, downstream, live capital.
+ * A7 HIGH (same class as the A-1 DSL-guards manual-path gap) — the A7 Signal
+ * Correlation HARD gate (checkSignalCorrelationGate: cosine similarity > 0.85 vs any
+ * DEPLOYED strategy, also blocks when no signal vector exists) was wired ONLY inside
+ * checkAutoPromotions (the autonomous cron). The MANUAL promotion path
+ * (_promoteStrategyInner, backing the HMAC-authenticated PATCH /api/strategies/:id/lifecycle
+ * route) delegated PAPER→DEPLOY_READY to evaluatePaperToDeployReadyGates, which has ZERO A7
+ * references — so a correctly-signed manual/n8n/Carter promotion of a signal-duplicate
+ * strategy reached DEPLOY_READY and, downstream, live capital.
  *
- * This file proves the manual path now BLOCKS a guards_failed=true strategy at all 3
- * transitions and PASSES a guards_failed=false / legacy-null one, via the SAME pure
- * evaluateDslGuardsGate the cron sites use.
+ * This file proves the manual PAPER→DEPLOY_READY path now BLOCKS a signal-duplicate strategy
+ * (before the shared evaluator + on-demand survival-twin replay), fails CLOSED on an A7
+ * infrastructure error, and PASSES a non-duplicate strategy through to the shared evaluator.
  *
- * Harness mirrors deepscan7-lifecycle-manual-path-parity.test.ts: imports the REAL
- * LifecycleService with its full dependency surface mocked, drives promoteStrategy()
- * through a FIFO selectQueue, and asserts on captured audit rows.
+ * Harness mirrors deepscan17-dsl-guards-manual-path.test.ts. The backtest carries a CLEAN
+ * dsl_guards blob so the A-1 DSL gate (which runs first) passes and A7 is reached.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -31,6 +30,7 @@ const mockResolveSurvivalTwin = vi.fn();
 const mockFreezePolicy = vi.fn();
 const mockLoadDiv = vi.fn();
 const mockShadowGate = vi.fn();
+const mockA7 = vi.fn();
 
 /** Rows captured from db.insert(...).values(...) — audit assertions read this. */
 const insertedRows: Record<string, unknown>[] = [];
@@ -179,13 +179,9 @@ vi.mock("../lib/bif-gate.js", () => ({
 }));
 vi.mock("../services/multi-firm-promotion-service.js", () => ({ evaluateMultiFirmEligibility: vi.fn() }));
 
-// deepscan17-wave2 (2026-07-05): the manual PAPER→DEPLOY_READY path now runs the A7 signal
-// correlation gate (checkSignalCorrelationGate) AFTER the DSL guards gate. This DSL-focused
-// test mocks A7 to PASS so its guards-clean/legacy cases still reach the shared evaluator.
+// A7 gate — the manual PAPER→DEPLOY_READY block dynamically imports this module.
 vi.mock("../services/signal-correlation-service.js", () => ({
-  checkSignalCorrelationGate: vi.fn(async () => ({
-    allowed: true, reason: "A7 pass (mocked)", maxSimilarity: 0.1, blockingStrategyId: null,
-  })),
+  checkSignalCorrelationGate: (...args: unknown[]) => mockA7(...args),
 }));
 
 // The PAPER→DEPLOY_READY branch dynamically imports the evaluator module.
@@ -200,11 +196,11 @@ import { LifecycleService } from "../services/lifecycle-service.js";
 
 // ── Fixtures / helpers ────────────────────────────────────────────────────────
 
-const STRAT_ID = "eeee0001-0000-0000-0000-000000000001";
+const STRAT_ID = "eeee0002-0000-0000-0000-000000000002";
 
 const strategyRow = (overrides: Record<string, unknown> = {}) => ({
   id: STRAT_ID,
-  name: "dsl-guards-manual-strategy",
+  name: "a7-manual-strategy",
   symbol: "MES",
   lifecycleState: "PAPER",
   config: {},
@@ -212,9 +208,9 @@ const strategyRow = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-/** Backtest row with a controllable dsl_guards blob under result_extras. */
-const backtestRow = (dslGuards: unknown, overrides: Record<string, unknown> = {}) => ({
-  id: "bt-ds17-0001",
+/** Backtest row with a CLEAN dsl_guards blob so the A-1 DSL gate passes and A7 is reached. */
+const backtestRow = (overrides: Record<string, unknown> = {}) => ({
+  id: "bt-ds17w2-a7",
   walkForwardResults: null,
   gateResult: null,
   b15Battery: null,
@@ -224,7 +220,7 @@ const backtestRow = (dslGuards: unknown, overrides: Record<string, unknown> = {}
   kEff: null,
   propCompliance: null,
   slippageSurvival: null,
-  resultExtras: dslGuards === undefined ? {} : { dsl_guards: dslGuards },
+  resultExtras: { dsl_guards: { guards_failed: false } },
   ...overrides,
 });
 
@@ -248,7 +244,9 @@ beforeEach(() => {
   mockFreezePolicy.mockResolvedValue({ hash: "a".repeat(64), frozen_at: new Date() });
   mockLoadDiv.mockResolvedValue({ shadowSignals: [], backtestExpected: [] });
   mockShadowGate.mockResolvedValue({ passed: true, status: "pass", reason: "shadow_divergence_ok", auditPayload: {} });
-  // Evaluator returns a benign non-DSL block so a PASS-through of the DSL gate is
+  // Default A7: PASS (non-duplicate). Individual tests override.
+  mockA7.mockResolvedValue({ allowed: true, reason: "A7 pass", maxSimilarity: 0.12, blockingStrategyId: null });
+  // Evaluator returns a benign non-A7 block so a PASS-through of the A7 gate is
   // observable without modeling the entire downstream gate stack.
   mockEvaluateGates.mockReturnValue({
     passed: false, status: "blocked",
@@ -259,149 +257,63 @@ beforeEach(() => {
 });
 
 const svc = () => new LifecycleService();
-const GUARDS_FAILED = { guards_failed: true, guards_failed_reason: "stop_ceiling_exception" };
-const GUARDS_CLEAN = { guards_failed: false };
 
-// ─── PAPER → DEPLOY_READY (delegates to paper-to-deploy-ready-gates.ts) ────────
-
-describe("A-1 — manual PAPER→DEPLOY_READY DSL guards gate", () => {
-  it("BLOCKS a guards_failed=true strategy before the evaluator / survival replay", async () => {
+describe("A7 — manual PAPER→DEPLOY_READY signal correlation gate", () => {
+  it("BLOCKS a signal-duplicate strategy before the evaluator / survival replay", async () => {
     selectQueue.push([strategyRow({ lifecycleState: "PAPER" })]);   // 1 strategy pre-read
-    selectQueue.push([backtestRow(GUARDS_FAILED)]);                 // 2 latest completed backtest
+    selectQueue.push([backtestRow()]);                              // 2 latest completed backtest
+    mockA7.mockResolvedValue({
+      allowed: false,
+      reason: "signal_correlation_too_high",
+      maxSimilarity: 0.93,
+      blockingStrategyId: "dep-0001",
+    });
 
     const res = await svc().promoteStrategy(STRAT_ID, "PAPER", "DEPLOY_READY", {});
 
     expect(res.success).toBe(false);
-    expect(res.error).toBe("lifecycle.dsl_guards_failed_block");
-    const row = insertedRows.find((r) => r.action === "lifecycle.dsl_guards_failed_block")!;
+    expect(res.error).toBe("lifecycle.promotion_blocked_signal_correlation");
+    const row = insertedRows.find((r) => r.action === "lifecycle.promotion_blocked_signal_correlation")!;
     expect(row).toBeDefined();
     expect(row.status).toBe("failure");
-    expect((row.result as Record<string, unknown>).guards_failed).toBe(true);
+    expect((row.result as Record<string, unknown>).max_similarity).toBe(0.93);
+    expect((row.result as Record<string, unknown>).blocking_strategy_id).toBe("dep-0001");
+    expect((row.result as Record<string, unknown>).threshold).toBe(0.85);
     // Rejected BEFORE the shared evaluator and the on-demand survival-twin Python replay.
     expect(mockEvaluateGates).not.toHaveBeenCalled();
     expect(mockResolveSurvivalTwin).not.toHaveBeenCalled();
-    // Dedicated SSE mirrors the cron site.
-    expect(sseEvents.some((e) => e.event === "lifecycle:dsl_guards_evaluated" && e.payload.passed === false)).toBe(true);
+    // A7 was evaluated on the correct strategy id.
+    expect(mockA7).toHaveBeenCalledWith(STRAT_ID);
   });
 
-  it("PASSES a guards_failed=false strategy through to the shared evaluator", async () => {
-    selectQueue.push([strategyRow({ lifecycleState: "PAPER" })]);   // 1 strategy pre-read
-    selectQueue.push([backtestRow(GUARDS_CLEAN)]);                  // 2 latest completed backtest
-    selectQueue.push([]);                                          // 3 latest MC (none)
-    selectQueue.push([{ id: STRAT_ID, config: {}, frozenPolicyHash: null }]); // 4 frozen shadow
+  it("FAILS CLOSED (blocks) when the A7 gate throws an infrastructure error", async () => {
+    selectQueue.push([strategyRow({ lifecycleState: "PAPER" })]);
+    selectQueue.push([backtestRow()]);
+    mockA7.mockRejectedValue(new Error("signal-correlation DB unavailable"));
 
     const res = await svc().promoteStrategy(STRAT_ID, "PAPER", "DEPLOY_READY", {});
 
-    // DSL gate did NOT block; flow reached the shared evaluator (which returns the b15 block).
-    expect(auditActions()).not.toContain("lifecycle.dsl_guards_failed_block");
-    expect(auditActions()).toContain("lifecycle.dsl_guards_pass");
-    expect(mockEvaluateGates).toHaveBeenCalledTimes(1);
-    expect(res.error).toBe("b15_parameter_robustness_failed");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("lifecycle.promotion_blocked_signal_correlation");
+    const row = insertedRows.find((r) => r.action === "lifecycle.promotion_blocked_signal_correlation")!;
+    expect(row).toBeDefined();
+    expect(String((row.result as Record<string, unknown>).reason)).toContain("infrastructure error");
+    expect(mockEvaluateGates).not.toHaveBeenCalled();
   });
 
-  it("PASSES (legacy grandfather) when dsl_guards is entirely absent", async () => {
+  it("PASSES a non-duplicate strategy through to the shared evaluator", async () => {
     selectQueue.push([strategyRow({ lifecycleState: "PAPER" })]);   // 1 strategy pre-read
-    selectQueue.push([backtestRow(undefined)]);                    // 2 backtest with no dsl_guards
+    selectQueue.push([backtestRow()]);                              // 2 latest completed backtest
     selectQueue.push([]);                                          // 3 latest MC (none)
     selectQueue.push([{ id: STRAT_ID, config: {}, frozenPolicyHash: null }]); // 4 frozen shadow
+    // mockA7 default: allowed=true
 
     const res = await svc().promoteStrategy(STRAT_ID, "PAPER", "DEPLOY_READY", {});
 
-    expect(auditActions()).not.toContain("lifecycle.dsl_guards_failed_block");
-    expect(auditActions()).toContain("lifecycle.dsl_guards_unavailable_legacy");
+    // A7 did NOT block; flow reached the shared evaluator (which returns the b15 block).
+    expect(auditActions()).not.toContain("lifecycle.promotion_blocked_signal_correlation");
+    expect(mockA7).toHaveBeenCalledWith(STRAT_ID);
     expect(mockEvaluateGates).toHaveBeenCalledTimes(1);
     expect(res.error).toBe("b15_parameter_robustness_failed");
-  });
-});
-
-// ─── TESTING → PAPER (legacy fast-track edge into PAPER) ──────────────────────
-
-describe("A-1 — manual TESTING→PAPER DSL guards gate", () => {
-  it("BLOCKS a guards_failed=true strategy", async () => {
-    selectQueue.push([strategyRow({ lifecycleState: "TESTING" })]); // 1 strategy pre-read
-    selectQueue.push([backtestRow(GUARDS_FAILED)]);                // 2 DSL guards fetch
-
-    const res = await svc().promoteStrategy(STRAT_ID, "TESTING", "PAPER", {});
-
-    expect(res.success).toBe(false);
-    expect(res.error).toBe("lifecycle.dsl_guards_failed_block");
-    const row = insertedRows.find((r) => r.action === "lifecycle.dsl_guards_failed_block")!;
-    expect(row).toBeDefined();
-    expect(row.status).toBe("failure");
-    expect((row.input as Record<string, unknown>).fromState).toBe("TESTING");
-    expect(sseEvents.some((e) => e.event === "lifecycle:dsl_guards_evaluated" && e.payload.passed === false)).toBe(true);
-  });
-
-  it("does NOT block a guards_failed=false strategy (clean DSL pass audit written)", async () => {
-    selectQueue.push([strategyRow({ lifecycleState: "TESTING" })]);
-    selectQueue.push([backtestRow(GUARDS_CLEAN)]);
-    // Downstream reads return [] (queue drained) — the assertion is purely that the
-    // DSL gate did not block; the rest of the TESTING→PAPER stack is out of scope here.
-    let res: { success: boolean; error?: string } | undefined;
-    let thrown: unknown = null;
-    try {
-      res = await svc().promoteStrategy(STRAT_ID, "TESTING", "PAPER", {});
-    } catch (err) {
-      thrown = err;
-    }
-
-    expect(auditActions()).not.toContain("lifecycle.dsl_guards_failed_block");
-    expect(auditActions()).toContain("lifecycle.dsl_guards_pass");
-    const errText = res?.error ?? String(thrown);
-    expect(errText).not.toBe("lifecycle.dsl_guards_failed_block");
-  });
-
-  it("does NOT block a legacy (absent dsl_guards) strategy", async () => {
-    selectQueue.push([strategyRow({ lifecycleState: "TESTING" })]);
-    selectQueue.push([backtestRow(undefined)]);
-    let res: { success: boolean; error?: string } | undefined;
-    let thrown: unknown = null;
-    try {
-      res = await svc().promoteStrategy(STRAT_ID, "TESTING", "PAPER", {});
-    } catch (err) {
-      thrown = err;
-    }
-
-    expect(auditActions()).not.toContain("lifecycle.dsl_guards_failed_block");
-    expect(auditActions()).toContain("lifecycle.dsl_guards_unavailable_legacy");
-    const errText = res?.error ?? String(thrown);
-    expect(errText).not.toBe("lifecycle.dsl_guards_failed_block");
-  });
-});
-
-// ─── SHADOW → PAPER (canonical edge into PAPER) ───────────────────────────────
-
-describe("A-1 — manual SHADOW→PAPER DSL guards gate", () => {
-  it("BLOCKS a guards_failed=true strategy (after the divergence gate clears)", async () => {
-    selectQueue.push([strategyRow({ lifecycleState: "SHADOW" })]);  // 1 strategy pre-read
-    selectQueue.push([backtestRow(GUARDS_FAILED)]);                // 2 DSL guards fetch
-
-    const res = await svc().promoteStrategy(STRAT_ID, "SHADOW", "PAPER", {});
-
-    expect(res.success).toBe(false);
-    expect(res.error).toBe("lifecycle.dsl_guards_failed_block");
-    const row = insertedRows.find((r) => r.action === "lifecycle.dsl_guards_failed_block")!;
-    expect(row).toBeDefined();
-    expect((row.input as Record<string, unknown>).fromState).toBe("SHADOW");
-    // The SHADOW→PAPER divergence gate ran first and passed, then the DSL gate blocked.
-    expect(mockShadowGate).toHaveBeenCalledTimes(1);
-    expect(sseEvents.some((e) => e.event === "lifecycle:dsl_guards_evaluated" && e.payload.passed === false)).toBe(true);
-  });
-
-  it("does NOT block a guards_failed=false strategy", async () => {
-    selectQueue.push([strategyRow({ lifecycleState: "SHADOW" })]);
-    selectQueue.push([backtestRow(GUARDS_CLEAN)]);
-    let res: { success: boolean; error?: string } | undefined;
-    let thrown: unknown = null;
-    try {
-      res = await svc().promoteStrategy(STRAT_ID, "SHADOW", "PAPER", {});
-    } catch (err) {
-      thrown = err;
-    }
-
-    expect(auditActions()).not.toContain("lifecycle.dsl_guards_failed_block");
-    expect(auditActions()).toContain("lifecycle.dsl_guards_pass");
-    const errText = res?.error ?? String(thrown);
-    expect(errText).not.toBe("lifecycle.dsl_guards_failed_block");
   });
 });
