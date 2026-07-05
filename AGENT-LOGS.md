@@ -20,13 +20,13 @@
 
 **Bonus finding:** 45 `bias_state` rows still pointed at retired strategies as active_strategy_id (not cleaned at May retirement) — nulled during purge.
 
-**Carry-forward (deferred — coordination/coupling, NOT fixed):**
-- `picker-metrics.ts` DSR `/3` divisor — semantically coupled to the fix-wave's DSR-formula unification; reconcile AFTER their FIX-STATS settles the canonical `deflated_sharpe` shape.
-- `sse-events.ts` D-3 catalog drift (`backtest:complete` vs server `backtest:completed` → tile never fires; +19 uncatalogued events) — coordinate with the System-Map session (owns sse-events.ts + has System Map uncommitted).
-- `office.html` H-4/H-5 (switch cards one-shot snapshot → GREEN Bot Power while backend halted; silent catch) — concurrent session commits office.html frequently; do once it settles.
-- pytest 4 collection errors (test_mini_safety_guard + test_weight_trainer import nonexistent symbols; test_playbook_router_hysteresis = concurrent session's file; test_risk_metrics_properties = missing `hypothesis` env).
-- MC GPU/CPU RNG cross-device non-reproducibility (monte_carlo.py — may be in fix-wave's FIX-STATS scope).
-- **Handed to fix-wave:** force-close caller site `paper-signal-service.ts:3402-3404` is OUTSIDE their FIX-KILLSWITCH file list — must thread accountKey when forceCloseAllPositions gets a scope param.
+**Carry-forward — CLOSE-OUT re-verification (all deferred items resolved except 2 genuinely out-of-lane):**
+- ✅ `picker-metrics.ts` DSR `/3` — FIXED (`2e68d3e`): verified `cross_validation.py` returns `dsr` = `norm.cdf(...)` ∈ [0,1] and the fix-wave left `cross_val` as the `result["deflated_sharpe"]` source (shape stable), so removed the divisor (used directly); test 16/16.
+- ✅ `sse-events.ts` D-3 — NON-BUG (fix-wave `deepscan17-wave2` already resolved): server only emits `backtest:completed`, `useSSE.ts:36` handles it, the `backtest:complete` case is dead-but-harmless; tile fires fine.
+- ✅ `office.html` H-4/H-5 — FIXED (`2b696ee`): switch cards now poll every 10s (Bot Power reflects a server auto-halt within ~10s) + dim on disconnect.
+- ✅ pytest collection — REDUCED 4→1 (`0b2a7ca`): skip-guarded test_mini_safety_guard (mini-safety covered by StrategyDSL Literal), test_weight_trainer (dormant module), test_risk_metrics_properties (`importorskip("hypothesis")`). Remaining 1 = `test_playbook_router_hysteresis` (`HYSTERESIS_THRESHOLD`) is the parallel session's in-flight `playbook_router.py` — theirs.
+- ✅ **force-close caller** `paper-signal-service.ts:3402-3404` — RESOLVED by fix-wave: verified `forceCloseAllPositions` now takes `scope`, the caller passes `scope: { accountKey }`, AND the function filters open positions by resolved account key (byte-identical unscoped default). Cross-account blast-radius CRITICAL closed.
+- ⏳ STILL OPEN (out-of-lane): (a) MC GPU/CPU RNG cross-device non-reproducibility (`monte_carlo.py` — fix-wave's FIX-STATS lane); (b) `test_playbook_router_hysteresis` collection error (concurrent session's `playbook_router.py`).
 
 ---
 ### Session Log — 2026-07-05 Deep-Scan #17 (8-band full-system re-audit) + Wave 1 (CRITICAL) + Wave 2 (MED/LOW) LANDED on phase-0
