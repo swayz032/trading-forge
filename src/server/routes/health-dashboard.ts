@@ -23,15 +23,17 @@
  *   paperSessions: { active, stale, total },
  *   metrics: SessionMetrics[],
  *   memory: { heapUsedMb, heapTotalMb, rssMb, externalMb },
+ *   dbMigration: { latencyMs, latestHash, appliedAt, totalApplied },
+ *   lastBacktest: { latencyMs, lastCompletedAt, ageMs, ageHours },
  *   responseMs
  * }
  */
 
 import { Router, Request, Response } from "express";
 import { spawn } from "child_process";
-import { sql, eq, lt, and } from "drizzle-orm";
+import { sql, eq, lt, and, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { paperSessions, deadLetterQueue } from "../db/schema.js";
+import { paperSessions, deadLetterQueue, backtests } from "../db/schema.js";
 import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import { checkSystemMapDrift, type RegistrySubsystemSummary } from "../lib/system-topology.js";
 import { getDeepARRuntimeStatus } from "../services/deepar-service.js";
@@ -373,6 +375,76 @@ async function getDLQHealth(): Promise<DLQHealth> {
   };
 }
 
+// ─── Deep-scan #16 Wave 2 Track G2 (#25) — DB migration version + backtest freshness ──
+//
+// Neither /api/health nor /api/health/dashboard previously reported (a) which
+// migration is actually applied on this DB, or (b) how long it has been since
+// any backtest last completed successfully. (a) matters because a boot-time
+// migration failure can leave a running server on a STALE schema with zero
+// visible signal short of grepping logs; (b) matters because a silently-dead
+// candidate-backtest-conveyor / lifecycle promotion pipeline looks identical
+// to "nothing new to backtest right now" without an explicit staleness clock.
+
+interface DbMigrationHealth {
+  latencyMs: number;
+  latestHash: string | null;
+  appliedAt: string | null;
+  totalApplied: number;
+}
+
+async function checkDbMigrationVersion(): Promise<DbMigrationHealth> {
+  const t0 = Date.now();
+  const latestResult = await db.execute(
+    sql`SELECT hash, created_at::text AS created_at FROM drizzle.__drizzle_migrations ORDER BY created_at DESC LIMIT 1`,
+  );
+  const countResult = await db.execute(
+    sql`SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations`,
+  );
+  const latestRows = (
+    (latestResult as unknown as { rows?: Array<{ hash: string; created_at: string }> }).rows
+    ?? (latestResult as unknown as Array<{ hash: string; created_at: string }>)
+  ) ?? [];
+  const countRows = (
+    (countResult as unknown as { rows?: Array<{ count: number }> }).rows
+    ?? (countResult as unknown as Array<{ count: number }>)
+  ) ?? [];
+  const latest = latestRows[0] ?? null;
+
+  return {
+    latencyMs: Date.now() - t0,
+    latestHash: latest?.hash ?? null,
+    appliedAt: latest?.created_at ?? null,
+    totalApplied: countRows[0]?.count ?? 0,
+  };
+}
+
+interface LastBacktestHealth {
+  latencyMs: number;
+  lastCompletedAt: string | null;
+  ageMs: number | null;
+  ageHours: number | null;
+}
+
+async function checkLastSuccessfulBacktest(): Promise<LastBacktestHealth> {
+  const t0 = Date.now();
+  const [row] = await db
+    .select({ createdAt: backtests.createdAt })
+    .from(backtests)
+    .where(eq(backtests.status, "completed"))
+    .orderBy(desc(backtests.createdAt))
+    .limit(1);
+
+  const lastCompletedAt = row?.createdAt ? new Date(row.createdAt).toISOString() : null;
+  const ageMs = row?.createdAt ? Date.now() - new Date(row.createdAt).getTime() : null;
+
+  return {
+    latencyMs: Date.now() - t0,
+    lastCompletedAt,
+    ageMs,
+    ageHours: ageMs != null ? Math.round((ageMs / (1000 * 60 * 60)) * 10) / 10 : null,
+  };
+}
+
 // ─── Route handler ─────────────────────────────────────────────
 
 router.get("/dashboard", async (req: Request, res: Response) => {
@@ -390,6 +462,8 @@ router.get("/dashboard", async (req: Request, res: Response) => {
     deeparResult,
     quantumResult,
     dlqResult,
+    dbMigrationResult,
+    lastBacktestResult,
   ] = await Promise.allSettled([
     withTimeout(checkPostgres()),
     withTimeout(checkOllama()),
@@ -401,6 +475,8 @@ router.get("/dashboard", async (req: Request, res: Response) => {
     withTimeout(getDeepARRuntimeStatus()),
     withTimeout(getQuantumRuntimeStatus()),
     withTimeout(getDLQHealth()),
+    withTimeout(checkDbMigrationVersion()),
+    withTimeout(checkLastSuccessfulBacktest()),
   ]);
 
   // Metrics — synchronous, no I/O
@@ -520,6 +596,27 @@ router.get("/dashboard", async (req: Request, res: Response) => {
           oldestUnresolvedAgeMs: null,
           byCategory: null,
           error: dlqResult.reason instanceof Error ? dlqResult.reason.message : String(dlqResult.reason),
+        },
+    // Deep-scan #16 Wave 2 Track G2 (#25): DB migration version — surfaces whether
+    // the running server's schema expectations match what's actually applied.
+    dbMigration: dbMigrationResult.status === "fulfilled"
+      ? dbMigrationResult.value
+      : {
+          latestHash: null,
+          appliedAt: null,
+          totalApplied: null,
+          error: dbMigrationResult.reason instanceof Error ? dbMigrationResult.reason.message : String(dbMigrationResult.reason),
+        },
+    // Deep-scan #16 Wave 2 Track G2 (#25): time since last successful backtest —
+    // a silently-dead conveyor/lifecycle pipeline looks identical to "nothing new
+    // to backtest" without this explicit staleness clock.
+    lastBacktest: lastBacktestResult.status === "fulfilled"
+      ? lastBacktestResult.value
+      : {
+          lastCompletedAt: null,
+          ageMs: null,
+          ageHours: null,
+          error: lastBacktestResult.reason instanceof Error ? lastBacktestResult.reason.message : String(lastBacktestResult.reason),
         },
     metrics,
     memory: {

@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { idempotencyKeys } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+import { trackG2SilentFailuresTotal } from "../lib/metrics-registry.js";
 
 /**
  * Idempotency middleware for POST/PATCH endpoints.
@@ -55,7 +56,21 @@ export function idempotencyMiddleware(req: Request, res: Response, next: NextFun
           return;
         }
         // Expired — delete and proceed
-        db.delete(idempotencyKeys).where(eq(idempotencyKeys.key, key)).catch(() => {});
+        db.delete(idempotencyKeys).where(eq(idempotencyKeys.key, key)).catch((deleteErr) => {
+          // Deep-scan #16 Wave 2 Track G2 (#17): if this DELETE fails, the expired
+          // row survives with its OLD createdAt. Combined with onConflictDoNothing()
+          // on the fresh-response INSERT below, the stale row can never be replaced —
+          // this key silently (and potentially permanently) loses idempotency
+          // caching, since every future request with this key falls through to this
+          // same "expired" branch and the insert keeps no-op'ing against the same
+          // immortal row. Log + count so this is discoverable instead of a quiet,
+          // indefinite cache-miss for one key.
+          logger.warn(
+            { err: deleteErr, key: key.slice(0, 8) },
+            "Idempotency: failed to delete expired key — stale row may permanently block future cache writes via onConflictDoNothing",
+          );
+          try { trackG2SilentFailuresTotal.labels({ site: "idempotency_expired_key_delete" }).inc(); } catch { /* non-blocking counter */ }
+        });
       }
 
       // Intercept response to cache it

@@ -45,7 +45,7 @@ import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/ss
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, slippageSurvivalBlocksTotal, auditWriteFailuresTotal, b14GateTotal, wfeGateTotal, parameterDriftGateTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, slippageSurvivalBlocksTotal, auditWriteFailuresTotal, b14GateTotal, wfeGateTotal, parameterDriftGateTotal, dslGuardsGateTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -135,6 +135,109 @@ function _incParameterDriftGateCounter(
     const isLegacy = result.status === "legacy_null" || result.status === "cpcv_exempt";
     const outcome = isLegacy ? "legacy" : result.passed ? "pass" : "block";
     parameterDriftGateTotal.labels({ transition, outcome }).inc();
+  } catch { /* non-blocking counter */ }
+}
+
+// ─── Deep-scan #16 Wave 2 Track G2 (E-1) — DSL guards_failed HARD promotion gate ──
+//
+// Wave 1 stamped result["dsl_guards"]["guards_failed"]=true (backtester.py) when the
+// E.3/E.4/E.5 risk-guard block (stop-ceiling / time-stop / DLL-halt) threw mid-backtest
+// and NONE of those guards ran for that run. backtest-service.ts already persists the
+// whole dsl_guards object into backtests.result_extras.dsl_guards and increments
+// tf_backtest_dsl_guards_failed_total (producer-side signal — see the "E-1 guards_failed
+// consumer" note in backtest-service.ts), but until this track NOTHING blocked promotion
+// on it — an unguarded backtest could still reach PAPER / DEPLOY_READY and, downstream,
+// live capital. This pure evaluator + its 3 call sites (TESTING→PAPER, SHADOW→PAPER,
+// PAPER→DEPLOY_READY) close that gap using the SAME evidence-gate pattern as
+// evaluateB14CiGate / evaluateWfeGate / evaluateParameterDriftGate: a plain object in,
+// a { passed, auditAction, auditPayload } out, zero DB access, fully unit-testable.
+//
+// Legacy contract: pre-Wave-1-Track-2 backtests never emitted dsl_guards.guards_failed
+// AT ALL (the key is absent, not false) — those grandfather-pass with a documented warn,
+// mirroring lifecycle.wfe_unavailable_legacy / lifecycle.dsr_unavailable_legacy. Once a
+// backtest genuinely emits guards_failed=false, the gate reports a clean "pass" (no
+// audit-worthy event; the caller may still choose to write a routine success row).
+interface DslGuardsGateInput {
+  guards_failed?: boolean | null;
+  guards_failed_reason?: string | null;
+}
+
+interface DslGuardsGateResult {
+  /** True when the gate allows promotion; false when it blocks. */
+  passed: boolean;
+  /** Terminal state string, mirrors the other lifecycle gate helpers' `status`. */
+  status: "pass" | "blocked" | "legacy_proceed";
+  /** Canonical audit action name; null on a clean (non-legacy) pass. */
+  auditAction: "lifecycle.dsl_guards_failed_block" | "lifecycle.dsl_guards_unavailable_legacy" | null;
+  /** Human-readable reason string (mirrors the audit action). */
+  reason: string;
+  /** Full audit payload — merge into the audit_log result field. */
+  auditPayload: {
+    guards_failed: boolean | null;
+    guards_failed_reason: string | null;
+    status: string;
+    blocked: boolean;
+  };
+}
+
+function evaluateDslGuardsGate(
+  dslGuards: DslGuardsGateInput | null | undefined,
+): DslGuardsGateResult {
+  // Legacy: the field is ABSENT (undefined), not merely falsy. A real backtest that
+  // ran the guards cleanly always stamps guards_failed=false explicitly (see
+  // _dsl_guards_meta default in backtester.py) — only a pre-Track-2 backtest, or a
+  // resultExtras blob missing the dsl_guards key entirely, hits this branch.
+  if (dslGuards == null || typeof dslGuards !== "object" || dslGuards.guards_failed === undefined) {
+    return {
+      passed: true,
+      status: "legacy_proceed",
+      auditAction: "lifecycle.dsl_guards_unavailable_legacy",
+      reason: "lifecycle.dsl_guards_unavailable_legacy",
+      auditPayload: {
+        guards_failed: null,
+        guards_failed_reason: null,
+        status: "legacy_proceed",
+        blocked: false,
+      },
+    };
+  }
+
+  if (dslGuards.guards_failed === true) {
+    return {
+      passed: false,
+      status: "blocked",
+      auditAction: "lifecycle.dsl_guards_failed_block",
+      reason: "lifecycle.dsl_guards_failed_block",
+      auditPayload: {
+        guards_failed: true,
+        guards_failed_reason: dslGuards.guards_failed_reason ?? null,
+        status: "blocked",
+        blocked: true,
+      },
+    };
+  }
+
+  return {
+    passed: true,
+    status: "pass",
+    auditAction: null,
+    reason: "lifecycle.dsl_guards_pass",
+    auditPayload: {
+      guards_failed: false,
+      guards_failed_reason: null,
+      status: "pass",
+      blocked: false,
+    },
+  };
+}
+
+function _incDslGuardsGateCounter(
+  transition: LifecycleGateTransition,
+  result: { passed: boolean; status: string },
+): void {
+  try {
+    const outcome = result.status === "legacy_proceed" ? "legacy" : result.passed ? "pass" : "block";
+    dslGuardsGateTotal.labels({ transition, outcome }).inc();
   } catch { /* non-blocking counter */ }
 }
 
@@ -3566,6 +3669,82 @@ export class LifecycleService {
           logger.warn({ strategyId: s.id, err: dsrTpErr }, "DSR gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
         }
 
+        // ── E-1 (deepscan16 Wave 2 Track G2) — DSL guards_failed HARD gate: TESTING → PAPER ──
+        // Reads backtests.result_extras.dsl_guards.guards_failed (Wave-1 Track 2 producer
+        // field). guards_failed=true means the E.3/E.4/E.5 risk-guard block threw mid-backtest
+        // and NONE of the stop-ceiling / time-stop / DLL-halt guards ran for that run — the
+        // backtest is UNGUARDED, not clean, and must not promote toward live capital.
+        // `latestBt` here is the full-row select a few gates above (no extra DB round trip).
+        try {
+          const dslGuardsTp = ((latestBt.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+            | DslGuardsGateInput
+            | null;
+          const dslGuardsResultTp = evaluateDslGuardsGate(dslGuardsTp);
+          _incDslGuardsGateCounter("TESTING_TO_PAPER", dslGuardsResultTp);
+
+          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+            strategyId: s.id,
+            ...dslGuardsResultTp.auditPayload,
+            passed: dslGuardsResultTp.passed,
+            reason: dslGuardsResultTp.reason,
+          });
+
+          await db.insert(auditLog).values({
+            action: dslGuardsResultTp.auditAction ?? "lifecycle.dsl_guards_pass",
+            entityId: s.id,
+            entityType: "strategy",
+            status: !dslGuardsResultTp.passed ? "failure" : dslGuardsResultTp.status === "legacy_proceed" ? "warning" : "success",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: dslGuardsResultTp.auditPayload,
+            correlationId: tickCorrelationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (TESTING→PAPER) audit insert failed (non-blocking)");
+          });
+
+          if (!dslGuardsResultTp.passed) {
+            logger.warn(
+              { strategyId: s.id, guardsFailedReason: dslGuardsResultTp.auditPayload.guards_failed_reason, transition: "TESTING→PAPER" },
+              "DSL guards gate BLOCKED TESTING→PAPER: guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+            );
+            strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            try {
+              await this._maybeAutoGraveyard(s.id, "dsl_guards_failed", { guardsFailedReason: dslGuardsResultTp.auditPayload.guards_failed_reason }, "TESTING", tickCorrelationId);
+            } catch (graveyardErr) {
+              logger.warn({ strategyId: s.id, err: graveyardErr }, "dsl_guards_failed _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+            }
+            continue; // block decision wins regardless of graveyard write outcome
+          }
+          // Gate passed (or legacy grandfather) — reset consecutive counter
+          this._resetHardGateCounter(s.id, "dsl_guards_failed", tickCorrelationId);
+        } catch (dslGuardsTpErr) {
+          // Fail-CLOSED: this gate protects live capital from an UNGUARDED backtest
+          // (same severity class as B14) — a read/parse error must not silently allow
+          // promotion. In practice `latestBt.resultExtras` is already-parsed JS from the
+          // row this function loaded upstream, so this branch guards against unexpected
+          // shape errors, not DB connectivity.
+          try { dslGuardsGateTotal.labels({ transition: "TESTING_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
+          logger.warn({ strategyId: s.id, err: dslGuardsTpErr }, "DSL guards gate (TESTING→PAPER): read failed — blocking promotion (fail-closed)");
+          await db.insert(auditLog).values({
+            action: "lifecycle.dsl_guards_gate_error_fail_closed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: {
+              reason: "lifecycle.dsl_guards_gate_error_fail_closed",
+              error: dslGuardsTpErr instanceof Error ? dslGuardsTpErr.message : String(dslGuardsTpErr),
+              note: "DSL guards gate threw on TESTING→PAPER path — promotion blocked; retries next cron cycle",
+            },
+            correlationId: tickCorrelationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+          continue;
+        }
+
         // ── (deepscan8 Track D 2026-07-02) Frozen-policy baseline stamp — T→P cron path ──
         // Stamps frozen_policy_hash at TESTING→PAPER so the P→DR drift check
         // (evaluateFrozenPolicyDriftAtPromotion) compares against the TRUE config baseline
@@ -4239,6 +4418,74 @@ export class LifecycleService {
             this._resetHardGateCounter(s.id, "dsr_blocked_floor", tickCorrelationId);
           } catch (dsrShErr) {
             logger.warn({ strategyId: s.id, err: dsrShErr }, "DSR gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
+          }
+
+          // ── E-1 (deepscan16 Wave 2 Track G2) — DSL guards_failed HARD gate: SHADOW → PAPER ──
+          // Mirrors the TESTING→PAPER gate exactly so a shadow-destined strategy cannot
+          // bypass the guards_failed check via the SHADOW ladder. `latestBtSh` is a
+          // full-row select above (no extra DB round trip).
+          try {
+            const dslGuardsSh = ((latestBtSh.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+              | DslGuardsGateInput
+              | null;
+            const dslGuardsResultSh = evaluateDslGuardsGate(dslGuardsSh);
+            _incDslGuardsGateCounter("SHADOW_TO_PAPER", dslGuardsResultSh);
+
+            broadcastSSE("lifecycle:dsl_guards_evaluated", {
+              strategyId: s.id,
+              ...dslGuardsResultSh.auditPayload,
+              passed: dslGuardsResultSh.passed,
+              reason: dslGuardsResultSh.reason,
+            });
+
+            await db.insert(auditLog).values({
+              action: dslGuardsResultSh.auditAction ?? "lifecycle.dsl_guards_pass",
+              entityId: s.id,
+              entityType: "strategy",
+              status: !dslGuardsResultSh.passed ? "failure" : dslGuardsResultSh.status === "legacy_proceed" ? "warning" : "success",
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: dslGuardsResultSh.auditPayload,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (SHADOW→PAPER) audit insert failed (non-blocking)");
+            });
+
+            if (!dslGuardsResultSh.passed) {
+              logger.warn(
+                { strategyId: s.id, guardsFailedReason: dslGuardsResultSh.auditPayload.guards_failed_reason, transition: "SHADOW→PAPER" },
+                "DSL guards gate BLOCKED SHADOW→PAPER: guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+              );
+              strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+              try {
+                await this._maybeAutoGraveyard(s.id, "dsl_guards_failed", { guardsFailedReason: dslGuardsResultSh.auditPayload.guards_failed_reason }, "SHADOW", tickCorrelationId);
+              } catch (graveyardErr) {
+                logger.warn({ strategyId: s.id, err: graveyardErr }, "dsl_guards_failed _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+              }
+              continue;
+            }
+            this._resetHardGateCounter(s.id, "dsl_guards_failed", tickCorrelationId);
+          } catch (dslGuardsShErr) {
+            try { dslGuardsGateTotal.labels({ transition: "SHADOW_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
+            logger.warn({ strategyId: s.id, err: dslGuardsShErr }, "DSL guards gate (SHADOW→PAPER): read failed — blocking promotion (fail-closed)");
+            await db.insert(auditLog).values({
+              action: "lifecycle.dsl_guards_gate_error_fail_closed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: {
+                reason: "lifecycle.dsl_guards_gate_error_fail_closed",
+                error: dslGuardsShErr instanceof Error ? dslGuardsShErr.message : String(dslGuardsShErr),
+                note: "DSL guards gate threw on SHADOW→PAPER path — promotion blocked; retries next cron cycle",
+              },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (SHADOW→PAPER) failed (non-blocking)");
+            });
+            strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+            continue;
           }
 
           // Frozen-policy baseline stamp — SHADOW → PAPER cron path
@@ -5259,6 +5506,102 @@ export class LifecycleService {
             logger.warn({ strategyId: s.id, err: auditErr }, "parameter_drift_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
+        }
+
+        // ── E-1 (deepscan16 Wave 2 Track G2) — DSL guards_failed HARD gate: PAPER → DEPLOY_READY ──
+        // Reads backtests.result_extras.dsl_guards.guards_failed (Wave-1 Track 2 producer
+        // field). guards_failed=true means the E.3/E.4/E.5 risk-guard block threw mid-backtest
+        // and NONE of the stop-ceiling / time-stop / DLL-halt guards ran for that run — the
+        // backtest is UNGUARDED, not clean, and must not promote toward live capital. This is
+        // the LAST-CHANCE gate before DEPLOY_READY, so it runs regardless of whether the
+        // strategy arrived via TESTING→PAPER or SHADOW→PAPER (both already gate it too — this
+        // is intentional defense-in-depth, matching how B14/WFE/parameter-drift all re-evaluate
+        // at every hop rather than trusting an earlier hop's pass).
+        try {
+          const [latestBtForDslGuards] = await db
+            .select({ resultExtras: backtests.resultExtras })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const dslGuards = ((latestBtForDslGuards?.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+            | DslGuardsGateInput
+            | null;
+          const dslGuardsResult = evaluateDslGuardsGate(dslGuards);
+          _incDslGuardsGateCounter("PAPER_TO_DEPLOY_READY", dslGuardsResult);
+
+          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+            strategyId: s.id,
+            ...dslGuardsResult.auditPayload,
+            passed: dslGuardsResult.passed,
+            reason: dslGuardsResult.reason,
+          });
+
+          await db.insert(auditLog).values({
+            action: dslGuardsResult.auditAction ?? "lifecycle.dsl_guards_pass",
+            entityId: s.id,
+            entityType: "strategy",
+            status: !dslGuardsResult.passed ? "failure" : dslGuardsResult.status === "legacy_proceed" ? "warning" : "success",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: dslGuardsResult.auditPayload,
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (PAPER→DEPLOY_READY) audit insert failed (non-blocking)");
+          });
+
+          if (!dslGuardsResult.passed) {
+            logger.warn(
+              { strategyId: s.id, guardsFailedReason: dslGuardsResult.auditPayload.guards_failed_reason, transition: "PAPER→DEPLOY_READY" },
+              "DSL guards gate BLOCKED PAPER→DEPLOY_READY: guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            try {
+              await this._maybeAutoGraveyard(s.id, "dsl_guards_failed", { guardsFailedReason: dslGuardsResult.auditPayload.guards_failed_reason }, "PAPER", correlationId);
+            } catch (graveyardErr) {
+              logger.warn({ strategyId: s.id, err: graveyardErr }, "dsl_guards_failed _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+            }
+            continue; // block decision wins regardless of graveyard write outcome
+          }
+          // Gate passed (or legacy grandfather) — reset consecutive counter.
+          // Deliberately NOT pushed into gateEvidenceStatuses: that array feeds the
+          // SEPARATE >=3-incomplete "evidence completeness" governor
+          // (evidence-completeness.ts). Every backtest today is pre-Track-2 and would
+          // book "legacy_proceed" (an isIncompleteEvidenceStatus "legacy" match) on
+          // this brand-new gate, silently tipping strategies that currently sit at
+          // 2-incomplete over the 3-incomplete threshold — an unintended change to a
+          // DIFFERENT hard gate's blocking behavior. This gate's own pass/block
+          // decision (above) is unaffected either way.
+          this._resetHardGateCounter(s.id, "dsl_guards_failed", correlationId);
+        } catch (dslGuardsErr) {
+          // Fail-CLOSED: same severity class as B14 — a read/parse error must not
+          // silently allow an unguarded backtest to promote to DEPLOY_READY.
+          try { dslGuardsGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
+          logger.warn({ strategyId: s.id, err: dslGuardsErr }, "DSL guards gate (PAPER→DEPLOY_READY): read failed — blocking promotion (fail-closed)");
+          await db.insert(auditLog).values({
+            action: "lifecycle.dsl_guards_gate_error_fail_closed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: {
+              reason: "lifecycle.dsl_guards_gate_error_fail_closed",
+              error: dslGuardsErr instanceof Error ? dslGuardsErr.message : String(dslGuardsErr),
+              note: "DSL guards gate threw on PAPER→DEPLOY_READY path — promotion blocked; retries next cron cycle",
+            },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Wave B Fix 1: DSR walk-forward gate (PAPER → DEPLOY_READY) ──────────

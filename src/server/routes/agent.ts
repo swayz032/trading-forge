@@ -2000,6 +2000,12 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
           reason: "mechanic_portability=true (cross-market mechanic — speaker chart is not the strategy's market)",
           ideas_count: ideas.length,
         },
+      }).catch((err) => {
+        // deepscan16 Wave 2 Track G2 (#16): this call previously had no .catch() at
+        // all (an unhandled-rejection risk, the most severe form of this finding's
+        // silent-failure class) — now matches the logging sibling pattern used
+        // elsewhere in this file's extraction pipeline.
+        logger.warn({ err, sourceUrl }, "extraction.mechanic_classification_override: audit_log write failed");
       });
       finalClassification = "futures_primary";
     }
@@ -2026,7 +2032,11 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
               video_id: _videoId,
             },
             correlationId,
-          }).catch(() => {});
+          }).catch((err) => {
+            // deepscan16 Wave 2 Track G2 (#16): matches the logging sibling pattern
+            // used elsewhere in this file — this row was previously swallowed silently.
+            logger.warn({ err, sourceUrl, lineageKey: extractionLineageKey }, "extraction.recall_applied: audit_log write failed");
+          });
         }
       }
     } catch (recallErr) {
@@ -2063,7 +2073,11 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
               video_id: _videoId,
             },
             correlationId,
-          }).catch(() => {});
+          }).catch((err) => {
+            // deepscan16 Wave 2 Track G2 (#16): matches the logging sibling pattern
+            // used elsewhere in this file — this row was previously swallowed silently.
+            logger.warn({ err, sourceUrl, lineageKey: extractionLineageKey }, "extraction.confluence_recovered: audit_log write failed");
+          });
         }
       }
     } catch (recoveryErr) {
@@ -2122,7 +2136,11 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
                   video_id: _videoId,
                 },
                 correlationId,
-              }).catch(() => {});
+              }).catch((err) => {
+                // deepscan16 Wave 2 Track G2 (#16): matches the logging sibling pattern
+                // used elsewhere in this file — this row was previously swallowed silently.
+                logger.warn({ err, sourceUrl, lineageKey: extractionLineageKey }, "extraction.coverage_repair_round: audit_log write failed");
+              });
             }
           } catch (repairErr) {
             logger.warn(
@@ -2169,7 +2187,11 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
                     video_id: _videoId,
                   },
                   correlationId,
-                }).catch(() => {});
+                }).catch((err) => {
+                  // deepscan16 Wave 2 Track G2 (#16): matches the logging sibling pattern
+                  // used elsewhere in this file — this row was previously swallowed silently.
+                  logger.warn({ err, sourceUrl, lineageKey: extractionLineageKey }, "extraction.concept_named: audit_log write failed");
+                });
               }
             }
           }

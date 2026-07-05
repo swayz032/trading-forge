@@ -15,6 +15,7 @@ import { cleanupSession } from "../services/paper-signal-service.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
 import { notifyWarning } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { trackG2SilentFailuresTotal } from "../lib/metrics-registry.js";
 
 const router = Router();
 
@@ -185,7 +186,34 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .set({ status: "failed_to_stream" as any })
         .where(eq(paperSessions.id, session.id))
-        .catch(() => {});
+        .catch((updateErr) => {
+          // Deep-scan #16 Wave 2 Track G2 (#14): if THIS update fails, the session
+          // never actually reaches status='failed_to_stream' in the DB — the
+          // auto-restart cron (which matches on that status) will never find this
+          // session, and the dead stream stays invisible with no operator signal.
+          // Log loudly + a distinct audit row + a counter so the gap is discoverable
+          // even though we cannot safely retry synchronously from inside this
+          // best-effort stream-startup catch block.
+          const updateErrMsg = updateErr instanceof Error ? updateErr.message : String(updateErr);
+          req.log.error(
+            { err: updateErr, sessionId: session.id },
+            "paper.session_start: FAILED to mark session failed_to_stream — auto-restart cron will not discover this dead stream",
+          );
+          db.insert(auditLog).values({
+            action: "paper.failed_to_stream_status_update_failed",
+            entityType: "paper_session",
+            entityId: session.id,
+            input: { strategyId, sessionId: session.id },
+            result: {
+              error: updateErrMsg,
+              note: "status UPDATE to failed_to_stream did not persist — auto-restart cron will not match this session",
+            },
+            status: "failure",
+            decisionAuthority: "system",
+            correlationId: req.id ?? null,
+          }).catch(() => { /* best-effort secondary audit; primary failure already logged above */ });
+          try { trackG2SilentFailuresTotal.labels({ site: "paper_session_failed_to_stream_update" }).inc(); } catch { /* non-blocking counter */ }
+        });
     }
 
     // Audit trail — paper session lifecycle
