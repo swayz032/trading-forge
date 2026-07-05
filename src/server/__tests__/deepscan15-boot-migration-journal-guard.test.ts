@@ -67,4 +67,38 @@ describe("deepscan15 C1 — boot-migration journal parse guard", () => {
     // An audit row was written so the failure is reconstructable post-incident.
     expect(audited.some((r) => r.action === "migration.journal_parse_failed")).toBe(true);
   });
+
+  // Deep-scan #16 E-5: the raw file READ (as opposed to the JSON.parse above)
+  // used to sit OUTSIDE any try/catch — a TOCTOU race (file removed/replaced
+  // after runPendingMigrations' existsSync check), an AV-scanner lock, or a
+  // permissions error propagated straight past this function's alerting and
+  // crash-looped the boot with zero Discord/audit signal. Passing a directory
+  // path (instead of a file) reliably reproduces a file-I/O read failure
+  // (EISDIR) cross-platform without needing real file-lock races.
+  it("fires a CRITICAL alert + audit row and rethrows when the journal file itself cannot be READ (not just parsed)", async () => {
+    const dirPath = fs.mkdtempSync(path.join(os.tmpdir(), "ds16-e5-journal-unreadable-"));
+    const notified: Array<[string, string]> = [];
+    const audited: Array<Record<string, unknown>> = [];
+
+    await expect(
+      // Pass the directory itself as the "journal path" — reading a directory
+      // as a file throws (EISDIR), simulating the file-read failure class.
+      readJournalOrAlert(dirPath, "cid-unreadable", {
+        notify: async (title, message) => {
+          notified.push([title, message]);
+        },
+        audit: async (row) => {
+          audited.push(row);
+        },
+        incrementFailure: () => 1,
+      }),
+    ).rejects.toThrow(/journal/i);
+
+    expect(notified.length).toBeGreaterThanOrEqual(1);
+    expect(notified.some(([title]) => /journal|boot blocked/i.test(title))).toBe(true);
+    // Same audit action as the parse-failure branch — both are "we could not
+    // determine the pending migration set" failures, reconstructable via one
+    // audit-action query regardless of which phase (read vs parse) failed.
+    expect(audited.some((r) => r.action === "migration.journal_parse_failed" && r.input && (r.input as Record<string, unknown>)["phase"] === "file_read")).toBe(true);
+  });
 });

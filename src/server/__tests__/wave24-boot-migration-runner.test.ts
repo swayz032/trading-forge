@@ -433,6 +433,50 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     expect(discordCall).toBeDefined();
   });
 
+  // ─── Deep-Scan #16 E-5: per-migration SQL file read failure (TOCTOU race) ───
+  // The .sql file passes the existsSync() check a few lines above the read,
+  // but the read itself throws (file removed/replaced/locked in the window
+  // between the two calls, or an AV-scanner lock). Before the fix this
+  // propagated straight out of the loop with ZERO audit row and ZERO Discord
+  // alert — a silent crash-loop. Verify it now alerts loudly before rethrowing.
+  it("per-migration SQL read failure (existsSync true, readFileSync throws): audits + alerts + rethrows (fail-closed)", async () => {
+    const tag = "0130_toctou_race";
+    const entries = [{ idx: 0, when: 6100000, tag }];
+    _appliedWhens = new Set();
+
+    const journalPath = getJournalPath();
+    mockFiles.set(journalPath, makeJournal(entries));
+    mockExistingPaths.add(journalPath);
+
+    const sqlPath = getMigrationSqlPath(tag);
+    // Mark the file as EXISTING (passes the existsSync gate) but never register
+    // its content in mockFiles — the mocked readFileSync throws ENOENT for any
+    // path not in the map, simulating the file vanishing/locking after the
+    // existsSync check ran.
+    mockExistingPaths.add(sqlPath);
+
+    const { runPendingMigrations } = await import("../lib/boot-migration-runner.js");
+    await expect(runPendingMigrations()).rejects.toThrow(/failed to read SQL file/i);
+
+    // Transaction (SQL execution) must never have been reached.
+    expect(mockTransaction).not.toHaveBeenCalled();
+
+    // Loud audit row for the read failure specifically.
+    const readFailureCalls = mockInsertAuditRowSafe.mock.calls.filter(
+      (c) => c[0]?.action === "migration.auto_apply_failed" && c[0]?.input?.phase === "migration_sql_read",
+    );
+    expect(readFailureCalls).toHaveLength(1);
+    expect(readFailureCalls[0][0].input.tag).toBe(tag);
+    expect(readFailureCalls[0][0].status).toBe("failure");
+
+    // Discord CRITICAL fired before the rethrow.
+    expect(mockFetch).toHaveBeenCalled();
+    const discordCall = mockFetch.mock.calls.find(
+      (c) => String(c[0]).includes("/alert/alerts") || String(c[0]).includes("discord.com"),
+    );
+    expect(discordCall).toBeDefined();
+  });
+
   // ─── Case 5: pg_dump unavailable + ALLOW_NO_BACKUP=false → fail-closed ──────
   it("pg_dump unavailable + ALLOW_NO_BACKUP=false: fails-closed before applying any migration", async () => {
     _pgDumpAvailable = false;

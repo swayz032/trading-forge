@@ -947,9 +947,24 @@ async function confirmSelfRestart(params: unknown, token?: string): Promise<unkn
   await auditActionExecuted("self_restart", clean, { triggered: true, reason });
 
   try {
+    // deep-scan #16 A-1: /api/admin/* sits BEHIND the general `/api` Bearer auth
+    // gate (index.ts) — only /api/carter, /api/tradingview, and
+    // /api/broker/fill-callback are mounted ahead of it. This internal call was
+    // sending only the route's own X-Restart-Signature HMAC and got 401'd by
+    // the gate before verifyRestartHmac ever ran. Attach the Bearer token when
+    // API_KEY is configured (production); leave it absent otherwise so local/dev
+    // requests still fall through to the cookie / AUTH_DEV_BYPASS / 503 paths
+    // exactly as before (sending "Bearer undefined" would 403 immediately).
+    const apiKey = process.env.API_KEY;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "X-Restart-Signature": sig,
+    };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
     await fetch(`http://localhost:${port}/api/admin/self-restart`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Restart-Signature": sig },
+      headers,
       body: JSON.stringify({ timestamp: tsSeconds, reason }),
       signal: AbortSignal.timeout(5000),
     });
