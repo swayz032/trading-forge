@@ -1,0 +1,951 @@
+{
+ "summary": {
+  "n_scored": 117,
+  "min": 0.0,
+  "median": 0.441,
+  "max": 0.544,
+  "tiers": {
+   "low<0.6": 117
+  },
+  "corpus_spine_bound_pct": 85.1,
+  "corpus_approximated_of_bound_pct": 96.6
+ },
+ "per_strategy": {
+  "ae7a2560-3569-4f29-b297-a4f3a60d1ca3": {
+   "fidelity_score": 0.444,
+   "spine_total": 9,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 1
+  },
+  "6c755822-713d-48f9-867e-cf399722e69a": {
+   "fidelity_score": 0.0,
+   "spine_total": 1,
+   "spine_bound": 0,
+   "faithful": 0,
+   "approximated": 0,
+   "dropped": 1
+  },
+  "97fabc41-f55b-4a20-a020-c28d6b7ffb54": {
+   "fidelity_score": 0.0,
+   "spine_total": 1,
+   "spine_bound": 0,
+   "faithful": 0,
+   "approximated": 0,
+   "dropped": 1
+  },
+  "9f38ab7a-9a3d-4771-bdfb-13c1cd067536": {
+   "fidelity_score": 0.0,
+   "spine_total": 1,
+   "spine_bound": 0,
+   "faithful": 0,
+   "approximated": 0,
+   "dropped": 1
+  },
+  "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90": {
+   "fidelity_score": 0.467,
+   "spine_total": 15,
+   "spine_bound": 14,
+   "faithful": 0,
+   "approximated": 14,
+   "dropped": 1
+  },
+  "47b1c45a-de30-498b-b630-0ab957395204": {
+   "fidelity_score": 0.45,
+   "spine_total": 20,
+   "spine_bound": 17,
+   "faithful": 1,
+   "approximated": 16,
+   "dropped": 3
+  },
+  "b2deddcb-57d4-4bc9-b750-39be0f8fe12a": {
+   "fidelity_score": 0.444,
+   "spine_total": 9,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 1
+  },
+  "5b9fefce-ea5a-490c-a80e-8136272ddcf7": {
+   "fidelity_score": 0.444,
+   "spine_total": 9,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 1
+  },
+  "fb2e92ab-feda-4327-a524-4a557e859da7": {
+   "fidelity_score": 0.443,
+   "spine_total": 35,
+   "spine_bound": 31,
+   "faithful": 0,
+   "approximated": 31,
+   "dropped": 4
+  },
+  "5591c0ba-a4ac-44eb-81c1-f26011774013": {
+   "fidelity_score": 0.45,
+   "spine_total": 20,
+   "spine_bound": 17,
+   "faithful": 1,
+   "approximated": 16,
+   "dropped": 3
+  },
+  "971826d6-defb-4882-a634-5deeecad712f": {
+   "fidelity_score": 0.45,
+   "spine_total": 20,
+   "spine_bound": 17,
+   "faithful": 1,
+   "approximated": 16,
+   "dropped": 3
+  },
+  "0dfd11ee-d227-4ff0-a839-c1c78356d5e5": {
+   "fidelity_score": 0.443,
+   "spine_total": 35,
+   "spine_bound": 31,
+   "faithful": 0,
+   "approximated": 31,
+   "dropped": 4
+  },
+  "39eba5ec-6939-434a-a1cc-bcb19bee4606": {
+   "fidelity_score": 0.443,
+   "spine_total": 35,
+   "spine_bound": 31,
+   "faithful": 0,
+   "approximated": 31,
+   "dropped": 4
+  },
+  "594186e5-3249-40d7-8791-b46ea2c01b20": {
+   "fidelity_score": 0.467,
+   "spine_total": 15,
+   "spine_bound": 14,
+   "faithful": 0,
+   "approximated": 14,
+   "dropped": 1
+  },
+  "cce3d9f0-e23e-473d-b841-8af2db3eab1a": {
+   "fidelity_score": 0.531,
+   "spine_total": 16,
+   "spine_bound": 16,
+   "faithful": 1,
+   "approximated": 15,
+   "dropped": 0
+  },
+  "9d133b69-55ea-4eab-969f-c385eacbba21": {
+   "fidelity_score": 0.531,
+   "spine_total": 16,
+   "spine_bound": 16,
+   "faithful": 1,
+   "approximated": 15,
+   "dropped": 0
+  },
+  "1771442d-0138-4c22-8993-8acfe4c79fd3": {
+   "fidelity_score": 0.478,
+   "spine_total": 46,
+   "spine_bound": 44,
+   "faithful": 0,
+   "approximated": 44,
+   "dropped": 2
+  },
+  "d36f9a97-ebbc-423b-b7a8-a1f06271f689": {
+   "fidelity_score": 0.478,
+   "spine_total": 46,
+   "spine_bound": 44,
+   "faithful": 0,
+   "approximated": 44,
+   "dropped": 2
+  },
+  "ebc8fff7-5459-427f-a4ad-a68a6366f6e0": {
+   "fidelity_score": 0.478,
+   "spine_total": 46,
+   "spine_bound": 44,
+   "faithful": 0,
+   "approximated": 44,
+   "dropped": 2
+  },
+  "b18952c0-ae56-411c-ae06-017051083658": {
+   "fidelity_score": 0.467,
+   "spine_total": 15,
+   "spine_bound": 14,
+   "faithful": 0,
+   "approximated": 14,
+   "dropped": 1
+  },
+  "4be0db1d-b6fe-46c4-8251-fd721b1b0992": {
+   "fidelity_score": 0.462,
+   "spine_total": 13,
+   "spine_bound": 12,
+   "faithful": 0,
+   "approximated": 12,
+   "dropped": 1
+  },
+  "a1d641ff-e35c-48f8-899f-9401e0c2c839": {
+   "fidelity_score": 0.531,
+   "spine_total": 16,
+   "spine_bound": 16,
+   "faithful": 1,
+   "approximated": 15,
+   "dropped": 0
+  },
+  "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3": {
+   "fidelity_score": 0.4,
+   "spine_total": 30,
+   "spine_bound": 24,
+   "faithful": 0,
+   "approximated": 24,
+   "dropped": 6
+  },
+  "913f40c4-6d3d-4c71-81da-109631f38873": {
+   "fidelity_score": 0.462,
+   "spine_total": 13,
+   "spine_bound": 12,
+   "faithful": 0,
+   "approximated": 12,
+   "dropped": 1
+  },
+  "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa": {
+   "fidelity_score": 0.458,
+   "spine_total": 12,
+   "spine_bound": 10,
+   "faithful": 1,
+   "approximated": 9,
+   "dropped": 2
+  },
+  "63d50af3-5629-437d-9271-0b242b212458": {
+   "fidelity_score": 0.355,
+   "spine_total": 31,
+   "spine_bound": 22,
+   "faithful": 0,
+   "approximated": 22,
+   "dropped": 9
+  },
+  "43d73bbc-2710-4d8f-89d0-bac8e60688c4": {
+   "fidelity_score": 0.355,
+   "spine_total": 31,
+   "spine_bound": 22,
+   "faithful": 0,
+   "approximated": 22,
+   "dropped": 9
+  },
+  "8a047fd8-148c-46b0-a268-717f826ff4d4": {
+   "fidelity_score": 0.355,
+   "spine_total": 31,
+   "spine_bound": 22,
+   "faithful": 0,
+   "approximated": 22,
+   "dropped": 9
+  },
+  "a2644bb7-943e-4247-8cc7-6ee385c53595": {
+   "fidelity_score": 0.409,
+   "spine_total": 11,
+   "spine_bound": 9,
+   "faithful": 0,
+   "approximated": 9,
+   "dropped": 2
+  },
+  "05b069a6-a8e4-49bb-a933-846d6b4b6f02": {
+   "fidelity_score": 0.409,
+   "spine_total": 11,
+   "spine_bound": 9,
+   "faithful": 0,
+   "approximated": 9,
+   "dropped": 2
+  },
+  "8936bb44-8a0a-4a62-87fa-e8461215066e": {
+   "fidelity_score": 0.409,
+   "spine_total": 11,
+   "spine_bound": 9,
+   "faithful": 0,
+   "approximated": 9,
+   "dropped": 2
+  },
+  "b5871142-d5e4-4d8b-a7da-3033719d762f": {
+   "fidelity_score": 0.458,
+   "spine_total": 12,
+   "spine_bound": 10,
+   "faithful": 1,
+   "approximated": 9,
+   "dropped": 2
+  },
+  "e27546e4-fd8d-49d1-a359-5a0ed9a9411b": {
+   "fidelity_score": 0.458,
+   "spine_total": 12,
+   "spine_bound": 10,
+   "faithful": 1,
+   "approximated": 9,
+   "dropped": 2
+  },
+  "58de00c3-308d-4f7a-9223-be161168e9ec": {
+   "fidelity_score": 0.4,
+   "spine_total": 30,
+   "spine_bound": 24,
+   "faithful": 0,
+   "approximated": 24,
+   "dropped": 6
+  },
+  "8908c9a0-9708-4a1b-b793-ace88b57e3c1": {
+   "fidelity_score": 0.4,
+   "spine_total": 30,
+   "spine_bound": 24,
+   "faithful": 0,
+   "approximated": 24,
+   "dropped": 6
+  },
+  "2c64c7c5-5d5d-4ba3-9995-cc5ab2fcfa1f": {
+   "fidelity_score": 0.382,
+   "spine_total": 17,
+   "spine_bound": 13,
+   "faithful": 0,
+   "approximated": 13,
+   "dropped": 4
+  },
+  "69b64551-05ad-41f6-b736-aeaab16d6bfb": {
+   "fidelity_score": 0.441,
+   "spine_total": 17,
+   "spine_bound": 15,
+   "faithful": 0,
+   "approximated": 15,
+   "dropped": 2
+  },
+  "b238477c-71a4-4fa0-bb50-5f67c1b2c865": {
+   "fidelity_score": 0.382,
+   "spine_total": 17,
+   "spine_bound": 13,
+   "faithful": 0,
+   "approximated": 13,
+   "dropped": 4
+  },
+  "81663564-e5bc-42b6-8a51-548ba0bc55c3": {
+   "fidelity_score": 0.5,
+   "spine_total": 16,
+   "spine_bound": 15,
+   "faithful": 1,
+   "approximated": 14,
+   "dropped": 1
+  },
+  "ad9811b7-10db-482e-afb8-d1158d5054ce": {
+   "fidelity_score": 0.5,
+   "spine_total": 16,
+   "spine_bound": 15,
+   "faithful": 1,
+   "approximated": 14,
+   "dropped": 1
+  },
+  "edbe2372-05b6-4388-afce-b99e754b7e04": {
+   "fidelity_score": 0.5,
+   "spine_total": 16,
+   "spine_bound": 15,
+   "faithful": 1,
+   "approximated": 14,
+   "dropped": 1
+  },
+  "81002a32-98fc-4a49-9079-14742224122a": {
+   "fidelity_score": 0.436,
+   "spine_total": 55,
+   "spine_bound": 46,
+   "faithful": 2,
+   "approximated": 44,
+   "dropped": 9
+  },
+  "c029e162-ecf9-4709-9820-baf60c6b7af0": {
+   "fidelity_score": 0.436,
+   "spine_total": 55,
+   "spine_bound": 46,
+   "faithful": 2,
+   "approximated": 44,
+   "dropped": 9
+  },
+  "c45b4718-07b1-4bea-baa3-1ee0a8e209b4": {
+   "fidelity_score": 0.436,
+   "spine_total": 55,
+   "spine_bound": 46,
+   "faithful": 2,
+   "approximated": 44,
+   "dropped": 9
+  },
+  "3c6d439a-d49c-4124-a215-ff2577361480": {
+   "fidelity_score": 0.405,
+   "spine_total": 21,
+   "spine_bound": 16,
+   "faithful": 1,
+   "approximated": 15,
+   "dropped": 5
+  },
+  "6a03c714-45c5-4efe-81e2-5a6af5e554c0": {
+   "fidelity_score": 0.405,
+   "spine_total": 21,
+   "spine_bound": 16,
+   "faithful": 1,
+   "approximated": 15,
+   "dropped": 5
+  },
+  "321ef3d8-b0db-47ee-a365-7e9090fbfcee": {
+   "fidelity_score": 0.405,
+   "spine_total": 21,
+   "spine_bound": 16,
+   "faithful": 1,
+   "approximated": 15,
+   "dropped": 5
+  },
+  "a20ecb89-a119-4c4c-958a-6558abb08a17": {
+   "fidelity_score": 0.406,
+   "spine_total": 32,
+   "spine_bound": 24,
+   "faithful": 2,
+   "approximated": 22,
+   "dropped": 8
+  },
+  "06ea64d3-155a-45a4-a233-53cac8a3584d": {
+   "fidelity_score": 0.406,
+   "spine_total": 32,
+   "spine_bound": 24,
+   "faithful": 2,
+   "approximated": 22,
+   "dropped": 8
+  },
+  "3af883fa-9c50-45de-9076-214136f44b8a": {
+   "fidelity_score": 0.462,
+   "spine_total": 13,
+   "spine_bound": 12,
+   "faithful": 0,
+   "approximated": 12,
+   "dropped": 1
+  },
+  "5e5803d1-e255-4ee9-943f-02328deb5f14": {
+   "fidelity_score": 0.389,
+   "spine_total": 9,
+   "spine_bound": 6,
+   "faithful": 1,
+   "approximated": 5,
+   "dropped": 3
+  },
+  "4be1fb85-0c34-4f2e-b326-9053440bdc64": {
+   "fidelity_score": 0.389,
+   "spine_total": 9,
+   "spine_bound": 6,
+   "faithful": 1,
+   "approximated": 5,
+   "dropped": 3
+  },
+  "6304525a-81a6-41ea-9bdc-d768ee5e9ee1": {
+   "fidelity_score": 0.312,
+   "spine_total": 16,
+   "spine_bound": 10,
+   "faithful": 0,
+   "approximated": 10,
+   "dropped": 6
+  },
+  "543874f8-21ad-4bc8-b298-4f8c62a35f87": {
+   "fidelity_score": 0.455,
+   "spine_total": 55,
+   "spine_bound": 49,
+   "faithful": 1,
+   "approximated": 48,
+   "dropped": 6
+  },
+  "d3d2d55f-30b1-4587-915e-af87e2dc2953": {
+   "fidelity_score": 0.455,
+   "spine_total": 55,
+   "spine_bound": 49,
+   "faithful": 1,
+   "approximated": 48,
+   "dropped": 6
+  },
+  "e596fbaf-a0c7-482c-8257-e581391a8e40": {
+   "fidelity_score": 0.4,
+   "spine_total": 5,
+   "spine_bound": 4,
+   "faithful": 0,
+   "approximated": 4,
+   "dropped": 1
+  },
+  "0e2af137-890f-4202-962f-99ba4a3cf813": {
+   "fidelity_score": 0.4,
+   "spine_total": 5,
+   "spine_bound": 4,
+   "faithful": 0,
+   "approximated": 4,
+   "dropped": 1
+  },
+  "7af16961-6df4-4038-b906-24e51cae1ede": {
+   "fidelity_score": 0.4,
+   "spine_total": 5,
+   "spine_bound": 4,
+   "faithful": 0,
+   "approximated": 4,
+   "dropped": 1
+  },
+  "b2f4630d-3540-4a33-94c9-ebbafdd9346f": {
+   "fidelity_score": 0.455,
+   "spine_total": 55,
+   "spine_bound": 49,
+   "faithful": 1,
+   "approximated": 48,
+   "dropped": 6
+  },
+  "338f7e39-4932-48b3-a993-10afa1ed9b3e": {
+   "fidelity_score": 0.467,
+   "spine_total": 30,
+   "spine_bound": 28,
+   "faithful": 0,
+   "approximated": 28,
+   "dropped": 2
+  },
+  "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411": {
+   "fidelity_score": 0.467,
+   "spine_total": 30,
+   "spine_bound": 28,
+   "faithful": 0,
+   "approximated": 28,
+   "dropped": 2
+  },
+  "f43088ac-49dc-4503-947f-6badf004a9e6": {
+   "fidelity_score": 0.467,
+   "spine_total": 30,
+   "spine_bound": 28,
+   "faithful": 0,
+   "approximated": 28,
+   "dropped": 2
+  },
+  "67d67ba0-c0b4-4dab-ba00-a25c331ae4d5": {
+   "fidelity_score": 0.429,
+   "spine_total": 14,
+   "spine_bound": 11,
+   "faithful": 1,
+   "approximated": 10,
+   "dropped": 3
+  },
+  "331fe15a-8560-4b46-88bb-4b01119b725a": {
+   "fidelity_score": 0.389,
+   "spine_total": 9,
+   "spine_bound": 6,
+   "faithful": 1,
+   "approximated": 5,
+   "dropped": 3
+  },
+  "c98d373d-fa40-4f87-b6ef-e6cb2d595d8d": {
+   "fidelity_score": 0.312,
+   "spine_total": 16,
+   "spine_bound": 10,
+   "faithful": 0,
+   "approximated": 10,
+   "dropped": 6
+  },
+  "93fe89cf-7491-4cfd-a645-e7291db36523": {
+   "fidelity_score": 0.312,
+   "spine_total": 16,
+   "spine_bound": 10,
+   "faithful": 0,
+   "approximated": 10,
+   "dropped": 6
+  },
+  "335f7418-0417-4356-bf1c-701f53e51510": {
+   "fidelity_score": 0.474,
+   "spine_total": 19,
+   "spine_bound": 18,
+   "faithful": 0,
+   "approximated": 18,
+   "dropped": 1
+  },
+  "f8691d73-d03e-46b7-b3fd-1948be7fd8e7": {
+   "fidelity_score": 0.474,
+   "spine_total": 19,
+   "spine_bound": 18,
+   "faithful": 0,
+   "approximated": 18,
+   "dropped": 1
+  },
+  "1b256347-a65c-4ec0-a73b-77c2c01cc29e": {
+   "fidelity_score": 0.429,
+   "spine_total": 14,
+   "spine_bound": 11,
+   "faithful": 1,
+   "approximated": 10,
+   "dropped": 3
+  },
+  "389d5007-430a-4919-84c4-8cd8467afa6b": {
+   "fidelity_score": 0.474,
+   "spine_total": 19,
+   "spine_bound": 18,
+   "faithful": 0,
+   "approximated": 18,
+   "dropped": 1
+  },
+  "534ca8ea-32d8-4c94-8f09-d851a78d795f": {
+   "fidelity_score": 0.375,
+   "spine_total": 32,
+   "spine_bound": 24,
+   "faithful": 0,
+   "approximated": 24,
+   "dropped": 8
+  },
+  "0f3a1418-992a-427e-818a-6d427fe11173": {
+   "fidelity_score": 0.375,
+   "spine_total": 32,
+   "spine_bound": 24,
+   "faithful": 0,
+   "approximated": 24,
+   "dropped": 8
+  },
+  "f3babbdd-2e2e-4adb-b449-dc1590f569e2": {
+   "fidelity_score": 0.429,
+   "spine_total": 14,
+   "spine_bound": 11,
+   "faithful": 1,
+   "approximated": 10,
+   "dropped": 3
+  },
+  "162e6fdd-e4c9-4335-b6da-bb8c3f8cb59d": {
+   "fidelity_score": 0.375,
+   "spine_total": 32,
+   "spine_bound": 24,
+   "faithful": 0,
+   "approximated": 24,
+   "dropped": 8
+  },
+  "979ba21b-66ca-4071-8e5e-ca96911a4cbd": {
+   "fidelity_score": 0.441,
+   "spine_total": 17,
+   "spine_bound": 15,
+   "faithful": 0,
+   "approximated": 15,
+   "dropped": 2
+  },
+  "9b871b65-3a50-456d-accc-5269d59a3992": {
+   "fidelity_score": 0.441,
+   "spine_total": 17,
+   "spine_bound": 15,
+   "faithful": 0,
+   "approximated": 15,
+   "dropped": 2
+  },
+  "67c762e4-d2e0-4b57-ae72-6b8755007d36": {
+   "fidelity_score": 0.406,
+   "spine_total": 32,
+   "spine_bound": 24,
+   "faithful": 2,
+   "approximated": 22,
+   "dropped": 8
+  },
+  "91bfb9e4-bb54-4a80-842e-3522bb1b0527": {
+   "fidelity_score": 0.382,
+   "spine_total": 17,
+   "spine_bound": 13,
+   "faithful": 0,
+   "approximated": 13,
+   "dropped": 4
+  },
+  "710a9ed3-a3d0-4eb3-baa1-69085bf87dd1": {
+   "fidelity_score": 0.46,
+   "spine_total": 25,
+   "spine_bound": 22,
+   "faithful": 1,
+   "approximated": 21,
+   "dropped": 3
+  },
+  "c1217b13-f0a5-4fa9-afaa-35da4ce3998f": {
+   "fidelity_score": 0.46,
+   "spine_total": 25,
+   "spine_bound": 22,
+   "faithful": 1,
+   "approximated": 21,
+   "dropped": 3
+  },
+  "942f83cc-0a84-41d7-b11d-b3f3b88a6f2b": {
+   "fidelity_score": 0.475,
+   "spine_total": 20,
+   "spine_bound": 19,
+   "faithful": 0,
+   "approximated": 19,
+   "dropped": 1
+  },
+  "232d9540-cbda-478e-93c4-9a35f6cf8a86": {
+   "fidelity_score": 0.475,
+   "spine_total": 20,
+   "spine_bound": 19,
+   "faithful": 0,
+   "approximated": 19,
+   "dropped": 1
+  },
+  "d8fe9ad2-da9a-463f-bcea-2b742601b028": {
+   "fidelity_score": 0.475,
+   "spine_total": 20,
+   "spine_bound": 19,
+   "faithful": 0,
+   "approximated": 19,
+   "dropped": 1
+  },
+  "fc4bf082-41d0-4030-b5a7-5494889139c0": {
+   "fidelity_score": 0.434,
+   "spine_total": 38,
+   "spine_bound": 31,
+   "faithful": 2,
+   "approximated": 29,
+   "dropped": 7
+  },
+  "9955f721-7644-4e31-8d01-f34a109289b6": {
+   "fidelity_score": 0.434,
+   "spine_total": 38,
+   "spine_bound": 31,
+   "faithful": 2,
+   "approximated": 29,
+   "dropped": 7
+  },
+  "1dd66daa-5066-4755-ba3a-4ca76017e57a": {
+   "fidelity_score": 0.434,
+   "spine_total": 38,
+   "spine_bound": 31,
+   "faithful": 2,
+   "approximated": 29,
+   "dropped": 7
+  },
+  "2c7e78e7-0663-44f6-af18-0a5c68ad2f1d": {
+   "fidelity_score": 0.544,
+   "spine_total": 34,
+   "spine_bound": 32,
+   "faithful": 5,
+   "approximated": 27,
+   "dropped": 2
+  },
+  "e135491b-dedf-4c30-8614-9c74acc6055f": {
+   "fidelity_score": 0.46,
+   "spine_total": 25,
+   "spine_bound": 22,
+   "faithful": 1,
+   "approximated": 21,
+   "dropped": 3
+  },
+  "d916b245-1562-4e82-9530-d7a79bc2c04c": {
+   "fidelity_score": 0.4,
+   "spine_total": 10,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 2
+  },
+  "e28f6ea8-fbd1-4926-a68b-e2d7de48ba46": {
+   "fidelity_score": 0.4,
+   "spine_total": 10,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 2
+  },
+  "326fe955-50cc-4246-bdab-8976438b7c06": {
+   "fidelity_score": 0.4,
+   "spine_total": 10,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 2
+  },
+  "f8795a5d-2341-433a-bf77-6dc8dae4e32c": {
+   "fidelity_score": 0.544,
+   "spine_total": 34,
+   "spine_bound": 32,
+   "faithful": 5,
+   "approximated": 27,
+   "dropped": 2
+  },
+  "562decbf-034d-412b-9210-4f87b7f86179": {
+   "fidelity_score": 0.544,
+   "spine_total": 34,
+   "spine_bound": 32,
+   "faithful": 5,
+   "approximated": 27,
+   "dropped": 2
+  },
+  "aae789b5-2d29-4558-a58b-7950ce5b9c0a": {
+   "fidelity_score": 0.423,
+   "spine_total": 13,
+   "spine_bound": 10,
+   "faithful": 1,
+   "approximated": 9,
+   "dropped": 3
+  },
+  "8ec7f48d-59e8-4888-8ac7-9cdd875a78e2": {
+   "fidelity_score": 0.423,
+   "spine_total": 13,
+   "spine_bound": 10,
+   "faithful": 1,
+   "approximated": 9,
+   "dropped": 3
+  },
+  "52f9921d-619c-4cab-b845-bef642c7585f": {
+   "fidelity_score": 0.423,
+   "spine_total": 13,
+   "spine_bound": 10,
+   "faithful": 1,
+   "approximated": 9,
+   "dropped": 3
+  },
+  "589ec512-eecf-4d49-879f-7ec0e8d2b8f2": {
+   "fidelity_score": 0.4,
+   "spine_total": 10,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 2
+  },
+  "ca5564d8-f6a2-46f5-9f2f-e678572ccf48": {
+   "fidelity_score": 0.4,
+   "spine_total": 10,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 2
+  },
+  "4c61be86-5940-4bec-a8a0-87328b2cafe8": {
+   "fidelity_score": 0.4,
+   "spine_total": 10,
+   "spine_bound": 8,
+   "faithful": 0,
+   "approximated": 8,
+   "dropped": 2
+  },
+  "8148f3b5-8bc7-4d36-a1d4-0ed5e2802185": {
+   "fidelity_score": 0.375,
+   "spine_total": 20,
+   "spine_bound": 14,
+   "faithful": 1,
+   "approximated": 13,
+   "dropped": 6
+  },
+  "7ea22e05-b1b2-4be5-bd35-5f5f1bba5805": {
+   "fidelity_score": 0.375,
+   "spine_total": 20,
+   "spine_bound": 14,
+   "faithful": 1,
+   "approximated": 13,
+   "dropped": 6
+  },
+  "1489bf44-a7de-4a68-b6c9-d4d4fe9ff390": {
+   "fidelity_score": 0.375,
+   "spine_total": 20,
+   "spine_bound": 14,
+   "faithful": 1,
+   "approximated": 13,
+   "dropped": 6
+  },
+  "85776068-64f5-4877-b99b-026de2c49201": {
+   "fidelity_score": 0.456,
+   "spine_total": 45,
+   "spine_bound": 40,
+   "faithful": 1,
+   "approximated": 39,
+   "dropped": 5
+  },
+  "ff718865-0876-4cdb-a84a-cc88eaf32cd7": {
+   "fidelity_score": 0.456,
+   "spine_total": 45,
+   "spine_bound": 40,
+   "faithful": 1,
+   "approximated": 39,
+   "dropped": 5
+  },
+  "6491538e-aff0-4ed8-b0c6-67a36e6cf84f": {
+   "fidelity_score": 0.456,
+   "spine_total": 45,
+   "spine_bound": 40,
+   "faithful": 1,
+   "approximated": 39,
+   "dropped": 5
+  },
+  "a18406a7-4f63-4d10-948b-228b9473ad5f": {
+   "fidelity_score": 0.47,
+   "spine_total": 33,
+   "spine_bound": 31,
+   "faithful": 0,
+   "approximated": 31,
+   "dropped": 2
+  },
+  "93534762-1b88-41c8-b5bf-32ba8584bc0e": {
+   "fidelity_score": 0.47,
+   "spine_total": 33,
+   "spine_bound": 31,
+   "faithful": 0,
+   "approximated": 31,
+   "dropped": 2
+  },
+  "ac4fe99d-1c97-42ee-8ce2-dafd6f18e0ea": {
+   "fidelity_score": 0.47,
+   "spine_total": 33,
+   "spine_bound": 31,
+   "faithful": 0,
+   "approximated": 31,
+   "dropped": 2
+  },
+  "88626172-8b82-4607-938c-fab7c8b9b3a9": {
+   "fidelity_score": 0.405,
+   "spine_total": 21,
+   "spine_bound": 17,
+   "faithful": 0,
+   "approximated": 17,
+   "dropped": 4
+  },
+  "29a5a070-24e6-4fc4-ac0b-284d314039b6": {
+   "fidelity_score": 0.405,
+   "spine_total": 21,
+   "spine_bound": 17,
+   "faithful": 0,
+   "approximated": 17,
+   "dropped": 4
+  },
+  "229770b3-860c-49c3-820e-0d3ff1348704": {
+   "fidelity_score": 0.405,
+   "spine_total": 21,
+   "spine_bound": 17,
+   "faithful": 0,
+   "approximated": 17,
+   "dropped": 4
+  },
+  "3f63d906-ce8e-4a9f-9e97-c3b6b075642d": {
+   "fidelity_score": 0.455,
+   "spine_total": 22,
+   "spine_bound": 19,
+   "faithful": 1,
+   "approximated": 18,
+   "dropped": 3
+  },
+  "a71fb739-41de-45f3-af8f-1bec87338107": {
+   "fidelity_score": 0.455,
+   "spine_total": 22,
+   "spine_bound": 19,
+   "faithful": 1,
+   "approximated": 18,
+   "dropped": 3
+  },
+  "3e91ffe4-bd68-41bb-a364-d35968c0778f": {
+   "fidelity_score": 0.455,
+   "spine_total": 22,
+   "spine_bound": 19,
+   "faithful": 1,
+   "approximated": 18,
+   "dropped": 3
+  },
+  "f6ff3004-361f-4c00-9235-fa233a57bac5": {
+   "fidelity_score": 0.5,
+   "spine_total": 23,
+   "spine_bound": 21,
+   "faithful": 2,
+   "approximated": 19,
+   "dropped": 2
+  },
+  "84928232-2e58-4e6c-92d3-5e8631eb2138": {
+   "fidelity_score": 0.5,
+   "spine_total": 23,
+   "spine_bound": 21,
+   "faithful": 2,
+   "approximated": 19,
+   "dropped": 2
+  },
+  "30024153-c7ea-43bb-a430-7a900ddde667": {
+   "fidelity_score": 0.5,
+   "spine_total": 23,
+   "spine_bound": 21,
+   "faithful": 2,
+   "approximated": 19,
+   "dropped": 2
+  }
+ }
+}

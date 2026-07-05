@@ -72,13 +72,34 @@ Noise-floor reference (this baseline): full-battery false-pass **0/100 nulls** (
 `docs/replay-results/null-calibration-corpus-v2-2026-07-04-report.json`. DSR/WRC/SPA/B14 each 0% on
 nulls; wf_cpcv (67%) + PBO (81%) permissive alone but AND-stacked to 0. Battery validated selective.
 
-## Next (evidence generation — sequence)
+## First measurements (done)
 
-1. **Null-strategy calibration** — establish the battery's false-pass noise floor
-   (`TF_ALLOW_FIXED_1=true PYTHONPATH=. python scripts/null_gate_calibration.py --n 100 --seed 42`).
-2. **Corpus Mode A vs Mode B** on Corpus v2 (raw vs overlay).
-3. **Overlay attribution** on Corpus v2.
-4. **Only then** onboard additional strategies (growing the corpus after the baseline is calibrated).
+- **Null calibration** (`docs/replay-results/null-calibration-corpus-v2-2026-07-04-report.json`): full-battery
+  false-pass **0/100** — battery validated selective.
+- **Mode A vs Mode B** (`docs/replay-results/mode-ab-corpus-v2-2026-07-04-report.json`): 47/78 scored
+  (31 unscorable, data quality). Of 47: 38 HURTS / 9 HELPS-EDGE; positive raw Sharpe 21/47 → overlay 5/47
+  (over-filters). **No demonstrable edge** (best 0.50, median −0.27). Overlay confirmed a risk-shaper,
+  not edge-adder — **keep it FROZEN.**
+- **★ Execution Fidelity Score** (`scripts/corpus-fidelity-score.py`, report
+  `docs/replay-results/corpus-fidelity-2026-07-04.json`): **ALL 117 ≤ 0.54, median 0.44.** Spine steps 85%
+  bound BUT **96.6% of bindings are approximations** — only ~3% native evaluators. Distinct educators
+  (VWAP/FVG/order-block/supply-demand) all bind to the same generic primitives → collapse to identical
+  ~8-trades/decade behavior → indistinguishable + edgeless. **This is the dominant bottleneck, quantified:
+  the corpus can't reveal edge because it isn't executing the educators' actual methods.**
+
+## Next (evidence-driven roadmap — fidelity FIRST, overlay LAST)
+
+1. **Execution fidelity** — raise fidelity by building NATIVE evaluators for the educators' actual concepts
+   (VWAP reclaim, FVG, order block, supply/demand, sweep+reclaim) instead of the generic BOS/CHoCH proxy.
+   Track the Execution Fidelity Score per strategy (Wave C / Fidelity Verdict productionizes it — persist +
+   expose + quarantine low-fidelity backtests as inadmissible). *This is the point where distinct strategies
+   will spread out instead of clustering.*
+2. **Data completeness** — fix intraday/MCL `ratio_adj` gaps (31/78 unscorable) so the scored sample ≈ 78.
+3. **Corpus re-run** — re-run Mode A/B once strategies execute faithfully AND are fully scorable.
+4. **Overlay evaluation** — only meaningful after fidelity; overlay stays FROZEN until then.
+5. **Portfolio construction** — from the survivors, later.
+
+NOT: optimize the overlay / tune thresholds / add filters. Those come much later, if ever.
 
 See [[project_onboarding_leak_hunt_direction_fix_2026_07_04]], [[project_timeframe_integrity_fix_2026_07_03]],
 [[project_layer4_research_conveyor_2026_07_02]].
