@@ -3,6 +3,27 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-05 Deep-Scan #18b fix-wave COMPLETE + independently CERTIFIED (grading-integrity)
+
+**Mission:** Finish the remaining #18b gap CRITICALs (P-1/P-2/X-1) and prove "no-lie 10/10" via the operator's new `grading-integrity` skill (doer≠grader).
+
+**Work completed (all on branch `hardening/ds18-menu-tsc-fix` @ 163eef8, 11 commits, NOT phase-0):**
+- **P-2** (exportability.py) — archetype fast-path now calls `_pine_inexpressible_notes()` → surfaces the 3 dropped-feature deductions (Style-C / confluence / multi-TF) that were silently `[]`; faithful/exportable unchanged (documented server-executed policy); main path byte-unchanged.
+- **X-1** (production/reconciliation-service.ts) — severity=green now requires `hasVerifiableData`; a 0/0/0 run (production_trades has no writer) → yellow (UNVERIFIABLE) + warn, not false-green on the primary panel. Also fixed a pre-existing false-green TEST (old "green happy path" fed zeros via `.where().limit()` while the service awaits `.where()` directly; rewritten to assert honest yellow + documented the genuine-green coverage gap).
+- **P-1** (pine_compiler.py, via pine-export fixer, merged 871e5fb) — `archetype:`/`uncatalogued:` short-circuits to a standalone single-declaration artifact in both `compile_strategy` + `compile_dual_artifacts`; fixes the nested `indicator()`/`strategy()` → invalid Pine on the LIVE TradingView→TradersPost path (majority of library). New test counts declaration STATEMENTS (10/10; 7/10 fail on pre-fix = non-vacuous). Non-archetype path untouched.
+
+**Verification (doer, CLAIMED) + INDEPENDENT certification (accuracy-validator, VERIFIED):** ALL 6 gap fixes (Q-1, Z-1/2/3, P-2, X-1, P-1, + menu-tsc/RL-CPCV) graded **8/10 VERIFIED** by an independent accuracy-validator — doer≠grader, 2 non-overlapping paths each, re-measured from zero per `grading-integrity`. **The batch scored 8, NOT a doer-declared 10** — that's the anti-lie mechanism working: an evidence-grounded number that survives adversarial independent re-measure. tsc 0; reconciliation 13/13; pine archetype 10/10; menu 3/3; rl-cpcv 5/5; pytest 5/5.
+
+**Known-facts updates:** grading-integrity skill VALIDATED in practice — an independent doer-separated grader produced 8/10, not the inflated 10 the doer-grades-doer pattern produces. See [[feedback_grading_integrity_2026_07_05]].
+
+**Carry-forward (honest open risks — surfaced, not hidden):**
+- Land branch → phase-0 (FF after the concurrent OR-branches session's WIP lands; §11b).
+- `npm run db:migrate` (or boot-runner) to apply 0191/0192/0193 to live Postgres — NOT yet applied.
+- Wire the `production_trades` writers (X-1 option a) so a genuine-green recon path exists + can be tested (currently derivation-correct but zero live-data coverage).
+- Re-run `test_cloud_backend.py` locally with a timeout — hung 53/63 in the grader sandbox (Q-1 logic verified live regardless).
+- 2 stray `git stash` entries from the OTHER session sit in the shared repo (§11b latent risk — not ours).
+
+---
 ### Session Log — 2026-07-05 Deep-Scan #18b (gap panel) + anti-lie root-cause + fix-wave batch 1
 
 **Mission:** Operator: scan the domains the concurrent session's fix wave does NOT cover, and "make all systems 10/10 no lie — because agents say 10/10 then another scan says 6.5." Also corrected the exec-path fact: live path = TradingView→TradersPost→Tradovate (NOT TF-direct).
