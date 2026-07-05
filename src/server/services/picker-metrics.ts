@@ -5,7 +5,11 @@
  *
  *   1. rolling_30d_deflated_sharpe  — from backtest resultExtras.deflated_sharpe.dsr,
  *                                     most recent completed backtest within 30 days.
- *                                     Clamped to [0, 1] via min(dsr/3, 1.0).
+ *                                     dsr is ALREADY a probability in [0,1] (cross_validation.py
+ *                                     deflated_sharpe_ratio returns norm.cdf(...)), so it is used
+ *                                     directly (clamp01 defensive only). deepscan17: the old /3
+ *                                     divisor assumed an unbounded z-score and wrongly compressed
+ *                                     the CDF to [0,0.33], under-weighting skill in the composite.
  *
  *   2. regime_conditional_pf        — profit factor on backtest_trades whose
  *                                     macro_regime matches the current regimeLabel.
@@ -125,7 +129,7 @@ export interface PickerMetricOpts {
 const COMPONENT_WEIGHT = 0.25;
 const SHARPE_LOOKBACK_DAYS = 30;
 const PF_NORMALISE_DIVISOR = 3;
-const DSR_NORMALISE_DIVISOR = 3;
+// deepscan17: DSR_NORMALISE_DIVISOR removed — deflated_sharpe.dsr is already a CDF in [0,1].
 const RECENCY_HALF_LIFE_DAYS = 30;
 const DIVERSIFICATION_LOOKBACK_DAYS = 7;
 
@@ -257,7 +261,8 @@ async function computeDeflatedSharpeMap(
       const extras = row.resultExtras as Record<string, unknown> | null;
       const ds = extras?.deflated_sharpe as Record<string, unknown> | undefined;
       const dsr = typeof ds?.dsr === "number" ? ds.dsr : 0;
-      result.set(row.strategyId, clamp01(dsr / DSR_NORMALISE_DIVISOR));
+      // dsr is a CDF in [0,1] — use directly; clamp01 guards legacy/out-of-range values.
+      result.set(row.strategyId, clamp01(dsr));
     }
   } catch (err) {
     logger.warn({ err }, "picker-metrics: deflated_sharpe fetch failed — defaulting to 0");
