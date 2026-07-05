@@ -306,6 +306,25 @@ export async function fireDiscordCritical(title: string, message: string): Promi
   }
 }
 
+/**
+ * Deep-scan #16 E-5: extracted from the per-migration failure catch (below) so
+ * the SAME crash-loop counter + escalation cadence fires for EVERY boot-migration
+ * failure class — not just SQL-execution failures. Bumps the file-based attempt
+ * counter and fires a Discord CRITICAL on the configured cadence (attempt 1, 3,
+ * every 10th thereafter) so a vacation-mode NSSM respawn loop never runs
+ * silently. Never throws — mirrors fireDiscordCritical's fire-and-forget contract.
+ */
+async function bumpBootFailureCrashLoopAlert(latestFailureDescription: string): Promise<void> {
+  const _failureAttempt = _readBootFailureCount() + 1;
+  _writeBootFailureCount(_failureAttempt);
+  if (shouldAlertBootFailure(_failureAttempt)) {
+    await fireDiscordCritical(
+      `BOOT BLOCKED — Migration Crash-Loop: ${_failureAttempt} attempt(s)`,
+      `boot-migration has failed ${_failureAttempt} time(s) in a row.\n\nLatest failure: ${latestFailureDescription}\n\nNSSM will respawn the backend automatically. On vacation, this loop continues until manually resolved. Check the Railway log and the bin/boot-migration-failures.json counter.`,
+    );
+  }
+}
+
 // ─── deepscan15 C1: guarded _journal.json read ──────────────────────────────────
 /**
  * Read + parse _journal.json behind the SAME failure-signalling path a migration
@@ -340,7 +359,52 @@ export async function readJournalOrAlert(
       return attempt;
     });
 
-  const raw = readUtf8StripBom(journalPath);
+  // Deep-scan #16 E-5: this file read used to be OUTSIDE the try/catch below —
+  // it only guarded JSON.parse, not the read itself. A TOCTOU race (file
+  // removed/replaced after the existsSync check in runPendingMigrations), an
+  // AV-scanner lock, or a corrupt/truncated file threw straight past this
+  // function's alerting and crash-looped the boot with zero Discord signal.
+  // Guard the read with the SAME notify/audit/bumpFailure deps as the parse
+  // failure below so every read failure alerts before it rethrows.
+  let raw: string;
+  try {
+    raw = readUtf8StripBom(journalPath);
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { journalPath, err: errMsg },
+      "boot-migration: _journal.json FAILED to read (file I/O) — boot blocked",
+    );
+    await audit({
+      action: "migration.journal_parse_failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "gate",
+      input: { journal_path: journalPath, phase: "file_read" } as Record<string, unknown>,
+      result: { error: errMsg } as Record<string, unknown>,
+      status: "failure",
+      correlationId,
+    });
+    await notify(
+      "BOOT BLOCKED — Migration Journal Unreadable",
+      `_journal.json could not be read: ${errMsg}\n\n` +
+        `This is often a transient file-lock (AV scanner) or TOCTOU race (file removed/replaced ` +
+        `after the existence check). The backend cannot determine which migrations are pending ` +
+        `and will NOT boot (fail-closed). NSSM will keep respawning into the same failure until ` +
+        `this is fixed.\n\nInspect src/server/db/migrations/meta/_journal.json for existence, ` +
+        `permissions, and corruption.`,
+    );
+    const attempt = bumpFailure();
+    if (shouldAlertBootFailure(attempt)) {
+      await notify(
+        `BOOT BLOCKED — Migration Crash-Loop: ${attempt} attempt(s)`,
+        `boot-migration has failed ${attempt} time(s) in a row on journal read. ` +
+          `On vacation this loop continues until manually resolved. ` +
+          `Check bin/boot-migration-failures.json.`,
+      );
+    }
+    throw new Error(`boot-migration: _journal.json read failed: ${errMsg}`);
+  }
   try {
     return JSON.parse(raw) as Journal;
   } catch (err) {
@@ -730,7 +794,41 @@ export async function runPendingMigrations(
       continue;
     }
 
-    const migrationSql = readUtf8StripBom(sqlFilePath);
+    // Deep-scan #16 E-5: guard the per-migration read the same way as the
+    // journal read above — a TOCTOU race (the file existed at the existsSync
+    // check a few lines up but was removed/replaced before this read), an
+    // AV-scanner lock, or disk I/O flake here used to propagate straight out
+    // of the loop, past every alerting path below, without ever firing the
+    // Discord+audit signal.
+    let migrationSql: string;
+    try {
+      migrationSql = readUtf8StripBom(sqlFilePath);
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      logger.error(
+        { tag: entry.tag, sqlFilePath, err: errMsg },
+        "boot-migration: FAILED to read migration SQL file — boot blocked",
+      );
+      await insertAuditRowSafe({
+        action: "migration.auto_apply_failed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "gate",
+        input: { tag: entry.tag, idx: entry.idx, sqlFilePath, phase: "migration_sql_read" } as Record<string, unknown>,
+        result: { error: errMsg } as Record<string, unknown>,
+        status: "failure",
+        correlationId,
+      });
+      await fireDiscordCritical(
+        `BOOT BLOCKED — Migration File Read Failed: ${entry.tag}`,
+        `boot-migration could not read the SQL file for pending migration ${entry.tag} (${sqlFilePath}).\n\n` +
+          `Error: ${errMsg}\n\nServer boot is BLOCKED. This is often a transient file-lock (AV scanner) or ` +
+          `TOCTOU race — retrying the boot may succeed on its own. If it persists, inspect the file for ` +
+          `corruption/truncation.`,
+      );
+      await bumpBootFailureCrashLoopAlert(`${entry.tag} (file read) — ${errMsg}`);
+      throw new Error(`boot-migration: failed to read SQL file for ${entry.tag}: ${errMsg}`);
+    }
     const hash = crypto.createHash("sha256").update(migrationSql).digest("hex");
 
     // Split on Drizzle statement-breakpoint markers (matches apply-missing-migrations.mjs)
@@ -907,17 +1005,12 @@ export async function runPendingMigrations(
         criticalMsg,
       );
 
-      // FIX 2 (deepscan10): increment file-based crash-loop counter and
-      // send an escalation alert on the configured cadence (1, 3, every 10th)
-      // so a vacation-mode NSSM respawn loop never runs silently for 14 days.
-      const _failureAttempt = _readBootFailureCount() + 1;
-      _writeBootFailureCount(_failureAttempt);
-      if (shouldAlertBootFailure(_failureAttempt)) {
-        await fireDiscordCritical(
-          `BOOT BLOCKED — Migration Crash-Loop: ${_failureAttempt} attempt(s)`,
-          `boot-migration has failed ${_failureAttempt} time(s) in a row.\n\nLatest failure: ${entry.tag} — ${errMsg}\n\nNSSM will respawn the backend automatically. On vacation, this loop continues until manually resolved. Check the Railway log and the bin/boot-migration-failures.json counter.`,
-        );
-      }
+      // FIX 2 (deepscan10) / deep-scan #16 E-5: increment the file-based
+      // crash-loop counter and send an escalation alert on the configured
+      // cadence (1, 3, every 10th) so a vacation-mode NSSM respawn loop never
+      // runs silently for 14 days. Extracted to bumpBootFailureCrashLoopAlert
+      // so the SAME cadence logic covers the file-read failure paths above.
+      await bumpBootFailureCrashLoopAlert(`${entry.tag} — ${errMsg}`);
 
       // Throw to block boot (fail-closed)
       throw new Error(`boot-migration: failed to apply ${entry.tag}: ${errMsg}`);

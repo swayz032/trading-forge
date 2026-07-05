@@ -130,13 +130,16 @@ async function hasStaleAlertFiredForWindow(lastAt: Date): Promise<boolean> {
   try {
     const { auditLog } = await import("../db/schema.js");
     const { and, eq, gte } = await import("drizzle-orm");
+    // Deep-scan #16 Band G: bounded by escalationDedupWindowStart (recency),
+    // NOT by lastAt alone — see comment above the helper. A stuck incident
+    // (lastAt never advancing) must still re-open this gate every cron tick.
     const rows = await db
       .select({ id: auditLog.id })
       .from(auditLog)
       .where(
         and(
           eq(auditLog.action, "dead_mans_heartbeat.stale_detected"),
-          gte(auditLog.createdAt, lastAt),
+          gte(auditLog.createdAt, escalationDedupWindowStart(lastAt)),
         ),
       )
       .limit(1);
@@ -145,6 +148,43 @@ async function hasStaleAlertFiredForWindow(lastAt: Date): Promise<boolean> {
     logger.warn({ err }, "dead-mans-heartbeat: stale-alert dedup DB lookup failed (fail-open — may double-alert once)");
     return false;
   }
+}
+
+// Deep-scan #16 Band G: the escalation ladder (stale-alert dedup, auto-restart
+// dedup) used to key EXCLUSIVELY off `lastAt` — the last-SUCCESSFUL heartbeat
+// timestamp. That timestamp never advances while the backend stays hung, so
+// `gte(auditLog.createdAt, lastAt)` matched the FIRST attempt's own audit row
+// forever afterward: if attemptAutoRestart's self-restart POST returned HTTP
+// 200 without the process actually becoming healthy again (e.g. it "restarted"
+// into the same hang, or the restart request 200'd but the process never
+// exited), every subsequent 30-min cron tick saw "something already happened
+// since lastAt" and silently skipped — collapsing the entire ladder (2nd/3rd
+// auto-restart attempt, the 24h-cap terminal alert, the Kasa power-cycle
+// escape valve) down to a single alert, ever, for an incident that could run
+// for the full 14-day vacation window.
+//
+// Fix: dedup on RECENCY of the last escalation ACTION, not on the static
+// incident-start timestamp. `ESCALATION_REALERT_INTERVAL_MS` is set just
+// under the 30-min cron cadence (scheduler.ts "heartbeat-stale-check") so:
+//   - a genuine duplicate invocation within the same tick (e.g. two
+//     overlapping cron fires from a slow DB query) is still deduped, but
+//   - the NEXT scheduled tick — 30 min later, same stuck `lastAt` — is treated
+//     as a FRESH escalation opportunity, letting attempt 2, attempt 3, the
+//     24h-cap alert, and the Kasa power-cycle all fire in sequence as
+//     designed instead of the ladder going silent after attempt 1.
+const ESCALATION_REALERT_INTERVAL_MS = 25 * 60 * 1000; // 25 min — just under the 30-min cron cadence
+
+/**
+ * Resolves the effective dedup-window floor: the LATER of (a) the start of
+ * this stale incident (`lastAt`) and (b) `now - ESCALATION_REALERT_INTERVAL_MS`.
+ * A prior escalation action only counts as "already handled" if it happened
+ * both after the incident started AND within the recency window — so a stuck
+ * incident naturally re-opens the escalation gate every cron tick instead of
+ * being permanently silenced by its own first audit row.
+ */
+function escalationDedupWindowStart(lastAt: Date): Date {
+  const recencyFloor = Date.now() - ESCALATION_REALERT_INTERVAL_MS;
+  return new Date(Math.max(lastAt.getTime(), recencyFloor));
 }
 
 // hasRefreshStaleAlertFiredWithinWindow() queries audit_log for any alert row
@@ -402,9 +442,22 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
     return;
   }
 
-  // STALE — check dedup before alerting
-  if (_lastAlertedForTs && lastAt.getTime() === _lastAlertedForTs.getTime()) {
-    // Fast-path: in-memory cache says we already alerted for this stale window
+  // STALE — check dedup before alerting.
+  //
+  // Deep-scan #16 Band G: the fast path used to match forever for the life of
+  // the process once `_lastAlertedForTs === lastAt` — which is exactly the
+  // false-200 case (self-restart POST returns 200 but the process never
+  // actually exits/respawns, so lastAt stays stuck AND the in-memory guard
+  // stays set). Gate it on RECENCY of the last alert too, so it only
+  // suppresses a genuine duplicate within the same escalation window and
+  // re-opens on the next cron tick if the incident is still unresolved.
+  if (
+    _lastAlertedForTs &&
+    lastAt.getTime() === _lastAlertedForTs.getTime() &&
+    _alertFiredAt &&
+    Date.now() - _alertFiredAt.getTime() < ESCALATION_REALERT_INTERVAL_MS
+  ) {
+    // Fast-path: in-memory cache says we already alerted for this stale window recently
     logger.debug(
       { minutesSince, lastAlertedFor: _lastAlertedForTs.toISOString() },
       "dead-mans-heartbeat: stale already alerted — skipping duplicate",
@@ -583,15 +636,21 @@ async function hasAutoRestartAttemptedForWindow(lastAt: Date): Promise<boolean> 
   try {
     const { auditLog } = await import("../db/schema.js");
     const { and, eq, gte } = await import("drizzle-orm");
-    // Consider anything written after the stale heartbeat timestamp as being
-    // for this same stale window (only one attempt per staleness window).
+    // Deep-scan #16 Band G: bounded by escalationDedupWindowStart (recency),
+    // NOT by lastAt alone. `lastAt` never advances while the backend stays
+    // hung, so gating solely on "anything since lastAt" matched the FIRST
+    // attempt's own audit row forever — a false-200 self-restart (HTTP 200
+    // returned but the process never actually recovers) would then silently
+    // block every subsequent attempt, collapsing the 24h-cap + Kasa
+    // escalation ladder down to a single try, ever. Recency-bounding lets
+    // each cron tick (30 min cadence) re-open the gate for a fresh attempt.
     const rows = await db
       .select({ id: auditLog.id })
       .from(auditLog)
       .where(
         and(
           eq(auditLog.action, "dead_mans_heartbeat.auto_restart_attempted"),
-          gte(auditLog.createdAt, lastAt),
+          gte(auditLog.createdAt, escalationDedupWindowStart(lastAt)),
         ),
       )
       .limit(1);
@@ -750,13 +809,26 @@ async function attemptAutoRestart(
   const port = process.env["PORT"] ?? "4000";
   const selfRestartUrl = `http://localhost:${port}/api/admin/self-restart`;
 
+  // deep-scan #16 A-1: /api/admin/* sits BEHIND the general `/api` Bearer auth
+  // gate in index.ts (only /api/carter, /api/tradingview, and
+  // /api/broker/fill-callback are mounted ahead of it). This self-heal fetch
+  // used to send only the route's own X-Restart-Signature HMAC and got 401'd
+  // by the gate before verifyRestartHmac ever ran — the auto-restart escape
+  // valve was dead on arrival. Attach the Bearer token when API_KEY is
+  // configured (production); leave it absent otherwise so local/dev requests
+  // still fall through to the cookie / AUTH_DEV_BYPASS / 503 paths exactly as
+  // before (sending "Bearer undefined" would 403 immediately instead).
+  const apiKey = process.env["API_KEY"];
+  const selfRestartHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-Restart-Signature": sig,
+  };
+  if (apiKey) selfRestartHeaders.Authorization = `Bearer ${apiKey}`;
+
   try {
     const resp = await fetch(selfRestartUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Restart-Signature": sig,
-      },
+      headers: selfRestartHeaders,
       // Pass 6 Track D: plumb cronCorrelationId as parentCorrelationId so the
       // admin handler can reuse it as the audit row's correlation_id, linking
       // the stale-detected row, the auto_restart_attempted row, and the
