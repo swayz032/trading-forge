@@ -178,6 +178,53 @@ describe("broker-router", () => {
     vi.clearAllMocks();
   });
 
+  // ─── DS19 C-1: kill-switch scoping ───────────────────────────────────────────
+  // The pre-fix routeOrder called isHaltedForProduction() UNSCOPED, so one
+  // account's DLL/trailing-DD/firm-suspension breach globally blocked EVERY
+  // account's orders. These tests assert the fix: the check is scoped to the
+  // routed account, and falls back to the UNSCOPED global check (fail-CLOSED)
+  // when the scope lookup fails.
+
+  it("DS19 C-1: scopes the kill-switch check to the routed account's {firmId, accountKey}", async () => {
+    mockSelectReturning([TRADERSPOST_ACCOUNT]); // firmId "mffu"
+    vi.mocked(submitWebhookOrder).mockResolvedValue({ success: true, statusCode: 200, responseBody: { ok: true } });
+
+    await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-scope-1");
+
+    // resolveAccountKey({firmId:"mffu"}) → "mffu" (no config.account_key), matching
+    // how a paper_session on this firm keys today. Layer 7 gets firmId, L2/L3 get accountKey.
+    expect(killSwitch.isHaltedForProduction).toHaveBeenCalledWith(
+      expect.objectContaining({ firmId: "mffu", accountKey: "mffu", correlationId: "corr-scope-1" }),
+    );
+    // Never called unscoped (no firmId) on the happy path.
+    expect(killSwitch.isHaltedForProduction).not.toHaveBeenCalledWith(
+      expect.objectContaining({ firmId: undefined }),
+    );
+  });
+
+  it("DS19 C-1: falls back to the UNSCOPED global check (fail-CLOSED) when the scope lookup throws", async () => {
+    // db.select rejects → scope lookup catch leaves haltScope empty → global check.
+    // @ts-ignore — Drizzle builder mock
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockRejectedValue(new Error("scope lookup DB error")),
+        }),
+      }),
+    } as ReturnType<typeof db.select>);
+
+    await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-scope-2");
+
+    // The kill-switch is still consulted (fail-CLOSED first gate) but UNSCOPED —
+    // an unresolved scope must never let an order slip past a real global halt.
+    expect(killSwitch.isHaltedForProduction).toHaveBeenCalled();
+    const call = vi.mocked(killSwitch.isHaltedForProduction).mock.calls[0][0] as
+      | { firmId?: unknown; accountKey?: unknown }
+      | undefined;
+    expect(call?.firmId).toBeUndefined();
+    expect(call?.accountKey).toBeUndefined();
+  });
+
   // ─── Test 1 ────────────────────────────────────────────────────────────────
 
   it("routes to TradersPost and returns success", async () => {
