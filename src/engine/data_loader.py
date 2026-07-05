@@ -103,14 +103,26 @@ def _write_cache_sidecar(
     source: str,
     adjusted: bool,
     dataset_hash: str,
+    *,
+    is_partial: bool = False,
+    range_start: Optional[str] = None,
+    range_end: Optional[str] = None,
 ) -> None:
     """Write provenance JSON alongside a cache parquet (deep-scan #10 FIX 7).
 
     Guards against cache poisoning: a subsequent read can verify that the file
     written under the ratio_adj/ path is genuinely ratio-adjusted.
 
-    Schema: {source, adjusted, written_at, dataset_hash}
+    Schema: {source, adjusted, written_at, dataset_hash, is_partial, range_start, range_end}
     File name: <parquet_name>.provenance.json (e.g. ratio_adj/15min.parquet.provenance.json)
+
+    deepscan16 Wave-1 Track2 CRITICAL E-4: is_partial / range_start / range_end are
+    additive fields. When the caller could only fetch a date-filtered slice (the
+    intended full-history re-fetch failed) it MUST pass is_partial=True + the actual
+    [range_start, range_end] covered by what got written to disk. _check_cache_sidecar
+    below refuses to serve a sidecar with is_partial=True — this is what stops a
+    truncated request-scoped slice from silently being treated as "complete history"
+    by every other caller that shares the same full-history cache key.
     """
     import datetime as _dt
     import json as _json
@@ -120,6 +132,9 @@ def _write_cache_sidecar(
         "adjusted": adjusted,
         "written_at": _dt.datetime.utcnow().isoformat() + "Z",
         "dataset_hash": dataset_hash,
+        "is_partial": is_partial,
+        "range_start": range_start,
+        "range_end": range_end,
     }
     try:
         sidecar.write_text(_json.dumps(payload), encoding="utf-8")
@@ -136,6 +151,11 @@ def _check_cache_sidecar(cache_file: Path, adjusted: bool) -> bool:
     Rules:
     - Sidecar absent (legacy cache) → allow with one-time INFO per file per process.
     - Sidecar present, adjusted=False for a ratio_adj-path read → WARN, return False.
+    - Sidecar present, is_partial=True (deepscan16 E-4) → WARN, return False. A partial
+      write means the intended full-history re-fetch failed and only a request-scoped
+      date slice landed on disk under the full-history cache key; the ONLY safe read
+      behavior is to treat it as a cache miss so the caller re-attempts a full fetch
+      rather than silently trusting the truncated slice as complete history.
     - Sidecar present, consistent → return True.
     """
     import json as _json
@@ -156,6 +176,15 @@ def _check_cache_sidecar(cache_file: Path, adjusted: bool) -> bool:
             print(
                 f"WARN: Cache sidecar for {cache_file.name} says adjusted=false "
                 f"(expected adjusted=true for ratio_adj path) — treating as cache miss",
+                file=sys.stderr,
+            )
+            return False
+        if data.get("is_partial", False):
+            print(
+                f"WARN: Cache sidecar for {cache_file.name} is_partial=true "
+                f"(range {data.get('range_start')}..{data.get('range_end')} — truncated "
+                f"full-history refetch fallback) — treating as cache miss until a full "
+                f"refresh succeeds",
                 file=sys.stderr,
             )
             return False
@@ -805,19 +834,66 @@ def load_ohlcv(
                 # date-range requests (including crisis scenarios in stress_test.py
                 # that need 2008-2020 data) all hit the local cache.
                 full_sql = f"SELECT ts_event, open, high, low, close, volume FROM read_parquet('{source}') ORDER BY ts_event"
+                # deepscan16 Wave-1 Track2 CRITICAL E-4: track WHICH dataframe actually
+                # landed on disk (full_df vs the date-filtered `df` fallback) so the
+                # sidecar's dataset_hash/range fields describe the real cached bytes,
+                # never the wider dataset we merely intended to write.
+                _cache_write_is_partial = False
+                _written_df = None
                 try:
                     full_pdf = con.execute(full_sql).fetchdf()
                     full_df = pl.from_pandas(full_pdf)
                     full_df.write_parquet(str(tmp_cache), compression="zstd")
-                except Exception:
-                    # Fallback: cache the filtered slice (better than nothing)
+                    _written_df = full_df
+                except Exception as _full_fetch_err:
+                    # Full-history re-fetch failed — the ONLY data we have is the
+                    # already date-filtered `df` from this request. Previously this
+                    # slice was written under the identical full-history cache key
+                    # with no marker, so every OTHER caller (including crisis-window
+                    # backtests needing 2008-2020 data) would silently read a
+                    # truncated "complete history" cache. Now: still write it (better
+                    # than nothing for THIS request's own range) but flag it
+                    # is_partial=True in the sidecar so _check_cache_sidecar refuses
+                    # to serve it as complete history on the next read.
+                    print(
+                        f"WARNING: full-history re-fetch failed for {data_symbol} {timeframe} "
+                        f"({_full_fetch_err!r}); caching date-filtered slice "
+                        f"[{start}..{end}] as PARTIAL — will not be trusted as complete "
+                        f"history by future reads",
+                        file=sys.stderr,
+                    )
                     df.write_parquet(str(tmp_cache), compression="zstd")
+                    _written_df = df
+                    _cache_write_is_partial = True
                 # Atomic replace — other readers see either old or new, never partial write
                 _os_m4.replace(str(tmp_cache), str(cache_file))
                 size_kb = cache_file.stat().st_size / 1024
-                print(f"Cache atomic-write: {data_symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
-                # FIX 7 (deep-scan #10): write provenance sidecar alongside the cache file
-                _write_cache_sidecar(cache_file, source=source, adjusted=adjusted, dataset_hash=compute_dataset_hash(df))
+                _write_kind = "PARTIAL slice" if _cache_write_is_partial else "full history"
+                print(
+                    f"Cache atomic-write ({_write_kind}): {data_symbol} {timeframe} → "
+                    f"{cache_file} ({size_kb:.0f} KB)",
+                    file=sys.stderr,
+                )
+                # FIX 7 (deep-scan #10) + E-4: write provenance sidecar alongside the
+                # cache file, describing the dataframe that was ACTUALLY written
+                # (_written_df), not the filtered `df` from this request's own query.
+                _range_start_val = None
+                _range_end_val = None
+                try:
+                    if _written_df is not None and len(_written_df) > 0 and "ts_event" in _written_df.columns:
+                        _range_start_val = str(_written_df["ts_event"].min())
+                        _range_end_val = str(_written_df["ts_event"].max())
+                except Exception:
+                    pass
+                _write_cache_sidecar(
+                    cache_file,
+                    source=source,
+                    adjusted=adjusted,
+                    dataset_hash=compute_dataset_hash(_written_df if _written_df is not None else df),
+                    is_partial=_cache_write_is_partial,
+                    range_start=_range_start_val,
+                    range_end=_range_end_val,
+                )
             except Exception as e:
                 # Clean up temp file if atomic replace failed
                 try:

@@ -304,6 +304,12 @@ def simulate_counterfactual(
         )
 
     # Need at least entry bar + 1 exit bar
+    # deepscan16 Wave-1 Track2 MED #24: entry_bar_idx == -1 is _find_entry_bar_idx's
+    # documented "not found" sentinel (fixed to actually return it instead of
+    # fabricating 0). Must be checked BEFORE the >= len(bars) bound check since -1
+    # is not out-of-range on the high side.
+    if entry_bar_idx < 0:
+        return _indet("entry_bar_index_not_found")
     if entry_bar_idx >= len(bars):
         return _indet("entry_bar_index_out_of_bounds")
     if entry_bar_idx + 1 >= len(bars):
@@ -316,10 +322,17 @@ def simulate_counterfactual(
         return _indet("invalid_entry_bar_open")
 
     # ── ATR at entry ──
+    # deepscan16 Wave-1 Track2 MED #24 (additional instance beyond the primary
+    # load_forward_bars/_find_entry_bar_idx fix): this previously fabricated a
+    # plausible ATR (1% of entry price) when atr_14 was NaN/missing at the entry
+    # bar, feeding an invented volatility into the stop/slippage math below and
+    # contradicting this module's own "INDETERMINATE ... never fabricated"
+    # contract (CLAUDE.md §13). ATR is a real input to a FAITHFUL replay — if we
+    # cannot read it off the entry bar, the counterfactual is unusable and must be
+    # marked INDETERMINATE, not silently priced off an invented number.
     atr_at_entry = float(entry_row.get("atr_14", float("nan")))
     if math.isnan(atr_at_entry) or atr_at_entry <= 0:
-        # Fallback: use 1% of price as ATR proxy
-        atr_at_entry = entry_price * 0.01
+        return _indet("atr_unavailable_at_entry")
 
     # ── Stop: min(per-symbol framework ceiling, 1.5×ATR) — matches the LIVE overlay (NOT the
     #    backtester's 6pt fallback), so the counterfactual reflects the operator's big-move stops ──
@@ -749,11 +762,23 @@ def load_forward_bars(
                 from src.engine.indicators.core import compute_atr  # noqa: PLC0415
                 atr_series = compute_atr(df, 14)
                 df = df.with_columns(atr_series.alias("atr_14"))
-            except Exception:
-                # Fallback: use 0.5% of close as ATR proxy
-                df = df.with_columns(
-                    (pl.col("close") * 0.005).alias("atr_14")
+            except Exception as _atr_exc:
+                # deepscan16 Wave-1 Track2 MED #24 fix: this previously fabricated a
+                # plausible ATR (0.5% of close) and let the counterfactual sim proceed
+                # on invented volatility, contradicting this module's own docstring +
+                # CLAUDE.md §13 ("INDETERMINATE on missing forward bars, never
+                # fabricated"). ATR is a real input to the stop/slippage math below —
+                # if we cannot compute it, the whole forward-bars payload is unusable
+                # for a FAITHFUL replay. Return None so the caller's existing
+                # None-handling routes this signal to INDETERMINATE
+                # ("forward_bars_unavailable"), matching this function's own
+                # documented "Returns None (INDETERMINATE) if loading fails" contract.
+                logger.warning(
+                    "gate_block_analyzer: ATR compute failed for %s @ %s — "
+                    "returning None (INDETERMINATE) instead of a fabricated ATR proxy: %s",
+                    symbol, from_dt, _atr_exc,
                 )
+                return None
 
         return df
 
@@ -765,7 +790,13 @@ def load_forward_bars(
 def _find_entry_bar_idx(df: pl.DataFrame, signal_dt: datetime) -> int:
     """Find the bar index that contains signal_dt, then return +1 (next-bar fill).
 
-    Returns -1 if no suitable bar is found.
+    Returns -1 if no suitable bar is found (deepscan16 Wave-1 Track2 MED #24: this
+    docstring's own contract — the implementation previously silently fabricated 0
+    ("assume first bar is entry") in both no-timestamp-column and no-match cases,
+    contradicting the "-1 = not found" sentinel documented here and CLAUDE.md §13
+    ("INDETERMINATE ... never fabricated"). Both fallback paths below now honor the
+    documented -1 sentinel; simulate_counterfactual() treats entry_bar_idx < 0 as
+    INDETERMINATE ("entry_bar_index_not_found") rather than silently trading bar 0.
     """
     ts_col = "ts_event" if "ts_event" in df.columns else None
     if ts_col is None:
@@ -775,8 +806,9 @@ def _find_entry_bar_idx(df: pl.DataFrame, signal_dt: datetime) -> int:
                 break
 
     if ts_col is None:
-        # No timestamp column — assume first bar is entry
-        return 0
+        # No timestamp column — cannot locate the entry bar. Do NOT fabricate
+        # "assume first bar" (MED #24) — signal INDETERMINATE via -1.
+        return -1
 
     # Find the bar whose timestamp is closest to but not after the signal
     # signal_dt is in UTC; bars may be in UTC or local
@@ -804,8 +836,10 @@ def _find_entry_bar_idx(df: pl.DataFrame, signal_dt: datetime) -> int:
     except Exception:
         pass
 
-    # Fallback: first bar
-    return 0
+    # No bar at/after the signal timestamp was found — the real entry bar is
+    # genuinely unknown (MED #24: do NOT fabricate "first bar"). Signal
+    # INDETERMINATE via -1.
+    return -1
 
 
 def _compute_median_atr(df: pl.DataFrame) -> float:
@@ -1061,7 +1095,30 @@ def run_gate_block_analysis(
                 entry_bar_idx = _find_entry_bar_idx(bars, sig.created_at)
                 median_atr = _compute_median_atr(bars)
                 if math.isnan(median_atr) or median_atr <= 0:
-                    median_atr = float(bars["close"].mean()) * 0.005
+                    # deepscan16 Wave-1 Track2 MED #24 (2nd additional instance): this
+                    # previously fabricated a plausible median ATR (0.5% of mean close)
+                    # and fed it into simulate_counterfactual as if it were real
+                    # volatility data, contradicting the "INDETERMINATE ... never
+                    # fabricated" contract (CLAUDE.md §13). When _compute_median_atr
+                    # cannot derive a real value, the whole signal's counterfactual is
+                    # unusable — mark it INDETERMINATE and move on instead of pricing
+                    # off an invented number.
+                    all_results.append(CounterfactualResult(
+                        signal_id=sig.signal_id,
+                        gate_key=sig.gate_key,
+                        symbol=sym,
+                        direction=sig.direction,
+                        entry_price=float("nan"),
+                        exit_price=float("nan"),
+                        exit_reason="no_data",
+                        realized_r=float("nan"),
+                        net_pnl_dollars=float("nan"),
+                        mfe_points=float("nan"),
+                        is_big_move=False,
+                        indeterminate=True,
+                        indeterminate_reason="median_atr_unavailable",
+                    ))
+                    continue
 
                 result = simulate_counterfactual(
                     signal=sig,

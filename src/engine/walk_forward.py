@@ -634,12 +634,21 @@ def _run_walk_forward_cpcv(
 
     # ── Wave 3 Track 3A: BIF computation (CPCV mode) ─────────────────────────
     # K_eff = n_paths (C(6,2)=15 combinatorial paths per default CPCV config).
-    # IS Sharpe proxy = mean(path_OOS_sharpes) — uses the same OOS series as
-    # agg_sharpe (M1 limitation: BIF ≈ 1.0, block gate never fires in default
-    # CPCV mode).  The result dict carries bif_proxy_basis="oos_mean_not_is" so
-    # the TS BIF gate can emit a non-blocking audit warn.
-    # Per-path IS Sharpes (using true IS fold data) are a Wave 30 carry-forward
-    # per the comment at the top of the CPCV combinations loop.
+    # deepscan #7 (2026-07-02) E1 fix, RE-VERIFIED deepscan16 Wave-1 Track2 B-2
+    # (2026-07-04): the primary basis is mean(per_path_is_sharpes) — true
+    # per-path IN-SAMPLE Sharpes from the lightweight IS-only backtest run per
+    # CPCV path above ("E1: lightweight IS backtest to capture true per-path IS
+    # Sharpe"). This is a genuine IS-vs-OOS comparison so BIF reflects real
+    # selection inflation and the block gate (BIF >= BIF_BLOCK_THRESHOLD) can
+    # actually fire — bif_reliable=True, bif_proxy_basis="cpcv_per_path_is".
+    # FAIL-LOUD FALLBACK: only when per_path_is_sharpes is partially/fully
+    # unavailable (some/all per-path IS backtests failed) do we fall back to
+    # mean(path_OOS_sharpes) — the same concatenated OOS series as agg_sharpe,
+    # so BIF≈1.0 and the block gate is inert for that run. That degraded case is
+    # tagged bif_reliable=False + bif_proxy_basis="oos_mean_not_is" so the TS
+    # BIF gate treats it as unavailable/legacy (visible, non-blocking audit-warn)
+    # instead of silently passing bif≈1.0 as clean. See the reliability branch
+    # immediately below (_has_full_is).
     _cpcv_bif_result: dict = {}
     try:
         from src.engine.statistics.backtest_inflation_factor import (
