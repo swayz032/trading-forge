@@ -55,9 +55,9 @@ describe("menu api router", () => {
     const layer = menuApiRouter.stack.find(
       (l: any) => l.route?.path === "/slumhouse/api/menu/now-serving",
     );
-    const handler = layer.route.stack[layer.route.stack.length - 1].handle;
+    const handler = (layer as any).route.stack[(layer as any).route.stack.length - 1].handle;
     const res: any = { body: null, json(b: any) { this.body = b; return this; } };
-    await handler({ query: {} } as any, res);
+    await handler({ query: {} } as any, res, (() => undefined) as any);
     expect(res.body).toEqual({ dishes: [] });
     expect(mocks.assembleNowServing).toHaveBeenCalledOnce();
   });
@@ -67,9 +67,9 @@ describe("menu api router", () => {
     const layer = menuApiRouter.stack.find(
       (l: any) => l.route?.path === "/slumhouse/api/menu/kitchen",
     );
-    const handler = layer.route.stack[layer.route.stack.length - 1].handle;
+    const handler = (layer as any).route.stack[(layer as any).route.stack.length - 1].handle;
     const res: any = { body: null, json(b: any) { this.body = b; return this; } };
-    await handler({ query: {} } as any, res);
+    await handler({ query: {} } as any, res, (() => undefined) as any);
     expect(res.body).toEqual({ families: [] });
     expect(mocks.assembleKitchenMenu).toHaveBeenCalledWith("MES");
   });
