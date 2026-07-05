@@ -178,6 +178,40 @@ def deflated_sharpe_ratio(
 
     Returns:
         dict with dsr, expected_max_sr, significant (DSR > 1.0)
+
+    RECONCILIATION (deepscan18 A-C1, 2026-07-05): this function used to carry its
+    OWN independent re-derivation of the Bailey & Lopez de Prado DSR math,
+    parallel to (and diverged from) the canonical implementation in
+    risk_metrics.py::compute_deflated_sharpe_ratio(). Two bugs had crept into
+    this copy that the canonical one already had fixed (deepscan17 B-2/B-7):
+      1. Kurtosis term used the pre-fix `(kurtosis - 3) / 4`, which is a no-op
+         at normal kurtosis=3 — Mertens (2002)'s correct term is
+         `(kurtosis - 1) / 4` (contributes 0.5*SR^2 at kurtosis=3, matching
+         Lo (2002)'s baseline Var(SR_hat) ~= (1 + SR^2/2)/n). The stale term
+         silently understated se_sr for every normal-ish return series.
+      2. `expected_max_sr` was subtracted from `observed_sharpe` on a mismatched
+         scale (a raw z-units order statistic treated as if it were already on
+         the Sharpe scale), instead of being scaled by the Sharpe standard error
+         first (Bailey & Lopez de Prado 2014 §4; sr_benchmark = z_n * sharpe_std).
+    This function's output flows: run_cross_validation() -> backtester.py
+    resultExtras.deflated_sharpe (lines ~5665, ~7477) -> picker-metrics.ts
+    (25% weight of the LIVE strategy-selection composite score) and the Office
+    deploy-approvals card — while lifecycle-service.ts promotion gates read
+    risk_metrics.py's compute_deflated_sharpe_ratio() output directly. Left
+    unreconciled, the strategy PICKED to trade was ranked on the WRONG
+    (unfixed) DSR math while promotion gated on the fixed one — two different
+    "honesty-adjusted skill scores" for the same strategy.
+
+    FIX: delegate the corrected z-score math to risk_metrics.py's single
+    canonical implementation (single source of truth — no more parallel
+    formula to drift), then convert its z-score to the [0,1] CDF probability
+    this function's callers contractually expect at `deflated_sharpe.dsr`
+    (picker-metrics.ts and deploy-approvals.ts both read `.dsr` directly as an
+    already-CDF value — see picker-metrics.ts module docstring). The
+    `n_observations < 10`/`n_trials < 1` and `n_trials == 1` short-circuits
+    below are UNCHANGED (they never used the buggy kurtosis/scaling terms —
+    only the multi-trial branch below is being reconciled).
+    See test_dsr_reconciliation.py for the cross-implementation parity test.
     """
     if n_observations < 10 or n_trials < 1:
         return {
@@ -197,36 +231,31 @@ def deflated_sharpe_ratio(
             "detail": "single trial — no multiple testing adjustment",
         }
 
-    # Expected maximum Sharpe ratio under null hypothesis (Euler-Mascheroni approximation)
-    euler_mascheroni = 0.5772156649
-    z_n = (1 - euler_mascheroni) * scipy_stats.norm.ppf(1 - 1.0 / n_trials) + \
-          euler_mascheroni * scipy_stats.norm.ppf(1 - 1.0 / (n_trials * np.e))
+    # RECONCILED: delegate to the canonical risk_metrics implementation instead
+    # of re-deriving z_n / se_sr independently (see docstring above). Import is
+    # local to avoid any module-load-order coupling between the two engine
+    # statistics modules.
+    from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _canonical_dsr
 
-    expected_max_sr = z_n * np.sqrt(1.0 / n_observations)
-
-    # Standard error of the Sharpe ratio (Lo 2002, extended for non-normal)
-    se_sr = np.sqrt(
-        (1 + 0.5 * observed_sharpe ** 2 - skewness * observed_sharpe +
-         ((kurtosis - 3) / 4) * observed_sharpe ** 2) / n_observations
+    canonical = _canonical_dsr(
+        observed_sharpe=observed_sharpe,
+        n_trials=n_trials,
+        n_observations=n_observations,
+        skewness=skewness,
+        kurtosis=kurtosis,
     )
-
-    if se_sr <= 0:
-        return {
-            "dsr": 0.0,
-            "expected_max_sr": round(expected_max_sr, 4),
-            "significant": False,
-            "detail": "SE(SR) <= 0",
-        }
-
-    # DSR = CDF((observed - expected_max) / SE)
-    dsr_value = float(scipy_stats.norm.cdf((observed_sharpe - expected_max_sr) / se_sr))
+    dsr_z = canonical["dsr"]  # raw z-score, ~N(0,1) under H0 — NOT a probability
+    dsr_value = float(scipy_stats.norm.cdf(dsr_z))
 
     return {
-        "dsr": round(dsr_value, 4),
-        "expected_max_sr": round(expected_max_sr, 4),
+        "dsr": round(dsr_value, 4),  # CONTRACT: [0,1] CDF — picker-metrics.ts / deploy-approvals.ts read this directly
+        "expected_max_sr": round(canonical["sr_expected_max"], 4),  # z-units Bailey-LdP order-statistic bracket term
         "significant": dsr_value > 0.95,  # > 95th percentile
         "n_trials": n_trials,
         "n_observations": n_observations,
+        "dsr_z": round(dsr_z, 4),  # diagnostic only — the canonical (non-CDF) z-score scale
+        "p_value": canonical["p_value"],
+        "passes": canonical["passes"],
     }
 
 
