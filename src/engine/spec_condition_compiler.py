@@ -40,14 +40,28 @@ import numpy as np
 import polars as pl
 
 from src.engine.context.structural_stops import compute_structural_stop
+from src.engine.indicators.bias_native import compute_bias_signal
+from src.engine.indicators.confirmation_native import compute_confirmation_signal
 from src.engine.indicators.core import compute_atr, compute_ema
 from src.engine.indicators.fvg_native import compute_fvg_signal
 from src.engine.indicators.market_structure import detect_swings
+from src.engine.indicators.mss_native import compute_mss_signal
+from src.engine.indicators.sweep_native import compute_sweep_signal
 from src.engine.session_windows import is_in_killzone
 from src.engine.spec_family_bindings import BindingPlan, ConditionBinding, compile_binding_plan
 from src.engine.strategy_base import BaseStrategy
 
 FVG_PRIMITIVE_NAME: str = "fvg_native.compute_fvg_signal"
+# Composition Fidelity Experiment (docs/designs/composition-fidelity-experiment-2026-07-05.md)
+# bundle primitive names — MUST match the literal strings spec_family_bindings.resolve_bundle_
+# primitive() returns (that module has zero import surface by design, so these are independently
+# duplicated string constants, same convention as FVG_PRIMITIVE_NAME above).
+BIAS_PRIMITIVE_NAME: str = "bias_native.compute_bias_signal"
+CONFIRMATION_PRIMITIVE_NAME: str = "confirmation_native.compute_confirmation_signal"
+SWEEP_PRIMITIVE_NAME: str = "sweep_native.compute_sweep_signal"
+MSS_PRIMITIVE_NAME: str = "mss_native.compute_mss_signal"
+BUNDLE_BEARISH_KEYWORDS: tuple[str, ...] = ("bearish", "short", "down", "sell")
+BUNDLE_BULLISH_KEYWORDS: tuple[str, ...] = ("bullish", "long", "up ", "buy")
 """Binding-plan primitive marker used by spec_family_bindings.bind_condition() when
 TF_FVG_IDENTITY_ENABLED routes a WAIT_STRUCTURE/FILTER FVG-family condition to the fresh
 fvg_native detector (see that module's FVG Identity Dispatch Experiment docstring). Checked
@@ -168,6 +182,7 @@ class SpecConditionStrategy(BaseStrategy):
         trace: bool = False,
         binding_plan: BindingPlan | None = None,
         strategy_name: str | None = None,
+        restore_condition_ids: frozenset[str] | None = None,
     ) -> None:
         self.compiled_spec = compiled_spec
         self.spec = compiled_spec.get("spec", {}) if "spec" in compiled_spec else compiled_spec
@@ -175,7 +190,10 @@ class SpecConditionStrategy(BaseStrategy):
         self.symbol = symbol
         self.timeframe = timeframe
         self.trace_enabled = trace
-        self.binding_plan = binding_plan or compile_binding_plan(self.spec)
+        # Composition Fidelity Experiment (default None — 100% backward compatible; see
+        # spec_family_bindings.compile_binding_plan's restore_condition_ids docstring).
+        self.restore_condition_ids = restore_condition_ids
+        self.binding_plan = binding_plan or compile_binding_plan(self.spec, restore_condition_ids=restore_condition_ids)
         # OVERLAY-VISIBILITY CONTRACT (Band C follow-up, closes the same bug
         # class B2 closed for archetype-mapped onboards): `apply_eligibility_gate()`
         # in backtester.py checks `strategy_name` against playbook_router.py's
@@ -203,6 +221,15 @@ class SpecConditionStrategy(BaseStrategy):
         self.approximation: bool = self.binding_plan.approximation_used
         # Populated by compute() when trace_enabled=True.
         self.last_trace: list[dict] = []
+        # DIAGNOSTIC-ONLY (composition-fidelity-experiment-2026-07-05.md Step 0): always
+        # populated by compute() regardless of trace_enabled — read-only per-condition boolean
+        # arrays keyed by condition_id, the SAME arrays compute() ANDs together to derive
+        # spine_satisfied. Zero effect on entry_long/entry_short/exit_long/exit_short (additive
+        # attribute only, mirrors the last_trace pattern) — used by
+        # scripts/composition-gating-diagnostic.py to measure per-condition true-frequency and
+        # the smallest-AND-subset ("gating set") that reproduces the strategy's real entry bars,
+        # BLIND to any before/after SDS comparison (Step 0 runs on baseline-mode compute() only).
+        self.last_per_condition_bool: dict[str, np.ndarray] = {}
 
     # ─── BaseStrategy interface ────────────────────────────────────────────
     def get_params(self) -> dict:
@@ -289,6 +316,21 @@ class SpecConditionStrategy(BaseStrategy):
         result = compute_fvg_signal(open_, high, low, close)
         return result.any_active
 
+    @staticmethod
+    def _select_directional(result: Any, object_text: str) -> np.ndarray:
+        """Composition Fidelity Experiment: given a native evaluator's directional Result
+        (bullish_active/bearish_active/any_active) and the condition's OWN object text, pick the
+        sub-signal that matches the object's stated direction when the text names one — otherwise
+        fall back to `any_active` (a real, condition-family-specific signal, still a faithful
+        improvement over the previous single shared undifferentiated array, honestly used when
+        the object text itself gives no directional hint)."""
+        norm = f" {(object_text or '').strip().lower()} "
+        if any(kw in norm for kw in BUNDLE_BEARISH_KEYWORDS):
+            return result.bearish_active
+        if any(kw in norm for kw in BUNDLE_BULLISH_KEYWORDS):
+            return result.bullish_active
+        return result.any_active
+
     def _eval_wait_retest(self, close: np.ndarray, high: np.ndarray, low: np.ndarray, n: int) -> np.ndarray:
         if n < RETEST_LEVEL_EMA_PERIOD + 2:
             return np.zeros(n, dtype=bool)
@@ -303,6 +345,7 @@ class SpecConditionStrategy(BaseStrategy):
         false_col = pl.lit(False)
         if n < MIN_BARS_REQUIRED:
             self.last_trace = []
+            self.last_per_condition_bool = {}
             return df.with_columns(
                 [
                     false_col.alias("entry_long"),
@@ -323,6 +366,15 @@ class SpecConditionStrategy(BaseStrategy):
         wait_structure = None
         wait_retest = None
         fvg_signal = None
+        # Composition Fidelity Experiment bundle caches (each computed at most once per compute()
+        # call, mirroring fvg_signal's caching above) — separate cache per family so a spec with
+        # e.g. both a restored WAIT_BIAS and a restored WAIT_CONFIRMATION condition evaluates each
+        # native primitive exactly once and shares its result ONLY across conditions bound to that
+        # SAME primitive (never across families).
+        bias_result = None
+        confirmation_result = None
+        sweep_result = None
+        mss_result = None
 
         spine_bindings = [b for b in self.binding_plan.bindings if b.role == "spine"]
         per_condition_bool: dict[str, np.ndarray] = {}
@@ -350,6 +402,28 @@ class SpecConditionStrategy(BaseStrategy):
                 if fvg_signal is None:
                     fvg_signal = self._eval_fvg(open_, high, low, close)
                 per_condition_bool[b.condition_id] = fvg_signal
+            elif b.primitive == BIAS_PRIMITIVE_NAME:
+                # Composition-bundle restoration (experiment) — checked BEFORE the generic
+                # WAIT_BIAS/CONFIRM_DIRECTION type dispatch below, same placement discipline as
+                # the FVG check above. Directional sub-signal selected from THIS condition's own
+                # object text (see _select_directional) — fixes the pre-existing bug where every
+                # WAIT_BIAS condition shared one bullish-only-checked array regardless of what its
+                # object actually named.
+                if bias_result is None:
+                    bias_result = compute_bias_signal(open_, high, low, close)
+                per_condition_bool[b.condition_id] = self._select_directional(bias_result, b.object)
+            elif b.primitive == CONFIRMATION_PRIMITIVE_NAME:
+                if confirmation_result is None:
+                    confirmation_result = compute_confirmation_signal(open_, high, low, close)
+                per_condition_bool[b.condition_id] = self._select_directional(confirmation_result, b.object)
+            elif b.primitive == SWEEP_PRIMITIVE_NAME:
+                if sweep_result is None:
+                    sweep_result = compute_sweep_signal(open_, high, low, close)
+                per_condition_bool[b.condition_id] = self._select_directional(sweep_result, b.object)
+            elif b.primitive == MSS_PRIMITIVE_NAME:
+                if mss_result is None:
+                    mss_result = compute_mss_signal(open_, high, low, close)
+                per_condition_bool[b.condition_id] = self._select_directional(mss_result, b.object)
             elif b.type == "WAIT_SESSION":
                 per_condition_bool[b.condition_id] = self._eval_wait_session(b, ts_list, n)
             elif b.type in ("WAIT_STRUCTURE", "VERIFY_STRUCTURE"):
@@ -372,6 +446,8 @@ class SpecConditionStrategy(BaseStrategy):
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
             else:
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
+
+        self.last_per_condition_bool = per_condition_bool
 
         if per_condition_bool:
             spine_satisfied = np.ones(n, dtype=bool)
@@ -532,6 +608,7 @@ def from_compiled_spec(
     timeframe: str = "5m",
     trace: bool = False,
     strategy_name: str | None = None,
+    restore_condition_ids: frozenset[str] | None = None,
 ) -> SpecConditionStrategy:
     """Factory mirroring the `_load_strategy_class` -> `cls()` pattern in
     backtester.py, but parameterized with the actual spec payload since this
@@ -541,7 +618,15 @@ def from_compiled_spec(
     string spec-onboarding-service.ts's B2 playbook registration writes into
     playbook_router.py) so the eligibility-gate overlay-visibility contract
     holds — see SpecConditionStrategy.__init__ docstring comment.
+
+    `restore_condition_ids`: Composition Fidelity Experiment bundle-restoration target set,
+    default None (100% backward compatible — see compile_binding_plan's docstring).
     """
     return SpecConditionStrategy(
-        compiled_spec=compiled_spec, symbol=symbol, timeframe=timeframe, trace=trace, strategy_name=strategy_name
+        compiled_spec=compiled_spec,
+        symbol=symbol,
+        timeframe=timeframe,
+        trace=trace,
+        strategy_name=strategy_name,
+        restore_condition_ids=restore_condition_ids,
     )

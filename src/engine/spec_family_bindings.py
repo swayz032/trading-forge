@@ -86,6 +86,97 @@ def resolve_fvg_object(object_text: str) -> bool:
     return any(kw in norm for kw in FVG_OBJECT_KEYWORDS)
 
 
+# ─── Composition Fidelity Experiment — Phase 3 Increment 2 (docs/designs/
+# composition-fidelity-experiment-2026-07-05.md) ────────────────────────────
+# The FVG null (increment 1) proved single-object identity restoration is real but
+# behaviorally invisible: a spec is an AND-chain gated by whichever spine condition is
+# rarest-true, almost never the one object restored. This experiment restores identity to the
+# ACTUALLY-GATING conditions of a strategy AS A BUNDLE — every object family the Step 0 gating
+# diagnostic (scripts/composition-gating-diagnostic.py) found in that strategy's own gating set,
+# restored together, single variable: TF_COMPOSITION_BUNDLE_ENABLED + an explicit per-strategy
+# `restore_condition_ids` set (NOT a global keyword auto-detect like the FVG flag above — the
+# locked spec requires "restore ALL gating conditions of a strategy at once; leave non-gating
+# conditions and everything else byte-identical," which needs per-condition-id targeting, not a
+# blanket keyword match that would also restore non-gating conditions of the same object family).
+#
+# Default OFF; when restore_condition_ids is None (every existing caller — production,
+# the FVG-increment-1 rig, etc.) behavior is 100% unchanged regardless of the env flag.
+SWEEP_OBJECT_KEYWORDS: tuple[str, ...] = (
+    "sweep",
+    "liquidity grab",
+    "stop hunt",
+    "stop run",
+    "judas swing",
+    "raid",
+)
+MSS_OBJECT_KEYWORDS: tuple[str, ...] = (
+    "mss",
+    "market structure shift",
+    "structure shift",
+    "choch",
+    "change of character",
+    "change in state",
+    "state delivery",
+)
+
+BIAS_NATIVE_PRIMITIVE: str = "bias_native.compute_bias_signal"
+CONFIRMATION_NATIVE_PRIMITIVE: str = "confirmation_native.compute_confirmation_signal"
+SWEEP_NATIVE_PRIMITIVE: str = "sweep_native.compute_sweep_signal"
+MSS_NATIVE_PRIMITIVE: str = "mss_native.compute_mss_signal"
+FVG_NATIVE_PRIMITIVE: str = "fvg_native.compute_fvg_signal"
+
+
+def composition_bundle_enabled() -> bool:
+    """Read at call time (not cached), same live-read contract as fvg_identity_enabled()."""
+    return os.environ.get("TF_COMPOSITION_BUNDLE_ENABLED", "false").strip().lower() == "true"
+
+
+def resolve_sweep_object(object_text: str) -> bool:
+    if not object_text:
+        return False
+    norm = object_text.strip().lower()
+    return any(kw in norm for kw in SWEEP_OBJECT_KEYWORDS)
+
+
+def resolve_mss_object(object_text: str) -> bool:
+    if not object_text:
+        return False
+    norm = object_text.strip().lower()
+    return any(kw in norm for kw in MSS_OBJECT_KEYWORDS)
+
+
+def resolve_bundle_primitive(cond_type: str, object_text: str) -> str | None:
+    """Family dispatch for the composition-bundle restoration. Returns the native primitive name
+    this (type, object) pair should bind to when it is a member of the current strategy's gating
+    set and the bundle is enabled — or None when no built native evaluator covers it (an honest
+    gap, NOT a guess; the caller must leave such conditions on the generic path).
+
+    Order matters: MSS/sweep keyword matches take priority over the type-level bias/confirmation
+    default so an explicitly-named structural event (e.g. "mss or change in state delivery" typed
+    WAIT_CONFIRMATION per the real corpus) gets the MORE specific evaluator rather than the
+    type's generic native fallback.
+    """
+    if cond_type in ("WAIT_STRUCTURE", "VERIFY_STRUCTURE", "FILTER"):
+        if resolve_fvg_object(object_text):
+            return FVG_NATIVE_PRIMITIVE
+        if resolve_sweep_object(object_text):
+            return SWEEP_NATIVE_PRIMITIVE
+        if resolve_mss_object(object_text):
+            return MSS_NATIVE_PRIMITIVE
+        return None
+    if cond_type in ("WAIT_BIAS", "CONFIRM_DIRECTION"):
+        if resolve_mss_object(object_text):
+            return MSS_NATIVE_PRIMITIVE
+        return BIAS_NATIVE_PRIMITIVE
+    if cond_type == "WAIT_CONFIRMATION":
+        if resolve_mss_object(object_text):
+            return MSS_NATIVE_PRIMITIVE
+        if resolve_sweep_object(object_text):
+            return SWEEP_NATIVE_PRIMITIVE
+        return CONFIRMATION_NATIVE_PRIMITIVE
+    return None
+
+
 # ─── Session keyword table (duplicated verbatim in the TS mirror — see module
 # docstring). Kept identical to session_windows.SESSION_KEYWORDS so a spec's
 # WAIT_SESSION binding decision doesn't depend on session_windows.py's own
@@ -225,10 +316,20 @@ def resolve_session_keyword(object_text: str) -> str | None:
     return None
 
 
-def bind_condition(condition: dict) -> ConditionBinding:
+def bind_condition(condition: dict, restore: bool = False) -> ConditionBinding:
     """Bind a single spec condition {id, type, object, role, span, evidence} to
     a primitive descriptor. Never raises; unknown condition types are honestly
-    unbindable rather than defaulted to some guessed family."""
+    unbindable rather than defaulted to some guessed family.
+
+    `restore` (Composition Fidelity Experiment, default False — 100% backward compatible):
+    True iff the CALLER has already determined this specific condition_id is a member of its
+    strategy's precomputed gating set (scripts/composition-gating-diagnostic.py) and wants the
+    bundle-restoration path evaluated for it. Checked FIRST, before the existing single-object
+    TF_FVG_IDENTITY_ENABLED path, so the composition experiment's explicit per-condition targeting
+    takes precedence when both mechanisms could apply to the same condition — they never conflict
+    in practice (TF_FVG_IDENTITY_ENABLED and TF_COMPOSITION_BUNDLE_ENABLED are not intended to be
+    flipped on simultaneously in the same run, but if they were, per-condition explicit restore
+    targeting is the more specific signal and should win)."""
     cond_id = str(condition.get("id", ""))
     cond_type = str(condition.get("type", ""))
     role = str(condition.get("role", ""))
@@ -260,6 +361,26 @@ def bind_condition(condition: dict) -> ConditionBinding:
             executed=False,
             reason=meta.unbound_reason,
         )
+
+    # Composition-bundle restoration (experiment, per-condition-targeted — see module docstring
+    # above SWEEP_OBJECT_KEYWORDS). Checked BEFORE the single-object FVG path: this condition's
+    # id must already be a member of the caller-supplied gating set (restore=True) AND the bundle
+    # flag must be on. resolve_bundle_primitive() returns None for any (type, object) the built
+    # evaluators don't cover — an honest gap, falls through unchanged below.
+    if restore and composition_bundle_enabled():
+        bundle_primitive = resolve_bundle_primitive(cond_type, obj)
+        if bundle_primitive is not None:
+            return ConditionBinding(
+                condition_id=cond_id,
+                type=cond_type,
+                role=role,
+                object=obj,
+                bindable=True,
+                primitive=bundle_primitive,
+                approximation=False,
+                executed=True,
+                reason=None,
+            )
 
     # FVG identity dispatch (experiment, env-gated — see module docstring
     # above SESSION_KEYWORDS). Only WAIT_STRUCTURE/FILTER conditions are in
@@ -350,9 +471,15 @@ class BindingPlan:
         }
 
 
-def compile_binding_plan(spec: dict) -> BindingPlan:
+def compile_binding_plan(spec: dict, restore_condition_ids: frozenset[str] | None = None) -> BindingPlan:
     """Compile a full spec artifact body {entry_conditions, invalidations,
     entry_trigger_id, ...} into a BindingPlan.
+
+    `restore_condition_ids` (Composition Fidelity Experiment, default None — 100% backward
+    compatible): an explicit set of condition_ids to attempt bundle-restoration binding for (see
+    bind_condition's `restore` docstring). None (every existing caller) means no condition is
+    restored regardless of TF_COMPOSITION_BUNDLE_ENABLED — the experiment's harness is the only
+    caller expected to ever pass a non-None value.
 
     Deterministic: iterates entry_conditions in-order, no randomness, no
     wall-clock reads — same spec always produces the same plan (replay
@@ -362,8 +489,13 @@ def compile_binding_plan(spec: dict) -> BindingPlan:
     invalidations = spec.get("invalidations", []) or []
     trigger_id = str(spec.get("entry_trigger_id", "") or "")
 
-    bindings = [bind_condition(c) for c in entry_conditions]
-    invalidation_bindings = [bind_condition(c) for c in invalidations]
+    def _restore(c: dict) -> bool:
+        if restore_condition_ids is None:
+            return False
+        return str(c.get("id", "")) in restore_condition_ids
+
+    bindings = [bind_condition(c, restore=_restore(c)) for c in entry_conditions]
+    invalidation_bindings = [bind_condition(c, restore=_restore(c)) for c in invalidations]
 
     spine = [b for b in bindings if b.role == "spine"]
     confluence = [b for b in bindings if b.role == "confluence"]
