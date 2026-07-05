@@ -101,5 +101,35 @@ nulls; wf_cpcv (67%) + PBO (81%) permissive alone but AND-stacked to 0. Battery 
 
 NOT: optimize the overlay / tune thresholds / add filters. Those come much later, if ever.
 
+## Project phase model (evidence-based)
+
+| Phase | Question | Status |
+|---|---|---|
+| 1 — Extraction | Can we recover what the educator taught? | Largely demonstrated |
+| 2 — Conservation | Can we preserve semantics through compilation? | Demonstrated (Ledgers A–G) |
+| **3 — Faithful execution** | Does the engine execute those semantics vs approximations? | **CURRENT dominant bottleneck** |
+| 4 — Strategy research | Which strategies have durable edge? | Premature until Phase 3 improves |
+
+**Precise claim (not "the compiler is solved"):** *the compiler and verification pipeline are mature
+enough that execution fidelity is now the limiting factor.* Names the bottleneck from evidence; does not
+imply nothing is left to improve.
+
+## Definition of success for Phase 3 (what to watch, NOT "find a profit")
+
+Success is these metrics moving on re-runs — **not** a single profitable strategy:
+
+| Metric | Today (Corpus v2, 2026-07-04) | Target direction |
+|---|---|---|
+| Native evaluator coverage | ~3% | much higher |
+| Approximation usage | ~97% | much lower |
+| Median execution fidelity | 0.44 | substantially higher |
+| **★ Distinct behavioral signatures** | **17 / 47** | **→ 47 / 47** |
+
+**The leading indicator is distinct behavioral signatures.** As native evaluators replace generic proxies,
+different educators should produce increasingly DISTINCT trade behavior (signatures approach n/n). If
+fidelity rises but signatures DON'T diverge, that signals another bottleneck downstream of execution —
+investigate before continuing. Only after fidelity ↑ **and** behavior diversifies should edge improvements
+be trusted as evidence about the educators' ideas rather than the engine's approximations.
+
 See [[project_onboarding_leak_hunt_direction_fix_2026_07_04]], [[project_timeframe_integrity_fix_2026_07_03]],
 [[project_layer4_research_conveyor_2026_07_02]].
