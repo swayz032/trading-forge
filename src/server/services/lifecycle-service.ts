@@ -3840,6 +3840,131 @@ export class LifecycleService {
           logger.warn({ strategyId: s.id, err: wfeTpErr }, "WFE gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
         }
 
+        // DS#20 T-A1 (2026-07-05): PBO overfit HARD gate — TESTING→PAPER (cron legacy fast-track).
+        // §12 documents PBO < 0.15 as a HARD gate on BOTH TESTING→SHADOW and TESTING→PAPER with
+        // "no PBO-bypass path". It WAS wired only into the manual _promoteStrategyInner path (the
+        // single evaluatePboGate call site) and was MISSING from this autonomous cron legacy
+        // fast-track — so a vacation-mode auto-promotion could push a genuinely overfit strategy
+        // (pbo_overall > threshold) straight to PAPER that a manual click would BLOCK (Deep-Scan
+        // #20 Band A F-1). Mirrors the manual PBO block + the sibling cron B14 fail-CLOSED pattern.
+        // FAIL-CLOSED on infra error per §12 (matches manual deepscan18 D-D3 posture).
+        try {
+          const pboWfMetaTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const pboOverallTp = pboWfMetaTp?.pbo_overall as number | null | undefined;
+          const pboOverallPValueTp = pboWfMetaTp?.pbo_overall_p_value as number | null | undefined;
+          const innerWfMetaTp = (pboWfMetaTp?.wf_metadata as Record<string, unknown> | null) ?? null;
+          const pboDegenReasonTp = (innerWfMetaTp?.pbo_degenerate_reason as string | null | undefined) ?? null;
+
+          const pboResultTp = evaluatePboGate(
+            { pbo_overall: pboOverallTp, pbo_p_value: pboOverallPValueTp, pbo_degenerate_reason: pboDegenReasonTp },
+          );
+
+          if (!pboResultTp.ok) {
+            const pboBlockActionTp =
+              pboResultTp.reason === "lifecycle.pbo_plain_wf_degenerate_block"
+                ? "lifecycle.pbo_plain_wf_degenerate_block"
+                : "lifecycle.pbo_overfit_block";
+            const regimeLabelTp = s.regimeTrainedOn ?? "unknown";
+            try { pboBlocksTotal.labels({ regime: regimeLabelTp }).inc(); } catch { /* non-blocking counter */ }
+            await db.insert(auditLog).values({
+              action: pboBlockActionTp,
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: pboResultTp.auditPayload as Record<string, unknown>,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) block audit insert failed (non-blocking)");
+            });
+            broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+              strategyId: s.id,
+              fromState: "TESTING",
+              toState: "PAPER",
+              pbo: pboResultTp.pbo,
+              threshold: pboResultTp.threshold,
+              blocked: true,
+            });
+            logger.warn(
+              { strategyId: s.id, pbo: pboResultTp.pbo, threshold: pboResultTp.threshold, reason: pboResultTp.reason, transition: "TESTING→PAPER" },
+              "PBO gate BLOCKED TESTING→PAPER (cron): pbo_overall exceeds institutional threshold",
+            );
+            strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            await this._maybeAutoGraveyard(s.id, "pbo_overfit", { pbo: pboResultTp.pbo, threshold: pboResultTp.threshold }, "TESTING", tickCorrelationId);
+            continue;
+          }
+
+          // PBO passed (or legacy/cpcv-unavailable grandfather) — emit the matching audit + SSE.
+          if (pboResultTp.legacyNull) {
+            await db.insert(auditLog).values({
+              action: "lifecycle.pbo_unavailable_legacy",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: pboResultTp.auditPayload as Record<string, unknown>,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) legacy audit insert failed (non-blocking)");
+            });
+          } else if (pboResultTp.reason === "lifecycle.pbo_cpcv_is_unavailable") {
+            await db.insert(auditLog).values({
+              action: "lifecycle.pbo_cpcv_is_unavailable",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: pboResultTp.auditPayload as Record<string, unknown>,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) cpcv-unavailable audit insert failed (non-blocking)");
+            });
+          }
+          broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            strategyId: s.id,
+            fromState: "TESTING",
+            toState: "PAPER",
+            pbo: pboResultTp.pbo,
+            threshold: pboResultTp.threshold,
+            blocked: false,
+            legacy_null: pboResultTp.legacyNull,
+          });
+          this._resetHardGateCounter(s.id, "pbo_overfit", tickCorrelationId);
+        } catch (pboTpErr) {
+          // FAIL-CLOSED per §12 ("no PBO-bypass path") — mirrors the sibling B14 fail-closed catch
+          // above and the manual path's deepscan18 D-D3 posture. An unreadable/failed PBO must
+          // HOLD the strategy in TESTING, not wave it through to PAPER.
+          const pboTpErrMsg = pboTpErr instanceof Error ? pboTpErr.message : String(pboTpErr);
+          logger.warn({ strategyId: s.id, err: pboTpErr }, "PBO gate (TESTING→PAPER cron): read/eval error — BLOCKING promotion (fail-CLOSED per §12)");
+          try { pboBlocksTotal.labels({ regime: "gate_error" }).inc(); } catch { /* non-blocking counter */ }
+          await db.insert(auditLog).values({
+            action: "lifecycle.pbo_gate_error_fail_closed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: { reason: "pbo_gate_infrastructure_error", error: pboTpErrMsg, note: "PBO gate threw on TESTING→PAPER cron path — promotion blocked; retries next cron cycle" },
+            correlationId: tickCorrelationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "PBO fail-closed audit insert (TESTING→PAPER cron) failed (non-blocking)");
+          });
+          broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            strategyId: s.id,
+            fromState: "TESTING",
+            toState: "PAPER",
+            pbo: null,
+            threshold: null,
+            blocked: true,
+            error: true,
+          });
+          strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+          continue;
+        }
+
         // FIX 1: Parameter drift gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
         try {
           const driftWfResultsTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
