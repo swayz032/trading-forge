@@ -161,6 +161,11 @@ vi.mock("../services/cross-symbol-pnl.js", () => ({
   getAccountSessionCumulativePnL: vi.fn().mockResolvedValue(0),
   evaluateCrossSymbolDll: vi.fn().mockReturnValue({ blocked: false }),
   DEFAULT_PERSONAL_DLL_DOLLARS: 1000,
+  // HIGH C-1 fix (deep-scan #16 wave-1 track-3): paper-signal-service.ts now calls
+  // these two pure helpers before evaluateCrossSymbolDll — stub them so the mocked
+  // module shape matches the real exports and the import doesn't throw.
+  resolveAccountKey: vi.fn(() => "default"),
+  resolvePersonalDllDollars: vi.fn(() => 1000),
 }));
 
 vi.mock("../services/notification-service.js", () => ({

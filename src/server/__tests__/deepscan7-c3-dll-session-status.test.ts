@@ -89,9 +89,11 @@ describe("C3 — firm DLL aggregate includes stopped/paused sessions with today'
     // Row is returned by the (mocked) SQL layer because the status filter now
     // admits stopped sessions — the inArray assertion above proves the filter;
     // this proves the aggregation counts its today-key losses.
+    // firmId set on both rows — HIGH C-1 fix resolves the account key from
+    // firmId when config.account_key is absent (backward-compatible default).
     state.sessions = [
-      { id: "s-stopped", symbol: "MES", dailyPnlBreakdown: { [TODAY]: -300 } },
-      { id: "s-active", symbol: "MNQ", dailyPnlBreakdown: { [TODAY]: -100 } },
+      { id: "s-stopped", firmId: "topstep", config: null, symbol: "MES", dailyPnlBreakdown: { [TODAY]: -300 } },
+      { id: "s-active", firmId: "topstep", config: null, symbol: "MNQ", dailyPnlBreakdown: { [TODAY]: -100 } },
     ];
     state.positions = [];
 
@@ -105,7 +107,7 @@ describe("C3 — firm DLL aggregate includes stopped/paused sessions with today'
 
   it("a stopped session with ONLY yesterday's losses contributes 0 (day-key scoping preserved)", async () => {
     state.sessions = [
-      { id: "s-stopped-old", symbol: "MES", dailyPnlBreakdown: { [YESTERDAY]: -500 } },
+      { id: "s-stopped-old", firmId: "topstep", config: null, symbol: "MES", dailyPnlBreakdown: { [YESTERDAY]: -500 } },
     ];
     state.positions = [];
 
@@ -119,7 +121,7 @@ describe("C3 — firm DLL aggregate includes stopped/paused sessions with today'
 
   it("open MTM on a paused session's positions counts toward the firm aggregate", async () => {
     state.sessions = [];
-    state.positions = [{ symbol: "MNQ", unrealizedPnl: "-150" }];
+    state.positions = [{ symbol: "MNQ", unrealizedPnl: "-150", sessionFirmId: "topstep", sessionConfig: null }];
 
     const result = await getAccountSessionCumulativePnL("topstep", TODAY);
 
