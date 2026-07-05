@@ -64,6 +64,13 @@ jobs:
         run: npm run check:family-grade-postscript
       - name: Gate — cron/manual promotion-gate parity (deepscan18 D-D1)
         run: npm run check:gate-parity
+      # Deep-Scan #19 H-ext (2026-07-05): extraction regression gate. Loads the on-disk
+      # production extraction surface (minimal prompt + minimal schema + few-shot config
+      # per model-router.ts) and asserts regression-meaningful invariants. Offline-safe:
+      # the optional live extraction SKIPS when Ollama is unreachable (always true in CI),
+      # so only the schema/prompt/few-shot checks run here — and they fail-closed on drift.
+      - name: Gate — transcript extraction parity (schema/prompt surface)
+        run: npm run check:extraction-parity
 
   test-node:
     name: Node Tests + Coverage

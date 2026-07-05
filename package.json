@@ -28,6 +28,7 @@
     "check:ts-python-pm-factor-parity": "npx tsx scripts/check-ts-python-pm-factor-parity.ts",
     "check:ts-python-firm-rules-version": "npx tsx scripts/check-ts-python-firm-rules-version.ts",
     "check:archetype-lockstep": "npx tsx scripts/check-archetype-lockstep.ts",
+    "check:extraction-parity": "tsx scripts/wave26-gemma4-smoke-test.ts --parity-only",
     "audit:n8n": "node scripts/audit-n8n-workflows.mjs",
     "preflight:vacation": "tsx scripts/pre-vacation-preflight.ts",
     "forge": "tsx scripts/cli.ts",

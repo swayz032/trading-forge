@@ -23,7 +23,9 @@ function freshResponses(): Record<QueryKey, unknown[]> {
     today: [{ today_pnl: 2847, trades_today: 7, wins: 5, losses: 2 }],
     open: [{ open_now: 2 }],
     pot: [{ in_pot: 14 }],
-    kill: [{ value: "true" }],
+    // DS19: kill-switch reads system_parameters.current_value WHERE param_name='pipeline_mode'.
+    // Numeric mode code — "1"=ACTIVE (the only green state), "0"=PAUSED/"2"=VACATION/"3"=AUTOPAUSE (red).
+    kill: [{ current_value: "1" }],
     sparkPnl: [
       { d: "2026-05-21", pnl: 412, cnt: 3 },
       { d: "2026-05-22", pnl: -98, cnt: 2 },
@@ -162,14 +164,36 @@ describe("crib-data", () => {
     expect(data.banner.todayBag).toBe("+$0");
     expect(data.banner.tradesToday.count).toBe(0);
     expect(data.banner.openNow).toBe(0);
-    expect(data.banner.killSwitch).toBe("green"); // missing kill row = green default
+    // DS19 (H-crib): kill-switch reads now fail SAFE to red — a DB error must NEVER show
+    // a false green on the family crib (was "green default" under the old swallowed-error bug).
+    expect(data.banner.killSwitch).toBe("red");
     expect(data.discordFeed).toEqual([]);
     expect(data.pot).toEqual([]);
     expect(data.crew).toEqual([]);
   });
 
-  it("treats system_parameters.pipeline_active='false' as kill switch RED", async () => {
-    responses.kill = [{ value: "false" }];
+  // DS19 (H-crib): pipeline_mode is a numeric mode code. Green ONLY when ACTIVE ("1");
+  // every paused/halted mode + missing row must read red on the family crib.
+  it("treats pipeline_mode='1' (ACTIVE) as kill switch GREEN", async () => {
+    responses.kill = [{ current_value: "1" }];
+    const { assembleCribData } = await import("../../lib/slumhouse/crib-data.js");
+    const data = await assembleCribData({ brokerAccountId: "00000000-0000-0000-0000-000000000003" });
+    expect(data.banner.killSwitch).toBe("green");
+  });
+
+  it.each([
+    ["0", "PAUSED"],
+    ["2", "VACATION"],
+    ["3", "AUTOPAUSE_DD_VELOCITY"],
+  ])("treats pipeline_mode='%s' (%s) as kill switch RED", async (modeCode) => {
+    responses.kill = [{ current_value: modeCode }];
+    const { assembleCribData } = await import("../../lib/slumhouse/crib-data.js");
+    const data = await assembleCribData({ brokerAccountId: "00000000-0000-0000-0000-000000000003" });
+    expect(data.banner.killSwitch).toBe("red");
+  });
+
+  it("treats a MISSING pipeline_mode row as kill switch RED (never a false green)", async () => {
+    responses.kill = [];
     const { assembleCribData } = await import("../../lib/slumhouse/crib-data.js");
     const data = await assembleCribData({ brokerAccountId: "00000000-0000-0000-0000-000000000003" });
     expect(data.banner.killSwitch).toBe("red");

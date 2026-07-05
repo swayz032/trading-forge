@@ -7,7 +7,7 @@ import { evaluateContextGate } from "./context-gate-service.js";
 import { checkAntiSetupGate, type AntiSetupGateResult } from "./anti-setup-gate-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
-import { eq, and, isNull, ne, gte, lte, desc, sql } from "drizzle-orm";
+import { eq, and, isNull, ne, gte, lte, desc, sql, inArray } from "drizzle-orm";
 import { tracer } from "../lib/tracing.js";
 import { isDSLStrategy, translateDSLToPaperConfig } from "./dsl-translator.js";
 import { getActiveLockout } from "./strategy-lockout-service.js";
@@ -3557,8 +3557,15 @@ export async function evaluateSignals(
     // at SIGNAL TIME so the 3rd signal of the day never reaches openPosition.
     //
     // Counting: paper_trades rows CLOSED on the current CME futures trading day
-    // (same date convention as paper-execution-service.ts:925). Per-session
-    // scope — each prop-firm account has its own quota.
+    // (same date convention as paper-execution-service.ts:925).
+    //
+    // DS19 C-3 (2026-07-05): count is ACCOUNT-scoped, not session-scoped, to
+    // honor the "1-2 A+ trades/day per ACCOUNT" mandate (CLAUDE.md §4). Pre-fix
+    // this counted only THIS session's trades, so two sessions (e.g. MES + MNQ)
+    // on one prop-firm account could each take 2 = 4 trades/day for the account —
+    // double the mandate. For the single-session-per-account setup today (each
+    // account = one paper_session, no config.account_key set) the sibling set is
+    // just this session, so the count is byte-identical to legacy.
     //
     // Precedence: sessionRow.max_trades_per_day (if set + positive) > env default.
     // Fail-OPEN: DB error → allow the trade through + warn audit (better to let
@@ -3566,11 +3573,21 @@ export async function evaluateSignals(
     let dailyTradeCapBlocked = false;
     try {
       const capTodayEt = toFuturesTradingDayString(new Date(bar.timestamp));
+      const capAccountKey = resolveAccountKey(sessionRow as { firmId?: string | null; config?: unknown });
+      const activeCapSessions = await db
+        .select({ id: paperSessions.id, firmId: paperSessions.firmId, config: paperSessions.config })
+        .from(paperSessions)
+        .where(eq(paperSessions.status, "active"));
+      const siblingSessionIds = activeCapSessions
+        .filter((s) => resolveAccountKey(s) === capAccountKey)
+        .map((s) => s.id);
+      // Defensive: always include the current session even if a status race excluded it.
+      if (!siblingSessionIds.includes(sessionId)) siblingSessionIds.push(sessionId);
       const [capRow] = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(paperTrades)
         .where(and(
-          eq(paperTrades.sessionId, sessionId),
+          inArray(paperTrades.sessionId, siblingSessionIds),
           sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${capTodayEt}`,
         ));
       const tradesToday = capRow?.count ?? 0;

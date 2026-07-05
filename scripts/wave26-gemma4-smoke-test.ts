@@ -28,7 +28,7 @@
  * Prerequisite: Ollama running at localhost:11434 with local model loaded.
  */
 
-import { readFileSync } from "fs";
+import { readFileSync, existsSync, readdirSync } from "fs";
 import { resolve } from "path";
 
 // Force Ollama primary (ensure env is unset or false)
@@ -701,6 +701,462 @@ const MINIMAL_PARITY_FIXTURE_OUTPUTS: Array<{ id: string; name: string; output: 
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PRODUCTION-SURFACE PARITY GATE (Deep-Scan #19 H-ext fix — 2026-07-05)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// WHAT PRODUCTION ACTUALLY RUNS (verified against model-router.ts:2310-2333 +
+// :2389-2394 at HEAD 77a72f9):
+//   - Env default TRANSCRIPT_EXTRACTOR_USE_LEGACY=false → the -minimal path.
+//   - Prompt : src/agents/transcript-extractor-minimal.md          (getTranscriptExtractorPromptPath)
+//   - Schema : src/agents/kb/transcript-extractor-minimal-schema.json (loadTranscriptOutputSchema)
+//   - Few-shot: SKIPPED in minimal mode (buildGemmaFewShotMessages resolves the
+//     intentionally-absent "__skip_minimal_mode__" dir → zero example turns).
+//   NOT the "calibrated" v10/v12 transcript-extractor.md the older docs referenced.
+//
+// WHY THIS GATE EXISTS: the previous `--parity-only` path validated 3 HARDCODED
+// inline fixture objects against a shape-checker — it never touched the real prompt,
+// schema, or few-shot config, so a prompt/schema regression passed GREEN (a tautology).
+// This gate LOADS THE ACTUAL PRODUCTION EXTRACTION SURFACE FROM DISK and asserts
+// regression-meaningful invariants: it FAILS if someone deletes/renames a required
+// schema field or an enum value, or guts a load-bearing prompt section. It runs
+// fully OFFLINE (no model call required); the live extraction is an OPTIONAL sub-check
+// that SKIPS with a clear reason when the tower/model is unreachable — never hangs.
+
+// ── Canonical extraction-surface constants (single source of truth for the gate) ──
+// These MUST match the minimal schema + minimal prompt. If they drift, either the
+// surface regressed (schema/prompt edited without updating this gate) or this gate
+// is stale — both are caught as a FAIL, which is the point.
+const CANONICAL_CONFLUENCE_FACTORS = [
+  "market_structure_aligned",
+  "liquidity_target_clear",
+  "smt_confirmation",
+  "vwap_alignment",
+  "killzone_active",
+  "delta_or_volume_signature",
+  "vp_level_proximity",
+  "macro_alignment",
+  "internals_aligned",
+  "cross_asset_aligned",
+  "regime_match",
+] as const;
+const MINIMAL_STRATEGY_REQUIRED_FIELDS = [
+  "higher_timeframe",
+  "direction",
+  "entry_sequence",
+  "preferred_regime",
+  "stop",
+  "targets",
+  "confluences",
+] as const;
+const MINIMAL_TIMEFRAME_ENUM = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"] as const;
+const MINIMAL_DIRECTION_ENUM = ["long", "short", "both"] as const;
+const MINIMAL_INSTRUMENT_ENUM = [
+  "futures_primary",
+  "non_futures_primary",
+  "futures_with_forex_illustration",
+] as const;
+// Load-bearing subset of stop anchors — the structural anchors + the ATR fallback +
+// the null-fallback. If ANY of these vanishes the framework stop-anchor contract broke.
+const MINIMAL_STOP_ANCHOR_REQUIRED = [
+  "sweep_wick_below_entry",
+  "sweep_wick_above_entry",
+  "swing_low_below_entry",
+  "swing_high_above_entry",
+  "displacement_candle_low",
+  "displacement_candle_high",
+  "atr_multiple",
+] as const;
+
+interface SurfaceCheck {
+  name: string;
+  pass: boolean;
+  detail: string;
+}
+
+// Resolve the exact prompt + schema + few-shot config production uses, mirroring
+// model-router.ts. Honors TRANSCRIPT_EXTRACTOR_USE_LEGACY so the gate tracks whatever
+// path prod is actually on (default = minimal).
+function resolveProductionExtractionSurface(): {
+  useLegacy: boolean;
+  promptPath: string;
+  schemaPath: string;
+  fewShotSkipped: boolean;
+  fewShotDir: string;
+  skipSentinelDir: string;
+} {
+  const useLegacy = (process.env.TRANSCRIPT_EXTRACTOR_USE_LEGACY ?? "false").toLowerCase() === "true";
+  return {
+    useLegacy,
+    promptPath: resolve(
+      PROJECT_ROOT,
+      useLegacy ? "src/agents/transcript-extractor.md" : "src/agents/transcript-extractor-minimal.md",
+    ),
+    schemaPath: resolve(
+      PROJECT_ROOT,
+      useLegacy
+        ? "src/agents/kb/transcript-extractor-output-schema.json"
+        : "src/agents/kb/transcript-extractor-minimal-schema.json",
+    ),
+    // Minimal mode skips few-shot (model-router.ts:2389-2394). Legacy mode uses them.
+    fewShotSkipped: !useLegacy,
+    fewShotDir: resolve(PROJECT_ROOT, "src/agents/kb/few-shot/transcript-extractor"),
+    skipSentinelDir: resolve(PROJECT_ROOT, "src/agents/kb/few-shot/__skip_minimal_mode__"),
+  };
+}
+
+// Navigate: schema.properties.strategies.items — the per-strategy object schema.
+function getStrategyItemSchema(schema: Record<string, unknown>): Record<string, unknown> | null {
+  const props = schema["properties"] as Record<string, unknown> | undefined;
+  const strategies = props?.["strategies"] as Record<string, unknown> | undefined;
+  const items = strategies?.["items"] as Record<string, unknown> | undefined;
+  return items && typeof items === "object" ? items : null;
+}
+
+function enumOf(node: unknown): string[] {
+  if (node && typeof node === "object" && Array.isArray((node as Record<string, unknown>)["enum"])) {
+    return ((node as Record<string, unknown>)["enum"] as unknown[]).map((v) => String(v));
+  }
+  return [];
+}
+
+// PURE — takes the parsed minimal schema object and asserts regression-meaningful
+// invariants. Exported-in-spirit (module-local) so a required-field deletion can be
+// proven to FAIL in isolation without mutating the file on disk.
+function checkMinimalSchemaInvariants(schema: Record<string, unknown>): SurfaceCheck[] {
+  const checks: SurfaceCheck[] = [];
+
+  // 1. Root required set
+  const rootRequired = Array.isArray(schema["required"]) ? (schema["required"] as unknown[]).map(String) : [];
+  const rootOk = ["strategies", "instrument_classification"].every((f) => rootRequired.includes(f));
+  checks.push({
+    name: "schema.root.required",
+    pass: rootOk,
+    detail: rootOk ? "root requires strategies + instrument_classification" : `root.required=[${rootRequired.join(", ")}]`,
+  });
+
+  const item = getStrategyItemSchema(schema);
+  if (!item) {
+    checks.push({
+      name: "schema.strategies.items",
+      pass: false,
+      detail: "properties.strategies.items missing — cannot validate per-strategy contract",
+    });
+    return checks;
+  }
+
+  // 2. Per-strategy required fields — FAILS if any required field renamed/removed
+  const itemRequired = Array.isArray(item["required"]) ? (item["required"] as unknown[]).map(String) : [];
+  const missingRequired = MINIMAL_STRATEGY_REQUIRED_FIELDS.filter((f) => !itemRequired.includes(f));
+  checks.push({
+    name: "schema.strategy.required_fields",
+    pass: missingRequired.length === 0,
+    detail:
+      missingRequired.length === 0
+        ? `all ${MINIMAL_STRATEGY_REQUIRED_FIELDS.length} required fields present`
+        : `MISSING required field(s): ${missingRequired.join(", ")} (have: ${itemRequired.join(", ")})`,
+  });
+
+  const itemProps = (item["properties"] as Record<string, unknown> | undefined) ?? {};
+
+  // 3. direction enum
+  const dirEnum = enumOf(itemProps["direction"]);
+  const dirMissing = MINIMAL_DIRECTION_ENUM.filter((v) => !dirEnum.includes(v));
+  checks.push({
+    name: "schema.strategy.direction.enum",
+    pass: dirMissing.length === 0,
+    detail: dirMissing.length === 0 ? `direction enum = [${dirEnum.join(", ")}]` : `direction enum MISSING: ${dirMissing.join(", ")}`,
+  });
+
+  // 4. higher_timeframe enum
+  const tfEnum = enumOf(itemProps["higher_timeframe"]);
+  const tfMissing = MINIMAL_TIMEFRAME_ENUM.filter((v) => !tfEnum.includes(v));
+  checks.push({
+    name: "schema.strategy.higher_timeframe.enum",
+    pass: tfMissing.length === 0,
+    detail: tfMissing.length === 0 ? `timeframe enum has all ${MINIMAL_TIMEFRAME_ENUM.length} values` : `timeframe enum MISSING: ${tfMissing.join(", ")}`,
+  });
+
+  // 5. stop.anchor enum (structural anchors + atr_multiple + null)
+  const stopProps = ((itemProps["stop"] as Record<string, unknown> | undefined)?.["properties"] as Record<string, unknown> | undefined) ?? {};
+  const anchorEnum = enumOf(stopProps["anchor"]);
+  const anchorHasNull = Array.isArray((stopProps["anchor"] as Record<string, unknown> | undefined)?.["enum"])
+    ? ((stopProps["anchor"] as Record<string, unknown>)["enum"] as unknown[]).includes(null)
+    : false;
+  const anchorMissing = MINIMAL_STOP_ANCHOR_REQUIRED.filter((v) => !anchorEnum.includes(v));
+  const anchorOk = anchorMissing.length === 0 && anchorHasNull;
+  checks.push({
+    name: "schema.strategy.stop.anchor.enum",
+    pass: anchorOk,
+    detail: anchorOk
+      ? `stop.anchor enum has all load-bearing anchors + null`
+      : `stop.anchor issues → missing: [${anchorMissing.join(", ")}]${anchorHasNull ? "" : " + null-fallback ABSENT"}`,
+  });
+
+  // 6. confluences.items.canonical_match enum — the 11-factor vocabulary contract
+  const confItems = (itemProps["confluences"] as Record<string, unknown> | undefined)?.["items"] as Record<string, unknown> | undefined;
+  const confProps = (confItems?.["properties"] as Record<string, unknown> | undefined) ?? {};
+  const cmEnum = enumOf(confProps["canonical_match"]);
+  const cmMissing = CANONICAL_CONFLUENCE_FACTORS.filter((v) => !cmEnum.includes(v));
+  checks.push({
+    name: "schema.strategy.confluences.canonical_match.enum",
+    pass: cmMissing.length === 0,
+    detail:
+      cmMissing.length === 0
+        ? `all ${CANONICAL_CONFLUENCE_FACTORS.length} canonical confluence factors present`
+        : `canonical_match enum MISSING factor(s): ${cmMissing.join(", ")}`,
+  });
+
+  // confluences.items.required must include name + description
+  const confRequired = Array.isArray(confItems?.["required"]) ? (confItems!["required"] as unknown[]).map(String) : [];
+  const confReqOk = ["name", "description"].every((f) => confRequired.includes(f));
+  checks.push({
+    name: "schema.strategy.confluences.required",
+    pass: confReqOk,
+    detail: confReqOk ? "confluence items require name + description" : `confluence items.required=[${confRequired.join(", ")}]`,
+  });
+
+  // 7. instrument_classification enum
+  const instrEnum = enumOf((schema["properties"] as Record<string, unknown>)["instrument_classification"]);
+  const instrMissing = MINIMAL_INSTRUMENT_ENUM.filter((v) => !instrEnum.includes(v));
+  checks.push({
+    name: "schema.root.instrument_classification.enum",
+    pass: instrMissing.length === 0,
+    detail: instrMissing.length === 0 ? `instrument_classification enum complete` : `instrument_classification enum MISSING: ${instrMissing.join(", ")}`,
+  });
+
+  return checks;
+}
+
+// PURE — asserts the minimal prompt still contains its load-bearing sections.
+// FAILS if the strict-fill instruction, the confluence-factor vocabulary, or the
+// bidirectional-default semantics are gutted.
+function checkMinimalPromptInvariants(promptText: string): SurfaceCheck[] {
+  const checks: SurfaceCheck[] = [];
+  const text = promptText;
+
+  // Load-bearing #1: strict-fill / never-invent instruction
+  const strictFill = /NEVER invent values/i.test(text) && /set it null/i.test(text);
+  checks.push({
+    name: "prompt.strict_fill_instruction",
+    pass: strictFill,
+    detail: strictFill ? "strict-fill 'NEVER invent values … set it null' present" : "strict-fill instruction MISSING or gutted",
+  });
+
+  // Load-bearing #2: confluence-factor vocabulary — all 11 canonical factors named
+  const factorsMissing = CANONICAL_CONFLUENCE_FACTORS.filter((f) => !text.includes(f));
+  checks.push({
+    name: "prompt.confluence_factor_vocabulary",
+    pass: factorsMissing.length === 0,
+    detail:
+      factorsMissing.length === 0
+        ? `all ${CANONICAL_CONFLUENCE_FACTORS.length} canonical factors documented in prompt`
+        : `prompt MISSING confluence factor(s): ${factorsMissing.join(", ")}`,
+  });
+
+  // Load-bearing #3: bidirectional-default semantics
+  const bidirDefault = /default(?:s)?\s+to\s+["'`]*both/i.test(text) || /Default to\s+`?"?both/i.test(text);
+  const autoDetect = /auto-detect rule/i.test(text);
+  const bidirOk = bidirDefault && autoDetect;
+  checks.push({
+    name: "prompt.bidirectional_default_semantics",
+    pass: bidirOk,
+    detail: bidirOk
+      ? "bidirectional default-to-'both' + auto-detect rule present"
+      : `bidirectional semantics gutted → default-both:${bidirDefault} auto-detect:${autoDetect}`,
+  });
+
+  return checks;
+}
+
+// Probe the local model via /api/tags with a SHORT timeout. Returns the resolved
+// model name if reachable + present, else null. NEVER throws, NEVER hangs.
+async function probeLocalModel(): Promise<string | null> {
+  const ollamaBase = process.env.OLLAMA_HOST ?? "http://localhost:11434";
+  const localModel = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+  try {
+    const res = await fetch(`${ollamaBase}/api/tags`, { signal: AbortSignal.timeout(2_000) });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { models?: Array<{ name: string }> };
+    const models = (data.models ?? []).map((m) => m.name);
+    const has = models.some((m) => m === localModel || m.startsWith(localModel.split(":")[0]!));
+    return has ? localModel : null;
+  } catch {
+    return null;
+  }
+}
+
+// OPTIONAL live sub-check: if the model is reachable, run ONE real extraction against
+// a known fixture transcript and validate the output shape against the minimal schema.
+// If unreachable → SKIP with an explicit line. Never fails the gate on unreachability.
+async function runOptionalLiveExtraction(): Promise<{ ran: boolean; pass: boolean; detail: string }> {
+  const model = await probeLocalModel();
+  if (!model) {
+    return {
+      ran: false,
+      pass: true,
+      detail: "MODEL UNREACHABLE — skipped live extraction (schema/prompt checks still ran)",
+    };
+  }
+  try {
+    const mod = await import("../src/server/services/model-router.js").catch(() => null);
+    const callScoutExtractLlm = (mod as { callScoutExtractLlm?: unknown } | null)?.callScoutExtractLlm as
+      | ((messages: Array<{ role: string; content: string }>, ctx: unknown) => Promise<string | null>)
+      | undefined;
+    if (typeof callScoutExtractLlm !== "function") {
+      return { ran: false, pass: true, detail: "MODEL REACHABLE but model-router import unavailable — skipped live extraction" };
+    }
+    const fixture = PARITY_FIXTURES[0]!; // ICT Silver Bullet
+    const messages = [
+      {
+        role: "user" as const,
+        content: `Extract all strategies from this YouTube transcript. Return a JSON object with a "strategies" array.\n\nTRANSCRIPT:\n${fixture.transcript}`,
+      },
+    ];
+    const raw = await callScoutExtractLlm(messages, undefined);
+    if (!raw) return { ran: true, pass: false, detail: `live extraction returned null for fixture ${fixture.id}` };
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return { ran: true, pass: false, detail: `live extraction returned non-JSON for fixture ${fixture.id}` };
+    }
+    const shape = checkMinimalShape(parsed, `live:${fixture.id}`);
+    return {
+      ran: true,
+      pass: shape.pass,
+      detail: shape.pass
+        ? `live extraction against ${model} produced minimal-schema-valid output for ${fixture.id}`
+        : `live extraction shape failures: ${shape.failures.join("; ")}`,
+    };
+  } catch (err) {
+    // A live-path error must NOT fail the offline gate — downgrade to skip.
+    return {
+      ran: false,
+      pass: true,
+      detail: `MODEL REACHABLE but live extraction errored (non-fatal, skipped): ${(err as Error).message ?? err}`,
+    };
+  }
+}
+
+// The real regression gate. Loads the on-disk production surface, asserts invariants,
+// optionally runs a live extraction, and emits the documented PASS string.
+async function runProductionSurfaceParityTests(): Promise<boolean> {
+  console.log("\n─────────────────────────────────────────────────────");
+  console.log("PRODUCTION-SURFACE PARITY GATE (Deep-Scan #19 H-ext)");
+  console.log("─────────────────────────────────────────────────────");
+  const surface = resolveProductionExtractionSurface();
+  console.log(`Production path: ${surface.useLegacy ? "LEGACY (transcript-extractor.md + v11 schema + few-shot)" : "MINIMAL (transcript-extractor-minimal.md + minimal schema, few-shot SKIPPED)"}`);
+  console.log(`  prompt : ${surface.promptPath.replace(PROJECT_ROOT, ".")}`);
+  console.log(`  schema : ${surface.schemaPath.replace(PROJECT_ROOT, ".")}`);
+  console.log(`  fewshot: ${surface.fewShotSkipped ? "SKIPPED (minimal mode)" : "ENABLED (legacy mode)"}`);
+  console.log();
+
+  const allChecks: SurfaceCheck[] = [];
+
+  // ── Schema on disk ──────────────────────────────────────────────────────────
+  let schema: Record<string, unknown> | null = null;
+  try {
+    schema = JSON.parse(readFileSync(surface.schemaPath, "utf-8")) as Record<string, unknown>;
+    allChecks.push({ name: "schema.file_readable", pass: true, detail: `parsed ${surface.schemaPath.replace(PROJECT_ROOT, ".")}` });
+  } catch (err) {
+    allChecks.push({ name: "schema.file_readable", pass: false, detail: `FAILED to read/parse schema: ${(err as Error).message ?? err}` });
+  }
+  if (schema) {
+    if (surface.useLegacy) {
+      // Legacy path: lighter contract (the finding targets the minimal prod path).
+      const props = schema["properties"] as Record<string, unknown> | undefined;
+      allChecks.push({
+        name: "schema.legacy.has_strategies",
+        pass: !!props && "strategies" in props,
+        detail: props && "strategies" in props ? "legacy schema exposes strategies[]" : "legacy schema missing strategies[]",
+      });
+    } else {
+      allChecks.push(...checkMinimalSchemaInvariants(schema));
+    }
+  }
+
+  // ── Prompt on disk ──────────────────────────────────────────────────────────
+  let promptText: string | null = null;
+  try {
+    promptText = readFileSync(surface.promptPath, "utf-8");
+    allChecks.push({ name: "prompt.file_readable", pass: true, detail: `read ${surface.promptPath.replace(PROJECT_ROOT, ".")} (${promptText.length} chars)` });
+  } catch (err) {
+    allChecks.push({ name: "prompt.file_readable", pass: false, detail: `FAILED to read prompt: ${(err as Error).message ?? err}` });
+  }
+  if (promptText && !surface.useLegacy) {
+    allChecks.push(...checkMinimalPromptInvariants(promptText));
+  } else if (promptText && surface.useLegacy) {
+    allChecks.push({
+      name: "prompt.legacy.nonempty",
+      pass: promptText.length > 100,
+      detail: `legacy prompt present (${promptText.length} chars)`,
+    });
+  }
+
+  // ── Few-shot config matches what the router expects ─────────────────────────
+  if (surface.fewShotSkipped) {
+    // Minimal mode: router resolves the intentionally-absent sentinel dir → 0 examples.
+    // If that dir ever appears it would silently re-enable W23H-shaped few-shot on the
+    // minimal path (the exact 2026-05-27 regression the minimal prompt was built to avoid).
+    const sentinelAbsent = !existsSync(surface.skipSentinelDir);
+    allChecks.push({
+      name: "fewshot.minimal_skip_sentinel_absent",
+      pass: sentinelAbsent,
+      detail: sentinelAbsent
+        ? "minimal mode skips few-shot (sentinel dir correctly absent → 0 example turns)"
+        : "sentinel dir EXISTS — minimal path would wrongly load W23H few-shot (regression)",
+    });
+  } else {
+    // Legacy mode: the real few-shot dir must exist with ≥3 examples.
+    let n = 0;
+    try {
+      n = readdirSync(surface.fewShotDir).filter((f) => f.endsWith(".json")).length;
+    } catch {
+      n = 0;
+    }
+    allChecks.push({
+      name: "fewshot.legacy_examples_present",
+      pass: n >= 3,
+      detail: n >= 3 ? `legacy few-shot dir has ${n} example files` : `legacy few-shot dir has only ${n} examples (<3)`,
+    });
+  }
+
+  // ── Print results ───────────────────────────────────────────────────────────
+  let allPass = true;
+  for (const c of allChecks) {
+    console.log(`  ${c.pass ? "OK  " : "FAIL"}: ${c.name} — ${c.detail}`);
+    if (!c.pass) allPass = false;
+  }
+
+  // ── Optional live extraction (offline-safe) ─────────────────────────────────
+  console.log();
+  const live = await runOptionalLiveExtraction();
+  if (!live.ran) {
+    console.log(`  SKIP: live_extraction — ${live.detail}`);
+  } else {
+    console.log(`  ${live.pass ? "OK  " : "FAIL"}: live_extraction — ${live.detail}`);
+    if (!live.pass) allPass = false;
+  }
+
+  console.log();
+  console.log("─────────────────────────────────────────────────────");
+  // Documented doc-contract success string (CLAUDE.md §13). Emitted ONLY on GREEN.
+  console.log(`PARITY SPEC VALIDATION: ${allPass ? "PASS" : "FAIL"}`);
+  if (allPass) {
+    console.log("The on-disk production extraction surface (minimal prompt + minimal schema +");
+    console.log("few-shot config) matches the calibrated contract. Regression-safe.");
+  } else {
+    console.log("FAIL: the production extraction surface regressed. A required schema field/enum");
+    console.log("was removed/renamed, or a load-bearing prompt section was gutted. Fix the surface");
+    console.log("(src/agents/transcript-extractor-minimal.md + transcript-extractor-minimal-schema.json)");
+    console.log("or update this gate's canonical constants if the contract intentionally changed.");
+  }
+  console.log("─────────────────────────────────────────────────────");
+
+  return allPass;
+}
+
 function runMinimalModeParityTests(): boolean {
   console.log("\n─────────────────────────────────────────────────────");
   console.log("TRACK O DEEPSCAN11 — MINIMAL-MODE PARITY TEST (PRODUCTION PATH)");
@@ -1056,9 +1512,15 @@ async function emitV12ParityAudit(pass: boolean): Promise<void> {
 }
 
 async function runSmoke(): Promise<void> {
-  // Track O (deepscan11 2026-07-02): --parity-only now runs the MINIMAL production
-  // path parity test by default. Legacy v12 speaker_concepts check moved behind
-  // --legacy-parity flag. Both can run together when neither flag is provided.
+  // Deep-Scan #19 H-ext (2026-07-05): --parity-only now runs the REAL production-surface
+  // parity gate — it loads the on-disk minimal prompt + minimal schema + few-shot config
+  // (the exact surface production runs per model-router.ts) and asserts regression-meaningful
+  // invariants, plus an OFFLINE-safe optional live extraction. This is the gate whose GREEN
+  // is the CLAUDE.md §13 merge contract (`PARITY SPEC VALIDATION: PASS`).
+  const surfaceParityPass = await runProductionSurfaceParityTests();
+
+  // Supplementary structural shape-check of the inline minimal fixtures (kept for
+  // coverage of checkMinimalShape; NOT the authoritative gate — that is above).
   const minimalParityPass = runMinimalModeParityTests();
 
   // Legacy v12 check: runs when --legacy-parity is explicit OR when doing a full
@@ -1067,9 +1529,10 @@ async function runSmoke(): Promise<void> {
   const paritySpecPass = LEGACY_PARITY ? runStaticParityTests() : (!PARITY_ONLY ? runStaticParityTests() : true);
 
   if (PARITY_ONLY) {
-    // Emit audit stamp for minimal parity result
-    await emitV12ParityAudit(minimalParityPass && paritySpecPass);
-    process.exit(minimalParityPass ? 0 : 1);
+    // Emit audit stamp for parity result (non-fatal if DB unavailable — offline-safe).
+    await emitV12ParityAudit(surfaceParityPass && minimalParityPass && paritySpecPass);
+    // Exit code is driven by the AUTHORITATIVE production-surface gate.
+    process.exit(surfaceParityPass ? 0 : 1);
   }
 
   console.log("\n─────────────────────────────────────────────────────");

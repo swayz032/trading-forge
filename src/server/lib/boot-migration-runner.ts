@@ -76,6 +76,45 @@ interface Journal {
 }
 
 /**
+ * Deep-Scan #19 D-1 (2026-07-05): the Drizzle journal `when` timestamp is NOT
+ * unique — 5 twin pairs share an identical `when` (0044a/0052, 0147/0159,
+ * 0148/0160, 0152/0162, 0153/0164). The applied-set was keyed ONLY on `when`
+ * (`__drizzle_migrations.created_at`), so on an INCREMENTAL deploy the second
+ * migration of any twin was silently filtered out of `pending` and NEVER ran
+ * (no audit, no Discord, no orphan warning — fail-soft downstreams masked it as
+ * "quietly not working"). Prod escaped an outage only because the current twins
+ * happened to land via a fresh-bootstrap pass or reconcile migrations.
+ *
+ * Fix (surgical, no mass re-run risk): for NON-colliding `when`s keep the fast
+ * when-check — byte-identical to legacy, no file read. For duplicate `when`s,
+ * disambiguate on the UNIQUE sha256 file hash (the `hash` column already stored
+ * per row). `hashOfTag` returns null when the .sql is missing/unreadable → the
+ * entry is treated as pending so the apply-loop's existing missing/read-error
+ * alerting fires (never silently swallowed).
+ */
+export function computePendingMigrations(
+  entries: JournalEntry[],
+  appliedWhens: Set<string>,
+  appliedHashes: Set<string>,
+  hashOfTag: (entry: JournalEntry) => string | null,
+): JournalEntry[] {
+  const whenCounts = new Map<number, number>();
+  for (const e of entries) whenCounts.set(e.when, (whenCounts.get(e.when) ?? 0) + 1);
+
+  return entries.filter((e) => {
+    const isDuplicateWhen = (whenCounts.get(e.when) ?? 0) > 1;
+    if (!isDuplicateWhen) {
+      // legacy fast path — unchanged behavior for the 183 unique-`when` entries
+      return !appliedWhens.has(String(e.when));
+    }
+    // duplicate `when` — the D-1 collision zone; disambiguate by file hash
+    const h = hashOfTag(e);
+    if (h === null) return true; // can't hash → pending; apply loop reports missing/unreadable
+    return !appliedHashes.has(h);
+  });
+}
+
+/**
  * Read a UTF-8 text file and strip a leading byte-order-mark (BOM) if present.
  *
  * WHY: PowerShell (the operator's primary shell) writes files as UTF-8/UTF-16
@@ -693,18 +732,53 @@ export async function runPendingMigrations(
   }
 
   // ─── Query applied ──────────────────────────────────────────────────────────
-  type AppliedRow = { created_at: string };
+  // DS19 D-1: also read `hash` (unique per file) to disambiguate duplicate-`when`
+  // twins that the created_at-only key silently dropped.
+  type AppliedRow = { created_at: string; hash: string };
   const appliedResult = await db.execute<AppliedRow>(
-    sql`SELECT created_at::text AS created_at FROM drizzle.__drizzle_migrations`,
+    sql`SELECT created_at::text AS created_at, hash FROM drizzle.__drizzle_migrations`,
   );
   // drizzle-orm returns { rows: [...] } for raw execute; normalise either shape
   const appliedRows: AppliedRow[] =
     (appliedResult as { rows?: AppliedRow[] }).rows ??
     (appliedResult as unknown as AppliedRow[]);
   const appliedWhens = new Set(appliedRows.map((r) => String(r.created_at)));
+  const appliedHashes = new Set(appliedRows.map((r) => r.hash).filter(Boolean));
 
-  // ─── Compute pending ────────────────────────────────────────────────────────
-  const pending = journal.entries.filter((e) => !appliedWhens.has(String(e.when)));
+  // DS19 D-1: warn once if the journal contains colliding `when` values so the
+  // hazard is visible in boot logs even after the dedup is hash-safe.
+  const _dupWhens = new Map<number, string[]>();
+  for (const e of journal.entries) {
+    const arr = _dupWhens.get(e.when) ?? [];
+    arr.push(e.tag);
+    _dupWhens.set(e.when, arr);
+  }
+  const _collisions = [..._dupWhens.entries()].filter(([, tags]) => tags.length > 1);
+  if (_collisions.length > 0) {
+    logger.warn(
+      { collisions: _collisions.map(([when, tags]) => ({ when, tags })) },
+      "boot-migration: journal has duplicate `when` values — dedup falls back to sha256 hash for these (DS19 D-1)",
+    );
+  }
+
+  // ─── Compute pending (DS19 D-1: hash-disambiguated for duplicate-`when` twins) ─
+  const _migrationsDirForHash = resolveMigrationsDir();
+  const pending = computePendingMigrations(
+    journal.entries,
+    appliedWhens,
+    appliedHashes,
+    (entry) => {
+      // Only called for duplicate-`when` entries. Read + sha256 the file; null on
+      // any error so the entry is treated pending and the apply loop reports it.
+      try {
+        const p = path.join(_migrationsDirForHash, `${entry.tag}.sql`);
+        if (!fs.existsSync(p)) return null;
+        return crypto.createHash("sha256").update(readUtf8StripBom(p)).digest("hex");
+      } catch {
+        return null;
+      }
+    },
+  );
 
   if (pending.length === 0) {
     logger.info(

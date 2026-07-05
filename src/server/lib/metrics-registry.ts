@@ -1052,3 +1052,40 @@ export const dllHaltTotal = new Counter({
     dllHaltTotal.labels({ reason }).inc(0);
   }
 })();
+
+// ─── Deep-Scan #19 G-1 — disk-space monitor counter (2026-07-05) ──────────────
+//
+// tf_disk_low_space_events_total{outcome}
+//   Incremented by disk-space-service.ts::runDiskSpaceMonitor() every time the
+//   hourly `disk-space-monitor` cron detects free space below the
+//   DISK_FREE_MIN_GB / DISK_FREE_MIN_PCT floor for the backup/data volume.
+//   Also incremented by db-backup-service.ts's pre-write guard when the
+//   nightly backup itself finds the disk already low before writing a new dump.
+//
+//   outcome label (closed set):
+//     "pruned_recovered"      — emergency-pruning oldest db-backup files (down to
+//                                the DB_BACKUP_MIN_KEEP safety floor) brought free
+//                                space back above both thresholds.
+//     "still_low_after_prune" — free space remained below threshold even after
+//                                pruning down to the safety floor (real disk
+//                                pressure unrelated to backup files — CRITICAL).
+//
+//   Cardinality: 2 outcome values — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana before the first low-space event).
+//
+//   Operational question answered: "Has the tower's disk ever gotten
+//   dangerously full, and did auto-pruning recover it or was it a deeper
+//   problem requiring operator intervention?"
+export const diskLowSpaceEventsTotal = new Counter({
+  name: "tf_disk_low_space_events_total",
+  help: "Total low-disk-space events detected, labelled by whether emergency pruning recovered free space",
+  labelNames: ["outcome"] as const,
+  registers: [promRegistry],
+});
+
+(function _zeroInitDiskLowSpaceEvents() {
+  for (const outcome of ["pruned_recovered", "still_low_after_prune"] as const) {
+    diskLowSpaceEventsTotal.labels({ outcome }).inc(0);
+  }
+})();

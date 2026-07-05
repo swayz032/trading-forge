@@ -550,15 +550,9 @@ export interface DriftAlertData {
 }
 
 // ─── Pine export ──────────────────────────────────────────────────────
-
-export interface PineExportCompletedData {
-  strategyId: string;
-  exportId: string;
-  exportType?: string;
-  score?: number;
-  indicator_file?: string;
-  strategy_file?: string;
-}
+// DS19 (Dead-SSE): removed the unused `PineExportCompletedData` interface (was only
+// referenced by the dead `pine:export_completed` underscore union member). The server
+// emits `pine:export-completed` (hyphen) → PineExportCompletedV2Data below.
 
 /** Emitted by the pine-export agent after a successful Pine script export. */
 export interface PineExportCompletedV2Data {
@@ -1713,7 +1707,6 @@ export type SSEEvent =
   | { type: "correlation:alert"; data: CorrelationAlertData }
   | { type: "portfolio:correlation_snapshot"; data: PortfolioCorrelationSnapshotData }
   | { type: "drift:alert"; data: DriftAlertData }
-  | { type: "pine:export_completed"; data: PineExportCompletedData }
   | { type: "pine:export-completed"; data: PineExportCompletedV2Data }
   | { type: "pine:export-failed"; data: PineExportFailedData }
   | { type: "critic:run-completed"; data: CriticRunCompletedData }

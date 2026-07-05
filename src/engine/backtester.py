@@ -1295,6 +1295,11 @@ def _apply_static_styleC_management(
         ZeroVolumeOnTradeCriticalBar,
         check_zero_volume_trade_critical,
     )
+    # Deepscan19 B-3: exit-side volume-impact fill-price degradation. Default OFF
+    # via BACKTEST_EXIT_PARTIAL_FILL_ENABLED — see fill_model.py docstring. When
+    # off, apply_exit_volume_price_impact() returns its input price unchanged, so
+    # this import + the two call sites below are a true no-op by construction.
+    from src.engine.fill_model import apply_exit_volume_price_impact
 
     managed_trades = []
     ts_col = "ts_event"
@@ -1449,6 +1454,15 @@ def _apply_static_styleC_management(
                             exit_price_p = (
                                 float(close_np[bar]) if bar < len(close_np) else bar_open
                             )
+                            # Deepscan19 B-3: degrade the FLATTEN FILL PRICE on thin
+                            # volume — the flatten itself is UNCONDITIONAL (occurs
+                            # regardless of this call's output; break below always
+                            # fires). No-op when BACKTEST_EXIT_PARTIAL_FILL_ENABLED
+                            # is unset/false (default).
+                            exit_price_p, _ = apply_exit_volume_price_impact(
+                                exit_price_p, is_short=is_short, bar_idx=bar,
+                                exit_size=size, df=df, tick_size=tick,
+                            )
                             exit_reason_p = "time_stop"
                             exit_idx_p = bar
                             break
@@ -1462,6 +1476,13 @@ def _apply_static_styleC_management(
                         gap_count_p += 1
                     else:
                         exit_price_p = trail_stop_p
+                    # Deepscan19 B-3: degrade the stop/trailing-stop FILL PRICE on
+                    # thin volume. Occurrence (break below) is unaffected — only
+                    # the realized price may worsen. No-op by default (flag off).
+                    exit_price_p, _ = apply_exit_volume_price_impact(
+                        exit_price_p, is_short=False, bar_idx=bar,
+                        exit_size=size, df=df, tick_size=tick,
+                    )
                     exit_reason_p = (
                         "trailing_stop" if trail_stop_p > initial_stop else "stop_loss"
                     )
@@ -1473,6 +1494,11 @@ def _apply_static_styleC_management(
                         gap_count_p += 1
                     else:
                         exit_price_p = trail_stop_p
+                    # Deepscan19 B-3: symmetric degradation for the short side.
+                    exit_price_p, _ = apply_exit_volume_price_impact(
+                        exit_price_p, is_short=True, bar_idx=bar,
+                        exit_size=size, df=df, tick_size=tick,
+                    )
                     exit_reason_p = (
                         "trailing_stop" if trail_stop_p < initial_stop else "stop_loss"
                     )

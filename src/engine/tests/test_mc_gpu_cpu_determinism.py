@@ -39,12 +39,66 @@ from src.engine.monte_carlo import (
     _block_bootstrap_core,
     block_bootstrap,
     create_authoritative_rng,
+    return_bootstrap,
+    trade_resample,
 )
 
 
 def _make_trades(n: int = 60, seed: int = 7) -> np.ndarray:
     rng = np.random.default_rng(seed)
     return rng.normal(80.0, 220.0, size=n)
+
+
+# ─── Deepscan #19 B-1/B-2 fixtures — device-independence for the DEFAULT
+# resampling paths (trade_resample, return_bootstrap IID branch) ────────────
+#
+# Neither trade_resample() nor return_bootstrap()'s IID branch has a
+# CuPy-specific "_gpu" sibling like block_bootstrap does — the GPU dispatch
+# happens INLINE by passing a non-numpy `xp` module straight into these
+# functions from run_monte_carlo() (xp = get_array_module(request.use_gpu),
+# and use_gpu defaults True — this IS the default production dispatch path).
+# So to reproduce the "device RNG != authoritative CPU RNG" bug class without
+# requiring real GPU hardware/cupy in this environment, these fixtures stand
+# in for a device array module: asarray/cumsum/asnumpy are numpy-backed (so
+# the test runs anywhere), but `random.default_rng` is DELIBERATELY a
+# different bit-generator family (SFC64, not PCG64DXSM) — the exact shape of
+# CuPy's own native RNG stream diverging from create_authoritative_rng(). If
+# either function still consumed `xp.random.default_rng(seed)` directly (the
+# pre-B-1 bug), the tests below would fail because the two streams produce
+# different draws for the same seed (proven by the sanity-check test).
+
+
+class _FakeDeviceRandom:
+    """Stand-in for a device RNG namespace (e.g. cupy.random) seeded with a
+    non-authoritative bit generator, so the identical-index assertions below
+    are a real regression guard, not a vacuous pass."""
+
+    @staticmethod
+    def default_rng(seed):
+        return np.random.Generator(np.random.SFC64(seed))
+
+
+class _FakeDeviceModule:
+    """Stand-in for a 'device' array module (e.g. cupy) that doesn't require
+    an actual GPU or cupy installation. `xp is np` is False for an instance
+    of this class, so functions take the same code branch they would for
+    real cupy; `asarray`/`cumsum` are numpy-backed so the test runs on any
+    machine; `asnumpy` satisfies monte_carlo._to_numpy()'s `cp.asnumpy(arr)`
+    call once `src.engine.monte_carlo.cp` is monkeypatched to this instance."""
+
+    random = _FakeDeviceRandom()
+
+    @staticmethod
+    def asarray(x):
+        return np.asarray(x)
+
+    @staticmethod
+    def cumsum(x, axis=None):
+        return np.cumsum(x, axis=axis)
+
+    @staticmethod
+    def asnumpy(x):
+        return np.asarray(x)
 
 
 # ─── 1. CPU-authoritative index generation is deterministic ─────────────────
@@ -226,3 +280,100 @@ class TestBlockBootstrapSameSeedStability:
             axis=1,
         )
         np.testing.assert_array_equal(a, expected)
+
+
+# ─── 5. Sanity check on the fake-device fixture itself ─────────────────────
+
+class TestFakeDeviceFixtureSanity:
+    def test_fake_device_rng_actually_differs_from_authoritative(self):
+        """Proves the fixture is a real regression guard: _FakeDeviceRandom's
+        SFC64 stream genuinely diverges from create_authoritative_rng()'s
+        PCG64DXSM stream for the same seed. If it didn't, the
+        identical-across-xp-modules assertions in the classes below would
+        pass vacuously regardless of whether trade_resample()/
+        return_bootstrap() actually route through the authoritative RNG."""
+        seed = 909
+        authoritative = create_authoritative_rng(seed)[0].integers(0, 100, size=20)
+        fake_device = _FakeDeviceRandom.default_rng(seed).integers(0, 100, size=20)
+        assert not np.array_equal(authoritative, fake_device)
+
+
+# ─── 6. trade_resample() device-independent resample indices (B-1) ─────────
+
+class TestTradeResampleDeviceIndependence:
+    """monte_carlo.trade_resample() previously seeded `xp.random.default_rng
+    (seed)` directly whenever `xp is not np` — the default GPU dispatch path
+    (use_gpu defaults True end-to-end in run_monte_carlo(), and
+    trade_resample is the DEFAULT resampling method). On CuPy that seeds
+    CuPy's own native RNG stream, not the authoritative PCG64DXSM
+    (create_authoritative_rng) — same bug class as block_bootstrap's
+    pre-deepscan18-B-E1 behavior. This class proves the fix: resample indices
+    (and therefore output paths) are IDENTICAL for the same seed regardless
+    of which array module is passed in, because indices are always derived
+    from create_authoritative_rng() on CPU before any xp-specific RNG could
+    run — this test FAILS on pre-B-1 code (xp.random.default_rng(seed) on
+    the fake-device branch would diverge from the np branch per the sanity
+    check above) and PASSES after the B-1 fix.
+    """
+
+    def test_same_seed_identical_across_xp_modules(self, monkeypatch):
+        fake_module = _FakeDeviceModule()
+        monkeypatch.setattr("src.engine.monte_carlo.cp", fake_module)
+
+        trades = _make_trades(35, seed=17)
+        n_sims = 120
+        seed = 909
+
+        paths_np = trade_resample(trades, n_sims, seed=seed, xp=np)
+        paths_fake_device = trade_resample(trades, n_sims, seed=seed, xp=fake_module)
+
+        np.testing.assert_array_equal(paths_np, paths_fake_device)
+
+    def test_deterministic_same_seed_same_xp(self):
+        trades = _make_trades(35, seed=17)
+        a = trade_resample(trades, n_sims=100, seed=2026, xp=np)
+        b = trade_resample(trades, n_sims=100, seed=2026, xp=np)
+        np.testing.assert_array_equal(a, b)
+
+
+# ─── 7. return_bootstrap() IID-path device-independent resample indices (B-1) ─
+
+class TestReturnBootstrapIidDeviceIndependence:
+    """Same contract as TestTradeResampleDeviceIndependence, applied to the
+    daily-returns IID branch of return_bootstrap() (Fix-3-era code seeded
+    `xp.random.default_rng(seed)` whenever xp was not np). The
+    autocorrelation gate is monkeypatched to force the IID branch
+    deterministically — real random test data would otherwise nondeterministically
+    route to block-bootstrap depending on the lag-1 pearsonr p-value per
+    _safe_autocorrelation's low-confidence guard, which is a different code
+    path from the one B-1 fixes."""
+
+    def test_same_seed_identical_across_xp_modules(self, monkeypatch):
+        monkeypatch.setattr(
+            "src.engine.monte_carlo._safe_autocorrelation",
+            lambda arr: (0.0, False),
+        )
+        fake_module = _FakeDeviceModule()
+        monkeypatch.setattr("src.engine.monte_carlo.cp", fake_module)
+
+        daily_returns = _make_trades(60, seed=23) / 1000.0
+        n_sims = 80
+        n_days = 60  # == history length, avoids extrapolation warnings
+        seed = 4141
+
+        paths_np = return_bootstrap(daily_returns, n_sims, n_days, seed=seed, xp=np)
+        paths_fake_device = return_bootstrap(
+            daily_returns, n_sims, n_days, seed=seed, xp=fake_module
+        )
+
+        np.testing.assert_array_equal(paths_np, paths_fake_device)
+
+    def test_deterministic_same_seed_same_xp(self, monkeypatch):
+        monkeypatch.setattr(
+            "src.engine.monte_carlo._safe_autocorrelation",
+            lambda arr: (0.0, False),
+        )
+        daily_returns = _make_trades(60, seed=23) / 1000.0
+        a = return_bootstrap(daily_returns, n_sims=100, n_days=60, seed=2026, xp=np)
+        b = return_bootstrap(daily_returns, n_sims=100, n_days=60, seed=2026, xp=np)
+        np.testing.assert_array_equal(a, b)

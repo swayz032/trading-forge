@@ -430,14 +430,10 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       break;
 
     // ─── Pine export ──────────────────────────────────────────────────
-    // Legacy underscore event — server emits `pine:export-completed` (hyphen)
-    // these days, but the union still includes the underscore variant for
-    // backward compatibility with any in-flight clients. Treat both the same.
-    case "pine:export_completed": {
-      qc.invalidateQueries({ queryKey: ["strategies"] });
-      qc.invalidateQueries({ queryKey: ["pine"] });
-      break;
-    }
+    // DS19 (Dead-SSE): removed the dead `pine:export_completed` (underscore) case —
+    // the server only ever emits `pine:export-completed` (hyphen, pine-export-service.ts:876/1242),
+    // handled below at the hyphen case. The underscore union member + its data type
+    // were removed from sse-events.ts in the same change.
 
     // ─── n8n / agents ─────────────────────────────────────────────────
 

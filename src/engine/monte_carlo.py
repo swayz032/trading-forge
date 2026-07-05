@@ -145,9 +145,24 @@ def trade_resample(
         xp = np
 
     trades_xp = xp.asarray(trades)
-    # Use PCG64DXSM for authoritative reproducibility (CPU path)
-    rng = create_authoritative_rng(seed)[0] if xp is np else xp.random.default_rng(seed)
-    indices = rng.integers(0, len(trades), size=(n_sims, len(trades)))
+    # FIX (deepscan19 B-1, 2026-07-05): previously the GPU branch called
+    # `xp.random.default_rng(seed)` directly, which — when xp is cp (CuPy) —
+    # seeds CuPy's OWN native RNG algorithm/stream on-device, a DIFFERENT
+    # generator family than the authoritative PCG64DXSM
+    # (`create_authoritative_rng`) the CPU branch used. Same seed therefore
+    # produced a DIFFERENT resample on GPU (tower, use_gpu defaults True —
+    # this is the DEFAULT resampling path) vs CPU (CI), straddling the B14
+    # `probability_of_ruin_ci.ci_high` 0.20 hard-gate threshold depending on
+    # which machine ran the backtest.
+    #
+    # FIX: generate the resample INDICES on CPU via the authoritative RNG
+    # regardless of xp, then transfer only the (cheap) integer index array to
+    # the GPU for the gather + cumsum. Mirrors the block_bootstrap()/
+    # block_bootstrap_gpu() fix (deepscan18 B-E1) exactly — see
+    # gpu_pipeline.py::block_bootstrap_gpu() docstring for the same pattern.
+    _idx_rng = create_authoritative_rng(seed)[0]
+    indices_cpu = _idx_rng.integers(0, len(trades), size=(n_sims, len(trades)))
+    indices = xp.asarray(indices_cpu)
     sampled = trades_xp[indices]
     paths = xp.cumsum(sampled, axis=1)
 
@@ -288,15 +303,26 @@ def return_bootstrap(
         return paths
 
     returns_xp = xp.asarray(daily_returns)
-    # Fix 3: was xp.random.default_rng(seed) unconditionally, which on CPU produces an
-    # SFC64-backed generator — inconsistent with trade_resample() which uses PCG64DXSM.
-    # In "both" mode this caused inter-method RNG family inconsistency.
-    # Now: CPU path uses create_authoritative_rng() (PCG64DXSM), GPU path keeps xp.random.
-    if xp is np:
-        rng = create_authoritative_rng(seed)[0]
-    else:
-        rng = xp.random.default_rng(seed)
-    indices = rng.integers(0, len(daily_returns), size=(n_sims, n_days))
+    # Fix 3 (superseded by deepscan19 B-1 below): was xp.random.default_rng(seed)
+    # unconditionally, which on CPU produces an SFC64-backed generator —
+    # inconsistent with trade_resample() which uses PCG64DXSM. In "both" mode
+    # this caused inter-method RNG family inconsistency.
+    #
+    # FIX (deepscan19 B-1, 2026-07-05): the GPU branch introduced by Fix 3
+    # (`rng = xp.random.default_rng(seed)` when xp is not np) seeds CuPy's OWN
+    # native RNG algorithm/stream ON-DEVICE — a different generator family
+    # than the authoritative PCG64DXSM the CPU branch used. Same seed
+    # therefore produced a DIFFERENT IID resample on GPU (tower, use_gpu
+    # defaults True) vs CPU (CI), straddling the B14
+    # `probability_of_ruin_ci.ci_high` 0.20 hard-gate threshold depending on
+    # which machine ran the backtest — identical failure mode to
+    # trade_resample() and block_bootstrap()/block_bootstrap_gpu() (deepscan18
+    # B-E1). Now: generate the resample INDICES on CPU via the authoritative
+    # RNG regardless of xp, then transfer only the (cheap) integer index array
+    # to the GPU for the gather + cumsum.
+    _idx_rng = create_authoritative_rng(seed)[0]
+    indices_cpu = _idx_rng.integers(0, len(daily_returns), size=(n_sims, n_days))
+    indices = xp.asarray(indices_cpu)
     sampled = returns_xp[indices]
     paths = xp.cumsum(sampled, axis=1)
 

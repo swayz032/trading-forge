@@ -10,6 +10,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { getExecutionMode } from "../execution-mode.js";
+import { logger } from "../logger.js";
 import { unmappedAccountDisclosure, liveModeDataDisclosure } from "./translate.js";
 
 export type CribData = {
@@ -267,13 +268,42 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
     WHERE lifecycle_state IN ('CANDIDATE','TESTING','SHADOW','PAPER')
   `).catch(() => [] as any[]));
 
-  // 4. Kill switch — read from system_parameters (TF's operator-tappable halt)
-  const killRow = await firstRow(db.execute(sql`
-    SELECT value FROM system_parameters
-    WHERE key = 'pipeline_active' LIMIT 1
-  `).catch(() => [] as any[]));
-  const killSwitch: "green" | "red" =
-    killRow?.value === "false" || killRow?.value === false ? "red" : "green";
+  // 4. Kill switch — read from system_parameters (TF's operator-tappable halt).
+  // DS19 (H-crib): the previous query read `SELECT value ... WHERE key='pipeline_active'`
+  // but the schema columns are `param_name`/`current_value` and no `pipeline_active`
+  // param exists — so the query ALWAYS threw, the bare `.catch(()=>[])` swallowed it,
+  // and killSwitch defaulted to "green" (permanently green, could never show red on the
+  // family crib). The real param is `pipeline_mode` (see pipeline-control-service.ts):
+  // current_value is a numeric-string mode code — "1"=ACTIVE (only healthy/green state),
+  // "0"=PAUSED, "2"=VACATION, "3"=AUTOPAUSE_DD_VELOCITY (all halted → red). Green ONLY
+  // when explicitly ACTIVE; any other value, missing row, or read error → red (fail-safe:
+  // a family member must never see a false green on an errored/unknown read).
+  let killSwitch: "green" | "red" = "red";
+  try {
+    const killRow = await firstRow(
+      db.execute(sql`
+        SELECT current_value FROM system_parameters
+        WHERE param_name = 'pipeline_mode' LIMIT 1
+      `),
+    );
+    const modeCode = killRow == null ? null : String((killRow as any).current_value ?? (killRow as any).currentValue ?? "");
+    if (modeCode === "1") {
+      killSwitch = "green";
+    } else if (modeCode == null || modeCode === "") {
+      // No pipeline_mode row at all — treat as unknown, show red (safe default).
+      logger.warn(
+        "[crib-data] DS19: pipeline_mode param missing from system_parameters; kill-switch tile defaulting to red (unknown state)",
+      );
+    }
+    // Any explicit non-"1" mode code (PAUSED/VACATION/AUTOPAUSE) correctly stays red.
+  } catch (err) {
+    // DS19: never swallow silently into a false green — log loud and stay red.
+    logger.error(
+      { err },
+      "[crib-data] DS19: failed to read pipeline_mode for family crib kill-switch tile; defaulting to red (safe state)",
+    );
+    killSwitch = "red";
+  }
 
   // 4b. Sparklines — last 7 trading days
   const sparkPnlRows = canReadAccountScopedData

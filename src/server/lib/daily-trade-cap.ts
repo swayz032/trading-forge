@@ -36,8 +36,18 @@
  *   - "Today" = CME futures trading day (toFuturesTradingDayString), so trades
  *     opened 17:00–23:59 ET count toward NEXT day's quota — matches
  *     paper-execution-service.ts:925 convention.
- *   - Scope = per-session (one prop-firm account = one paper_session). A 3rd
- *     trade on session A doesn't block a 1st trade on session B.
+ *   - Scope = per-ACCOUNT (DS19 C-3, 2026-07-05). This module is the pure
+ *     evaluator; the SCOPE is set by whatever `tradesToday` the caller supplies.
+ *     The caller (paper-signal-service.ts) now counts paper_trades closed today
+ *     across ALL active sessions that resolve to the same account key
+ *     (cross-symbol-pnl.ts::resolveAccountKey), so the "1-2 A+ trades/day per
+ *     ACCOUNT" mandate holds even when one account runs multiple sessions (e.g.
+ *     MES + MNQ). Pre-fix the caller counted a single session, which under
+ *     multi-session-per-account allowed up to 2×N trades/day. For the
+ *     single-session-per-account setup today the sibling set is just this
+ *     session, so the account-scoped count is byte-identical to the old
+ *     per-session count. A 2nd trade on Account A's MNQ session is now correctly
+ *     counted against the same quota as its MES session.
  *
  * Defaults:
  *   - TF_MAX_TRADES_PER_DAY=2 (operator's mandate; 1-2 trades/day means

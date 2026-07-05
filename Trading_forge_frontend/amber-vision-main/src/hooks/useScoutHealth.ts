@@ -27,19 +27,26 @@ export interface ScoutHealth {
 /**
  * Pass 10 — Real-time SSE wiring.
  *
- * Subscribes to `scout-health:*` and `windows:real-reboot-pending` events on
+ * Subscribes to `scout-health:*` and the Windows health-check events on
  * the existing /api/sse/events stream. Every matching event invalidates the
  * React Query cache so the tile re-fetches immediately rather than waiting
  * for its 30s staleTime to expire. Falls back gracefully when the browser
  * does not support EventSource or the connection drops — the 30s poll is
  * the safety net.
+ *
+ * DS19 (Dead-SSE): the previous `windows:real-reboot-pending` subscription was dead —
+ * the backend never emits it. The Windows health-check service (windows-health-check-service.ts)
+ * emits `windows:health-check-failed` (pre-market pause / reboot pending) and
+ * `windows:health-check-auto-resumed` (recovery). Both change scout/pipeline availability,
+ * so the tile now refreshes on the real events.
  */
 const SCOUT_HEALTH_EVENTS = [
   "scout-health:drain-stall",
   "scout-health:reject-skew",
   "scout-health:reject-spike",
   "scout-health:no-strategies-today",
-  "windows:real-reboot-pending",
+  "windows:health-check-failed",
+  "windows:health-check-auto-resumed",
 ] as const;
 
 function useScoutHealthSseInvalidator(): void {

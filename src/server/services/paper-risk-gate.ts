@@ -265,25 +265,59 @@ export async function checkRiskGate(
   // F-1 Fix: halt at DLL_HALT_PCT × firmDLL (default 67%), not at 100% of firmDLL.
   // kill-switch.ts Layer 2 already halts at DLL_HALT_PCT * dll; this gate must match.
   // Firms with dailyLossLimit=null (MFFU has NO daily loss limit) skip this gate.
+  //
+  // DS19 C-2 (2026-07-05): the halt must be evaluated against the ACCOUNT's
+  // COMBINED loss across every session on the same account — NOT one session in
+  // isolation. Pre-fix this read only `session.dailyPnlBreakdown[today]`, so two
+  // sessions (e.g. MES + MNQ) on one Topstep account could each sit at $600
+  // (< the $670 halt) while the account was down $1,200 — past the halt — and
+  // BOTH slipped through. This is the exact under-halt class that kill-switch
+  // Layer 2 was rewritten to fix (getAccountSessionCumulativePnL /
+  // resolveAccountKey), but this gate — the standing fallback whenever Layer 2
+  // fails OPEN on its 100ms budget — was never migrated while gate (f) below was.
+  // Now mirrors gate (f)'s account-scoped aggregation and SHARES its 30s cache
+  // (keyed by resolved accountKey), so no extra query on the common path and the
+  // single-session-per-account operator setup is byte-identical to legacy.
   if (firmConfig?.dailyLossLimit) {
     // Use CME futures trading-day key to match dailyPnlBreakdown entries.
     // Trades closed 17:00–23:59 ET belong to the NEXT trading day (5pm ET cutoff).
     const today = toFuturesTradingDayString();
-    const breakdown = (session.dailyPnlBreakdown as Record<string, number> | null) ?? {};
-    const todayPnl = breakdown[today] ?? 0;
-    const todayLoss = todayPnl < 0 ? Math.abs(todayPnl) : 0;
+    const dllAccountKey = resolveAccountKey(session);
+
+    let accountTodayLoss = getCachedGlobalDailyLoss(today, dllAccountKey);
+    if (accountTodayLoss === null) {
+      const activeSessionsForDll = await db
+        .select({
+          firmId: paperSessions.firmId,
+          config: paperSessions.config,
+          dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
+        })
+        .from(paperSessions)
+        .where(eq(paperSessions.status, "active"));
+
+      accountTodayLoss = activeSessionsForDll
+        .filter((s) => resolveAccountKey(s) === dllAccountKey)
+        .reduce((sum, s) => {
+          const bd = (s.dailyPnlBreakdown as Record<string, number> | null) ?? {};
+          const pnl = bd[today] ?? 0;
+          return sum + (pnl < 0 ? Math.abs(pnl) : 0);
+        }, 0);
+
+      // Cache under the account key so gate (f)'s non-household path reuses it.
+      setCachedGlobalDailyLoss(today, dllAccountKey, accountTodayLoss);
+    }
 
     // Halt threshold = DLL_HALT_PCT × firm DLL (e.g. 0.67 × $1000 = $670 for Topstep)
     const dllHaltThreshold = firmConfig.dailyLossLimit * DLL_HALT_PCT;
 
-    if (todayLoss >= dllHaltThreshold) {
+    if (accountTodayLoss >= dllHaltThreshold) {
       logger.warn(
-        { sessionId, todayLoss, dllHaltThreshold, dailyLossLimit: firmConfig.dailyLossLimit, DLL_HALT_PCT },
-        "Risk gate: daily loss halt threshold hit",
+        { sessionId, accountKey: dllAccountKey, accountTodayLoss, dllHaltThreshold, dailyLossLimit: firmConfig.dailyLossLimit, DLL_HALT_PCT },
+        "Risk gate: daily loss halt threshold hit (account-aggregated, DS19 C-2)",
       );
       return {
         allowed: false,
-        reason: `Daily loss halt threshold reached ($${todayLoss.toFixed(2)} today vs $${dllHaltThreshold.toFixed(2)} halt limit [${Math.round(DLL_HALT_PCT * 100)}% of $${firmConfig.dailyLossLimit} for ${session.firmId}])`,
+        reason: `Daily loss halt threshold reached (account "${dllAccountKey}" $${accountTodayLoss.toFixed(2)} today vs $${dllHaltThreshold.toFixed(2)} halt limit [${Math.round(DLL_HALT_PCT * 100)}% of $${firmConfig.dailyLossLimit} for ${session.firmId}])`,
         check: "daily_loss_limit",
       };
     }

@@ -89,6 +89,20 @@
     return '$' + Math.round(n).toLocaleString('en-US');
   }
 
+  // DS19 (H-office-label): map the wire dllModel to plain-English copy so this card
+  // names the ACTUAL loss-limit model instead of hardcoding "Trailing-DD". The value
+  // shown here is the DAILY firm loss limit — Topstep = EOD trailing DD; MFFU = fixed
+  // daily loss limit; unknown firm = conservative estimate. Mirrors the SPA
+  // ProductionStatusPanel dllModelLabel() so an MFFU daily-DLL account isn't mislabeled.
+  function dllModelLabel(m) {
+    switch (m) {
+      case 'trailing_dd_hwm': return 'trailing DD';
+      case 'daily_dll_pct':   return 'daily loss limit';
+      case 'estimate_5pct':   return 'est. loss limit';
+      default:                return 'loss limit';
+    }
+  }
+
   function item(label, value, cls, sub) {
     return '<div class="ofr-item"><div class="ofr-k">' + esc(label) + '</div>' +
       '<div class="ofr-v ' + (cls || '') + '">' + esc(value) + '</div>' +
@@ -129,17 +143,22 @@
         'Nothing is at risk right now — no active trading session reported.');
     }
 
-    // 3. Trailing-DD / firm-limit headroom
+    // 3. Firm loss-limit headroom (DS19 H-office-label: dll-model-aware — this value is
+    // the DAILY firm loss limit, so name the actual model instead of hardcoding "Trailing-DD")
+    var modelLabel = dllModelLabel(dd.dllModel);
     if (dd.firmLimit != null) {
       html += item(
-        'Drawdown headroom',
+        modelLabel.charAt(0).toUpperCase() + modelLabel.slice(1) + ' headroom',
         (dd.bufferRemaining != null ? money(dd.bufferRemaining) : '—') + ' of ' + money(dd.firmLimit),
         sevClass(dd.severity),
-        'Room left before today’s firm loss limit is hit'
+        'Room left before today’s ' + modelLabel + ' is hit'
       );
     } else {
-      html += item('Drawdown headroom', 'Unknown', 'warn',
-        'The tower did not report a firm loss limit — treat as no headroom.');
+      html += item(
+        modelLabel.charAt(0).toUpperCase() + modelLabel.slice(1) + ' headroom',
+        'Unknown', 'warn',
+        'The tower did not report a firm loss limit — treat as no headroom.'
+      );
     }
 
     // 4. Kill switches (9-layer)

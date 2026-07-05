@@ -66,19 +66,33 @@ try {
   Write-Host "     tower still booting (first self-heal npm install can take a minute). Re-check http://localhost:4000/api/health shortly." -ForegroundColor Yellow
 }
 
-# Config readback proves NSSM is *configured* to use the launcher; it doesn't
-# prove the running process actually took that path (a stale/cached process
-# could still be alive). tower-boot.mjs's log() helper always prints at least
-# one "[tower-boot ...]" line before handing off to tsx, so grep the NSSM
-# stdout log for it as live confirmation the wrapper genuinely executed.
+# deepscan19 G-3 (2026-07-05): the AUTHORITATIVE post-install signal is NSSM's
+# own configured AppParameters, re-read here (not just at step 1, before the
+# restart) -- if AppParameters still points at tower-boot.mjs after the
+# restart, the service IS configured to use the self-healing launcher, full
+# stop. That is what this script installs and is the thing worth verifying.
+#
+# The stdout-log grep below is SECONDARY/ADVISORY ONLY. It was previously the
+# thing that printed a "WARNING", which reads as "the launcher might not be
+# active" -- but the log can legitimately be days stale (e.g. the API hasn't
+# restarted since the log was last rotated/truncated) even when the launcher
+# is genuinely live; a stale log is normal, not a regression. Downgrading it
+# to an informational note avoids a false-alarm WARNING on an otherwise
+# successful, verified install.
+$readbackFinal = (& $nssm get TradingForgeAPI AppParameters 2>&1 | Out-String).Trim()
+if ($readbackFinal -eq $launcher) {
+  Write-Host "     confirmed: AppParameters = $readbackFinal -- DONE. Self-healing launcher is genuinely active (authoritative NSSM config readback)." -ForegroundColor Green
+} else {
+  Write-Host "     WARNING: AppParameters now reads back as [$readbackFinal], expected [$launcher]. The service may have been reconfigured by something else after step 1's readback." -ForegroundColor Red
+}
+
 if (Test-Path $stdoutLog) {
   $bootLines = Get-Content $stdoutLog -Tail 40 | Select-String -Pattern "\[tower-boot "
   if ($bootLines) {
-    Write-Host "     confirmed: tower-boot.mjs log lines found in $stdoutLog -- DONE. Self-healing launcher is genuinely active." -ForegroundColor Green
+    Write-Host "     (advisory) tower-boot.mjs log lines also found in $stdoutLog -- corroborates the AppParameters confirmation above." -ForegroundColor DarkGray
   } else {
-    Write-Host "     WARNING: AppParameters is correct but no '[tower-boot ' lines found in the last 40 lines of $stdoutLog yet." -ForegroundColor Yellow
-    Write-Host "     This can just mean the log hasn't flushed yet -- re-check the log in a minute before assuming failure." -ForegroundColor Yellow
+    Write-Host "     (advisory) log not recently written -- this is normal if the API hasn't restarted recently and does NOT contradict the AppParameters confirmation above." -ForegroundColor DarkGray
   }
 } else {
-  Write-Host "     NOTE: could not find $stdoutLog to confirm the wrapper actually ran (config readback above is still correct)." -ForegroundColor Yellow
+  Write-Host "     (advisory) could not find $stdoutLog -- informational only; the AppParameters confirmation above is still authoritative." -ForegroundColor DarkGray
 }

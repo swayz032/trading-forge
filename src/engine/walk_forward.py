@@ -47,6 +47,7 @@ from src.engine.cross_validation import (
     get_wfe_warn_floor,
     run_cross_validation,
 )
+from src.engine.monte_carlo import create_authoritative_rng
 from src.engine.nvtx_markers import range_pop, range_push
 from src.engine.optimizer import _apply_params, _build_search_space, optimize_strategy
 from src.engine.sanity_checks import run_sanity_checks
@@ -483,7 +484,20 @@ def _run_walk_forward_cpcv(
         # Seed: base + path index for determinism
         path_seed = _base_seed + n_paths
         os.environ["BACKTEST_WINDOW_SEED"] = str(path_seed)
-        np.random.seed(path_seed)
+        # B-4 fix (deepscan19, 2026-07-05): was np.random.seed(path_seed) — legacy
+        # global-RNG seeding, a different RNG-family footprint than
+        # create_authoritative_rng() (PCG64DXSM) used by every other MC/backtest
+        # RNG consumer in this engine (monte_carlo.py block_bootstrap /
+        # trade_resample / return_bootstrap, fill_model.py apply_fill_model, etc).
+        # A repo-wide grep confirms no code path reads the legacy global np.random
+        # state (no np.random.rand/randint/choice/normal/uniform/shuffle/
+        # permutation callers) — the old call was RNG-family drift, not a
+        # load-bearing seed. Still fully deterministic: path_seed itself is
+        # deterministic (_base_seed + n_paths), and create_authoritative_rng()
+        # is a pure function of that seed. Establishes the correct authoritative
+        # RNG object for this path so any future code added to this block draws
+        # from the same PCG64DXSM family as the rest of the engine.
+        _path_rng = create_authoritative_rng(path_seed)[0]  # noqa: F841
 
         try:
             # B-3 fix (deepscan17, 2026-07-05): pass the chronologically-restricted

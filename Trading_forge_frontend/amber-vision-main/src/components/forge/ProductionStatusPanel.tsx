@@ -223,16 +223,24 @@ function ReconCard({ q }: { q: ProductionStatusResponse["sixQuestions"]["lastCle
 }
 
 function KillSwitchCard({ q }: { q: KillSwitchStatusReport }) {
-  const haltedLayers = q.layers.filter((l) => l.halted);
-  const allGreen = haltedLayers.length === 0;
-  const severity: OverallSeverity = allGreen ? "green" : "red";
+  // DS19 (H-cards): an empty layers[] is NOT "all green" — it means the kill-switch
+  // report never arrived from the tower (missing/degraded). Treating unknown as green
+  // is a false-safe that hides an outage. Mirror office-risk.js: 0 layers → degraded
+  // (yellow, "Unknown"), never green.
+  const layers = Array.isArray(q.layers) ? q.layers : [];
+  const layersUnknown = layers.length === 0;
+  const haltedLayers = layers.filter((l) => l.halted);
+  const allGreen = !layersUnknown && haltedLayers.length === 0;
+  const severity: OverallSeverity = layersUnknown ? "yellow" : allGreen ? "green" : "red";
 
   return (
     <div className={`flex items-start gap-3 rounded-lg p-3 ${severityBg(severity)} border ${severityBorder(severity)}`}>
       <Shield className={`w-5 h-5 mt-0.5 flex-shrink-0 ${severityColor(severity)}`} />
       <div className="min-w-0">
         <p className="text-sm font-semibold text-text-primary leading-tight">Q5 — Kill switches (9 layers)</p>
-        {allGreen
+        {layersUnknown
+          ? <p className={`text-sm mt-0.5 ${severityColor("yellow")}`}>Unknown — kill-switch report missing from the tower</p>
+          : allGreen
           ? <p className="text-sm mt-0.5 text-profit">All 9 layers GREEN</p>
           : (
             <ul className="mt-1 space-y-0.5">

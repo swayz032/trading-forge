@@ -780,7 +780,31 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
     compilePineExport(strategyId, firmKey, "pine_indicator").catch((err: unknown) =>
       logger.error({ err, strategyId, firmKey }, "Post-deploy Pine export failed"),
     );
-  }).catch(() => {});
+  }).catch((importErr: unknown) => {
+    // DS19 (E-1): the outer catch previously swallowed dynamic-import/module-load
+    // failures silently — if pine-export-service.js failed to load, the promised Pine
+    // export never ran with zero log/audit/alert. Log loud + write an audit row so an
+    // import/load failure is observable. (Inner compilePineExport() error handling is
+    // unchanged — this only covers the import()/firmKey-resolution promise itself.)
+    logger.error(
+      { err: importErr, strategyId },
+      "deploy: pine-export-service dynamic import failed — Pine export did NOT run",
+    );
+    void db
+      .insert(auditLog)
+      .values({
+        action: "pine_export.deploy_trigger_failed",
+        entityType: "strategy",
+        entityId: strategyId,
+        input: { reason: "dynamic_import_failed", stage: "post_deploy_pine_export" },
+        result: { error: importErr instanceof Error ? importErr.message : String(importErr) },
+        status: "failure",
+        decisionAuthority: "system",
+      })
+      .catch((auditErr: unknown) =>
+        logger.error({ err: auditErr, strategyId }, "deploy: pine_export.deploy_trigger_failed audit insert failed"),
+      );
+  });
 
   // Broadcast deploy SSE so dashboard and any listeners know immediately
   broadcastSSE("strategy:deployed", {

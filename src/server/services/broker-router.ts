@@ -34,6 +34,7 @@ import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.
 import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { killSwitch } from "../production/kill-switch.js";
+import { resolveAccountKey } from "./cross-symbol-pnl.js";
 import { getEnabledFirms } from "./strategy-assignment-service.js";
 import { getFirmLimit, CONTRACT_CAP_MAX, getFirmAccount, CONTRACT_SPECS, DEFAULT_ACCOUNT_SIZE } from "../../shared/firm-config.js";
 // deep-scan #15 FIX M3: shared firm↔broker_type topology invariant (single source
@@ -450,9 +451,48 @@ export async function routeOrder(
   // isHaltedForProduction() is fail-CLOSED: DB error → returns true → blocks.
   // This gate fires BEFORE pipeline check, account lookup, or anything else.
   // It is the unconditional production safety interlock for live order routing.
+  //
+  // DS19 C-1 (2026-07-05): SCOPE the check to the account being routed. The
+  // pre-fix call was UNSCOPED — one account's DLL / trailing-DD / firm-suspension
+  // breach returned a global halted=true that blocked EVERY other account's
+  // orders, defeating the deepscan17/18 multi-account-isolation fix at the one
+  // place it matters most (broker order routing = the 4th un-hunted call site).
+  // We resolve the account's {firmId, accountKey} first via a lightweight lookup.
+  // broker_accounts has no config/account_key column, so resolveAccountKey falls
+  // back to firmId — which exactly matches how paper_sessions on this firm key
+  // today (single-account-per-firm; no config.account_key set) and fully isolates
+  // the cross-FIRM case (Topstep breach no longer blocks a different-firm account
+  // — the §5 Phase 3/4 scaling scenario). If the scope lookup fails we fall back
+  // to the UNSCOPED global check (fail-CLOSED — over-blocking is always safe).
+  // When same-firm-multi-account with distinct config.account_key lands, a
+  // broker_account→account_key mapping must be threaded here to keep parity.
+  let haltScope: { accountKey?: string; firmId?: string | null } = {};
+  try {
+    const scopeRows = await db
+      .select({ firmId: brokerAccounts.firmId })
+      .from(brokerAccounts)
+      .where(eq(brokerAccounts.accountId, accountId))
+      .limit(1);
+    const scopeRow = scopeRows[0];
+    if (scopeRow) {
+      haltScope = {
+        firmId: scopeRow.firmId,
+        accountKey: resolveAccountKey({ firmId: scopeRow.firmId }),
+      };
+    }
+  } catch (scopeErr) {
+    logger.warn(
+      { err: scopeErr, accountId, correlationId },
+      "broker-router: kill-switch scope lookup failed — using UNSCOPED global check (fail-CLOSED, DS19 C-1)",
+    );
+  }
+
   let halted: boolean;
   try {
-    halted = await killSwitch.isHaltedForProduction();
+    halted = await killSwitch.isHaltedForProduction({
+      correlationId: correlationId ?? undefined,
+      ...haltScope,
+    });
   } catch (killSwitchErr) {
     // Fail-CLOSED: if the check itself throws, treat as halted.
     // F-5: surface the error so silent halts are visible. Without this, every

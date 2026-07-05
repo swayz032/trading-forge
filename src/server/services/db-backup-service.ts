@@ -10,6 +10,13 @@
  *   audit trail. This service is the systemic fix.
  *
  * ALGORITHM:
+ *   0. (deepscan19 G-1) Pre-write disk-space guard: check free space on the
+ *      backup volume via disk-space-service.ts::checkDiskSpace(). If below
+ *      DISK_FREE_MIN_GB / DISK_FREE_MIN_PCT, emergency-prune the OLDEST
+ *      existing backup files (down to the DB_BACKUP_MIN_KEEP safety floor)
+ *      and re-check. If still low, SKIP the write loudly (status
+ *      "skipped_low_disk") rather than risk this backup being what tips the
+ *      disk to 0 bytes free.
  *   1. Run pg_dump (no-shell execFile — credentials never touch process listing)
  *      to a timestamped local file under DB_BACKUP_LOCAL_DIR.
  *   2. Push the dump file off-tower to S3 (preferred when AWS_* + S3_BUCKET are
@@ -27,11 +34,17 @@
  *   S3_BACKUP_BUCKET               (optional — dedicated backup bucket; falls back to S3_BUCKET)
  *   S3_BACKUP_PREFIX               (default: "db-backups/")
  *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION (already in .env)
+ *   DISK_FREE_MIN_GB               (default: 10)  — see disk-space-service.ts
+ *   DISK_FREE_MIN_PCT              (default: 10)  — see disk-space-service.ts
+ *   DB_BACKUP_MIN_KEEP             (default: 3)   — emergency-prune safety floor
  *
  * AUDIT ACTIONS EMITTED:
  *   db_backup.completed            — successful dump + optional off-tower push
  *   db_backup.failed               — dump or push failed (Discord critical)
  *   db_backup.offtower_unconfigured — dump succeeded but no off-tower target
+ *   disk.low_space                 — (deepscan19 G-1, via disk-space-service.ts)
+ *                                     pre-write guard found the disk low, tagged
+ *                                     with whether emergency pruning recovered it
  *
  * FAIL-SOFT GUARANTEE:
  *   An off-tower push failure does NOT suppress the local dump write — the
@@ -59,6 +72,18 @@ import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+// deepscan19 G-1: disk-full pre-write guard. This is a ONE-WAY static import
+// (db-backup-service.ts -> disk-space-service.ts). disk-space-service.ts must
+// NEVER statically import from this module — its own runDiskSpaceMonitor()
+// reaches this module's getLocalDir() via a runtime `await import(...)` so
+// the two modules never form a static circular-import cycle.
+import {
+  checkDiskSpace,
+  isLowDiskSpace,
+  pruneOldestFilesUntilSafe,
+  getDbBackupMinKeep,
+  emitLowSpaceSignalForPreWriteGuard,
+} from "./disk-space-service.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -277,7 +302,7 @@ export function isOfftowerConfigured(): boolean {
 // ─── Result type ─────────────────────────────────────────────────────────────
 
 export interface DbBackupResult {
-  status: "success" | "failed" | "disabled";
+  status: "success" | "failed" | "disabled" | "skipped_low_disk";
   filePath?: string;
   sizeBytes?: number;
   offtowerUrl?: string;
@@ -351,6 +376,54 @@ export async function runDbBackup(): Promise<DbBackupResult> {
       { correlationId, localDir, error },
     );
     return { status: "failed", error, durationMs: Date.now() - t0 };
+  }
+
+  // ─── Disk-space pre-write guard (deepscan19 G-1) ────────────────────────────
+  // Never let the backup itself be what fills the disk. Check free space on
+  // the backup volume BEFORE writing a new dump; if low, emergency-prune the
+  // oldest existing backups (down to the DB_BACKUP_MIN_KEEP safety floor) and
+  // re-check. If space is still low after pruning, SKIP this backup write
+  // loudly rather than risk writing the file that tips the disk to 0 bytes
+  // free (which would take Postgres itself down, not just the backup).
+  const preWriteCheck = await checkDiskSpace(localDir);
+  if (isLowDiskSpace(preWriteCheck)) {
+    logger.warn(
+      { correlationId, preWriteCheck },
+      "db-backup: low disk space detected before write — attempting emergency prune of oldest backups",
+    );
+    const minKeep = getDbBackupMinKeep();
+    const { pruned: emergencyPruned, finalCheck } = await pruneOldestFilesUntilSafe(
+      localDir,
+      "tf-db-backup-",
+      ".sql",
+      minKeep,
+    );
+    const stillLow = isLowDiskSpace(finalCheck);
+
+    // Emit the same audit/Discord/metric signal the hourly disk-space-monitor
+    // cron emits, tagged as coming from the backup pre-write guard.
+    await emitLowSpaceSignalForPreWriteGuard(preWriteCheck, finalCheck, emergencyPruned, stillLow);
+
+    if (stillLow) {
+      const freeGb = finalCheck.freeBytes != null ? (finalCheck.freeBytes / 1_000_000_000).toFixed(2) : "unknown";
+      const freePct = finalCheck.freePercent != null ? finalCheck.freePercent.toFixed(1) : "unknown";
+      const error =
+        `Disk space critically low (${freeGb}GB free, ${freePct}%) even after emergency-pruning ` +
+        `${emergencyPruned.length} oldest backup(s) down to the ${minKeep}-file safety floor. ` +
+        `Skipping this backup write to avoid making the disk-full condition worse.`;
+      logger.error({ correlationId, finalCheck, emergencyPruned }, `db-backup: ${error}`);
+      await _emitFailedAudit(correlationId, error, t0);
+      return {
+        status: "skipped_low_disk",
+        error,
+        durationMs: Date.now() - t0,
+        prunedFiles: emergencyPruned,
+      };
+    }
+    logger.info(
+      { correlationId, emergencyPruned, finalCheck },
+      "db-backup: emergency prune recovered enough disk space — proceeding with backup write",
+    );
   }
 
   // ─── Check pg_dump availability ─────────────────────────────────────────────

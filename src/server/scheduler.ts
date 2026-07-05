@@ -81,6 +81,9 @@ import { runPortfolioDriftDemotion } from "./services/portfolio-drift-demotion-s
 import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
 // W0.1: Nightly off-tower database backup (hardware-failure safety net)
 import { runDbBackup } from "./services/db-backup-service.js";
+// deepscan19 G-1: hourly disk-space monitor — auto-prunes oldest db backups
+// + Discord CRITICAL + audit + Prometheus counter when the backup volume runs low.
+import { runDiskSpaceMonitor } from "./services/disk-space-service.js";
 // Pass 1 Track D: Discord fanout audit — keeps _webhookHealth in sync every 30 min
 import { runDiscordFanoutAudit } from "./services/discord-fanout-audit-service.js";
 // A14 regime-bank population — fills synthetic_regime_bank so black-swan evaluator
@@ -169,6 +172,10 @@ const NEVER_DISABLE_JOBS = new Set([
   // pg_dump failures (e.g. S3 outage, portable pg_dump path broken) must never
   // permanently disable it; a disabled backup job = silent total-loss exposure.
   "db-backup",
+  // deepscan19 G-1 2026-07-05: the ONLY disk-full early-warning job — 5
+  // consecutive statfs/audit failures must never permanently disable it; a
+  // disabled disk-space monitor = silent slow-motion ENOSPC outage.
+  "disk-space-monitor",
   // deepscan7 DS7-H1 2026-07-02: Windows reboot-pending probing must never go
   // dark — it is _PIPELINE_GATE_EXEMPT but was still auto-disableable.
   "pre-trading-day-health-check",
@@ -693,6 +700,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // A hardware failure destroys the database regardless of pipeline state.
   // The backup signal is a safety/reliability signal, not a trading research signal.
   "db-backup",                          // W0.1: nightly off-tower DB backup
+  // deepscan19 G-1: disk-space monitoring is a hardware/reliability safety
+  // signal, same tier as db-backup — a full disk during a pipeline pause is
+  // still a real outage risk (Postgres writes fail regardless of pipeline state).
+  "disk-space-monitor",                 // G-1: hourly disk-full early warning + auto-prune
   // Phase 4C: daily reconciliation and weekly drift detection are safety signals —
   // they must run regardless of pipeline pause state to catch stale positions
   // and live/backtest drift that may have triggered the pause in the first place.
@@ -5640,6 +5651,40 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("db-backup");
+
+  // ─── deepscan19 G-1: Disk-Space Monitor — hourly, DST-agnostic ─────────────
+  //
+  // Checks free space on the db-backup volume every hour on the hour. Unlike
+  // the ET-hour-gated crons above, this job has no wall-clock target — it
+  // fires once per hour regardless of DST, so no double-fire / ET-hour-guard
+  // pattern is needed (mirrors quantum-rl-training-window's plain hourly cron).
+  //
+  // On a low-space reading: emergency-prunes the OLDEST db-backup files down
+  // to the DB_BACKUP_MIN_KEEP safety floor, re-checks, and — win or lose —
+  // emits `disk.low_space` audit + Discord CRITICAL + tf_disk_low_space_events_total.
+  //
+  // Pipeline-gate EXEMPT: a full disk is a hardware/reliability risk that
+  // exists regardless of whether the trading pipeline is paused (registered
+  // in _PIPELINE_GATE_EXEMPT above, mirrors db-backup).
+  registerJob("disk-space-monitor", 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "disk-space-monitor" }, "cron tick start");
+    await runDiskSpaceMonitor();
+  });
+
+  cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("disk-space-monitor")) return;
+    try {
+      // NOT pipeline-gated — safety signal (in _PIPELINE_GATE_EXEMPT)
+      const t0disk = Date.now();
+      await withRetry("disk-space-monitor", SCHEDULER_JOBS["disk-space-monitor"].run, 1);
+      markJobRun("disk-space-monitor");
+      emitJobComplete("disk-space-monitor", Date.now() - t0disk);
+    } finally {
+      _releaseJobLock("disk-space-monitor");
+    }
+  });
+  _scheduledJobs.add("disk-space-monitor");
 
   // ─── Phase 4C: daily reconciliation (4:15 PM ET weekdays) ──────────────────
   // Safety signal — pipeline-gate-exempt so it fires even when pipeline is PAUSED.

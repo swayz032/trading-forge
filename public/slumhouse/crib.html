@@ -150,6 +150,7 @@
       document.body.appendChild(backdrop);
 
       function dismiss() {
+        if (chipPollTimer) { clearInterval(chipPollTimer); chipPollTimer = null; } // DS19: stop re-poll once modal closes
         backdrop.style.transition = "opacity 0.2s ease";
         backdrop.style.opacity = "0";
         setTimeout(() => backdrop.remove(), 200);
@@ -161,18 +162,32 @@
         if (e.key === "Escape") { dismiss(); document.removeEventListener("keydown", esc); }
       });
 
-      // Live chips pulled from /crib API (best-effort — modal still works without)
-      SH.fetchJSON("/slumhouse/api/crib").then(data => {
-        if (!data || !data.banner) return;
+      // Live chips pulled from /crib API (best-effort — modal still works without).
+      // DS19 (H-crib-html): (1) the kill chip now shows GREEN only when the value is
+      // EXPLICITLY "green" — any other value (red / unknown / undefined / stale) reads
+      // red, so an errored/missing read can never present as a reassuring green. (2) the
+      // chips RE-POLL on the same cadence as the kill-tile watchdog (KILL_POLL_MS) so a
+      // family member with the welcome modal open never watches a forever-stale number.
+      const CHIP_POLL_MS = 15000; // matches KILL_POLL_MS in the kill-tile watchdog below
+      let chipPollTimer = null;
+      function renderChips(b) {
         const chips = backdrop.querySelector("#sw-chips");
-        const b = data.banner;
+        if (!chips || !b) return;
         const todayCls = b.todayBagRaw < 0 ? "red" : b.todayBagRaw > 0 ? "" : "dim";
+        const killGreen = b.killSwitch === "green"; // explicit-healthy only
         chips.innerHTML = `
           <span class="sw-chip ${todayCls}">Today's bag · ${b.todayBag}</span>
           <span class="sw-chip dim">${b.openNow} open</span>
-          <span class="sw-chip ${b.killSwitch === "red" ? "red" : ""}">Kill switch · ${b.killSwitch === "red" ? "Red" : "Green"}</span>
+          <span class="sw-chip ${killGreen ? "" : "red"}">Kill switch · ${killGreen ? "Green" : "Red"}</span>
         `;
-      }).catch(() => {});
+      }
+      function pollChips() {
+        SH.fetchJSON("/slumhouse/api/crib").then(data => {
+          if (data && data.banner) renderChips(data.banner);
+        }).catch(() => {});
+      }
+      pollChips();
+      chipPollTimer = setInterval(pollChips, CHIP_POLL_MS);
     })();
   </script>
 
@@ -229,7 +244,8 @@
       // SH.fetchJSON returns null on any failure (never throws). On null we keep
       // the last-known state; killTick() degrades the tile as it ages.
       const data = await SH.fetchJSON("/slumhouse/api/crib");
-      const ks = data && data.banner && data.banner.killSwitch;
+      const bag = data && data.banner;
+      const ks = bag && bag.killSwitch;
       if (ks === "green" || ks === "red") {
         // deepscan18 H-F2: if the initial cold-load failed (blank crib — the kill tile
         // and banner content were never built), recover by reloading to run the full
@@ -239,6 +255,78 @@
         killLastOkTs = Date.now();
         renderKillTile(killLastState, false, 0);
         updateStaleBanner(false, 0);
+        // DS19 (H-crib-html): refresh the four one-shot data tiles on the same 15s
+        // cadence so "Today's Bag" / "Trades Today" / "Open Right Now" / "In the Pot"
+        // track live numbers instead of freezing at their cold-load values.
+        refreshBannerTiles(bag);
+      }
+    }
+
+    // DS19 (H-crib-html): builds the four banner data tiles from a fresh `bag` payload,
+    // each stamped with a stable id so refreshBannerTiles() can swap them in place.
+    // Used by both the initial cold-load render and the killPoll re-poll cycle.
+    function buildBannerTiles(bag) {
+      const today = stat({
+        label: "Today's Bag",
+        value: bag.todayBag,
+        valueClass: bag.todayBagRaw < 0 ? "red" : bag.todayBagRaw > 0 ? "green" : "",
+        spark: bag.todayBagSpark,
+        sub: bag.tradesToday.count > 0
+          ? `${bag.tradesToday.wins}W · ${bag.tradesToday.losses}L`
+          : "no trades yet",
+      });
+      today.id = "sh-tile-todaybag";
+
+      const trades = stat({
+        label: "Trades Today",
+        value: String(bag.tradesToday.count),
+        spark: bag.tradesSpark,
+        sub: `${bag.tradesToday.wins} wins · ${bag.tradesToday.losses} losses`,
+      });
+      trades.id = "sh-tile-trades";
+
+      const open = stat({
+        label: "Open Right Now",
+        value: String(bag.openNow),
+        sub: bag.openNow > 0 ? "live positions" : "none open",
+      });
+      open.id = "sh-tile-open";
+
+      // In the Pot (custom SVG cooking pot with bubbling liquid + flames)
+      const potTile = stat({
+        label: "In the Pot",
+        value: String(bag.inPot),
+        valueClass: "amber",
+        spark: null, // skip the default sparkline; we'll inject the pot instead
+        sub: "testing",
+      });
+      potTile.id = "sh-tile-pot";
+      const potSparkSlot = potTile.querySelector(".sh-stat-spark");
+      if (potSparkSlot) {
+        potSparkSlot.innerHTML = "";
+        potSparkSlot.appendChild(SH.potChart(bag.inPot, { width: 320, height: 110 }));
+      }
+      // Steam sparkles in the top-right corner (above the lid)
+      potTile.appendChild(SH.el("div", { class: "sh-tile-steam" },
+        SH.el("i"), SH.el("i"), SH.el("i"), SH.el("i")));
+
+      return { today, trades, open, potTile };
+    }
+
+    // DS19 (H-crib-html): re-renders the four data tiles in place from a fresh `bag`.
+    // No-ops for any tile whose node isn't present (e.g. cold-load never built them).
+    function refreshBannerTiles(bag) {
+      if (!bag) return;
+      const tiles = buildBannerTiles(bag);
+      const map = {
+        "sh-tile-todaybag": tiles.today,
+        "sh-tile-trades": tiles.trades,
+        "sh-tile-open": tiles.open,
+        "sh-tile-pot": tiles.potTile,
+      };
+      for (const id in map) {
+        const cur = document.getElementById(id);
+        if (cur) cur.replaceWith(map[id]);
       }
     }
 
@@ -284,50 +372,16 @@
       const b = document.getElementById("sh-banner");
       const bag = data.banner;
 
-      // Today's Bag
-      b.appendChild(stat({
-        label: "Today's Bag",
-        value: bag.todayBag,
-        valueClass: bag.todayBagRaw < 0 ? "red" : bag.todayBagRaw > 0 ? "green" : "",
-        spark: bag.todayBagSpark,
-        sub: bag.tradesToday.count > 0
-          ? `${bag.tradesToday.wins}W · ${bag.tradesToday.losses}L`
-          : "no trades yet",
-      }));
-
-      // Trades Today
-      b.appendChild(stat({
-        label: "Trades Today",
-        value: String(bag.tradesToday.count),
-        spark: bag.tradesSpark,
-        sub: `${bag.tradesToday.wins} wins · ${bag.tradesToday.losses} losses`,
-      }));
-
-      // Open Right Now (no real time series yet — falls back to baseline)
-      b.appendChild(stat({
-        label: "Open Right Now",
-        value: String(bag.openNow),
-        sub: bag.openNow > 0 ? "live positions" : "none open",
-      }));
-
-      // In the Pot (custom SVG cooking pot with bubbling liquid + flames)
-      const potTile = stat({
-        label: "In the Pot",
-        value: String(bag.inPot),
-        valueClass: "amber",
-        spark: null, // skip the default sparkline; we'll inject the pot instead
-        sub: "testing",
-      });
-      // Replace the empty spark slot with the SVG pot chart
-      const potSparkSlot = potTile.querySelector(".sh-stat-spark");
-      if (potSparkSlot) {
-        potSparkSlot.innerHTML = "";
-        potSparkSlot.appendChild(SH.potChart(bag.inPot, { width: 320, height: 110 }));
-      }
-      // Steam sparkles in the top-right corner (above the lid)
-      potTile.appendChild(SH.el("div", { class: "sh-tile-steam" },
-        SH.el("i"), SH.el("i"), SH.el("i"), SH.el("i")));
-      b.appendChild(potTile);
+      // DS19 (H-crib-html): these four tiles were built ONCE at cold-load and never
+      // refreshed — a family member would watch stale P&L / trade counts / open
+      // positions forever. They are now built via buildBannerTiles() (below) with
+      // stable ids so killPoll (the same 15s watchdog cadence that refreshes the kill
+      // tile) re-renders them in place. See refreshBannerTiles().
+      const initTiles = buildBannerTiles(bag);
+      b.appendChild(initTiles.today);
+      b.appendChild(initTiles.trades);
+      b.appendChild(initTiles.open);
+      b.appendChild(initTiles.potTile);
 
       // Kill switch (live pulse, no chart)
       killLastState = bag.killSwitch === "green" ? "green" : "red";

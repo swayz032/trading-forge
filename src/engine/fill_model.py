@@ -12,6 +12,26 @@ Control via env vars:
   BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD (default: "0.1")  — fraction of bar volume
                                           above which fill probability degrades
 
+Deepscan19 B-3 (2026-07-05): apply_volume_partial_fills() above only ever applies to
+ENTRY bars (backtester.py passes the entry array at the call sites) — exits (stop-outs,
+TP fills, 15:55 ET hard flatten) always fill at full size/idealized price, overstating
+exit quality on thin bars. compute_exit_price_impact_ticks()/apply_exit_volume_price_impact()
+below are the SYMMETRIC exit-side counterpart: instead of degrading SIZE (you cannot
+partially exit a stop-out and leave risk open), they degrade the FILL PRICE of a closing
+order when it's large relative to thin bar volume — the same 3-zone qty/volume-ratio
+shape as compute_volume_based_fill_ratios(), just mapped onto adverse price impact ticks
+instead of a fill-ratio. Gated behind BACKTEST_EXIT_PARTIAL_FILL_ENABLED (default FALSE,
+same opt-in discipline as BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED) so it does NOT
+silently re-baseline every historical backtest. CRITICAL INVARIANT: this model only ever
+adjusts the fill PRICE — it never gates whether an exit occurs. The 15:55 ET hard
+flatten in particular must always flatten unconditionally; callers must never let this
+function's output influence whether/when the flatten fires, only what price it fills at.
+
+Control via env vars:
+  BACKTEST_EXIT_PARTIAL_FILL_ENABLED     (default: "false") — opt-IN to enable
+  BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD (default: "0.1")  — reused from the entry-side
+                                          model; same fraction-of-bar-volume onset point
+
 P&L contract: fill model outputs adjusted sizes (integer contracts); P&L is always
 computed by backtester.py using the futures formula:
   net_pnl = (exit - entry) × contracts × point_value - slippage - commission
@@ -65,6 +85,24 @@ def _get_partial_fill_enabled() -> bool:
 def _get_partial_fill_volume_threshold() -> float:
     """Read BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD at call time (cached; clear for tests)."""
     return float(os.environ.get("BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD", "0.1"))
+
+
+@lru_cache(maxsize=1)
+def _get_exit_partial_fill_enabled() -> bool:
+    """Read BACKTEST_EXIT_PARTIAL_FILL_ENABLED at call time (cached; clear for tests).
+
+    Deepscan19 B-3 (2026-07-05): default FALSE. Exit-side volume-impact modeling is
+    opt-IN so it does NOT silently re-baseline every historical backtest — when this
+    is FALSE (default), apply_exit_volume_price_impact() returns the input price
+    completely unchanged (byte-identical to pre-B-3 behavior). When TRUE, closing
+    fills (stop-outs, TP fills, 15:55 ET hard flatten) on thin-volume bars degrade in
+    PRICE only — the occurrence of the exit is never gated by this flag.
+
+    Usage in tests (same pattern as _get_partial_fill_enabled):
+      fill_model._get_exit_partial_fill_enabled.cache_clear()
+      os.environ["BACKTEST_EXIT_PARTIAL_FILL_ENABLED"] = "true"
+    """
+    return os.environ.get("BACKTEST_EXIT_PARTIAL_FILL_ENABLED", "false").lower() in ("true", "1", "yes")
 
 
 def compute_fill_probabilities(
@@ -473,3 +511,118 @@ def apply_volume_partial_fills(
         )
 
     return adjusted_sizes, fill_ratios, audit_payload
+
+
+# ─── Exit-Side Volume Price Impact (Deepscan19 B-3, opt-in) ─────────────────
+
+
+MAX_EXIT_IMPACT_TICKS = 2.0
+
+
+def apply_exit_volume_price_impact(
+    raw_exit_price: float,
+    is_short: bool,
+    bar_idx: int,
+    exit_size: float,
+    df: pl.DataFrame,
+    tick_size: float,
+    volume_threshold: float | None = None,
+) -> tuple[float, dict]:
+    """Degrade a single closing (exit) fill price when the closing order is large
+    relative to thin bar volume — symmetric counterpart to apply_volume_partial_fills()
+    for the exit side (stop-outs, TP fills, 15:55 ET hard flatten).
+
+    Unlike the entry-side model, exits can never be "partially filled" and leave risk
+    open — a stop-out or the 15:55 ET hard flatten must close the FULL remaining
+    position. So instead of degrading size, this degrades the realized fill PRICE:
+    a large closing order on a thin bar walks the book further, producing a worse
+    (not better) exit than the naive stop/TP/flatten price.
+
+    Uses the same 3-zone qty/bar-volume-ratio shape as compute_volume_based_fill_ratios():
+      - ratio < volume_threshold           -> 0 ticks impact (full liquidity, no degrade)
+      - volume_threshold <= ratio <= 1.0   -> linear ramp 0 -> MAX_EXIT_IMPACT_TICKS
+      - ratio > 1.0                        -> MAX_EXIT_IMPACT_TICKS (forced max impact)
+
+    Gated by BACKTEST_EXIT_PARTIAL_FILL_ENABLED (default FALSE) — see
+    _get_exit_partial_fill_enabled() docstring. When disabled, returns
+    (raw_exit_price, {"enabled": False, "impact_ticks": 0.0}) UNCHANGED: byte-identical
+    to pre-B-3 behavior.
+
+    CRITICAL INVARIANT: this function NEVER decides whether an exit occurs — callers
+    (backtester.py trade-management loops) decide that independently (e.g. the 15:55 ET
+    hard flatten ALWAYS fires regardless of this function's output). This function only
+    adjusts the PRICE of a fill the caller has already committed to.
+
+    Args:
+        raw_exit_price: The naive stop/TP/flatten price before volume impact
+        is_short: True if closing a short (adverse impact pushes the buy-to-cover
+            price UP); False if closing a long (adverse impact pushes the sell
+            price DOWN)
+        bar_idx: Index into df identifying which bar's volume to use
+        exit_size: Number of contracts being closed on this bar
+        df: DataFrame with a 'volume' column (missing column / out-of-range bar_idx /
+            non-finite or non-positive exit_size/volume => no-op, price unchanged)
+        tick_size: Instrument tick size (points per tick)
+        volume_threshold: Optional override (default: BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD,
+            same env var + validation the entry-side model uses)
+
+    Returns:
+        (adjusted_exit_price, audit_dict) — audit_dict always has "enabled" and
+        "impact_ticks" keys; additional keys are best-effort diagnostics.
+    """
+    if not _get_exit_partial_fill_enabled():
+        return raw_exit_price, {"enabled": False, "impact_ticks": 0.0}
+
+    if bar_idx < 0 or bar_idx >= len(df) or "volume" not in df.columns:
+        return raw_exit_price, {
+            "enabled": True,
+            "impact_ticks": 0.0,
+            "reason": "no_volume_data",
+        }
+
+    bar_volume = float(df["volume"][bar_idx])
+    if not np.isfinite(bar_volume) or bar_volume <= 0:
+        return raw_exit_price, {
+            "enabled": True,
+            "impact_ticks": 0.0,
+            "reason": "zero_or_invalid_bar_volume",
+        }
+
+    exit_size_f = float(exit_size)
+    if not np.isfinite(exit_size_f) or exit_size_f <= 0:
+        return raw_exit_price, {
+            "enabled": True,
+            "impact_ticks": 0.0,
+            "reason": "zero_or_invalid_exit_size",
+        }
+
+    vt = volume_threshold if volume_threshold is not None else _get_partial_fill_volume_threshold()
+    # Same defensive validation as compute_volume_based_fill_ratios (B-12 fix, deepscan17):
+    # an out-of-range threshold must fall back to the documented default, not silently
+    # widen/narrow the degradation zone.
+    if not np.isfinite(vt) or vt < 0.0 or vt >= 1.0:
+        vt = 0.1
+
+    ratio = exit_size_f / bar_volume
+    if ratio < vt:
+        impact_ticks = 0.0
+    elif ratio <= 1.0:
+        impact_ticks = MAX_EXIT_IMPACT_TICKS * (ratio - vt) / (1.0 - vt + 1e-10)
+    else:
+        impact_ticks = MAX_EXIT_IMPACT_TICKS
+    impact_ticks = float(np.clip(impact_ticks, 0.0, MAX_EXIT_IMPACT_TICKS))
+
+    impact_points = impact_ticks * tick_size
+    # Adverse impact only: closing a short costs MORE to buy back (price up);
+    # closing a long realizes LESS on the sell (price down). Never favorable.
+    adjusted_price = raw_exit_price + impact_points if is_short else raw_exit_price - impact_points
+
+    return adjusted_price, {
+        "enabled": True,
+        "impact_ticks": round(impact_ticks, 4),
+        "impact_points": round(impact_points, 4),
+        "bar_volume": bar_volume,
+        "exit_size": exit_size_f,
+        "qty_volume_ratio": round(ratio, 4),
+        "volume_threshold": vt,
+    }
