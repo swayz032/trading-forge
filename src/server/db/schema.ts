@@ -64,7 +64,15 @@ export const strategies = pgTable("strategies", {
   symbols: text("symbols").array().notNull().default(sql`ARRAY['MES']::TEXT[]`),
   timeframe: text("timeframe").notNull(),
   config: jsonb("config").notNull(), // Full strategy definition JSON
-  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD | NEEDS_ARCHETYPE | NEEDS_REVISION
+  // deepscan18 D-D4 (2026-07-05): full 12-state enumeration — SHADOW was missing (the
+  // Wave 29 Pass A.1 skew-measurement stage, TESTING → SHADOW → PAPER). Column stays
+  // free-text by design (lifecycle-service.ts VALID_TRANSITIONS is the authoritative
+  // state machine); a DB CHECK constraint on the 12 states would be reasonable
+  // defense-in-depth but is intentionally deferred so a future state add is a one-line
+  // VALID_TRANSITIONS edit, not a migration. Canonical 12: CANDIDATE, TESTING, SHADOW,
+  // PAPER, DEPLOY_READY, PILOT, DEPLOYED, DECLINING, RETIRED, GRAVEYARD, NEEDS_ARCHETYPE,
+  // NEEDS_REVISION.
+  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | SHADOW | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD | NEEDS_ARCHETYPE | NEEDS_REVISION
   lifecycleChangedAt: timestamp("lifecycle_changed_at").defaultNow(),
   preferredRegime: text("preferred_regime"), // TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL (single — deprecated in W24)
   // W23H.B: multi-regime array. Supersedes preferredRegime. Both readable; single deprecated in W24.
