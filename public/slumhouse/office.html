@@ -1212,6 +1212,10 @@
         }
         ofLayout();
         loadSwitches();
+        // deepscan17 H-4: poll so a server-side auto-halt (Bot Power -> RED) reflects in the
+        // toggle within ~10s instead of showing a stale GREEN while the backend is halted. The
+        // adjacent Risk-Truth card already polls; this keeps the more prominent switch in sync.
+        setInterval(loadSwitches, 10000);
       }
 
       // Carter connect — opens the Slumdawg Lobby (Call Carter | Check Messages).
@@ -1233,9 +1237,11 @@
 
       function loadSwitches() {
         fetch('/slumhouse/admin/switches', { credentials: 'same-origin' })
-          .then(function (r) { return r.json(); })
-          .then(function (d) { ofSwitches = (d && d.switches) || {}; applySwitches(); })
-          .catch(function () {});
+          .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+          .then(function (d) { ofSwitches = (d && d.switches) || {}; if (ofTrack) ofTrack.style.opacity = ''; applySwitches(); })
+          // deepscan17 H-5: on fetch failure, dim the switch cards so a frozen toggle is not
+          // mistaken for live state (the Risk-Truth card carries the authoritative halt banner).
+          .catch(function () { if (ofTrack) ofTrack.style.opacity = '0.45'; });
       }
       function applySwitches() {
         OF_CARDS.forEach(function (cd, i) {
