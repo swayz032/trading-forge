@@ -251,6 +251,17 @@
     .rr-dots { display: flex; gap: 9px; }
     .rr-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.18); cursor: pointer; transition: transform 0.2s, background 0.2s, box-shadow 0.2s; }
     .rr-dot.on { background: var(--lime); box-shadow: 0 0 12px rgba(163,255,18,0.6); transform: scale(1.25); }
+    /* account tabs + report picker (2 prop-firm accounts → tabs appear) */
+    .rr-acct-tabs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 760px; margin: 0 auto 14px; }
+    .rr-acct { font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 999px; cursor: pointer; color: var(--dim); background: rgba(163,255,18,0.05); border: 1px solid rgba(163,255,18,0.16); transition: color 0.15s, border-color 0.15s, background 0.15s; }
+    .rr-acct:hover { color: var(--ink); border-color: rgba(163,255,18,0.35); }
+    .rr-acct.on { color: #0a0d0a; background: var(--lime); border-color: var(--lime); }
+    .rr-picker { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 760px; margin: 0 auto 14px; }
+    .rr-chipR { font-size: 12px; padding: 6px 13px; border-radius: 10px; cursor: pointer; color: var(--dim); background: rgba(8,10,8,0.5); border: 1px solid rgba(255,255,255,0.1); transition: color 0.15s, border-color 0.15s, background 0.15s; }
+    .rr-chipR:hover { color: var(--ink); border-color: rgba(163,255,18,0.3); }
+    .rr-chipR.on { color: var(--ink); border-color: rgba(163,255,18,0.5); background: rgba(163,255,18,0.06); }
+    .rr-chipR b { font-weight: 800; margin-right: 5px; color: #6a746a; }
+    .rr-chipR b.g-a { color: #b4ff2e; } .rr-chipR b.g-b { color: #d6ff9a; } .rr-chipR b.g-c { color: #ffce5c; } .rr-chipR b.g-d { color: #ff6b6b; }
     /* explicit ON / OFF meanings (color-coded) */
     .of-onoff { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
     .of-on, .of-off { display: flex; gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.4; color: var(--ink); }
@@ -988,7 +999,13 @@
         entryQuality: 0.82, model: 'GPT-5.4', critiquedAt: '3:04 AM'
       };
       function rrGradeClass(g) { var c = String(g || '').charAt(0).toUpperCase(); return c === 'A' ? 'g-a' : c === 'B' ? 'g-b' : c === 'C' ? 'g-c' : 'g-d'; }
-      var RR_STATE = { idx: 0, n: 0, timer: null };
+      var RR_STATE = { idx: 0, n: 0, timer: null, reports: [], accounts: [], account: 'all', reportIdx: 0, stats: null };
+      var RR_PREMIUM = [[/silver\s*bullet/i,'Silver Bullet'],[/opening\s*range|\borb\b|open(ing)?\s*(range\s*)?break|session\s*open/i,'Opening Heist'],[/mean\s*revers|rubber|revert/i,'The Rubber Band'],[/support|\bbounce\b|demand\s*zone|off\s*(a\s*)?level|level\s*bounce/i,'The Bounce'],[/resist|supply\s*zone|rejection|reject/i,'The Rejection'],[/break\s*out|breakout|range\s*break/i,'The Breakout'],[/squeeze|bollinger|keltner|coil|nr7/i,'Squeeze Play'],[/manipulat|\btrap\b|stop\s*hunt|sweep|liquidity\s*grab/i,'The Trap'],[/reversal|reverse|\bflip\b/i,'The Flip'],[/vwap|\bfade\b/i,'The Fade'],[/gap\s*(and|&)?\s*go|gap\s*fill|\bgap\b/i,'Gap & Go'],[/fvg|order\s*block|\bict\b|\bsmt\b|imbalance/i,'The Sweep'],[/trend|continuation|momentum|pullback|rider/i,'Trend Rider'],[/scalp/i,'Quick Bite'],[/\brsi\b|oversold|overbought|connors/i,'The Dip Snatch'],[/\bema\b|moving\s*average|\bsma\b|golden\s*cross|crossover/i,'The Crossover']];
+      var RR_FILLER = {i:1,use:1,my:1,the:1,a:1,an:1,of:1,or:1,and:1,to:1,look:1,lets:1,"let's":1,minute:1,min:1,trade:1,strategy:1,setup:1,entry:1,overall:1,using:1,with:1,on:1,for:1,how:1};
+      function rrCleanName(name){var n=String(name||'').replace(/_/g,' ').replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi,'').replace(/\s+\d+\s*m(in)?\b/gi,'').replace(/\s+\d+\s*h\b/gi,'').replace(/\s+/g,' ').trim();var w=n.split(' ').filter(Boolean);var k=w.filter(function(x){return !RR_FILLER[x.toLowerCase()];});return ((k.length?k:w).slice(0,3).join(' ').trim())||'House Special';}
+      function rrPremiumTitle(name){var n=String(name||'').replace(/_/g,' ');for(var i=0;i<RR_PREMIUM.length;i++){if(RR_PREMIUM[i][0].test(n))return RR_PREMIUM[i][1];}return rrCleanName(n);}
+      function rrFmtTime(t){ if(!t)return ''; if(/^\d{4}-\d\d-\d\dT/.test(t)){ try{ return new Date(t).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }); }catch(e){ return t; } } return t; }
+      function rrFiltered(){ return RR_STATE.account==='all' ? RR_STATE.reports : RR_STATE.reports.filter(function(r){ return r.accountId===RR_STATE.account; }); }
       function rrBuildSlides(r) {
         var attr = r.attribution || {};
         var bars = RR_ATTR.map(function (k) { var w = Math.round((attr[k] || 0) * 100); return w > 0 ? '<i style="width:' + w + '%;background:' + RR_ATTR_C[k] + '"></i>' : ''; }).join('');
@@ -1023,18 +1040,30 @@
       }
       function rrAutoPlay() { if (RR_STATE.timer) clearInterval(RR_STATE.timer); RR_STATE.timer = setInterval(function () { rrGo(RR_STATE.idx + 1); }, 5200); }
       function rrStopPlay() { if (RR_STATE.timer) { clearInterval(RR_STATE.timer); RR_STATE.timer = null; } }
-      function renderReports() {
+      function paintRoom() {
         var body = document.getElementById('rr-body');
         if (!body) return;
-        // TODO(next): swap `reports` to fetch /slumhouse/api/reports once the backend route lands.
-        var reports = [];
-        var r = reports.length ? reports[0] : RR_EXAMPLE;
-        var isEx = !reports.length;
-        var slides = rrBuildSlides(r);
+        rrStopPlay();
+        var isEx = RR_STATE.reports.length === 0;
+        var filtered = isEx ? [] : rrFiltered();
+        if (RR_STATE.reportIdx >= filtered.length) RR_STATE.reportIdx = 0;
+        var cur = isEx ? RR_EXAMPLE : (filtered[RR_STATE.reportIdx] || RR_EXAMPLE);
+        var disp = { grade: cur.grade, strategy: rrPremiumTitle(cur.strategy), symbol: cur.symbol, realizedR: cur.realizedR,
+          oneLiner: cur.oneLiner, whatWentRight: cur.whatWentRight, whatToWatch: cur.whatToWatch, actionNeeded: cur.actionNeeded,
+          attribution: cur.attribution, entryQuality: cur.entryQuality, parameterHint: cur.parameterHint, confluenceMissed: cur.confluenceMissed,
+          regimeMismatch: cur.regimeMismatch, model: (cur.model || '').toUpperCase(), critiquedAt: rrFmtTime(cur.critiquedAt) };
+        var tabs = (!isEx && RR_STATE.accounts.length > 1)
+          ? '<div class="rr-acct-tabs"><span class="rr-acct' + (RR_STATE.account === 'all' ? ' on' : '') + '" data-acct="all">All</span>' + RR_STATE.accounts.map(function (a) { return '<span class="rr-acct' + (RR_STATE.account === a.id ? ' on' : '') + '" data-acct="' + a.id + '">' + rrEsc(a.label) + ' (' + a.count + ')</span>'; }).join('') + '</div>' : '';
+        var picker = (!isEx && filtered.length > 1)
+          ? '<div class="rr-picker">' + filtered.map(function (r, i) { return '<span class="rr-chipR' + (i === RR_STATE.reportIdx ? ' on' : '') + '" data-rep="' + i + '"><b class="' + rrGradeClass(r.grade) + '">' + rrEsc(r.grade) + '</b>' + rrEsc(rrPremiumTitle(r.strategy)) + '</span>'; }).join('') + '</div>' : '';
+        var ln = RR_STATE.stats && RR_STATE.stats.lastNight;
+        var note = isEx
+          ? 'No live trades yet — your plays are still candidates in the kitchen, so the bot hasn\'t traded. When it does, GPT-5\'s read plays here, one matter at a time. This is the shape:'
+          : (ln ? 'Last night — ' + ln + ' trade' + (ln === 1 ? '' : 's') + ' read by GPT-5. Pick a play, let the ball tell it.' : 'GPT-5\'s reads from your bot\'s trades.');
+        var slides = rrBuildSlides(disp);
         RR_STATE.n = slides.length; RR_STATE.idx = 0;
         body.innerHTML =
-          '<div class="rr-summary">' + (isEx ? 'No live trades yet — your plays are still candidates in the kitchen, so the bot hasn\'t traded. When it does, GPT-5\'s read on each trade plays here, one matter at a time. This is the shape:' : 'Last night\'s read from GPT-5.') + '</div>' +
-          (isEx ? '<div class="rr-example-tag">Example report</div>' : '') +
+          '<div class="rr-summary">' + note + '</div>' + (isEx ? '<div class="rr-example-tag">Example report</div>' : '') + tabs + picker +
           '<div class="rr-stage"><div class="rr-mist"></div><div class="rr-mist b"></div><div class="rr-mist c"></div><div class="rr-glass"></div>' +
             '<div class="rr-slides">' + slides.map(function (s, i) { return '<div class="rr-slide' + (i === 0 ? ' active' : '') + '">' + s + '</div>'; }).join('') + '</div>' +
           '</div>' +
@@ -1042,7 +1071,24 @@
         var pv = body.querySelector('[data-rr-prev]'); if (pv) pv.addEventListener('click', function () { rrGo(RR_STATE.idx - 1); rrAutoPlay(); });
         var nx = body.querySelector('[data-rr-next]'); if (nx) nx.addEventListener('click', function () { rrGo(RR_STATE.idx + 1); rrAutoPlay(); });
         body.querySelectorAll('.rr-dot').forEach(function (d, i) { d.addEventListener('click', function () { rrGo(i); rrAutoPlay(); }); });
+        body.querySelectorAll('[data-acct]').forEach(function (t) { t.addEventListener('click', function () { RR_STATE.account = t.getAttribute('data-acct'); RR_STATE.reportIdx = 0; paintRoom(); }); });
+        body.querySelectorAll('[data-rep]').forEach(function (c) { c.addEventListener('click', function () { RR_STATE.reportIdx = +c.getAttribute('data-rep'); paintRoom(); }); });
         rrAutoPlay();
+      }
+      function renderReports() {
+        var body = document.getElementById('rr-body');
+        if (!body) return;
+        body.innerHTML = '<div class="rr-summary">Reading the ball…</div>';
+        fetch('/slumhouse/api/reports?scope=night', { credentials: 'same-origin' })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(function (data) {
+            RR_STATE.reports = (data && Array.isArray(data.reports)) ? data.reports : [];
+            RR_STATE.accounts = (data && Array.isArray(data.accounts)) ? data.accounts : [];
+            RR_STATE.stats = (data && data.stats) || null;
+            RR_STATE.account = 'all'; RR_STATE.reportIdx = 0;
+            paintRoom();
+          })
+          .catch(function () { RR_STATE.reports = []; RR_STATE.accounts = []; RR_STATE.stats = null; paintRoom(); });
       }
       function exitReportingRoom() {
         var room = document.getElementById('reporting-room');
