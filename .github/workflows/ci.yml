@@ -62,6 +62,8 @@ jobs:
         run: npm run check:2026-compliance
       - name: Gate — family-grade postscript on all notify calls
         run: npm run check:family-grade-postscript
+      - name: Gate — cron/manual promotion-gate parity (deepscan18 D-D1)
+        run: npm run check:gate-parity
 
   test-node:
     name: Node Tests + Coverage
