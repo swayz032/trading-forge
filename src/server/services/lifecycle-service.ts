@@ -672,6 +672,9 @@ export class LifecycleService {
           // Wave A (2026-07-03) — Slippage-Survival gate input; manual-path parity with the
           // cron sweep block below.
           slippageSurvival: backtests.slippageSurvival,
+          // A-1 (deepscan17 2026-07-05) — result_extras.dsl_guards feeds the DSL guards HARD
+          // gate below (manual-path parity with the cron sweep, which reads the same field).
+          resultExtras: backtests.resultExtras,
         }).from(backtests).where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed"))).orderBy(desc(backtests.createdAt)).limit(1);
 
         // ── (deepscan7 F-1 2026-07-02) Compliance-drift HARD block — cron-path parity ──
@@ -740,6 +743,56 @@ export class LifecycleService {
             });
             return { success: false, error: "compliance ruleset drift_detected — promotion held until human revalidation" };
           }
+        }
+
+        // ── A-1 (deepscan17 2026-07-05) — DSL guards_failed HARD gate: PAPER → DEPLOY_READY (manual) ──
+        // Cron parity: checkAutoPromotions gates PAPER→DEPLOY_READY on
+        // result_extras.dsl_guards.guards_failed=true (unguarded backtest — E.3/E.4/E.5 risk
+        // guards threw mid-run, so stop-ceiling / time-stop / DLL enforcement never ran). The
+        // manual PATCH path delegates PAPER→DEPLOY_READY to evaluatePaperToDeployReadyGates
+        // (B14/WFE/drift/BIF), which has ZERO dsl_guards references — so a correctly-signed
+        // manual/n8n/Carter promotion of a guards_failed strategy reached DEPLOY_READY and,
+        // downstream, live capital. Enforced inline here (same dual-call-site pattern the
+        // slippage-survival + BIF gates use) BEFORE the on-demand survival-twin Python replay,
+        // so an unguarded backtest never spends a subprocess. evaluateDslGuardsGate is total
+        // (never throws) and is the SAME pure evaluator the 3 cron sites call; any resultExtras
+        // shape error is caught by the outer PAPER→DEPLOY_READY fail-CLOSED handler.
+        {
+          const dslGuardsInputP2D = ((latestBtP2D?.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+            | DslGuardsGateInput
+            | null;
+          const dslGuardsResultP2D = evaluateDslGuardsGate(dslGuardsInputP2D);
+          _incDslGuardsGateCounter("PAPER_TO_DEPLOY_READY", dslGuardsResultP2D);
+
+          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+            strategyId: id,
+            ...dslGuardsResultP2D.auditPayload,
+            passed: dslGuardsResultP2D.passed,
+            reason: dslGuardsResultP2D.reason,
+          });
+
+          await db.insert(auditLog).values({
+            action: dslGuardsResultP2D.auditAction ?? "lifecycle.dsl_guards_pass",
+            entityId: id,
+            entityType: "strategy",
+            status: !dslGuardsResultP2D.passed ? "failure" : dslGuardsResultP2D.status === "legacy_proceed" ? "warning" : "success",
+            decisionAuthority: "gate",
+            input: { fromState, toState },
+            result: dslGuardsResultP2D.auditPayload,
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate (PAPER→DEPLOY_READY manual path) audit insert failed (non-blocking)");
+          });
+
+          if (!dslGuardsResultP2D.passed) {
+            logger.warn(
+              { strategyId: id, guardsFailedReason: dslGuardsResultP2D.auditPayload.guards_failed_reason, transition: "PAPER→DEPLOY_READY" },
+              "DSL guards gate BLOCKED PAPER→DEPLOY_READY (manual path): guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            return { success: false, error: "lifecycle.dsl_guards_failed_block" };
+          }
+          this._resetHardGateCounter(id, "dsl_guards_failed", correlationId);
         }
 
         const [latestMcP2D] = latestBtP2D ? await db.select({
@@ -1131,6 +1184,94 @@ export class LifecycleService {
         const shadowErrMsg = shadowGateErr instanceof Error ? shadowGateErr.message : String(shadowGateErr);
         logger.warn({ strategyId: id, err: shadowGateErr }, "SHADOW→PAPER evaluator: infrastructure error — blocking promotion (fail-closed)");
         return { success: false, error: `shadow_to_paper_gate_evaluator_error: ${shadowErrMsg}` };
+      }
+    }
+
+    // ── A-1 (deepscan17 2026-07-05) — DSL guards_failed HARD gate: MANUAL path into PAPER ──
+    // checkAutoPromotions (the autonomous cron) blocks BOTH forward edges into PAPER on
+    // result_extras.dsl_guards.guards_failed=true (E.3/E.4/E.5 risk guards threw mid-run — the
+    // stop-ceiling / time-stop / DLL-halt enforcement never ran, so the backtest is UNGUARDED,
+    // not clean). Those cron call sites live entirely inside checkAutoPromotions; the manual
+    // PATCH /:id/lifecycle path (this function) had NO such gate, so a correctly-HMAC-signed
+    // manual/n8n/Carter promotion of a guards_failed strategy reached PAPER (and downstream live
+    // capital). Mirrors the cron gate via the SAME pure evaluator: same audit actions, same SSE,
+    // same counter, same fail-CLOSED posture. Covers TESTING→PAPER (legacy) + SHADOW→PAPER
+    // (canonical); DEPLOY_READY→PAPER demotion is excluded (moving away from capital, not toward
+    // it — matches the cron's forward-only gating). Runs BEFORE the heavy gate stack so an
+    // unguarded backtest is rejected early. Self-contained fetch of the latest completed backtest
+    // (no dependency on the promotionEvidence block below). No _maybeAutoGraveyard here: burial is
+    // a repeated-autonomous-failure escalation, not a single-operator-attempt outcome (mirrors the
+    // manual path's other gates, which block-and-return without burying).
+    if ((fromState === "TESTING" || fromState === "SHADOW") && toState === "PAPER") {
+      const dslGuardsTransition: LifecycleGateTransition =
+        fromState === "SHADOW" ? "SHADOW_TO_PAPER" : "TESTING_TO_PAPER";
+      try {
+        const [btDslGuards] = await (tx ?? db)
+          .select({ resultExtras: backtests.resultExtras })
+          .from(backtests)
+          .where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed")))
+          .orderBy(desc(backtests.createdAt))
+          .limit(1);
+        const dslGuardsInput = ((btDslGuards?.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+          | DslGuardsGateInput
+          | null;
+        const dslGuardsResult = evaluateDslGuardsGate(dslGuardsInput);
+        _incDslGuardsGateCounter(dslGuardsTransition, dslGuardsResult);
+
+        broadcastSSE("lifecycle:dsl_guards_evaluated", {
+          strategyId: id,
+          ...dslGuardsResult.auditPayload,
+          passed: dslGuardsResult.passed,
+          reason: dslGuardsResult.reason,
+        });
+
+        await db.insert(auditLog).values({
+          action: dslGuardsResult.auditAction ?? "lifecycle.dsl_guards_pass",
+          entityId: id,
+          entityType: "strategy",
+          status: !dslGuardsResult.passed ? "failure" : dslGuardsResult.status === "legacy_proceed" ? "warning" : "success",
+          decisionAuthority: "gate",
+          input: { fromState, toState },
+          result: dslGuardsResult.auditPayload,
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr) => {
+          logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate (manual path into PAPER) audit insert failed (non-blocking)");
+        });
+
+        if (!dslGuardsResult.passed) {
+          logger.warn(
+            { strategyId: id, guardsFailedReason: dslGuardsResult.auditPayload.guards_failed_reason, transition: `${fromState}→PAPER` },
+            "DSL guards gate BLOCKED (manual path): guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+          );
+          strategyPromotions.labels({ from_state: fromState, to_state: "PAPER", actor: "system_gate" }).inc();
+          return { success: false, error: "lifecycle.dsl_guards_failed_block" };
+        }
+        this._resetHardGateCounter(id, "dsl_guards_failed", options.correlationId ?? null);
+      } catch (dslGuardsErr) {
+        // Fail-CLOSED: this gate protects live capital from an UNGUARDED backtest (same severity
+        // class as B14) — a read/parse error must not silently allow promotion. In practice the
+        // resultExtras blob is already-parsed JS, so this guards against unexpected shape errors,
+        // not DB connectivity.
+        try { dslGuardsGateTotal.labels({ transition: dslGuardsTransition, outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
+        logger.warn({ strategyId: id, err: dslGuardsErr }, "DSL guards gate (manual path into PAPER): read failed — blocking promotion (fail-closed)");
+        await db.insert(auditLog).values({
+          action: "lifecycle.dsl_guards_gate_error_fail_closed",
+          entityId: id,
+          entityType: "strategy",
+          status: "failure",
+          decisionAuthority: "gate",
+          input: { fromState, toState },
+          result: {
+            reason: "lifecycle.dsl_guards_gate_error_fail_closed",
+            error: dslGuardsErr instanceof Error ? dslGuardsErr.message : String(dslGuardsErr),
+            note: "DSL guards gate threw on manual promotion into PAPER — promotion blocked",
+          },
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr) => {
+          logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate fail-closed audit insert (manual path into PAPER) failed (non-blocking)");
+        });
+        strategyPromotions.labels({ from_state: fromState, to_state: "PAPER", actor: "system_gate" }).inc();
+        return { success: false, error: "lifecycle.dsl_guards_gate_error_fail_closed" };
       }
     }
 

@@ -1518,28 +1518,45 @@ def _apply_static_styleC_management(
                         new_trail = bar_low + (2.0 * atr_at_bar)
                         trail_stop_p = min(trail_stop_p, new_trail)
 
-            # ── Blended exit price (mirrors adaptive path lines 1333-1354) ────
+            # ── Blended exit price (deepscan17 B-1 fix, 2026-07-05) ───────────
+            # PREVIOUS BUG: any stop_loss/trailing_stop/time_stop exit discarded
+            # banked TP1/TP2 profit outright (final_exit_p = exit_price_p), even
+            # though TP1->BE+1->eventual stop is the DESIGNED Style C lifecycle,
+            # not an edge case — this corrupted P&L on the MAJORITY of Style C
+            # trades feeding every downstream Sharpe/PF/DSR promotion gate.
+            # FIX: blend unconditionally from the filled fractions. The UNFILLED
+            # remainder uses exit_price_p (the actual stop/trail/time fill,
+            # gap-aware) when that's what closed the trade, else the bar close
+            # at the original signal exit (unchanged from the pre-fix "signal"
+            # branches). exit_reason_p is left untouched when the trade
+            # genuinely closed via stop/trailing/time_stop — the label still
+            # describes WHY it closed; only the price now reflects the banked
+            # partials. Repro (deepscan17 audit): MES long entry 5000, TP1 fill
+            # 5010 (33%), stop moves BE+1 5000.25, then trailing_stop with TP2
+            # unfilled -> blended = 0.33*5010 + 0.67*5000.25 = 5003.4675, not
+            # the pre-fix 5000.25.
             if exit_reason_p in ("stop_loss", "trailing_stop", "time_stop"):
-                final_exit_p = exit_price_p
-            elif tp1_filled_p and tp2_filled_p:
+                runner_exit_p = exit_price_p
+            else:
                 runner_exit_p = (
-                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else tp2_price_p
+                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else exit_price_p
                 )
+
+            if tp1_filled_p and tp2_filled_p:
                 final_exit_p = (
                     TP1_FRACTION_C * tp1_price_p
                     + TP2_FRACTION_C * tp2_price_p
                     + RUNNER_FRACTION_C * runner_exit_p
                 )
-                exit_reason_p = "take_profit"
+                if exit_reason_p not in ("stop_loss", "trailing_stop", "time_stop"):
+                    exit_reason_p = "take_profit"
             elif tp1_filled_p:
-                runner_exit_p = (
-                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else exit_price_p
-                )
                 final_exit_p = (
                     TP1_FRACTION_C * tp1_price_p
                     + (TP2_FRACTION_C + RUNNER_FRACTION_C) * runner_exit_p
                 )
-                exit_reason_p = "take_profit"
+                if exit_reason_p not in ("stop_loss", "trailing_stop", "time_stop"):
+                    exit_reason_p = "take_profit"
             else:
                 final_exit_p = exit_price_p
 
@@ -2026,12 +2043,35 @@ def _apply_adaptive_management(
 
                 elif runner_method == "chandelier":
                     # Chandelier: ATR-based trail below the most recent bar high (longs).
+                    # B-9 fix (deepscan17, 2026-07-05): TS adaptive-exit-engine.ts uses
+                    # a regime-aware chandelier multiplier (Wave 26 Pass L Tweak 1) —
+                    # 2.5x for TRENDING_UP/TRENDING_DOWN/EXPANSION (StratBase 2026-02:
+                    # PF 1.56 @ 2.5x vs PF 1.44 @ 2.0x on trending regimes), 2.0x
+                    # otherwise (env STOP_CHANDELIER_MULTIPLIER_TRENDING). This branch
+                    # hardcoded 2.0x unconditionally, ignoring regime_default (already
+                    # in scope from the top of this function) — a TS<->Python parity
+                    # gap. Dormant under the DEFAULT regime->method map (chandelier is
+                    # only routed for HIGH_VOL_MACRO by default; trending regimes route
+                    # to anchored_vwap) but activates the moment an operator maps a
+                    # trending regime to chandelier via exit_plan_config.
+                    _is_trending_regime = regime_default in ("TRENDING_UP", "TRENDING_DOWN", "EXPANSION")
+                    if _is_trending_regime:
+                        try:
+                            _chandelier_mult = float(
+                                os.environ.get("STOP_CHANDELIER_MULTIPLIER_TRENDING", "2.5")
+                            )
+                            if not math.isfinite(_chandelier_mult):
+                                _chandelier_mult = 2.5
+                        except (TypeError, ValueError):
+                            _chandelier_mult = 2.5
+                    else:
+                        _chandelier_mult = 2.0
                     atr_at_bar = float(atr_np[bar]) if bar < len(atr_np) and not np.isnan(atr_np[bar]) else atr_at_entry
                     if not is_short:
-                        new_trail = bar_high - (2.0 * atr_at_bar)
+                        new_trail = bar_high - (_chandelier_mult * atr_at_bar)
                         trail_stop = max(trail_stop, new_trail)
                     else:
-                        new_trail = bar_low + (2.0 * atr_at_bar)
+                        new_trail = bar_low + (_chandelier_mult * atr_at_bar)
                         trail_stop = min(trail_stop, new_trail)
 
                 else:
@@ -2045,26 +2085,38 @@ def _apply_adaptive_management(
                         new_trail = bar_low + max(risk_points, min_trail)
                         trail_stop = min(trail_stop, new_trail)
 
-        # ── Blended exit price ──────────────────────────────────────────
+        # ── Blended exit price (deepscan17 B-1 fix, 2026-07-05) ──────────
         # Multi-leg scaling: approximate P&L from separate lot fills.
+        # PREVIOUS BUG: same as _apply_static_styleC_management — a
+        # stop/trailing/time_stop exit discarded any TP1/TP2 profit already
+        # banked instead of blending it in. See that function's docstring
+        # for the full repro. FIX: blend unconditionally; the UNFILLED
+        # remainder uses exit_price (actual stop/trail/time fill, gap-aware)
+        # when that's what closed the trade, else bar close at signal exit.
+        # exit_reason is left untouched for genuine stop/trailing/time_stop
+        # closes — it still describes WHY the trade closed.
         if exit_reason in ("stop_loss", "trailing_stop", "time_stop"):
-            # Stop / time-stop always overrides scale-out — single price
-            final_exit = exit_price
-        elif tp1_filled and tp2_filled:
-            runner_exit = float(close_np[exit_idx]) if exit_idx < len(close_np) else tp2_price
+            runner_exit = exit_price
+        else:
+            runner_exit = (
+                float(close_np[exit_idx]) if exit_idx < len(close_np) else exit_price
+            )
+
+        if tp1_filled and tp2_filled:
             final_exit = (
                 scaling.tp1_pct * tp1_price
                 + scaling.tp2_pct * tp2_price
                 + scaling.runner_pct * runner_exit
             )
-            exit_reason = "take_profit"
+            if exit_reason not in ("stop_loss", "trailing_stop", "time_stop"):
+                exit_reason = "take_profit"
         elif tp1_filled:
-            runner_exit = float(close_np[exit_idx]) if exit_idx < len(close_np) else exit_price
             final_exit = (
                 scaling.tp1_pct * tp1_price
                 + (scaling.tp2_pct + scaling.runner_pct) * runner_exit
             )
-            exit_reason = "take_profit"
+            if exit_reason not in ("stop_loss", "trailing_stop", "time_stop"):
+                exit_reason = "take_profit"
         else:
             final_exit = exit_price
 
@@ -4493,6 +4545,7 @@ def run_backtest(
         if request.fill_model:
             from src.engine.fill_model import (
                 apply_fill_model,
+                apply_volume_partial_fills,
                 compute_fill_probabilities_v2,
             )
             fill_config = request.fill_model.model_dump()
@@ -4503,6 +4556,42 @@ def run_backtest(
                 spread_multiplier=spread_multiplier,
             )
             short_entries_np, short_adjusted_sizes = apply_fill_model(short_entries_np, short_fill_probs, sizes.copy(), seed=43)
+
+            # B-6 fix (deepscan17, 2026-07-05): PREVIOUS BUG — Stage 2
+            # (volume-based partial fill, HIGH #6) was applied to the long
+            # entry mask only (see apply_volume_partial_fills call above on
+            # entries_np/sizes). Short entries only ever went through Stage 1
+            # (RSI/type-based apply_fill_model) — a large-size short entry on
+            # a thin-volume bar was backtested as fully filled while the
+            # symmetric long entry on the same bar/volume would have been
+            # degraded. Apply the identical Stage 2 model to the short mask
+            # so both directions share the same fill-realism contract.
+            short_adjusted_sizes, _short_vol_fill_ratios, _short_partial_fill_audit = (
+                apply_volume_partial_fills(short_entries_np, short_adjusted_sizes, df)
+            )
+            # Merge short-side counts into the long-side audit dict so
+            # engine_audit.partial_fill_modeled reflects BOTH directions
+            # rather than under-reporting (schema unchanged — same keys,
+            # combined counts).
+            if _partial_fill_audit:
+                _long_n = _partial_fill_audit.get("total_orders", 0)
+                _short_n = _short_partial_fill_audit.get("total_orders", 0)
+                _combined_n = _long_n + _short_n
+                _combined_partials = (
+                    _partial_fill_audit.get("partial_fills", 0)
+                    + _short_partial_fill_audit.get("partial_fills", 0)
+                )
+                if _combined_n > 0:
+                    _combined_avg_ratio = (
+                        _partial_fill_audit.get("avg_fill_ratio", 1.0) * _long_n
+                        + _short_partial_fill_audit.get("avg_fill_ratio", 1.0) * _short_n
+                    ) / _combined_n
+                else:
+                    _combined_avg_ratio = 1.0
+                _partial_fill_audit["total_orders"] = _combined_n
+                _partial_fill_audit["partial_fills"] = _combined_partials
+                _partial_fill_audit["avg_fill_ratio"] = round(_combined_avg_ratio, 4)
+
             # Merge short partial fill adjustments into main sizes array
             # (safe: same bar can't have both long and short entry)
             short_fill_mask = short_entries_np.astype(bool)
@@ -5661,12 +5750,16 @@ def run_backtest(
                 "n_trades": len(_h5_entry_slips),
             },
             # HIGH #6 — Partial fill model audit (Wave 27.5 Pass C.1).
+            # B-18 fix (deepscan17, 2026-07-05): mirror fill_model.py's honest
+            # None (not-computed) for avg_slippage_delta_per_partial rather
+            # than a fabricated 0.0 — this fallback fires when fill_model
+            # wasn't even requested, so "measured 0.0" would be doubly false.
             "partial_fill_modeled": _partial_fill_audit if _partial_fill_audit else {
                 "enabled": False,
                 "total_orders": 0,
                 "partial_fills": 0,
                 "avg_fill_ratio": 1.0,
-                "avg_slippage_delta_per_partial": 0.0,
+                "avg_slippage_delta_per_partial": None,
             },
         },
         # CRITICAL #1 — DSL guard summary (E.3/E.4/E.5 enforcement).
@@ -5826,7 +5919,36 @@ def run_backtest(
                 or len(_wf_windows)
                 or 1
             )
-            _dsr_threshold = float(os.environ.get("DSR_HONEST_THRESHOLD", "1.5"))
+            # B-11 fix (deepscan17, 2026-07-05): default re-calibrated 1.5 -> 1.645.
+            # A sibling fix (risk_metrics.py B-2, same date) corrected
+            # compute_deflated_sharpe_ratio()'s dsr formula from a scale-mismatched
+            # (observed - z_bracket) / sharpe_std — which produced wildly
+            # over-punitive, mostly-negative dsr values that this 1.5 threshold was
+            # informally calibrated against — to the proper Bailey/Lopez-de-Prado
+            # z-scale statistic dsr = observed_sharpe/sharpe_std - sr_expected_max,
+            # which is ~N(0,1) under the null. On the corrected scale, dsr >= 1.5
+            # is only ~one-tailed p=0.067 — LOOSER than the p<0.05 standard
+            # compute_deflated_sharpe_ratio() itself already uses for its own
+            # "passes" field (p_value < 0.05 <=> dsr > norm.ppf(0.95) = 1.645).
+            # 1.5 unchanged would make this "honest DSR" gate (SHADOW -> PAPER,
+            # lifecycle-service.ts wave24-dsr-honest-gate) LOOSER than the DSR
+            # module's own internal pass/fail bar for the identical statistic —
+            # an inconsistency invisible before B-2 because the old formula's
+            # values never landed anywhere near either threshold in a stable way.
+            # 1.645 aligns both checks on the same institutional p<0.05 standard
+            # (CLAUDE.md "ship gates strict, then loosen with data" — this is the
+            # stricter direction, not looser). Risk of metric drift: strategies
+            # sitting in dsr in [1.5, 1.645) that PREVIOUSLY passed this gate will
+            # now BLOCK at SHADOW -> PAPER; nothing that previously blocked can
+            # newly pass. Downstream: lifecycle-service.ts's Wave 24 Item 19 gate
+            # reads the persisted dsr_passed boolean directly (not the threshold
+            # value) — this Python-side change is authoritative. The TS-side
+            # DSR_HONEST_THRESHOLD default (lifecycle-service.ts:1962, used only
+            # for the audit-log message text, not the gate decision) should be
+            # updated to "1.645" to match for display consistency — out of scope
+            # here (lifecycle-service.ts is not an owned file for this agent);
+            # flagged as carry-forward.
+            _dsr_threshold = float(os.environ.get("DSR_HONEST_THRESHOLD", "1.645"))
 
             if _total_trades_inv > 0 and _n_obs_inv > 1:
                 _dsr_honest = _compute_dsr_inv(

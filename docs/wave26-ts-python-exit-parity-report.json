@@ -1,23 +1,77 @@
 {
-  "run_date": "2026-06-28T18:53:58.829Z",
+  "run_date": "2026-07-05T05:53:57.161Z",
   "overall_passed": true,
   "price_tolerance": 0.01,
   "scaling_tolerance": 0.001,
   "fixtures": [
     {
-      "fixture": "long+TRENDING_UP",
+      "fixture": "long+TRENDING_UP+liquidity_rank_divergence",
       "ts_plan": {
-        "tp1_price": 4006,
-        "tp2_price": 4012,
-        "runner_trail_method": "anchored_vwap",
-        "scaling_tp1_pct": 0.2,
-        "scaling_tp2_pct": 0.3,
-        "scaling_runner_pct": 0.5,
-        "pre_lunch_threshold_r": 0.3
+        "tp1": {
+          "source": "liquidity",
+          "price": 4006,
+          "level_type": "pdh",
+          "htf_significance": 3,
+          "r_multiple": 1
+        },
+        "tp2": {
+          "source": "r_multiple",
+          "price": 4012,
+          "r_multiple": 2
+        },
+        "runner": {
+          "trail_method": "anchored_vwap",
+          "trail_anchor_value": 1779631200000,
+          "regime_source": "TRENDING_UP",
+          "method_source": "regime_default"
+        },
+        "scaling": {
+          "tp1_pct": 0.2,
+          "tp2_pct": 0.3,
+          "runner_pct": 0.5,
+          "regime_source": "TRENDING_UP",
+          "schedule_source": "regime_default"
+        },
+        "early_exit_threshold_delta_div": 0.6,
+        "early_exit_partial_pct": 0.25,
+        "pre_lunch_threshold_r": 0.3,
+        "pre_lunch_partial_pct": 0.5,
+        "audit_payload": {
+          "strategy_id": "parity-harness",
+          "symbol": "MES",
+          "regime": "TRENDING_UP",
+          "narrative_phase": null,
+          "tp1_source": "liquidity",
+          "tp1_level_type": "pdh",
+          "tp1_r_multiple": 1,
+          "tp1_price": 4006,
+          "tp2_source": "r_multiple",
+          "tp2_level_type": null,
+          "tp2_r_multiple": 2,
+          "tp2_price": 4012,
+          "runner_method": "anchored_vwap",
+          "runner_method_source": "regime_default",
+          "scaling_tp1_pct": 0.2,
+          "scaling_tp2_pct": 0.3,
+          "scaling_runner_pct": 0.5,
+          "scaling_source": "regime_default",
+          "pre_lunch_threshold_r": 0.3,
+          "delta_div_threshold": 0.6,
+          "delta_div_partial_pct": 0.25,
+          "decayed_factor_count": 0,
+          "atr": 6,
+          "entry_price": 4000,
+          "entry_stop": 3994,
+          "entry_direction": "long"
+        }
       },
       "py_plan": {
         "tp1_price": 4006,
+        "tp1_source": "liquidity",
+        "tp1_level_type": "pdh",
         "tp2_price": 4012,
+        "tp2_source": "r_multiple",
+        "tp2_level_type": null,
         "runner_trail_method": "anchored_vwap",
         "scaling_tp1_pct": 0.2,
         "scaling_tp2_pct": 0.3,
@@ -33,9 +87,37 @@
           "reason": "OK"
         },
         {
+          "field": "tp1.source",
+          "ts_val": "liquidity",
+          "py_val": "liquidity",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type",
+          "ts_val": "pdh",
+          "py_val": "pdh",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
           "field": "tp2.price",
           "ts_val": 4012,
           "py_val": 4012,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.level_type",
+          "ts_val": null,
+          "py_val": null,
           "passed": true,
           "reason": "OK"
         },
@@ -69,8 +151,22 @@
         },
         {
           "field": "pre_lunch_threshold_r",
-          "ts_val": "0.3",
-          "py_val": "0.3",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type (ground truth, not just mutual echo)",
+          "ts_val": "pdh",
+          "py_val": "pdh",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type (Python ground truth)",
+          "ts_val": "pdh",
+          "py_val": "pdh",
           "passed": true,
           "reason": "OK"
         }
@@ -80,17 +176,69 @@
     {
       "fixture": "short+TRENDING_DOWN",
       "ts_plan": {
-        "tp1_price": 3994,
-        "tp2_price": 3988,
-        "runner_trail_method": "anchored_vwap",
-        "scaling_tp1_pct": 0.2,
-        "scaling_tp2_pct": 0.3,
-        "scaling_runner_pct": 0.5,
-        "pre_lunch_threshold_r": 0.3
+        "tp1": {
+          "source": "r_multiple",
+          "price": 3994,
+          "r_multiple": 1
+        },
+        "tp2": {
+          "source": "r_multiple",
+          "price": 3988,
+          "r_multiple": 2
+        },
+        "runner": {
+          "trail_method": "anchored_vwap",
+          "trail_anchor_value": 1779631200000,
+          "regime_source": "TRENDING_DOWN",
+          "method_source": "regime_default"
+        },
+        "scaling": {
+          "tp1_pct": 0.2,
+          "tp2_pct": 0.3,
+          "runner_pct": 0.5,
+          "regime_source": "TRENDING_DOWN",
+          "schedule_source": "regime_default"
+        },
+        "early_exit_threshold_delta_div": 0.6,
+        "early_exit_partial_pct": 0.25,
+        "pre_lunch_threshold_r": 0.3,
+        "pre_lunch_partial_pct": 0.5,
+        "audit_payload": {
+          "strategy_id": "parity-harness",
+          "symbol": "MES",
+          "regime": "TRENDING_DOWN",
+          "narrative_phase": null,
+          "tp1_source": "r_multiple",
+          "tp1_level_type": null,
+          "tp1_r_multiple": 1,
+          "tp1_price": 3994,
+          "tp2_source": "r_multiple",
+          "tp2_level_type": null,
+          "tp2_r_multiple": 2,
+          "tp2_price": 3988,
+          "runner_method": "anchored_vwap",
+          "runner_method_source": "regime_default",
+          "scaling_tp1_pct": 0.2,
+          "scaling_tp2_pct": 0.3,
+          "scaling_runner_pct": 0.5,
+          "scaling_source": "regime_default",
+          "pre_lunch_threshold_r": 0.3,
+          "delta_div_threshold": 0.6,
+          "delta_div_partial_pct": 0.25,
+          "decayed_factor_count": 0,
+          "atr": 6,
+          "entry_price": 4000,
+          "entry_stop": 4006,
+          "entry_direction": "short"
+        }
       },
       "py_plan": {
         "tp1_price": 3994,
+        "tp1_source": "r_multiple",
+        "tp1_level_type": null,
         "tp2_price": 3988,
+        "tp2_source": "r_multiple",
+        "tp2_level_type": null,
         "runner_trail_method": "anchored_vwap",
         "scaling_tp1_pct": 0.2,
         "scaling_tp2_pct": 0.3,
@@ -106,9 +254,37 @@
           "reason": "OK"
         },
         {
+          "field": "tp1.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type",
+          "ts_val": null,
+          "py_val": null,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
           "field": "tp2.price",
           "ts_val": 3988,
           "py_val": 3988,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.level_type",
+          "ts_val": null,
+          "py_val": null,
           "passed": true,
           "reason": "OK"
         },
@@ -142,8 +318,8 @@
         },
         {
           "field": "pre_lunch_threshold_r",
-          "ts_val": "0.3",
-          "py_val": "0.3",
+          "ts_val": 0.3,
+          "py_val": 0.3,
           "passed": true,
           "reason": "OK"
         }
@@ -151,19 +327,73 @@
       "passed": true
     },
     {
-      "fixture": "long+RANGE_BOUND",
+      "fixture": "long+RANGE_BOUND+liquidity_rank_divergence",
       "ts_plan": {
-        "tp1_price": 5256,
-        "tp2_price": 5262,
-        "runner_trail_method": "developing_poc",
-        "scaling_tp1_pct": 0.5,
-        "scaling_tp2_pct": 0.3,
-        "scaling_runner_pct": 0.2,
-        "pre_lunch_threshold_r": 0.3
+        "tp1": {
+          "source": "liquidity",
+          "price": 5256,
+          "level_type": "eqh",
+          "htf_significance": 3,
+          "r_multiple": 1
+        },
+        "tp2": {
+          "source": "r_multiple",
+          "price": 5262,
+          "r_multiple": 2
+        },
+        "runner": {
+          "trail_method": "developing_poc",
+          "trail_anchor_value": 5244,
+          "regime_source": "RANGE_BOUND",
+          "method_source": "regime_default"
+        },
+        "scaling": {
+          "tp1_pct": 0.5,
+          "tp2_pct": 0.3,
+          "runner_pct": 0.2,
+          "regime_source": "RANGE_BOUND",
+          "schedule_source": "regime_default"
+        },
+        "early_exit_threshold_delta_div": 0.6,
+        "early_exit_partial_pct": 0.25,
+        "pre_lunch_threshold_r": 0.3,
+        "pre_lunch_partial_pct": 0.5,
+        "audit_payload": {
+          "strategy_id": "parity-harness",
+          "symbol": "MES",
+          "regime": "RANGE_BOUND",
+          "narrative_phase": null,
+          "tp1_source": "liquidity",
+          "tp1_level_type": "eqh",
+          "tp1_r_multiple": 1,
+          "tp1_price": 5256,
+          "tp2_source": "r_multiple",
+          "tp2_level_type": null,
+          "tp2_r_multiple": 2,
+          "tp2_price": 5262,
+          "runner_method": "developing_poc",
+          "runner_method_source": "regime_default",
+          "scaling_tp1_pct": 0.5,
+          "scaling_tp2_pct": 0.3,
+          "scaling_runner_pct": 0.2,
+          "scaling_source": "regime_default",
+          "pre_lunch_threshold_r": 0.3,
+          "delta_div_threshold": 0.6,
+          "delta_div_partial_pct": 0.25,
+          "decayed_factor_count": 0,
+          "atr": 6,
+          "entry_price": 5250,
+          "entry_stop": 5244,
+          "entry_direction": "long"
+        }
       },
       "py_plan": {
         "tp1_price": 5256,
+        "tp1_source": "liquidity",
+        "tp1_level_type": "eqh",
         "tp2_price": 5262,
+        "tp2_source": "r_multiple",
+        "tp2_level_type": null,
         "runner_trail_method": "developing_poc",
         "scaling_tp1_pct": 0.5,
         "scaling_tp2_pct": 0.3,
@@ -179,9 +409,37 @@
           "reason": "OK"
         },
         {
+          "field": "tp1.source",
+          "ts_val": "liquidity",
+          "py_val": "liquidity",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type",
+          "ts_val": "eqh",
+          "py_val": "eqh",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
           "field": "tp2.price",
           "ts_val": 5262,
           "py_val": 5262,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.level_type",
+          "ts_val": null,
+          "py_val": null,
           "passed": true,
           "reason": "OK"
         },
@@ -215,8 +473,22 @@
         },
         {
           "field": "pre_lunch_threshold_r",
-          "ts_val": "0.3",
-          "py_val": "0.3",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type (ground truth, not just mutual echo)",
+          "ts_val": "eqh",
+          "py_val": "eqh",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type (Python ground truth)",
+          "ts_val": "eqh",
+          "py_val": "eqh",
           "passed": true,
           "reason": "OK"
         }
@@ -226,17 +498,69 @@
     {
       "fixture": "long+HIGH_VOL_MACRO",
       "ts_plan": {
-        "tp1_price": 4506,
-        "tp2_price": 4512,
-        "runner_trail_method": "chandelier",
-        "scaling_tp1_pct": 0.6,
-        "scaling_tp2_pct": 0.3,
-        "scaling_runner_pct": 0.1,
-        "pre_lunch_threshold_r": 0.5
+        "tp1": {
+          "source": "r_multiple",
+          "price": 4506,
+          "r_multiple": 1
+        },
+        "tp2": {
+          "source": "r_multiple",
+          "price": 4512,
+          "r_multiple": 2
+        },
+        "runner": {
+          "trail_method": "chandelier",
+          "trail_anchor_value": 12,
+          "regime_source": "HIGH_VOL_MACRO",
+          "method_source": "regime_default"
+        },
+        "scaling": {
+          "tp1_pct": 0.6,
+          "tp2_pct": 0.3,
+          "runner_pct": 0.1,
+          "regime_source": "HIGH_VOL_MACRO",
+          "schedule_source": "regime_default"
+        },
+        "early_exit_threshold_delta_div": 0.6,
+        "early_exit_partial_pct": 0.25,
+        "pre_lunch_threshold_r": 0.5,
+        "pre_lunch_partial_pct": 0.5,
+        "audit_payload": {
+          "strategy_id": "parity-harness",
+          "symbol": "MES",
+          "regime": "HIGH_VOL_MACRO",
+          "narrative_phase": null,
+          "tp1_source": "r_multiple",
+          "tp1_level_type": null,
+          "tp1_r_multiple": 1,
+          "tp1_price": 4506,
+          "tp2_source": "r_multiple",
+          "tp2_level_type": null,
+          "tp2_r_multiple": 2,
+          "tp2_price": 4512,
+          "runner_method": "chandelier",
+          "runner_method_source": "regime_default",
+          "scaling_tp1_pct": 0.6,
+          "scaling_tp2_pct": 0.3,
+          "scaling_runner_pct": 0.1,
+          "scaling_source": "regime_default",
+          "pre_lunch_threshold_r": 0.5,
+          "delta_div_threshold": 0.6,
+          "delta_div_partial_pct": 0.25,
+          "decayed_factor_count": 0,
+          "atr": 6,
+          "entry_price": 4500,
+          "entry_stop": 4494,
+          "entry_direction": "long"
+        }
       },
       "py_plan": {
         "tp1_price": 4506,
+        "tp1_source": "r_multiple",
+        "tp1_level_type": null,
         "tp2_price": 4512,
+        "tp2_source": "r_multiple",
+        "tp2_level_type": null,
         "runner_trail_method": "chandelier",
         "scaling_tp1_pct": 0.6,
         "scaling_tp2_pct": 0.3,
@@ -252,9 +576,37 @@
           "reason": "OK"
         },
         {
+          "field": "tp1.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type",
+          "ts_val": null,
+          "py_val": null,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
           "field": "tp2.price",
           "ts_val": 4512,
           "py_val": 4512,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.level_type",
+          "ts_val": null,
+          "py_val": null,
           "passed": true,
           "reason": "OK"
         },
@@ -288,8 +640,8 @@
         },
         {
           "field": "pre_lunch_threshold_r",
-          "ts_val": "0.5",
-          "py_val": "0.5",
+          "ts_val": 0.5,
+          "py_val": 0.5,
           "passed": true,
           "reason": "OK"
         }
@@ -299,17 +651,69 @@
     {
       "fixture": "long+COMPRESSION",
       "ts_plan": {
-        "tp1_price": 4256,
-        "tp2_price": 4262,
-        "runner_trail_method": "structure_trail",
-        "scaling_tp1_pct": 0.5,
-        "scaling_tp2_pct": 0.3,
-        "scaling_runner_pct": 0.2,
-        "pre_lunch_threshold_r": 0.3
+        "tp1": {
+          "source": "r_multiple",
+          "price": 4256,
+          "r_multiple": 1
+        },
+        "tp2": {
+          "source": "r_multiple",
+          "price": 4262,
+          "r_multiple": 2
+        },
+        "runner": {
+          "trail_method": "structure_trail",
+          "trail_anchor_value": 4244,
+          "regime_source": "COMPRESSION",
+          "method_source": "regime_default"
+        },
+        "scaling": {
+          "tp1_pct": 0.5,
+          "tp2_pct": 0.3,
+          "runner_pct": 0.2,
+          "regime_source": "COMPRESSION",
+          "schedule_source": "regime_default"
+        },
+        "early_exit_threshold_delta_div": 0.6,
+        "early_exit_partial_pct": 0.25,
+        "pre_lunch_threshold_r": 0.3,
+        "pre_lunch_partial_pct": 0.5,
+        "audit_payload": {
+          "strategy_id": "parity-harness",
+          "symbol": "MES",
+          "regime": "COMPRESSION",
+          "narrative_phase": null,
+          "tp1_source": "r_multiple",
+          "tp1_level_type": null,
+          "tp1_r_multiple": 1,
+          "tp1_price": 4256,
+          "tp2_source": "r_multiple",
+          "tp2_level_type": null,
+          "tp2_r_multiple": 2,
+          "tp2_price": 4262,
+          "runner_method": "structure_trail",
+          "runner_method_source": "regime_default",
+          "scaling_tp1_pct": 0.5,
+          "scaling_tp2_pct": 0.3,
+          "scaling_runner_pct": 0.2,
+          "scaling_source": "regime_default",
+          "pre_lunch_threshold_r": 0.3,
+          "delta_div_threshold": 0.6,
+          "delta_div_partial_pct": 0.25,
+          "decayed_factor_count": 0,
+          "atr": 6,
+          "entry_price": 4250,
+          "entry_stop": 4244,
+          "entry_direction": "long"
+        }
       },
       "py_plan": {
         "tp1_price": 4256,
+        "tp1_source": "r_multiple",
+        "tp1_level_type": null,
         "tp2_price": 4262,
+        "tp2_source": "r_multiple",
+        "tp2_level_type": null,
         "runner_trail_method": "structure_trail",
         "scaling_tp1_pct": 0.5,
         "scaling_tp2_pct": 0.3,
@@ -325,9 +729,37 @@
           "reason": "OK"
         },
         {
+          "field": "tp1.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type",
+          "ts_val": null,
+          "py_val": null,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
           "field": "tp2.price",
           "ts_val": 4262,
           "py_val": 4262,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.level_type",
+          "ts_val": null,
+          "py_val": null,
           "passed": true,
           "reason": "OK"
         },
@@ -361,8 +793,895 @@
         },
         {
           "field": "pre_lunch_threshold_r",
-          "ts_val": "0.3",
-          "py_val": "0.3",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "long+EXPANSION",
+      "ts_plan": {
+        "tp1": {
+          "source": "r_multiple",
+          "price": 4756,
+          "r_multiple": 1
+        },
+        "tp2": {
+          "source": "r_multiple",
+          "price": 4762,
+          "r_multiple": 2
+        },
+        "runner": {
+          "trail_method": "anchored_vwap",
+          "trail_anchor_value": 1779631200000,
+          "regime_source": "EXPANSION",
+          "method_source": "regime_default"
+        },
+        "scaling": {
+          "tp1_pct": 0.2,
+          "tp2_pct": 0.3,
+          "runner_pct": 0.5,
+          "regime_source": "EXPANSION",
+          "schedule_source": "regime_default"
+        },
+        "early_exit_threshold_delta_div": 0.6,
+        "early_exit_partial_pct": 0.25,
+        "pre_lunch_threshold_r": 0.3,
+        "pre_lunch_partial_pct": 0.5,
+        "audit_payload": {
+          "strategy_id": "parity-harness",
+          "symbol": "MES",
+          "regime": "EXPANSION",
+          "narrative_phase": null,
+          "tp1_source": "r_multiple",
+          "tp1_level_type": null,
+          "tp1_r_multiple": 1,
+          "tp1_price": 4756,
+          "tp2_source": "r_multiple",
+          "tp2_level_type": null,
+          "tp2_r_multiple": 2,
+          "tp2_price": 4762,
+          "runner_method": "anchored_vwap",
+          "runner_method_source": "regime_default",
+          "scaling_tp1_pct": 0.2,
+          "scaling_tp2_pct": 0.3,
+          "scaling_runner_pct": 0.5,
+          "scaling_source": "regime_default",
+          "pre_lunch_threshold_r": 0.3,
+          "delta_div_threshold": 0.6,
+          "delta_div_partial_pct": 0.25,
+          "decayed_factor_count": 0,
+          "atr": 6,
+          "entry_price": 4750,
+          "entry_stop": 4744,
+          "entry_direction": "long"
+        }
+      },
+      "py_plan": {
+        "tp1_price": 4756,
+        "tp1_source": "r_multiple",
+        "tp1_level_type": null,
+        "tp2_price": 4762,
+        "tp2_source": "r_multiple",
+        "tp2_level_type": null,
+        "runner_trail_method": "anchored_vwap",
+        "scaling_tp1_pct": 0.2,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.5,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "checks": [
+        {
+          "field": "tp1.price",
+          "ts_val": 4756,
+          "py_val": 4756,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type",
+          "ts_val": null,
+          "py_val": null,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.price",
+          "ts_val": 4762,
+          "py_val": 4762,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.level_type",
+          "ts_val": null,
+          "py_val": null,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "runner_trail_method",
+          "ts_val": "anchored_vwap",
+          "py_val": "anchored_vwap",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp1_pct",
+          "ts_val": 0.2,
+          "py_val": 0.2,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp2_pct",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.runner_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "pre_lunch_threshold_r",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "short+LOW_LIQ_CHOP+liquidity_rank_divergence",
+      "ts_plan": {
+        "tp1": {
+          "source": "liquidity",
+          "price": 4094,
+          "level_type": "pdl",
+          "htf_significance": 3,
+          "r_multiple": 1
+        },
+        "tp2": {
+          "source": "r_multiple",
+          "price": 4088,
+          "r_multiple": 2
+        },
+        "runner": {
+          "trail_method": "developing_poc",
+          "trail_anchor_value": 4106,
+          "regime_source": "LOW_LIQ_CHOP",
+          "method_source": "regime_default"
+        },
+        "scaling": {
+          "tp1_pct": 0.5,
+          "tp2_pct": 0.5,
+          "runner_pct": 0,
+          "regime_source": "LOW_LIQ_CHOP",
+          "schedule_source": "regime_default"
+        },
+        "early_exit_threshold_delta_div": 0.6,
+        "early_exit_partial_pct": 0.25,
+        "pre_lunch_threshold_r": 0.3,
+        "pre_lunch_partial_pct": 0.5,
+        "audit_payload": {
+          "strategy_id": "parity-harness",
+          "symbol": "MES",
+          "regime": "LOW_LIQ_CHOP",
+          "narrative_phase": null,
+          "tp1_source": "liquidity",
+          "tp1_level_type": "pdl",
+          "tp1_r_multiple": 1,
+          "tp1_price": 4094,
+          "tp2_source": "r_multiple",
+          "tp2_level_type": null,
+          "tp2_r_multiple": 2,
+          "tp2_price": 4088,
+          "runner_method": "developing_poc",
+          "runner_method_source": "regime_default",
+          "scaling_tp1_pct": 0.5,
+          "scaling_tp2_pct": 0.5,
+          "scaling_runner_pct": 0,
+          "scaling_source": "regime_default",
+          "pre_lunch_threshold_r": 0.3,
+          "delta_div_threshold": 0.6,
+          "delta_div_partial_pct": 0.25,
+          "decayed_factor_count": 0,
+          "atr": 6,
+          "entry_price": 4100,
+          "entry_stop": 4106,
+          "entry_direction": "short"
+        }
+      },
+      "py_plan": {
+        "tp1_price": 4094,
+        "tp1_source": "liquidity",
+        "tp1_level_type": "pdl",
+        "tp2_price": 4088,
+        "tp2_source": "r_multiple",
+        "tp2_level_type": null,
+        "runner_trail_method": "developing_poc",
+        "scaling_tp1_pct": 0.5,
+        "scaling_tp2_pct": 0.5,
+        "scaling_runner_pct": 0,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "checks": [
+        {
+          "field": "tp1.price",
+          "ts_val": 4094,
+          "py_val": 4094,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.source",
+          "ts_val": "liquidity",
+          "py_val": "liquidity",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type",
+          "ts_val": "pdl",
+          "py_val": "pdl",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.price",
+          "ts_val": 4088,
+          "py_val": 4088,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.level_type",
+          "ts_val": null,
+          "py_val": null,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "runner_trail_method",
+          "ts_val": "developing_poc",
+          "py_val": "developing_poc",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp1_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp2_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.runner_pct",
+          "ts_val": 0,
+          "py_val": 0,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "pre_lunch_threshold_r",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type (ground truth, not just mutual echo)",
+          "ts_val": "pdl",
+          "py_val": "pdl",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type (Python ground truth)",
+          "ts_val": "pdl",
+          "py_val": "pdl",
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "long+UNKNOWN",
+      "ts_plan": {
+        "tp1": {
+          "source": "r_multiple",
+          "price": 4906,
+          "r_multiple": 1
+        },
+        "tp2": {
+          "source": "r_multiple",
+          "price": 4912,
+          "r_multiple": 2
+        },
+        "runner": {
+          "trail_method": "developing_poc",
+          "trail_anchor_value": 4894,
+          "regime_source": "UNKNOWN",
+          "method_source": "regime_default"
+        },
+        "scaling": {
+          "tp1_pct": 0.5,
+          "tp2_pct": 0.3,
+          "runner_pct": 0.2,
+          "regime_source": "UNKNOWN",
+          "schedule_source": "regime_default"
+        },
+        "early_exit_threshold_delta_div": 0.6,
+        "early_exit_partial_pct": 0.25,
+        "pre_lunch_threshold_r": 0.3,
+        "pre_lunch_partial_pct": 0.5,
+        "audit_payload": {
+          "strategy_id": "parity-harness",
+          "symbol": "MES",
+          "regime": "UNKNOWN",
+          "narrative_phase": null,
+          "tp1_source": "r_multiple",
+          "tp1_level_type": null,
+          "tp1_r_multiple": 1,
+          "tp1_price": 4906,
+          "tp2_source": "r_multiple",
+          "tp2_level_type": null,
+          "tp2_r_multiple": 2,
+          "tp2_price": 4912,
+          "runner_method": "developing_poc",
+          "runner_method_source": "regime_default",
+          "scaling_tp1_pct": 0.5,
+          "scaling_tp2_pct": 0.3,
+          "scaling_runner_pct": 0.2,
+          "scaling_source": "regime_default",
+          "pre_lunch_threshold_r": 0.3,
+          "delta_div_threshold": 0.6,
+          "delta_div_partial_pct": 0.25,
+          "decayed_factor_count": 0,
+          "atr": 6,
+          "entry_price": 4900,
+          "entry_stop": 4894,
+          "entry_direction": "long"
+        }
+      },
+      "py_plan": {
+        "tp1_price": 4906,
+        "tp1_source": "r_multiple",
+        "tp1_level_type": null,
+        "tp2_price": 4912,
+        "tp2_source": "r_multiple",
+        "tp2_level_type": null,
+        "runner_trail_method": "developing_poc",
+        "scaling_tp1_pct": 0.5,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.2,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "checks": [
+        {
+          "field": "tp1.price",
+          "ts_val": 4906,
+          "py_val": 4906,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp1.level_type",
+          "ts_val": null,
+          "py_val": null,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.price",
+          "ts_val": 4912,
+          "py_val": 4912,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.source",
+          "ts_val": "r_multiple",
+          "py_val": "r_multiple",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.level_type",
+          "ts_val": null,
+          "py_val": null,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "runner_trail_method",
+          "ts_val": "developing_poc",
+          "py_val": "developing_poc",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp1_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp2_pct",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.runner_pct",
+          "ts_val": 0.2,
+          "py_val": 0.2,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "pre_lunch_threshold_r",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "pre_lunch_fixtures": [
+    {
+      "fixture": "RANGE_BOUND 10:00 ET (before gate) -> no fire",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0,
+          "py_val": 0,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 5253,
+          "py_val": 5253,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "RANGE_BOUND 11:30 ET pnl below threshold -> no fire",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0,
+          "py_val": 0,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 5253,
+          "py_val": 5253,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "RANGE_BOUND 11:30 ET pnl==threshold (boundary >=) -> FIRES",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 5253,
+          "py_val": 5253,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "RANGE_BOUND 11:45 ET pnl above threshold -> FIRES",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 5253,
+          "py_val": 5253,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "TRENDING_UP 12:00 ET (not a trigger regime) -> no fire",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0,
+          "py_val": 0,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 4003,
+          "py_val": 4003,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "LOW_LIQ_CHOP 13:00 ET pnl above threshold, short -> FIRES",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": true,
+          "py_val": true,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 4097,
+          "py_val": 4097,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "COMPRESSION 11:29 ET (1 min before gate) -> no fire",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0,
+          "py_val": 0,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 4253,
+          "py_val": 4253,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "HIGH_VOL_MACRO 12:00 ET (not a trigger regime) -> no fire",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0,
+          "py_val": 0,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 4503,
+          "py_val": 4503,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "EXPANSION 12:00 ET (not a trigger regime) -> no fire",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0,
+          "py_val": 0,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 4753,
+          "py_val": 4753,
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "LOW_LIQ_CHOP 15:00 ET pnl just under threshold -> no fire",
+      "checks": [
+        {
+          "field": "shouldFire (ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "should_fire (Python, ground truth)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "shouldFire (TS<->Python parity)",
+          "ts_val": false,
+          "py_val": false,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "partial_pct",
+          "ts_val": 0,
+          "py_val": 0,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tightened_stop",
+          "ts_val": 4103,
+          "py_val": 4103,
           "passed": true,
           "reason": "OK"
         }

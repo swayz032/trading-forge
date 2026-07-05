@@ -79,9 +79,20 @@ vi.mock("../db/schema.js", () => ({
     id: "id",
     firmId: "firm_id",
     status: "status",
+    config: "config",
+    startingCapital: "starting_capital",
     dailyPnlBreakdown: "daily_pnl_breakdown",
     currentEquity: "current_equity",
     realizedPeakEquity: "realized_peak_equity",
+  },
+  // deepscan17 (2026-07-05): cross-symbol-pnl.ts::getAccountSessionCumulativePnL
+  // (now called by checkLayer2DailyLoss) also destructures paperPositions.
+  paperPositions: {
+    id: "id",
+    sessionId: "session_id",
+    symbol: "symbol",
+    unrealizedPnl: "unrealized_pnl",
+    closedAt: "closed_at",
   },
   ProductionMode: undefined,
 }));
@@ -90,6 +101,13 @@ vi.mock("drizzle-orm", () => ({
   eq: vi.fn((_col: unknown, _val: unknown) => `eq(${String(_val)})`),
   desc: vi.fn(() => "desc"),
   and: vi.fn((...args: unknown[]) => `and(${args.join(",")})`),
+  // deepscan17 (2026-07-05): needed by cross-symbol-pnl.ts's dynamic drizzle-orm import.
+  isNull: vi.fn(() => "isNull"),
+  inArray: vi.fn((_col: unknown, vals: unknown[]) => `inArray(${vals})`),
+  sql: Object.assign(
+    vi.fn((..._args: unknown[]) => ({ as: vi.fn((name: string) => `sql_as(${name})`) })),
+    {},
+  ),
 }));
 
 vi.mock("../routes/sse.js", () => ({
@@ -140,6 +158,10 @@ vi.mock("../lib/audit-log-helper.js", () => ({
 
 vi.mock("../../shared/firm-config.js", () => ({
   getFirmAccount: vi.fn().mockReturnValue({ dailyLossLimit: 1000, maxDrawdown: 2000 }),
+  // deepscan17 (2026-07-05) C-2 fix: checkLayer2DailyLoss now resolves the personal
+  // DLL base via resolvePersonalDllDollars (cross-symbol-pnl.ts), which for firm
+  // "topstep" reads this tier table instead of the mocked getFirmAccount() above.
+  TOPSTEP_TRAILING_DD_BY_SIZE: { 50000: 2000, 100000: 3000, 150000: 4500 },
 }));
 
 // M-1: paper-execution-service mock — forceCloseAllPositions must be intercepted.
@@ -184,11 +206,19 @@ function mockSessionPnl(
   dayPnl: number,
   firmId = "mffu",
   dll = 1000,
+  // deepscan17 (2026-07-05) C-1 fix: 80% warn dedup is now keyed by resolved
+  // ACCOUNT key, not session id. Pass a distinct accountKey (via config.account_key)
+  // for tests that need independent dedup — otherwise every "mffu" session shares
+  // one account bucket. `dll` remains vestigial for firmId="mffu" (resolves via
+  // DEFAULT_PERSONAL_DLL_DOLLARS, not this param) — kept for call-site documentation.
+  accountKey?: string,
 ) {
   const today = todayCmeKey();
   const sessionRow = {
     id: sessionId,
     firmId,
+    config: accountKey ? { account_key: accountKey } : null,
+    startingCapital: "50000",
     dailyPnlBreakdown: { [today]: dayPnl },
     currentEquity: "50000",
     realizedPeakEquity: "50000",
@@ -217,6 +247,10 @@ function mockSessionPnl(
       }),
       orderBy: vi.fn().mockReturnValue({
         limit: vi.fn().mockResolvedValue([]),
+      }),
+      // deepscan17: getAccountSessionCumulativePnL open-MTM query join (no open positions).
+      innerJoin: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
       }),
     }),
   } as ReturnType<typeof db.select>);
@@ -257,9 +291,15 @@ describe("M-1: DLL 95% force-close wired into Layer 2 (checkLayer2DailyLoss)", (
     await Promise.resolve();
     await new Promise((r) => setTimeout(r, 0));
 
+    // deepscan17 (2026-07-05) C-1/E-1: forceCloseAllPositions is now called with
+    // (reason, {correlationId, scope}) — account-scoped + correlationId-threaded.
     const { forceCloseAllPositions } = await import("../services/paper-execution-service.js");
     expect(vi.mocked(forceCloseAllPositions)).toHaveBeenCalledWith(
       expect.stringContaining("dll_force_close_at_95pct"),
+      expect.objectContaining({
+        correlationId: expect.any(String),
+        scope: { accountKey: "mffu" },
+      }),
     );
   });
 
@@ -268,9 +308,17 @@ describe("M-1: DLL 95% force-close wired into Layer 2 (checkLayer2DailyLoss)", (
     await killSwitch.evaluateAllKillSwitchLayers();
     await new Promise((r) => setTimeout(r, 0));
 
+    // Trigger row is written with status "pending" (completion is a SEPARATE
+    // "sizing.dll_force_close_completed" / status "success" row — see next assertion).
     expect(vi.mocked(insertAuditRow)).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "sizing.dll_force_close",
+        status: "pending",
+      }),
+    );
+    expect(vi.mocked(insertAuditRow)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "sizing.dll_force_close_completed",
         status: "success",
       }),
     );
@@ -281,24 +329,29 @@ describe("M-1: DLL 95% force-close wired into Layer 2 (checkLayer2DailyLoss)", (
     await killSwitch.evaluateAllKillSwitchLayers();
     await new Promise((r) => setTimeout(r, 0));
 
+    // deepscan17 C-1: SSE payload keys off the resolved account_key (accountKey
+    // "mffu" here, since no config.account_key override was set), not session_id.
     expect(vi.mocked(broadcastSSE)).toHaveBeenCalledWith(
       "kill_switch:dll_force_close",
       expect.objectContaining({
-        session_id: "session-fc-sse",
+        account_key: "mffu",
         threshold_pct: expect.closeTo(0.95, 2),
       }),
     );
   });
 
-  it("detail includes session_id, firm_id, day_pnl, dll", async () => {
-    // dll comes from getFirmAccount().dailyLossLimit (mocked as 1000 globally)
-    mockSessionPnl("session-fc-detail", -980, "topstep");
+  it("detail includes account_key, firm_id, day_pnl, dll", async () => {
+    // deepscan17 C-2 fix: dll now comes from resolvePersonalDllDollars, not the
+    // mocked getFirmAccount().dailyLossLimit=1000 global. For firm "topstep" with
+    // no trailing_dd_amount override and default startingCapital=50000, that
+    // resolves via TOPSTEP_TRAILING_DD_BY_SIZE[50000] = 2000 (50K combine tier).
+    mockSessionPnl("session-fc-detail", -1950, "topstep");
     const decision = await killSwitch.evaluateAllKillSwitchLayers();
     expect(decision.detail).toMatchObject({
-      session_id: "session-fc-detail",
+      account_key: "topstep",
       firm_id: "topstep",
-      day_pnl: -980,
-      dll: 1000,
+      day_pnl: -1950,
+      dll: 2000,
     });
   });
 
@@ -346,7 +399,7 @@ describe("M-1: DLL 95% force-close wired into Layer 2 (checkLayer2DailyLoss)", (
   });
 });
 
-describe("A-5: 80% DLL approach warning (once per session, family-grade)", () => {
+describe("A-5: 80% DLL approach warning (once per account — deepscan17 C-1 rescoped from per-session, family-grade)", () => {
   beforeEach(() => {
     killSwitch._invalidateCacheForTests();
     vi.clearAllMocks();
@@ -362,9 +415,11 @@ describe("A-5: 80% DLL approach warning (once per session, family-grade)", () =>
 
   it("emits sizing.dll_80pct_approach_warned audit when dayPnl is between 67% and 95% of DLL", async () => {
     // -820 = 82% of DLL=1000 — in the warn band [80%, 95%)
-    // Use a session ID that has not been seen before in this process run
+    // deepscan17 C-1: dedup is now per-ACCOUNT (config.account_key), not session id —
+    // use an account key that has not been seen before in this process run.
     const sessionId = `session-warn-80-${Date.now()}-${Math.random()}`;
-    mockSessionPnl(sessionId, -820);
+    const accountKey = `acct-warn-80-${Date.now()}-${Math.random()}`;
+    mockSessionPnl(sessionId, -820, "mffu", 1000, accountKey);
     await killSwitch.evaluateAllKillSwitchLayers();
     await new Promise((r) => setTimeout(r, 0));
 
@@ -378,7 +433,8 @@ describe("A-5: 80% DLL approach warning (once per session, family-grade)", () =>
 
   it("emits createAlert with warning severity and family-grade message", async () => {
     const sessionId = `session-warn-alert-${Date.now()}-${Math.random()}`;
-    mockSessionPnl(sessionId, -850);
+    const accountKey = `acct-warn-alert-${Date.now()}-${Math.random()}`;
+    mockSessionPnl(sessionId, -850, "mffu", 1000, accountKey);
     await killSwitch.evaluateAllKillSwitchLayers();
     await new Promise((r) => setTimeout(r, 0));
 
@@ -392,7 +448,8 @@ describe("A-5: 80% DLL approach warning (once per session, family-grade)", () =>
 
   it("family-grade message includes all required phrases", async () => {
     const sessionId = `session-warn-msg-${Date.now()}-${Math.random()}`;
-    mockSessionPnl(sessionId, -830);
+    const accountKey = `acct-warn-msg-${Date.now()}-${Math.random()}`;
+    mockSessionPnl(sessionId, -830, "mffu", 1000, accountKey);
     await killSwitch.evaluateAllKillSwitchLayers();
     await new Promise((r) => setTimeout(r, 0));
 
@@ -404,9 +461,10 @@ describe("A-5: 80% DLL approach warning (once per session, family-grade)", () =>
     expect(call.message).toContain("No action needed");
   });
 
-  it("dedup: 80% warn fires only ONCE per session ID (second call same session skips)", async () => {
+  it("dedup: 80% warn fires only ONCE per account (second call same account skips)", async () => {
     const sessionId = `session-dedup-once-${Date.now()}-${Math.random()}`;
-    mockSessionPnl(sessionId, -840);
+    const accountKey = `acct-dedup-once-${Date.now()}-${Math.random()}`;
+    mockSessionPnl(sessionId, -840, "mffu", 1000, accountKey);
 
     // First call — warn should fire
     await killSwitch.evaluateAllKillSwitchLayers();
@@ -420,7 +478,7 @@ describe("A-5: 80% DLL approach warning (once per session, family-grade)", () =>
       killSwitch._setLayerCacheForTests(l, { halted: false });
     }
 
-    // Second call with SAME session (same DB mock returns same session ID)
+    // Second call with SAME account (same DB mock returns same account_key)
     await killSwitch.evaluateAllKillSwitchLayers();
     await new Promise((r) => setTimeout(r, 0));
     const secondCallCount = vi.mocked(createAlert).mock.calls.length;
@@ -429,22 +487,24 @@ describe("A-5: 80% DLL approach warning (once per session, family-grade)", () =>
     expect(secondCallCount).toBe(firstCallCount);
   });
 
-  it("dedup: different session IDs each fire their own 80% warn", async () => {
-    // Session A
+  it("dedup: different accounts each fire their own 80% warn", async () => {
+    // Account A
     const sessionA = `session-dedup-a-${Date.now()}-${Math.random()}`;
-    mockSessionPnl(sessionA, -800);
+    const accountA = `acct-dedup-a-${Date.now()}-${Math.random()}`;
+    mockSessionPnl(sessionA, -800, "mffu", 1000, accountA);
     await killSwitch.evaluateAllKillSwitchLayers();
     await new Promise((r) => setTimeout(r, 0));
     const afterA = vi.mocked(createAlert).mock.calls.length;
 
-    // Session B (different session ID, new layer evaluation)
+    // Account B (different account key, new layer evaluation)
     killSwitch._invalidateCacheForTests();
     for (let l = 3; l <= 9; l++) {
       killSwitch._setLayerCacheForTests(l, { halted: false });
     }
 
     const sessionB = `session-dedup-b-${Date.now()}-${Math.random()}`;
-    mockSessionPnl(sessionB, -800);
+    const accountB = `acct-dedup-b-${Date.now()}-${Math.random()}`;
+    mockSessionPnl(sessionB, -800, "mffu", 1000, accountB);
     await killSwitch.evaluateAllKillSwitchLayers();
     await new Promise((r) => setTimeout(r, 0));
     const afterB = vi.mocked(createAlert).mock.calls.length;

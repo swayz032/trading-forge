@@ -47,6 +47,10 @@ import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 // 2026-06-29 Fix 2 (HIGH): TS Style C evaluator — primary path replacing Python subprocess.
 // Eliminates per-bar spawn overhead and 1h TP blackout from circuit-breaker open state.
 import { evaluateStyleCExit } from "../lib/style-c-exit-evaluator.js";
+// deepscan17 (2026-07-05) C-1 fix: forceCloseAllPositions scope resolution reuses the
+// SAME account-key resolver cross-symbol-pnl.ts uses for DLL aggregation, so "which
+// account does this position belong to" can never disagree between the two subsystems.
+import { resolveAccountKey } from "./cross-symbol-pnl.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -1436,7 +1440,15 @@ export async function openPosition(sessionId: string, params: {
                   { sessionId, firmKey, reason: killResult.reason },
                   "Kill switch (D6): force_close=true — calling forceCloseAllPositions(dll_95_force_close)",
                 );
-                await forceCloseAllPositions("dll_95_force_close");
+                // deepscan17 E-1 fix: thread the caller's correlationId (was silently
+                // dropped — a fresh randomUUID() was minted inside forceCloseAllPositions,
+                // breaking the openPosition->force-close audit chain).
+                // deepscan17 C-1 fix: scope the flatten to THIS session only. The Python
+                // D6 kill-switch result is computed per-session (killResult.daily_pnl_pct
+                // is this session's own P&L, not an account aggregate) — scoping by
+                // sessionId (rather than a resolved accountKey) is the narrowest correct
+                // blast radius for a check that was never account-aware in the first place.
+                await forceCloseAllPositions("dll_95_force_close", { correlationId, scope: { sessionIds: [sessionId] } });
               } catch (forceCloseErr) {
                 // deepscan14 F1: this is the SECOND force-close site (Python
                 // compliance-gate D6 path) — it was failing silently (bare logger.error,
@@ -4946,15 +4958,44 @@ export async function runSessionEndRollSweep(context?: { correlationId?: string 
 // closePosition call, so the halt→flatten→per-position chain is linkable in
 // the audit_log for 90-day reconstruction.
 //
-// Callers: kill-switch.ts:setMode('HALT') only. Do NOT call from openPosition
-// or any hot path — this is a rare, operator-triggered emergency action.
+// Callers: kill-switch.ts:setMode('HALT') / kill-switch.ts checkLayer2DailyLoss
+// (account-scoped) / openPosition D6 / paper-signal-service.ts cross-symbol
+// force-close. Do NOT call from any per-bar hot path — this is a rare,
+// halt/breach-triggered emergency action.
 //
-export async function forceCloseAllPositions(reason: string): Promise<{ count: number; closed: number; stuck: number }> {
+// deepscan17 (2026-07-05) C-1 fix: this query previously had NO account/firm/
+// session filter — `.where(isNull(paperPositions.closedAt))` alone flattened
+// EVERY open position system-wide, so a single account's DLL-95% breach force-
+// closed every OTHER healthy account/firm sharing the process. `opts.scope`
+// narrows the flatten to one account (via resolveAccountKey, the same key
+// cross-symbol-pnl.ts uses for DLL aggregation) or an explicit session-id list.
+// Omitting scope preserves the original system-wide behavior for the two
+// legitimate system-wide callers (operator HALT via setMode, and any future
+// deliberate full-flatten path) — no existing caller's behavior changes unless
+// it opts in to a scope.
+//
+// deepscan17 E-1 fix: opts.correlationId lets the caller thread its own root
+// correlationId through the whole force-close so the halt->flatten->per-position
+// chain is linkable end-to-end in the audit_log. Defaults to a fresh randomUUID()
+// when the caller has none (unchanged behavior for callers that don't pass one).
+export interface ForceCloseScope {
+  /** Resolved account key (see cross-symbol-pnl.ts::resolveAccountKey) — flattens only this account's open positions. */
+  accountKey?: string;
+  /** Explicit session-id allowlist — takes priority over accountKey when both are set. */
+  sessionIds?: string[];
+}
+
+export async function forceCloseAllPositions(
+  reason: string,
+  opts: { correlationId?: string; scope?: ForceCloseScope } = {},
+): Promise<{ count: number; closed: number; stuck: number }> {
   // FINDING #8 FIX: generate a single batch correlationId that links the batch
   // audit row to every per-position closePosition call in this flatten sweep.
-  const batchCorrelationId = randomUUID();
+  // deepscan17 E-1: prefer the caller's correlationId when supplied.
+  const batchCorrelationId = opts.correlationId ?? randomUUID();
+  const scope = opts.scope;
 
-  const openPositions = await db
+  const openPositionsRaw = await db
     .select({
       id: paperPositions.id,
       sessionId: paperPositions.sessionId,
@@ -4969,6 +5010,30 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
     })
     .from(paperPositions)
     .where(isNull(paperPositions.closedAt));
+
+  // deepscan17 C-1 fix: apply scope in application code (not the query) so the
+  // unscoped default path's query shape — and every existing test mock for it —
+  // is byte-identical to pre-fix behavior. sessionIds takes priority when both
+  // scope fields are set (explicit list is unambiguous); accountKey requires a
+  // second lightweight query to resolve each open position's owning session to
+  // an account key, mirroring cross-symbol-pnl.ts's own resolution pattern.
+  let openPositions = openPositionsRaw;
+  if (scope?.sessionIds && scope.sessionIds.length > 0) {
+    const idSet = new Set(scope.sessionIds);
+    openPositions = openPositionsRaw.filter((p) => p.sessionId && idSet.has(p.sessionId));
+  } else if (scope?.accountKey) {
+    const sessionIds = [...new Set(openPositionsRaw.map((p) => p.sessionId).filter((id): id is string => !!id))];
+    if (sessionIds.length === 0) {
+      openPositions = [];
+    } else {
+      const sessionRows = await db
+        .select({ id: paperSessions.id, firmId: paperSessions.firmId, config: paperSessions.config })
+        .from(paperSessions)
+        .where(inArray(paperSessions.id, sessionIds));
+      const keyBySession = new Map(sessionRows.map((s) => [s.id, resolveAccountKey(s)]));
+      openPositions = openPositionsRaw.filter((p) => p.sessionId && keyBySession.get(p.sessionId) === scope.accountKey);
+    }
+  }
 
   const count = openPositions.length;
 
@@ -5104,18 +5169,21 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
   }
 
   // Audit log the batch flatten event (FINDING #8 FIX: non-null correlationId)
+  // deepscan17 C-1: record the scope so an audit reader can see whether this
+  // was an account-scoped flatten (breach containment) or a system-wide one
+  // (operator HALT) — the two have very different blast radii.
   db.insert(auditLog).values({
     action: "paper.force_flatten_all",
     entityType: "system",
     entityId: null,
     decisionAuthority: "system",
-    input: { reason } as Record<string, unknown>,
+    input: { reason, scope: scope ?? "system_wide" } as Record<string, unknown>,
     result: { reason, count, closed: closedCount, stuck: stuckCount, errors, skipped } as Record<string, unknown>,
     status: errors.length === 0 && stuckCount === 0 ? "success" : "partial_failure",
     correlationId: batchCorrelationId,
   }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: audit_log write failed (non-blocking)"));
 
-  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length });
+  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length, scope: scope ?? null });
 
   return { count, closed: closedCount, stuck: stuckCount };
 }

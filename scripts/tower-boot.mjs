@@ -65,6 +65,15 @@ function selfHeal() {
 
 if (!selfHeal()) process.exit(1); // NSSM AppRestartDelay will retry the heal
 
+// deepscan17 G-1 (2026-07-05): stamp a marker so startup-config-check.ts can
+// prove at runtime that NSSM is actually invoking THIS launcher rather than
+// tsx directly (the silent-misconfig gap the audit found — the launcher can
+// exist on disk and never be wired up, with no signal to the operator).
+// child_process.spawn() defaults `env` to a copy of process.env taken at
+// spawn time, so setting this on our own process.env before spawning
+// propagates to the tsx child without an explicit env passthrough object.
+process.env.TF_LAUNCHED_VIA_BOOT_WRAPPER = "1";
+
 log("launching tower via tsx…");
 const tsxCli = join(ROOT, "node_modules", "tsx", "dist", "cli.mjs");
 const child = spawn(process.execPath, [tsxCli, join(ROOT, "src", "server", "index.ts")], {

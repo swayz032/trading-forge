@@ -99,7 +99,7 @@ import { liveOrderRoutes } from "./routes/live-order.js";
 import { fillCallbackRoutes } from "./routes/fill-callback.js";
 import { leakDetectionRoutes } from "./routes/leak-detection.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
-import { checkStartupSecrets } from "./lib/startup-config-check.js";
+import { checkStartupSecrets, startBootConfigReminderMonitor } from "./lib/startup-config-check.js";
 import { insertAuditRowSafe } from "./lib/audit-log-helper.js";
 
 // ─── Boot correlation (deepscan7 D2 / obs-M5, 2026-07-02) ─────────
@@ -143,6 +143,12 @@ await runPendingMigrations(bootCorrelationId);
 // so the operator learns BEFORE leaving that auto-restart is disabled.
 // Never throws — warn-only, never fail boot.
 await checkStartupSecrets();
+
+// deepscan17 G-1/G-3 (2026-07-05): a single boot-time WARN for the boot-launcher
+// and LIVE_ORDER_HMAC_SECRET gaps is easy to miss during a 30-day vacation.
+// This starts a 24h repeat that re-fires Discord only while each gap persists.
+// Idempotent + fail-soft — safe to call once here regardless of NODE_ENV/platform.
+startBootConfigReminderMonitor();
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard

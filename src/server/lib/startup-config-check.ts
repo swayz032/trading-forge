@@ -35,6 +35,17 @@
  *     Unset OR equal to the known deploy-time placeholder OR shorter than
  *     MIN_SECRET_LENGTH → warn so the operator knows to rotate.
  *
+ *   Boot launcher activation (deepscan17 G-1, 2026-07-05)
+ *     scripts/tower-boot.mjs is a self-healing launcher (verifies critical
+ *     deps, npm-installs if node_modules is incomplete, then boots via tsx)
+ *     that NSSM must be explicitly repointed at (scripts/install-tower-launcher.ps1,
+ *     one-time elevated). The launcher can exist on disk and never be wired
+ *     up with no signal to the operator — this check closes that silent gap
+ *     by detecting the TF_LAUNCHED_VIA_BOOT_WRAPPER marker tower-boot.mjs
+ *     stamps on its own process.env before spawning the tsx child (inherited
+ *     by default). Windows/production only — `npm run dev` never goes
+ *     through NSSM. See runBootConfigReminderCheck() for the repeating alert.
+ *
  * Import logger from ./logger.js (not ../index.js) per CLAUDE.md §13 feedback rule.
  */
 
@@ -46,6 +57,92 @@ const MIN_SECRET_LENGTH = 32;
 
 /** Known placeholder value shipped in .env.example for SLUMDAWG_WEBHOOK_SECRET. */
 const SLUMDAWG_PLACEHOLDER = "slumdawg-rotate-me-after-first-deploy-2026-05-25";
+
+/** One-line activation command surfaced in every boot-launcher alert (deepscan17 G-1). */
+const BOOT_LAUNCHER_ACTIVATION_CMD = "scripts\\install-tower-launcher.ps1";
+
+/**
+ * True only when the boot-launcher-active check is meaningful: the production
+ * Windows tower, where NSSM is the thing that decides whether tower-boot.mjs
+ * or tsx-directly gets invoked. `npm run dev` / vitest / CI run on the same
+ * OS but never go through NSSM, so gating on NODE_ENV=production (the value
+ * wave19-nssm-migrate.ps1 sets via NSSM AppEnvironmentExtra) avoids a
+ * false-positive CRITICAL every time a developer runs the server locally.
+ */
+export function isBootLauncherCheckApplicable(): boolean {
+  return process.platform === "win32" && process.env.NODE_ENV === "production";
+}
+
+/**
+ * True when this process was launched via scripts/tower-boot.mjs rather than
+ * NSSM invoking tsx directly. See tower-boot.mjs for how the marker is set.
+ */
+export function isBootLauncherActive(): boolean {
+  return process.env.TF_LAUNCHED_VIA_BOOT_WRAPPER === "1";
+}
+
+/**
+ * Fires the boot-launcher-inactive Discord CRITICAL. Shared between the
+ * immediate boot-time check below and the daily reminder tick
+ * (runBootConfigReminderCheck) so the message only lives in one place.
+ * Never throws — notify failures are caught and logged.
+ */
+async function fireBootLauncherInactiveAlert(): Promise<void> {
+  const msg =
+    "The self-healing tower-boot.mjs launcher exists on disk but NSSM is still " +
+    "launching tsx DIRECTLY. If node_modules is ever incomplete at a restart " +
+    "(see reference_tower_restart_dep_wipe_trap), the process crash-loops into " +
+    "a Paused service with NO auto-recovery — the exact outage this launcher " +
+    "was built to prevent.\n\n" +
+    `Activate (one-time, elevated, ~30 seconds): right-click ${BOOT_LAUNCHER_ACTIVATION_CMD} ` +
+    "and choose 'Run with PowerShell' (accept the elevation prompt). It repoints " +
+    "NSSM, restarts the service, and verifies /api/health for you.";
+
+  try {
+    const { notifyCritical } = await import("../services/notification-service.js");
+    notifyCritical(
+      "Tower self-healing launcher is NOT active",
+      appendFamilyGradePostscript(
+        msg,
+        "A safety upgrade that auto-fixes a missing-file restart problem is sitting unused.",
+        "Ask Tony to run install-tower-launcher.ps1 (one click, as Administrator). No trading impact today.",
+      ),
+      { activation_command: BOOT_LAUNCHER_ACTIVATION_CMD },
+    );
+  } catch (notifyErr) {
+    logger.warn({ err: notifyErr }, "startup-config-check: Discord notify failed (non-blocking)");
+  }
+}
+
+/**
+ * Fires the LIVE_ORDER_HMAC_SECRET-unset Discord WARN. Shared between the
+ * immediate boot-time check and the daily reminder tick, mirroring the KASA
+ * partial-config notify pattern (operator body + family-grade postscript).
+ * Never throws — notify failures are caught and logged.
+ */
+async function fireLiveOrderHmacUnsetAlert(): Promise<void> {
+  const msg =
+    "LIVE_ORDER_HMAC_SECRET is NOT SET. The live-order route (Path B: Pine → " +
+    "TF gateway → TradersPost) returns 503 fail-CLOSED on every inbound Pine " +
+    "alert until this is configured. " +
+    "Set LIVE_ORDER_HMAC_SECRET (≥32 random chars) in .env and restart the " +
+    "backend if you are using Path B.";
+
+  try {
+    const { notifyWarning } = await import("../services/notification-service.js");
+    notifyWarning(
+      "LIVE_ORDER_HMAC_SECRET not configured — Path B live-order route disabled",
+      appendFamilyGradePostscript(
+        msg,
+        "A security setting for one order-routing path is missing.",
+        "No action needed if you don't use TradingView Pine alerts through the TF gateway. Otherwise ask Tony to set it.",
+      ),
+      { env_var: "LIVE_ORDER_HMAC_SECRET" },
+    );
+  } catch (notifyErr) {
+    logger.warn({ err: notifyErr }, "startup-config-check: Discord notify failed (non-blocking)");
+  }
+}
 
 /**
  * Runs boot-time validation of all HMAC/security secrets required by the
@@ -115,6 +212,32 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
     warnings.push("ADMIN_RESTART_HMAC_SECRET_TOO_SHORT");
   }
 
+  // ── Boot launcher activation (deepscan17 G-1, 2026-07-05) ────────────────
+  // NSSM STILL invokes tsx directly today (verified live via `nssm get
+  // TradingForgeAPI AppParameters`) — tower-boot.mjs exists but is inert
+  // until an operator runs scripts/install-tower-launcher.ps1 (elevated,
+  // one-time). This is exactly the class of silent misconfig that survives
+  // undetected for 30 days: the fix is built, tested, and never turned on.
+  if (isBootLauncherCheckApplicable() && !isBootLauncherActive()) {
+    const msg =
+      "The self-healing tower-boot.mjs launcher exists but NSSM is still invoking " +
+      "tsx DIRECTLY. If node_modules is ever incomplete at restart time, the " +
+      "process crash-loops into a Paused service outage with no auto-recovery. " +
+      `Activate (one-time, elevated): run ${BOOT_LAUNCHER_ACTIVATION_CMD} as Administrator.`;
+
+    logger.warn(
+      { event: "boot_launcher.inactive", activation_command: BOOT_LAUNCHER_ACTIVATION_CMD },
+      `[STARTUP CRITICAL] ${msg}`,
+    );
+    warnings.push("BOOT_LAUNCHER_NOT_ACTIVE");
+    await fireBootLauncherInactiveAlert();
+  } else if (isBootLauncherCheckApplicable()) {
+    logger.info(
+      { event: "boot_launcher.active" },
+      "startup-config-check: self-healing boot launcher is ACTIVE (tower-boot.mjs)",
+    );
+  }
+
   // ── LIVE_ORDER_HMAC_SECRET ────────────────────────────────────────────────
   // Required by live-order.ts Path B HMAC verification (live-order.ts:100).
   // Missing or too short → route returns 503 fail-CLOSED on every Pine alert.
@@ -132,6 +255,11 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
         `[STARTUP WARN] ${msg}`,
       );
       warnings.push("LIVE_ORDER_HMAC_SECRET_NOT_SET");
+      // deepscan17 G-3 (2026-07-05): this previously only logged — zero Discord
+      // visibility for a route that fail-CLOSED 503s every Pine alert. Escalated
+      // to a WARN notify here + a daily repeat via runBootConfigReminderCheck
+      // while the secret stays unset (mirrors the KASA partial-config pattern).
+      await fireLiveOrderHmacUnsetAlert();
     } else if (liveOrderSecret.trim().length < MIN_SECRET_LENGTH) {
       const msg =
         `LIVE_ORDER_HMAC_SECRET is set but SHORTER THAN RECOMMENDED (${liveOrderSecret.trim().length} chars < ${MIN_SECRET_LENGTH}). ` +
@@ -147,20 +275,45 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
   }
 
   // ── LIVE_ORDER_GATEWAY_URL ────────────────────────────────────────────────
-  // Used by live-order.ts for self-reference / callback link generation (Path B).
-  // Missing → callback links in Discord notifications and webhook registrations
-  // will produce broken placeholder URLs.
+  // Used by live-order.ts for self-reference / callback link generation (Path B),
+  // and by pine-gateway-options.ts / webhook-builder.ts / lifecycle-service.ts /
+  // pine-export-service.ts to decide tf_gateway-vs-direct mode. Missing → those
+  // callers fall back to the LESS SAFE direct-to-TradersPost path (bypassing
+  // the kill-switch, compliance gate, firm-cap clamp, and circuit breaker) and
+  // block archetype strategies from promoting to PAPER.
+  //
+  // deepscan17 G-3 (2026-07-05): auto-derive from TRADING_FORGE_PUBLIC_URL
+  // instead of requiring a second, redundant env var — same base URL, same
+  // derivation pine-export-service.ts already applies for tf_marker_webhook_url
+  // (`${tfPublicUrl}/api/tradingview/marker`). Every downstream reader above
+  // reads process.env.LIVE_ORDER_GATEWAY_URL fresh at call time, and this runs
+  // BEFORE app.listen() and before any of those modules execute, so mutating
+  // it here closes the gap for every caller with zero operator action.
   {
     const gatewayUrl = process.env.LIVE_ORDER_GATEWAY_URL;
     if (!gatewayUrl || gatewayUrl.trim().length === 0) {
-      const msg =
-        "LIVE_ORDER_GATEWAY_URL is NOT SET. " +
-        "Path B live-order callback links will produce broken URLs in Discord " +
-        "alerts and webhook registrations. " +
-        "Set LIVE_ORDER_GATEWAY_URL to the public relay URL (e.g. https://tf-relay-production.up.railway.app).";
+      const publicUrl = process.env.TRADING_FORGE_PUBLIC_URL;
+      if (publicUrl && publicUrl.trim().length > 0) {
+        const derived = `${publicUrl.trim().replace(/\/+$/, "")}/api/live-order`;
+        process.env.LIVE_ORDER_GATEWAY_URL = derived;
+        logger.info(
+          { env_var: "LIVE_ORDER_GATEWAY_URL", derived_from: "TRADING_FORGE_PUBLIC_URL", value: derived },
+          "startup-config-check: LIVE_ORDER_GATEWAY_URL was unset — auto-derived from TRADING_FORGE_PUBLIC_URL",
+        );
+      } else {
+        const msg =
+          "LIVE_ORDER_GATEWAY_URL is NOT SET and could not be auto-derived " +
+          "(TRADING_FORGE_PUBLIC_URL is also unset). " +
+          "Path B live-order callback links will produce broken URLs in Discord " +
+          "alerts and webhook registrations, and Pine alerts fall back to the " +
+          "direct-to-TradersPost path (bypasses kill-switch/compliance/firm-cap). " +
+          "Set TRADING_FORGE_PUBLIC_URL (recommended — this auto-derives from it) " +
+          "or set LIVE_ORDER_GATEWAY_URL directly " +
+          "(e.g. https://tf-relay-production.up.railway.app/api/live-order).";
 
-      logger.warn({ env_var: "LIVE_ORDER_GATEWAY_URL" }, `[STARTUP WARN] ${msg}`);
-      warnings.push("LIVE_ORDER_GATEWAY_URL_NOT_SET");
+        logger.warn({ env_var: "LIVE_ORDER_GATEWAY_URL" }, `[STARTUP WARN] ${msg}`);
+        warnings.push("LIVE_ORDER_GATEWAY_URL_NOT_SET");
+      }
     }
   }
 
@@ -390,6 +543,7 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
       {
         checked: [
           "ADMIN_RESTART_HMAC_SECRET",
+          "TF_LAUNCHED_VIA_BOOT_WRAPPER (win32 production only)",
           "LIVE_ORDER_HMAC_SECRET",
           "LIVE_ORDER_GATEWAY_URL",
           "TRADING_FORGE_PUBLIC_URL",
@@ -404,4 +558,81 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
   }
 
   return { warnings, errors };
+}
+
+// ─── Daily reminder loop (deepscan17, 2026-07-05) ──────────────────────────
+// A single boot-time WARN is exactly the "easily missed" pattern the
+// autonomous-readiness charter forbids for a 30-day-unattended tower — the
+// operator only sees these log lines if they're SSH'd in and scrolling.
+// This re-runs the two persistent (non-self-healing) boot-config gaps once a
+// day for as long as the process lives, so Discord — the channel the
+// operator actually watches on vacation — gets a nudge every day the gap
+// stays open, not just once at whatever moment the service last restarted.
+
+const DAILY_REMINDER_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+let _reminderTimer: ReturnType<typeof setInterval> | null = null;
+let _reminderInitialized = false;
+
+/**
+ * Re-evaluates the two persistent boot-config gaps and re-fires Discord only
+ * while each condition is still true. Exported for direct unit testing —
+ * startBootConfigReminderMonitor() just calls this on a timer. Fail-soft: a
+ * reminder tick must never throw (would kill the interval's error handling
+ * upstream) or crash the process.
+ */
+export async function runBootConfigReminderCheck(): Promise<void> {
+  try {
+    if (isBootLauncherCheckApplicable() && !isBootLauncherActive()) {
+      logger.warn(
+        { event: "boot_launcher.inactive_reminder" },
+        "[STARTUP CRITICAL][DAILY REMINDER] self-healing boot launcher still not active",
+      );
+      await fireBootLauncherInactiveAlert();
+    }
+
+    const liveOrderSecret = process.env.LIVE_ORDER_HMAC_SECRET;
+    if (!liveOrderSecret || liveOrderSecret.trim().length === 0) {
+      logger.warn(
+        { event: "live_order_hmac_secret.unset_reminder" },
+        "[STARTUP WARN][DAILY REMINDER] LIVE_ORDER_HMAC_SECRET still unset",
+      );
+      await fireLiveOrderHmacUnsetAlert();
+    }
+  } catch (err) {
+    logger.warn({ err }, "startup-config-check: daily reminder tick failed (non-blocking)");
+  }
+}
+
+/**
+ * Starts the daily boot-config reminder loop. Idempotent — safe to call more
+ * than once (repeat calls are no-ops). Call once from index.ts after boot.
+ * The timer is unref'd so it never keeps the process alive on its own —
+ * app.listen()'s open socket already does that job; this just means the
+ * reminder loop doesn't block a clean shutdown or hang a test process.
+ */
+export function startBootConfigReminderMonitor(): void {
+  if (_reminderInitialized) return;
+  _reminderInitialized = true;
+
+  _reminderTimer = setInterval(() => {
+    runBootConfigReminderCheck().catch((err) => {
+      logger.warn({ err }, "startup-config-check: daily reminder interval threw unexpectedly");
+    });
+  }, DAILY_REMINDER_INTERVAL_MS);
+  _reminderTimer.unref?.();
+
+  logger.info(
+    { event: "boot_config_reminder.monitor_started", intervalMs: DAILY_REMINDER_INTERVAL_MS },
+    "startup-config-check: daily boot-config reminder monitor started",
+  );
+}
+
+/** Stops the daily reminder loop. Exposed for tests / graceful shutdown. */
+export function stopBootConfigReminderMonitor(): void {
+  if (_reminderTimer !== null) {
+    clearInterval(_reminderTimer);
+    _reminderTimer = null;
+  }
+  _reminderInitialized = false;
 }

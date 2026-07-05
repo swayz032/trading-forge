@@ -344,3 +344,88 @@ export function evaluateCrossSymbolDll(
     pnLBySymbol: pnl.pnLBySymbol,
   };
 }
+
+// ─── A-2 (deepscan17, 2026-07-05): account_key uniqueness sanity check ────────
+//
+// resolveAccountKey() silently falls back to firmId when config.account_key is
+// unset, re-merging accounts that were supposed to be isolated (the exact bug
+// C-1 fixed above). A firm with 2+ real broker accounts but <2 distinct
+// account_key values in its active sessions means the operator has NOT opted
+// the second account into config.account_key yet — DLL isolation is silently
+// INACTIVE for that firm today, and nothing currently surfaces that fact.
+
+export interface AccountKeyUniquenessWarning {
+  firmId: string;
+  distinctBrokerAccounts: number;
+  distinctActiveAccountKeys: number;
+}
+
+/**
+ * Pure comparison function — callers supply already-queried counts so this is
+ * trivially unit-testable without a DB round-trip. WARN when a firm has >=2
+ * broker accounts but <2 distinct account_key values across its active sessions.
+ */
+export function checkAccountKeyUniquenessSanity(
+  brokerAccountCountsByFirm: Record<string, number>,
+  activeAccountKeysByFirm: Record<string, Set<string>>,
+): AccountKeyUniquenessWarning[] {
+  const warnings: AccountKeyUniquenessWarning[] = [];
+  for (const [firmId, brokerAccountCount] of Object.entries(brokerAccountCountsByFirm)) {
+    const distinctKeys = activeAccountKeysByFirm[firmId]?.size ?? 0;
+    if (brokerAccountCount >= 2 && distinctKeys < 2) {
+      warnings.push({ firmId, distinctBrokerAccounts: brokerAccountCount, distinctActiveAccountKeys: distinctKeys });
+    }
+  }
+  return warnings;
+}
+
+/**
+ * Live DB-backed wrapper around checkAccountKeyUniquenessSanity(). NOT wired to
+ * a scheduler in this fix wave — scheduler.ts cron registration is outside the
+ * kill-switch/paper-execution/paper-signal/cross-symbol-pnl file-ownership
+ * boundary for deepscan17 FIX-KILLSWITCH. Call this from a boot task or daily
+ * cron to activate the WARN. Fail-open: a DB error logs and returns [] rather
+ * than blocking anything (this is a sanity WARN, never a trading gate).
+ */
+export async function runAccountKeyUniquenessSanityCheck(): Promise<AccountKeyUniquenessWarning[]> {
+  try {
+    const { db } = await import("../db/index.js");
+    const { brokerAccounts, paperSessions } = await import("../db/schema.js");
+    const { eq, inArray } = await import("drizzle-orm");
+
+    const brokerRows = await db
+      .select({ firmId: brokerAccounts.firmId })
+      .from(brokerAccounts)
+      .where(eq(brokerAccounts.enabled, true));
+
+    const brokerAccountCountsByFirm: Record<string, number> = {};
+    for (const row of brokerRows) {
+      const firmId = row.firmId ?? "default";
+      brokerAccountCountsByFirm[firmId] = (brokerAccountCountsByFirm[firmId] ?? 0) + 1;
+    }
+
+    const sessionRows = await db
+      .select({ firmId: paperSessions.firmId, config: paperSessions.config })
+      .from(paperSessions)
+      .where(inArray(paperSessions.status, [...DLL_AGGREGATE_SESSION_STATUSES]));
+
+    const activeAccountKeysByFirm: Record<string, Set<string>> = {};
+    for (const session of sessionRows) {
+      const firmId = session.firmId ?? "default";
+      const key = resolveAccountKey(session);
+      (activeAccountKeysByFirm[firmId] ??= new Set()).add(key);
+    }
+
+    const warnings = checkAccountKeyUniquenessSanity(brokerAccountCountsByFirm, activeAccountKeysByFirm);
+    for (const w of warnings) {
+      logger.warn(
+        { ...w },
+        "cross-symbol-pnl A-2: firm has multiple broker accounts but <2 distinct config.account_key values in active sessions — DLL isolation may be INACTIVE for this firm's second account (deepscan17, 2026-07-05)",
+      );
+    }
+    return warnings;
+  } catch (err) {
+    logger.warn({ err }, "cross-symbol-pnl A-2: uniqueness sanity check failed — fail-open, no warnings emitted");
+    return [];
+  }
+}

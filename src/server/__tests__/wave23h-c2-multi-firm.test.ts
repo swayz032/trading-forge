@@ -65,6 +65,12 @@ vi.mock("../db/index.js", () => ({
         orderBy: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue([]),
         }),
+        // deepscan17 (2026-07-05): checkLayer2DailyLoss now delegates to
+        // cross-symbol-pnl.ts::getAccountSessionCumulativePnL, whose open-MTM
+        // query joins paperPositions -> paperSessions. No open positions here.
+        innerJoin: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
       })),
     })),
     update: vi.fn().mockReturnValue({
@@ -86,13 +92,22 @@ vi.mock("../db/schema.js", () => ({
   // paperSessions required so eq(paperSessions.status, "active") in L2/L3 does not throw
   // with "Cannot read property 'status' of undefined" → which makes L2/L3 fail-CLOSED
   // causing overall_halted=true even when no firms are suspended (Wave 24 fix).
-  paperSessions: { id: "id", firmId: "firm_id", status: "status", dailyPnlBreakdown: "daily_pnl_breakdown", currentEquity: "current_equity", realizedPeakEquity: "realized_peak_equity" },
+  paperSessions: { id: "id", firmId: "firm_id", status: "status", config: "config", startingCapital: "starting_capital", dailyPnlBreakdown: "daily_pnl_breakdown", currentEquity: "current_equity", realizedPeakEquity: "realized_peak_equity" },
+  // deepscan17: cross-symbol-pnl.ts::getAccountSessionCumulativePnL also destructures this.
+  paperPositions: { id: "id", sessionId: "session_id", symbol: "symbol", unrealizedPnl: "unrealized_pnl", closedAt: "closed_at" },
   ProductionMode: undefined,
 }));
 
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((_col, _val) => `eq(${String(_val)})`),
   desc: vi.fn(() => "desc"),
+  // deepscan17: needed by cross-symbol-pnl.ts's dynamic drizzle-orm import.
+  isNull: vi.fn(() => "isNull"),
+  inArray: vi.fn((_col, vals: unknown[]) => `inArray(${vals})`),
+  sql: Object.assign(
+    vi.fn((..._args: unknown[]) => ({ as: vi.fn((name: string) => `sql_as(${name})`) })),
+    {},
+  ),
 }));
 
 vi.mock("../routes/sse.js", () => ({
@@ -142,6 +157,13 @@ vi.mock("../lib/audit-log-helper.js", () => ({
 // (unknown firm) so L2/L3 always skip without halting (Wave 24 fix).
 vi.mock("../../shared/firm-config.js", () => ({
   getFirmAccount: vi.fn().mockReturnValue(null),
+  // deepscan17 (2026-07-05) C-2 fix: checkLayer2DailyLoss now resolves the personal
+  // DLL base via resolvePersonalDllDollars (cross-symbol-pnl.ts), which reads this
+  // tier table for firmId="topstep" instead of the getFirmAccount() mock above.
+  // Without this, a "topstep" pseudo-session (this file's broker_accounts fixture
+  // rows double as L2's active-sessions fixture) throws inside the tier lookup,
+  // which fails Layer 2 CLOSED and masks the Layer 7 behavior under test.
+  TOPSTEP_TRAILING_DD_BY_SIZE: { 50000: 2000, 100000: 3000, 150000: 4500 },
 }));
 
 // ─── Imports after mocks ──────────────────────────────────────────────────────

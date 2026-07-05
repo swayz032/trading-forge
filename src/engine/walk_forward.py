@@ -390,7 +390,10 @@ def _run_walk_forward_cpcv(
         #
         # Previous behaviour (pre-Wave C): no IS-side strip — is_data included ALL
         # embargo-adjacent IS bars, making WFE and PBO mildly optimistic.
-        is_fold_dfs_purged: list[pl.DataFrame] = []
+        # B-3 fix (deepscan17, 2026-07-05): track each purged IS fold's fold
+        # index alongside its frame so the warmup-only subset below can filter
+        # by chronological position without re-deriving it from purge math.
+        is_fold_dfs_purged: list[tuple[int, pl.DataFrame]] = []
         for fi in sorted(is_fold_indices):
             fold_df = folds[fi]
             strip_start, strip_end = _cpcv_fold_embargo_strips(
@@ -402,7 +405,7 @@ def _run_walk_forward_cpcv(
             )
             effective_len = len(fold_df) - strip_start - strip_end
             if effective_len > 0:
-                is_fold_dfs_purged.append(fold_df.slice(strip_start, effective_len))
+                is_fold_dfs_purged.append((fi, fold_df.slice(strip_start, effective_len)))
             else:
                 print(
                     f"  CPCV: IS fold {fi} too small ({len(fold_df)} bars <= "
@@ -410,9 +413,31 @@ def _run_walk_forward_cpcv(
                     file=sys.stderr,
                 )
         if is_fold_dfs_purged:
-            is_data = pl.concat(is_fold_dfs_purged)
+            is_data = pl.concat([_df for _, _df in is_fold_dfs_purged])
         else:
             continue  # No usable IS data after purge — skip this path
+
+        # B-3 fix (deepscan17, 2026-07-05): warmup must be chronologically PRIOR
+        # to the OOS window only. Folds are built in chronological order
+        # (fold 0 earliest .. fold N-1 latest), but is_data above mixes IS
+        # folds from BOTH sides of the test window — e.g. test_fold_indices
+        # (0,1) has is_fold_indices (2,3,4,5), ALL of which are chronologically
+        # AFTER the OOS window. run_backtest()'s warmup path
+        # (backtester.py: `data = pl.concat([warmup_data, data])`, no re-sort)
+        # then prepends that FUTURE data ahead of oos_data, so rolling
+        # indicators at the start of the OOS window are seeded with
+        # lookahead information — a real leak, not just a wasted computation.
+        # Only combo (4,5) was leak-free by accident (its IS folds are all
+        # chronologically prior). Fix: restrict the warmup frame passed to
+        # run_backtest() to IS folds strictly before the earliest OOS fold
+        # index in this combo. `is_data` itself (unrestricted, all IS folds)
+        # is left unchanged below for the per-path IS-Sharpe evaluation —
+        # that is a legitimate full-IS-sample use, not an indicator warmup.
+        _earliest_test_fold = min(test_fold_indices)
+        _warmup_fold_dfs = [
+            _df for fi, _df in is_fold_dfs_purged if fi < _earliest_test_fold
+        ]
+        warmup_data_for_oos = pl.concat(_warmup_fold_dfs) if _warmup_fold_dfs else None
 
         # OOS data — bilateral embargo strip (Wave C hardening: adds OOS-end strip).
         # - Strip START: bars adjacent to the preceding IS fold (was already present).
@@ -461,7 +486,10 @@ def _run_walk_forward_cpcv(
         np.random.seed(path_seed)
 
         try:
-            path_result = run_backtest(_shared_req, data=oos_data, warmup_data=is_data)
+            # B-3 fix (deepscan17, 2026-07-05): pass the chronologically-restricted
+            # warmup frame, not the full (possibly-future) is_data. See the
+            # warmup_data_for_oos construction above for the leak this closes.
+            path_result = run_backtest(_shared_req, data=oos_data, warmup_data=warmup_data_for_oos)
         except Exception as _path_exc:
             # FIX 3 (2026-06-22): do NOT increment n_paths on failure — failed paths
             # were being counted in the denominator, diluting the PBO overfit signal.
@@ -2599,6 +2627,47 @@ def run_walk_forward_class(
             oos_start_dt_wf = start_date
             oos_end_dt_wf = end_date
 
+        # B-5 fix (deepscan17, 2026-07-05): lightweight IS-only backtest so
+        # WFE/BIF/PBO/DSR can be computed for this (archetype/class-strategy)
+        # path exactly like run_walk_forward() computes them for DSL
+        # strategies. Mirrors the CPCV per-path IS eval pattern
+        # (_run_walk_forward_cpcv ~line 511: run_backtest(..., data=is_data)
+        # with no warmup — a pure IS read, not an indicator-warmup prime).
+        # Non-fatal: on failure this window simply contributes no IS daily
+        # P&Ls, degrading (not crashing) the aggregate WFE/BIF/PBO below —
+        # same soft-failure contract run_walk_forward() uses.
+        _is_ts_c_wfe = _ts_col_wf(is_data)
+        if _is_ts_c_wfe and len(is_data) > 0:
+            is_start_dt_wfe = str(is_data[_is_ts_c_wfe][0])[:10]
+            is_end_dt_wfe = str(is_data[_is_ts_c_wfe][-1])[:10]
+        else:
+            is_start_dt_wfe = start_date
+            is_end_dt_wfe = end_date
+
+        _is_daily_pnls_cls: list[float] = []
+        if len(is_data) > 50:
+            try:
+                _is_result_cls = run_class_backtest(
+                    strategy=strategy,
+                    start_date=is_start_dt_wfe,
+                    end_date=is_end_dt_wfe,
+                    slippage_ticks=slippage_ticks,
+                    commission_per_side=commission_per_side,
+                    firm_key=firm_key,
+                    data=is_data,
+                    htf_cache=htf_cache,
+                    daily_data=daily_data,
+                    skip_eligibility_gate=skip_eligibility_gate,
+                )
+                _is_daily_pnls_cls = list(_is_result_cls.get("daily_pnls", []))
+            except Exception as _is_exc_cls:
+                print(
+                    f"  Walk-forward (class) WFE: IS backtest window {i+1} failed "
+                    f"({_is_exc_cls!r}). WFE/BIF/PBO degraded for this window "
+                    f"(no crash — soft failure, same as run_walk_forward()).",
+                    file=sys.stderr,
+                )
+
         oos_result = run_class_backtest(
             strategy=strategy,
             start_date=oos_start_dt_wf,
@@ -2659,6 +2728,12 @@ def run_walk_forward_class(
             "avg_winner_rr": oos_result.get("avg_winner_rr", 0),
             "avg_loser_rr": oos_result.get("avg_loser_rr", 0),
             "confidence": "OK",
+            # B-5 fix (deepscan17, 2026-07-05): internal-only field consumed by
+            # the WFE/BIF/PBO aggregation below (_build_cpcv_paths_from_window_results
+            # reads this same key name). Popped before the function returns —
+            # never reaches the schema output. Mirrors run_walk_forward()'s
+            # "_is_daily_pnls" convention exactly.
+            "_is_daily_pnls": _is_daily_pnls_cls,
         }
 
         warnings = []
@@ -2753,6 +2828,175 @@ def run_walk_forward_class(
 
     cross_val = run_cross_validation(_oos_aggregate, is_sharpe=avg_is_sharpe)
 
+    # ── B-5 fix (deepscan17, 2026-07-05): WFE/BIF/PBO/DSR for class strategies ──
+    # PREVIOUS BUG: this function's return dict never carried wfe_overall / bif /
+    # k_eff / pbo_overall / dsr_pass at all (only the unflattened "cross_validation"
+    # sub-dict above, which the TS gates don't read). wfe-gate.ts / bif-gate.ts /
+    # pbo-gate.ts treat an ABSENT top-level key as a legacy grandfather-pass, so
+    # every archetype strategy that runs through THIS function — bounce_off_level,
+    # ict_bias_aligned_continuation, silver_bullet, crt, power_of_3, i.e. the live
+    # 117-strategy library — was PERMANENTLY exempt from these promotion gates.
+    # FIX: thread the same base-config-IS-basis computation run_walk_forward()
+    # uses for its plain/purged_embargo path. No optimizer-basis branch is needed
+    # here — optimize=True already raises NotImplementedError earlier in this
+    # function, so there is no optimizer_best_score_mean case to reconcile (this
+    # simplifies the port vs. run_walk_forward()'s dual-basis WFE logic).
+    # IS daily P&Ls come from the lightweight per-window IS-only backtest added
+    # above (stashed under "_is_daily_pnls" on each window_detail).
+    all_is_pnls_cls: list[float] = []
+    for _w_is in window_results:
+        all_is_pnls_cls.extend(_w_is.get("_is_daily_pnls", []))
+
+    _combined_is_sharpe_cls: Optional[float] = None
+    if len(all_is_pnls_cls) > 1:
+        _is_pnl_arr_cls = np.array(all_is_pnls_cls)
+        _is_std_cls = float(np.std(_is_pnl_arr_cls, ddof=1))
+        _combined_is_sharpe_cls = (
+            float(np.mean(_is_pnl_arr_cls) / _is_std_cls * np.sqrt(252)) if _is_std_cls > 0 else 0.0
+        )
+
+    # ── WFE ──────────────────────────────────────────────────────────────────
+    wfe_overall_cls: Optional[float] = None
+    wfe_status_cls: Optional[str] = None
+    _wfe_hard_floor_cls = get_wfe_hard_floor()
+    _wfe_warn_floor_cls = get_wfe_warn_floor()
+    if _combined_is_sharpe_cls is not None and _combined_is_sharpe_cls > 0:
+        _wfe_dict_cls = compute_wfe(is_sharpe=_combined_is_sharpe_cls, oos_sharpe=agg_sharpe)
+        wfe_overall_cls = _wfe_dict_cls["wfe"]
+        wfe_status_cls = _wfe_dict_cls["status"]
+        print(
+            f"  WFE (class): {wfe_overall_cls:.4f} status={wfe_status_cls} "
+            f"(IS={_combined_is_sharpe_cls:.4f}, OOS={agg_sharpe:.4f})",
+            file=sys.stderr,
+        )
+    else:
+        # Same degenerate-IS contract as run_walk_forward(): wfe_overall=0.0 +
+        # wfe_status="degenerate_is" so the TS gate BLOCKS rather than silently
+        # grandfather-passing on a truly-absent key.
+        wfe_overall_cls = 0.0
+        wfe_status_cls = "degenerate_is"
+        print(
+            "  WFE (class): IS Sharpe <= 0 or no per-window IS P&Ls collected — "
+            "emitting wfe_overall=0.0 (degenerate_is); TS gate will BLOCK "
+            "(walk_forward.wfe_degenerate_is_block).",
+            file=sys.stderr,
+        )
+
+    # ── BIF ──────────────────────────────────────────────────────────────────
+    _bif_result_cls: dict = {}
+    try:
+        from src.engine.statistics.backtest_inflation_factor import (
+            compute_bif as _compute_bif_cls,
+        )
+        _bif_is_sharpe_cls = _combined_is_sharpe_cls if _combined_is_sharpe_cls is not None else 0.0
+        # Mirrors run_walk_forward()'s B7 fix: k_eff counts only non-LOW-confidence
+        # windows (floored at 1) — LOW-confidence windows are unreliable IS/OOS
+        # draws and would artificially inflate k_eff / deflate BIF.
+        _bif_k_eff_cls = float(
+            max(len([w for w in window_results if w.get("confidence") != "LOW"]), 1)
+        )
+        _bif_result_cls = _compute_bif_cls(
+            is_sharpe=_bif_is_sharpe_cls,
+            wf_sharpe=agg_sharpe,
+            k_eff=_bif_k_eff_cls,
+        )
+        print(
+            f"  BIF (class): {_bif_result_cls.get('bif', 'N/A')} "
+            f"(IS={_bif_is_sharpe_cls:.4f}, WF={agg_sharpe:.4f}, K_eff={_bif_k_eff_cls:.0f}) "
+            f"-> {_bif_result_cls.get('verdict', 'N/A')}",
+            file=sys.stderr,
+        )
+    except Exception as _bif_exc_cls:
+        print(
+            f"  BIF (class): computation failed ({_bif_exc_cls!r}) — "
+            f"skipping (non-blocking, bif=None in output).",
+            file=sys.stderr,
+        )
+
+    # ── PBO ──────────────────────────────────────────────────────────────────
+    pbo_overall_cls: Optional[float] = None
+    pbo_overall_p_value_cls: Optional[float] = None
+    pbo_degenerate_cls = False
+    if len(window_results) >= 4:
+        try:
+            from src.engine.pbo_gate import (
+                _build_cpcv_paths_from_window_results as _build_paths_cls,
+            )
+            from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _cpcv_pbo_cls
+            _cpcv_paths_cls = _build_paths_cls(window_results)
+            _pbo_gate_result_cls = _cpcv_pbo_cls(_cpcv_paths_cls)
+            _pbo_val_cls = _pbo_gate_result_cls.get("pbo")
+            pbo_overall_p_value_cls = _pbo_gate_result_cls.get("p_value")
+            pbo_degenerate_cls = bool(_pbo_gate_result_cls.get("degenerate", False))
+            if _pbo_val_cls is not None and not (
+                isinstance(_pbo_val_cls, float) and _pbo_val_cls != _pbo_val_cls
+            ):
+                pbo_overall_cls = _pbo_val_cls
+                print(
+                    f"  PBO (class): {pbo_overall_cls:.4f} "
+                    f"n_paths={_pbo_gate_result_cls.get('n_paths')}",
+                    file=sys.stderr,
+                )
+            else:
+                # None (degenerate IS==OOS) or NaN (sample-size guard) — leave
+                # pbo_overall_cls=None so the TS gate's pbo_unavailable_legacy /
+                # degenerate handling applies rather than a fabricated value.
+                print(
+                    f"  PBO (class): unavailable (degenerate={pbo_degenerate_cls}, "
+                    f"n_paths={_pbo_gate_result_cls.get('n_paths')}).",
+                    file=sys.stderr,
+                )
+        except Exception as _pbo_exc_cls:
+            print(
+                f"  PBO (class): computation failed ({_pbo_exc_cls!r}) — "
+                f"pbo_overall=None (non-blocking).",
+                file=sys.stderr,
+            )
+    else:
+        print(
+            f"  PBO (class): skipped (need >= 4 windows, have {len(window_results)})",
+            file=sys.stderr,
+        )
+
+    # ── DSR ──────────────────────────────────────────────────────────────────
+    _class_dsr_result: dict = {}
+    _class_dsr_pass: Optional[bool] = None
+    _class_dsr_unavailable = False
+    try:
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _class_dsr_fn
+        _class_n_trials = max(len(windows), 1)
+        _class_dsr_result = _class_dsr_fn(
+            observed_sharpe=agg_sharpe,
+            n_trials=_class_n_trials,
+            n_observations=max(len(all_oos_pnls), 2),
+        )
+        _class_dsr_pass_raw = _class_dsr_result.get("passes")
+        _class_dsr_pass = bool(_class_dsr_pass_raw) if _class_dsr_pass_raw is not None else None
+        print(
+            f"  DSR (class): dsr={_class_dsr_result.get('dsr')} passes={_class_dsr_pass} "
+            f"(n_trials={_class_n_trials}, n_obs={len(all_oos_pnls)})",
+            file=sys.stderr,
+        )
+    except Exception as _class_dsr_exc:
+        print(
+            f"  DSR (class): computation failed ({_class_dsr_exc!r}) — "
+            f"emitting dsr_unavailable=True (auditable, not silent).",
+            file=sys.stderr,
+        )
+        _class_dsr_result = {
+            "dsr": None,
+            "passes": None,
+            "error": str(_class_dsr_exc),
+            "error_type": type(_class_dsr_exc).__name__,
+        }
+        _class_dsr_pass = False
+        _class_dsr_unavailable = True
+
+    # Strip the internal per-window IS-P&L stash before it reaches the schema
+    # output (mirrors run_walk_forward()'s "_is_daily_pnls" cleanup at ~line 1952).
+    for _w_clean in window_results:
+        _w_clean.pop("_is_daily_pnls", None)
+
     # ─── Prop firm compliance on aggregated OOS results ─────
     prop_compliance = None
     if all_oos_pnl_records and all_oos_trades:
@@ -2789,6 +3033,28 @@ def run_walk_forward_class(
         "sanity_checks": sanity,
         "cross_validation": cross_val,
         "prop_compliance": prop_compliance,
+        # B-5 fix (deepscan17, 2026-07-05) — WFE/BIF/PBO/DSR, additive top-level
+        # keys mirroring run_walk_forward()'s contract (TS gates read these
+        # exact key names: wfe-gate.ts reads "wfe_overall"; bif-gate.ts reads
+        # "bif"/"k_eff"; pbo-gate.ts reads "pbo_overall"). Absent-key legacy
+        # grandfather-pass no longer applies to fresh class-strategy runs.
+        "wfe_overall": wfe_overall_cls,
+        "wfe_status": wfe_status_cls,
+        "wfe_hard_floor": _wfe_hard_floor_cls,
+        "wfe_warn_floor": _wfe_warn_floor_cls,
+        "pbo_overall": pbo_overall_cls,
+        "pbo_overall_p_value": pbo_overall_p_value_cls,
+        "pbo_degenerate": pbo_degenerate_cls,
+        "bif": _bif_result_cls.get("bif"),
+        "k_eff": _bif_result_cls.get("k_eff"),
+        "bif_detail": _bif_result_cls,
+        "wf_metadata": {
+            "mode": "plain",
+            "n_folds": len(windows),
+            "dsr": _class_dsr_result.get("dsr"),
+            "dsr_pass": _class_dsr_pass,
+            "dsr_unavailable": _class_dsr_unavailable,
+        },
         # Slippage-Survival Gate (Wave A follow-up, 2026-07-03) — ADDITIVE beyond
         # the two return dicts explicitly requested (_run_walk_forward_cpcv +
         # run_walk_forward): run_walk_forward_class() is a THIRD, separate WF

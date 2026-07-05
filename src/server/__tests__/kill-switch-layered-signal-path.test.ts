@@ -82,9 +82,21 @@ vi.mock("../db/schema.js", () => ({
     id: "id",
     firmId: "firm_id",
     status: "status",
+    config: "config",
+    startingCapital: "starting_capital",
     dailyPnlBreakdown: "daily_pnl_breakdown",
     currentEquity: "current_equity",
     realizedPeakEquity: "realized_peak_equity",
+  },
+  // deepscan17 (2026-07-05): cross-symbol-pnl.ts::getAccountSessionCumulativePnL
+  // (now called by checkLayer2DailyLoss) also destructures paperPositions from
+  // this module for its open-MTM query.
+  paperPositions: {
+    id: "id",
+    sessionId: "session_id",
+    symbol: "symbol",
+    unrealizedPnl: "unrealized_pnl",
+    closedAt: "closed_at",
   },
   ProductionMode: undefined,
 }));
@@ -93,6 +105,16 @@ vi.mock("drizzle-orm", () => ({
   eq: vi.fn((_col, _val) => `eq(${String(_val)})`),
   desc: vi.fn((_col) => "desc"),
   and: vi.fn((...args: unknown[]) => `and(${args.join(",")})`),
+  // deepscan17 (2026-07-05): checkLayer2DailyLoss now delegates to
+  // cross-symbol-pnl.ts::getAccountSessionCumulativePnL, which dynamically
+  // imports drizzle-orm for isNull/inArray/sql — these were previously unused
+  // by kill-switch.ts directly and missing from this mock.
+  isNull: vi.fn(() => "isNull"),
+  inArray: vi.fn((_col, vals: unknown[]) => `inArray(${vals})`),
+  sql: Object.assign(
+    vi.fn((..._args: unknown[]) => ({ as: vi.fn((name: string) => `sql_as(${name})`) })),
+    {},
+  ),
 }));
 
 vi.mock("../routes/sse.js", () => ({
@@ -232,6 +254,11 @@ function mockDllBreach() {
         orderBy: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue([]),
         }),
+        // deepscan17: getAccountSessionCumulativePnL's open-MTM query joins
+        // paperPositions -> paperSessions. No open positions in this fixture.
+        innerJoin: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
       };
     }),
   } as ReturnType<typeof db.select>);
@@ -276,6 +303,10 @@ function mockTrailingDdBreach() {
       }),
       orderBy: vi.fn().mockReturnValue({
         limit: vi.fn().mockResolvedValue([]),
+      }),
+      // deepscan17: getAccountSessionCumulativePnL open-MTM query join (no open positions).
+      innerJoin: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
       }),
     }),
   } as ReturnType<typeof db.select>);

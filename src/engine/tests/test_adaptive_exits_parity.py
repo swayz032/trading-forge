@@ -222,13 +222,25 @@ class TestLiquidityTP1Parity:
     def test_tp2_at_least_0p5R_beyond_tp1(self):
         """TP2 must be >= tp1_r + 0.5 (TS: r >= tp1.r_multiple + 0.5).
         Uses atr=10 so all levels are within max_distance cap.
+
+        deepscan17 (2026-07-05): all three candidates now share the SAME
+        htf_significance (3) so the composite rank score (see B-4(b) fix in
+        adaptive_exits.py) degenerates to pure proximity ordering for THIS
+        fixture — isolating the R-gap-from-TP1 logic under test from the
+        significance-based reranking behavior (which has its own dedicated
+        coverage in scripts/wave26-ts-python-exit-parity.ts's
+        "liquidity_rank_divergence" fixtures). Before the fix, london_high's
+        higher significance (4) made it outrank pdh and become TP1 instead —
+        an accurate reflection of the corrected algorithm, but not what this
+        test intends to exercise.
         """
         liq = [
-            LiquidityLevelSnapshot("pdh", 4006.0, 3),         # 1.0R → TP1
+            LiquidityLevelSnapshot("pdh", 4006.0, 3),         # 1.0R → TP1 (nearest, tied significance)
             LiquidityLevelSnapshot("asian_high", 4007.0, 3),  # 1.17R — 0.17R above TP1, too close
-            LiquidityLevelSnapshot("london_high", 4009.0, 4), # 1.5R — 0.5R above TP1, qualifies
+            LiquidityLevelSnapshot("london_high", 4009.0, 3), # 1.5R — 0.5R above TP1, qualifies
         ]
         plan = _plan("TRENDING_UP", liq=liq, atr=10.0)
+        assert plan.tp1.price == pytest.approx(4006.0)
         assert plan.tp2.price == pytest.approx(4009.0)
         assert plan.tp2.source == "liquidity"
 

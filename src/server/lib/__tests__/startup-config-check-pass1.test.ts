@@ -179,23 +179,45 @@ describe("checkStartupSecrets — Pass 1 Track C", () => {
   );
 
   // ── LIVE_ORDER_GATEWAY_URL ───────────────────────────────────────────────
+  // deepscan17 G-3 (2026-07-05): unset now AUTO-DERIVES from
+  // TRADING_FORGE_PUBLIC_URL (which VALID_ENV always sets) instead of
+  // warning — NOT_SET only fires when BOTH are unset. See the dedicated
+  // deepscan17 test file for full derivation coverage.
 
   it(
-    "warns LIVE_ORDER_GATEWAY_URL_NOT_SET when unset",
+    "auto-derives LIVE_ORDER_GATEWAY_URL from TRADING_FORGE_PUBLIC_URL when unset (no warning)",
     withEnv(
       { ...VALID_ENV, LIVE_ORDER_GATEWAY_URL: undefined },
       async () => {
         const { checkStartupSecrets } = await import("../startup-config-check.js");
         const result = await checkStartupSecrets();
-        expect(result.warnings).toContain("LIVE_ORDER_GATEWAY_URL_NOT_SET");
+        expect(result.warnings).not.toContain("LIVE_ORDER_GATEWAY_URL_NOT_SET");
+        expect(process.env.LIVE_ORDER_GATEWAY_URL).toBe(
+          `${VALID_ENV.TRADING_FORGE_PUBLIC_URL}/api/live-order`,
+        );
       },
     ),
   );
 
   it(
-    "warns LIVE_ORDER_GATEWAY_URL_NOT_SET when empty string",
+    "auto-derives LIVE_ORDER_GATEWAY_URL from TRADING_FORGE_PUBLIC_URL when empty string (no warning)",
     withEnv(
       { ...VALID_ENV, LIVE_ORDER_GATEWAY_URL: "" },
+      async () => {
+        const { checkStartupSecrets } = await import("../startup-config-check.js");
+        const result = await checkStartupSecrets();
+        expect(result.warnings).not.toContain("LIVE_ORDER_GATEWAY_URL_NOT_SET");
+        expect(process.env.LIVE_ORDER_GATEWAY_URL).toBe(
+          `${VALID_ENV.TRADING_FORGE_PUBLIC_URL}/api/live-order`,
+        );
+      },
+    ),
+  );
+
+  it(
+    "warns LIVE_ORDER_GATEWAY_URL_NOT_SET when unset AND TRADING_FORGE_PUBLIC_URL also unset (cannot derive)",
+    withEnv(
+      { ...VALID_ENV, LIVE_ORDER_GATEWAY_URL: undefined, TRADING_FORGE_PUBLIC_URL: undefined },
       async () => {
         const { checkStartupSecrets } = await import("../startup-config-check.js");
         const result = await checkStartupSecrets();
@@ -205,13 +227,14 @@ describe("checkStartupSecrets — Pass 1 Track C", () => {
   );
 
   it(
-    "does NOT warn LIVE_ORDER_GATEWAY_URL when set to any non-empty string",
+    "does NOT warn or overwrite LIVE_ORDER_GATEWAY_URL when set to any non-empty string",
     withEnv(
       { ...VALID_ENV, LIVE_ORDER_GATEWAY_URL: "https://example.com" },
       async () => {
         const { checkStartupSecrets } = await import("../startup-config-check.js");
         const result = await checkStartupSecrets();
         expect(result.warnings).not.toContain("LIVE_ORDER_GATEWAY_URL_NOT_SET");
+        expect(process.env.LIVE_ORDER_GATEWAY_URL).toBe("https://example.com");
       },
     ),
   );

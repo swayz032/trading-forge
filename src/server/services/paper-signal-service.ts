@@ -3398,9 +3398,14 @@ export async function evaluateSignals(
           // FINDING #2 FIX: prior fire-and-forget dynamic import meant a module-load
           // failure or thrown exception silently swallowed — positions stayed open past
           // the firm DLL breach with no audit row and no operator alert.
+          // deepscan17 (2026-07-05): E-1 threads the root correlationId (was minted fresh
+          // inside forceCloseAllPositions, breaking the audit chain); C-1 scopes the
+          // flatten to THIS account (accountKey, resolved above) so a breach on one
+          // funded account cannot flatten a healthy sibling account/firm.
           try {
             await forceCloseAllPositions(
-              `cross_symbol_dll_force_close:${firmId}:${dllResult.dllPct.toFixed(3)}`
+              `cross_symbol_dll_force_close:${firmId}:${dllResult.dllPct.toFixed(3)}`,
+              { correlationId: correlationId ?? undefined, scope: { accountKey } },
             );
           } catch (fcErr: unknown) {
             const fcMsg = fcErr instanceof Error ? fcErr.message : String(fcErr);

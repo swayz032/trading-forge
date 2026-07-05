@@ -1362,8 +1362,14 @@ def _compute_sharpe_ratios(paths: np.ndarray, periods_per_year: float = 252.0) -
     daily = np.diff(paths, axis=1)
     means = np.mean(daily, axis=1)
     stds = np.std(daily, axis=1, ddof=1)
-    stds = np.where(stds == 0, 1e-10, stds)
-    return means / stds * np.sqrt(periods_per_year)
+    # FIX (deepscan17 B-8, 2026-07-05): this was the pre-FIX-8 pattern — replacing
+    # near-zero std with 1e-10 explodes Sharpe to ~1e10-1e13 for flat/breakeven
+    # paths, corrupting confidence_intervals.sharpe_ratio percentiles fed to B14/
+    # prop-firm sim consumers. Mirrors the guard already applied in
+    # risk_metrics.py::compute_sharpe_distribution (FIX 8) and
+    # compute_lo_sharpe_distribution (E6): stds < 1e-8 -> Sharpe = 0.0 (no edge
+    # signal, not an infinitely profitable one).
+    return np.where(stds < 1e-8, 0.0, means / stds * np.sqrt(periods_per_year))
 
 
 def _compute_percentiles(values: np.ndarray, levels: list[float]) -> dict:
