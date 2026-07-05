@@ -247,6 +247,23 @@
     .rr-attr-legend { display: flex; flex-wrap: wrap; gap: 7px 14px; }
     .rr-attr-legend span { font-size: 11px; color: var(--dim); }
     .rr-attr-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+    /* staggered "crystal-ball reveal" — the report materializes piece by piece */
+    .rr-rev { opacity: 0; animation: rr-in 0.55s cubic-bezier(0.2,0.7,0.3,1) forwards; }
+    @keyframes rr-in { from { opacity: 0; transform: translateY(12px); filter: blur(5px); } to { opacity: 1; transform: none; filter: blur(0); } }
+    /* entry-quality radial gauge */
+    .rr-drive-head { display: flex; align-items: center; gap: 14px; margin: 6px 0 4px; }
+    .rr-gauge { position: relative; flex: 0 0 auto; width: 62px; height: 62px; border-radius: 50%;
+      background: conic-gradient(var(--lime) calc(var(--pct,0) * 1%), rgba(255,255,255,0.07) 0);
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 0 24px rgba(163,255,18,0.22), inset 0 0 12px rgba(0,0,0,0.5); }
+    .rr-gauge::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #14180f, #070a06); }
+    .rr-gauge span { position: relative; z-index: 1; font-size: 14px; font-weight: 800; color: var(--lime); text-shadow: 0 0 10px rgba(163,255,18,0.55); }
+    .rr-gauge-lbl { font-size: 12px; color: var(--dim); line-height: 1.4; }
+    /* the fix + missed chips + regime flag */
+    .rr-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+    .rr-chip { font-size: 11px; color: var(--warm); background: rgba(255,200,120,0.08); border: 1px solid rgba(255,200,120,0.22); border-radius: 999px; padding: 3px 11px; }
+    .rr-flag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 11px; border-radius: 999px; margin-top: 12px; }
+    .rr-flag.ok { color: var(--lime); background: rgba(163,255,18,0.1); border: 1px solid rgba(163,255,18,0.25); }
+    .rr-flag.bad { color: var(--red); background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.3); }
     /* explicit ON / OFF meanings (color-coded) */
     .of-onoff { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
     .of-on, .of-off { display: flex; gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.4; color: var(--ink); }
@@ -978,6 +995,9 @@
         whatToWatch: 'Fill was ~2 ticks early vs the ideal price — small slippage that shaved a sliver off the R.',
         actionNeeded: 'Nothing to fix — this is the shape you want. Keep the exit discipline exactly like this.',
         attribution: { regime: 0.15, structure: 0.22, narrative: 0.10, confluence: 0.20, decay: 0.05, liquidity: 0.13, fill: 0.05, exit_plan: 0.10 },
+        parameterHint: { field: 'Entry timing', current: 'market on the sweep', suggested: 'wait one candle', confidence: 0.61 },
+        confluenceMissed: ['SMT confirmation'],
+        regimeMismatch: false,
         entryQuality: 0.82, model: 'GPT-5.4', critiquedAt: '3:04 AM'
       };
       function rrGradeClass(g) { var c = String(g || '').charAt(0).toUpperCase(); return c === 'A' ? 'g-a' : c === 'B' ? 'g-b' : c === 'C' ? 'g-c' : 'g-d'; }
@@ -987,22 +1007,32 @@
         var legend = RR_ATTR.filter(function (k) { return (attr[k] || 0) > 0; }).map(function (k) { return '<span><i style="background:' + RR_ATTR_C[k] + '"></i>' + k.replace('_', ' ') + ' ' + Math.round((attr[k] || 0) * 100) + '%</span>'; }).join('');
         var pos = (r.realizedR || 0) >= 0;
         var rTxt = r.realizedR != null ? (pos ? '+' : '') + Number(r.realizedR).toFixed(1) + 'R' : '—';
-        var eq = r.entryQuality != null ? ' &middot; entry quality ' + Math.round(r.entryQuality * 100) + '%' : '';
+        var eqPct = r.entryQuality != null ? Math.round(r.entryQuality * 100) : null;
+        var fix = r.parameterHint
+          ? (rrEsc(r.parameterHint.field) + ': ' + (r.parameterHint.current != null ? rrEsc(r.parameterHint.current) + ' &rarr; ' : '') + rrEsc(r.parameterHint.suggested) + (r.parameterHint.confidence != null ? ' (' + Math.round(r.parameterHint.confidence * 100) + '% sure)' : ''))
+          : 'Nothing to change &mdash; keep it exactly like this.';
+        var missed = (r.confluenceMissed && r.confluenceMissed.length)
+          ? '<div class="rr-chips">' + r.confluenceMissed.map(function (m) { return '<span class="rr-chip">missed: ' + rrEsc(m) + '</span>'; }).join('') + '</div>' : '';
+        var regime = r.regimeMismatch ? '<span class="rr-flag bad">Wrong regime for this play</span>' : '<span class="rr-flag ok">Right regime for this play</span>';
+        var gauge = eqPct != null ? '<div class="rr-drive-head"><div class="rr-gauge" style="--pct:' + eqPct + '"><span>' + eqPct + '%</span></div><div class="rr-gauge-lbl">Entry quality<br>how clean the setup was</div></div>' : '';
+        var _d = 0; function rev() { _d += 150; return ' style="animation-delay:' + _d + 'ms"'; }
         return '<div class="rr-card">' +
           '<div class="rr-mist"></div><div class="rr-mist b"></div><div class="rr-glass"></div>' +
           '<div class="rr-inner">' +
-          '<div class="rr-head">' +
+          '<div class="rr-head rr-rev"' + rev() + '>' +
             '<div class="rr-grade ' + rrGradeClass(r.grade) + '">' + rrEsc(r.grade || '—') + '</div>' +
             '<div class="rr-hname"><div class="rr-name">' + rrEsc(r.strategy) + '<span class="sym">' + rrEsc(r.symbol || '') + '</span></div><div class="rr-hmeta">' + rrEsc(r.model || '') + ' &middot; ' + rrEsc(r.critiquedAt || '') + '</div></div>' +
             '<div class="rr-r ' + (pos ? 'pos' : 'neg') + '">' + rTxt + '</div>' +
           '</div>' +
-          '<div class="rr-oneliner">&ldquo;' + rrEsc(r.oneLiner || '') + '&rdquo;</div>' +
+          '<div class="rr-oneliner rr-rev"' + rev() + '>&ldquo;' + rrEsc(r.oneLiner || '') + '&rdquo;</div>' +
+          '<div class="rr-rev"' + rev() + '>' + regime + '</div>' +
           '<div class="rr-div"></div>' +
-          '<div class="rr-sec first"><b>What went right</b><p>' + rrEsc(r.whatWentRight || '—') + '</p></div>' +
-          '<div class="rr-sec"><b>What to watch</b><p>' + rrEsc(r.whatToWatch || '—') + '</p></div>' +
-          '<div class="rr-sec"><b>Action needed</b><p>' + rrEsc(r.actionNeeded || '—') + '</p></div>' +
+          '<div class="rr-sec first rr-rev"' + rev() + '><b>What worked</b><p>' + rrEsc(r.whatWentRight || '—') + '</p></div>' +
+          '<div class="rr-sec rr-rev"' + rev() + '><b>Watch out</b><p>' + rrEsc(r.whatToWatch || '—') + '</p></div>' +
+          '<div class="rr-sec rr-rev"' + rev() + '><b>The move</b><p>' + rrEsc(r.actionNeeded || '—') + '</p></div>' +
+          '<div class="rr-sec rr-rev"' + rev() + '><b>The fix</b><p>' + fix + '</p>' + missed + '</div>' +
           '<div class="rr-div"></div>' +
-          '<div class="rr-sec first"><b>Why it did what it did' + eq + '</b><div class="rr-attr">' + bars + '</div><div class="rr-attr-legend">' + legend + '</div></div>' +
+          '<div class="rr-sec first rr-rev"' + rev() + '><b>What drove it</b>' + gauge + '<div class="rr-attr">' + bars + '</div><div class="rr-attr-legend">' + legend + '</div></div>' +
           '</div>' +
         '</div>';
       }
