@@ -313,6 +313,59 @@ function _buildTrainingEnv(): NodeJS.ProcessEnv {
   };
 }
 
+// ── AUDIT_EVENT_JSON stderr bridge (Deep-Scan #18, 2026-07-05) ──────────────────
+//
+// The spawned Python training subprocess (quantum_rl_agent → db_loader.py
+// load_backtest_bar_data) cannot write audit_log directly. It emits canonical
+// `AUDIT_EVENT_JSON {json}` stderr sentinels (mirrors backtester.py) for CPCV purge
+// events. Parse them from the child's full stderr on close and write the documented
+// audit rows here (the runner already owns a DB handle). Closes the Band-H gap where
+// quantum_rl.training_cpcv_purge_violation was documented but never actually fired.
+const _AUDIT_EVENT_SENTINEL = "AUDIT_EVENT_JSON ";
+const _MAX_AUDIT_EVENTS_PER_RUN = 50; // flood guard
+
+export function _writeStderrAuditEvents(
+  stderrText: string,
+  strategyId: number | string,
+  correlationId?: string,
+): number {
+  let emitted = 0;
+  for (const rawLine of stderrText.split("\n")) {
+    const trimmed = rawLine.trim();
+    if (!trimmed.startsWith(_AUDIT_EVENT_SENTINEL)) continue;
+    if (emitted >= _MAX_AUDIT_EVENTS_PER_RUN) break;
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(trimmed.slice(_AUDIT_EVENT_SENTINEL.length));
+    } catch {
+      continue; // malformed sentinel — skip
+    }
+    const action = typeof payload.event === "string" ? payload.event : null;
+    if (!action) continue;
+    emitted++;
+    const status = typeof payload.status === "string" ? payload.status : "info";
+    const { event: _event, status: _status, ...rest } = payload;
+    void _event;
+    void _status;
+    db.insert(auditLog)
+      .values({
+        action,
+        entityType: "strategy",
+        entityId: String(strategyId),
+        status,
+        correlationId: correlationId ?? null,
+        result: rest,
+      })
+      .catch((auditErr) =>
+        logger.warn(
+          { err: String(auditErr), strategyId, action },
+          "quantum-rl-training-runner: AUDIT_EVENT_JSON audit row write failed (non-blocking)",
+        ),
+      );
+  }
+  return emitted;
+}
+
 // ── Output type ───────────────────────────────────────────────────────────────
 
 export interface RlTrainingAutoFireResult {
@@ -483,6 +536,12 @@ export async function runRlTrainingForStrategy(
 
       const durationMs = Date.now() - start;
       const stdoutSnippet = stdout.slice(-500);
+
+      // Deep-Scan #18: surface any AUDIT_EVENT_JSON sentinels the training subprocess
+      // emitted (e.g. quantum_rl.training_cpcv_purge_violation from db_loader.py) as
+      // real audit_log rows. Runs regardless of exit code — a purge is worth recording
+      // even if training later failed.
+      _writeStderrAuditEvents(stderr, strategyId, correlationId);
 
       if (code === 0) {
         // Parse regimes trained from JSON output

@@ -624,6 +624,81 @@ class TestLoadBacktestBarData:
         assert len(bars) == 1, f"Expected 1 IS bar, got {len(bars)}"
         assert bars[0]["timestamp"].startswith("2024-02"), f"Wrong timestamp: {bars[0]['timestamp']}"
 
+    def test_cpcv_purge_emits_audit_event_sentinel(self, capsys):
+        """Deep-Scan #18: a purged OOS bar must emit an AUDIT_EVENT_JSON stderr sentinel
+        (event=quantum_rl.training_cpcv_purge_violation) so quantum-rl-training-runner.ts
+        writes the documented audit row — previously the purge was silent."""
+        from src.engine.replay.db_loader import load_backtest_bar_data
+
+        wf_row = {
+            "id": "fold-1", "window_index": 0,
+            "is_start": "2024-01-01", "is_end": "2024-03-31",
+            "oos_start": "2024-04-01", "oos_end": "2024-06-30",
+        }
+        is_trade = {
+            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=timezone.utc),
+            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=timezone.utc),
+            "direction": "long", "entry_price": 4200.0, "exit_price": 4215.0,
+            "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
+            "session_type": "rth", "macro_regime": "TRENDING",
+        }
+        oos_trade = {
+            "entry_time": datetime(2024, 5, 10, 10, 30, tzinfo=timezone.utc),
+            "exit_time": datetime(2024, 5, 10, 11, 0, tzinfo=timezone.utc),
+            "direction": "long", "entry_price": 4350.0, "exit_price": 4365.0,
+            "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
+            "session_type": "rth", "macro_regime": "RANGE_BOUND",
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchall.side_effect = [[wf_row], [is_trade, oos_trade]]
+        mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+        with patch("src.engine.replay.db_loader._get_db_connection", return_value=mock_conn):
+            bars = load_backtest_bar_data(backtest_id=42, cpcv_purge=True)
+
+        assert len(bars) == 1  # OOS bar purged
+        captured = capsys.readouterr()
+        sentinels = [ln for ln in captured.err.splitlines() if ln.startswith("AUDIT_EVENT_JSON ")]
+        assert len(sentinels) == 1, f"expected 1 AUDIT_EVENT_JSON sentinel, stderr={captured.err!r}"
+        payload = json.loads(sentinels[0][len("AUDIT_EVENT_JSON "):])
+        assert payload["event"] == "quantum_rl.training_cpcv_purge_violation"
+        assert payload["status"] == "warning"
+        assert payload["purged_bar_count"] == 1
+        assert payload["bars_retained"] == 1
+        assert payload["backtest_id"] == 42
+        assert payload["malformed_fold_count"] == 0
+
+    def test_cpcv_no_purge_no_malformed_fold_emits_no_sentinel(self, capsys):
+        """No purge + no malformed fold → no sentinel (avoid audit noise on clean runs)."""
+        from src.engine.replay.db_loader import load_backtest_bar_data
+
+        wf_row = {
+            "id": "fold-1", "window_index": 0,
+            "is_start": "2024-01-01", "is_end": "2024-03-31",
+            "oos_start": "2024-04-01", "oos_end": "2024-06-30",
+        }
+        is_trade = {
+            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=timezone.utc),
+            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=timezone.utc),
+            "direction": "long", "entry_price": 4200.0, "exit_price": 4215.0,
+            "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
+            "session_type": "rth", "macro_regime": "TRENDING",
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchall.side_effect = [[wf_row], [is_trade]]
+        mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+        with patch("src.engine.replay.db_loader._get_db_connection", return_value=mock_conn):
+            bars = load_backtest_bar_data(backtest_id=7, cpcv_purge=True)
+
+        assert len(bars) == 1
+        captured = capsys.readouterr()
+        assert "AUDIT_EVENT_JSON " not in captured.err
+
     def test_cpcv_purge_false_returns_all_bars(self):
         """cpcv_purge=False must return all bars (debug-only mode)."""
         from src.engine.replay.db_loader import load_backtest_bar_data
