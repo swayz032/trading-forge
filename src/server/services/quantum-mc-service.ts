@@ -11,6 +11,7 @@ import { parsePythonJson } from "../../shared/utils.js";
 import { compilePineExport } from "./pine-export-service.js";
 import { tracer } from "../lib/tracing.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
+import { quantumMcRunsTotal } from "../lib/metrics-registry.js";
 // FIX H2 (deepscan15 2026-07-03): route this bespoke spawn through the shared
 // python-runner semaphore accounting so it counts toward MAX_PYTHON_SUBPROCESSES
 // and the pythonSubprocess{Active,Queued} stats — previously this spawn bypassed
@@ -134,24 +135,59 @@ export async function runQuantumMC(
   qmcSpan.setAttribute("eventType", eventType);
   qmcSpan.setAttribute("firmKey", firmKey);
 
-  // Fetch backtest
-  const [bt] = await db.select().from(backtests).where(eq(backtests.id, backtestId));
-  if (!bt) throw new Error(`Backtest ${backtestId} not found`);
-  if (bt.status !== "completed") throw new Error(`Backtest not completed (status: ${bt.status})`);
+  // Deep-scan #16 Wave-1 Track 5 (HIGH E-8): the backtest fetch + "running" row insert
+  // below happen BEFORE the try block further down — if either throws (backtest not
+  // found/completed, or a DB error on the insert itself), there is no quantumMcRuns row
+  // to attach a failure audit to, and the caller's catch previously had nothing but a
+  // bare logger.error. Wrap this pre-insert phase so a failure here is still counted +
+  // audited (against the backtestId, since no run row exists yet) before re-throwing.
+  let bt: typeof backtests.$inferSelect;
+  let qmcRow: typeof quantumMcRuns.$inferSelect;
+  try {
+    // Fetch backtest
+    const [btRow] = await db.select().from(backtests).where(eq(backtests.id, backtestId));
+    if (!btRow) throw new Error(`Backtest ${backtestId} not found`);
+    if (btRow.status !== "completed") throw new Error(`Backtest not completed (status: ${btRow.status})`);
+    bt = btRow;
 
-  // Insert running quantum run
-  // Insert a running row with a provisional method label — updated after the Python
-  // engine returns so we reflect the actual execution path (iae or classical_fallback).
-  const [qmcRow] = await db
-    .insert(quantumMcRuns)
-    .values({
-      backtestId,
-      status: "running",
-      method: "iae",  // provisional — overwritten below once result is available
-      governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
-    })
-    .returning();
-  qmcSpan.setAttribute("qmcRunId", qmcRow.id);
+    // Insert running quantum run
+    // Insert a running row with a provisional method label — updated after the Python
+    // engine returns so we reflect the actual execution path (iae or classical_fallback).
+    const [qmcRowInserted] = await db
+      .insert(quantumMcRuns)
+      .values({
+        backtestId,
+        status: "running",
+        method: "iae",  // provisional — overwritten below once result is available
+        governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
+      })
+      .returning();
+    qmcRow = qmcRowInserted;
+    qmcSpan.setAttribute("qmcRunId", qmcRow.id);
+  } catch (preInsertErr) {
+    const preInsertErrMsg = preInsertErr instanceof Error ? preInsertErr.message : String(preInsertErr);
+    try { quantumMcRunsTotal.labels({ outcome: "pre_insert_error" }).inc(); } catch { /* non-blocking counter */ }
+    logger.error(
+      { backtestId, eventType, firmKey, err: preInsertErr },
+      "quantum-mc-service: pre-insert phase failed (no quantumMcRuns row exists yet) — attributing failure audit to the backtest",
+    );
+    await db.insert(auditLog).values({
+      action: "quantum-mc.run",
+      entityType: "backtest",
+      entityId: backtestId,
+      input: { backtestId, eventType, firmKey },
+      result: { error: preInsertErrMsg, stage: "pre_insert" },
+      status: "failure",
+      decisionAuthority: "agent",
+      errorMessage: preInsertErrMsg,
+      correlationId,
+    }).catch((auditErr) => {
+      logger.warn({ backtestId, err: auditErr }, "quantum-mc.run (pre_insert failure) audit insert failed (non-blocking)");
+    });
+    qmcSpan.setAttribute("status", "failed");
+    qmcSpan.end();
+    throw preInsertErr;
+  }
 
   // Hoist cost telemetry vars OUTSIDE try block so catch handler can reference
   // them even if early failures throw before they would have been initialized
@@ -381,6 +417,7 @@ export async function runQuantumMC(
     qmcSpan.setAttribute("status", "completed");
     qmcSpan.setAttribute("backend", result.backend_used);
     qmcSpan.end();
+    try { quantumMcRunsTotal.labels({ outcome: "completed" }).inc(); } catch { /* non-blocking counter */ }
     return { id: qmcRow.id, status: "completed", ...result };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
@@ -413,6 +450,7 @@ export async function runQuantumMC(
 
     qmcSpan.setAttribute("status", "failed");
     qmcSpan.end();
+    try { quantumMcRunsTotal.labels({ outcome: "failed" }).inc(); } catch { /* non-blocking counter */ }
     return { id: qmcRow.id, status: "failed", error: errorMsg };
   }
 }

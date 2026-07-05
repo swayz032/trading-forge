@@ -10,11 +10,19 @@ EIA API v2 base: https://api.eia.gov/v2/
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from datetime import datetime, timedelta
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+# Deep-scan #16 Wave-1 Track 5 (HIGH E-9): this module had zero `logging`/`print`
+# usage anywhere -- fetch_all_eia()'s bare `except Exception` swallow point below
+# degraded every configured series to an empty list with NO signal that a rate
+# limit, missing EIA_API_KEY, or API outage occurred. Fail-soft is preserved --
+# only the silence is fixed.
+logger = logging.getLogger(__name__)
 
 EIA_BASE_URL = "https://api.eia.gov/v2"
 
@@ -181,7 +189,14 @@ def fetch_all_eia(
                 api_key=key,
             )
             results[name] = observations
-        except Exception:
+        except Exception as exc:
+            # WARN (not silent) -- a dark EIA feed (rate limit, missing/expired
+            # EIA_API_KEY, outage) must be visible instead of degrading this
+            # series to an empty list with zero trace.
+            logger.warning(
+                "EIA fetch failed for series '%s' (%s) -- returning empty series (fail-soft): %s",
+                name, series_id, exc,
+            )
             results[name] = []
 
     return results

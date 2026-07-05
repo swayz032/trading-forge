@@ -24,7 +24,7 @@ import { captureToDLQ } from "../lib/dlq-service.js";
 import { db } from "../db/index.js";
 import { tracer } from "../lib/tracing.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
-import { backtestRuns, backtestScoredTotal, rlTrainingEpochsTotal } from "../lib/metrics-registry.js";
+import { backtestRuns, backtestScoredTotal, rlTrainingEpochsTotal, backtestCompletionWriteFailedTotal, quantumMcRunsTotal, backtestDslGuardsFailedTotal } from "../lib/metrics-registry.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
 import { computeResultHash, computeDataHash, computeStrategyHash } from "../lib/result-hasher.js";
 // Track A F-6: insertAuditRowSafe added. Remaining db.insert(auditLog) call
@@ -109,6 +109,17 @@ function buildResultExtras(result: BacktestResult): Record<string, unknown> | nu
     // gate permanently blocked. Fail-closed preserved: old backtests without
     // this field continue to return [] (gate blocks).
     "expected_signals",
+    // Deep-scan #16 Wave-1 Track 5 cross-track contract: Track 2 is adding
+    // result["dsl_guards"]["guards_failed"] to the Python engine (backtester.py
+    // already emits result["dsl_guards"] with stop_ceiling_skips/time_stop_exits/
+    // dll_halt_blocks etc. — see _dsl_guards_meta in backtester.py — but
+    // guards_failed did not exist yet at the time this track shipped). Persisting
+    // the whole dsl_guards object (not just guards_failed) means this is forward-
+    // compatible with zero further TS changes once Track 2 lands the field — see
+    // the guards_failed invalid-for-promotion check inside the completion
+    // transaction below, which reads it back out of `result` directly (not
+    // resultExtras) so it fires in the SAME completion pass that persists it.
+    "dsl_guards",
   ] as const;
   let hasAny = false;
   for (const key of extraKeys) {
@@ -934,6 +945,13 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     const rawEquityCurve = result.equity_curve ?? metrics.equity_curve ?? null;
     const equityCurveGuard = downsampleEquityCurve(rawEquityCurve as unknown[] | null);
 
+    // Deep-scan #16 Wave-1 Track 5 (HIGH E-7): this transaction has no local catch of
+    // its own — a throw here (constraint violation, connection drop mid-transaction,
+    // etc.) used to propagate straight to the OUTER catch (~3081) with no distinguishing
+    // signal of WHERE it failed. Wrapping it here lets us emit a counter + best-effort
+    // audit row + SSE broadcast BEFORE re-throwing, so "the completion write itself
+    // failed" is discoverable even if the outer catch's own recovery write also fails.
+    try {
     await db.transaction(async (tx) => {
       // 1. Update backtest row with full results
       await tx
@@ -1110,7 +1128,75 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         durationMs: result.execution_time_ms,
         correlationId: correlationId ?? null,
       });
+
+      // 7. Deep-scan #16 Wave-1 Track 5 cross-track contract: Track 2 is adding
+      // result["dsl_guards"]["guards_failed"] to the Python engine. This backtest
+      // does NOT own the engine or the lifecycle gate wiring, so this is a
+      // read-only, forward-compatible consumer: when guards_failed is present and
+      // non-empty, write a distinct audit_log row so the backtest is flagged
+      // invalid-for-promotion in the audit trail (and counted, not silently
+      // absorbed into the generic "backtest.run success" row above). No lifecycle
+      // gate reads this yet — that wiring is out of scope for this track — but the
+      // signal now exists the moment Track 2 ships the producer field.
+      const dslGuardsRaw = (result as unknown as Record<string, unknown>).dsl_guards as
+        | Record<string, unknown>
+        | null
+        | undefined;
+      const guardsFailedRaw = dslGuardsRaw?.guards_failed;
+      const guardsFailedList = Array.isArray(guardsFailedRaw)
+        ? guardsFailedRaw
+        : guardsFailedRaw
+          ? [guardsFailedRaw]
+          : [];
+      if (guardsFailedList.length > 0) {
+        try { backtestDslGuardsFailedTotal.inc(); } catch { /* non-blocking counter */ }
+        await tx.insert(auditLog).values({
+          action: "backtest.dsl_guards_failed",
+          entityType: "backtest",
+          entityId: backtestId,
+          input: { strategyId },
+          result: {
+            guards_failed: guardsFailedList,
+            note: "DSL guard(s) failed during backtest execution — this backtest is NOT clean for promotion purposes",
+          },
+          status: "failure",
+          correlationId: correlationId ?? null,
+        });
+      }
     });
+    } catch (completionWriteErr) {
+      // HIGH E-7: the completion-write transaction failed. Emit a counter (in-memory,
+      // survives DB outages) + best-effort audit row + SSE BEFORE re-throwing so the
+      // outer catch's recovery path is not the only trace of this failure — if the
+      // recovery write also fails (see the outer catch below), this is the only signal
+      // that survives.
+      const completionWriteErrMsg = completionWriteErr instanceof Error
+        ? completionWriteErr.message
+        : String(completionWriteErr);
+      try { backtestCompletionWriteFailedTotal.labels({ stage: "completion_write" }).inc(); } catch { /* non-blocking counter */ }
+      logger.error(
+        { backtestId, strategyId, err: completionWriteErr, correlationId },
+        "CRITICAL: backtest completion-write transaction failed — engine result computed but NOT yet persisted; outer catch will attempt recovery write",
+      );
+      await db.insert(auditLog).values({
+        action: "backtest.completion_write_failed",
+        entityType: "backtest",
+        entityId: backtestId,
+        input: { strategyId },
+        result: { error: completionWriteErrMsg, stage: "completion_write" },
+        status: "failure",
+        decisionAuthority: "system",
+        errorMessage: completionWriteErrMsg,
+        correlationId: correlationId ?? null,
+      }).catch((auditWriteErr) => {
+        logger.error(
+          { backtestId, strategyId, err: auditWriteErr },
+          "backtest.completion_write_failed audit insert ALSO failed — DB likely degraded; counter + structured log are the only trace",
+        );
+      });
+      broadcastSSE("backtest:completion_write_failed", { backtestId, strategyId, error: completionWriteErrMsg });
+      throw completionWriteErr; // preserve existing outer-catch recovery behavior (mark status=failed)
+    }
 
     // ─── Broadcast completion SSE ─────────────────────────────────
     broadcastSSE("backtest:completed", {
@@ -2426,9 +2512,35 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             () => runQuantumMC(backtestId, "breach", firmKey),
           );
           logger.info({ backtestId, qmcId: qmcResult.id, status: qmcResult.status }, "Auto quantum MC completed");
+          // HIGH E-8: quantum-mc-service.ts writes its OWN "quantum-mc.run" audit row on
+          // both success and internal failure; this counter is the auto-fire-hook-level
+          // signal (a week of silent failures here must be distinguishable from clean runs).
+          try {
+            quantumMcRunsTotal.labels({ outcome: qmcResult.status === "completed" ? "completed" : "failed" }).inc();
+          } catch { /* non-blocking counter */ }
         } catch (qmcErr) {
-          // Circuit open or Python failure — log and swallow (non-blocking)
+          // HIGH E-8 fix: previously this branch only called logger.error — no audit_log,
+          // no counter, no Discord. This fires when runQuantumMC() throws BEFORE it can
+          // write its own failure audit row (circuit-breaker-open rejection, or a DB error
+          // in the pre-insert fetch/insert inside quantum-mc-service.ts — see the
+          // "pre_insert_error" outcome there). Challenger-only — advisory, never gates
+          // promotion — but must still be observable.
+          const qmcErrMsg = qmcErr instanceof Error ? qmcErr.message : String(qmcErr);
           logger.error({ backtestId, err: qmcErr }, "Auto quantum MC failed (non-blocking)");
+          try { quantumMcRunsTotal.labels({ outcome: "auto_fire_uncaught" }).inc(); } catch { /* non-blocking counter */ }
+          await db.insert(auditLog).values({
+            action: "quantum_mc.auto_fire_failed",
+            entityType: "backtest",
+            entityId: backtestId,
+            input: { backtestId, eventType: "breach" },
+            result: { error: qmcErrMsg },
+            status: "failure",
+            decisionAuthority: "system",
+            errorMessage: qmcErrMsg,
+            correlationId: correlationId ?? null,
+          }).catch((auditErr) => {
+            logger.warn({ backtestId, err: auditErr }, "quantum_mc.auto_fire_failed audit insert failed (non-blocking)");
+          });
         }
       })();
     }
@@ -3089,26 +3201,58 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     return { id: backtestId, status: "completed", ...result };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    await db
-      .update(backtests)
-      .set({ status: "failed", errorMessage: errorMsg })
-      .where(eq(backtests.id, backtestId));
+    // Deep-scan #16 Wave-1 Track 5 (HIGH E-7): this recovery write is the LAST line of
+    // defense that marks a failed backtest as status="failed" instead of leaving it
+    // stuck at "running" forever. Previously it had no protection of its own — if the
+    // DB was degraded enough that the ORIGINAL failure happened, there was a real chance
+    // this recovery write (and its audit insert) would ALSO throw, in which case the
+    // exception propagated out of this async function with ZERO trace anywhere: no DB
+    // row update, no audit_log row, and (for a fire-and-forget caller with no .catch())
+    // a silent unhandled rejection. Wrapping the recovery write in its own try/catch
+    // guarantees this function ALWAYS returns a deterministic {status:"failed"} result
+    // and ALWAYS leaves an in-memory (counter + structured log) trace even when every
+    // DB write fails.
+    let recoveryWriteFailed = false;
+    try {
+      await db
+        .update(backtests)
+        .set({ status: "failed", errorMessage: errorMsg })
+        .where(eq(backtests.id, backtestId));
 
-    await db.insert(auditLog).values({
-      action: "backtest.run",
-      entityType: "backtest",
-      entityId: backtestId,
-      input: config as unknown as Record<string, unknown>,
-      result: { error: errorMsg },
-      status: "failure",
-      decisionAuthority: "agent",
-      errorMessage: errorMsg,
-      correlationId: correlationId ?? null,
-    });
+      await db.insert(auditLog).values({
+        action: "backtest.run",
+        entityType: "backtest",
+        entityId: backtestId,
+        input: config as unknown as Record<string, unknown>,
+        result: { error: errorMsg },
+        status: "failure",
+        decisionAuthority: "agent",
+        errorMessage: errorMsg,
+        correlationId: correlationId ?? null,
+      });
+    } catch (recoveryErr) {
+      recoveryWriteFailed = true;
+      try { backtestCompletionWriteFailedTotal.labels({ stage: "recovery_write" }).inc(); } catch { /* non-blocking counter */ }
+      logger.error(
+        {
+          backtestId,
+          strategyId,
+          originalError: errorMsg,
+          recoveryError: recoveryErr instanceof Error ? recoveryErr.message : String(recoveryErr),
+          correlationId,
+        },
+        "CRITICAL: backtest recovery write ALSO failed after the original failure — " +
+        "this row is STUCK at status='running' with ZERO DB trace (audit_log write also " +
+        "failed). Manual DB intervention required — search logs for this backtestId.",
+      );
+    }
 
     backtestSpan.setAttribute("status", "failed");
+    backtestSpan.setAttribute("recoveryWriteFailed", recoveryWriteFailed);
     backtestSpan.end();
-    broadcastSSE("backtest:failed", { backtestId, strategyId, error: errorMsg });
+    // SSE broadcast does not depend on the DB — fires regardless of recovery-write outcome
+    // so the dashboard sees the failure live even when the row itself is stuck.
+    broadcastSSE("backtest:failed", { backtestId, strategyId, error: errorMsg, recoveryWriteFailed });
     return { id: backtestId, status: "failed", error: errorMsg };
   }
 }

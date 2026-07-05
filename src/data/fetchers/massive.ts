@@ -17,6 +17,19 @@ interface MassiveConfig {
   baseUrl?: string;
 }
 
+// Deep-scan #16 Wave-1 Track 5 (HIGH #13): fetchBars() previously had no
+// AbortController/timeout — CircuitBreaker.call() (the caller-side wrapper used
+// elsewhere in the codebase) imposes no deadline of its own, so a hung Massive
+// API response wedged a symbol's internal backfill indefinitely. Mirrors the
+// per-attempt AbortController pattern used by traderspost/client.ts (SUBMIT_TIMEOUT_MS).
+// Pre-PAPER simulator only (CANDIDATE/TESTING) per CLAUDE.md §8, but the data it
+// fetches feeds CANDIDATE/TESTING gate evaluation — a hang here silently stalls
+// the whole pre-paper pipeline for that symbol.
+const MASSIVE_FETCH_TIMEOUT_MS = Math.max(
+  1000,
+  parseInt(process.env.MASSIVE_FETCH_TIMEOUT_MS ?? "15000", 10) || 15000,
+);
+
 interface BarRequest {
   symbol: string;
   timeframe: "1min" | "5min" | "15min" | "1hour" | "daily";
@@ -49,7 +62,25 @@ export function createMassiveFetcher(config: MassiveConfig) {
       to: request.to,
     });
 
-    const response = await fetch(`${baseUrl}/bars?${params}`, { headers });
+    // HIGH #13: bounded AbortController timeout so a hung Massive response can never
+    // wedge the caller (or the circuit breaker, which imposes no deadline of its own)
+    // indefinitely. A timeout abort surfaces as a distinguishable AbortError so callers
+    // can tell "Massive is slow/down" apart from a genuine 4xx/5xx API error.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), MASSIVE_FETCH_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch(`${baseUrl}/bars?${params}`, { headers, signal: controller.signal });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new Error(`Massive API fetchBars timed out after ${MASSIVE_FETCH_TIMEOUT_MS}ms (symbol=${request.symbol}, timeframe=${request.timeframe})`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
     if (!response.ok) {
       throw new Error(`Massive API error: ${response.status} ${response.statusText}`);
     }

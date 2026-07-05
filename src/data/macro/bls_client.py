@@ -9,11 +9,19 @@ Uses only stdlib (urllib) -- no requests dependency.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from datetime import datetime
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+# Deep-scan #16 Wave-1 Track 5 (HIGH E-9): this module had zero `logging`/`print`
+# usage anywhere -- fetch_all_bls()'s bare `except Exception` swallow point below
+# degraded every configured series to an empty list with NO signal that a rate
+# limit, missing BLS_API_KEY, or API outage occurred. Fail-soft is preserved --
+# only the silence is fixed.
+logger = logging.getLogger(__name__)
 
 BLS_V1_URL = "https://api.bls.gov/publicAPI/v1/timeseries/data/"
 BLS_V2_URL = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
@@ -198,7 +206,15 @@ def fetch_all_bls(
             end_year=end_year,
             api_key=key,
         )
-    except Exception:
+    except Exception as exc:
+        # WARN (not silent) -- a dark BLS feed (rate limit, missing/expired
+        # BLS_API_KEY, outage) must be visible instead of degrading every
+        # configured series to an empty list with zero trace.
+        logger.warning(
+            "BLS fetch_all_bls failed for %d series (start_year=%s, end_year=%s) -- "
+            "returning empty series for all (fail-soft): %s",
+            len(series_ids), start_year, end_year, exc,
+        )
         return {name: [] for name in BLS_SERIES}
 
     # Map series IDs back to friendly names

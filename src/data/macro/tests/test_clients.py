@@ -9,6 +9,7 @@ import json
 import unittest
 from io import BytesIO
 from unittest.mock import MagicMock, patch
+from urllib.error import URLError
 
 from src.data.macro.fred_client import FRED_SERIES, fetch_all_macro, fetch_series, get_latest_values
 from src.data.macro.bls_client import BLS_SERIES, fetch_all_bls, fetch_bls_series
@@ -91,6 +92,23 @@ class TestFredClient(unittest.TestCase):
         # Should have an entry for every configured series
         for name in FRED_SERIES:
             self.assertIn(name, result)
+
+    @patch("src.data.macro.fred_client.urlopen")
+    def test_fetch_all_macro_logs_warning_on_fetch_failure(self, mock_urlopen):
+        """Deep-scan #16 Wave-1 Track 5 (HIGH E-9): a per-series fetch failure must
+        emit a WARNING log (not silently swallow) while still returning an empty
+        list for that series (fail-soft preserved)."""
+        mock_urlopen.side_effect = URLError("Connection refused")
+
+        with self.assertLogs("src.data.macro.fred_client", level="WARNING") as logs:
+            result = fetch_all_macro(lookback_days=30, api_key="test_key")
+
+        # Fail-soft preserved: every series still present, all empty.
+        for name in FRED_SERIES:
+            self.assertIn(name, result)
+            self.assertEqual(result[name], [])
+        # Loud: at least one WARNING mentioning the failure was emitted.
+        self.assertTrue(any("FRED fetch failed" in msg for msg in logs.output))
 
     @patch("src.data.macro.fred_client.urlopen")
     def test_get_latest_values(self, mock_urlopen):
@@ -217,6 +235,21 @@ class TestBlsClient(unittest.TestCase):
         for name in BLS_SERIES:
             self.assertIn(name, result)
 
+    @patch("src.data.macro.bls_client.urlopen")
+    def test_fetch_all_bls_logs_warning_on_fetch_failure(self, mock_urlopen):
+        """Deep-scan #16 Wave-1 Track 5 (HIGH E-9): a BLS fetch failure must emit
+        a WARNING log (not silently swallow) while still returning an empty list
+        per series (fail-soft preserved)."""
+        mock_urlopen.side_effect = URLError("Connection refused")
+
+        with self.assertLogs("src.data.macro.bls_client", level="WARNING") as logs:
+            result = fetch_all_bls(start_year=2025, end_year=2025)
+
+        for name in BLS_SERIES:
+            self.assertIn(name, result)
+            self.assertEqual(result[name], [])
+        self.assertTrue(any("BLS fetch_all_bls failed" in msg for msg in logs.output))
+
 
 # ─── EIA Client Tests ──────────────────────────────────────────
 
@@ -287,6 +320,21 @@ class TestEiaClient(unittest.TestCase):
         result = fetch_all_eia(lookback_days=30, api_key="test_key")
         for name in EIA_SERIES:
             self.assertIn(name, result)
+
+    @patch("src.data.macro.eia_client.urlopen")
+    def test_fetch_all_eia_logs_warning_on_fetch_failure(self, mock_urlopen):
+        """Deep-scan #16 Wave-1 Track 5 (HIGH E-9): a per-series fetch failure must
+        emit a WARNING log (not silently swallow) while still returning an empty
+        list for that series (fail-soft preserved)."""
+        mock_urlopen.side_effect = URLError("Connection refused")
+
+        with self.assertLogs("src.data.macro.eia_client", level="WARNING") as logs:
+            result = fetch_all_eia(lookback_days=30, api_key="test_key")
+
+        for name in EIA_SERIES:
+            self.assertIn(name, result)
+            self.assertEqual(result[name], [])
+        self.assertTrue(any("EIA fetch failed" in msg for msg in logs.output))
 
 
 if __name__ == "__main__":

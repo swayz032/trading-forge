@@ -45,7 +45,7 @@ import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/ss
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, slippageSurvivalBlocksTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, slippageSurvivalBlocksTotal, auditWriteFailuresTotal, b14GateTotal, wfeGateTotal, parameterDriftGateTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -91,6 +91,52 @@ import {
   slippageEvidenceBucket,
   bifEvidenceBucket,
 } from "../lib/evidence-completeness.js";
+
+// ─── Deep-scan #16 Wave-1 Track 5 (HIGH E-6) — hard-gate observability helpers ──
+//
+// B14 ci_high, WFE, and parameter-drift gates write audit_log + SSE on every
+// evaluation but previously incremented NO Prometheus counter — a promotion
+// pipeline could sit blocked for weeks with no Grafana panel moving. These
+// three tiny helpers derive a closed-set `outcome` label from each gate's pure
+// result object and increment the corresponding registry counter. Called
+// immediately after every `evaluateXGate(...)` invocation in this file so the
+// increment site can never silently fall out of sync with a new branch.
+//
+// Non-blocking by design (wrapped in try/catch): a counter-increment failure
+// must never affect a promotion decision.
+type LifecycleGateTransition = "TESTING_TO_PAPER" | "SHADOW_TO_PAPER" | "PAPER_TO_DEPLOY_READY";
+
+function _incB14GateCounter(
+  transition: LifecycleGateTransition,
+  result: { passed: boolean; legacyFallback?: boolean },
+): void {
+  try {
+    const outcome = !result.passed ? "block" : result.legacyFallback ? "legacy" : "pass";
+    b14GateTotal.labels({ transition, outcome }).inc();
+  } catch { /* non-blocking counter */ }
+}
+
+function _incWfeGateCounter(
+  transition: LifecycleGateTransition,
+  result: { passed: boolean; status: string },
+): void {
+  try {
+    const isLegacy = result.status === "legacy_null" || result.status === "cpcv_exempt";
+    const outcome = isLegacy ? "legacy" : result.passed ? "pass" : "block";
+    wfeGateTotal.labels({ transition, outcome }).inc();
+  } catch { /* non-blocking counter */ }
+}
+
+function _incParameterDriftGateCounter(
+  transition: LifecycleGateTransition,
+  result: { passed: boolean; status: string },
+): void {
+  try {
+    const isLegacy = result.status === "legacy_null" || result.status === "cpcv_exempt";
+    const outcome = isLegacy ? "legacy" : result.passed ? "pass" : "block";
+    parameterDriftGateTotal.labels({ transition, outcome }).inc();
+  } catch { /* non-blocking counter */ }
+}
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -3246,6 +3292,7 @@ export class LifecycleService {
               : null;
 
             const b14CiResultTp = evaluateB14CiGate(ruinCiTp, pointEstimateTp);
+            _incB14GateCounter("TESTING_TO_PAPER", b14CiResultTp);
 
             await db.insert(auditLog).values({
               action: "b14.gate_evaluated",
@@ -3287,6 +3334,7 @@ export class LifecycleService {
             // run — an absent one means MC errored or is still pending, a genuine failure
             // that must BLOCK (retries next cron cycle once MC completes), not slip through.
             const b14TpNoMc = evaluateB14CiGate(null, null);
+            _incB14GateCounter("TESTING_TO_PAPER", b14TpNoMc);
             await db.insert(auditLog).values({
               action: "b14.gate_evaluated",
               entityId: s.id,
@@ -3311,6 +3359,7 @@ export class LifecycleService {
           // B14 CI is a hard gate protecting against high ruin probability. A gate that
           // cannot run must block promotion, not silently allow it.
           const b14TpErrMsg = b14TpErr instanceof Error ? b14TpErr.message : String(b14TpErr);
+          try { b14GateTotal.labels({ transition: "TESTING_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn({ strategyId: s.id, err: b14TpErr }, "B14 CI gate (TESTING→PAPER): read failed — blocking promotion (fail-closed)");
           await db.insert(auditLog).values({
             action: "b14.gate_error_fail_closed",
@@ -3339,6 +3388,7 @@ export class LifecycleService {
           const wfeStatusTp = wfResultsTp?.wfe_status != null ? String(wfResultsTp.wfe_status) : null;
 
           const wfeResultTp = evaluateWfeGate(wfeOverallTp, undefined, undefined, wfeStatusTp);
+          _incWfeGateCounter("TESTING_TO_PAPER", wfeResultTp);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
             strategyId: s.id,
@@ -3390,6 +3440,7 @@ export class LifecycleService {
           }
         } catch (wfeTpErr) {
           // Fail-open: WFE gate read failure is non-blocking
+          try { wfeGateTotal.labels({ transition: "TESTING_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn({ strategyId: s.id, err: wfeTpErr }, "WFE gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
         }
 
@@ -3405,6 +3456,7 @@ export class LifecycleService {
           const paramStabilityStatusTp = (driftWfResultsTp?.param_stability_status as string | null | undefined) ?? null;
 
           const driftResultTp = evaluateParameterDriftGate(driftClassificationTp, driftConfidenceTp, paramStabilityStatusTp);
+          _incParameterDriftGateCounter("TESTING_TO_PAPER", driftResultTp);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
             strategyId: s.id,
@@ -3447,6 +3499,7 @@ export class LifecycleService {
           }
         } catch (driftTpErr) {
           // Fail-open: drift gate read failure is non-blocking
+          try { parameterDriftGateTotal.labels({ transition: "TESTING_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn({ strategyId: s.id, err: driftTpErr }, "Parameter drift gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
         }
 
@@ -3949,6 +4002,7 @@ export class LifecycleService {
                 : null;
 
               const b14CiResultSh = evaluateB14CiGate(ruinCiSh, pointEstimateSh);
+              _incB14GateCounter("SHADOW_TO_PAPER", b14CiResultSh);
 
               await db.insert(auditLog).values({
                 action: "b14.gate_evaluated",
@@ -3983,6 +4037,7 @@ export class LifecycleService {
               this._resetHardGateCounter(s.id, "b14_ci_high", tickCorrelationId);
             } else {
               const b14ShNoMc = evaluateB14CiGate(null, null);
+              _incB14GateCounter("SHADOW_TO_PAPER", b14ShNoMc);
               await db.insert(auditLog).values({
                 action: "b14.gate_evaluated",
                 entityId: s.id,
@@ -4004,6 +4059,7 @@ export class LifecycleService {
             }
           } catch (b14ShErr) {
             const b14ShErrMsg = b14ShErr instanceof Error ? b14ShErr.message : String(b14ShErr);
+            try { b14GateTotal.labels({ transition: "SHADOW_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
             logger.warn({ strategyId: s.id, err: b14ShErr }, "B14 CI gate (SHADOW→PAPER): read failed — blocking promotion (fail-closed)");
             await db.insert(auditLog).values({
               action: "b14.gate_error_fail_closed",
@@ -4032,6 +4088,7 @@ export class LifecycleService {
             const wfeStatusSh = wfResultsSh?.wfe_status != null ? String(wfResultsSh.wfe_status) : null;
 
             const wfeResultSh = evaluateWfeGate(wfeOverallSh, undefined, undefined, wfeStatusSh);
+            _incWfeGateCounter("SHADOW_TO_PAPER", wfeResultSh);
 
             broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
               strategyId: s.id,
@@ -4078,6 +4135,7 @@ export class LifecycleService {
               this._resetHardGateCounter(s.id, "wfe_hard_floor", tickCorrelationId);
             }
           } catch (wfeShErr) {
+            try { wfeGateTotal.labels({ transition: "SHADOW_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
             logger.warn({ strategyId: s.id, err: wfeShErr }, "WFE gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
           }
 
@@ -4092,6 +4150,7 @@ export class LifecycleService {
             const paramStabilityStatusSh = (driftWfResultsSh?.param_stability_status as string | null | undefined) ?? null;
 
             const driftResultSh = evaluateParameterDriftGate(driftClassificationSh, driftConfidenceSh, paramStabilityStatusSh);
+            _incParameterDriftGateCounter("SHADOW_TO_PAPER", driftResultSh);
 
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
               strategyId: s.id,
@@ -4132,6 +4191,7 @@ export class LifecycleService {
               this._resetHardGateCounter(s.id, "parameter_overfit_drift", tickCorrelationId);
             }
           } catch (driftShErr) {
+            try { parameterDriftGateTotal.labels({ transition: "SHADOW_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
             logger.warn({ strategyId: s.id, err: driftShErr }, "Parameter drift gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
           }
 
@@ -4866,6 +4926,7 @@ export class LifecycleService {
                   : null;
 
                 const b14CiResult = evaluateB14CiGate(ruinCi, pointEstimate);
+                _incB14GateCounter("PAPER_TO_DEPLOY_READY", b14CiResult);
 
                 // Always emit audit row so dashboard can show gate evaluation history.
                 await db.insert(auditLog).values({
@@ -4927,6 +4988,7 @@ export class LifecycleService {
                 // evaluator) ALREADY hard-blocks absent MC here; this makes the autonomous
                 // cron path match. evaluateB14CiGate(null,null) returns passed=false.
                 const b14NoMcResult = evaluateB14CiGate(null, null);
+                _incB14GateCounter("PAPER_TO_DEPLOY_READY", b14NoMcResult);
                 await db.insert(auditLog).values({
                   action: "b14.gate_evaluated",
                   entityId: s.id,
@@ -4957,6 +5019,7 @@ export class LifecycleService {
           } catch (b14Err) {
             // Hardening 2026-06-22 (F-2): DB hiccup in B14 gate must BLOCK promotion,
             // not fall through silently. Pattern matches A7 signal-correlation gate catch.
+            try { b14GateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
             logger.warn(
               { strategyId: s.id, err: b14Err },
               "B14 Survival Twin gate: infrastructure error — blocking promotion (fail-closed)",
@@ -5116,6 +5179,7 @@ export class LifecycleService {
           const paramStabilityStatus = (driftWfResults?.param_stability_status as string | null | undefined) ?? null;
 
           const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence, paramStabilityStatus);
+          _incParameterDriftGateCounter("PAPER_TO_DEPLOY_READY", driftResult);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
             strategyId: s.id,
@@ -5176,6 +5240,7 @@ export class LifecycleService {
           }
         } catch (driftErr) {
           // Fail-open: drift gate read failure is non-blocking.
+          try { parameterDriftGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn(
             { strategyId: s.id, err: driftErr },
             "Parameter drift gate: read failed (non-blocking — promotion continues)",
@@ -5561,6 +5626,23 @@ export class LifecycleService {
               spaConsistentP,
             });
 
+            // Deep-scan #16 Wave-1 Track 5 (HIGH E-6): the Pass E orchestrator's wfe_floor
+            // sub-gate is a SECOND WFE evaluation site (distinct from the standalone WFE-gate
+            // helper invocation used for TESTING→PAPER/SHADOW→PAPER above — see the
+            // F-5 removal note near line ~5123). It has no `status`/`legacyFallback` field,
+            // only {passed, data_available} — data_available===false means the gate had
+            // no backtest data to evaluate (mapped to "legacy" for consistency with the
+            // other two counters' semantics).
+            {
+              const wfeFloorRes = orchResult.gate_results.wfe_floor;
+              const wfeFloorOutcome = wfeFloorRes.data_available === false
+                ? "legacy"
+                : wfeFloorRes.passed ? "pass" : "block";
+              try {
+                wfeGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: wfeFloorOutcome }).inc();
+              } catch { /* non-blocking counter */ }
+            }
+
             // Remove b14 from orchestrator result to avoid double-counting
             const gatesToEvaluate: Array<"wfe_floor" | "cpcv_n_paths" | "wrc_p" | "spa_p"> =
               ["wfe_floor", "cpcv_n_paths", "wrc_p", "spa_p"];
@@ -5675,6 +5757,9 @@ export class LifecycleService {
           // F-4 Hardening 2026-06-23: Fail-CLOSED on orchestrator infrastructure error.
           // The orchestrator evaluates WFE-0.80, CPCV-15, WRC, and SPA — all institutional gates.
           // An orchestrator that cannot run must BLOCK promotion, not silently allow it.
+          // Deep-scan #16 Wave-1 Track 5: this orchestrator failure blocks the wfe_floor
+          // sub-gate too (it never got the chance to evaluate) — count it as an error.
+          try { wfeGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           const orchErrMsg = orchErr instanceof Error ? orchErr.message : String(orchErr);
           logger.warn(
             { strategyId: s.id, err: orchErr },
