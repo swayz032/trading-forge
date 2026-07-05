@@ -83,6 +83,49 @@ class ExportabilityResult(BaseModel):
     faithful: bool = True
 
 
+def _pine_inexpressible_notes(cfg: dict) -> list:
+    """Deep-Scan #18b P-2 (2026-07-05): human-readable notes for strategy logic Pine
+    cannot reproduce — Style C exits / 11-factor confluence / multi-TF gating. Mirrors
+    the authoritative §6a/6b/6c checks in score_exportability (kept in sync with them);
+    the archetype fast-path calls this so its `deductions` is no longer silently empty.
+    Detection intentionally liberal (field-present ⇒ designed-with-it) per §6."""
+    notes: list = []
+    ep = cfg.get("exit_params", {}) or {}
+    epc = cfg.get("exit_plan_config", {}) or {}
+    if (
+        ep.get("style") in ("c", "C", "style_c", "styleC")
+        or ep.get("partials")
+        or ep.get("runner_trail") is True
+        or ep.get("move_stop_to_be") is True
+        or epc.get("exit_style") == "adaptive"
+    ):
+        notes.append(
+            "Exit semantics not expressible in Pine: Style C 33/33/34 partial closes, "
+            "runner trail, BE+1, and/or adaptive exits cannot be reproduced by "
+            "strategy.exit() — the Pine artifact emits a single all-or-nothing stop/target."
+        )
+    eq = cfg.get("entry_quality", {}) or {}
+    mf = eq.get("min_factors_satisfied")
+    if (
+        eq.get("use_weighted_scoring") is True
+        or (isinstance(mf, (int, float)) and mf > 0)
+        or eq.get("regime_required") is True
+    ):
+        notes.append(
+            "Confluence gating not expressible in Pine: 11-factor weighted scoring / "
+            "min_factors_satisfied / regime_required cannot be reproduced — Pine fires "
+            "on the raw indicator signal alone."
+        )
+    tf_fields = [k for k in ("daily_tf", "htf_tf", "itf_tf") if cfg.get(k)]
+    if tf_fields:
+        notes.append(
+            "Multi-TF gating not expressible in Pine: HTF alignment fields ("
+            + ", ".join(tf_fields)
+            + ") require top-down timeframe AND-gating Pine cannot reproduce."
+        )
+    return notes
+
+
 def score_exportability(strategy_config: dict) -> ExportabilityResult:
     """Score a strategy's exportability to Pine Script v5.
 
@@ -118,15 +161,29 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
 
     if _entry_indicator_raw.startswith("archetype:") or _entry_indicator_raw.startswith("uncatalogued:"):
         prefix_label = "archetype" if _entry_indicator_raw.startswith("archetype:") else "uncatalogued"
+        # Deep-Scan #18b P-2 (2026-07-05): the fast-path used to early-return with
+        # deductions=[] BEFORE the §6 semantic-fidelity checks ran, so an archetype's
+        # Style-C exits / 11-factor confluence / multi-TF gating were reported as fully
+        # faithful with ZERO visibility that Pine drops them (empty deductions). Surface
+        # those dropped features now via _pine_inexpressible_notes() so a consumer of the
+        # result (dashboard / operator) is no longer blind to what the Pine artifact omits.
+        # exportable/faithful stay True BY DESIGN: an archetype executes server-side via
+        # broker-router (Pine is a visual-only aid — see the §6 comments below), so Pine's
+        # inability to reproduce entry/exit logic is expected and must not gate promotion.
+        # This is the documented "archetypes report faithful=True" exception per the
+        # Band-P fix guidance. Whether the promotion gate SHOULD hard-block on this is a
+        # lifecycle-service.ts policy question (not changed here).
+        _archetype_notes = _pine_inexpressible_notes(strategy_config)
         return ExportabilityResult(
             score=60.0,
             band="alert_only",
             indicator_scores={_entry_indicator_raw: 60.0},
-            deductions=[],
+            deductions=_archetype_notes,
             recommendations=[
                 f"'{_entry_indicator_raw}' is a structural {prefix_label} — "
                 "alert-only Pine recipe assigned (passive marker + alertcondition). "
-                "Python engine at src/engine/strategies/<class>.py owns entry/exit."
+                "Python engine at src/engine/strategies/<class>.py owns entry/exit; the "
+                "deductions list strategy logic Pine does NOT reproduce (visual-only aid)."
             ],
             exportable=True,
             faithful=True,
