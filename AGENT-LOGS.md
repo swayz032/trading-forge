@@ -3,6 +3,27 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-05 Deep-Scan #18c — H-1 + C-3 + #3 production_trades LANDED + LIVE (certified 7/10, deployed)
+
+**Mission:** The concurrent session left flagged playbook_router WIP; operator ("fix it, its your job") + then landed + deployed all of it, plus the #3 X-1 production_trades writers.
+
+**Work completed (all on `origin/phase-0` @ `7d31003`, tower running it):**
+- **H-1** (`playbook_router.py`): corrected the 42-entry multi-TF expansion classification — moved 18 misclassified entries (families manipulation_trade/jump_in_downtrend/bos_and_fvg_or_fvg/vwap_cross/entry_condition/trade_era_scale_in × mes/mnq/mcl) CONTINUATION→REVERSAL to match their 5m sibling; 24 correctly-continuation entries stayed. New guard test `test_playbook_router_archetype_consistency.py` (3/3, non-vacuous). The misclassified draft was the other session's WIP (preserved on `wip/other-session-leftover-2026-07-05`); phase-0 never carried it.
+- **C-3** (`backtester.py` + `backtest-service.ts` + `jsonb-shapes.ts`): surfaced the eligibility-gate `mode` (was computed at backtester.py:292/320/324 but DROPPED at :4412) into `result["eligibility_gate_mode"]` via helper `_build_eligibility_gate_mode_disclosure`, added to `buildResultExtras` extraKeys allowlist → persisted to `backtests.result_extras` JSONB. The passthrough_strategy_unregistered→tf_institutional_overlay flip (which H-1's registration triggers for 42 strategies) is now queryable, not silent. 17 tests (8 py + 9 ts).
+- **#3 X-1 production_trades writers** (`broker-router.ts` + `fill-reconciliation-service.ts` + mig **0194**): fail-soft `void`-called INSERT (never throws into routeOrder — live money path safe) + idempotent partial unique index on traderspost_webhook_id + onConflictDoNothing + genuine-green recon test.
+
+**Verification:** Each fix INDEPENDENTLY CERTIFIED **7/10 VERIFIED** by accuracy-validator (doer≠grader per grading-integrity, 2 non-overlapping paths, adversarial). Landed via clean rebase→FF (zero file overlap, A/B-confirmed). Tower restarted clean (uptime reset, pydeps missing=[], no RESTART-TRAP); migration 0194 VERIFIED in live DB (`production_trades_traderspost_webhook_id_uq` EXISTS). 0191-93 applied earlier this session.
+
+**Known residuals (documented, certifier-caught — not hidden):**
+- #3 F-1 (CRITICAL scope-inflation): `computeActualPnlForFullExit` UPDATE path is DEAD on canonical order flow (only fires under SERVER_MEDIATED_EXECUTION_ENABLED=true + server_mediated_orders row via routeLiveEntry, NOT live-order.ts) → `actual_pnl`/`tradovate_fill_id` stay NULL until SME live. The INSERT + recon-green path (what X-1 needed) is solid; not a correctness bug.
+- C-3: `result_extras` persistence code-traced end-to-end, NOT verified against a live-DB round-trip.
+- 5 `test_playbook_router_vp` + 18 `test_a_plus_gate_parity` failures are PRE-EXISTING (A/B-proven), not from this work.
+
+**Carry-forward for next session:**
+- The concurrent session's corpus-v3 step1/gate2 commit + parity report are preserved on `wip/other-session-corpus-v3-step1-2026-07-05` (5307d5f, pushed) — that session should rebase onto origin/phase-0 + push, NOT resurrect via the tower checkout.
+- The other agent's earlier flagged playbook draft + docs sit on `wip/other-session-leftover-2026-07-05` (d6e5839).
+- Wire the #3 UPDATE path to the canonical live-order.ts flow (match on traderspost_webhook_id) when SME execution is built, to make `actual_pnl` populate for real TradersPost orders.
+
 ### Session Log — 2026-07-05 Deep-Scan #18b fix-wave COMPLETE + independently CERTIFIED (grading-integrity)
 
 **Mission:** Finish the remaining #18b gap CRITICALs (P-1/P-2/X-1) and prove "no-lie 10/10" via the operator's new `grading-integrity` skill (doer≠grader).
