@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { eq, sql, desc, asc, and, ilike } from "drizzle-orm";
 import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
@@ -506,11 +507,34 @@ if __name__ == "__main__":
   res.type("text/plain").send(py);
 });
 
+// deep-scan routes F-1 (HIGH, 2026-07-06): validate the SHAPE of strategy writes before they hit the DB.
+// req.body.config (arbitrary client JSON) flows into strategies.config JSONB, which later drives sizing
+// (risk-sizing.ts), the backtester, paper-signal-service, and lifecycle promotion. It was written with ZERO
+// type enforcement — a leaked API key or compromised n8n workflow could inject a malformed config (wrong
+// types, config-as-array/string/null) that silently corrupts downstream logic. Enforce the top-level shape
+// (types + config-must-be-an-object); intentionally NOT constraining the JSONB internals (too varied — the
+// per-field verifiers + gates own semantic validation), just the structural contract.
+const strategyWriteSchema = z.object({
+  // All four are NOT NULL columns on `strategies` — required for CREATE, enforced-when-present for PATCH (partial).
+  name: z.string().min(1).max(200),
+  description: z.string().max(8000).nullish(),
+  symbol: z.string().min(1).max(24),
+  timeframe: z.string().min(1).max(24),
+  config: z.record(z.string(), z.unknown()), // plain object — rejects array/string/null
+  tags: z.array(z.string().max(120)).max(64).optional(),
+});
+const strategyUpdateSchema = strategyWriteSchema.partial(); // PATCH: every field optional (partial update)
+
 // Create strategy
 // P2D (Wave 9, 2026-05-17): operator_manual / backfill sources are trusted but
 // still require an audit row. All other sources must pass assertCrossValidatedSource.
 strategyRoutes.post("/", async (req, res) => {
-  const { name, description, symbol, timeframe, config, tags } = req.body;
+  const parsed = strategyWriteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_strategy_body", details: parsed.error.flatten() });
+    return;
+  }
+  const { name, description, symbol, timeframe, config, tags } = parsed.data;
   const source: string = (config as any)?.source ?? (config as any)?.metadata?.source ?? "unknown";
   const OPERATOR_EXEMPT_SOURCES = new Set(["operator_manual", "backfill"]);
 
@@ -555,7 +579,13 @@ strategyRoutes.patch("/:id", async (req, res) => {
     return;
   }
 
-  const { name, description, symbol, timeframe, config, tags } = req.body;
+  // deep-scan routes F-1 (HIGH): validate the update shape (partial — every field optional) before the DB write.
+  const parsedPatch = strategyUpdateSchema.safeParse(req.body);
+  if (!parsedPatch.success) {
+    res.status(400).json({ error: "invalid_strategy_body", details: parsedPatch.error.flatten() });
+    return;
+  }
+  const { name, description, symbol, timeframe, config, tags } = parsedPatch.data;
   const [row] = await db
     .update(strategies)
     .set({
