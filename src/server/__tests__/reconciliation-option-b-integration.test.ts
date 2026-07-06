@@ -145,4 +145,14 @@ describe("Option B end-to-end — a real sent-vs-confirmed BREACH is detected (O
     );
     expect(rows.rows[0].mismatch_count).toBe(0); // proxy mode cannot see the divergence
   });
+
+  it("Observability re-cert F-2: the reconciliation-completed SSE payload carries correlationId", async () => {
+    const sse = await import("../routes/sse.js");
+    (sse.broadcastSSE as unknown as { mock: { calls: unknown[][] } }).mock.calls.length = 0;
+    await runDailyReconciliation(DAY);
+    const calls = (sse.broadcastSSE as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+    const reconEvt = calls.find((c) => c[0] === "production:reconciliation-completed");
+    expect(reconEvt).toBeDefined();
+    expect((reconEvt![1] as { correlationId?: string }).correlationId).toBeTruthy(); // SSE hop no longer drops it
+  });
 });

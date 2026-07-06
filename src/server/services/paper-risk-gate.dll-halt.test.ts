@@ -197,15 +197,17 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
     expect(result.check).toBe("daily_loss_limit");
   });
 
-  it("MFFU (null dailyLossLimit): $2000 loss NOT blocked by DLL gate", async () => {
-    // MFFU has dailyLossLimit=null — DLL gate must be entirely skipped
+  it("MFFU (dailyLossLimit=1000): $2000 loss IS blocked by the DLL gate", async () => {
+    // deep-scan Paper re-cert (stale-fixture fix): MFFU dailyLossLimit is now 1000 (was null) per the
+    // 2026-07-02 firm data-fix + the ts-python-firm-rules parity repair — so the DLL gate applies to
+    // MFFU too. $2000 loss exceeds the 67% halt band (0.67 × 1000 = $670) → the gate BLOCKS.
     const session = makeSessionRow({ firmId: "mffu", lossToday: 2000, todayKey });
     wireDbMock(session, [session]);
 
     const result = await checkRiskGate("test-session-id", "MES", 6);
 
-    // Should not be blocked by daily_loss_limit check
-    expect(result.check).not.toBe("daily_loss_limit");
+    expect(result.allowed).toBe(false);
+    expect(result.check).toBe("daily_loss_limit");
   });
 
   it("Topstep: todayLoss=$999 (old 100% threshold) BLOCKED by 67% gate", async () => {

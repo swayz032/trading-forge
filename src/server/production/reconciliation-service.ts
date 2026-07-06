@@ -601,13 +601,20 @@ export async function runDailyReconciliation(
       );
     }
 
-    // Also red if mffu PnL delta > tolerance (already captured in mismatches above,
-    // but the check ensures red even if mismatch_count is 1 due to only that check)
+    // Also red if mffu PnL delta > tolerance. deep-scan Observability re-cert F-1: this override runs
+    // AFTER deriveReconSeverity, so it must respect the SAME independent-source bar the clamp enforces —
+    // otherwise a MFFU-PnL delta against an unverified (empty production_trades) expected side would
+    // report an unconfirmable RED. Force RED only with enough independent sources; in degraded mode
+    // the disagreement still degrades a clean green to yellow, but never fabricates a red.
     if (
       mffuDashboardPnl !== null &&
       Math.abs(mffuDashboardPnl - expectedPnl) > RECON_CONFIG.PNL_TOLERANCE_DOLLARS
     ) {
-      severity = "red";
+      if (effectiveIndependentSources >= MIN_INDEPENDENT_SOURCES_FOR_RED) {
+        severity = "red";
+      } else if (severity === "green") {
+        severity = "yellow"; // surface the MFFU disagreement without asserting an unverified red
+      }
     }
 
     // Degraded-reconciliation mode (M-7 + ds21 Bands A+D). The CLAMP itself now lives in
@@ -758,12 +765,15 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
       logger.error({ err }, "reconciliation: audit_log write failed (non-blocking)")
     );
 
-  // SSE event
+  // SSE event. deep-scan Observability re-cert F-2: carry correlationId so the SSE hop of the
+  // bar→handler→DB→SSE→audit_log chain is traceable (Discord + audit already carry it; SSE was the
+  // one hop still dropping it — a dashboard push can now be joined to its daily_reconciliation row).
   broadcastSSE("production:reconciliation-completed", {
     reconDate: params.reconDate,
     severity: params.severity,
     mismatchCount: params.mismatchCount,
     ranAt: ranAt.toISOString(),
+    correlationId: params.correlationId,
   });
 
   return {
