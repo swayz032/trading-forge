@@ -30,6 +30,22 @@ describe("economic-calendar-loader — authoritative T1 window (Phase 3)", () =>
     expect(mcl.inWindow).toBe(true); // FOMC affects all products
   });
 
+  it("F-1 CRITICAL: partial DB (FOMC+EIA only, FRED failed) STILL blocks NFP via per-type gap-fill", async () => {
+    // The compliance-collapse scenario: the sync cron inserts FOMC+EIA unconditionally, but NFP/CPI/GDP/PPI
+    // only when FRED_API_KEY works. If FRED is unset/expired/rate-limited the table has FOMC+EIA rows but no
+    // NFP — the OLD all-or-nothing logic used DB-only (table non-empty) and NFP silently vanished. With the
+    // per-type gap-fill, NFP must still be blocked from the hardcoded fallback, reported source="fallback".
+    dbRows([
+      { event_type: "FOMC", date: "2026-01-28", time_et: "14:00" },
+      { event_type: "EIA", date: "2026-01-07", time_et: "10:30" },
+    ]);
+    // 2026-01-02 is the first Friday of Jan → NFP at 08:30 ET (EST) = 13:30 UTC. Must be in-window.
+    const mes = await getT1ReleaseWindow("MES", "2026-01-02T13:30:00.000Z");
+    expect(mes.inWindow).toBe(true);
+    expect(mes.eventType).toBe("NFP");
+    expect(mes.source).toBe("fallback"); // NFP came from gap-fill, not the (FRED-incomplete) DB
+  });
+
   it("EIA window blocks crude ONLY (2026-01-07 10:30 ET = 15:30 UTC EST)", async () => {
     dbRows([{ event_type: "EIA", date: "2026-01-07", time_et: "10:30" }]);
     const mcl = await getT1ReleaseWindow("MCL", "2026-01-07T15:30:00.000Z");
