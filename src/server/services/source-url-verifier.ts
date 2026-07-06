@@ -61,9 +61,11 @@ function buildKeywordSet(args: VerifyArgs): Set<string> {
   add(args.conceptName);
   add(args.entryArchetype);
   add(args.thesis);
-  // Always require a futures-market keyword presence
-  kw.add("futures");
-  kw.add("trading");
+  // deep-scan services HIGH (2026-07-06): do NOT inject the generic filler "futures"/"trading" here. They used
+  // to be added to the SUBSTANCE set, so the matchCount>=2 authenticity gate was trivially satisfied by any page
+  // containing the phrase "futures trading" — with ZERO match to the actual strategy (market/concept/archetype/
+  // thesis). The gate must count only real substance tokens; a page that merely says "futures trading" is not
+  // evidence the source teaches THIS strategy.
   return kw;
 }
 
