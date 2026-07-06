@@ -248,3 +248,42 @@ three MUST land before any corpus-level re-baseline (they move equity metrics th
 ### Record
 - The regression clause's denominator ("traded in v2") is computed from the fixed-engine v2 arm INSIDE this run
   → internally consistent by construction, needs no separate re-derivation.
+
+## DEFECT 6 (MCL reconciliation) — Ruling (a), diagnosis-before-fix (Fable-5, LOCKED 2026-07-06)
+Reference re-derivation validity FAILED: 8 pairs (ALL MCL, 0 non-MCL) raise `reconciliation_failed` on the
+guard-fixed engine — the engine detecting its OWN two P&L computations (equity-curve vs summed-trade) disagree at
+MCL's $100/point scale. **Ruling (a): fix Defect 6, re-derive, complete the reference. (b) rejected** — internal
+arm-consistency ≠ instrument validity (was ALSO symmetric on the guard-less engine we refused to certify); a
+`reconciliation_failed` is self-reported wrongness, not an unmeasurable pair; excluding the blocked pairs right
+after an encouraging reference is textbook asymmetric-stopping; and "near-certain revivals we can't measure" is a
+CLAIM, not a verdict — forbidden in a certification.
+
+### Diagnosis-before-fix (PRE-REGISTERED — the tolerance path is abuse-prone)
+Two hypotheses, different fixes:
+- **H-A: real P&L omission the guards introduced** (Defect-4-class) → mirror the missing deduction, verify, and
+  confirm the fix does NOT touch entry logic (guards changing P&L don't move trade counts — verdict-variable check).
+- **H-B: the $1 ABSOLUTE tolerance is mis-scaled for MCL's point value** (computations correct, threshold wrong) →
+  fix = relative tolerance or per-contract scaling. **GUARDRAIL: a validity-check threshold change is exactly what
+  gets abused — it MUST be derived from contract specs (point_value × positions), justified in the commit
+  INDEPENDENT of any Gate 3 number, and applied UNIFORMLY across symbols.** Not tuned to make any pair pass.
+Diagnose FIRST; the diagnosis selects the fix.
+
+### READ ORDER for the next cycle (mechanical)
+defect-#6 diagnosis → fix under scope lock → re-derive reference → reference VALIDITY (MCL under microscope) →
+final N + original-9 disposition (the 2 indeterminates RESOLVE to survive/dropout) → unseal classifier verdict
+against **≥(N−1)/N**. If N=9 → rule is ≥8/9, landing exactly where the original freeze started, now on an
+instrument that earns the number.
+
+## FROZEN ANNOTATION (banked now, independent of the verdict) 2026-07-06
+**`1ab7321`'s core finding — runtime demotion revives dead strategies — is CONFIRMED ROBUST TO THE FRAMEWORK GUARDS**
+on 7 of 9 pairs (all MES/MNQ: snNkQSyWX4k, m-G1ag77aVc, oDLt9zh33LE + oDLt9zh33LE_MCL; baseline 0 → demotion
+1,000–2,400 trades on the guard-FIXED engine). The 2 MCL pairs (m-G1ag77aVc_MCL, snNkQSyWX4k_MCL) are
+instrument-blocked pending Defect 6, NOT dropouts (0 confirmed non-survivals). **The biggest standing threat to the
+whole arc — that the demotion revivals were guard-less-engine artifacts — is now dead: they survive a correct
+instrument.** Independent of whether the classifier (Gate 3) reproduces them.
+**ORB disambiguation frozen:** `oDLt9zh33LE` is the genuine zero-baseline ORB (baseline 0 all 3 symbols, matches the
+frozen signature); `jlShztsY3oA` is an UNRELATED already-profitable strategy that shares the ORB tag (baseline
+2851/2424 on MES/MNQ) — excluded from the reference correctly.
+**Floors 7/8/9 VERIFIED (deferral confirmed):** VIX-sizing / partial-fill / margin-expansion all floor position size
+≥1 and cannot suppress an entry (sizing.py:1250, fill_model.py:442, margin_expansion.py:97). Registered as
+mandatory before any corpus re-baseline (they move equity metrics null-cal + Mode A/B consume).
