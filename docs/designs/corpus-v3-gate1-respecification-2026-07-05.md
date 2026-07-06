@@ -206,3 +206,45 @@ tolerance** (`backtester.py:7263` raises above it — so any completed run had �
 are UNAFFECTED** — demotion revivals (`1ab7321`), null-calibration, DRI, and Gate 3's revival/regression counts
 all rest on trade counts / signals, not equity curves. **Companion action:** check the historical record for any
 run that DID raise this reconciliation error and was waved off as flaky; if any, flag them.
+
+## DEFECT 5 + RULINGS (Fable-5, LOCKED 2026-07-06) — verdict-variable defect + reference re-derivation
+Audit found **Defect 5 (verified): `run_class_backtest` — the compiled-spec path the WHOLE corpus uses — never
+applied the core framework guards** (E.3 ATR stop-ceiling entry-skip, E.5 15:55 time-stop, E.4 67%/95% DLL halt).
+Every historical class-backtest ran guard-less. Smoke test: 535 DLL halts fired on ONE spec where zero ever did.
+Fixed in `8cd2885` (scope-clean: backtester.py + 4 tests only). This fix SUPPRESSES/SKIPS entries → verdict-VARIABLE.
+
+### Ruling 1 — legitimate (blade leg re-worded)
+Blade-leg-2 for Defect 5 = **"result-independent AND reference-specified"** (fix content determined ENTIRELY by
+run_backtest's existing guard code — nothing tunable toward any revival count), NOT "verdict-variable-preserving."
+A guard-less engine measures a DIFFERENT strategy than the spec defines; a verdict from it certifies a fantasy.
+**Direction check: guards suppress entries → the fix pushes the gate toward FAIL, not PASS** — the opposite
+signature of goalpost-moving. CONSEQUENCE: the quarantined 6/9 reconstruction is now DOUBLE-DEAD (hand-computed
+AND measured on the guard-less engine) — predicts nothing about the re-run.
+
+### Ruling 2 — the frozen "9" is re-derived on the fixed engine (LOCKED, in order)
+The frozen rule means "classifier extraction-time roles REPRODUCE what runtime demotion achieved" — a comparison,
+defined only on a COMMON engine. The 9 was measured on a now-certified-broken instrument; keeping the literal
+denominator while fixing the engine silently swaps the hypothesis. So:
+1. **RE-DERIVE THE REFERENCE:** run the runtime-demotion arm (v2 + `TF_ROLE_DEMOTION_MODE=struct_ctx`) on the
+   GUARD-FIXED engine, same pinned everything. Strategies reviving under demotion there = **N** = the new
+   reference set. A reference measurement — read BEFORE and SEPARATELY from the verdict.
+2. **Rule transforms STRUCTURALLY, not numerically:** ≥**(N−1)/N** classifier revivals (one miss only with
+   audited explanation) + zero unexplained regressions — identical FORM, re-derived denominator. **If N < 5 →
+   LOW_POWER, cannot certify alone** (same handling as Gate 1's margin stratum) → escalate, do not trivially pass.
+3. **Dropouts are a FINDING, not a deletion:** any of the original 9 that don't revive under demotion on the
+   correct engine = contradicting evidence against the SCOPE of `1ab7321` → annotate that frozen finding
+   re-scoped ("on the then-current, guard-LESS engine"), the re-derivation quantifying what survives.
+**READ ORDER LOCKED: reference → validity → verdict.** The current v2/v3 run keeps grinding (its arms are needed
+regardless); NO verdict read until the reference lands.
+
+### Ruling 3 — defer 7/8/9, CONDITIONAL on code-verified entry-suppression floors
+Deferral of Defects 7 (VIX sizing) / 8 (partial-fill) / 9 (margin expansion) holds ONLY IF none can change
+whether an entry OCCURS — verify IN CODE, not by category: (7) VIX sizing cannot round position size to 0
+contracts, or sizing is downstream of entry counting; (8) partial-fill cannot produce a zero fill that voids a
+trade; (9) margin expansion cannot cap contracts below 1. If ALL floors hold → verdict-irrelevant, defer +
+register. **If ANY can suppress an entry → promotes to pre-verdict, joins the audit commit.** Regardless, all
+three MUST land before any corpus-level re-baseline (they move equity metrics that null-cal + Mode A/B consume).
+
+### Record
+- The regression clause's denominator ("traded in v2") is computed from the fixed-engine v2 arm INSIDE this run
+  → internally consistent by construction, needs no separate re-derivation.
