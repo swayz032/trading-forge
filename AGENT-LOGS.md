@@ -4,6 +4,50 @@
 
 ---
 
+### Session Log — 2026-07-06 Corpus v3 Gate 3 — instrument saga (5 run_class_backtest defects) + reference re-derivation IN FLIGHT
+
+**Mission:** Certify Corpus v3 Gate 3 (do the classifier's extraction-time roles reproduce the runtime-demotion
+revival?) under the frozen rule (≥8/9 revival + zero unexplained regressions, no relief). Continuation of the
+Corpus v3 build (Gate 1 RETIRED→Gate 1′; fixed-atom mechanism per the confound-removal amendment). Advisor = Fable 5.
+
+**What happened (validity-before-verdict protocol working as designed — 5 instrument defects caught BEFORE any
+verdict read):** Gate 3's harness runs through `run_class_backtest`, an UNDER-MAINTAINED SIBLING of `run_backtest`
+missing hardening fixes. Systematic sibling-parity audit (`8cd2885`) classified every divergence (a-fix / b-intentional /
+c-escalate) and FIXED 3, DEFERRED 3, documented 2, escalated 0:
+- **Defect 1** winners/losers hoist (zero-signal `UnboundLocalError`) — fixed.
+- **Defect 4** roll-cost omitted from class-path bar-level equity loop → reconciliation raise — fixed. FROZEN
+  FINDING (bounded): class-path equity overstated by roll cost, historically BOUNDED by the $1 recon tolerance;
+  trade-level P&L always correct; trade-count/signal findings (1ab7321, null-cal, DRI) unaffected.
+- **★ Defect 5 (biggest):** `run_class_backtest` — the whole-corpus compiled-spec path — **NEVER applied the
+  framework guards** (E.3 ATR stop-ceiling entry-skip, E.5 15:55 time-stop, E.4 67%/95% DLL halt). Every historical
+  class-backtest ran guard-less (smoke test: 535 DLL halts fired on one spec where 0 ever did). Fixed. **Project-wide
+  finding.** VERDICT-VARIABLE (suppresses entries) → triggered Ruling 2 below.
+- **Defects 7/8/9** (VIX sizing / partial-fill / margin expansion) — DEFERRED, conditional on code-verified
+  entry-suppression floors (in-flight); must land before any corpus re-baseline (they move equity metrics).
+- **Parity-guard CI test added** (`test_gate3_sibling_parity_guard.py`) so the next un-mirrored fix is caught by CI.
+
+**Fable-5 rulings (LOCKED in `corpus-v3-gate1-respecification-2026-07-05.md`):**
+- Defect-5 fix legitimate: blade re-worded "result-independent AND reference-specified"; guards suppress entries →
+  fix pushes gate toward FAIL (anti-goalpost). The quarantined 6/9 reconstruction is DOUBLE-DEAD (hand-computed +
+  guard-less engine).
+- **Ruling 2 (consequential): the frozen "9" is INVALID as-is** (measured on the now-certified-broken engine; a
+  comparison needs a common engine). RE-DERIVE the reference: run the demotion arm on the guard-fixed engine → **N**;
+  rule transforms to **≥(N−1)/N** + zero unexplained regressions (identical form), LOW_POWER if N<5. Dropouts from
+  the original 9 = a FINDING annotating 1ab7321 re-scoped, not a deletion.
+- **READ ORDER LOCKED: reference → validity → verdict.** "Re-run once" = cap on VERDICT READS, not runs.
+
+**IN FLIGHT (multi-hour tower compute):** reference re-derivation (demotion arm on guard-fixed engine, 42×2 battery)
+→ `docs/replay-results/corpus-v3-reference-rederivation-2026-07-06.json` (not yet written). The v2/v3 Gate 3 run also
+grinds. NO verdict numbers read.
+
+**RESUME AT:** reference JSON lands → read its VALIDITY block → read N + which of the original 9 survive (annotate
+1ab7321 for dropouts) → read the 7/8/9 floor verdicts → ONLY THEN unseal the classifier Gate 3 verdict + apply the
+≥(N−1)/N rule (no relief). Fixed-atom v3-shadow specs already exist (14, `fixed_atom=true`). Docs = memory:
+`corpus-v3-gate1-respecification-2026-07-05.md` (all rulings/protocol), `corpus-v3-IMPLEMENTATION-PLAN-*` (manifest +
+Step-5 amendment). Commits: audit `8cd2885`, rulings `c8413ea`.
+
+---
+
 ### Session Log — 2026-07-05 Independent verification of the DS#21 8-band panel + executed the survivors (C-1, Q-2, D.1) — LANDED phase-0
 
 **Mission:** Operator handed this session the DS#21 CLAIMED 8-band panel (mean ~6.4) and said "make everything bug-free." Ran doer≠grader verification (6 parallel accuracy-validators, grading-integrity skill), then executed every confirmed defect that was still open, safe, and verifiable — landing FF to phase-0. Confirmed NO concurrent live agent (DS#21 + ds21-WAVE-2 + corpus-v3 are all prior committed runs).
