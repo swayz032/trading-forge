@@ -36,9 +36,24 @@ function walkTsFiles(dir: string): string[] {
   return out;
 }
 
-// Match a lifecycle SSE broadcast via EITHER the catalog constant OR a raw "lifecycle:*" string literal.
+// deep-scan Obs re-verify #6: CATALOG-AGNOSTIC. lifecycle SSE events live in MORE THAN ONE catalog
+// object (LIFECYCLE_GATE_EVENTS *and* WAVE29_EVENTS — e.g. PBO_EVALUATED / SHADOW_DIVERGENCE_EVALUATED,
+// both HARD promotion gates). A regex hardcoding `LIFECYCLE_GATE_EVENTS` missed 8 live WAVE29 sites.
+// So: parse sse.ts for EVERY `KEY: "lifecycle:…"` entry across ALL `*_EVENTS` objects, then match any
+// `broadcastSSE(<anything>.KEY, {…})` whose KEY resolves to a lifecycle:* value, plus raw "lifecycle:*".
+function lifecycleEventKeys(): Set<string> {
+  const sse = readFileSync("src/server/routes/sse.ts", "utf8");
+  const keys = new Set<string>();
+  for (const m of sse.matchAll(/(\w+)\s*:\s*"(lifecycle:[^"]+)"/g)) {
+    keys.add(m[1]); // the SCREAMING_SNAKE catalog key whose value is a lifecycle:* event
+  }
+  return keys;
+}
+const LIFECYCLE_KEYS = lifecycleEventKeys();
+
+// Match broadcastSSE(<Obj>.<KEY>, {body}) OR broadcastSSE("lifecycle:*", {body}).
 const BROADCAST_RE =
-  /broadcastSSE\(\s*(?:LIFECYCLE_GATE_EVENTS\.(\w+)|"(lifecycle:[^"]+)")\s*,\s*\{([\s\S]*?)\}\)/g;
+  /broadcastSSE\(\s*(?:(\w+)\.(\w+)|"(lifecycle:[^"]+)")\s*,\s*\{([\s\S]*?)\}\)/g;
 
 // correlationId/tickCorrelationId must appear as a KEY: preceded by `{`, `,`, or line-start (+ ws),
 // and followed by `,`, `:`, or `}`. This rejects a value-position match after `: ` (the snake_case bug).
@@ -50,7 +65,13 @@ function collect() {
     const src = readFileSync(file, "utf8");
     if (!src.includes("broadcastSSE")) continue;
     for (const m of src.matchAll(BROADCAST_RE)) {
-      sites.push({ file: file.split(/[\\/]/).pop() ?? file, event: m[1] ?? m[2] ?? "?", body: m[3] ?? "" });
+      const rawLifecycle = m[3];            // "lifecycle:*" literal
+      const objKey = m[2];                  // KEY in <Obj>.<KEY>
+      // Only lifecycle SSE: a raw "lifecycle:*" literal, OR an <Obj>.KEY whose KEY resolves (via sse.ts)
+      // to a lifecycle:* value — regardless of WHICH catalog object (LIFECYCLE_GATE_EVENTS/WAVE29_EVENTS/…).
+      if (!rawLifecycle && !(objKey && LIFECYCLE_KEYS.has(objKey))) continue;
+      const event = rawLifecycle ?? `${m[1]}.${objKey}`;
+      sites.push({ file: file.split(/[\\/]/).pop() ?? file, event, body: m[4] ?? "" });
     }
   }
   return sites;
@@ -79,23 +100,25 @@ describe("lifecycle SSE events carry a correlationId KEY (F-3, all events incl. 
     expect(KEY_RE.test("strategyId: id,\n  tickCorrelationId,")).toBe(true);          // tick variant
   });
 
-  it("explicitly covers the known live-capital gate surfaces (incl. the raw-string dsl_guards HARD gate)", () => {
+  it("explicitly covers the known live-capital gate surfaces (across BOTH catalogs + raw-string)", () => {
     const sites = collect();
-    for (const evt of [
+    // event is now "<Catalog>.KEY" (e.g. LIFECYCLE_GATE_EVENTS.PROMOTED / WAVE29_EVENTS.PBO_EVALUATED)
+    // or a raw "lifecycle:*" literal. Match by the KEY suffix so the check is catalog-agnostic.
+    for (const key of [
       "PROMOTED",
       "PAPER_TO_DEPLOY_READY_BLOCKED",
       "BIF_EVALUATED",
       "B14_EVALUATED",
       "WFE_EVALUATED",
-      "DSL_GUARDS_EVALUATED", // now emitted via the catalog constant (was a raw "lifecycle:…" string)
+      "DSL_GUARDS_EVALUATED",
+      "PBO_EVALUATED",                 // WAVE29_EVENTS — HARD gate, was invisible to the pre-#6 guard
+      "SHADOW_DIVERGENCE_EVALUATED",   // WAVE29_EVENTS — HARD gate
     ]) {
-      const matching = sites.filter((s) => s.event === evt || `LIFECYCLE_GATE_EVENTS.${s.event}` === `LIFECYCLE_GATE_EVENTS.${evt}`);
-      const found = sites.filter((s) => s.event === evt);
-      expect(found.length, `expected at least one ${evt} broadcast`).toBeGreaterThanOrEqual(1);
+      const found = sites.filter((s) => s.event === key || s.event.endsWith(`.${key}`));
+      expect(found.length, `expected at least one ${key} broadcast`).toBeGreaterThanOrEqual(1);
       for (const s of found) {
-        expect(KEY_RE.test(s.body), `${evt} broadcast missing correlationId KEY`).toBe(true);
+        expect(KEY_RE.test(s.body), `${key} broadcast missing correlationId KEY`).toBe(true);
       }
-      void matching;
     }
   });
 });
