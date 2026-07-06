@@ -35,6 +35,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { backtests, monteCarloRuns, strategies } from "../../db/schema.js";
 import { adminSessionFromCookie } from "../../lib/slumhouse/admin-session.js";
+import { checkSlumhouseOrigin } from "../../lib/slumhouse/require-session.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 import { logger } from "../../lib/logger.js";
 import type { LifecycleService } from "../../services/lifecycle-service.js";
@@ -423,6 +424,9 @@ deployApprovalsRouter.post(
   "/slumhouse/admin/deploy-approvals/:id/approve",
   async (req: Request, res: Response): Promise<void> => {
     if (!requireAdminSession(req, res)) return;
+    // deep-scan Slumhouse F-3: CSRF Origin guard on the highest-stakes state-mutating POST (moves a
+    // strategy to/from live capital) — matches every sibling Slumhouse control-surface POST.
+    if (!checkSlumhouseOrigin(req, res)) return;
     const strategyId = String(req.params.id ?? "");
     const correlationId = randomUUID();
 
@@ -488,6 +492,9 @@ deployApprovalsRouter.post(
   "/slumhouse/admin/deploy-approvals/:id/reject",
   async (req: Request, res: Response): Promise<void> => {
     if (!requireAdminSession(req, res)) return;
+    // deep-scan Slumhouse F-3: CSRF Origin guard on the highest-stakes state-mutating POST (moves a
+    // strategy to/from live capital) — matches every sibling Slumhouse control-surface POST.
+    if (!checkSlumhouseOrigin(req, res)) return;
     const strategyId = String(req.params.id ?? "");
     const correlationId = randomUUID();
     const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
