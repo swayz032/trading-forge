@@ -3,6 +3,35 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+
+### Session Log — 2026-07-05 Deep-Scan #20 (8-band read-only audit ~6.5) + fix wave LANDED + CERTIFIED
+
+**Mission:** Operator: "deep scan for all bugs and blockers, wiring… all systems institutional grade… bug free to be 10/10." Ran an 8-band read-only adversarial audit (Deep-Scan #20), then a full code fix wave in a SHA-pinned worktree, doer≠grader certified, FF-landed phase-0. (10 is unreachable by the grading-integrity rubric — set as the expectation up front; honest ceiling 7-8.)
+
+**Deep-Scan #20 (read-only, 8 parallel grounded auditors, pinned to SHA 9f680b3) — overall ~6.5** (consistent w/ TF history 6.8-7.9). CLAIMED bands: A cross-system-truth 5(TESTING→PAPER)/7(other) · B backtest 6 · C paper/exec 6 · D architecture 6.5 · E observability 6 · F n8n/relay 6 · G autonomy 7 · H extraction/frontend 6.5. Marquee: **A-F1 (CRIT)** PBO overfit HARD gate present on manual promotion path but MISSING from the autonomous cron TESTING→PAPER fast-track (vacation-mode could auto-promote an overfit strategy the manual path blocks); **C-1 (CRIT-inert)** SME exit-order account resolution misroutes once a firm has 2+ enabled accounts; **B-1 (HIGH)** trade_resample (default MC method) GPU/CPU RNG non-parity flips the B14 gate; **system-map:check RED at HEAD** (43-item SSE inventory drift, pre-existing). **Band F (n8n): all 6 findings LIVE-INFRA — the Railway n8n fleet reverted to a ~May-2026 snapshot (alert channel + generative loop dead-on-arrival: missing proxy-token→401; 7 workflows on retired models→404); relay CODE correct. Contradicts the pinned "n8n postgres-backed redeploy-safe" fact.**
+
+**Fix wave — SHA-pinned worktree `tf-ds20-fix` off `face711`, FF-landed. Commits `dadb45f..f005a8a` (5):**
+- **T-A1 (CRIT):** PBO gate wired into cron `checkAutoPromotions` TESTING→PAPER, fail-CLOSED per §12 (mirrors manual block + sibling B14). `dadb45f`.
+- **T-C1 (CRIT-inert)+T-B1 (HIGH):** SME exit account-resolution via `account_strategy_assignments`, fail-CLOSED on 0/ambiguous (`sme.exit_account_unresolved`); MC `trade_resample` CPU-index RNG parity (mirrors block_bootstrap deepscan18 B-E1). `8e1bc25`.
+- **T-A2 (HIGH):** `check:gate-parity` extended to cover TESTING→PAPER cron fast-track (asserts 5 TESTING-stage HARD gates incl. PBO) — the CI net that would have caught A-F1. `7a2e581`.
+- **MED/LOW wave:** T-E1 sse-contract n8n-emitted allowlist · T-E2 dead `pine:export_completed` removed · T-E3/E4 bare audit-catch → log-loud · T-G1 pine-reconciliation-staleness-check daily cron · T-G2 RL/quantum fire-and-forget pending rows (rl_training_runs + quantum_mc_runs, per §13) · T-B2 golden-fixture anchored to real risk_metrics (Sharpe+maxDD) · T-H2 archetype-lockstep runtime import · T-H4 cookie boundary anchor. `c65beb6`.
+- **T-D1:** System Map reconciled → `system-map:check` GREEN (was pre-existing RED): 2 scheduler jobs registered, +30 live SSE events, −14 grep-verified dead-doc. `f005a8a`.
+
+**Deferred (carry-forward, NOT silently dropped):** T-H1 (CLAUDE.md parity-gate doc-drift + wrong-prompt-pointer — the parity smoke-test validates fixtures not the model; DEFERRED because a concurrent corpus-v3 session was actively editing that same wave26 parity harness); T-D2 (dual exit_plan_config surface — latent, needs canonical-surface decision); the ENTIRE n8n live-infra workstream (Band F — operator-gated: rotated OLLAMA_PROXY_TOKEN + live REST mutation + revert root-cause).
+
+**Verification:** tsc --noEmit exit 0 (0 errors — after catching the fresh worktree had NO node_modules → early tsc runs were FALSE CLEANS; junctioned main node_modules). All 3 CI hard gates GREEN (production-isolation, 2026-compliance, **system-map:check now exit 0 driftItems=[]**) + gate-parity + sse-contract + archetype-lockstep all exit 0. 148 targeted vitest pass (gate-chain-integration pglite + PBO×2 + deepscan7 manual-cron-parity + server-mediated-executor); golden-fixture 57 + metric-snapshot 23 pytest pass. **Independent accuracy-validator (doer≠grader): all 5 commits CONFIRMED via 2+ non-overlapping paths** (adversarial fixture proved the gate-parity net fails-correctly when PBO removed; standalone Python repro of MC RNG parity bit-identical; T-G2 rl_training_runs choice confirmed correct vs quantum_rl_runs). **VERIFIED bands: cross-system-gates 8 · backtest 7 · paper/exec 7 · architecture 8 · observability 7 · autonomy 8 · overall wave 7.** Disclosed non-blocking residuals: no dedicated trade_resample determinism test, no SME fail-closed-branch test (correct-by-read, CI-unguarded).
+
+**Known-facts updates (pinned below):** (1) fix-wave git worktrees have NO node_modules → `npx tsc` silently NO-OPS (exit 1, 0 errors = false clean) — junction/symlink main node_modules or `npm ci` before trusting any tsc/vitest/tsx gate in a worktree; (2) `system-map:sync` does NOT reconcile the hand-maintained SSE inventory or scheduler-job registry — those need manual edits (the recurring architect-close-out reconciliation).
+
+**Carry-forward for next session:**
+- **n8n live-infra re-apply (operator-gated):** re-add `X-Relay-Proxy-Token: <CURRENT rotated relay OLLAMA_PROXY_TOKEN>` to the 23 `/__oc/*`+`/__ollama/*` nodes; repoint 7 generative workflows off retired models → `gemma4:e4b-it-qat`; restore idempotency headers; re-disable DPM/MRC demotion PATCH nodes; re-archive zombie 9A/11A. FIRST investigate WHY the fleet reverted (stale-backup import vs postgres-backed assumption wrong) so a re-patch doesn't just revert.
+- **T-H1:** coordinate w/ corpus-v3 session on wave26 parity harness — make `--parity-only` invoke the model, then fix CLAUDE.md §13 + repoint read-only-prompt fact to `transcript-extractor-minimal.md` (production default; v10 `transcript-extractor.md` only under TRANSCRIPT_EXTRACTOR_USE_LEGACY=true).
+- **T-D2:** pick ONE canonical exit_plan_config surface (overlay nested vs runtime top-level column); align overlay+runtime+graduator.
+- **Test-coverage residuals:** add a `trade_resample` GPU/CPU determinism test (only block_bootstrap covered) + SME 0/ambiguous fail-closed branch test.
+- **Band B MED-HIGH:** PF/net-pnl/commission have no decoupled production fn (inline in backtester.py) — golden-fixture anchor covers only Sharpe+maxDD; a reusable metrics module would close the rest.
+
+---
+
 ### Session Log — 2026-07-05 Deep-Scan #18c — H-1 + C-3 + #3 production_trades LANDED + LIVE (certified 7/10, deployed)
 
 **Mission:** The concurrent session left flagged playbook_router WIP; operator ("fix it, its your job") + then landed + deployed all of it, plus the #3 X-1 production_trades writers.
@@ -23,6 +52,8 @@
 - The concurrent session's corpus-v3 step1/gate2 commit + parity report are preserved on `wip/other-session-corpus-v3-step1-2026-07-05` (5307d5f, pushed) — that session should rebase onto origin/phase-0 + push, NOT resurrect via the tower checkout.
 - The other agent's earlier flagged playbook draft + docs sit on `wip/other-session-leftover-2026-07-05` (d6e5839).
 - Wire the #3 UPDATE path to the canonical live-order.ts flow (match on traderspost_webhook_id) when SME execution is built, to make `actual_pnl` populate for real TradersPost orders.
+
+---
 
 ### Session Log — 2026-07-05 Deep-Scan #18b fix-wave COMPLETE + independently CERTIFIED (grading-integrity)
 
