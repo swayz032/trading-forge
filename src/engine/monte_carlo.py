@@ -145,9 +145,19 @@ def trade_resample(
         xp = np
 
     trades_xp = xp.asarray(trades)
-    # Use PCG64DXSM for authoritative reproducibility (CPU path)
-    rng = create_authoritative_rng(seed)[0] if xp is np else xp.random.default_rng(seed)
-    indices = rng.integers(0, len(trades), size=(n_sims, len(trades)))
+    # DS#20 T-B1 (2026-07-05): derive the resample INDICES on CPU with the authoritative
+    # PCG64DXSM generator, then hand only the (cheap) index array to the GPU for the gather.
+    # Previously the GPU branch seeded cupy's own `default_rng(seed)` — a DIFFERENT generator
+    # family than PCG64DXSM — so this method (trade_resample, the DEFAULT MC method:
+    # method="trade_resample", use_gpu defaults True) produced a DIFFERENT bootstrap resample
+    # (and hence a different probability_of_ruin_ci.ci_high straddling the B14 0.20 hard gate)
+    # depending on whether the run executed on the GPU tower or a CPU-only CI/dev box. This is
+    # the exact non-determinism block_bootstrap() fixed in deepscan18 B-E1 (lines ~506-524) but
+    # which was never applied to this sibling default method. Random DRAWS are now identical
+    # CPU vs GPU for a given seed; only the vectorized gather + cumsum run on device.
+    cpu_rng = create_authoritative_rng(seed)[0]
+    indices_np = cpu_rng.integers(0, len(trades), size=(n_sims, len(trades)))
+    indices = indices_np if xp is np else xp.asarray(indices_np)
     sampled = trades_xp[indices]
     paths = xp.cumsum(sampled, axis=1)
 

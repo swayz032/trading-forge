@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls, brokerAccounts } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls, brokerAccounts, accountStrategyAssignments } from "../db/schema.js";
 import { writeLockoutFromKillEvent } from "./strategy-lockout-service.js";
 import { eq, and, isNull, desc, sql, inArray } from "drizzle-orm";
 import { broadcastSSE, PAPER_EXIT_EVENTS } from "../routes/sse.js";
@@ -3453,14 +3453,54 @@ async function _resolveSmeContextForExit(
       .limit(1);
     if (!strat) return null;
 
-    // firmId → accountId (first enabled broker account for this firm)
+    // firmId + strategyId → accountId.  DS#20 T-C1 (Band C CRITICAL): resolve the
+    // SPECIFIC account assigned to THIS strategy via account_strategy_assignments
+    // (strategy→account, active, firm-matched) instead of "first enabled broker account
+    // for the firm". The old query silently routed a live modify/flatten (TRAIL, BE+1,
+    // partial-close, 15:55 flatten) for a position on account B to account A the moment a
+    // firm had 2+ enabled accounts — an explicit APPROVED horizontal-scaling lever
+    // (§5 Phase 3 multi-account Topstep, §9 family). FAIL-CLOSED on 0-or-ambiguous: never
+    // guess which account holds a live position — suppress the SME route (paper sim
+    // unaffected) + loud audit. The definitive fix threads an explicit accountId onto
+    // paper_sessions at open time (schema change, deferred); until then this closes the
+    // silent-misroute hole by refusing to guess.
     const firmId = sess.firmId ?? "";
     if (!firmId) return null;
-    const [acct] = await db
-      .select({ accountId: brokerAccounts.accountId })
-      .from(brokerAccounts)
-      .where(and(eq(brokerAccounts.firmId, firmId), eq(brokerAccounts.enabled, true)))
-      .limit(1);
+    const assignedAccts = await db
+      .select({ accountId: accountStrategyAssignments.accountId })
+      .from(accountStrategyAssignments)
+      .innerJoin(brokerAccounts, eq(accountStrategyAssignments.accountId, brokerAccounts.accountId))
+      .where(and(
+        eq(accountStrategyAssignments.strategyId, sess.strategyId),
+        eq(accountStrategyAssignments.status, "active"),
+        eq(brokerAccounts.firmId, firmId),
+        eq(brokerAccounts.enabled, true),
+      ));
+    if (assignedAccts.length !== 1) {
+      // 0 = no active assignment for this strategy on this firm; >1 = ambiguous (same
+      // strategy on multiple accounts of one firm — the approved Topstep multi-account
+      // lever). Either way, do NOT guess which account holds the live position.
+      logger.warn(
+        { sessionId, positionId, strategyId: sess.strategyId, firmId, candidateCount: assignedAccts.length },
+        "SME: could not resolve an unambiguous account for exit routing — suppressing SME route (fail-closed, paper sim unaffected)",
+      );
+      await insertAuditRowSafe({
+        action: "sme.exit_account_unresolved",
+        entityType: "strategy",
+        entityId: sess.strategyId,
+        decisionAuthority: "gate",
+        status: "failure",
+        input: { sessionId, positionId, firmId } as Record<string, unknown>,
+        result: {
+          reason: assignedAccts.length === 0 ? "no_active_assignment" : "ambiguous_multi_account",
+          candidate_count: assignedAccts.length,
+          note: "SME exit routing requires exactly one active account_strategy_assignments match for the strategy+firm; never guess which account holds the live position",
+        } as Record<string, unknown>,
+        correlationId: entryCorrelationId ?? randomUUID(),
+      });
+      return null;
+    }
+    const acct = assignedAccts[0];
     if (!acct?.accountId) return null;
 
     return {
