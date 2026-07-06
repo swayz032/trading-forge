@@ -174,6 +174,20 @@ export const INDEPENDENT_SOURCE_COUNT = 2; // productionTrades + MFFU snapshot
 /** Minimum independent sources before severity is clamped to at most "yellow". */
 export const MIN_INDEPENDENT_SOURCES_FOR_RED = 3;
 
+/**
+ * deep-scan A: are the traderspost / tradovate COUNT legs independent of the
+ * production_trades count?  Today they are 1:1 PROXIES (fetchTraderspostLogCount /
+ * fetchTradovateFillsCount both return the shared production_trades count — see the
+ * F-7 GAP docstring above), so count checks 1 & 2 would be self-comparisons that can
+ * NEVER surface a mismatch. Recording those as "0 mismatches (pass)" overstates
+ * assurance — it reads like a 3-way count reconciliation actually ran. This flag gates
+ * checks 1 & 2 so they are SKIPPED (and recorded as not-independently-verifiable) until
+ * Option B (a TradersPost webhook-confirm consumer writing traderspost_confirmed_at, or
+ * live tradovate_fill_id under server-mediated execution) makes the legs genuinely
+ * independent. Flip to `true` in the SAME change that wires the distinct-column queries.
+ */
+export const PROXY_COUNT_LEGS_INDEPENDENT = false;
+
 async function fetchProxyCountsFromProductionTrades(date: Date): Promise<number> {
   const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
@@ -414,24 +428,39 @@ export async function runDailyReconciliation(
     // ── Compare: build mismatch_details ───────────────────────────────────
     const mismatches: MismatchDetail[] = [];
 
-    // Check 1: production_trades.count === traderspost_log.count
-    if (productionTradesCount !== traderspostLogCount) {
-      mismatches.push({
-        source: "production_trades_vs_traderspost",
-        expected: productionTradesCount,
-        actual: traderspostLogCount,
-        delta: traderspostLogCount - productionTradesCount,
-      });
-    }
+    // Checks 1 & 2 (count cross-checks) run ONLY when the traderspost/tradovate legs
+    // are genuinely independent of production_trades. In proxy mode they are 1:1 copies
+    // of productionTradesCount (self-comparison → always equal → a fake pass that
+    // overstates assurance), so they are skipped and recorded as unavailable rather than
+    // silently "passing". severity is already clamped to yellow via INDEPENDENT_SOURCE_COUNT
+    // (< MIN_INDEPENDENT_SOURCES_FOR_RED) so the operator panel never reads a false green here.
+    if (PROXY_COUNT_LEGS_INDEPENDENT) {
+      // Check 1: production_trades.count === traderspost_log.count
+      if (productionTradesCount !== traderspostLogCount) {
+        mismatches.push({
+          source: "production_trades_vs_traderspost",
+          expected: productionTradesCount,
+          actual: traderspostLogCount,
+          delta: traderspostLogCount - productionTradesCount,
+        });
+      }
 
-    // Check 2: traderspost_log.count === tradovate_fills.count
-    if (traderspostLogCount !== tradovateFillsCount) {
-      mismatches.push({
-        source: "traderspost_vs_tradovate_fills",
-        expected: traderspostLogCount,
-        actual: tradovateFillsCount,
-        delta: tradovateFillsCount - traderspostLogCount,
-      });
+      // Check 2: traderspost_log.count === tradovate_fills.count
+      if (traderspostLogCount !== tradovateFillsCount) {
+        mismatches.push({
+          source: "traderspost_vs_tradovate_fills",
+          expected: traderspostLogCount,
+          actual: tradovateFillsCount,
+          delta: tradovateFillsCount - traderspostLogCount,
+        });
+      }
+    } else {
+      logger.info(
+        { productionTradesCount },
+        "reconciliation: count cross-checks (1,2) SKIPPED — traderspost/tradovate legs are " +
+          "proxies of production_trades, not independent (see PROXY_COUNT_LEGS_INDEPENDENT). " +
+          "Severity stays clamped to yellow via INDEPENDENT_SOURCE_COUNT.",
+      );
     }
 
     // Check 3: tradovate_fills.pnl ≈ mffu_dashboard_pnl (within tolerance)
