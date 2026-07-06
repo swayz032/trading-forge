@@ -24,12 +24,16 @@ def test_dsr_passes_strong_sharpe():
 
 
 def test_pbo_low_for_consistent_strategy():
-    """Uniform OOS performance should produce low PBO."""
+    """Uniform OOS performance should produce low PBO.
+
+    FIX 2 (ds21): compute_pbo now requires real is_metric_values — a
+    consistent strategy has IS performance tracking OOS (no inflation),
+    so the fixture supplies is_metric_values == the OOS sharpes.
+    """
     # Windows with similar OOS performance
-    windows = [
-        {"oos_metrics": {"sharpe_ratio": 1.8 + i * 0.01}} for i in range(6)
-    ]
-    result = compute_pbo(windows)
+    sharpes = [1.8 + i * 0.01 for i in range(6)]
+    windows = [{"oos_metrics": {"sharpe_ratio": s}} for s in sharpes]
+    result = compute_pbo(windows, is_metric_values=sharpes)
     # Monotonically increasing = consistent, PBO should be reasonable
     assert result["pbo"] is not None
     assert result["n_combinations"] > 0

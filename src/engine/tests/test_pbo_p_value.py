@@ -51,15 +51,17 @@ class TestComputePboPValue:
     def test_pbo_p_value_present_in_result(self):
         """compute_pbo result must contain pbo_p_value key."""
         from src.engine.risk_metrics import compute_pbo
-        windows = _make_windows([1.0, 1.1, 1.2, 1.3, 1.4, 1.5])
-        result = compute_pbo(windows)
+        sharpes = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+        windows = _make_windows(sharpes)
+        result = compute_pbo(windows, is_metric_values=sharpes)
         assert "pbo_p_value" in result
 
     def test_pbo_p_value_not_none_with_enough_combinations(self):
         """With 6 windows, C(6,3)=20 combinations → p_value should be real."""
         from src.engine.risk_metrics import compute_pbo
-        windows = _make_windows([1.0, 1.1, 1.2, 1.3, 1.4, 1.5])
-        result = compute_pbo(windows)
+        sharpes = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+        windows = _make_windows(sharpes)
+        result = compute_pbo(windows, is_metric_values=sharpes)
         # 20 combinations is enough for binomtest
         p_val = result.get("pbo_p_value")
         # Should be a float, not None
@@ -80,9 +82,10 @@ class TestComputePboPValue:
 
         # Alternating sharpes: IS and OOS equally good → PBO near 0.5
         # 10 windows: values alternate high/low so neither IS half dominates
+        # FIX 2 (ds21): IS tracks OOS (no inflation) — "equally good" fixture.
         sharpes = [1.0, 0.9, 1.1, 0.8, 1.2, 0.7, 1.3, 0.6, 1.4, 0.5]
         windows = _make_windows(sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=sharpes)
 
         pbo_val = result.get("pbo")
         p_val = result.get("pbo_p_value")
@@ -106,10 +109,13 @@ class TestComputePboPValue:
         """
         from src.engine.risk_metrics import compute_pbo
 
-        # Strong degradation: first 4 high, last 4 very low
+        # Strong degradation: first 4 high, last 4 very low.
+        # FIX 2 (ds21): IS is genuinely inflated relative to OOS (curve-fit
+        # fixture) — OOS-as-IS proxy is banned by compute_pbo's contract.
         sharpes = [3.0, 2.8, 2.5, 2.0, 0.1, -0.1, -0.2, -0.3]
+        is_values = [v + 2.0 for v in sharpes]
         windows = _make_windows(sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=is_values)
 
         pbo_val = result.get("pbo")
         p_val = result.get("pbo_p_value")
@@ -133,10 +139,13 @@ class TestComputePboPValue:
         """
         from src.engine.risk_metrics import compute_pbo
 
-        # Anti-overfit: last 4 windows better than first 4 (OOS improves over time)
+        # Anti-overfit: last 4 windows better than first 4 (OOS improves over time).
+        # FIX 2 (ds21): IS is genuinely deflated relative to OOS (the strategy
+        # under-promises IS and over-delivers OOS — the anti-overfit case).
         sharpes = [-0.3, -0.2, -0.1, 0.1, 2.0, 2.5, 2.8, 3.0]
+        is_values = [v - 2.0 for v in sharpes]
         windows = _make_windows(sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=is_values)
 
         pbo_val = result.get("pbo")
         p_val = result.get("pbo_p_value")
@@ -152,8 +161,9 @@ class TestComputePboPValue:
         """Fewer than 4 windows → both pbo and pbo_p_value are None."""
         from src.engine.risk_metrics import compute_pbo
 
-        windows = _make_windows([1.0, 1.5, 0.8])  # 3 windows
-        result = compute_pbo(windows)
+        sharpes = [1.0, 1.5, 0.8]  # 3 windows
+        windows = _make_windows(sharpes)
+        result = compute_pbo(windows, is_metric_values=sharpes)
 
         assert result["pbo"] is None
         # p_value should also be None when pbo is None
@@ -164,8 +174,9 @@ class TestComputePboPValue:
         """Existing pbo, interpretation, n_combinations fields must still be present."""
         from src.engine.risk_metrics import compute_pbo
 
-        windows = _make_windows([1.0, 1.1, 1.2, 0.9, 0.8, 0.7])
-        result = compute_pbo(windows)
+        sharpes = [1.0, 1.1, 1.2, 0.9, 0.8, 0.7]
+        windows = _make_windows(sharpes)
+        result = compute_pbo(windows, is_metric_values=sharpes)
 
         # All original fields still present
         assert "pbo" in result
@@ -182,8 +193,9 @@ class TestComputePboPValue:
         """
         from src.engine.risk_metrics import compute_pbo
 
-        windows = _make_windows([1.0, 0.5, 1.5, 0.3, 2.0, 0.1, 1.8, 0.4])
-        pbo_result = compute_pbo(windows)
+        sharpes = [1.0, 0.5, 1.5, 0.3, 2.0, 0.1, 1.8, 0.4]
+        windows = _make_windows(sharpes)
+        pbo_result = compute_pbo(windows, is_metric_values=sharpes)
 
         # Simulate what walk_forward.py does
         from src.engine.walk_forward import _PBO_OVERFIT_THRESHOLD_DEFAULT

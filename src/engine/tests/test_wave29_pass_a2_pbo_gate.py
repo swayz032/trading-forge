@@ -150,10 +150,16 @@ class TestComputePboFromCpcvPaths(unittest.TestCase):
             compute_pbo_from_cpcv_paths,
         )
 
+        # FIX 2 (ds21): supply a per-window optimization.best_sharpe distinct
+        # from the OOS sharpe. Without it, _build_cpcv_paths_from_window_results
+        # falls back to is_sharpe == oos_sharpe (the degenerate case), which
+        # compute_pbo_from_cpcv_paths deliberately returns pbo=None for (FIX 2
+        # in pbo_gate.py itself — a real IS/OOS divergence is required).
         window_results = [
             {
                 "window": i + 1,
                 "oos_metrics": {"sharpe_ratio": float(i) / 5.0 + 0.1},
+                "optimization": {"best_sharpe": float(i) / 5.0 + 1.1},
                 "confidence": "OK",
             }
             for i in range(5)

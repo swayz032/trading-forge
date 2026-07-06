@@ -55,10 +55,14 @@ class TestPBOKnownOverfit:
         C(6,3) combinations) consistently beat the last 3 (OOS proxy).
         PBO will be high because IS-look windows always outperform OOS-look windows.
         """
-        # Strong IS-era performance, weak OOS-era performance
+        # Strong IS-era performance, weak OOS-era performance.
+        # FIX 2 (ds21): supply a genuinely inflated IS series (OOS + constant
+        # shift) — the OOS-as-IS proxy is banned by compute_pbo's fail-closed
+        # contract, so the fixture must model real curve-fit IS inflation.
         oos_sharpes = [2.5, 2.3, 2.1, 0.1, -0.1, 0.2]
+        is_values = [v + 2.0 for v in oos_sharpes]
         windows = _make_windows(oos_sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=is_values)
         assert result["pbo"] is not None
         # IS half consistently better than OOS half → elevated PBO
         assert result["pbo"] >= 0.4  # within 0.1 of 0.5
@@ -66,8 +70,9 @@ class TestPBOKnownOverfit:
     def test_pbo_known_overfit_interpretation_not_robust(self):
         """High PBO → interpretation must signal risk (not 'Low overfitting')."""
         oos_sharpes = [3.0, 2.8, 2.6, 0.05, -0.1, 0.1]
+        is_values = [v + 2.0 for v in oos_sharpes]
         windows = _make_windows(oos_sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=is_values)
         assert result["pbo"] is not None
         if result["pbo"] >= 0.4:
             assert "Low overfitting" not in result["interpretation"]
@@ -82,10 +87,11 @@ class TestPBOKnownStable:
         When IS-look and OOS-look windows are comparable in performance, the
         IS half does NOT systematically beat the OOS half → PBO is low.
         """
-        # Nearly identical Sharpe across all 6 windows → balanced IS/OOS splits
+        # Nearly identical Sharpe across all 6 windows → balanced IS/OOS splits.
+        # FIX 2 (ds21): a stable strategy's IS values track OOS (no inflation).
         oos_sharpes = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
         windows = _make_windows(oos_sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=oos_sharpes)
         assert result["pbo"] is not None
         # Balanced performance → PBO around 0.5 (random coin flip)
         # A truly stable strategy should have PBO NOT heavily elevated
@@ -95,7 +101,7 @@ class TestPBOKnownStable:
         """Monotonically increasing Sharpe (improving) → IS half not always better."""
         oos_sharpes = [0.5, 0.7, 0.9, 1.1, 1.3, 1.5]
         windows = _make_windows(oos_sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=oos_sharpes)
         assert result["pbo"] is not None
         assert result["n_combinations"] > 0
         # PBO should be low for a strategy that improves over time
@@ -106,7 +112,16 @@ class TestPBOKnownStable:
 
 class TestPBOWiredIntoWalkForward:
     def test_pbo_field_present_in_wf_result(self):
-        """Full walk-forward run must emit 'pbo' key in result."""
+        """Full walk-forward run must emit 'pbo' key in result.
+
+        FIX 2 (ds21): WF_MODE default flipped "plain" → "cpcv" (2026-06-22
+        institutional hardening). The top-level "pbo" key is a plain/purged_embargo-mode
+        field (Wave 27.5 Pass B HIGH #3); CPCV mode emits "pbo_overall" instead
+        (Wave 29 Pass A.2) and has no top-level "pbo" key. This test module
+        specifically exercises the plain-mode PBO auto-wire, so it must now
+        request wf_mode="plain" explicitly rather than relying on the
+        (no-longer-true) plain default.
+        """
         from src.engine.config import (
             BacktestRequest,
             IndicatorConfig,
@@ -128,6 +143,7 @@ class TestPBOWiredIntoWalkForward:
                 ],
                 entry_long="close crosses_above sma_5",
                 entry_short="close crosses_below sma_5",
+                exit="close crosses_below sma_5",
                 stop_loss=StopConfig(type="atr", multiplier=2.0),
                 position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
             ),
@@ -135,7 +151,7 @@ class TestPBOWiredIntoWalkForward:
             end_date="2023-06-30",
         )
 
-        result = run_walk_forward(request, data=data, n_splits=5)
+        result = run_walk_forward(request, data=data, n_splits=5, wf_mode="plain")
 
         # pbo key MUST be present (may be None if < 4 windows survived)
         assert "pbo" in result
@@ -145,7 +161,15 @@ class TestPBOWiredIntoWalkForward:
         assert "pbo_p_value" in result
 
     def test_pbo_value_is_bounded_or_none(self):
-        """pbo value must be in [0, 1] or None (not an error float)."""
+        """pbo value must be in [0, 1] or None (not an error float).
+
+        FIX 2 (ds21): request wf_mode="plain" explicitly — see the
+        test_pbo_field_present_in_wf_result docstring above for why. Without
+        it, the default cpcv-mode result has no top-level "pbo" key at all,
+        so `result.get("pbo")` silently returns None and the `if pbo_val is
+        not None` guard skips the bound assertion entirely (a vacuous pass
+        that never actually exercises the ranking math).
+        """
         from src.engine.config import (
             BacktestRequest,
             IndicatorConfig,
@@ -167,6 +191,7 @@ class TestPBOWiredIntoWalkForward:
                 ],
                 entry_long="close crosses_above sma_10",
                 entry_short="close crosses_below sma_10",
+                exit="close crosses_below sma_10",
                 stop_loss=StopConfig(type="atr", multiplier=1.5),
                 position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
             ),
@@ -174,8 +199,12 @@ class TestPBOWiredIntoWalkForward:
             end_date="2023-06-30",
         )
 
-        result = run_walk_forward(request, data=data, n_splits=5)
+        result = run_walk_forward(request, data=data, n_splits=5, wf_mode="plain")
         pbo_val = result.get("pbo")
+        # Indicator warmup (sma_10) can auto-reduce n_splits below the PBO
+        # 4-window minimum depending on available OOS bars — pbo legitimately
+        # stays None in that case. The bound check below is the actual
+        # contract under test (not an early-return artifact).
         if pbo_val is not None:
             assert 0.0 <= pbo_val <= 1.0
 
@@ -203,6 +232,7 @@ class TestPBOWiredIntoWalkForward:
                 ],
                 entry_long="close crosses_above sma_5",
                 entry_short="close crosses_below sma_5",
+                exit="close crosses_below sma_5",
                 stop_loss=StopConfig(type="atr", multiplier=2.0),
                 position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
             ),
