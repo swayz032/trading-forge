@@ -48,6 +48,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { logger } from "./logger.js";
 import { insertAuditRowSafe } from "./audit-log-helper.js";
+import { findDuplicateJournalWhens } from "./migration-journal-utils.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -670,6 +671,53 @@ export async function runPendingMigrations(
     await checkForOrphanSqlFiles(journal, correlationId);
   } catch (orphanCheckErr) {
     logger.warn({ err: String(orphanCheckErr) }, "boot-migration: orphan-sql-file check itself failed (non-blocking)");
+  }
+
+  // ds21 CRITICAL (deep-scan #21 Band F): the pending filter (below) keys "already
+  // applied" on the journal `when` epoch (recorded as drizzle.__drizzle_migrations.created_at),
+  // NOT on the per-migration tag/hash. If two journal entries share an identical `when`,
+  // applying the first records that `when` and the SECOND is then treated as applied and
+  // SILENTLY, PERMANENTLY skipped — no audit, no alert — surfacing only later as an opaque
+  // "column/table does not exist" runtime error. This has already occurred 5 times
+  // (0044a/0052, 0147/0159, 0148/0160, 0152/0162, 0153/0164 — each later sibling was applied
+  // out-of-band, leaving the ledger inconsistent). We do NOT auto-re-apply here (some of the
+  // colliding migrations, e.g. 0052 FK-cascade, are not cleanly idempotent — re-running on a
+  // live boot could fail-CLOSED). Instead we detect the collision loudly so the operator is in
+  // the loop for every collision, existing or future. Full remediation (key pending on hash,
+  // once every colliding migration is verified idempotent) is a documented follow-up.
+  try {
+    const dupWhens = findDuplicateJournalWhens(journal.entries);
+    if (dupWhens.length > 0) {
+      const detail = dupWhens
+        .map((g) => `when=${g.when}: [${g.tags.join(", ")}]`)
+        .join("; ");
+      logger.error(
+        { duplicateWhenGroups: dupWhens },
+        "boot-migration: DUPLICATE journal `when` values detected — a later colliding migration " +
+          "can be silently skipped by the when-keyed pending filter",
+      );
+      await insertAuditRowSafe({
+        action: "boot_migration.duplicate_journal_when_detected",
+        entityType: "migration",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { duplicateWhenGroups: dupWhens } as Record<string, unknown>,
+        result: { count: dupWhens.length } as Record<string, unknown>,
+        status: "error",
+        errorMessage: `duplicate journal when values: ${detail}`,
+        correlationId,
+      });
+      await fireDiscordCritical(
+        "Boot migration — duplicate journal `when` detected",
+        `The migration journal has ${dupWhens.length} group(s) of entries sharing an identical \`when\` ` +
+          `timestamp:\n\n${detail}\n\nThe boot-migration pending filter keys on \`when\`, so the LATER migration ` +
+          `in each group can be silently skipped (never applied, no ledger row). Verify each later sibling's ` +
+          `schema actually exists in the DB; give it a unique \`when\` in meta/_journal.json (only after confirming ` +
+          `the migration is idempotent) so future boots track it correctly.`,
+      );
+    }
+  } catch (dupCheckErr) {
+    logger.warn({ err: String(dupCheckErr) }, "boot-migration: duplicate-when check itself failed (non-blocking)");
   }
 
   // ─── Bootstrap __drizzle_migrations table ───────────────────────────────────
