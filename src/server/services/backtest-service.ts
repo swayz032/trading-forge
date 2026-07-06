@@ -109,6 +109,19 @@ function buildResultExtras(result: BacktestResult): Record<string, unknown> | nu
     // gate permanently blocked. Fail-closed preserved: old backtests without
     // this field continue to return [] (gate blocks).
     "expected_signals",
+    // C-3 fix (deep-scan #18c, 2026-07-05): eligibility gate mode disclosure.
+    // Python backtester.py::run_backtest() now surfaces gate_stats["mode"] (+
+    // "passthrough_reason") from apply_eligibility_gate() into
+    // result["eligibility_gate_mode"] = {long, long_passthrough_reason, short,
+    // short_passthrough_reason}. Before this fix, the main backtest path
+    // captured _long_gate_stats/_short_gate_stats ONLY to extract
+    // structural_stop_map — mode was computed but discarded, so a strategy's
+    // passthrough_strategy_unregistered -> tf_institutional_overlay flip (e.g.
+    // after playbook_router.ALL_STRATS registration) produced no queryable
+    // record on the persisted backtest row. Persisting this key lets the
+    // operator query `result_extras->'eligibility_gate_mode'` to detect the
+    // flip and treat pre/post-flip backtests as non-comparable.
+    "eligibility_gate_mode",
     // Deep-scan #16 Wave-1 Track 5 cross-track contract: Track 2 is adding
     // result["dsl_guards"]["guards_failed"] to the Python engine (backtester.py
     // already emits result["dsl_guards"] with stop_ceiling_skips/time_stop_exits/

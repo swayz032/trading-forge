@@ -240,6 +240,18 @@ export interface BacktestResultExtrasShape {
   frankenstein_pass?: boolean;
   compliance_pass_rate?: number;
   a14_severity?: string;
+  // C-3 fix (deep-scan #18c, 2026-07-05): eligibility gate mode disclosure.
+  // Surfaces apply_eligibility_gate()'s gate_stats["mode"] (+ "passthrough_reason")
+  // from the main backtest path so the passthrough<->gated flip is queryable
+  // instead of silently dropped. <mode> is one of: source_entry_only,
+  // passthrough_htf_unavailable, passthrough_strategy_unregistered,
+  // tf_institutional_overlay, or null (gate disabled / side absent).
+  eligibility_gate_mode?: {
+    long?: string | null;
+    long_passthrough_reason?: string | null;
+    short?: string | null;
+    short_passthrough_reason?: string | null;
+  };
   [key: string]: unknown;            // forward-compat: accept new Python fields
 }
 

@@ -540,6 +540,41 @@ def apply_eligibility_gate(
     return filtered, exit_signals, gate_stats
 
 
+def _build_eligibility_gate_mode_disclosure(
+    long_gate_stats: Optional[dict] = None,
+    short_gate_stats: Optional[dict] = None,
+) -> dict:
+    """C-3 fix (deep-scan #18c, 2026-07-05): build the additive
+    ``result["eligibility_gate_mode"]`` disclosure dict from the raw
+    ``gate_stats`` blobs returned by ``apply_eligibility_gate()`` for each side.
+
+    Prior to this fix, the main backtest path (``run_backtest()``) captured
+    the per-side gate_stats ONLY to extract ``structural_stop_map`` — the
+    ``"mode"`` field (one of ``source_entry_only`` / ``passthrough_htf_unavailable``
+    / ``passthrough_strategy_unregistered`` / ``tf_institutional_overlay``) was
+    computed by ``apply_eligibility_gate()`` but discarded, so a strategy
+    flipping from ``passthrough_strategy_unregistered`` to
+    ``tf_institutional_overlay`` (e.g. after ``playbook_router.ALL_STRATS``
+    registration) produced NO queryable record on the persisted backtest row.
+
+    Pure function — no I/O, no side effects, replay-deterministic. Callers pass
+    ``None`` for a side that never ran (gate disabled entirely via
+    ``use_eligibility_gate=False``, or no ``entry_short`` column present).
+
+    Returns:
+        {"long": <mode|None>, "long_passthrough_reason": <str|None>,
+         "short": <mode|None>, "short_passthrough_reason": <str|None>}
+    """
+    long_gate_stats = long_gate_stats or {}
+    short_gate_stats = short_gate_stats or {}
+    return {
+        "long": long_gate_stats.get("mode"),
+        "long_passthrough_reason": long_gate_stats.get("passthrough_reason"),
+        "short": short_gate_stats.get("mode"),
+        "short_passthrough_reason": short_gate_stats.get("passthrough_reason"),
+    }
+
+
 # G2: Backtest/Paper parity gates — skip engine + anti-setup filter + compliance gate.
 # Production defaults (P0-3 hardening):
 #   TF_BACKTEST_SKIP_MODE       ∈ {off, shadow, enforce}  default: enforce
@@ -4400,8 +4435,18 @@ def run_backtest(
     # structural-stop-distance map threaded to _apply_trade_management() below
     # so the management loop uses the SAME stop that justified admission.
     _dsl_structural_stop_map: dict = {"long": {}, "short": {}}
+    # C-3 fix (deep-scan #18c, 2026-07-05): surface gate_stats["mode"] (+
+    # "passthrough_reason") from apply_eligibility_gate() into the persisted
+    # result via _build_eligibility_gate_mode_disclosure() so the
+    # passthrough<->gated flip is queryable, not silently dropped. See that
+    # helper's docstring for the full rationale. _dsl_long_gate_stats /
+    # _dsl_short_gate_stats default to None so a run with
+    # use_eligibility_gate=False (or no entry_short column) still produces a
+    # well-shaped (if partially null) disclosure dict.
+    _dsl_long_gate_stats: Optional[dict] = None
+    _dsl_short_gate_stats: Optional[dict] = None
     if use_eligibility_gate:
-        entries_np, exits_np, _long_gate_stats = apply_eligibility_gate(
+        entries_np, exits_np, _dsl_long_gate_stats = apply_eligibility_gate(
             entries_np, exits_np, df,
             direction="long", symbol=config.symbol,
             firm_key=request.firm_key,
@@ -4409,7 +4454,7 @@ def run_backtest(
             strategy_name=_dsl_strategy_name,
             passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
         )
-        _dsl_structural_stop_map["long"] = _long_gate_stats.get("structural_stop_map", {})
+        _dsl_structural_stop_map["long"] = _dsl_long_gate_stats.get("structural_stop_map", {})
         # Update DataFrame with filtered signals
         df = df.with_columns([
             pl.Series("entry_long", entries_np),
@@ -4419,7 +4464,7 @@ def run_backtest(
         if "entry_short" in df.columns:
             short_entries_np = df["entry_short"].to_numpy()
             short_exits_np = df["exit_short"].to_numpy()
-            short_entries_np, short_exits_np, _short_gate_stats = apply_eligibility_gate(
+            short_entries_np, short_exits_np, _dsl_short_gate_stats = apply_eligibility_gate(
                 short_entries_np, short_exits_np, df,
                 direction="short", symbol=config.symbol,
                 firm_key=request.firm_key,
@@ -4427,11 +4472,14 @@ def run_backtest(
                 strategy_name=_dsl_strategy_name,
                 passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
             )
-            _dsl_structural_stop_map["short"] = _short_gate_stats.get("structural_stop_map", {})
+            _dsl_structural_stop_map["short"] = _dsl_short_gate_stats.get("structural_stop_map", {})
             df = df.with_columns([
                 pl.Series("entry_short", short_entries_np),
                 pl.Series("exit_short", short_exits_np),
             ])
+    _dsl_eligibility_gate_mode = _build_eligibility_gate_mode_disclosure(
+        _dsl_long_gate_stats, _dsl_short_gate_stats,
+    )
 
     # ─── G2 parity gate (skip + anti-setup, default off) ────────
     # W27.5 C.2: per-backtest compliance_mode override wins over env var.
@@ -5802,6 +5850,14 @@ def run_backtest(
         # FIX 2 (deep-scan #10): HTF passthrough disclosure — True when eligibility gate
         # ran in passthrough mode (htf_cache unavailable). Additive; TS persists it.
         "htf_passthrough": _dsl_htf_passthrough,
+        # C-3 fix (deep-scan #18c, 2026-07-05): eligibility gate mode disclosure.
+        # {"long": <mode>, "long_passthrough_reason": <str|None>, "short": <mode>,
+        #  "short_passthrough_reason": <str|None>}. <mode> is one of
+        # source_entry_only / passthrough_htf_unavailable /
+        # passthrough_strategy_unregistered / tf_institutional_overlay / None
+        # (gate disabled or side absent). Additive key — TS persists via the
+        # result_extras allowlist in backtest-service.ts::buildResultExtras.
+        "eligibility_gate_mode": _dsl_eligibility_gate_mode,
     }
     # Also embed parity gate stats in run_receipt for backward-compat TS readers.
     # This is done after the result dict is built to avoid mutating run_receipt template.
