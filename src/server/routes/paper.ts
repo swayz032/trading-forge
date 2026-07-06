@@ -483,7 +483,7 @@ router.get("/trades", async (_req, res) => {
 });
 
 // POST /api/paper/execute/open — open a position with realistic fills
-router.post("/execute/open", async (req, res) => {
+router.post("/execute/open", idempotencyMiddleware, async (req, res) => {  // deep-scan routes F-2: dedupe double-POST
   try {
     const { sessionId, symbol, side, signalPrice, contracts = 1 } = req.body;
     if (!sessionId || !symbol || !side || !signalPrice) {
@@ -532,7 +532,7 @@ router.post("/execute/open", async (req, res) => {
 });
 
 // POST /api/paper/execute/close — close a position with realistic fills
-router.post("/execute/close", async (req, res) => {
+router.post("/execute/close", idempotencyMiddleware, async (req, res) => {  // deep-scan routes F-2: dedupe double-POST
   try {
     const { positionId, exitSignalPrice } = req.body;
     if (!positionId || !exitSignalPrice) {

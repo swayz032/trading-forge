@@ -122,20 +122,24 @@ brokerAccountRoutes.patch("/:id/symbols", async (req: Request, res: Response) =>
       return;
     }
 
-    // Audit
-    const updatedBy = (req.headers["x-operator-id"] as string | undefined) ?? "operator";
+    // Audit — deep-scan routes F-3 (2026-07-06): decisionAuthority MUST be a trusted server value, NOT a
+    // client-supplied header. The x-operator-id header is caller-controlled and any authenticated caller could
+    // set it to attribute this change to an arbitrary name in the audit trail. This route is auth-gated in a
+    // single-operator system, so the authority is "operator"; the client hint is retained only as clearly
+    // labeled informational metadata (client_supplied_operator_hint), never as the authoritative attribution.
+    const operatorHint = (req.headers["x-operator-id"] as string | undefined) ?? null;
     insertAuditRow({
       action: "broker_account.symbols_updated",
       entityType: "broker_account",
       entityId: id,
-      decisionAuthority: updatedBy,
+      decisionAuthority: "operator",
       status: "success",
       input: { accountId: id, prior_symbols: existing.enabledSymbols, new_symbols: enabled_symbols },
-      result: { updated_enabled_symbols: enabled_symbols, updated_by: updatedBy },
+      result: { updated_enabled_symbols: enabled_symbols, client_supplied_operator_hint: operatorHint },
     }).catch((err: unknown) => logger.warn({ err, accountId: id }, "Failed to write broker_account.symbols_updated audit row"));
 
     logger.info(
-      { accountId: id, firmId: existing.firmId, priorSymbols: existing.enabledSymbols, newSymbols: enabled_symbols, updatedBy },
+      { accountId: id, firmId: existing.firmId, priorSymbols: existing.enabledSymbols, newSymbols: enabled_symbols, clientOperatorHint: operatorHint },
       "W23H.H: broker account enabled_symbols updated",
     );
 
@@ -144,7 +148,7 @@ brokerAccountRoutes.patch("/:id/symbols", async (req: Request, res: Response) =>
       firmId: existing.firmId,
       prior_symbols: existing.enabledSymbols,
       enabled_symbols: updated.enabledSymbols,
-      updated_by: updatedBy,
+      updated_by: operatorHint,
     });
   } catch (err) {
     logger.error({ err, accountId: id }, "PATCH /broker-accounts/:id/symbols: failed");
