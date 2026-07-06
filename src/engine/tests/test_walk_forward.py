@@ -204,6 +204,22 @@ class TestEmbargo:
 
         assert BacktestRequest.model_fields["embargo_bars"].default == 20
 
+    def test_no_unsafe_embargo_zero_default_in_backtester_dispatch(self):
+        """deep-scan Backtest re-VERIFY HIGH: the CLI dispatch for archetype (Band B) + compiled-spec
+        (Band C) strategies calls run_walk_forward_class(embargo_bars=config.get("embargo_bars", <D>)).
+        <D> MUST NOT be 0 — a 0 raw-dict default overrode the function's safe =20 (no caller sets the
+        key), running the CANONICAL production paths with ZERO CPCV purge (the exact leakage F-1 targets,
+        reopened on 2 of 3 dispatch paths). Source-structural guard against reintroduction.
+        """
+        import pathlib
+
+        backtester = pathlib.Path(__file__).parent.parent / "backtester.py"
+        text = backtester.read_text(encoding="utf-8")
+        assert 'config.get("embargo_bars", 0)' not in text, (
+            "unsafe embargo_bars=0 default in backtester.py dispatch — disables CPCV purge on "
+            "archetype/compiled-spec walk-forwards"
+        )
+
     def test_default_embargo_produces_gap_vs_zero(self):
         """Default embargo=20 creates shorter OOS windows than explicit embargo=0."""
         n = 500

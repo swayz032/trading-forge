@@ -7931,7 +7931,10 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 # commission_per_side value in the JSON, which is preserved).
                 commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
-                embargo_bars=config.get("embargo_bars", 0),
+                embargo_bars=config.get("embargo_bars", 20),  # deep-scan Backtest re-verify HIGH: was 0 —
+                # a raw-dict default of 0 OVERRODE run_walk_forward_class's safe =20 on the
+                # archetype (Band B) + compiled-spec (Band C) dispatch paths (no caller sets
+                # the key), so those production walk-forwards ran with ZERO CPCV purge (leakage).
             )
             # Compute tier from OOS metrics (walk-forward doesn't do this itself)
             oos = result.get("oos_metrics", {})
@@ -8063,7 +8066,10 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 # commission_per_side value in the JSON, which is preserved).
                 commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
-                embargo_bars=config.get("embargo_bars", 0),
+                embargo_bars=config.get("embargo_bars", 20),  # deep-scan Backtest re-verify HIGH: was 0 —
+                # a raw-dict default of 0 OVERRODE run_walk_forward_class's safe =20 on the
+                # archetype (Band B) + compiled-spec (Band C) dispatch paths (no caller sets
+                # the key), so those production walk-forwards ran with ZERO CPCV purge (leakage).
             )
         else:
             result = run_class_backtest(
