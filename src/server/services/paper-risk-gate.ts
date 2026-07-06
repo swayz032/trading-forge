@@ -12,7 +12,7 @@ import { isUsDst } from "../lib/dst-utils.js";
 // SAME account-resolution helper kill-switch.ts Layer 2 / cross-symbol-pnl.ts
 // use, so this gate and the kill-switch DLL gate can never disagree about
 // which sessions belong to the same account.
-import { resolveAccountKey } from "./cross-symbol-pnl.js";
+import { resolveAccountKey, resolvePersonalDllDollars } from "./cross-symbol-pnl.js";
 
 // ── F-1 Fix: halt new entries at DLL_HALT_PCT × firmDLL (matching kill-switch Layer 2) ──
 // CLAUDE.md §4: "HALT new entries at 67% (env: DLL_HALT_PCT)"
@@ -273,17 +273,30 @@ export async function checkRiskGate(
     const todayPnl = breakdown[today] ?? 0;
     const todayLoss = todayPnl < 0 ? Math.abs(todayPnl) : 0;
 
-    // Halt threshold = DLL_HALT_PCT × firm DLL (e.g. 0.67 × $1000 = $670 for Topstep)
-    const dllHaltThreshold = firmConfig.dailyLossLimit * DLL_HALT_PCT;
+    // deep-scan long-tail F-1 (operator-approved 2026-07-06): UNIFY the DLL base with the two other
+    // gates on this same signal path. This gate previously used firmConfig.dailyLossLimit (Topstep=$1000
+    // → $670 halt) while kill-switch.ts Layer 2 + cross-symbol-pnl.ts use resolvePersonalDllDollars
+    // (Topstep 50k → $2,000 trailing-DD → $1,340 halt). They CONTRADICTED 2× for the primary firm.
+    // Operator chose the trailing-DD base ($1,340) — Topstep's real account-closure constraint is the
+    // trailing max drawdown, not the softer $1,000 daily figure. resolvePersonalDllDollars is firm-aware:
+    // Topstep → $2,000 (trailing DD); others (MFFU) → DEFAULT_PERSONAL_DLL_DOLLARS ($1,000, unchanged $670).
+    const trailingDdOverride = (session.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
+    const accountStartingFloor = parseFloat(session.startingCapital as string) || 50_000;
+    const personalDllBase = resolvePersonalDllDollars({
+      firmId: session.firmId,
+      trailingDdOverride,
+      accountStartingFloor,
+    });
+    const dllHaltThreshold = personalDllBase * DLL_HALT_PCT;
 
     if (todayLoss >= dllHaltThreshold) {
       logger.warn(
-        { sessionId, todayLoss, dllHaltThreshold, dailyLossLimit: firmConfig.dailyLossLimit, DLL_HALT_PCT },
+        { sessionId, todayLoss, dllHaltThreshold, personalDllBase, DLL_HALT_PCT },
         "Risk gate: daily loss halt threshold hit",
       );
       return {
         allowed: false,
-        reason: `Daily loss halt threshold reached ($${todayLoss.toFixed(2)} today vs $${dllHaltThreshold.toFixed(2)} halt limit [${Math.round(DLL_HALT_PCT * 100)}% of $${firmConfig.dailyLossLimit} for ${session.firmId}])`,
+        reason: `Daily loss halt threshold reached ($${todayLoss.toFixed(2)} today vs $${dllHaltThreshold.toFixed(2)} halt limit [${Math.round(DLL_HALT_PCT * 100)}% of $${personalDllBase} personal DLL for ${session.firmId}])`,
         check: "daily_loss_limit",
       };
     }
