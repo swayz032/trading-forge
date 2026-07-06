@@ -24,6 +24,7 @@
     "check:gate-parity": "node scripts/check-gate-parity.mjs",
     "check:ts-python-exit-parity": "npx tsx scripts/wave26-ts-python-exit-parity.ts",
     "check:pglite-ddl-parity": "npx tsx scripts/check-pglite-ddl-parity.ts",
+    "check:gate-contract-keys": "npx tsx scripts/check-gate-contract-keys.ts",
     "check:spec-binding-plan-parity": "npx tsx scripts/check-spec-binding-plan-parity.ts",
     "check:ts-python-tier1-parity": "npx tsx scripts/check-ts-python-tier1-parity.ts",
     "check:ts-python-pm-factor-parity": "npx tsx scripts/check-ts-python-pm-factor-parity.ts",
