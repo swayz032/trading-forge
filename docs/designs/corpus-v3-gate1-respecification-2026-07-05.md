@@ -50,3 +50,24 @@ argument in reserve.** Written down NOW so today's re-specification is honest, n
   coverage is much higher, the rules OVERFIT the design split — a separate finding to freeze.
 - **Record notes:** rule-covered stratum 83.3% is N=12 — quote with its (wide) CI or not at all. The Gate 1 FAIL
   was self-reported honestly against the pre-registered pin — the pre-registration did its job; logged.
+
+## CERTIFIED RESULT (independently re-verified 2026-07-05)
+- **human-vs-gold-on-margin = 29/43 = 67.44%** (95% Wilson CI [52.52%, 79.51%]; not LOW_POWER). Gold = single-rater
+  first-pass (documented; NOT adjudicated) → same units as classifier-vs-gold. Overall inter-rater independently
+  re-verified 41/71 = 57.75% (matches audit).
+- **Locked criterion:** classifier margin CI-lower 54.42% ≥ 67.44%? **FALSE → Gate 1 STAYS FAILED (certified).**
+- **The failure mode (finding, not relief):** classifier margin POINT 67.24% vs human ceiling POINT 67.44% —
+  **statistically indistinguishable (~67% both, overlapping CIs). The classifier is HUMAN-EQUIVALENT on the margin.**
+  It fails only the *demonstrable strict beat* the criterion required, which a human-equivalent classifier cannot
+  satisfy against single-rater gold whose own inter-rater ceiling is 57.7%.
+- **Overfit finding (frozen separately):** deterministic-rule coverage design-set 34.35% vs held-out 17.14% =
+  **2.00× → rules OVERFIT the design split.** Option-(a) rule expansion is therefore weakly motivated — more rules
+  likely overfit further rather than generalize on held-out.
+- **Rule-covered stratum:** 10/12 = 83.33%, 95% Wilson CI [55.20%, 95.30%] (N=12, wide — cited with CI per ruling).
+
+## DISCIPLINE NOTE (do NOT re-specify Gate 1 a third time)
+Gate 1 was re-specified ONCE with a coin-in-the-air threshold; it failed honestly. Arguing now that "the screen is
+unsatisfiable by a human-equivalent classifier, so relax it again" is the exact goalpost-move precedent the Gate-3
+no-relief pre-commitment was written to forbid. **Gate 1 stays FAILED. The classifier does not clear the necessary
+screen. Per the plan we do NOT proceed to Gate 3.** The path forward is an operator/advisor decision on a DIFFERENT
+lever (gold quality / classifier approach / fallback), not a third re-spec.
