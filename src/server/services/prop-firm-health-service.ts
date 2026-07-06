@@ -67,6 +67,11 @@ interface FirmProbeConfig {
   suspendedBodyPatterns: string[];
 }
 
+// deep-scan broker/cookie F-6: Topstep + MFFU are the ONLY currently-supported firms (the 9 legacy firms
+// were removed via migration 0097, 2026-05-10 — CLAUDE.md §6). The Apex/TPT/FFN/Alpha/Tradeify/Earn2Trade
+// entries below are DORMANT probes retained as future-proofing — each auto-skips with a debug log when its
+// API key is unset. Do NOT read them as currently-supported firms; a firm activates only if an operator
+// re-adds its API key. (Kept, not pruned, so re-adding a firm needs only an env var, not a code change.)
 const FIRM_PROBES: FirmProbeConfig[] = [
   {
     firmId: "apex",
