@@ -5349,13 +5349,21 @@ def run_backtest(
             entry_slip = float(trade.get("EntrySlipCost", slip_cost / 2.0))
             exit_slip = float(trade.get("ExitSlipCost", slip_cost / 2.0))
             half_comm = comm_cost / 2.0
+            # deep-scan backtest-engine F-1 (CRITICAL, 2026-07-06): the DSL path's bar-level equity loop never
+            # deducted RollSpreadCost even though net_pnl (trade-level) subtracts it — the SAME "Defect-4" bug
+            # that was fixed ONLY in run_class_backtest (~line 7450). On a backtest holding a position across a
+            # real CME roll day at canonical size (9 MES × $3.75 = ~$33.75 > the $1 recon tolerance) the equity
+            # curve diverged from summed-trade P&L → run_backtest's own reconciliation guard HARD-CRASHED with
+            # "RECONCILIATION FAILED" (or drifted at tiny sizes). Deduct the combined entry+exit roll charge at
+            # the EXIT bar, exactly like the class path. Equity-curve-only change; trade signals/counts unchanged.
+            roll_cost = float(trade.get("RollSpreadCost", 0.0))
             if t_entry_idx < n_bars:
                 bar_dollar_pnls[t_entry_idx] -= (entry_slip + half_comm)
             if t_exit_idx < n_bars:
-                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm)
-            assert abs((entry_slip + half_comm) + (exit_slip + half_comm) - (slip_cost + comm_cost)) < 0.01, (
+                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm + roll_cost)
+            assert abs((entry_slip + half_comm) + (exit_slip + half_comm + roll_cost) - (slip_cost + comm_cost + roll_cost)) < 0.01, (
                 f"Friction split invariant: entry_slip={entry_slip:.4f}, exit_slip={exit_slip:.4f}, "
-                f"comm={comm_cost:.4f}, expected_total={slip_cost + comm_cost:.4f}"
+                f"comm={comm_cost:.4f}, roll={roll_cost:.4f}, expected_total={slip_cost + comm_cost + roll_cost:.4f}"
             )
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
