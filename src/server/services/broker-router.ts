@@ -1463,12 +1463,26 @@ export async function routeOrder(
           },
         );
       } else {
+        // deep-scan execution F-3 (2026-07-06): a 4xx reject (HTTP status present) genuinely did NOT reach the
+        // broker — but a network/timeout error (no HTTP response → statusCode null) is AMBIGUOUS: per
+        // traderspost/client.ts the broker MAY have already processed the order before the socket timed out
+        // (client.ts deliberately does NOT retry timeouts for this reason). Asserting "did NOT reach" on a
+        // timeout could prompt the operator to re-fire the same trade → a real duplicate, the exact thing the
+        // idempotency key exists to prevent, defeated by a misleading alert. Soften the copy for that case.
+        const ambiguousDelivery = submitResult.statusCode == null;
+        const detail = ambiguousDelivery
+          ? "A TradersPost order timed out / hit a network error. It MAY OR MAY NOT have reached the broker — " +
+            "check the TradersPost/broker dashboard before assuming it didn't. Do NOT blindly re-fire it."
+          : "TradersPost rejected an order. The order did NOT reach the broker.";
+        const familyDetail = ambiguousDelivery
+          ? "Tell Tony: 'A TradersPost order timed out.' Do NOT re-place it — the broker MIGHT have it; check the dashboard first."
+          : "Tell Tony: 'A TradersPost order was rejected.' If you cannot reach him, no action is required — the broker did not receive the order.";
         notifyWarning(
-          `TradersPost reject for ${signal.ticker ?? "unknown"}`,
+          `TradersPost ${ambiguousDelivery ? "timeout/network error" : "reject"} for ${signal.ticker ?? "unknown"}`,
           appendFamilyGradePostscript(
             `Account ${accountId} on ${signalActionStr}: HTTP ${statusCodeStr}, body=${truncatedBody}`,
-            "TradersPost rejected an order. The order did NOT reach the broker.",
-            "Tell Tony: 'A TradersPost order was rejected.' If you cannot reach him, no action is required — the broker did not receive the order.",
+            detail,
+            familyDetail,
           ),
           {
             correlationId: correlationId ?? null,
