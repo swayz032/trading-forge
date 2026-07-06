@@ -33,9 +33,11 @@ const journal = JSON.parse(
   readFileSync(resolve(__dirname, "../db/migrations/meta/_journal.json"), "utf-8"),
 ) as { entries: Array<{ when: number; tag: string }> };
 
-// The 5 known-existing duplicate-`when` collisions (later sibling applied out-of-band;
-// reconciliation of these is operator-gated on live-DB schema-existence verification —
-// they must NOT be auto-re-run because 0052 is non-idempotent).
+// The 5 known-existing duplicate-`when` collisions (later sibling applied out-of-band —
+// schema exists in prod, verified read-only; ledger row merely absent, which is inert
+// because the runner keys `pending` on `when`). The migrations ARE idempotent (e.g. 0052
+// uses DROP CONSTRAINT IF EXISTS before each ADD), so even a re-run would be safe — no
+// action needed on these; this guard only blocks NEW collisions going forward.
 const ALLOWLISTED_DUP_WHENS: ReadonlySet<number> = new Set([
   1776200000000, // 0044a_system_parameters_tables / 0052_fk_cascade_hardening
   1748304000000, // 0147_quantum_mc_runs_replay_uniqueness / 0159_broker_accounts_ab_paper_routing

@@ -707,11 +707,14 @@ export async function runPendingMigrations(
   // SILENTLY, PERMANENTLY skipped — no audit, no alert — surfacing only later as an opaque
   // "column/table does not exist" runtime error. This has already occurred 5 times
   // (0044a/0052, 0147/0159, 0148/0160, 0152/0162, 0153/0164 — each later sibling was applied
-  // out-of-band, leaving the ledger inconsistent). We do NOT auto-re-apply here (some of the
-  // colliding migrations, e.g. 0052 FK-cascade, are not cleanly idempotent — re-running on a
-  // live boot could fail-CLOSED). Instead we detect the collision loudly so the operator is in
-  // the loop for every collision, existing or future. Full remediation (key pending on hash,
-  // once every colliding migration is verified idempotent) is a documented follow-up.
+  // out-of-band, leaving the ledger inconsistent — schema exists in prod, verified read-only
+  // 2026-07-05; the missing ledger row is inert because pending keys on `when`). We do NOT
+  // auto-re-apply here — not because the migrations are unsafe (they ARE idempotent, e.g. 0052
+  // uses DROP CONSTRAINT IF EXISTS before each ADD; an earlier note wrongly called it
+  // non-idempotent, corrected after an independent grader disproved it) — but simply because
+  // no re-apply is needed (schema already present) and detecting the collision loudly keeps the
+  // operator in the loop for every collision, existing or future. Full remediation (key pending
+  // on hash) is a documented follow-up; it is now safe since the colliding migrations are idempotent.
   try {
     const dupWhens = findDuplicateJournalWhens(journal.entries);
     if (dupWhens.length > 0) {

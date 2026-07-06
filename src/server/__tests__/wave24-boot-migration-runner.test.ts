@@ -611,8 +611,11 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     // Only second migration applied
     expect(mockTransaction).toHaveBeenCalledOnce();
 
-    const warnCalls = mockLogger.warn.mock.calls.map((c) => String(c[c.length - 1]));
-    expect(warnCalls.some((m) => m.includes("SQL file missing"))).toBe(true);
+    // 2026-06-28 hardening: the missing-SQL path was upgraded from a silent logger.warn to a
+    // fail-loud logger.error + audit row + Discord CRITICAL (still skip-and-continue by default).
+    // Assert against the current loud path (message is "SQL file MISSING").
+    const errorCalls = mockLogger.error.mock.calls.map((c) => String(c[c.length - 1]));
+    expect(errorCalls.some((m) => /SQL file MISSING/i.test(m))).toBe(true);
   });
 
   // ─── Backup path included in failure audit row ────────────────────────────────
