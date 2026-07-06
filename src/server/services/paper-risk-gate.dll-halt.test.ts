@@ -155,6 +155,13 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
   let todayKey: string;
 
   beforeEach(async () => {
+    // deep-scan long-tail re-verify (2026-07-06): freeze wall-clock to mid-RTH so the DOWNSTREAM
+    // overnight-position gate (paper-risk-gate gate (e) — blocks outside 13:30–20:00 UTC when
+    // firmConfig.overnightOk=false, true for Topstep) can't mask the DLL-gate assertions. The
+    // "$800 ALLOWED" case false-RED'd whenever CI ran outside RTH (it reaches gate (e); the other
+    // cases return early at the DLL gate). Fake ONLY Date (not setTimeout) to avoid async interference.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-06T15:00:00Z")); // Monday 11:00 ET — mid-RTH
     todayKey = await makeTodayKey();
     __resetDailyLossCacheForTests();
     vi.clearAllMocks();
@@ -162,6 +169,7 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
 
   afterEach(() => {
     __resetDailyLossCacheForTests();
+    vi.useRealTimers();
   });
 
   // deep-scan long-tail F-1 (operator-approved 2026-07-06): Topstep DLL base UNIFIED to the trailing-DD
