@@ -1311,6 +1311,25 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   });
   _scheduledJobs.add("heartbeat-stale-check");
 
+  // deep-scan Autonomy re-cert HIGH: economic-calendar-sync was registerJob'd + _PIPELINE_GATE_EXEMPT
+  // but NEVER cron.schedule'd — a dead job. Net effect: economic_release_dates stayed stale, so the
+  // Tier-1 news-blackout / C11 macro gate fell back to the hardcoded fallback calendar, directly
+  // violating the "never hardcode dates" mandate. Now scheduled monthly (1st, 09:00) — the exact hour
+  // is immaterial for a monthly data refresh, so no DST double-fire is needed. Pipeline-gate-exempt,
+  // so it runs even while the trading pipeline is paused.
+  cron.schedule("0 9 1 * *", async () => {
+    if (!_tryAcquireJobLock("economic-calendar-sync")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("economic-calendar-sync", SCHEDULER_JOBS["economic-calendar-sync"].run, 1);
+      markJobRun("economic-calendar-sync");
+      emitJobComplete("economic-calendar-sync", Date.now() - t0);
+    } finally {
+      _releaseJobLock("economic-calendar-sync");
+    }
+  });
+  _scheduledJobs.add("economic-calendar-sync");
+
   // FINDING #6 FIX: secondary off-RTH heartbeat check every 4h.
   // The primary heartbeat-stale-check is RTH-only (isEtRth gate), leaving a ~64h blind spot
   // after a Friday-evening crash. This check fires at 4h intervals and sends a WARNING
