@@ -327,6 +327,13 @@ export const FACTORY_EVENTS = {
   //                 confluence_factors, source_url }
   BIDIRECTIONAL_REJECTED:     "factory:bidirectional_rejected",
   THIN_CONFLUENCE_GRADUATED:  "factory:thin_confluence_graduated",
+  // Deep-Scan #21 Band D (2026-07-05) — catalog-drift fix. Broadcast by
+  // candidate-backtest-conveyor-service.ts when a CANDIDATE strategy is
+  // enqueued for its next backtest cycle. Was emitted since the conveyor
+  // shipped but never registered here — dashboards subscribing off this
+  // catalog silently missed the event. Data shape: { strategyId, strategyName,
+  // backtestId, correlationId }
+  CANDIDATE_BACKTEST_ENQUEUED: "factory:candidate_backtest_enqueued",
 } as const;
 
 export type FactoryEventName = (typeof FACTORY_EVENTS)[keyof typeof FACTORY_EVENTS];
@@ -422,6 +429,12 @@ export const ARCHETYPE_ROUTING_EVENTS = {
   SIGNAL_RESOLVED: "archetype:signal_resolved",
   // Fired when the Python evaluator subprocess fails or times out.
   EVALUATOR_FAILED: "archetype:evaluator_failed",
+  // Deep-Scan #21 Band D (2026-07-05) — catalog-drift fix. Broadcast by
+  // scheduler.ts::classifyDayArchetype() after a daily archetype prediction
+  // is persisted to day_archetypes. Was emitted since the day-archetype
+  // classifier shipped but never registered here. Data shape: { symbol, date,
+  // predicted, confidence }
+  PREDICTED: "archetype:predicted",
 } as const;
 
 export type ArchetypeRoutingEventName =
@@ -492,6 +505,20 @@ export const LIFECYCLE_GATE_EVENTS = {
   // fired when a DEPLOYED strategy's rolling_sharpe_30d falls below the floor.
   // Payload: { strategyId, strategyName, rollingSharpe30d, floor, from, to, correlationId }
   PORTFOLIO_DRIFT_DEMOTED: "lifecycle:portfolio_drift_demoted",
+  // Deep-Scan #21 Band D (2026-07-05) — catalog-drift fix. 4 events broadcast
+  // since their respective features shipped but never registered in this
+  // catalog constant (dashboards/queries built against LIFECYCLE_GATE_EVENTS
+  // silently missed them). Emission sites:
+  //   DSL_GUARDS_EVALUATED         — lifecycle-service.ts evaluateDslGuardsGate() call sites
+  //                                  (TESTING→PAPER, PAPER→DEPLOY_READY, + 3 cron sites)
+  //   AUTO_CHECK                   — scheduler.ts lifecycle-auto-check cron summary broadcast
+  //   GATE_EVALUATED                — scheduler.ts harsh-regime-phase hardening event
+  //                                  (system-level entity, not strategy-specific)
+  //   OPERATOR_ABSENT_AUTOPROMOTED  — operator-absent-mode-service.ts Tier-1 auto-promote
+  DSL_GUARDS_EVALUATED: "lifecycle:dsl_guards_evaluated",
+  AUTO_CHECK: "lifecycle:auto-check",
+  GATE_EVALUATED: "lifecycle:gate_evaluated",
+  OPERATOR_ABSENT_AUTOPROMOTED: "lifecycle:operator_absent_autopromoted",
 } as const;
 
 export type LifecycleGateEventName =
@@ -524,6 +551,14 @@ export const PINE_EVENTS = {
   // Pass 3 Track C calls emitPineShadowRefused() from the four refusal sites;
   // Track D (this file) registers the SSE constant so Track C can import it.
   REFUSED_SHADOW_STRATEGY: "pine:refused_shadow_strategy",
+  // Deep-Scan #21 Band D (2026-07-05) — catalog-drift fix. Broadcast by
+  // pine-export-service.ts (compileDualPineExport + compilePineExport) on
+  // every export completion/failure. Was emitted since dual-export shipped
+  // but never registered here.
+  // EXPORT_COMPLETED payload: { strategyId, exportId, contentHash, exportabilityScore, durationMs }
+  // EXPORT_FAILED payload:    { strategyId, errorCode, message, durationMs }
+  EXPORT_COMPLETED: "pine:export-completed",
+  EXPORT_FAILED: "pine:export-failed",
 } as const;
 
 export type PineEventName = (typeof PINE_EVENTS)[keyof typeof PINE_EVENTS];

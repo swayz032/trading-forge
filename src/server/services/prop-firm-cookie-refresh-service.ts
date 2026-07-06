@@ -29,8 +29,10 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { execFile } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -221,6 +223,124 @@ export interface FirmRefreshResult {
   error?: string;
 }
 
+const execFileAsync = promisify(execFile);
+
+// ─── Deep-Scan #21 Band F (2026-07-05) — Playwright one-time auto-remediation ─
+//
+// Previously, a missing Playwright install went straight to "mark stale + fire
+// a daily Discord alert" with NO remediation attempt. Cookies would silently
+// stay stale indefinitely on any host where Playwright's package or browser
+// binary went missing (fresh `npm ci` that skips postinstall, a Docker image
+// rebuild, or a partial dependency wipe — see reference_tower_restart_dep_wipe_trap
+// memory). This block adds a bounded, fail-soft, ONE-TIME-PER-PROCESS attempt
+// to self-heal before falling back to the existing alert-only path.
+//
+// Guard is process-global (not per-firm): MFFU and Topstep share one Playwright
+// install, so a single successful `npx playwright install chromium` benefits
+// both firms in the same sweep via Node's own module cache — no need to run
+// the install command twice per process lifetime.
+let _playwrightRemediationAttempted = false;
+const PLAYWRIGHT_REMEDIATION_TIMEOUT_MS = 120_000; // 2 min bound — never hangs the cron
+
+/**
+ * Runs the documented Playwright install command exactly once per process.
+ * Fail-soft: never throws. Returns true only if the command exited 0.
+ * Emits audit rows for both the attempt and its outcome so the remediation
+ * path is observable (previously zero visibility beyond the daily Discord alert).
+ */
+async function attemptPlaywrightInstallOnce(correlationId: string): Promise<boolean> {
+  if (_playwrightRemediationAttempted) {
+    logger.debug("prop-firm-cookie-refresh: Playwright remediation already attempted this process — not re-running install");
+    return false;
+  }
+  _playwrightRemediationAttempted = true;
+
+  await insertAuditRow({
+    action: "prop_firm.cookie_refresh_playwright_remediation_attempted",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "system",
+    input: { command: "npx playwright install chromium", timeoutMs: PLAYWRIGHT_REMEDIATION_TIMEOUT_MS } as Record<string, unknown>,
+    result: {} as Record<string, unknown>,
+    status: "success",
+    correlationId,
+  }).catch((auditErr) => {
+    logger.warn({ auditErr }, "prop-firm-cookie-refresh: remediation-attempted audit row failed (non-blocking)");
+  });
+
+  logger.warn(
+    { correlationId },
+    "prop-firm-cookie-refresh: Playwright unavailable — attempting ONE-TIME auto-remediation via 'npx playwright install chromium'",
+  );
+
+  try {
+    await execFileAsync("npx", ["playwright", "install", "chromium"], {
+      timeout: PLAYWRIGHT_REMEDIATION_TIMEOUT_MS,
+      windowsHide: true,
+    });
+
+    await insertAuditRow({
+      action: "prop_firm.cookie_refresh_playwright_remediation_succeeded",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {} as Record<string, unknown>,
+      result: { command: "npx playwright install chromium" } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    }).catch((auditErr) => {
+      logger.warn({ auditErr }, "prop-firm-cookie-refresh: remediation-succeeded audit row failed (non-blocking)");
+    });
+
+    logger.info({ correlationId }, "prop-firm-cookie-refresh: Playwright auto-remediation install command succeeded — retrying import");
+    return true;
+  } catch (remediationErr) {
+    const errorMsg = remediationErr instanceof Error ? remediationErr.message : String(remediationErr);
+
+    await insertAuditRow({
+      action: "prop_firm.cookie_refresh_playwright_remediation_failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {} as Record<string, unknown>,
+      result: { command: "npx playwright install chromium", error: errorMsg } as Record<string, unknown>,
+      status: "failed",
+      correlationId,
+    }).catch((auditErr) => {
+      logger.warn({ auditErr }, "prop-firm-cookie-refresh: remediation-failed audit row failed (non-blocking)");
+    });
+
+    logger.warn(
+      { err: remediationErr, correlationId },
+      "prop-firm-cookie-refresh: Playwright auto-remediation failed — falling back to alert-only (existing behavior)",
+    );
+    return false;
+  }
+}
+
+/**
+ * Attempts one-time remediation, then retries the dynamic import exactly once.
+ * Fail-soft end-to-end: NEVER throws into the refresh loop. Returns the
+ * resolved `chromium` launcher on success, or null if remediation didn't help
+ * (or had already been attempted and failed earlier this process).
+ */
+async function recoverPlaywrightViaOneTimeRemediation(firmId: string, correlationId: string): Promise<any | null> {
+  try {
+    const installSucceeded = await attemptPlaywrightInstallOnce(correlationId);
+    if (!installSucceeded) return null;
+
+    // The install command downloads Chromium's browser binary but does NOT
+    // add the "playwright" npm package to node_modules if it was never a
+    // declared project dependency — both failure modes must be treated as
+    // remediation-did-not-help, so re-check the import explicitly.
+    const pw = await import("playwright" as string);
+    return pw.chromium;
+  } catch (err) {
+    logger.warn({ err, firmId }, "prop-firm-cookie-refresh: post-remediation import retry failed (non-blocking)");
+    return null;
+  }
+}
+
 async function refreshFirmCookies(firm: FirmConfig): Promise<FirmRefreshResult> {
   const username = process.env[firm.usernameEnv];
   const password = process.env[firm.passwordEnv];
@@ -241,6 +361,15 @@ async function refreshFirmCookies(firm: FirmConfig): Promise<FirmRefreshResult> 
     const pw = await import("playwright" as string);
     chromium = pw.chromium;
   } catch {
+    // One-time auto-remediation attempt BEFORE falling back to alert-only
+    // (deep-scan #21 Band F). Never throws — fully fail-soft.
+    chromium = await recoverPlaywrightViaOneTimeRemediation(firm.firmId, randomUUID()).catch((err) => {
+      logger.warn({ err, firmId: firm.firmId }, "prop-firm-cookie-refresh: remediation helper threw unexpectedly (non-blocking)");
+      return null;
+    });
+  }
+
+  if (!chromium) {
     logger.warn({ firmId: firm.firmId }, "prop-firm-cookie-refresh: Playwright not available — skipping");
     _cookieStatus[firm.firmId] = "stale";
 
