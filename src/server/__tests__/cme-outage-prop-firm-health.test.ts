@@ -131,6 +131,7 @@ import {
 } from "../services/prop-firm-health-service.js";
 
 import { broadcastSSE } from "../routes/sse.js";
+import { AlertFactory } from "../services/alert-service.js";
 
 // ─── C1: Exchange Status Service Tests ───────────────────────────────────────
 
@@ -372,5 +373,61 @@ describe("C1+C2 — gate state independence", () => {
     expect(isExchangeHalted("CME")).toBe(true); // still halted
 
     await resolveOutage("CME");
+  });
+});
+
+// deep-scan broker/cookie F-2 re-verify (2026-07-06): the repeated-unreachable escalation (F-2) was verified
+// only by a throwaway grader script. This makes it DURABLE. Drives pollPropFirmHealth with one keyed firm and
+// a throwing global.fetch, asserting the streak contract: NO alert at streak 1-2, exactly ONE at threshold (3),
+// NO re-fire at 4-5, and a healthy poll RESETS so a second outage re-escalates. Uses the real module-global
+// consecutiveUnreachable/unreachableAlerted state (no reset export), so it self-resets via a healthy poll first.
+describe("F-2 — prop-firm repeated-unreachable escalation (streak + reset)", () => {
+  const KEY = "TOPSTEP_API_KEY";
+  let hadKey: string | undefined;
+
+  beforeEach(() => {
+    hadKey = process.env[KEY];
+    process.env[KEY] = "test-token"; // so topstep is probed (not skipped)
+    process.env.PROP_FIRM_UNREACHABLE_ALERT_THRESHOLD = "3";
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    if (hadKey === undefined) delete process.env[KEY];
+    else process.env[KEY] = hadKey;
+    vi.unstubAllGlobals();
+  });
+
+  it("alerts exactly ONCE at streak 3, not before, not again — and re-escalates after a healthy reset", async () => {
+    const okResp = { status: 200, text: async () => "{}" } as unknown as Response;
+    // Healthy poll first → resets any pre-existing topstep streak/alert flag to a known-clean baseline.
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResp));
+    await pollPropFirmHealth();
+    vi.mocked(AlertFactory.systemError).mockClear();
+
+    // Now make every probe throw → topstep goes "unreachable".
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("ECONNREFUSED")));
+    await pollPropFirmHealth(); // streak 1
+    await pollPropFirmHealth(); // streak 2
+    expect(AlertFactory.systemError).not.toHaveBeenCalled(); // transient blip must not alert
+
+    await pollPropFirmHealth(); // streak 3 → escalate
+    expect(AlertFactory.systemError).toHaveBeenCalledTimes(1);
+
+    await pollPropFirmHealth(); // streak 4
+    await pollPropFirmHealth(); // streak 5
+    expect(AlertFactory.systemError).toHaveBeenCalledTimes(1); // one-shot — no re-fire while still down
+
+    // Healthy poll resets the streak AND the one-shot flag.
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResp));
+    await pollPropFirmHealth();
+    vi.mocked(AlertFactory.systemError).mockClear();
+
+    // A second outage must re-escalate (proves the reset cleared unreachableAlerted, not silenced forever).
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("ECONNREFUSED")));
+    await pollPropFirmHealth(); // streak 1
+    await pollPropFirmHealth(); // streak 2
+    await pollPropFirmHealth(); // streak 3 → escalate again
+    expect(AlertFactory.systemError).toHaveBeenCalledTimes(1);
   });
 });
