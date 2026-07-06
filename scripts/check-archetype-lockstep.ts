@@ -15,6 +15,17 @@
  *      Python: derived from the import + class assignment in _get_archetype_class_map()
  *   3. live-order.ts ARCHETYPE_REGISTRY_KEYS matches the graduator registry key set
  *      (a missing key rejects LIVE orders as unknown_archetype → 0 LIVE trades)
+ *   4. RUNTIME import check (DS#20 T-H2, 2026-07-05): checks 1-3 above are pure
+ *      static string-parses of the Python source — they never actually import
+ *      the strategy classes. A Python class rename/move that leaves the
+ *      ARCHETYPE_CLASS_MAP string entries intact passes checks 1-3 while engine
+ *      dispatch throws ImportError/AttributeError at graduation. This check
+ *      spawns a `python` subprocess that literally calls
+ *      `_get_archetype_class_map()` (the SAME function checks 1-3 only read as
+ *      text) and asserts every entry resolves to a real class object. Verified
+ *      import-safe on this tower (~0.5s, no vectorbt/backtester in the import
+ *      chain — see DS#20 fix-wave report) with a hard 30s subprocess timeout as
+ *      a belt-and-suspenders guard against this CI gate ever hanging.
  *
  * Exits non-zero on any drift so CI fails loudly.
  *
@@ -26,6 +37,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import { spawnSync } from "node:child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -219,6 +231,80 @@ function parseLiveOrderArchetypeKeys(filePath: string): Set<string> {
   return result;
 }
 
+// ─── Runtime import check (DS#20 T-H2) ────────────────────────────────────────
+// Checks 1-3 (and the two parse* functions above) never execute a single line
+// of Python — they regex the SOURCE TEXT of archetype_evaluator.py. That means
+// a class rename/move inside src/engine/strategies/*.py that leaves the
+// ARCHETYPE_CLASS_MAP string entries (import line + dict key/value) untouched
+// passes checks 1-3 while the real import raises ImportError/AttributeError
+// the moment graduation actually dispatches to that archetype. This function
+// closes that gap by spawning python and literally calling
+// _get_archetype_class_map() — the exact function whose body checks 1-3 only
+// read as text — and asserting every value it returns is a real class object.
+
+interface RuntimeImportCheckResult {
+  ok: boolean;
+  count?: number;
+  keys?: string[];
+  bad_keys?: string[];
+  error?: string;
+}
+
+function runPythonRuntimeImportCheck(): RuntimeImportCheckResult {
+  const pythonScript = `
+import json, sys
+sys.path.insert(0, '.')
+try:
+    from src.engine.archetype_evaluator import _get_archetype_class_map
+    class_map = _get_archetype_class_map()
+    bad_keys = [k for k, v in class_map.items() if not isinstance(v, type)]
+    print(json.dumps({
+        "ok": len(bad_keys) == 0,
+        "count": len(class_map),
+        "keys": sorted(class_map.keys()),
+        "bad_keys": bad_keys,
+    }))
+except Exception as e:
+    print(json.dumps({"ok": False, "error": f"{type(e).__name__}: {e}"}))
+    sys.exit(1)
+`;
+
+  // Hard 30s timeout: this gate must fail LOUD, never hang. If archetype
+  // evaluator's import chain ever grows to pull in vectorbt/backtester, this
+  // timeout is what turns a silent CI hang into a visible FAIL instead.
+  const result = spawnSync("python", ["-c", pythonScript], {
+    cwd: ROOT,
+    encoding: "utf-8",
+    timeout: 30_000,
+  });
+
+  if (result.error) {
+    const timedOut = (result.error as NodeJS.ErrnoException).code === "ETIMEDOUT" || result.signal === "SIGTERM";
+    return {
+      ok: false,
+      error: timedOut
+        ? "python subprocess timed out after 30s (see DS#20 T-H2 — a hanging gate is worse than a static one; this gate is designed to FAIL rather than hang)"
+        : `python subprocess failed to spawn: ${result.error.message}`,
+    };
+  }
+
+  if (result.status !== 0 && !result.stdout?.trim()) {
+    return {
+      ok: false,
+      error: `python subprocess exited ${result.status} with no output. stderr: ${result.stderr || "<empty>"}`,
+    };
+  }
+
+  try {
+    return JSON.parse(result.stdout.trim()) as RuntimeImportCheckResult;
+  } catch {
+    return {
+      ok: false,
+      error: `could not parse python output as JSON. stdout: ${result.stdout}\nstderr: ${result.stderr}`,
+    };
+  }
+}
+
 // ─── Main comparison ──────────────────────────────────────────────────────────
 
 function main(): void {
@@ -304,6 +390,54 @@ function main(): void {
     }
   }
 
+  // Check 5 (DS#20 T-H2): runtime import — actually EXECUTE
+  // _get_archetype_class_map() instead of only regex-parsing its source text.
+  // Catches a class rename/move in src/engine/strategies/*.py that leaves the
+  // ARCHETYPE_CLASS_MAP string entries intact (checks 1-3 would pass) but
+  // throws ImportError/AttributeError the moment engine dispatch actually
+  // imports it at graduation time.
+  console.log("  Running runtime import check (DS#20 T-H2)...");
+  const runtimeCheck = runPythonRuntimeImportCheck();
+
+  if (!runtimeCheck.ok) {
+    console.log(`  ARCHETYPE_RUNTIME_IMPORT: FAIL`);
+    driftFound.push(
+      `RUNTIME IMPORT FAILED: _get_archetype_class_map() could not be executed — ` +
+      `${runtimeCheck.error || `bad_keys=${JSON.stringify(runtimeCheck.bad_keys)}`}. ` +
+      `This means a class referenced in ARCHETYPE_CLASS_MAP was renamed or moved without ` +
+      `updating the map — static checks 1-3 above could not see this because they only ` +
+      `regex the source text, never import it.`,
+    );
+  } else {
+    console.log(
+      `  ARCHETYPE_RUNTIME_IMPORT: OK (${runtimeCheck.count} keys resolved to real classes)`,
+    );
+
+    // Cross-check: the runtime dict's key set must exactly match the
+    // statically-parsed pyRegistry key set. A mismatch here means the static
+    // regex parser (checks 1-3) and the actual Python dict have silently
+    // diverged in shape, independent of whether imports succeed.
+    const runtimeKeys = new Set(runtimeCheck.keys || []);
+    for (const [key] of pyRegistry) {
+      if (!runtimeKeys.has(key)) {
+        driftFound.push(
+          `RUNTIME/STATIC KEY MISMATCH: '${key}' was found by the static Python parser but is ` +
+          `NOT present in the runtime _get_archetype_class_map() result — the static regex ` +
+          `parser and the actual dict have diverged.`,
+        );
+      }
+    }
+    for (const key of runtimeKeys) {
+      if (!pyRegistry.has(key)) {
+        driftFound.push(
+          `RUNTIME/STATIC KEY MISMATCH: '${key}' is returned by the runtime ` +
+          `_get_archetype_class_map() but was NOT found by the static Python parser — the ` +
+          `static regex parser and the actual dict have diverged.`,
+        );
+      }
+    }
+  }
+
   if (driftFound.length > 0) {
     console.error("\ncheck-archetype-lockstep: DRIFT DETECTED\n");
     for (const d of driftFound) {
@@ -315,7 +449,8 @@ function main(): void {
 
   console.log(
     `\ncheck-archetype-lockstep: PASS — ${tsRegistry.size} graduator keys, ` +
-    `${pyRegistry.size} engine keys, ${liveOrderKeys.size} live-order keys, all in lockstep.`,
+    `${pyRegistry.size} engine keys, ${liveOrderKeys.size} live-order keys, all in lockstep ` +
+    `(static parse + DS#20 T-H2 runtime import both green).`,
   );
   process.exit(0);
 }

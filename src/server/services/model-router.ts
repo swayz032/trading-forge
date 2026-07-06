@@ -23,6 +23,9 @@ import { resolve } from "path";
 // is behaviorally equivalent (identical pino config + test-runtime silence).
 import { logger } from "../lib/logger.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
+// DS#20 T-E3: use the codebase's established safe-insert helper (logs internally
+// on failure) instead of a raw db.insert(...).catch(() => {}) that swallowed errors.
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 
@@ -1109,19 +1112,23 @@ function buildPromptSync(
   const appendix = _appendixCache.get(role);
   if (appendix && appendix.trim().length > 0) {
     parts.push(appendix.trim());
-    // Sampled 1-in-100 telemetry — fire-and-forget, never throws, never awaited
+    // Sampled 1-in-100 telemetry — fire-and-forget, never throws, never awaited.
+    // DS#20 T-E3: previously a doubly-bare .catch(() => {}) (inner insert AND
+    // outer dynamic-import chain) swallowed failures with zero logging.
+    // insertAuditRowSafe logs internally on failure, so a failed write is no
+    // longer silent — the outer .catch still guards the dynamic-import chain
+    // itself (e.g. module resolution failure) since insertAuditRowSafe can't
+    // catch an error that happens before it's even called.
     if (Math.random() < 0.01) {
-      import("../db/index.js").then(({ db }) =>
-        import("../db/schema.js").then(({ auditLog }) =>
-          db.insert(auditLog).values({
-            action: "pattern_evolution.applied",
-            entityType: "model_router",
-            status: "success",
-            result: { role, appendix_length: appendix.length },
-            decisionAuthority: "scheduler",
-          }).catch(() => {}),
-        ),
-      ).catch(() => {});
+      insertAuditRowSafe({
+        action: "pattern_evolution.applied",
+        entityType: "model_router",
+        status: "success",
+        result: { role, appendix_length: appendix.length },
+        decisionAuthority: "scheduler",
+      }).catch((err: unknown) =>
+        logger.error({ err, role }, "model-router: pattern_evolution.applied telemetry insert failed"),
+      );
     }
   }
 

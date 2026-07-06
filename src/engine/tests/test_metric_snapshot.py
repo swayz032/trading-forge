@@ -81,6 +81,44 @@ def _total_commission(trades: list[dict]) -> float:
     return sum(t["commission"] for t in trades)
 
 
+# ─── DS#20 T-B2 — production math-truth anchors ────────────────────
+# Same rationale as test_golden_fixtures.py: the snapshot metrics above are a
+# deliberate self-contained reimplementation (module docstring: "no external
+# imports" for the pre-commit tier), so a regression in the PRODUCTION
+# src.engine.risk_metrics module would never be caught by this file alone.
+# These two helpers anchor against the real production functions
+# (compute_max_drawdown_distribution / compute_sharpe_distribution — numpy/os
+# only, verified import-safe, no vectorbt/backtester in the import chain).
+# They are used ONLY by TestSnapshotRiskMetricsAnchor (Tier 2 / PR-gate),
+# never by the Tier 1 pre-commit classes, so the pre-commit fast path stays
+# import-light exactly as designed.
+
+def _max_dd_via_risk_metrics(trades: list[dict]) -> float:
+    """Anchor against src.engine.risk_metrics.compute_max_drawdown_distribution (DS#20 T-B2)."""
+    pytest.importorskip("src.engine.risk_metrics")
+    from src.engine.risk_metrics import compute_max_drawdown_distribution
+
+    net_pnls = np.array([t["net_pnl"] for t in trades], dtype=float)
+    path = np.cumsum(net_pnls).reshape(1, -1)
+    dist = compute_max_drawdown_distribution(path, initial_capital=0.0, percentiles=[0.5])
+    return dist["p50"]
+
+
+def _sharpe_via_risk_metrics(trades: list[dict], periods: float = 252.0) -> float:
+    """Anchor against src.engine.risk_metrics.compute_sharpe_distribution (DS#20 T-B2).
+
+    Prepend a 0.0 path-start point so np.diff() regenerates the exact
+    per-trade net_pnl series (see test_golden_fixtures.py for full rationale).
+    """
+    pytest.importorskip("src.engine.risk_metrics")
+    from src.engine.risk_metrics import compute_sharpe_distribution
+
+    net_pnls = np.array([t["net_pnl"] for t in trades], dtype=float)
+    path = np.concatenate(([0.0], np.cumsum(net_pnls))).reshape(1, -1)
+    dist = compute_sharpe_distribution(path, percentiles=[0.5], periods_per_year=periods)
+    return dist["p50"]
+
+
 # ─── Snapshot I/O ─────────────────────────────────────────────────────
 
 def _snapshot_path(name: str) -> Path:
@@ -515,6 +553,49 @@ class TestSnapshotRegimeShift:
             f"Snapshot file missing: {path}\nRun: "
             f"pytest src/engine/tests/test_metric_snapshot.py --snapshot-update"
         )
+
+
+class TestSnapshotRiskMetricsAnchor:
+    """DS#20 T-B2 — production math-truth anchor for max_dd + sharpe.
+
+    PR gate only (deliberately excluded from the pre-commit fast tier — it
+    imports src.engine.risk_metrics, which the Tier 1 classes above are
+    documented to avoid). For each flat-trade-list fixture, asserts the
+    PRODUCTION risk_metrics functions agree with this file's local
+    reimplementation. Closes the gap where a regression inside
+    src.engine.risk_metrics (Sharpe / max-drawdown formula) would drift
+    unnoticed because every other test in this suite only re-derives its own
+    reimplementation and compares it to itself / a stored snapshot.
+    """
+
+    FLAT_FIXTURES = [
+        "fixture_perfect",
+        "fixture_losing",
+        "fixture_marginal",
+        "fixture_fees_killer",
+    ]
+
+    def test_max_dd_matches_production_risk_metrics(self):
+        for name in self.FLAT_FIXTURES:
+            fixture = _load_fixture(name)
+            trades = fixture["trades"]
+            local_dd = _max_dd(trades)
+            prod_dd = _max_dd_via_risk_metrics(trades)
+            assert abs(prod_dd - local_dd) < 0.01, (
+                f"{name}: production risk_metrics max_dd ({prod_dd:.4f}) diverges from "
+                f"local reimplementation ({local_dd:.4f})"
+            )
+
+    def test_sharpe_matches_production_risk_metrics(self):
+        for name in self.FLAT_FIXTURES:
+            fixture = _load_fixture(name)
+            trades = fixture["trades"]
+            local_sharpe = _sharpe(trades)
+            prod_sharpe = _sharpe_via_risk_metrics(trades)
+            assert abs(prod_sharpe - local_sharpe) < 0.001, (
+                f"{name}: production risk_metrics sharpe ({prod_sharpe:.6f}) diverges from "
+                f"local reimplementation ({local_sharpe:.6f})"
+            )
 
 
 # ═══════════════════════════════════════════════════════════════════════

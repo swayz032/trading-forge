@@ -1713,7 +1713,9 @@ export type SSEEvent =
   | { type: "correlation:alert"; data: CorrelationAlertData }
   | { type: "portfolio:correlation_snapshot"; data: PortfolioCorrelationSnapshotData }
   | { type: "drift:alert"; data: DriftAlertData }
-  | { type: "pine:export_completed"; data: PineExportCompletedData }
+  // DS#20 T-E2: the underscore-separated sibling of this event was removed here
+  // (dead catalog entry, never fired). This hyphenated event is the real live
+  // one, emitted at src/server/services/pine-export-service.ts:876,1242.
   | { type: "pine:export-completed"; data: PineExportCompletedV2Data }
   | { type: "pine:export-failed"; data: PineExportFailedData }
   | { type: "critic:run-completed"; data: CriticRunCompletedData }

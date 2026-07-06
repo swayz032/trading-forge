@@ -35,7 +35,12 @@ export async function requireSlumhouseUser(
   next: NextFunction,
 ): Promise<void> {
   const cookieHeader = req.headers.cookie ?? "";
-  const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
+  // DS#20 T-H4: anchor the cookie match at a cookie boundary (start-of-header or
+  // "; ") so a foreign cookie like `notslumhouse_sid=…` cannot substring-match
+  // COOKIE_NAME. Not exploitable (the captured token still fails verifySession's
+  // HMAC), but the anchored form matches the sibling parser at index.ts and avoids
+  // decoding the wrong cookie value. Non-capturing group keeps match[1] the token.
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`));
   if (!match) {
     res.status(401).json({ error: "no_session" });
     return;

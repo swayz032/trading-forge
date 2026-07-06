@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // deepscan6 O10 (2026-07-01): SSE contract visibility check.
 // deepscan12 Track R (2026-07-02): Added hard-fail gate for safety-critical server-only events.
+// DS#20 T-E1 (2026-07-05): Added n8n-emitted allowlist bucket — see NOTE below.
 //
 // The server broadcasts SSE events via broadcastSSE("<event>", data); the frontend
 // declares a typed catalog (the SSEEvent discriminated union in
@@ -10,6 +11,18 @@
 // This derives BOTH sides from source and reports the drift:
 //   - server literal broadcasts NOT in the frontend catalog  (frontend can't type/subscribe)
 //   - frontend catalog entries with NO literal server broadcast (possible dead tile / dynamic)
+//
+// NOTE (DS#20 T-E1): a THIRD source of truth exists — n8n workflows also POST
+// to /api/sse/broadcast with an arbitrary `body.type`, so some catalog events are
+// never emitted by a broadcastSSE("...") literal in src/server/ at all (n8n is the
+// sole emitter). Before this fix those events sat in "catalog-only unknown
+// (investigate)" forever, indistinguishable from an actually-dead tile — and an
+// n8n-side rename would silently break the frontend with NO drift reported. We now
+// also scan workflows/n8n/*.json for the `type: '<namespace>:<event>'` JS-object-
+// literal shape n8n Code/HTTP-Request nodes embed in their JSON body strings, and
+// bucket frontend-catalog events found there as "n8n-emitted, verified live" — a
+// distinct bucket from "unknown". A catalog event that is NEITHER a TS literal
+// broadcast NOR an n8n-emitted type still falls into "unknown/dead".
 //
 // EXIT BEHAVIOUR:
 //   exit 1 (HARD FAIL) — any safety-critical event (matching SAFETY_RE below) is
@@ -28,6 +41,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SERVER_DIR = join(ROOT, "src", "server");
 const CATALOG = join(ROOT, "Trading_forge_frontend", "amber-vision-main", "src", "types", "sse-events.ts");
+const N8N_DIR = join(ROOT, "workflows", "n8n");
 
 // ─── Safety-critical pattern ──────────────────────────────────────────────────
 // Events whose names match this pattern represent immediate trading risk. If any
@@ -115,6 +129,35 @@ for (const f of walk(SERVER_DIR)) {
   while ((m = serverRe.exec(txt)) !== null) serverEvents.add(m[1]);
 }
 
+// ─── n8n-emitted events (DS#20 T-E1) ──────────────────────────────────────────
+// n8n workflows POST to /api/sse/broadcast with an arbitrary body.type — these
+// events never appear as a broadcastSSE("...") literal in src/server/ because
+// n8n is the sole emitter. Scan the top-level workflow export JSON files
+// (non-recursive — deliberately excludes workflows/n8n/_archived/, which holds
+// superseded workflow versions we don't want counted as "verified live") for the
+// `type: '<namespace>:<event>'` shape n8n Code/HTTP-Request nodes embed inside
+// their JSON-stringified body (single- or double-quoted, "type" key itself may
+// or may not be quoted since it's a JS object literal, not JSON, at that point).
+const n8nEmittedEvents = new Set();
+const n8nTypeRe = /\btype['"]?\s*:\s*['"]([a-z0-9_]+:[a-z0-9_-]+)['"]/gi;
+let n8nFiles = [];
+try {
+  n8nFiles = readdirSync(N8N_DIR).filter((f) => f.endsWith(".json"));
+} catch {
+  // workflows/n8n not present (e.g. a partial checkout) — n8n-emitted bucket
+  // stays empty and previously-n8n-only events fall back to "unknown".
+}
+for (const f of n8nFiles) {
+  const p = join(N8N_DIR, f);
+  let st;
+  try { st = statSync(p); } catch { continue; }
+  if (!st.isFile()) continue;
+  let txt;
+  try { txt = readFileSync(p, "utf8"); } catch { continue; }
+  let m;
+  while ((m = n8nTypeRe.exec(txt)) !== null) n8nEmittedEvents.add(m[1].toLowerCase());
+}
+
 // Frontend catalog: type: "event" discriminants in the SSEEvent union.
 //
 // deepscan17-wave2 (2026-07-05) fix: the old regex scanned the WHOLE file, so
@@ -168,9 +211,18 @@ const catalogOnly = [...catalogEvents].filter((e) => !serverEvents.has(e)).sort(
 const safetyCriticalMissing = serverOnly.filter((e) => SAFETY_RE.test(e));
 const advisoryMissing = serverOnly.filter((e) => !SAFETY_RE.test(e));
 
-// Separate known-dynamic catalog-only entries from unknown ones.
+// Separate known-dynamic catalog-only entries, n8n-emitted entries, and unknown ones.
+// DS#20 T-E1: n8n-emitted check runs BEFORE the "unknown" fallback so an event that
+// is only ever emitted by n8n (never a TS literal, never a constant-reference
+// allowlist entry) gets its own explicit "verified live" bucket instead of sitting
+// in "unknown" forever.
 const dynamicCatalogOnly = catalogOnly.filter((e) => DYNAMIC_BROADCAST_ALLOWLIST.has(e));
-const unknownCatalogOnly = catalogOnly.filter((e) => !DYNAMIC_BROADCAST_ALLOWLIST.has(e));
+const n8nEmittedCatalogOnly = catalogOnly.filter(
+  (e) => !DYNAMIC_BROADCAST_ALLOWLIST.has(e) && n8nEmittedEvents.has(e.toLowerCase()),
+);
+const unknownCatalogOnly = catalogOnly.filter(
+  (e) => !DYNAMIC_BROADCAST_ALLOWLIST.has(e) && !n8nEmittedEvents.has(e.toLowerCase()),
+);
 
 console.log(`[sse-contract] server literal broadcasts: ${serverEvents.size} | frontend catalog types: ${catalogEvents.size}`);
 
@@ -193,6 +245,9 @@ for (const e of advisoryMissing) console.log(`    + ${e}`);
 
 console.log(`[sse-contract] catalog-only allowlisted (dynamic broadcast via constant): ${dynamicCatalogOnly.length}`);
 for (const e of dynamicCatalogOnly) console.log(`    ~ ${e}`);
+
+console.log(`[sse-contract] catalog-only n8n-emitted, verified live (workflows/n8n/*.json): ${n8nEmittedCatalogOnly.length}`);
+for (const e of n8nEmittedCatalogOnly) console.log(`    n ${e}`);
 
 console.log(`[sse-contract] catalog-only unknown (investigate — dead or needs allowlist): ${unknownCatalogOnly.length}`);
 for (const e of unknownCatalogOnly) console.log(`    - ${e}`);

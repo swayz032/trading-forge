@@ -751,36 +751,55 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
   // mirroring lifecycle-service.triggerPineCompile so a manual deploy targets the
   // same firm the strategy actually qualified for. Falls back to topstep_50k only
   // if no passing firm is found or propCompliance data is missing.
-  import("../services/pine-export-service.js").then(async ({ compilePineExport }) => {
+  //
+  // DS#20 T-E4: the dynamic-import + destructure used to sit OUTSIDE the try/catch
+  // below (guarded only by a bare outer `.catch(() => {})`), so a failure in the
+  // import itself (module resolution) or the destructure was fully silent — a
+  // human-approved DEPLOY could silently never generate its Pine artifact with no
+  // logged trace. Moving the import inside the same try/catch that already logs
+  // firmKey-resolution failures routes every failure mode through logger.error.
+  // Behavior is unchanged: a firmKey-resolution failure still falls back to the
+  // default "topstep_50k" and still attempts the export; only an import/destructure
+  // failure now aborts the export (it has no compilePineExport reference to call).
+  (async () => {
     let firmKey = "topstep_50k";
     try {
-      const [latestBt] = await db
-        .select({ propCompliance: backtests.propCompliance })
-        .from(backtests)
-        .where(and(eq(backtests.strategyId, strategyId), eq(backtests.status, "completed")))
-        .orderBy(desc(backtests.createdAt))
-        .limit(1);
+      const { compilePineExport } = await import("../services/pine-export-service.js");
 
-      if (latestBt?.propCompliance) {
-        const propResults = latestBt.propCompliance as Record<string, { passed?: boolean; pass?: boolean }>;
-        const passingFirm = Object.entries(propResults).find(
-          ([, r]) => r.passed === true || r.pass === true,
-        );
-        if (passingFirm) {
-          firmKey = passingFirm[0];
+      try {
+        const [latestBt] = await db
+          .select({ propCompliance: backtests.propCompliance })
+          .from(backtests)
+          .where(and(eq(backtests.strategyId, strategyId), eq(backtests.status, "completed")))
+          .orderBy(desc(backtests.createdAt))
+          .limit(1);
+
+        if (latestBt?.propCompliance) {
+          const propResults = latestBt.propCompliance as Record<string, { passed?: boolean; pass?: boolean }>;
+          const passingFirm = Object.entries(propResults).find(
+            ([, r]) => r.passed === true || r.pass === true,
+          );
+          if (passingFirm) {
+            firmKey = passingFirm[0];
+          }
         }
+      } catch (firmResolveErr) {
+        logger.warn(
+          { strategyId, err: firmResolveErr },
+          "deploy: firmKey resolution from propCompliance failed (defaulting to topstep_50k)",
+        );
       }
-    } catch (firmResolveErr) {
-      logger.warn(
-        { strategyId, err: firmResolveErr },
-        "deploy: firmKey resolution from propCompliance failed (defaulting to topstep_50k)",
+
+      compilePineExport(strategyId, firmKey, "pine_indicator").catch((err: unknown) =>
+        logger.error({ err, strategyId, firmKey }, "Post-deploy Pine export failed"),
+      );
+    } catch (importErr) {
+      logger.error(
+        { strategyId, err: importErr },
+        "deploy: post-deploy Pine export module load failed — Pine artifact NOT generated",
       );
     }
-
-    compilePineExport(strategyId, firmKey, "pine_indicator").catch((err: unknown) =>
-      logger.error({ err, strategyId, firmKey }, "Post-deploy Pine export failed"),
-    );
-  }).catch(() => {});
+  })();
 
   // Broadcast deploy SSE so dashboard and any listeners know immediately
   broadcastSSE("strategy:deployed", {

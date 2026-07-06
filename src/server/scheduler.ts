@@ -3540,6 +3540,111 @@ except Exception as e:
   });
   _scheduledJobs.add("tournament-staleness-check");
 
+  // ─── DS#20 T-G1: Pine-vs-broker reconciliation staleness check — daily ──────
+  // Pine-vs-broker reconciliation (scripts/pine-broker-reconcile.ts, CLAUDE.md §7)
+  // has ZERO automated trigger — it is manual-CLI-only because TradingView's
+  // Strategy-Tester CSV export has no public API, so full auto-reconciliation
+  // cannot be built. During a 14-day vacation a family/operator Pine bot can
+  // silently diverge from broker fills with no signal if the operator simply
+  // forgets to run the script. This cron does NOT invoke the reconcile itself
+  // (that still requires a human-supplied CSV export) — it closes the
+  // STALENESS gap by alarming when too much time has passed since the last
+  // `pine_parity.reconciliation_run` audit row, mirroring the
+  // tournament-staleness-check pattern immediately above.
+  //
+  // Pipeline-gate EXEMPT: this is a pure observability/safety signal — staleness
+  // detection must fire even when the operator has paused the research
+  // pipeline (mirrors composite-health-daily-digest / regime-drift-detector
+  // rationale — a stale Pine reconciliation is dangerous regardless of pipeline
+  // pause state).
+  _PIPELINE_GATE_EXEMPT.add("pine-reconciliation-staleness-check");
+
+  registerJob("pine-reconciliation-staleness-check", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    const staleDays = parseInt(process.env.PINE_RECON_STALENESS_DAYS ?? "7", 10);
+    try {
+      const rows = await db
+        .select({ createdAt: auditLog.createdAt })
+        .from(auditLog)
+        .where(eq(auditLog.action, "pine_parity.reconciliation_run"))
+        .orderBy(desc(auditLog.createdAt))
+        .limit(1);
+      const lastRunAt = rows.length > 0
+        ? new Date(rows[0].createdAt as unknown as string | number | Date)
+        : null;
+      const ageDays = lastRunAt ? (Date.now() - lastRunAt.getTime()) / (24 * 60 * 60 * 1000) : null;
+      const isStale = ageDays === null || ageDays > staleDays;
+
+      if (isStale) {
+        logger.warn(
+          { correlationId, lastRunAt, ageDays, staleDays },
+          "pine-reconciliation-staleness-check: reconciliation stale or never run",
+        );
+        notifyWarning(
+          "Pine-vs-broker reconciliation is stale",
+          appendFamilyGradePostscript(
+            lastRunAt
+              ? `Last pine_parity.reconciliation_run audit row is ${ageDays!.toFixed(1)} days old ` +
+                `(threshold: ${staleDays}d). Pine Strategy-Tester P&L may have silently diverged ` +
+                `from broker fills with nobody watching. Run: npx tsx scripts/pine-broker-reconcile.ts ` +
+                `--strategy <id> --csv <tester-export.csv>`
+              : `No pine_parity.reconciliation_run audit row has ever been written. Pine reconciliation ` +
+                `has apparently never been run for any strategy. Run: npx tsx scripts/pine-broker-reconcile.ts ` +
+                `--strategy <id> --csv <tester-export.csv>`,
+            "The bot hasn't double-checked its TradingView chart against real broker trades in a while.",
+            "No action needed while you're away — when back, ask Tony to run the Pine reconciliation check.",
+          ),
+          { correlationId, lastRunAt: lastRunAt?.toISOString() ?? null, ageDays, staleDays },
+        );
+      }
+
+      await insertAuditRowSafe({
+        action: "pine_reconciliation.staleness_checked",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { staleDaysThreshold: staleDays } as Record<string, unknown>,
+        result: {
+          lastRunAt: lastRunAt?.toISOString() ?? null,
+          ageDays,
+          isStale,
+        } as Record<string, unknown>,
+        status: isStale ? "warning" : "success",
+        correlationId,
+      });
+    } catch (err) {
+      logger.error({ err, correlationId }, "pine-reconciliation-staleness-check: check failed");
+      await insertAuditRowSafe({
+        action: "pine_reconciliation.staleness_checked",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { staleDaysThreshold: staleDays } as Record<string, unknown>,
+        result: { error: err instanceof Error ? err.message : String(err) } as Record<string, unknown>,
+        status: "failed",
+        correlationId,
+      }).catch(() => {});
+    }
+  });
+
+  // Simple daily fire (no ET-hour guard needed — staleness detection tolerates
+  // a few hours of schedule jitter; unlike an ET-market-open cron, precision
+  // here is not load-bearing).
+  cron.schedule("0 11 * * *", async () => {
+    if (!_tryAcquireJobLock("pine-reconciliation-staleness-check")) return;
+    try {
+      // NOT pipeline-gated — safety/observability signal (in _PIPELINE_GATE_EXEMPT)
+      logger.info("Scheduler: pine-reconciliation-staleness-check (daily)");
+      const t0prsc = Date.now();
+      await withRetry("pine-reconciliation-staleness-check", SCHEDULER_JOBS["pine-reconciliation-staleness-check"].run, 1);
+      markJobRun("pine-reconciliation-staleness-check");
+      emitJobComplete("pine-reconciliation-staleness-check", Date.now() - t0prsc);
+    } finally {
+      _releaseJobLock("pine-reconciliation-staleness-check");
+    }
+  });
+  _scheduledJobs.add("pine-reconciliation-staleness-check");
+
   // ─── C1 (W15): CME exchange status poll — every 60 seconds ─────────────────
   // Probes CME status endpoint every 60s. On outage: blocks new entries,
   // logs open positions (not closed), fires critical alert.
@@ -3984,7 +4089,7 @@ except Exception as e:
   });
   _scheduledJobs.add("harsh-regime-phase-activation-check");
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT), quantum-replay-weekly-analysis (Sunday 19:00 ET — W27P1.5-A2, pipeline-gate-EXEMPT, kill-switch=auto_patch_loop_enabled), strategy-stale-detector (04:00 ET daily — W26PassG-PassD, pipeline-gated, GRAVEYARD-never), candidate-backtest-conveyor (45s — 2026-06-28, pipeline-gated, enqueue-only, MAX_CONCURRENT_BACKTESTS slots)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), pine-reconciliation-staleness-check (daily 11:00 UTC — DS#20 T-G1, pipeline-gate-EXEMPT), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT), quantum-replay-weekly-analysis (Sunday 19:00 ET — W27P1.5-A2, pipeline-gate-EXEMPT, kill-switch=auto_patch_loop_enabled), strategy-stale-detector (04:00 ET daily — W26PassG-PassD, pipeline-gated, GRAVEYARD-never), candidate-backtest-conveyor (45s — 2026-06-28, pipeline-gated, enqueue-only, MAX_CONCURRENT_BACKTESTS slots)");
 
   // ─── Wave 24 Pass 1 Item 1: BW session refresh — every 6 hours ────────────────
   // CATASTROPHIC GAP: runBwSessionRefreshCheck existed but had ZERO callers in

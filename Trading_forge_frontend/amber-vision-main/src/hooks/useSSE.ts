@@ -429,16 +429,6 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       qc.invalidateQueries({ queryKey: ["alerts"] });
       break;
 
-    // ─── Pine export ──────────────────────────────────────────────────
-    // Legacy underscore event — server emits `pine:export-completed` (hyphen)
-    // these days, but the union still includes the underscore variant for
-    // backward compatibility with any in-flight clients. Treat both the same.
-    case "pine:export_completed": {
-      qc.invalidateQueries({ queryKey: ["strategies"] });
-      qc.invalidateQueries({ queryKey: ["pine"] });
-      break;
-    }
-
     // ─── n8n / agents ─────────────────────────────────────────────────
 
     case "n8n:health-alert": {

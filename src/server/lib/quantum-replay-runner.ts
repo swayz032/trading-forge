@@ -35,7 +35,7 @@ import { tmpdir } from "os";
 import { createHash } from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { systemParameters, auditLog } from "../db/schema.js";
+import { systemParameters, auditLog, quantumMcRuns } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { notifyCritical } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "./notification-helpers.js";
@@ -344,6 +344,44 @@ function _buildPythonEnv(): NodeJS.ProcessEnv {
   };
 }
 
+// ── DS#20 T-G2: quantum_mc_runs pending-row lifecycle helpers ───────────────────
+/**
+ * On clean completion, the pending bookkeeping row is superseded by the
+ * Python-side db_loader.py authoritative row — delete it so no empty
+ * duplicate "completed" row lingers in quantum_mc_runs. Fail-soft (never
+ * throws): a delete failure just leaves a harmless orphan `running` row that
+ * the existing 60-min stale-pending-sweeper will sweep to `failed` later.
+ */
+function _deleteReplayPendingRow(quantumReplayPendingRowId: string | null): void {
+  if (!quantumReplayPendingRowId) return;
+  db.delete(quantumMcRuns)
+    .where(eq(quantumMcRuns.id, quantumReplayPendingRowId))
+    .catch((err) =>
+      logger.warn(
+        { err: String(err), quantumReplayPendingRowId },
+        "quantum-replay-runner: quantum_mc_runs pending-row cleanup delete failed (non-blocking)",
+      ),
+    );
+}
+
+/**
+ * On failure/timeout/spawn-error, mark the pending row `failed` immediately so
+ * it's visible in audit/ops queries right away rather than waiting for the
+ * 60-min sweep. Fail-soft (never throws).
+ */
+function _failReplayPendingRow(quantumReplayPendingRowId: string | null): void {
+  if (!quantumReplayPendingRowId) return;
+  db.update(quantumMcRuns)
+    .set({ status: "failed" })
+    .where(eq(quantumMcRuns.id, quantumReplayPendingRowId))
+    .catch((err) =>
+      logger.warn(
+        { err: String(err), quantumReplayPendingRowId },
+        "quantum-replay-runner: quantum_mc_runs pending-row failure update failed (non-blocking)",
+      ),
+    );
+}
+
 // ── Main export ────────────────────────────────────────────────────────────────
 
 /**
@@ -397,6 +435,59 @@ export async function runQuantumReplayForBacktest(
   const timeoutMs = getTimeoutMs();
   const pythonCmd = getPythonCmd();
 
+  // ── DS#20 T-G2: pending job-tracking row BEFORE spawn ──────────────────────
+  // §13 "Don't create fire-and-forget runs without a pending DB row" — prior to
+  // this fix the subprocess was spawned with no DB row at all, so a
+  // both-process death (OS OOM-kill / power loss) left the replay attempt
+  // invisible AND the circuit-breaker counter never incremented (the process
+  // never reached a close/error/timeout handler to record the failure).
+  //
+  // Target table: quantum_mc_runs, WITH governance_labels.replay_mode=true per
+  // §13 namespacing. status="running" (not "pending") because spawn happens
+  // synchronously right after this insert — this also matches the condition
+  // scheduler.ts's existing stale-pending-sweeper already checks for this exact
+  // table (`quantum_mc_runs`, status='running', 60-min cutoff — see
+  // scheduler.ts's `stale-pending-sweeper` job), so the boot-time orphan sweep
+  // is already in place with no further scheduler changes needed.
+  //
+  // db_loader.py writes its OWN authoritative completed row separately (with
+  // real reproducibility_hash + estimated_value etc, upserted via the
+  // (backtest_id, method, reproducibility_hash) partial-unique index) — this
+  // bookkeeping row must never be left behind looking like real data:
+  //   - on success: DELETE it (the Python-side row is now the source of truth;
+  //     `WHERE status = 'completed'` readers, e.g. db_loader.py:627/712,
+  //     already filter to real rows only, but deleting avoids an empty
+  //     duplicate "completed" row existing at all)
+  //   - on failure/timeout/spawn-error: UPDATE to status="failed" so it's
+  //     immediately visible and excluded from any `status = 'completed'` read
+  //   - on a full process death before any handler fires: the row stays
+  //     status="running" and is caught by the existing 60-min sweep above
+  //
+  // Fail-soft: an insert failure must NOT block the spawn (challenger-only,
+  // advisory-only research signal — losing one data point is fine; blocking
+  // replay on a DB hiccup is not).
+  let quantumReplayPendingRowId: string | null = null;
+  try {
+    const [pendingRow] = await db.insert(quantumMcRuns).values({
+      backtestId,
+      status: "running",
+      method: "iae",
+      governanceLabels: {
+        experimental: true,
+        authoritative: false,
+        decision_role: "challenger_only",
+        replay_mode: true,
+        source: "quantum-replay-runner_auto_fire",
+      },
+    }).returning({ id: quantumMcRuns.id });
+    quantumReplayPendingRowId = pendingRow?.id ?? null;
+  } catch (pendingRowErr) {
+    logger.warn(
+      { err: String(pendingRowErr), backtestId, correlationId },
+      "quantum-replay-runner: quantum_mc_runs pending-row insert failed (non-blocking) — spawn proceeds without crash-visibility row",
+    );
+  }
+
   // Fix 9: derive per-backtest seed so two replay runs on the same backtest
   // produce reproducible results (rather than hardcoded "42" for all).
   // SHA-256(backtestId).readUInt32BE(0) — deterministic, mirrors deriveRlTrainingSeed.
@@ -430,6 +521,7 @@ export async function runQuantumReplayForBacktest(
       registerExternalPythonSubprocess(proc);
     } catch (spawnErr) {
       _recordFailure(String(spawnErr));
+      _failReplayPendingRow(quantumReplayPendingRowId);
       reject(spawnErr);
       return;
     }
@@ -446,6 +538,7 @@ export async function runQuantumReplayForBacktest(
         try { proc.kill("SIGKILL"); } catch { /* already dead */ }
       }, 2000);
       _recordFailure(`timed out after ${timeoutMs}ms`);
+      _failReplayPendingRow(quantumReplayPendingRowId);
       reject(new Error(`quantum-replay-runner timed out after ${timeoutMs}ms for backtestId=${backtestId}`));
     }, timeoutMs);
 
@@ -478,6 +571,9 @@ export async function runQuantumReplayForBacktest(
       if (code === 0) {
         const rowsWritten = _parseRowsWritten(stdout);
         _recordSuccess();
+        // db_loader.py already wrote its own authoritative completed row(s) —
+        // delete the bookkeeping placeholder so no empty duplicate lingers.
+        _deleteReplayPendingRow(quantumReplayPendingRowId);
         logger.info(
           { backtestId, correlationId, durationMs, rowsWritten },
           "quantum-replay-runner: subprocess completed successfully",
@@ -490,6 +586,7 @@ export async function runQuantumReplayForBacktest(
           "quantum-replay-runner: subprocess exited with non-zero code",
         );
         _recordFailure(errMsg.slice(0, 200));
+        _failReplayPendingRow(quantumReplayPendingRowId);
         reject(new Error(`quantum_replay failed (exit ${code}) for backtestId=${backtestId}: ${errMsg.slice(0, 200)}`));
       }
     });
@@ -503,6 +600,7 @@ export async function runQuantumReplayForBacktest(
         "quantum-replay-runner: subprocess spawn error",
       );
       _recordFailure(String(err));
+      _failReplayPendingRow(quantumReplayPendingRowId);
       reject(err);
     });
   });
