@@ -308,3 +308,24 @@ The prior classifier Gate 3 run (`corpus-v3-gate3-shadow-results-2026-07-05.json
 (crash-masked / MCL-broken — it's the run that surfaced Defects 1/4/5/6). It is INVALID and stays sealed/quarantined.
 The verdict = re-run v2-baseline vs v3-shadow (classifier roles, fixed-atom) on the Defect-4/5/6-fixed engine,
 validity-first, then classifier revival count over the N=9 set vs ≥8/9, + regression enumeration for Gate 1′.
+
+## CLASSIFIER GATE 3 VERDICT — CERTIFIED FAIL (independently re-verified 2026-07-06, fixed engine)
+Classifier Gate 3 re-run on the Defect-1/4/5/6-fixed engine (`corpus-v3-gate3-shadow-results-2026-07-06.json`,
+engine_sha 7c1ec994). Read-order followed: reference (N=9, certified) → validity (PASSED) → verdict.
+- **VALIDITY PASSED:** 0 crashes / 0 exceptions / 0 timeouts; all_9_revival_pairs_measurable=true;
+  all_v2_traded_pairs_measurable=true; 42/42 per-pair "ok" (independently confirmed).
+- **VERDICT (independently recomputed = agent's report):** classifier revival **7 / 9** (rule ≥8/9). The classifier
+  reproduces demotion's revival on 7 of the 9 reference strategies: m-G1ag77aVc×3, oDLt9zh33LE×3, snNkQSyWX4k_MES.
+  **MISSES: snNkQSyWX4k_MNQ + snNkQSyWX4k_MCL** (the crossover strategy revives under the classifier on MES but not
+  MNQ/MCL). **2 misses > the 1-miss allowance → FAILS the revival criterion.**
+- **REGRESSIONS: 2** — jlShztsY3oA_MNQ (v2 2424→v3 0) + jlShztsY3oA_MCL (v2 3021→v3 0). (jlShztsY3oA = the
+  unrelated already-profitable ORB; the classifier's roles zero it on MNQ/MCL.)
+- **5m_support_level (B1) spine non-empty = TRUE** — the bidirectional fix DID cure B1 (under-assignment); the
+  classifier gives it a real spine.
+- **CERTIFIED VERDICT: Gate 3 FAILS the frozen rule (≥8/9 revival + zero unexplained regressions).** 7/9 revival is
+  below the bar. **Per the LOCKED no-relief pre-commitment, this stands — 7/9 < 8/9, no ceiling-relief argument in
+  reserve.** The classifier's extraction-time roles reproduce MOST (7/9) but not all of runtime demotion's effect,
+  and introduce 2 regressions.
+- **CONTRAST (positive, already certified):** runtime demotion itself is **9/9** on the same fixed engine (the
+  certified reference). So the WORKING mechanism is runtime demotion (DRI labels applied at runtime); the
+  extraction-level classifier is close-but-not-equivalent.
