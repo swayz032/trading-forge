@@ -7002,6 +7002,26 @@ def run_class_backtest(
     winner_loser_ratio = 0.0
     trades_list: list[dict] = []
     trade_pnls_arr = np.array([])
+    # Default arrays for winners/losers/avg values — used in expectancy_per_trade
+    # calculation below. Overwritten inside `if trades_records is not None:` when
+    # trades exist. GATE3-DEFECT-1 FIX (corpus-v3 gate3 re-run protocol, 2026-07-06):
+    # mirrors the C2 FIX (deepscan5 2026-06-29) hoist already applied to the sibling
+    # run_backtest() at line ~5032-5035. Without this hoist, a zero-signal class
+    # backtest (total_trades==0, trades_records=None) skips the block below entirely
+    # and `winners`/`losers` are referenced unconditionally further down in the
+    # "expectancy_per_trade" dict entry — UnboundLocalError on every zero-signal run.
+    winners = np.array([])
+    losers = np.array([])
+    avg_winner = 0.0
+    avg_loser = 0.0
+    # GATE3-DEFECT-1 FIX (continued): _roll_spread_audit_rows_cls is read
+    # unconditionally at the "roll_spread_costs" dict entry near the function's
+    # return (~line 7600) but was previously only assigned inside this same
+    # `if trades_records is not None:` block (MED #5, Wave 27.5 Pass D.1) — same
+    # unbound-on-zero-signal defect class as winners/losers above, caught by the
+    # GATE3-DEFECT-1 regression test actually exercising the zero-signal path
+    # end-to-end (test_gate3_defect1_class_backtest_zero_signal.py).
+    _roll_spread_audit_rows_cls: list[dict] = []
 
     if trades_records is not None:
         trade_pnls_list = []
@@ -7015,7 +7035,6 @@ def run_class_backtest(
         _ts_et_list_roll_cls = df["ts_et"].to_list() if "ts_et" in df.columns else (
             df["ts_event"].to_list() if "ts_event" in df.columns else []
         )
-        _roll_spread_audit_rows_cls: list[dict] = []
 
         for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
