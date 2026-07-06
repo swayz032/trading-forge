@@ -81,6 +81,31 @@ def evaluate_signal(
     direction = signal.get("direction", "long")
     strategy_name = signal.get("strategy_name", "unknown")
 
+    # ds21 (deep-scan #21 residual — paper/backtest parity): unregistered-strategy bypass.
+    # Mirrors backtester.py::apply_eligibility_gate's `passthrough_strategy_unregistered` branch:
+    # if strategy_name is not registered to ANY playbook (not in ALL_STRATS), the 7-layer
+    # eligibility OVERLAY does not apply. The backtest validated these strategies with the overlay
+    # bypassed, so the live/paper path MUST bypass it too — otherwise check #2 below SKIPs every
+    # signal for the ~100 graduated strategies whose names aren't in the 174-entry ALL_STRATS list,
+    # while backtest trades them (the promotion-breaking paper/backtest divergence). The overlay is
+    # the ONLY thing bypassed: the separate framework/risk gates (structural-stop ceiling, DLL,
+    # daily-trade-cap, lunch/PM taper, macro blackout, Stage-2 A+ confluence) still run in BOTH
+    # engines, so parity — and every other safety gate — is preserved. Registered strategies
+    # (in ALL_STRATS) continue through the full gate below, including check #2's per-playbook
+    # allow-list. Local import mirrors the backtester's circular-import-safe pattern.
+    from src.engine.context.playbook_router import ALL_STRATS
+    _strat_norm = strategy_name.lower().replace("strategy", "").strip().replace("_", "")
+    _all_norm = [s.lower().replace("_", "") for s in ALL_STRATS]
+    if _strat_norm and _strat_norm not in _all_norm:
+        reasoning.append(
+            f"Strategy {strategy_name!r} unregistered (not in playbook_router.ALL_STRATS) — "
+            "eligibility overlay bypassed for backtest parity (framework + Stage-2 gates still apply)"
+        )
+        return EligibilityDecision(
+            action="TAKE", confidence=bias_state.bias_confidence, reasoning=reasoning,
+            bias_state=bias_state, playbook=playbook.playbook,
+        )
+
     # ─── Hard SKIP checks ─────────────────────────────────────
 
     # Check 0 (deep-scan #8 2026-07-02): structural stop exceeds per-symbol ceiling.
