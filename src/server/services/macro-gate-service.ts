@@ -115,8 +115,13 @@ async function checkIsmRrpGate(): Promise<{
       rrpValue,
     };
   } catch (err) {
-    logger.warn({ err }, "C11 ISM/RRP gate check failed — assuming no gate");
-    return { ismBelow49: false, rrpBelow20B: false, bothTriggered: false, ismValue: null, rrpValue: null };
+    // deep-scan services CRITICAL (2026-07-06): C11 is a HARD safety gate (block trading in crisis/ISM-RRP
+    // stress). A DB error means we CANNOT verify it is safe to trade — so fail CLOSED (treat as triggered →
+    // block), not "assume no gate". Emit a LOUD error (was a silent logger.warn) so the operator can see a
+    // gate is blocking due to an infra error vs a real crisis. Over-blocking on a transient DB blip is the
+    // safe direction for a crisis gate; letting a crisis trade through un-checked is not.
+    logger.error({ err }, "C11 ISM/RRP gate DB read FAILED — failing CLOSED (blocking) until the read recovers");
+    return { ismBelow49: true, rrpBelow20B: true, bothTriggered: true, ismValue: null, rrpValue: null };
   }
 }
 
