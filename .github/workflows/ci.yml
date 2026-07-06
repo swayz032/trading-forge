@@ -261,3 +261,9 @@ jobs:
         run: npm run check:ts-python-tier1-parity
       - name: Gate — TS/Python PM size-factor parity
         run: npm run check:ts-python-pm-factor-parity
+      # deep-scan re-verify: wire the two new contract/schema gates into CI (were script-only —
+      # Paper re-verify Finding 1 caught gate-contract-keys shipped unwired, so drift wasn't caught).
+      - name: Gate — JSONB gate-input contract keys (producer↔consumer)
+        run: npm run check:gate-contract-keys
+      - name: Gate — PGlite CORE_DDL ↔ schema.ts parity
+        run: npm run check:pglite-ddl-parity
