@@ -6818,6 +6818,18 @@ def run_class_backtest(
         "short": short_gate_stats.get("structural_stop_map", {}),
     }
 
+    # GATE3-DEFECT-6 fix (2026-07-06): mirror deep-scan #18c's C-3 fix
+    # (`_build_eligibility_gate_mode_disclosure`), which surfaced
+    # gate_stats["mode"] (+ "passthrough_reason") into run_backtest's
+    # result["eligibility_gate_mode"] so the passthrough<->gated flip is
+    # queryable — but was only ever wired into run_backtest, never mirrored to
+    # this sibling. Pure additive telemetry (does NOT affect trade signals,
+    # counts, or P&L — computation-preserving, unlike Defect 5), so this is a
+    # low-risk class-(a) fix: same helper, same shape, both engine paths.
+    _cls_eligibility_gate_mode = _build_eligibility_gate_mode_disclosure(
+        long_gate_stats, short_gate_stats,
+    )
+
     # Merge gate stats
     gate_stats = {
         "long": long_gate_stats,
@@ -6910,6 +6922,144 @@ def run_class_backtest(
 
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
+
+    # ─── GATE3-DEFECT-5 fix (2026-07-06): DSL guards parity ──────────────────
+    # Systematic sibling-parity audit (corpus-v3-gate1-respecification-2026-07-05.md
+    # §"GATE 3 RE-RUN — SYSTEMATIC SIBLING-PARITY AUDIT") found run_class_backtest
+    # NEVER called _apply_dsl_stop_loss_and_time_stop() (E.3 ATR stop-ceiling
+    # entry-skip + E.5 15:55 ET time-stop-on-signal-array) or
+    # _apply_dll_halt_to_entries() (E.4 67% personal-DLL entry halt / 95%
+    # force-close) — both are unconditionally applied inside run_backtest() (Wave 21)
+    # and are documented CRITICAL institutional hard gates (deepscan16 Wave-1
+    # Track2 CRITICAL E-1: "an unguarded backtest ... could show great
+    # Sharpe/PF/DSR and sail through WFE/PBO/B14 to DEPLOY_READY with zero
+    # machine-readable trace"). Every strategy compiled through the class path —
+    # the path the whole corpus runs through, per CLAUDE.md §2b — had been
+    # running fully UNGUARDED for both DLL halt and the unconditional stop-ceiling/
+    # time-stop layer (the 7-layer eligibility gate's structural-stop SKIP and the
+    # shared _apply_trade_management's 15:55 flatten are still separately in
+    # force for the class path; this closes the gap for cases where the
+    # eligibility gate is skipped/bypassed, and closes DLL halt entirely — DLL
+    # halt has NO other enforcement anywhere in the class path).
+    #
+    # Mirrors run_backtest's exact call pattern (same shared functions, same
+    # fail-safe try/except wrapper) so a data-shape surprise here degrades to a
+    # visible/auditable "guards_failed" state rather than crashing the backtest.
+    #
+    # NOTE — this IS a trade-signal-affecting fix (unlike Defect 4's equity-only
+    # fix): DLL halt suppresses entries and the ATR-ceiling check skips entries
+    # whose structural stop exceeds the per-symbol ceiling, so it can change
+    # trade counts. It is applied identically to v2 and every v3-shadow spec in
+    # this re-run (engine-level, not spec-level), so the v2-vs-v3 comparison
+    # stays apples-to-apples — both arms are measured on the same corrected
+    # engine, not one arm silently unguarded.
+    _cls_dsl_guards_meta: dict = {
+        "stop_ceiling_skips": 0,
+        "time_stop_exits": 0,
+        "dll_halt_blocks": 0,
+        "guards_failed": False,
+        "guards_failed_reason": None,
+        "guards_failed_audit_action": None,
+    }
+    try:
+        _guard_entry_long_cls = entries_pd.to_numpy().astype(bool)
+        _guard_exit_long_cls = exits_pd.to_numpy().astype(bool)
+        _guard_entry_short_cls = short_entries_pd.to_numpy().astype(bool)
+        _guard_exit_short_cls = short_exits_pd.to_numpy().astype(bool)
+        _guard_close_np_cls = df["close"].to_numpy()
+        _guard_atr_np_cls = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 0.0)
+        _guard_ts_cls = (
+            df["ts_et"].to_list() if "ts_et" in df.columns
+            else (df["ts_event"].to_list() if "ts_event" in df.columns else None)
+        )
+        _guard_ts_et_cls = df["ts_et"].to_list() if "ts_et" in df.columns else None
+        _guard_vix_np_cls: Optional[np.ndarray] = df["vix"].to_numpy() if "vix" in df.columns else None
+        _guard_stop_mult_cls = (
+            float(strategy.config.stop_loss.multiplier)
+            if hasattr(strategy, "config") and hasattr(strategy.config, "stop_loss") and strategy.config.stop_loss
+            else 1.5
+        )
+
+        # E.3 + E.5
+        (
+            _guard_entry_long_cls,
+            _guard_exit_long_cls,
+            _guard_entry_short_cls,
+            _guard_exit_short_cls,
+            _dsl_sl_meta_cls,
+        ) = _apply_dsl_stop_loss_and_time_stop(
+            _guard_entry_long_cls,
+            _guard_exit_long_cls,
+            _guard_entry_short_cls,
+            _guard_exit_short_cls,
+            high_np,
+            low_np,
+            _guard_atr_np_cls,
+            _guard_ts_cls,
+            stop_multiplier=_guard_stop_mult_cls,
+            symbol=symbol,
+            close_np=_guard_close_np_cls,
+            ts_et_timestamps=_guard_ts_et_cls,
+            vix_np=_guard_vix_np_cls,
+        )
+        _cls_dsl_guards_meta["stop_ceiling_skips"] = len(_dsl_sl_meta_cls.get("skipped_trades", []))
+        _cls_dsl_guards_meta["time_stop_exits"] = _dsl_sl_meta_cls.get("time_stop_exits", 0)
+
+        # E.4 — DLL halt. Firm DLL comes from firm_config; default $1000 (Topstep).
+        _guard_firm_dll_cls = 1000.0
+        if firm_key:
+            from src.engine.firm_config import FIRM_RULES as _guard_firm_rules_cls
+            _guard_firm_dll_cls = _guard_firm_rules_cls.get(firm_key, {}).get("daily_loss_limit") or 1000.0
+        _guard_dll_pct_cls = float(os.environ.get("DLL_HALT_PCT", "0.67"))
+        _guard_ts_arr_cls = np.array(
+            _guard_ts_cls if _guard_ts_cls is not None else [""] * len(_guard_entry_long_cls)
+        )
+
+        _guard_entry_long_cls, _guard_entry_short_cls, _dll_meta_cls = _apply_dll_halt_to_entries(
+            _guard_entry_long_cls,
+            _guard_entry_short_cls,
+            _guard_exit_long_cls,
+            _guard_exit_short_cls,
+            high_np,
+            low_np,
+            _guard_close_np_cls,
+            _guard_atr_np_cls,
+            _guard_ts_arr_cls,
+            spec.point_value,
+            sizes_clean,
+            commission,
+            personal_dll_pct=_guard_dll_pct_cls,
+            firm_dll=_guard_firm_dll_cls,
+        )
+        _cls_dsl_guards_meta["dll_halt_blocks"] = _dll_meta_cls.get("entries_suppressed", 0)
+
+        if (_cls_dsl_guards_meta["stop_ceiling_skips"] or _cls_dsl_guards_meta["time_stop_exits"]
+                or _cls_dsl_guards_meta["dll_halt_blocks"]):
+            print(
+                f"[Class guards] E.3 stop_ceiling_skips={_cls_dsl_guards_meta['stop_ceiling_skips']} "
+                f"E.5 time_stop_exits={_cls_dsl_guards_meta['time_stop_exits']} "
+                f"E.4 dll_halt_blocks={_cls_dsl_guards_meta['dll_halt_blocks']}",
+                file=sys.stderr,
+            )
+
+        # Write guard-modified arrays back into the pandas Series that vectorbt reads.
+        entries_pd = pd.Series(_guard_entry_long_cls, index=entries_pd.index)
+        exits_pd = pd.Series(_guard_exit_long_cls, index=exits_pd.index)
+        short_entries_pd = pd.Series(_guard_entry_short_cls, index=short_entries_pd.index)
+        short_exits_pd = pd.Series(_guard_exit_short_cls, index=short_exits_pd.index)
+    except Exception as _cls_guard_err:
+        # Fail-safe: mirror run_backtest's deepscan16 Wave-1 Track2 CRITICAL E-1
+        # pattern — an exception here must NOT silently proceed unguarded with no
+        # trace. The backtest still completes (fail-safe), but result["dsl_guards"]
+        # carries guards_failed=True so the promotion layer treats this run as
+        # UNGUARDED rather than clean.
+        _cls_dsl_guards_meta["guards_failed"] = True
+        _cls_dsl_guards_meta["guards_failed_reason"] = repr(_cls_guard_err)
+        _cls_dsl_guards_meta["guards_failed_audit_action"] = "backtest.dsl_guards_failed"
+        print(
+            f"[Class guards] ERROR — guards skipped (non-fatal): {_cls_guard_err!r}",
+            file=sys.stderr,
+        )
 
     # ─── Run vectorbt Portfolio (long + short) ────────────────
     # vectorbt handles SIGNAL TIMING only — no slippage/fees.
@@ -7243,13 +7393,30 @@ def run_class_backtest(
             entry_slip = float(trade.get("EntrySlipCost", slip_cost / 2.0))
             exit_slip = float(trade.get("ExitSlipCost", slip_cost / 2.0))
             half_comm = comm_cost / 2.0
+            # GATE3-DEFECT-4 fix (2026-07-06, corpus-v3-gate1-respecification.md
+            # "GATE 3 RE-RUN — SYSTEMATIC SIBLING-PARITY AUDIT"): `net_pnl` above
+            # (line ~7128) subtracts SlippageCost + CommissionCost + RollSpreadCost,
+            # but this bar-level equity loop previously deducted only slip + comm —
+            # RollSpreadCost was silently dropped from bar_dollar_pnls, so equity
+            # under-counted roll-day trades relative to net_pnl by exactly the roll
+            # cost. Bounded pre-fix: the $1 reconciliation tolerance below caught it
+            # on every historically COMPLETED run (roll cost is small vs $1), so no
+            # completed backtest was ever actually WRONG beyond that tolerance — see
+            # FROZEN FINDING in the design doc. Deduct the whole per-trade roll cost
+            # at the EXIT bar (mirrors the existing slip/comm split pattern; roll
+            # cost is not itself split entry/exit because it is already a single
+            # combined entry+exit roll-day charge from compute_roll_spread_cost()).
+            # verdict-variable-preserving, NOT computation-preserving: changes
+            # equity curves + equity-derived metrics only; does NOT change trade
+            # signals or counts, which is all Gate 3's frozen rule measures.
+            roll_cost = float(trade.get("RollSpreadCost", 0.0))
             if t_entry_idx < n_bars:
                 bar_dollar_pnls[t_entry_idx] -= (entry_slip + half_comm)
             if t_exit_idx < n_bars:
-                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm)
-            assert abs((entry_slip + half_comm) + (exit_slip + half_comm) - (slip_cost + comm_cost)) < 0.01, (
+                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm + roll_cost)
+            assert abs((entry_slip + half_comm) + (exit_slip + half_comm + roll_cost) - (slip_cost + comm_cost + roll_cost)) < 0.01, (
                 f"Friction split invariant: entry_slip={entry_slip:.4f}, exit_slip={exit_slip:.4f}, "
-                f"comm={comm_cost:.4f}, expected_total={slip_cost + comm_cost:.4f}"
+                f"comm={comm_cost:.4f}, roll={roll_cost:.4f}, expected_total={slip_cost + comm_cost + roll_cost:.4f}"
             )
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
@@ -7607,6 +7774,18 @@ def run_class_backtest(
         "roll_spread_costs": _roll_spread_audit_rows_cls,
         # Slippage-Survival Gate (Wave A, 2026-07-03) — see block computed above.
         "slippage_survival": _slippage_survival_block_cls,
+        # GATE3-DEFECT-5 fix (2026-07-06) — DSL guard summary (E.3/E.4/E.5
+        # enforcement), same schema key/shape as run_backtest's "dsl_guards" so
+        # downstream consumers (TS backtest-service.ts guards_failed audit) get
+        # the same contract from both engine paths. vol_scale_applied /
+        # liquidity_haircut_applied (Wave 24 Pass 2 parity_metadata) are NOT
+        # ported in this fix — that subsystem is position-sizing-only (not
+        # signal/trade-count), out of scope for this class-(a) audit pass, and
+        # carried forward as a documented gap (see audit classification table).
+        "dsl_guards": _cls_dsl_guards_meta,
+        # GATE3-DEFECT-6 fix (2026-07-06) — mirrors run_backtest's
+        # "eligibility_gate_mode" key (deep-scan #18c C-3 fix); see note above.
+        "eligibility_gate_mode": _cls_eligibility_gate_mode,
     }
 
 
