@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Pass 11 Phase 6 — n8n Drift Detector.
  *
@@ -28,7 +27,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { config } from "dotenv";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -294,7 +293,7 @@ function findMissingErrorWorkflow(workflowJson) {
 // A correctly-wired SplitInBatches has index 1 (loop) eventually loop BACK to itself, and index 0 (done)
 // terminate. A SWAPPED wiring (loop body on index 0, terminal on index 1) is populated on both indices
 // but reverses which one loops — invisible to a bare `idx1.length===0` check.
-function reachesNode(conns, startTargets, targetName, maxDepth = 100) {
+export function reachesNode(conns, startTargets, targetName, maxDepth = 100) {
   const seen = new Set();
   let frontier = (startTargets ?? []).map((t) => t?.node).filter(Boolean);
   for (let depth = 0; depth < maxDepth && frontier.length; depth++) {
@@ -313,7 +312,7 @@ function reachesNode(conns, startTargets, targetName, maxDepth = 100) {
 }
 
 // ─── F-5b: SplitInBatches v3 wired to index 1 (loop), not index 0 ───
-function findSplitBatchesMisWired(workflowJson) {
+export function findSplitBatchesMisWired(workflowJson) {
   const violations = [];
   const conns = workflowJson.connections ?? {};
   for (const node of workflowJson.nodes ?? []) {
@@ -495,7 +494,13 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((err) => {
-  console.error("audit-n8n-workflows failed:", err);
-  process.exit(1);
-});
+// Run the audit only when executed directly (node scripts/audit-n8n-workflows.mjs), NOT when imported by a
+// test (deep-scan n8n F-2: the detector functions above are exported for regression coverage — importing them
+// must not fire the live audit, which hits the n8n REST API).
+const _isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (_isMain) {
+  main().catch((err) => {
+    console.error("audit-n8n-workflows failed:", err);
+    process.exit(1);
+  });
+}
