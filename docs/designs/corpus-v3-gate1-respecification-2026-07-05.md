@@ -458,3 +458,33 @@ does not close on a self-adjudication.
    evidence the ~67% margin ceiling binds at the strategy level → the decision REOPENS honestly.**
 4. **ITERATION BUDGET: this is pass TWO of TWO.** A third pass requires NEW EVIDENCE about why the margin is hard,
    NOT another targeted rule. Locked now, while the temptation is invisible.
+
+## GATE 1′ CERTIFIED (independent blind rater ran — PROVISIONAL LIFTED) 2026-07-06
+Independent blind rater (fresh context; NO classifier/demotion/gold/prior-verdict access; transcripts only) adjudicated
+the 10 conditions. Parent independently verified the load-bearing Afrikaans anchor (line 33). The multi-rater
+requirement is now MET → the PROVISIONAL mark on the Gate 1′ dispositions is LIFTED, with ONE correction:
+
+- **MISSES (snNkQSyWX4k) = CLASSIFIER ERROR — CONFIRMED (both raters agree).** Independent rater: #1 candle-close,
+  #2 candles-retest, #5 price-retest, #7 consolidation = MANDATORY_GATE (the entry trigger + avoid-rule). Classifier
+  put all in context. (#4 us-session independently = CONTEXTUAL, confirming even DRI gold's JUSTIFIED_MANDATORY there
+  was wrong.)
+- **REGRESSIONS (jlShztsY3oA) = FLIPPED: CLASSIFIER ERROR, not fidelity correction.** The independent rater read the
+  Afrikaans framing correctly — "dit benodig net meer konteks hier is hoe om dit reg te stel" ("it just needs more
+  context, here's how to FIX it") = false-in-naive-form-BUT-viable-WITH-additions, NOT a disavowal. So Fibonacci (#9)
+  sits in the flat "how to fix it" list → **MANDATORY_GATE**. The classifier moved it to context = ERROR. (#8
+  structure = OPTIONAL via "selfs/even add"; #10 tendency-line = CONTEXTUAL narrated example.)
+  **The self-adjudication's "fidelity correction" + "structural irony (demotion unfaithful)" claims are RETRACTED.**
+  On jlShztsY3oA, demotion keeping Fibonacci as spine was CORRECT; the classifier dropping it was the error — demotion
+  was the MORE faithful arm here (still ONE strategy; demotion's general fidelity remains unexamined).
+
+## CORRECTED FINAL DIAGNOSIS (certified)
+- **Gate 3 FAILS** on BOTH clauses now: revival 7/9 < 8/9 AND the 2 jlShztsY3oA regressions are UNEXPLAINED (classifier
+  dropped a mandatory gate, not a justified promotion). Certified, no relief.
+- **UNIFORM failure mode (all 4 deltas):** the classifier OVER-CONTEXTUALIZES real gates — the entry trigger +
+  consolidation avoid-rule (snNkQSyWX4k) and the Fibonacci fix-gate (jlShztsY3oA). Diagnosis is CLEANER and STRONGER
+  (one mechanism, 4 examples) than the pre-flip split.
+- **Fix direction CONFIRMED + strengthened** (iterate the classifier to stop over-contextualizing gates). The flip
+  changed the framing (both deltas are the same error; demotion faithful on the one pair they differ), NOT the fix.
+- **Iteration protocol point 1 satisfied:** misses HOLD as errors → proceed. The regression flip strengthens rather
+  than blocks (still a classifier error to fix), but the design must generalize from the 143 — Fibonacci is a
+  confirming example, NOT a design input.
