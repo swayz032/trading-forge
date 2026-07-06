@@ -280,6 +280,13 @@ def test_cat03_indicator_math():
 
     # Also scan ALL python in src/engine for centered windows.
     # EXCLUDE this audit test file itself (its own regex literal would self-match).
+    # deep-scan backtest-engine F-3 (2026-07-06): the old pattern `\.rolling\(` only matched pandas-style
+    # .rolling(...) and was BLIND to Polars' .rolling_max/.rolling_min/.rolling_mean/.rolling_sum/.rolling_std/
+    # .rolling_median(center=True) — a genuine centered-window API used in market_structure.py:39. Broadened to
+    # the full rolling(_*) family. market_structure.py's usage is DELIBERATE + look-ahead-SAFE (detect_swings
+    # shifts the swing index forward by +half_window before any downstream consumer sees it), so it is
+    # allowlisted; any OTHER centered window anywhere in src/engine is still a HARD fail.
+    _CENTERED_ALLOWLIST = {"src/engine/indicators/market_structure.py"}
     self_path = Path(__file__).resolve()
     bad_files = []
     for p in (REPO_ROOT / "src/engine").rglob("*.py"):
@@ -289,8 +296,11 @@ def test_cat03_indicator_math():
             s = p.read_text(encoding="utf-8")
         except Exception:
             continue
-        if re.search(r"\.rolling\([^)]*center\s*=\s*True", s):
-            bad_files.append(str(p.relative_to(REPO_ROOT)))
+        rel = str(p.relative_to(REPO_ROOT)).replace("\\", "/")
+        if rel in _CENTERED_ALLOWLIST:
+            continue
+        if re.search(r"\.rolling(_\w+)?\([^)]*center\s*=\s*True", s):
+            bad_files.append(rel)
     findings.append(f"engine files with centered rolling: {bad_files or 'none'}")
     if bad_files:
         failures.append(f"centered rolling windows in: {bad_files}")
