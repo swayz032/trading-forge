@@ -329,3 +329,48 @@ engine_sha 7c1ec994). Read-order followed: reference (N=9, certified) → validi
 - **CONTRAST (positive, already certified):** runtime demotion itself is **9/9** on the same fixed engine (the
   certified reference). So the WORKING mechanism is runtime demotion (DRI labels applied at runtime); the
   extraction-level classifier is close-but-not-equivalent.
+
+## GATE 3 FAIL — MILESTONE FREEZE + 3 framing corrections (Fable-5, 2026-07-06)
+The Gate 3 FAIL (7/9 vs ≥8/9, no relief) is CERTIFIED and STANDS. Three corrections to my write-up framing, locked:
+
+**Correction 1 — "demotion certified 9/9 as the working mechanism" OVERSTATED (retracted).** The reference
+re-derivation was a YARDSTICK (it established N so the classifier had an honest denominator) — NOT a certification
+of demotion-as-a-production-mechanism. A single run can't be both the yardstick and a certified result (the
+yardstick can't certify itself). **What is TRUE + freezable:** runtime demotion revives **9/9 on the corrected
+engine**, confirming + extending `1ab7321` (7/9 last cycle → 9/9 now with the MCL pairs resolved). That is the
+mechanism-level answer to the corpus collapse — real, bankable. **What is NOT yet true:** "corpus revival is
+achievable today via demotion" is a PRODUCTION claim it hasn't earned — runtime demotion applies first-pass
+single-rater DRI labels (57.7% inter-rater), covers only the 14 audited concepts, and **has never been through
+Gate 1′** (nobody has adjudicated whether DEMOTION's own role changes are transcript-faithful — it escaped that
+exam by being the reference, not the candidate). If promoted from yardstick to shipping path, it inherits the
+IDENTICAL certification stack the classifier just faced. Otherwise we'd certify the classifier's competitor by
+exempting it from the exam the classifier failed.
+
+**Correction 2 — the 2 regressions are PENDING adjudication, NOT characterized.** `jlShztsY3oA` was written as
+BOTH "the unrelated already-profitable ORB" AND "likely correctly re-roled" — those can't both stand. The frozen
+regression clause: a new death is acceptable ONLY with a specific promoted-spine condition + transcript-anchored
+justification. **Gate 1′ adjudicates this — it is not pre-judged here.** If upheld → fidelity corrections (demotion
+was keeping a mis-roled strategy alive), regression clause satisfied, score reads differently. If overturned →
+real classifier errors. **Structural irony (logged):** if Gate 1′ upholds the jlShztsY3oA re-roling, then on that
+strategy it is DEMOTION that is unfaithful to the transcript — the reference beat the classifier on a pair where
+the reference was WRONG.
+
+**Correction 3 — the miss pattern is a FINGERPRINT.** `snNkQSyWX4k` revives on MES but not MNQ/MCL — yet the
+classifier assigns roles from transcript semantics, which are SYMBOL-INVARIANT. Same spec, same roles, three
+symbols, split behavior → the divergence is almost certainly NOT "classifier misread the transcript on MNQ"; it's
+that the classifier's role set differs from demotion's by a condition whose behavioral consequence only binds on
+MNQ/MCL (tick size / vol regime / session microstructure × a guard). Checkable in MINUTES (tower-free): diff the
+role assignments (classifier vs demotion) on snNkQSyWX4k + jlShztsY3oA, isolate the differing condition(s) → know
+whether it's one condition's semantics (Gate 1′ adjudicates) or a genuine symbol-conditional structure the
+extraction layer can't express (architecture-boundary finding, kin to B2).
+
+**SEQUENCING (next session's openers):** (1) freeze THIS milestone [done]. (2) role-diff analysis (classifier vs
+demotion roles on snNkQSyWX4k + jlShztsY3oA — cheap, tower-free). (3) **Gate 1′ on all FOUR deltas** (2 misses +
+2 regressions) — it was always the 2nd leg of the AND; a Gate 3 FAIL does NOT cancel it (its output is the
+diagnosis the path-forward needs). (4) Path-forward (iterate classifier / productionize demotion-through-full-cert
+/ hybrid) is OPEN but MALFORMED until Gate 1′ reports — every branch's cost-benefit turns on whether the 4 deltas
+are classifier errors or classifier corrections.
+
+**Integrity note for the record:** this chain survived six instrument defects (run_class_backtest sibling-parity),
+a rate-limited agent death, a power outage + git-ref corruption, and a near-miss verdict — with zero laundered
+numbers. The no-relief line held on a 7/9 near-miss. The system reported against itself at every fork.
