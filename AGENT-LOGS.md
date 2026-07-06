@@ -4,6 +4,25 @@
 
 ---
 
+### Session Log — 2026-07-06 All-domains-to-9 loop — Round 5: LONG-TAIL cluster sweep (3 CRITICAL + 2 HIGH fixed)
+
+**Mission:** systematic from-zero grading of the ~940 un-graded files (services/routes/libs/engine/scripts) in risk-prioritized clusters. Wave 1 = 4 clusters (execution, promotion gates, scheduler/autonomy, market-data/production). Found + FIXED live defects the "13 subsystems at 9" snapshot missed — validating the "every inch" mandate.
+
+**★ CRITICALS FIXED:**
+- **SCHEDULER TZ (`b65cfb7`) — ~50 DST-paired safety crons were SILENTLY DEAD.** node-cron uses the PROCESS local TZ unless `{timezone}` is passed; ZERO of 109 cron.schedule() passed it, and the tower's resolved TZ is `America/New_York` (TZ unset — CONFIRMED via `node -e Intl...`). So every "0 21,22" DST-paired job fired at ET hours, the inner ET-hour guard never matched → clean early-return (no throw → watchdog blind; heartbeat is plain-interval → kept "alive"). Dead: weekly-drift-2sigma vacation auto-HALT, daily-reconciliation, paper-journal-recon, db-backup, digests, n8n/regime/quantum weeklies. FIX: `scheduleUtc()` wrapper forces `{timezone:"UTC"}` on all 109 + boot-time TZ log. **Operator: also set TZ=UTC in NSSM env (defense-in-depth).**
+- **MARKET-DATA Tier-1 news blackout (`a9a9747`) — silently collapsed to FOMC+EIA-only.** sync inserts FOMC+EIA unconditionally but NFP/CPI/GDP/PPI only when FRED_API_KEY works; `economic-calendar-loader.getRows()` used DB-only whenever the table was non-empty → FRED-down = NFP/CPI/GDP/PPI blackout drops to zero silently (MFFU ban risk). FIX: per-event-type gap-fill (DB wins per type, hardcoded fallback fills missing types) + per-match source + loud WARN + durable test.
+- **PROMOTION L-1 (`9f6244b`) — CANDIDATE→SHADOW skipped the PBO<15% overfitting gate.** The edge is in VALID_TRANSITIONS + reachable via the HMAC PATCH route (n8n/Carter secret, not human-only); the PBO gate only fired on `fromState==="TESTING"`. So a strategy could reach PAPER capital never PBO-checked. FIX: extended the gate to fire on `fromState===CANDIDATE` too.
+
+**HIGHS FIXED:**
+- **EXECUTION F-1 (`0f56f86`):** w1-live-order-gateway.test.ts had 4/21 RED — a stale db mock made the F-1 lifecycle gate's `select` throw → all static-token Pine-gateway tests hit 409, ZERO coverage that a DEPLOYED order forwards or that HALT→423. Production code correct; mock stale. FIX: added select mock (21/21).
+- **PROMOTION L-2 (`ae914de`):** BIF gate was the one sibling that failed OPEN on a compute_bif() error (swallowed to bif=null = legacy grandfather). FIX: walk_forward emits `bif_computation_error=true` sentinel; bif-gate.ts fails CLOSED on it (before legacy-null); both call sites wired; 3 durable tests.
+
+**Verified CLEAN (this wave):** routeOrder fail-closed chain (76/76, DB-enforced idempotency, dual reconciliation), kill-switch L1-L9 (fail-closed on critical layers, no field-name mismatch), self-restart HMAC, remote-power-cycle guard, operator-absent Tier-1-only, boot-migration fail-closed, cron overlap/watchdog, market-internals staleness, liquidity-map fail-safe, B14/WFE/PBO/parameter-drift gate math + actor-authority + atomicity + gate-parity.
+
+**MEDs/LOW carry-forward:** execution F-2 (fill-callback route-level HMAC test, inert until SME go-live) + F-3 (Discord "did NOT reach broker" overclaims on a timeout → soften); market-data F-2 (drift-detector live-Sharpe leg zero-coverage — expected_pnl always null → sharpe null → green; safe but dark — wire to paper_trades or emit a distinct "never available" audit); scheduler F-2 (2 crons use `.includes()` substring guard not `=== N` — fragile). **NEXT: cluster wave 2** (remaining ~half of services + 93 routes + 304 scripts + 158 libs).
+
+---
+
 ### Session Log — 2026-07-06 All-domains-to-9 loop — Round 4: re-verifies + OLD FRONTEND DELETED + quantum
 
 **Mission:** continue the doer≠grader loop; process the 4 dispatched re-verifies + quantum from-zero scan; execute the operator's mid-loop directive to DELETE the old frontend.
