@@ -22,7 +22,17 @@
 
 **CERTIFIED-9 TALLY:** 7 core domains + Slumhouse + Carter = 9 subsystems at band 9. Broker/cookie + n8n at 8 (need durable tests). Long-tail at 7 (F-4 coverage). Quantum at 6 (pennylane-infra HIGH is honest-labeled; isolation clean).
 
-**Carry-forward (all clean, precise):** (1) broker/cookie 2 durable failure-injection tests → 9; (2) long-tail F-4 Topstep-exception test → toward 9; (3) n8n F-2/F-3 regression tests + F-4 empty-suite glob + F-5 dead file; (4) extraction F-2 coverage-model DECISION (docstring quote-overlap vs lenient any-token — affects the strategy-library corpus); (5) quantum: cost-budget ENFORCER (not just logger), tensor_signal_model coverage, the pennylane-install infra question (is "quantum" meant to run real circuits on the tower, or is classical-fallback acceptable? — operator/infra call); (6) Slumhouse-side safety-SSE test (the deepscan12 concern outlived its deleted test); (7) CLAUDE.md §15 doc repoint Slumhouse.
+**Durable tests LANDED this continuation (band-8/7 → toward 9):**
+- long-tail DLL time-fragile test FIXED (`b4edabd`, froze clock mid-RTH) + F-4 Topstep-exception durable test ADDED (`068ca87`, 4 cases, 24/24) → **long-tail's two re-verify blockers BOTH closed** (should re-verify to ~9).
+- broker/cookie F-2 repeated-unreachable streak durable test ADDED (`4bfcfe7`, drives pollPropFirmHealth + throwing fetch, pins no-alert-1/2 + one-at-3 + no-refire-4/5 + reset-re-escalates, 23/23) → **1 of broker/cookie's 2 durable tests done**.
+
+**Carry-forward (all clean, precise):**
+1. **broker/cookie F-1 durable test** (the LAST piece → band 9): `captureOneFirm` is PRIVATE — drive it via exported `runDashboardSnapshots()`. Recipe: `vi.mock("playwright", () => ({ chromium: { launch → browser → newContext → newPage } }))` (playwright is NOT installed, so it's a virtual mock) with a `page` whose `$("input[type='password']")` returns a truthy element (login case) vs `null` (clean case) + `page.url()` returns a login URL variant; mock insertAuditRowSafe + broadcastSSE + fs.mkdirSync/screenshot + logger. Assert: login-page firm → status:"error"/"stale_cookie_redirected_to_login" + `dashboard_snapshot.capture_failed` audit + NO screenshot; clean firm → captured + `dashboard_snapshot.captured` audit. FIRM_DASHBOARDS is module-level (check it has ≥1 entry without needing live cookies). Fragile mock chain — author carefully, do NOT ship flaky.
+2. n8n F-2/F-3 regression tests + F-4 empty-suite glob + F-5 dead file.
+3. extraction F-2 coverage-model DECISION (docstring quote-overlap vs lenient any-token — affects the strategy-library corpus).
+4. quantum: cost-budget ENFORCER (not just logger), tensor_signal_model coverage, the pennylane-install infra question (is "quantum" meant to run real circuits on the tower, or is classical-fallback acceptable? — operator/infra call).
+5. Slumhouse-side safety-SSE test (the deepscan12 concern outlived its deleted test).
+6. CLAUDE.md §15 doc repoint Slumhouse.
 
 ---
 
