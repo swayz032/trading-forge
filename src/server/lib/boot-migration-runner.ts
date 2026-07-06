@@ -158,6 +158,33 @@ function _resetBootFailureCount(): void {
   }
 }
 
+// ds21-w2 (deep-scan #21 alert-fatigue fix): 24h dedup for the duplicate-`when` Discord alert.
+// The audit row still writes on EVERY boot (durable, queryable record); this throttles ONLY the
+// Discord CRITICAL so an unchanged collision set doesn't re-ping the operator on every restart.
+// Re-fires if the collision signature changes (new/removed collision) or 24h elapse. File-based
+// on purpose — no DB query added to the fail-closed boot path.
+const _dupWhenAlertMarkerPath = path.resolve(_dirname, "..", "..", "..", "..", "bin", "boot-migration-dupwhen-alert.json");
+const _DUP_WHEN_ALERT_DEDUP_MS = 24 * 60 * 60 * 1000;
+
+function _shouldFireDupWhenDiscord(signature: string): boolean {
+  try {
+    const m = JSON.parse(fs.readFileSync(_dupWhenAlertMarkerPath, "utf8")) as { signature?: string; ts?: number };
+    if (m.signature === signature && typeof m.ts === "number" && Date.now() - m.ts < _DUP_WHEN_ALERT_DEDUP_MS) {
+      return false; // identical collision set already alerted < 24h ago
+    }
+  } catch {
+    // missing/corrupt marker → fire
+  }
+  try {
+    const dir = path.dirname(_dupWhenAlertMarkerPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(_dupWhenAlertMarkerPath, JSON.stringify({ signature, ts: Date.now() }), "utf8");
+  } catch (e) {
+    logger.warn({ err: e, path: _dupWhenAlertMarkerPath }, "boot-migration: failed to write dup-when alert marker (non-fatal)");
+  }
+  return true;
+}
+
 function resolveMigrationsDir(): string {
   if (process.env.MIGRATIONS_DIR) return process.env.MIGRATIONS_DIR;
   // Go up from lib/ → server/ → src/ → root
@@ -707,14 +734,21 @@ export async function runPendingMigrations(
         errorMessage: `duplicate journal when values: ${detail}`,
         correlationId,
       });
-      await fireDiscordCritical(
-        "Boot migration — duplicate journal `when` detected",
-        `The migration journal has ${dupWhens.length} group(s) of entries sharing an identical \`when\` ` +
-          `timestamp:\n\n${detail}\n\nThe boot-migration pending filter keys on \`when\`, so the LATER migration ` +
-          `in each group can be silently skipped (never applied, no ledger row). Verify each later sibling's ` +
-          `schema actually exists in the DB; give it a unique \`when\` in meta/_journal.json (only after confirming ` +
-          `the migration is idempotent) so future boots track it correctly.`,
-      );
+      // ds21-w2: audit row above records EVERY boot; Discord CRITICAL is 24h-deduped per collision
+      // signature so an unchanged (dormant) collision set doesn't re-ping the operator each restart.
+      const dupSignature = dupWhens.map((g) => g.when).sort((a, b) => a - b).join(",");
+      if (_shouldFireDupWhenDiscord(dupSignature)) {
+        await fireDiscordCritical(
+          "Boot migration — duplicate journal `when` detected",
+          `The migration journal has ${dupWhens.length} group(s) of entries sharing an identical \`when\` ` +
+            `timestamp:\n\n${detail}\n\nThe boot-migration pending filter keys on \`when\`, so the LATER migration ` +
+            `in each group can be silently skipped (never applied, no ledger row). Verify each later sibling's ` +
+            `schema actually exists in the DB; give it a unique \`when\` in meta/_journal.json (only after confirming ` +
+            `the migration is idempotent) so future boots track it correctly.`,
+        );
+      } else {
+        logger.info({ dupSignature }, "boot-migration: duplicate-when Discord alert deduped (<24h since last identical alert)");
+      }
     }
   } catch (dupCheckErr) {
     logger.warn({ err: String(dupCheckErr) }, "boot-migration: duplicate-when check itself failed (non-blocking)");
