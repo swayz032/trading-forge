@@ -10,6 +10,7 @@ import { LifecycleService } from "../services/lifecycle-service.js";
 import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 import { assertCrossValidatedSource } from "../services/agent-service.js";
 import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
+import { buildDeployEvidence } from "./slumhouse/deploy-approvals.js";
 
 export const strategyRoutes = Router();
 const lifecycleService = new LifecycleService();
@@ -657,6 +658,32 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
   if (!requireOfficeControlAuthority(req, res, "strategy.deploy_mutation_blocked")) return;
   const strategyId = req.params.id;
 
+  // deep-scan Slumhouse F-1 (CRITICAL): this legacy route performs the SAME DEPLOY_READY→DEPLOYED live-
+  // capital transition as the Office deploy-approvals card, but previously SKIPPED the server-side
+  // evidence gate — a stale/failing strategy could reach live via curl at the same auth tier, bypassing
+  // WFE/PBO/B14/staleness. Re-derive evidence + fail CLOSED, matching deploy-approvals.ts exactly.
+  const correlationId = randomUUID();
+  try {
+    const ev = await buildDeployEvidence(strategyId);
+    if (!ev.approvable) {
+      res.status(409).json({
+        error: "evidence_not_approvable",
+        evidenceState: ev.evidenceState,
+        blockers: ev.blockers,
+        correlationId,
+      });
+      return;
+    }
+  } catch (evErr) {
+    logger.warn({ strategyId, err: evErr, correlationId }, "deploy: evidence build failed — fail-CLOSED (refusing deploy)");
+    res.status(409).json({
+      error: "evidence_unavailable",
+      message: "Could not read deploy evidence — refusing to deploy until it loads clean.",
+      correlationId,
+    });
+    return;
+  }
+
   // Capture pre-deploy metrics snapshot for the audit record before the transition
   let metricsSnapshot: Record<string, unknown> = {};
   try {
@@ -717,6 +744,7 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
     {
       actor: "human_release",
       reason: "manual_tradingview_deployment_approval",
+      correlationId, // deep-scan Slumhouse F-2: §2 chain — was null on this legacy path
     },
   );
   if (!result.success) {
@@ -740,6 +768,7 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
       result: metricsSnapshot,
       status: "success",
       decisionAuthority: "human",
+      correlationId, // deep-scan Slumhouse F-2: link to the transition + evidence check
     });
   } catch (auditErr) {
     // Audit failure must not roll back an approved deploy — log it for investigation
