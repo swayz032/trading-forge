@@ -36,6 +36,7 @@ import {
 } from "../db/schema.js";
 import { eq, sql, gte, lt, and, sum, count } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+import { deriveReconSeverity } from "../lib/recon-severity.js";
 import { AlertFactory } from "../services/alert-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { runDashboardSnapshots } from "../services/dashboard-snapshot-service.js";
@@ -454,6 +455,12 @@ export async function runDailyReconciliation(
     // ── Compare: build mismatch_details ───────────────────────────────────
     const mismatches: MismatchDetail[] = [];
 
+    // ⚠ F-3 (confirmation-latency window — OPERATOR MUST ACCEPT BEFORE FLIPPING THE FLAG): check 1
+    // is a strict same-day equality. A trade sent shortly before the recon run whose TradersPost
+    // confirmation webhook hasn't landed yet would count as a transient sent≠confirmed mismatch
+    // (timing, not a real breach). Typical webhook latency is seconds, but before setting
+    // RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true the operator must either accept this transient-alert
+    // risk in writing OR add a grace window (exclude trades within N min of the recon boundary).
     // Check 1: production_trades (SENT) vs traderspost (CONFIRMED). deep-scan A / Option B:
     // when RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true, traderspostLogCount is the genuinely
     // independent count of TradersPost-confirmed rows (traderspost_confirmed_at IS NOT NULL,
@@ -566,9 +573,21 @@ export async function runDailyReconciliation(
       tradovateFillsCount > 0 ||
       (tradingviewMarkerCount !== null && tradingviewMarkerCount > 0) ||
       mffuDashboardPnl !== null;
-    let severity: ReconSeverity;
+    // deep-scan A / Option B fix (F-1): effective independent-source count includes the TradersPost
+    // CONFIRMED leg when Option B is wired (RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true), so the
+    // degraded clamp lifts and a genuine sent-vs-confirmed breach reaches RED instead of being
+    // permanently capped at yellow.
+    const effectiveIndependentSources =
+      INDEPENDENT_SOURCE_COUNT + (isTraderspostConfirmIndependent() ? 1 : 0);
+    const { severity: derivedSeverity, degraded } = deriveReconSeverity({
+      mismatchCount,
+      hasVerifiableData,
+      effectiveIndependentSources,
+      redMismatchCount: RECON_CONFIG.RED_MISMATCH_COUNT,
+      minIndependentSourcesForRed: MIN_INDEPENDENT_SOURCES_FOR_RED,
+    });
+    let severity: ReconSeverity = derivedSeverity;
     if (mismatchCount === 0 && !hasVerifiableData) {
-      severity = "yellow";
       logger.warn(
         {
           reconDate: reconDateStr,
@@ -580,12 +599,6 @@ export async function runDailyReconciliation(
         },
         "reconciliation UNVERIFIABLE — all data sources empty/null (production_trades has no writer wired); reporting yellow (degraded), NOT a confirmed-clean green"
       );
-    } else if (mismatchCount === 0) {
-      severity = "green";
-    } else if (mismatchCount < RECON_CONFIG.RED_MISMATCH_COUNT) {
-      severity = "yellow";
-    } else {
-      severity = "red";
     }
 
     // Also red if mffu PnL delta > tolerance (already captured in mismatches above,
@@ -597,34 +610,22 @@ export async function runDailyReconciliation(
       severity = "red";
     }
 
-    // M-7 + ds21 CRITICAL (deep-scan #21 Bands A+D): Degraded-reconciliation mode. When fewer
-    // than MIN_INDEPENDENT_SOURCES_FOR_RED independent data sources are available we cannot be
-    // confident that EITHER verdict is real: a "red" might be a proxy-count artifact, and — the
-    // ds21 fix — a "green" is a FALSE-GREEN, because traderspostLogCount and tradovateFillsCount
-    // are 1:1 proxies of productionTradesCount (all three are the SAME query result), so Checks
-    // 1 & 2 compare a value to itself and can never mismatch. Reporting green off that self-
-    // comparison told the operator's primary ProductionStatusPanel + the 90-day audit trail that
-    // reconciliation "verified" something when it verified nothing. The original M-7 clamp only
-    // floored red→yellow; it left green un-clamped, which is exactly the hole. Now BOTH red and
-    // green are capped at yellow (UNVERIFIED / degraded) until a genuinely independent source is
-    // wired and INDEPENDENT_SOURCE_COUNT is bumped to ≥ MIN_INDEPENDENT_SOURCES_FOR_RED. Yellow
-    // here means "ran, but cannot independently confirm" — the honest state.
-    if (
-      INDEPENDENT_SOURCE_COUNT < MIN_INDEPENDENT_SOURCES_FOR_RED &&
-      (severity === "red" || severity === "green")
-    ) {
-      const originalSeverity = severity;
-      severity = "yellow";
+    // Degraded-reconciliation mode (M-7 + ds21 Bands A+D). The CLAMP itself now lives in
+    // deriveReconSeverity() above, keyed on the DYNAMIC effectiveIndependentSources (F-1 fix) — so
+    // it correctly LIFTS once Option B is wired (3 independent sources) and a genuine breach can
+    // reach red. Here we only LOG the degraded downgrade. Before Option B: traderspost/tradovate
+    // counts are 1:1 proxies of production_trades (self-comparison can't mismatch), so red/green are
+    // capped at yellow ("ran, but cannot independently confirm" — the honest state).
+    if (degraded) {
       logger.warn(
         {
           reconDate: reconDateStr,
-          independentSourceCount: INDEPENDENT_SOURCE_COUNT,
+          effectiveIndependentSources,
           minRequired: MIN_INDEPENDENT_SOURCES_FOR_RED,
-          originalSeverity,
           downgradedSeverity: "yellow",
         },
-        `reconciliation: degraded mode — insufficient independent sources; ${originalSeverity} capped at yellow ` +
-          `(traderspost/tradovate counts are 1:1 proxies of production_trades, not independent verification)`
+        "reconciliation: degraded mode — insufficient independent sources; red/green capped at yellow " +
+          "(wire the Option-B confirm webhook + set RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true to lift this)"
       );
     }
 
