@@ -122,3 +122,44 @@ AND-certification silently becomes an AND across two classifiers.
   of the actual diff, and the drift was certified benign BY INSPECTION, not by trust. Manifest discipline works.
 - HONEST CAVEAT: check #2's "byte-identical when flag OFF" is STRUCTURAL inspection only — the full worktree test
   re-run confirming the additive-wiring claim is DEFERRED to next session (on the pending list, not silently dropped).
+
+## GATE 3 RE-RUN PROTOCOL (Fable-5, LOCKED before dispatch 2026-07-06)
+Gate 3's first run produced an INVALID measurement — 3 classifier-independent instrument defects crashed/masked
+the exact transitions under test. Re-run authorized (three-leg blade holds: defect real+verified, fix result-
+independent, frozen rule can still fail). Protocol:
+
+### VALIDITY-BEFORE-VERDICT (strict ordering — closes the asymmetric-stopping hazard the 6/9 peek created)
+The re-run harness reports **instrument validity FIRST**: zero crashes, zero exceptions, ALL 9 revival pairs AND
+ALL v2-traded pairs measurable, no timeouts.
+- Validity FAILS → verdict numbers **QUARANTINED UNREAD**; the new defect gets the same three-leg treatment; re-run.
+- Validity PASSES → verdict read **ONCE**; frozen rule applies — FINAL, no relief, **no post-hoc instrument claims.**
+This makes "go find one more instrument bug" structurally impossible, not merely resisted.
+
+### DENOMINATOR: option (i) LOCKED — fix all instruments so all 9 are measurable
+(ii) re-scope the "9" to measurable pairs = REJECTED (goalpost-adjacent even with sign-off; frozen rule said 9,
+9 it stays). (iii) accept MCL indeterminate = REJECTED (caps max at 6/9, forces FAIL on instrument grounds —
+inverts the same error). Only (i) preserves the rule as written.
+
+### MCL: DIAGNOSE BEFORE FIX
+The demotion experiment (commit `1ab7321`) measured MCL revivals on this same data → strong prior that the Gate 3
+MCL gate failure is a harness-loads-an-unneeded-TF artifact, NOT corrupt data. **If diagnosis shows the MCL data
+is genuinely corrupt → STOP:** that contradicts a certified prior result and becomes a FROZEN FINDING of its own
+before anything re-runs.
+
+### SCOPE LOCK on the fix commit (instrument-only)
+ONLY: the winners/losers hoist + zero-signal regression test (mirror of the C2 fix), the MCL gate resolution, the
+timeout envelope (limit/chunking — never the computation). ZERO changes to classifier / specs / roles / the
+harness logic that computes revival/regression. Commit message enumerates exactly these 3 defects and nothing
+else. **Any classifier-side "while I'm in here" change VOIDS the re-run.**
+
+### QUARANTINE the 6/9 reconstruction
+The agent's hand-reconstructed 6/9 is DIAGNOSTIC ONLY — never citable in certification. The valid re-run verdict
+SUPERSEDES it in BOTH directions (if the re-run says 8/9 PASS, the recon didn't earn it; if 6/9 FAIL, the recon
+doesn't rescue it).
+
+### RECORD
+- The Step-5 agent's conduct — refused to certify a crash-masked result, reconstructed diagnostically, did NOT
+  self-patch the engine — is doer≠grader culture working at the subagent level. Logged.
+- **METHODOLOGY FREEZE (standing requirement):** a harness that can crash on the transition it is measuring will
+  systematically mask exactly the effect under test (zero-signal crashes hide zero→nonzero revivals). ALL future
+  gate harnesses must include an instrument-validity self-check as a standing requirement.
