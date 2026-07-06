@@ -48,7 +48,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { logger } from "./logger.js";
 import { insertAuditRowSafe } from "./audit-log-helper.js";
-import { findDuplicateJournalWhens } from "./migration-journal-utils.js";
+import { findDuplicateJournalWhens, computeMigrationPlan } from "./migration-journal-utils.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -777,19 +777,73 @@ export async function runPendingMigrations(
     }
   }
 
-  // ─── Query applied ──────────────────────────────────────────────────────────
-  type AppliedRow = { created_at: string };
+  // ─── Query applied (hash + when) ─────────────────────────────────────────────
+  type AppliedRow = { created_at: string; hash: string };
   const appliedResult = await db.execute<AppliedRow>(
-    sql`SELECT created_at::text AS created_at FROM drizzle.__drizzle_migrations`,
+    sql`SELECT created_at::text AS created_at, hash FROM drizzle.__drizzle_migrations`,
   );
   // drizzle-orm returns { rows: [...] } for raw execute; normalise either shape
   const appliedRows: AppliedRow[] =
     (appliedResult as { rows?: AppliedRow[] }).rows ??
     (appliedResult as unknown as AppliedRow[]);
   const appliedWhens = new Set(appliedRows.map((r) => String(r.created_at)));
+  const appliedHashes = new Set(appliedRows.map((r) => r.hash));
 
-  // ─── Compute pending ────────────────────────────────────────────────────────
-  const pending = journal.entries.filter((e) => !appliedWhens.has(String(e.when)));
+  // ─── Compute the plan keyed on migration HASH, not `when` (F1 fix, deep-scan Autonomy HIGH) ──
+  // Closes the silent-skip class: two journal entries sharing a `when` no longer cause the second
+  // to be treated as applied. hashOf reads + sha256s each .sql; null (missing/locked) → the plan
+  // falls back to the legacy when-based check for that entry, so behavior is never worse than before.
+  const migrationsDir = resolveMigrationsDir();
+  const hashOf = (e: { when: number; tag: string }): string | null => {
+    try {
+      const p = path.join(migrationsDir, `${e.tag}.sql`);
+      if (!fs.existsSync(p)) return null;
+      return crypto.createHash("sha256").update(readUtf8StripBom(p)).digest("hex");
+    } catch {
+      return null;
+    }
+  };
+  const { toApply, toBackfill } = computeMigrationPlan(
+    journal.entries,
+    appliedWhens,
+    appliedHashes,
+    hashOf,
+  );
+
+  // ─── Backfill ledger drift for the 5 verified out-of-band collision siblings ─────────────────
+  // Their schema is already present in prod (verified read-only 2026-07-05) — record the missing
+  // ledger row (hash + when) so future boots track them by identity; do NOT re-run the SQL.
+  for (const entry of toBackfill) {
+    const h = hashOf(entry);
+    if (h === null) continue; // defensive: backfill entries always hash non-null
+    try {
+      await db.execute(
+        sql`INSERT INTO drizzle.__drizzle_migrations (hash, created_at) VALUES (${h}, ${entry.when})`,
+      );
+      logger.warn(
+        { tag: entry.tag, when: entry.when },
+        "boot-migration: BACKFILLED ledger row for a verified out-of-band collision sibling (hash recorded, SQL NOT re-run — schema already present)",
+      );
+      await insertAuditRowSafe({
+        action: "boot_migration.ledger_backfilled",
+        entityType: "migration",
+        entityId: entry.tag,
+        decisionAuthority: "system",
+        input: { tag: entry.tag, when: entry.when } as Record<string, unknown>,
+        result: { backfilled: true, reran_sql: false } as Record<string, unknown>,
+        status: "success",
+        correlationId,
+      });
+    } catch (backfillErr) {
+      logger.warn(
+        { err: String(backfillErr), tag: entry.tag },
+        "boot-migration: ledger backfill failed (non-blocking — will retry next boot)",
+      );
+    }
+  }
+
+  // ─── Pending = genuinely-unapplied migrations (hash-keyed) ───────────────────
+  const pending = toApply;
 
   if (pending.length === 0) {
     logger.info(
@@ -836,7 +890,7 @@ export async function runPendingMigrations(
     logger.warn({ err: mkdirErr, backupDir }, "boot-migration: failed to create backup dir (will use os.tmpdir())");
   }
 
-  const migrationsDir = resolveMigrationsDir();
+  // migrationsDir already resolved above (for the hash-keyed plan); reuse it here.
   const databaseUrl = process.env.DATABASE_URL ?? "";
 
   // ─── Apply each pending migration in journal order ───────────────────────────

@@ -24,6 +24,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import path from "node:path";
 import os from "node:os";
+import { createHash } from "node:crypto";
 
 // ─── Mock: node:fs ─────────────────────────────────────────────────────────────
 // We control which files "exist" and their content.
@@ -102,6 +103,10 @@ function extractSqlString(obj: unknown): string {
 
 // Track the SQL statements executed and __drizzle_migrations inserts.
 let _appliedWhens: Set<string> = new Set();
+// F1: the runner now keys "applied" on hash. Tests that mark a migration applied AND mock its .sql
+// file must supply that migration's hash here (when → sha256 of its content) so the hash-keyed plan
+// recognises it as applied. Tests that don't mock the .sql fall back to the when-based check.
+let _appliedHashByWhen: Map<string, string> = new Map();
 let _txStmts: string[] = [];
 let _txMigrationsInserted: number[] = [];
 
@@ -127,8 +132,13 @@ const mockDbExecute = vi.fn(async (sqlObj: unknown) => {
   const rawSql = extractSqlString(sqlObj);
 
   if (rawSql.includes("created_at") && rawSql.includes("drizzle_migrations")) {
-    // "SELECT created_at::text AS created_at FROM drizzle.__drizzle_migrations"
-    return { rows: [..._appliedWhens].map((w) => ({ created_at: w })) };
+    // "SELECT created_at::text AS created_at, hash FROM drizzle.__drizzle_migrations"
+    return {
+      rows: [..._appliedWhens].map((w) => ({
+        created_at: w,
+        hash: _appliedHashByWhen.get(w) ?? `nohash-${w}`,
+      })),
+    };
   }
   if (rawSql.toLowerCase().includes("create") || rawSql.includes("__drizzle_migrations")) {
     return { rows: [] };
@@ -211,6 +221,7 @@ beforeEach(() => {
   mockFiles.clear();
   mockExistingPaths.clear();
   _appliedWhens = new Set();
+  _appliedHashByWhen = new Map();
   _txStmts = [];
   _txMigrationsInserted = [];
   _pgDumpAvailable = true;
@@ -563,6 +574,12 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     ];
     // 0127 already applied, 0128 pending
     _appliedWhens = new Set(["9000000"]);
+    // F1: the plan keys on hash — record 0127's hash so it's recognised as applied (its .sql is
+    // mocked below, so the runner will hash it and must find that hash in the ledger).
+    _appliedHashByWhen.set(
+      "9000000",
+      createHash("sha256").update(makeMigrationSql("0127_applied")).digest("hex"),
+    );
 
     const journalPath = getJournalPath();
     mockFiles.set(journalPath, makeJournal(entries));
