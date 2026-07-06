@@ -392,3 +392,37 @@ Diffed classifier (v3-shadow) vs demotion-effective (v2 role, DRI-CONTEXTUAL→c
 **→ Gate 1′ target sharpened:** adjudicate whether the DIFFERING conditions are transcript-mandatory gates —
 snNkQSyWX4k's 4 JUSTIFIED_MANDATORY (upheld → classifier erred) + jlShztsY3oA's OPTIONAL/UNRESOLVED (if genuinely
 optional → classifier's kill is a fidelity correction, demotion the unfaithful one — the structural irony realized).
+
+## GATE 1′ ADJUDICATION — DIAGNOSED (2026-07-06, load-bearing anchors independently re-verified)
+Gate 1′ multi-pass transcript adjudication of the 10 differing conditions (+ parent independent anchor re-verify).
+**INDEPENDENCE CAVEAT:** the adjudication was a two-pass SELF adjudication (single session, 2nd pass adversarial),
+NOT a fully-independent second rater — a CLAIM, not certification. BUT the parent independently re-verified the
+load-bearing transcript anchors (below), and the top-level dispositions are robust to the 4 self-disagreements.
+- **MISSES (snNkQSyWX4k_MNQ + MCL) = CLASSIFIER ERROR (verified).** The classifier moved the LITERAL ENTRY TRIGGER
+  to context: transcript "candles retest one or both of the averages... **that is our signal to sell**" +
+  "price came back down right here to retest the average **so that is our entry**"; plus consolidation avoid-rule
+  "we're **not doing anything during consolidation**." 3 of 7 conditions confirm mandatory-gate → classifier
+  under-assigned real gates (most seriously the entry trigger). (Side: even DRI gold's "us session"
+  JUSTIFIED_MANDATORY was OVERTURNED — "I only trade us session... you want to practice at different sessions" =
+  personal habit, not requirement — gold is not immune to doer≠grader either.)
+- **REGRESSIONS (jlShztsY3oA_MNQ + MCL) = FIDELITY CORRECTION (verified).** 0 of 3 conditions mandatory (all
+  OPTIONAL/UNRESOLVED); the transcript calls the naive ORB "'n vals strategie ... die meeste handelaars verloor
+  geld daarmee" (a false strategy most traders lose money with) and frames fibonacci/structure as improvement
+  SUGGESTIONS. Classifier's context assignment is FAITHFUL → the death is a correct fidelity kill → **regression
+  clause SATISFIED (zero unexplained regressions).** STRUCTURAL IRONY REALIZED: demotion (the N=9 reference) is the
+  transcript-UNFAITHFUL arm on these pairs (kept soft conditions as hard gates).
+
+## FINAL GATE 3 DISPOSITION (fully diagnosed)
+- **Revival 7/9 < 8/9 → Gate 3 FAILS** (stands, no relief). The 2 misses are REAL classifier errors (verified),
+  not adjudicable away.
+- **Regression clause SATISFIED** (2 regressions = fidelity corrections, upheld).
+- **Root cause DIAGNOSED:** the classifier OVER-CONTEXTUALIZES — it moves genuine gates (incl. the literal entry
+  trigger) to context. Specific + FIXABLE, consistent with Gate 1's ~67% margin accuracy. The classifier is close
+  (7/9) and MORE transcript-faithful than demotion on jlShztsY3oA. Demotion is NOT clearly better (over-keeps; never
+  went through Gate 1′; single-rater labels).
+
+## PATH-FORWARD (now well-formed)
+Recommended: **ITERATE THE CLASSIFIER** — the fix is diagnosed: stop over-contextualizing entry-trigger/gate
+conditions (keep WAIT_CONFIRMATION "retest→signal" type as spine). On snNkQSyWX4k, restoring the entry trigger to
+spine would likely revive MNQ/MCL → 8-9/9. Alternatives (productionize demotion / hybrid) are weaker given demotion
+is the less-faithful arm where they differ. OPEN for operator/advisor ruling.
