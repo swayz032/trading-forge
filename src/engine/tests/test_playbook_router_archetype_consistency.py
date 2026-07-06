@@ -1,11 +1,14 @@
 """H-1 archetype-classification consistency guard (Deep-Scan #18c, 2026-07-05).
 
 The multi-TF library expansion registers each YouTube-educator concept across
-several timeframes in the playbook_router strategy-family lists. Deep-Scan Band A/B
-found the original expansion misclassified 6 concept families: it placed
+several timeframes in the playbook_router strategy-family lists. The other session's
+OR-branches WIP drafted this 42-entry expansion with ALL of them in CONTINUATION_STRATS,
+which Deep-Scan Band A/B flagged as misclassifying 6 concept families: it would place
 ``manipulation_trade_*_1m`` (and 5 others) in CONTINUATION_STRATS while their 5m
 sibling lives in REVERSAL_STRATS — a semantic inversion that hands those setups the
-wrong bias-regime eligibility.
+wrong bias-regime eligibility. This commit lands the expansion onto phase-0 with the
+CORRECTED split (18 → REVERSAL to match their siblings, 24 stay CONTINUATION); phase-0
+never carried the misclassified draft.
 
 The invariant these tests enforce: **a given concept (stripped of its
 ``_<symbol>_<timeframe>`` suffix) must belong to exactly ONE archetype family.**
