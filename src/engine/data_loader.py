@@ -58,6 +58,77 @@ def _get_connection() -> duckdb.DuckDBPyConnection:
     return _con
 
 
+# ─── S3 Read Pre-Flight Guard (deep-scan #21 Wave-2 MED, 2026-07-05) ──────────
+#
+# CERTIFIED FINDING: DuckDB's native httpfs S3 reader (`con.execute(sql).fetchdf()`
+# in load_ohlcv below) can SEGFAULT / raise a Windows access violation — a native
+# crash outside the Python exception machinery — when AWS credentials are
+# missing/invalid (reproduced by deep-scan #21 Band B: no AWS_*/S3_BUCKET env ->
+# segfault across 3 tests). A bare `except Exception:` around that call CANNOT
+# catch a native crash, so the whole backtest subprocess died uncontrolled instead
+# of returning a structured error — surfacing to the TS python-runner as an opaque
+# non-zero exit with no diagnosable reason.
+#
+# FIX: verify the exact env-var contract `_get_connection()` documents above
+# (AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY — DuckDB auto-reads these once httpfs
+# is loaded; no other credential source is wired anywhere in this codebase — see
+# the same convention in src/data/scripts/upload_to_s3.py and
+# black_swan_evaluator.py) BEFORE DuckDB ever touches the network. Missing creds
+# now raise a clean, structured DataLoadConfigError instead of crashing the
+# process. No-ops for non-S3 sources, so local_path / warm-cache reads (the vast
+# majority of calls) are byte-identical to before this change.
+#
+# HONEST RESIDUAL (documented per deep-scan #21 instructions): this closes the
+# reproducible crash class — missing/absent credentials, the one Band B actually
+# reproduced. It does NOT guarantee protection against a truncated S3 object or a
+# network drop mid-transfer DURING the DuckDB fetchdf() call itself — those
+# failures occur inside DuckDB's native C++ S3 client after this guard has already
+# passed, which a Python-level pre-flight cannot wrap without real flaky-S3 /
+# truncated-object test infrastructure (deliberately corrupted fixtures + simulated
+# connection drops) that is out of scope here. A config guard is the fully
+# testable, fully safe subset of the fix; the remaining native-crash surface is
+# narrower (mid-read network failure) but not eliminated.
+
+class DataLoadConfigError(RuntimeError):
+    """Raised when an S3 parquet read is refused pre-flight instead of risking a
+    DuckDB native crash. See the module note above `_check_s3_read_config` for why
+    this exists and what it does/doesn't cover."""
+
+
+def _check_s3_read_config(s3_path: str) -> None:
+    """Pre-flight guard: refuse an S3 read with a clean, catchable exception when
+    AWS credentials are absent, instead of letting DuckDB's native S3 reader
+    attempt (and potentially native-crash on) a read it cannot authenticate.
+
+    No-op for any path that is not an 's3://' URI — local files, `local_path=`
+    fixtures, and warm local-cache reads never reach this check and are completely
+    unaffected (byte-identical happy path). On the happy path for real S3 reads
+    (creds present), this is a single dict lookup pair — negligible overhead, zero
+    behavior change to the actual read.
+    """
+    if not s3_path.startswith("s3://"):
+        return
+
+    has_access_key = bool(os.environ.get("AWS_ACCESS_KEY_ID"))
+    has_secret_key = bool(os.environ.get("AWS_SECRET_ACCESS_KEY"))
+    if has_access_key and has_secret_key:
+        return
+
+    missing = []
+    if not has_access_key:
+        missing.append("AWS_ACCESS_KEY_ID")
+    if not has_secret_key:
+        missing.append("AWS_SECRET_ACCESS_KEY")
+
+    raise DataLoadConfigError(
+        f"S3 read for '{s3_path}' aborted before DuckDB: missing "
+        f"{' and '.join(missing)}. DuckDB's native S3 (httpfs) reader can "
+        f"native-crash the whole backtest subprocess on a bad-credentials read "
+        f"instead of raising a catchable exception — refusing the read pre-flight "
+        f"instead. Set the missing credential(s) in the environment before retrying."
+    )
+
+
 # ─── Local Cache ──────────────────────────────────────────────────
 # Phase 12 perf fix: 24-hour TTL + BACKTEST_CACHE_BUST env var for invalidation.
 #
@@ -765,6 +836,11 @@ def load_ohlcv(
     _from_cache = source.startswith(str(CACHE_DIR))
     _verify_ratio_adjusted_source(source, adjusted, from_cache=_from_cache)
 
+    # Deep-scan #21 Wave-2 MED: refuse an S3 read with a clean exception when AWS
+    # creds are absent, instead of risking a DuckDB native crash (see guard docstring
+    # above _check_s3_read_config). No-op for local_path / cache sources.
+    _check_s3_read_config(source)
+
     sql = f"""
         SELECT ts_event, open, high, low, close, volume
         FROM read_parquet('{source}')
@@ -784,6 +860,10 @@ def load_ohlcv(
             # Previously the guard was only on the primary path; a raw fallback with
             # adjusted=True would silently serve unadjusted data (and poison the cache).
             _verify_ratio_adjusted_source(legacy, adjusted, from_cache=False)
+            # Deep-scan #21 Wave-2 MED: same pre-flight guard on the legacy fallback
+            # S3 read — defense in depth in case a future caller reaches this branch
+            # without having gone through the primary source's guard above.
+            _check_s3_read_config(legacy)
             legacy_sql = f"""
                 SELECT ts_event, open, high, low, close, volume
                 FROM read_parquet('{legacy}')
