@@ -7172,6 +7172,11 @@ def run_class_backtest(
     # GATE3-DEFECT-1 regression test actually exercising the zero-signal path
     # end-to-end (test_gate3_defect1_class_backtest_zero_signal.py).
     _roll_spread_audit_rows_cls: list[dict] = []
+    # GATE3-DEFECT-6 FIX (corpus-v3-gate1-respecification.md "DEFECT 6 (MCL
+    # reconciliation)", 2026-07-06): full-precision (entry_p, exit_p) pairs, one
+    # per trade in the SAME order as trades_list.append(trade) below. See the
+    # fix note at the bar_dollar_pnls loop for why this parallel array exists.
+    _raw_price_pairs_cls: list[tuple[float, float]] = []
 
     if trades_records is not None:
         trade_pnls_list = []
@@ -7278,6 +7283,10 @@ def run_class_backtest(
             net_pnl = gross - slip_cost - comm_cost - _roll_cost_usd_cls
 
             trade_pnls_list.append(net_pnl)
+            # GATE3-DEFECT-6 FIX: capture the FULL-PRECISION entry_p/exit_p used in
+            # `gross` above (not yet rounded) — one entry per trade, same order as
+            # trades_list.append(trade) below, so the two lists stay index-aligned.
+            _raw_price_pairs_cls.append((entry_p, exit_p))
 
             trade: dict = {}
             for col in trades_records.columns:
@@ -7356,11 +7365,40 @@ def run_class_backtest(
     bar_dollar_pnls = np.zeros(n_bars)
 
     if trades_list:
-        for trade in trades_list:
+        for _bar_pnl_i, trade in enumerate(trades_list):
             t_entry_idx = int(trade.get("Entry Idx", 0))
             t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
-            t_entry_p = float(trade.get("Avg Entry Price", 0))
-            t_exit_p = float(trade.get("Avg Exit Price", 0))
+            # GATE3-DEFECT-6 FIX (corpus-v3-gate1-respecification.md "DEFECT 6 (MCL
+            # reconciliation)", 2026-07-06): read the FULL-PRECISION entry/exit prices
+            # captured in _raw_price_pairs_cls (same values `gross`/`net_pnl` used
+            # above), NOT the display-rounded `trade["Avg Entry/Exit Price"]` fields
+            # (round(...,4), added only for JSON-output readability). Reading the
+            # rounded fields here made this loop's per-bar mark-to-market sum
+            # (equity_total) disagree with net_pnl's sum (trades_total) by the
+            # 4-decimal-place rounding quantum on TWO prices per trade — negligible
+            # in dollar terms for MES ($5/pt) and MNQ ($2/pt), but amplified 20-50x
+            # by MCL's $100/pt point value across thousands of trades, tripping the
+            # $1 reconciliation tolerance on 8/42 pairs (all MCL) in the Gate 3
+            # reference re-derivation. Diagnosis (numeric, confirmed via one-off
+            # instrumented run of snNkQSyWX4k_MCL demotion, 2484 trades): recomputing
+            # trades_total with these SAME rounded prices reproduced equity_total to
+            # 4 decimal places exactly (diff 0.0000) — i.e. no dollars were missing;
+            # this was a pure representation mismatch (H-B), not an omitted cost term
+            # (H-A). Fix removes the mismatch at its source instead of widening the
+            # validity-check tolerance: the $1 gate stays exactly as strict as before
+            # for every symbol, so it still catches a genuine Defect-4-class omission
+            # on MCL. Verdict-variable-preserving, NOT computation-preserving: refines
+            # equity-derived numbers only (equity curve, drawdown, daily P&L); does
+            # NOT touch entry logic, trade signals, or trade counts, which is all
+            # Gate 3's frozen rule measures.
+            if _bar_pnl_i < len(_raw_price_pairs_cls):
+                t_entry_p, t_exit_p = _raw_price_pairs_cls[_bar_pnl_i]
+            else:
+                # Defensive fallback (should never trigger — _raw_price_pairs_cls is
+                # appended 1:1 with trades_list in the loop above): fall back to the
+                # rounded trade-dict fields rather than crashing.
+                t_entry_p = float(trade.get("Avg Entry Price", 0))
+                t_exit_p = float(trade.get("Avg Exit Price", 0))
             # F-6 FIX (class path): Use int() to match the P&L loop's int(size)
             # contract floor. float(Size) was a dormant mismatch — integer-valued
             # today but would break reconciliation if fractional-Kelly sizing lands.
