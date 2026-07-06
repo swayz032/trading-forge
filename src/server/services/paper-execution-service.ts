@@ -2274,10 +2274,13 @@ export async function openPosition(sessionId: string, params: {
     filled: true,
   };
 
+  // ds21 (deep-scan #21 Band D): thread correlationId (in scope) onto the highest-value
+  // reconstruction event so bar→handler→DB→SSE→audit stays correlatable for a position open.
   broadcastSSE("paper:position-opened", {
     sessionId,
     position,
     executionQuality: executionResult,
+    correlationId,
   });
 
   logger.info({ sessionId, executionResult }, "Paper position opened");

@@ -4792,6 +4792,8 @@ export async function evaluateSignals(
                 { sessionId, symbol, satisfiedCount, minRequired, factorResults, factorSource, strategyId: sessionConfig.strategyId },
                 "Wave 23H.D Stage 2: A+ gate REJECTED — per-strategy indicators insufficient",
               );
+              // ds21 (deep-scan #21 Band D): include correlationId like the sibling
+              // signal:weighted_score_rejected event, for consistent per-bar trace coverage.
               broadcastSSE("signal:a_plus_rejected", {
                 sessionId,
                 symbol,
@@ -4801,6 +4803,7 @@ export async function evaluateSignals(
                 factorSource,
                 price: bar.close,
                 timestamp: bar.timestamp,
+                correlationId: correlationId ?? null,
               });
               db.insert(paperSignalLogs).values({
                 sessionId,
@@ -4937,6 +4940,8 @@ export async function evaluateSignals(
                 { sessionId, symbol, satisfiedCount, minRequired, factorResults, factorSource, strategyId: sessionConfig.strategyId },
                 "Wave 23.C Stage 2: A+ gate REJECTED — insufficient confluence factors",
               );
+              // ds21 (deep-scan #21 Band D): include correlationId like the sibling
+              // signal:weighted_score_rejected event, for consistent per-bar trace coverage.
               broadcastSSE("signal:a_plus_rejected", {
                 sessionId,
                 symbol,
@@ -4946,6 +4951,7 @@ export async function evaluateSignals(
                 factorSource,
                 price: bar.close,
                 timestamp: bar.timestamp,
+                correlationId: correlationId ?? null,
               });
               db.insert(paperSignalLogs).values({
                 sessionId,

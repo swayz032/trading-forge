@@ -1323,12 +1323,16 @@ class KillSwitch {
       );
 
     // SSE broadcast
+    // ds21 (deep-scan #21 Band D): thread the same correlationId used on the audit row
+    // (:1319) into the SSE payload so a dashboard consumer of this capital-safety HALT/RESUME
+    // event can correlate it to its audit trail without timestamp-matching.
     broadcastSSE("production:mode-changed", {
       previousMode,
       newMode: mode,
       reason,
       setBy,
       changedAt: new Date().toISOString(),
+      correlationId: modeChangeCorrelationId,
     });
 
     logger.info(
