@@ -156,3 +156,34 @@ describe("Option B end-to-end — a real sent-vs-confirmed BREACH is detected (O
     expect((reconEvt![1] as { correlationId?: string }).correlationId).toBeTruthy(); // SSE hop no longer drops it
   });
 });
+
+describe("deep-scan Accuracy HIGH — expected_pnl unpopulated must NOT false-RED (Option B ON)", () => {
+  beforeEach(async () => {
+    // The REAL broker-router condition: production_trades rows EXIST (confirmed, so Option B has 3
+    // independent sources and the degraded clamp lifts) but every expected_pnl is NULL. Pre-fix,
+    // fetchExpectedPnl returned Number(null ?? 0)=0; once the MFFU-PnL leg is wired (Phase 4C) that
+    // fabricated $0 would produce a guaranteed false RED on any nonzero MFFU day. Post-fix it returns
+    // null → the P&L check + the RED severity branch both SKIP.
+    await pg.exec("DELETE FROM production_trades; DELETE FROM daily_reconciliation;");
+    await pg.exec(`
+      INSERT INTO production_trades (strategy_id, strategy_version_hash, bar_timestamp, signal_value, traderspost_webhook_id, expected_pnl, traderspost_confirmed_at) VALUES
+      ('11111111-1111-1111-1111-111111111111','h1','2026-07-02T14:00:00Z',1,'wh-1',NULL,'2026-07-02T14:00:05Z'),
+      ('11111111-1111-1111-1111-111111111111','h1','2026-07-02T15:00:00Z',1,'wh-2',NULL,'2026-07-02T15:00:05Z');
+    `);
+  });
+
+  it("Option B ON + expected_pnl all NULL → severity is NOT red (P&L leg skipped honestly, not fabricated $0)", async () => {
+    process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT = "true";
+    await runDailyReconciliation(DAY);
+    const status = await getDailyReconciliationStatus(DAY);
+    // sent==confirmed (2/2) → no count divergence; expected_pnl null → no P&L mismatch. Not red.
+    expect(status.severity).not.toBe("red");
+    const rows = await pg.query<{ mismatch_count: number; expected_pnl: string }>(
+      "SELECT mismatch_count, expected_pnl FROM daily_reconciliation ORDER BY ran_at DESC LIMIT 1",
+    );
+    // No fabricated pnl_mffu_vs_expected mismatch was recorded.
+    expect(rows.rows[0].mismatch_count).toBe(0);
+    // Persisted expected_pnl is the notNull-column placeholder 0 (null coerced), NOT a compared value.
+    expect(Number(rows.rows[0].expected_pnl)).toBe(0);
+  });
+});

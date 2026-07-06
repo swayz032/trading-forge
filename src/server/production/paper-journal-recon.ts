@@ -110,6 +110,11 @@ export interface PaperReconStrategyResult {
   pnlTolerance: number | null;
   pnlDriftExceedsTolerance: boolean;
   missingBrokerData: boolean;
+  // deep-scan Accuracy CRITICAL: production_trades rows exist but every expected_pnl is NULL
+  // (broker-router writes it null by design pre server-mediated execution). The P&L drift join
+  // MUST NOT coalesce NULL→$0 (that turns any real paper P&L into a false CRITICAL drift alert).
+  // When true, P&L reconciliation was not performed — drift is null, never a mismatch.
+  brokerPnlUnavailable: boolean;
   tradeIds: string[];
 }
 
@@ -829,6 +834,29 @@ export async function runPaperJournalRecon(
     }
   }
 
+  // deep-scan Accuracy CRITICAL: strategies whose production_trades rows exist but carry only NULL
+  // expected_pnl. Their P&L drift was intentionally NOT computed (would have false-alerted). Surface
+  // it as a distinct WARN so hasDrift=false is not misread as "P&L verified clean".
+  const strategiesWithBrokerPnlUnavailable = results.filter((r) => r.brokerPnlUnavailable).length;
+  if (strategiesWithBrokerPnlUnavailable > 0) {
+    const affectedPnl = results.filter((r) => r.brokerPnlUnavailable);
+    await writeAuditRow({
+      action: "paper_reconciliation.broker_pnl_unavailable",
+      status: "warning",
+      correlationId,
+      payload: {
+        reconDate: reconDateStr,
+        message:
+          "P&L reconciliation was NOT performed for these strategies: production_trades rows exist " +
+          "but every expected_pnl is NULL (broker-router writes it null by design — no server-mediated " +
+          "fill ingest populates it yet). Trade-count parity still ran; P&L drift is unverified. Do NOT " +
+          "read hasDrift=false as 'P&L verified clean' for these strategies.",
+        affected_strategy_ids: affectedPnl.map((r) => r.strategyId),
+        affected_strategy_count: affectedPnl.length,
+      },
+    });
+  }
+
   const reconciliationInactive = !brokerTapeSourceActive && strategiesWithMissingBrokerData > 0;
 
   // Always write the top-level evaluated row (includes all 4 sub-check summaries)
@@ -841,6 +869,7 @@ export async function runPaperJournalRecon(
       strategiesEvaluated: deployedStrategies.length,
       strategiesWithMismatch,
       strategiesWithMissingBrokerData,
+      strategies_with_broker_pnl_unavailable: strategiesWithBrokerPnlUnavailable,
       hasDrift,
       broker_tape_source_active: brokerTapeSourceActive,
       reconciliation_inactive: reconciliationInactive,
@@ -978,6 +1007,7 @@ async function evaluateStrategy(
       pnlDriftDollars: null,
       pnlTolerance: null,
       pnlDriftExceedsTolerance: false,
+      brokerPnlUnavailable: false,
       missingBrokerData: false,
       tradeIds: [],
     };
@@ -1045,6 +1075,7 @@ async function evaluateStrategy(
   let pnlDriftDollars: number | null = null;
   let pnlTolerance: number | null = null;
   let pnlDriftExceedsTolerance = false;
+  let brokerPnlUnavailable = false;
 
   if (!missingBrokerData && paperTradeRows.length > 0) {
     // Aggregate paper P&L for the day for this strategy
@@ -1056,7 +1087,12 @@ async function evaluateStrategy(
       // Without this filter, a multi-strategy account's combined broker P&L was compared
       // against a single strategy's paper P&L → false CRITICAL drift alerts + masked real drift.
       const brokerPnlRows = await db
-        .select({ total: sql<string>`coalesce(sum(expected_pnl), 0)` })
+        .select({
+          total: sql<string>`coalesce(sum(expected_pnl), 0)`,
+          // deep-scan Accuracy CRITICAL: count() ignores NULLs → distinguishes "expected_pnl
+          // unpopulated" (broker-router writes it null by design) from a genuine $0 broker P&L.
+          populated: sql<string>`count(expected_pnl)`,
+        })
         .from(productionTrades)
         .where(
           and(
@@ -1065,14 +1101,24 @@ async function evaluateStrategy(
             lt(productionTrades.barTimestamp, dayEnd)
           )
         );
-      const totalBrokerPnl = Number(brokerPnlRows[0]?.total ?? 0);
-      pnlDriftDollars = Math.abs(totalPaperPnl - totalBrokerPnl);
+      const populatedExpectedPnl = Number(brokerPnlRows[0]?.populated ?? 0);
+      if (populatedExpectedPnl === 0) {
+        // No production_trades row in the window carries a real expected_pnl → paper-vs-broker P&L
+        // reconciliation is impossible. Coalescing NULL→$0 here would make totalBrokerPnl=0 and turn
+        // ANY real paper P&L into a false CRITICAL drift. Degrade honestly: drift null, never a mismatch.
+        pnlDriftDollars = null;
+        pnlDriftExceedsTolerance = false;
+        brokerPnlUnavailable = true;
+      } else {
+        const totalBrokerPnl = Number(brokerPnlRows[0]?.total ?? 0);
+        pnlDriftDollars = Math.abs(totalPaperPnl - totalBrokerPnl);
 
-      // Tolerance: use the first trade's contracts for representative sizing
-      // (daily aggregate comparison — per-trade contract count summed for tolerance)
-      const totalContracts = paperTradeRows.reduce((sum, t) => sum + (t.contracts ?? 1), 0);
-      pnlTolerance = computePnlTolerance(strategy.symbol, totalContracts);
-      pnlDriftExceedsTolerance = pnlDriftDollars > pnlTolerance;
+        // Tolerance: use the first trade's contracts for representative sizing
+        // (daily aggregate comparison — per-trade contract count summed for tolerance)
+        const totalContracts = paperTradeRows.reduce((sum, t) => sum + (t.contracts ?? 1), 0);
+        pnlTolerance = computePnlTolerance(strategy.symbol, totalContracts);
+        pnlDriftExceedsTolerance = pnlDriftDollars > pnlTolerance;
+      }
     } catch (err) {
       logger.warn({ err, strategyId: strategy.id }, "paper-journal-recon: broker P&L fetch failed");
       // Cannot compute drift — treat as missing broker data rather than mismatch
@@ -1090,6 +1136,7 @@ async function evaluateStrategy(
     pnlDriftDollars,
     pnlTolerance,
     pnlDriftExceedsTolerance,
+    brokerPnlUnavailable,
     missingBrokerData,
     tradeIds,
   };
@@ -1112,6 +1159,7 @@ function buildErrorResult(
     pnlDriftDollars: null,
     pnlTolerance: null,
     pnlDriftExceedsTolerance: false,
+    brokerPnlUnavailable: true,
     missingBrokerData: true,
     tradeIds: [],
   };
