@@ -20,6 +20,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
 const execute = process.argv.includes("--execute");
 const overrideProd = process.argv.includes("--i-know-what-im-doing");
+// deep-scan scripts F-2 (CRITICAL 2026-07-06): NODE_ENV is NOT a reliable prod signal in this repo — the tower
+// runs NODE_ENV=development against the SINGLE live Railway Postgres (no separate dev DB; CLAUDE.md §15a). So a
+// NODE_ENV-only guard let `--execute` TRUNCATE CASCADE all strategies + audit_log against PROD. Add the same
+// DATABASE_URL-pattern guard the sibling wipe-strategy-bucket-fresh-start.ts uses, requiring an explicit
+// --i-understand-production to wipe a Railway prod DB.
+const understandProd = process.argv.includes("--i-understand-production");
+const PROD_URL_PATTERN = /switchback\.proxy\.rlwy\.net|railway\.app/;
 
 const envText = fs.readFileSync(path.join(root, ".env"), "utf8");
 const env = Object.fromEntries(
@@ -35,6 +42,16 @@ if (env.NODE_ENV === "production" && !overrideProd) {
 }
 
 const url = env.DATABASE_URL || env.PG_URL || env.POSTGRES_URL;
+// deep-scan scripts F-2: refuse to wipe a Railway PRODUCTION database unless --i-understand-production is passed,
+// regardless of NODE_ENV. This is the guard that actually matches this repo's dev/prod topology.
+if (url && PROD_URL_PATTERN.test(url) && execute && !understandProd) {
+  console.error(
+    "REFUSING: DATABASE_URL points at a Railway PRODUCTION instance and --execute was given.\n" +
+    "This would TRUNCATE CASCADE all strategies + the entire audit_log/forensic trail against PROD.\n" +
+    "Pass --i-understand-production alongside --execute ONLY if you truly intend to wipe production.",
+  );
+  process.exit(1);
+}
 if (!url) {
   console.error("No DATABASE_URL in .env");
   process.exit(1);
