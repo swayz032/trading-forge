@@ -724,7 +724,7 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
       traderspostLogCount: params.traderspostLogCount,
       tradovateFillsCount: params.tradovateFillsCount,
       mffuDashboardPnl: params.mffuDashboardPnl !== null ? String(params.mffuDashboardPnl) : null,
-      expectedPnl: String(params.expectedPnl ?? 0), // deep-scan Accuracy HIGH: column is notNull; null (unpopulated) persists as 0, but the LIVE P&L check/severity already SKIP the null case so no false RED — the 0 here is a placeholder, not a compared value
+      expectedPnl: params.expectedPnl !== null ? String(params.expectedPnl) : null, // deep-scan Accuracy re-verify: persist genuine NULL when unpopulated (col nullable via mig 0198) so buildPnlToday null-guards it
       mismatchCount: params.mismatchCount,
       mismatchDetails: params.mismatchDetails as unknown as Record<string, unknown>[],
       alertFired: params.alertFired,
@@ -740,7 +740,7 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
         traderspostLogCount: params.traderspostLogCount,
         tradovateFillsCount: params.tradovateFillsCount,
         mffuDashboardPnl: params.mffuDashboardPnl !== null ? String(params.mffuDashboardPnl) : null,
-        expectedPnl: String(params.expectedPnl ?? 0), // deep-scan Accuracy HIGH: column is notNull; null (unpopulated) persists as 0, but the LIVE P&L check/severity already SKIP the null case so no false RED — the 0 here is a placeholder, not a compared value
+        expectedPnl: params.expectedPnl !== null ? String(params.expectedPnl) : null, // deep-scan Accuracy re-verify: persist genuine NULL when unpopulated (col nullable via mig 0198) so buildPnlToday null-guards it
         mismatchCount: params.mismatchCount,
         mismatchDetails: params.mismatchDetails as unknown as Record<string, unknown>[],
         alertFired: params.alertFired,

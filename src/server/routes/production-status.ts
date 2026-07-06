@@ -154,9 +154,14 @@ async function buildPnlToday(): Promise<PnLStatus> {
     }
 
     const row = rows[0];
-    const expected = Number(row.expectedPnl ?? 0);
+    // deep-scan Accuracy re-verify HIGH: expected_pnl is NULL when production_trades.expected_pnl is
+    // unpopulated (broker-router writes it null by design; persisted null via mig 0198). Do NOT coerce
+    // null→0 into a compared baseline — that makes delta = actual - 0 = actual → false YELLOW/RED on the
+    // operator's front-door panel once the MFFU scraper (Phase 4C) returns a real actual. Skip the
+    // P&L-delta severity when expected is unknown (show actual, no fabricated disagreement).
+    const expected = row.expectedPnl !== null ? Number(row.expectedPnl) : null;
     const actual = row.mffuDashboardPnl !== null ? Number(row.mffuDashboardPnl) : null;
-    const delta = actual !== null ? actual - expected : null;
+    const delta = actual !== null && expected !== null ? actual - expected : null;
 
     let severity: OverallSeverity = "green";
     if (delta !== null && Math.abs(delta) > 50) severity = "yellow";

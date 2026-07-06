@@ -53,7 +53,7 @@ const DR_DDL = `
 CREATE TABLE IF NOT EXISTS daily_reconciliation (
   id BIGSERIAL PRIMARY KEY, recon_date DATE NOT NULL UNIQUE,
   production_trades_count INTEGER NOT NULL, traderspost_log_count INTEGER NOT NULL,
-  tradovate_fills_count INTEGER NOT NULL, mffu_dashboard_pnl NUMERIC, expected_pnl NUMERIC NOT NULL,
+  tradovate_fills_count INTEGER NOT NULL, mffu_dashboard_pnl NUMERIC, expected_pnl NUMERIC,
   mismatch_count INTEGER NOT NULL DEFAULT 0, mismatch_details JSONB NOT NULL DEFAULT '[]'::jsonb,
   alert_fired BOOLEAN NOT NULL DEFAULT false, severity TEXT,
   ran_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -178,12 +178,12 @@ describe("deep-scan Accuracy HIGH — expected_pnl unpopulated must NOT false-RE
     const status = await getDailyReconciliationStatus(DAY);
     // sent==confirmed (2/2) → no count divergence; expected_pnl null → no P&L mismatch. Not red.
     expect(status.severity).not.toBe("red");
-    const rows = await pg.query<{ mismatch_count: number; expected_pnl: string }>(
+    const rows = await pg.query<{ mismatch_count: number; expected_pnl: string | null }>(
       "SELECT mismatch_count, expected_pnl FROM daily_reconciliation ORDER BY ran_at DESC LIMIT 1",
     );
     // No fabricated pnl_mffu_vs_expected mismatch was recorded.
     expect(rows.rows[0].mismatch_count).toBe(0);
-    // Persisted expected_pnl is the notNull-column placeholder 0 (null coerced), NOT a compared value.
-    expect(Number(rows.rows[0].expected_pnl)).toBe(0);
+    // Persisted expected_pnl is genuine NULL now (col nullable via mig 0198) — buildPnlToday null-guards it.
+    expect(rows.rows[0].expected_pnl).toBeNull();
   });
 });

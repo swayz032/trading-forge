@@ -269,6 +269,37 @@ describe("ProductionStatus — GET /api/production/status", () => {
     }
   });
 
+  // ── deep-scan Accuracy re-verify: null expected_pnl must NOT false-alert the front-door panel ──
+  it("null expected_pnl + nonzero MFFU P&L → pnlToday NOT red, delta null (no fabricated $0 baseline)", async () => {
+    // The exact danger path the re-verify found: expected_pnl unpopulated (NULL) but the MFFU scraper
+    // returns a real actual. Pre-fix, buildPnlToday coerced null→0 → delta = 300 - 0 = 300 > 200 → RED
+    // on the operator's ProductionStatusPanel every real-P&L day. Post-fix: expected null → delta null.
+    mockState.killSwitchHalted = false;
+    mockState.haltedLayers = [];
+    mockState.reconRows = [
+      { reconDate: mockState.cmeDayKey, mismatchCount: 0, ranAt: new Date(), expectedPnl: null, mffuDashboardPnl: "300" },
+    ];
+
+    const { productionStatusRoutes } = await import("../routes/production-status.js");
+    _invalidateStatusCacheForTests();
+
+    const { req, res, capturedBody } = makeMockReqRes();
+    const handler = productionStatusRoutes.stack[0]?.route?.stack[0]?.handle as
+      ((req: Partial<Request>, res: Partial<Response>) => Promise<void>) | undefined;
+
+    if (handler) {
+      await handler(req, res);
+      const body = capturedBody.value as ProductionStatusResponse;
+      if (body) {
+        const pnl = body.sixQuestions.pnlToday as { severity: string; delta: number | null; expectedPnl: number | null; todayPnl: number | null };
+        expect(pnl.severity).not.toBe("red");   // the false-RED symptom is gone
+        expect(pnl.delta).toBeNull();            // no fabricated delta against a placeholder $0
+        expect(pnl.expectedPnl).toBeNull();      // surfaced honestly as "unknown", not $0
+        expect(pnl.todayPnl).toBe(300);          // real MFFU actual still shown
+      }
+    }
+  });
+
   // ── Test 3: Overall yellow when any question yields yellow ──────────────
   it("reports yellow when last clean reconciliation is >24h old", async () => {
     // Set a clean recon from 48h ago → yellow

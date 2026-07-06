@@ -2600,7 +2600,10 @@ export const dailyReconciliation = pgTable(
     traderspostLogCount: integer("traderspost_log_count").notNull(),
     tradovateFillsCount: integer("tradovate_fills_count").notNull(),
     mffuDashboardPnl: numeric("mffu_dashboard_pnl"),
-    expectedPnl: numeric("expected_pnl").notNull(),
+    // deep-scan Accuracy re-verify: nullable — a genuine NULL means "expected_pnl unpopulated"
+    // (broker-router writes production_trades.expected_pnl null by design). Migration 0198. Consumers
+    // null-guard it instead of comparing against a fabricated $0. See buildPnlToday / fetchExpectedPnl.
+    expectedPnl: numeric("expected_pnl"),
     mismatchCount: integer("mismatch_count").notNull().default(0),
     mismatchDetails: jsonb("mismatch_details").notNull().default(sql`'[]'::jsonb`),
     alertFired: boolean("alert_fired").notNull().default(false),
