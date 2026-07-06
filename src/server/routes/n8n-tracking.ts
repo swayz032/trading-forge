@@ -62,8 +62,14 @@ function verifyN8nHmac(headerValue: string | undefined, body: unknown): { ok: tr
 type HmacEnforceMode = "warn" | "enforce";
 
 function getHmacEnforceMode(): HmacEnforceMode {
-  const raw = (process.env["N8N_HMAC_ENFORCE_MODE"] ?? "warn").toLowerCase().trim();
-  return raw === "enforce" ? "enforce" : "warn";
+  const raw = (process.env["N8N_HMAC_ENFORCE_MODE"] ?? "").toLowerCase().trim();
+  if (raw === "enforce") return "enforce";
+  if (raw === "warn") return "warn";
+  // deep-scan n8n F-3: the 7-day 2026-05-21 transition window is long over + this route is superseded by
+  // n8n-execution-scraper (no live workflow POSTs here). A CONFIGURED secret must actually be ENFORCED —
+  // defaulting to "warn" fail-opened even with a secret set. Default enforce when a secret exists; keep
+  // warn only when no secret is configured (verifyN8nHmac already fail-closes in prod for an unset secret).
+  return process.env["N8N_WEBHOOK_SECRET"] ? "enforce" : "warn";
 }
 
 // ─── POST /api/n8n/execution-log — n8n calls this at end of each workflow ──
