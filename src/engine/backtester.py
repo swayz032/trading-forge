@@ -5099,6 +5099,12 @@ def run_backtest(
             df["ts_event"].to_list() if "ts_event" in df.columns else []
         )
         _roll_spread_audit_rows: list[dict] = []
+        # deep-scan backtest-engine F-2 (HIGH, 2026-07-06): capture FULL-PRECISION (entry, exit) prices per
+        # trade so the bar-level equity loop below reconciles against the same values `gross`/`net_pnl` used,
+        # NOT the 4-decimal ROUNDED trade-dict fields. The rounded fields (round(exit_p, 4) at ~line 5225)
+        # accumulate representation error that trips the $1 reconciliation guard at MCL's $100/point scale —
+        # the SAME "Defect-6" bug fixed only in run_class_backtest via _raw_price_pairs_cls (~line 7187).
+        _raw_price_pairs: list[tuple[float, float]] = []
 
         for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
@@ -5284,6 +5290,8 @@ def run_backtest(
                 trade["mfe"] = None
 
             trades_list.append(trade)
+            # deep-scan backtest-engine F-2: parallel full-precision price capture (same order as trades_list).
+            _raw_price_pairs.append((entry_p, exit_p))
 
         trade_pnls_arr = np.array(trade_pnls_list)
         winners = trade_pnls_arr[trade_pnls_arr > 0]
@@ -5307,11 +5315,18 @@ def run_backtest(
     bar_dollar_pnls = np.zeros(n_bars)
 
     if trades_list:
-        for trade in trades_list:
+        for _bar_pnl_i, trade in enumerate(trades_list):
             t_entry_idx = int(trade.get("Entry Idx", 0))
             t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
-            t_entry_p = float(trade.get("Avg Entry Price", 0))
-            t_exit_p = float(trade.get("Avg Exit Price", 0))
+            # deep-scan backtest-engine F-2: read the FULL-PRECISION captured prices (index-aligned with
+            # trades_list) so the equity curve reconciles against the same values gross/net_pnl used — NOT the
+            # 4-decimal ROUNDED trade-dict fields (which drift the recon guard at MCL's $100/point scale).
+            if _bar_pnl_i < len(_raw_price_pairs):
+                t_entry_p, t_exit_p = _raw_price_pairs[_bar_pnl_i]
+            else:
+                # Defensive fallback (should never trigger — the two lists append in lockstep).
+                t_entry_p = float(trade.get("Avg Entry Price", 0))
+                t_exit_p = float(trade.get("Avg Exit Price", 0))
             # F-6 FIX: Use int() to match the integer contract count used in P&L
             # computation. float(Size) was correct today (sizes are integer-valued
             # floats) but would silently misreconcile if fractional-Kelly sizing is
