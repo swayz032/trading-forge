@@ -34,6 +34,14 @@ import { insertAuditRow } from "../lib/audit-log-helper.js";
 // Track which firms are currently suspended so paper engine can gate new orders.
 const suspendedFirms = new Set<string>();
 
+// deep-scan broker/cookie F-2: a silently-broken health probe (DNS/TLS/endpoint) returns 'unreachable'
+// with alertFired:false forever → the C1/C2 outage/suspension detector goes BLIND with zero operator
+// signal. Escalate a REPEATED-unreachable streak (the 'alert only on repeated failures' the probe comment
+// promised but never implemented). Fire once per breach; reset when the streak breaks.
+const consecutiveUnreachable = new Map<string, number>();
+const unreachableAlerted = new Set<string>();
+const UNREACHABLE_ALERT_THRESHOLD = Number(process.env["PROP_FIRM_UNREACHABLE_ALERT_THRESHOLD"] ?? 3);
+
 // ─── Suspension change callback ───────────────────────────────────────────────
 type SuspensionNotifyFn = (firmId: string, suspended: boolean) => Promise<void>;
 let _onSuspensionChange: SuspensionNotifyFn | null = null;
@@ -300,6 +308,38 @@ export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
         status: "success",
         correlationId: cronCorrelationId,
       }).catch((err) => logger.error({ err }, "prop-firm-health: audit log write failed (non-blocking)"));
+    }
+
+    // deep-scan broker/cookie F-2: repeated-unreachable escalation (silent probe death = C1/C2 blindness).
+    if (result.status === "unreachable") {
+      const streak = (consecutiveUnreachable.get(result.firmId) ?? 0) + 1;
+      consecutiveUnreachable.set(result.firmId, streak);
+      if (streak >= UNREACHABLE_ALERT_THRESHOLD && !unreachableAlerted.has(result.firmId)) {
+        unreachableAlerted.add(result.firmId);
+        logger.error({ firmId: result.firmId, streak }, "prop-firm-health: repeated unreachable — C1/C2 detector BLIND for this firm");
+        AlertFactory.systemError(
+          `prop-firm-unreachable-${result.firmId}`,
+          new Error(
+            `Prop firm ${result.firmId.toUpperCase()} health probe UNREACHABLE ${streak}× consecutively ` +
+            `(~${streak * 15} min). The C1/C2 outage/suspension detector is BLIND for this firm — new-order ` +
+            `blocking on suspension will NOT fire. Investigate DNS/TLS/endpoint. Last error: ${result.responseBodySnippet ?? "unknown"}.`,
+          ),
+        );
+        await insertAuditRow({
+          action: "prop_firm.repeated_unreachable_alert",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { firmId: result.firmId, consecutive: streak } as Record<string, unknown>,
+          result: { threshold: UNREACHABLE_ALERT_THRESHOLD, detectorBlind: true } as Record<string, unknown>,
+          status: "success",
+          correlationId: cronCorrelationId,
+        }).catch((err) => logger.error({ err }, "prop-firm-health: unreachable audit write failed (non-blocking)"));
+      }
+    } else {
+      // any non-unreachable status breaks the streak + re-arms the alert
+      if (consecutiveUnreachable.get(result.firmId)) consecutiveUnreachable.set(result.firmId, 0);
+      unreachableAlerted.delete(result.firmId);
     }
   }
 
