@@ -126,7 +126,10 @@ vi.mock("../routes/sse.js", () => ({
     sseEvents.push({ event, payload });
     return mockBroadcastSSE(event, payload);
   },
-  LIFECYCLE_GATE_EVENTS: new Proxy({}, { get: (_t, p) => `lifecycle:${String(p)}` }),
+  // deep-scan Obs re-verify #4: real catalog values are lowercase snake_case ("lifecycle:dsl_guards_evaluated"),
+  // so the mock must lowercase the SCREAMING_SNAKE prop — else DSL_GUARDS_EVALUATED resolved to the wrong
+  // (uppercase) event string once the broadcast site switched from the raw literal to the constant.
+  LIFECYCLE_GATE_EVENTS: new Proxy({}, { get: (_t, p) => `lifecycle:${String(p).toLowerCase()}` }),
   WAVE29_EVENTS: new Proxy({}, { get: (_t, p) => `wave29:${String(p)}` }),
 }));
 

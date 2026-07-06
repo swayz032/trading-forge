@@ -1057,6 +1057,9 @@ export function initScheduler(bootCorrelationId: string | null = null) {
 
     if (promoted.length > 0 || demoted.length > 0 || pilotResult.promoted > 0 || pilotResult.killed > 0 || absentPromoted.length > 0) {
       broadcastSSE("lifecycle:auto-check", {
+        // deep-scan Obs re-verify #4 F-NEW-2: this lifecycle SSE dropped correlationId while the job's
+        // audit rows carry it — breaks SSE→audit_log reconstruction for autonomous promotion sweeps.
+        correlationId,
         promoted,
         demoted,
         pilotPromoted: pilotResult.promoted,

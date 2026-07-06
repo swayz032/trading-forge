@@ -16,7 +16,14 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 
-const SRC = readFileSync("src/server/services/lifecycle-service.ts", "utf8");
+// deep-scan Obs re-verify #4: scan EVERY file that emits lifecycle:* SSE, not just lifecycle-service.ts.
+// scheduler.ts + operator-absent-mode-service.ts share the lifecycle:* namespace and hid F-NEW-2
+// (scheduler lifecycle:auto-check dropped correlationId) from 4 rounds of a single-file guard.
+const SRC_FILES = [
+  "src/server/services/lifecycle-service.ts",
+  "src/server/scheduler.ts",
+  "src/server/services/operator-absent-mode-service.ts",
+];
 
 // Match a lifecycle SSE broadcast via EITHER the catalog constant OR a raw "lifecycle:*" string literal.
 const BROADCAST_RE =
@@ -27,10 +34,14 @@ const BROADCAST_RE =
 const KEY_RE = /(?:^|[{,])\s*(?:correlationId|tickCorrelationId)\s*[,:}]/m;
 
 function collect() {
-  return [...SRC.matchAll(BROADCAST_RE)].map((m) => ({
-    event: m[1] ?? m[2] ?? "?",
-    body: m[3] ?? "",
-  }));
+  const sites: Array<{ file: string; event: string; body: string }> = [];
+  for (const file of SRC_FILES) {
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(BROADCAST_RE)) {
+      sites.push({ file: file.split("/").pop() ?? file, event: m[1] ?? m[2] ?? "?", body: m[3] ?? "" });
+    }
+  }
+  return sites;
 }
 
 describe("lifecycle SSE events carry a correlationId KEY (F-3, all events incl. raw-string)", () => {
@@ -42,7 +53,7 @@ describe("lifecycle SSE events carry a correlationId KEY (F-3, all events incl. 
 
     const offenders = sites
       .filter((s) => !KEY_RE.test(s.body))
-      .map((s) => `${s.event}: ${s.body.replace(/\s+/g, " ").trim().slice(0, 80)}`);
+      .map((s) => `${s.file}:${s.event}: ${s.body.replace(/\s+/g, " ").trim().slice(0, 80)}`);
 
     expect(offenders, `lifecycle SSE broadcasts missing a correlationId KEY:\n${offenders.join("\n")}`).toEqual([]);
   });

@@ -73,7 +73,9 @@ describe("Deep-Scan #21 Wave 2 Fix 1 — SSE catalog drift closed", () => {
     expect(pineExportSrc).toContain('broadcastSSE("pine:export-failed"');
 
     const lifecycleServiceSrc = readSrc("src/server/services/lifecycle-service.ts");
-    expect(lifecycleServiceSrc).toContain('broadcastSSE("lifecycle:dsl_guards_evaluated"');
+    // deep-scan Obs re-verify #4: dsl_guards is now emitted via the catalog CONSTANT (was a raw literal);
+    // being cataloged is the GOAL of this drift test, so assert the constant form, not the verbatim string.
+    expect(lifecycleServiceSrc).toContain("broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED");
 
     const schedulerSrc = readSrc("src/server/scheduler.ts");
     expect(schedulerSrc).toContain('broadcastSSE("lifecycle:auto-check"');
