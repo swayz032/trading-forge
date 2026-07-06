@@ -9,6 +9,7 @@ import {
   AttachmentBuilder,
 } from "discord.js";
 import { resolve as pathResolve } from "path";
+import { timingSafeEqual } from "node:crypto";
 import { existsSync, writeFileSync, readFileSync, unlinkSync, mkdirSync } from "fs";
 import { dirname } from "path";
 import express from "express";
@@ -495,14 +496,22 @@ export {
 
 // POST /alert/:channel — receives alerts from n8n workflows
 alertApp.post("/alert/:channel", async (req, res) => {
-  // Verify shared secret to prevent unauthorized Discord messages
+  // Verify shared secret to prevent unauthorized Discord messages.
+  // deep-scan libs/discord F-2 (2026-07-06): (1) FAIL-CLOSED when API_KEY is unset — the old `if (apiKey)` left this
+  // alert-relay webhook with ZERO auth (silently open) when the secret was not configured; (2) constant-time compare
+  // via timingSafeEqual (was plain !==), matching the codebase security bar (slumdawg-hmac / session / carter-auth).
   const apiKey = process.env.API_KEY;
-  if (apiKey) {
-    const auth = req.headers.authorization;
-    if (!auth || auth !== `Bearer ${apiKey}`) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+  if (!apiKey) {
+    res.status(503).json({ error: "webhook_auth_unconfigured" });
+    return;
+  }
+  const auth = req.headers.authorization ?? "";
+  const expected = `Bearer ${apiKey}`;
+  const authBuf = Buffer.from(auth);
+  const expBuf = Buffer.from(expected);
+  if (authBuf.length !== expBuf.length || !timingSafeEqual(authBuf, expBuf)) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
   }
 
   const { channel } = req.params;
