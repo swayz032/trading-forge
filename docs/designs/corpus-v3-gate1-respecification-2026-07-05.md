@@ -71,3 +71,36 @@ unsatisfiable by a human-equivalent classifier, so relax it again" is the exact 
 no-relief pre-commitment was written to forbid. **Gate 1 stays FAILED. The classifier does not clear the necessary
 screen. Per the plan we do NOT proceed to Gate 3.** The path forward is an operator/advisor decision on a DIFFERENT
 lever (gold quality / classifier approach / fallback), not a third re-spec.
+
+## PATH FORWARD — Gate 1 RETIRED, replaced by Gate 1′ (Fable-5 ruling, LOCKED 2026-07-05)
+Gate 1 (semantic bulk-screen) stays FAILED and UNCURED — the classifier never passes it. It is RETIRED, not
+relaxed: the record shows the semantic bulk-certification was gold-noise-limited and replaced by a
+behaviorally-anchored screen. (Diagnosis-not-appeal note: the locked criterion was asymmetric — classifier
+CI-lower 54.42% vs human POINT 67.44%; under that test a second human rater would likely fail the first too.
+That confirms "human-equivalent" is the right read of 67.24% vs 67.44%; it changes nothing about the certified FAIL.)
+
+### Gate 1′ — targeted adjudication (LOCKED before any adjudication happens)
+The screen function (catch a classifier wrong for compensating reasons) does NOT require certifying against 221
+noisy labels — it requires high-quality adjudication of exactly the conditions that are BEHAVIORALLY DECISIVE.
+- **Scope:** for every strategy whose trading behavior CHANGES between v2 and v3-shadow (revivals AND deaths),
+  every condition whose ROLE ASSIGNMENT DIFFERS (v2 role ≠ v3 classifier role) gets fresh MULTI-RATER,
+  transcript-anchored adjudication.
+- **LOCKED pass rule:** every revival-driving role change must be UPHELD by adjudication; any OVERTURNED change
+  is treated as an UNEXPLAINED REGRESSION under Gate 3's frozen clause and FAILS certification.
+- **Can fail:** adjudicators have not looked; the classifier's known scores do NOT predetermine their verdicts.
+- **doer≠grader extends to adjudicators:** their labels are CLAIMS until the transcript anchors are independently
+  checked; multi-rater, independent, transcript-anchored.
+
+### AND-certification pre-commitment (LOCKED before Gate 3 runs — knowledge-ordering hazard)
+Running Gate 3 in the shadow namespace is legitimate (shadow prevents baseline contamination; "Gate 1 before
+Gate 3" was flip-safety, not information). But if Gate 3 passes first, pressure builds to wave off adjudication.
+**Certification for the flip requires Gate 3 (frozen rule: ≥8/9 revival + zero unexplained regressions, NO relief)
+AND Gate 1′ (adjudication rule above) — regardless of the order results arrive or how good either looks alone.**
+
+### Two freezes
+1. **Rules-overfit CLOSED:** design 34.35% vs held-out 17.14% = 2.00× → option-(a) rule expansion is not merely
+   capped but likely COUNTERPRODUCTIVE (more rules → more overfit). Closed; not pursued.
+2. **Structural finding + gold-strengthening DEFERRED:** semantic bulk-certification is gold-noise-limited at
+   ~57.7% single-rater label reliability; the classifier is at human parity on the margin. Gold-strengthening is
+   NOT rejected — DEFERRED to corpus-scale, scoped to the MARGIN stratum only, if/when the classifier certifies
+   via Gate 1′+Gate 3 and 117-strategy confidence is actually needed.
