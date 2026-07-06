@@ -27,6 +27,7 @@ import {
 } from "../../db/schema.js";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../../lib/logger.js";
+import { getCarterCorrelationId } from "./carter-correlation-context.js";
 
 // ── Service imports (REUSE — do not re-implement) ─────────────────────────────
 import { runBacktest } from "../../services/backtest-service.js";
@@ -796,7 +797,7 @@ async function auditActionExecuted(
     entityType: "voice_agent_action",
     status,
     decisionAuthority: "voice_agent",
-    correlationId: correlationId ?? randomUUID(),
+    correlationId: correlationId ?? getCarterCorrelationId() ?? randomUUID(),
     input: { action, params } as Record<string, unknown>,
     result: (result ?? {}) as Record<string, unknown>,
     ...(errorMessage ? { errorMessage } : {}),
@@ -1100,7 +1101,7 @@ async function confirmRequestLifecycleCheck(params: unknown, token?: string): Pr
   // (deepscan7 obs-H2 2026-07-02) one UUID per Carter action — threaded into the sweep
   // context (mirrors the scheduler's tickCorrelationId threading) so every lifecycle.promoted
   // row this sweep produces shares the correlationId of the carter.action_executed row.
-  const correlationId = randomUUID();
+  const correlationId = getCarterCorrelationId() ?? randomUUID(); // deep-scan Carter F-1: link to req.id
   const [promotions, demotions] = await Promise.all([
     svc.checkAutoPromotions({ correlationId }),
     svc.checkAutoDemotions({ correlationId }),
@@ -1150,7 +1151,7 @@ async function confirmRequestPromotion(params: unknown, token?: string): Promise
   // (deepscan7 obs-H2 2026-07-02) one UUID per Carter action — threaded into promoteStrategy
   // options so the lifecycle.promoted / gate-block audit rows share the correlationId of the
   // carter.action_executed row (previously undefined → null-correlated promotion rows).
-  const correlationId = randomUUID();
+  const correlationId = getCarterCorrelationId() ?? randomUUID(); // deep-scan Carter F-1: link to req.id
   // GUARDRAIL: actor="system" (NOT human_release) — Carter is non-human authority,
   // so human-required promotions (DEPLOY_READY → DEPLOYED / PILOT) stay blocked inside
   // promoteStrategy. The voice-agent attribution lives on the audit row, not the gate actor.
