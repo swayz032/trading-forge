@@ -149,11 +149,16 @@ vi.mock("../db/schema.js", () => ({
 }));
 
 vi.mock("drizzle-orm", () => ({
-  eq:   vi.fn(() => ({})),
-  gte:  vi.fn(() => ({})),
-  and:  vi.fn(() => ({})),
-  sql:  vi.fn((s: TemplateStringsArray) => ({ sql: s[0] })),
-  desc: vi.fn((col: unknown) => col),
+  eq:     vi.fn(() => ({})),
+  gte:    vi.fn(() => ({})),
+  and:    vi.fn(() => ({})),
+  // deep-scan D.1: buildLastCleanRecon now filters on the persisted severity via
+  // or(eq(severity,'green'), isNull(severity)) — the mock must stub both operators
+  // or their construction throws (the .where() stub already ignores its argument).
+  or:     vi.fn(() => ({})),
+  isNull: vi.fn(() => ({})),
+  sql:    vi.fn((s: TemplateStringsArray) => ({ sql: s[0] })),
+  desc:   vi.fn((col: unknown) => col),
 }));
 
 vi.mock("../lib/logger.js", () => ({

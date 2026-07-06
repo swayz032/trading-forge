@@ -17,7 +17,7 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
 import { dailyReconciliation, paperSessions, weeklyDriftReports } from "../db/schema.js";
-import { desc, eq, gte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getDailyReconciliationStatus } from "../production/reconciliation-service.js";
@@ -288,14 +288,30 @@ export async function buildDrawdownDistance(): Promise<DrawdownStatus> {
 
 async function buildLastCleanRecon(): Promise<ReconStatus> {
   try {
-    // Find the most recent day with mismatch_count = 0
+    // Find the most recent day with mismatch_count = 0 AND an authoritative
+    // green severity. deep-scan D.1: mismatch_count=0 alone is a false-green — a
+    // run with NO verifiable data (production_trades/traderspost/tradovate all
+    // empty) trivially has 0 mismatches but ds21's write path persists it as
+    // severity='yellow' (degraded/unverifiable). Requiring severity='green' here
+    // stops ProductionStatusPanel showing GREEN off an unverifiable run. Legacy
+    // rows (severity IS NULL, pre-ds21) fall back to mismatch-only — mirrors the
+    // documented fallback in getDailyReconciliationStatus; never resurrects a
+    // false-green for rows written since the column exists.
     const rows = await db
       .select({
         reconDate: dailyReconciliation.reconDate,
         ranAt: dailyReconciliation.ranAt,
       })
       .from(dailyReconciliation)
-      .where(eq(dailyReconciliation.mismatchCount, 0))
+      .where(
+        and(
+          eq(dailyReconciliation.mismatchCount, 0),
+          or(
+            eq(dailyReconciliation.severity, "green"),
+            isNull(dailyReconciliation.severity),
+          ),
+        ),
+      )
       .orderBy(desc(dailyReconciliation.ranAt))
       .limit(1);
 
