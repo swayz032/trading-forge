@@ -78,14 +78,20 @@ describe("extractWebhookId", () => {
 });
 
 describe("traderspostConfirmSecretRequired (S-1)", () => {
-  it("true only when NODE_ENV=production AND the independent leg is on", () => {
-    expect(traderspostConfirmSecretRequired()).toBe(false);
-    process.env.NODE_ENV = "production";
+  it("true in any live env (production OR staging) when the independent leg is on; false in dev/test", () => {
     expect(traderspostConfirmSecretRequired()).toBe(false);
     process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT = "true";
-    expect(traderspostConfirmSecretRequired()).toBe(true);
     process.env.NODE_ENV = "development";
+    expect(traderspostConfirmSecretRequired()).toBe(false); // dev bypasses even with the flag on
+    process.env.NODE_ENV = "production";
+    expect(traderspostConfirmSecretRequired()).toBe(true);
+    process.env.NODE_ENV = "staging";
+    expect(traderspostConfirmSecretRequired()).toBe(true); // re-cert: staging is live too
+    process.env.NODE_ENV = "test";
     expect(traderspostConfirmSecretRequired()).toBe(false);
+    delete process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT;
+    process.env.NODE_ENV = "production";
+    expect(traderspostConfirmSecretRequired()).toBe(false); // flag off → never required
   });
 });
 

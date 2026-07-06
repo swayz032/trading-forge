@@ -347,19 +347,23 @@ describe("M2 — reader sees divergence_vs_backtest round-trip (PGlite integrati
 // ─── M12 tests — correlationId plumbing (source analysis) ────────────────────
 
 describe("M12 — correlationId threading into isHaltedForProduction", () => {
-  it("paper-signal-service.ts H3 block passes correlationId to isHaltedForProduction", () => {
-    // deep-scan Paper F-2: assert BEHAVIORALLY that the entry-gate call threads correlationId into
-    // its object arg — the call legitimately evolved to a multi-line `{ correlationId, accountKey,
-    // firmId }` under the per-account-scope hardening, and a frozen single-line literal went false-RED.
-    expect(PSS_SRC).toMatch(/killSwitch\.isHaltedForProduction\(\{[\s\S]*?correlationId/);
+  it("paper-signal-service.ts: EVERY isHaltedForProduction call threads correlationId (entry-gate + Gate-1)", () => {
+    // deep-scan Paper F-2 (re-cert fix): the earlier single toMatch was a tautology — with TWO call
+    // sites (2508 + 3170), stripping correlationId from one still matched the other (and [\s\S]*?
+    // matched any of the 88 later correlationId tokens in this 6k-line file). Assert EVERY call's
+    // object arg carries correlationId, so dropping it from ANY call fails. [^}]* is brace-bounded
+    // (the objects are multi-line `{ correlationId, accountKey, firmId }` with no inner }).
+    const calls = [...PSS_SRC.matchAll(/killSwitch\.isHaltedForProduction\(\{([^}]*)\}/g)];
+    expect(calls.length).toBeGreaterThan(0);
+    for (const c of calls) expect(c[1]).toMatch(/\bcorrelationId\b/);
   });
 
-  it("paper-execution-service.ts openPosition passes correlationId to isHaltedForProduction", () => {
-    // M12 fix: correlationId is threaded at the openPosition kill-switch gate. deep-scan Paper F-2:
-    // assert BEHAVIORALLY (correlationId present in the object arg) rather than matching a frozen
-    // literal — the call legitimately evolved to `{ correlationId, accountKey, firmId }` under the
-    // deepscan18 per-account-scope hardening, and a brittle string-match went false-RED on it.
-    expect(PES_SRC).toMatch(/killSwitch\.isHaltedForProduction\(\{[^}]*\bcorrelationId\b/);
+  it("paper-execution-service.ts: EVERY isHaltedForProduction call threads correlationId", () => {
+    // Same every-call guard (not a single toMatch): removing correlationId from any openPosition
+    // kill-switch call fails. Robust to a future 2nd call site being added without correlationId.
+    const calls = [...PES_SRC.matchAll(/killSwitch\.isHaltedForProduction\(\{([^}]*)\}/g)];
+    expect(calls.length).toBeGreaterThan(0);
+    for (const c of calls) expect(c[1]).toMatch(/\bcorrelationId\b/);
   });
 
   it("regression: paper-execution-service.ts does NOT call isHaltedForProduction() without correlationId", () => {

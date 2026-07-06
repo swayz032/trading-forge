@@ -49,8 +49,12 @@ export function extractWebhookId(body: Record<string, unknown>): string | null {
  *  endpoint would let anyone who can guess a traderspost_webhook_id forge a confirmation and defeat
  *  the sent-vs-confirmed breach detector. Exported for testing. */
 export function traderspostConfirmSecretRequired(): boolean {
+  // re-cert carry-forward: gate on an explicit live-env set (production OR staging) rather than the
+  // bare "production" literal — a staging deployment with the independent leg on + no secret is just
+  // as exploitable. dev/test/unset still bypass so local + CI keep working without a secret.
+  const env = process.env.NODE_ENV;
   return (
-    process.env.NODE_ENV === "production" &&
+    (env === "production" || env === "staging") &&
     process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT === "true"
   );
 }
