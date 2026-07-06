@@ -374,3 +374,21 @@ are classifier errors or classifier corrections.
 **Integrity note for the record:** this chain survived six instrument defects (run_class_backtest sibling-parity),
 a rate-limited agent death, a power outage + git-ref corruption, and a near-miss verdict — with zero laundered
 numbers. The no-relief line held on a 7/9 near-miss. The system reported against itself at every fork.
+
+## ROLE-DIFF ANALYSIS (Fable-5 Correction 3 resolved — condition-semantics, NOT symbol-structure) 2026-07-06
+Diffed classifier (v3-shadow) vs demotion-effective (v2 role, DRI-CONTEXTUAL→context) roles on the 4-delta concepts.
+**Both deltas: the classifier assigned ZERO spine** (over-contextualized); demotion retained the v2 spine minus CONTEXTUAL.
+- **`snNkQSyWX4k` (2 MISSES):** classifier moved 7 v2-spine conditions to `context`, INCLUDING **4 the DRI gold marks
+  `JUSTIFIED_MANDATORY`** (candles-retest, us-session, price-retest, consolidation) + 3 UNRESOLVED. Demotion kept them
+  spine. → Divergence = classifier mis-demoting GOLD GATES → looks like CLASSIFIER ERRORS (consistent with Gate 1's
+  ~67% margin accuracy). Gate 1′ adjudicates: if the transcript-mandatory reading is upheld, the misses are classifier mistakes.
+- **`jlShztsY3oA` (2 REGRESSIONS):** classifier moved 3 v2-spine conditions to `context` — 2 `OPTIONAL` + 1 UNRESOLVED
+  (NOT mandatory). Demotion kept them spine. → The classifier's demotion is DEFENSIBLE (optional ≠ gate); the kill is
+  either a fidelity correction (demotion over-kept a soft-gated strategy) OR over-demotion. Genuine coin-in-air for Gate 1′.
+- **NOT the architecture-boundary case:** roles are symbol-invariant; the divergence is WHICH conditions are gates
+  (semantics, adjudicable) — not a symbol-conditional structure the extraction layer can't express. Gate 1′ is the
+  right + sufficient next instrument. The MES-vs-MNQ/MCL symbol split is a secondary execution effect of the shared
+  0-spine role set, downstream of the role divergence.
+**→ Gate 1′ target sharpened:** adjudicate whether the DIFFERING conditions are transcript-mandatory gates —
+snNkQSyWX4k's 4 JUSTIFIED_MANDATORY (upheld → classifier erred) + jlShztsY3oA's OPTIONAL/UNRESOLVED (if genuinely
+optional → classifier's kill is a fidelity correction, demotion the unfaithful one — the structural irony realized).
