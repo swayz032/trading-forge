@@ -92,6 +92,30 @@ Prior context: `MILESTONE-context-misclassification-2026-07-05.md`, `residual-fi
 
 ---
 
+### Session Log — 2026-07-05 Deep-Scan #21 (8-band) + fix wave — VERIFIED 7 (doer≠grader), branch `hardening/ds21-fixwave-2026-07-05`
+
+**Mission:** Operator: "deep scan for all bugs and blockers, wiring… all systems institutional-grade, bug-free, 10/10," then "EXECUTE ALL FINDINGS AND BUGS." Also deleted all 12 archived n8n workflows.
+
+**Grading honesty:** did NOT deliver "10/10" — per `grading-integrity`, 10 is the red-flag itself; realistic ceiling 7-8. 8-band READ-ONLY panel (CLAIMED mean ~6.4) → independent accuracy-validator certification downgraded the two load-bearing surfaces to **band 2** (paper-execution + reconciliation/observability), the anti-lie mechanism working.
+
+**Deep-Scan #21 certified findings:** (C-1 CRITICAL) live paper eligibility gate passed `strategy.id` UUID where `eligibility_gate.py` check#2 expects the concept NAME → every live signal SKIPs on non-NO_TRADE playbooks (still-open from ds18). (A+D CRITICAL) reconciliation false-green — `fetchTraderspostLogCount`/`fetchTradovateFillsCount` both `return sharedCount` (tautology) + no persisted `severity` column so read path recomputed green. (D+A CRITICAL) `normalizeWorkflowHealth` no staleness ceiling → 91-106d-stale n8n fleet read "healthy"; ghost `0A_health_monitor_66HEjQavpvirY6g5`. (F CRITICAL, DORMANT) boot-migration keys pending on `when` not tag → 5 duplicate-`when` pairs silently skip the later migration (all already applied out-of-band → dormant). (D HIGH) circuit-breaker `setOnStateChange` single-callback → index.ts overwrote broker-router's TradersPost handler. (B HIGH) `pytest src/engine/` aborted at COLLECTION on orphaned `HYSTERESIS_THRESHOLD` import + ~35 stale fixtures (production code correct).
+
+**Fix wave — 7 commits on `hardening/ds21-fixwave-2026-07-05` (base abbbbbb, isolated worktree §11b):** `b063fe0` eligibility gate name-not-UUID (+CachedSession.strategyName); `616fe13` reconciliation clamp red+green→yellow under <3 independent sources + persisted `severity` col (mig 0195); `c0a6b2c` boot-migration duplicate-`when` loud boot alert (leaf `migration-journal-utils.ts`, no auto-re-apply — 0052 FK-cascade not idempotent); `6c9bed4` circuit-breaker multi-subscriber array; `524071d` SSE correlationId on mode-changed/position-opened/a_plus_rejected; `4899ba6` system-topology staleness ceiling (192h) + manifest regen 28→20 + ghost-id fix + System Map generated-block resync (staleness ADVISORY → gate green); `8824a9b` Python test-integrity (test-only).
+
+**Verification:** independent accuracy-validator (doer≠grader, 2 paths/fix): 4/5 CONFIRMED-CLOSED, FIX-3 PARTIAL-by-honest-design, **overall VERIFIED band 7**, zero commit-message overclaim. All 3 CI gates exit 0 at HEAD; `tsc --noEmit` 0 errors; recon 15/15, circuit-breaker 5/5+14/14, staleness 10/10, dup-when 5/5; pytest collection 6989/0-errors + 8 target files 143 passed/3 skipped/0 failed (parent re-ran).
+
+**n8n:** deleted all 12 archived research workflows (backed up to `workflows/n8n/archived-backup-2026-07-05/`). n8n's own DELETE (API+UI) 500s on a `workflow_published_version` RESTRICT FK bug — cleared those rows in n8n Postgres (schema `n8n`) then deleted; 20 active remain, error-sink intact. New pin `reference_n8n_delete_500_published_version_fk`.
+
+**Known-facts updates:** (1) new pin `reference_n8n_delete_500_published_version_fk`. (2) Band H correction — the memory-flagged sbp_/Databento secret leak is in UNTRACKED settings.json, NOT committed to source.
+
+**Carry-forward for next session:**
+- **Land pending:** rebase `hardening/ds21-fixwave-2026-07-05` onto phase-0 + FF-merge (clean — phase-0's only new commits are the concurrent Corpus-v3 gate docs).
+- **Residual on eligibility (separate, pre-existing Band B2 finding):** paper-live `eligibility_gate.py::evaluate_signal` lacks the unregistered-strategy bypass that `backtester.py::apply_eligibility_gate` has → strategies whose NAME isn't in the 174-entry `ALL_STRATS` still SKIP live while backtest passes. ds21 closed the UUID type-bug; full parity needs this bypass added to the live path (carefully).
+- **Boot-migration:** loud alert fires every boot (5 collisions unresolved) — mild alert-fatigue; full fix = hash-keyed pending after verifying each of the 5 migrations idempotent (0052 FK-cascade blocker), OR add 24h Discord dedup.
+- **Deferred MED/LOW (documented, not done):** paper_signal_logs correlation_id column (10+ insert sites); archetype exportability `faithful=True`; DuckDB native-crash guard; SSE catalog drift; Playwright-missing cookie remediation.
+
+---
+
 ### Session Log — 2026-07-05 Deep-Scan #20 (8-band read-only audit ~6.5) + fix wave LANDED + CERTIFIED
 
 **Mission:** Operator: "deep scan for all bugs and blockers, wiring… all systems institutional grade… bug free to be 10/10." Ran an 8-band read-only adversarial audit (Deep-Scan #20), then a full code fix wave in a SHA-pinned worktree, doer≠grader certified, FF-landed phase-0. (10 is unreachable by the grading-integrity rubric — set as the expectation up front; honest ceiling 7-8.)
