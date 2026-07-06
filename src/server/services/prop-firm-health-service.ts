@@ -151,7 +151,8 @@ export interface FirmHealthResult {
   alertFired: boolean;
 }
 
-async function probeFirm(config: FirmProbeConfig): Promise<FirmHealthResult> {
+// exported for deep-scan broker/cookie F-5 classifier unit tests (side-effect-free response→status decision)
+export async function probeFirm(config: FirmProbeConfig): Promise<FirmHealthResult> {
   const apiKey = process.env[config.apiKeyEnv];
   if (!apiKey) {
     logger.debug({ firmId: config.firmId, env: config.apiKeyEnv }, "prop-firm-health: no API key configured — skipping probe");
