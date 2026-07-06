@@ -80,6 +80,16 @@ const _traderspostBreaker = CircuitBreakerRegistry.get(TRADERSPOST_CIRCUIT_BREAK
 let _tpBreacherAlertedOpen = false;
 
 // State-change hook: fires once per transition.
+//
+// deep-scan #21 HIGH fix (2026-07-05): setOnStateChange is now MULTI-SUBSCRIBER
+// (see circuit-breaker.ts::CircuitBreakerRegistry.setOnStateChange). Previously
+// "last call wins" meant index.ts's generic AlertFactory.circuitOpen(name)
+// handler — registered at that module's own top-level body, which per ES
+// module execution order runs AFTER this module's imports resolve — silently
+// OVERWROTE this handler on every boot, so the TradersPost-specific Discord
+// "orders safely blocked" alert + broker:degraded SSE + CLOSE-recovery log
+// never fired. Both handlers now coexist; this one still only reacts to
+// TRADERSPOST_CIRCUIT_BREAKER_KEY transitions.
 CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
   if (name !== TRADERSPOST_CIRCUIT_BREAKER_KEY) return;
 

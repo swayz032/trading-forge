@@ -153,6 +153,13 @@ startBootConfigReminderMonitor();
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
 // and any future notification channels (SNS/email) are aware immediately.
+//
+// deep-scan #21 HIGH fix (2026-07-05): setOnStateChange is now MULTI-SUBSCRIBER
+// (see circuit-breaker.ts::CircuitBreakerRegistry.setOnStateChange) — this
+// generic handler ADDS to, rather than replaces, any handler registered by an
+// earlier-imported module (e.g. broker-router.ts's TradersPost-specific
+// Discord/SSE/CLOSE-recovery handler, registered at that module's load time
+// via a transitive route import above). Both now fire on every transition.
 CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
   if (to === "OPEN") {
     AlertFactory.circuitOpen(name);
