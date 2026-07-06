@@ -347,19 +347,19 @@ describe("M2 — reader sees divergence_vs_backtest round-trip (PGlite integrati
 // ─── M12 tests — correlationId plumbing (source analysis) ────────────────────
 
 describe("M12 — correlationId threading into isHaltedForProduction", () => {
-  it("paper-signal-service.ts H3 block passes correlationId from pendingEntry", () => {
-    // The H3 fix (commit 456b716) already passes correlationId at the pending-entry fill site.
-    // Verify the exact call pattern is present.
-    expect(PSS_SRC).toContain(
-      "killSwitch.isHaltedForProduction({ correlationId: pendingEntry.correlationId })",
-    );
+  it("paper-signal-service.ts H3 block passes correlationId to isHaltedForProduction", () => {
+    // deep-scan Paper F-2: assert BEHAVIORALLY that the entry-gate call threads correlationId into
+    // its object arg — the call legitimately evolved to a multi-line `{ correlationId, accountKey,
+    // firmId }` under the per-account-scope hardening, and a frozen single-line literal went false-RED.
+    expect(PSS_SRC).toMatch(/killSwitch\.isHaltedForProduction\(\{[\s\S]*?correlationId/);
   });
 
   it("paper-execution-service.ts openPosition passes correlationId to isHaltedForProduction", () => {
-    // M12 fix: correlationId is now threaded at the openPosition kill-switch gate.
-    expect(PES_SRC).toContain(
-      "killSwitch.isHaltedForProduction({ correlationId })",
-    );
+    // M12 fix: correlationId is threaded at the openPosition kill-switch gate. deep-scan Paper F-2:
+    // assert BEHAVIORALLY (correlationId present in the object arg) rather than matching a frozen
+    // literal — the call legitimately evolved to `{ correlationId, accountKey, firmId }` under the
+    // deepscan18 per-account-scope hardening, and a brittle string-match went false-RED on it.
+    expect(PES_SRC).toMatch(/killSwitch\.isHaltedForProduction\(\{[^}]*\bcorrelationId\b/);
   });
 
   it("regression: paper-execution-service.ts does NOT call isHaltedForProduction() without correlationId", () => {

@@ -150,8 +150,13 @@ function signRestart(timestamp: number, reason: string): string {
 }
 
 describe("Deep-Scan #16 A-1 — /api/admin/self-restart through the real auth-gate middleware chain", () => {
-  it("X-Restart-Signature alone (no Authorization) → 401 — proves the gate itself still requires Bearer/cookie", async () => {
-    process.env["API_KEY"] = TEST_API_KEY; // configured, but caller sends no Authorization header
+  it("X-Restart-Signature alone (no Authorization) → 200 — self-restart is HMAC-only (Bearer-bypassed for vacation-mode phone access)", async () => {
+    // deep-scan Security S-2: the auth gate was redesigned (auth.ts:79-90) to BYPASS the Bearer
+    // requirement for the 5 self-authenticating admin routes — a phone-only operator must curl
+    // self-restart without a distributed API_KEY. The route's own HMAC is the real gate. The old
+    // assertion ("no Authorization → 401, gate still requires Bearer") asserted a superseded contract
+    // and was reproducibly failing at HEAD — corrected here to the current HMAC-only contract.
+    process.env["API_KEY"] = TEST_API_KEY; // configured, but self-restart bypasses the Bearer gate
     const timestamp = Math.floor(Date.now() / 1000);
     const reason = "deepscan16_regression_guard";
     const sig = signRestart(timestamp, reason);
@@ -165,9 +170,13 @@ describe("Deep-Scan #16 A-1 — /api/admin/self-restart through the real auth-ga
       body: JSON.stringify({ timestamp, reason }),
     });
 
-    expect(resp.status).toBe(401);
-    const body = (await resp.json()) as { error?: string };
-    expect(body.error).toBe("Missing authorization");
+    expect(resp.status).toBe(200);
+    const body = (await resp.json()) as { status?: string };
+    expect(body.status).toBe("restart_initiated");
+    // HMAC verification is the real gate — an audit row is written only after it succeeds.
+    expect(mockInsertAuditRow).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "system.self_restart_requested" }),
+    );
   });
 
   it("X-Restart-Signature + Authorization: Bearer <API_KEY> → 200 — the exact fix now shipped in both internal callers", async () => {
@@ -196,7 +205,10 @@ describe("Deep-Scan #16 A-1 — /api/admin/self-restart through the real auth-ga
     );
   });
 
-  it("wrong Bearer token (Authorization present but invalid) → 403 even with a valid HMAC signature", async () => {
+  it("Authorization header is IGNORED for self-restart (Bearer-bypassed) — wrong Bearer + valid HMAC still → 200", async () => {
+    // deep-scan Security S-2: self-restart bypasses the Bearer gate entirely (auth.ts:79-90), so a
+    // wrong Authorization header is never evaluated — the HMAC is the sole gate. The old assertion
+    // (wrong Bearer → 403) asserted the superseded Bearer-enforced contract and was failing at HEAD.
     process.env["API_KEY"] = TEST_API_KEY;
     const timestamp = Math.floor(Date.now() / 1000);
     const reason = "deepscan16_wrong_bearer";
@@ -212,7 +224,7 @@ describe("Deep-Scan #16 A-1 — /api/admin/self-restart through the real auth-ga
       body: JSON.stringify({ timestamp, reason }),
     });
 
-    expect(resp.status).toBe(403);
+    expect(resp.status).toBe(200);
   });
 
   it("valid Bearer but WRONG HMAC signature → 401 from the route's own verifyRestartHmac (gate passing does not bypass HMAC)", async () => {
