@@ -3129,6 +3129,7 @@ export class LifecycleService {
           });
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+            correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
             strategyId: s.id,
             from: "CANDIDATE",
             to: "TESTING",
@@ -3186,6 +3187,7 @@ export class LifecycleService {
         if (shadowResult.success) {
           promoted.push(s.id);
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+            correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
             strategyId: s.id,
             from: "TESTING",
             to: "SHADOW",
@@ -4253,6 +4255,7 @@ export class LifecycleService {
           promoted.push(s.id);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+            correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
             strategyId: s.id,
             from: "TESTING",
             to: "PAPER",
@@ -7631,6 +7634,7 @@ export class LifecycleService {
           if (killResult.success) {
             result.killed++;
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+              correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
               strategyId: s.id,
               from: "PILOT",
               to: "GRAVEYARD",
@@ -7690,6 +7694,7 @@ export class LifecycleService {
           if (promoteResult.success) {
             result.promoted++;
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+              correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
               strategyId: s.id,
               from: "PILOT",
               to: "DEPLOYED",
@@ -7788,6 +7793,7 @@ export class LifecycleService {
           if (failResult.success) {
             result.killed++;
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+              correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
               strategyId: s.id,
               from: "PILOT",
               to: "GRAVEYARD",
