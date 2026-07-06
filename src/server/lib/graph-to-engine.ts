@@ -12,6 +12,7 @@
  */
 import type { AtomType, DecisionAtom } from "./decision-atom.js";
 import type { CompiledGraph } from "./graph-compiler.js";
+import { classifyGateStrengthDeterministic, gateStrengthToRole } from "./gate-strength.js";
 
 // FRAMEWORK = risk objects the overlay OWNS (must never become a required source-owned entry condition).
 // Mirrors predicate-compression.ts FRAMEWORK so the boundary is the same one compression classified out.
@@ -27,7 +28,15 @@ export interface EngineCondition {
   id: string;            // === the graph atom id (traceability for Ledger D invariant 2)
   type: AtomType;        // source atom type (setup/structure/confirmation/…)
   object: string;        // object_canonical — the discriminating concept
-  role: "spine" | "confluence" | "trigger" | "invalidation";
+  /**
+   * "context" is Corpus v3's semantic-role addition (TF_SEMANTIC_ROLE_CLASSIFIER, default OFF) — a
+   * condition the gate-strength classifier judged CONTEXTUAL (scene-setting / narrative / refuted
+   * strawman). RETAINED here, never dropped — non-gating, engine-ignored — so the provenance receipt
+   * survives and a future re-audit can re-adjudicate the margin WITHOUT re-running extraction.
+   * "or_branch" is the classifier's ALTERNATIVE label (distinct from the topology-derived `or_branches`
+   * group array below, which is unchanged and still edge/grammar-derived).
+   */
+  role: "spine" | "confluence" | "or_branch" | "context" | "trigger" | "invalidation";
   /** Transcript provenance (Ledger G execution traceability: trade → condition → clause). Additive/optional. */
   span?: { start: number; end: number };
   evidence?: string;
@@ -59,6 +68,32 @@ const directionOf = (atoms: DecisionAtom[]): "long" | "short" | "both" => {
 };
 
 /**
+ * TF_SEMANTIC_ROLE_CLASSIFIER (Corpus v3, Step 3, default OFF) — read live so tests can flip it without
+ * re-importing the module. Byte-identical-when-OFF: `resolveConditionRole` below runs the EXACT original
+ * `inAndGroup.has(a.id) ? "confluence" : "spine"` expression whenever the flag is unset/false.
+ */
+const semanticRoleClassifierEnabled = (): boolean => process.env.TF_SEMANTIC_ROLE_CLASSIFIER === "true";
+
+/**
+ * Resolve a non-terminal/non-invalidation atom's `role`. Flag OFF (default) -> the ORIGINAL topology-only
+ * heuristic, untouched. Flag ON -> the gate-strength deterministic rules 1-5 (see gate-strength.ts); atoms
+ * rules 1-5 leave AMBIGUOUS fall back to the same topology heuristic (the compiler is documented
+ * "Pure / deterministic / standalone" — full gemma adjudication (rule 6) is the async
+ * `classifyGateStrength()` API used by Gate 1 grading and any future async onboarding path, not this
+ * synchronous compiler).
+ */
+function resolveConditionRole(a: DecisionAtom, inAndGroup: Set<string>): EngineCondition["role"] {
+  if (!semanticRoleClassifierEnabled()) return inAndGroup.has(a.id) ? "confluence" : "spine";
+  const gs = classifyGateStrengthDeterministic({
+    type: a.type,
+    object: a.object_canonical,
+    evidenceQuote: a.provenance.evidence_quote ?? "",
+  });
+  if (gs !== null) return gateStrengthToRole(gs);
+  return inAndGroup.has(a.id) ? "confluence" : "spine";
+}
+
+/**
  * Translate a compiled Decision Graph into the engine strategy spec.
  *
  * Every source-owned atom becomes a condition (spine / confluence / trigger / invalidation); the graph's
@@ -83,7 +118,7 @@ export function compileToEngineSpec(graph: CompiledGraph): EngineStrategySpec {
     } else {
       entry_conditions.push({
         id: a.id, type: a.type, object: a.object_canonical,
-        role: inAndGroup.has(a.id) ? "confluence" : "spine",
+        role: resolveConditionRole(a, inAndGroup),
         span: a.provenance.transcript_span, evidence: a.provenance.evidence_quote,
       });
     }

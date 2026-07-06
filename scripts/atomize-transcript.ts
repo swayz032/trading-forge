@@ -64,6 +64,18 @@ rule is NOT a decision — even if it mentions indicators or price.
   "this setup has a high win rate" / "you stop trusting yourself"  -> NO (justification / motivation)
   "the engulfing candle confirms buyers"  -> YES only if it introduces a confirmation rule not already stated, else explanation.
 
+DEFENSE-IN-DEPTH (Corpus v3, 2026-07-05) — two clause shapes that read like rules but are NOT the educator's
+own decision, confirmed by the DRI over-specification audit as the clearest, highest-confidence FAIL cases:
+  REFUTED STRAWMAN: the educator is paraphrasing a belief/approach they are about to DEBUNK ("everyone says
+    VWAP is support", "every course I bought said the same thing", "that's the false/naive strategy") ->
+    NO (classify "explanation" or "context" — this is what the strategy REJECTS, never a gate it uses).
+  UI-ARTIFACT: narration of clicking through the charting platform itself (closing a settings dialog,
+    removing an indicator overlay, switching a chart's visual theme) rather than a trade action -> NO
+    (classify "visual_reference" or "non_strategy" — "now you want to go ahead and exit" about a SETTINGS
+    PANEL is not an EXIT_HINT).
+Both FAIL the gate even when they use gate-shaped words ("must", "rule", "wait for", "exit") — the test is
+whether the educator is ASSERTING the rule for their own strategy, not merely describing or refuting one.
+
 OWNERSHIP BOUNDARY: stop-loss, take-profit, target, position size, risk amount, and risk/reward are
 FRAMEWORK-OWNED (outside the strategy edge). They are valid concepts but NEVER decision atoms — classify them
 "framework_owned".
