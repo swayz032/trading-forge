@@ -749,7 +749,7 @@ export class LifecycleService {
             broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
               strategyId: id,
               drift_firms: driftFirms,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             return { success: false, error: "compliance ruleset drift_detected — promotion held until human revalidation" };
           }
@@ -774,9 +774,10 @@ export class LifecycleService {
           const dslGuardsResultP2D = evaluateDslGuardsGate(dslGuardsInputP2D);
           _incDslGuardsGateCounter("PAPER_TO_DEPLOY_READY", dslGuardsResultP2D);
 
-          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
             strategyId: id,
             ...dslGuardsResultP2D.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
             passed: dslGuardsResultP2D.passed,
             reason: dslGuardsResultP2D.reason,
           });
@@ -1229,7 +1230,7 @@ export class LifecycleService {
               incomplete_count: incompleteCount,
               total_gates: evidenceStatuses.length,
               gate_evidence_statuses: evidenceStatuses,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             return {
               success: false,
@@ -1313,9 +1314,10 @@ export class LifecycleService {
         const dslGuardsResult = evaluateDslGuardsGate(dslGuardsInput);
         _incDslGuardsGateCounter(dslGuardsTransition, dslGuardsResult);
 
-        broadcastSSE("lifecycle:dsl_guards_evaluated", {
+        broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
           strategyId: id,
           ...dslGuardsResult.auditPayload,
+          correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #3 F-6: match paired audit row (manual-promotion block)
           passed: dslGuardsResult.passed,
           reason: dslGuardsResult.reason,
         });
@@ -1636,7 +1638,7 @@ export class LifecycleService {
               strategyId: id,
               age_days: parseFloat(ageDays.toFixed(1)),
               limit_days: stalenessDays,
-              correlation_id: options.correlationId ?? null,
+              correlationId: options.correlationId ?? null,
             });
             return { success: false, error };
           }
@@ -3278,7 +3280,7 @@ export class LifecycleService {
               strategyId: s.id,
               age_days: parseFloat(ageDays.toFixed(1)),
               limit_days: stalenessDays,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             continue;
           }
@@ -3361,7 +3363,7 @@ export class LifecycleService {
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                 strategyId: s.id,
                 drift_firms: driftFirms,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;
             }
@@ -4138,9 +4140,10 @@ export class LifecycleService {
           const dslGuardsResultTp = evaluateDslGuardsGate(dslGuardsTp);
           _incDslGuardsGateCounter("TESTING_TO_PAPER", dslGuardsResultTp);
 
-          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
             strategyId: s.id,
             ...dslGuardsResultTp.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
             passed: dslGuardsResultTp.passed,
             reason: dslGuardsResultTp.reason,
           });
@@ -4381,7 +4384,7 @@ export class LifecycleService {
                 strategyId: s.id,
                 age_days: parseFloat(ageDaysSh.toFixed(1)),
                 limit_days: stalenessDaysSh,
-                correlation_id: tickCorrelationId,
+                correlationId: tickCorrelationId,
               });
               continue;
             }
@@ -4453,7 +4456,7 @@ export class LifecycleService {
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                   strategyId: s.id,
                   drift_firms: driftFirmsSh,
-                  correlation_id: tickCorrelationId,
+                  correlationId: tickCorrelationId,
                 });
                 continue;
               }
@@ -4917,9 +4920,10 @@ export class LifecycleService {
             const dslGuardsResultSh = evaluateDslGuardsGate(dslGuardsSh);
             _incDslGuardsGateCounter("SHADOW_TO_PAPER", dslGuardsResultSh);
 
-            broadcastSSE("lifecycle:dsl_guards_evaluated", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
               strategyId: s.id,
               ...dslGuardsResultSh.auditPayload,
+              correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
               passed: dslGuardsResultSh.passed,
               reason: dslGuardsResultSh.reason,
             });
@@ -5272,7 +5276,7 @@ export class LifecycleService {
                 strategyId: s.id,
                 age_days: parseFloat(ageDays.toFixed(1)),
                 limit_days: stalenessDays,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;  // skip to next strategy — inside the outer try
             }
@@ -5307,7 +5311,7 @@ export class LifecycleService {
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                 strategyId: s.id,
                 drift_firms: driftFirms,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;
             }
@@ -6025,9 +6029,10 @@ export class LifecycleService {
           const dslGuardsResult = evaluateDslGuardsGate(dslGuards);
           _incDslGuardsGateCounter("PAPER_TO_DEPLOY_READY", dslGuardsResult);
 
-          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
             strategyId: s.id,
             ...dslGuardsResult.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
             passed: dslGuardsResult.passed,
             reason: dslGuardsResult.reason,
           });
@@ -6797,7 +6802,7 @@ export class LifecycleService {
               strategyId: s.id,
               current_hash: driftResult.currentHash,
               frozen_hash: driftResult.frozenHash ?? null,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             continue; // skip this strategy in the current pass
           }
@@ -6934,7 +6939,7 @@ export class LifecycleService {
               incomplete_count: incompleteCount,
               total_gates: gateEvidenceStatuses.length,
               gate_evidence_statuses: gateEvidenceStatuses,
-              correlation_id: correlationId ?? null,
+              correlationId: correlationId ?? null,
             });
 
             // ─── FIX 3 (DEBT-3) 2026-06-24: auto-backtest enqueue on evidence-incomplete ────

@@ -1,51 +1,78 @@
 /**
  * lifecycle-sse-correlation.test.ts — deep-scan Observability re-verify F-3 (HIGH).
  *
- * EVERY lifecycle SSE broadcast (not just PROMOTED) must carry correlationId so the operator's live
- * SSE stream can be joined back to the audit_log / lifecycle_transitions row
- * (CLAUDE.md §2: bar→handler→DB→SSE→audit_log). Source-structural guard: catches a NEW
- * broadcastSSE(LIFECYCLE_GATE_EVENTS.*, {...}) added without correlationId.
+ * EVERY lifecycle SSE broadcast must carry a `correlationId` (or `tickCorrelationId`) KEY so the
+ * operator's live SSE stream joins back to the audit_log / lifecycle_transitions row
+ * (CLAUDE.md §2: bar→handler→DB→SSE→audit_log). Source-structural guard.
  *
- * F-3c (re-verify #2): the original guard only matched LIFECYCLE_GATE_EVENTS.PROMOTED (6 of 33 sites),
- * so it could NOT catch the two still-broken sites the re-verify found (PAPER_TO_DEPLOY_READY_BLOCKED
- * line 1111 + BIF_EVALUATED line 6256). This version matches ALL LIFECYCLE_GATE_EVENTS.* broadcasts and
- * asserts each body carries correlationId or tickCorrelationId — domain-wide, not PROMOTED-only.
+ * Re-verify #3 hardening — the prior guard was BLIND to the real bug shape twice over:
+ *   (a) it matched the identifier `correlationId` ANYWHERE in the body, so `correlation_id: correlationId`
+ *       (snake_case key, 11 sites) passed GREEN despite the SSE consumer key being wrong. This version
+ *       requires `correlationId` as a KEY (shorthand `correlationId,` or explicit `correlationId:`), so a
+ *       value-position match after `: ` (e.g. `correlation_id: correlationId`) correctly FAILS.
+ *   (b) it only matched `broadcastSSE(LIFECYCLE_GATE_EVENTS.*` — 5 raw-string `broadcastSSE("lifecycle:…"`
+ *       HARD-gate broadcasts (dsl_guards) were structurally unreachable. This version matches BOTH.
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 
 const SRC = readFileSync("src/server/services/lifecycle-service.ts", "utf8");
 
-describe("lifecycle SSE events carry correlationId (F-3, all gate events)", () => {
-  it("every broadcastSSE(LIFECYCLE_GATE_EVENTS.*, {...}) payload includes correlationId/tickCorrelationId", () => {
-    // Match each lifecycle-gate broadcast's object-literal body up to its first closing brace.
-    const re = /broadcastSSE\(LIFECYCLE_GATE_EVENTS\.(\w+),\s*\{([\s\S]*?)\}\)/g;
-    const matches = [...SRC.matchAll(re)];
-    // There are 33 lifecycle-gate broadcast sites today; guard against the regex silently matching none.
-    expect(matches.length).toBeGreaterThanOrEqual(30);
+// Match a lifecycle SSE broadcast via EITHER the catalog constant OR a raw "lifecycle:*" string literal.
+const BROADCAST_RE =
+  /broadcastSSE\(\s*(?:LIFECYCLE_GATE_EVENTS\.(\w+)|"(lifecycle:[^"]+)")\s*,\s*\{([\s\S]*?)\}\)/g;
 
-    const offenders: string[] = [];
-    for (const m of matches) {
-      const evt = m[1];
-      const body = m[2];
-      if (!/\b(correlationId|tickCorrelationId)\b/.test(body)) {
-        // capture the event name + a snippet so a failure names the exact broken site
-        offenders.push(`${evt}: ${body.replace(/\s+/g, " ").trim().slice(0, 80)}`);
-      }
-    }
-    expect(offenders, `lifecycle SSE broadcasts missing correlationId:\n${offenders.join("\n")}`).toEqual([]);
+// correlationId/tickCorrelationId must appear as a KEY: preceded by `{`, `,`, or line-start (+ ws),
+// and followed by `,`, `:`, or `}`. This rejects a value-position match after `: ` (the snake_case bug).
+const KEY_RE = /(?:^|[{,])\s*(?:correlationId|tickCorrelationId)\s*[,:}]/m;
+
+function collect() {
+  return [...SRC.matchAll(BROADCAST_RE)].map((m) => ({
+    event: m[1] ?? m[2] ?? "?",
+    body: m[3] ?? "",
+  }));
+}
+
+describe("lifecycle SSE events carry a correlationId KEY (F-3, all events incl. raw-string)", () => {
+  it("every lifecycle broadcastSSE payload has correlationId/tickCorrelationId as a KEY", () => {
+    const sites = collect();
+    // 33 catalog-constant + 5 raw-string dsl_guards = 38 lifecycle SSE sites today. Guard against the
+    // regex silently matching zero (the "detector found nothing so everything passes" failure mode).
+    expect(sites.length).toBeGreaterThanOrEqual(35);
+
+    const offenders = sites
+      .filter((s) => !KEY_RE.test(s.body))
+      .map((s) => `${s.event}: ${s.body.replace(/\s+/g, " ").trim().slice(0, 80)}`);
+
+    expect(offenders, `lifecycle SSE broadcasts missing a correlationId KEY:\n${offenders.join("\n")}`).toEqual([]);
   });
 
-  it("still covers the known live-capital gate surfaces explicitly", () => {
-    // Belt-and-suspenders: name the surfaces the re-verify caught, so a future rename can't silently
-    // drop them from the generic match above.
-    for (const evt of ["PROMOTED", "PAPER_TO_DEPLOY_READY_BLOCKED", "BIF_EVALUATED", "B14_EVALUATED", "WFE_EVALUATED"]) {
-      const re = new RegExp(`broadcastSSE\\(LIFECYCLE_GATE_EVENTS\\.${evt},\\s*\\{([\\s\\S]*?)\\}\\)`, "g");
-      const bodies = [...SRC.matchAll(re)].map((mm) => mm[1]);
-      expect(bodies.length, `expected at least one ${evt} broadcast`).toBeGreaterThanOrEqual(1);
-      for (const body of bodies) {
-        expect(body, `${evt} broadcast missing correlationId`).toMatch(/\b(correlationId|tickCorrelationId)\b/);
+  it("rejects the snake_case key bug shape (mutation-resistance sanity)", () => {
+    // The exact bug the prior guard missed: value-position identifier under a snake_case key.
+    expect(KEY_RE.test("strategyId: id, correlation_id: correlationId, reason: x")).toBe(false);
+    // And genuinely accepts both key forms actually used in the file.
+    expect(KEY_RE.test("strategyId: id, correlationId, reason: x")).toBe(true);       // shorthand
+    expect(KEY_RE.test("strategyId: id,\n  correlationId: options.correlationId ?? null,")).toBe(true); // explicit
+    expect(KEY_RE.test("strategyId: id,\n  tickCorrelationId,")).toBe(true);          // tick variant
+  });
+
+  it("explicitly covers the known live-capital gate surfaces (incl. the raw-string dsl_guards HARD gate)", () => {
+    const sites = collect();
+    for (const evt of [
+      "PROMOTED",
+      "PAPER_TO_DEPLOY_READY_BLOCKED",
+      "BIF_EVALUATED",
+      "B14_EVALUATED",
+      "WFE_EVALUATED",
+      "DSL_GUARDS_EVALUATED", // now emitted via the catalog constant (was a raw "lifecycle:…" string)
+    ]) {
+      const matching = sites.filter((s) => s.event === evt || `LIFECYCLE_GATE_EVENTS.${s.event}` === `LIFECYCLE_GATE_EVENTS.${evt}`);
+      const found = sites.filter((s) => s.event === evt);
+      expect(found.length, `expected at least one ${evt} broadcast`).toBeGreaterThanOrEqual(1);
+      for (const s of found) {
+        expect(KEY_RE.test(s.body), `${evt} broadcast missing correlationId KEY`).toBe(true);
       }
+      void matching;
     }
   });
 });
