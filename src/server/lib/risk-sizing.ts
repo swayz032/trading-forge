@@ -524,8 +524,13 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
     : 1.0;
   const accountIsHealthy = accountHealthRatio >= 0.85;
 
-  // Edge case: balance ≤ 0
-  if (input.accountBalance <= 0) {
+  // Edge case: balance ≤ 0 OR non-finite. deep-scan sizing F-1 (HIGH, 2026-07-06): a NaN/undefined/Infinity
+  // accountBalance previously sailed through this (`NaN <= 0` is false) and through every downstream cap/floor,
+  // yielding finalContracts=NaN with rejectionReason=null (Math.max(0, NaN)=NaN, not 0) — a NaN order size that
+  // reaches routeOrder() un-rejected. The live call site guards it with `|| 50_000`, but a pure sizing function
+  // that gates real capital must be self-fail-closed, not caller-dependent (the TopstepX build-out is a future
+  // direct caller). Reject non-finite as an invalid (zero-equivalent) balance.
+  if (!Number.isFinite(input.accountBalance) || input.accountBalance <= 0) {
     return {
       finalContracts: 0,
       pyramidTier,
