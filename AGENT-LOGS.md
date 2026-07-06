@@ -22,7 +22,9 @@
 
 **CERTIFIED-9 TALLY:** 7 core domains + Slumhouse + Carter = 9 subsystems at band 9. Broker/cookie + n8n at 8 (need durable tests). Long-tail at 7 (F-4 coverage). Quantum at 6 (pennylane-infra HIGH is honest-labeled; isolation clean).
 
-**Durable tests LANDED this continuation (band-8/7 → toward 9):**
+**★ CONFIRM RE-VERIFY (independent, HEAD fe49cc5) — broker/cookie + long-tail + n8n ALL CERTIFIED band 9.** 64/64 tests green; DLL-halt re-run 3× stable (no timing variance — the fake-timer freeze genuinely removed the RTH dependency); every new test confirmed NON-tautological by cross-referencing exact source lines (dashboard-snapshot:130-137/200/221, correlated-guard:219-231, getHmacEnforceMode call-site, findSplitBatchesMisWired real export + main()-guard prevents live-API on import); no regressions (all new params optional/trailing, backward-compat). n8n F-4/F-5 remain LOW carry-forward (not load-bearing HIGHs). **CERTIFIED-9 NOW = 12 subsystems:** 7 core + Slumhouse + Carter + broker/cookie + long-tail + n8n. Remaining band-<9: quantum (6) + extraction (5). Frontend DELETED (moot).
+
+**Durable tests LANDED this continuation (band-8/7 → CERTIFIED 9 above):**
 - long-tail DLL time-fragile test FIXED (`b4edabd`, froze clock mid-RTH) + F-4 Topstep-exception durable test ADDED (`068ca87`, 4 cases, 24/24) → **long-tail's two re-verify blockers BOTH closed** (should re-verify to ~9).
 - broker/cookie F-2 repeated-unreachable streak durable test ADDED (`4bfcfe7`, drives pollPropFirmHealth + throwing fetch, pins no-alert-1/2 + one-at-3 + no-refire-4/5 + reset-re-escalates, 23/23) → **1 of broker/cookie's 2 durable tests done**.
 
