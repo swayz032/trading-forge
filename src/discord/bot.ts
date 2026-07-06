@@ -15,6 +15,7 @@ import express from "express";
 import pino from "pino";
 import { z } from "zod";
 import { createHash } from "crypto";
+import { signSlumdawgRequest } from "../server/slumdawg-hmac.js";
 import { commands, handleCommand } from "./commands.js";
 
 const log = pino({
@@ -649,13 +650,15 @@ client.on("messageCreate", async (msg) => {
     try { await msg.react("✅"); } catch {}
     const ack = await msg.reply(slumdawgAck());
 
-    // HMAC sign + POST to local ingest proxy (same box, same secret)
+    // HMAC sign + POST to local ingest proxy (same box, same secret).
+    // deep-scan n8n F-1 (CRITICAL): this previously signed createHash(sha256)(ts.body.secret) — the OLD
+    // broken scheme — while the backend validates createHmac(sha256, secret)(ts:path). The two can NEVER
+    // agree, so EVERY #slumdawg-feed ingest silently 401'd while the bot reacted ✅ + said "cooking now".
+    // Use the canonical signer (ts:path, HMAC) — path is the router-relative req.path "/ingest-youtube".
     const secret = process.env.SLUMDAWG_WEBHOOK_SECRET || "";
     const ts = String(Math.floor(Date.now() / 1000));
     const body = JSON.stringify({ url });
-    const sig = secret
-      ? createHash("sha256").update(`${ts}.${body}.${secret}`).digest("hex")
-      : "";
+    const sig = signSlumdawgRequest(ts, "/ingest-youtube", secret);
 
     const resp = await fetch(`${FORGE_API}/api/admin/slumdawg/ingest-youtube`, {
       method: "POST",
@@ -667,6 +670,10 @@ client.on("messageCreate", async (msg) => {
       signal: AbortSignal.timeout(180_000),
     });
 
+    // deep-scan n8n F-1: surface a backend failure instead of masking a 401/503 body as a "verdict".
+    if (!resp.ok) {
+      log.warn({ status: resp.status, url }, "slumdawg ingest: backend rejected the request");
+    }
     const result = (await resp.json().catch(() => ({}))) as IngestResult;
     const embed = buildSlumdawgVerdictEmbed(result, url);
     const editPayload: { content: null; embeds: EmbedBuilder[]; files?: AttachmentBuilder[] } = { content: null, embeds: [embed] };
