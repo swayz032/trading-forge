@@ -727,15 +727,27 @@
     function renderMC(r) {
       const { el } = SH;
       const mc = r.monteCarlo || {};
+      // deep-scan slumhouse-frontend F-1 (CRITICAL 2026-07-06): the histogram below is REAL only when the server
+      // sent a per-path distribution (>=30 samples). In the common case the MC engine emits only percentiles, so
+      // buildMCHistogram() SYNTHESIZES a bell shape from worst/typical/best (re-randomized each load). The old copy
+      // asserted "1,000 different times" unconditionally, presenting a fabricated shape as 1,000 real runs — the
+      // exact false-positive a family member would trust to judge safety. Make the copy honest per case.
+      const isSynthesizedMC = !(Array.isArray(mc.distribution) && mc.distribution.length >= 30);
       const panel = el("div", { class: "r-panel r-panel-mc" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Monte Carlo", el("span", { class: "src whatif" }, "🧪 What-if")),
         ),
-        el("div", { class: "r-cap" },
-          "We made the bot play the same year ",
-          el("b", {}, "1,000 different times"),
-          ". Here's where the money landed:",
-        ),
+        isSynthesizedMC
+          ? el("div", { class: "r-cap" },
+              "Estimated spread of outcomes, shaped from the ",
+              el("b", {}, "worst, typical, and best year"),
+              ". (The curve below is an approximation from those numbers — not 1,000 recorded runs.)",
+            )
+          : el("div", { class: "r-cap" },
+              "We made the bot play the same year ",
+              el("b", {}, "1,000 different times"),
+              ". Here's where the money landed:",
+            ),
       );
 
       // Empty state: no real MC data — chart still animates with synthesized
