@@ -720,7 +720,7 @@ export class LifecycleService {
                 note: "Manual operator override required — cannot verify compliance ruleset integrity",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "lifecycle.drift_check_infra_error audit insert failed (non-blocking)");
             });
             return { success: false, error: `drift_check_infrastructure_error: ${errMsg}` };
@@ -743,7 +743,7 @@ export class LifecycleService {
                 reason: "compliance ruleset drift_detected — promotion held until human revalidation",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
             });
             broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
@@ -790,7 +790,7 @@ export class LifecycleService {
             input: { fromState, toState },
             result: dslGuardsResultP2D.auditPayload,
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate (PAPER→DEPLOY_READY manual path) audit insert failed (non-blocking)");
           });
 
@@ -844,7 +844,7 @@ export class LifecycleService {
                 threshold: 0.85,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "A7 audit insert (manual path) failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -882,7 +882,7 @@ export class LifecycleService {
               threshold: 0.85,
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ err: auditErr, correlationId }, "A7 gate fail-closed audit insert (manual path) failed (non-blocking)");
             auditWriteFailuresTotal.labels({ action: "lifecycle.a7_gate_error" }).inc();
           });
@@ -1007,7 +1007,7 @@ export class LifecycleService {
               input: { fromState, toState },
               result: bifCpcvResult.auditPayload as Record<string, unknown>,
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "lifecycle.bif_cpcv_unmeasured audit insert failed (non-blocking)");
             });
           }
@@ -1041,7 +1041,7 @@ export class LifecycleService {
             input: { fromState, toState },
             result: slippageSurvivalResultP2D.auditPayload as Record<string, unknown>,
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: id, err: auditErr }, "slippage_survival.gate_evaluated audit insert (manual path) failed (non-blocking)");
           });
 
@@ -1178,7 +1178,7 @@ export class LifecycleService {
               input: { fromState, toState },
               result: { error: freezeMsg, note: "first-time freeze write failed — promotion blocked; retry once the DB write succeeds" },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (manual freeze-write) audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
             });
@@ -1220,7 +1220,7 @@ export class LifecycleService {
                 note: "Strategy must complete institutional-grade backtests before promotion proceeds",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "promotion_evidence_incomplete audit insert failed (non-blocking)");
             });
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTION_EVIDENCE_INCOMPLETE, {
@@ -1329,7 +1329,7 @@ export class LifecycleService {
           input: { fromState, toState },
           result: dslGuardsResult.auditPayload,
           correlationId: options.correlationId ?? null,
-        }).catch((auditErr) => {
+        }).catch((auditErr: unknown) => {
           logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate (manual path into PAPER) audit insert failed (non-blocking)");
         });
 
@@ -1362,7 +1362,7 @@ export class LifecycleService {
             note: "DSL guards gate threw on manual promotion into PAPER — promotion blocked",
           },
           correlationId: options.correlationId ?? null,
-        }).catch((auditErr) => {
+        }).catch((auditErr: unknown) => {
           logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate fail-closed audit insert (manual path into PAPER) failed (non-blocking)");
         });
         strategyPromotions.labels({ from_state: fromState, to_state: "PAPER", actor: "system_gate" }).inc();
@@ -2476,7 +2476,7 @@ export class LifecycleService {
               note: "Manual operator override required — cannot verify compliance ruleset integrity",
             },
             correlationId: correlationIdTp,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: id, err: auditErr }, "lifecycle.drift_check_infra_error (T→P manual) audit insert failed (non-blocking)");
           });
           return { success: false, error: `drift_check_infrastructure_error: ${errMsg}` };
@@ -2499,7 +2499,7 @@ export class LifecycleService {
               reason: "compliance ruleset drift_detected — promotion held until human revalidation",
             },
             correlationId: correlationIdTp,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: id, err: auditErr }, "compliance-drift (T→P manual) audit insert failed (non-blocking)");
           });
           broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
@@ -2560,7 +2560,7 @@ export class LifecycleService {
             note: "T→P baseline freeze write failed (manual path) — promotion blocked; retry once the DB write succeeds",
           },
           correlationId: correlationIdFreeze,
-        }).catch((auditErr) => {
+        }).catch((auditErr: unknown) => {
           logger.warn({ err: auditErr, correlationId: correlationIdFreeze }, "frozen_policy.hash_compute_failed (T→P manual freeze-write) audit insert failed (non-blocking)");
           auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
         });
@@ -3018,7 +3018,7 @@ export class LifecycleService {
     // H3 fix 2026-06-28: replaced bare .catch(() => {}) with logger.error so
     // DB-write failures are visible in logs.  Fire-and-forget semantic preserved
     // (no re-throw; strategy retirement continues regardless).
-    AlertFactory.decayAlert(strategyId, "retire").catch((err) =>
+    AlertFactory.decayAlert(strategyId, "retire").catch((err: unknown) =>
       logger.error(
         { err, strategyId, context: "decay-alert-db-write" },
         "AlertFactory.decayAlert failed — alert not persisted",
@@ -3267,7 +3267,7 @@ export class LifecycleService {
                 backtest_created_at: latestBt.createdAt,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale auto-check audit insert failed (non-blocking)");
             });
             broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
@@ -3351,7 +3351,7 @@ export class LifecycleService {
                   reason: "compliance ruleset drift_detected — promotion held until human revalidation",
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift (T→P cron) audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
@@ -3381,7 +3381,7 @@ export class LifecycleService {
               note: "Cron will retry next tick once the underlying error is resolved",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error (T→P cron) audit insert failed (non-blocking)");
           });
           continue;
@@ -3419,7 +3419,7 @@ export class LifecycleService {
                     reason: "compliance_gate.check_freshness failed — promotion held until ruleset is fresh and violation-free",
                   },
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "compliance_blocked audit insert failed (non-blocking)");
                 });
                 broadcastSSE("strategy:compliance_blocked", {
@@ -3452,7 +3452,7 @@ export class LifecycleService {
                   error: gateErr instanceof Error ? gateErr.message : String(gateErr),
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 // Deep-scan #5 H3 (2026-06-29): was silently swallowed — a gate-BLOCK decision
                 // dropped with zero visibility if the DB was under pressure.
                 logger.warn({ err: auditErr, correlationId }, "compliance_gate_error audit insert failed (non-blocking)");
@@ -3539,7 +3539,7 @@ export class LifecycleService {
               note: "gateResult JSONB missing on latest backtest — survival-score gate skipped, promotion proceeded",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "survival-score-gate-missing-data audit insert failed (non-blocking)");
           });
         }
@@ -3576,7 +3576,7 @@ export class LifecycleService {
               } as Record<string, unknown>,
               status: "failure",
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
               logger.warn({ err: auditErr, correlationId }, "exportability_block audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "lifecycle.exportability_block" }).inc();
@@ -3631,7 +3631,7 @@ export class LifecycleService {
             } as Record<string, unknown>,
             status: "warn",
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ auditErr, strategyId: s.id }, "exportability_infra_error audit insert failed (non-blocking)");
           });
 
@@ -3699,7 +3699,7 @@ export class LifecycleService {
               input: { fromState: "TESTING", toState: "PAPER" },
               result: b14CiResultTp.auditPayload,
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (TESTING→PAPER) audit insert failed (non-blocking)");
             });
 
@@ -3740,7 +3740,7 @@ export class LifecycleService {
               input: { fromState: "TESTING", toState: "PAPER" },
               result: { ...b14TpNoMc.auditPayload, note: "no completed MC run for latest backtest — fail-closed (MC auto-fires post-backtest; absent = errored/pending)" },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (TESTING→PAPER no-MC fail-closed) audit insert failed (non-blocking)");
             });
             logger.warn(
@@ -3770,7 +3770,7 @@ export class LifecycleService {
               note: "B14 CI gate threw on TESTING→PAPER path — promotion blocked; retries next cron cycle",
             },
             correlationId: tickCorrelationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
           });
           strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
@@ -3818,7 +3818,7 @@ export class LifecycleService {
                 status: wfeResultTp.status,
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate (TESTING→PAPER) audit insert failed (non-blocking)");
             });
 
@@ -3875,7 +3875,7 @@ export class LifecycleService {
               input: { fromState: "TESTING", toState: "PAPER" },
               result: pboResultTp.auditPayload as Record<string, unknown>,
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) block audit insert failed (non-blocking)");
             });
             broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
@@ -3906,7 +3906,7 @@ export class LifecycleService {
               input: { fromState: "TESTING", toState: "PAPER" },
               result: pboResultTp.auditPayload as Record<string, unknown>,
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) legacy audit insert failed (non-blocking)");
             });
           } else if (pboResultTp.reason === "lifecycle.pbo_cpcv_is_unavailable") {
@@ -3919,7 +3919,7 @@ export class LifecycleService {
               input: { fromState: "TESTING", toState: "PAPER" },
               result: pboResultTp.auditPayload as Record<string, unknown>,
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) cpcv-unavailable audit insert failed (non-blocking)");
             });
           }
@@ -3949,7 +3949,7 @@ export class LifecycleService {
             input: { fromState: "TESTING", toState: "PAPER" },
             result: { reason: "pbo_gate_infrastructure_error", error: pboTpErrMsg, note: "PBO gate threw on TESTING→PAPER cron path — promotion blocked; retries next cron cycle" },
             correlationId: tickCorrelationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "PBO fail-closed audit insert (TESTING→PAPER cron) failed (non-blocking)");
           });
           broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
@@ -4002,7 +4002,7 @@ export class LifecycleService {
                 status: driftResultTp.status,
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate (TESTING→PAPER) audit insert failed (non-blocking)");
             });
 
@@ -4116,7 +4116,7 @@ export class LifecycleService {
             input: { fromState: "TESTING", toState: "PAPER" },
             result: dslGuardsResultTp.auditPayload,
             correlationId: tickCorrelationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (TESTING→PAPER) audit insert failed (non-blocking)");
           });
 
@@ -4156,7 +4156,7 @@ export class LifecycleService {
               note: "DSL guards gate threw on TESTING→PAPER path — promotion blocked; retries next cron cycle",
             },
             correlationId: tickCorrelationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
           });
           strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
@@ -4209,7 +4209,7 @@ export class LifecycleService {
                 note: "T→P baseline freeze write failed (cron path) — cron retries next cycle",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "frozen_policy.hash_compute_failed (T→P cron freeze-write) audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
             });
@@ -4335,7 +4335,7 @@ export class LifecycleService {
                   backtest_created_at: latestBtSh.createdAt,
                 },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale (SHADOW→PAPER) audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
@@ -4408,7 +4408,7 @@ export class LifecycleService {
                     reason: "compliance ruleset drift_detected — promotion held until human revalidation",
                   },
                   correlationId: tickCorrelationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift (SHADOW→PAPER cron) audit insert failed (non-blocking)");
                 });
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
@@ -4438,7 +4438,7 @@ export class LifecycleService {
                 note: "Cron will retry next tick once the underlying error is resolved",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error (SHADOW→PAPER cron) audit insert failed (non-blocking)");
             });
             continue;
@@ -4489,7 +4489,7 @@ export class LifecycleService {
                 note: "gateResult JSONB missing on latest backtest — survival-score gate skipped, promotion proceeded",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "survival-score-gate-missing-data (SHADOW→PAPER) audit insert failed (non-blocking)");
             });
           }
@@ -4522,7 +4522,7 @@ export class LifecycleService {
                 } as Record<string, unknown>,
                 status: "failure",
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "exportability_block (SHADOW→PAPER) audit insert failed (non-blocking)");
                 auditWriteFailuresTotal.labels({ action: "lifecycle.exportability_block" }).inc();
               });
@@ -4560,7 +4560,7 @@ export class LifecycleService {
               } as Record<string, unknown>,
               status: "warn",
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ auditErr, strategyId: s.id }, "exportability_infra_error (SHADOW→PAPER) audit insert failed (non-blocking)");
             });
             broadcastSSE("strategy:exportability_infra_error", {
@@ -4610,7 +4610,7 @@ export class LifecycleService {
                 input: { fromState: "SHADOW", toState: "PAPER" },
                 result: b14CiResultSh.auditPayload,
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (SHADOW→PAPER) audit insert failed (non-blocking)");
               });
 
@@ -4644,7 +4644,7 @@ export class LifecycleService {
                 input: { fromState: "SHADOW", toState: "PAPER" },
                 result: { ...b14ShNoMc.auditPayload, note: "no completed MC run for latest backtest — fail-closed (MC auto-fires post-backtest; absent = errored/pending)" },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (SHADOW→PAPER no-MC fail-closed) audit insert failed (non-blocking)");
               });
               logger.warn(
@@ -4671,7 +4671,7 @@ export class LifecycleService {
                 note: "B14 CI gate threw on SHADOW→PAPER path — promotion blocked; retries next cron cycle",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert (SHADOW→PAPER) failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
@@ -4716,7 +4716,7 @@ export class LifecycleService {
                   status: wfeResultSh.status,
                 },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate (SHADOW→PAPER) audit insert failed (non-blocking)");
               });
 
@@ -4772,7 +4772,7 @@ export class LifecycleService {
                   status: driftResultSh.status,
                 },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate (SHADOW→PAPER) audit insert failed (non-blocking)");
               });
 
@@ -4865,7 +4865,7 @@ export class LifecycleService {
               input: { fromState: "SHADOW", toState: "PAPER" },
               result: dslGuardsResultSh.auditPayload,
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (SHADOW→PAPER) audit insert failed (non-blocking)");
             });
 
@@ -4899,7 +4899,7 @@ export class LifecycleService {
                 note: "DSL guards gate threw on SHADOW→PAPER path — promotion blocked; retries next cron cycle",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (SHADOW→PAPER) failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
@@ -4947,7 +4947,7 @@ export class LifecycleService {
                   note: "SHADOW→PAPER baseline freeze write failed (cron path) — cron retries next cycle",
                 },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "frozen_policy.hash_compute_failed (SHADOW→PAPER cron freeze-write) audit insert failed (non-blocking)");
                 auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
               });
@@ -5197,7 +5197,7 @@ export class LifecycleService {
                   backtest_created_at: latestBt.createdAt,
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale PAPER audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
@@ -5233,7 +5233,7 @@ export class LifecycleService {
                   reason: "compliance ruleset drift_detected — promotion held until human revalidation",
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
@@ -5268,7 +5268,7 @@ export class LifecycleService {
               note: "Manual operator override required — cannot verify compliance ruleset integrity",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error audit insert failed (non-blocking)");
           });
           continue;
@@ -5324,7 +5324,7 @@ export class LifecycleService {
                   note: "Hard gate activates after 30 days of MRP data",
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B10 MRP advisory audit insert failed (non-blocking)");
               });
             } else {
@@ -5389,7 +5389,7 @@ export class LifecycleService {
                 threshold: 0.85,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "A7 audit insert failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -5432,7 +5432,7 @@ export class LifecycleService {
               threshold: 0.85,
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
             logger.warn({ err: auditErr, correlationId }, "A7 gate fail-closed audit insert failed (non-blocking)");
             auditWriteFailuresTotal.labels({ action: "lifecycle.a7_gate_error" }).inc();
@@ -5507,7 +5507,7 @@ export class LifecycleService {
                     b14_hard_gate_enabled: true,
                   },
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 audit insert failed (non-blocking)");
                 });
                 strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -5540,7 +5540,7 @@ export class LifecycleService {
                 input: { fromState: "PAPER", toState: "DEPLOY_READY", evaluated_via: "on_demand_replay" },
                 result: { survival_twin_status: od.status, reason: od.reason, per_firm: od.perFirm ?? null, replay_error: od.error ?? null },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B14 survival-twin on-demand audit insert failed (non-blocking)");
               });
 
@@ -5603,7 +5603,7 @@ export class LifecycleService {
                   input: { fromState: "PAPER", toState: "DEPLOY_READY" },
                   result: b14CiResult.auditPayload,
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate audit insert failed (non-blocking)");
                 });
 
@@ -5663,7 +5663,7 @@ export class LifecycleService {
                   input: { fromState: "PAPER", toState: "DEPLOY_READY" },
                   result: { ...b14NoMcResult.auditPayload, note: "no completed MC run for latest backtest — fail-closed" },
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (no-MC fail-closed) audit insert failed (non-blocking)");
                 });
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
@@ -5698,7 +5698,7 @@ export class LifecycleService {
               input: { fromState: "PAPER", toState: "DEPLOY_READY" },
               result: { reason: "b14.gate_error_fail_closed", error: String(b14Err) },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -5763,7 +5763,7 @@ export class LifecycleService {
                   hard_gate_enabled: b15HardGateEnabled,
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B15 audit insert failed (non-blocking)");
               });
               if (b15HardGateEnabled) {
@@ -5881,7 +5881,7 @@ export class LifecycleService {
                 status: driftResult.status,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate audit insert failed (non-blocking)");
             });
             if (isBlock) {
@@ -5920,7 +5920,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: driftErr instanceof Error ? driftErr.message : String(driftErr), note: "infra read failure — fail-open, promotion continues" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "parameter_drift_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
@@ -5970,7 +5970,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: dslGuardsResult.auditPayload,
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (PAPER→DEPLOY_READY) audit insert failed (non-blocking)");
           });
 
@@ -6015,7 +6015,7 @@ export class LifecycleService {
               note: "DSL guards gate threw on PAPER→DEPLOY_READY path — promotion blocked; retries next cron cycle",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
           });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -6063,7 +6063,7 @@ export class LifecycleService {
               input: { fromState: "PAPER", toState: "DEPLOY_READY" },
               result: dsrGateResult.auditPayload,
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "DSR gate (PAPER→DEPLOY_READY) audit insert failed (non-blocking)");
             });
 
@@ -6114,7 +6114,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: dsrPdrErr instanceof Error ? dsrPdrErr.message : String(dsrPdrErr), note: "infra read failure — fail-open, promotion continues" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "dsr_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
@@ -6180,7 +6180,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: bifResult.auditPayload as Record<string, unknown>,
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "BIF gate audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
           });
 
@@ -6226,7 +6226,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: bifErr instanceof Error ? bifErr.message : String(bifErr), note: "infra read failure — fail-open, promotion continues" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "bif_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
@@ -6266,7 +6266,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: slippageSurvivalResult.auditPayload as Record<string, unknown>,
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival.gate_evaluated audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
           });
 
@@ -6315,7 +6315,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: slippageSurvivalErr instanceof Error ? slippageSurvivalErr.message : String(slippageSurvivalErr), note: "infra read failure — fail-open, promotion continues" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
@@ -6446,7 +6446,7 @@ export class LifecycleService {
                     data_available: gateRes.data_available,
                   },
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, gate, err: auditErr }, "Pass E gate_failed audit insert failed (non-blocking)");
                 });
                 // data_available: false → strategy just lacks data yet (TRANSIENT); don't count toward burial.
@@ -6504,7 +6504,7 @@ export class LifecycleService {
                 },
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "Pass E gates_cleared audit insert failed (non-blocking)");
             });
             // Track A.2: check orchestrator data availability for evidence scoring
@@ -6539,7 +6539,7 @@ export class LifecycleService {
               note: "Pass E orchestrator threw — promotion blocked (fail-closed); retries next cron cycle",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "orchestrator fail-closed audit insert failed (non-blocking)");
           });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -6611,7 +6611,7 @@ export class LifecycleService {
                 agreement,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "composite shadow evaluation audit insert failed (non-blocking)");
             });
 
@@ -6664,7 +6664,7 @@ export class LifecycleService {
                 note: "composite shadow gate threw — promotion proceeds via Wave 27.5 hard gates alone",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
               logger.warn({ err: auditErr, correlationId }, "composite_shadow_evaluation_error audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "composite.shadow_evaluation_error" }).inc();
@@ -6718,7 +6718,7 @@ export class LifecycleService {
                 note: "Operator must POST /api/admin/frozen-policy-override with HMAC + rationale ≥50 chars",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "frozen_policy drift-block audit failed (non-blocking)");
             });
             broadcastSSE(LIFECYCLE_GATE_EVENTS.FROZEN_POLICY_DRIFT_BLOCKED, {
@@ -6770,7 +6770,7 @@ export class LifecycleService {
                 input: { fromState: "PAPER", toState: "DEPLOY_READY" },
                 result: { error: freezeMsg, note: "first-time freeze write failed — promotion blocked; retries next cron cycle" },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
                 logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (freeze-write) audit insert failed (non-blocking)");
                 auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
@@ -6794,7 +6794,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: msg, note: "hash compute exception — promotion blocked until manual investigation" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
             logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (exception) audit insert failed (non-blocking)");
             auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
@@ -6840,7 +6840,7 @@ export class LifecycleService {
                 note: "Strategy must complete institutional-grade backtests before promotion proceeds",
               },
               correlationId: correlationId ?? null,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "promotion_evidence_incomplete audit insert failed (non-blocking)");
             });
             notifyWarning(
@@ -7001,7 +7001,7 @@ export class LifecycleService {
               input: { rollingSharpe, tradingDays },
               result: { error: String(e) },
               correlationId: correlationId ?? null,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
               logger.warn({ err: auditErr, correlationId }, "deploy_ready_alert_failed audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "lifecycle.deploy_ready_alert_failed" }).inc();
@@ -7438,7 +7438,7 @@ export class LifecycleService {
             status: "pending",
             decisionAuthority: "scheduler",
             correlationId: correlationId ?? null,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "regen.auto_triggered audit insert failed (non-blocking)");
           });
 
@@ -7685,7 +7685,7 @@ export class LifecycleService {
                   input: { fromState: "PILOT", toState: "DEPLOYED" },
                   result: { error: errMsg, attempts: 3, note: "Pine compile failed after 3 retries (30s/2m/10m)" },
                   correlationId: correlationId ?? null,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
                   logger.warn({ err: auditErr, correlationId }, "deployed_pine_compile_failed audit insert failed (non-blocking)");
                   auditWriteFailuresTotal.labels({ action: "lifecycle.deployed_pine_compile_failed" }).inc();
@@ -7701,7 +7701,7 @@ export class LifecycleService {
                   ),
                 );
               }
-            })().catch((err) => {
+            })().catch((err: unknown) => {
               logger.error({ strategyId: s.id, err }, "PILOT auto-promote: Pine export retry wrapper threw unexpectedly");
             });
           } else {

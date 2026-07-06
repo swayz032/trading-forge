@@ -356,7 +356,7 @@ function _deleteReplayPendingRow(quantumReplayPendingRowId: string | null): void
   if (!quantumReplayPendingRowId) return;
   db.delete(quantumMcRuns)
     .where(eq(quantumMcRuns.id, quantumReplayPendingRowId))
-    .catch((err) =>
+    .catch((err: unknown) =>
       logger.warn(
         { err: String(err), quantumReplayPendingRowId },
         "quantum-replay-runner: quantum_mc_runs pending-row cleanup delete failed (non-blocking)",
@@ -374,7 +374,7 @@ function _failReplayPendingRow(quantumReplayPendingRowId: string | null): void {
   db.update(quantumMcRuns)
     .set({ status: "failed" })
     .where(eq(quantumMcRuns.id, quantumReplayPendingRowId))
-    .catch((err) =>
+    .catch((err: unknown) =>
       logger.warn(
         { err: String(err), quantumReplayPendingRowId },
         "quantum-replay-runner: quantum_mc_runs pending-row failure update failed (non-blocking)",
@@ -417,7 +417,7 @@ export async function runQuantumReplayForBacktest(
       status: "success",
       correlationId: correlationId ?? null,
       result: { reason: "cooldown_expired", cooldown_ms: _circuitBreakerCooldownMs },
-    }).catch((auditErr) =>
+    }).catch((auditErr: unknown) =>
       logger.warn(
         { err: String(auditErr), backtestId },
         "quantum-replay-runner: circuit_breaker_closed audit row failed (non-blocking)",
@@ -560,7 +560,7 @@ export async function runQuantumReplayForBacktest(
       }
     });
 
-    proc.on("close", (code) => {
+    proc.on("close", (code: number | null) => {
       clearTimeout(timer);
       if (settled) return;
       settled = true;
@@ -591,7 +591,7 @@ export async function runQuantumReplayForBacktest(
       }
     });
 
-    proc.on("error", (err) => {
+    proc.on("error", (err: unknown) => {
       clearTimeout(timer);
       if (settled) return;
       settled = true;

@@ -356,7 +356,7 @@ export function _writeStderrAuditEvents(
         correlationId: correlationId ?? null,
         result: rest,
       })
-      .catch((auditErr) =>
+      .catch((auditErr: unknown) =>
         logger.warn(
           { err: String(auditErr), strategyId, action },
           "quantum-rl-training-runner: AUDIT_EVENT_JSON audit row write failed (non-blocking)",
@@ -395,7 +395,7 @@ function _finalizeRlTrainingRunRow(
       comparisonResult: extra.comparisonResult ?? null,
     })
     .where(eq(rlTrainingRuns.id, rlTrainingRunId))
-    .catch((err) =>
+    .catch((err: unknown) =>
       logger.warn(
         { err: String(err), rlTrainingRunId, status },
         "quantum-rl-training-runner: rl_training_runs finalize update failed (non-blocking)",
@@ -449,7 +449,7 @@ export async function runRlTrainingForStrategy(
       status: "success",
       correlationId: correlationId ?? null,
       result: { reason: "cooldown_expired", cooldown_ms: _circuitBreakerCooldownMs },
-    }).catch((auditErr) =>
+    }).catch((auditErr: unknown) =>
       logger.warn(
         { err: String(auditErr), strategyId },
         "quantum-rl-training-runner: circuit_breaker_closed audit row failed (non-blocking)",
@@ -606,7 +606,7 @@ export async function runRlTrainingForStrategy(
       }
     });
 
-    proc.on("close", (code) => {
+    proc.on("close", (code: number | null) => {
       clearTimeout(timer);
       if (settled) return;
       settled = true;
@@ -652,7 +652,7 @@ export async function runRlTrainingForStrategy(
       }
     });
 
-    proc.on("error", (err) => {
+    proc.on("error", (err: unknown) => {
       clearTimeout(timer);
       if (settled) return;
       settled = true;
