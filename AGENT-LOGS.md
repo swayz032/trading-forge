@@ -4,6 +4,28 @@
 
 ---
 
+### Session Log — 2026-07-06 All-domains-to-9 loop — Round 4: re-verifies + OLD FRONTEND DELETED + quantum
+
+**Mission:** continue the doer≠grader loop; process the 4 dispatched re-verifies + quantum from-zero scan; execute the operator's mid-loop directive to DELETE the old frontend.
+
+**Re-verify verdicts (independent accuracy-validator, from-zero, at HEAD 6263182):**
+- **Slumhouse → band 9 CERTIFIED.** F-1 gate-bypass genuinely closed (grader independently hunted every DEPLOY_READY→DEPLOYED path, found no other bypass; defense-in-depth actor check backs it), F-2/F-2b correlationId, F-3 CSRF. 20/20 + 42/42.
+- **Carter → band 9 CERTIFIED.** ALS correlation chain links all 11 audit sites end-to-end. 5/5 + 263/264 (1 pre-existing unrelated apify flake).
+- **Broker/cookie → band 8** (NOT 9): all 6 fixes correct + regression-free, but F-1 (stale-cookie) + F-2 (unreachable-streak) have NO PERMANENT tests — grader verified via throwaway injection. TO REACH 9: add durable vitest for captureOneFirm login-page branch (mock playwright) + pollPropFirmHealth streak/reset (mock fetch). F-5 classifier tests (19/19) are the pattern to mirror.
+- **Long-tail → band 7** (NOT 9): DLL/settlement/guard/dead-code fixes correct, but (a) DLL test was TIME-FRAGILE → **FIXED this session** (`b4edabd`, froze clock to mid-RTH); (b) F-4 Topstep-exception has ZERO test coverage (correlated-position-guard.test.ts never passes proposedFirmId/proposedUserId/proposedStrategyId) — TO REACH 9: add a test block exercising proposedFirmId="topstep"+null-userId+matching/mismatch strategy + cross-firm.
+- **n8n → band 8** (NOT 9): F-1/F-2/F-3 all confirmed (bot.ts HMAC 21/21 parity; detector caught the real swapped-wiring fixture; enforce-default surgical). F-2/F-3 lack dedicated regression tests. F-4 test-glob + F-5 dead file still open.
+- **Quantum → band 6** (from-zero, NEVER graded before — operator asked). ★ CHALLENGER-ISOLATION VERDICT = CLEAN: quantum NEVER gates money/promotion (traced every consumer — lifecycle/broker-router/paper-signal all free of RL/qubo/tensor; a-plus-auditor-governance.test.ts is a real mutation-testable isolation guard). 2 HIGHs: (1) pennylane/neal/dwave/braket ABSENT in prod Python → RL VQC + entropy filter + SQA silently run classical/no-op/random since inception — honestly labeled via governance_labels.backend_label="unavailable" (infra/branding gap, NOT a safety leak); (2) cross-file test pollution → **FIXED this session** (`a05f401`). Cloud 3-gate opt-in confirmed (no auto-cloud-spend path); braket stub stays stub. MEDIUM: quantum-cost-tracker logs but doesn't ENFORCE a $/QPU budget ceiling; tensor_signal_model.py (781 lines, live fire-and-forget) has zero test coverage. 7/105 test_quantum_entropy_filter.py fail (pennylane absent, soft-None contract).
+
+**★ OPERATOR DIRECTIVE EXECUTED — old frontend DELETED (`55ba47d` + `d5fdf69`).** "Slumhouse is the ONLY frontend we use." Removed `Trading_forge_frontend/amber-vision-main/` (230 files: CommandRoom, Dashboard, SPA observation deck) + build:frontend script + index.ts static-serve (root now 302→/slumhouse/) + existsSync-skipped the check-sse-contract CI gate (no typed catalog left; Slumhouse consumes SSE as untyped JS) + system-topology union-arm + 3 obsolete SSE-catalog tests (deepscan12-track-r, wave11-sse-inventory, 1 assertion in wave13). This MOOTS the 2 frontend HIGHs the from-zero SPA scan found (Dashboard.tsx fabricated payout data + CommandRoom.tsx UNKNOWN-renders-green — both in the deleted SPA). 4 CI gates GREEN (isolation/2026/system-map driftItems=[]/sse-contract SKIP), tsc clean. NOTE: CLAUDE.md §15 still lists amber-vision-main as "Dashboard" — stale doc line, repoint to Slumhouse. Memory [[project_slumhouse_is_real_frontend]] + [[feedback_pine_is_family_monitor_only_not_operator_execution]] updated.
+
+**Also landed this session:** Slumhouse F-3 CSRF (`fa54927`), n8n F-3 HMAC-enforce-default (`6263182`), Pine 20 stale tests greened + CRITICAL disproven (`0f36054`), extraction F-1 fail-open contract (`8fb6b56`), extraction F-2 documented as a b7934d9 multi-way DESIGN conflict (needs a coverage-model decision, not a patch — quote-overlap fix broke 5 other tests, reverted).
+
+**CERTIFIED-9 TALLY:** 7 core domains + Slumhouse + Carter = 9 subsystems at band 9. Broker/cookie + n8n at 8 (need durable tests). Long-tail at 7 (F-4 coverage). Quantum at 6 (pennylane-infra HIGH is honest-labeled; isolation clean).
+
+**Carry-forward (all clean, precise):** (1) broker/cookie 2 durable failure-injection tests → 9; (2) long-tail F-4 Topstep-exception test → toward 9; (3) n8n F-2/F-3 regression tests + F-4 empty-suite glob + F-5 dead file; (4) extraction F-2 coverage-model DECISION (docstring quote-overlap vs lenient any-token — affects the strategy-library corpus); (5) quantum: cost-budget ENFORCER (not just logger), tensor_signal_model coverage, the pennylane-install infra question (is "quantum" meant to run real circuits on the tower, or is classical-fallback acceptable? — operator/infra call); (6) Slumhouse-side safety-SSE test (the deepscan12 concern outlived its deleted test); (7) CLAUDE.md §15 doc repoint Slumhouse.
+
+---
+
 ### Session Log — 2026-07-06 Corpus v3 Gate 3 — instrument saga (5 run_class_backtest defects) + reference re-derivation IN FLIGHT
 
 **Mission:** Certify Corpus v3 Gate 3 (do the classifier's extraction-time roles reproduce the runtime-demotion
