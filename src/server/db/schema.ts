@@ -2509,6 +2509,9 @@ export const productionTrades = pgTable(
     complianceCheckId: integer("compliance_check_id"),
     traderspostWebhookId: text("traderspost_webhook_id"),
     tradovateFillId: text("tradovate_fill_id"),
+    // Option B (deep-scan A, migration 0197): stamped by POST /api/traderspost/order-status when
+    // TradersPost confirms the order — the independent "confirmed" leg for reconciliation.
+    traderspostConfirmedAt: timestamp("traderspost_confirmed_at", { withTimezone: true }),
     expectedSlippage: numeric("expected_slippage"),
     actualSlippage: numeric("actual_slippage"),
     expectedPnl: numeric("expected_pnl"),

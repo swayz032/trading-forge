@@ -205,15 +205,41 @@ async function fetchProxyCountsFromProductionTrades(date: Date): Promise<number>
   return Number(rows[0]?.cnt ?? 0);
 }
 
+/** deep-scan A / Option B: the operator opts the traderspost leg into REAL independence
+ *  (count of TradersPost-CONFIRMED rows) once the POST /api/traderspost/order-status webhook
+ *  is wired and orders flow. Default false → proxy mode (unchanged). */
+export function isTraderspostConfirmIndependent(): boolean {
+  return process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT === "true";
+}
+
+/** Option B: count production_trades rows TradersPost has confirmed (traderspost_confirmed_at
+ *  IS NOT NULL) in the day window — a GENUINELY independent "confirmed" leg vs the server "sent"
+ *  count. Migration 0197 adds the column; stamped by traderspost-confirm.ts. */
+async function fetchTraderspostConfirmedCount(date: Date): Promise<number> {
+  const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayEnd = new Date(dayStart.getTime() + 86_400_000);
+  const rows = await db
+    .select({ cnt: count() })
+    .from(productionTrades)
+    .where(
+      and(
+        gte(productionTrades.barTimestamp, dayStart),
+        lt(productionTrades.barTimestamp, dayEnd),
+        sql`${productionTrades.traderspostConfirmedAt} IS NOT NULL`,
+      ),
+    );
+  return Number(rows[0]?.cnt ?? 0);
+}
+
 /**
- * Proxy for TradersPost log count. Until Phase 4C wires traderspost_webhook_id,
- * returns the same productionTrades count (re-uses the shared query result supplied
- * by the caller).
+ * TradersPost log count. When RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true (Option B webhook wired),
+ * returns the genuinely-independent CONFIRMED count. Otherwise a 1:1 proxy of the production_trades
+ * count (re-uses the caller's shared query result).
  */
 async function fetchTraderspostLogCount(date: Date, sharedCount: number): Promise<number> {
-  // When traderspost_webhook_id is populated, query that column instead.
-  // For now, return the pre-fetched shared count to avoid a duplicate SQL round-trip.
-  void date; // date retained in signature for Phase 4C wiring
+  if (isTraderspostConfirmIndependent()) {
+    return fetchTraderspostConfirmedCount(date);
+  }
   return sharedCount;
 }
 
@@ -428,24 +454,36 @@ export async function runDailyReconciliation(
     // ── Compare: build mismatch_details ───────────────────────────────────
     const mismatches: MismatchDetail[] = [];
 
-    // Checks 1 & 2 (count cross-checks) run ONLY when the traderspost/tradovate legs
-    // are genuinely independent of production_trades. In proxy mode they are 1:1 copies
-    // of productionTradesCount (self-comparison → always equal → a fake pass that
-    // overstates assurance), so they are skipped and recorded as unavailable rather than
-    // silently "passing". severity is already clamped to yellow via INDEPENDENT_SOURCE_COUNT
-    // (< MIN_INDEPENDENT_SOURCES_FOR_RED) so the operator panel never reads a false green here.
-    if (PROXY_COUNT_LEGS_INDEPENDENT) {
-      // Check 1: production_trades.count === traderspost_log.count
+    // Check 1: production_trades (SENT) vs traderspost (CONFIRMED). deep-scan A / Option B:
+    // when RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true, traderspostLogCount is the genuinely
+    // independent count of TradersPost-confirmed rows (traderspost_confirmed_at IS NOT NULL,
+    // stamped by POST /api/traderspost/order-status) — a REAL sent-vs-confirmed reconciliation.
+    // Otherwise the leg is a 1:1 proxy of production_trades (self-comparison → fake pass), so the
+    // check is skipped and logged rather than silently "passing".
+    const traderspostConfirmIndependent = isTraderspostConfirmIndependent();
+    if (traderspostConfirmIndependent || PROXY_COUNT_LEGS_INDEPENDENT) {
       if (productionTradesCount !== traderspostLogCount) {
         mismatches.push({
-          source: "production_trades_vs_traderspost",
+          source: traderspostConfirmIndependent
+            ? "production_trades_vs_traderspost_confirmed"
+            : "production_trades_vs_traderspost",
           expected: productionTradesCount,
           actual: traderspostLogCount,
           delta: traderspostLogCount - productionTradesCount,
         });
       }
+    } else {
+      logger.info(
+        { productionTradesCount },
+        "reconciliation: count check 1 SKIPPED — traderspost leg is a proxy of production_trades. " +
+          "Wire the Option-B webhook (POST /api/traderspost/order-status) and set " +
+          "RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true post go-live to make it a real sent-vs-confirmed check.",
+      );
+    }
 
-      // Check 2: traderspost_log.count === tradovate_fills.count
+    // Check 2: traderspost vs tradovate_fills — STILL a proxy (tradovate fill IDs need SME/live
+    // fill population), so gated on PROXY_COUNT_LEGS_INDEPENDENT only.
+    if (PROXY_COUNT_LEGS_INDEPENDENT) {
       if (traderspostLogCount !== tradovateFillsCount) {
         mismatches.push({
           source: "traderspost_vs_tradovate_fills",
@@ -454,13 +492,6 @@ export async function runDailyReconciliation(
           delta: tradovateFillsCount - traderspostLogCount,
         });
       }
-    } else {
-      logger.info(
-        { productionTradesCount },
-        "reconciliation: count cross-checks (1,2) SKIPPED — traderspost/tradovate legs are " +
-          "proxies of production_trades, not independent (see PROXY_COUNT_LEGS_INDEPENDENT). " +
-          "Severity stays clamped to yellow via INDEPENDENT_SOURCE_COUNT.",
-      );
     }
 
     // Check 3: tradovate_fills.pnl ≈ mffu_dashboard_pnl (within tolerance)

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-06T02:22:45.949Z",
+  "generatedAt": "2026-07-06T08:37:43.719Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,7 +15,7 @@
     ]
   },
   "counts": {
-    "routes": 78,
+    "routes": 79,
     "schedulerJobs": 108,
     "workflowFiles": 20,
     "canonicalWorkflows": 20,
@@ -97,6 +97,7 @@
     "/api/synthetic-black-swan",
     "/api/tournament",
     "/api/trade-journal",
+    "/api/traderspost",
     "/api/tradingview",
     "/api/validation",
     "/api/validation-cadence",
@@ -812,7 +813,7 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 78,
+      "routes": 79,
       "schedulerJobs": 108,
       "engineSubsystems": 29,
       "databaseTables": 110
@@ -1609,7 +1610,8 @@
           "/api/broker-error-budget",
           "/api/broker/fill-callback",
           "/api/live-order",
-          "/api/strategy-assignments"
+          "/api/strategy-assignments",
+          "/api/traderspost"
         ],
         "schedulerJobs": [
           "broker-error-budget-check",
@@ -8721,7 +8723,8 @@
         "/api/broker-error-budget",
         "/api/broker/fill-callback",
         "/api/live-order",
-        "/api/strategy-assignments"
+        "/api/strategy-assignments",
+        "/api/traderspost"
       ],
       "schedulerJobs": [
         "broker-error-budget-check",

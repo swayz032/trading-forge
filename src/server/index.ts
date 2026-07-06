@@ -20,6 +20,7 @@ import { indicatorRoutes } from "./routes/indicators.js";
 import { backtestRoutes } from "./routes/backtests.js";
 import { agentRoutes } from "./routes/agent.js";
 import { carterWebhookRouter } from "./routes/carter-webhook.js";
+import { tradersPostConfirmRouter } from "./routes/traderspost-confirm.js";
 import { carterToolsRouter } from "./routes/carter-tools.js";
 import { monteCarloRoutes } from "./routes/monte-carlo.js";
 import complianceRoutes from "./routes/compliance.js";
@@ -255,6 +256,12 @@ app.use("/api/carter/webhook", carterWebhookRouter);
 
 // Middleware
 app.use(express.json({ limit: "10mb" }));
+
+// Option B (deep-scan A): TradersPost order-status confirmation consumer. External callback —
+// mounted AFTER express.json (needs parsed body) but BEFORE authMiddleware (has its own optional
+// shared-secret gate via X-TradersPost-Confirm-Secret / TRADERSPOST_CONFIRM_SECRET). Only stamps
+// production_trades.traderspost_confirmed_at; no order flow. Inert until the operator wires it.
+app.use("/api/traderspost", tradersPostConfirmRouter);
 
 // Correlation ID — must be first /api middleware so all subsequent handlers have req.log
 app.use("/api", correlationMiddleware);

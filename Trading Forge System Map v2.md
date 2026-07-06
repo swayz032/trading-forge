@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-06T02:22:45.949Z`.
+Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,7 +11,7 @@ Updated automatically from the repo on `2026-07-06T02:22:45.949Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
-- API routes tracked: `78`
+- API routes tracked: `79`
 - Scheduler jobs tracked: `108`
 - Current live Trading Forge n8n workflows tracked: `20`
 - Canonical workflows tracked: `20`
@@ -54,7 +54,7 @@ Updated automatically from the repo on `2026-07-06T02:22:45.949Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `73`
-- Route coverage: `78/78`
+- Route coverage: `79/79`
 - Scheduler coverage: `108/108`
 - Engine coverage: `29/29`
 - Database coverage: `110/110`
@@ -304,6 +304,7 @@ Updated automatically from the repo on `2026-07-06T02:22:45.949Z`.
 - `/api/synthetic-black-swan`
 - `/api/tournament`
 - `/api/trade-journal`
+- `/api/traderspost`
 - `/api/tradingview`
 - `/api/validation`
 - `/api/validation-cadence`

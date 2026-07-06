@@ -2107,7 +2107,8 @@
       "/api/broker-error-budget",
       "/api/broker/fill-callback",
       "/api/live-order",
-      "/api/strategy-assignments"
+      "/api/strategy-assignments",
+      "/api/traderspost"
     ],
     "engine_subsystems": [
       "broker_router",

@@ -37,18 +37,23 @@ describe("deep-scan A — proxy count legs must not fake-pass a 3-way reconcilia
     expect(SRC).toMatch(/export const PROXY_COUNT_LEGS_INDEPENDENT\s*=\s*false;/);
   });
 
-  it("count checks 1 & 2 are gated on PROXY_COUNT_LEGS_INDEPENDENT (not unconditional)", () => {
-    // The self-comparison must sit inside `if (PROXY_COUNT_LEGS_INDEPENDENT) { ... }`.
-    const gateIdx = SRC.indexOf("if (PROXY_COUNT_LEGS_INDEPENDENT) {");
-    expect(gateIdx).toBeGreaterThan(-1);
-    const check1Idx = SRC.indexOf('source: "production_trades_vs_traderspost"');
+  it("check 1 is gated on the Option-B confirm flag OR proxy-independence; check 2 on proxy-independence", () => {
+    // check 1 (production_trades vs traderspost): REAL when Option B is wired
+    // (isTraderspostConfirmIndependent()), else proxy-gated — never an unconditional self-compare.
+    const gate1Idx = SRC.indexOf("if (traderspostConfirmIndependent || PROXY_COUNT_LEGS_INDEPENDENT) {");
+    expect(gate1Idx).toBeGreaterThan(-1);
+    const check1Idx = SRC.indexOf('source: traderspostConfirmIndependent');
+    expect(check1Idx).toBeGreaterThan(gate1Idx);
+
+    // check 2 (traderspost vs tradovate) stays proxy-gated (tradovate needs SME/live fills)
+    const gate2Idx = SRC.indexOf("if (PROXY_COUNT_LEGS_INDEPENDENT) {", gate1Idx);
     const check2Idx = SRC.indexOf('source: "traderspost_vs_tradovate_fills"');
-    expect(check1Idx).toBeGreaterThan(gateIdx);
-    expect(check2Idx).toBeGreaterThan(gateIdx);
-    // and the gate must close (else-branch logs the skip) before the independent Check 3
-    const elseIdx = SRC.indexOf("count cross-checks (1,2) SKIPPED", gateIdx);
-    const check3Idx = SRC.indexOf('source: "pnl_mffu_vs_expected"');
-    expect(elseIdx).toBeGreaterThan(gateIdx);
-    expect(check3Idx).toBeGreaterThan(elseIdx);
+    expect(gate2Idx).toBeGreaterThan(gate1Idx);
+    expect(check2Idx).toBeGreaterThan(gate2Idx);
+
+    // proxy-mode still logs the skip (with the Option-B activation hint) — no silent fake-pass
+    const skipLogIdx = SRC.indexOf("count check 1 SKIPPED");
+    expect(skipLogIdx).toBeGreaterThan(-1);
+    expect(SRC).toContain("RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true");
   });
 });
