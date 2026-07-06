@@ -121,6 +121,21 @@ async function captureOneFirm(config: FirmDashboardConfig): Promise<SnapshotResu
 
     await page.goto(config.dashboardUrl, { waitUntil: "networkidle" });
 
+    // deep-scan broker/cookie F-1 (HIGH): an EXPIRED cookie redirects the dashboard URL to a LOGIN page,
+    // but this used to screenshot it unconditionally + return status:"captured" — storing a login screen
+    // as payout-dispute evidence (a false success the F-4 audit would then faithfully record). Detect the
+    // login page (password field OR login-path URL) and return an error so the stale cookie surfaces via
+    // the dashboard_snapshot.capture_failed audit row instead of a fake "captured".
+    try {
+      const passwordField = await page.$("input[type='password']");
+      const currentUrl: string = typeof page.url === "function" ? String(page.url()) : "";
+      if (passwordField || /\/(login|signin|sign-in|auth)\b/i.test(currentUrl)) {
+        return { firmId: config.firmId, status: "error", errorMessage: "stale_cookie_redirected_to_login" };
+      }
+    } catch {
+      // Detection is best-effort — if it throws, fall through and capture (a snapshot beats a crash).
+    }
+
     // Ensure the snapshot directory exists for this firm
     const firmDir = path.join(SNAPSHOT_BASE_DIR, config.firmId);
     fs.mkdirSync(firmDir, { recursive: true });
