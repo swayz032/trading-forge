@@ -106,7 +106,7 @@ END_DATE = "2026-07-01"
 # byte-identical for any pair that actually trades -- only zero-signal pairs change from
 # crash -> clean total_trades=0. Re-stamped to the fixed HEAD; update this value again if this
 # script is re-run against a later commit.
-ENGINE_SHA_PIN = "e3a8b7f1d8e9793f47962a8db83d8a10b3547c73"
+ENGINE_SHA_PIN = "5b863aca4662be1c20504a8673952eecb196adc7"
 
 
 def load_spec_artifact(spec_dir: Path, video: str) -> dict | None:
