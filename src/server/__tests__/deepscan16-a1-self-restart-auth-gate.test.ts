@@ -246,4 +246,40 @@ describe("Deep-Scan #16 A-1 — /api/admin/self-restart through the real auth-ga
     const body = (await resp.json()) as { error?: string };
     expect(body.error).toBe("hmac_verification_failed");
   });
+
+  // ─── Failure-injection: replay a captured (valid) signature past the 60s drift window ─────────
+  it("replay-window: a VALID HMAC for a STALE timestamp (>60s old) → 401 (captured-signature replay is rejected)", async () => {
+    process.env["API_KEY"] = TEST_API_KEY;
+    // Attacker captures a legitimately-signed request and replays it 2 minutes later. The signature
+    // still verifies (it's real), but RESTART_TIMESTAMP_DRIFT_MS=60_000 must reject the stale replay.
+    const staleTimestamp = Math.floor(Date.now() / 1000) - 120;
+    const reason = "deepscan_replay_window_injection";
+    const sig = signRestart(staleTimestamp, reason); // genuine signature for the stale timestamp
+
+    const resp = await fetch(`${baseUrl}/api/admin/self-restart`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Restart-Signature": sig,
+      },
+      body: JSON.stringify({ timestamp: staleTimestamp, reason }),
+    });
+
+    expect(resp.status).toBe(401); // signature valid, but replay window exceeded → rejected
+  });
+
+  it("replay-window boundary: a fresh timestamp (within 60s) with a valid HMAC → 200 (not over-rejecting)", async () => {
+    process.env["API_KEY"] = TEST_API_KEY;
+    const freshTimestamp = Math.floor(Date.now() / 1000) - 5; // 5s old — well within the window
+    const reason = "deepscan_replay_window_fresh";
+    const sig = signRestart(freshTimestamp, reason);
+
+    const resp = await fetch(`${baseUrl}/api/admin/self-restart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Restart-Signature": sig },
+      body: JSON.stringify({ timestamp: freshTimestamp, reason }),
+    });
+
+    expect(resp.status).toBe(200); // proves the 401 above is the drift check, not a blanket reject
+  });
 });
