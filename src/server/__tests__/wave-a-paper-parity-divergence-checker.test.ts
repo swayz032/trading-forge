@@ -118,6 +118,16 @@ describe("Fix 9: shadow-signal-divergence-checker compound fault detection", () 
     expect(result.per_signal_violations.length).toBe(MIN_SAMPLE_SIZE * 2);
   });
 
+  it("deep-scan Paper F-1: divergence_pct stays within [0,1] even when every signal has 2 violations", () => {
+    // Every signal diverges on BOTH direction and size → 2×sample violations. The documented
+    // contract is "fraction of SIGNALS that diverge" (0..1), so this must be 1.0, not 2.0.
+    const { shadowSignals, backtestExpected } = makePairsN(MIN_SAMPLE_SIZE, "long", "short", 2, 3);
+    const result = compareShadowToBacktest(shadowSignals, backtestExpected);
+    expect(result.per_signal_violations.length).toBe(MIN_SAMPLE_SIZE * 2); // 2 violations/signal
+    expect(result.divergence_pct).toBeLessThanOrEqual(1.0);
+    expect(result.divergence_pct).toBe(1.0); // all N signals diverged → 100%, not 200%
+  });
+
   it("size within 10% tolerance is not a violation", () => {
     // size 2 vs 2.1 → diff 5% < 10% → no violation
     const { shadowSignals, backtestExpected } = makePairsN(MIN_SAMPLE_SIZE, "long", "long", 2, 2.1);
