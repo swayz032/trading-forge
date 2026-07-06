@@ -62,6 +62,18 @@ except ImportError:
     PENNYLANE_AVAILABLE = False
     BRAKET_PENNYLANE_AVAILABLE = False
 
+# institutional-grade observability (2026-07-06): shout ONCE at import if PennyLane is missing, so a future
+# silent lib-removal can never quietly degrade the RL agent to classical/random coin-flip without anyone
+# noticing (the exact "quantum silently ran classical for months" gap that prompted this). Advisory-only —
+# quantum is challenger-only and this never blocks; the honest state is always queryable via
+# `npm run check:quantum-backends`.
+if not PENNYLANE_AVAILABLE:
+    _rl_logger.warning(
+        "QUANTUM RL: PennyLane NOT installed — VQC policy training runs CLASSICAL fallback (near-random "
+        "action selection). `pip install pennylane pennylane-lightning` to restore real circuits. "
+        "Challenger-only: does NOT affect trading."
+    )
+
 
 # ─── Governance ──────────────────────────────────────────────────
 GOVERNANCE = {
