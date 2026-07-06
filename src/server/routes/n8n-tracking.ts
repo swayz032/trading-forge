@@ -61,7 +61,7 @@ function verifyN8nHmac(headerValue: string | undefined, body: unknown): { ok: tr
 // query who is still sending unsigned traffic before the flip.
 type HmacEnforceMode = "warn" | "enforce";
 
-function getHmacEnforceMode(): HmacEnforceMode {
+export function getHmacEnforceMode(): HmacEnforceMode {
   const raw = (process.env["N8N_HMAC_ENFORCE_MODE"] ?? "").toLowerCase().trim();
   if (raw === "enforce") return "enforce";
   if (raw === "warn") return "warn";
