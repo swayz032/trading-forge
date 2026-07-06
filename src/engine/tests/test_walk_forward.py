@@ -195,6 +195,15 @@ class TestEmbargo:
             assert len(is_d) == len(is_e), "IS sizes must match default vs explicit-20"
             assert len(oos_d) == len(oos_e), "OOS sizes must match default vs explicit-20"
 
+    def test_backtest_request_embargo_default_is_20(self):
+        """deep-scan Backtest re-cert HIGH: BacktestRequest.embargo_bars (the PRODUCTION dispatch path
+        through backtester.py) must default to 20, not 0. A 0 request-default silently OVERRODE
+        run_walk_forward()'s protective 20 on every production CPCV/WF run → zero purge → IS/OOS leakage.
+        """
+        from src.engine.config import BacktestRequest
+
+        assert BacktestRequest.model_fields["embargo_bars"].default == 20
+
     def test_default_embargo_produces_gap_vs_zero(self):
         """Default embargo=20 creates shorter OOS windows than explicit embargo=0."""
         n = 500

@@ -628,7 +628,12 @@ class BacktestRequest(BaseModel):
     commission_per_side: Optional[float] = None
     mode: Literal["single", "walkforward"] = "single"
     walk_forward_splits: int = 5
-    embargo_bars: int = 0  # Bars to skip between IS/OOS (prevents data leakage)
+    # deep-scan Backtest re-cert HIGH: was 0, which OVERRODE run_walk_forward()'s Wave-C-hardened
+    # protective default of 20 (whose comment says "Do NOT default to 0") on the entire BacktestRequest
+    # production path — so every production CPCV/WF run purged ZERO bars, defeating the AFML purge+embargo
+    # methodology (a real IS/OOS leakage risk). Aligned to 20. NOTE: this re-baselines backtests run via
+    # BacktestRequest (they now purge 20 bars) — historical metrics are non-comparable; re-run before trusting.
+    embargo_bars: int = 20  # Bars to skip between IS/OOS (prevents data leakage; AFML purge+embargo)
     max_trades_per_day: int = 2  # Max entries per calendar day (long + short combined)
     firm_key: Optional[str] = None
     event_calendar: Optional[EventCalendarConfig] = None
