@@ -316,9 +316,13 @@ export async function evolveStrategy(
     robust_ranges: robustRanges,
     current_sharpe: parseFloat(strategy.rollingSharpe30d ?? "0"),
     baseline_sharpe: parentSharpe,
-    window_sharpes: wfResults?.windows
-      ? (wfResults.windows as any[]).map((w: any) => w.oos_metrics?.sharpe_ratio ?? 0)
-      : [],
+    // deep-scan Backtest F-2: in CPCV mode (the default) wfResults.windows is [] by design, which made
+    // window_sharpes silently [] → degraded the param-evolver LLM prompt. Fall back to CPCV's per-PATH
+    // OOS Sharpes (path_sharpes) when there are no per-window results, so the prompt gets real evidence.
+    window_sharpes:
+      (wfResults?.windows as any[] | undefined)?.length
+        ? (wfResults!.windows as any[]).map((w: any) => w.oos_metrics?.sharpe_ratio ?? 0)
+        : ((wfResults?.path_sharpes as number[] | undefined) ?? []),
     mutation_history: priorMutationOutcomes.length > 0
       ? priorMutationOutcomes.map((m) => ({
           param_name: m.paramName,

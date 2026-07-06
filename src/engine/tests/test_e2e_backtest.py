@@ -144,8 +144,9 @@ class TestE2EBacktest:
 
         compliance = run_prop_compliance(daily_pnls, stats)
 
-        # Must have all 8 firms
-        assert len(compliance) == 8
+        # deep-scan Backtest re-cert (stale-fixture fix): only 2 firms remain after the 9-legacy-firm
+        # prune (migration 0097, 2026-05-10 — Topstep + MFFU ONLY). Was a stale `== 8`.
+        assert len(compliance) == 2
         for firm, details in compliance.items():
             assert "passed" in details
             assert "expected_eval_cost" in details

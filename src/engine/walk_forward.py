@@ -1021,6 +1021,10 @@ def _run_walk_forward_cpcv(
         "daily_pnl_records": all_oos_pnl_records,
         "equity_curve": all_oos_equity,
         "windows": [],
+        # deep-scan Backtest F-2: CPCV has no per-WINDOW structure (windows=[]), but it DOES have
+        # per-PATH OOS Sharpes. Expose them so consumers (evolution-service window_sharpes → the
+        # param-evolver LLM prompt) fall back to real CPCV evidence instead of a silently-empty [].
+        "path_sharpes": path_sharpes,
         "n_splits": n_splits,
         "is_ratio": 1.0 - (k_test_groups / n_splits),
         "execution_time_ms": elapsed_ms,
