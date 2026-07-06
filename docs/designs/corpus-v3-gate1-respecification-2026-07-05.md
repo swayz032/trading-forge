@@ -163,3 +163,46 @@ doesn't rescue it).
 - **METHODOLOGY FREEZE (standing requirement):** a harness that can crash on the transition it is measuring will
   systematically mask exactly the effect under test (zero-signal crashes hide zero→nonzero revivals). ALL future
   gate harnesses must include an instrument-validity self-check as a standing requirement.
+
+## GATE 3 RE-RUN — SYSTEMATIC SIBLING-PARITY AUDIT (Fable-5, LOCKED 2026-07-06)
+Gate 3 run 2 hit a 4th instrument defect (roll-cost omitted from `run_class_backtest`'s bar-level equity loop
+while `net_pnl` subtracts it → reconciliation raise at `backtester.py:7268`). Root pattern: `run_class_backtest`
+(the compiled-spec path the whole corpus uses) is an under-maintained sibling of `run_backtest`, missing
+hardening fixes the latter has. Authorized: enumerate the defect CLASS once via a systematic audit rather than
+discover it one re-run at a time.
+
+### Audit scope discipline (prevents hardening-pass → uncontrolled rewrite)
+Diff `run_class_backtest` vs `run_backtest`; classify EVERY divergence:
+- **(a) hardening fix present in one, absent in the other → FIX** (each defect its own three-leg verification +
+  regression test where feasible). ONLY class (a) enters the commit.
+- **(b) intentional divergence → DOCUMENT why, leave it.**
+- **(c) cannot determine → ESCALATE, do NOT guess.**
+
+### Blade wording correction (goes in commit + log)
+Defect 1's fix is behaviorally byte-identical. **Defect 4's fix is NOT** — it changes equity curves and every
+equity-derived metric. It does NOT change trade signals or counts, and Gate 3's frozen rule (revival, regression)
+is defined ENTIRELY on trade counts. So the leg is **"verdict-variable-preserving," NOT "computation-preserving"**
+— corrects P&L plumbing without touching anything Gate 3 measures.
+
+### Parity-guard test (durable output, IN SCOPE this commit)
+Add a test that runs both paths on identical inputs and asserts agreement on all shared outputs, so the NEXT
+un-mirrored fix is caught by CI, not by a four-defect Gate 3 postmortem. (Deeper cure — factor out the duplicated
+logic so there's nothing to mirror — is REGISTERED as post-certification engineering, NOT started now.)
+
+### "Re-run once" = cap on VERDICT READS, not runs (clarification, locked)
+If the re-run's validity gate fails on a defect 5 the audit missed → verdict numbers stay QUARANTINED UNREAD and
+the protocol loops (same blade, same scope lock). Verdict numbers are read EXACTLY ONCE, from the first
+validity-passing run, and the frozen rule applies to those numbers with no relief.
+
+MCL diagnosis (harness-loads-unneeded-30min-TF artifact, fixed) + timeout envelope stay in scope — everything
+lands before the single re-run.
+
+## FROZEN FINDING (corrected, bounded + stratified — Fable-5) 2026-07-06
+**Class-path equity curves omit roll cost from the bar-level loop** (`run_class_backtest` deducts slippage +
+commission into `bar_dollar_pnls` but not `RollSpreadCost`, while `net_pnl` subtracts all three). **For all
+historically COMPLETED class-path runs, the resulting equity overstatement is BOUNDED by the $1 reconciliation
+tolerance** (`backtester.py:7263` raises above it — so any completed run had ≤$1 bar-vs-trade divergence).
+**Trade-level P&L was ALWAYS correct** (`net_pnl` includes roll cost). **Trade-count and signal-based findings
+are UNAFFECTED** — demotion revivals (`1ab7321`), null-calibration, DRI, and Gate 3's revival/regression counts
+all rest on trade counts / signals, not equity curves. **Companion action:** check the historical record for any
+run that DID raise this reconciliation error and was waved off as flaky; if any, flag them.
