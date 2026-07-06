@@ -4869,8 +4869,12 @@ export async function evaluateSignals(
 
             for (const factor of factors) {
               try {
-                let satisfied = true;
-                let reason = "unknown_factor_fail_open";
+                // deep-scan signal-gen F-1 (CRITICAL): Path B factors now fail CLOSED (satisfied=false)
+                // on missing/unknown/error data — matching Path A (confirming-indicator-evaluator) + Path C
+                // (confluence-score). Failing OPEN to satisfied=true dishonestly INFLATED the confluence count
+                // (e.g. first ~20 bars after any session reset / process restart, volume_confirmation auto-passed).
+                let satisfied = false;
+                let reason = "unknown_factor_fail_closed";
 
                 if (factor === "regime_match") {
                   satisfied = biasState === null || biasState.activeStrategyId === null || biasState.activeStrategyId === sessionConfig.strategyId;
@@ -4885,8 +4889,8 @@ export async function evaluateSignals(
                     satisfied = bar.volume !== undefined && bar.volume > rollingMean * 1.2;
                     reason = satisfied ? "volume_above_threshold" : "volume_insufficient";
                   } else {
-                    satisfied = true; // fail-open when insufficient history
-                    reason = "insufficient_history_fail_open";
+                    satisfied = false; // fail-CLOSED when insufficient history (cannot verify volume → not confirmed)
+                    reason = "insufficient_history_fail_closed";
                   }
                 } else if (factor === "macro_alignment") {
                   // Reuse calendarBlocked result (already computed above)
@@ -4898,11 +4902,11 @@ export async function evaluateSignals(
                     const sessionDateStr = barTimestampToTradingDay(bar.timestamp);
                     const vpData = await getSessionShapeScore(symbol, sessionDateStr);
                     if (!vpData.available) {
-                      satisfied = true; // fail-open when VP data unavailable
-                      reason = "vp_not_available_fail_open";
+                      satisfied = false; // fail-CLOSED when VP data unavailable (cannot verify shape → not confirmed)
+                      reason = "vp_not_available_fail_closed";
                       logger.warn(
                         { sessionId, symbol, sessionDate: sessionDateStr },
-                        "Wave 23.C vp_shape: VP shape data unavailable — fail-open (satisfied=true)",
+                        "Wave 23.C vp_shape: VP shape data unavailable — fail-CLOSED (satisfied=false)",
                       );
                     } else {
                       satisfied = vpData.score >= VP_SHAPE_SCORE_THRESHOLD;
@@ -4915,8 +4919,8 @@ export async function evaluateSignals(
                       );
                     }
                   } catch {
-                    satisfied = true; // fail-open on any VP error
-                    reason = "vp_shape_error_fail_open";
+                    satisfied = false; // fail-CLOSED on any VP error
+                    reason = "vp_shape_error_fail_closed";
                   }
                 }
 
@@ -4940,8 +4944,8 @@ export async function evaluateSignals(
                   reason: `signal.a_plus_factor_evaluated: factor=${factor} satisfied=${satisfied} source=${factorSource} reason=${reason}`,
                 }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist canonical factor audit log"));
               } catch {
-                // Per-factor fail-open: any evaluation error marks it satisfied
-                factorResults.push({ factor, satisfied: true, reason: "factor_eval_error_fail_open" });
+                // Per-factor fail-CLOSED: any evaluation error marks it NOT satisfied (cannot verify → not confirmed)
+                factorResults.push({ factor, satisfied: false, reason: "factor_eval_error_fail_closed" });
               }
             }
 
