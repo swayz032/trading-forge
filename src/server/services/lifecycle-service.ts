@@ -1108,7 +1108,7 @@ export class LifecycleService {
             input: { fromState, toState }, result: gatePdrResult.auditPayload ?? { reason: gatePdrResult.reason },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "PAPER→DEPLOY_READY evaluator audit failed (non-blocking)"); });
-          broadcastSSE(LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED, { strategyId: id, reason: gatePdrResult.reason, passed: false });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED, { strategyId: id, correlationId, reason: gatePdrResult.reason, passed: false });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
           return { success: false, error: gatePdrResult.reason ?? "PAPER→DEPLOY_READY gate failed" };
         }
@@ -2505,7 +2505,9 @@ export class LifecycleService {
           broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
             strategyId: id,
             drift_firms: driftFirmsTp,
-            correlation_id: correlationIdTp,
+            // deep-scan Obs re-verify F-3c: canonical camelCase key (its 4 sibling COMPLIANCE_DRIFT_BLOCKED
+            // sites all emit correlationId) — one join key across all 33 lifecycle SSE broadcasts.
+            correlationId: correlationIdTp,
           });
           return { success: false, error: "compliance ruleset drift_detected — promotion held until human revalidation" };
         }
@@ -6255,6 +6257,7 @@ export class LifecycleService {
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.BIF_EVALUATED, {
             strategyId: s.id,
+            correlationId, // deep-scan Obs re-verify F-3b: BIF is a HARD gate; SSE must carry correlationId (audit row does)
             ...bifResult.auditPayload,
             passed: bifResult.passed,
             reason: bifResult.reason,
