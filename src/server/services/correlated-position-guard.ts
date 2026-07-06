@@ -218,7 +218,14 @@ export function checkCorrelatedPositionGuard(
       // Cross-firm (Topstep ↔ MFFU) correlated positions: always block.
       const proposedIsTopstep = (proposedFirmId ?? "").toLowerCase() === "topstep";
       const blockingIsTopstep = (pos.firmId ?? "").toLowerCase() === "topstep";
-      const sameUser     = proposedUserId != null && pos.userId != null && proposedUserId === pos.userId;
+      // deep-scan long-tail F-4: paper_sessions has no userId column, and per CLAUDE.md §9 family members
+      // run SEPARATE deployments — so within THIS deployment every account is the one operator's. Treat
+      // "userId absent on both sides" as same-operator (the real single-operator case); if an explicit
+      // userId is ever added, it still must match on both sides. Previously `sameUser` required non-null
+      // userIds and was therefore ALWAYS false → the exception was unreachable dead code.
+      const sameUser =
+        (proposedUserId == null && pos.userId == null) ||
+        (proposedUserId != null && pos.userId != null && proposedUserId === pos.userId);
       const sameStrategy = proposedStrategyId != null && pos.strategyId != null && proposedStrategyId === pos.strategyId;
 
       if (proposedIsTopstep && blockingIsTopstep && sameUser && sameStrategy) {

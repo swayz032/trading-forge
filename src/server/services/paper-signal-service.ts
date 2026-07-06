@@ -3871,13 +3871,30 @@ export async function evaluateSignals(
     let correlatedBlocked = lockoutBlocked; // short-circuit if already blocked
     if (!lockoutBlocked) {
       try {
-        // Query ALL open positions across sessions for cross-symbol guard
+        // Query ALL open positions across sessions for cross-symbol guard.
+        // deep-scan long-tail F-4: also fetch firmId + strategyId per open position (via the session join)
+        // and pass the proposed entry's firmId/strategyId, so the Topstep same-operator multi-account
+        // exception (correlated-position-guard §F-3) can actually fire — previously the call passed only
+        // (symbol, positions) with no firm/strategy context, making the exception unreachable dead code and
+        // wrongly blocking the operator's own Topstep multi-account copy (allowed per CLAUDE.md §6/§9).
         const allOpenPositions = await db
-          .select({ symbol: paperPositions.symbol })
+          .select({
+            symbol: paperPositions.symbol,
+            firmId: paperSessions.firmId,
+            strategyId: paperSessions.strategyId,
+          })
           .from(paperPositions)
+          .innerJoin(paperSessions, eq(paperPositions.sessionId, paperSessions.id))
           .where(isNull(paperPositions.closedAt));
 
-        const correlGuard = checkCorrelatedPositionGuard(symbol, allOpenPositions);
+        const correlGuard = checkCorrelatedPositionGuard(
+          symbol,
+          allOpenPositions,
+          null,                     // matrixOverride — use the loaded correlation matrix
+          sessionFirmId,            // proposedFirmId
+          undefined,                // proposedUserId — single-operator deployment (§9: family = separate deployments); not tracked
+          sessionConfig.strategyId, // proposedStrategyId
+        );
         if (!correlGuard.allowed) {
           correlatedBlocked = true;
           span.setAttribute("correlated_position_blocked", true);
