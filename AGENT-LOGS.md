@@ -4,6 +4,22 @@
 
 ---
 
+### Session Log — 2026-07-05 Deep-Scan #21 WAVE-2 — all deferred carry-forwards executed (branch `hardening/ds21-wave2-2026-07-05`)
+
+**Mission:** Operator pushed back on the ds21 wave-1 "carry-forward" deferrals ("WHY didn't you do these") — so wave-2 EXECUTED every deferred item instead of documenting it. Fresh worktree pinned to phase-0 tip `44d7ac5`.
+
+**Work completed (6 commits `c1735af`→`3186ae7`):**
+- **`c1735af` — eligibility unregistered-strategy parity (the CRITICAL residual).** paper-live `eligibility_gate.py::evaluate_signal` now mirrors `backtester.py::apply_eligibility_gate`'s `passthrough_strategy_unregistered` bypass: strategy_name not in `ALL_STRATS` → action=TAKE (overlay bypassed), matching the TS bypass→TAKE default. The ~100 graduated strategies whose names aren't in the 174-entry ALL_STRATS list now trade live (were SKIPping every signal while backtest traded). Overlay is the ONLY thing bypassed — framework/Stage-2/DLL/macro/lunch gates still apply; registered strategies still hit the per-playbook allow-list. 3/3 new + 15/15 existing skip regression.
+- **`3d5dee4` — DuckDB S3-read config pre-flight** (`DataLoadConfigError` before DuckDB touches network on missing AWS creds; no-op for local/cache → happy path byte-identical). Residual documented: doesn't cover truncated-object/mid-fetch native crash. 10/10 + 70/2 data_loader regression.
+- **`3186ae7` — archetype exportability faithful=True false-green.** exportability.py computes `faithful` HONESTLY now; `checkExportability` returns honest faithful + `isDirectRoutedArchetype`, gates `ok = exportable && (faithful || isDirectRoutedArchetype)` so archetypes still promote (route direct) while non-archetypes stay blocked; lifecycle writes an exemption audit row. 35 pytest + 22 vitest (incl. non-archetype-still-blocked regression).
+- **`189f5ea` — paper_signal_logs correlation_id column** (migration 0196, nullable + index) + threaded correlationId into the in-scope telemetry inserts (hedge-block + a_plus_rejected both paths).
+- **`090b4e7` — SSE catalog drift** (6 emitter names added to their *_EVENTS catalogs) + **Playwright cookie-refresh auto-remediation** (one bounded 120s audited install attempt before alert-only) + fixed a brittle exact-count assertion (`LIFECYCLE_GATE_EVENTS===12` → floor).
+- **`96e23d5` — boot-migration duplicate-when Discord 24h dedup** (audit row still every boot; alert throttled per collision signature).
+
+**Verification:** whole-project `tsc --noEmit` 0 errors; all 3 CI gates exit 0 (`system-map:check` driftItems=[], production-isolation CLEAN, 2026-compliance OK); wave-2 pytest parity+guard 13/13, vitest 22/22 across SSE/cookie/m6 + exportability. Each subagent's load-bearing claim re-verified.
+
+**Carry-forward:** land `hardening/ds21-wave2-2026-07-05` FF onto phase-0 (clean — phase-0 unchanged since base). To go live on the tower: `git pull` + restart TradingForgeAPI (migrations 0195+0196 auto-apply via boot-runner). Honest residuals: eligibility bypass matches backtest but if the operator wants unregistered strategies to ALSO honor NO_TRADE/bias in live, that's a separate design choice; DuckDB guard doesn't cover mid-fetch native crashes.
+
 ### Session Log — 2026-07-05 Corpus v3 build (bidirectional role classification) — CHECKPOINT, Gate 1 retired → Gate 1′, shadow re-onboard in flight
 
 **Mission:** Build the extractor role-classification fix (Corpus v3) that corrects BOTH over-promotion (context→spine)
