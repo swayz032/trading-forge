@@ -107,6 +107,8 @@ let _appliedWhens: Set<string> = new Set();
 // file must supply that migration's hash here (when → sha256 of its content) so the hash-keyed plan
 // recognises it as applied. Tests that don't mock the .sql fall back to the when-based check.
 let _appliedHashByWhen: Map<string, string> = new Map();
+// F1 backfill: raw SQL of every `INSERT INTO drizzle.__drizzle_migrations` seen via db.execute.
+let _backfillInserts: string[] = [];
 let _txStmts: string[] = [];
 let _txMigrationsInserted: number[] = [];
 
@@ -131,6 +133,11 @@ const mockTransaction = vi.fn(async (fn: (tx: { execute: typeof mockTxExecute })
 const mockDbExecute = vi.fn(async (sqlObj: unknown) => {
   const rawSql = extractSqlString(sqlObj);
 
+  if (rawSql.includes("INSERT INTO drizzle.__drizzle_migrations")) {
+    // F1 backfill path (also drizzle-bootstrap INSERTs, if any) — capture for assertions.
+    _backfillInserts.push(rawSql);
+    return { rows: [] };
+  }
   if (rawSql.includes("created_at") && rawSql.includes("drizzle_migrations")) {
     // "SELECT created_at::text AS created_at, hash FROM drizzle.__drizzle_migrations"
     return {
@@ -222,6 +229,7 @@ beforeEach(() => {
   mockExistingPaths.clear();
   _appliedWhens = new Set();
   _appliedHashByWhen = new Map();
+  _backfillInserts = [];
   _txStmts = [];
   _txMigrationsInserted = [];
   _pgDumpAvailable = true;
@@ -602,6 +610,40 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     );
     expect(successCalls).toHaveLength(1);
     expect(successCalls[0][0].input.migration_name).toBe("0128_pending");
+  });
+
+  // ─── F1 backfill: a verified out-of-band sibling records its ledger row WITHOUT re-running SQL ──
+  it("backfill path: a known out-of-band sibling (hash matches KNOWN set) is backfilled, NOT re-run", async () => {
+    // Feed the runner the REAL 0052 content so its computed hash matches KNOWN_OUT_OF_BAND_APPLIED_HASHES.
+    const realFs = (await vi.importActual<typeof import("node:fs")>("node:fs"));
+    const real0052 = realFs.readFileSync(
+      path.join(process.cwd(), "src/server/db/migrations/0052_fk_cascade_hardening.sql"),
+      "utf8",
+    );
+    const KNOWN_WHEN = 1776200000000;
+    const entries = [{ idx: 0, when: KNOWN_WHEN, tag: "0052_fk_cascade_hardening" }];
+    // The collision `when` is recorded in the ledger (by its partner 0044a), but 0052's HASH is not
+    // (nohash placeholder) — so the plan must BACKFILL 0052 by identity, not re-run it.
+    _appliedWhens = new Set([String(KNOWN_WHEN)]);
+
+    const journalPath = getJournalPath();
+    mockFiles.set(journalPath, makeJournal(entries));
+    mockExistingPaths.add(journalPath);
+    const sqlPath = getMigrationSqlPath("0052_fk_cascade_hardening");
+    mockFiles.set(sqlPath, real0052);
+    mockExistingPaths.add(sqlPath);
+
+    const { runPendingMigrations } = await import("../lib/boot-migration-runner.js");
+    await runPendingMigrations();
+
+    // Ledger row backfilled (INSERT executed) + audited — but NO migration transaction (no re-run).
+    expect(_backfillInserts.length).toBe(1);
+    expect(mockTransaction).not.toHaveBeenCalled();
+    const backfillAudits = mockInsertAuditRowSafe.mock.calls.filter(
+      (c) => c[0]?.action === "boot_migration.ledger_backfilled",
+    );
+    expect(backfillAudits).toHaveLength(1);
+    expect(backfillAudits[0][0].entityId).toBe("0052_fk_cascade_hardening");
   });
 
   // ─── SQL file missing → skips entry without throwing ─────────────────────────
