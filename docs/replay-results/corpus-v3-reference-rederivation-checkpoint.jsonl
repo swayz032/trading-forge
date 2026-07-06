@@ -1,0 +1,91 @@
+{"video": "75DJN5UVQnw", "symbol": "MES", "arm": "baseline", "tag": "S/R", "tf_label": "5m", "n_trades": 1, "error": null, "status": "ok"}
+{"video": "75DJN5UVQnw", "symbol": "MES", "arm": "demotion", "tag": "S/R", "tf_label": "5m", "n_trades": 1, "error": null, "status": "ok"}
+{"video": "75DJN5UVQnw", "symbol": "MNQ", "arm": "baseline", "tag": "S/R", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "75DJN5UVQnw", "symbol": "MNQ", "arm": "demotion", "tag": "S/R", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "75DJN5UVQnw", "symbol": "MCL", "arm": "baseline", "tag": "S/R", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "75DJN5UVQnw", "symbol": "MCL", "arm": "demotion", "tag": "S/R", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "jlShztsY3oA", "symbol": "MES", "arm": "baseline", "tag": "ORB", "tf_label": "5m", "n_trades": 2851, "error": null, "status": "ok"}
+{"video": "jlShztsY3oA", "symbol": "MES", "arm": "demotion", "tag": "ORB", "tf_label": "5m", "n_trades": 2851, "error": null, "status": "ok"}
+{"video": "jlShztsY3oA", "symbol": "MNQ", "arm": "baseline", "tag": "ORB", "tf_label": "5m", "n_trades": 2424, "error": null, "status": "ok"}
+{"video": "UBvfsImdI2U", "symbol": "MES", "arm": "baseline", "tag": "CRT", "tf_label": "1h", "n_trades": 315, "error": null, "status": "ok"}
+{"video": "UBvfsImdI2U", "symbol": "MES", "arm": "demotion", "tag": "CRT", "tf_label": "1h", "n_trades": 388, "error": null, "status": "ok"}
+{"video": "c8VLqF0XDR4", "symbol": "MES", "arm": "baseline", "tag": "entry", "tf_label": "15m", "n_trades": 1727, "error": null, "status": "ok"}
+{"video": "UBvfsImdI2U", "symbol": "MNQ", "arm": "baseline", "tag": "CRT", "tf_label": "1h", "n_trades": 249, "error": null, "status": "ok"}
+{"video": "UBvfsImdI2U", "symbol": "MNQ", "arm": "demotion", "tag": "CRT", "tf_label": "1h", "n_trades": 321, "error": null, "status": "ok"}
+{"video": "UBvfsImdI2U", "symbol": "MCL", "arm": "baseline", "tag": "CRT", "tf_label": "1h", "n_trades": 713, "error": null, "status": "ok"}
+{"video": "c8VLqF0XDR4", "symbol": "MES", "arm": "demotion", "tag": "entry", "tf_label": "15m", "n_trades": 1899, "error": null, "status": "ok"}
+{"video": "UBvfsImdI2U", "symbol": "MCL", "arm": "demotion", "tag": "CRT", "tf_label": "1h", "n_trades": 900, "error": null, "status": "ok"}
+{"video": "jlShztsY3oA", "symbol": "MNQ", "arm": "demotion", "tag": "ORB", "tf_label": "5m", "n_trades": 2424, "error": null, "status": "ok"}
+{"video": "c8VLqF0XDR4", "symbol": "MNQ", "arm": "baseline", "tag": "entry", "tf_label": "15m", "n_trades": 1345, "error": null, "status": "ok"}
+{"video": "c8VLqF0XDR4", "symbol": "MNQ", "arm": "demotion", "tag": "entry", "tf_label": "15m", "n_trades": 1568, "error": null, "status": "ok"}
+{"video": "NMUd0oX_7Pg", "symbol": "MES", "arm": "baseline", "tag": "candle", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "HfZTCZTDfWk", "symbol": "MES", "arm": "baseline", "tag": "bias", "tf_label": "4h", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "HfZTCZTDfWk", "symbol": "MES", "arm": "demotion", "tag": "bias", "tf_label": "4h", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "HfZTCZTDfWk", "symbol": "MNQ", "arm": "baseline", "tag": "bias", "tf_label": "4h", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "HfZTCZTDfWk", "symbol": "MNQ", "arm": "demotion", "tag": "bias", "tf_label": "4h", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "HfZTCZTDfWk", "symbol": "MCL", "arm": "baseline", "tag": "bias", "tf_label": "4h", "n_trades": 269, "error": null, "status": "ok"}
+{"video": "HfZTCZTDfWk", "symbol": "MCL", "arm": "demotion", "tag": "bias", "tf_label": "4h", "n_trades": 562, "error": null, "status": "ok"}
+{"video": "NMUd0oX_7Pg", "symbol": "MES", "arm": "demotion", "tag": "candle", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MES", "arm": "baseline", "tag": "BB", "tf_label": "5m", "n_trades": 2355, "error": null, "status": "ok"}
+{"video": "NMUd0oX_7Pg", "symbol": "MNQ", "arm": "baseline", "tag": "candle", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MES", "arm": "baseline", "tag": "BB", "tf_label": "5m", "n_trades": 2355, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MES", "arm": "demotion", "tag": "BB", "tf_label": "5m", "n_trades": 2431, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MES", "arm": "demotion", "tag": "BB", "tf_label": "5m", "n_trades": 2431, "error": null, "status": "ok"}
+{"video": "NMUd0oX_7Pg", "symbol": "MNQ", "arm": "demotion", "tag": "candle", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "sVkmZklJDHI", "symbol": "MES", "arm": "baseline", "tag": "risk", "tf_label": "1m", "n_trades": 3309, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MNQ", "arm": "baseline", "tag": "BB", "tf_label": "5m", "n_trades": 1981, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MNQ", "arm": "baseline", "tag": "BB", "tf_label": "5m", "n_trades": 1981, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MNQ", "arm": "demotion", "tag": "BB", "tf_label": "5m", "n_trades": 2026, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MNQ", "arm": "demotion", "tag": "BB", "tf_label": "5m", "n_trades": 2026, "error": null, "status": "ok"}
+{"video": "NMUd0oX_7Pg", "symbol": "MCL", "arm": "baseline", "tag": "candle", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MCL", "arm": "baseline", "tag": "BB", "tf_label": "5m", "n_trades": 2501, "error": null, "status": "ok"}
+{"video": "FqxEKDxemtI", "symbol": "MCL", "arm": "baseline", "tag": "BB", "tf_label": "5m", "n_trades": 2501, "error": null, "status": "ok"}
+{"video": "NMUd0oX_7Pg", "symbol": "MCL", "arm": "demotion", "tag": "candle", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "ktkqq7QsN9Q", "symbol": "MES", "arm": "baseline", "tag": "VWAP", "tf_label": "15m", "n_trades": 1319, "error": null, "status": "ok", "exception_line": null}
+{"video": "N7uP9V0Iktc", "symbol": "MES", "arm": "baseline", "tag": "EMA", "tf_label": "5m", "n_trades": 2087, "error": null, "status": "ok", "exception_line": null}
+{"video": "snNkQSyWX4k", "symbol": "MES", "arm": "baseline", "tag": "MA-x", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "ktkqq7QsN9Q", "symbol": "MES", "arm": "demotion", "tag": "VWAP", "tf_label": "15m", "n_trades": 1319, "error": null, "status": "ok", "exception_line": null}
+{"video": "snNkQSyWX4k", "symbol": "MES", "arm": "demotion", "tag": "MA-x", "tf_label": "5m", "n_trades": 2162, "error": null, "status": "ok"}
+{"video": "ktkqq7QsN9Q", "symbol": "MNQ", "arm": "baseline", "tag": "VWAP", "tf_label": "15m", "n_trades": 1115, "error": null, "status": "ok", "exception_line": null}
+{"video": "ktkqq7QsN9Q", "symbol": "MNQ", "arm": "demotion", "tag": "VWAP", "tf_label": "15m", "n_trades": 1115, "error": null, "status": "ok", "exception_line": null}
+{"video": "N7uP9V0Iktc", "symbol": "MES", "arm": "demotion", "tag": "EMA", "tf_label": "5m", "n_trades": 2087, "error": null, "status": "ok", "exception_line": null}
+{"video": "snNkQSyWX4k", "symbol": "MNQ", "arm": "baseline", "tag": "MA-x", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "snNkQSyWX4k", "symbol": "MNQ", "arm": "demotion", "tag": "MA-x", "tf_label": "5m", "n_trades": 1759, "error": null, "status": "ok"}
+{"video": "N7uP9V0Iktc", "symbol": "MNQ", "arm": "baseline", "tag": "EMA", "tf_label": "5m", "n_trades": 1739, "error": null, "status": "ok", "exception_line": null}
+{"video": "snNkQSyWX4k", "symbol": "MCL", "arm": "baseline", "tag": "MA-x", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok"}
+{"video": "sVkmZklJDHI", "symbol": "MES", "arm": "demotion", "tag": "risk", "tf_label": "1m", "n_trades": 3309, "error": null, "status": "ok"}
+{"video": "oDLt9zh33LE", "symbol": "MES", "arm": "baseline", "tag": "ORB", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok", "exception_line": null}
+{"video": "N7uP9V0Iktc", "symbol": "MNQ", "arm": "demotion", "tag": "EMA", "tf_label": "5m", "n_trades": 1739, "error": null, "status": "ok", "exception_line": null}
+{"video": "oDLt9zh33LE", "symbol": "MES", "arm": "demotion", "tag": "ORB", "tf_label": "5m", "n_trades": 2317, "error": null, "status": "ok", "exception_line": null}
+{"video": "N7uP9V0Iktc", "symbol": "MCL", "arm": "baseline", "tag": "EMA", "tf_label": "5m", "n_trades": 2430, "error": null, "status": "ok", "exception_line": null}
+{"video": "oDLt9zh33LE", "symbol": "MNQ", "arm": "baseline", "tag": "ORB", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok", "exception_line": null}
+{"video": "N7uP9V0Iktc", "symbol": "MCL", "arm": "demotion", "tag": "EMA", "tf_label": "5m", "n_trades": 2430, "error": null, "status": "ok", "exception_line": null}
+{"video": "oDLt9zh33LE", "symbol": "MNQ", "arm": "demotion", "tag": "ORB", "tf_label": "5m", "n_trades": 1957, "error": null, "status": "ok", "exception_line": null}
+{"video": "KXWRtV2LOVc", "symbol": "MES", "arm": "baseline", "tag": "OB", "tf_label": "5m", "n_trades": 2856, "error": null, "status": "ok", "exception_line": null}
+{"video": "oDLt9zh33LE", "symbol": "MCL", "arm": "baseline", "tag": "ORB", "tf_label": "5m", "n_trades": 0, "error": null, "status": "ok", "exception_line": null}
+{"video": "KXWRtV2LOVc", "symbol": "MES", "arm": "demotion", "tag": "OB", "tf_label": "5m", "n_trades": 2856, "error": null, "status": "ok", "exception_line": null}
+{"video": "sVkmZklJDHI", "symbol": "MNQ", "arm": "baseline", "tag": "risk", "tf_label": "1m", "n_trades": 2958, "error": null, "status": "ok"}
+{"video": "sVkmZklJDHI", "symbol": "MNQ", "arm": "baseline", "tag": "risk", "tf_label": "1m", "n_trades": 2958, "error": null, "status": "ok"}
+{"video": "oDLt9zh33LE", "symbol": "MCL", "arm": "demotion", "tag": "ORB", "tf_label": "5m", "n_trades": 2392, "error": null, "status": "ok", "exception_line": null}
+{"video": "KXWRtV2LOVc", "symbol": "MNQ", "arm": "baseline", "tag": "OB", "tf_label": "5m", "n_trades": 2455, "error": null, "status": "ok", "exception_line": null}
+{"video": "KXWRtV2LOVc", "symbol": "MNQ", "arm": "demotion", "tag": "OB", "tf_label": "5m", "n_trades": 2455, "error": null, "status": "ok", "exception_line": null}
+{"video": "m-G1ag77aVc", "symbol": "MES", "arm": "baseline", "tag": "disc/prem", "tf_label": "30m", "n_trades": 0, "error": null, "status": "ok", "exception_line": null}
+{"video": "m-G1ag77aVc", "symbol": "MES", "arm": "demotion", "tag": "disc/prem", "tf_label": "30m", "n_trades": 1125, "error": null, "status": "ok", "exception_line": null}
+{"video": "m-G1ag77aVc", "symbol": "MNQ", "arm": "baseline", "tag": "disc/prem", "tf_label": "30m", "n_trades": 0, "error": null, "status": "ok", "exception_line": null}
+{"video": "m-G1ag77aVc", "symbol": "MNQ", "arm": "demotion", "tag": "disc/prem", "tf_label": "30m", "n_trades": 984, "error": null, "status": "ok", "exception_line": null}
+{"video": "sVkmZklJDHI", "symbol": "MNQ", "arm": "demotion", "tag": "risk", "tf_label": "1m", "n_trades": 2958, "error": null, "status": "ok"}
+{"video": "m-G1ag77aVc", "symbol": "MCL", "arm": "baseline", "tag": "disc/prem", "tf_label": "30m", "n_trades": 0, "error": null, "status": "ok", "exception_line": null}
+{"video": "sVkmZklJDHI", "symbol": "MNQ", "arm": "demotion", "tag": "risk", "tf_label": "1m", "n_trades": 2958, "error": null, "status": "ok"}
+{"video": "jlShztsY3oA", "symbol": "MCL", "arm": "baseline", "tag": "ORB", "tf_label": "5m", "n_trades": 3021, "error": null, "status": "ok", "exception_line": null}
+{"video": "jlShztsY3oA", "symbol": "MCL", "arm": "demotion", "tag": "ORB", "tf_label": "5m", "n_trades": 3021, "error": null, "status": "ok", "exception_line": null}
+{"video": "c8VLqF0XDR4", "symbol": "MCL", "arm": "baseline", "tag": "entry", "tf_label": "15m", "n_trades": 2327, "error": null, "status": "ok", "exception_line": null}
+{"video": "c8VLqF0XDR4", "symbol": "MCL", "arm": "demotion", "tag": "entry", "tf_label": "15m", "n_trades": 2327, "error": null, "status": "ok", "exception_line": null}
+{"video": "FqxEKDxemtI", "symbol": "MCL", "arm": "demotion", "tag": "BB", "tf_label": "5m", "n_trades": 2567, "error": null, "status": "ok", "exception_line": null}
+{"video": "snNkQSyWX4k", "symbol": "MCL", "arm": "demotion", "tag": "MA-x", "tf_label": "5m", "n_trades": 2484, "error": null, "status": "ok", "exception_line": null}
+{"video": "sVkmZklJDHI", "symbol": "MCL", "arm": "baseline", "tag": "risk", "tf_label": "1m", "n_trades": 2985, "error": null, "status": "ok", "exception_line": null}
+{"video": "sVkmZklJDHI", "symbol": "MCL", "arm": "demotion", "tag": "risk", "tf_label": "1m", "n_trades": 2985, "error": null, "status": "ok", "exception_line": null}
+{"video": "KXWRtV2LOVc", "symbol": "MCL", "arm": "baseline", "tag": "OB", "tf_label": "5m", "n_trades": 2926, "error": null, "status": "ok", "exception_line": null}
+{"video": "ktkqq7QsN9Q", "symbol": "MCL", "arm": "baseline", "tag": "VWAP", "tf_label": "15m", "n_trades": 1644, "error": null, "status": "ok", "exception_line": null}
+{"video": "ktkqq7QsN9Q", "symbol": "MCL", "arm": "demotion", "tag": "VWAP", "tf_label": "15m", "n_trades": 1644, "error": null, "status": "ok", "exception_line": null}
+{"video": "KXWRtV2LOVc", "symbol": "MCL", "arm": "demotion", "tag": "OB", "tf_label": "5m", "n_trades": 2926, "error": null, "status": "ok", "exception_line": null}
+{"video": "m-G1ag77aVc", "symbol": "MCL", "arm": "demotion", "tag": "disc/prem", "tf_label": "30m", "n_trades": 1974, "error": null, "status": "ok", "exception_line": null}
