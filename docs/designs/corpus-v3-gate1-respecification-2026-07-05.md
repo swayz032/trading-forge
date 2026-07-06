@@ -287,3 +287,24 @@ frozen signature); `jlShztsY3oA` is an UNRELATED already-profitable strategy tha
 **Floors 7/8/9 VERIFIED (deferral confirmed):** VIX-sizing / partial-fill / margin-expansion all floor position size
 ≥1 and cannot suppress an entry (sizing.py:1250, fill_model.py:442, margin_expansion.py:97). Registered as
 mandatory before any corpus re-baseline (they move equity metrics null-cal + Mode A/B consume).
+
+## REFERENCE CERTIFIED — N=9 (independently re-verified 2026-07-06, on Defect-6-fixed engine)
+Reference re-derivation re-run on the guard-fixed + Defect-6-fixed engine (`75208e1`/`84471ee`). Independently
+re-verified from `corpus-v3-reference-rederivation-2026-07-06.json`:
+- **VALIDITY: 0 crashes / 0 exceptions / 0 timeouts / all 42 pairs measurable = TRUE.** The 8 previously-failing
+  MCL `reconciliation_failed` pairs all reconcile now → Defect-6 fix RUNTIME-CONFIRMED. Defect-6 regression test
+  `test_gate3_defect6_class_backtest_mcl_reconciliation.py` verified FAILS-pre-fix / PASSES-post-fix (`75208e1`).
+- **N = 9** (LOW_POWER=False), 0 error pairs. Revival set = {snNkQSyWX4k, m-G1ag77aVc, oDLt9zh33LE} × {MES,MNQ,MCL}.
+- **Original-9 disposition RESOLVED:** 9 survive / 3 dropout. The 2 previously-indeterminate MCL pairs both REVIVE
+  (snNkQSyWX4k_MCL 0→2484, m-G1ag77aVc_MCL 0→1974). The 3 dropouts are jlShztsY3oA×3 (unrelated profitable ORB).
+- **FROZEN ANNOTATION UPGRADED:** `1ab7321`'s demotion finding is now confirmed robust to the framework guards on
+  **9 of 9** pairs (was 7/9 with 2 instrument-blocked; the block was Defect 6, now fixed). The guard-less-artifact
+  threat is FULLY dead, not merely mostly.
+- **FROZEN RULE denominator = N=9 → ≥8/9 classifier revivals + zero unexplained regressions.** Exactly where the
+  original freeze started, now on an instrument that earns the number.
+
+## VERDICT STEP (next, per read-order): classifier Gate 3 must RE-RUN on the fixed engine
+The prior classifier Gate 3 run (`corpus-v3-gate3-shadow-results-2026-07-05.json`) executed on the PRE-fix engine
+(crash-masked / MCL-broken — it's the run that surfaced Defects 1/4/5/6). It is INVALID and stays sealed/quarantined.
+The verdict = re-run v2-baseline vs v3-shadow (classifier roles, fixed-atom) on the Defect-4/5/6-fixed engine,
+validity-first, then classifier revival count over the N=9 set vs ≥8/9, + regression enumeration for Gate 1′.
