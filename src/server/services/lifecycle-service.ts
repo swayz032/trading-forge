@@ -1876,8 +1876,14 @@ export class LifecycleService {
     // Two separate thresholds:
     //   PBO_OVERFIT_THRESHOLD     (0.5)  — W27.5 warn threshold (walk_forward.py)
     //   PBO_OVERFIT_THRESHOLD_PCT (0.15) — this gate (Wave 29 lifecycle hard gate)
+    // deep-scan promotion L-1 (CRITICAL, 2026-07-06): the PBO<15% overfitting gate must fire on EVERY path
+    // into a capital-adjacent stage (SHADOW/PAPER), not just from TESTING. VALID_TRANSITIONS still permits the
+    // legacy CANDIDATE→SHADOW edge (reachable via the HMAC PATCH /:id/lifecycle route, whose secret is shared
+    // with n8n/Carter automation, not human-only) — and it previously skipped PBO entirely because this guard
+    // only matched fromState==="TESTING". Adding CANDIDATE closes the bypass so an overfit strategy can never
+    // reach paper capital un-PBO-checked. (SHADOW→PAPER already gets the separate divergence gate.)
     if (
-      fromState === "TESTING" &&
+      (fromState === "TESTING" || fromState === "CANDIDATE") &&
       (toState === "SHADOW" || toState === "PAPER") &&
       promotionEvidence.backtestId
     ) {
