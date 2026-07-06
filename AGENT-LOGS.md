@@ -19,9 +19,10 @@
 **Re-verification at HEAD (doer≠grader, both directions):** CONFIRMED-real → C(fixed), A(open), D.1(fixed). Already-closed by ds21/at-HEAD → D.2 staleness (`nowMs`+`isStale` ceiling), E exportability, B commission fixtures (19/19), Pine P-1/P-2, Q-1 cloud gate, broker writer. Phantom → E.2 `.bin` (no such artifact).
 
 **Carry-forward (still open — deliberately NOT rushed per "incident-free"):**
-- **A — recon 3-way tautology** (`reconciliation-service.ts` checks 1/2 compare `sharedCount` to itself): proper close needs independent broker-side count sources ("Option B never built") = a BUILD, out of §2 hardening scope. Blast radius already cut by D.1 + the `INDEPENDENT_SOURCE_COUNT<3→yellow` clamp. Left at its honest architectural floor.
-- **F — boot-migration dedup keyed on `when` not `tag`**: fail-CLOSED boot runner = don't rush. 4/5 dup-`when` pairs idempotent-safe (DS#19 D-1); ds21-w2 added a LOUD duplicate-`when` alert. Only `0164_slumhouse_users` unverified — operator: `SELECT 1 FROM information_schema.tables WHERE table_name='slumhouse_users';`.
-- **B PBO fixtures** (~17): stale post-FIX2/FIX3 API (test hygiene, not prod math) — update fixtures, never edit prod.
+**Follow-up (operator said "finish the rest" — executed the safe in-scope parts; `ef17c3f`):**
+- **A — recon tautology: HONESTY GATE SHIPPED.** Checks 1/2 (production_trades vs traderspost/tradovate proxy legs = self-comparison) now gated on `PROXY_COUNT_LEGS_INDEPENDENT` (false) → SKIPPED + logged, not fake-passing. Real 3-way independence needs Option B (a TradersPost webhook-confirm consumer + `traderspost_confirmed_at` migration) or live `tradovate_fill_id` under SME — genuinely out of §2 hardening scope (new endpoint / go-live decision). D.1 already removed the panel false-green. 2 vitest.
+- **F — boot dup-when: DURABLE GUARD SHIPPED + contradiction resolved.** `boot-migration-dup-when-guard.test.ts` fails CI on any NEW duplicate-`when` beyond the 5 allowlisted → blocks the bug class at the source. **RESOLVED ds21-vs-DS#19: `0052_fk_cascade_hardening` is NON-idempotent** — 55 DDL / 26 bare `ALTER TABLE ... ADD CONSTRAINT` (no IF NOT EXISTS) → re-run errors → fail-CLOSED boot throws. ds21 was RIGHT to alert-only; DS#19 D-1's "idempotent-safe" was WRONG (29 guards cover 29/55). So NO auto-re-run of dup-when siblings is safe. Reconciling the existing 5 needs a schema-existence-verified `INSERT hash` (no SQL re-run) against the live DB — operator-gated on DB access. Pinned: [[reference_boot_migration_0052_not_idempotent_2026_07_05]]. 2 vitest.
+- **B PBO fixtures** (~17): stale post-FIX2/FIX3 API (test hygiene, not prod math) — update fixtures, never edit prod. (B commission fixtures already pass at HEAD.)
 
 ---
 
