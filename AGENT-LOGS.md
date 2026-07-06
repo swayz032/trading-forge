@@ -4,6 +4,34 @@
 
 ---
 
+### Session Log — 2026-07-05 Independent doer≠grader verification of a concurrent agent's 8-band panel + Q-2 fix
+
+**Mission:** Operator ran a fresh deep-scan-and-fix (concurrent live agent, CLAIMED 8-band panel mean ~6.4) AND asked this session to also "deep scan… make all systems 10/10." Chosen role (operator-confirmed): independent GRADER (grading-integrity doer≠grader) + cover the gaps the panel under-serves — NOT a duplicate fix wave on the shared tree (§11b, 2+ concurrent sessions live).
+
+**Work completed:**
+- **6 parallel accuracy-validator graders**, read-only, pinned to SHA `1ebbbce`, 2 non-overlapping paths each, adversarial (disprove-the-finding). Re-derived every CLAIMED band from current artifacts.
+- **VERIFIED results vs the concurrent panel:**
+  - **C (eligibility UUID→name): CONFIRMED real CRITICAL** — `paper-signal-service.ts:5457` passes `sessionConfig.strategyId` (UUID) into the name-match gate (`eligibility_gate.py:108`); every non-`NO_TRADE` live/paper signal SKIPs; backtest passes `strategy.name` + has an unregistered-strategy bypass live lacks. Live agent's file cluster → handed exact fix (add `name` to CachedSession `:541`, populate `:924`, pass at `:5457`).
+  - **A (recon 3-way tautology): CONFIRMED** — `reconciliation-service.ts:199-215` two legs `return sharedCount`; checks `:418/:428` compare a value to itself → 0 mismatches forever.
+  - **D (recon read-path + system-topology staleness): CONFIRMED, D.1 deeper than claimed** — severity never persisted (no column `:2586`); `production-status.ts:289 buildLastCleanRecon` recomputes green from `mismatchCount` alone (no verifiable-data check) → `ProductionStatusPanel` shows GREEN off the tautology; `system-topology.ts:496 normalizeWorkflowHealth` has NO staleness guard, manifest 93d stale, `system-map:check` green off it.
+  - **B ("~33 engine tests red, PBO/commission nets broken"): PARTIAL → severity FALSE.** 31 red = 100% STALE FIXTURES (commission tests assert pre-2026-06-23 wrong rates the code corrected; PBO tests use old 1-arg API that FIX2/FIX3 hardened), 0 code bugs; golden 57/57 + math 99/99 pass. ⚠️ DANGER: do NOT edit prod to make old tests pass — update the fixtures.
+  - **E (archetype faithful false-green + `.bin`): FALSE alarm.** faithful deductions populated (P-2 `96fdbf4` ancestor), 32/32; `.bin` claim UNLOCATABLE (no such artifact at HEAD).
+  - **F (boot-migration "5 pairs silently skip"): PARTIAL (band 4).** dedup keyed on `when` only (`boot-migration-runner.ts:707`), 5 dup-`when` pairs confirmed; 4/5 already known-safe (DS#19 D-1, idempotent); only `0164_slumhouse_users` genuinely unverified (needs 1 DB query).
+  - **Pine live-exec (P-1): FALSE (fixed)** — `871e5fb`+`96fdbf4` ancestors; compiler emits exactly 1 declaration; 10/10. Real-capital archetype path SOUND.
+  - **Q-1 cloud gate: fixed (fail-closed)**; **Broker `production_trades` writer: working (mig 0194)**; **n8n proxy token: env-driven (code-side)**; **security: fail-closed** (3 spot-checks).
+- **Fixed (off-panel gap, isolated branch `hardening/verify-fix-2026-07-05` @ `e839905`, pushed, UNLANDED): Q-2 SQA mislabeling.** `qubo_trade_timing.decode_timing_schedule` + `quantum_annealing_optimizer.run_sqa_optimization` inherited pydantic default `method="sqa"` even when neal was absent and the classical greedy/random-search fallback ran. Now tagged `greedy_classical_fallback` / `classical_random_search` (matches the `brute_force_classical`/`classical_fallback` convention already in quantum_mc.py). Python-only; no TS/registry/migration.
+
+**Verification:** All 6 graders confirmed HEAD unchanged (`1ebbbce`) start→end. Q-2: `test_qubo_method_labeling.py` 4/4 + `test_quantum_adversarial_stress.py` 35/35 = 39 pass, 0 regressions (NEAL_AVAILABLE=False in env — the real production fallback path). Worktree pinned to SHA, node_modules junctioned for real tsc/pytest. **vitest is BROKEN in the shared node_modules (`@vitest/utils` missing) — no TS test can run against this tree right now; pytest 9.0.3 works.**
+
+**Known-facts updates:** (1) vitest cannot run in the shared node_modules (`@vitest/utils` absent) — any "vitest green" claim uses a different env; do NOT `npm install` to fix while the NSSM tower API runs off it (restart-trap). (2) Q-2 SQA-mislabel was named in DS#18b but NEVER landed (only Q-1 + Z-migrations landed at `4b11946`).
+
+**Carry-forward for next session:**
+- **FF-land `hardening/verify-fix-2026-07-05` (Q-2)** onto phase-0 when concurrent sessions quiesce (rebase onto tip, `merge --ff-only`; expect a trivial AGENT-LOGS top-of-file conflict).
+- **Handoff to the live agent (on-panel confirmed):** C UUID→name patch; A/D.1 persist recon severity + read-path verifiable-data check + system-topology staleness ceiling; F dedup key `when`→`tag` + `SELECT 1 FROM information_schema.tables WHERE table_name='slumhouse_users'`. **Band B: update stale fixtures, do NOT touch prod math.**
+- Independent re-scan after fixes land → only then does the VERIFIED band move toward the 7-8 institutional ceiling (10 is unreachable per grading-integrity).
+
+---
+
 ### Session Log — 2026-07-05 Deep-Scan #20 (8-band read-only audit ~6.5) + fix wave LANDED + CERTIFIED
 
 **Mission:** Operator: "deep scan for all bugs and blockers, wiring… all systems institutional grade… bug free to be 10/10." Ran an 8-band read-only adversarial audit (Deep-Scan #20), then a full code fix wave in a SHA-pinned worktree, doer≠grader certified, FF-landed phase-0. (10 is unreachable by the grading-integrity rubric — set as the expectation up front; honest ceiling 7-8.)
