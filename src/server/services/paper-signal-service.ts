@@ -541,6 +541,10 @@ export function checkTrailStopExtended(
 interface CachedSession {
   config: StrategyConfig;
   strategyId: string;
+  // deep-scan C-1: the strategy's CONCEPT name (not the UUID). The context/eligibility
+  // gate matches on the concept name; passing strategyId (a UUID) made every live signal
+  // SKIP on any non-NO_TRADE playbook. Backtest passes strategy.name — this restores parity.
+  name: string;
   symbol: string;
   timeframe: string;             // e.g. "1m", "5m", "15m", "1h"
   cooldownRemaining: number;     // bars remaining in cooldown
@@ -922,6 +926,7 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
   const entry: CachedSession = {
     config,
     strategyId: strategy.id,
+    name: strategy.name,
     symbol: strategy.symbol,
     timeframe: strategy.timeframe ?? "1m",
     cooldownRemaining: 0,
@@ -5455,8 +5460,10 @@ export async function evaluateSignals(
         : baseContracts;
       try {
         const ctxGate = await evaluateContextGate(
+          // deep-scan C-1: pass the concept name, NOT strategyId (UUID) — the gate
+          // name-matches against playbook allowed_strategies; a UUID never matches → SKIP.
           symbol, config.side, bar.close,
-          sessionConfig.strategyId, barBuffer, indicators,
+          sessionConfig.name, barBuffer, indicators,
         );
         if (ctxGate.action === "SKIP") {
           riskGatePassed = false;
