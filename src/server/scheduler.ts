@@ -23,6 +23,7 @@ import { db } from "./db/index.js";
 import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, agentJobs, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
+import { findUnscheduledJobs } from "./lib/scheduler-drift.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { runPythonModule } from "./lib/python-runner.js";
@@ -722,11 +723,9 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
 ]);
 
 function _validateAllJobsScheduled(): void {
-  const registered = new Set(Object.keys(SCHEDULER_JOBS));
-  const missing: string[] = [];
-  for (const job of registered) {
-    if (!_scheduledJobs.has(job)) missing.push(job);
-  }
+  // deep-scan Autonomy re-verify: drift logic extracted to a testable leaf (scheduler-drift.ts) so a
+  // fabricated-bad-fixture test can prove the detector fires without booting this module.
+  const missing = findUnscheduledJobs(Object.keys(SCHEDULER_JOBS), _scheduledJobs);
   if (missing.length > 0) {
     logger.error(
       { missing },
