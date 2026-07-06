@@ -435,7 +435,7 @@ export async function runDailyReconciliation(
         traderspostLogCount: 0,
         tradovateFillsCount: 0,
         mffuDashboardPnl: null,
-        expectedPnl: 0,
+        expectedPnl: null, // deep-scan Accuracy re-verify F-2: genuine null (contract), not placeholder 0
         tradingviewMarkerCount: null,
         mismatchCount: 1,
         mismatchDetails: [
