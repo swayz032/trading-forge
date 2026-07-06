@@ -10,6 +10,19 @@
  */
 
 import cron from "node-cron";
+
+// deep-scan scheduler F-1 (CRITICAL, 2026-07-06): node-cron interprets cron expressions in the PROCESS local
+// timezone unless a { timezone } option is passed. The tower runs with TZ UNSET → resolved local TZ is
+// America/New_York, NOT UTC. Every "DST-safe double-fire" job here fires at UTC hours (e.g. "0 21,22 * * 0")
+// with an inner guard checking the true ET hour — that guard only matches if node-cron actually fired at the
+// UTC hour. With a non-UTC process TZ the jobs fired at ET hours 21/22, the guard never matched, and ~50
+// DST-paired safety crons (weekly-drift-detection vacation auto-HALT, daily-reconciliation, paper-journal-recon,
+// db-backup, briefings, digests) were SILENTLY DEAD — no throw, no audit, no alert (heartbeat is plain-interval
+// so it kept reporting "alive"). This wrapper forces UTC on EVERY schedule so firing no longer depends on the
+// ambient process TZ. (Belt-and-suspenders: also set TZ=UTC in the tower NSSM env.)
+function scheduleUtc(expression: string, handler: Parameters<typeof cron.schedule>[1]) {
+  return cron.schedule(expression, handler, { timezone: "UTC" });
+}
 import { randomUUID } from "crypto";
 // Fix 1 (2026-06-29): non-blocking subprocess for n8n-workflow-sync.
 // execSync freezes V8's event loop for up to 60s — no HTTP/WS/SSE/cron/DLL
@@ -733,7 +746,7 @@ function _validateAllJobsScheduled(): void {
     );
     if (process.env.NODE_ENV !== "production") {
       throw new Error(
-        `Scheduler drift: ${missing.join(", ")} registered but no cron.schedule()`,
+        `Scheduler drift: ${missing.join(", ")} registered but no scheduleUtc()`,
       );
     }
   }
@@ -928,6 +941,16 @@ function registerDLQHandlers(): void {
 export function initScheduler(bootCorrelationId: string | null = null) {
   if (initialized) return;
   initialized = true;
+  // deep-scan scheduler F-1 (CRITICAL): surface the resolved process TZ at boot. Every cron below is now
+  // pinned to UTC via scheduleUtc(), so firing no longer depends on this — but a non-UTC process TZ still
+  // affects any bare local-time Date math elsewhere, so make it VISIBLE instead of discoverable-only.
+  const _resolvedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  logger.info(
+    { resolvedProcessTz: _resolvedTz, cronTimezone: "UTC", tzEnv: process.env.TZ ?? "<unset>" },
+    _resolvedTz === "UTC"
+      ? "Scheduler: process TZ is UTC; all crons pinned to UTC."
+      : `Scheduler: process TZ is ${_resolvedTz} (NOT UTC) — all crons are pinned to UTC via scheduleUtc() so DST-paired jobs still fire correctly. Consider TZ=UTC in the NSSM env for defense-in-depth.`,
+  );
   if (bootCorrelationId) {
     logger.info({ correlationId: bootCorrelationId }, "Scheduler: initializing (boot-correlated)");
   }
@@ -1236,7 +1259,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // boot. Hourly UTC tick; the inner hour-gate restricts execution to
   // 8 AM ET (UTC 12 or 13 depending on DST) and DB-level idempotency
   // ensures at-most-one-fire-per-UTC-day.
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("autonomous-scout-discovery")) return;
     try {
       if (!(await pipelineGate("autonomous-scout-discovery"))) return;
@@ -1279,7 +1302,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     const { writeHeartbeat } = await import("./services/dead-mans-heartbeat-service.js");
     await writeHeartbeat();
   });
-  cron.schedule("*/15 * * * *", async () => {
+  scheduleUtc("*/15 * * * *", async () => {
     if (!_tryAcquireJobLock("heartbeat-write")) return;
     try {
       const t0 = Date.now();
@@ -1300,7 +1323,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     // Wave 24 Pass 1.5 Item 6: auto-flip operator_absent_since from 24h/48h silence
     await runOperatorAbsenceAutoDetect();
   });
-  cron.schedule("*/30 * * * *", async () => {
+  scheduleUtc("*/30 * * * *", async () => {
     if (!_tryAcquireJobLock("heartbeat-stale-check")) return;
     try {
       const t0 = Date.now();
@@ -1319,7 +1342,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // violating the "never hardcode dates" mandate. Now scheduled monthly (1st, 09:00) — the exact hour
   // is immaterial for a monthly data refresh, so no DST double-fire is needed. Pipeline-gate-exempt,
   // so it runs even while the trading pipeline is paused.
-  cron.schedule("0 9 1 * *", async () => {
+  scheduleUtc("0 9 1 * *", async () => {
     if (!_tryAcquireJobLock("economic-calendar-sync")) return;
     try {
       const t0 = Date.now();
@@ -1340,7 +1363,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     const { runOffRthHeartbeatCheck } = await import("./services/dead-mans-heartbeat-service.js");
     await runOffRthHeartbeatCheck();
   });
-  cron.schedule("0 */4 * * *", async () => {
+  scheduleUtc("0 */4 * * *", async () => {
     if (!_tryAcquireJobLock("heartbeat-ooh-check")) return;
     try {
       const t0 = Date.now();
@@ -1362,7 +1385,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   registerJob("n8n-execution-scrape", 5 * 60 * 1000, async () => {
     await runN8nExecutionScrape();
   });
-  cron.schedule("*/5 * * * *", async () => {
+  scheduleUtc("*/5 * * * *", async () => {
     if (!_tryAcquireJobLock("n8n-execution-scrape")) return;
     try {
       const t0 = Date.now();
@@ -1395,7 +1418,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     const correlationId = randomUUID();
     await runPositionDriftReconciliation(correlationId);
   });
-  cron.schedule("*/5 * * * *", async () => {
+  scheduleUtc("*/5 * * * *", async () => {
     if (!_tryAcquireJobLock("position-drift-reconcile")) return;
     try {
       const t0 = Date.now();
@@ -1459,7 +1482,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // Track C F-8: python-pool-saturation-check was registered but had no
   // cron.schedule — the saturation alarm only fired via reconcileMissedRuns
   // on each boot. Wire a proper 30s cron driver.
-  cron.schedule("*/30 * * * * *", async () => {
+  scheduleUtc("*/30 * * * * *", async () => {
     if (!_tryAcquireJobLock("python-pool-saturation-check")) return;
     try {
       const t0 = Date.now();
@@ -1473,7 +1496,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("python-pool-saturation-check");
 
   // ─── Every 4 hours: Rolling Sharpe update ─────────────────
-  cron.schedule("0 */4 * * *", async () => {
+  scheduleUtc("0 */4 * * *", async () => {
     if (!_tryAcquireJobLock("rolling-sharpe")) return;
     try {
     if (!(await pipelineGate("rolling-sharpe"))) return;
@@ -1491,7 +1514,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // DeepAR predict (6:00 AM ET) for the Python subprocess pool.
   // Run at both 10:05 and 11:05 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Check actual ET hour+minute before executing — only one will fire.
-  cron.schedule("5 10,11 * * 1-5", async () => {
+  scheduleUtc("5 10,11 * * 1-5", async () => {
     if (!_tryAcquireJobLock("pre-market-prep")) return;
     try {
     const now = new Date();
@@ -1528,7 +1551,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // check to run so subsequent successful runs can be observed in the
   // job-health dashboard. The service itself short-circuits when there
   // is nothing to do (no pause-state mutation on healthy outcomes).
-  cron.schedule("0 12,13 * * 1-5", async () => {
+  scheduleUtc("0 12,13 * * 1-5", async () => {
     if (!_tryAcquireJobLock("pre-trading-day-health-check")) return;
     try {
     const now = new Date();
@@ -1578,7 +1601,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // (provenance row, pipeline mode, latest mode-change ownership). No-op if the
   // pipeline was never paused by a reboot or was already operator-resumed.
   // NOT pipelineGated: must run even when pipeline is PAUSED so it can resume it.
-  cron.schedule("0 * * * 0,6", async () => {
+  scheduleUtc("0 * * * 0,6", async () => {
     try {
       const { maybeAutoResumeAfterReboot } = await import("./services/windows-health-check-service.js");
       const result = await maybeAutoResumeAfterReboot();
@@ -1598,7 +1621,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     const { runBrokerErrorBudgetCheck } = await import("./services/broker-error-budget-service.js");
     await runBrokerErrorBudgetCheck();
   });
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("broker-error-budget-check")) return;
     try {
       if (!(await pipelineGate("broker-error-budget-check"))) return;
@@ -1613,7 +1636,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("broker-error-budget-check");
 
   // ─── Every hour: Compare stopped paper sessions to backtest ─
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("paper-vs-backtest")) return;
     try {
     if (!(await pipelineGate("paper-vs-backtest"))) return;
@@ -1629,7 +1652,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // ─── Daily at 2:00 AM ET: Decay monitor sweep (DST-aware) ────
   // Run at both 6:00 and 7:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Check actual ET hour before executing — only one of the two will fire.
-  cron.schedule("0 6,7 * * *", async () => {
+  scheduleUtc("0 6,7 * * *", async () => {
     if (!_tryAcquireJobLock("decay-monitor")) return;
     try {
     const now = new Date();
@@ -1657,7 +1680,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("decay-monitor");
 
   // ─── Every 6 hours: Lifecycle auto-promotions/demotions ────
-  cron.schedule("0 */6 * * *", async () => {
+  scheduleUtc("0 */6 * * *", async () => {
     if (!_tryAcquireJobLock("lifecycle-auto-check")) return;
     try {
     if (!(await pipelineGate("lifecycle-auto-check"))) return;
@@ -1671,7 +1694,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("lifecycle-auto-check");
 
   // ─── Every 5 minutes: Stale paper session detection ─────────
-  cron.schedule("*/5 * * * *", async () => {
+  scheduleUtc("*/5 * * * *", async () => {
     if (!_tryAcquireJobLock("stale-session-check")) return;
     try {
     const t0stale = Date.now();
@@ -1683,7 +1706,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("stale-session-check");
 
   // ─── Every 60 seconds: Metrics heartbeat ─────────────────────
-  cron.schedule("* * * * *", async () => {
+  scheduleUtc("* * * * *", async () => {
     if (!_tryAcquireJobLock("metrics-heartbeat")) return;
     try {
     const t0mh = Date.now();
@@ -1787,7 +1810,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     );
   });
 
-  cron.schedule("*/30 * * * * *", async () => {
+  scheduleUtc("*/30 * * * * *", async () => {
     if (!_tryAcquireJobLock("pipeline-resume-drain")) return;
     try {
     const t0drain = Date.now();
@@ -1802,7 +1825,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // Periodic drain so n8n strict-scout entries don't pile up forever.
   // pipeline-resume-drain only fires on PAUSE→ACTIVE transitions; this
   // covers the steady-state "pipeline is active and scouts are flowing" case.
-  cron.schedule("*/10 * * * *", async () => {
+  scheduleUtc("*/10 * * * *", async () => {
     if (!_tryAcquireJobLock("drain-scouted-ideas-periodic")) return;
     try {
     const t0drainP = Date.now();
@@ -1815,7 +1838,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
 
   // ─── DeepAR: Train daily at 2:30 AM ET (weekdays) ──────────
   // Run at both 6:30 and 7:30 UTC to cover EDT (UTC-4) and EST (UTC-5).
-  cron.schedule("30 6,7 * * 1-5", async () => {
+  scheduleUtc("30 6,7 * * 1-5", async () => {
     if (!_tryAcquireJobLock("deepar-train")) return;
     try {
     const now = new Date();
@@ -1841,7 +1864,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
 
   // ─── DeepAR: Predict daily at 6:00 AM ET (weekdays) ───────
   // Run at both 10:00 and 11:00 UTC to cover EDT/EST.
-  cron.schedule("0 10,11 * * 1-5", async () => {
+  scheduleUtc("0 10,11 * * 1-5", async () => {
     if (!_tryAcquireJobLock("deepar-predict")) return;
     try {
     const now = new Date();
@@ -1870,7 +1893,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // ─── Loop 1: Macro regime daily sync — 5 AM ET (DST-aware) ──────
   // Runs BEFORE archetype classifier (6 AM) and DeepAR predict (6 AM)
   // so today's macro_regime is the freshest signal those jobs see.
-  cron.schedule("0 9,10 * * 1-5", async () => {
+  scheduleUtc("0 9,10 * * 1-5", async () => {
     if (!_tryAcquireJobLock("macro-data-sync")) return;
     try {
     const now = new Date();
@@ -1909,7 +1932,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     logger.info({ persisted }, "C11 FRED daily ingestion + classification complete");
   });
 
-  cron.schedule("0 20,21 * * 1-5", async () => {
+  scheduleUtc("0 20,21 * * 1-5", async () => {
     if (!_tryAcquireJobLock("c11-fred-daily")) return;
     try {
     const now = new Date();
@@ -1935,7 +1958,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     logger.info({ persisted }, "C11 H.4.1 RRP/TGA ingestion complete");
   });
 
-  cron.schedule("0 13,14 * * 5", async () => {
+  scheduleUtc("0 13,14 * * 5", async () => {
     if (!_tryAcquireJobLock("c11-h41-weekly")) return;
     try {
     // Friday only (day 5), 9 AM ET
@@ -1963,7 +1986,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     logger.info({ persisted }, "C11 BLS release ingestion complete");
   });
 
-  cron.schedule("35 12,13 * * 1-5", async () => {
+  scheduleUtc("35 12,13 * * 1-5", async () => {
     if (!_tryAcquireJobLock("c11-bls-release")) return;
     try {
     // 8:35 AM ET (UTC 12:35/13:35 for EDT/EST)
@@ -1993,7 +2016,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     logger.info({ persisted }, "C11 Treasury auction ingestion complete");
   });
 
-  cron.schedule("0 19,20 * * 1-5", async () => {
+  scheduleUtc("0 19,20 * * 1-5", async () => {
     if (!_tryAcquireJobLock("c11-treasury-auctions")) return;
     try {
     // 3 PM ET (UTC 19:00/20:00 for EDT/EST)
@@ -2029,7 +2052,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
 
   // Sunday 8 PM ET = Monday 00:00 UTC (EDT) or 01:00 UTC (EST)
   // Fire at both 00:00 and 01:00 UTC on Sundays/Mondays and filter by ET hour
-  cron.schedule("0 0,1 * * 0,1", async () => {
+  scheduleUtc("0 0,1 * * 0,1", async () => {
     if (!_tryAcquireJobLock("w19-definition-pull")) return;
     try {
     const now = new Date();
@@ -2070,7 +2093,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   });
 
   // 6 PM ET = 22:00 UTC (EDT) or 23:00 UTC (EST)
-  cron.schedule("0 22,23 * * 1-5", async () => {
+  scheduleUtc("0 22,23 * * 1-5", async () => {
     if (!_tryAcquireJobLock("w19-statistics-pull")) return;
     try {
     const now = new Date();
@@ -2111,7 +2134,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   });
 
   // 8:25 AM ET = 12:25 UTC (EDT) or 13:25 UTC (EST)
-  cron.schedule("25 12,13 * * 1-5", async () => {
+  scheduleUtc("25 12,13 * * 1-5", async () => {
     if (!_tryAcquireJobLock("w19-imbalance-pull")) return;
     try {
     const now = new Date();
@@ -2137,7 +2160,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // (TREND_DAY_UP, RANGE_DAY, …) from premarket features and writes one
   // row per symbol into day_archetypes.  Strategy eligibility matrix
   // and skip classifier read from this table at evaluation time.
-  cron.schedule("0 10,11 * * 1-5", async () => {
+  scheduleUtc("0 10,11 * * 1-5", async () => {
     if (!_tryAcquireJobLock("archetype-daily-classify")) return;
     try {
     const now = new Date();
@@ -2165,7 +2188,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // Staggered to 6:35 AM ET (was 6:30 AM ET) to give pre-market prep (6:05)
   // a 30-min window before a second Python-spawning cron hits the pool.
   // Run at both 10:35 and 11:35 UTC to cover EDT/EST.
-  cron.schedule("35 10,11 * * 1-5", async () => {
+  scheduleUtc("35 10,11 * * 1-5", async () => {
     if (!_tryAcquireJobLock("deepar-validate")) return;
     try {
     const now = new Date();
@@ -2240,7 +2263,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     }
   });
 
-  cron.schedule("0 12,13 * * 1-5", async () => {
+  scheduleUtc("0 12,13 * * 1-5", async () => {
     if (!_tryAcquireJobLock("a-plus-auditor-scan")) return;
     try {
     const now = new Date();
@@ -2298,7 +2321,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // the IBM Quantum job poller only fired via reconcileMissedRuns. Wire a
   // proper 5-min cron driver. Inner guards (isPipelineActive, QUANTUM_CLOUD_ENABLED)
   // keep it cheap when disabled.
-  cron.schedule("*/5 * * * *", async () => {
+  scheduleUtc("*/5 * * * *", async () => {
     if (!_tryAcquireJobLock("cloud-qmc-poll")) return;
     try {
       const t0 = Date.now();
@@ -2317,7 +2340,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // actualPnl but were created before Phase 2.4 landed, or whose session
   // post-processing ran before regret scoring was available.
   registerJob("regret-score-fill", 24 * 60 * 60 * 1000, fillRegretScores);
-  cron.schedule("0 3,4 * * *", async () => {
+  scheduleUtc("0 3,4 * * *", async () => {
     if (!_tryAcquireJobLock("regret-score-fill")) return;
     try {
     const now = new Date();
@@ -2345,7 +2368,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("regret-score-fill");
 
   // ─── Every 2 hours: Agent health sweep ───────────────────
-  cron.schedule("0 */2 * * *", async () => {
+  scheduleUtc("0 */2 * * *", async () => {
     if (!_tryAcquireJobLock("agent-health-sweep")) return;
     try {
     if (!(await pipelineGate("agent-health-sweep"))) return;
@@ -2359,7 +2382,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("agent-health-sweep");
 
   // ─── Daily at midnight UTC: Portfolio correlation check ──
-  cron.schedule("0 0 * * *", async () => {
+  scheduleUtc("0 0 * * *", async () => {
     if (!_tryAcquireJobLock("portfolio-correlation")) return;
     try {
     if (!(await pipelineGate("portfolio-correlation"))) return;
@@ -2373,7 +2396,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("portfolio-correlation");
 
   // ─── Monthly on 1st at 3:00 AM UTC: Meta parameter review ─
-  cron.schedule("0 3 1 * *", async () => {
+  scheduleUtc("0 3 1 * *", async () => {
     if (!_tryAcquireJobLock("meta-parameter-review")) return;
     try {
     if (!(await pipelineGate("meta-parameter-review"))) return;
@@ -2393,7 +2416,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // forcing function is that operators can't hide from validation cadence by
   // pausing the pipeline. The report informs whether to resume work, so the
   // gate would be self-defeating.
-  cron.schedule("30 3 1 * *", async () => {
+  scheduleUtc("30 3 1 * *", async () => {
     if (!_tryAcquireJobLock("validation-cadence-monthly")) return;
     try {
     logger.info("Scheduler: Running monthly Reality Check report (validation cadence)");
@@ -2408,7 +2431,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // ─── Weekly Monday 12 AM ET: Anti-setup mine + effectiveness ──
   // Run at 4:00 and 5:00 UTC to cover EDT (UTC-4) and EST (UTC-5).
   // Only fires when the ET hour resolves to Monday 12:00 AM.
-  cron.schedule("0 4,5 * * 1", async () => {
+  scheduleUtc("0 4,5 * * 1", async () => {
     if (!_tryAcquireJobLock("anti-setup-mine")) return;
     try {
     const now = new Date();
@@ -2454,7 +2477,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     }
   });
 
-  cron.schedule("*/15 * * * *", async () => {
+  scheduleUtc("*/15 * * * *", async () => {
     if (!_tryAcquireJobLock("dlq-retry")) return;
     try {
     if (!(await pipelineGate("dlq-retry"))) return;
@@ -2486,7 +2509,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     }
   });
 
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("dlq-escalation")) return;
     try {
     if (!(await pipelineGate("dlq-escalation"))) return;
@@ -2507,7 +2530,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     logger.info("Idempotency keys cleaned up");
   });
 
-  cron.schedule("0 3 * * *", async () => {
+  scheduleUtc("0 3 * * *", async () => {
     if (!_tryAcquireJobLock("idempotency-cleanup")) return;
     try {
     if (!(await pipelineGate("idempotency-cleanup"))) return;
@@ -2548,7 +2571,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     }
   });
 
-  cron.schedule("5 * * * *", async () => {
+  scheduleUtc("5 * * * *", async () => {
     if (!_tryAcquireJobLock("quantum-cost-prune")) return;
     try {
     const t0qcp = Date.now();
@@ -2747,7 +2770,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     }
   });
 
-  cron.schedule("*/5 * * * *", async () => {
+  scheduleUtc("*/5 * * * *", async () => {
     if (!_tryAcquireJobLock("stale-pending-sweeper")) return;
     try {
     if (!(await pipelineGate("stale-pending-sweeper"))) return;
@@ -2803,7 +2826,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
 
   // ─── Daily at 2:15 AM ET: n8n workflow sync (DST-aware) ──────
   // Run at 6:15 and 7:15 UTC to cover EDT (UTC-4) and EST (UTC-5).
-  cron.schedule("15 6,7 * * *", async () => {
+  scheduleUtc("15 6,7 * * *", async () => {
     if (!_tryAcquireJobLock("n8n-workflow-sync")) return;
     try {
     const now = new Date();
@@ -2831,7 +2854,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   _scheduledJobs.add("n8n-workflow-sync");
 
   // Run at 8:00 and 9:00 UTC to cover EDT (UTC-4) and EST (UTC-5) for 4 AM ET.
-  cron.schedule("0 8,9 * * *", async () => {
+  scheduleUtc("0 8,9 * * *", async () => {
     if (!_tryAcquireJobLock("system-map-drift")) return;
     try {
     const now = new Date();
@@ -2858,7 +2881,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   });
 
   // Run at 4:00 and 5:00 UTC on Sundays to cover EDT (UTC-4) and EST (UTC-5) for midnight ET.
-  cron.schedule("0 4,5 * * 0", async () => {
+  scheduleUtc("0 4,5 * * 0", async () => {
     if (!_tryAcquireJobLock("compliance-rule-drift")) return;
     try {
     const now = new Date();
@@ -2991,7 +3014,7 @@ except Exception as e:
   });
 
   // Sunday 17:00 ET = 21:00 or 22:00 UTC (EDT/EST); fire at both UTC hours on Sunday.
-  cron.schedule("0 21,22 * * 0", async () => {
+  scheduleUtc("0 21,22 * * 0", async () => {
     if (!_tryAcquireJobLock("hmm-regime-weekly-refit")) return;
     try {
     const now = new Date();
@@ -3055,7 +3078,7 @@ except Exception as e:
     }
   });
 
-  cron.schedule("*/30 * * * *", async () => {
+  scheduleUtc("*/30 * * * *", async () => {
     if (!_tryAcquireJobLock("disabled-job-probe")) return;
     try {
     const t0probe = Date.now();
@@ -3072,7 +3095,7 @@ except Exception as e:
     await collectAllMetrics();
   });
 
-  cron.schedule("*/30 * * * *", async () => {
+  scheduleUtc("*/30 * * * *", async () => {
     if (!_tryAcquireJobLock("metrics-collector")) return;
     try {
     const t0metrics = Date.now();
@@ -3089,7 +3112,7 @@ except Exception as e:
     await recordFunnelSnapshot();
   });
 
-  cron.schedule("0 1 * * *", async () => {
+  scheduleUtc("0 1 * * *", async () => {
     if (!_tryAcquireJobLock("funnel-snapshot")) return;
     try {
     if (!(await pipelineGate("funnel-snapshot"))) return;
@@ -3146,7 +3169,7 @@ except Exception as e:
     }
   });
 
-  cron.schedule("*/15 * * * *", async () => {
+  scheduleUtc("*/15 * * * *", async () => {
     if (!_tryAcquireJobLock("n8n-health-check")) return;
     try {
     const t0n8nHealth = Date.now();
@@ -3163,7 +3186,7 @@ except Exception as e:
     await collectResourceMetrics();
   });
 
-  cron.schedule("*/5 * * * *", async () => {
+  scheduleUtc("*/5 * * * *", async () => {
     if (!_tryAcquireJobLock("resource-snapshot")) return;
     try {
     const t0res = Date.now();
@@ -3180,7 +3203,7 @@ except Exception as e:
     await recordSessionAnalyticsRollup();
   });
 
-  cron.schedule("45 3 * * *", async () => {
+  scheduleUtc("45 3 * * *", async () => {
     if (!_tryAcquireJobLock("session-analytics-rollup")) return;
     try { // 3:45 AM UTC = 11:45 PM ET
     const t0sa = Date.now();
@@ -3201,7 +3224,7 @@ except Exception as e:
     }
   });
 
-  cron.schedule("0 1,2 * * 1", async () => {
+  scheduleUtc("0 1,2 * * 1", async () => {
     if (!_tryAcquireJobLock("graveyard-pattern-extraction")) return;
     try {
     const now = new Date();
@@ -3239,7 +3262,7 @@ except Exception as e:
   });
 
   // 03:30 + 04:30 UTC covers 11:30 PM ET in both EDT (UTC-4) and EST (UTC-5).
-  cron.schedule("30 3,4 * * *", async () => {
+  scheduleUtc("30 3,4 * * *", async () => {
     if (!_tryAcquireJobLock("nightly-critique")) return;
     try {
     const now = new Date();
@@ -3264,7 +3287,7 @@ except Exception as e:
   });
 
   // Run at 5:00 and 6:00 UTC on Sundays to cover EDT (UTC-4) and EST (UTC-5) for 1 AM ET.
-  cron.schedule("0 5,6 * * 0", async () => {
+  scheduleUtc("0 5,6 * * 0", async () => {
     if (!_tryAcquireJobLock("critic-feedback")) return;
     try {
     const now = new Date();
@@ -3299,7 +3322,7 @@ except Exception as e:
   // Run at 6:05 and 7:05 UTC daily to cover EDT (UTC-4) and EST (UTC-5) for 2:05 AM ET.
   // Track C F-5: staggered by +5 min from decay-monitor (0 6,7) which fires at
   // the top of the hour for 2:00 AM ET. Same fire-window, different minute.
-  cron.schedule("5 6,7 * * *", async () => {
+  scheduleUtc("5 6,7 * * *", async () => {
     if (!_tryAcquireJobLock("regen-declining-sweep")) return;
     try {
     const now = new Date();
@@ -3323,7 +3346,7 @@ except Exception as e:
     await resolveAbTests();
   });
 
-  cron.schedule("0 23 * * 0", async () => {
+  scheduleUtc("0 23 * * 0", async () => {
     if (!_tryAcquireJobLock("prompt-ab-resolution")) return;
     try {
     if (!(await pipelineGate("prompt-ab-resolution"))) return;
@@ -3385,7 +3408,7 @@ except Exception as e:
   });
 
   // Run at 1:00 and 2:00 UTC on Mondays to cover EDT/EST for Sunday 9 PM ET.
-  cron.schedule("0 1,2 * * 1", async () => {
+  scheduleUtc("0 1,2 * * 1", async () => {
     if (!_tryAcquireJobLock("databento-weekly-refresh")) return;
     try {
     const now = new Date();
@@ -3468,7 +3491,7 @@ except Exception as e:
 
   // Track C F-5: staggered to :07 past hour to avoid collision with
   // system-map-drift (0 8,9) which also fires at the top of the hour at 4 AM ET.
-  cron.schedule("7 8,9 * * *", async () => {
+  scheduleUtc("7 8,9 * * *", async () => {
     if (!_tryAcquireJobLock("data-integrity-suite")) return;
     try {
     const now = new Date();
@@ -3509,7 +3532,7 @@ except Exception as e:
     logger.info(result, "Contract roll sweep complete");
   });
 
-  cron.schedule("30 20,21 * * 1-5", async () => {
+  scheduleUtc("30 20,21 * * 1-5", async () => {
     if (!_tryAcquireJobLock("contract-roll-sweep")) return;
     try {
     const now = new Date();
@@ -3550,7 +3573,7 @@ except Exception as e:
 
   // Track C F-5: staggered to ":03" past every 6h to avoid colliding with
   // lifecycle-auto-check (0 */6) which also fired at the same minute boundary.
-  cron.schedule("3 */6 * * *", async () => {
+  scheduleUtc("3 */6 * * *", async () => {
     if (!_tryAcquireJobLock("tournament-staleness-check")) return;
     try {
     const t0tourn = Date.now();
@@ -3651,7 +3674,7 @@ except Exception as e:
   // Simple daily fire (no ET-hour guard needed — staleness detection tolerates
   // a few hours of schedule jitter; unlike an ET-market-open cron, precision
   // here is not load-bearing).
-  cron.schedule("0 11 * * *", async () => {
+  scheduleUtc("0 11 * * *", async () => {
     if (!_tryAcquireJobLock("pine-reconciliation-staleness-check")) return;
     try {
       // NOT pipeline-gated — safety/observability signal (in _PIPELINE_GATE_EXEMPT)
@@ -3677,7 +3700,7 @@ except Exception as e:
     await pollCmeStatus();
   });
 
-  cron.schedule("* * * * *", async () => {
+  scheduleUtc("* * * * *", async () => {
     if (!_tryAcquireJobLock("cme-status-poll")) return;
     try {
     const t0cme = Date.now();
@@ -3704,7 +3727,7 @@ except Exception as e:
     await pollPropFirmHealth();
   });
 
-  cron.schedule("*/15 * * * *", async () => {
+  scheduleUtc("*/15 * * * *", async () => {
     if (!_tryAcquireJobLock("prop-firm-health-check")) return;
     try {
     const t0pfh = Date.now();
@@ -3730,7 +3753,7 @@ except Exception as e:
     await runDashboardSnapshots();
   });
 
-  cron.schedule("5 * * * *", async () => {
+  scheduleUtc("5 * * * *", async () => {
     if (!_tryAcquireJobLock("prop-firm-dashboard-snapshot")) return;
     try { // 5 min past each hour to stagger from other hourly jobs
     const t0snap = Date.now();
@@ -3769,7 +3792,7 @@ except Exception as e:
   });
 
   // 9:30 AM ET = 13:30 UTC (EDT) or 14:30 UTC (EST) — fire both, filter on ET
-  cron.schedule("30 13,14 * * 1-5", async () => {
+  scheduleUtc("30 13,14 * * 1-5", async () => {
     if (!_tryAcquireJobLock("bias-engine-session-start")) return;
     try {
     const now = new Date();
@@ -3890,7 +3913,7 @@ except Exception as e:
   // on each boot. Hourly UTC tick; inner hour-gate (12 or 13 UTC) restricts
   // execution to 8:30 AM ET (DST-aware); audit-log idempotency limits to one
   // run per UTC day.
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("pre-market-routine")) return;
     try {
       // NOT pipeline-gated: pre-market context is a safety/observability input
@@ -3947,7 +3970,7 @@ except Exception as e:
   });
 
   // 10:00 AM ET = 14:00 UTC (EDT) or 15:00 UTC (EST) — fire both, filter on ET
-  cron.schedule("0 14,15 * * 1-5", async () => {
+  scheduleUtc("0 14,15 * * 1-5", async () => {
     if (!_tryAcquireJobLock("bias-engine-refresh-10am-et")) return;
     try {
     const now = new Date();
@@ -4098,7 +4121,7 @@ except Exception as e:
 
   // Daily 03:00 UTC — NOT DST-sensitive (UTC-anchored deliberately, not ET)
   // NOT pipeline-gated (safety/observability — must run when paused)
-  cron.schedule("0 3 * * *", async () => {
+  scheduleUtc("0 3 * * *", async () => {
     if (!_tryAcquireJobLock("harsh-regime-phase-activation-check")) return;
     try {
     logger.info("Scheduler: Harsh-regime phase activation check (03:00 UTC daily)");
@@ -4160,7 +4183,7 @@ except Exception as e:
   // Wave 24 Item 1: BW refresh exempted from pipeline gate — credential safety
   _PIPELINE_GATE_EXEMPT.add("bw-session-refresh");
 
-  cron.schedule("0 */6 * * *", async () => {
+  scheduleUtc("0 */6 * * *", async () => {
     if (!_tryAcquireJobLock("bw-session-refresh")) return;
     try {
       const t0 = Date.now();
@@ -4224,7 +4247,7 @@ except Exception as e:
   // Wave 24 Item 1: cookie refresh exempted from pipeline gate — safety signal
   _PIPELINE_GATE_EXEMPT.add("prop-firm-cookie-refresh");
 
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("prop-firm-cookie-refresh")) return;
     try {
       const t0 = Date.now();
@@ -4253,7 +4276,7 @@ except Exception as e:
   });
 
   // Sunday 18:00 ET = Monday 22:00 UTC (EDT, UTC-4) or 23:00 UTC (EST, UTC-5)
-  cron.schedule("0 22,23 * * 1", async () => {
+  scheduleUtc("0 22,23 * * 1", async () => {
     if (!_tryAcquireJobLock("weekly-drift-2sigma-check")) return;
     try {
       const now = new Date();
@@ -4302,7 +4325,7 @@ except Exception as e:
   });
 
   // Every 4 hours, RTH-gated (09:00–16:00 ET, weekdays)
-  cron.schedule("0 */4 * * 1-5", async () => {
+  scheduleUtc("0 */4 * * 1-5", async () => {
     if (!_tryAcquireJobLock("deployed-strategy-starvation-check")) return;
     try {
       const now = new Date();
@@ -4351,7 +4374,7 @@ except Exception as e:
     }
   });
 
-  cron.schedule("*/15 * * * *", async () => {
+  scheduleUtc("*/15 * * * *", async () => {
     if (!_tryAcquireJobLock("webhook-latency-check")) return;
     try {
       // Not pipeline-gated: latency monitor is an observability surface
@@ -4381,7 +4404,7 @@ except Exception as e:
   });
 
   // Daily at 6 AM ET = 10:00 UTC (EDT) or 11:00 UTC (EST), weekdays only
-  cron.schedule("0 10,11 * * 1-5", async () => {
+  scheduleUtc("0 10,11 * * 1-5", async () => {
     if (!_tryAcquireJobLock("regime-coverage-check")) return;
     try {
       const now = new Date();
@@ -4429,7 +4452,7 @@ except Exception as e:
 
   // Daily at 7 AM ET = 11:00 UTC (EDT) or 12:00 UTC (EST). Minute :37 dodges the
   // :33 slot already used by strategy-age-revalidation in the same 11,12 UTC hour.
-  cron.schedule("37 11,12 * * *", async () => {
+  scheduleUtc("37 11,12 * * *", async () => {
     if (!_tryAcquireJobLock("account-key-uniqueness-sanity")) return;
     try {
       const now = new Date();
@@ -4479,7 +4502,7 @@ except Exception as e:
   // Sun 19:00 ET = Mon 23:00 UTC (EDT, UTC-4) or Mon 00:00 UTC next day (EST, UTC-5).
   // Fire at Mon 23:00 and Tue 00:00 UTC to cover both offsets; ET day+hour guard
   // inside the handler filters to Sunday 19:00 only.
-  cron.schedule("0 23 * * 1", async () => {
+  scheduleUtc("0 23 * * 1", async () => {
     if (!_tryAcquireJobLock("n8n-drift-detector-weekly")) return;
     try {
       const now = new Date();
@@ -4517,7 +4540,7 @@ except Exception as e:
 
   // Fire at 13:00 and 14:00 UTC on the 1st of every month to cover EDT/EST.
   // ET day-of-month + hour guard inside handler filters to 09:00 ET on the 1st.
-  cron.schedule("0 13,14 1 * *", async () => {
+  scheduleUtc("0 13,14 1 * *", async () => {
     if (!_tryAcquireJobLock("n8n-drift-detector-monthly")) return;
     try {
       const now = new Date();
@@ -4585,7 +4608,7 @@ except Exception as e:
   // NOT pipeline-gated (safety/observability — must run when paused)
   _PIPELINE_GATE_EXEMPT.add("pre-market-briefing-discord");
 
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("pre-market-briefing-discord")) return;
     try {
       const t0 = Date.now();
@@ -4679,7 +4702,7 @@ except Exception as e:
   _PIPELINE_GATE_EXEMPT.add("liquidity-map-refresh");
 
   // Cron driver: every 30 min — "*/30 * * * *"
-  cron.schedule("*/30 * * * *", async () => {
+  scheduleUtc("*/30 * * * *", async () => {
     if (!_tryAcquireJobLock("liquidity-map-refresh")) return;
     try {
       const t0 = Date.now();
@@ -4802,7 +4825,7 @@ except Exception as e:
   _PIPELINE_GATE_EXEMPT.add("naked-poc-sync-daily");
 
   // Cron driver: fires at 20:30 and 21:30 UTC weekdays (covers EDT + EST 16:30 ET)
-  cron.schedule("30 20,21 * * 1-5", async () => {
+  scheduleUtc("30 20,21 * * 1-5", async () => {
     if (!_tryAcquireJobLock("naked-poc-sync-daily")) return;
     try {
       const now = new Date();
@@ -4852,7 +4875,7 @@ except Exception as e:
   // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5)
   // Pass 7 Track B cron jitter: offset to :07 to avoid pile-up with
   // composite-health-daily-digest (:13) and regime-drift-detector (:23).
-  cron.schedule("7 21,22 * * *", async () => {
+  scheduleUtc("7 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("consistency-tracker-daily-digest")) return;
     try {
       const now = new Date();
@@ -4899,7 +4922,7 @@ except Exception as e:
     );
   });
 
-  cron.schedule("0 */4 * * *", async () => {
+  scheduleUtc("0 */4 * * *", async () => {
     if (!_tryAcquireJobLock("pattern-aggregator")) return;
     try {
       const t0 = Date.now();
@@ -5020,7 +5043,7 @@ except Exception as e:
 
   // Cron driver: every hour — "0 * * * *"
   // Job itself checks for the 20:xx-21:xx UTC window (17:00 ET)
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("wave26-cohort-daily-audit-report")) return;
     try {
       const t0 = Date.now();
@@ -5155,7 +5178,7 @@ except Exception as e:
   _PIPELINE_GATE_EXEMPT.add("narrative-state-tracker");
 
   // Cron driver: every 5 min — "*/5 * * * *"
-  cron.schedule("*/5 * * * *", async () => {
+  scheduleUtc("*/5 * * * *", async () => {
     if (!_tryAcquireJobLock("narrative-state-tracker")) return;
     try {
       const t0 = Date.now();
@@ -5200,7 +5223,7 @@ except Exception as e:
 
   // Sun 19:00 ET = Sun 23:00 UTC (EDT, UTC-4) or Mon 00:00 UTC (EST, UTC-5).
   // Fire at both; ET day+hour guard inside the handler filters to Sunday 19:00 ET only.
-  cron.schedule("0 23,0 * * 0,1", async () => {
+  scheduleUtc("0 23,0 * * 0,1", async () => {
     if (!_tryAcquireJobLock("quantum-replay-weekly-analysis")) return;
     try {
       const now = new Date();
@@ -5256,7 +5279,7 @@ except Exception as e:
   // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5)
   // Pass 7 Track B cron jitter: offset to :13 to avoid pile-up with
   // consistency-tracker-daily-digest (:07) and regime-drift-detector (:23).
-  cron.schedule("13 21,22 * * *", async () => {
+  scheduleUtc("13 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("composite-health-daily-digest")) return;
     try {
       const now = new Date();
@@ -5298,7 +5321,7 @@ except Exception as e:
     await runCarterAnalystSweep();
   });
 
-  cron.schedule("0 12,13 * * *", async () => {
+  scheduleUtc("0 12,13 * * *", async () => {
     if (!_tryAcquireJobLock("carter-analyst-daily")) return;
     try {
       const now = new Date();
@@ -5347,7 +5370,7 @@ except Exception as e:
 
   // 04:00 ET = 09:00 UTC (EST, UTC-5) or 08:00 UTC (EDT, UTC-4)
   // Double-fire "0 8,9 * * *" + ET-hour guard ensures exactly one execution per day.
-  cron.schedule("0 8,9 * * *", async () => {
+  scheduleUtc("0 8,9 * * *", async () => {
     if (!_tryAcquireJobLock("strategy-stale-detector")) return;
     try {
       const now = new Date();
@@ -5406,7 +5429,7 @@ except Exception as e:
     await checkVacationAutoRecovery();
   });
 
-  cron.schedule("* * * * *", async () => {
+  scheduleUtc("* * * * *", async () => {
     if (!_tryAcquireJobLock("dd-velocity-cron")) return;
     try {
       // NOT pipeline-gated — safety/monitoring signal (in _PIPELINE_GATE_EXEMPT)
@@ -5469,7 +5492,7 @@ except Exception as e:
   });
 
   // Fires every hour on the hour (off-RTH guard inside job body)
-  cron.schedule("0 * * * *", async () => {
+  scheduleUtc("0 * * * *", async () => {
     if (!_tryAcquireJobLock("quantum-rl-training-window")) return;
     try {
       // NOT pipeline-gated (in _PIPELINE_GATE_EXEMPT)
@@ -5509,7 +5532,7 @@ except Exception as e:
   // 18:00 ET = 22:00 UTC (EST, UTC-5) or 21:00 UTC (EDT, UTC-4)
   // Pass 7 Track B cron jitter: offset to :23 to avoid pile-up with
   // consistency-tracker-daily-digest (:07) and composite-health-daily-digest (:13).
-  cron.schedule("23 21,22 * * *", async () => {
+  scheduleUtc("23 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("regime-drift-detector")) return;
     try {
       const now = new Date();
@@ -5563,7 +5586,7 @@ except Exception as e:
     await runPortfolioDriftDemotion();
   });
 
-  cron.schedule("43 21,22 * * *", async () => {
+  scheduleUtc("43 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("portfolio-drift-demotion")) return;
     try {
       const now = new Date();
@@ -5598,7 +5621,7 @@ except Exception as e:
     await runStrategyAgeRevalidation();
   });
   // 07:00 ET = 11:00 UTC (EDT, UTC-4) or 12:00 UTC (EST, UTC-5) — DST-safe double-fire + guard.
-  cron.schedule("33 11,12 * * *", async () => {
+  scheduleUtc("33 11,12 * * *", async () => {
     if (!_tryAcquireJobLock("strategy-age-revalidation")) return;
     try {
       const now = new Date();
@@ -5646,7 +5669,7 @@ except Exception as e:
 
   // 10:00 ET = 14:00 UTC (EDT) or 15:00 UTC (EST). Fire both; ET-hour guard
   // inside filters to exactly 10:00 ET on Wednesdays.
-  cron.schedule("0 14,15 * * 3", async () => {
+  scheduleUtc("0 14,15 * * 3", async () => {
     if (!_tryAcquireJobLock("mcl-pre-eia-stop-tighten")) return;
     try {
       const now = new Date();
@@ -5694,7 +5717,7 @@ except Exception as e:
 
   // Fri 17:00 ET = Fri 21:00 UTC (EDT, UTC-4) or Fri 22:00 UTC (EST, UTC-5)
   // Double-fire: "0 21,22 * * 5"; ET-hour + weekday guards inside handler filter to Fri 17:00 ET.
-  cron.schedule("0 21,22 * * 5", async () => {
+  scheduleUtc("0 21,22 * * 5", async () => {
     if (!_tryAcquireJobLock("ab-comparison-weekly-digest")) return;
     try {
       const now = new Date();
@@ -5741,7 +5764,7 @@ except Exception as e:
     await runDbBackup();
   });
 
-  cron.schedule("0 6,7 * * *", async () => {
+  scheduleUtc("0 6,7 * * *", async () => {
     if (!_tryAcquireJobLock("db-backup")) return;
     try {
       const now = new Date();
@@ -5776,7 +5799,7 @@ except Exception as e:
     const { runDailyReconciliation } = await import("./production/reconciliation-service.js");
     await runDailyReconciliation();
   });
-  cron.schedule("15 20,21 * * 1-5", async () => {
+  scheduleUtc("15 20,21 * * 1-5", async () => {
     if (!_tryAcquireJobLock("daily-reconciliation")) return;
     try {
       const etHour = parseInt(
@@ -5820,7 +5843,7 @@ except Exception as e:
     const { runWeeklyDriftDetection } = await import("./production/drift-detector.js");
     await runWeeklyDriftDetection();
   });
-  cron.schedule("0 22,23 * * 0", async () => {
+  scheduleUtc("0 22,23 * * 0", async () => {
     if (!_tryAcquireJobLock("weekly-drift-detection")) return;
     try {
       const etStr = new Date().toLocaleString("en-US", {
@@ -5884,7 +5907,7 @@ except Exception as e:
     const { runPaperJournalRecon } = await import("./production/paper-journal-recon.js");
     await runPaperJournalRecon();
   });
-  cron.schedule("30 21,22 * * *", async () => {
+  scheduleUtc("30 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("paper-journal-recon-daily")) return;
     try {
       const now = new Date();
@@ -5947,7 +5970,7 @@ except Exception as e:
 
   _PIPELINE_GATE_EXEMPT.add("feed-silence-check"); // Safety signal — must fire when paused
 
-  cron.schedule("*/5 * * * *", async () => {
+  scheduleUtc("*/5 * * * *", async () => {
     if (!_tryAcquireJobLock("feed-silence-check")) return;
     try {
       const t0 = Date.now();
@@ -5967,7 +5990,7 @@ except Exception as e:
   registerJob("discord-fanout-audit-30min", 30 * 60 * 1000, async () => {
     await runDiscordFanoutAudit();
   });
-  cron.schedule("*/30 * * * *", async () => {
+  scheduleUtc("*/30 * * * *", async () => {
     if (!_tryAcquireJobLock("discord-fanout-audit-30min")) return;
     try {
       const t0 = Date.now();
@@ -6004,7 +6027,7 @@ except Exception as e:
 
   // Fire Sunday at 07:00 UTC (03:00 ET EDT) and 08:00 UTC (03:00 ET EST).
   // ET-hour guard inside the handler confirms Sunday 03:00 ET only.
-  cron.schedule("0 7,8 * * 0", async () => {
+  scheduleUtc("0 7,8 * * 0", async () => {
     if (!_tryAcquireJobLock("synthetic-regime-bank-populate")) return;
     try {
       const now = new Date();
@@ -6235,7 +6258,7 @@ except Exception as e:
 
   // Fires at 09:00 UTC and 10:00 UTC — DST-safe double-fire for 5 AM ET.
   // ET-hour guard inside the handler confirms 5 AM ET before running.
-  cron.schedule("0 9,10 * * *", async () => {
+  scheduleUtc("0 9,10 * * *", async () => {
     if (!_tryAcquireJobLock("deployed-pine-artifact-check")) return;
     try {
       const now = new Date();
@@ -6278,7 +6301,7 @@ except Exception as e:
     await runCandidateBacktestConveyor();
   });
 
-  cron.schedule("*/45 * * * * *", async () => {
+  scheduleUtc("*/45 * * * * *", async () => {
     if (!_tryAcquireJobLock("candidate-backtest-conveyor")) return;
     try {
       const t0conv = Date.now();
