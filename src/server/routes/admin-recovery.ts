@@ -86,11 +86,10 @@ function verifyRestartHmac(
   const secret = process.env.ADMIN_RESTART_HMAC_SECRET;
 
   if (!secret || secret.length === 0) {
-    if (process.env.NODE_ENV === "production") {
-      return { ok: false, reason_code: "secret_not_configured" };
-    }
-    // Dev/test: allow through without secret so unit tests work without env var.
-    return { ok: true };
+    // deep-scan Security re-cert HIGH: fail CLOSED when the secret is unset — in EVERY environment
+    // (was a NODE_ENV !== "production" dev-bypass = full auth bypass on these Bearer-exempt recovery
+    // routes in staging/test/unset). Mirrors admin-frozen-policy-override's unconditional fail-closed.
+    return { ok: false, reason_code: "secret_not_configured" };
   }
 
   if (!headerValue || typeof headerValue !== "string" || headerValue.length === 0) {

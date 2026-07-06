@@ -84,11 +84,12 @@ function verifyRestartHmac(
 ): { ok: true } | { ok: false; reason_code: string } {
   const secret = process.env.ADMIN_RESTART_HMAC_SECRET;
   if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      return { ok: false, reason_code: "secret_not_configured" };
-    }
-    // Dev/test: allow through without secret so tests don't need the env var
-    return { ok: true };
+    // deep-scan Security re-cert HIGH: fail CLOSED when the secret is unset — in EVERY environment.
+    // The old `NODE_ENV !== "production"` dev-bypass returned {ok:true} (a FULL auth bypass) on these
+    // Bearer-exempt admin routes in staging/test/unset — anyone could curl self-restart /
+    // clear-kill-switch-cache unauthenticated. Mirrors admin-frozen-policy-override's unconditional
+    // fail-closed. Tests must set ADMIN_RESTART_HMAC_SECRET + sign (deepscan16 / wave24 already do).
+    return { ok: false, reason_code: "secret_not_configured" };
   }
   if (!headerValue || typeof headerValue !== "string" || headerValue.length === 0) {
     return { ok: false, reason_code: "missing_header" };

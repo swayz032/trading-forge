@@ -282,4 +282,22 @@ describe("Deep-Scan #16 A-1 — /api/admin/self-restart through the real auth-ga
 
     expect(resp.status).toBe(200); // proves the 401 above is the drift check, not a blanket reject
   });
+
+  // ─── Failure-injection: secret UNSET must FAIL CLOSED (the re-cert fail-open HIGH) ────────────
+  it("secret UNSET → 401 fail-closed (the re-cert HIGH: old NODE_ENV!==production dev-bypass returned 200)", async () => {
+    process.env["API_KEY"] = TEST_API_KEY;
+    delete process.env["ADMIN_RESTART_HMAC_SECRET"]; // no secret; vitest's NODE_ENV="test" is EXACTLY
+    // the non-production env the removed dev-bypass opened — the route must now reject, not bypass.
+    const timestamp = Math.floor(Date.now() / 1000);
+    const reason = "deepscan_failopen_regression";
+    const sig = createHmac("sha256", "irrelevant-no-configured-secret").update(`${timestamp}:${reason}`, "utf8").digest("hex");
+
+    const resp = await fetch(`${baseUrl}/api/admin/self-restart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Restart-Signature": sig },
+      body: JSON.stringify({ timestamp, reason }),
+    });
+
+    expect(resp.status).toBe(401); // fail-CLOSED; pre-fix this was an unauthenticated 200 (auth bypass)
+  });
 });
