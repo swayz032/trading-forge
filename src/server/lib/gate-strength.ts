@@ -14,12 +14,32 @@
  *   2. type==WAIT_CONFIRMATION and MANDATORY_LANG                                        -> mandatory
  *   3. ALT_LANG ("or","either...or","any of")                                            -> alternative
  *   4. clear OPTIONAL_LANG ("ideally","helps","bonus","even better")                      -> optional
- *   5. type in {WAIT_STRUCTURE,WAIT_BIAS} with MANDATORY_LANG                             -> mandatory
+ *   5. type in EXECUTION_MANDATORY_TYPES with MANDATORY_LANG                              -> mandatory
+ *   5b. TRIGGER_LANG (directional entry-trigger discourse, any type)                      -> mandatory
  *   6. AMBIGUOUS (none clear) -> gemma adjudicates with the DRI taxonomy in the prompt    -> its label
  *
- * Pattern-list provenance: MANDATORY_LANG / CONTEXT_LANG / ALT_LANG / OPTIONAL_LANG are mined ONLY from
- * the 70% rules-design split's quotes (docs/replay-results/corpus-v3-heldout-split-2026-07-05.json) --
- * the held-out 30% is untouched by these lists per the Gate-1 circularity-fix requirement.
+ * ITERATION PASS 2 (2026-07-06, docs/designs/corpus-v3-classifier-iteration-2026-07-06.md) — closes the
+ * classifier's OVER-CONTEXTUALIZATION of genuine entry gates (the diagnosed Gate-3 failure mode: entry-
+ * trigger / "wait-for retest -> signal/enter" conditions were demoted to `context` because NO deterministic
+ * rule escalated the execution-path atom types, so they fell to the gemma margin, which biases toward
+ * contextual). Two additive changes, BOTH derived ONLY from the 143 rules-design conditions (never from the
+ * held-out set, never from the snNkQSyWX4k/jlShztsY3oA behavioral pairs):
+ *   - Rule 5's atom-type set widened from {WAIT_STRUCTURE,WAIT_BIAS} to add the execution-path atoms
+ *     {WAIT_RETEST,CONFIRM_DIRECTION,ENABLE_ENTRY,ENTER}. Motivated by 6 design gold-JUSTIFIED_MANDATORY
+ *     WAIT_RETEST conditions the pre-fix rules routed to the margin ("wait for a retrace back to the 5 SMA",
+ *     "wait for that retest into that fair value gap", "as soon as the key level is tapped", "It must
+ *     reverse right after breaking a high or a low", "price break below and retest ... before we can",
+ *     "wait for the market to retest that high or low"). 0 design false-positives.
+ *   - Rule 5b (TRIGGER_LANG): directional entry-trigger discourse escalates to mandatory. Motivated by 3
+ *     design gold-JUSTIFIED_MANDATORY conditions the pre-fix rules routed to the margin ("that's when you go
+ *     long", "I never take calls under VWAP and I never take puts over VWAP", "looking to take puts on a
+ *     VWOP retest"). Placed AFTER ALT/OPTIONAL so interchangeable/bonus framing still wins first. 0 design
+ *     false-positives across all four gold classes. NOT extended to surface forms ("signal to sell", "that's
+ *     our entry") that have ZERO design-143 support — adding those would be tuning to the held-out anecdote.
+ *
+ * Pattern-list provenance: MANDATORY_LANG / CONTEXT_LANG / ALT_LANG / OPTIONAL_LANG / TRIGGER_LANG are mined
+ * ONLY from the 70% rules-design split's quotes (docs/replay-results/corpus-v3-heldout-split-2026-07-05.json)
+ * -- the held-out 30% is untouched by these lists per the Gate-1 circularity-fix requirement.
  *
  * Rules 1-5 are pure / synchronous / no I/O. Rule 6 is the ONLY network call (gemma on the tower Ollama)
  * -- graph-to-engine.ts's compiler is documented "Pure / deterministic / standalone"; `classifyGateStrength`
@@ -104,6 +124,20 @@ export const ALT_LANG: RegExp[] = [
   /\bor even\b/i,
 ];
 
+/**
+ * Directional entry-trigger discourse (rule 5b, ITERATION PASS 2) — the speaker names a directional
+ * entry ACTION ("go long", "take puts", "that's when you [act]", "I never take X"). Naming the trigger IS
+ * a gate, not scene-setting. Mined ONLY from the 143 rules-design conditions (each pattern below has >=1
+ * design gold-JUSTIFIED_MANDATORY motivating quote; 0 design false-positives across all 4 gold classes).
+ * Checked AFTER CONTEXT_LANG (rule 1) and ALT/OPTIONAL (rules 3-4) so genuinely-contextual narration and
+ * interchangeable/bonus framing take precedence.
+ */
+export const TRIGGER_LANG: RegExp[] = [
+  /\bthat('?s| is) when (you|we|i)\b/i, // "...that's when you go long" (FILTER, gold JUSTIFIED_MANDATORY)
+  /\b(go|going|take) (long|short|puts?|calls?)\b/i, // "take puts on a VWOP retest" (WAIT_CONFIRMATION); "I never take calls/puts" (FILTER)
+  /\bi never (take|trade)\b/i, // "I never take calls under VWAP and I never take puts over VWAP" (FILTER, gold JUSTIFIED_MANDATORY)
+];
+
 /** Bonus / enhancement / non-required framing (rule 4). */
 export const OPTIONAL_LANG: RegExp[] = [
   /\bideally\b/i,
@@ -124,9 +158,23 @@ export const OPTIONAL_LANG: RegExp[] = [
 const anyMatch = (patterns: RegExp[], text: string): boolean => patterns.some((re) => re.test(text));
 
 /** Atom types rule 2 applies to. */
-const MANDATORY_TYPE_RULE2: ReadonlySet<AtomType> = new Set(["WAIT_CONFIRMATION"]);
-/** Atom types rule 5 applies to. */
-const MANDATORY_TYPE_RULE5: ReadonlySet<AtomType> = new Set(["WAIT_STRUCTURE", "WAIT_BIAS"]);
+const MANDATORY_TYPE_RULE2: ReadonlySet<AtomType> = new Set<AtomType>(["WAIT_CONFIRMATION"]);
+/**
+ * Atom types rule 5 applies to. ITERATION PASS 2 (2026-07-06) widened this set from
+ * {WAIT_STRUCTURE,WAIT_BIAS} to add the execution-path atoms {WAIT_RETEST,CONFIRM_DIRECTION,ENABLE_ENTRY,
+ * ENTER} — the S4-S6 states that ACTUALLY carry the entry trigger. Pre-fix, no deterministic rule escalated
+ * these, so gate-language WAIT_RETEST conditions ("wait for that retest into that fair value gap") were
+ * demoted to the gemma margin and over-contextualized. Derived from the 143 rules-design set (6 motivating
+ * gold-JUSTIFIED_MANDATORY WAIT_RETEST conditions, 0 design false-positives). See file docstring.
+ */
+const MANDATORY_TYPE_RULE5: ReadonlySet<AtomType> = new Set<AtomType>([
+  "WAIT_STRUCTURE",
+  "WAIT_BIAS",
+  "WAIT_RETEST",
+  "CONFIRM_DIRECTION",
+  "ENABLE_ENTRY",
+  "ENTER",
+]);
 
 /**
  * Deterministic subset of the hybrid classifier — rules 1-5 ONLY. Pure / synchronous / no I/O.
@@ -149,8 +197,12 @@ export function classifyGateStrengthDeterministic(atom: GateStrengthAtomInput): 
   // Rule 4 — clear OPTIONAL_LANG (any type).
   if (anyMatch(OPTIONAL_LANG, text)) return "optional";
 
-  // Rule 5 — WAIT_STRUCTURE / WAIT_BIAS + MANDATORY_LANG.
+  // Rule 5 — execution-path / structure / bias atom types + MANDATORY_LANG (see MANDATORY_TYPE_RULE5).
   if (MANDATORY_TYPE_RULE5.has(atom.type) && anyMatch(MANDATORY_LANG, text)) return "mandatory";
+
+  // Rule 5b (ITERATION PASS 2) — directional entry-trigger discourse escalates to mandatory, any atom type.
+  // Reached only when rules 1-5 did not fire, so CONTEXT/ALT/OPTIONAL framing has already taken precedence.
+  if (anyMatch(TRIGGER_LANG, text)) return "mandatory";
 
   return null; // rule 6 — ambiguous
 }
