@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-06T00:29:59.500Z`.
+Updated automatically from the repo on `2026-07-06T02:22:45.949Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -13,8 +13,8 @@ Updated automatically from the repo on `2026-07-06T00:29:59.500Z`.
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `78`
 - Scheduler jobs tracked: `108`
-- Current live Trading Forge n8n workflows tracked: `28`
-- Canonical workflows tracked: `28`
+- Current live Trading Forge n8n workflows tracked: `20`
+- Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `29`
 - Database tables tracked: `110`
@@ -93,7 +93,7 @@ Updated automatically from the repo on `2026-07-06T00:29:59.500Z`.
 - Inactive workflow candidates: `0`
 - Broken workflow blockers: `0`
 - Failing workflow blockers: `0`
-- Source-missing workflow blockers: `28`
+- Source-missing workflow blockers: `0`
 - Awaiting redeploy workflow blockers: `0`
 - Stale workflow blockers: `0`
 - Runtime control blockers: `0`
@@ -115,14 +115,14 @@ Updated automatically from the repo on `2026-07-06T00:29:59.500Z`.
 - `shadow_experimental`: `5`
 
 ### Workflow States
-- `production-active`: `28`
+- `production-active`: `20`
 - `built-inactive`: `0`
 - `broken`: `0`
 - `external-non-core`: `0`
-- health `healthy`: `23`
+- health `healthy`: `18`
 - health `failing`: `0`
 - health `stale`: `0`
-- health `unknown`: `5`
+- health `unknown`: `2`
 
 ### Subsystem Coverage Gaps
 - `5tf_mtf_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
@@ -452,34 +452,26 @@ Updated automatically from the repo on `2026-07-06T00:29:59.500Z`.
 - `walk_forward`
 
 ### Workflow Inventory
-- `0A_health_monitor_66HEjQavpvirY6g5`
-- `10A_master_orchestration_8HKXzNmo9KF59SBu`
-- `11A_critic_optimization_pVT6svNTljjBoQbW`
-- `3A_workflow_backup_J0p8oYkONmN7pYn6`
-- `5A_weekly_tournament_2rVOEn4LnMAubTmW`
-- `5G_brave_search_scout_z2c7zJmSx5dNle6P`
-- `5H_reddit_scout_ZMgHYjcTq4YTRQXh`
-- `5I_tavily_scout_TMT3g7HenJ5etiwv`
-- `6D_compliance_gate_RumAJUp4iS1TYlNm`
-- `7A_auto_evolution_MIIxmilbgZv3SUBh`
-- `8A_idea_to_strategy_vlCaiWM7F0AH1RRY`
-- `8B_source_quality_review_LQtqeWAcNOlkqROH`
-- `9A_nightly_self_critique_26ruSYvIjqHGOhsd`
-- `Anti_Setup_Refresh_PHcD2tFZpzr7kQGF`
-- `Daily_Compliance_Check_WT9sVMzG83rg1L29`
-- `Daily_Portfolio_Monitor_u0RcmfuClgRinXAX`
-- `Daily_Scout_5E_7GCDtSCifGgdpeuq`
-- `Macro_Data_Sync_X2IjKuYseGukxKDj`
-- `Monthly_Robustness_Check_m6aD7X4ioWfhWaS9`
-- `Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd`
-- `Post_Session_Skip_Review_LayXj1mbHh4aGSM9`
-- `Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en`
-- `Pre_Session_Skip_Check_eaq72MwKwCjv7g7F`
-- `Strategy_Generation_Loop_eCr7cyb0aPArFCZc`
-- `Strategy_Tournament_hPXhUaSC3ScznZE9`
-- `Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB`
-- `Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg`
-- `Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy`
+- `0A_health_monitor_DGEk1D478xWJClKD`
+- `10A_master_orchestration_LTH2vot3Mv9B5AHb`
+- `14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT`
+- `3A_workflow_backup_5bfT33w0TylM0Hbk`
+- `5A_weekly_tournament_iGjDyKYpxNFzoXCw`
+- `5P_nemo_scenario_generator_0ooxmt74fCtHiTo6`
+- `6D_compliance_gate_UJUSRydbOZHDq7LB`
+- `7A_auto_evolution_eEt2dJrZbV6C7TRL`
+- `Anti_Setup_Refresh_9KY6ixHP47mP7k0y`
+- `Daily_Compliance_Check_b8CSc84wQzJ4lEGH`
+- `Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx`
+- `Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq`
+- `Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC`
+- `Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd`
+- `Post_Session_Skip_Review_ao1OK1SCNVMQbCPK`
+- `Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk`
+- `Pre_Session_Skip_Check_flOq70zNhT3Umemt`
+- `Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT`
+- `TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV`
+- `Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp`
 
 ### Database Tables
 - `a_plus_market_scans`

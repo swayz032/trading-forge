@@ -43,6 +43,14 @@ interface LiveWorkflowManifestEntry {
   lastSuccessAt?: string;
   lastFailureAt?: string;
   notes?: string[];
+  /**
+   * Per-workflow override for the staleness ceiling (deep-scan #21). Most of the
+   * live fleet is daily/weekly cron-driven and fits the global
+   * WORKFLOW_STALE_MAX_AGE_HOURS default, but genuinely monthly-cadence workflows
+   * (e.g. "Monthly Robustness Check") would otherwise be misreported as "stale" for
+   * ~3 weeks out of every cycle. Declare an explicit override in hours instead.
+   */
+  staleAfterHours?: number;
 }
 
 interface LiveWorkflowManifest {
@@ -378,6 +386,34 @@ const BROKEN_WORKFLOW_TITLES = new Set<string>();
 const STRICT_PRODUCTION_READINESS_ENV = "TF_STRICT_PRODUCTION_READINESS";
 const RUNTIME_STAGE_ENV = "TF_RUNTIME_STAGE";
 
+/**
+ * Deep-scan #21 (2026-07-05): `normalizeWorkflowHealth` previously checked only
+ * `lastSuccessAt == null` and never AGE — a workflow whose last recorded success was
+ * 91-106 days old reported `healthStatus: "healthy"`, identical to one that ran 6
+ * minutes ago. `WORKFLOW_STALE_MAX_AGE_HOURS` closes that gap.
+ *
+ * Default rationale: the live n8n fleet (20 active workflows post cleanup) is
+ * predominantly daily/weekly cron-driven — compliance gates, macro sync, and scout
+ * crons run ~1x/day; the tournament + compliance re-parse workflows run ~1x/week.
+ * 192h (8 days) comfortably covers a missed daily run plus a full weekly cycle with
+ * slack, while still catching workflows that have gone genuinely dark. Monthly-
+ * cadence workflows (e.g. "Monthly Robustness Check") declare a per-workflow
+ * `staleAfterHours` override in the live-workflow manifest so they aren't misreported
+ * as "stale" for ~3 weeks out of every 30-day cycle.
+ *
+ * This signal is advisory/observability-only — see `productionConvergence.staleWorkflowBlockers`
+ * — it does NOT feed `buildDriftItems` / the `system-map:check` CI gate.
+ */
+const WORKFLOW_STALE_MAX_AGE_HOURS_ENV = "WORKFLOW_STALE_MAX_AGE_HOURS";
+const DEFAULT_WORKFLOW_STALE_MAX_AGE_HOURS = 192;
+
+export function resolveWorkflowStaleMaxAgeHours(env: NodeJS.ProcessEnv = process.env): number {
+  const raw = env[WORKFLOW_STALE_MAX_AGE_HOURS_ENV];
+  if (raw == null || raw.trim() === "") return DEFAULT_WORKFLOW_STALE_MAX_AGE_HOURS;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_WORKFLOW_STALE_MAX_AGE_HOURS;
+}
+
 interface WorkflowHealthMetadata {
   healthStatus: WorkflowHealthStatus;
   failureCount: number | null;
@@ -493,9 +529,19 @@ function parseWorkflowDate(value: string | null | undefined): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-function normalizeWorkflowHealth(
-  metadata: Partial<WorkflowHealthMetadata> | undefined,
+/**
+ * Pure, deterministic health classifier (deep-scan #21). `nowMs` is threaded in by the
+ * caller rather than read via `Date.now()` internally so this stays unit-testable and
+ * replay-deterministic. Adds an AGE ceiling on top of the pre-existing null-check:
+ * a workflow whose `lastSuccessAt` is older than `staleMaxAgeHours` now reports
+ * `"stale"` instead of `"healthy"` — closing the false-positive where a 91-106-day-old
+ * success timestamp read identically to a fresh one.
+ */
+export function normalizeWorkflowHealth(
+  metadata: (Partial<WorkflowHealthMetadata> & { staleAfterHours?: number }) | undefined,
   isActive: boolean,
+  nowMs: number,
+  defaultStaleMaxAgeHours: number = DEFAULT_WORKFLOW_STALE_MAX_AGE_HOURS,
 ): WorkflowHealthMetadata {
   const notes = [...(metadata?.notes ?? [])];
   const healthStatus = metadata?.healthStatus ?? "unknown";
@@ -504,16 +550,33 @@ function normalizeWorkflowHealth(
   const lastSuccessMs = parseWorkflowDate(lastSuccessAt);
   const missingFreshEvidence = isActive && lastSuccessMs == null;
   const explicitFailure = healthStatus === "failing";
+
+  const staleMaxAgeHours = metadata?.staleAfterHours ?? defaultStaleMaxAgeHours;
+  const ageMs = lastSuccessMs != null ? nowMs - lastSuccessMs : null;
+  const isStale =
+    isActive
+    && !missingFreshEvidence
+    && !explicitFailure
+    && ageMs != null
+    && ageMs > staleMaxAgeHours * 60 * 60 * 1000;
+
   const inferredStatus: WorkflowHealthStatus = missingFreshEvidence
     ? "unknown"
     : explicitFailure
       ? "failing"
-      : "healthy";
+      : isStale
+        ? "stale"
+        : "healthy";
 
   if (missingFreshEvidence) {
     notes.push("No live success timestamp is available for this active workflow.");
   } else if (explicitFailure) {
     notes.push("Latest workflow failure is newer than success evidence and requires attention.");
+  } else if (isStale) {
+    const ageHours = Math.floor((ageMs as number) / (60 * 60 * 1000));
+    notes.push(
+      `Last known success is ${ageHours}h old, exceeding the ${staleMaxAgeHours}h staleness ceiling — treat as unverified, not healthy.`,
+    );
   } else if (healthStatus === "unknown") {
     notes.push("Workflow health inferred from live success timestamp.");
   }
@@ -633,8 +696,10 @@ async function validateWorkflowSourceFile(filePath: string): Promise<WorkflowSou
 export function buildWorkflowInventoryFromStems(
   stems: string[],
   activeCanonicalNames: ReadonlySet<string> = new Set(),
-  workflowHealth: ReadonlyMap<string, Partial<WorkflowHealthMetadata>> = new Map(),
+  workflowHealth: ReadonlyMap<string, Partial<WorkflowHealthMetadata> & { staleAfterHours?: number }> = new Map(),
   workflowSourceValidation: ReadonlyMap<string, WorkflowSourceValidation> = new Map(),
+  nowMs: number = Date.now(),
+  defaultStaleMaxAgeHours: number = resolveWorkflowStaleMaxAgeHours(),
 ): WorkflowInventorySummary {
   const grouped = new Map<string, string[]>();
 
@@ -648,7 +713,7 @@ export function buildWorkflowInventoryFromStems(
   const items = [...grouped.entries()]
     .map(([canonicalName, variants]) => {
       const isActive = activeCanonicalNames.has(canonicalName);
-      const health = normalizeWorkflowHealth(workflowHealth.get(canonicalName), isActive);
+      const health = normalizeWorkflowHealth(workflowHealth.get(canonicalName), isActive, nowMs, defaultStaleMaxAgeHours);
       const sourceValidation = workflowSourceValidation.get(canonicalName) ?? { status: "missing" as const, errors: [] };
       const forcedBroken = health.healthStatus === "failing" || sourceValidation.status === "invalid";
       const liveSyncStatus: WorkflowLiveSyncStatus = sourceValidation.status === "missing"
@@ -736,7 +801,7 @@ async function collectWorkflowInventory(rootDir: string): Promise<WorkflowInvent
         .filter((workflow) => workflow.active)
         .map((workflow) => canonicalizeWorkflowStem(`${workflow.name}_${workflow.id}`)),
     );
-    const workflowHealth = new Map<string, Partial<WorkflowHealthMetadata>>(
+    const workflowHealth = new Map<string, Partial<WorkflowHealthMetadata> & { staleAfterHours?: number }>(
       manifest.workflows.map((workflow) => [
         canonicalizeWorkflowStem(`${workflow.name}_${workflow.id}`),
         {
@@ -745,6 +810,7 @@ async function collectWorkflowInventory(rootDir: string): Promise<WorkflowInvent
           lastSuccessAt: workflow.lastSuccessAt ?? null,
           lastFailureAt: workflow.lastFailureAt ?? null,
           notes: workflow.notes ?? [],
+          staleAfterHours: workflow.staleAfterHours,
         },
       ]),
     );
