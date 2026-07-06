@@ -107,22 +107,22 @@ class TestMigration0152Idempotency:
     """Migration 0152 must be idempotent (CREATE TABLE IF NOT EXISTS)."""
 
     def test_migration_file_exists(self):
-        """Migration file 0152_quantum_rl_runs.sql must exist."""
+        """Migration file 0158_quantum_rl_runs.sql must exist."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         assert migration_path.exists(), f"Migration file not found: {migration_path}"
 
     def test_migration_uses_if_not_exists(self):
         """Migration must use CREATE TABLE IF NOT EXISTS for idempotency."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "CREATE TABLE IF NOT EXISTS" in content, "Migration must be idempotent (IF NOT EXISTS)"
 
     def test_migration_creates_correct_table(self):
         """Migration must create quantum_rl_runs table, not quantum_mc_runs."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "quantum_rl_runs" in content
         # Verify this migration creates quantum_rl_runs not quantum_mc_runs
@@ -137,7 +137,7 @@ class TestMigration0152Idempotency:
     def test_migration_has_governance_comment(self):
         """Migration must document namespace separation rationale."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "circular" in content.lower() or "IAE-vs-RL" in content or "namespace" in content.lower()
 
@@ -147,7 +147,7 @@ class TestMigration0152Idempotency:
         journal_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "meta" / "_journal.json"
         journal = json.loads(journal_path.read_text())
         tags = [e["tag"] for e in journal["entries"]]
-        assert "0152_quantum_rl_runs" in tags, f"0152_quantum_rl_runs not in journal. Found: {tags[-5:]}"
+        assert "0158_quantum_rl_runs" in tags, f"0158_quantum_rl_runs not in journal. Found: {tags[-5:]}"
 
 
 # ─── Test 2: Column presence in migration SQL ────────────────────────────────
@@ -175,7 +175,7 @@ class TestMigration0152Columns:
     def test_all_columns_present(self):
         """All required columns must appear in the migration SQL."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         for col in self.EXPECTED_COLUMNS:
             assert col in content, f"Column '{col}' not found in migration"
@@ -183,14 +183,14 @@ class TestMigration0152Columns:
     def test_bigserial_primary_key(self):
         """id column must be BIGSERIAL PRIMARY KEY."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "BIGSERIAL PRIMARY KEY" in content
 
     def test_governance_labels_jsonb_not_null(self):
         """governance_labels must be JSONB NOT NULL."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "governance_labels" in content
         assert "JSONB NOT NULL" in content or "jsonb NOT NULL" in content.lower()
@@ -204,21 +204,21 @@ class TestMigration0152Indexes:
     def test_strategy_evaluated_index_exists(self):
         """idx_quantum_rl_runs_strategy_evaluated must be in migration."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "idx_quantum_rl_runs_strategy_evaluated" in content
 
     def test_regime_action_index_exists(self):
         """idx_quantum_rl_runs_regime_action must be in migration."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "idx_quantum_rl_runs_regime_action" in content
 
     def test_cpcv_fold_index_exists(self):
         """idx_quantum_rl_runs_cpcv_fold must be in migration (partial index)."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "idx_quantum_rl_runs_cpcv_fold" in content
 
@@ -457,23 +457,29 @@ class TestRewardFunctionCiHigh:
         assert abs(shaped - (realized_r - expected_ci_pen)) < 1e-6
 
     def test_ci_high_below_threshold_no_penalty(self):
-        """ci_high=0.30 must produce zero ci_high penalty (max(0, 0.30 − 0.40)=0)."""
-        env = _make_env()
+        """ci_high strictly BELOW the (env-tracked) threshold must produce zero ci_high penalty.
 
+        CORRECTED 2026-07-06: was hardcoded to ci_high=0.30 vs a 0.40 threshold; the threshold was tightened
+        to 0.20 (tracks the production B14 gate), so 0.30 is now ABOVE it. Reference _RL_CI_HIGH_THRESHOLD so
+        this stays correct at any threshold value.
+        """
+        env = _make_env()
         realized_r = 1.0
-        ci_high = 0.30
+        ci_high = _RL_CI_HIGH_THRESHOLD - 0.05  # strictly below → no penalty
 
         shaped, ci_pen, dd_pen = env.compute_shaped_reward(
             realized_r, ci_high=ci_high, drawdown_penalty=0.0
         )
 
-        assert ci_pen == 0.0, f"Expected 0 ci_high penalty for ci_high=0.30, got {ci_pen}"
+        assert ci_pen == 0.0, f"Expected 0 ci_high penalty for ci_high below threshold, got {ci_pen}"
         assert abs(shaped - realized_r) < 1e-6
 
     def test_ci_high_exactly_at_threshold_no_penalty(self):
-        """ci_high exactly at 0.40 threshold must produce zero ci_high penalty."""
+        """ci_high exactly AT the (env-tracked) threshold must produce zero ci_high penalty (max(0, 0)=0)."""
         env = _make_env()
-        shaped, ci_pen, _ = env.compute_shaped_reward(1.0, ci_high=0.40, drawdown_penalty=0.0)
+        shaped, ci_pen, _ = env.compute_shaped_reward(
+            1.0, ci_high=_RL_CI_HIGH_THRESHOLD, drawdown_penalty=0.0
+        )
         assert ci_pen == 0.0
 
     def test_reward_alpha_default_is_correct(self):
