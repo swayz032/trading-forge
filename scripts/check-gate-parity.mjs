@@ -278,9 +278,47 @@ for (const [pathLabel, set] of [["MANUAL", foundManual], ["CRON", foundCron]]) {
   }
 }
 
+// ─── TESTING → PAPER (cron legacy fast-track) HARD-gate coverage ──────────────
+// DS#20 T-A2 (Band A F-2): the above net covers ONLY the PAPER→DEPLOY_READY edge.
+// The checkAutoPromotions "Gate 2: TESTING → PAPER" legacy fast-track reimplements its
+// gate stack INLINE (it does NOT delegate to a shared evaluator), so a TESTING-stage
+// HARD gate can be present on the manual _promoteStrategyInner path yet silently MISSING
+// from the cron fast-track — exactly how the PBO overfit gate (Wave 29 A.2, a documented
+// §12 HARD gate with "no PBO-bypass path") shipped cron-absent and could auto-promote an
+// overfit strategy to PAPER in vacation mode (Band A F-1). This asserts every canonical
+// TESTING-stage HARD gate appears in the cron Gate-2 region.
+const regionCronTesting = stripComments(
+  sliceBetween(
+    lifecycleRaw,
+    "Gate 2: TESTING → PAPER",
+    "Gate 2.5",
+    "CRON path — checkAutoPromotions TESTING→PAPER legacy fast-track",
+  ),
+);
+const foundCronTesting = gateTokensIn(regionCronTesting);
+const TESTING_TO_PAPER_HARD_GATES = [
+  { id: "t2p_pbo", token: "evaluatePboGate" },
+  { id: "t2p_b14_ci", token: "evaluateB14CiGate" },
+  { id: "t2p_wfe", token: "evaluateWfeGate" },
+  { id: "t2p_parameter_drift", token: "evaluateParameterDriftGate" },
+  { id: "t2p_dsr_walk_forward", token: "evaluateDsrWalkForwardGate" },
+];
+for (const g of TESTING_TO_PAPER_HARD_GATES) {
+  if (!presentIn(g, foundCronTesting, regionCronTesting)) {
+    fail(
+      `TESTING→PAPER cron gate coverage BROKEN: '${g.id}' (identity ${JSON.stringify(g.token)}) ` +
+        `is MISSING from the checkAutoPromotions "Gate 2: TESTING → PAPER" legacy fast-track.\n` +
+        `  This autonomous (vacation-mode) path reimplements its gate stack inline; a TESTING-stage ` +
+        `HARD gate absent here can auto-promote a strategy to PAPER that the manual path would BLOCK ` +
+        `(exactly the PBO Band A F-1 incident). Mirror the gate into the cron Gate-2 loop.`,
+    );
+  }
+}
+
 // ─── Report ───────────────────────────────────────────────────────────────────
 const hardCount = HARD_GATES.length;
 const divCount = DIVERGENCES.length;
+const t2pCount = TESTING_TO_PAPER_HARD_GATES.length;
 
 if (errors.length > 0) {
   console.error("\n❌ check:gate-parity — PAPER→DEPLOY_READY cron-vs-manual gate parity BROKEN\n");
@@ -299,10 +337,12 @@ if (errors.length > 0) {
 console.log(
   `✅ check:gate-parity — PAPER→DEPLOY_READY parity OK: all ${hardCount} HARD gates fire on ` +
     `BOTH the cron sweep and the manual PATCH path; ${divCount} documented divergences hold; ` +
-    `no unregistered gate tokens.`,
+    `no unregistered gate tokens. TESTING→PAPER: all ${t2pCount} TESTING-stage HARD gates ` +
+    `present in the cron legacy fast-track.`,
 );
 console.log(
   `   HARD: ${HARD_GATES.map((g) => g.id).join(", ")}\n` +
-    `   DIVERGENCE: ${DIVERGENCES.map((d) => `${d.id}(${d.onPath})`).join(", ")}`,
+    `   DIVERGENCE: ${DIVERGENCES.map((d) => `${d.id}(${d.onPath})`).join(", ")}\n` +
+    `   TESTING→PAPER: ${TESTING_TO_PAPER_HARD_GATES.map((g) => g.id).join(", ")}`,
 );
 process.exit(0);
