@@ -87,7 +87,11 @@ def evaluate_signal(
     # eligibility OVERLAY does not apply. The backtest validated these strategies with the overlay
     # bypassed, so the live/paper path MUST bypass it too — otherwise check #2 below SKIPs every
     # signal for the ~100 graduated strategies whose names aren't in the 174-entry ALL_STRATS list,
-    # while backtest trades them (the promotion-breaking paper/backtest divergence). The overlay is
+    # while backtest trades them (the promotion-breaking paper/backtest divergence).
+    # MEASURED 2026-07-05 (read-only live DB): the "~100 unregistered" figure is now STALE —
+    # ALL_STRATS was expanded to 174 entries covering the graduated library, so 0 of 120 current
+    # strategies are unregistered and 0 are in PAPER+ (all CANDIDATE). This branch is therefore a
+    # LATENT safety-net today (0 active exposure), not an active bypass. The overlay is
     # the ONLY thing bypassed: the separate framework/risk gates (structural-stop ceiling, DLL,
     # daily-trade-cap, lunch/PM taper, macro blackout, Stage-2 A+ confluence) still run in BOTH
     # engines, so parity — and every other safety gate — is preserved. Registered strategies
