@@ -1270,7 +1270,7 @@ export class LifecycleService {
             input: { fromState, toState }, result: shadowGateResult.auditPayload ?? { reason: shadowGateResult.reason },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "SHADOW→PAPER evaluator audit failed (non-blocking)"); });
-          broadcastSSE(LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED, { strategyId: id, reason: shadowGateResult.reason, passed: false });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED, { strategyId: id, correlationId, reason: shadowGateResult.reason, passed: false });
           return { success: false, error: shadowGateResult.reason ?? "SHADOW→PAPER gate failed" };
         }
       } catch (shadowGateErr) {
@@ -3737,6 +3737,7 @@ export class LifecycleService {
             });
 
             broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+              correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
               strategyId: s.id,
               ...b14CiResultTp.auditPayload,
               passed: b14CiResultTp.passed,
@@ -3820,6 +3821,7 @@ export class LifecycleService {
           _incWfeGateCounter("TESTING_TO_PAPER", wfeResultTp);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
+            correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
             strategyId: s.id,
             wfe_overall: wfeResultTp.wfeOverall,
             status: wfeResultTp.status,
@@ -4013,6 +4015,7 @@ export class LifecycleService {
           _incParameterDriftGateCounter("TESTING_TO_PAPER", driftResultTp);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
+            correlationId: tickCorrelationId, // deep-scan Obs F-3: SSE carries correlationId
             strategyId: s.id,
             classification: driftResultTp.classification,
             confidence: driftResultTp.confidence,
@@ -4675,6 +4678,7 @@ export class LifecycleService {
               });
 
               broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
                 strategyId: s.id,
                 ...b14CiResultSh.auditPayload,
                 passed: b14CiResultSh.passed,
@@ -4748,6 +4752,7 @@ export class LifecycleService {
             _incWfeGateCounter("SHADOW_TO_PAPER", wfeResultSh);
 
             broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
+              correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
               strategyId: s.id,
               wfe_overall: wfeResultSh.wfeOverall,
               status: wfeResultSh.status,
@@ -4810,6 +4815,7 @@ export class LifecycleService {
             _incParameterDriftGateCounter("SHADOW_TO_PAPER", driftResultSh);
 
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
+              correlationId: tickCorrelationId, // deep-scan Obs F-3: SSE carries correlationId
               strategyId: s.id,
               classification: driftResultSh.classification,
               confidence: driftResultSh.confidence,
@@ -5668,6 +5674,7 @@ export class LifecycleService {
                 });
 
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                  correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
                   strategyId: s.id,
                   ...b14CiResult.auditPayload,
                   passed: b14CiResult.passed,
@@ -5727,6 +5734,7 @@ export class LifecycleService {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (no-MC fail-closed) audit insert failed (non-blocking)");
                 });
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                  correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
                   strategyId: s.id,
                   ...b14NoMcResult.auditPayload,
                   passed: false,
@@ -5907,6 +5915,7 @@ export class LifecycleService {
           _incParameterDriftGateCounter("PAPER_TO_DEPLOY_READY", driftResult);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
+            correlationId: tickCorrelationId, // deep-scan Obs F-3: SSE carries correlationId
             strategyId: s.id,
             classification: driftResult.classification,
             confidence: driftResult.confidence,
