@@ -13398,6 +13398,25 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-07-06 All-domains-to-9 loop — Round 2 re-verify (doer≠grader, from-zero)
+
+**Mission:** Operator `/goal` = run a REAL loop, don't stop until every domain/subsystem is a genuine 9 (rubric ceiling; "9.5" is not a defined band). Backtest engine emphasized. Landed FF-only on `hardening/phase-0`.
+
+**Work completed (all landed, each independently graded):**
+- **Backtest F-2 + F-3/F-5** (`5bf4f6e`): CPCV return dict now exposes `path_sharpes` (per-path OOS Sharpes) → evolution-service.ts `window_sharpes` falls back to it when `windows=[]` (was silently [] in CPCV, degrading the param-evolver prompt). Stale tests fixed: slippage post-warmup windows (was all-NaN inside ATR(14) warmup), prop_compliance `== 2` firms (was stale 8).
+- **Accuracy A-3 LIVE-VERIFIED** (read-only prod DB, DATABASE_URL from main tree): `audit-unregistered-strategies.ts` → **0 of 120 strategies unregistered, 0 live/paper exposure** (ALL_STRATS=174). The eligibility-overlay bypass has ZERO active exposure — resolved the single-source concern with a live figure, not a code comment.
+- **Observability F-3 FULLY closed** (`9542007`): all 16 lifecycle SSE broadcasts now carry correlationId — 6 PROMOTED (prior commit) + 6 B14/WFE_EVALUATED + SHADOW_TO_PAPER_BLOCKED + 3 PARAMETER_DRIFT_EVALUATED (via `tickCorrelationId`). bar→handler→DB→SSE→audit chain unbroken on every lifecycle surface. Structural guard test green.
+- **Backtest embargo HIGH — COMPLETED across all 3 dispatch paths** (`d78c8e2`): Round-1 re-verify (band 5) caught my F-1 fix covered only BacktestRequest/DSL (Band A); backtester.py:7934+8066 (archetype Band-B + compiled-spec Band-C — the CANONICAL production paths) still used `config.get("embargo_bars", 0)` → ZERO CPCV purge. Fixed both → 20 + source-structural regression test (the WF suite never exercised the CLI dispatch, so the literal was invisible). **doer≠grader caught a real incomplete fix.**
+- **Paper Finding 1 — CI-ENFORCED** (`b1b4ebe`): re-verify caught `check:gate-contract-keys` shipped script-only (never in ci.yml). Wired BOTH new gates (gate-contract-keys + pglite-ddl-parity) as real fail-closed `run:` steps in ci.yml.
+
+**Verification:** every fix landed with tsc-clean + regression/failure-injection test + production-isolation clean; each domain independently re-graded from zero (doer≠grader). Security = CERTIFIED band 9 (fail-open HMAC closed + failure-injection).
+
+**Band state (independently graded this session):** Security **9 ✅**. Others: Backtest/Paper/Observability/Architecture/Autonomy at 7-8 with named remaining items closed → Round-2 re-verifies in flight (Architecture + Backtest#2 + Paper#2 + Observability). Accuracy A-3 live-verified 0 exposure.
+
+**Carry-forward:** (1) await Round-2 re-verifies; fix whatever new HIGHs they surface (loop continues per `/goal` until all domains certify 9); (2) Autonomy re-verify (drift-detector failure-injection added) + Accuracy from-zero scan still to dispatch; (3) Backtest F-4 (order-dependent test pollution) is a known LOW (passes standalone); (4) n8n-tracking.ts fail-open LOW documented (risk of breaking live n8n if N8N_WEBHOOK_SECRET unset).
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
