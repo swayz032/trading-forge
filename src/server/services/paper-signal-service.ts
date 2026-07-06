@@ -3938,6 +3938,7 @@ export async function evaluateSignals(
           indicatorSnapshot: { ...indicators, _hedge_underlying: hedge.conflictUnderlying, _hedge_conflict_side: hedge.conflictSide, _hedge_conflict_session: hedge.conflictSessionId },
           acted: false,
           reason: `cross_account_hedge_blocked: open ${hedge.conflictSide} on ${hedge.conflictUnderlying} in another account`,
+          correlationId: correlationId ?? null,  // ds21-w2: trace linkage
         }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist cross-account hedge block log"));
         insertAuditRow({
           action: "compliance.cross_account_hedge_blocked",
@@ -4820,6 +4821,7 @@ export async function evaluateSignals(
                 },
                 acted: false,
                 reason: `signal.a_plus_rejected: source=${factorSource} ${satisfiedCount}/${minRequired} factors satisfied (${factorResults.filter((r) => !r.satisfied).map((r) => r.factor).join(", ")} failed)`,
+                correlationId: correlationId ?? null,  // ds21-w2: trace linkage (pairs with signal:a_plus_rejected SSE)
               }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist A+ rejected log"));
             } else {
               logger.debug(
@@ -4968,6 +4970,7 @@ export async function evaluateSignals(
                 },
                 acted: false,
                 reason: `signal.a_plus_rejected: source=${factorSource} ${satisfiedCount}/${minRequired} factors satisfied (${factorResults.filter((r) => !r.satisfied).map((r) => r.factor).join(", ")} failed)`,
+                correlationId: correlationId ?? null,  // ds21-w2: trace linkage (pairs with signal:a_plus_rejected SSE)
               }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist A+ rejected log"));
             } else {
               logger.debug(

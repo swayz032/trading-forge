@@ -956,11 +956,16 @@ export const paperSignalLogs = pgTable(
     indicatorSnapshot: jsonb("indicator_snapshot"),    // RSI, ATR, VWAP values at signal time
     acted: boolean("acted").default(false),            // was a position opened?
     reason: text("reason"),                           // if not acted, why (cooldown, risk gate, etc.)
+    // ds21-w2 (deep-scan #21 Band D): per-bar signal telemetry now carries the trace id so the
+    // bar→handler→DB→SSE→audit reconstruction chain (§2 mandate) links here too. Nullable — legacy
+    // rows + insert sites without correlationId in scope stay null; the value is threaded where available.
+    correlationId: text("correlation_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     index("paper_signal_logs_session_idx").on(table.sessionId),
     index("paper_signal_logs_created_idx").on(table.createdAt),
+    index("paper_signal_logs_correlation_idx").on(table.correlationId),
   ]
 );
 
