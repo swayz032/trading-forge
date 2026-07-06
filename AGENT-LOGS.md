@@ -4,6 +4,27 @@
 
 ---
 
+### Session Log — 2026-07-05 Independent verification of the DS#21 8-band panel + executed the survivors (C-1, Q-2, D.1) — LANDED phase-0
+
+**Mission:** Operator handed this session the DS#21 CLAIMED 8-band panel (mean ~6.4) and said "make everything bug-free." Ran doer≠grader verification (6 parallel accuracy-validators, grading-integrity skill), then executed every confirmed defect that was still open, safe, and verifiable — landing FF to phase-0. Confirmed NO concurrent live agent (DS#21 + ds21-WAVE-2 + corpus-v3 are all prior committed runs).
+
+**Work completed (all landed on `origin/hardening/phase-0`):**
+- **C-1 (CRITICAL) — eligibility gate UUID→name** (`paper-signal-service.ts`): live path passed `sessionConfig.strategyId` (UUID) into `eligibility_gate.py` name-match → every non-`NO_TRADE` live/paper signal SKIPped (backtest passes `strategy.name`). Added `name` to CachedSession, pass `sessionConfig.name` at the gate call. **Behaviorally proven**: ran real `evaluate_signal` — UUID → SKIP at Check#2, `silver_bullet` → TAKE. 4 structural + 38 regression vitest. (`d103697`)
+- **Q-2 — SQA mislabel** (`qubo_trade_timing.py` + `quantum_annealing_optimizer.py`): classical greedy/random fallback inherited `method="sqa"`; now `greedy_classical_fallback`/`classical_random_search`. 39 pytest. (`c5db5a1`)
+- **D.1 — recon panel false-green** (`production-status.ts`): ds21-WAVE-2 added `daily_reconciliation.severity` + fixed `getDailyReconciliationStatus` but MISSED `buildLastCleanRecon` (the query `GET /api/production/status` — the operator daily panel — polls). It greened off `mismatch_count=0`+age alone, so a no-verifiable-data run (persisted `severity='yellow'`) showed GREEN. Added `or(eq(severity,'green'), isNull(severity))`; legacy NULL keeps mismatch-only fallback. Completed drizzle-orm unit mock (`or`/`isNull`). 4 new + 12 existing vitest. (`f7a9c53`)
+- **Bonus — repaired broken shared node_modules**: `@vitest/utils` (+554 pkgs) missing → vitest couldn't run at all; `npm install` (no wipe, tower-safe) restored the TS suite.
+
+**Verification:** every fix re-derived from current artifacts, tsc-clean on touched files, 3 CI hard gates exit 0. FF-landed via server-side FF push (rejected-not-forced if branch moved).
+
+**Re-verification at HEAD (doer≠grader, both directions):** CONFIRMED-real → C(fixed), A(open), D.1(fixed). Already-closed by ds21/at-HEAD → D.2 staleness (`nowMs`+`isStale` ceiling), E exportability, B commission fixtures (19/19), Pine P-1/P-2, Q-1 cloud gate, broker writer. Phantom → E.2 `.bin` (no such artifact).
+
+**Carry-forward (still open — deliberately NOT rushed per "incident-free"):**
+- **A — recon 3-way tautology** (`reconciliation-service.ts` checks 1/2 compare `sharedCount` to itself): proper close needs independent broker-side count sources ("Option B never built") = a BUILD, out of §2 hardening scope. Blast radius already cut by D.1 + the `INDEPENDENT_SOURCE_COUNT<3→yellow` clamp. Left at its honest architectural floor.
+- **F — boot-migration dedup keyed on `when` not `tag`**: fail-CLOSED boot runner = don't rush. 4/5 dup-`when` pairs idempotent-safe (DS#19 D-1); ds21-w2 added a LOUD duplicate-`when` alert. Only `0164_slumhouse_users` unverified — operator: `SELECT 1 FROM information_schema.tables WHERE table_name='slumhouse_users';`.
+- **B PBO fixtures** (~17): stale post-FIX2/FIX3 API (test hygiene, not prod math) — update fixtures, never edit prod.
+
+---
+
 ### Session Log — 2026-07-05 Deep-Scan #21 WAVE-2 — all deferred carry-forwards executed (branch `hardening/ds21-wave2-2026-07-05`)
 
 **Mission:** Operator pushed back on the ds21 wave-1 "carry-forward" deferrals ("WHY didn't you do these") — so wave-2 EXECUTED every deferred item instead of documenting it. Fresh worktree pinned to phase-0 tip `44d7ac5`.
