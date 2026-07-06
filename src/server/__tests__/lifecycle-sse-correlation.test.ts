@@ -86,7 +86,8 @@ function collect() {
 describe("lifecycle SSE events carry a correlationId KEY (F-3, all events incl. raw-string)", () => {
   it("every lifecycle broadcastSSE payload has correlationId/tickCorrelationId as a KEY", () => {
     const sites = collect();
-    // 33 catalog-constant + 5 raw-string dsl_guards = 38 lifecycle SSE sites today. Guard against the
+    // ~50 lifecycle SSE sites today across 4 files (lifecycle-service 46 + scheduler 2 + operator-absent 1
+    // + portfolio-drift 1) and 2 catalogs (LIFECYCLE_GATE_EVENTS + WAVE29_EVENTS). Guard against the
     // regex silently matching zero (the "detector found nothing so everything passes" failure mode).
     expect(sites.length).toBeGreaterThanOrEqual(35);
 
