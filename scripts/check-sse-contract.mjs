@@ -34,7 +34,7 @@
 //     are broadcast via a variable (not a literal) and would false-positive here.
 //     The value is that the contract is VISIBLE + diffable in CI.
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -42,6 +42,16 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SERVER_DIR = join(ROOT, "src", "server");
 const CATALOG = join(ROOT, "Trading_forge_frontend", "amber-vision-main", "src", "types", "sse-events.ts");
 const N8N_DIR = join(ROOT, "workflows", "n8n");
+
+// 2026-07-06: the old amber-vision-main React SPA (and its typed sse-events.ts catalog) was DELETED —
+// Slumhouse is the only frontend and consumes SSE as untyped JS (public/slumhouse/office-*.js), so there is
+// no typed discriminated-union catalog left to bind server broadcasts against. This gate's frontend-drift
+// purpose is obsolete; skip cleanly (server-side SSE broadcasts are unaffected). If a typed Slumhouse SSE
+// catalog is ever introduced, repoint CATALOG at it and delete this guard.
+if (!existsSync(CATALOG)) {
+  console.log("[check-sse-contract] SKIP — frontend SSE catalog deleted (Slumhouse is untyped-JS-only). Server broadcasts unaffected.");
+  process.exit(0);
+}
 
 // ─── Safety-critical pattern ──────────────────────────────────────────────────
 // Events whose names match this pattern represent immediate trading risk. If any

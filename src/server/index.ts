@@ -681,17 +681,16 @@ app.use("/api", (err: Error, _req: express.Request, res: express.Response, _next
   res.status(500).json({ error: "Internal server error" });
 });
 
-// ─── Serve Frontend (production) ──────────────────────────────
-// Vite builds to Trading_forge_frontend/amber-vision-main/dist/
-// In prod (Railway), serve the built SPA from Express directly.
+// ─── Frontend ──────────────────────────────────────────────────
+// 2026-07-06: the old amber-vision-main React SPA was DELETED — Slumhouse (the PWA served by
+// slumhouseRouter from public/slumhouse/*, mounted above) is the ONLY frontend now. Bare/unknown
+// non-API routes redirect to the Slumhouse entry (the router handles all /slumhouse/* + /slumhouse/api/*).
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const frontendDist = path.resolve(__dirname, "../../Trading_forge_frontend/amber-vision-main/dist");
+void __dirname; // retained for other path.resolve uses / future static roots
 
-app.use(express.static(frontendDist));
-
-// SPA catch-all: any non-API route serves index.html (Express 5 syntax)
-app.get("/{*splat}", (_req, res) => {
-  res.sendFile(path.join(frontendDist, "index.html"));
+app.get("/{*splat}", (req, res) => {
+  if (req.path.startsWith("/api")) { res.status(404).json({ error: "not_found" }); return; }
+  res.redirect(302, "/slumhouse/");
 });
 
 process.on("unhandledRejection", (reason, _promise) => {

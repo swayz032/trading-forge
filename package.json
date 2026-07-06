@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "tsx watch src/server/index.ts",
     "build": "tsc",
-    "build:frontend": "cd Trading_forge_frontend/amber-vision-main && npm run build",
     "build:all": "npm run build:frontend && npm run build",
     "start": "node dist/server/index.js",
     "db:generate": "drizzle-kit generate",
