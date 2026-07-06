@@ -53,3 +53,37 @@ re-onboard → stamp `corpus_version="v3-2026-07-…"` → full re-baseline (nul
 certified evidence.
 
 ## Non-goals (unchanged): Layer-2 (#26) separate; frozen execution findings not reopened; DRI taxonomy unchanged.
+
+## AMENDMENT to Step 5 mechanism (LOCKED before results, Fable-5 approved 2026-07-05)
+**Change:** Step 5 switches from FULL re-onboard (re-atomize all clauses via gemma → graph → classify) to
+**FIXED-ATOM role-reassignment**: take each v2 spec's existing `entry_conditions`, run `classifyGateStrength()` on
+each, emit v3 with ONLY the `role` field changed. Atoms held identical to v2.
+**Rationale (confound removal — the manifest enforcing itself):** gemma re-atomization at temp 0.1 is NOT
+run-to-run deterministic, so a re-atomize can produce a DIFFERENT atom set than v2 (a clause flips `is_decision`).
+That varies more than the classifier flag → violates the locked manifest ("only `TF_SEMANTIC_ROLE_CLASSIFIER`
+varies") and confounds Gate 3's attribution of a revival/death to the role classifier. Fixed-atom isolates the
+one variable. The frozen Gate 3 decision rule (≥8/9 revival, zero unexplained deaths) is UNTOUCHED — only the
+spec-production mechanism changed to the one that tests the pre-registered hypothesis. Faster too (gemma only on
+margin conditions of 14 specs, not 3,558 clauses).
+
+### Implication 1 — TEST = SHIP (chain-of-custody, Fable-5)
+Fixed-atom Gate 3 certifies "classifier applied to v2 atoms." Therefore **fixed-atom re-role IS the production
+v2→v3 migration mechanism** for the existing 117 strategies (their v2 atoms are already certified, provenance-
+stamped work product; re-atomizing adds gemma noise and destroys reproducibility for nothing). v3 = v2 atoms +
+classifier-assigned roles. The FULL extraction pipeline with the classifier inline remains the path for NEW videos
+going forward, and gets its OWN pre-registered validation when the first post-v3 video onboards — NOT part of this cert.
+
+### Implication 2 — NONDETERMINISM finding, frozen on its own line (Fable-5)
+**"Gemma re-atomization at temp 0.1 is not run-to-run deterministic → atom sets are not reproducible artifacts."**
+Consequence beyond Gate 3: any provenance claim "this spec is what the pipeline produces from this transcript" is
+actually "…on this run"; the architecture's "atomize is the one LLM stage before deterministic graph-compile"
+framing inherits this caveat. **Pre-registered future measurement (not now — needs tower, off critical path):**
+re-atomize a few videos N times, report atom-set drift rate, so the caveat gets a number instead of a shrug.
+
+### Record
+- Killed re-onboard cost ~26 min tower time and nothing else; **no results were peeked at → pre-registration
+  uncontaminated.** Partial 1/14 output quarantined to `_killed-reatomize-partial-QUARANTINE/`, out of the shadow namespace.
+- **Certification stack UNCHANGED:** Gate 3 (fixed-atom, frozen rule, no relief) ∧ Gate 1′ (multi-rater adjudication
+  of role diffs) ∧ path-parity (sync emit path reproduces async Gate 1 on the 221) → flip eligibility.
+- Gate 1′ is SHARPER under fixed-atom: every behavioral delta is a role change by construction, so the adjudication
+  set = exactly the role diffs on behaviorally-changed strategies, no atom-drift noise to exclude.
