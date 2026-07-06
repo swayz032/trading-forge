@@ -20,6 +20,7 @@
  *   access this endpoint, matching the security posture of the Office switches.
  */
 import { Router, type Request, type Response } from "express";
+import { randomUUID } from "node:crypto";
 import { db } from "../../db/index.js";
 import { slumhouseUsers } from "../../db/schema.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
@@ -76,6 +77,11 @@ export async function postSlumhouseUser(req: Request, res: Response): Promise<vo
   await insertAuditRowSafe({
     action: "slumhouse.user_mapped",
     status: "success",
+    // deep-scan Slumhouse F-2b: §2 chain — this is the "which account gets live fills for a Discord
+    // identity" write; it must be forensically reconstructable by correlationId.
+    correlationId: randomUUID(),
+    entityType: "broker_account_mapping",
+    entityId: String(broker_account_id),
     input: { discord_user_id, broker_account_id, jersey_number },
   });
 
