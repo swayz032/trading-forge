@@ -4,7 +4,67 @@
 
 ---
 
-### Session Log — 2026-07-05 Independent doer≠grader verification of a concurrent agent's 8-band panel + Q-2 fix
+### Session Log — 2026-07-05 Corpus v3 build (bidirectional role classification) — CHECKPOINT, Gate 1 retired → Gate 1′, shadow re-onboard in flight
+
+**Mission:** Build the extractor role-classification fix (Corpus v3) that corrects BOTH over-promotion (context→spine)
+AND under-assignment (real-gates→confluence), certified against the frozen causal model. Continuation of the
+context-misclassification milestone (`1ab7321`) + Problem B characterization (`240c933`). Advisor seat = Fable 5
+(succeeded GPT); every pre-registration co-designed + adversarially reviewed; every gate verdict independently
+re-verified (doer≠grader, now extended to adjudicators).
+
+**Established this session (evidence-leveled):**
+- **Root cause located in code:** `graph-to-engine.ts:86` assigned spine-vs-confluence by pure graph topology
+  (`inAndGroup ? confluence : spine`) — NO semantic gate-strength test. That is the B1 root (multi-part gates
+  clustered → demoted to confluence → spine empties). Fix = semantic gate-strength classifier reproducing the DRI
+  taxonomy at extraction.
+- **Gate 2 PASS (verified, `face711`):** parity harness now validates `entry_conditions[].role` domain
+  {spine,confluence,or_branch,context,trigger,invalidation}; green on v2 (histogram spine 2769 / conf 2694 /
+  trigger 987 / inval 603 across 6450 conds — the 43% spine share is the over-specification quantified).
+- **Classifier built** (`gate-strength.ts`, hybrid: deterministic rules 1-5 + gemma margin; extraction-100 worktree
+  `1521b46`/`1747084`). Flag `TF_SEMANTIC_ROLE_CLASSIFIER` default OFF.
+- **Gate 1 (semantic proxy) certified FAIL — TWICE, honestly:** (a) original overall ≥85% pin → 70.0% (49/70
+  held-out); (b) re-specified vs pre-registered human-vs-gold-on-margin → classifier margin CI-lower 54.42% <
+  67.44% → FAIL. **The finding:** classifier margin POINT 67.24% ≈ human ceiling 67.44% — the classifier is
+  HUMAN-EQUIVALENT on the margin; it fails only the *demonstrable strict beat* against single-rater gold whose own
+  inter-rater is 57.7%. Semantic bulk-certification is GOLD-NOISE-LIMITED. Rules-overfit 2.00× (design 34.35% vs
+  held-out 17.14%) → option-(a) rule expansion CLOSED (counterproductive).
+- Two parent-agent errors named + corrected on the record (ceiling arithmetic was circular; 67.2%>57.7% mixed
+  units). Only genuinely-new fact was stratum composition (83% margin). No goalpost moved — Gate 1 FAIL stands.
+
+**Structural ruling (Fable-5) — Gate 1 RETIRED, replaced, NOT relaxed:**
+- **Gate 1 stays FAILED + UNCURED on the record.** Semantic bulk-screen retired as gold-noise-limited.
+- **Gate 1′ (targeted adjudication)** LOCKED: multi-rater transcript-anchored adjudication of ONLY the role changes
+  on behaviorally-changed strategies (revivals+deaths); every revival-driving change must be upheld, any overturned
+  = unexplained regression under Gate 3's frozen clause = fails cert. Passes the 3-leg blade (can-fail /
+  structural-motivation / FAIL-uncured).
+- **Path-parity check** LOCKED (emerged from Step-5 verification): the async classifier (Gate 1) and the sync
+  emit-spec compiler (Gate 3) must produce IDENTICAL role assignments on held-out, or they're two classifiers.
+- **AND-certification (updated, LOCKED):** flip requires **Gate 3 ∧ Gate 1′ ∧ path-parity**, any order, no matter
+  how good any looks alone (knowledge-ordering hazard). **Gate 3 frozen rule (≥8/9 revival + zero unexplained
+  regressions) has NO RELIEF** — the ceiling-relief logic used on Gate 1 is forbidden to Gate 3.
+
+**Verification / integrity:** v2 baseline UNTOUCHED (shadow specs isolated in `v3-shadow-specs/`, stamped
+`corpus_version=v3-shadow-2026-07-05` + `engine_sha=1d35093`). `24f57ee` (concurrent session's backtester.py +64)
+verified DISCLOSURE-ONLY by diff-read (captures previously-discarded gate_stats; trade signals unchanged; struct-stop
+only under a default-OFF flag) → manifest byte-identity holds. **CAVEAT (not dropped):** the "byte-identical when
+classifier OFF" claim is STRUCTURAL inspection only; full worktree test re-run is DEFERRED to next session.
+
+**Pending — NEXT SESSION opens at "shadow specs drained → run Gate 3":**
+1. Re-onboard completes (multi-hour tower gemma job, was 0/14) → run `scripts/corpus-v3-shadow-gate3.py` on the 14
+   shadow specs; independently re-verify revival X/9 + `5m_support_level` spine + regression enumeration.
+2. Role-change deltas (`corpus-v3-role-change-deltas-2026-07-05.json`) → dispatch Gate 1′ multi-rater adjudication;
+   verify transcript anchors (doer≠grader covers adjudicators — their labels are claims until anchors check out).
+3. Path-parity check async-vs-sync (pre-registered) — must pass for certification.
+4. Deferred worktree test re-run confirming the additive-wiring / byte-identical-off claim.
+5. Standing locks unchanged (AND-cert Gate3∧Gate1′∧path-parity; Gate 3 no-relief; Gate 1 FAIL uncured;
+   gold-strengthening DEFERRED to corpus-scale margin-only).
+
+**Frozen docs = the memory (read these to resume):** `docs/designs/corpus-v3-semantic-role-classification-2026-07-05.md`
+(design + pins), `corpus-v3-IMPLEMENTATION-PLAN-2026-07-05.md` (manifest verbatim + build order),
+`corpus-v3-gate1-respecification-2026-07-05.md` (Gate 1 FAIL cert + Gate 1′ + path-parity + AND-cert, ALL locks).
+Prior context: `MILESTONE-context-misclassification-2026-07-05.md`, `residual-findings-FROZEN-2026-07-05.md`.
+
+
 
 **Mission:** Operator ran a fresh deep-scan-and-fix (concurrent live agent, CLAIMED 8-band panel mean ~6.4) AND asked this session to also "deep scan… make all systems 10/10." Chosen role (operator-confirmed): independent GRADER (grading-integrity doer≠grader) + cover the gaps the panel under-serves — NOT a duplicate fix wave on the shared tree (§11b, 2+ concurrent sessions live).
 
