@@ -537,24 +537,34 @@ export async function runDailyReconciliation(
       severity = "red";
     }
 
-    // M-7: Degraded-reconciliation mode — when fewer than MIN_INDEPENDENT_SOURCES_FOR_RED
-    // independent data sources are available, we cannot be confident that a "red"
-    // verdict reflects genuine mismatches rather than proxy-count tautologies.
-    // Cap severity at "yellow" so operators see degraded mode, not a false red alarm.
+    // M-7 + ds21 CRITICAL (deep-scan #21 Bands A+D): Degraded-reconciliation mode. When fewer
+    // than MIN_INDEPENDENT_SOURCES_FOR_RED independent data sources are available we cannot be
+    // confident that EITHER verdict is real: a "red" might be a proxy-count artifact, and — the
+    // ds21 fix — a "green" is a FALSE-GREEN, because traderspostLogCount and tradovateFillsCount
+    // are 1:1 proxies of productionTradesCount (all three are the SAME query result), so Checks
+    // 1 & 2 compare a value to itself and can never mismatch. Reporting green off that self-
+    // comparison told the operator's primary ProductionStatusPanel + the 90-day audit trail that
+    // reconciliation "verified" something when it verified nothing. The original M-7 clamp only
+    // floored red→yellow; it left green un-clamped, which is exactly the hole. Now BOTH red and
+    // green are capped at yellow (UNVERIFIED / degraded) until a genuinely independent source is
+    // wired and INDEPENDENT_SOURCE_COUNT is bumped to ≥ MIN_INDEPENDENT_SOURCES_FOR_RED. Yellow
+    // here means "ran, but cannot independently confirm" — the honest state.
     if (
       INDEPENDENT_SOURCE_COUNT < MIN_INDEPENDENT_SOURCES_FOR_RED &&
-      severity === "red"
+      (severity === "red" || severity === "green")
     ) {
+      const originalSeverity = severity;
       severity = "yellow";
       logger.warn(
         {
           reconDate: reconDateStr,
           independentSourceCount: INDEPENDENT_SOURCE_COUNT,
           minRequired: MIN_INDEPENDENT_SOURCES_FOR_RED,
-          originalSeverity: "red",
+          originalSeverity,
           downgradedSeverity: "yellow",
         },
-        "reconciliation: degraded mode — insufficient independent sources; severity capped at yellow"
+        `reconciliation: degraded mode — insufficient independent sources; ${originalSeverity} capped at yellow ` +
+          `(traderspost/tradovate counts are 1:1 proxies of production_trades, not independent verification)`
       );
     }
 
@@ -635,6 +645,9 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
       mismatchCount: params.mismatchCount,
       mismatchDetails: params.mismatchDetails as unknown as Record<string, unknown>[],
       alertFired: params.alertFired,
+      // ds21: persist the authoritative (clamped) severity so the read path can't
+      // recompute a weaker false-green from mismatch_count alone.
+      severity: params.severity,
       ranAt,
     })
     .onConflictDoUpdate({
@@ -648,6 +661,7 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
         mismatchCount: params.mismatchCount,
         mismatchDetails: params.mismatchDetails as unknown as Record<string, unknown>[],
         alertFired: params.alertFired,
+        severity: params.severity,
         ranAt,
       },
     });
@@ -722,6 +736,8 @@ export async function getDailyReconciliationStatus(
     .select({
       reconDate: dailyReconciliation.reconDate,
       mismatchCount: dailyReconciliation.mismatchCount,
+      // ds21: read the persisted authoritative severity (incl. the degraded-mode clamp).
+      severity: dailyReconciliation.severity,
       ranAt: dailyReconciliation.ranAt,
     })
     .from(dailyReconciliation)
@@ -739,11 +755,23 @@ export async function getDailyReconciliationStatus(
 
   const row = rows[0];
   const mc = row.mismatchCount;
-  let severity: ReconSeverity = "green";
-  if (mc >= RECON_CONFIG.RED_MISMATCH_COUNT) {
-    severity = "red";
-  } else if (mc >= RECON_CONFIG.YELLOW_MISMATCH_COUNT) {
-    severity = "yellow";
+  // ds21 CRITICAL (deep-scan #21 Band D): prefer the PERSISTED severity written at run time.
+  // Previously this recomputed severity from mismatch_count alone (green whenever mc===0),
+  // which discarded the write-path degraded-mode clamp and resurrected the false-green the
+  // compute path just closed (the primary ProductionStatusPanel reads through here). Only fall
+  // back to the mismatch-count recompute for legacy rows written before the severity column
+  // existed (severity === null).
+  let severity: ReconSeverity;
+  if (row.severity === "green" || row.severity === "yellow" || row.severity === "red") {
+    severity = row.severity;
+  } else {
+    // Legacy row (no persisted severity) — recompute from mismatch count.
+    severity = "green";
+    if (mc >= RECON_CONFIG.RED_MISMATCH_COUNT) {
+      severity = "red";
+    } else if (mc >= RECON_CONFIG.YELLOW_MISMATCH_COUNT) {
+      severity = "yellow";
+    }
   }
 
   return {

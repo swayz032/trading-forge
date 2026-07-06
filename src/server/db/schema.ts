@@ -2596,6 +2596,11 @@ export const dailyReconciliation = pgTable(
     mismatchCount: integer("mismatch_count").notNull().default(0),
     mismatchDetails: jsonb("mismatch_details").notNull().default(sql`'[]'::jsonb`),
     alertFired: boolean("alert_fired").notNull().default(false),
+    // ds21 (deep-scan #21 Bands A+D): persist the authoritative severity computed at run time
+    // (incl. the degraded-mode/independent-source clamp). Nullable for legacy rows written before
+    // this column existed — the read path (getDailyReconciliationStatus) falls back to a
+    // mismatch-count recompute only when this is null, so it never resurrects a false-green.
+    severity: text("severity"),
     ranAt: timestamp("ran_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
