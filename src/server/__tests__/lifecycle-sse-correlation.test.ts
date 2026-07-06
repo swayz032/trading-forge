@@ -14,16 +14,27 @@
  *       HARD-gate broadcasts (dsl_guards) were structurally unreachable. This version matches BOTH.
  */
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
-// deep-scan Obs re-verify #4: scan EVERY file that emits lifecycle:* SSE, not just lifecycle-service.ts.
-// scheduler.ts + operator-absent-mode-service.ts share the lifecycle:* namespace and hid F-NEW-2
-// (scheduler lifecycle:auto-check dropped correlationId) from 4 rounds of a single-file guard.
-const SRC_FILES = [
-  "src/server/services/lifecycle-service.ts",
-  "src/server/scheduler.ts",
-  "src/server/services/operator-absent-mode-service.ts",
-];
+// deep-scan Obs re-verify #5: DISCOVER every emitter file programmatically rather than maintain a
+// hardcoded list. A static SRC_FILES list is exactly the blind-spot class that hid F-NEW-2 (scheduler)
+// and portfolio-drift-demotion-service.ts — a guard that must be re-listed per new emitter file is
+// exhaustive-for-now, not comprehensive. Walk src/server for every non-test .ts that emits a lifecycle
+// SSE and scan it, so any future emitter file is covered automatically.
+function walkTsFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const ent of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, ent.name);
+    if (ent.isDirectory()) {
+      if (ent.name === "__tests__" || ent.name === "node_modules") continue;
+      out.push(...walkTsFiles(full));
+    } else if (ent.name.endsWith(".ts") && !ent.name.endsWith(".test.ts")) {
+      out.push(full);
+    }
+  }
+  return out;
+}
 
 // Match a lifecycle SSE broadcast via EITHER the catalog constant OR a raw "lifecycle:*" string literal.
 const BROADCAST_RE =
@@ -35,10 +46,11 @@ const KEY_RE = /(?:^|[{,])\s*(?:correlationId|tickCorrelationId)\s*[,:}]/m;
 
 function collect() {
   const sites: Array<{ file: string; event: string; body: string }> = [];
-  for (const file of SRC_FILES) {
+  for (const file of walkTsFiles("src/server")) {
     const src = readFileSync(file, "utf8");
+    if (!src.includes("broadcastSSE")) continue;
     for (const m of src.matchAll(BROADCAST_RE)) {
-      sites.push({ file: file.split("/").pop() ?? file, event: m[1] ?? m[2] ?? "?", body: m[3] ?? "" });
+      sites.push({ file: file.split(/[\\/]/).pop() ?? file, event: m[1] ?? m[2] ?? "?", body: m[3] ?? "" });
     }
   }
   return sites;
