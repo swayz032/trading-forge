@@ -104,3 +104,21 @@ AND Gate 1′ (adjudication rule above) — regardless of the order results arri
    ~57.7% single-rater label reliability; the classifier is at human parity on the margin. Gold-strengthening is
    NOT rejected — DEFERRED to corpus-scale, scoped to the MARGIN stratum only, if/when the classifier certifies
    via Gate 1′+Gate 3 and 117-strategy confidence is actually needed.
+
+## PATH-PARITY CHECK (LOCKED certification condition — Fable-5, emerged from Step-5 verification)
+Gate 1 certified the ASYNC `classifyGateStrength()` path; Gate 3 runs specs produced by the SYNC emit-spec compiler
+path (`graph-to-engine.ts` + the Step-5 `gateStrengthOverrides` async pre-pass in `atomize-transcript.ts`). These
+are TWO implementations of what we claim is ONE classifier. If they diverge (prompt assembly, margin routing,
+deterministic-rule pass), Gate 1's FAIL and Gate 1′/Gate 3's verdicts describe DIFFERENT artifacts and the
+AND-certification silently becomes an AND across two classifiers.
+- **LOCKED:** before certification, run the SYNC emit-spec path on the 70 held-out (or all 221) conditions and
+  confirm role assignments are **IDENTICAL** to the async path's already-recorded Gate 1 outputs (on disk).
+  Identical means identical; any mismatch is enumerated and explained, or path-parity FAILS. Cheap: async outputs
+  exist, one sync re-run compared offline after the tower frees.
+- **Certification for flip now requires Gate 3 ∧ Gate 1′ ∧ path-parity** (updated AND-certification).
+
+## Session-close record notes (Fable-5, verbatim-worthy)
+- The `24f57ee` resolution is the pinning manifest doing its EXACT job: it flagged real engine drift, forced a read
+  of the actual diff, and the drift was certified benign BY INSPECTION, not by trust. Manifest discipline works.
+- HONEST CAVEAT: check #2's "byte-identical when flag OFF" is STRUCTURAL inspection only — the full worktree test
+  re-run confirming the additive-wiring claim is DEFERRED to next session (on the pending list, not silently dropped).
