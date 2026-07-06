@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-03T23:04:00.000Z",
+  "generatedAt": "2026-07-06T00:29:59.500Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -56,8 +56,8 @@
     "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
   ],
   "subsystemCounts": {
-    "total": 72,
-    "ready": 47,
+    "total": 73,
+    "ready": 48,
     "blocked": 18,
     "manualGated": 2,
     "experimental": 5
@@ -764,6 +764,7 @@
         "health-dashboard-runtime",
         "metrics:snapshot SSE",
         "paper.session_auto_stop",
+        "pine_reconciliation.staleness_checked",
         "portfolio.regime_coverage_gap",
         "regret.score-fill",
         "scheduler:job-complete SSE",
@@ -918,6 +919,36 @@
         "strategy_export_artifacts:recent-write",
         "strategy:deployed SSE",
         "strategy.deploy_approved"
+      ]
+    },
+    {
+      "id": "portfolio_drift_demotion",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log.lifecycle.portfolio_drift_demotion",
+        "audit_log.portfolio_drift_demotion.*",
+        "audit_log.portfolio_drift_demotion.completed",
+        "audit_log.strategy.portfolio_drift_detected",
+        "lifecycle.portfolio_drift_demotion",
+        "lifecycle.portfolio_drift_zombie_declining",
+        "portfolio_drift_demotion.completed",
+        "portfolio_drift_demotion.dry_run",
+        "portfolio_drift_demotion.no_sharpe_data_skipped",
+        "portfolio_drift_demotion.strategy_eval_failed",
+        "prometheus:tf_portfolio_drift_demotions_total",
+        "scheduler:portfolio-drift-demotion:21,22-utc",
+        "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20",
+        "sse:lifecycle:portfolio_drift_demoted",
+        "strategy.portfolio_drift_detected",
+        "tf_portfolio_drift_demotions_total"
       ]
     },
     {

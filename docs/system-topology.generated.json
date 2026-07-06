@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-03T23:33:08.661Z",
+  "generatedAt": "2026-07-06T00:29:59.500Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,12 +16,12 @@
   },
   "counts": {
     "routes": 78,
-    "schedulerJobs": 105,
+    "schedulerJobs": 108,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
     "databaseTables": 110,
-    "registrySubsystems": 72
+    "registrySubsystems": 73
   },
   "routes": [
     "/api/ab-comparison",
@@ -106,6 +106,7 @@
   "schedulerJobs": [
     "a-plus-auditor-scan",
     "ab-comparison-weekly-digest",
+    "account-key-uniqueness-sanity",
     "agent-health-sweep",
     "anti-setup-effectiveness",
     "anti-setup-mine",
@@ -172,8 +173,10 @@
     "paper-journal-recon-daily",
     "paper-vs-backtest",
     "pattern-aggregator",
+    "pine-reconciliation-staleness-check",
     "pipeline-resume-drain",
     "portfolio-correlation",
+    "portfolio-drift-demotion",
     "position-drift-reconcile",
     "pre-market-briefing-discord",
     "pre-market-prep",
@@ -934,34 +937,34 @@
     "workflow_backups"
   ],
   "registryCoverage": {
-    "registryEntries": 72,
-    "autonomousSubsystems": 63,
+    "registryEntries": 73,
+    "autonomousSubsystems": 64,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 66,
+      "runtime-proven": 67,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 66,
+      "active": 67,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 67,
+      "active_preprod": 68,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 65,
+      "runtime_proven_autonomous": 66,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 59,
+      "not_collecting": 60,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -969,13 +972,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 58,
+      "deterministic_instrumented": 59,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 63,
+      "deterministic_instrumented": 64,
       "manual_gated": 2
     },
     "manualGates": [
@@ -992,7 +995,7 @@
     ],
     "coveredCounts": {
       "routes": 78,
-      "schedulerJobs": 105,
+      "schedulerJobs": 108,
       "engineSubsystems": 29,
       "databaseTables": 110
     },
@@ -1019,11 +1022,11 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 58,
-      "dataCollectionComplete": 72,
-      "auditabilityComplete": 72,
-      "failureVisibilityComplete": 72,
-      "authorityCorrect": 72,
+      "automationComplete": 59,
+      "dataCollectionComplete": 73,
+      "auditabilityComplete": 73,
+      "failureVisibilityComplete": 73,
+      "authorityCorrect": 73,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
@@ -1040,7 +1043,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 65,
+        "production_autonomous": 66,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1075,6 +1078,7 @@
         "parameter_robustness_gate",
         "pbo_overfit_gate",
         "pine_export_preparation",
+        "portfolio_drift_demotion",
         "pre_market_briefing_service",
         "pre_market_institutional_expansion",
         "quantum_experimental",
@@ -4163,6 +4167,7 @@
           "CircuitBreakerRegistry.statusAll",
           "metrics:snapshot SSE",
           "paper.session_auto_stop",
+          "pine_reconciliation.staleness_checked",
           "portfolio.regime_coverage_gap",
           "regret.score-fill",
           "scheduler:job-complete SSE",
@@ -4212,6 +4217,7 @@
           "health-dashboard-runtime",
           "metrics:snapshot SSE",
           "paper.session_auto_stop",
+          "pine_reconciliation.staleness_checked",
           "portfolio.regime_coverage_gap",
           "regret.score-fill",
           "scheduler:job-complete SSE",
@@ -4235,6 +4241,7 @@
           "/api/webhook-latency"
         ],
         "schedulerJobs": [
+          "account-key-uniqueness-sanity",
           "agent-health-sweep",
           "data-integrity-suite",
           "deployed-pine-artifact-check",
@@ -4247,6 +4254,7 @@
           "idempotency-cleanup",
           "metrics-collector",
           "metrics-heartbeat",
+          "pine-reconciliation-staleness-check",
           "pre-trading-day-health-check",
           "python-pool-saturation-check",
           "regime-coverage-check",
@@ -4817,6 +4825,107 @@
           "pine-export-artifacts",
           "deploy-approval-audit-events",
           "pine-route-coverage"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "portfolio_drift_demotion",
+        "domain": "lifecycle",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "high",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log.lifecycle.portfolio_drift_demotion",
+          "audit_log.portfolio_drift_demotion.*",
+          "audit_log.portfolio_drift_demotion.completed",
+          "audit_log.strategy.portfolio_drift_detected",
+          "lifecycle.portfolio_drift_demotion",
+          "lifecycle.portfolio_drift_zombie_declining",
+          "portfolio_drift_demotion.completed",
+          "portfolio_drift_demotion.dry_run",
+          "portfolio_drift_demotion.no_sharpe_data_skipped",
+          "portfolio_drift_demotion.strategy_eval_failed",
+          "prometheus:tf_portfolio_drift_demotions_total",
+          "scheduler:portfolio-drift-demotion:21,22-utc",
+          "sse:lifecycle:portfolio_drift_demoted",
+          "strategy.portfolio_drift_detected",
+          "tf_portfolio_drift_demotions_total"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "strategies",
+          "strategies.rolling_sharpe_30d"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.lifecycle.portfolio_drift_demotion",
+          "audit_log.portfolio_drift_demotion.*",
+          "audit_log.portfolio_drift_demotion.completed",
+          "audit_log.strategy.portfolio_drift_detected",
+          "lifecycle.portfolio_drift_demotion",
+          "lifecycle.portfolio_drift_zombie_declining",
+          "portfolio_drift_demotion.completed",
+          "portfolio_drift_demotion.dry_run",
+          "portfolio_drift_demotion.no_sharpe_data_skipped",
+          "portfolio_drift_demotion.strategy_eval_failed",
+          "prometheus:tf_portfolio_drift_demotions_total",
+          "scheduler:portfolio-drift-demotion:21,22-utc",
+          "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+          "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20",
+          "sse:lifecycle:portfolio_drift_demoted",
+          "strategy.portfolio_drift_detected",
+          "tf_portfolio_drift_demotions_total"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "portfolio-drift-demotion"
+        ],
+        "healthCheck": "src/server/__tests__/ds16w3-portfolio-drift-demotion.test.ts",
+        "freshnessSignals": [
+          "audit_log.portfolio_drift_demotion.completed",
+          "scheduler:portfolio-drift-demotion:21,22-utc"
+        ],
+        "evidenceQueries": [
+          "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+          "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20"
         ],
         "coverageGaps": []
       },
@@ -11170,6 +11279,7 @@
         "CircuitBreakerRegistry.statusAll",
         "metrics:snapshot SSE",
         "paper.session_auto_stop",
+        "pine_reconciliation.staleness_checked",
         "portfolio.regime_coverage_gap",
         "regret.score-fill",
         "scheduler:job-complete SSE",
@@ -11219,6 +11329,7 @@
         "health-dashboard-runtime",
         "metrics:snapshot SSE",
         "paper.session_auto_stop",
+        "pine_reconciliation.staleness_checked",
         "portfolio.regime_coverage_gap",
         "regret.score-fill",
         "scheduler:job-complete SSE",
@@ -11242,6 +11353,7 @@
         "/api/webhook-latency"
       ],
       "schedulerJobs": [
+        "account-key-uniqueness-sanity",
         "agent-health-sweep",
         "data-integrity-suite",
         "deployed-pine-artifact-check",
@@ -11254,6 +11366,7 @@
         "idempotency-cleanup",
         "metrics-collector",
         "metrics-heartbeat",
+        "pine-reconciliation-staleness-check",
         "pre-trading-day-health-check",
         "python-pool-saturation-check",
         "regime-coverage-check",
@@ -11824,6 +11937,107 @@
         "pine-export-artifacts",
         "deploy-approval-audit-events",
         "pine-route-coverage"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "portfolio_drift_demotion",
+      "domain": "lifecycle",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "high",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log.lifecycle.portfolio_drift_demotion",
+        "audit_log.portfolio_drift_demotion.*",
+        "audit_log.portfolio_drift_demotion.completed",
+        "audit_log.strategy.portfolio_drift_detected",
+        "lifecycle.portfolio_drift_demotion",
+        "lifecycle.portfolio_drift_zombie_declining",
+        "portfolio_drift_demotion.completed",
+        "portfolio_drift_demotion.dry_run",
+        "portfolio_drift_demotion.no_sharpe_data_skipped",
+        "portfolio_drift_demotion.strategy_eval_failed",
+        "prometheus:tf_portfolio_drift_demotions_total",
+        "scheduler:portfolio-drift-demotion:21,22-utc",
+        "sse:lifecycle:portfolio_drift_demoted",
+        "strategy.portfolio_drift_detected",
+        "tf_portfolio_drift_demotions_total"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "strategies",
+        "strategies.rolling_sharpe_30d"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.lifecycle.portfolio_drift_demotion",
+        "audit_log.portfolio_drift_demotion.*",
+        "audit_log.portfolio_drift_demotion.completed",
+        "audit_log.strategy.portfolio_drift_detected",
+        "lifecycle.portfolio_drift_demotion",
+        "lifecycle.portfolio_drift_zombie_declining",
+        "portfolio_drift_demotion.completed",
+        "portfolio_drift_demotion.dry_run",
+        "portfolio_drift_demotion.no_sharpe_data_skipped",
+        "portfolio_drift_demotion.strategy_eval_failed",
+        "prometheus:tf_portfolio_drift_demotions_total",
+        "scheduler:portfolio-drift-demotion:21,22-utc",
+        "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20",
+        "sse:lifecycle:portfolio_drift_demoted",
+        "strategy.portfolio_drift_detected",
+        "tf_portfolio_drift_demotions_total"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "portfolio-drift-demotion"
+      ],
+      "healthCheck": "src/server/__tests__/ds16w3-portfolio-drift-demotion.test.ts",
+      "freshnessSignals": [
+        "audit_log.portfolio_drift_demotion.completed",
+        "scheduler:portfolio-drift-demotion:21,22-utc"
+      ],
+      "evidenceQueries": [
+        "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20"
       ],
       "coverageGaps": []
     },

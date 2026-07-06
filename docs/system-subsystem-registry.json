@@ -1874,7 +1874,8 @@
       "signal.starvation_critical",
       "webhook.broker_ack",
       "webhook.latency_high",
-      "portfolio.regime_coverage_gap"
+      "portfolio.regime_coverage_gap",
+      "pine_reconciliation.staleness_checked"
     ],
     "metrics_surfaces": [
       "/api/health",
@@ -1888,6 +1889,7 @@
       "CircuitBreakerRegistry.statusAll"
     ],
     "scheduler_jobs": [
+      "account-key-uniqueness-sanity",
       "agent-health-sweep",
       "data-integrity-suite",
       "deployed-pine-artifact-check",
@@ -1900,6 +1902,7 @@
       "idempotency-cleanup",
       "metrics-collector",
       "metrics-heartbeat",
+      "pine-reconciliation-staleness-check",
       "pre-trading-day-health-check",
       "python-pool-saturation-check",
       "regime-coverage-check",

@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
+Updated automatically from the repo on `2026-07-06T00:29:59.500Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `78`
-- Scheduler jobs tracked: `105`
+- Scheduler jobs tracked: `108`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -20,55 +20,55 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 - Database tables tracked: `110`
 
 ### Subsystem Runtime States
-- `active`: `66`
+- `active`: `67`
 - `experimental`: `5`
 - `scaffold`: `1`
 
 ### Current Pre-Production States
-- `active_preprod`: `67`
+- `active_preprod`: `68`
 - `experimental_preprod`: `5`
 - `inactive_preprod`: `0`
 - `partially_active_preprod`: `0`
 
 ### Launch Target States
 - `experimental_challenger`: `5`
-- `runtime_proven_autonomous`: `65`
+- `runtime_proven_autonomous`: `66`
 - `runtime_proven_manual_gate`: `2`
 
 ### Production Target States
-- `production_autonomous`: `65`
+- `production_autonomous`: `66`
 - `production_experimental`: `5`
 - `production_manual_gate`: `2`
 - `production_not_intended`: `0`
 
 ### Subsystem Operating Classes
 - `adaptive`: `7`
-- `deterministic_instrumented`: `63`
+- `deterministic_instrumented`: `64`
 - `manual_gated`: `2`
 
 ### Learning Modes
 - `active_learning`: `7`
-- `deterministic_instrumented`: `58`
+- `deterministic_instrumented`: `59`
 - `manual_gate_only`: `2`
 - `shadow_experimental`: `5`
 
 ### Registry Coverage
-- Registry subsystems tracked: `72`
+- Registry subsystems tracked: `73`
 - Route coverage: `78/78`
-- Scheduler coverage: `105/105`
+- Scheduler coverage: `108/108`
 - Engine coverage: `29/29`
 - Database coverage: `110/110`
-- Autonomous subsystems with audit coverage: `63/63`
-- Autonomous subsystems with audit actions: `63/63`
-- Autonomous subsystems with telemetry evidence: `63/63`
-- Active-runtime subsystems with freshness signals: `72/72`
-- Runtime/experimental subsystems with evidence queries: `72/72`
+- Autonomous subsystems with audit coverage: `64/64`
+- Autonomous subsystems with audit actions: `64/64`
+- Autonomous subsystems with telemetry evidence: `64/64`
+- Active-runtime subsystems with freshness signals: `73/73`
+- Runtime/experimental subsystems with evidence queries: `73/73`
 - Self-evolving subsystems with learning inputs: `9/9`
 - Self-evolving subsystems with learning persistence: `9/9`
-- Failure visibility complete: `72/72`
+- Failure visibility complete: `73/73`
 
 ### Proof Status
-- `runtime-proven`: `66`
+- `runtime-proven`: `67`
 - `partially-proven`: `1`
 - `offline-by-design`: `0`
 - `experimental`: `5`
@@ -76,17 +76,17 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 
 ### Pre-Production Integrity
 - Integrity status: `incomplete`
-- Automation complete: `58/72`
-- Data collection complete: `72/72`
-- Auditability complete: `72/72`
-- Failure visibility complete: `72/72`
-- Authority correct: `72/72`
+- Automation complete: `59/73`
+- Data collection complete: `73/73`
+- Auditability complete: `73/73`
+- Failure visibility complete: `73/73`
+- Authority correct: `73/73`
 - Learning active: `8/9`
 - Incomplete subsystems: `9`
 
 ### Production Convergence
 - Convergence status: `blocked`
-- Ready subsystem targets: `49`
+- Ready subsystem targets: `50`
 - Blocked subsystem targets: `18`
 - Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
@@ -111,7 +111,7 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 - `collecting_only`: `0`
 - `learning_active`: `8`
 - `learning_blocked`: `0`
-- `not_collecting`: `59`
+- `not_collecting`: `60`
 - `shadow_experimental`: `5`
 
 ### Workflow States
@@ -163,6 +163,7 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 - `pbo_overfit_gate` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `phase5_contract_spec_scaffold` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
 - `pine_export_preparation` class=`manual_gated` learningMode=`manual_gate_only` current=`active_preprod` target=`production_manual_gate` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `portfolio_drift_demotion` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `pre_market_briefing_service` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `pre_market_institutional_expansion` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `production_hardening` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-halt-only productionBlockers=manual_gate:operator-halt-only gaps=none
@@ -312,6 +313,7 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 ### Scheduler Jobs
 - `a-plus-auditor-scan`
 - `ab-comparison-weekly-digest`
+- `account-key-uniqueness-sanity`
 - `agent-health-sweep`
 - `anti-setup-effectiveness`
 - `anti-setup-mine`
@@ -378,8 +380,10 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 - `paper-journal-recon-daily`
 - `paper-vs-backtest`
 - `pattern-aggregator`
+- `pine-reconciliation-staleness-check`
 - `pipeline-resume-drain`
 - `portfolio-correlation`
+- `portfolio-drift-demotion`
 - `position-drift-reconcile`
 - `pre-market-briefing-discord`
 - `pre-market-prep`
@@ -657,11 +661,11 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 - **Listeners:** `useSSE.ts` → warning toast + invalidates paper+alerts.
 - **Purpose:** 67% DLL reached; new entries blocked, existing positions held.
 
-### paper:exit:tp1_filled / paper:exit:tp2_filled / paper:exit:be_stop_moved / paper:exit:trail_tightened / paper:exit:time_stop_flattened / paper:exit:handler_error
-- **Emitter:** `src/server/services/paper-execution-service.ts` (PAPER_EXIT_EVENTS constants)
+### paper:tp1_filled / paper:tp2_filled / paper:be_stop_moved / paper:trail_tightened / paper:time_stop_flattened / paper:handler_error
+- **Emitter:** `src/server/services/paper-execution-service.ts` (PAPER_EXIT_EVENTS constants — `src/server/routes/sse.ts:292`)
 - **Payload shape:** `{ position_id, strategy_id|null, decision_type, evidence, exit_style:"D"|"C", correlation_id }`
 - **Listeners:** `useSSE.ts` → invalidates paper. Future: per-position exit timeline panel.
-- **Purpose:** Style D/C exit handler milestones — TP fills, stop moves, trail tighten, time-stop flatten.
+- **Purpose:** Style D/C exit handler milestones — TP fills, stop moves, trail tighten, time-stop flatten. (Wave-scope rename: dropped the `exit:` infix — old `paper:exit:*` names retired.)
 
 ### paper:auto_stopped / paper:auto_recovered / paper:session-feedback-computed
 - **Emitter:** `src/server/scheduler.ts:3879,3936,4029`
@@ -757,12 +761,6 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 
 ---
 
-### compliance:violation_detected
-- **Emitter:** `src/server/routes/compliance.ts:560,636,722` (COMPLIANCE_EVENTS.VIOLATION_DETECTED)
-- **Payload shape:** `{ rule, strategy_id?, position_id?, firm, details, correlation_id? }`
-- **Listeners:** `Compliance.tsx` + `useSSE.ts` → invalidates compliance+alerts.
-- **Purpose:** 2026 MFFU compliance rule violation detected pre-order.
-
 ### compliance:collaborative_trading_warning
 - **Emitter:** `src/server/services/strategy-assignment-service.ts:328`
 - **Payload shape:** `{ strategyId, accountIds }`
@@ -781,12 +779,6 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 - **Listeners:** `useSSE.ts` → 12-second error toast + invalidates all compliance caches.
 - **Purpose:** Drift event requires all firm compliance reviews to be invalidated.
 
-### migration:legacy_firm_cleanup_complete / firm_count_changed
-- **Emitter:** `src/server/routes/compliance.ts` (COMPLIANCE_EVENTS constants)
-- **Payload shape:** see interface definitions
-- **Listeners:** `useSSE.ts` → invalidates compliance.
-- **Purpose:** Firm registry migration and count change notifications.
-
 ---
 
 ### broker:order_routed
@@ -797,8 +789,8 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 
 ---
 
-### pine:export-completed / pine:export-failed / pine:export_completed (legacy)
-- **Emitter:** `src/server/services/pine-export-service.ts:543,614,812,868`
+### pine:export-completed / pine:export-failed
+- **Emitter:** `src/server/services/pine-export-service.ts:876,947,1242,1298`
 - **Payload shape:** see `PineExport*Data` interfaces
 - **Listeners:** `useSSE.ts` → success/error toast + invalidates strategies+pine.
 - **Purpose:** Pine script compilation and export outcomes.
@@ -869,11 +861,11 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 
 ---
 
-### pending_bucket.updated / pending_bucket.graduated / pending_bucket.expired
-- **Emitter:** `src/server/routes/agent.ts`, `scheduler.ts`
+### pending_bucket.updated / pending_bucket.graduated
+- **Emitter:** `src/server/routes/agent.ts:3222,3725,4051,4127`, `scheduler.ts`
 - **Payload shape:** see `PendingBucket*Data` interfaces
 - **Listeners:** `PendingValidationTab.tsx` + `useSSE.ts`
-- **Purpose:** Scout pending-bucket cross-validation lifecycle.
+- **Purpose:** Scout pending-bucket cross-validation lifecycle. (`pending_bucket.expired` retired — no longer emitted; terminal path is `pending_bucket:killed`.)
 
 ---
 
@@ -891,10 +883,10 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 
 ---
 
-### windows:health-check-failed / windows:health-check-ram-warning / windows:real-reboot-pending
-- **Emitter:** `src/server/services/windows-health-check-service.ts`
+### windows:health-check-failed
+- **Emitter:** `src/server/services/windows-health-check-service.ts:232,330`
 - **Listeners:** `useSSE.ts` → invalidates health. Future: operator health banner.
-- **Purpose:** Skytech tower Windows health — RAM pressure, reboot-pending state.
+- **Purpose:** Skytech tower Windows health — health-check failure (crash / reboot-pending). (`windows:health-check-ram-warning` + `windows:real-reboot-pending` retired — no longer emitted; auto-resume path is `windows:health-check-auto-resumed`.)
 
 ---
 
@@ -984,10 +976,6 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 > SSEEvent union but missing from the inventory above. Each entry is condensed —
 > for full payload shape, see the interface in `sse-events.ts`.
 
-### backtest:complete
-- **Emitter:** `src/server/services/backtest-service.ts`
-- **Purpose:** Backtest run finished (success or failure).
-
 ### compliance:drift_detected
 - **Emitter:** `src/server/services/compliance-refresh-service.ts` (Wave 9 W9-3)
 - **Purpose:** Compliance rule document drift detected; severity=critical when PAPER/PILOT/DEPLOYED strategies exist.
@@ -1035,10 +1023,6 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 ### paper:roll-flatten / paper:roll-spread-applied / paper:roll-warning
 - **Emitter:** `src/server/services/paper-execution-service.ts` (futures roll handling)
 - **Purpose:** Futures contract roll lifecycle — flatten near expiry, spread cost applied, advance warning.
-
-### pine:export_completed
-- **Emitter:** `src/server/services/pine-export-service.ts`
-- **Purpose:** Pine export pipeline finished successfully — artifact persisted.
 
 ### pine_export:failed
 - **Emitter:** `src/server/services/pine-export-recipient-service.ts` + `src/server/routes/pine-export.ts` (Wave 9 W9-2)
@@ -1094,6 +1078,110 @@ Updated automatically from the repo on `2026-07-03T23:04:00.000Z`.
 ### signal:macro_gate_eval_failed
 ### monte_carlo:trades_fallback_used
 ### pending_bucket:killed
+
+### Deep-Scan #20 Batch Additions (2026-07-06)
+
+> Reconciled by the SSE inventory drift checker (`buildSseInventoryDriftItems` in
+> `src/server/lib/system-topology.ts`). These events were already typed in the
+> `sse-events.ts` union + emitted server-side but were absent from the inventory
+> above (accumulated since the Wave 29 green close-out). Each entry cites its live
+> emitter; full payload shape lives in the interface in `sse-events.ts`.
+
+### alert:broker_error_budget
+- **Emitter:** `src/server/services/broker-error-budget-service.ts:313`
+- **Purpose:** Broker error-budget breach — routing error rate exceeded the rolling budget.
+
+### alert:path_c_error
+- **Emitter:** `src/server/services/paper-signal-service.ts:4716`
+- **Purpose:** Path C (Wave 25 weighted confluence) evaluation raised an error during signal scoring.
+
+### alert:regime_coverage_gap
+- **Emitter:** `src/server/services/regime-coverage-monitor-service.ts:229`
+- **Purpose:** Deployed strategies do not cover the current institutional regime — coverage gap alarm.
+
+### alert:webhook_latency_high
+- **Emitter:** `src/server/services/webhook-latency-monitor-service.ts:191`
+- **Purpose:** TradersPost webhook round-trip latency exceeded threshold — execution-path degradation signal.
+
+### backtest:completion_write_failed
+- **Emitter:** `src/server/services/backtest-service.ts:1197`
+- **Purpose:** Final backtest-completion DB write failed after the run finished — counter + audit + SSE are the trace.
+
+### bias_engine:refreshed
+- **Emitter:** `src/server/scheduler.ts:3910`
+- **Purpose:** 10:00 AM ET bias-engine refresh completed — regime/playbook/eligibility recomputed.
+
+### bias_engine:session_start
+- **Emitter:** `src/server/scheduler.ts:3741`
+- **Purpose:** Session-start bias-engine computation completed for the trading day.
+
+### factory:candidate_backtest_enqueued
+- **Emitter:** `src/server/services/candidate-backtest-conveyor-service.ts:224`
+- **Purpose:** Autonomous conveyor enqueued a CANDIDATE strategy for backtest.
+
+### factory:graduation_entry_quality
+- **Emitter:** `src/server/routes/sse.ts:310` (FACTORY_EVENTS.GRADUATION_ENTRY_QUALITY)
+- **Purpose:** Emitted alongside lifecycle promotion when the graduator attaches an `entry_quality` block.
+
+### factory:multi_market_bucket
+- **Emitter:** `src/server/routes/sse.ts:309` (FACTORY_EVENTS.MULTI_MARKET_BUCKET)
+- **Purpose:** A pending bucket aggregated ≥2 distinct seeded symbols (multi-market concept convergence).
+
+### fill_reconciliation:fill_ingested
+- **Emitter:** `src/server/services/fill-reconciliation-service.ts:673`
+- **Purpose:** A broker fill was ingested into the reconciliation ledger.
+
+### fill_reconciliation:reconcile_cleared
+- **Emitter:** `src/server/services/fill-reconciliation-service.ts:982`
+- **Purpose:** A previously-flagged reconciliation drift cleared after matching fills arrived.
+
+### lifecycle:dsl_guards_evaluated
+- **Emitter:** `src/server/services/lifecycle-service.ts:777`
+- **Purpose:** DSL quality/anti-pattern guards evaluated during a lifecycle transition.
+
+### lifecycle:pbo_evaluated
+- **Emitter:** `src/server/routes/sse.ts:387` (WAVE29_EVENTS.PBO_EVALUATED)
+- **Purpose:** PBO overfit gate evaluated at TESTING → SHADOW/PAPER (Wave 29 Pass A).
+
+### lifecycle:shadow_divergence_evaluated
+- **Emitter:** `src/server/routes/sse.ts:389` (WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED)
+- **Purpose:** Shadow-signal divergence gate evaluated at SHADOW → PAPER (Wave 29 Pass A.3).
+
+### macro:regime-updated
+- **Emitter:** `src/server/scheduler.ts:8204`
+- **Purpose:** Macro regime state transition detected and persisted.
+
+### quantum_rl:training_completed
+- **Emitter:** `src/server/routes/sse.ts:393` (WAVE29_EVENTS.RL_TRAINING_COMPLETED)
+- **Purpose:** Quantum RL challenger training window completed (Wave 29 Pass C, advisory-only).
+
+### risk:dd_velocity_vacation_auto_recovered
+- **Emitter:** `src/server/services/dd-velocity-gate.ts:609`
+- **Purpose:** DD-velocity vacation-mode auto-pause self-recovered after drawdown velocity normalized.
+
+### signal:rl_ab_routed
+- **Emitter:** `src/server/routes/sse.ts:391` (WAVE29_EVENTS.RL_AB_ROUTED)
+- **Purpose:** A/B paper routing directed a signal to slumdawg-baseline vs slumdawg-rl-challenger (Wave 29 Pass C).
+
+### signal:shadow_logged
+- **Emitter:** `src/server/routes/sse.ts:385` (WAVE29_EVENTS.SHADOW_LOGGED)
+- **Purpose:** SHADOW-stage signal logged without broker contact (`traderspost_webhook_called=false`, Wave 29 Pass A.1).
+
+### signal:weighted_score_rejected
+- **Emitter:** `src/server/services/paper-signal-service.ts:4614`
+- **Purpose:** Path C weighted confluence score below threshold (or hard-block) rejected a signal entry (Wave 25).
+
+### strategy:exportability_infra_error
+- **Emitter:** `src/server/services/lifecycle-service.ts:3639`
+- **Purpose:** Pine exportability check raised an infrastructure error (distinct from a faithful-Pine block).
+
+### tradingview:marker-received
+- **Emitter:** `src/server/routes/tradingview-webhook.ts:440`
+- **Purpose:** TradingView chart marker webhook received (bot's-eye visual monitor signal).
+
+### windows:health-check-auto-resumed
+- **Emitter:** `src/server/services/windows-health-check-service.ts:489`
+- **Purpose:** Pipeline auto-resumed after a reboot-pending pause cleared on a later health-check pass.
 
 ---
 
