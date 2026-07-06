@@ -142,6 +142,16 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
         per-indicator.  ICT_NO_PINE_INDICATORS deduction does NOT apply because
         the archetype form ('archetype:order_block') always has an alert-only
         recipe regardless of whether the raw indicator name is in that set.
+
+        exportable is ALWAYS True on this fast-path (the alert-only recipe is a
+        legitimate compilable product).  faithful is HONEST as of Deep-Scan #21
+        Wave-2 (2026-07-05) — it reflects whether the archetype's config actually
+        carries Style-C exits / 11-factor confluence / multi-TF gating that Pine
+        cannot reproduce (previously hardcoded True regardless — a false-green
+        that fed the lifecycle promotion gate). See the fast-path body below for
+        the full consumer contract: direct-routed archetypes are NOT blocked by
+        faithful=False at the consumer (pine-export-service.ts::checkExportability),
+        because they execute server-side via broker-router, never through Pine.
     """
     # ─── Prefix fast-path: archetype: / uncatalogued: ────────────────────────
     # These entry_indicator values denote structural archetypes whose entry/exit
@@ -167,13 +177,35 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
         # faithful with ZERO visibility that Pine drops them (empty deductions). Surface
         # those dropped features now via _pine_inexpressible_notes() so a consumer of the
         # result (dashboard / operator) is no longer blind to what the Pine artifact omits.
-        # exportable/faithful stay True BY DESIGN: an archetype executes server-side via
-        # broker-router (Pine is a visual-only aid — see the §6 comments below), so Pine's
-        # inability to reproduce entry/exit logic is expected and must not gate promotion.
-        # This is the documented "archetypes report faithful=True" exception per the
-        # Band-P fix guidance. Whether the promotion gate SHOULD hard-block on this is a
-        # lifecycle-service.ts policy question (not changed here).
         _archetype_notes = _pine_inexpressible_notes(strategy_config)
+
+        # Deep-Scan #21 Wave-2 (2026-07-05): CERTIFIED FINDING FIX — faithful used to be
+        # hardcoded True UNCONDITIONALLY here, even when _archetype_notes above proves the
+        # archetype carries Style-C exits / 11-factor confluence / multi-TF gating that Pine
+        # genuinely cannot reproduce. That hardcoded True was a false-green: checkExportability()
+        # (pine-export-service.ts) computes `ok = exportable && faithful`, and lifecycle-service.ts
+        # hard-gates TESTING→PAPER / SHADOW→PAPER promotion on `!exportCheck.ok` — so the gate was
+        # reading "Pine faithfully reproduces this" when it demonstrably does not.
+        #
+        # faithful is now HONEST: True only when _pine_inexpressible_notes() found nothing (the
+        # alert-only Pine recipe really is a complete, faithful passive-marker representation of
+        # a plain archetype entry with no Style-C/confluence/multi-TF complexity). False when any
+        # of those features are present — Pine cannot reproduce them, full stop.
+        #
+        # exportable STAYS True unconditionally regardless of faithful: the alert-only Pine
+        # artifact (passive marker + alertcondition) is always a legitimate, compilable PRODUCT
+        # for this class of strategy — "exportable" answers "can Pine produce something usable",
+        # not "does it capture full fidelity".
+        #
+        # Consumer contract: archetypes/uncatalogued strategies execute DIRECT via
+        # broker-router — never through Pine (CLAUDE.md §7 "Pine parity wall") — so an honest
+        # faithful=False here must NOT by itself block promotion. That exemption is applied at
+        # the consumer (pine-export-service.ts::checkExportability), which recognizes the
+        # archetype/uncatalogued prefix and does not gate the direct-routed strategy's `ok` on
+        # this faithful flag — while still surfacing the honest value so no consumer is misled
+        # into believing Pine faithfully reproduces logic it cannot express.
+        _archetype_faithful = len(_archetype_notes) == 0
+
         return ExportabilityResult(
             score=60.0,
             band="alert_only",
@@ -186,7 +218,7 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
                 "deductions list strategy logic Pine does NOT reproduce (visual-only aid)."
             ],
             exportable=True,
-            faithful=True,
+            faithful=_archetype_faithful,
         )
 
     score = 100.0

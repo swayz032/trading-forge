@@ -91,12 +91,15 @@ interface CompilerOutput {
  * exportability score + deductions without persisting an export artifact.
  * Lifecycle service can use this as a hard gate before writing PAPER state.
  *
- * Returns { ok, score, band, deductions, recommendations }. `ok` is true iff
- * the strategy compiles AND BOTH the compiler's `exportable` AND `faithful`
- * flags are set.
+ * Returns { ok, score, band, deductions, recommendations, faithful,
+ * isDirectRoutedArchetype }. `ok` is true iff the strategy compiles AND the
+ * compiler's `exportable` flag is set AND (the compiler's `faithful` flag is
+ * set OR the strategy is a direct-routed archetype/uncatalogued strategy —
+ * see the Deep-Scan #21 Wave-2 note below).
  *
  * Semantic-fidelity model (2026-06-22 FAIL-LOUD mandate):
- *   ok=true  → the exported Pine faithfully reproduces the validated strategy logic.
+ *   ok=true  → the exported Pine faithfully reproduces the validated strategy logic
+ *              (or the strategy is exempt — see below).
  *   ok=false → one or more features (Style C exits / confluence gating / multi-TF
  *               alignment) cannot be expressed in Pine.  The strategy executes
  *               server-side via broker-router (server-mediated execution); Pine is
@@ -104,6 +107,30 @@ interface CompilerOutput {
  *
  * faithful defaults to true when absent in compiler output (backward-compat with
  * compiler versions prior to 2026-06-22).
+ *
+ * ── Deep-Scan #21 Wave-2 (2026-07-05) — archetype/uncatalogued direct-route exemption ──
+ * exportability.py's `archetype:`/`uncatalogued:` fast-path now reports `faithful`
+ * HONESTLY (previously hardcoded `true` unconditionally — a false-green: an archetype
+ * carrying Style-C exits / 11-factor confluence / multi-TF gating would report
+ * faithful=true even though Pine genuinely cannot reproduce that logic).
+ *
+ * BUT archetype/uncatalogued strategies execute DIRECT via broker-router — never
+ * through Pine (CLAUDE.md §7 "Pine parity wall") — so Pine's inability to reproduce
+ * their entry/exit logic is IRRELEVANT to how they actually execute. Gating promotion
+ * on an honest faithful=false for these strategies would strand them at TESTING for a
+ * reason that has zero bearing on their real (direct) execution path.
+ *
+ * This function therefore detects the archetype/uncatalogued prefix on
+ * `strat.config.entry_indicator` (or `indicators[0].type` fallback — mirrors
+ * exportability.py's own detection exactly) and does NOT require `faithful` for
+ * those strategies' `ok` to be true. The `faithful` value returned below is ALWAYS
+ * the compiler's honest value (never coerced to true) — no consumer of this result
+ * is misled about whether Pine actually reproduces the strategy. `isDirectRoutedArchetype`
+ * is surfaced so callers (e.g. lifecycle-service.ts) can log/audit that an exemption
+ * was applied, rather than the exemption being invisible.
+ *
+ * Non-archetype (Pine-routed) strategies are UNCHANGED: ok still requires
+ * exportable && faithful, full stop.
  *
  * NOTE: This is a thin wrapper over the existing compiler — it does not
  * yet perform full semantic-equivalence checking (running the strategy in
@@ -119,27 +146,50 @@ export async function checkExportability(strategyId: string): Promise<{
   deductions: string[];
   recommendations: string[];
   error?: string;
+  faithful?: boolean; // Deep-Scan #21 Wave-2: honest value, never coerced for archetypes
+  isDirectRoutedArchetype?: boolean;
 }> {
   try {
     const [strat] = await db.select().from(strategies).where(eq(strategies.id, strategyId));
     if (!strat) {
       return { ok: false, score: null, band: null, deductions: ["strategy_not_found"], recommendations: [] };
     }
-    // Dry-run: run the dual compiler with persist=false — only inspect
-    // exportability metadata. No DB rows are written.
+    // Dry-run (persist=false) — inspect exportability metadata, no DB writes.
     const result = await compileDualPineExport(strategyId, undefined, undefined, false);
 
     const exportable = !!result?.exportability?.exportable;
     // faithful defaults to true when absent (backward-compat — pre-2026-06-22 compiler output
     // does not have this field; treat those as faithful to avoid blocking existing pipelines).
+    // This is ALWAYS the honest compiler value — never coerced for archetypes.
     const faithful = result?.exportability?.faithful !== false;
 
+    // Deep-Scan #21 Wave-2: detect the archetype:/uncatalogued: direct-route prefix from
+    // the strategy's own config — mirrors exportability.py::score_exportability's exact
+    // detection (entry_indicator first, indicators[0].type fallback) so the two stay in
+    // lockstep. Archetypes/uncatalogued strategies execute DIRECT via broker-router —
+    // never through Pine (CLAUDE.md §7) — so they are exempt from the faithfulness
+    // requirement below. `faithful` itself is NEVER coerced true for them; only `ok` is.
+    const cfg = (strat.config ?? {}) as Record<string, unknown>;
+    let entryIndicatorRaw = typeof cfg.entry_indicator === "string" ? cfg.entry_indicator : "";
+    if (!entryIndicatorRaw) {
+      const inds = Array.isArray(cfg.indicators) ? cfg.indicators : [];
+      const first = inds[0];
+      entryIndicatorRaw = typeof first === "object" && first !== null
+        ? String((first as Record<string, unknown>).type ?? "")
+        : String(first ?? "");
+    }
+    const isDirectRoutedArchetype =
+      entryIndicatorRaw.startsWith("archetype:") || entryIndicatorRaw.startsWith("uncatalogued:");
+    const gateOk = exportable && (faithful || isDirectRoutedArchetype);
+
     return {
-      ok: exportable && faithful,
+      ok: gateOk,
       score: result?.exportability?.score ?? null,
       band: result?.exportability?.band ?? null,
       deductions: result?.exportability?.deductions ?? [],
       recommendations: result?.exportability?.recommendations ?? [],
+      faithful,
+      isDirectRoutedArchetype,
     };
   } catch (err) {
     return {
@@ -149,6 +199,8 @@ export async function checkExportability(strategyId: string): Promise<{
       deductions: ["compiler_error"],
       recommendations: [],
       error: err instanceof Error ? err.message : String(err),
+      faithful: undefined,
+      isDirectRoutedArchetype: false,
     };
   }
 }

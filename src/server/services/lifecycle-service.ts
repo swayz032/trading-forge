@@ -3600,6 +3600,37 @@ export class LifecycleService {
           } else {
             // Gate passed — reset consecutive counter
             this._resetHardGateCounter(s.id, "exportability_blocked", tickCorrelationId);
+
+            // Deep-Scan #21 Wave-2 (2026-07-05): the gate can now pass a strategy whose
+            // Pine artifact is honestly unfaithful (exportCheck.faithful === false) when
+            // it is a direct-routed archetype/uncatalogued strategy (exportCheck.
+            // isDirectRoutedArchetype === true) — Pine is a visual-only aid for those; the
+            // strategy executes server-side via broker-router regardless of Pine fidelity.
+            // Log this exemption non-blocking so it is NOT an invisible pass-through: the
+            // strategy's Pine artifact genuinely omits validated logic, and any operator or
+            // downstream consumer inspecting the promotion history should see WHY the gate
+            // passed a non-faithful export rather than assuming faithful=true.
+            if (exportCheck.isDirectRoutedArchetype && exportCheck.faithful === false) {
+              db.insert(auditLog).values({
+                action: "strategy.lifecycle.exportability_archetype_direct_route_exempt",
+                entityType: "strategy",
+                entityId: s.id,
+                decisionAuthority: "gate",
+                input: { fromState: "TESTING", toState: "PAPER" },
+                result: {
+                  note: "Archetype/uncatalogued strategy executes DIRECT via broker-router — "
+                    + "Pine faithfulness is not required for promotion. Pine export (if ever "
+                    + "generated) is a visual-only aid and honestly omits the logic below.",
+                  score: exportCheck.score,
+                  band: exportCheck.band,
+                  deductions: exportCheck.deductions,
+                } as Record<string, unknown>,
+                status: "success",
+                correlationId,
+              }).catch((auditErr: unknown) => {
+                logger.warn({ err: auditErr, correlationId, strategyId: s.id }, "exportability_archetype_direct_route_exempt audit insert failed (non-blocking)");
+              });
+            }
           }
         } catch (err) {
           // Pass 8 Track A (2026-06-23): Convert fail-OPEN to fail-CLOSED.
@@ -4541,6 +4572,32 @@ export class LifecycleService {
               await this._maybeAutoGraveyard(s.id, "exportability_blocked", { score: exportCheckSh.score, band: exportCheckSh.band }, "SHADOW", tickCorrelationId);
             } else {
               this._resetHardGateCounter(s.id, "exportability_blocked", tickCorrelationId);
+
+              // Deep-Scan #21 Wave-2 (2026-07-05): mirror of the TESTING→PAPER exemption
+              // audit above — surface (non-blocking) when this gate pass relied on the
+              // archetype/uncatalogued direct-route exemption rather than genuine Pine
+              // faithfulness, so no consumer is misled about what the Pine artifact covers.
+              if (exportCheckSh.isDirectRoutedArchetype && exportCheckSh.faithful === false) {
+                db.insert(auditLog).values({
+                  action: "strategy.lifecycle.exportability_archetype_direct_route_exempt",
+                  entityType: "strategy",
+                  entityId: s.id,
+                  decisionAuthority: "gate",
+                  input: { fromState: "SHADOW", toState: "PAPER" },
+                  result: {
+                    note: "Archetype/uncatalogued strategy executes DIRECT via broker-router — "
+                      + "Pine faithfulness is not required for promotion. Pine export (if ever "
+                      + "generated) is a visual-only aid and honestly omits the logic below.",
+                    score: exportCheckSh.score,
+                    band: exportCheckSh.band,
+                    deductions: exportCheckSh.deductions,
+                  } as Record<string, unknown>,
+                  status: "success",
+                  correlationId: tickCorrelationId,
+                }).catch((auditErr: unknown) => {
+                  logger.warn({ err: auditErr, correlationId: tickCorrelationId, strategyId: s.id }, "exportability_archetype_direct_route_exempt (SHADOW→PAPER) audit insert failed (non-blocking)");
+                });
+              }
             }
           } catch (exportErrSh) {
             const infraErrMsgSh = exportErrSh instanceof Error ? exportErrSh.message : String(exportErrSh);

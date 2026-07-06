@@ -7,6 +7,8 @@
  *   - Surface the specific human-readable deduction reason so the lifecycle service
  *     can log / alert the operator
  *   - Not crash when the compiler output is missing the faithful field (backward-compat)
+ *   - (Deep-Scan #21 Wave-2) Exempt direct-routed archetype/uncatalogued strategies
+ *     from the faithfulness requirement WITHOUT ever reporting a misleading faithful=true
  *
  * These tests mock compileDualPineExport at the module level (db is not wired in test env).
  * We test the checkExportability logic by unit-testing its output contract given
@@ -20,6 +22,16 @@
  * Note: DEPLOYED strategies execute server-side via broker-router (server-mediated
  * execution).  Pine export is a visual-only aid for those.  The refusals below are
  * by design.
+ *
+ * Deep-Scan #21 Wave-2 (2026-07-05) — CERTIFIED FINDING FIX:
+ *   exportability.py's archetype:/uncatalogued: fast-path used to hardcode
+ *   faithful=true UNCONDITIONALLY, even for archetypes carrying Style-C exits /
+ *   11-factor confluence / multi-TF gating Pine genuinely cannot reproduce — a
+ *   false-green fed straight into this gate. exportability.py now reports faithful
+ *   HONESTLY for archetypes. Because archetypes execute DIRECT via broker-router
+ *   (never through Pine — CLAUDE.md §7 "Pine parity wall"), this gate now exempts
+ *   isDirectRoutedArchetype=true strategies from the faithfulness requirement —
+ *   while ALWAYS returning the honest `faithful` value so no consumer is misled.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -33,19 +45,24 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
  * ok-contract directly by simulating what checkExportability returns given
  * different compiler exportability objects.
  *
- * ok = !!result?.exportability?.exportable AND !!result?.exportability?.faithful
+ * ok = !!result?.exportability?.exportable AND
+ *      (!!result?.exportability?.faithful OR isDirectRoutedArchetype)
  *       (faithful defaults to true if missing — backward-compat)
+ *
+ * Deep-Scan #21 Wave-2: isDirectRoutedArchetype defaults to false so every existing
+ * (non-archetype) call site in this file is unaffected — the exemption only fires
+ * when a test explicitly opts in.
  */
 function deriveOk(exportability: {
   exportable: boolean;
   faithful?: boolean;
   score?: number;
   deductions?: string[];
-}): boolean {
+}, isDirectRoutedArchetype = false): boolean {
   const exportable = !!exportability.exportable;
   // faithful defaults to true when missing (backward-compat with old compiler output)
   const faithful = exportability.faithful !== undefined ? !!exportability.faithful : true;
-  return exportable && faithful;
+  return exportable && (faithful || isDirectRoutedArchetype);
 }
 
 /**
@@ -58,6 +75,8 @@ interface CheckResult {
   deductions: string[];
   recommendations: string[];
   error?: string;
+  faithful?: boolean;
+  isDirectRoutedArchetype?: boolean;
 }
 
 function simulateCheckExportability(exportability: {
@@ -67,13 +86,16 @@ function simulateCheckExportability(exportability: {
   band: string;
   deductions?: string[];
   recommendations?: string[];
-}): CheckResult {
+}, isDirectRoutedArchetype = false): CheckResult {
+  const faithful = exportability.faithful !== undefined ? !!exportability.faithful : true;
   return {
-    ok: deriveOk(exportability),
+    ok: deriveOk(exportability, isDirectRoutedArchetype),
     score: exportability.score,
     band: exportability.band,
     deductions: exportability.deductions ?? [],
     recommendations: exportability.recommendations ?? [],
+    faithful,
+    isDirectRoutedArchetype,
   };
 }
 
@@ -345,5 +367,125 @@ describe("checkExportability — deduction content requirements", () => {
       + "runner trail, and/or BE+1 breakeven mechanics cannot be reproduced by strategy.exit().";
     expect(deduction).toMatch(/Style C/);
     expect(deduction).toMatch(/runner trail/i);
+  });
+});
+
+// ─── Deep-Scan #21 Wave-2: archetype/uncatalogued direct-route exemption ─────
+//
+// CERTIFIED FINDING FIX: exportability.py's archetype:/uncatalogued: fast-path
+// used to hardcode faithful=true unconditionally, even when the archetype carries
+// Style-C exits / 11-factor confluence / multi-TF gating that Pine cannot
+// reproduce. That was a false-green feeding this gate's `ok` computation directly
+// (lifecycle-service.ts hard-blocks TESTING→PAPER / SHADOW→PAPER on !ok).
+//
+// The fix: exportability.py now reports faithful HONESTLY for archetypes. This
+// gate (checkExportability) exempts isDirectRoutedArchetype=true strategies from
+// the faithfulness requirement, because they execute DIRECT via broker-router
+// and never ride through Pine (CLAUDE.md §7 "Pine parity wall") — so an honest
+// faithful=false must not by itself block their promotion. Critically, the
+// returned `faithful` value is NEVER coerced to true for the exemption — any
+// consumer reading `.faithful` directly sees the honest flag.
+
+describe("checkExportability — Deep-Scan #21 Wave-2 archetype direct-route exemption", () => {
+  it("archetype with Style-C exits: faithful=false honestly reported, but ok=true (exempt)", () => {
+    const result = simulateCheckExportability(
+      {
+        exportable: true,
+        faithful: false,
+        score: 60,
+        band: "alert_only",
+        deductions: [
+          "Exit semantics not expressible in Pine: Style C 33/33/34 partial closes — "
+          + "the alert-only Pine artifact emits a single all-or-nothing stop/target.",
+        ],
+      },
+      /* isDirectRoutedArchetype */ true,
+    );
+    // Exempt: ok=true because the strategy routes DIRECT, never through Pine.
+    expect(result.ok).toBe(true);
+    // But faithful is NEVER coerced — the honest false value is preserved on the result.
+    expect(result.faithful).toBe(false);
+    expect(result.isDirectRoutedArchetype).toBe(true);
+    expect(result.deductions[0]).toMatch(/style c/i);
+  });
+
+  it("archetype with 11-factor confluence gating: faithful=false, ok=true (exempt)", () => {
+    const result = simulateCheckExportability(
+      {
+        exportable: true,
+        faithful: false,
+        score: 60,
+        band: "alert_only",
+        deductions: [
+          "Confluence gating not expressible in Pine: 11-factor weighted scoring "
+          + "cannot be reproduced — Pine fires on the raw indicator alone.",
+        ],
+      },
+      true,
+    );
+    expect(result.ok).toBe(true);
+    expect(result.faithful).toBe(false);
+  });
+
+  it("archetype with multi-TF gating: faithful=false, ok=true (exempt)", () => {
+    const result = simulateCheckExportability(
+      {
+        exportable: true,
+        faithful: false,
+        score: 60,
+        band: "alert_only",
+        deductions: [
+          "Multi-TF gating not expressible in Pine: strategy declares HTF alignment fields.",
+        ],
+      },
+      true,
+    );
+    expect(result.ok).toBe(true);
+    expect(result.faithful).toBe(false);
+  });
+
+  it("NON-archetype strategy with faithful=false is STILL blocked — exemption does not leak", () => {
+    // The exact same exportability payload, but isDirectRoutedArchetype=false (default) —
+    // must be blocked exactly like before this fix. Proves the exemption is scoped
+    // strictly to direct-routed archetypes and does not weaken the gate generally.
+    const result = simulateCheckExportability({
+      exportable: true,
+      faithful: false,
+      score: 60,
+      band: "alert_only",
+      deductions: ["Exit semantics not expressible in Pine: Style C 33/33/34 partial closes."],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.faithful).toBe(false);
+    expect(result.isDirectRoutedArchetype).toBe(false);
+  });
+
+  it("archetype with exportable=false is STILL blocked — exemption only waives faithful, not exportable", () => {
+    const result = simulateCheckExportability(
+      {
+        exportable: false,
+        faithful: false,
+        score: 0,
+        band: "do_not_export",
+        deductions: ["compiler_error"],
+      },
+      true,
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("plain archetype with no inexpressible features: faithful=true, ok=true (no exemption needed)", () => {
+    const result = simulateCheckExportability(
+      {
+        exportable: true,
+        faithful: true,
+        score: 60,
+        band: "alert_only",
+        deductions: [],
+      },
+      true,
+    );
+    expect(result.ok).toBe(true);
+    expect(result.faithful).toBe(true);
   });
 });
