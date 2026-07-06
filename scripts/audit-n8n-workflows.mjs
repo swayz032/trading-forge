@@ -290,6 +290,28 @@ function findMissingErrorWorkflow(workflowJson) {
   return violations;
 }
 
+// deep-scan n8n F-2: does any node reachable from `startTargets` connect back to `targetName`?
+// A correctly-wired SplitInBatches has index 1 (loop) eventually loop BACK to itself, and index 0 (done)
+// terminate. A SWAPPED wiring (loop body on index 0, terminal on index 1) is populated on both indices
+// but reverses which one loops — invisible to a bare `idx1.length===0` check.
+function reachesNode(conns, startTargets, targetName, maxDepth = 100) {
+  const seen = new Set();
+  let frontier = (startTargets ?? []).map((t) => t?.node).filter(Boolean);
+  for (let depth = 0; depth < maxDepth && frontier.length; depth++) {
+    const next = [];
+    for (const nodeName of frontier) {
+      if (nodeName === targetName) return true;
+      if (seen.has(nodeName)) continue;
+      seen.add(nodeName);
+      for (const branch of conns[nodeName]?.main ?? []) {
+        if (Array.isArray(branch)) for (const t of branch) if (t?.node) next.push(t.node);
+      }
+    }
+    frontier = next;
+  }
+  return false;
+}
+
 // ─── F-5b: SplitInBatches v3 wired to index 1 (loop), not index 0 ───
 function findSplitBatchesMisWired(workflowJson) {
   const violations = [];
@@ -307,6 +329,30 @@ function findSplitBatchesMisWired(workflowJson) {
         reason: "SplitInBatches v3 loop body wired to index 0 (done) instead of index 1 (loop)",
         idx0_targets: idx0.length,
         idx1_targets: idx1.length,
+      });
+      continue;
+    }
+    // deep-scan n8n F-2: catch the SWAPPED case (both indices populated, but reversed). The loop branch
+    // (index 1) MUST loop back to this node; the done branch (index 0) must NOT.
+    const idx1LoopsBack = reachesNode(conns, idx1, node.name);
+    const idx0LoopsBack = reachesNode(conns, idx0, node.name);
+    if (!idx1LoopsBack) {
+      violations.push({
+        nodeName: node.name,
+        reason: "SplitInBatches v3 index 1 (loop) does NOT loop back to the node — the loop body never re-invokes it (index 0/1 likely swapped)",
+        idx0_targets: idx0.length,
+        idx1_targets: idx1.length,
+        idx0LoopsBack,
+        idx1LoopsBack,
+      });
+    } else if (idx0LoopsBack) {
+      violations.push({
+        nodeName: node.name,
+        reason: "SplitInBatches v3 index 0 (done) loops back to the node — the terminal branch is wired as the loop (index 0/1 swapped)",
+        idx0_targets: idx0.length,
+        idx1_targets: idx1.length,
+        idx0LoopsBack,
+        idx1LoopsBack,
       });
     }
   }
