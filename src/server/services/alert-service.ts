@@ -325,6 +325,7 @@ export const AlertFactory = {
     reconDate: string,
     mismatchCount: number,
     details: Array<{ source: string; expected: number | string; actual: number | string; delta?: number }>,
+    correlationId?: string | null,
   ) =>
     createAlert({
       type: "system",
@@ -339,6 +340,9 @@ export const AlertFactory = {
         mismatchCount,
         details,
         event: "reconciliation_mismatch",
+        // deep-scan Observability #5: carry the recon run's correlation_id so the Discord alert
+        // joins back to the daily_reconciliation row + audit_log chain (closes the last hop).
+        correlationId: correlationId ?? undefined,
       },
     }),
 };

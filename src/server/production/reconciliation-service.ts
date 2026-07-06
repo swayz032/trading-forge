@@ -650,7 +650,9 @@ export async function runDailyReconciliation(
 
     // ── Fire alert on mismatch ─────────────────────────────────────────────
     if (alertFired) {
-      await AlertFactory.criticalReconciliationMismatch(reconDateStr, mismatchCount, mismatches);
+      // deep-scan Observability #5: pass reconRunId so the Discord alert is traceable back to the
+      // daily_reconciliation row + audit_log correlation chain (was dropped at this last hop).
+      await AlertFactory.criticalReconciliationMismatch(reconDateStr, mismatchCount, mismatches, reconRunId);
     }
 
     logger.info(

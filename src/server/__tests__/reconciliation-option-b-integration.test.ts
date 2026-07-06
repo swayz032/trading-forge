@@ -20,8 +20,8 @@ import * as schema from "../db/schema.js";
 const h = vi.hoisted(() => ({ db: null as unknown as ReturnType<typeof drizzle> }));
 vi.mock("../db/index.js", () => ({
   db: new Proxy({}, {
-    get(_t, prop) {
-      const real = h.db as unknown as Record<string, unknown>;
+    get(_t, prop: string | symbol) {
+      const real = h.db as unknown as Record<string | symbol, unknown>;
       const v = real[prop];
       return typeof v === "function" ? (v as (...a: unknown[]) => unknown).bind(real) : v;
     },
@@ -109,5 +109,40 @@ describe("Option B end-to-end — persisted severity reflects the DYNAMIC clamp 
     );
     expect(rows.rows[0].mismatch_count).toBe(0);
     expect(rows.rows[0].severity).toBe("green");
+  });
+});
+
+describe("Option B end-to-end — a real sent-vs-confirmed BREACH is detected (Observability #4)", () => {
+  beforeEach(async () => {
+    // Override the clean fixture: 3 sent, only 2 TradersPost-confirmed → a genuine divergence.
+    await pg.exec("DELETE FROM production_trades;");
+    await pg.exec(`
+      INSERT INTO production_trades (strategy_id, strategy_version_hash, bar_timestamp, signal_value, traderspost_webhook_id, expected_pnl, traderspost_confirmed_at) VALUES
+      ('11111111-1111-1111-1111-111111111111','h1','2026-07-02T14:00:00Z',1,'wh-1',100,'2026-07-02T14:00:05Z'),
+      ('11111111-1111-1111-1111-111111111111','h1','2026-07-02T15:00:00Z',1,'wh-2',100,'2026-07-02T15:00:05Z'),
+      ('11111111-1111-1111-1111-111111111111','h1','2026-07-02T16:00:00Z',1,'wh-3',100,NULL);
+    `);
+  });
+
+  it("Option B ON: 3 sent / 2 confirmed → divergence DETECTED (mismatch_count=1), surfaced as a REAL non-degraded yellow", async () => {
+    process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT = "true";
+    await runDailyReconciliation(DAY);
+    const rows = await pg.query<{ severity: string; mismatch_count: number }>(
+      "SELECT severity, mismatch_count FROM daily_reconciliation ORDER BY ran_at DESC LIMIT 1",
+    );
+    expect(rows.rows[0].mismatch_count).toBe(1); // sent(3) vs confirmed(2) caught end-to-end
+    // 1 < RED_MISMATCH_COUNT(3) → yellow; but with 3 independent sources it is NOT clamped —
+    // it is a real detected warning, not a hidden degraded-yellow. getDailyReconciliationStatus reads it.
+    expect(rows.rows[0].severity).toBe("yellow");
+    const status = await getDailyReconciliationStatus(DAY);
+    expect(status.severity).toBe("yellow");
+  });
+
+  it("Option B OFF: the SAME divergence is INVISIBLE in proxy mode (mismatch_count=0) — proves Option B adds real detection", async () => {
+    await runDailyReconciliation(DAY); // flag unset → traderspost leg is a proxy → check 1 skipped
+    const rows = await pg.query<{ severity: string; mismatch_count: number }>(
+      "SELECT severity, mismatch_count FROM daily_reconciliation ORDER BY ran_at DESC LIMIT 1",
+    );
+    expect(rows.rows[0].mismatch_count).toBe(0); // proxy mode cannot see the divergence
   });
 });

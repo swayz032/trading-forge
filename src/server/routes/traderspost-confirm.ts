@@ -12,12 +12,22 @@
  * movement). It is inert until TradersPost is configured to POST here AND real orders flow; the
  * recon side stays proxy-mode until RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true is set post go-live.
  *
+ * SECURITY (deep-scan Security S-1): once RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true the confirmed
+ * count is a live reconciliation input, so a forged POST could defeat the breach detector. In
+ * production+independent mode the shared secret is therefore MANDATORY — see the 503 guard below
+ * (mirrors admin-frozen-policy-override's secret-required-in-production pattern).
+ *
+ * CORRELATION (deep-scan Architecture F-1 / Observability #5): every audit row carries a
+ * correlation_id (inbound header → matched production_trades row → minted fallback) and a real
+ * entityId from the matched row, so a confirmation can be joined back to the bar→handler→DB chain.
+ *
  * ⚠ PAYLOAD MAPPING — OPERATOR MUST VERIFY: TradersPost's callback must carry the
  * traderspost_webhook_id we sent at submit (our deterministic idempotency key). The exact field
  * name depends on TradersPost's callback schema — this accepts the common aliases; confirm against
  * https://traderspost.io/docs/webhooks#order-callbacks and adjust `extractWebhookId` before enabling.
  */
 import { Router, type Request, type Response } from "express";
+import { randomUUID } from "node:crypto";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { productionTrades } from "../db/schema.js";
@@ -34,13 +44,45 @@ export function extractWebhookId(body: Record<string, unknown>): string | null {
   return null;
 }
 
+/** S-1: in production, when the confirmed leg is a live independent reconciliation input
+ *  (RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true), the shared secret is mandatory — an unauthenticated
+ *  endpoint would let anyone who can guess a traderspost_webhook_id forge a confirmation and defeat
+ *  the sent-vs-confirmed breach detector. Exported for testing. */
+export function traderspostConfirmSecretRequired(): boolean {
+  return (
+    process.env.NODE_ENV === "production" &&
+    process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT === "true"
+  );
+}
+
 // Exported for direct unit testing (repo's supertest-free convention).
 export async function handleTradersPostOrderStatus(
   req: { body?: unknown; header: (name: string) => string | undefined },
   res: { status: (c: number) => { json: (b: unknown) => unknown } },
 ): Promise<unknown> {
-  // Optional shared-secret gate — only enforced when TRADERSPOST_CONFIRM_SECRET is configured.
   const expectedSecret = process.env.TRADERSPOST_CONFIRM_SECRET;
+
+  // S-1 structural production guard: refuse to run unauthenticated while feeding a live independent
+  // recon leg, rather than trusting operator discipline to have set the secret.
+  if (traderspostConfirmSecretRequired() && !expectedSecret) {
+    logger.error(
+      "traderspost-confirm: RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true in production but " +
+        "TRADERSPOST_CONFIRM_SECRET is unset — refusing (503) to avoid an unauthenticated confirm leg",
+    );
+    await insertAuditRowSafe({
+      action: "traderspost.order_confirm_misconfigured",
+      entityType: "production_trade",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {} as Record<string, unknown>,
+      result: { reason: "secret_required_in_production" } as Record<string, unknown>,
+      status: "error",
+      correlationId: randomUUID(),
+    });
+    return res.status(503).json({ error: "traderspost_confirm_secret_required_in_production" });
+  }
+
+  // Optional shared-secret gate — enforced whenever TRADERSPOST_CONFIRM_SECRET is configured.
   if (expectedSecret) {
     const provided = req.header("X-TradersPost-Confirm-Secret");
     if (provided !== expectedSecret) {
@@ -52,6 +94,7 @@ export async function handleTradersPostOrderStatus(
         input: {} as Record<string, unknown>,
         result: { reason: "bad_secret" } as Record<string, unknown>,
         status: "error",
+        correlationId: randomUUID(),
       });
       return res.status(401).json({ error: "invalid_traderspost_confirm_secret" });
     }
@@ -62,6 +105,11 @@ export async function handleTradersPostOrderStatus(
   if (!webhookId) {
     return res.status(400).json({ error: "missing_webhook_id" });
   }
+
+  // Correlation: prefer an inbound X-Correlation-Id, else the matched row's own correlation_id
+  // (joins the confirm back to the originating bar→handler→DB chain), else mint one so the audit
+  // row is never un-correlatable.
+  const inboundCorrelationId = req.header("X-Correlation-Id") ?? null;
 
   try {
     // Idempotent stamp: set confirmed_at ONLY once, ONLY on a matching not-yet-confirmed row.
@@ -74,19 +122,27 @@ export async function handleTradersPostOrderStatus(
           isNull(productionTrades.traderspostConfirmedAt),
         ),
       )
-      .returning({ id: productionTrades.id });
+      .returning({ id: productionTrades.id, correlationId: productionTrades.correlationId });
 
     const matched = updated.length > 0;
+    let rowId: number | null = matched ? updated[0].id : null;
+    let rowCorrelationId: string | null = matched ? (updated[0].correlationId ?? null) : null;
     let alreadyConfirmed = false;
     if (!matched) {
       // distinguish idempotent replay (row exists, already confirmed) from unknown id
       const existing = await db
-        .select({ id: productionTrades.id })
+        .select({ id: productionTrades.id, correlationId: productionTrades.correlationId })
         .from(productionTrades)
         .where(eq(productionTrades.traderspostWebhookId, webhookId))
         .limit(1);
       alreadyConfirmed = existing.length > 0;
+      if (alreadyConfirmed) {
+        rowId = existing[0].id;
+        rowCorrelationId = existing[0].correlationId ?? null;
+      }
     }
+
+    const correlationId = inboundCorrelationId ?? rowCorrelationId ?? randomUUID();
 
     await insertAuditRowSafe({
       action: matched
@@ -95,11 +151,12 @@ export async function handleTradersPostOrderStatus(
           ? "traderspost.order_confirm_idempotent_skip"
           : "traderspost.order_confirm_no_match",
       entityType: "production_trade",
-      entityId: null,
+      entityId: rowId != null ? String(rowId) : null,
       decisionAuthority: "system",
       input: { webhookId } as Record<string, unknown>,
       result: { matched, alreadyConfirmed } as Record<string, unknown>,
       status: matched || alreadyConfirmed ? "success" : "warning",
+      correlationId,
     });
 
     // Always 200 for matched + idempotent replays (avoid TradersPost retry storms). A no-match
@@ -116,6 +173,7 @@ export async function handleTradersPostOrderStatus(
       result: {} as Record<string, unknown>,
       status: "error",
       errorMessage: err instanceof Error ? err.message : String(err),
+      correlationId: inboundCorrelationId ?? randomUUID(),
     });
     return res.status(500).json({ error: "confirm_stamp_failed" });
   }

@@ -3,13 +3,15 @@
  *
  * Behavioral tests of the exported handler with a mocked db (the handler transitively imports
  * the real db, which boots on import — same mock-the-db convention as production-status.test.ts).
+ * Covers auth, idempotency, the S-1 production secret guard, and correlation_id/entityId threading.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+type AuditRow = { action: string; entityId: string | null; correlationId: string | null };
 const mockState = vi.hoisted(() => ({
-  updateReturning: [] as Array<{ id: number }>, // rows stamped by the UPDATE
-  selectRows: [] as Array<{ id: number }>,       // rows found by the follow-up SELECT
-  audits: [] as string[],
+  updateReturning: [] as Array<{ id: number; correlationId: string | null }>,
+  selectRows: [] as Array<{ id: number; correlationId: string | null }>,
+  audits: [] as AuditRow[],
 }));
 
 vi.mock("../db/index.js", () => ({
@@ -30,14 +32,17 @@ vi.mock("../db/index.js", () => ({
     })),
   },
 }));
-vi.mock("../db/schema.js", () => ({ productionTrades: { traderspostWebhookId: {}, traderspostConfirmedAt: {}, id: {} } }));
+vi.mock("../db/schema.js", () => ({ productionTrades: { traderspostWebhookId: {}, traderspostConfirmedAt: {}, id: {}, correlationId: {} } }));
 vi.mock("../lib/audit-log-helper.js", () => ({
-  insertAuditRowSafe: vi.fn(async (v: { action: string }) => { mockState.audits.push(v.action); return true; }),
+  insertAuditRowSafe: vi.fn(async (v: { action: string; entityId?: string | null; correlationId?: string | null }) => {
+    mockState.audits.push({ action: v.action, entityId: v.entityId ?? null, correlationId: v.correlationId ?? null });
+    return true;
+  }),
 }));
 vi.mock("../lib/logger.js", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() } }));
 vi.mock("drizzle-orm", () => ({ and: vi.fn(() => ({})), eq: vi.fn(() => ({})), isNull: vi.fn(() => ({})), sql: vi.fn(() => ({})) }));
 
-import { handleTradersPostOrderStatus, extractWebhookId } from "../routes/traderspost-confirm.js";
+import { handleTradersPostOrderStatus, extractWebhookId, traderspostConfirmSecretRequired } from "../routes/traderspost-confirm.js";
 
 function mockRes() {
   const captured = { status: 0, body: undefined as unknown };
@@ -49,12 +54,15 @@ function mockRes() {
 function req(body: unknown, headers: Record<string, string> = {}) {
   return { body, header: (n: string) => headers[n] };
 }
+const actions = () => mockState.audits.map((a) => a.action);
 
 beforeEach(() => {
   mockState.updateReturning = [];
   mockState.selectRows = [];
   mockState.audits = [];
   delete process.env.TRADERSPOST_CONFIRM_SECRET;
+  delete process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT;
+  delete process.env.NODE_ENV;
 });
 
 describe("extractWebhookId", () => {
@@ -69,18 +77,40 @@ describe("extractWebhookId", () => {
   });
 });
 
+describe("traderspostConfirmSecretRequired (S-1)", () => {
+  it("true only when NODE_ENV=production AND the independent leg is on", () => {
+    expect(traderspostConfirmSecretRequired()).toBe(false);
+    process.env.NODE_ENV = "production";
+    expect(traderspostConfirmSecretRequired()).toBe(false);
+    process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT = "true";
+    expect(traderspostConfirmSecretRequired()).toBe(true);
+    process.env.NODE_ENV = "development";
+    expect(traderspostConfirmSecretRequired()).toBe(false);
+  });
+});
+
 describe("handleTradersPostOrderStatus", () => {
+  it("S-1: 503 + misconfigured audit when independent leg is live in prod but no secret set", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT = "true";
+    const { res, captured } = mockRes();
+    await handleTradersPostOrderStatus(req({ webhook_id: "k1" }), res);
+    expect(captured.status).toBe(503);
+    expect(actions()).toContain("traderspost.order_confirm_misconfigured");
+    expect(mockState.audits[0].correlationId).toBeTruthy(); // never un-correlatable
+  });
+
   it("401 + audit when a secret is configured and the header is wrong", async () => {
     process.env.TRADERSPOST_CONFIRM_SECRET = "s3cret";
     const { res, captured } = mockRes();
     await handleTradersPostOrderStatus(req({ webhook_id: "k1" }, { "X-TradersPost-Confirm-Secret": "wrong" }), res);
     expect(captured.status).toBe(401);
-    expect(mockState.audits).toContain("traderspost.order_confirm_unauthorized");
+    expect(actions()).toContain("traderspost.order_confirm_unauthorized");
   });
 
-  it("proceeds when no secret is configured", async () => {
+  it("proceeds when no secret is configured (non-prod)", async () => {
     const { res, captured } = mockRes();
-    mockState.updateReturning = [{ id: 7 }];
+    mockState.updateReturning = [{ id: 7, correlationId: null }];
     await handleTradersPostOrderStatus(req({ webhook_id: "k1" }), res);
     expect(captured.status).toBe(200);
   });
@@ -91,31 +121,45 @@ describe("handleTradersPostOrderStatus", () => {
     expect(captured.status).toBe(400);
   });
 
-  it("matched: stamps and returns matched=true + order_confirmed audit", async () => {
+  it("matched: stamps, sets entityId from the row, and carries the row's correlation_id", async () => {
     const { res, captured } = mockRes();
-    mockState.updateReturning = [{ id: 42 }];
+    mockState.updateReturning = [{ id: 42, correlationId: "corr-42" }];
     await handleTradersPostOrderStatus(req({ webhook_id: "k1" }), res);
     expect(captured.status).toBe(200);
     expect(captured.body).toMatchObject({ ok: true, matched: true, alreadyConfirmed: false });
-    expect(mockState.audits).toContain("traderspost.order_confirmed");
+    const row = mockState.audits.find((a) => a.action === "traderspost.order_confirmed");
+    expect(row?.entityId).toBe("42");
+    expect(row?.correlationId).toBe("corr-42"); // joined back to the production_trades row
   });
 
-  it("idempotent replay: no stamp but row exists → alreadyConfirmed=true + idempotent audit", async () => {
+  it("inbound X-Correlation-Id wins over the row's correlation_id", async () => {
+    const { res } = mockRes();
+    mockState.updateReturning = [{ id: 42, correlationId: "corr-42" }];
+    await handleTradersPostOrderStatus(req({ webhook_id: "k1" }, { "X-Correlation-Id": "inbound-9" }), res);
+    const row = mockState.audits.find((a) => a.action === "traderspost.order_confirmed");
+    expect(row?.correlationId).toBe("inbound-9");
+  });
+
+  it("idempotent replay: no stamp but row exists → alreadyConfirmed=true, entityId + correlation from the row", async () => {
     const { res, captured } = mockRes();
-    mockState.updateReturning = [];        // nothing stamped (already confirmed)
-    mockState.selectRows = [{ id: 42 }];   // but the row exists
+    mockState.updateReturning = [];
+    mockState.selectRows = [{ id: 42, correlationId: "corr-42" }];
     await handleTradersPostOrderStatus(req({ webhook_id: "k1" }), res);
     expect(captured.body).toMatchObject({ matched: false, alreadyConfirmed: true });
-    expect(mockState.audits).toContain("traderspost.order_confirm_idempotent_skip");
+    const row = mockState.audits.find((a) => a.action === "traderspost.order_confirm_idempotent_skip");
+    expect(row?.entityId).toBe("42");
+    expect(row?.correlationId).toBe("corr-42");
   });
 
-  it("no match: unknown id → matched=false, alreadyConfirmed=false + no_match audit (still 200)", async () => {
+  it("no match: unknown id → matched=false + no_match audit (still 200), correlation minted not null", async () => {
     const { res, captured } = mockRes();
     mockState.updateReturning = [];
     mockState.selectRows = [];
     await handleTradersPostOrderStatus(req({ webhook_id: "unknown" }), res);
     expect(captured.status).toBe(200);
     expect(captured.body).toMatchObject({ matched: false, alreadyConfirmed: false });
-    expect(mockState.audits).toContain("traderspost.order_confirm_no_match");
+    const row = mockState.audits.find((a) => a.action === "traderspost.order_confirm_no_match");
+    expect(row?.entityId).toBeNull();
+    expect(row?.correlationId).toBeTruthy(); // minted fallback — never un-correlatable
   });
 });
