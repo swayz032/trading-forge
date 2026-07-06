@@ -3921,7 +3921,7 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) block audit insert failed (non-blocking)");
             });
             broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
-              tickCorrelationId, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE must carry correlationId (audit row does)
+              correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
               strategyId: s.id,
               fromState: "TESTING",
               toState: "PAPER",
@@ -3967,7 +3967,7 @@ export class LifecycleService {
             });
           }
           broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
-            tickCorrelationId, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE must carry correlationId (audit row does)
+            correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
             strategyId: s.id,
             fromState: "TESTING",
             toState: "PAPER",
@@ -3997,7 +3997,7 @@ export class LifecycleService {
             logger.warn({ strategyId: s.id, err: auditErr }, "PBO fail-closed audit insert (TESTING→PAPER cron) failed (non-blocking)");
           });
           broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
-            tickCorrelationId, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE must carry correlationId (audit row does)
+            correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
             strategyId: s.id,
             fromState: "TESTING",
             toState: "PAPER",

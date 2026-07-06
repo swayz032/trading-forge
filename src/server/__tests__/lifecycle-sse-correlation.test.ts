@@ -55,9 +55,15 @@ const LIFECYCLE_KEYS = lifecycleEventKeys();
 const BROADCAST_RE =
   /broadcastSSE\(\s*(?:(\w+)\.(\w+)|"(lifecycle:[^"]+)")\s*,\s*\{([\s\S]*?)\}\)/g;
 
-// correlationId/tickCorrelationId must appear as a KEY: preceded by `{`, `,`, or line-start (+ ws),
-// and followed by `,`, `:`, or `}`. This rejects a value-position match after `: ` (the snake_case bug).
-const KEY_RE = /(?:^|[{,])\s*(?:correlationId|tickCorrelationId)\s*[,:}]/m;
+// deep-scan Obs re-verify #7 F-8: require the CANONICAL `correlationId` KEY specifically — NOT
+// `tickCorrelationId` as a standalone key. The file's 41-site convention renames the tick correlation
+// on emit (`correlationId: tickCorrelationId`) so every SSE consumer joins on ONE key (correlationId).
+// Accepting bare `tickCorrelationId,` as a key papered over the real bug (3 WAVE29 sites emitting the
+// wrong key). `correlationId` must appear as a KEY: preceded by `{`, `,`, or line-start (+ ws), followed
+// by `,`, `:`, or `}` — this matches `correlationId,` (shorthand) and `correlationId: tickCorrelationId`
+// (value=tick, key canonical), and rejects both `correlation_id: correlationId` (value-position) and a
+// bare `tickCorrelationId,` (wrong key).
+const KEY_RE = /(?:^|[{,])\s*correlationId\s*[,:}]/m;
 
 function collect() {
   const sites: Array<{ file: string; event: string; body: string }> = [];
@@ -95,9 +101,11 @@ describe("lifecycle SSE events carry a correlationId KEY (F-3, all events incl. 
     // The exact bug the prior guard missed: value-position identifier under a snake_case key.
     expect(KEY_RE.test("strategyId: id, correlation_id: correlationId, reason: x")).toBe(false);
     // And genuinely accepts both key forms actually used in the file.
-    expect(KEY_RE.test("strategyId: id, correlationId, reason: x")).toBe(true);       // shorthand
-    expect(KEY_RE.test("strategyId: id,\n  correlationId: options.correlationId ?? null,")).toBe(true); // explicit
-    expect(KEY_RE.test("strategyId: id,\n  tickCorrelationId,")).toBe(true);          // tick variant
+    expect(KEY_RE.test("strategyId: id, correlationId, reason: x")).toBe(true);       // shorthand key ✓
+    expect(KEY_RE.test("strategyId: id,\n  correlationId: options.correlationId ?? null,")).toBe(true); // explicit key ✓
+    expect(KEY_RE.test("strategyId: id,\n  correlationId: tickCorrelationId,")).toBe(true); // canonical key, tick value ✓
+    // F-8: a BARE tickCorrelationId is the WRONG key (SSE consumers join on correlationId) — must be rejected.
+    expect(KEY_RE.test("strategyId: id,\n  tickCorrelationId,")).toBe(false);
   });
 
   it("explicitly covers the known live-capital gate surfaces (across BOTH catalogs + raw-string)", () => {
