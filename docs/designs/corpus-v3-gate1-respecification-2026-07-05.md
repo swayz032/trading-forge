@@ -426,3 +426,35 @@ Recommended: **ITERATE THE CLASSIFIER** — the fix is diagnosed: stop over-cont
 conditions (keep WAIT_CONFIRMATION "retest→signal" type as spine). On snNkQSyWX4k, restoring the entry trigger to
 spine would likely revive MNQ/MCL → 8-9/9. Alternatives (productionize demotion / hybrid) are weaker given demotion
 is the less-faithful arm where they differ. OPEN for operator/advisor ruling.
+
+## ⚠ b4812c5 RE-MARKED PROVISIONAL — Gate 1′ ran ≠ Gate 1′ locked (Fable-5, 2026-07-06)
+The Gate 1′ that ran was a TWO-PASS SELF adjudication (passes disagreed 4/10) + parent anchor spot-check. The
+LOCKED Gate 1′ specified MULTI-RATER independent adjudication — the whole reason it exists is that single-rater
+labels at 57.7% were what made Gate 1 uncertifiable. **Disclosure does not downgrade a requirement.** Also: the
+parent's anchor re-verify made the parent the second rater — doer≠grader strained (the certifier supplied the
+independence). **The Gate 1′ dispositions in this doc are PROVISIONAL until one genuinely INDEPENDENT rater
+(fresh context; NO classifier output, NO demotion labels, NO DRI gold, NO prior-pass verdicts) blind-adjudicates
+the ~10 conditions from transcript quotes alone.** The chain that refused to certify against single-rater gold
+does not close on a self-adjudication.
+- **Two-sided risk (live both ways):** REGRESSIONS lean on translated Afrikaans speaker-intent — if the framing is
+  "naive ORB is false BUT with these additions it works," the fib/structure conditions are mandatory-to-the-FIXED
+  strategy and the disposition FLIPS. MISSES feed the iteration design; the fix is a rule from N=2 misses and the
+  deterministic rules already overfit 2.00× — a rule that only moves the 2 known misses is memorization.
+- **CORRECTION to the record:** STRIKE "demotion is the less-faithful arm" as a GENERAL claim — established on ONE
+  strategy (jlShztsY3oA), and only IF the independent rater upholds it. What is certified about demotion:
+  mechanism-level revival 9/9 on the corrected engine; transcript-fidelity UNEXAMINED (it never went through
+  Gate 1′), except where it lost to the classifier once (pending confirmation). The comparison table has ONE row.
+
+## ITERATION PROTOCOL (LOCKED before any classifier code — Fable-5)
+1. **INDEPENDENT RATER FIRST.** If misses hold as errors + regressions as corrections → proceed. If either FLIPS →
+   the design input changes; know before writing the fix.
+2. **Fix designed against the RULES-DESIGN set (143), NOT against snNkQSyWX4k.** Implement the
+   "wait-for/retest/trigger → gate" pattern; measure on the HELD-OUT 70 BEFORE any Gate 3 re-run: (a) held-out
+   margin agreement improves-or-holds, (b) rule-coverage overfit ratio stays sane. A fix that only moves the 2
+   known misses = memorization wearing a rule's clothes → rejected.
+3. **Gate 3 re-run = SINGLE-SHOT** vs certified N=9, frozen ≥8/9 + zero unexplained regressions (jlShztsY3oA deaths
+   count explained ONLY if the independent rater upheld them). Same validity-before-verdict read order.
+   **PRE-COMMIT: if the iterated classifier returns 7/9 with a DIFFERENT miss pattern → NOT "one more iteration" →
+   evidence the ~67% margin ceiling binds at the strategy level → the decision REOPENS honestly.**
+4. **ITERATION BUDGET: this is pass TWO of TWO.** A third pass requires NEW EVIDENCE about why the margin is hard,
+   NOT another targeted rule. Locked now, while the temptation is invisible.
