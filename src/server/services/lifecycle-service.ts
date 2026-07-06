@@ -1084,10 +1084,17 @@ export class LifecycleService {
           // silently counted as outcome="clean". Map that distinct reason to its own label.
           const bifReliableForCounter =
             ((wfResults?.wf_metadata as Record<string, unknown> | null)?.bif_reliable) === false;
+          // deep-scan promotion L-2: thread the computation-error sentinel so this outcome-counter reflects the
+          // true fail-closed verdict (a real compute_bif failure counts as blocked, not clean).
+          const bifCompErrorCounter =
+            (wfResults as Record<string, unknown> | null)?.bif_computation_error === true;
           const bifResult = evaluateBifGate(
             latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
             latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
-            bifReliableForCounter ? { bifReliable: false } : undefined,
+            {
+              bifReliable: bifReliableForCounter ? false : undefined,
+              computationError: bifCompErrorCounter,
+            },
           );
           const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
             ? "cpcv_unmeasured"
@@ -6242,10 +6249,16 @@ export class LifecycleService {
           const bifNum = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
           const kEffNum = latestBtForBif?.kEff != null ? Number(latestBtForBif.kEff) : null;
 
+          // deep-scan promotion L-2: read the computation-error sentinel (top-level of walkForwardResults)
+          // so a REAL compute_bif() failure fails the gate CLOSED instead of grandfathering as legacy-null.
+          const bifCompError =
+            (latestBtForBif?.walkForwardResults as Record<string, unknown> | null)?.bif_computation_error === true;
           const bifResult = evaluateBifGate(
             bifNum,
             kEffNum,
-            bifReliableFalse ? { bifReliable: false, proxyBasis: bifProxyBasis } : { proxyBasis: bifProxyBasis },
+            bifReliableFalse
+              ? { bifReliable: false, proxyBasis: bifProxyBasis, computationError: bifCompError }
+              : { proxyBasis: bifProxyBasis, computationError: bifCompError },
           );
 
           const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"

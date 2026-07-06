@@ -2093,9 +2093,15 @@ def run_walk_forward(
             file=sys.stderr,
         )
     except Exception as _bif_exc:
+        # deep-scan promotion L-2 (HIGH, 2026-07-06): a MODERN computation failure must NOT be swallowed into
+        # a bare bif=None — that is indistinguishable from a genuine pre-Wave-3 backtest, and bif-gate.ts treats
+        # null as a legacy-grandfather PASS → the gate fails OPEN on a real error. Its sibling gates all fail
+        # CLOSED on computation error (WFE degenerate_is, PBO worst-case 1.0, parameter-drift classifier_error).
+        # Emit a DISTINCT sentinel so the gate can fail closed on THIS while still grandfathering true legacy null.
+        _bif_result = {"bif_computation_error": True}
         print(
-            f"  BIF: computation failed ({_bif_exc!r}) — "
-            f"skipping (non-blocking, bif=None in output).",
+            f"  BIF: computation FAILED ({_bif_exc!r}) — emitting bif_computation_error=true "
+            f"(gate fails CLOSED, not grandfathered).",
             file=sys.stderr,
         )
 
@@ -2415,6 +2421,7 @@ def run_walk_forward(
         # k_eff     = n_splits (WF windows = independent IS/OOS draws).
         # TS gate contract: reads "bif" (float) and "k_eff" (float) from this dict.
         "bif": _bif_result.get("bif"),
+        "bif_computation_error": _bif_result.get("bif_computation_error"),
         "k_eff": _bif_result.get("k_eff"),
         "bif_detail": _bif_result,
         # WRC / SPA — data-snooping guard on concatenated plain/purged_embargo OOS P&L.
@@ -2911,9 +2918,11 @@ def run_walk_forward_class(
             file=sys.stderr,
         )
     except Exception as _bif_exc_cls:
+        # deep-scan promotion L-2 (HIGH): same fail-closed sentinel as the plain-WF path above.
+        _bif_result_cls = {"bif_computation_error": True}
         print(
-            f"  BIF (class): computation failed ({_bif_exc_cls!r}) — "
-            f"skipping (non-blocking, bif=None in output).",
+            f"  BIF (class): computation FAILED ({_bif_exc_cls!r}) — emitting bif_computation_error=true "
+            f"(gate fails CLOSED, not grandfathered).",
             file=sys.stderr,
         )
 
@@ -3050,6 +3059,7 @@ def run_walk_forward_class(
         "pbo_overall_p_value": pbo_overall_p_value_cls,
         "pbo_degenerate": pbo_degenerate_cls,
         "bif": _bif_result_cls.get("bif"),
+        "bif_computation_error": _bif_result_cls.get("bif_computation_error"),
         "k_eff": _bif_result_cls.get("k_eff"),
         "bif_detail": _bif_result_cls,
         "wf_metadata": {
