@@ -660,3 +660,23 @@ likely/retraces-to). NO dispositions — those are the morning ruling.
   rule can derive from is the ruling. If none → design set empty for the target sub-class → quarantine impossible →
   the pre-registered escalate/epistemics-restate branch (possibly the (b) landing) fires. This decision can KILL the
   pass-3 track; it is reserved for fresh eyes against this packet, per the licensor's own standing order.
+
+## DEFECT-4 COMPANION — CLOSED with a REAL catch (log-grep, 2026-07-07)
+The registered companion ("check the historical record for any run that DID raise this reconciliation error and was
+waved off as flaky") is CLOSED — and it caught one:
+- **`mode-ab-corpus-v2-2026-07-04-report.json` / .jsonl: spec `ae7a2560` MES 15m, class execution_path, Mode A →
+  `ValueError: RECONCILIATION FAILED: equity=-18888.09, trades=-18940.76, diff=52.67` → verdict INDETERMINATE.**
+  Root cause was NOT diagnosed at the time (recorded as "a mode run errored"). **$52.67 is Defect-4's signature:**
+  roll cost omitted from the class-path equity loop, accumulated over 2015-2026 (~44 MES quarterly rolls × ~$1/roll).
+- **This REVISES the Defect-4 frozen finding:** its "equity overstatement BOUNDED by the $1 tolerance for all
+  historically COMPLETED runs" is technically true (completed = ≤$1) but INCOMPLETE — for LONG-HISTORY class runs the
+  roll-cost omission EXCEEDS $1 and ERRORS the run (INDETERMINATE), rather than completing with a bounded overstatement.
+  So Defect-4 doesn't just "slightly overstate equity"; it can make long-history class specs UN-COMPLETABLE.
+- **Scope (fact):** affects the corpus RE-BASELINE equity metrics (Mode A/B: Sharpe/DSR/WFE/B14) for long-history
+  specs — NOT the trade-count Gate-3 revival/regression verdict (which the frozen finding correctly isolates as
+  trade-count-based, unaffected). The MCL $2.38 (defect6 diag) + $4.03 (Gate-3 pre-fix) hits were the INVESTIGATED
+  Defect-6 (precision), not waved off.
+- **STOP-AND-PARK (charter):** this touches pass-3's downstream corpus re-baseline → recorded, NOT fixed tonight. The
+  Defect-4 fix (deduct RollSpreadCost in the class-path bar-level equity loop, mirroring net_pnl) is a scoped
+  backtest-core change for the post-cert track — and it is a THIRD instrument-integrity site joining the F-4 ceiling
+  divergence + the duplicate-enforcement class. Reconciliation GATE itself is SOUND (it caught + refused $52.67).
