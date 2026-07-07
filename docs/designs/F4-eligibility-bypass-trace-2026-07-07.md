@@ -421,3 +421,27 @@ Traced where `SpeakerItem.name` (the coverage gate's reference population) actua
 runtime hands the gate the 8-field extraction and never the compiled spec (the gate's TYPE + W3.1 role say so; provenance
 traced, exact (b) call-site not). F-5 also still SHARPENS the NEUTRAL brief (item #6): adjudication anchors from
 transcript quotes, never spec-side strings — validated here (transcript IS the correct upstream source).
+
+## ★ F-5 WIRING-TRACE (item 3b) → F-5 LOW-CLOSED 2026-07-07
+Call-site read (the fact the census lacked): the coverage gate has ONE production invocation —
+`src/server/routes/agent.ts:1972` `await runCoverageGate(markdown, firstIdea)`:
+- arg1 = `markdown` (the transcript) → SpeakerItem enumeration from the transcript (confirms provenance census).
+- arg2 = `firstIdea` = the extractor's SINGLE-PASS output, read via `entry_sequence`/`confluences` (agent.ts:954/1064-1067/
+  1332-1360) = the 8-field `ExtractionSnapshot`, NOT the compiled v3 spec.
+- The gate runs at EXTRACTION TIME; the compiled spec (`entry_conditions`) is DOWNSTREAM (`SpeakerItem → DecisionAtom →
+  spec`) so it does not yet exist at this call and CANNOT be substituted. `computeCoverageVerdict`'s only other caller
+  (`extraction-coverage-repair.ts`) re-runs on the SAME transcript-enumerated speaker items (repair loop) — also no spec path.
+**F-5 = LOW-CLOSED.** No path substitutes the compiled spec; the production reference population is correct
+(transcript-named items vs 8-field extractor prose). Trace hash = this commit.
+
+## ★★ STANDING METHODOLOGICAL RULE (register) — review-time data paths are instrument surfaces 2026-07-07
+F-5's full arc earned this: the flip-audit ran on a `entry_conditions[].object` PROXY because the offline reviewer used
+what was cached — harmless here (caught by voluntary caveat-flagging), but the same move against a subtler proxy
+certifies on the wrong population with nobody flagging. **STANDING RULE: any audit/review artifact that substitutes a
+proxy for the production representation MUST declare the substitution IN the artifact itself, and the declaration
+TRAVELS with every downstream citation of the numbers.** Review-time data paths get the same instrument-integrity
+scrutiny as production ones. (F-5's caveat did this voluntarily; the register makes it mandatory. → also memory.)
+
+## ITEM #2 CONFIRMATION (Defect-4 census, re-surfaced): reconciled (a) — see reconciliation entry above. Real blast
+radius = long-history Mode A/B (~11y) equity ONLY; Gate-3/pass-3 (trade-count, ~6y) UNAFFECTED; fix = add
+`_roll_cost_usd_cls` to the class equity loop, pre-re-baseline tier with Defects 7/8/9. Census headline corrected in the JSON.
