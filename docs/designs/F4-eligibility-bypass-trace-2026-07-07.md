@@ -56,3 +56,21 @@ F-4 as written ("unregistered bypass returns TAKE before all 9 hard-SKIP checks;
 is CORRECTED: intentional parity bypass (not fail-OPEN); overlay-only (framework gates claimed-separate, ceiling
 discrepancy flagged); 0 current exposure (not 7-at-full-size). BUT the grader corroborates the ds21 carry-forward AND
 its re-look surfaced the Check-0-ceiling-vs-comment discrepancy — genuine triage value even where the grade was overstated.
+
+## DISCREPANCY RESOLVED (fact) — the ceiling has TWO enforcement points that DIVERGE for unregistered
+Bounded grep of backtester.py + structural_stops.py:
+- **Point A — Check 0 (eligibility_gate.py:115): SKIP the trade if structural stop > per-symbol ceiling.** This is
+  the §4 semantics ("If structural distance > ceiling → SKIP TRADE, never clamp down"). **BYPASSED for unregistered**
+  (the :109 early TAKE returns before it).
+- **Point B — backtester.py:430-443 / 984-993 / 1091 / 1380-1385: `max_stop_points=_get_stop_ceiling_for_symbol(sym)`
+  + `min(_stop_ceiling, atr×mult)` — caps the EXECUTION stop at the ceiling.** STILL APPLIES regardless of registration.
+- **So the code comment ("ceiling still applies") is TRUE for the EXECUTION CAP (Point B); the SKIP-eligibility
+  semantics (Point A / Check 0) IS bypassed for unregistered.** Net divergence for an unregistered strategy whose
+  structure requires a wider-than-ceiling stop: instead of being SKIPPED (§4), the trade is TAKEN with a ceiling-capped
+  stop. NOT "no ceiling at all"; a skip-vs-clamp-and-take behavioral divergence.
+- **Interacts with the H5 structural-stop-parity topic** (flag-gated `BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED`,
+  default OFF) — clamp-vs-skip is the same axis; not resolved here.
+- **MATERIALITY of the skip-vs-clamp divergence = PARKED** (does taking-with-clamped-stop vs skipping change edge/
+  survival for unregistered strategies? + is the parity rationale correct or should the fix register-all-archetypes?).
+- **Exposure unchanged: 0/120 unregistered, 0 PAPER+ → latent. Pass-3 impact NIL (within-concept A/B cancels).**
+**F-4 trace COMPLETE at the fact/judgment boundary. Facts frozen; three rulings queued for dawn.**
