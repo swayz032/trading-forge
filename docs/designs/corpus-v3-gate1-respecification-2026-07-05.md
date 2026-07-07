@@ -514,3 +514,54 @@ backtested — verdict hand-assembled from both logs, deterministic per-pair bac
   is 9/9). Open branches: (a) scoped pass-3 extending the pattern to retracement/level gates [needs advisor ruling on
   whether that's "new evidence" or budget-violation]; (b) accept Gate 3 FAIL, productionize the revival win separately;
   (c) reopen on gold-quality/architecture. Malformed to pick until the advisor rules on the budget question.
+
+## ★★ INTEGRITY FINDING (FROZEN) — the independent rater INVERTED the verdict, not refined it (2026-07-06)
+The most consequential integrity event of the chain, surfaced from where it was buried ("per the certified Gate 1′"):
+- **Provisional self-adjudication** ruled the jlShztsY3oA regressions FIDELITY CORRECTIONS. Under THAT disposition,
+  the iterated run = 9/9 revival + EXPLAINED regressions → **Gate 3 PASSES.**
+- **Certified independent rater** ruled Fibonacci MANDATORY → the regressions are classifier errors → **Gate 3 FAILS.**
+- The cheap (hours-not-days) blind rater did not refine the answer — **it INVERTED it.** Without it, this program
+  would have announced a FALSE CERTIFICATION of a classifier that demotes mandatory gates. **Independence was not
+  procedural hygiene; it was the difference between a true FAIL and a false PASS.** Freeze as a standalone
+  methodological finding.
+- **Verbatim rater rationale (the reading the verdict turned on), recorded because a verdict-deciding adjudication
+  owes the record its why:** framing is "false in naive/retail form BUT viable WITH specific additions," NOT a
+  disavowal. Decisive lines — "die kleinhandel is die meeste van die tyd 'n vals strategie" (the retail version is a
+  false strategy most of the time — indicts the naive application, not the concept); **"dit beteken nie dat die bol
+  nutteloos is nie, dit benodig net meer konteks"** (this doesn't mean the ORB is useless, it just needs more context
+  — the PIVOT that rejects "disavowed, period"); **"hier is hoe om dit reg te stel"** (here's how to fix it — frames
+  what follows as the required fix). Fibonacci sits in that fix-list: "gereedskap soos Fibonacci te gebruik, gaan jou
+  uit hierdie nuttelose ambagte hou" (using tools like Fibonacci will keep you out of these useless trades) → MANDATORY.
+- **COROLLARY (permanent inversion):** "the classifier was the more faithful arm" (struck provisionally earlier) is
+  now PERMANENTLY INVERTED — where the arms disagreed and adjudication is certified, the CLASSIFIER was wrong.
+
+## PASS-3 LICENSED — escape clause fires (Fable-5 ruling, counterargument faced)
+The sub-class finding ALONE would NOT license pass-3 (every miss can be christened a sub-class → infinite taxonomy,
+one-rule-per-funeral = the whack-a-mole the budget forbids). What carries the license is the CONJUNCTION:
+1. Pass-2's held-out margin IMPROVED — direct counter-evidence to the 2.00× memorization fear that motivated the
+   budget; pattern-class rules generalize.
+2. The pre-registered ceiling-binding trigger (7/9 with a SHIFTED miss pattern) did NOT fire — the miss set did not
+   shift, it SHRANK, and the residue PREDATES pass-2.
+3. The residue is certified-diagnosed with transcript anchors — the highest-grade gold this program owns.
+Together = genuine evidence the margin is COVERAGE-structured (enumerable idiom families), not noise-structured.
+**Honest dependency:** the license leans on the held-out improvement + the certified diagnosis, NOT the 9/9 — same
+ruling at 8/9; OPPOSITE ruling had held-out degraded. **Branch (c) NOT indicated** (coverage gap with clean anchors,
+not gold-noise; Gate 1′ is the gold-quality instrument and it is working).
+
+## PASS-3 PRE-REGISTRATION (LOCKED before any code — Fable-5)
+1. **Verify the held-out-improvement claim INDEPENDENTLY** — the ruling is CONDITIONAL on it; currently self-reported.
+2. **Design-input quarantine.** FIRST enumerate retracement/level idioms in the 143-condition DESIGN set; design the
+   rule from THOSE. **jlShztsY3oA's 3 conditions are EXCLUDED from design inputs — they are the TEST.** If the design
+   set contains ZERO instances → STOP + ESCALATE (quarantine impossible; restate epistemics before writing anything).
+3. **Pass-2's rule is FROZEN.** Additive coverage only; NO joint re-tuning.
+4. **Same tripwire:** held-out margin improves-or-holds, checked BEFORE any Gate 3 dispatch.
+5. **Single-shot Gate 3, frozen rule, validity-before-verdict.** The regression's cure is BEHAVIORAL not explanatory —
+   certified adjudication says Fibonacci is mandatory, so a CORRECT classifier REVIVES jlShztsY3oA; its death cannot
+   be explained, only fixed.
+6. **The escape is SPENT.** If pass-3 fails Gate 3 for ANY reason → the classifier-iteration track CLOSES →
+   pre-committed landing = (b) productionize DEMOTION on its own cert track (which it still owes: it has NEVER passed a
+   fidelity adjudication and covers only 14 concepts). NO pass-4 argument entertained. Written now, while pass-3 looks
+   promising and the temptation is invisible.
+7. **Reuse named honestly:** this is the 3rd adaptive evaluation against the SAME 9 pairs; Gate 3's independence DECAYS
+   each pass. The genuinely fresh data is the post-flip corpus re-baseline (null-cal → Mode A/B); any anomaly there
+   REOPENS certification.
