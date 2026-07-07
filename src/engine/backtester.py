@@ -5230,6 +5230,17 @@ def run_backtest(
             trade["CommissionCost"] = round(comm_cost, 2)
             trade["RollSpreadCost"] = round(_roll_cost_usd, 4)
 
+            # ─── ADDITIVE-ONLY (emit-only) entry cross-reference fields ───
+            # Expose the already-computed entry bar index + entry timestamp on the
+            # returned trade record so downstream tooling can cross-reference each
+            # trade against calendar windows (macro-blackout) and bar windows
+            # (look-ahead audit). `entry_idx` is the int resolved above (line ~5107);
+            # `entry_timestamp` is the vectorbt-emitted "Entry Timestamp" value that
+            # already rode through the column loop (ISO string via isoformat()).
+            # Pure pass-through — NO computation, sizing, or P&L is touched.
+            trade["entry_idx"] = entry_idx
+            trade["entry_timestamp"] = trade.get("Entry Timestamp")
+
             # ─── Per-trade R:R (reward / risk) ─────────────────────
             # H5 fix (deep-scan #15, 2026-07-03): read the risk_points the
             # management loop ACTUALLY used (captured above as _mgmt_risk_points)
@@ -7307,6 +7318,17 @@ def run_class_backtest(
             trade["SlippageCost"] = round(slip_cost, 2)
             trade["CommissionCost"] = round(comm_cost, 2)
             trade["RollSpreadCost"] = round(_roll_cost_usd_cls, 4)
+
+            # ─── ADDITIVE-ONLY (emit-only) entry cross-reference fields ───
+            # Expose the already-computed entry bar index + entry timestamp on the
+            # returned trade record so downstream tooling can cross-reference each
+            # trade against calendar windows (macro-blackout) and bar windows
+            # (look-ahead audit). `entry_idx` is the int resolved above (line ~7198);
+            # `entry_timestamp` is the vectorbt-emitted "Entry Timestamp" value that
+            # already rode through the column loop (ISO string via isoformat()).
+            # Pure pass-through — NO computation, sizing, or P&L is touched.
+            trade["entry_idx"] = entry_idx
+            trade["entry_timestamp"] = trade.get("Entry Timestamp")
 
             # ─── Per-trade R:R (using 6pt capped risk) ───────────────
             risk_dollars = risk_pts * spec.point_value
