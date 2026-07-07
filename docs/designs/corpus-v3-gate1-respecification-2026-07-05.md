@@ -637,3 +637,11 @@ against the PASS-2 backup + the PINNED determinism envelope, applied MECHANICALL
 **STATUS after tonight:** pass-3 pre-reg MECHANICAL gates are complete — point 1 CONFIRMED (license unconditional),
 point 2 enumeration done (non-zero, launch clean). The REMAINING pass-3 work is the rule design, which is GATED by the
 PARKED imperative-vs-descriptive vetting blocker (fresh-eyes work). No mechanical pass-3 work remains tonight.
+
+## PASS-3 POINT-1 — N=3 BAND STRESS RESULT (2026-07-07)
+RUN3 (fresh live-gemma) = margin 67.9245% / overfit 1.70× — IDENTICAL to RUN1(pass-2) and RUN2. Three fresh runs,
+zero variance on the gemma-adjudicated margin. Point-1 CONFIRM is now N=3-robust. Honest read: the ±3pp band was
+never stressed (delta 0.0000 across 3 runs) — on THIS 66-call margin set gemma did not flip aggregate agreement, so
+either gemma is stable-in-practice at temp 0.1 here or responses are cached (gemma_calls count recorded in the run
+JSON distinguishes; fresh-call counts observed argue stability, not caching). The frozen general nondeterminism
+finding stands; it simply did not manifest on this stratum. CONFIRM holds; independence is genuine.
