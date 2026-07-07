@@ -848,3 +848,22 @@ ROTATED: the first, advisor caught in the operator's design; this one, operator 
 Every node checks every node; the direction of the catch rotates freely. That topology — not a chain of command — is
 what makes the system trustworthy rather than merely careful. → discipline docs, with the F-2 arc + the recursive-grader
 dividend, as the three demonstrations that the protocol's value compounds.
+
+## ★★ NEUTRAL-ADJUDICATION RESULT — boundary hypothesis SUPPORTED (read in locked order) 2026-07-07
+Blind rater (36 items, closed taxonomy). Read in the pre-registered order:
+- **CONTROL GATE: GREEN** — 5/5 imperatives → mandatory-gate (all HIGH conf), 5/5 descriptives → contextual. 10/10.
+  Rater reliable; targets unsealed as signal, not noise.
+- **PRIMARY — canonical Fibonacci (N17): contextual-scene-setting (medium).** Anchored to the Afrikaans ORIGINAL
+  ("prys waarskynlik sal terugtrek na 'n Fibonacci retracement vlak"). Blind rater read the surface as NARRATION, noting
+  it "reads as narration despite the translation aid framing Fibonacci as a filtering tool." **Per pre-registered outcome:
+  surface FAILS where discourse SUCCEEDED → hypothesis SUPPORTED at its strongest test point; gate-strength lives in
+  DISCOURSE, not the sentence.** The founding exemplar confirms the boundary mechanism live.
+- **★ CONFIDENCE STRATIFICATION (signal under the signal):** all 5 known-gates (imperatives) rated mandatory at HIGH; all
+  5 NEUTRAL-pool mandatory calls at MEDIUM (0 high). The rater reserved HIGH for unambiguous surfaces + hedged on every
+  ambiguous one — the gap IS evidence the surface doesn't cleanly carry mandatory intent for the NEUTRALs.
+- **SECONDARY — ≥2-of-25:** 5 mandatory (N04/N06/N20/N28/N34) but **0 HIGH-confidence.** Turns on "confident" — the ONE
+  term left UN-PINNED in the pre-registration (flagged, NOT resolved post-hoc). confident=high → 0 → SURVIVES;
+  confident=medium+ → 5 but all hedged + mixed anchors (N04/N34 plausible gates; N20 anchor-object mismatch; N28
+  past-tense narration). **Both reads converge: boundary hypothesis HOLDS.**
+- **INSULATION verbatim:** whichever verdict, revises the taxonomy ONLY; classifier track stays CLOSED; spent stays spent.
+Artifacts committed: blinded packet, SEALED key, rater verdicts. FINAL verdict + "confident" pin = operator's.

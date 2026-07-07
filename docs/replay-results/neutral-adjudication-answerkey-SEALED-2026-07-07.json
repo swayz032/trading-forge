@@ -1,0 +1,400 @@
+{
+ "title": "Corpus v3 — Adjudication Answer Key (SEALED — do NOT show the rater)",
+ "frozen": "2026-07-07",
+ "purpose": "Reliability read for the blinded packet neutral-adjudication-packet-blinded-2026-07-07.json. Maps opaque item_id -> role + control ground truth + source provenance. Consult ONLY after the independent rater returns verdicts.",
+ "cert_context": "corpus-v3-gate3-cert-2026-07-06 — PARKED question: design-set retracement gates (IMPERATIVE, pass-2 covered) vs jlShztsY3oA Fibonacci (DESCRIPTIVE, uncovered) — fresh-eyes adjudication.",
+ "counts": {
+  "targets": 26,
+  "imperative_control": 5,
+  "descriptive_control": 5,
+  "total": 36
+ },
+ "reliability_read": "A reliable rater should score ALL 10 controls correctly: the 5 imperative_control items as GATE (mandatory-gate) and the 5 descriptive_control items as NARRATION (contextual-scene-setting). Each imperative_control mislabeled NARRATION, or descriptive_control mislabeled GATE, is a calibration miss. >=1 control miss = discount the rater's target verdicts; >=2 misses = rater unreliable, do not use target ratings. Only if all 10 controls are correct should the 26 target verdicts be treated as an unbiased fresh-eyes ruling — including the disputed jlShztsY3oA Fibonacci target (census_row_index 34).",
+ "shuffle_method": "type-agnostic: item_id assigned by ascending SHA-256 hex digest of the anchor (transcript quote) text. Reproducible, leaks no type ordering.",
+ "answer_key": {
+  "N01": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 33,
+    "object": "new york open time zone",
+    "census_tag": "NEUTRAL",
+    "dri_class": "JUSTIFIED_MANDATORY"
+   }
+  },
+  "N02": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 26,
+    "object": "retest",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N03": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 28,
+    "object": "trend",
+    "census_tag": "NEUTRAL",
+    "dri_class": "JUSTIFIED_MANDATORY"
+   }
+  },
+  "N04": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 17,
+    "object": "retest",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N05": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 18,
+    "object": "future selling",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N06": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 3,
+    "object": "retracement opportunity",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N07": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 13,
+    "object": "ema",
+    "census_tag": "NEUTRAL",
+    "dri_class": "OPTIONAL"
+   }
+  },
+  "N08": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 20,
+    "object": "time frame",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N09": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 9,
+    "object": "low price level",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N10": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 23,
+    "object": "1hour zone context",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N11": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 35,
+    "object": "structure confirmation within range box",
+    "census_tag": "NEUTRAL",
+    "dri_class": "OPTIONAL(cert-adj)",
+    "dri_ref": "WAIT_CONFIRMATION:structure confirmation within range box#0 (dri: OPTIONAL)"
+   }
+  },
+  "N12": {
+   "role": "imperative_control",
+   "control_ground_truth": "mandatory-gate",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 30,
+    "object": "high or low initial candle with overlapping fvg",
+    "census_tag": "IMPERATIVE"
+   }
+  },
+  "N13": {
+   "role": "descriptive_control",
+   "control_ground_truth": "contextual-scene-setting",
+   "source_row": {
+    "corpus": "dri-audit",
+    "dri_condition_id": "WAIT_SESSION:4 hour chart#0",
+    "dri_classification": "CONTEXTUAL"
+   }
+  },
+  "N14": {
+   "role": "descriptive_control",
+   "control_ground_truth": "contextual-scene-setting",
+   "source_row": {
+    "corpus": "dri-audit",
+    "dri_condition_id": "WAIT_STRUCTURE:avoiding two mistakes#0",
+    "dri_classification": "CONTEXTUAL"
+   }
+  },
+  "N15": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 21,
+    "object": "market reaches level",
+    "census_tag": "NEUTRAL",
+    "dri_class": "ALTERNATIVE"
+   }
+  },
+  "N16": {
+   "role": "imperative_control",
+   "control_ground_truth": "mandatory-gate",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 5,
+    "object": "price tried to break below area",
+    "census_tag": "IMPERATIVE"
+   }
+  },
+  "N17": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 34,
+    "object": "fibonacci retracement level",
+    "census_tag": "DESCRIPTIVE",
+    "dri_class": "JUSTIFIED_MANDATORY(cert-adj)",
+    "dri_ref": "WAIT_STRUCTURE:fibonacci retracement level#0 (dri: OPTIONAL)"
+   }
+  },
+  "N18": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 2,
+    "object": "cross down and retrace",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N19": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 25,
+    "object": "vwap",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N20": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 16,
+    "object": "one day time frame",
+    "census_tag": "NEUTRAL",
+    "dri_class": "JUSTIFIED_MANDATORY"
+   }
+  },
+  "N21": {
+   "role": "imperative_control",
+   "control_ground_truth": "mandatory-gate",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 14,
+    "object": "daily fvg 4h hour candle",
+    "census_tag": "IMPERATIVE"
+   }
+  },
+  "N22": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 36,
+    "object": "downward tendency line",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL(cert-adj)",
+    "dri_ref": "FILTER:downward tendency line#0 (dri: UNRESOLVED/CONTEXTUAL)"
+   }
+  },
+  "N23": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 8,
+    "object": "30 minute high pre market high fvg",
+    "census_tag": "NEUTRAL",
+    "dri_class": "OPTIONAL"
+   }
+  },
+  "N24": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 4,
+    "object": "level",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N25": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 32,
+    "object": "high price level",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N26": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 10,
+    "object": "zone sitting right in here",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N27": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 11,
+    "object": "wicks retest zones",
+    "census_tag": "NEUTRAL",
+    "dri_class": "UNRESOLVED"
+   }
+  },
+  "N28": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 7,
+    "object": "retest into area",
+    "census_tag": "NEUTRAL",
+    "dri_class": "UNRESOLVED"
+   }
+  },
+  "N29": {
+   "role": "imperative_control",
+   "control_ground_truth": "mandatory-gate",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 0,
+    "object": "5 sma crossing below 20 sma 4h chart",
+    "census_tag": "IMPERATIVE"
+   }
+  },
+  "N30": {
+   "role": "descriptive_control",
+   "control_ground_truth": "contextual-scene-setting",
+   "source_row": {
+    "corpus": "dri-audit",
+    "dri_condition_id": "WAIT_SESSION:eur usd#0",
+    "dri_classification": "CONTEXTUAL"
+   }
+  },
+  "N31": {
+   "role": "imperative_control",
+   "control_ground_truth": "mandatory-gate",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 29,
+    "object": "opening range breakout zone",
+    "census_tag": "IMPERATIVE"
+   }
+  },
+  "N32": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 27,
+    "object": "stop placement rule",
+    "census_tag": "NEUTRAL",
+    "dri_class": "UNRESOLVED"
+   }
+  },
+  "N33": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 24,
+    "object": "price movement",
+    "census_tag": "NEUTRAL",
+    "dri_class": "CONTEXTUAL"
+   }
+  },
+  "N34": {
+   "role": "target",
+   "control_ground_truth": "n/a",
+   "source_row": {
+    "corpus": "census",
+    "census_row_index": 12,
+    "object": "vwop retest",
+    "census_tag": "NEUTRAL",
+    "dri_class": "JUSTIFIED_MANDATORY"
+   }
+  },
+  "N35": {
+   "role": "descriptive_control",
+   "control_ground_truth": "contextual-scene-setting",
+   "source_row": {
+    "corpus": "dri-audit",
+    "dri_condition_id": "WAIT_SESSION:currency pair#0",
+    "dri_classification": "CONTEXTUAL"
+   }
+  },
+  "N36": {
+   "role": "descriptive_control",
+   "control_ground_truth": "contextual-scene-setting",
+   "source_row": {
+    "corpus": "dri-audit",
+    "dri_condition_id": "FILTER:binger band standard deviation#0",
+    "dri_classification": "CONTEXTUAL"
+   }
+  }
+ }
+}
