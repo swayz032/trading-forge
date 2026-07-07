@@ -5234,10 +5234,16 @@ export async function evaluateSignals(
       const accountStartingFloor = parseAccountNumericOrDefault(sessionRow.startingCapital, 50_000);
       // Pass 5 Track C F-2: prefer realizedPeakEquity (atomic close-time HWM)
       // over highWaterBalance (MTM-oscillating). Fall back to legacy column then to balance.
-      const highWaterBalance =
-        parseFloat(sessionRow.realizedPeakEquity as string) ||
-        parseFloat(sessionRow.highWaterBalance as string) ||
-        accountBalance;
+      // FIX A4 (deep-scan #22 fix-wave-2, 2026-07-07): `parseFloat(x) || parseFloat(y) || z`
+      // has the same falsy-zero bug wave-1 fixed at the other 4 call sites (deepscan22-fix8)
+      // — a legitimately-zeroed realizedPeakEquity (e.g. a session that gave back its entire
+      // HWM) or highWaterBalance would be silently discarded because `0` is falsy, replacing
+      // a real "you have zero cushion left" HWM with a phantom nonzero one. Use the existing
+      // parseAccountNumericOrDefault() helper (only NaN/null/undefined trigger the fallback).
+      const highWaterBalance = parseAccountNumericOrDefault(
+        sessionRow.realizedPeakEquity,
+        parseAccountNumericOrDefault(sessionRow.highWaterBalance, accountBalance),
+      );
       // Pass 5 Track C F-4: cumulativeProfit must be REALIZED-only for pyramid tier math.
       // Using currentEquity (MTM) inflates tier mid-trade when winners are open.
       // Backtester uses realized P&L (sizing.py:846); paper must match.
