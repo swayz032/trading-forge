@@ -232,3 +232,20 @@ BEFORE trusting any blast-radius claim** — candidate resolutions: estimate ove
 to NEITHER net_pnl nor equity (no divergence → Defect-4 mischaracterized) / ae7a2560's $52.67 had a different root
 cause. The census is a flagged ESTIMATE, not a fact. This is itself a useful night-shift yield: the blast-radius
 question is NOT settled and the Defect-4 characterization may need revisiting — added to morning step 2.
+
+## ★ F-2 CLOSED (morning item #4, executed) — 2026-07-07
+The coverage-gate substring bug (operator-relayed): `extraction-coverage-gate.ts::classify()` `nameInUnit` used
+`u.includes(nameWord)` — a RAW SUBSTRING match that counted a speaker item PRESENT when its name word merely appeared
+mid-word in the unit ("range"⊂"arranged", "band"⊂"abandoned", "cross"⊂"across", "order"⊂"disorder"). Direction of the
+bug: inflates `coverage_pct` → **false PASS** — a false-green masking an incomplete extraction.
+- **Confirmed by execution** (repro: name "range" vs a unit saying only "arranged" → COVERED/pass, wrong).
+- **Fixed** to word-boundary (token-prefix) matching: ≥4-char name words match by token-prefix (keeps morphology
+  band→bands, vwap→vwaps), all-short-word fallback ("5 sma") uses EXACT token match (a 3-char prefix re-collides,
+  sma→smart). Post-fix repro: BUG rows flipped COVERED→MISSING/coverage_failed; controls (genuine presence + plural)
+  stayed COVERED. **27/27 vitest** (25 existing + 2 F-2 regression tests locking the fix).
+- **Committed + FF-pushed** `0db52b4` on `extraction/100pct-evidence` (explicit-path, concurrent files NOT swept per §11b).
+- **RE-SCOPE (Ruling 1):** F-2 was NOT classifier-specific — it is the EXTRACTION-FIDELITY FLOOR. Ruling 1 didn't moot
+  it; it SHARPENED its relevance: (b) productionizes demotion on 14 concepts whose extractions must be genuinely
+  complete, and a false-green coverage gate would let an incomplete extraction into the demotion set. (b) needs this
+  fix MORE than the classifier did. Morning queue: F-2 done; remaining = look-ahead materiality, timestamp-emit run,
+  NEUTRAL-adjudication dispatch.
