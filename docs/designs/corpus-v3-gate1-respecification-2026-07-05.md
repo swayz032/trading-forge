@@ -715,3 +715,17 @@ confirmation (unrepeatable-read rule, frozen since Defect 5).
 - **R3:** F-4 closes **LOW, latent, parity-guarded.** (i)+(ii) pass clean (Catch-1 false alarm); (iii) partial-fail bounded
   (values identical, SKIP-vs-clamp action divergence, 0/120 exposure). SKIP-vs-clamp = 3rd confirmed site on the
   post-cert duplicate-enforcement refactor register.
+
+## RULING 2 tally — CORRECTION + the flip-risk sibling FOUND (2026-07-07, integrity fix)
+The Ruling-1 commit said "fire-and-forget v2-traded tally launched." **CORRECTION: it was NOT launched, and can't be
+as a fire-and-forget** — the Gate-3 harness persisted counts only; no trades-dump path exists in the backtester CLI or
+shadow-gate3 → extracting a trade's timestamp needs a per-trade emit ADDITION (a code change), which is careful setup,
+declined at this hour per the standing order.
+**But the mechanical scan RESOLVED the decisive input:** of 26 v2-traded pairs, 25 are high-count (216-3309 trades,
+can't flip on a mask); **exactly ONE is the flip-risk sibling — `75DJN5UVQnw_MES` = 1 trade** (Fable-5 predicted a
+"1-trade sibling"; it's MES not MCL). It is NON-reference → **the reference N=9 (all 1036-2977) stays robust,
+unaffected**; the flip risk is confined to the re-baseline tail.
+**Downgraded to a BOUNDED MORNING RUN (not tonight):** add a per-trade timestamp emit → run `75DJN5UVQnw_MES` → check
+if its single trade falls in a `STATIC_EVENTS` macro window. If YES, that re-baseline pair flips v2 1→0 under the
+macro-mask (Defect 9); if NO, the tail is clean too. Feeds Defect-9 (pre-re-baseline tier) materiality. Decisive input
+(the sibling's identity + count) captured tonight; only the timestamp cross-ref remains, and it needs the harness add.
