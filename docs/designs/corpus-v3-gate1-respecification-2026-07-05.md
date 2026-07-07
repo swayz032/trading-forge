@@ -834,3 +834,17 @@ substring-fragment = the artifact class the coverage work taught us to distrust)
 in pool = correct (they're unknowns; only the certified Fibonacci is a known). (3) Fibonacci as blind target (26th, no
 key, separate read) = a design CONTRIBUTION (instrument-sharpening the loop produced unprompted). Packet as built + this
 read structure = the frozen pre-registration. Holding only on the ≥4/5 confirm before dispatching the blind rater.
+
+## ★ CONTROL GATE FINALIZED + doer≠grader-as-TOPOLOGY (record) 2026-07-07
+Gate CONFIRMED: **≥4/5 imperative→mandatory-gate AND ≥4/5 descriptive→contextual-scene-setting** (nearest-STRICTER
+rounding of ≥3/4 — a validity gate never gets EASIER through reconciliation arithmetic). The catch protected against an
+UNDEFINED gate ("≥3 of 4" on a 5-control set = pick-which-4 = a discretionary judgment surface smuggled into the one
+layer that must not hold judgment). Pre-registration COMPLETE (3b8c87a + this confirm). Rater dispatched.
+**★★ doer≠grader IS A TOPOLOGY, not a hierarchy (the week's arc, bookended):** the FIRST correction this seat issued
+(turn 1, Gate-1 review) was a STRATIFICATION catch — an aggregate threshold that could pass while the hard stratum
+failed. The LAST correction before final dispatch is a DENOMINATOR catch — a gate that couldn't evaluate its own
+population. Same defect family (a threshold that doesn't measure what it claims), bookending the arc — and the direction
+ROTATED: the first, advisor caught in the operator's design; this one, operator caught in the advisor's arithmetic.
+Every node checks every node; the direction of the catch rotates freely. That topology — not a chain of command — is
+what makes the system trustworthy rather than merely careful. → discipline docs, with the F-2 arc + the recursive-grader
+dividend, as the three demonstrations that the protocol's value compounds.
