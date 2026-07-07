@@ -41,3 +41,14 @@ SHIFT is expected — the question is which shifts are correction vs anomaly. Pr
 The 7/8/9 batch cannot land until this is ratified — otherwise the re-validation's own criteria would be authored by
 someone who has already seen the corrected numbers. That is the one place Phase 0's ordering left open, and it closes
 here. **Operator ratifies -> then the batch lands -> then the re-baseline runs its pre-written exam.**
+
+## ★ AMENDMENT (0.5 RATIFIED-AS-AMENDED) — the calendar-backfill expected-change class 2026-07-07
+Pre-reg as drafted RATIFIED. Plus ONE new EXPECTED-change class the Part-B calendar backfill creates:
+- **Post-backfill, 2020-2023 trades that fall in newly-visible macro windows are SUPPRESSED for the first time** —
+  entry-suppressing, PRE-REGISTERED DIRECTION (trade counts DOWN, ONLY in macro windows, ONLY pre-2024). **Classified as
+  EXPECTED CORRECTION, not anomaly.**
+- **Its own read (the full-corpus answer the 1-pair tally could only date-scope):** enumerate the suppressed trades,
+  VERIFY each sits inside a backfilled macro window, report their aggregate P&L = **the mask's RETROACTIVE MATERIALITY
+  RECEIPT.**
+- **ANOMALY (tripwire, locked read-order):** any suppression OUTSIDE a macro window, OR any suppression that flips a
+  zero/nonzero status. Same contradicting-evidence protocol as everything.

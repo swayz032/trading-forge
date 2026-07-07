@@ -473,3 +473,32 @@ Two parts, the tally reshaped both:
   the 7/8/9 batch (so the re-baseline exercises real macro data) or is a separate pre-re-baseline item.
 **AWAITING RATIFY: (1) Defect-9 = defense-in-depth (tier confirmed?), (2) Part A + Part B scope, (3) does Part B
 (calendar backfill) block the re-baseline or run parallel?**
+
+## ★★ DEFECT-9 RULINGS + PART-B SPEC STAGED (2026-07-07)
+1. **Tier = DEFENSE-IN-DEPTH, claim carries its dates.** Decisive pair clean (2024-2026 established); v2-traded tail
+   tallied against a calendar empty pre-2024 → "no verdict flipped anywhere" is ESTABLISHED 2024-2026, STRUCTURALLY
+   UNTESTABLE 2020-2023 until Part B. Not a hedge — the tally surfaced its own blind spot by design.
+2. **Part B (calendar backfill) = the ENABLING half; Part B FIRST, Part A second** (mask built+tested against the FULL
+   calendar, never the stub). The calendar hole gets its OWN register entry — **CALENDAR-COVERAGE GAP** (data-integrity
+   finding: anything macro-aware — event-anchored edge angles, future macro-conditional strategies, live `calendarBlocked`
+   replaying history — is silently blind pre-2024).
+3. **Fork: Part B BLOCKS the re-baseline (SEQUENTIAL).** Re-baseline = judge re-cert; half-empty calendar = a silent
+   date-shaped asterisk on the certificate (the exact silently-scoped-instrument cost the week taught). Counter ("macro
+   barely fires") proves too much — barely-fires → cheap to wait; fires-more-than-1-pair-tally → waiting mandatory.
+   Either branch = sequential. Cost small (API pulls + verification, days).
+**PHASE 0 ORDER FINALIZED: Part B (calendar backfill) → Part A (class-path mask) → 7/8 land → seam trace → re-baseline.**
+(#3 receipt grinds independently, joins when the tower finishes.)
+
+## PART B SPEC — STAGED (calendar backfill to 2020; ratifies on sight)
+- **Sources (per memory reference_economic_calendar_apis, keys held):** FOMC statement dates (FRED/Fed calendar), CPI +
+  NFP/Employment-Situation release dates (BLS release schedule), EIA weekly crude inventory (EIA, T1 for MCL). Backfill
+  window = 2020-01 → 2024-01 (fills the gap before the current earliest 2024-01-02). Wire into STATIC_EVENTS /
+  economic-calendar-sync-service.ts (+ mig 0172 lineage).
+- **★ HARD REQUIREMENT — timestamp convention (the invisible error class):** these are RELEASE-TIME events. Spec MUST use
+  the **RELEASE (announcement) timestamp, in ET, DST-handled — NOT the data reference period.** Canonical release times:
+  NFP + CPI = 08:30 ET; FOMC statement = 14:00 ET; EIA crude = 10:30 ET. An 8:30-vs-9:30 convention error masks the wrong
+  bars and is invisible to every test except a hand-checked sample.
+- **ACCEPTANCE:** hand-checked spot-verification of ~10 known dates (mix of FOMC 2020-2023 + CPI/NFP) against the PRIMARY
+  source (date + release-time + event-type match) BEFORE the mask consumes the calendar. Plus: no code that reads the
+  calendar changes behavior until the verification passes.
+**AWAITING RATIFY-ON-SIGHT of Part B spec → then Part B implements (agent-loop) → Part A → batch.**
