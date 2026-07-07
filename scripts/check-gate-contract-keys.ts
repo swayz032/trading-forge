@@ -28,6 +28,20 @@ const CONTRACT: Contract[] = [
   { key: "pbo_overall", producer: "src/engine/walk_forward.py", consumer: "src/server/lib/pbo-gate.ts" },
   { key: "probability_of_ruin_ci", producer: "src/engine/mc_confidence.py", consumer: "src/server/lib/b14-ci-gate.ts" },
   { key: "bif", producer: "src/engine/statistics/backtest_inflation_factor.py", consumer: "src/server/lib/bif-gate.ts" },
+  // deep-scan #22 fix #7: 3 additional surfaces that were live gate-input contracts but unpinned.
+  // B15 Parameter Robustness Battery — lifecycle-service.ts reads `b15.passed` off the
+  // `backtests.b15Battery` JSONB (PAPER → DEPLOY_READY, ~lifecycle-service.ts:5838). The
+  // producer emits the "passed" field directly (parameter_jitter_battery.py:563); the
+  // wrapping key name is "b15_battery" (backtester.py:8334), pinned via the comment usage
+  // of that literal in both files.
+  { key: "passed", producer: "src/engine/parameter_jitter_battery.py", consumer: "src/server/services/lifecycle-service.ts" },
+  // Frozen-policy SHA-256 contract — lifecycle-service.ts reads `strategies.frozenPolicyHash`
+  // (frozen_policy_hash column) at the PAPER → DEPLOY_READY drift gate. Producer is the hash
+  // computation module that stamps the column.
+  { key: "frozen_policy_hash", producer: "src/server/lib/frozen-policy-contract.ts", consumer: "src/server/services/lifecycle-service.ts" },
+  // BIF gate companion metric — effective trial count used to compute expected inflation
+  // (sqrt(2*ln(k_eff))). Same producer/consumer pairing as the `bif` entry above.
+  { key: "k_eff", producer: "src/engine/statistics/backtest_inflation_factor.py", consumer: "src/server/lib/bif-gate.ts" },
 ];
 
 const problems: string[] = [];
