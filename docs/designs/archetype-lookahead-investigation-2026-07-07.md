@@ -352,3 +352,29 @@ BASELINE COMMIT, not the implementer's claim.
 root cause, and HELD the batch rather than report the green it could have gotten away with (raw-⊆ held, 203 passed, nobody
 would have looked). doer≠grader internalized at the layer that was supposed to be the doer — the machinery isn't just
 catching defects, it's growing graders.
+
+## ★★ RULING — unicorn taxonomy is the MISSING HALF of acceptance evidence; commit PRE-AUTHORIZED on zero-(d) green (2026-07-07)
+The 600-fixture zero-(d) taxonomy was BREAKER-ONLY. Unicorn has raw-⊆ (250 fixtures) + the structural conjunction
+argument — NECESSARY, NOT SUFFICIENT: the closed taxonomy is precisely the check for sequential-machine effects at
+TRADE level that candidate-monotonicity can't catch, and unicorn has more interacting windows (±1 disp, ±5 FVG), its own
+occupancy dynamics, and the same-bar priority race. Its FVG-lag gate bound in only 1 synthetic zone. **Criterion "zero
+(d)s" demonstrated for HALF the fix.** Gap closes cheaply: run the taxonomy over a unicorn set WITH FVG-lag stress folded
+in (FVG at proximity boundaries ±4/±5/±6; displacement + FVG windows DISAGREE on validity onset so `valid_from =
+max(disp_valid_from, f_bar)` genuinely binds). **Zero (d)s there → ratified criterion met IN FULL → commit PRE-AUTHORIZED
+on that green, no further word (F-2 line cuts both ways: no inferring authorization AND no re-litigating a criterion once
+its evidence is complete). Anything else → holds + relays.**
+**3rd occupancy mechanism (same-bar opposite-direction priority race) → ENGINE-SEMANTICS SEAM (registered, not a
+blocker).** It's a finding about the ENGINE not the fix (exists batch + streaming alike) — a tie-break rule nobody
+pre-registered. Register: what the priority rule IS, whether DETERMINISTIC across runs, whether LIVE's execution path
+shares the convention (a backtest tie-break live resolves differently = a quiet test≠ship seam). Named seam.
+**Three calls ruled:** (1) real-corpus receipt = re-baseline-tier read; synthetic materiality carries the EXACT label
+"expected-direction confirmation (look-ahead optimistically inflating), magnitude UNMEASURED pending real-data run" — the
+−16.4pp / −201pts DO NOT travel into any downstream claim. (2) stress-test = the missing HALF of acceptance evidence, NOT
+a follow-up (resolved above). (3) tripwire arms at corpus re-baseline + INHERITS the locked read-order (fire → taxonomy
+classification on that pair FIRST → all-(a)/(b)/(c) = fix working, reference stands → any (d)/predicate-fail = FULL STOP) —
+**written into the re-baseline's pre-registration NOW so it waits there, not reconstructed later.**
+**★ RECURSIVE doer≠grader DIVIDEND (record name):** the re-reviewer improved its OWN instrument twice mid-review and
+found a mechanism the implementer missed — **the grader graded its own harness.** doer≠grader running RECURSIVELY, one
+level deeper than the implementer's seed=32 hold. The machinery is now catching defects in the machinery that catches
+defects. Goes next to the F-2 arc in the discipline docs: the protocol's value COMPOUNDS — every layer that internalizes
+the blade grows a layer beneath it that does too.
