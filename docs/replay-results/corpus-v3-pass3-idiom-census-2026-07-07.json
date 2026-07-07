@@ -1,0 +1,317 @@
+{
+ "frozen": "2026-07-07",
+ "purpose": "pass-3 imperative-vs-descriptive RULING evidence packet \u2014 CENSUS not verdict, surface-lexical tags only, dispositions are the morning ruling",
+ "wrinkle": "jlShztsY3oA (target) quotes are Afrikaans in DRI; certified ENGLISH translations used for target exemplars; the ruling must judge cross-language, English markers do not apply to raw target quotes",
+ "marker_defs": {
+  "imperative": "\\bwait(ing)? for\\b|\\bmust\\b|\\bonly (when|if|enter|take|trade)\\b|\\bas soon as\\b|\\bbefore (we|you) can\\b|\\bneed(s)? to\\b|\\bhas to\\b|\\bi only\\b|\\bcardinal rule\\b|\\bthe rule(s)? (is|for)\\b|\\bstep number\\b|\\byou want to wait\\b|\\brequire",
+  "descriptive": "\\bwill (likely |probably )?(retrace|pull ?back|return|move|form|come|drop)|\\blikely\\b|\\bretraces? (back )?to\\b|\\btends? to\\b|\\bafter a (big )?(move|shift)\\b|\\bforms?\\b|\\bappears?\\b"
+ },
+ "design_census": {
+  "IMPERATIVE": 9,
+  "DESCRIPTIVE": 0,
+  "NEUTRAL": 25
+ },
+ "target_tag": {
+  "fibonacci retracement ": "DESCRIPTIVE",
+  "structure confirmation": "NEUTRAL",
+  "downward tendency line": "NEUTRAL"
+ },
+ "rows": [
+  {
+   "set": "focused",
+   "video": "HfZTCZTDfWk",
+   "object": "5 sma crossing below 20 sma 4h chart",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "you don't just want to take the trade you want to wait for a retrace back to the 5 SMA"
+  },
+  {
+   "set": "focused",
+   "video": "HfZTCZTDfWk",
+   "object": "5 sma",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "wait for a retrace back to the 5 SMA"
+  },
+  {
+   "set": "focused",
+   "video": "HfZTCZTDfWk",
+   "object": "cross down and retrace",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "we get the cross down um right over here and we get the retrace right over here and once again very beautiful move lower"
+  },
+  {
+   "set": "focused",
+   "video": "m-G1ag77aVc",
+   "object": "retracement opportunity",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "we're basically now looking for a retracement opportunity to then buy from further inside of the first leg of price action"
+  },
+  {
+   "set": "broad",
+   "video": "c8VLqF0XDR4",
+   "object": "level",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "this is not going to play out every day. This is just one of many setups that we can keep our eye on"
+  },
+  {
+   "set": "broad",
+   "video": "c8VLqF0XDR4",
+   "object": "price tried to break below area",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+  },
+  {
+   "set": "broad",
+   "video": "c8VLqF0XDR4",
+   "object": "price break below and retest as resistance",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "We are waiting for price to break below, come back and retest it as resistance before we can"
+  },
+  {
+   "set": "broad",
+   "video": "c8VLqF0XDR4",
+   "object": "retest into area",
+   "class": "UNRESOLVED",
+   "tag": "NEUTRAL",
+   "quote_en": "what I was looking for was for price to pull back into this area because the market was very bullish today"
+  },
+  {
+   "set": "broad",
+   "video": "c8VLqF0XDR4",
+   "object": "30 minute high pre market high fvg",
+   "class": "OPTIONAL",
+   "tag": "NEUTRAL",
+   "quote_en": "a lot of confluence as well as large buying participants at this key level"
+  },
+  {
+   "set": "broad",
+   "video": "HfZTCZTDfWk",
+   "object": "low price level",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "you can see this low is 1788"
+  },
+  {
+   "set": "broad",
+   "video": "snNkQSyWX4k",
+   "object": "zone sitting right in here",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "so this should be our initial exit just based on support and resistance"
+  },
+  {
+   "set": "broad",
+   "video": "snNkQSyWX4k",
+   "object": "wicks retest zones",
+   "class": "UNRESOLVED",
+   "tag": "NEUTRAL",
+   "quote_en": "I'm just going to point out a few right we closed below we kind of came back up here are the Wicks these are the kind of retests near the zones"
+  },
+  {
+   "set": "broad",
+   "video": "N7uP9V0Iktc",
+   "object": "vwop retest",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "NEUTRAL",
+   "quote_en": "VWAP is always a big retest spot ... then I'm looking to take puts on a VWOP retest, not a pre-market low retest"
+  },
+  {
+   "set": "broad",
+   "video": "N7uP9V0Iktc",
+   "object": "ema",
+   "class": "OPTIONAL",
+   "tag": "NEUTRAL",
+   "quote_en": "You also trade EMA retest sometimes."
+  },
+  {
+   "set": "broad",
+   "video": "KXWRtV2LOVc",
+   "object": "daily fvg 4h hour candle",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "this will be our key level your goal is to enter short as soon as the key level is tapped"
+  },
+  {
+   "set": "broad",
+   "video": "KXWRtV2LOVc",
+   "object": "key level tap",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "as soon as the key level is tapped and you notice that 15 minute CRT"
+  },
+  {
+   "set": "broad",
+   "video": "KXWRtV2LOVc",
+   "object": "one day time frame",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "NEUTRAL",
+   "quote_en": "let's hop onto a one day time frame the daily time frame to look for a key level to have four confirmations for the trade"
+  },
+  {
+   "set": "broad",
+   "video": "m-G1ag77aVc",
+   "object": "retest",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "We look to buy from the demand zone when it is retested because we expect to see more of that institutional buying kicking in."
+  },
+  {
+   "set": "broad",
+   "video": "m-G1ag77aVc",
+   "object": "future selling",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "So future selling is expected once the market returns to this level."
+  },
+  {
+   "set": "broad",
+   "video": "m-G1ag77aVc",
+   "object": "supply zones",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "once the market returns to this level."
+  },
+  {
+   "set": "broad",
+   "video": "m-G1ag77aVc",
+   "object": "time frame",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "Let's say we begin on the 4hour time frame and we are looking at a supply zone."
+  },
+  {
+   "set": "broad",
+   "video": "m-G1ag77aVc",
+   "object": "market reaches level",
+   "class": "ALTERNATIVE",
+   "tag": "NEUTRAL",
+   "quote_en": "what we can do inside of the top zone is use what I call a standard confirmation."
+  },
+  {
+   "set": "broad",
+   "video": "m-G1ag77aVc",
+   "object": "lower time frame structure changes in agreement with larger trend direction",
+   "class": "OPTIONAL",
+   "tag": "NEUTRAL",
+   "quote_en": "what we can do inside of the top zone is use what I call a standard confirmation."
+  },
+  {
+   "set": "broad",
+   "video": "m-G1ag77aVc",
+   "object": "1hour zone context",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "but that's because this is a 1hour zone."
+  },
+  {
+   "set": "broad",
+   "video": "m-G1ag77aVc",
+   "object": "price movement",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "if we go over on the 5-minut time frame and dig into this larger demand zone"
+  },
+  {
+   "set": "broad",
+   "video": "ktkqq7QsN9Q",
+   "object": "vwap",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "Every course I bought, every video I watched, every guru I follow said the same thing. VWAP is support."
+  },
+  {
+   "set": "broad",
+   "video": "ktkqq7QsN9Q",
+   "object": "retest",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "Often, they'll retest again just like they did right here."
+  },
+  {
+   "set": "broad",
+   "video": "ktkqq7QsN9Q",
+   "object": "stop placement rule",
+   "class": "UNRESOLVED",
+   "tag": "NEUTRAL",
+   "quote_en": "The stop is going to go beyond the price level or beyond the testing candle wick."
+  },
+  {
+   "set": "broad",
+   "video": "ktkqq7QsN9Q",
+   "object": "trend",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "NEUTRAL",
+   "quote_en": "VWAP plays a better magnet than it does a trading level except in a trend."
+  },
+  {
+   "set": "broad",
+   "video": "oDLt9zh33LE",
+   "object": "opening range breakout zone",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "That is your opening range breakout zone that you wait for price action to break out."
+  },
+  {
+   "set": "broad",
+   "video": "oDLt9zh33LE",
+   "object": "high or low initial candle with overlapping fvg",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "step number three, we're going to wait for the market to retest that high or low of this initial candle"
+  },
+  {
+   "set": "broad",
+   "video": "oDLt9zh33LE",
+   "object": "fvg",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "IMPERATIVE",
+   "quote_en": "we are going to wait for again wait for that retest into that fair value gap."
+  },
+  {
+   "set": "broad",
+   "video": "oDLt9zh33LE",
+   "object": "high price level",
+   "class": "CONTEXTUAL",
+   "tag": "NEUTRAL",
+   "quote_en": "Now, we trade back up to the high. And do we get our entry reason?"
+  },
+  {
+   "set": "broad",
+   "video": "oDLt9zh33LE",
+   "object": "new york open time zone",
+   "class": "JUSTIFIED_MANDATORY",
+   "tag": "NEUTRAL",
+   "quote_en": "We come to our charts right before 9:30 open in the New York hill zone."
+  },
+  {
+   "set": "TARGET",
+   "video": "jlShztsY3oA",
+   "object": "fibonacci retracement level",
+   "class": "JUSTIFIED_MANDATORY(cert-adj)",
+   "tag": "DESCRIPTIVE",
+   "quote_en": "[cert EN] using tools like Fibonacci will keep you out of these useless trades, [knowing] that after a big move price will likely retrace to a Fibonacci retracement level"
+  },
+  {
+   "set": "TARGET",
+   "video": "jlShztsY3oA",
+   "object": "structure confirmation within range box",
+   "class": "OPTIONAL(cert-adj)",
+   "tag": "NEUTRAL",
+   "quote_en": "[cert EN] even add something to confirmation of structure within the range"
+  },
+  {
+   "set": "TARGET",
+   "video": "jlShztsY3oA",
+   "object": "downward tendency line",
+   "class": "CONTEXTUAL(cert-adj)",
+   "tag": "NEUTRAL",
+   "quote_en": "[cert EN] we're still trading above that downward trend line, why would you go short in it"
+  }
+ ]
+}

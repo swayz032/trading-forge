@@ -645,3 +645,18 @@ never stressed (delta 0.0000 across 3 runs) — on THIS 66-call margin set gemma
 either gemma is stable-in-practice at temp 0.1 here or responses are cached (gemma_calls count recorded in the run
 JSON distinguishes; fresh-call counts observed argue stability, not caching). The frozen general nondeterminism
 finding stands; it simply did not manifest on this stratum. CONFIRM holds; independence is genuine.
+
+## PASS-3 IMPERATIVE-VS-DESCRIPTIVE — EVIDENCE PACKET FROZEN (census, NOT verdict — 2026-07-07)
+`docs/replay-results/corpus-v3-pass3-idiom-census-2026-07-07.json` — all 40 design-set retracement/level idioms
+(4 focused + 36 broad) + jlShztsY3oA's 3 CERTIFIED-ENGLISH target-class exemplars, verbatim anchors, tagged by
+SURFACE LEXICAL MARKERS ONLY (imperative: wait-for/must/only-when/as-soon-as/before-we-can; descriptive: will-retrace/
+likely/retraces-to). NO dispositions — those are the morning ruling.
+- **Design census (surface markers): IMPERATIVE 9, DESCRIPTIVE 0, NEUTRAL 25.** Target Fibonacci (cert EN) = DESCRIPTIVE.
+- **FACTUAL WRINKLE for the ruling:** jlShztsY3oA (target) quotes are AFRIKAANS in the DRI; certified English
+  translations are used for the exemplars; English markers do NOT apply to raw target quotes → the ruling is inherently
+  cross-language.
+- **What the census does NOT settle (the morning ruling):** the 25 NEUTRAL rows are unclassifiable by surface markers —
+  whether ANY of them (or any imperative one re-read) is a CLEAN descriptive-retracement-GATE design instance the pass-3
+  rule can derive from is the ruling. If none → design set empty for the target sub-class → quarantine impossible →
+  the pre-registered escalate/epistemics-restate branch (possibly the (b) landing) fires. This decision can KILL the
+  pass-3 track; it is reserved for fresh eyes against this packet, per the licensor's own standing order.
