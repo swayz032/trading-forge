@@ -971,9 +971,35 @@ export class AgentService {
           };
         }
       } catch (auditErr) {
-        // Auditor failure should NOT block the backtest path — log loudly so
-        // we know the gate is broken, but continue.
-        logger.error({ err: auditErr }, "Layer 2 auditor threw — gate disabled for this call; INVESTIGATE");
+        // FAIL-CLOSED: the Layer-2 auditor is a gate; if the gate itself throws
+        // we CANNOT know whether the graduated config is safe, so we must REFUSE
+        // the promotion rather than silently wave it through (which is what the
+        // old log-and-continue did — a fail-OPEN that contradicted this block's
+        // own "FAIL-CLOSED" header). Reject + audit row + Discord WARN.
+        logger.error(
+          { err: auditErr, dsl_name: (sanitizedDsl as any)?.name, correlationId },
+          "Layer 2 auditor THREW — failing CLOSED: refusing graduated_bucket promotion (gate cannot certify safety)",
+        );
+        await db.insert(auditLog).values({
+          action: "backtest.auditor_error_fail_closed",
+          entityType: "strategy",
+          input: { dsl_name: (sanitizedDsl as any)?.name, source: options.source },
+          result: { error: auditErr instanceof Error ? auditErr.message : String(auditErr) },
+          status: "failure",
+          decisionAuthority: "gate",
+          correlationId: correlationId ?? null,
+        }).catch((writeErr) => logger.warn({ err: writeErr }, "audit_log write failed for auditor-error fail-closed"));
+        notifyWarning(
+          "Layer-2 Auditor Error — Promotion BLOCKED (fail-closed)",
+          `graduated-strategy-auditor threw while auditing "${String((sanitizedDsl as any)?.name ?? "unknown")}". The Layer-2 audit gate failed CLOSED and REFUSED the promotion. Investigate the auditor — no audit certification means no promotion.`,
+          { dsl_name: (sanitizedDsl as any)?.name, correlationId },
+        );
+        return {
+          strategyId: null, backtestId: null, status: "audit_rejected",
+          tier: null, forgeScore: null,
+          skipped: true,
+          reason: "auditor_threw_fail_closed",
+        };
       }
     }
 

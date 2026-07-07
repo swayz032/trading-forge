@@ -381,3 +381,61 @@ describe("evaluateB14CiGate — result surface (SSE payload source)", () => {
     }
   });
 });
+
+// ─── Payout-denial gate (regression: consistency_fail_rate merged into per_firm) ─
+// Deep-scan payout-denial fix (2026-07-06): monte_carlo.py now merges
+// firm_survival[firm].consistency_fail_rate INTO probability_of_ruin_ci.per_firm
+// so this gate can actually fire. Previously per_firm never carried the key →
+// the Topstep 40%-consistency payout-denial BLOCK could NEVER trigger.
+describe("evaluateB14CiGate — payout-denial gate on per_firm.consistency_fail_rate", () => {
+  it("BLOCKS when a firm's consistency_fail_rate exceeds the payout-denial threshold (>40% fail)", () => {
+    // ci_high well below threshold so we reach the payout-denial check (not blocked earlier).
+    const ruinCi = {
+      point_estimate: 0.05,
+      ci_low: 0.02,
+      ci_high: 0.08,
+      ci_method: "BCa",
+      n_resamples: 9999,
+      per_firm: {
+        topstep_50k: {
+          point_estimate: 0.05,
+          ci_high: 0.08,
+          consistency_fail_rate: 0.45, // >40% — Topstep payout-denial territory
+        },
+      },
+    } as unknown as RuinCiDict;
+    const result = evaluateB14CiGate(ruinCi, null, 0.40);
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.payout_denial_rate_exceeds_threshold");
+    expect(result.auditPayload.blocked).toBe(true);
+    expect(result.auditPayload.worst_consistency_fail_rate).toBe(0.45);
+  });
+
+  it("PASSES when consistency_fail_rate is below the payout-denial threshold", () => {
+    const ruinCi = {
+      ci_high: 0.08,
+      point_estimate: 0.05,
+      per_firm: {
+        topstep_50k: { ci_high: 0.08, consistency_fail_rate: 0.05 },
+      },
+    } as unknown as RuinCiDict;
+    const result = evaluateB14CiGate(ruinCi, null, 0.40);
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("b14.ci_high_within_threshold");
+  });
+
+  it("selects the WORST firm's consistency_fail_rate across multiple firms", () => {
+    const ruinCi = {
+      ci_high: 0.08,
+      point_estimate: 0.05,
+      per_firm: {
+        mffu_50k: { ci_high: 0.08, consistency_fail_rate: 0.12 },
+        topstep_50k: { ci_high: 0.08, consistency_fail_rate: 0.55 },
+      },
+    } as unknown as RuinCiDict;
+    const result = evaluateB14CiGate(ruinCi, null, 0.40);
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.payout_denial_rate_exceeds_threshold");
+    expect(result.auditPayload.worst_consistency_fail_rate).toBe(0.55);
+  });
+});

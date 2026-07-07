@@ -66,6 +66,21 @@ export interface CollaborativeTradingWarning {
   rule: "mffu_no_collaborative_trading";
 }
 
+/**
+ * Thrown when a strategy assignment is REFUSED because it would create an MFFU
+ * collaborative-trading ban risk (CLAUDE.md §6 hard rule). 409 Conflict — the
+ * caller must assign a DIFFERENT strategy to this family member (§9).
+ */
+export class CollaborativeTradingBlockedError extends Error {
+  readonly statusCode = 409;
+  readonly warning: CollaborativeTradingWarning;
+  constructor(message: string, warning: CollaborativeTradingWarning) {
+    super(message);
+    this.name = "CollaborativeTradingBlockedError";
+    this.warning = warning;
+  }
+}
+
 // ─── Pipeline-pause guard ─────────────────────────────────────────────────────
 
 class PipelinePausedError extends Error {
@@ -383,47 +398,64 @@ export async function assignStrategyToAccount(
   );
 
   if (warning) {
-    logger.warn(
-      { warning },
-      "strategy-assignment: MFFU collaborative-trading warning — assigning anyway but surfacing compliance event",
+    // FAIL-CLOSED: MFFU's collaborative-trading rule is a HARD compliance boundary
+    // (CLAUDE.md §6 — "2+ accounts running identical/opposite strategies → ban").
+    // The detector already excludes Topstep multi-account (allowed) and the
+    // operator's own account (null family label), so a firing warning is a real
+    // ban-risk assignment. BLOCK it (refuse + audit + Discord) rather than
+    // insert-and-warn, which was a fail-OPEN on a bannable violation.
+    logger.error(
+      { warning, accountId, strategyId, correlationId },
+      "strategy-assignment: MFFU collaborative-trading risk — BLOCKING assignment (fail-closed compliance boundary)",
     );
 
-    broadcastSSE("compliance:collaborative_trading_warning", {
+    broadcastSSE("compliance:collaborative_trading_blocked", {
       strategyId: warning.strategyId,
       firmId: warning.firmId,
       affectedAccountIds: warning.affectedAccountIds,
       familyMemberLabels: warning.familyMemberLabels,
       rule: warning.rule,
+      blocked: true,
       timestamp: new Date().toISOString(),
     });
 
-    // Discord alert — operator must be notified of MFFU collaborative-trading risk
+    // Discord alert — operator must be notified of the BLOCKED assignment
     notifyCritical(
-      "MFFU Collaborative-Trading Warning",
+      "MFFU Collaborative-Trading — Assignment BLOCKED",
       appendFamilyGradePostscript(
-        `Strategy ${strategyId} is being assigned to account ${accountId} on MFFU. ` +
-          `2+ family members running the same strategy on MFFU risks collaborative-trading detection. ` +
-          `Affected accounts: ${warning.affectedAccountIds.join(", ")}. Labels: ${warning.familyMemberLabels.join(", ")}.`,
+        `Strategy ${strategyId} was REFUSED assignment to account ${accountId} on MFFU. ` +
+          `2+ family members running the same strategy on MFFU is a collaborative-trading BAN risk, so the assignment was blocked. ` +
+          `Affected accounts: ${warning.affectedAccountIds.join(", ")}. Labels: ${warning.familyMemberLabels.join(", ")}. ` +
+          `Assign a DIFFERENT strategy to this family member on MFFU (§9).`,
         "A trading strategy couldn't be assigned to an account.",
-        "No action needed — the bot will retry. Call Tony if trading doesn't start within an hour.",
+        "No action needed automatically — a different strategy is needed for this account. Call Tony if unsure.",
       ),
       { strategyId, firmId: warning.firmId, affectedAccountIds: warning.affectedAccountIds },
     );
 
     await db.insert(auditLog).values({
-      action: "strategy_assignment.collaborative_trading_warning",
+      action: "strategy_assignment.collaborative_trading_blocked",
       entityType: "strategy",
       entityId: strategyId,
-      decisionAuthority: "system",
+      decisionAuthority: "gate",
       input: { accountId, strategyId, firmId: account.firmId, familyMemberLabel } as Record<string, unknown>,
       result: {
-        severity: "warning",
+        severity: "blocked",
         rule: warning.rule,
         affectedAccountIds: warning.affectedAccountIds,
       } as Record<string, unknown>,
-      status: "success",
+      status: "failure",
       correlationId,
+    }).catch((err) => {
+      logger.warn({ err, accountId, strategyId }, "strategy-assignment: collaborative-trading-blocked audit write failed (non-blocking)");
     });
+
+    throw new CollaborativeTradingBlockedError(
+      `Strategy ${strategyId} cannot be assigned to account ${accountId} on MFFU — collaborative-trading ban risk ` +
+        `(${warning.affectedAccountIds.length} family accounts would run the same strategy). ` +
+        `Assign a different strategy to this family member (CLAUDE.md §6/§9).`,
+      warning,
+    );
   }
 
   // Insert the assignment
