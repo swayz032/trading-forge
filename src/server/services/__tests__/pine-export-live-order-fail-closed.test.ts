@@ -57,10 +57,10 @@ vi.mock("../../index.js", () => ({
 // helper returns an object that is BOTH directly awaitable (via `.then`) AND
 // exposes a `.limit()` that resolves to the same rows, so a single mock queue
 // can serve every select call site in call order.
-function makeChainable<T>(rows: T[]) {
+function makeChainable(rows: unknown[]) {
   return {
     limit: vi.fn(() => Promise.resolve(rows)),
-    then: (resolve: (v: T[]) => void, reject?: (e: unknown) => void) =>
+    then: (resolve: (v: unknown[]) => void, reject?: (e: unknown) => void) =>
       Promise.resolve(rows).then(resolve, reject),
     catch: (reject: (e: unknown) => void) => Promise.resolve(rows).catch(reject),
   };
@@ -70,7 +70,7 @@ const mockValues = vi.fn().mockReturnThis();
 const mockSet = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
 const mockInsert = vi.fn().mockReturnValue({ values: mockValues });
 const mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
-const mockWhere = vi.fn(() => makeChainable([]));
+const mockWhere = vi.fn((): ReturnType<typeof makeChainable> => makeChainable([]));
 const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
 const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
