@@ -196,3 +196,30 @@ is A/B-cancelled (both arms use run_class_backtest), so tonight's certified 9/9 
 **STOP-AND-PARK per charter (7th-defect-smell, careful-not-tired verification, pass-3-downstream consequences):**
 morning = full-call-graph confirm each candidate (are they applied upstream of run_class_backtest?), then materiality/
 fix on the post-cert backtest-core parity refactor track. NOT fixed, NOT tired-verified tonight.
+
+## ★★ CORRECTIONS + LOCKED MORNING TRIAGE (Fable-5, 2026-07-07) — advisor's stop honored
+Two catches on the Axis-2 filing above:
+- **CATCH 1 — partial-fill + VIX are NOT new defects; they are registered Defects 7/8** (floor-verified, ruled
+  verdict-irrelevant, deferred pre-re-baseline weeks ago). Morning = LEDGER RECONCILIATION, not fresh investigation.
+  The §12 "DEFAULT ON" contradiction UPGRADES their PRIORITY, not their class. **Must NOT be re-numbered as new defects.**
+- **CATCH 2 — the macro-mask is the ONE genuine new find, and it is Defect-5-CLASS (verdict-VARIABLE), not 7/8/9-class.**
+  A macro-mask SUPPRESSES ENTRIES → the "A/B cancels" defense I filed is WRONG (it is the symmetric-blockage argument
+  this record already REJECTED twice: MCL option-(b), and Defect-5 itself forcing the reference re-derivation). Worse:
+  live has `calendarBlocked`; a class-path lacking its twin means backtest≠live BY CONSTRUCTION — strikes the founding
+  principle. **My "Gate-3 verdict survives" claim is RETRACTED for the macro-mask** — it survives ONLY if the decisive
+  trade-count check clears.
+
+**CLASSIFICATION RULE (locked before triage):** entry-SUPPRESSING candidates = pre-Gate-3 BLOCKERS; sizing/fill/
+P&L-only candidates = defer to pre-re-baseline. (macro-mask → blocker; partial-fill/VIX → pre-re-baseline.)
+
+**DECISIVE CHECK (locked):** for each of the 9 reference pairs + every v2-traded pair, COUNT trades inside macro
+windows. High-count pairs can't flip on a mask. ANY low-count pair with macro-window trades (the 1-trade MCL siblings
+are the live risk) → the reference N gets RE-DERIVED A THIRD TIME on the corrected (macro-masked) engine BEFORE pass-3's
+single shot. TEST=SHIP: the spent escape's one Gate 3 runs on whatever engine the triage certifies, not before.
+
+**REVISED MORNING ORDER (LOCKED):** (1) imperative-vs-descriptive ruling vs the packet; (2) candidate triage — Defect-7/8
+ledger reconcile, macro-mask verification, classification rule applied, macro-window trade counts; (3) F-4 predicates →
+materiality resolves; (4) F-2 under the blade; (5) look-ahead materiality. **Pass-3 rule implementation waits on (1);
+pass-3 Gate-3 dispatch waits on (1) AND (2).** Morning queue = 5 rulings, one possibly track-killing (imperative-vs-
+descriptive), one possibly engine-changing (macro-mask). The stop is HONORED: the factual frontier is exhausted, all
+that remains is judgment, and judgment waits for daylight.
