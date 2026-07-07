@@ -380,6 +380,33 @@ export interface EntryQualityWithSources {
   factor_sources?: Record<string, FactorSourceLabel>;
   /** Telemetric quality tag. Optional/additive — legacy rows omit this key. */
   factor_quality?: "rich" | "thin" | "fallback_only" | null;
+  /**
+   * FIX A1 (deep-scan #22 fix-wave-2, 2026-07-07): Wave 25 W25.1 opt-in flag for
+   * Path C (evaluateWeightedConfluence). paper-signal-service.ts:4176 reads this
+   * field from INSIDE config.entry_quality — it does NOT read the sibling
+   * top-level `strategies.use_weighted_scoring` DB column at signal-evaluation
+   * time (that column is read elsewhere, e.g. by the scoring-strategy loader,
+   * but the paper-signal-service dispatcher's decision point only looks here).
+   * Must be stamped here or Path C is silently dead-on-arrival for every
+   * graduated strategy regardless of what the DB column says.
+   */
+  use_weighted_scoring?: boolean;
+  /**
+   * FIX A1 (deep-scan #22 fix-wave-2, 2026-07-07): W23H.D Path A per-strategy
+   * confirming indicators. paper-signal-service.ts:4162-4170 reads this from
+   * INSIDE config.entry_quality, not from the sibling top-level
+   * `config.confirming_indicators` key the graduator also writes (that
+   * top-level copy is Wave 26 Pass E's bare confluence-factor-tag array —
+   * see direct-bucket-graduator.ts buildV11ConfigAdditions callers — a
+   * DIFFERENT shape than the ConfirmingIndicator{indicator,params,direction}
+   * objects this field requires; do NOT wire that array in here, it would
+   * silently divert Path C's error-fallback into a guaranteed-reject Path A).
+   * This field carries ONLY the genuinely LLM-extracted W23G.11
+   * `confirmingIndicators` (already the correct object shape) when present —
+   * absent/undefined for the (common) case where the LLM did not extract any,
+   * in which case Path A stays dormant and Path B/C behavior is unchanged.
+   */
+  confirming_indicators?: ConfirmingIndicator[];
 }
 
 /**
@@ -2652,7 +2679,22 @@ export async function graduateBucketDirectly(opts: {
   // A richly-extracted strategy (entry_sequence ≥ 3 steps OR targets ≥ 3) is
   // treated as "rich" even if the LLM confluence_factors list was auto-floored.
   // This reflects that the v11 extraction provided institutional-grade detail.
-  const v11RichExtraction = v11EntrySequence.length >= 3 || v11Targets.length >= 3;
+  //
+  // FIX A3 (deep-scan #22 fix-wave-2, 2026-07-07): the promotion previously fired
+  // REGARDLESS of realCount — a 3-step entry_sequence with ZERO real (extracted OR
+  // kb_inferred) confluence factors still got stamped "rich", which (a) suppressed
+  // Gate 3's thin_confluence_warning for a strategy that had NO real evidence behind
+  // its confluence factors, and (b) corrupted the tf_graduation_factor_quality_total
+  // telemetry (a fallback_only strategy reporting as rich). classifyFactorSources()'s
+  // OWN contract (line ~455-457 above) is realCount>=2 → rich; realCount===0 → never
+  // rich. The v11 promotion is a LEGITIMATE upgrade path (thin → rich when the
+  // extraction is otherwise deep) but must never manufacture "rich" out of zero real
+  // evidence — that's exactly the "no confluence WHATSOEVER" case Gate 3 exists to flag.
+  const realFactorCount = Object.values(factor_sources).filter(
+    (src) => src === "extracted" || src === "kb_inferred",
+  ).length;
+  const v11RichExtraction =
+    (v11EntrySequence.length >= 3 || v11Targets.length >= 3) && realFactorCount >= 2;
   const factor_quality: "rich" | "thin" | "fallback_only" =
     v11RichExtraction ? "rich" : rawFactorQuality;
 
@@ -2690,6 +2732,38 @@ export async function graduateBucketDirectly(opts: {
       originalMarket: market,
       confluenceFactors: finalConfluenceFactors,
     });
+
+    // ─── FIX A1 (deep-scan #22 fix-wave-2, 2026-07-07) ────────────────────────
+    // Stamp use_weighted_scoring + confirming_indicators INSIDE entryQualityBlock
+    // (config.entry_quality) — the ONLY location paper-signal-service.ts reads
+    // them from at signal-evaluation time (paper-signal-service.ts:4162-4177).
+    // Previously use_weighted_scoring was written ONLY as the top-level
+    // `strategies.use_weighted_scoring` DB column and confirming_indicators
+    // ONLY as the top-level `config.confirming_indicators` JSONB key — both
+    // dead-on-arrival for the Path C / Path A dispatcher, silently falling every
+    // graduated strategy to Path B (canonical-5 boolean), where Wave-vocab
+    // confluence_factors then hit unknown_factor_fail_closed and could push
+    // below min_factors_satisfied and BLOCK the entry outright.
+    // entryQualityBlock is mutated here (not re-declared) so both the leader
+    // INSERT (below) and the fan-out variant INSERT (further down, same object
+    // reference) pick up the fix identically — Wave 26 Pass H1 Bug 3 field-
+    // parity invariant preserved.
+    // NOTE: confirming_indicators here is intentionally the genuinely
+    // LLM-extracted W23G.11 `confirmingIndicators` (real ConfirmingIndicator
+    // objects) — NOT `v11MergedConfirmingIndicators` (the bare confluence-factor-
+    // tag string array Wave 26 Pass E stamps at the top-level config key). That
+    // string array is NOT the ConfirmingIndicator{indicator,params,direction}
+    // shape confirming-indicator-evaluator.ts requires; wiring it in here would
+    // make Path A engage (since it's non-empty on nearly every graduation) and
+    // then fail EVERY factor as `unknown_indicator:<factor-tag>` — turning the
+    // Path C error-fallback (designed to land safely on Path B) into a
+    // guaranteed-reject Path A instead. `confirmingIndicators` stays undefined
+    // for the common case (no LLM confluence extraction), which correctly keeps
+    // Path A dormant exactly as before this fix.
+    entryQualityBlock.use_weighted_scoring = wave25Defaults.useWeightedScoring;
+    if (confirmingIndicators && confirmingIndicators.length > 0) {
+      entryQualityBlock.confirming_indicators = confirmingIndicators;
+    }
 
     // ─── Wave 26 Pass I (2026-05-26): v11 config additions ────────────────────
     // Build the fields to stamp on every row (leader + variants).

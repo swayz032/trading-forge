@@ -125,3 +125,39 @@ describe("deep-scan #22 fix #8 — parseAccountNumericOrDefault preserves a legi
     expect(parseAccountNumericOrDefault("", 50_000)).toBe(50_000);
   });
 });
+
+describe("FIX A4 (deep-scan #22 fix-wave-2, 2026-07-07) — highWaterBalance chained fallback preserves a legitimate 0", () => {
+  // paper-signal-service.ts:5237-5240 composes the same helper twice to replace
+  // `parseFloat(realizedPeakEquity) || parseFloat(highWaterBalance) || accountBalance`,
+  // which discarded a real "0" realizedPeakEquity/highWaterBalance because 0 is falsy.
+  // This models the exact expression so the chain's behavior is directly verified.
+  const computeHighWaterBalance = (
+    realizedPeakEquity: unknown,
+    highWaterBalanceCol: unknown,
+    accountBalance: number,
+  ): number =>
+    parseAccountNumericOrDefault(
+      realizedPeakEquity,
+      parseAccountNumericOrDefault(highWaterBalanceCol, accountBalance),
+    );
+
+  it('a legitimate "0" realizedPeakEquity survives as 0 (the core regression)', () => {
+    expect(computeHighWaterBalance("0", "45000", 50_000)).toBe(0);
+  });
+
+  it('a legitimate "0" highWaterBalance survives as 0 when realizedPeakEquity is missing', () => {
+    expect(computeHighWaterBalance(null, "0", 50_000)).toBe(0);
+  });
+
+  it("falls through to highWaterBalance when realizedPeakEquity is null", () => {
+    expect(computeHighWaterBalance(null, "45250.50", 50_000)).toBeCloseTo(45250.50);
+  });
+
+  it("falls through to accountBalance when both columns are null/undefined", () => {
+    expect(computeHighWaterBalance(null, undefined, 50_000)).toBe(50_000);
+  });
+
+  it("a genuine positive realizedPeakEquity wins over highWaterBalance and accountBalance", () => {
+    expect(computeHighWaterBalance("62000.25", "45000", 50_000)).toBeCloseTo(62000.25);
+  });
+});
