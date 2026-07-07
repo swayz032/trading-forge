@@ -92,6 +92,7 @@
     .kv-gates-title { display: none; align-items: baseline; gap: 10px; margin-bottom: 12px; }
     .kv-gates-title b { font-size: 16px; font-weight: 800; color: var(--ink); }
     .kv-gates-title span { font-size: 11px; color: var(--mute); font-family: ui-monospace, monospace; }
+    .kv-gates-note { font-size: 10px; color: var(--mute); line-height: 1.45; margin: -4px 0 12px; max-width: 640px; }
     .kv-gates {
       display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px;
       scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;
@@ -374,10 +375,11 @@
       <div class="kv-hero-art" role="img" aria-label="Slumdawg Traders Kitchen"></div>
     </div>
 
-    <div class="kv-section-label">The journey · tap a dish to plate it</div>
+    <div class="kv-section-label">The journey · tap a dish to see how far it's moved</div>
     <div class="kv-gates-wrap">
-      <div id="kv-gates-idle" class="kv-gates-idle">Tap a play on the menu below to watch it move through the kitchen — one gate at a time.</div>
+      <div id="kv-gates-idle" class="kv-gates-idle">Tap a play on the menu below to see how far it's moved through the kitchen.</div>
       <div id="kv-gates-title" class="kv-gates-title"><b id="kv-gates-name"></b><span id="kv-gates-tag"></span></div>
+      <div id="kv-gates-note" class="kv-gates-note" style="display:none">This shows how far this play has moved through the kitchen — earlier steps reflect its current stage, not a fresh re-check of each test. Tap the play itself for the full test results.</div>
       <div id="kv-gates" class="kv-gates" style="display:none"></div>
     </div>
 
@@ -522,7 +524,13 @@
     }
 
     (async () => {
-      // ── Gate journey, coarse from lifecycle stage (mirrors gate-journey.ts) ──
+      // ── Journey progress, COARSE from lifecycle stage only (mirrors gate-journey.ts
+      //    coarseJourneyForStage). DS22 Track B B2: the backend menu endpoints do NOT
+      //    expose per-gate results here — only lifecycleState. So these steps are STAGE
+      //    INFERENCE, not verified per-gate outcomes. Labels/icons must say "reached"
+      //    (progressed past this milestone), NEVER "cleared ✓" (which reads as a
+      //    confirmed gate pass a family member would trust). Per-gate verified results
+      //    live on the recipe page, which uses resolveGateJourney(signals). ──
       const GATE_DEFS = [
         { label: "Profitable",  sub: "made money in testing" },
         { label: "Holds Up",    sub: "works on unseen data" },
@@ -534,8 +542,11 @@
         { label: "Live Money",  sub: "on the menu" },
       ];
       const STAGE_FRONTIER = { CANDIDATE:0, TESTING:1, SHADOW:4, PAPER:4, DEPLOY_READY:6, PILOT:7, DEPLOYED:7, GRAVEYARD:2, DECLINING:2 };
-      const ICON = { pass:"✓", now:"▸", fail:"✗", wait:"·" };
-      const WORD = { pass:"cleared", now:"cooking now", fail:"failed here", wait:"not yet" };
+      // Stage-inference icons/words — deliberately NOT a ✓ checkmark on "pass": a
+      // checkmark + "cleared" reads as a verified gate result, but we only know the
+      // stage. "●"/"reached" = progressed past this milestone (honest for stage data).
+      const ICON = { pass:"●", now:"▸", fail:"✗", wait:"·" };
+      const WORD = { pass:"reached", now:"working on it", fail:"stopped here", wait:"not yet" };
       function journeyForStage(state) {
         const st = String(state || "").toUpperCase();
         const frontier = STAGE_FRONTIER[st] != null ? STAGE_FRONTIER[st] : 0;
@@ -560,7 +571,7 @@
           orb.className = "kv-gate-orb";
           orb.innerHTML = '<div class="b"></div><div class="o"><i class="fl"></i><span class="ic">' + (ICON[g.status] || "·") + '</span></div>';
           const card = SH.el("div", { class: "kv-gate " + g.status },
-            SH.el("div", { class: "kv-gate-num" }, "Gate " + (i + 1)),
+            SH.el("div", { class: "kv-gate-num" }, "Step " + (i + 1)),
             orb,
             SH.el("div", { class: "kv-gate-title" }, g.label),
             SH.el("div", { class: "kv-gate-sub" }, g.sub),
@@ -570,6 +581,8 @@
         });
         idle.style.display = "none";
         titleEl.style.display = "flex";
+        var noteEl = document.getElementById("kv-gates-note");
+        if (noteEl) noteEl.style.display = "block";
         gatesEl.style.display = "flex";
         const cards = gatesEl.children;
         for (var i = 0; i < cards.length; i++) {
