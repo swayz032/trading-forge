@@ -58,3 +58,26 @@ TRIAGE data, not a fix.
 - **Grade correction:** "F-1/F-2/F-3 = 3 CRITICAL look-aheads" is OVERSTATED as written. Corrected: 0 confirmed
   CRITICALs; 2 narrow forward-window CANDIDATES (breaker, unicorn) pending materiality; mitigation likely clean. This
   is the doer≠grader value — a claimed CRITICAL is claims until the code is checked, and here the code mostly checks out.
+
+## F-4 (eligibility fail-OPEN for unregistered archetypes) — CORROBORATION of a known open item
+- **Not a new finding — it is my logged deep-scan-#21 carry-forward:** "eligibility unregistered-strategy parity
+  gap (Band B2, open)." The grader RE-FOUND it independently → doer≠grader corroboration (two paths, same gap →
+  raises confidence it is real, and that it is genuinely a live-safety concern, not noise).
+- **Quick trace tonight (not a full confirmation):** the eligibility references in `paper-signal-service.ts` are the
+  CONSISTENCY / payout-eligibility gate, which is fail-OPEN BY DESIGN ("payout-eligibility gate, NOT a loss gate" —
+  documented, consistent with the daily-trade-cap precedent). The grader's specific "unregistered archetype → returns
+  TAKE before the 9 hard-SKIP checks (stop-ceiling/kill-zone/sweep/R:R/bias-confidence/max-trades)" mechanism at :5554
+  did NOT surface in a quick grep (line numbers shifted; the bypass likely lives in the ARCHETYPE-dispatch vs
+  DSL-dispatch divergence, where archetype signals route around the gate DSL strategies pass through).
+- **PARKED (careful-not-tired, backtest-core/paper-parity):** a live-safety CRITICAL deserves the same careful trace
+  the look-ahead got — find the exact archetype-dispatch path, confirm which of the 9 hard-SKIP checks an unregistered
+  archetype bypasses, and assert the fix (register all 22 hand-coded archetypes OR route archetype signals through the
+  same eligibility gate). ZERO current exposure (nothing live), so no urgency — but a HARD must-fix before the first
+  live archetype trade. Status: corroborated + open, mechanism-trace parked.
+
+## GRADER-FINDINGS TRIAGE — COMPLETE (all 4, doer≠grader)
+F-1/F-2/F-3 (look-ahead): grader's "swing window" mechanism = FALSE POSITIVE (swing layer shifted/clean, mitigation
+gates entry-after-BOS); grade corrected 3-CRITICAL → 0-confirmed + 2 narrow forward-window candidates (breaker ±3,
+unicorn ±1/±5), materiality parked. F-4 (eligibility): corroborates known deep-scan-#21 carry-forward, mechanism-trace
+parked, zero current exposure. Net: the grader surfaced real triage value, but its CRITICAL grades were overstated as
+written — exactly why claims get checked against code before they are believed.
