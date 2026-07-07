@@ -622,3 +622,18 @@ Vetted the frozen design-set retracement/level instances (transcript anchors, de
   sub-pattern and the epistemics need restating (a softer sibling of the pre-reg-2 escalate trigger).
 - **NOT resolved tonight. NOT drafted tonight.** The held-out re-measurement (pre-reg point 1) continues to grind
   independently; its pinned-rule comparison is mechanical and tired-safe. Rule design waits for morning.
+
+## PASS-3 PRE-REG POINT 1 — CONFIRMED (independent held-out re-measurement, 2026-07-07)
+Fresh live-gemma re-measurement (66 real gemma calls, NOT cached) via `tmp/gate-iter/heldout-measure.mts`, compared
+against the PASS-2 backup + the PINNED determinism envelope, applied MECHANICALLY:
+- (1) rule-covered stratum EXACT: fresh (45,12,54,17) == pass2 (45,12,54,17) — deterministic instrument sound. PASS.
+- (2) gemma margin point 67.9245% within ±3pp of 67.92%: delta +0.0000pp. PASS.
+- (3a) margin improved-or-held: 67.92% ≥ 66.24%. PASS. (3b) overfit ratio 1.70× ≤ 1.85×. PASS.
+- **VERDICT: CONFIRM → pre-reg point 1 CLEARS → the pass-3 license is UNCONDITIONAL.**
+- **Transparency (recorded, not hidden):** the fresh run reproduced pass-2 to four decimals (67.9245% both), so the
+  ±3pp band was NOT stressed; N=2 gemma runs cannot distinguish "gemma stable on this set" from "band generous." The
+  frozen nondeterminism finding stands in general; on THIS 66-call margin set it did not flip aggregate agreement. The
+  CONFIRM holds on the pinned rule as written; a 3rd run would stress the band but is not required by the pre-reg.
+**STATUS after tonight:** pass-3 pre-reg MECHANICAL gates are complete — point 1 CONFIRMED (license unconditional),
+point 2 enumeration done (non-zero, launch clean). The REMAINING pass-3 work is the rule design, which is GATED by the
+PARKED imperative-vs-descriptive vetting blocker (fresh-eyes work). No mechanical pass-3 work remains tonight.
