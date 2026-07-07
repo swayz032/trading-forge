@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
+Updated automatically from the repo on `2026-07-07T04:23:41.120Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `79`
-- Scheduler jobs tracked: `108`
+- Scheduler jobs tracked: `109`
 - Current live Trading Forge n8n workflows tracked: `20`
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
@@ -55,7 +55,7 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `73`
 - Route coverage: `79/79`
-- Scheduler coverage: `108/108`
+- Scheduler coverage: `109/109`
 - Engine coverage: `29/29`
 - Database coverage: `110/110`
 - Autonomous subsystems with audit coverage: `64/64`
@@ -370,6 +370,7 @@ Updated automatically from the repo on `2026-07-06T08:37:43.719Z`.
 - `meta-parameter-review`
 - `metrics-collector`
 - `metrics-heartbeat`
+- `n8n-data-backup-daily`
 - `n8n-drift-detector-monthly`
 - `n8n-drift-detector-weekly`
 - `n8n-execution-scrape`

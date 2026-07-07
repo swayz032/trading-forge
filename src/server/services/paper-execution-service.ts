@@ -769,6 +769,7 @@ export async function openPosition(sessionId: string, params: {
         symbol: params.symbol,
         side: params.side,
         reason: "production_halt",
+        correlationId,
       });
       return {
         position: null,
@@ -797,6 +798,7 @@ export async function openPosition(sessionId: string, params: {
       symbol: params.symbol,
       side: params.side,
       reason: "production_halt_check_error",
+      correlationId,
     });
     return {
       position: null,
@@ -909,6 +911,7 @@ export async function openPosition(sessionId: string, params: {
       side: params.side,
       exchange: "CME",
       reason: "exchange_halted",
+      correlationId,
     });
     return {
       position: null,
@@ -985,6 +988,7 @@ export async function openPosition(sessionId: string, params: {
         symbol: params.symbol,
         side: params.side,
         reason: "firm_suspended",
+        correlationId,
       });
       return {
         position: null,
@@ -1349,6 +1353,7 @@ export async function openPosition(sessionId: string, params: {
                 halt_pct: killResult.halt_pct_used ?? _effectiveHaltPct,
                 daily_pnl_pct: killResult.daily_pnl_pct,
                 message: `New entries blocked: daily loss reached ${((killResult.halt_pct_used ?? _effectiveHaltPct) * 100).toFixed(0)}% of firm DLL. Existing positions held. Force-close triggers at ${((_effectiveForceClosePct) * 100).toFixed(0)}%.`,
+                correlationId: correlationId ?? null,
               });
             }
 
@@ -1531,6 +1536,7 @@ export async function openPosition(sessionId: string, params: {
           sessionId,
           symbol: params.symbol,
           error: killErr instanceof Error ? killErr.message : String(killErr),
+          correlationId,
         });
         AlertFactory.systemError("kill-switch-down", killErr instanceof Error ? killErr : String(killErr));
         const killDownAuditInsert = db.insert(auditLog).values({
@@ -1682,6 +1688,7 @@ export async function openPosition(sessionId: string, params: {
         stage: "freshness",
         status: cached.freshnessStatus,
         message: cached.freshnessMessage,
+        correlationId,
       });
       db.insert(auditLog).values({
         action: "compliance.gate_blocked",
@@ -1826,6 +1833,7 @@ export async function openPosition(sessionId: string, params: {
           status: violationResult.status,
           message: violationResult.message,
           violations: violationResult.violations,
+          correlationId,
         });
         db.insert(auditLog).values({
           action: "compliance.gate_blocked",
@@ -1869,6 +1877,7 @@ export async function openPosition(sessionId: string, params: {
       symbol: params.symbol,
       firm: firmKey,
       error: complianceErr instanceof Error ? complianceErr.message : String(complianceErr),
+      correlationId,
     });
   }
 
@@ -1890,7 +1899,7 @@ export async function openPosition(sessionId: string, params: {
     capturedFillProbability = fillProb;
     if (Math.random() > fillProb) {
       logger.info({ sessionId, symbol: params.symbol, fillProb, orderType }, "Fill probability miss — order not filled");
-      broadcastSSE("paper:fill-miss", { sessionId, symbol: params.symbol, fillProb, orderType });
+      broadcastSSE("paper:fill-miss", { sessionId, symbol: params.symbol, fillProb, orderType, correlationId });
       fillSpan.setAttribute("filled", false);
       fillSpan.end();
       return {
@@ -2724,6 +2733,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       contracts: pos.contracts,
       rollDates: rollCost.rollDates,
       costUsd: rollCost.estimatedSpreadCost,
+      correlationId: correlationId ?? null,
     });
   }
 
@@ -2753,6 +2763,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       ...metrics,          // includes sessionId from computeMetrics
       strategyId: session?.strategyId ?? null,
       tradeId: trade.id,
+      correlationId: correlationId ?? null,
     });
   } catch (metricsRecordErr) {
     logger.warn({ err: metricsRecordErr, sessionId: pos.sessionId }, "MetricsAggregator.recordTrade failed (non-blocking)");
@@ -4272,6 +4283,7 @@ export async function updatePositionPrices(
             broadcastSSE("paper:position-stop-breached", {
               positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
               stopLevel, adversePrice, currentPrice,
+              correlationId: correlationId ?? null,
             });
           } catch (stopCloseErr) {
             logger.error(
@@ -4830,8 +4842,12 @@ export async function checkRollAndFlatten(
           );
           notifyCritical(
             "Roll-day flatten failed",
-            `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
-            `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+            appendFamilyGradePostscript(
+              `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
+              `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+              "The trading bot hit an error trying to close a position before its futures contract rolls to the next month.",
+              "This position may stay open longer than intended. Tell Tony right away.",
+            ),
             { sessionId, positionId: pos.id, symbol: pos.symbol, rollDate: info.roll_date, correlationId },
           );
           await insertAuditRowSafe({
@@ -4893,6 +4909,7 @@ export async function checkRollAndFlatten(
           sessionId, positionId: pos.id, symbol: pos.symbol,
           rollDate: info.roll_date, flattenDate: info.flatten_date,
           pnlAtClose, activeContract: info.active_contract,
+          correlationId,
         });
 
         logger.info(
@@ -4911,6 +4928,7 @@ export async function checkRollAndFlatten(
           sessionId, positionId: pos.id, symbol: pos.symbol,
           daysToRoll: info.days_to_roll, rollDate: info.roll_date,
           flattenDate: info.flatten_date, activeContract: info.active_contract,
+          correlationId,
         });
 
         // Persist warn event (once per day per position is acceptable — duplicate
@@ -5244,7 +5262,7 @@ export async function forceCloseAllPositions(
     correlationId: batchCorrelationId,
   }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: audit_log write failed (non-blocking)"));
 
-  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length, scope: scope ?? null });
+  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length, scope: scope ?? null, correlationId: batchCorrelationId });
 
   return { count, closed: closedCount, stuck: stuckCount };
 }

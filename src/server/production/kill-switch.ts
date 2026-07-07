@@ -809,6 +809,7 @@ function checkLayer6CmeOutage(correlationId: string): HaltDecision {
       layer: 6,
       halted: true,
       timestamp: new Date().toISOString(),
+      correlationId,
     });
     decision = { halted: true, layer: 6, reason: "cme_outage_eval_failed", detail: { error: errMsg } };
   }

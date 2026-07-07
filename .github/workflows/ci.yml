@@ -64,6 +64,8 @@ jobs:
         run: npm run check:family-grade-postscript
       - name: Gate — cron/manual promotion-gate parity (deepscan18 D-D1)
         run: npm run check:gate-parity
+      - name: Gate — migration immutability (deep-scan #22 fix #5)
+        run: npm run check:migration-immutability
 
   test-node:
     name: Node Tests + Coverage

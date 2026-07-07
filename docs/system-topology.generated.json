@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-06T08:37:43.719Z",
+  "generatedAt": "2026-07-07T04:23:41.120Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 79,
-    "schedulerJobs": 108,
+    "schedulerJobs": 109,
     "workflowFiles": 20,
     "canonicalWorkflows": 20,
     "engineSubsystems": 29,
@@ -163,6 +163,7 @@
     "meta-parameter-review",
     "metrics-collector",
     "metrics-heartbeat",
+    "n8n-data-backup-daily",
     "n8n-drift-detector-monthly",
     "n8n-drift-detector-weekly",
     "n8n-execution-scrape",
@@ -814,7 +815,7 @@
     ],
     "coveredCounts": {
       "routes": 79,
-      "schedulerJobs": 108,
+      "schedulerJobs": 109,
       "engineSubsystems": 29,
       "databaseTables": 110
     },
@@ -7778,6 +7779,7 @@
           "/api/n8n"
         ],
         "schedulerJobs": [
+          "n8n-data-backup-daily",
           "n8n-drift-detector-monthly",
           "n8n-drift-detector-weekly",
           "n8n-execution-scrape",
@@ -14891,6 +14893,7 @@
         "/api/n8n"
       ],
       "schedulerJobs": [
+        "n8n-data-backup-daily",
         "n8n-drift-detector-monthly",
         "n8n-drift-detector-weekly",
         "n8n-execution-scrape",
