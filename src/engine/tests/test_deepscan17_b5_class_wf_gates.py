@@ -159,6 +159,15 @@ class TestB5WfeBifPboKeysPresent:
             strategy=_make_dummy_strategy(),
             start_date="2026-01-01", end_date="2026-04-01",
             n_splits=4, is_ratio=0.5,
+            # deep-scan #22 FIX 2 (2026-07-06): run_walk_forward_class() now
+            # honors WF_MODE (institutional default "cpcv") instead of
+            # silently always running plain WF. This suite tests the B-5
+            # PLAIN-mode WFE/BIF/PBO/DSR aggregation contract specifically
+            # (window-count assertions, plain-mode wfe_status vocabulary) —
+            # pin wf_mode="plain" explicitly so it keeps testing that path
+            # regardless of the new default. CPCV-mode's parallel contract is
+            # covered by test_deepscan22_fix2_class_cpcv_routing.py.
+            wf_mode="plain",
         )
         assert "wfe_overall" in result, (
             "B-5 REGRESSION: wfe_overall key absent — TS wfe-gate.ts will "
@@ -182,6 +191,15 @@ class TestB5WfeBifPboKeysPresent:
             strategy=_make_dummy_strategy(),
             start_date="2026-01-01", end_date="2026-04-01",
             n_splits=4, is_ratio=0.5,
+            # deep-scan #22 FIX 2 (2026-07-06): run_walk_forward_class() now
+            # honors WF_MODE (institutional default "cpcv") instead of
+            # silently always running plain WF. This suite tests the B-5
+            # PLAIN-mode WFE/BIF/PBO/DSR aggregation contract specifically
+            # (window-count assertions, plain-mode wfe_status vocabulary) —
+            # pin wf_mode="plain" explicitly so it keeps testing that path
+            # regardless of the new default. CPCV-mode's parallel contract is
+            # covered by test_deepscan22_fix2_class_cpcv_routing.py.
+            wf_mode="plain",
         )
         assert result.get("wfe_status") in ("pass", "warn", "fail", "degenerate_is")
 
@@ -197,6 +215,15 @@ class TestB5WfeBifPboKeysPresent:
             strategy=_make_dummy_strategy(),
             start_date="2026-01-01", end_date="2026-04-01",
             n_splits=4, is_ratio=0.5,
+            # deep-scan #22 FIX 2 (2026-07-06): run_walk_forward_class() now
+            # honors WF_MODE (institutional default "cpcv") instead of
+            # silently always running plain WF. This suite tests the B-5
+            # PLAIN-mode WFE/BIF/PBO/DSR aggregation contract specifically
+            # (window-count assertions, plain-mode wfe_status vocabulary) —
+            # pin wf_mode="plain" explicitly so it keeps testing that path
+            # regardless of the new default. CPCV-mode's parallel contract is
+            # covered by test_deepscan22_fix2_class_cpcv_routing.py.
+            wf_mode="plain",
         )
         assert "bif" in result, (
             "B-5 REGRESSION: bif key absent — TS bif-gate.ts will "
@@ -218,6 +245,15 @@ class TestB5WfeBifPboKeysPresent:
             strategy=_make_dummy_strategy(),
             start_date="2026-01-01", end_date="2026-04-01",
             n_splits=4, is_ratio=0.5,
+            # deep-scan #22 FIX 2 (2026-07-06): run_walk_forward_class() now
+            # honors WF_MODE (institutional default "cpcv") instead of
+            # silently always running plain WF. This suite tests the B-5
+            # PLAIN-mode WFE/BIF/PBO/DSR aggregation contract specifically
+            # (window-count assertions, plain-mode wfe_status vocabulary) —
+            # pin wf_mode="plain" explicitly so it keeps testing that path
+            # regardless of the new default. CPCV-mode's parallel contract is
+            # covered by test_deepscan22_fix2_class_cpcv_routing.py.
+            wf_mode="plain",
         )
         assert "pbo_overall" in result, (
             "B-5 REGRESSION: pbo_overall key absent — TS pbo-gate.ts will "
@@ -237,6 +273,15 @@ class TestB5WfeBifPboKeysPresent:
             strategy=_make_dummy_strategy(),
             start_date="2026-01-01", end_date="2026-04-01",
             n_splits=4, is_ratio=0.5,
+            # deep-scan #22 FIX 2 (2026-07-06): run_walk_forward_class() now
+            # honors WF_MODE (institutional default "cpcv") instead of
+            # silently always running plain WF. This suite tests the B-5
+            # PLAIN-mode WFE/BIF/PBO/DSR aggregation contract specifically
+            # (window-count assertions, plain-mode wfe_status vocabulary) —
+            # pin wf_mode="plain" explicitly so it keeps testing that path
+            # regardless of the new default. CPCV-mode's parallel contract is
+            # covered by test_deepscan22_fix2_class_cpcv_routing.py.
+            wf_mode="plain",
         )
         assert "wf_metadata" in result
         meta = result["wf_metadata"]
@@ -265,6 +310,15 @@ class TestB5InternalFieldNotLeaked:
             strategy=_make_dummy_strategy(),
             start_date="2026-01-01", end_date="2026-04-01",
             n_splits=4, is_ratio=0.5,
+            # deep-scan #22 FIX 2 (2026-07-06): run_walk_forward_class() now
+            # honors WF_MODE (institutional default "cpcv") instead of
+            # silently always running plain WF. This suite tests the B-5
+            # PLAIN-mode WFE/BIF/PBO/DSR aggregation contract specifically
+            # (window-count assertions, plain-mode wfe_status vocabulary) —
+            # pin wf_mode="plain" explicitly so it keeps testing that path
+            # regardless of the new default. CPCV-mode's parallel contract is
+            # covered by test_deepscan22_fix2_class_cpcv_routing.py.
+            wf_mode="plain",
         )
         for w in result["windows"]:
             assert "_is_daily_pnls" not in w, (
@@ -290,6 +344,15 @@ class TestB5DegenerateIsFallback:
             strategy=_make_dummy_strategy(),
             start_date="2026-01-01", end_date="2026-04-01",
             n_splits=4, is_ratio=0.5,
+            # deep-scan #22 FIX 2 (2026-07-06): run_walk_forward_class() now
+            # honors WF_MODE (institutional default "cpcv") instead of
+            # silently always running plain WF. This suite tests the B-5
+            # PLAIN-mode WFE/BIF/PBO/DSR aggregation contract specifically
+            # (window-count assertions, plain-mode wfe_status vocabulary) —
+            # pin wf_mode="plain" explicitly so it keeps testing that path
+            # regardless of the new default. CPCV-mode's parallel contract is
+            # covered by test_deepscan22_fix2_class_cpcv_routing.py.
+            wf_mode="plain",
         )
         assert result["wfe_overall"] == 0.0
         assert result["wfe_status"] == "degenerate_is"
@@ -312,6 +375,15 @@ class TestB5IsBacktestActuallyInvoked:
             strategy=_make_dummy_strategy(),
             start_date="2026-01-01", end_date="2026-04-01",
             n_splits=4, is_ratio=0.5,
+            # deep-scan #22 FIX 2 (2026-07-06): run_walk_forward_class() now
+            # honors WF_MODE (institutional default "cpcv") instead of
+            # silently always running plain WF. This suite tests the B-5
+            # PLAIN-mode WFE/BIF/PBO/DSR aggregation contract specifically
+            # (window-count assertions, plain-mode wfe_status vocabulary) —
+            # pin wf_mode="plain" explicitly so it keeps testing that path
+            # regardless of the new default. CPCV-mode's parallel contract is
+            # covered by test_deepscan22_fix2_class_cpcv_routing.py.
+            wf_mode="plain",
         )
         oos_calls = [c for c in call_log if c.get("warmup_data") is not None]
         is_calls = [c for c in call_log if c.get("warmup_data") is None]

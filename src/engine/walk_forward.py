@@ -2480,6 +2480,437 @@ def _default_class_wf_skip_eligibility_gate() -> bool:
     )
 
 
+def _run_walk_forward_cpcv_class(
+    strategy: BaseStrategy,
+    start_date: str,
+    end_date: str,
+    data: pl.DataFrame,
+    daily_data: Optional[pl.DataFrame],
+    htf_cache: Optional[dict],
+    slippage_ticks: float,
+    commission_per_side: Optional[float],
+    firm_key: Optional[str],
+    skip_eligibility_gate: bool,
+    n_splits: int = 6,
+    k_test_groups: int = 2,
+    embargo_bars: int = 20,
+) -> dict:
+    """CPCV walk-forward for class-based (BaseStrategy) strategies.
+
+    FIX 2 (deep-scan #22, CRITICAL). Closes the bug where
+    `run_walk_forward_class()` — the PRIMARY product path used by every
+    archetype/class-based strategy (bounce_off_level,
+    ict_bias_aligned_continuation, silver_bullet, crt, power_of_3, i.e. the
+    live 117-strategy library) — silently ignored `WF_MODE=cpcv` and always
+    ran plain walk-forward with no audit trail of the downgrade.
+
+    Mirrors `_run_walk_forward_cpcv()` (the DSL path's CPCV implementation)
+    fold/purge math and BIF/PBO/DSR aggregation EXACTLY, but dispatches each
+    combinatorial path through `run_class_backtest()` (with `htf_cache` /
+    `daily_data` / `skip_eligibility_gate` threaded through, matching how
+    `run_walk_forward_class()`'s own plain-mode windows call it) instead of
+    `run_backtest()`/`BacktestRequest` (which class-based `BaseStrategy`
+    instances cannot use — they are not DSL-compiled).
+
+    Kept as a separate function (not a refactor of `_run_walk_forward_cpcv()`)
+    deliberately — duplicating ~150 lines of well-tested aggregation logic
+    carries far less regression risk than reshaping the DSL path's existing
+    CPCV engine to accept two different backtest-dispatch mechanisms. Per
+    CLAUDE.md §2 design philosophy: "prefer boring, explicit logic over
+    clever abstractions."
+
+    Producer-key contract preserved (same as the plain-mode class path's
+    2026-07-05 B-5 fix): wfe_overall / pbo_overall / bif / k_eff / wf_metadata
+    all emit at the top level so wfe-gate.ts / bif-gate.ts / pbo-gate.ts keep
+    reading them. `wf_metadata.mode = "cpcv"` (vs "plain") lets downstream
+    consumers distinguish which WF engine produced the result — mirrors the
+    DSL CPCV path's own `wf_metadata["mode"] = "cpcv"` contract.
+
+    NOT ported from the DSL CPCV path (documented, not silent, scope cuts):
+      - WRC/SPA multi-model data-snooping guard: the existing PLAIN-mode
+        class-path return dict (`run_walk_forward_class`'s own return,
+        immediately below this function) does not carry wrc_result/spa_result
+        either — so this is parity with the existing class-path contract,
+        not a regression versus it. A future pass can port WRC/SPA to both
+        class-path modes together.
+      - Per-path IS Sharpe tracked via a lightweight run_class_backtest() call
+        on is_data per path (mirrors the DSL path's E1 fix) — used for BIF and
+        PBO exactly like the DSL path.
+    """
+    from itertools import combinations as _combos_cls
+
+    start_time = time.time()
+    symbol = strategy.symbol
+    n = len(data)
+    _base_seed = int(os.environ.get("BACKTEST_SEED", "42"))
+
+    fold_size = n // n_splits
+    folds: list[pl.DataFrame] = []
+    for fi in range(n_splits):
+        fold_start = fi * fold_size
+        fold_end = (fi + 1) * fold_size if fi < n_splits - 1 else n
+        folds.append(data.slice(fold_start, fold_end - fold_start))
+
+    n_paths = 0
+    path_sharpes: list[float] = []
+    path_returns: list[float] = []
+    all_oos_trades: list[dict] = []
+    all_oos_pnls: list[float] = []
+    all_oos_pnl_records: list[dict] = []
+    all_oos_equity: list[float] = []
+    per_path_is_sharpes: list[float] = []
+
+    def _ts_col_cpcv_cls(df: pl.DataFrame) -> str:
+        for col in ("ts_event", "ts_et"):
+            if col in df.columns:
+                return col
+        return ""
+
+    for test_fold_indices in _combos_cls(range(n_splits), k_test_groups):
+        is_fold_indices = [fi for fi in range(n_splits) if fi not in test_fold_indices]
+        test_fold_set = set(test_fold_indices)
+
+        # IS data — bilateral IS-side purge (same math as the DSL CPCV path).
+        is_fold_dfs_purged: list[tuple[int, pl.DataFrame]] = []
+        for fi in sorted(is_fold_indices):
+            fold_df = folds[fi]
+            strip_start, strip_end = _cpcv_fold_embargo_strips(
+                fold_idx=fi, test_fold_set=test_fold_set, n_splits=n_splits,
+                embargo_bars=embargo_bars, is_test_fold=False,
+            )
+            effective_len = len(fold_df) - strip_start - strip_end
+            if effective_len > 0:
+                is_fold_dfs_purged.append((fi, fold_df.slice(strip_start, effective_len)))
+            else:
+                print(
+                    f"  CPCV (class): IS fold {fi} too small ({len(fold_df)} bars <= "
+                    f"purge start={strip_start}+end={strip_end}) — skipping.",
+                    file=sys.stderr,
+                )
+        if is_fold_dfs_purged:
+            is_data = pl.concat([_df for _, _df in is_fold_dfs_purged])
+        else:
+            continue  # No usable IS data after purge — skip this path
+
+        # Warmup frame restricted to IS folds chronologically BEFORE the
+        # earliest OOS fold (same B-3 fix as the DSL path — prevents future
+        # IS folds from being prepended ahead of the OOS window).
+        _earliest_test_fold = min(test_fold_indices)
+        _warmup_fold_dfs = [
+            _df for fi, _df in is_fold_dfs_purged if fi < _earliest_test_fold
+        ]
+        warmup_data_for_oos = pl.concat(_warmup_fold_dfs) if _warmup_fold_dfs else None
+
+        # OOS data — bilateral embargo strip (same math as the DSL CPCV path).
+        oos_parts: list[pl.DataFrame] = []
+        for ti in sorted(test_fold_indices):
+            fold_df = folds[ti]
+            strip_start, strip_end = _cpcv_fold_embargo_strips(
+                fold_idx=ti, test_fold_set=test_fold_set, n_splits=n_splits,
+                embargo_bars=embargo_bars, is_test_fold=True,
+            )
+            effective_len = len(fold_df) - strip_start - strip_end
+            if effective_len > 0:
+                oos_parts.append(fold_df.slice(strip_start, effective_len))
+            else:
+                print(
+                    f"  CPCV (class): fold {ti} too small ({len(fold_df)} bars <= "
+                    f"purge start={strip_start}+end={strip_end}) "
+                    f"— skipping to preserve embargo integrity.",
+                    file=sys.stderr,
+                )
+
+        if not oos_parts:
+            continue
+        oos_data = pl.concat(oos_parts)
+        if len(oos_data) == 0:
+            continue
+
+        # Seed: base + path index for determinism (same convention as DSL CPCV path).
+        path_seed = _base_seed + n_paths
+        os.environ["BACKTEST_WINDOW_SEED"] = str(path_seed)
+        np.random.seed(path_seed)
+
+        _oos_tc = _ts_col_cpcv_cls(oos_data)
+        oos_start_dt = str(oos_data[_oos_tc][0])[:10] if (_oos_tc and len(oos_data) > 0) else start_date
+        oos_end_dt = str(oos_data[_oos_tc][-1])[:10] if (_oos_tc and len(oos_data) > 0) else end_date
+
+        try:
+            path_result = run_class_backtest(
+                strategy=strategy,
+                start_date=oos_start_dt,
+                end_date=oos_end_dt,
+                slippage_ticks=slippage_ticks,
+                commission_per_side=commission_per_side,
+                firm_key=firm_key,
+                data=oos_data,
+                htf_cache=htf_cache,
+                daily_data=daily_data,
+                skip_eligibility_gate=skip_eligibility_gate,
+                warmup_data=warmup_data_for_oos,
+            )
+        except Exception as _path_exc:
+            print(f"CPCV (class) path failed: {_path_exc!r}. Skipping (not counted in n_paths).", file=sys.stderr)
+            continue
+
+        path_sharpes.append(float(path_result.get("sharpe_ratio", 0.0)))
+        path_returns.append(float(path_result.get("total_return", 0.0)))
+        all_oos_trades.extend(path_result.get("trades", []))
+        _path_daily_pnls = list(path_result.get("daily_pnls", []))
+        all_oos_pnls.extend(_path_daily_pnls)
+
+        # E1-equivalent: lightweight IS-only backtest to capture true per-path
+        # IS Sharpe for BIF/PBO (mirrors the DSL CPCV path's own E1 fix).
+        _is_tc = _ts_col_cpcv_cls(is_data)
+        if _is_tc and len(is_data) > 50:
+            is_start_dt = str(is_data[_is_tc][0])[:10]
+            is_end_dt = str(is_data[_is_tc][-1])[:10]
+            try:
+                _is_bt_result = run_class_backtest(
+                    strategy=strategy,
+                    start_date=is_start_dt,
+                    end_date=is_end_dt,
+                    slippage_ticks=slippage_ticks,
+                    commission_per_side=commission_per_side,
+                    firm_key=firm_key,
+                    data=is_data,
+                    htf_cache=htf_cache,
+                    daily_data=daily_data,
+                    skip_eligibility_gate=skip_eligibility_gate,
+                )
+                per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
+            except Exception as _is_bt_exc:
+                print(
+                    f"  CPCV (class): IS backtest for path {n_paths} failed ({_is_bt_exc!r}). "
+                    f"Per-path IS Sharpe unavailable for this path.",
+                    file=sys.stderr,
+                )
+
+        all_oos_pnl_records.extend(path_result.get("daily_pnl_records", []))
+        _raw_eq = path_result.get("equity_bars", [])
+        if not _raw_eq:
+            _raw_eq = [
+                float(rec.get("equity", rec.get("value", 0)))
+                for rec in path_result.get("equity_curve", [])
+                if isinstance(rec, dict)
+            ]
+        all_oos_equity.extend(_raw_eq)
+        n_paths += 1
+
+    if not path_sharpes:
+        return {
+            "confidence": "LOW",
+            "low_confidence_windows": 0,
+            "oos_metrics": {"total_return": 0, "sharpe_ratio": 0, "max_drawdown": 0,
+                            "win_rate": 0, "profit_factor": 0, "total_trades": 0,
+                            "avg_trade_pnl": 0, "avg_daily_pnl": 0},
+            "wf_metadata": {
+                "mode": "cpcv", "n_folds": n_splits, "embargo_pct": 0.01,
+                "purge_window": embargo_bars, "n_paths": 0,
+                "dsr": None, "dsr_pass": None, "dsr_unavailable": True,
+            },
+            "trades": [],
+            "daily_pnls": [],
+            "daily_pnl_records": [],
+            "windows": [],
+            "n_splits": n_splits,
+            "is_ratio": 1.0 - (k_test_groups / n_splits),
+            "execution_time_ms": int((time.time() - start_time) * 1000),
+            "wfe_overall": None,
+            "wfe_status": "cpcv_not_applicable",
+            "bif": None,
+            "k_eff": 0,
+            "bif_detail": {},
+            "pbo_overall": None,
+            "pbo_overall_p_value": None,
+            "pbo_degenerate": False,
+            "slippage_survival": _compute_wf_slippage_survival([]),
+        }
+
+    # ── Aggregate from all paths (same math as the DSL CPCV path) ────────────
+    total_trades = len(all_oos_trades)
+    total_return = sum(path_returns)
+
+    if all_oos_pnls:
+        pnl_arr = np.array(all_oos_pnls)
+        agg_sharpe = float(np.mean(pnl_arr) / np.std(pnl_arr, ddof=1) * np.sqrt(252)) if np.std(pnl_arr, ddof=1) > 0 else 0.0
+    else:
+        agg_sharpe = 0.0
+
+    if all_oos_equity:
+        eq_arr = np.array(all_oos_equity, dtype=float)
+        running_peak = np.maximum.accumulate(eq_arr)
+        max_dd = float(np.max(running_peak - eq_arr))
+    else:
+        max_dd = 0.0
+
+    gross_wins = sum(float(t.get("PnL", t.get("pnl", 0))) for t in all_oos_trades if float(t.get("PnL", t.get("pnl", 0))) > 0)
+    gross_losses = sum(abs(float(t.get("PnL", t.get("pnl", 0)))) for t in all_oos_trades if float(t.get("PnL", t.get("pnl", 0))) < 0)
+    agg_pf = float(gross_wins / gross_losses) if gross_losses > 0 else 999.99
+    agg_win_rate = float(sum(1 for t in all_oos_trades if float(t.get("PnL", t.get("pnl", 0))) > 0) / max(total_trades, 1))
+    avg_daily = float(np.mean(all_oos_pnls)) if all_oos_pnls else 0.0
+
+    # ── DSR across CPCV paths ─────────────────────────────────────────────────
+    _class_cpcv_dsr_result: dict = {}
+    try:
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _cpcv_dsr_cls
+        _n_obs = len(all_oos_pnls)
+        _class_cpcv_dsr_result = _cpcv_dsr_cls(
+            observed_sharpe=agg_sharpe,
+            n_trials=max(n_paths, 1),
+            n_observations=max(_n_obs, 2),
+        )
+        _dsr_passes_raw_cls = _class_cpcv_dsr_result.get("passes")
+        _class_cpcv_dsr_result["dsr_pass"] = (
+            bool(_dsr_passes_raw_cls) if _dsr_passes_raw_cls is not None else None
+        )
+        _class_cpcv_dsr_result.setdefault("dsr_unavailable", False)
+    except Exception as _dsr_exc_cls:
+        print(f"  DSR (CPCV class): computation failed ({_dsr_exc_cls!r}).", file=sys.stderr)
+        _class_cpcv_dsr_result = {
+            "dsr": None, "dsr_pass": False, "dsr_unavailable": True,
+            "error": str(_dsr_exc_cls), "error_type": type(_dsr_exc_cls).__name__,
+        }
+
+    # ── BIF (Backtest Inflation Factor) — same reliability contract as DSL CPCV ──
+    _has_full_is_cls = (
+        len(per_path_is_sharpes) > 0 and len(per_path_is_sharpes) == len(path_sharpes)
+    )
+    _bif_result_cls: dict = {}
+    try:
+        from src.engine.statistics.backtest_inflation_factor import compute_bif as _compute_bif_cpcv_cls
+        if _has_full_is_cls:
+            _bif_is_sharpe_cls = float(np.mean(per_path_is_sharpes))
+            _bif_reliable_cls = True
+            _bif_proxy_basis_cls = "cpcv_per_path_is"
+        else:
+            _bif_is_sharpe_cls = float(np.mean(path_sharpes)) if path_sharpes else 0.0
+            _bif_reliable_cls = False
+            _bif_proxy_basis_cls = "oos_mean_not_is"
+        _bif_result_cls = _compute_bif_cpcv_cls(
+            is_sharpe=_bif_is_sharpe_cls,
+            wf_sharpe=agg_sharpe,
+            k_eff=float(max(n_paths, 1)),
+        )
+        _bif_result_cls["bif_proxy_basis"] = _bif_proxy_basis_cls
+        _bif_result_cls["bif_reliable"] = _bif_reliable_cls
+        print(
+            f"  BIF (CPCV class): {_bif_result_cls.get('bif', 'N/A')} "
+            f"(IS_{'true' if _has_full_is_cls else 'proxy'}={_bif_is_sharpe_cls:.4f}, "
+            f"WF={agg_sharpe:.4f}, K_eff={n_paths}, reliable={_bif_reliable_cls}) "
+            f"-> {_bif_result_cls.get('verdict', 'N/A')}",
+            file=sys.stderr,
+        )
+    except Exception as _bif_exc_cls:
+        _bif_result_cls = {"bif_computation_error": True}
+        print(f"  BIF (CPCV class): computation FAILED ({_bif_exc_cls!r}).", file=sys.stderr)
+
+    # ── PBO across CPCV paths — same true-IS-vs-degenerate contract as DSL path ──
+    _pbo_overall_cls: Optional[float] = None
+    _pbo_p_value_cls: Optional[float] = None
+    _pbo_degenerate_cls = False
+    try:
+        from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _pbo_cpcv_cls
+        if _has_full_is_cls:
+            _path_dicts_cls = [
+                {"is_sharpe": is_s, "oos_sharpe": oos_s, "is_returns": [], "oos_returns": []}
+                for is_s, oos_s in zip(per_path_is_sharpes, path_sharpes)
+            ]
+        else:
+            _path_dicts_cls = [
+                {"is_sharpe": s, "oos_sharpe": s, "is_returns": [], "oos_returns": []}
+                for s in path_sharpes
+            ]
+        _pbo_gate_result_cls = _pbo_cpcv_cls(_path_dicts_cls)
+        _pbo_degenerate_cls = bool(_pbo_gate_result_cls.get("degenerate", False))
+        _pbo_val_cls = _pbo_gate_result_cls.get("pbo")
+        if _pbo_val_cls is not None and not (
+            isinstance(_pbo_val_cls, float) and _pbo_val_cls != _pbo_val_cls
+        ):
+            _pbo_overall_cls = _pbo_val_cls
+            _pbo_p_value_cls = _pbo_gate_result_cls.get("p_value")
+        print(
+            f"  PBO (CPCV class): pbo={_pbo_overall_cls} degenerate={_pbo_degenerate_cls} "
+            f"n_paths={n_paths}",
+            file=sys.stderr,
+        )
+    except Exception as _pbo_exc_cls:
+        print(f"  PBO (CPCV class): computation failed ({_pbo_exc_cls!r}).", file=sys.stderr)
+
+    # ── WFE — combined-fold OOS Sharpe / per-path IS Sharpe mean ──────────────
+    _wfe_overall_cls: Optional[float] = None
+    _wfe_status_cls: str = "cpcv_not_applicable"
+    if _has_full_is_cls and per_path_is_sharpes:
+        _is_basis_cls = float(np.mean(per_path_is_sharpes))
+        if _is_basis_cls <= 0 or not np.isfinite(_is_basis_cls):
+            _wfe_overall_cls = 0.0
+            _wfe_status_cls = "degenerate_is"
+        else:
+            _wfe_overall_cls = round(agg_sharpe / _is_basis_cls, 4)
+            _wfe_status_cls = "cpcv_per_path_is"
+        print(
+            f"  WFE (CPCV class): {_wfe_overall_cls} status={_wfe_status_cls} "
+            f"(OOS={agg_sharpe:.4f}, n_paths_with_is={len(per_path_is_sharpes)})",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "  WFE (CPCV class): per-path IS Sharpes unavailable — "
+            "wfe_overall=None, wfe_status=cpcv_not_applicable.",
+            file=sys.stderr,
+        )
+
+    elapsed_ms = int((time.time() - start_time) * 1000)
+
+    return {
+        "confidence": "OK" if total_trades >= MIN_OOS_TRADES else "LOW",
+        "low_confidence_windows": 0,
+        "oos_metrics": {
+            "total_return": round(total_return, 2),
+            "sharpe_ratio": round(agg_sharpe, 4),
+            "max_drawdown": round(max_dd, 2),
+            "win_rate": round(agg_win_rate, 4),
+            "profit_factor": round(agg_pf, 4),
+            "total_trades": total_trades,
+            "avg_trade_pnl": round(total_return / max(total_trades, 1), 2),
+            "avg_daily_pnl": round(avg_daily, 2),
+        },
+        "trades": all_oos_trades,
+        "daily_pnls": all_oos_pnls,
+        "daily_pnl_records": all_oos_pnl_records,
+        "equity_curve": all_oos_equity,
+        "windows": [],
+        "path_sharpes": path_sharpes,
+        "n_splits": n_splits,
+        "is_ratio": 1.0 - (k_test_groups / n_splits),
+        "execution_time_ms": elapsed_ms,
+        # Producer-key contract (TS gates read these exact names — same
+        # contract the plain-mode class path's 2026-07-05 B-5 fix established):
+        "wfe_overall": _wfe_overall_cls,
+        "wfe_status": _wfe_status_cls,
+        "pbo_overall": _pbo_overall_cls,
+        "pbo_overall_p_value": _pbo_p_value_cls,
+        "pbo_degenerate": _pbo_degenerate_cls,
+        "bif": _bif_result_cls.get("bif"),
+        "bif_computation_error": _bif_result_cls.get("bif_computation_error"),
+        "k_eff": _bif_result_cls.get("k_eff"),
+        "bif_detail": _bif_result_cls,
+        "wf_metadata": {
+            "mode": "cpcv",
+            "n_folds": n_splits,
+            "embargo_pct": 0.01,
+            "purge_window": embargo_bars,
+            "n_paths": n_paths,
+            "dsr": _class_cpcv_dsr_result.get("dsr"),
+            "dsr_pass": _class_cpcv_dsr_result.get("dsr_pass"),
+            "dsr_unavailable": _class_cpcv_dsr_result.get("dsr_unavailable", False),
+            "bif_proxy_basis": _bif_result_cls.get("bif_proxy_basis"),
+            "bif_reliable": _bif_result_cls.get("bif_reliable", True),
+        },
+        "slippage_survival": _compute_wf_slippage_survival(all_oos_trades),
+    }
+
+
 def run_walk_forward_class(
     strategy: BaseStrategy,
     start_date: str,
@@ -2501,6 +2932,7 @@ def run_walk_forward_class(
     embargo_bars: int = 20,
     optimize: bool = False,
     skip_eligibility_gate: Optional[bool] = None,
+    wf_mode: Optional[str] = None,
 ) -> dict:
     """Walk-forward validation for class-based (BaseStrategy) strategies.
 
@@ -2522,6 +2954,17 @@ def run_walk_forward_class(
             `_default_class_wf_skip_eligibility_gate()` for the full history.
             `None` (default) resolves via the env var so existing callers
             that don't pass this kwarg are completely unaffected.
+        wf_mode: FIX 2 (deep-scan #22, CRITICAL). Walk-forward mode —
+            "plain" (legacy default for THIS function), "cpcv" (routes to
+            `_run_walk_forward_cpcv_class()`, the class-path mirror of
+            `_run_walk_forward_cpcv()`). Overrides WF_MODE env var. Env
+            default is "cpcv" — matches `run_walk_forward()`'s institutional
+            default so the PRIMARY product path (archetype/class strategies)
+            is no longer silently exempt from CPCV embargo/purge. When CPCV
+            is requested but the data is insufficient for
+            `_CPCV_N_SPLITS_CLASS` folds, auto-falls back to "plain" with an
+            explicit `walk_forward.cpcv_insufficient_data_fallback` audit
+            row — never a silent downgrade.
     """
     if skip_eligibility_gate is None:
         skip_eligibility_gate = _default_class_wf_skip_eligibility_gate()
@@ -2567,6 +3010,85 @@ def run_walk_forward_class(
                 bar_date=bar_date,
             )
         print(f"Walk-forward: built HTF cache with {len(htf_cache)} days", file=sys.stderr)
+
+    # ── FIX 2 (deep-scan #22, CRITICAL): WF_MODE resolution for the class path ──
+    # PREVIOUS BUG: this function called split_walk_forward_windows() unconditionally,
+    # completely ignoring WF_MODE — the DSL path (run_walk_forward()) has honored
+    # WF_MODE=cpcv (institutional default) since the 2026-06-22 hardening pass, but
+    # this function (the PRIMARY product path — archetype/class strategies:
+    # bounce_off_level, ict_bias_aligned_continuation, silver_bullet, crt, power_of_3,
+    # i.e. the live 117-strategy library) silently ran plain WF regardless, with no
+    # audit trail of the downgrade. Mirrors run_walk_forward()'s exact resolution
+    # logic (priority + auto-fallback) so both paths honor the same institutional
+    # default and the same auto-fallback contract.
+    _VALID_WF_MODES_CLS = ("plain", "cpcv")
+    _resolved_mode_cls = (
+        wf_mode
+        or os.environ.get("WF_MODE", "cpcv")
+    ).lower()
+    if _resolved_mode_cls == "purged_embargo":
+        # The class path has no purged_embargo implementation (only the DSL path
+        # does) — route to plain rather than raising, same "graceful narrowing"
+        # spirit as run_walk_forward()'s unknown-mode fallback below.
+        _resolved_mode_cls = "plain"
+    if _resolved_mode_cls not in _VALID_WF_MODES_CLS:
+        print(
+            f"Walk-forward (class): unknown WF_MODE={_resolved_mode_cls!r}; defaulting to 'cpcv'.",
+            file=sys.stderr,
+        )
+        _resolved_mode_cls = "cpcv"
+
+    _CPCV_N_SPLITS_CLASS = 6
+    _CPCV_K_TEST_GROUPS_CLASS = 2
+    _MIN_CPCV_FOLD_BARS_CLASS = int(os.environ.get("MIN_CPCV_FOLD_BARS", "60"))
+    if _resolved_mode_cls == "cpcv":
+        _fold_size_cls = len(data) // _CPCV_N_SPLITS_CLASS
+        if _fold_size_cls < _MIN_CPCV_FOLD_BARS_CLASS:
+            print(
+                f"Walk-forward (class): CPCV auto-fallback: data has insufficient bars for "
+                f"{_CPCV_N_SPLITS_CLASS} folds × {_MIN_CPCV_FOLD_BARS_CLASS} min bars/fold "
+                f"(fold_size={_fold_size_cls}). Falling back to 'plain'. "
+                f"Set WF_MODE=plain explicitly to suppress this message, or extend "
+                f"the backtest date range. Audit: walk_forward.cpcv_insufficient_data_fallback",
+                file=sys.stderr,
+            )
+            try:
+                from src.engine.audit_writer import write_audit_row_sync as _audit_cls
+                _audit_cls(
+                    action="walk_forward.cpcv_insufficient_data_fallback",
+                    entity_type="walk_forward",
+                    entity_id=getattr(strategy, "name", "unknown"),
+                    severity="warn",
+                    payload={
+                        "requested_mode": "cpcv",
+                        "fallback_mode": "plain",
+                        "fold_size": _fold_size_cls,
+                        "min_fold_bars": _MIN_CPCV_FOLD_BARS_CLASS,
+                        "n_splits": _CPCV_N_SPLITS_CLASS,
+                        "reason": "Insufficient data for CPCV (class path); auto-falling back to plain",
+                        "path": "run_walk_forward_class",
+                    },
+                )
+            except Exception:
+                pass  # Audit write must never block WF execution
+            _resolved_mode_cls = "plain"
+
+    if _resolved_mode_cls == "cpcv":
+        return _run_walk_forward_cpcv_class(
+            strategy=strategy,
+            start_date=start_date,
+            end_date=end_date,
+            data=data,
+            daily_data=daily_data,
+            htf_cache=htf_cache,
+            slippage_ticks=slippage_ticks,
+            commission_per_side=commission_per_side,
+            firm_key=firm_key,
+            skip_eligibility_gate=skip_eligibility_gate,
+            n_splits=_CPCV_N_SPLITS_CLASS,
+            k_test_groups=_CPCV_K_TEST_GROUPS_CLASS,
+            embargo_bars=embargo_bars,
+        )
 
     # F-2 FIX: Auto-reduce splits using timeframe-aware bar count (class path).
     # Same fix as run_walk_forward — MIN_OOS_DAYS bare is wrong for intraday.
