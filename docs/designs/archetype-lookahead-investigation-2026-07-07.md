@@ -300,3 +300,24 @@ retro-scoping number. Higher-win-rate peeked → historical equity inherits anot
 Defect 4); flat delta → look-ahead real but NON-EXPLOITATIVE, annotation says so. **Both readings pre-registered
 acceptable; neither reopens certified TRADE-COUNT findings absent the tripwire firing. The receipt SCOPES, does not
 re-litigate.**
+
+## ★★ DEFECT-10 IMPLEMENTATION — doer≠grader FINDING revises the ratified ⊆ invariant (2026-07-07)
+Batch implemented (breaker+unicorn streaming valid_from threaded via `compute_breaker_signals` `if i<valid_from:continue`;
+mitigation strict `i<=bos_bar` gate; test_audit_a12 lint whitelisting centered-shift by construction; L=0 truncated-replay
+contract fixture). 203 engine tests pass; NOT committed. Implementer flagged (grading-integrity, not blanket-PASS):
+**THE RATIFIED ⊆ INVARIANT IS LEVEL-DEPENDENT:**
+- **Raw candidate level (per-bar/per-zone): streaming ⊆ batch HOLDS, provably monotone** (only change = `if i<valid_from:
+  continue`, never False→True; verified `{39,43,44}⊇{43,44}`).
+- **Realized-trade level: ⊆ FAILS, 1/40 (breaker seed=32)** — a streaming-ONLY trade at bar 43 absent from batch.
+- **Root cause (diagnosed):** batch admits an illegitimate look-ahead-tainted trade at bar 39 (BOS confirms at 41, inside
+  window — THE Defect-10 bug), which OCCUPIES the single-position state machine and BLOCKS bar 43's LEGITIMATE non-look-
+  ahead retest. Streaming suppresses the bug-trade at 39, stays flat, legitimately takes 43. So the ⊆ violation is
+  **the fix WORKING** (freed a legitimate trade the bug's occupancy suppressed), NOT admitting-what-batch-rejected.
+**IMPLICATION — revises the ratified acceptance invariant.** Flavor-(a) as ratified ("streaming-absent-from-batch = bug →
+fail outright") would FAIL a CORRECT fix. Trade-level ⊆ is the WRONG level: monotonicity lives at the RAW-CANDIDATE level;
+a strictly-narrower gate on a single-open-position sequential machine can RELOCATE/FREE trades, not only remove them.
+**OPERATOR RULING NEEDED (revised invariant):** correctness check = RAW-CANDIDATE-level ⊆ (monotone, holds); realized-
+trade-level differences DIAGNOSED per-case (occupancy-freed-legitimate = OK; genuine admit-what-batch-rejected = bug).
+Unicorn 40/40 clean (its valid_from rarely exceeded formed_at in the fixtures; isolated deterministic proof confirmed the
+gate suppresses correctly when it binds). HOLDING for the ruling before re-review + accept — the re-review's acceptance
+criterion is exactly what's in question. (Finding is a CLAIM — independent re-review still verifies seed=32 + raw-⊆ + impact.)
