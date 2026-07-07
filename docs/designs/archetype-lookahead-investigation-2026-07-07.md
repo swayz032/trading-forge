@@ -159,3 +159,21 @@ pre-re-baseline alongside Defects 7/8/9 (which (b)'s sequencing already requires
 **CAUSALITY LINT (hardening track, permanent guard):** CI check — no forward index reads in validity computation.
 null-cal did NOT catch this and STRUCTURALLY COULDN'T (it guards the pipeline's general self-deception surface, not
 archetype-internal causality). This lint is Defect-10's class's permanent guard.
+
+## ★ FORWARD-WINDOW CENSUS (Defect-10 site enumeration) — BOUNDED to 2 sites 2026-07-07
+Grep-level scan of all strategy/indicator/context validity code, manually confirmed. Unlike the run_class_backtest
+proliferation (Defects 5-9), Defect-10 does NOT proliferate:
+- **Confirmed sites (2):** `breaker.py:151` `range(max(0, broken_at-3), min(n, broken_at+4))` (±3 forward BOS-validity);
+  `unicorn.py:97` `range(max(0, b_broken_at-1), min(n, b_broken_at+2))` (±1 displacement; +±5 FVG proximity).
+- **NO new forward-window-validity sites** — the `min(n, X+k)` construct appears ONLY at those 2.
+- **`detect_swings` (`market_structure.py:39-40`) — CLEAN, not a site.** The only centered rolling window (`center=True`)
+  in the engine; it carries the compensating `(index + half_window)` shift ("eliminates lookahead bias"). Confirmed.
+- **Zero negative shifts (`.shift(-N)`).** 2 direct future-index hits cleared as false positives (`sys.argv[i+1]` CLI
+  parsing; `volume_profile.py:174 sorted_bins[upper_idx+1]` = a PRICE-BIN spatial index, not a future bar).
+- **`mitigation.py`** 1-line `entry_bar > bos_bar` assert joins the fix batch ("likely clean" → "enforced clean").
+**★ EXISTING PARTIAL GUARD + ITS GAP (where the causality-lint lands):** `src/engine/tests/test_audit_a12.py` ALREADY
+audits look-ahead — it asserts NO `center=True`, entries `np.roll`-shifted, HTF `.shift(1)`. But it does NOT check
+forward-window VALIDITY loops → that gap is exactly why Defect-10 escaped it. **The causality-lint = EXTEND test_audit_a12
+to forbid forward-index reads in validity computation** (not net-new infra). Census-populated site list is now COMPLETE
+for the Defect-10 fix batch: breaker ±3, unicorn ±1/±5, mitigation assert. Class is small + bounded — no serial-discovery
+tail expected.
