@@ -142,15 +142,29 @@ export async function evaluateMacroGates(
 ): Promise<MacroGateResult> {
   const regimeState = await getLatestMacroRegimeState();
 
-  // No regime state → fail open (don't block when we don't know)
+  // deep-scan services/governor CRITICAL (2026-07-06): a null regime state (fresh deploy before the daily
+  // classifier cron has run, OR a DB error with no warm cache) used to return allowed=true "fail open" with ZERO
+  // observability — the crisis gate (the most dangerous C11 sub-gate) silently vanished, and the ISM/RRP
+  // fail-closed fix did NOT cover this earlier-returning path. FIX: (1) always emit a LOUD error so it is never
+  // silent; (2) for the crisis-vulnerable case (index-future long) fail CLOSED — block until real regime data
+  // exists — mirroring the ISM/RRP treatment. Non-index (MCL) and shorts proceed (the crisis gate does not apply).
   if (!regimeState) {
+    const isIndexFutureLong =
+      direction === "long" && ["ES", "NQ", "MES", "MNQ"].includes(instrument.toUpperCase());
+    logger.error(
+      { instrument, direction, strategyId, isIndexFutureLong },
+      "C11 macro gate: NO regime state available (fresh/cold classifier or DB error) — cannot evaluate the crisis " +
+        "gate; failing CLOSED for index-future longs, allowing non-index/shorts. This must not be silent.",
+    );
     return {
-      allowed: true,
-      blockNewLongs: false,
+      allowed: !isIndexFutureLong,
+      blockNewLongs: isIndexFutureLong,
       blockNewEntries: false,
       fomcSizeReduction: false,
-      gateReason: "no macro regime state available — fail open",
-      severity: "none",
+      gateReason: isIndexFutureLong
+        ? "no macro regime state available — failing CLOSED for index-future long (cannot verify crisis gate)"
+        : "no macro regime state available — non-index/short allowed",
+      severity: isIndexFutureLong ? "critical" : "none",
       macroContext: {
         dominantState: "unknown",
         probCrisis: 0,
