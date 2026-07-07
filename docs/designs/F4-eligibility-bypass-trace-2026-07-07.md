@@ -387,3 +387,19 @@ corpus if one is recoverable. If the schema-leak audit already scoped this → t
 morning order as item #3 (after the Defect-4 census read). **F-5 also SHARPENS the NEUTRAL brief (item #6): adjudication
 anchors must come from TRANSCRIPT QUOTES, never spec-side strings — we just watched spec-side strings turn out to be
 compiler residue.**
+
+## ★ DEFECT-4 CENSUS RECONCILED (morning item #2, code-read) — RESOLUTION (a) 2026-07-07
+The night-census contradiction is resolved by code-read: **(a) the estimate over-predicts by orders of magnitude.**
+Roll cost `_roll_cost_usd_cls` is charged PER-TRADE only when `entry_idx` is a rollover day (`is_rollover_day` gate,
+backtester.py ~7242) — NOT accumulated across every roll on a held position (the census's flat model). Rollover days
+~4/yr (MES/MNQ), ~12/yr (MCL); corpus is EOD-flat day-trading (15:55 time-stop) → only the few trades ENTERING on a
+rollover day pay any roll → total tiny, not ~$540.
+- **Defect-4 asymmetry CONFIRMED REAL** (not mischaracterized): `net_pnl = gross - slip - comm - _roll_cost_usd_cls`
+  (~7284) but the equity loop omits `_roll_cost_usd_cls` → divergence = Σ(rollover-day-entry rolls). Proven real by
+  ae7a2560's actual $52.67 divergence.
+- **Small in practice:** ≤$1 on the ~6y Gate-3 window → completes (as observed); >$1 only on long-history (ae7a2560 11y
+  = $52.67, which IS roll cost accumulated over 11y of rollover-day entries → **reconciliation (c) also FALSE**).
+- **REAL blast radius:** long-history Mode A/B (~11y) runs ONLY. **Gate-3 / pass-3 (trade-count, ~6y) UNAFFECTED**;
+  corpus re-baseline equity metrics AFFECTED. Fix = add `_roll_cost_usd_cls` to the class equity loop (mirror net_pnl),
+  **pre-re-baseline tier with Defects 7/8/9** — nothing ships before that batch. Census JSON headline corrected to the
+  reconciled verdict.
