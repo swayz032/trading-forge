@@ -124,3 +124,38 @@ Final state of all 4, code-anchored, verdicts parked:
 **Net:** the grader surfaced genuine issues but every CRITICAL grade was overstated as written; the corrected,
 code-anchored picture is 2 small-bounded reachable look-aheads + 1 latent-zero-exposure parity divergence — all with
 materiality parked for dawn, none with pass-3-pending-run consequences. Doer≠grader did its job: claims → checked facts.
+
+## ★★ RESERVED RULING → DEFECT 10 (forward-window validity look-ahead) — class-mandated fix 2026-07-07
+**REFRAME (Fable-5): materiality was the wrong gate.** A look-ahead in entry-validity is the cardinal instrument sin —
+it makes the backtest measure a strategy live cannot execute, breaking test=ship BY CONSTRUCTION; its materiality is
+corpus-and-snapshot-dependent (immaterial on today's 117 says nothing about the next video). **Fix is MANDATED BY
+DEFECT CLASS; materiality only governs RETROACTIVE SCOPING.** The A/B ships WITH the fix as its impact report — Defect-4
+pattern (fix mandated by class, measurement scopes historical damage).
+**DEFECT 10 REGISTERED — class "forward-window validity look-ahead".** Sites: breaker ±3 (`breaker.py:141`), unicorn
+±1/±5 (`unicorn.py:97`) from the trace + mitigation.py one-line assert ("likely clean"→"enforced clean") + **census-
+populated (do NOT enumerate serially by discovery — the run_class_backtest lesson: 2 sites from 1 trace = the Defects
+5-9 signature).**
+**THE FIX = STREAMING VALIDITY, not trailing-only.** `valid_at(t) = any BOS in [broken_at−3, min(t, broken_at+3)]` —
+flag becomes true the moment a BOS is observed, exactly as live experiences it. Strictly ENTRY-SUPPRESSING
+(streaming ⊆ batch at every t), impact bounded to the ≤3/≤5-bar windows, safe-direction. Same construction unicorn ±1/±5.
+**Trailing-only REJECTED** (changes archetype semantics; blast radius UNBOUNDED — zone with only-BOS-at-+1..+3 flips
+invalid → loses its ENTIRE 30-bar entry window, not just 3 bars). Experiment respecs **batch-vs-streaming**, NOT
+forward-vs-trailing.
+**FIX OWNER'S FIRST DELIVERABLE = semantics confirmation vs the archetype SOURCE DEFINITIONS; operator RATIFIES before
+any implementation (F-2 remediation pattern).**
+**RETROACTIVE-MATERIALITY RULING: no certified claim reopens.** Revivals are trade-count findings at 1,000-2,400 trades —
+a bounded-window entry-suppressing fix CANNOT zero them; Gate-3 FAIL was arm-symmetric on the same engine (24f57ee
+argument stands); null-cal 0/100 is CONSERVATIVE under a performance-inflating defect (if anything strengthened). Standing
+pre-re-baseline caveat ("historical equity metrics likely optimistic") EXTENDS to cover Defect 10.
+**★ PRE-REGISTERED TRIPWIRE (LOCKED):** if ANY N=9 reference pair OR v2-traded pair changes ZERO/NONZERO status under
+the streaming fix → STOP, contradicting-evidence protocol, reference re-derivation question REOPENS. High prior it never
+fires (crossover/discount/ORB don't smell like breaker/unicorn consumers) — but whether they route through shared zone
+machinery is the CENSUS's fact to state, not assumed.
+**SEQUENCING (one synergy): timestamp-emit FIRST + SEPARATE** (never batch a must-be-bit-identical change with a
+will-change-outcomes fix — parity check dies). The emit's per-trade timestamps ARE the impact-report instrumentation
+(which entries fell in +1..+3 = a read, not a reconstruction). **emit (parity-checked) → forward-window census →
+semantics ratification → Defect-10 fix batch via agent-loop → paired impact report (reads pre-registered).** All lands
+pre-re-baseline alongside Defects 7/8/9 (which (b)'s sequencing already requires → surviving track inherits the fix).
+**CAUSALITY LINT (hardening track, permanent guard):** CI check — no forward index reads in validity computation.
+null-cal did NOT catch this and STRUCTURALLY COULDN'T (it guards the pipeline's general self-deception surface, not
+archetype-internal causality). This lint is Defect-10's class's permanent guard.
