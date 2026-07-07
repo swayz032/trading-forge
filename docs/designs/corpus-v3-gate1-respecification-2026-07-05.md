@@ -867,3 +867,26 @@ Blind rater (36 items, closed taxonomy). Read in the pre-registered order:
   past-tense narration). **Both reads converge: boundary hypothesis HOLDS.**
 - **INSULATION verbatim:** whichever verdict, revises the taxonomy ONLY; classifier track stays CLOSED; spent stays spent.
 Artifacts committed: blinded packet, SEALED key, rater verdicts. FINAL verdict + "confident" pin = operator's.
+
+## ★★ NEUTRAL VERDICT — Part 1 (pin) + Part 2 (settled) 2026-07-07
+**PART 1 — "confident" PIN (author's own un-pinned term, handled as a flaw not resolved by convenient reading):** neither
+reading may be selected post-hoc (threshold-shopping, the move killed at Ruling-1 counter-case / Fibonacci fold / gate
+denominator — now applied to its author). Pin = strictest reading available at PRE-REGISTRATION time = MOST FAVORABLE TO
+FALSIFICATION = **medium-or-better counts.** → 5 NEUTRALs qualify on confidence; the ≥2 fate rides entirely on the
+CONJUNCTIVE second clause: CLEAN ANCHORS. **N20 OUT** (anchor mismatches its own object), **N28 OUT** (past-tense
+narration "what I was looking for" = report of prior intent, not a stated gate). **N04/N06/N34 = PENDING-ANCHOR-REVIEW**
+(operator rules clean-or-not on sight of verbatim anchors — no adjudication from summary; description-vs-evidence line).
+**Falsification branch (pre-committed, written first deliberately — highest-conflict read, thumb shown not pressing):
+≥2 of 3 survive → hypothesis FALSIFIED on the pool under its own terms (stands as Gate-3's FAIL stood at 9/9 revival).
+≤1 → survives the pool test. Both acceptable.**
+**PART 2 — SETTLED regardless of the pool:**
+- **Canonical Fibonacci (N17) = SUPPORTED, FROZEN.** Surface read as narration; the rater's own words ("reads as
+  narration despite the translation aid framing Fibonacci as a filtering tool") = the mechanism caught LIVE: the mandatory
+  reading was recoverable from DISCOURSE, not the sentence. Independent of the pool verdict.
+- **Confidence stratification = FROZEN as observed structure, hypothesis-SUPPORTING-NOT-ESTABLISHING** (honest evidence
+  level: clear gates uniform HIGH, every NEUTRAL-mandatory hedged MEDIUM, 0 exceptions — CONSISTENT with the boundary
+  hypothesis, but could equally be rater conservatism on unfamiliar phrasing; supporting, not confirmatory).
+- **10/10 control gate = validity-before-verdict spine held on the LAST gate of the run as on the first.**
+- **Scope pre-registered for the final verdict:** "on this corpus, by this blind-surface instrument, at this packet's
+  population" — no more (unscoped claims are where laundering hides; the week's last claim shouldn't re-teach its first
+  lesson). Insulation verbatim: revises taxonomy only, classifier track CLOSED, spent stays spent.
