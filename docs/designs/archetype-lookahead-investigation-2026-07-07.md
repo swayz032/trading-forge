@@ -177,3 +177,21 @@ forward-window VALIDITY loops → that gap is exactly why Defect-10 escaped it. 
 to forbid forward-index reads in validity computation** (not net-new infra). Census-populated site list is now COMPLETE
 for the Defect-10 fix batch: breaker ±3, unicorn ±1/±5, mitigation assert. Class is small + bounded — no serial-discovery
 tail expected.
+
+## ★ SEMANTICS CONFIRMATION (fix-owner first deliverable, for operator ratification) 2026-07-07
+Streaming validity is DEFINITION-PRESERVING (restores intent), not definition-changing:
+- **Breaker source def (docstring):** "Enter when price returns to a broken order block, VALIDATED BY BOS AT THE BREAK
+  POINT" / "valid ONLY if the OB was broken through WITH a confirmed Break of Structure." → inherently "valid-upon-BOS-
+  confirmation." Streaming `valid_at(t)=any BOS in [broken_at-3,min(t,broken_at+3)]` = valid the moment the confirming
+  BOS is OBSERVED = faithful to the definition + to what live experiences. Batch (any BOS in full [-3,+3] regardless of
+  observation time) is the IMPLEMENTATION SHORTCUT that peeks → the corruption. Streaming RESTORES the definition.
+  Behavioral delta ONLY when the sole BOS lands at broken_at+j (j in 1..3) and an entry sits at broken_at+k<j: batch
+  admits (peeking), streaming withholds until the BOS prints. Strictly entry-suppressing, bounded <=3.
+- **Unicorn source def (docstring):** strict SEQUENCE (swing->OB->break-with-displacement->FVG-during-displacement->
+  overlap->enter-on-retrace). ±1 displacement / ±5 FVG windows operationalize "the displacement + FVG that CREATED the
+  breaker." Streaming = each sequence element valid upon observation as it unfolds = faithful to the ordered definition;
+  batch peeks forward. Same class, bounded <=5.
+- **VERDICT (recommended, operator ratifies): streaming = the FAITHFUL operationalization of both archetype definitions;
+  the fix RESTORES intended "valid-upon-confirmation" semantics, does NOT change them. No reading of either definition
+  intends to condition an entry on a confirmation bar in its own future.** mitigation.py's `entry_bar > bos_bar` assert
+  is the same principle made explicit. AWAITING RATIFICATION before implementation (F-2 pattern).
