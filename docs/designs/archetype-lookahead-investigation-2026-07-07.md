@@ -262,3 +262,19 @@ The F-2 line — **staged, not started; ratification NEVER inferred from the pac
 (F-2 remediation, timestamp-emit, Defect-10). No longer a lesson; it is the PROGRAM'S STANDING LAUNCH PROTOCOL: any
 instrument-touching change stages its full spec, produces its ratification packet, and waits for EXPLICIT ratification
 before code — the packet landing is never the authorization. Write into the discipline docs when next touched. → also memory.
+
+## ★ AXIS-DERIVATION RECEIPT (Defect-10 fix batch step 1, for ratification) — L=0 CONFIRMED 2026-07-07
+**VERDICT: confirmation-shifted — `bos_list[j]` knowable at bar j; streaming applies at j directly. Observability lag
+L = 0.** Fact 2's two-axis subtlety resolves favorably: no window-arithmetic lag term needed.
+- **Leg 1 (code-read):** `detect_swings` centered window + `+half_window` shift; `detect_bos` advances swing pointers
+  with STRICT `<` (swing at shifted index s active only for bars i>s). So `bos_list[j]` = f(close[j], swing confirmed
+  at ≤ j-1) — all inputs in [0,j]. HIGH confidence.
+- **Leg 2 (empirical truncated-replay RECEIPT):** each BOS recomputed on `df[:j+1]` vs full history — **78 BOS events /
+  6 datasets, 78 IDENTICAL, 0 lagged** (production lookback=5 + test 2/3/4). Receipt scripts in scratchpad
+  (`bos_observability_receipt.py`, `bos_receipt_adversarial.py`, reproducible, lightweight polars only, no backtester).
+- **Fix implication (facts):** `valid_at(t)` indexes `bos_list` directly by bar → NO `+L` offset; `min(t, broken_at+3)`
+  stands (Fact 3 pin holds); **do NOT add another `half_window`** (shift already paid — double-count would push validity
+  later than the code observes). `broken_at` is the same exec-bar axis.
+- **Boundary caveat (ratification):** L=0 holds for `detect_swings`/`detect_bos` AS breaker/unicorn call them today
+  (`bos = detect_bos(df, detect_swings(df, swing_lookback))`); a future refactor to a non-centered/differently-shifted
+  swing basis needs re-measurement. AWAITING RATIFICATION → then streaming implementation.
