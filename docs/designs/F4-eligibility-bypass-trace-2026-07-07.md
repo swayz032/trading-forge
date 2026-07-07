@@ -143,3 +143,30 @@ grew the six run_backtest/run_class_backtest defects. FREEZE as: "duplicate-enfo
 liability (≥4 confirmed sites); cure class known (single-source enforcement + parity guards); register next to the
 sibling run_class_backtest refactor on the POST-CERT track." Site 4 (ceiling skip-vs-clamp) is where the divergence
 already bites — the canary for the class.
+
+## ITEM 4 — DUPLICATE-ENFORCEMENT PATTERN SURVEY (census, feeds post-cert refactor track — 2026-07-07)
+Two axes of the duplicate-enforcement / duplicate-logic house style:
+
+### Axis 1 — eligibility_gate in-gate check ↔ separate-path gate
+- **CONFIRMED twins (3 distinct):** max-trades (in-gate `:204` ↔ separate `evaluateDailyTradeCap`(live) +
+  `_apply_max_trades_per_day`(backtest)); DLL/reduce (in-gate `:278` ↔ separate `evaluateCrossSymbolDll`
+  reduce_size/halt/force + `apply_dll_halt`); structural-stop ceiling (in-gate Check-0 SKIP ↔ separate backtester
+  clamp — the ACTION-DIVERGENT one, the canary).
+- **POSSIBLE twins (related-not-identical — verify during refactor):** confluence (in-gate A+ overlay `≥4` ↔ separate
+  `evaluateWeightedConfluence` 11-factor Path C — two different confluence models gating the same signal); kill-zone
+  (in-gate Check-4 ↔ `killzone.ts` `killzone_active` weighted factor); liquidity-sweep (in-gate Check-5 ↔ delta/
+  structural weighted factors).
+- **SINGLE-SOURCE (clean):** macro-blackout (`calendarBlocked`), lunch/PM (`evaluateLunchBlackoutGate`) — separate-only,
+  NO in-gate copy; `checkRiskGate` / `evaluateContextGate` / `checkAntiSetupGate` / consistency-gate — no in-gate twin.
+
+### Axis 2 — run_backtest ↔ run_class_backtest (the six-defect sibling)
+The SAME duplicate-logic liability, already the documented source of Defects 1/4/5/6 (the class-path sibling missing
+guards/roll-cost/precision the run_backtest path had). Not re-surveyed (known); named here so both axes sit under ONE
+architectural liability.
+
+### CENSUS VERDICT (fact, no fix)
+Duplicate-enforcement is a confirmed pervasive HOUSE STYLE: Axis 1 = 3 confirmed + 3 possible in-gate/separate twins;
+Axis 2 = the run_backtest/run_class_backtest fork (≥6 historical defects). Cure class known (single-source enforcement
++ parity guards). **Registered as a named architectural liability on the POST-CERT refactor track** alongside the
+run_class_backtest sibling refactor. Ceiling skip-vs-clamp (Axis-1) is the one that already bites; it is the canary.
+Materiality/prioritization = parked (judgment). Facts only per charter.
