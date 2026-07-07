@@ -133,6 +133,14 @@ function buildResultExtras(result: BacktestResult): Record<string, unknown> | nu
     // transaction below, which reads it back out of `result` directly (not
     // resultExtras) so it fires in the SAME completion pass that persists it.
     "dsl_guards",
+    // deep-scan cross-system (2026-07-06): backtester.py emits result["margin_expansion_audit"] (VIX-tier
+    // max_contracts halving/quartering, Wave 27.5 Pass D DEFAULT ON) and result["roll_spread_costs"] (itemized
+    // per-roll-day P&L deduction) — both documented as producing backtest.margin_expansion_applied /
+    // backtest.roll_spread_itemized audit rows. They had no dedicated column AND weren't in this allowlist, so the
+    // Python-computed audit payloads were silently dropped on every backtest (no queryable record of when VIX
+    // margin expansion or a roll-day cost was applied). Add them so the audit trail survives to result_extras.
+    "margin_expansion_audit",
+    "roll_spread_costs",
   ] as const;
   let hasAny = false;
   for (const key of extraKeys) {
