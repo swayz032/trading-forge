@@ -44,6 +44,7 @@ import {
   buildMarkdownReport,
   checkPurgeViolation,
   computeProfitFactor,
+  computeReplayDisagreement,
   computeSharpeFromTrades,
   computeSpearman,
   selectThresholdFromIS,
@@ -60,6 +61,7 @@ export {
   buildMarkdownReport,
   checkPurgeViolation,
   computeProfitFactor,
+  computeReplayDisagreement,
   computeSharpeFromTrades,
   computeSpearman,
   selectThresholdFromIS,
@@ -219,7 +221,11 @@ export async function runAnalysis(
         const q = r.estimated_value !== null ? parseFloat(r.estimated_value) : null;
         const c = r.classical_value !== null ? parseFloat(r.classical_value) : null;
         if (q === null || c === null) return null;
-        return Math.abs(q - c) / Math.max(c, 1e-6);
+        // Gap 2 fix (2026-07-06): was `Math.abs(q - c) / Math.max(c, 1e-6)` —
+        // drifted from Python's `abs(q - c) / max(abs(c), 1e-6)` (quantum_replay.py:374-376)
+        // by omitting abs() on the denominator. Now delegates to the shared,
+        // parity-pinned computeReplayDisagreement() helper.
+        return computeReplayDisagreement(q, c);
       })
       .filter((d): d is number => d !== null);
 

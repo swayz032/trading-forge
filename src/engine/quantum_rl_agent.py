@@ -1815,6 +1815,28 @@ def train_regime_conditioned_policies(
         all_episode_rewards: list[float] = []
         regime_seed = int(rng.integers(0, 2**31))
 
+        # Gap 1 fix (quantum-rl-bridge, 2026-07-06): _dsr_floor + the Sharpe
+        # helper are hoisted here — BEFORE the batch loop — so the per-batch
+        # quantum_rl_runs INSERT below can persist a truthful dsr_passed value
+        # (previously _dsr_passed was computed ONCE, after this whole loop,
+        # from the fully-accumulated all_episode_rewards, and was never written
+        # into governance_payload at all — the persisted DB column had no
+        # dsr_passed key). rl-signal-fetcher.ts:228 reads
+        # governance_labels.dsr_passed but only consumes it on the fail-soft
+        # fallback branch (legacy rows lacking sr_is/sr_oos/n_training_iterations)
+        # — every current row takes the TS-probit-authoritative branch instead,
+        # so this was a latent (masked) disconnect, not a live break.
+        # _sharpe_of is the SAME formula final_sharpe uses post-loop (mean/std
+        # of the reward series, 0.0 when insufficient data) — defining it once
+        # here and calling it from both sites guarantees the per-batch proxy
+        # and the final per-regime value can never mathematically drift apart.
+        _dsr_floor: float = float(os.environ.get("QUANTUM_RL_DSR_FLOOR", "0.5"))
+
+        def _sharpe_of(vals: list[float]) -> float:
+            if len(vals) > 1 and np.std(vals) > 0:
+                return float(np.mean(vals) / np.std(vals))
+            return 0.0
+
         for epoch_batch_start in range(0, training_epochs, 20):
             batch_end = min(epoch_batch_start + 20, training_epochs)
             batch_rewards: list[float] = []
@@ -1931,17 +1953,22 @@ def train_regime_conditioned_policies(
                 _is_rewards = all_episode_rewards[:_half] if _half > 1 else all_episode_rewards
                 _oos_rewards = all_episode_rewards[_half:] if _half > 1 else all_episode_rewards
 
-                def _proxy_sharpe(vals: list[float]) -> float:
-                    if len(vals) > 1 and np.std(vals) > 0:
-                        return float(np.mean(vals) / np.std(vals))
-                    return 0.0
-
-                sr_is = _proxy_sharpe(_is_rewards)
-                sr_oos = _proxy_sharpe(_oos_rewards)
+                sr_is = _sharpe_of(_is_rewards)
+                sr_oos = _sharpe_of(_oos_rewards)
 
                 # ci_high snapshot: mean of the regime's ci_high series (best
                 # available proxy for "at decision time" at batch granularity).
                 batch_ci_high = float(np.mean(ci_highs)) if ci_highs else None
+
+                # Gap 1 fix: dsr_passed/dsr_value computed from the SAME
+                # all_episode_rewards-so-far series used for sr_is/sr_oos above
+                # (identical WITHIN-RUN cumulative-proxy pattern), via the
+                # shared _sharpe_of helper — so on the regime's LAST batch this
+                # is mathematically identical to the post-loop final_sharpe /
+                # _dsr_passed computed further down (same formula, same final
+                # all_episode_rewards contents, same _dsr_floor).
+                _batch_dsr_value = _sharpe_of(all_episode_rewards)
+                _batch_dsr_passed = _batch_dsr_value >= _dsr_floor
 
                 governance_payload = {
                     **RL_RUNS_GOVERNANCE,
@@ -1955,6 +1982,10 @@ def train_regime_conditioned_policies(
                     "sr_oos": sr_oos,
                     "n_training_iterations": batch_end,
                     "sr_proxy_method": "in_batch_cumulative_reward_half_split",
+                    "dsr_passed": _batch_dsr_passed,
+                    "dsr_value": _batch_dsr_value,
+                    "dsr_floor": _dsr_floor,
+                    "dsr_proxy_method": "in_batch_cumulative_reward_sharpe",
                 }
 
                 try:
@@ -2006,10 +2037,12 @@ def train_regime_conditioned_policies(
                     })
 
         # Final Sharpe + result summary
+        # Gap 1 fix: reuse the SAME _sharpe_of helper the per-batch proxy above
+        # calls (formula unchanged: mean/std of the reward series, 0.0 when
+        # insufficient data) — guarantees final_sharpe can never drift from the
+        # per-batch cumulative proxy already persisted to governance_payload.
         final_reward = float(np.mean(all_episode_rewards)) if all_episode_rewards else 0.0
-        final_sharpe = 0.0
-        if len(all_episode_rewards) > 1 and np.std(all_episode_rewards) > 0:
-            final_sharpe = float(np.mean(all_episode_rewards) / np.std(all_episode_rewards))
+        final_sharpe = _sharpe_of(all_episode_rewards)
 
         weights_hash = hashlib.sha256(params.tobytes()).hexdigest()[:16] if n_params > 0 else "no_params"
 
@@ -2020,7 +2053,11 @@ def train_regime_conditioned_policies(
         # The TS-side rl-dsr-gate.ts re-reads the governance_labels from
         # quantum_rl_runs; we stamp the value here so the TS gate has an authoritative
         # per-regime signal to consume.
-        _dsr_floor: float = float(os.environ.get("QUANTUM_RL_DSR_FLOOR", "0.5"))
+        # Gap 1 fix: _dsr_floor is now read ONCE, hoisted above the batch loop
+        # (same os.environ.get call, same default "0.5", same value — env vars
+        # don't change mid-process) — re-used here rather than re-read, so the
+        # per-batch persisted dsr_floor and this final comparison are guaranteed
+        # to use the identical floor value.
         _dsr_passed: bool = final_sharpe >= _dsr_floor
 
         _dsr_audit_action = "quantum_rl.dsr_passed" if _dsr_passed else "quantum_rl.dsr_floor_block"

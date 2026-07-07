@@ -34,6 +34,7 @@ import {
   buildMarkdownReport,
   computeSharpeFromTrades,
   applyEmbargo,
+  computeReplayDisagreement,
   type AnalysisResult,
   type FoldMetrics,
 } from "../../lib/replay/quantum-disagreement.js";
@@ -416,5 +417,54 @@ describe("statistical helper sanity checks", () => {
     const thresholds = analysis.thresholdResults.map(r => r.threshold);
     expect(thresholds).toContain(0.05);
     expect(thresholds).toContain(0.25);
+  });
+});
+
+// ─── Gap 2 parity test: computeReplayDisagreement vs Python quantum_replay.py ──
+//
+// Python (src/engine/replay/quantum_replay.py:374-376):
+//   disagreement = abs(quantum_estimate - stored_classical_ruin) / max(
+//       abs(stored_classical_ruin), 1e-6
+//   )
+//
+// Pins computeReplayDisagreement() to that exact formula: same numerator
+// (abs(q - c)), same denominator shape (max(abs(c), epsilon)), same epsilon
+// (1e-6). Values below are hand-computed against the Python formula so a
+// future edit to either side that breaks parity fails this test.
+describe("test_compute_replay_disagreement_matches_python_quantum_replay", () => {
+  it("matches Python for typical non-negative breach/ruin probabilities", () => {
+    // abs(0.25 - 0.20) / max(abs(0.20), 1e-6) = 0.05 / 0.20 = 0.25
+    expect(computeReplayDisagreement(0.25, 0.20)).toBeCloseTo(0.25, 10);
+    // abs(0.02 - 0.02) / max(abs(0.02), 1e-6) = 0 / 0.02 = 0
+    expect(computeReplayDisagreement(0.02, 0.02)).toBeCloseTo(0, 10);
+  });
+
+  it("matches Python's epsilon floor when classical is exactly zero", () => {
+    // abs(0.05 - 0) / max(abs(0), 1e-6) = 0.05 / 1e-6 = 50000
+    expect(computeReplayDisagreement(0.05, 0)).toBeCloseTo(50000, 4);
+  });
+
+  it("uses abs(classical) in the denominator — NOT a bare max(c, epsilon) — for a negative classical value", () => {
+    // This is the Gap 2 finding: the pre-fix TS recompute used
+    // Math.max(c, 1e-6) (no abs on c), which — for a negative c — collapses
+    // the denominator to 1e-6 regardless of |c|'s true magnitude. Python's
+    // max(abs(c), 1e-6) instead tracks |c|. Real breach/ruin probabilities
+    // are always in [0,1] (never negative) so this path is not hit by
+    // production data today — but the function must match Python's formula
+    // exactly, not merely "happen to agree on the domain we currently see".
+    const q = 0.10;
+    const c = -0.40;
+    const expected = Math.abs(q - c) / Math.max(Math.abs(c), 1e-6); // = 0.50 / 0.40 = 1.25
+    const buggyPreFixValue = Math.abs(q - c) / Math.max(c, 1e-6);   // = 0.50 / 1e-6 = 500000 (WRONG)
+    expect(computeReplayDisagreement(q, c)).toBeCloseTo(expected, 10);
+    expect(computeReplayDisagreement(q, c)).toBeCloseTo(1.25, 10);
+    expect(computeReplayDisagreement(q, c)).not.toBeCloseTo(buggyPreFixValue, 0);
+  });
+
+  it("is symmetric-safe: quantum below classical produces the same magnitude as quantum above", () => {
+    expect(computeReplayDisagreement(0.10, 0.20)).toBeCloseTo(
+      computeReplayDisagreement(0.30, 0.20),
+      10,
+    );
   });
 });
