@@ -695,6 +695,49 @@ export async function compileDualPineExport(
         return { id: exportId, status: "failed", error: refusalReason, reason: refusalReason, ok: false };
       }
 
+      // D4 fix (deep-scan #22, 2026-07-06): explicit gatewayOptions={mode:"direct"}
+      // escape hatch. deriveGatewayOptions treats an explicit caller opt-in as a
+      // deliberate operator decision (shouldAuditFallback=false), so the F-1
+      // fail-closed guard above NEVER fires for it — reopening the closed CRITICAL.
+      // A future misconfigured caller could pass mode:"direct" for a live-order
+      // context (paper_account_routing set = the operator's own A/B-routed
+      // sub-account) and silently bypass the kill-switch / compliance gate /
+      // firm-cap clamp / circuit breaker. Refuse it: override to tf_gateway and
+      // write an audit row so the reopening can never happen silently. No caller
+      // passes direct today; this is defense-in-depth against a future regression.
+      if (
+        gatewayOptions?.mode === "direct" &&
+        gwPaperRouting != null &&
+        gwPaperRouting !== ""
+      ) {
+        gwOpts.mode = "tf_gateway";
+        delete gwOpts.gatewayUrl;
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.direct_mode_overridden_live_context",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: {
+              strategyId,
+              correlationId: correlationId ?? null,
+              requestedMode: "direct",
+              paperAccountRouting: gwPaperRouting,
+              entryIndicator: gwEntryIndicator,
+            } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: "explicit_direct_refused_for_live_order_context",
+              overridden_to: "tf_gateway",
+            } as Record<string, unknown>,
+            status: "warn",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.error({ auditErr, strategyId }, "pine-export-gateway-direct-override: audit write failed");
+        }
+      }
+
       const strategyObj = config["strategy"] as Record<string, unknown>;
       const innerConfig = (typeof strategyObj["config"] === "object" && strategyObj["config"] !== null
         ? strategyObj["config"]
@@ -1416,6 +1459,49 @@ export async function compilePineExport(
           durationMs: Date.now() - startMs,
         });
         return { id: exportId, status: "failed", error: refusalReason, reason: refusalReason, ok: false };
+      }
+
+      // D4 fix (deep-scan #22, 2026-07-06): explicit gatewayOptions={mode:"direct"}
+      // escape hatch. deriveGatewayOptions treats an explicit caller opt-in as a
+      // deliberate operator decision (shouldAuditFallback=false), so the F-1
+      // fail-closed guard above NEVER fires for it — reopening the closed CRITICAL.
+      // A future misconfigured caller could pass mode:"direct" for a live-order
+      // context (paper_account_routing set = the operator's own A/B-routed
+      // sub-account) and silently bypass the kill-switch / compliance gate /
+      // firm-cap clamp / circuit breaker. Refuse it: override to tf_gateway and
+      // write an audit row so the reopening can never happen silently. No caller
+      // passes direct today; this is defense-in-depth against a future regression.
+      if (
+        gatewayOptions?.mode === "direct" &&
+        gwPaperRouting != null &&
+        gwPaperRouting !== ""
+      ) {
+        gwOpts.mode = "tf_gateway";
+        delete gwOpts.gatewayUrl;
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.direct_mode_overridden_live_context",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: {
+              strategyId,
+              correlationId: correlationId ?? null,
+              requestedMode: "direct",
+              paperAccountRouting: gwPaperRouting,
+              entryIndicator: gwEntryIndicator,
+            } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: "explicit_direct_refused_for_live_order_context",
+              overridden_to: "tf_gateway",
+            } as Record<string, unknown>,
+            status: "warn",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.error({ auditErr, strategyId }, "pine-export-gateway-direct-override: audit write failed");
+        }
       }
 
       const strategyObj = config["strategy"] as Record<string, unknown>;

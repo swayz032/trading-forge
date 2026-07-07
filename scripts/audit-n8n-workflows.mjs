@@ -17,6 +17,9 @@
  *   4. Dead port-4100 alert endpoints (/alert/* paths only — health
  *      probe to port 4100 is intentional and allowed)
  *   5. Outdated typeVersions (httpRequest < 4.2, scheduleTrigger < 1.2)
+ *   6. Retired Ollama model references (D1, deep-scan #22) — any node that
+ *      references a model other than the one served model `gemma4:e4b-it-qat`
+ *      (deepseek-r1 / nomic-embed-text / qwen2.5-coder / phi4-mini / gemma4:e2b).
  *
  * Allowlist marker: any node whose `notes` field contains
  *   `# n8n-drift-allowed: <reason>`
@@ -52,10 +55,36 @@ const REPORT_PATH = path.resolve(__dirname, "..", "tmp-n8n", "n8n-drift-report.m
 const API_KEY_PATTERNS = [
   { name: "brave", regex: /BSA[a-zA-Z0-9\-_]{10,}/g },
   { name: "tavily", regex: /tvly-[a-zA-Z0-9\-_]{10,}/g },
-  { name: "openai", regex: /sk-[a-zA-Z0-9]{20,}/g },
+  // D2 (deep-scan #22): broadened to catch modern OpenAI key formats.
+  // The legacy `[a-zA-Z0-9]{20,}` class stopped at the first hyphen, so
+  // `sk-proj-...` and `sk-svcacct-...` keys (project / service-account scoped,
+  // the 2024+ default) slipped past — the class now allows `-` and `_` which
+  // appear inside those key bodies.
+  { name: "openai", regex: /sk-[a-zA-Z0-9_-]{20,}/g },
   { name: "parallel", regex: /l7Whs[a-zA-Z0-9_]{10,}/g },
   { name: "n8n_jwt", regex: /eyJhbGciOi[a-zA-Z0-9._\-]+/g },
 ];
+
+// ─── D1 (deep-scan #22): retired Ollama model drift ─────────────────
+// The tower serves EXACTLY ONE local model as of 2026-07-03: `gemma4:e4b-it-qat`
+// (CLAUDE.md §15 tower-model consolidation). Every other model was RETIRED and
+// is no longer pulled. A workflow node still referencing a retired model routes
+// to a model the tower can't serve — a silent drift none of the checks above
+// caught, because none inspect ollama `model` fields. Flag any node that
+// references one of these retired model names.
+const RETIRED_OLLAMA_MODELS = [
+  "deepseek-r1",
+  "nomic-embed-text",
+  "qwen2.5-coder",
+  "phi4-mini",
+  "gemma4:e2b",
+];
+// Escape regex metacharacters in each literal name (qwen2.5-coder contains a `.`).
+// `gemma4:e2b` does NOT match the served `gemma4:e4b-it-qat` (distinct `e2b`/`e4b`).
+const RETIRED_MODEL_PATTERNS = RETIRED_OLLAMA_MODELS.map((name) => ({
+  name,
+  regex: new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"),
+}));
 
 // ─── Single-symbol hardcoded prompt phrases ─────────────────────────
 const SINGLE_SYMBOL_PHRASES = [
@@ -170,7 +199,7 @@ function nodeStringified(node) {
   return JSON.stringify(node);
 }
 
-function findApiKeys(workflowJson) {
+export function findApiKeys(workflowJson) {
   const violations = [];
   const text = JSON.stringify(workflowJson);
   for (const pat of API_KEY_PATTERNS) {
@@ -184,6 +213,24 @@ function findApiKeys(workflowJson) {
         if (pat.regex.test(ntext)) {
           violations.push({ nodeName: node.name, key: pat.name });
         }
+      }
+    }
+  }
+  return violations;
+}
+
+// ─── D1: retired Ollama model reference detection ───────────────────
+// Exported for regression coverage. Scans each node's serialized JSON for any
+// retired model name (covers `model` fields wherever they live — ollama nodes,
+// langchain lmChatOllama credentials, HTTP request bodies to /api/generate, etc.).
+export function findRetiredModelRefs(workflowJson) {
+  const violations = [];
+  for (const node of workflowJson.nodes ?? []) {
+    const ntext = nodeStringified(node);
+    for (const pat of RETIRED_MODEL_PATTERNS) {
+      pat.regex.lastIndex = 0;
+      if (pat.regex.test(ntext)) {
+        violations.push({ nodeName: node.name, model: pat.name });
       }
     }
   }
@@ -430,6 +477,7 @@ function renderReport(byWorkflow) {
 
   const sections = [
     ["api_keys", "Hardcoded API keys"],
+    ["retired_models", "Retired Ollama model references (tower serves only gemma4:e4b-it-qat)"],
     ["single_symbol", "Single-symbol hardcoded prompts"],
     ["scout_signal_type", "Scout POSTs missing `signal_type`"],
     ["port_4100_alert", "Dead port-4100 /alert/* endpoints"],
@@ -500,6 +548,7 @@ async function main() {
     const detail = await fetchWorkflowDetail(baseUrl, apiKey, w.id);
     const v = {
       api_keys: findApiKeys(detail),
+      retired_models: findRetiredModelRefs(detail),
       single_symbol: findSingleSymbolPrompts(detail),
       scout_signal_type: findScoutMissingSignalType(detail),
       port_4100_alert: findPort4100AlertRefs(detail),

@@ -3,8 +3,13 @@
  *
  * Pure-function Walk-Forward Efficiency (WFE) gate.
  *
- * Pass B.1 (backtest-core) emits `backtests.walk_forward_metadata.wfe_overall`
+ * Pass B.1 (backtest-core) emits `backtests.walkForwardResults.wfe_overall`
+ * (Drizzle column `walkForwardResults` = DB column `walk_forward_results`)
  * as the aggregate OOS/IS Sharpe ratio across all walk-forward windows.
+ *
+ * D7 (deep-scan #22, 2026-07-06): docstring corrected from the non-existent
+ * `walk_forward_metadata.wfe_overall` — every real reader in lifecycle-service.ts
+ * reads `latestBt.walkForwardResults.wfe_overall`.
  *
  * Institutional 2026 standard (aligned to CLAUDE.md §12 — parity fix 2026-06-22):
  *   wfe_overall >= WFE_HARD_FLOOR (0.70) → PASS
@@ -105,12 +110,12 @@ export function getWfeWarnFloor(): number {
 /**
  * Evaluate the WFE gate.
  *
- * @param wfeOverall  Value of backtests.walk_forward_metadata.wfe_overall.
+ * @param wfeOverall  Value of backtests.walkForwardResults.wfe_overall.
  *                    Pass null/undefined for legacy backtests pre-Pass-B.1 WHERE
  *                    the key is genuinely absent.
  * @param hardFloor   Override env-derived WFE_HARD_FLOOR (for tests).
  * @param warnFloor   Override env-derived WFE_WARN_FLOOR (for tests).
- * @param wfeStatus   Value of backtests.walk_forward_metadata.wfe_status.
+ * @param wfeStatus   Value of backtests.walkForwardResults.wfe_status.
  *                    When "degenerate_is" the gate BLOCKS regardless of wfeOverall
  *                    (G2a hardening 2026-06-22 — producer emits 0.0 + "degenerate_is"
  *                    when IS windows yield non-positive / absent Sharpe; this MUST NOT

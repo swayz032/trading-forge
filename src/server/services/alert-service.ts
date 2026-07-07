@@ -260,10 +260,16 @@ export const AlertFactory = {
       type: "system",
       severity: hoursRemaining <= 1 ? "critical" : "warning",
       title: `Bitwarden session expiring in ${hoursRemaining}h`,
-      message:
+      // D5 (deep-scan #22): wrapped with appendFamilyGradePostscript to match the
+      // sibling system alerts (heartbeat / cookie-refresh) so family members get
+      // plain-English context + action instead of an operator-only technical line.
+      message: appendFamilyGradePostscript(
         `The Bitwarden vault session token will expire in approximately ${hoursRemaining} hour(s). ` +
         `The daily session refresh cron should renew it automatically. If this alert persists, ` +
         `run 'bw login' manually on the Skytech tower and update BW_SESSION in the .env file.`,
+        "A stored security session the trading bot uses is about to expire — it normally renews itself.",
+        "No action needed unless this alert keeps repeating — if it does, call Tony.",
+      ),
       metadata: {
         hoursRemaining,
         event: "bw_session_expiring_soon",

@@ -208,6 +208,11 @@ describe("pine-export-recipient-service", () => {
       expect.stringMatching(/ext.001_mffu/i),  // recipientLabel
       expect.stringMatching(/^[a-f0-9]{64}$/),  // hmacSecret (64-char hex)
       MOCK_ACCOUNT_ID,  // accountId (9th arg)
+      // D3 (deep-scan #22): 10th positional arg `gatewayOptions` added in commit
+      // ed08fa4 but never asserted here — test had been silently RED since
+      // 2026-06-24. The happy-path mock strategy has no paper_account_routing, so
+      // recipientGatewayOpts resolves to undefined (see pine-export-recipient-service.ts).
+      undefined,  // gatewayOptions (10th arg)
     );
   });
 
