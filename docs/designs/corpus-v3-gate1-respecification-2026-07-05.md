@@ -488,3 +488,29 @@ requirement is now MET → the PROVISIONAL mark on the Gate 1′ dispositions is
 - **Iteration protocol point 1 satisfied:** misses HOLD as errors → proceed. The regression flip strengthens rather
   than blocks (still a classifier error to fix), but the design must generalize from the 143 — Fibonacci is a
   confirming example, NOT a design input.
+
+## ITERATED CLASSIFIER GATE 3 — CERTIFIED (2026-07-06, single-shot, recovered from 2 infra deaths)
+Single-shot iterated Gate 3 (classifier fix `15abe2d`) survived a rate-limit agent death (specs re-emitted OK) +
+a tower freeze at 39/42 (Option-A resume of 3 concepts, harness crashed on the filter's KeyError but ALL pairs
+backtested — verdict hand-assembled from both logs, deterministic per-pair backtester stdout; parent-recomputed).
+- **VALIDITY (read first): 42/42 pairs measurable, 0 None, all 9 reference pairs clean.** The pre-fix
+  `sVkmZklJDHI_MES` `None` was a TRANSIENT (fresh run: v2=3309) — not an engine fault. Resolved.
+- **REVIVAL: 9/9** (rule ≥8/9). ALL reference pairs revive under the iterated classifier: snNkQSyWX4k (0→2809/2396/2977),
+  m-G1ag77aVc (0→1230/1036/2314), oDLt9zh33LE (0→2856/2455/2926). **The 2 snNkQSyWX4k target misses are FIXED
+  (7/9→9/9)** — the entry-trigger escalation worked exactly as designed + validated (held-out margin improved, not memorized).
+- **REGRESSIONS: 2, STILL UNEXPLAINED — `jlShztsY3oA` MNQ/MCL (2424→0, 3021→0).** Verified: iterated jlShztsY3oA
+  spine count PRE=0 → ITERATED=0; **Fibonacci retracement level is STILL `context`** (the fix's wait-for/retest/trigger
+  pattern does NOT match retracement-level language). Per the certified Gate 1′ (independent rater), Fibonacci is a
+  MANDATORY gate the classifier wrongly demoted → these deaths remain CLASSIFIER ERRORS = UNEXPLAINED regressions.
+- **CERTIFIED VERDICT: Gate 3 FAILS.** Frozen rule = ≥8/9 revival AND zero unexplained regressions (AND, no relief).
+  9/9 revival PASSES; 2 unexplained regressions FAIL → the AND fails. 9/9 does NOT rescue it — no relief for a passing
+  revival when the regression clause fails.
+- **REFINED DIAGNOSIS (the genuinely new evidence):** the classifier over-contextualizes ≥2 DISTINCT gate sub-classes.
+  Pass-2 cured sub-class 1 (entry-trigger/retest → snNkQSyWX4k 9/9). Sub-class 2 (retracement-level gates → jlShztsY3oA
+  Fibonacci) is UNTOUCHED. Fixing one gate-class does not fix the other — a scope finding, not a margin-ceiling finding.
+- **ITERATION BUDGET / path-forward (operator+advisor decision):** pass 2 of 2 spent. The pre-commit forbade a 3rd
+  targeted rule "without new evidence about why the margin is hard." The 2nd gate-class discovery is arguably that new
+  evidence (a scope-refinement, distinct from the pre-committed 7/9-margin-ceiling-reopen which did NOT occur — revival
+  is 9/9). Open branches: (a) scoped pass-3 extending the pattern to retracement/level gates [needs advisor ruling on
+  whether that's "new evidence" or budget-violation]; (b) accept Gate 3 FAIL, productionize the revival win separately;
+  (c) reopen on gold-quality/architecture. Malformed to pick until the advisor rules on the budget question.
