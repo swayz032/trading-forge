@@ -244,9 +244,9 @@ describe("Topstep — canonical doc parity (sanity)", () => {
     expect(acct!.profitTarget).toBe(3000);
   });
 
-  it("Topstep 50K commissionPerSide is 0.37 (matches docs/prop-firm-rules-2026-topstep.md)", () => {
+  it("Topstep 50K commissionPerSide is 0.62 (2026-06-23 correction — was stale 0.37)", () => {
     const acct = getFirmAccount("topstep", "50k");
-    expect(acct!.commissionPerSide).toBe(0.37);
+    expect(acct!.commissionPerSide).toBe(0.62);
   });
 
   it("Topstep 50K payoutSplit is 0.90 (matches docs/prop-firm-rules-2026-topstep.md)", () => {

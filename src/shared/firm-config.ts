@@ -142,7 +142,7 @@ export const FIRMS: Record<string, FirmConfig> = {
         accountSize: 50_000, monthlyFee: 49, activationFee: 0, ongoingMonthlyFee: 0,
         profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "eod",
         payoutSplit: 0.90, minPayoutDays: 5, consistencyRule: 0.50, // Python: "topstep_50pct" — 50% best-day cap at Combine pass-request
-        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.37,
+        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.62, // deep-scan cross-system F-1: 0.37 was STALE (correction 2026-06-23 authoritative $0.62; live P&L path contract-class.ts already 0.62)
         minTradingDays: 5,
         // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-topstep.md)
         platformLockdownDate: "2026-01-12",
