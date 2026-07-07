@@ -129,6 +129,19 @@ function getFirmContractCap(firmKey: string | null | undefined, _symbol: string)
   return Math.max(CONTRACT_CAP_MIN, Math.min(limit.maxContracts, CONTRACT_CAP_MAX));
 }
 
+// ─── deep-scan #22 fix #8: fail-open `parseFloat(x) || default` sizing bug ──
+// `parseFloat("0") || 50_000` evaluates to 50_000 because 0 is falsy — a legitimately
+// zeroed-out account balance/starting-capital column (e.g. a session drained to $0, or
+// a not-yet-funded test session) was silently replaced with a phantom $50K, which then
+// flowed into computeRiskDerivedContracts() and sized live-shaped orders off a balance
+// the account does not actually have. Only NaN/undefined/null (a genuinely missing or
+// malformed numeric column) should fall back to the default — a real 0 must survive.
+export function parseAccountNumericOrDefault(raw: unknown, fallback: number): number {
+  if (raw == null) return fallback;
+  const n = typeof raw === "number" ? raw : parseFloat(raw as string);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 // ─── Calendar Filter Cache (Fix 3) ──────────────────────────────
 // Caches Python calendar_filter results per ET hour (YYYY-MM-DD-HH).
 // Economic event blackout windows are ±30 min, so hourly granularity is safe.
@@ -2659,7 +2672,7 @@ export async function evaluateSignals(
           const sessionDate = toFuturesTradingDayString(fillTs);
           const cumPnL = await getAccountSessionCumulativePnL(accountKey, sessionDate);
           const trailingDdOverride = (sessionRow.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
-          const accountStartingFloor = parseFloat(sessionRow.startingCapital as string) || 50_000;
+          const accountStartingFloor = parseAccountNumericOrDefault(sessionRow.startingCapital, 50_000);
           const personalDllDollars = resolvePersonalDllDollars({
             firmId: sessionRow.firmId,
             trailingDdOverride,
@@ -3387,7 +3400,7 @@ export async function evaluateSignals(
         const sessionDate = toFuturesTradingDayString(new Date(bar.timestamp));
         const cumPnL = await getAccountSessionCumulativePnL(accountKey, sessionDate);
         const trailingDdOverride = (sessionRow.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
-        const accountStartingFloorForDll = parseFloat(sessionRow.startingCapital as string) || 50_000;
+        const accountStartingFloorForDll = parseAccountNumericOrDefault(sessionRow.startingCapital, 50_000);
         const personalDllDollars = resolvePersonalDllDollars({
           firmId: sessionRow.firmId,
           trailingDdOverride,
@@ -5217,8 +5230,8 @@ export async function evaluateSignals(
       const rawPositionSize = (config as unknown as Record<string, unknown>).position_size as Record<string, unknown> | undefined;
 
       // Parse account state from session row (numeric columns arrive as strings from Postgres/Drizzle)
-      const accountBalance = parseFloat(sessionRow.currentEquity as string) || 50_000;
-      const accountStartingFloor = parseFloat(sessionRow.startingCapital as string) || 50_000;
+      const accountBalance = parseAccountNumericOrDefault(sessionRow.currentEquity, 50_000);
+      const accountStartingFloor = parseAccountNumericOrDefault(sessionRow.startingCapital, 50_000);
       // Pass 5 Track C F-2: prefer realizedPeakEquity (atomic close-time HWM)
       // over highWaterBalance (MTM-oscillating). Fall back to legacy column then to balance.
       const highWaterBalance =
