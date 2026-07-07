@@ -1,8 +1,15 @@
 /**
  * Pass 11 Phase 6 — n8n Drift Detector.
  *
- * Lists active workflows from the n8n REST API and runs five regex/JSON
- * checks against each one:
+ * Lists workflows from the n8n REST API. ACTIVE (non-archived) workflows are
+ * run through the nine regex/JSON drift checks below. Separately, any
+ * DEACTIVATED-but-not-archived workflow is surfaced as its own violation
+ * (`deactivated` section) — a paused production workflow silently drops out of
+ * the `active` set and would otherwise make the report read "0 violations"
+ * (false-green). Archiving a workflow (isArchived=true) is the explicit
+ * "intentionally off" acknowledgement that clears that flag.
+ *
+ * The nine checks run against each ACTIVE workflow:
  *   1. Hardcoded API keys (Brave, Tavily, OpenAI, Parallel, raw n8n JWTs)
  *   2. Single-symbol hardcoding ("ES futures", "specializing in ES",
  *      "E-mini S&P 500") in AI/langchain agent system messages
@@ -395,6 +402,24 @@ function findHttpMissingRetry(workflowJson) {
   return violations;
 }
 
+// ─── F-3: deactivated-but-not-archived detection ────────────────────
+// A DEACTIVATED (paused) workflow is NOT in the `active` set, so the nine drift
+// checks above never see it — the report would read "0 violations" while a
+// production workflow sits quietly turned off (false-green). Flag every
+// deactivated-but-not-archived workflow so a paused workflow is surfaced, not
+// hidden. Archiving (isArchived=true) is the explicit "intentionally off"
+// acknowledgement that clears the flag. Exported for regression coverage.
+export function findDeactivatedWorkflows(list) {
+  return (list ?? [])
+    .filter((w) => w && w.active === false && !w.isArchived)
+    .map((w) => ({
+      workflowName: w.name,
+      active: false,
+      isArchived: false,
+      note: "workflow is deactivated (paused) but not archived — was it intentional? Re-activate it, or archive it (isArchived=true) to acknowledge.",
+    }));
+}
+
 // ─── Report writer ──────────────────────────────────────────────────
 function renderReport(byWorkflow) {
   const lines = [];
@@ -413,6 +438,7 @@ function renderReport(byWorkflow) {
     ["split_batches", "SplitInBatches v3 mis-wired (loop body on index 0)"],
     ["webhook_auth", "Webhook trigger missing authentication"],
     ["http_retry", "External HTTP request missing retryOnFail"],
+    ["deactivated", "Deactivated (paused) but not archived — intentional?"],
   ];
 
   let totalViolations = 0;
@@ -459,10 +485,15 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`Listing active workflows from ${baseUrl}…`);
+  console.log(`Listing workflows from ${baseUrl}…`);
   const list = await fetchWorkflows(baseUrl, apiKey);
   const active = list.filter((w) => w.active && !w.isArchived);
-  console.log(`Auditing ${active.length} active workflows…`);
+  // F-3 (deep-scan false-green): DEACTIVATED-but-not-archived workflows are NOT in
+  // `active`, so the nine drift checks skip them entirely — a silently-paused
+  // production workflow would read as "0 violations". Surface them as a distinct
+  // violation so a paused workflow is reported, not hidden.
+  const deactivated = list.filter((w) => !w.active && !w.isArchived);
+  console.log(`Auditing ${active.length} active workflows; ${deactivated.length} deactivated-not-archived flagged…`);
 
   const byWorkflow = [];
   for (const w of active) {
@@ -480,6 +511,18 @@ async function main() {
       http_retry: findHttpMissingRetry(detail),
     };
     byWorkflow.push({ id: w.id, name: w.name, violations: v });
+  }
+
+  // F-3: emit one violation per deactivated-but-not-archived workflow. No detail
+  // fetch needed — the list row already carries name/active/isArchived. This makes
+  // the report non-clean (exit 1) so the scheduler's drift alert fires and the
+  // operator sees the paused workflow instead of a false "0 violations".
+  for (const w of deactivated) {
+    byWorkflow.push({
+      id: w.id,
+      name: w.name,
+      violations: { deactivated: findDeactivatedWorkflows([w]) },
+    });
   }
 
   const { text, totalViolations } = renderReport(byWorkflow);

@@ -661,6 +661,11 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // infrastructure safety signal — the pipeline pause does not protect against it.
   "n8n-drift-detector-weekly",           // A-2: n8n drift detection — safety signal
   "n8n-drift-detector-monthly",          // A-2: n8n drift detection — defense-in-depth
+  // F-5 (deep-scan): the daily n8n Postgres backup is the ONLY recovery net for a
+  // bad workflow import (F-4) or a dropped schema. It must run even when the trading
+  // pipeline is paused — a pause does not protect n8n state, and recovery data cannot
+  // be gated by the same pause it guards against.
+  "n8n-data-backup-daily",               // F-5: n8n Postgres recovery backup — safety signal
   "economic-calendar-sync",              // authoritative macro release-date refresh (FRED/Fed/EIA)
   // W25.5d: pre-market briefing must fire even when pipeline is paused.
   // Operator wants the bias on phone before market open regardless of pipeline state.
@@ -4567,6 +4572,44 @@ except Exception as e:
   });
   _scheduledJobs.add("n8n-drift-detector-monthly");
 
+  // ─── F-5 (deep-scan): daily n8n Postgres logical backup ────────────────────────
+  // scripts/backup-n8n-data.mjs is the ONLY recovery net for the F-4 importer (which
+  // can silently PUT stale local JSON over live workflows) and for a dropped/wiped n8n
+  // schema. Its docstring claimed a `n8n-data-backup-daily` cron invoked it — but no
+  // such cron existed (grep zero hits), so the safety net was DEAD. Wire it here.
+  // Pipeline-gate-exempt (recovery data can't be gated by the pause it guards). Runs
+  // daily at 03:30 ET, mirroring the DST-safe double-fire + ET-hour-guard + job-lock
+  // pattern used by the n8n drift detectors above.
+  registerJob("n8n-data-backup-daily", 24 * 60 * 60 * 1000, async () => {
+    await _runN8nDataBackup();
+  });
+
+  // 03:30 ET = 07:30 UTC (EDT, UTC-4) or 08:30 UTC (EST, UTC-5). Fire at both UTC
+  // half-hours; the ET-hour guard inside filters to 03:xx ET so it runs exactly once.
+  scheduleUtc("30 7,8 * * *", async () => {
+    if (!_tryAcquireJobLock("n8n-data-backup-daily")) return;
+    try {
+      const now = new Date();
+      const etHour = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        hour12: false,
+      });
+      if (etHour !== "3") {
+        logger.debug({ etHour }, "Scheduler: n8n-data-backup-daily — not 03:00 ET, skipping (DST guard)");
+        return;
+      }
+      logger.info({ job: "n8n-data-backup-daily" }, "running pipeline-gate-exempt n8n Postgres backup (daily)");
+      const t0 = Date.now();
+      await withRetry("n8n-data-backup-daily", SCHEDULER_JOBS["n8n-data-backup-daily"].run, 1);
+      markJobRun("n8n-data-backup-daily");
+      emitJobComplete("n8n-data-backup-daily", Date.now() - t0);
+    } finally {
+      _releaseJobLock("n8n-data-backup-daily");
+    }
+  });
+  _scheduledJobs.add("n8n-data-backup-daily");
+
   // ─── W25.5d: Daily pre-market briefing — 14:00 UTC (09:00 ET DST / 10:00 ET EST) ─
   //
   // Fires hourly; inner hour-gate restricts execution to UTC 14 only.
@@ -6480,6 +6523,73 @@ async function _runN8nDriftAudit(jobName: string): Promise<void> {
         { jobName, correlationId, exitCode: resolvedExitCode, stderrSummary },
       );
     }
+  }
+}
+
+/**
+ * F-5 (deep-scan) — run the daily n8n Postgres logical backup.
+ *
+ * Dynamically imports scripts/backup-n8n-data.mjs and calls its exported
+ * `runBackup()`. Writes an audit row on every outcome (`n8n.data_backup_completed`
+ * / `n8n.data_backup_failed`) so the operator can verify the backup fired, and
+ * fires a Discord CRITICAL on failure — a silently-failing backup would leave the
+ * F-4 importer / a dropped schema with no restore point.
+ *
+ * Invoked ONLY by the `n8n-data-backup-daily` cron (03:30 ET).
+ */
+async function _runN8nDataBackup(): Promise<void> {
+  const correlationId = randomUUID();
+  logger.info({ correlationId, jobName: "n8n-data-backup-daily" }, "n8n-data-backup: starting");
+
+  try {
+    // Variable specifier: keeps tsc from resolving the untyped .mjs script (returns
+    // `any`), while tsx resolves it at runtime from the repo root.
+    const backupModPath = "../../scripts/backup-n8n-data.mjs";
+    const mod = await import(backupModPath);
+    const result = await mod.runBackup({ logger });
+    logger.info(
+      { correlationId, jobName: "n8n-data-backup-daily", path: result?.path, bytes: result?.bytes, durationMs: result?.durationMs },
+      "n8n-data-backup: completed",
+    );
+    await insertAuditRow({
+      action: "n8n.data_backup_completed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { jobName: "n8n-data-backup-daily", correlationId } as Record<string, unknown>,
+      result: {
+        path: result?.path ?? null,
+        bytes: result?.bytes ?? null,
+        rowCounts: result?.rowCounts ?? null,
+        durationMs: result?.durationMs ?? null,
+      } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    }).catch((err) => logger.error({ err }, "n8n-data-backup: audit row write failed (success)"));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ correlationId, jobName: "n8n-data-backup-daily", err }, "n8n-data-backup: FAILED");
+    await insertAuditRow({
+      action: "n8n.data_backup_failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { jobName: "n8n-data-backup-daily", correlationId } as Record<string, unknown>,
+      result: { error: msg.slice(0, 500) } as Record<string, unknown>,
+      status: "failed",
+      correlationId,
+    }).catch((e) => logger.error({ err: e }, "n8n-data-backup: audit row write failed (failure)"));
+    notifyCritical(
+      "n8n Postgres backup FAILED",
+      appendFamilyGradePostscript(
+        `The daily n8n backup (n8n-data-backup-daily) failed: ${msg.slice(0, 300)}. ` +
+          `Without it, a bad workflow import or dropped schema has no recent restore point. ` +
+          `Run \`node scripts/backup-n8n-data.mjs\` from the Skytech tower to investigate.`,
+        "A background backup of the strategy automation system failed to run. This does not affect live trading.",
+        "Tell Tony: 'The n8n backup failed.' He will investigate when available. No trading is affected.",
+      ),
+      { jobName: "n8n-data-backup-daily", correlationId },
+    );
   }
 }
 

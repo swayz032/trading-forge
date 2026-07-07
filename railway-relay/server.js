@@ -19,6 +19,22 @@ if (!TOKEN) { console.error("FATAL: RELAY_TOKEN env var required"); process.exit
 const REQUEST_TIMEOUT_MS = Number(process.env.RELAY_REQUEST_TIMEOUT_MS || 90000);
 const MAX_BODY_BYTES = Number(process.env.RELAY_MAX_BODY_BYTES || 50 * 1024 * 1024); // 50 MB
 
+// F-1 (deep-scan): constant-time token comparison. A plain `!==` on a secret token
+// leaks length + shared-prefix length through early-exit timing — the exact fix the
+// tower client documents as required-but-unimplemented (scripts/tower-relay-client.cjs
+// comment). `crypto.timingSafeEqual` throws on unequal-length buffers, so length-guard
+// first (a length mismatch is already "not equal"; the length itself is not the secret),
+// then compare the equal-length bytes in constant time. Returns false for any non-string
+// / missing input so the security semantics of the old `presented !== TOKEN` are preserved
+// (unequal ⇒ reject).
+function timingSafeEqualStr(a, b) {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ab, bb);
+}
+
 // Deep-scan #6 S1 (2026-07-01): the /__ollama prefix forwards straight to the tower's
 // Ollama (localhost:11434) which has NO auth of its own. Before this, ANY internet caller
 // could hit /__ollama/api/* — inference (compute theft) AND destructive model management
@@ -47,7 +63,7 @@ function guardSensitiveProxy(req, res) {
   if (PROXY_GATED_PREFIX_RE.test(url)) {
     if (OLLAMA_PROXY_TOKEN) {
       const presented = req.headers["x-relay-proxy-token"];
-      if (presented !== OLLAMA_PROXY_TOKEN) {
+      if (!timingSafeEqualStr(presented, OLLAMA_PROXY_TOKEN)) {
         res.writeHead(401, { "content-type": "application/json" });
         res.end(JSON.stringify({ error: "proxy_token_required" }));
         return true; // handled (rejected)
@@ -133,7 +149,7 @@ server.on("upgrade", (req, socket, head) => {
     : null;
   const queryToken = u.searchParams.get("token");
   const presented = subprotocolToken || queryToken;
-  if (presented !== TOKEN) { socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n"); socket.destroy(); return; }
+  if (!timingSafeEqualStr(presented, TOKEN)) { socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n"); socket.destroy(); return; }
   wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
 });
 
