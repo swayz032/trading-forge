@@ -207,6 +207,33 @@ describe("computeCoverageVerdict — pure-functional", () => {
     expect(v1.missing).toEqual(v2.missing);
     expect(v1.coverage_pct).toBe(v2.coverage_pct);
   });
+
+  // F-2 REGRESSION (2026-07-07): classify() used `unit.includes(nameWord)` — a raw substring match
+  // that counted a speaker item PRESENT when its name word merely appeared mid-word in the unit
+  // ("range"⊂"arranged", "band"⊂"abandoned"). That inflated coverage_pct → false PASS (false-green
+  // masking an incomplete extraction). Fixed to word-boundary (token-prefix) matching.
+  it("F-2: name word colliding mid-word in a unit is NOT counted as present (no substring false-green)", () => {
+    const rangeItem = [{ name: "range", verbatim_quote: "the range", emphasis_level: "primary" as const }];
+    const onlyArranged = { entry_sequence: [{ step: 1, action: "we arranged our trades", rationale: "careful setup planning" }], confluences: [] };
+    const v = computeCoverageVerdict(rangeItem, onlyArranged);
+    expect(v.missing).toContain("range");
+    expect(v.covered).not.toContain("range");
+    expect(v.verdict).toBe("coverage_failed");
+
+    const bandItem = [{ name: "band", verbatim_quote: "the band", emphasis_level: "primary" as const }];
+    const onlyAbandoned = { entry_sequence: [{ step: 1, action: "we abandoned the setup", rationale: "no valid confirmation today" }], confluences: [] };
+    expect(computeCoverageVerdict(bandItem, onlyAbandoned).missing).toContain("band");
+  });
+
+  it("F-2: word-boundary match preserves morphology — plural/genuine presence stays COVERED", () => {
+    const bandItem = [{ name: "band", verbatim_quote: "the band", emphasis_level: "primary" as const }];
+    const bandsPlural = { entry_sequence: [{ step: 1, action: "the bands compress here", rationale: "wait for band expansion move" }], confluences: [] };
+    expect(computeCoverageVerdict(bandItem, bandsPlural).covered).toContain("band");
+
+    const rangeItem = [{ name: "range", verbatim_quote: "the range", emphasis_level: "primary" as const }];
+    const rangeReal = { entry_sequence: [{ step: 1, action: "price enters the range zone", rationale: "trade the range boundary" }], confluences: [] };
+    expect(computeCoverageVerdict(rangeItem, rangeReal).covered).toContain("range");
+  });
 });
 
 // ─── runCoverageEnumeration (mocked LLM) ─────────────────────────────────────

@@ -476,8 +476,20 @@ export function computeCoverageVerdict(
       .replace(UMBRELLA_TOKEN_RE, " ")
       .split(" ")
       .filter((w) => w.length >= 4);
-    const nameInUnit = (u: string) =>
-      u.includes(normName) || (nameWords.length > 0 && nameWords.every((w) => u.includes(w)));
+    // F-2 FIX (2026-07-07): WORD-BOUNDARY match, not raw substring. `u.includes(w)` matched a name
+    // word ANYWHERE in the unit incl. mid-word ("range"⊂"arranged", "band"⊂"abandoned",
+    // "cross"⊂"across", "order"⊂"disorder") → false PRESENT → inflated coverage_pct → false PASS
+    // (a false-green masking an incomplete extraction). Token-prefix on ≥4-char words keeps
+    // morphology (band→bands, vwap→vwaps) while killing the mid-word collisions; the all-short-word
+    // fallback (e.g. "5 sma") uses EXACT token match (a 3-char prefix like "sma" would re-collide
+    // with "smart"/"small"). `u` is already normalized; tokenize on non-alphanumeric strips punctuation.
+    const tokenize = (s: string) => s.split(/[^a-z0-9]+/).filter(Boolean);
+    const nameInUnit = (u: string) => {
+      const toks = tokenize(u);
+      if (nameWords.length > 0) return nameWords.every((w) => toks.some((t) => t === w || t.startsWith(w)));
+      const allNameTokens = tokenize(normName.replace(UMBRELLA_TOKEN_RE, " "));
+      return allNameTokens.length > 0 && allNameTokens.every((t) => toks.includes(t));
+    };
     const mentioning = units.filter(nameInUnit);
     if (mentioning.length === 0) return "missing";
     // COVERED when the name is discussed in a SUBSTANTIVE unit: >= MIN_MECHANIC_TOKENS content
