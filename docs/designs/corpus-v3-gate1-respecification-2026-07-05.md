@@ -680,3 +680,38 @@ waved off as flaky") is CLOSED — and it caught one:
   Defect-4 fix (deduct RollSpreadCost in the class-path bar-level equity loop, mirroring net_pnl) is a scoped
   backtest-core change for the post-cert track — and it is a THIRD instrument-integrity site joining the F-4 ceiling
   divergence + the duplicate-enforcement class. Reconciliation GATE itself is SOUND (it caught + refused $52.67).
+
+## ★★ RULING 1 — PROVISIONAL (inverted protocol: verdict → counter-case → Tonio-attack → freeze) 2026-07-07
+**VERDICT (Fable-5):** escalate trigger fires; pass-3 cannot launch as designed; landing → (b) productionize DEMOTION
+on its own cert track. The 9/9 revival MECHANISM pass-2 validated lives on as (b)'s foundation.
+**Adversarial attack (Tonio) — verdict SURVIVES, 2 scope corrections applied:**
+- Attack 1 (self-undermining evidence): the ruling can't use surface census `DESCRIPTIVE 0` to establish "zero
+  descriptive-mandatory exist" while arguing surface language is blind to that sub-class. The 25 NEUTRALs are
+  unresolved by the blind instrument → "contains zero" is OVERSTATED.
+- Attack 2 (N=1 finding frozen untested): "descriptive-mandatory = architecture boundary" rests on 1 exemplar
+  (Fibonacci) + the blind census; the NEUTRAL adjudication is its falsification test; freezing it established is premature.
+- **Attacks land on the reasoning, NOT the verdict:** at a SPENT single-shot escape the burden is on the LAUNCH to
+  demonstrate a viable design set before firing; viability is undemonstrated; the spent escape breaks the tie toward
+  don't-fire. Counter-case PREMISE survives (zero unestablished); CONCLUSION (therefore launch) does not. NO flip.
+**FREEZE: PROVISIONAL, with corrections —**
+1. Verdict basis = **"not DEMONSTRABLY viable at a spent escape (burden-on-launch)"**, NOT "contains zero" (positive
+   claim the blind census can't support). Unassailable as corrected.
+2. Architecture-boundary = **PROVISIONAL HYPOTHESIS** (descriptive-mandatory is the sub-class where surface language
+   does not carry gate-strength — same wall as Gate-1 57.7% inter-rater, localized to its linguistic mechanism). The
+   insulated NEUTRAL adjudication is its FALSIFICATION TEST. SEPARATE the pre-commitments: the classifier TRACK stays
+   closed regardless (spent escape); the FINDING is falsifiable and RETRACTED if the adjudication surfaces design-side
+   descriptive-mandatory instances. Track-closure follows from "spent"; finding-immutability does not.
+**PROVISIONAL licenses tonight:** escalate-documentation, (b)-landing scaffold on paper, descriptive-mandatory finding
+frozen (as hypothesis). **NOT licensed:** any classifier code, any Gate-3 (moot by the ruling). Single shot never fires.
+**Insulated NEUTRAL-adjudication track (pre-registered):** gold-improvement, independent rater on the 25 NEUTRALs,
+CANNOT reopen the classifier track; IS the falsification test of the boundary hypothesis. PROVISIONAL awaits fresh-eyes
+confirmation (unrepeatable-read rule, frozen since Defect 5).
+
+## RULING 2 (macro-mask) + RULING 3 (F-4) — accepted, mechanical
+- **R2:** reference N=9 ROBUST (counts 1036-2977, no pair flips on a mask) → NO third re-derivation. Macro-mask = **Defect 9**
+  (entry-suppressing, backtest≠live parity: live has `calendarBlocked`, class-path lacks its twin). Gate-3 mooted by R1 →
+  urgency drops pre-Gate-3-blocker → pre-re-baseline, same tier as Defects 7/8. (b)'s cert track runs AFTER the 7/8/9 batch
+  lands — the re-baseline always needed them; now nothing ships before them. Fire-and-forget v2-traded tally launched.
+- **R3:** F-4 closes **LOW, latent, parity-guarded.** (i)+(ii) pass clean (Catch-1 false alarm); (iii) partial-fail bounded
+  (values identical, SKIP-vs-clamp action divergence, 0/120 exposure). SKIP-vs-clamp = 3rd confirmed site on the
+  post-cert duplicate-enforcement refactor register.
