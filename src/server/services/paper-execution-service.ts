@@ -4830,8 +4830,12 @@ export async function checkRollAndFlatten(
           );
           notifyCritical(
             "Roll-day flatten failed",
-            `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
-            `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+            appendFamilyGradePostscript(
+              `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
+              `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+              "The trading bot hit an error trying to close a position before its futures contract rolls to the next month.",
+              "This position may stay open longer than intended. Tell Tony right away.",
+            ),
             { sessionId, positionId: pos.id, symbol: pos.symbol, rollDate: info.roll_date, correlationId },
           );
           await insertAuditRowSafe({
