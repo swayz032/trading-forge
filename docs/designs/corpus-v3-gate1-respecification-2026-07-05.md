@@ -600,3 +600,25 @@ pre-enumerated set — the quarantine is only as good as the timestamp on the fe
 **Standing order (fatigue = instrument-validity problem, not a virtue test):** anything the pre-reg does not cover
 gets WRITTEN DOWN AND PARKED, never resolved on the spot. Point 1 is the load-bearing gate for the whole pass-3
 license; a claim conditionally accepted because everyone's tired defeats the purpose of making the ruling conditional.
+
+## PASS-3 VETTING FINDING — PARKED for fresh eyes (standing order applied, 2026-07-07 ~00:xx)
+Vetted the frozen design-set retracement/level instances (transcript anchors, design-side, quarantine-safe):
+- **The 4 FOCUSED:** 2 JUSTIFIED_MANDATORY (HfZTCZTDfWk "wait for a retrace back to the 5 SMA" ×2) are genuine gates
+  but **IMPERATIVE** ("wait for a retrace") — pass-2's rule ALREADY fires on this language. 2 CONTEXTUAL ("cross down
+  and retrace" = narration; "retracement opportunity" = soft "looking for") correctly contextual.
+- **BROAD-set mandatory (14):** predominantly IMPERATIVE retest/tap gates — "waiting for price to... retest it as
+  resistance before we can", "as soon as the key level is tapped", "wait for the market to retest that high or low",
+  "wait for that retest into that fair value gap". Pass-2 covers this "wait-for/retest/as-soon-as" family.
+- **jlShztsY3oA's Fibonacci is DESCRIPTIVE/PREDICTIVE** — "price WILL LIKELY retrace to a Fibonacci retracement level"
+  in a "here's how to fix it" list, NO imperative marker. That is WHY pass-2 (imperative-anchored) does not fire on it.
+- **THE CRUX (parked, needs fresh eyes):** pass-3's rule must escalate a retracement/level gate stated DESCRIPTIVELY,
+  a distinct linguistic sub-pattern from the imperative gates pass-2 covers. **Open question the pre-reg did not
+  anticipate:** does the design set contain a CLEAN descriptive-retracement-gate instance to derive that rule from? If
+  the design instances are all imperative (covered), a rule drawn "from those instances" would re-cover pass-2 without
+  touching jlShztsY3oA — and designing the descriptive-pattern rule would risk drawing from the test (quarantine breach)
+  or from thin air. This is a SUBSTANTIVE design call, NOT mechanical → PARKED per the standing order (fatigue corrupts
+  improvised judgment; this is improvised judgment). Resolve NEXT session with fresh eyes: re-vet the full broad-36 for
+  any descriptive-retracement-gate design instance; if none exists, the quarantine may be effectively empty for THIS
+  sub-pattern and the epistemics need restating (a softer sibling of the pre-reg-2 escalate trigger).
+- **NOT resolved tonight. NOT drafted tonight.** The held-out re-measurement (pre-reg point 1) continues to grind
+  independently; its pinned-rule comparison is mechanical and tired-safe. Rule design waits for morning.
