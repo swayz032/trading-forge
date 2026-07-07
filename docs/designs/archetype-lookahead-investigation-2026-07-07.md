@@ -378,3 +378,33 @@ found a mechanism the implementer missed — **the grader graded its own harness
 level deeper than the implementer's seed=32 hold. The machinery is now catching defects in the machinery that catches
 defects. Goes next to the F-2 arc in the discipline docs: the protocol's value COMPOUNDS — every layer that internalizes
 the blade grows a layer beneath it that does too.
+
+## ★★ DEFECT-10 FIX ACCEPTED + COMMITTED (59dbc2a) — acceptance met in full 2026-07-07
+Unicorn taxonomy + FVG-lag stress: **ZERO (d)s** — 205 fixtures, 735/735 zones gate-bound (FVG lag 2-5, real not
+theoretical), 0 raw-⊆ violations, 0 sim↔real mismatches, taxonomy 113a/41b/41c/**0d** (predicate-4 operationalized:
+14 zero-dependence + 27 own-mild-lag, both verified; boundary/negative controls confirm true no-op outside binding).
+Combined with breaker (600 fixtures, 0d) + seed=32 + conformance + track3-pre-existing → **acceptance criterion met IN
+FULL. Pre-authorized commit fired. `59dbc2a` on hardening/phase-0.**
+**★ RECURSIVE doer≠grader — 3 LAYERS (record):** implementer held on its own seed=32 counter-example → breaker reviewer
+fixed its harness twice + found a 3rd occupancy mechanism → unicorn reviewer fixed its own harness (batch-vs-streaming
+valid_from read). The machinery catches defects in the machinery that catches defects, recursively. → discipline docs
+next to the F-2 arc: the protocol's value COMPOUNDS.
+
+## DEFECT-10 DOWNSTREAM ITEMS (3, per ruling)
+1. **Materiality — SYNTHETIC only, DIRECTIONAL label (locked):** synthetic reads = "expected-direction confirmation
+   (look-ahead was optimistically INFLATING historical), magnitude UNMEASURED pending real-data run." The −16.4pp
+   win-rate delta + −201pt displacement net DO NOT travel into any downstream claim. Real-corpus receipt = re-baseline-
+   tier read (both engines on the actual corpus + `c948bcd` timestamps), lands with the re-baseline.
+2. **ENGINE-SEMANTICS SEAM registered — same-bar opposite-direction priority race.** Finding about the ENGINE not the
+   fix (exists batch + streaming alike). Breaker entry-gen uses long-over-short GLOBAL priority (`if entry_long_raw:
+   ... elif entry_short_raw:`) — DETERMINISTIC by construction (fixed if/elif, no RNG). Unicorn does NOT share it
+   (zone-list-order SAME-SIDE priority within one per-side slot — reviewer clarified). **OPEN facts-item:** does LIVE's
+   execution path (`paper-signal-service.ts`) resolve same-bar long/short contention with the SAME long-over-short
+   convention? A backtest tie-break live resolves differently = a quiet test≠ship seam. Named + parked (facts-trace).
+3. **TRIPWIRE read-order → written into corpus RE-BASELINE pre-registration:** at the re-baseline, any N=9-reference or
+   v2-traded pair that flips zero↔nonzero → run the (a)-(d) taxonomy classification on THAT pair FIRST → all-(a)/(b)/(c)
+   predicates green = fix working, reference STANDS → any (d)/predicate-fail = FULL STOP, contradicting-evidence protocol,
+   reference reopens. This ordering TRAVELS with the tripwire to the re-baseline (waiting there, not reconstructed).
+**Test-depth caveats (follow-ups, NOT blockers — acceptance met):** unicorn `max_zone_age`-boundary + ≥3-overlapping-zone
+interaction untested; real-data binding-frequency (FVG-lag 2-5 occurrence in production) unconfirmed. Clean targeted
+follow-ups; none is a (d).
