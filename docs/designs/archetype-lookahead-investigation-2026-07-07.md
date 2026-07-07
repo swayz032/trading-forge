@@ -195,3 +195,20 @@ Streaming validity is DEFINITION-PRESERVING (restores intent), not definition-ch
   the fix RESTORES intended "valid-upon-confirmation" semantics, does NOT change them. No reading of either definition
   intends to condition an entry on a confirmation bar in its own future.** mitigation.py's `entry_bar > bos_bar` assert
   is the same principle made explicit. AWAITING RATIFICATION before implementation (F-2 pattern).
+
+## ★ TIMESTAMP-EMIT CLOSED (Defect-10 sequence step 1) + doer≠grader dividend 2026-07-07
+Emit (additive per-trade `entry_idx`+`entry_timestamp`, run_backtest + run_class_backtest) — independent parity review
+(fresh context) verdict **CONFORMANT + GREEN**: conformance PASS (22/0 additive, zero computation change), scope-lock
+PASS (only backtester.py, concurrent dirty files grep-confirmed unrelated), **PARITY bit-identical to the cent on BOTH
+paths** — run_class_backtest 6-trade 15265¢==15265¢ (equity 50152.65==50152.65); run_backtest the reviewer BUILT a real
+20-trade DSL fixture (−7025¢==−7025¢, full-float match) → the implementer's trivial 0/0 caveat **RESOLVED, not waved**.
+Committed. Per-trade timestamps now available for the impact-report reads.
+## ★ NEW FINDING (doer≠grader dividend from the emit review) — event-mask polarity inversion, run_backtest default fallback
+While forcing the DSL path to trade, the reviewer found a REAL bug OUT-OF-SCOPE of the emit (untouched): `run_backtest`'s
+DEFAULT-FALLBACK event-blackout-mask builder (`backtester.py` ~3870-3945) constructs `True=allow`, but
+`generate_signals()` (`signals.py:285-287`) consumes masks as `True=block` (matching `economic_calendar.py::
+generate_event_mask`'s documented contract). **Default path (no explicit `event_calendar` supplied) silently BLOCKS
+~all entries.** REGISTER for triage (do NOT fix — engine change, needs the pre-change ruling): (1) does PRODUCTION always
+supply an event_calendar (→ default path never hit → latent), or can prod hit the default (→ live-impacting)? (2) if
+production hits it, this is entry-suppressing (safe-direction) but corrupts backtest edge measurement. Candidate finding,
+mechanism-confirmed by the reviewer, production-reachability TRIAGE PARKED.
