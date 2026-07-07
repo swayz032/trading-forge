@@ -4,6 +4,19 @@
 
 ---
 
+### Session Log — 2026-07-06 All-domains-to-9 loop — Round 6: FULL-CODEBASE from-zero sweep (waves 2-4, ~10 CRITICAL + 11 HIGH + 8 MED)
+
+**Mission:** operator "/loop until every inch is 9" — independent from-zero grading of EVERY cluster (doer≠grader), fix every real CRITICAL/HIGH on the spot, land FF-only on `hardening/phase-0`.
+**Work completed (this round, all committed FF-only `606e249`→`dcbbd4d`):**
+- **CRITICALs (10 total across the sweep):** scheduler TZ (~50 dead crons → `scheduleUtc` UTC wrapper `b65cfb7`); tier-1 blackout per-type gap-fill (`a9a9747`); CANDIDATE→SHADOW PBO bypass (`9f6244b`); signal-gen Path B fail-open→closed (`4b0d118`); backtest `run_backtest` roll-cost + full-precision `_raw_price_pairs` (`a697aca`+`6b495e7`); **scripts** hardcoded PG password→env (`97e7a35`, private/local repo so NOT a public leak — see memory) + `wipe-all-data.mjs` DATABASE_URL prod guard (`97e7a35`); **discord** `/setup channel` unauthed mutation→operator gate (`cd05692`); **services** weekly-drift baseline asc→desc (`fedf6c9`) + C11 macro ISM/RRP fail-open→closed (`fedf6c9`).
+- **HIGHs (11):** execution timeout overclaim, BIF L-2, routes Zod, sizing F-1 NaN guard (`606e249`) + F-2 stale 0.08 tests (`e714db8`), backtest F-2 precision (`6b495e7`), critic-optimizer forgeScore-null→Infinity + source-url filler-keywords + cohort-audit fabricated-zeros→throw (`46cb0b8`), notification critical-drop→audit-row + nightly-critique shape-validate (`0d84233`), discord/auth timing-safe+fail-closed (`cd05692`).
+- **MEDs (8):** backtest F-3 look-ahead audit regex (Polars rolling_*), routes paper idempotency + spoofable audit attribution (`a2c5564`), market-data drift-detector dark live-Sharpe leg (`e5fb9ea`), slumhouse recipe.html fabricated "1,000 trials" MC histogram → honest copy + crib flat sparkline (`dcbbd4d`).
+**Verification:** every fix tsc-clean (`node node_modules/typescript/bin/tsc`) + relevant vitest/pytest GREEN + `check:production-isolation` CLEAN, committed FF-only per §11a/§11b. 8 clusters graded from zero via `accuracy-validator` subagents (remaining-services, scripts, libs/integrations/discord, slumhouse-frontend); verified-clean cores (routeOrder, kill-switch, sizing math, gate parity, P&L math, crypto/idempotency/audit infra) confirmed not rubber-stamped.
+**Known-facts updates:** [[project_trading_forge_private_no_monetization]] — repo is PRIVATE + LOCAL (not public); committed-secret findings downgraded (not world-exposed).
+**Carry-forward:** independent CERTIFICATION re-scan of the 10 CRITICAL fixes dispatched (doer≠grader — cannot self-certify to 9). Lower-pri follow-ups documented in commit msgs: composite-health-digest dead-catch (daily_digest still fires), direct-bucket-graduator wide-fingerprint non-unique (0109 partial cover), nightly-critique prompt-injection sanitizer, signal-gen cold-start backfill, ~5 service MEDs, scheduler substring guards. **OPERATOR ACTIONS:** rotate Railway PG password (prudent, not urgent — private/local); set `TZ=UTC` NSSM env (cron defense-in-depth); set `OPERATOR_DISCORD_IDS` to re-enable /setup channel.
+
+---
+
 ### Session Log — 2026-07-06 All-domains-to-9 loop — Round 5: LONG-TAIL cluster sweep (3 CRITICAL + 2 HIGH fixed)
 
 **Mission:** systematic from-zero grading of the ~940 un-graded files (services/routes/libs/engine/scripts) in risk-prioritized clusters. Wave 1 = 4 clusters (execution, promotion gates, scheduler/autonomy, market-data/production). Found + FIXED live defects the "13 subsystems at 9" snapshot missed — validating the "every inch" mandate.
