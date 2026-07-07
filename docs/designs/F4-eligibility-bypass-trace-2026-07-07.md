@@ -334,3 +334,27 @@ collision-noise-tolerable, not gate-crying-wolf). **PRECEDENT LINE:** this loop 
 statically mechanical (code diff + test suite = binary). Timestamp-emit / look-ahead / NEUTRAL do NOT inherit it —
 their verification is an empirical/validity READ, which waits for daylight regardless of whose hands type. Agent loops
 replace tired HANDS, not validity READS.
+
+## ★★ F-2 REMEDIATION LOOP — BINARY READ: CONFORMANT+GREEN → IMPLEMENTATION CLOSED (2026-07-07)
+Independent re-review (fresh context, no access to implementer reasoning) verdict:
+- **Conformance PASS** — byte-for-byte match to the ratified spec, ZERO prefix/`startsWith` residue in `classify()`,
+  no threshold changes.
+- **Scope-lock PASS** — only `nameInUnit` (7 lines) + `singularize` const + the 4 collision-class regression tests;
+  nothing else in either file touched.
+- **Suite GREEN** — 31/31.
+- **Hygiene flag adjudicated (author):** the reviewer surfaced 3 UNRELATED dirty worktree files (atomize-transcript/
+  graph-to-engine/handoff-conservation — a different subsystem's in-flight work). NOT a caveat on the remediation
+  (reviewer explicitly: "the F-2 remediation itself is clean"); handled by construction via explicit-path commit
+  (2 F-2 files + flip-artifact only, never `git add -A`). Does not trip the binary.
+**IMPLEMENTATION CLOSED per the binary rule (conformant + green, zero remediation deviations). Committed `b3f2c2c` on
+`extraction/100pct-evidence`, superseding the defective prefix `0db52b4`; FF-pushed.**
+**MERGE STILL WAITS on the daylight flip-audit (branch QUARANTINED — not merged to main/deployed).** Morning artifact
+`docs/replay-results/f2-flip-enumeration-2026-07-07.json` (facts, NOT adjudicated): **7 collision-corrections + 9
+plural-gains (remediated BETTER than original substring) vs 1 verb-form-false-MISSING** ("5 sma cross" no longer matches
+"crossing" — singularizer strips plural -s, not -ing). Net 16:1 positive; failure direction SAFE (false-MISSING =
+re-check, not false-cert). The morning's one-glance read: confirm the flips are collision-class corrections, not
+singularizer noise, then merge. **The counter-case (verb-form cry-wolf) is now EMPIRICALLY BOUNDED at 1 corpus case —
+its adjudication is the merge gate, by design.**
+**F-2 STATUS: implementation CLOSED + committed (remediated), MERGE pending daylight flip-audit. The full honest
+sequence on record: fixed(prefix) → filed-CLOSED(premature) → blade → independent-review-FAILED → ratified-remediation
+→ scope-locked-implement → independent-re-review-CONFORMANT+GREEN → implementation-CLOSED → merge-pending-flip-audit.**
