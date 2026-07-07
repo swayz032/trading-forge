@@ -729,3 +729,37 @@ unaffected**; the flip risk is confined to the re-baseline tail.
 if its single trade falls in a `STATIC_EVENTS` macro window. If YES, that re-baseline pair flips v2 1→0 under the
 macro-mask (Defect 9); if NO, the tail is clean too. Feeds Defect-9 (pre-re-baseline tier) materiality. Decisive input
 (the sibling's identity + count) captured tonight; only the timestamp cross-ref remains, and it needs the harness add.
+
+## ★★ RULING 1 CONFIRMED (PROVISIONAL-as-corrected) + FALSIFICATION-INSULATION ASYMMETRY (2026-07-07)
+Both attack-corrections ACCEPTED (Fable-5): verdict basis = "not demonstrably viable" (burden-of-proof at spent escape,
+NOT a "zero" the surface-lexical census — self-described blind to intent — cannot establish); architecture-boundary =
+PROVISIONAL HYPOTHESIS (stated a grade too hot as ESTABLISHED; the insulated NEUTRAL adjudication is the experiment that
+could kill it). The inverted protocol worked as designed: verdict SURVIVED, epistemics CORRECTED — doer≠grader flowing
+in both directions. **PROVISIONAL-as-corrected: CONFIRMED.**
+**FALSIFICATION-INSULATION ASYMMETRY (frozen into the ruling text):** if the NEUTRAL adjudication later certifies
+descriptive-mandatory instances, it REVISES the finding (boundary hypothesis dies, taxonomy improves) but does NOT
+reopen the classifier track. **The escape stays spent even if the wall turns out to have a door.** Falsification and
+insulation are asymmetric: the finding is falsifiable; the track-closure is not reversible. Only track-closure follows
+from "spent"; finding-immutability never did.
+
+## 75DJN5UVQnw_MES CATCH — logged at full weight (2026-07-07)
+Fable-5 pre-registered a risk CLASS ("1-trade sibling — a low-count pair a macro mask could zero"). The mechanical scan
+of 26 v2-traded pairs FOUND it: `75DJN5UVQnw_MES` = 1 trade, the sole pair under 50 (rest 216-3309). It landed OUTSIDE
+the reference set (non-reference → N=9 untouched), so the answer is benign for the pass-3-critical question — but **the
+prediction machinery worked even when the answer was benign.** A named risk-class, found by scan, correctly scoped. That
+is the instrument calibrated, logged as such.
+
+## ESCALATE DOCUMENTATION (formal record — classifier track CLOSED 2026-07-07)
+- **Event:** pass-3 (licensed 3rd classifier iteration) ESCALATED at the imperative-vs-descriptive ruling. It did NOT
+  run a Gate 3; the single shot never fired. The classifier-iteration track is CLOSED.
+- **Basis:** the pass-3 rule required a descriptive-mandatory-gate exemplar to design from; the design set does not
+  DEMONSTRABLY contain one (surface census: 0 descriptive-tagged, 25 NEUTRAL unresolved by a blind instrument), and at a
+  spent single-shot escape the burden is on the launch to demonstrate viability. Undemonstrated → don't fire → escalate.
+- **Landing:** (b) productionize demotion, own cert track — scaffold at
+  `docs/designs/corpus-v3-landing-b-demotion-productionization-scaffold-2026-07-07.md`.
+- **Pre-commitments (all frozen):** escape SPENT (irreversible); insulated NEUTRAL adjudication may revise the boundary
+  finding but cannot reopen the track; (b) owes its own fidelity adjudication + certifies only post-7/8/9-batch +
+  re-baseline; (b) scope = 14 concepts not 117; (b) has its own pre-registered kill condition → landing (c) documented.
+- **Epistemic status of the closure:** clean. Licensed on the conjunction (not the 9/9), iterated under budget, killed
+  by its own pre-registration at the exact linguistic boundary it discovered. The 9/9 revival MECHANISM survives as (b)'s
+  foundation. Nothing laundered; every number parent-recomputed; the rater-flip integrity finding stands permanent.
