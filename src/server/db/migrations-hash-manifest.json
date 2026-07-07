@@ -198,6 +198,6 @@
   "0194_production_trades_writer_idempotency.sql": "1cb1c353eb70f6269d021a52abe70aeefa36e38ac8bad4eca4cc078955fcb872",
   "0195_daily_reconciliation_severity.sql": "48066c2b003495fdccde44ec51b65b2290f58f2671533c0294c2d875b5e28d02",
   "0196_paper_signal_logs_correlation_id.sql": "279ab7585f0926cda35d88a1044bbdab90ac95236da6b00b9c78b0e182eeab59",
-  "0197_production_trades_traderspost_confirmed_at.sql": "2e760fb70f15d23b9ca7b3c27c80175e9524f6e4217c0e1eb1222d9a4f074896",
-  "0198_daily_reconciliation_expected_pnl_nullable.sql": "a473c9101c8bca9a9562f5072860769e4c4aa6dd25e85f21b4eecef7043790c7"
+  "0197_production_trades_traderspost_confirmed_at.sql": "b25202208add7ec6b9d8fbd9fe5ad82afbf3becf4b0befa6ede76a61bae20982",
+  "0198_daily_reconciliation_expected_pnl_nullable.sql": "76babd27f62cba327f66c638eb729ea9434e6330eabe925f1ed94a9c7d7178db"
 }
