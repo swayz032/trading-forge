@@ -810,3 +810,27 @@ the ORIGINAL, translation as aid (the rater-flip, the program's most verdict-con
 reading). Rater can't work original → disposition flagged translation-mediated + down-weighted in the read.
 **Data path (F-5 rule):** anchors extracted from TRANSCRIPT quotes, never spec-side strings; the packet DECLARES its
 source. Next: build the blinded transcript-anchored packet (sealed control answer-key) → dispatch the blind rater.
+
+## ★★ NEUTRAL-ADJUDICATION — READ STRUCTURE FROZEN (pre-registration) 2026-07-07
+Packet built (36 items: 26 targets [25 NEUTRAL: 23 design + 2 jlSh-NEUTRAL, after 2 byte-identical/substring collapses;
++ Fibonacci 26th] / 5 imperative + 5 descriptive controls), blinding leak-scan CLEAN, 0 spec-residue, Afrikaans dual-anchored.
+**Fibonacci is NOT foldable into the ≥2** — it is a KNOWN (discourse-certified mandatory); folding a known-mandatory into
+a "do ≥2 unknowns turn out mandatory?" test pre-loads the count + lowers the bar after it was set = threshold-shopping by
+population construction. KILLED. **Two reads, separated:**
+- **PRIMARY — canonical Fibonacci (blind), a transmission test:** mandatory + clean anchor → surface CAN carry
+  descriptive-mandatory → hypothesis WEAKENED on its founding exemplar (absorbed as a hypothesis finding, NEVER a
+  reopening — insulation verbatim, spent stays spent). cannot-determine/contextual → surface fails where discourse
+  succeeds → hypothesis SUPPORTED at its strongest test point, mechanism localized to discourse not the sentence.
+  optional-confluence → blind rater contradicts the certified verdict → instrument-disagreement datum (blind-surface vs
+  discourse-aware = different instruments), logged NOT suppressed.
+- **SECONDARY — ≥2-of-25 NEUTRAL pool** (population intact at 25), conditional on the control gate.
+**CONTROL GATE (validity-before-verdict) — count reconciled to the built 5+5 packet:** ≥4/5 imperative controls classified
+mandatory-gate AND ≥4/5 descriptive controls classified contextual-scene-setting (operator's ≥3/4 intent → ≥4/5 on the
+5-control set; operator to confirm ≥4/5). Miss either → targets stay SEALED, run VOIDS as instrument-failure, re-dispatch
+fresh rater. **READ ORDER LOCKED: controls → gate verdict → Fibonacci primary → NEUTRAL pool secondary** (same
+validity-before-verdict spine as every gate this week).
+**Builder decisions ratified:** (1) duplicate collapse = blind-hygiene, F-2's lesson operating UPSTREAM (byte-identical +
+substring-fragment = the artifact class the coverage work taught us to distrust); census amends to 23. (2) jlSh-NEUTRALs
+in pool = correct (they're unknowns; only the certified Fibonacci is a known). (3) Fibonacci as blind target (26th, no
+key, separate read) = a design CONTRIBUTION (instrument-sharpening the loop produced unprompted). Packet as built + this
+read structure = the frozen pre-registration. Holding only on the ≥4/5 confirm before dispatching the blind rater.
