@@ -321,3 +321,34 @@ trade-level differences DIAGNOSED per-case (occupancy-freed-legitimate = OK; gen
 Unicorn 40/40 clean (its valid_from rarely exceeded formed_at in the fixtures; isolated deterministic proof confirmed the
 gate suppresses correctly when it binds). HOLDING for the ruling before re-review + accept — the re-review's acceptance
 criterion is exactly what's in question. (Finding is a CLAIM — independent re-review still verifies seed=32 + raw-⊆ + impact.)
+
+## ★★ RULING — invariant re-pinned + CLOSED TAXONOMY + displacement accounting + tripwire read-order (2026-07-07)
+**1. Invariant → raw-candidate level (hard monotone check). Trade-level diffs → a CLOSED TAXONOMY (not open per-case
+diagnosis — declined as the first open judgment surface in an acceptance gate).** Every realized-trade difference resolves
+to EXACTLY ONE of:
+- **(a) removed** — batch trade absent in streaming, entry inside a forward window. Expected (the fix's point).
+- **(b) occupancy-freed** — streaming-only trade. FOUR machine-checkable predicates: (1) identify the batch trade
+  occupying the position at the candidate's bar; (2) verify that occupying trade is class-(a) removed; (3) verify the
+  freed candidate exists in BOTH engines' raw-candidate sets; (4) verify the freed candidate's own validity has NO
+  forward dependence.
+- **(c) timing-shifted** — same zone, entry moved later; verify the shift lands at valid_from.
+- **(d) anything else** — FAILS the batch outright. No residual, no discretion.
+**Re-review criterion: raw-candidate ⊆ holds GLOBALLY, AND every trade-level diff classifies (a)/(b)/(c) by predicates,
+ZERO (d)s.**
+**2. Impact model REBUILT — Defect-10 is NOT entry-additive-only (the finding under the finding).** seed=32 proves the
+look-ahead's damage propagates through position OCCUPANCY — a tainted trade DISPLACES legitimate trades downstream. The
+fix's realized effect is a TRADE-SET REWRITE, not a subtraction. Impact report gains a THIRD read: **(iii) displacement
+accounting — count of occupancy-freed trades, aggregate P&L, NETTED against removed tainted trades' P&L.** Materiality
+receipt = the NET of removal and liberation; sign genuinely OPEN — if freed trades outperform tainted, the look-ahead was
+NET-SUPPRESSIVE and historical metrics were PESSIMISTIC on this axis (pre-registered possible outcome, not post-hoc surprise).
+**3. Tripwire read-order LOCKED (exposure widened — occupancy-freeing can take a formerly-zero pair nonzero LEGITIMATELY).**
+Tripwire fires → run (a)-(d) classification on THAT pair FIRST → all diffs (a)/(b)/(c) predicates green → flip is the fix
+working, logged, reference STANDS. Any (d) or predicate failure → FULL STOP, contradicting-evidence protocol, reference
+reopens. Without this order the first legitimate liberation on a reference pair falsely reopens settled ground.
+**4. Re-review scope additions:** independently re-verify seed=32 against the four (b)-predicates (not inherit the
+implementer's narrative); confirm the 40 test_track3 failures are genuinely pre-existing by checking against the PRE-BATCH
+BASELINE COMMIT, not the implementer's claim.
+**RECORD LINE (earned):** the implementer found a counter-example to its OWN ratified acceptance criterion, diagnosed it to
+root cause, and HELD the batch rather than report the green it could have gotten away with (raw-⊆ held, 203 passed, nobody
+would have looked). doer≠grader internalized at the layer that was supposed to be the doer — the machinery isn't just
+catching defects, it's growing graders.
