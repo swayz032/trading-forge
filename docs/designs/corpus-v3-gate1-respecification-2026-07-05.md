@@ -763,3 +763,23 @@ is the instrument calibrated, logged as such.
 - **Epistemic status of the closure:** clean. Licensed on the conjunction (not the 9/9), iterated under budget, killed
   by its own pre-registration at the exact linguistic boundary it discovered. The 9/9 revival MECHANISM survives as (b)'s
   foundation. Nothing laundered; every number parent-recomputed; the rater-flip integrity finding stands permanent.
+
+## ★★ METHODOLOGY FINDINGS (the night's real yield — about the method, not the corpus) 2026-07-07
+**1. Integrity bound SYMMETRICALLY — the missing quadrant filled.** Every prior test of this system was the machine
+reporting against the builder: Gate 1 vs the classifier's hopes, the independent rater vs the self-adjudication, the
+validity gates vs six defects. Tonight added the quadrant the record didn't have: the OPERATOR held the ADVISOR's
+stop-rule against the advisor; the advisor's ruling was CORRECTED by the operator's attack (2 overstatements, both
+accepted); and the one reversal (reopening the rulings when the succession premise broke) went through the SAME single
+mechanism frozen findings allow — stated reasoning against new evidence, used once. **A system whose integrity only
+binds downward is a hierarchy wearing a lab coat. This one binds in every direction — and tonight is the proof the
+record didn't have yesterday.** doer≠grader is not a downward relation; it is mutual.
+**2. The classifier track RESOLVED, it did not fail.** It converted a vague symptom ("the corpus barely trades")
+through six instrument defects, two honest gate FAILs, a verdict-inverting adjudication, and a licensed-then-spent
+escape into THREE DURABLE ASSETS: (a) a 9/9-validated revival mechanism (→ (b)'s foundation), (b) a certified
+adjudication instrument that has already flipped one verdict (the rater), (c) a falsifiable hypothesis locating exactly
+where extraction-time semantics hit their wall (descriptive-mandatory). **Programs that launder their numbers end with
+a pile of passes and no knowledge. This track ends with a pile of FAILs and everything known.** That asymmetry —
+FAILs+knowledge > passes+ignorance — is the whole thesis of the methodology, demonstrated end to end.
+**3. On the pending NEUTRAL adjudication (stated now, to be held then):** whichever way it lands, the boundary
+hypothesis DYING is as clean a result as it SURVIVING. The falsification test is the point, not the answer. A finding
+you'd only run if you wanted it to survive isn't a test.
