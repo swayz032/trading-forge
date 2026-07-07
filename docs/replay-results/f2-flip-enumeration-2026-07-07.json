@@ -1,0 +1,324 @@
+{
+  "generated_at": "2026-07-07",
+  "method": "Cross-item test: for each unique entry_conditions[].object string across the 14 v3-shadow-specs fixtures (516 total rows, 456 unique object strings), check coverage against the pooled normalized-object-text corpus (the only prose field the v3 DecisionAtom spec.json schema carries — no entry_sequence/confluences prose exists in this pipeline; see project_spec_compiler_field_leak_audit_2026_07_03). Two logics compared: (A) pre-F-2 ORIGINAL substring `u.includes(normName) || nameWords.every(w=>u.includes(w))` at commit 15abe2d, (B) F-2 REMEDIATED exact-token+singularize logic in the current working tree (uncommitted, on top of HEAD 0db52b4). A flip = coveredA !== coveredB for at least one cross-item unit.",
+  "corpus_stats": {
+    "fixtures": 14,
+    "total_entry_condition_rows": 516,
+    "unique_object_strings": 456
+  },
+  "categories": {
+    "collision_correction": {
+      "count": 7,
+      "description": "A=covered via mid-word/prefix substring collision with an UNRELATED word; B=missing. GOOD — the fix working as intended.",
+      "items": [
+        {
+          "name": "break acceptance",
+          "videos": [
+            "ktkqq7QsN9Q"
+          ],
+          "sample_matching_units_A": [
+            "breakout acceptance retest entry"
+          ]
+        },
+        {
+          "name": "vwap test",
+          "videos": [
+            "ktkqq7QsN9Q"
+          ],
+          "sample_matching_units_A": [
+            "vwap retest vs pre market low retest",
+            "vwap retest"
+          ]
+        },
+        {
+          "name": "2",
+          "videos": [
+            "KXWRtV2LOVc"
+          ],
+          "sample_matching_units_A": [
+            "confluence and large buying participants at key level 6220 ish",
+            "touch basis 20 sma",
+            "long entry at 12835"
+          ]
+        },
+        {
+          "name": "ema trend confirmation",
+          "videos": [
+            "N7uP9V0Iktc"
+          ],
+          "sample_matching_units_A": [
+            "downtrend bias confirmation"
+          ]
+        },
+        {
+          "name": "50minut range low",
+          "videos": [
+            "oDLt9zh33LE"
+          ],
+          "sample_matching_units_A": [
+            "price to break above 15 minute range",
+            "price to break below 15 minute range",
+            "15 minute crt range"
+          ]
+        },
+        {
+          "name": "high price level",
+          "videos": [
+            "oDLt9zh33LE"
+          ],
+          "sample_matching_units_A": [
+            "price level 25 or higher"
+          ]
+        },
+        {
+          "name": "daily time frame",
+          "videos": [
+            "oDLt9zh33LE"
+          ],
+          "sample_matching_units_A": [
+            "timeframe hierarchy daily 4 h",
+            "timeframe hierarchy daily 4 h 1 h"
+          ]
+        }
+      ]
+    },
+    "verb_form_false_missing": {
+      "count": 1,
+      "description": "A=covered via a genuine -ed/-ing tense/gerund inflection of the SAME name stem; B=missing because singularize() only strips trailing plural 's', not verb tense suffixes. This is the counter-case COST of the fix.",
+      "items": [
+        {
+          "name": "5 sma cross below 50 sma",
+          "videos": [
+            "HfZTCZTDfWk"
+          ],
+          "sample_matching_units_A": [
+            "5 sma crossing below 20 sma 4 h chart"
+          ]
+        }
+      ]
+    },
+    "plural_preserved_b_only": {
+      "count": 9,
+      "description": "B covered where A's raw whole-phrase/substring check did not (singularizer recovered a plural<->singular pair asymmetric to raw substring). Extremely rare / theoretical edge; reported for completeness.",
+      "items": [
+        {
+          "name": "first 30 minutes high",
+          "videos": [
+            "c8VLqF0XDR4"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "first 15 minute candle range high",
+            "high first 15 minute candle"
+          ]
+        },
+        {
+          "name": "sma 50",
+          "videos": [
+            "HfZTCZTDfWk"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "5 sma cross above 50 sma",
+            "5 sma cross below 50 sma"
+          ]
+        },
+        {
+          "name": "supply zones",
+          "videos": [
+            "m-G1ag77aVc"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "supply zone location",
+            "supply zone boundary",
+            "supply zone"
+          ]
+        },
+        {
+          "name": "ema retests",
+          "videos": [
+            "N7uP9V0Iktc"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "price break below and retest as resistance",
+            "retest into area",
+            "retest"
+          ]
+        },
+        {
+          "name": "reversal candles",
+          "videos": [
+            "NMUd0oX_7Pg"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "wait reversal candle signal in step three before doing anything",
+            "third candle reversal"
+          ]
+        },
+        {
+          "name": "fvg breaks out range",
+          "videos": [
+            "oDLt9zh33LE"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "price to break above 15 minute range",
+            "price to break below 15 minute range",
+            "candle range range break"
+          ]
+        },
+        {
+          "name": "first candle closes above range",
+          "videos": [
+            "oDLt9zh33LE"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "first 5 m minute candle to close above or below range"
+          ]
+        },
+        {
+          "name": "sells",
+          "videos": [
+            "oDLt9zh33LE"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "sell zone",
+            "sell from supply zone",
+            "sell bias"
+          ]
+        },
+        {
+          "name": "fvg fvg",
+          "videos": [
+            "sVkmZklJDHI"
+          ],
+          "note": "B-only match (singularizer recovered a plural/singular pair A's raw substring missed)",
+          "sample_matching_units_B": [
+            "area fvg",
+            "30 minute high pre market high fvg",
+            "daily fvg 4 h hour candle"
+          ]
+        }
+      ]
+    }
+  },
+  "diagnostic_singularizer_earned_keep": {
+    "count": 22,
+    "description": "Names covered under BOTH A and B, but where B's coverage specifically required the singularizer (exact token match without singularize would have failed) — i.e. genuine plural/singular pairs the fix correctly keeps covered. Not a flip (A also covered these via its whole-phrase u.includes(normName) or substring clause) — shown as corroborating evidence the singularizer is pulling real weight, capped at 15 examples.",
+    "items": [
+      {
+        "name": "supply zone",
+        "videos": [
+          "75DJN5UVQnw"
+        ],
+        "matched_unit": "supply zones"
+      },
+      {
+        "name": "first 30 minutes high",
+        "videos": [
+          "c8VLqF0XDR4"
+        ],
+        "matched_unit": "first 15 minute candle range high"
+      },
+      {
+        "name": "trade",
+        "videos": [
+          "HfZTCZTDfWk"
+        ],
+        "matched_unit": "upside trades"
+      },
+      {
+        "name": "moving average",
+        "videos": [
+          "HfZTCZTDfWk"
+        ],
+        "matched_unit": "moving averages"
+      },
+      {
+        "name": "buy zone",
+        "videos": [
+          "HfZTCZTDfWk"
+        ],
+        "matched_unit": "supply zones"
+      },
+      {
+        "name": "retest",
+        "videos": [
+          "ktkqq7QsN9Q",
+          "m-G1ag77aVc"
+        ],
+        "matched_unit": "ema retests"
+      },
+      {
+        "name": "break",
+        "videos": [
+          "ktkqq7QsN9Q",
+          "sVkmZklJDHI"
+        ],
+        "matched_unit": "fvg breaks out range"
+      },
+      {
+        "name": "reclaim",
+        "videos": [
+          "ktkqq7QsN9Q"
+        ],
+        "matched_unit": "price fails and reclaims vwap"
+      },
+      {
+        "name": "market condition",
+        "videos": [
+          "ktkqq7QsN9Q"
+        ],
+        "matched_unit": "so instead trying to predict shifts we align with prevailing market conditions"
+      },
+      {
+        "name": "6 m candle 9 00",
+        "videos": [
+          "KXWRtV2LOVc"
+        ],
+        "matched_unit": "reversal candles"
+      },
+      {
+        "name": "one day time frame",
+        "videos": [
+          "KXWRtV2LOVc"
+        ],
+        "matched_unit": "entry refinement via lower time frames"
+      },
+      {
+        "name": "supply zones",
+        "videos": [
+          "m-G1ag77aVc"
+        ],
+        "matched_unit": "supply zone location"
+      },
+      {
+        "name": "time frame",
+        "videos": [
+          "m-G1ag77aVc",
+          "sVkmZklJDHI"
+        ],
+        "matched_unit": "entry refinement via lower time frames"
+      },
+      {
+        "name": "ema retests",
+        "videos": [
+          "N7uP9V0Iktc"
+        ],
+        "matched_unit": "price break below and retest as resistance"
+      },
+      {
+        "name": "ema retest",
+        "videos": [
+          "N7uP9V0Iktc"
+        ],
+        "matched_unit": "ema retests"
+      }
+    ]
+  }
+}

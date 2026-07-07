@@ -484,11 +484,12 @@ export function computeCoverageVerdict(
     // fallback (e.g. "5 sma") uses EXACT token match (a 3-char prefix like "sma" would re-collide
     // with "smart"/"small"). `u` is already normalized; tokenize on non-alphanumeric strips punctuation.
     const tokenize = (s: string) => s.split(/[^a-z0-9]+/).filter(Boolean);
+    const singularize = (x: string) => x.replace(/\b(\w+?)s\b/g, "$1");
     const nameInUnit = (u: string) => {
-      const toks = tokenize(u);
-      if (nameWords.length > 0) return nameWords.every((w) => toks.some((t) => t === w || t.startsWith(w)));
+      const singToks = new Set(tokenize(u).map(singularize));
+      if (nameWords.length > 0) return nameWords.every((w) => singToks.has(singularize(w)));
       const allNameTokens = tokenize(normName.replace(UMBRELLA_TOKEN_RE, " "));
-      return allNameTokens.length > 0 && allNameTokens.every((t) => toks.includes(t));
+      return allNameTokens.length > 0 && allNameTokens.every((t) => singToks.has(singularize(t)));
     };
     const mentioning = units.filter(nameInUnit);
     if (mentioning.length === 0) return "missing";

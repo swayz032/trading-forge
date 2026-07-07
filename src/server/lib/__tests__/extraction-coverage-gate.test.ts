@@ -234,6 +234,37 @@ describe("computeCoverageVerdict — pure-functional", () => {
     const rangeReal = { entry_sequence: [{ step: 1, action: "price enters the range zone", rationale: "trade the range boundary" }], confluences: [] };
     expect(computeCoverageVerdict(rangeItem, rangeReal).covered).toContain("range");
   });
+
+  // F-2 PREFIX-COLLISION HARDENING (2026-07-07): the word-boundary fix used token-PREFIX matching
+  // (`t === w || t.startsWith(w)`), which false-matched high-frequency real names against longer
+  // tokens that merely SHARE a prefix (high→highly/highlight, trend→trending, order→orderly,
+  // block→blockage). Replaced with EXACT-token match after a crude singularizer (strips trailing
+  // plural "s") so genuine plurals still resolve (bands→band) but prefix collisions do NOT.
+  it("F-2: name 'trend' is NOT matched by the longer token 'trending' (prefix collision killed)", () => {
+    const trendItem = [{ name: "trend", verbatim_quote: "the trend", emphasis_level: "primary" as const }];
+    const onlyTrending = { entry_sequence: [{ step: 1, action: "the trending topic was unrelated", rationale: "no valid confirmation today" }], confluences: [] };
+    const v = computeCoverageVerdict(trendItem, onlyTrending);
+    expect(v.missing).toContain("trend");
+    expect(v.covered).not.toContain("trend");
+  });
+
+  it("F-2: name 'high' is NOT matched by 'highly' / 'highlight' (prefix collision killed)", () => {
+    const highItem = [{ name: "high", verbatim_quote: "the high", emphasis_level: "primary" as const }];
+    const onlyHighly = { entry_sequence: [{ step: 1, action: "highly volatile highlight reel", rationale: "careful setup planning here" }], confluences: [] };
+    expect(computeCoverageVerdict(highItem, onlyHighly).missing).toContain("high");
+  });
+
+  it("F-2: multi-word name 'order block' is NOT satisfied by 'orderly' + 'blockage' (prefix collision killed)", () => {
+    const orderBlockItem = [{ name: "order block", verbatim_quote: "the order block", emphasis_level: "primary" as const }];
+    const onlyOrderly = { entry_sequence: [{ step: 1, action: "the desk kept an orderly log", rationale: "that caused a blockage" }], confluences: [] };
+    expect(computeCoverageVerdict(orderBlockItem, onlyOrderly).verdict).toBe("coverage_failed");
+  });
+
+  it("F-2: singularizer preserves plural morphology — name 'band' stays COVERED against 'bands'", () => {
+    const bandItem = [{ name: "band", verbatim_quote: "the band", emphasis_level: "primary" as const }];
+    const bandsPlural = { entry_sequence: [{ step: 1, action: "the bands compress here", rationale: "wait for a valid expansion move" }], confluences: [] };
+    expect(computeCoverageVerdict(bandItem, bandsPlural).covered).toContain("band");
+  });
 });
 
 // ─── runCoverageEnumeration (mocked LLM) ─────────────────────────────────────
