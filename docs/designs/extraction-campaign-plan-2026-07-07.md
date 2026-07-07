@@ -13,7 +13,7 @@ The frontier. Design brief (handed by the week):
 Pre-registered success bar (set NOW): a pre-committed fraction of a FRESH video set reaches certificate-grade extraction. Pre-registered failure meaning: if discourse-adjudication can't scale economically → H1 narrows to "fidelity achievable only at human-in-loop cost" → changes conveyor ECONOMICS not validity → pre-written fork (smaller library, higher per-strategy investment).
 Parallel: **(b)'s cert** — demotion's owed fidelity adjudication on the 14 concepts — is both a production candidate AND the pilot run of the certificate machinery itself.
 
-## Phase 2 — H2: the source-population read (only Phase 1 unlocks it).
+## Phase 2 — H2: the source-population read (only Phase 1 unlocks it). RULE FROZEN → h2-source-thesis-preregistration-2026-07-07.md
 Certificate-grade strategies → full battery on the re-certified engine. **H2 decision rule pre-registered before the count is known** (bands below — PENDING operator lock, with claude's 3 refinements folded in).
 
 ## Phase 3 — branch-dependent.
