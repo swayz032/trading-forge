@@ -581,3 +581,22 @@ Retracement/level idioms in the 143-condition DESIGN set (jlShztsY3oA's 3 condit
   artifact; a fully-fresh re-measurement (live gemma) is the stronger independence and is the next gate. Design-instance
   vetting (confirm the 4 focused matches are genuine retracement-level GATES, not loose quote-matches) happens during
   rule design.
+
+## PASS-3 DETERMINISM ENVELOPE (pre-reg point 1 comparison rule — PINNED tonight, before the fresh run lands)
+The independent held-out re-measurement uses LIVE GEMMA on the margin stratum; the frozen nondeterminism finding
+(gemma is NOT run-to-run deterministic at temp 0.1) means the comparison rule MUST be pinned now, not improvised
+when the number lands. **CONFIRM iff ALL three hold:**
+1. **Deterministic rule-covered stratum: EXACT (bit-identical) reproduction** vs pass-2. The rules are deterministic —
+   ANY diff means a broken instrument → STOP-AND-DIAGNOSE, not a pass/fail on the number.
+2. **Gemma margin point estimate within ±3.0 pp of pass-2's 67.92%** (band = [64.92%, 70.92%]).
+3. **Directional verdicts BOTH hold:** (a) margin improved-or-held = fresh margin point ≥ 66.24% (pass-1 67.24% − 1pp
+   noise floor); (b) overfit ratio ≤ 1.85× (pass-2 1.70× + 0.15 tolerance).
+**Outside ANY of the three = STOP-AND-DIAGNOSE.** Record BOTH numbers; do NOT pick-the-better-run. An out-of-band
+gemma margin is NOT automatically a pass-2 indictment — it may be the nondeterminism finding getting its number —
+but it is a stop, never a shop. Rule-covered EXACT-diff is always a broken-instrument stop.
+**Enumeration frozen as data:** `docs/replay-results/corpus-v3-pass3-enumeration-frozen-2026-07-06.json` (focused 4 /
+broad 36, matched conditions, vetting-PENDING on the 4). Pass-3's rule design provably draws only from this
+pre-enumerated set — the quarantine is only as good as the timestamp on the fence.
+**Standing order (fatigue = instrument-validity problem, not a virtue test):** anything the pre-reg does not cover
+gets WRITTEN DOWN AND PARKED, never resolved on the spot. Point 1 is the load-bearing gate for the whole pass-3
+license; a claim conditionally accepted because everyone's tired defeats the purpose of making the ruling conditional.

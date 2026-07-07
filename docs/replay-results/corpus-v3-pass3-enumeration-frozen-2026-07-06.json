@@ -1,0 +1,293 @@
+{
+  "frozen_date": "2026-07-06",
+  "purpose": "pass-3 design-input quarantine \u2014 pre-enumerated retracement/level idiom set; rule design MUST draw only from these, jlShztsY3oA excluded (the test)",
+  "split_source": "corpus-v3-heldout-split-2026-07-05.json rules_design_keys (143)",
+  "join": "video||condition_id (bug-fixed)",
+  "focused_count": 4,
+  "broad_count": 36,
+  "focused_vetting_status": "PENDING \u2014 confirm each is a genuine retracement/level GATE (not loose quote-match) before use as design input",
+  "focused": [
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_CONFIRMATION:5 sma crossing below 20 sma 4h chart#0",
+      "object": "5 sma crossing below 20 sma 4h chart",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "you don't just want to take the trade you want to wait for a retrace back to the 5 SMA"
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_RETEST:5 sma#0",
+      "object": "5 sma",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "wait for a retrace back to the 5 SMA"
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_CONFIRMATION:cross down and retrace#0",
+      "object": "cross down and retrace",
+      "classification": "CONTEXTUAL",
+      "quote": "we get the cross down um right over here and we get the retrace right over here and once again very beautiful move lower"
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_BIAS:retracement opportunity#0",
+      "object": "retracement opportunity",
+      "classification": "CONTEXTUAL",
+      "quote": "we're basically now looking for a retracement opportunity to then buy from further inside of the first leg of price action"
+    }
+  ],
+  "broad": [
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_RETEST:level#0",
+      "object": "level",
+      "classification": "CONTEXTUAL",
+      "quote": "this is not going to play out every day. This is just one of many setups that we can keep our eye on"
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_STRUCTURE:price tried to break below area#0",
+      "object": "price tried to break below area",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_RETEST:price break below and retest as resistance#0",
+      "object": "price break below and retest as resistance",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "We are waiting for price to break below, come back and retest it as resistance before we can"
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_RETEST:retest into area#0",
+      "object": "retest into area",
+      "classification": "UNRESOLVED",
+      "quote": "what I was looking for was for price to pull back into this area because the market was very bullish today"
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_STRUCTURE:30 minute high pre market high fvg#0",
+      "object": "30 minute high pre market high fvg",
+      "classification": "OPTIONAL",
+      "quote": "a lot of confluence as well as large buying participants at this key level"
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_CONFIRMATION:5 sma crossing below 20 sma 4h chart#0",
+      "object": "5 sma crossing below 20 sma 4h chart",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "you don't just want to take the trade you want to wait for a retrace back to the 5 SMA"
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_RETEST:5 sma#0",
+      "object": "5 sma",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "wait for a retrace back to the 5 SMA"
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_STRUCTURE:low price level#0",
+      "object": "low price level",
+      "classification": "CONTEXTUAL",
+      "quote": "you can see this low is 1788"
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_CONFIRMATION:cross down and retrace#0",
+      "object": "cross down and retrace",
+      "classification": "CONTEXTUAL",
+      "quote": "we get the cross down um right over here and we get the retrace right over here and once again very beautiful move lower"
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_STRUCTURE:zone sitting right in here#0",
+      "object": "zone sitting right in here",
+      "classification": "CONTEXTUAL",
+      "quote": "so this should be our initial exit just based on support and resistance"
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_RETEST:wicks retest zones#0",
+      "object": "wicks retest zones",
+      "classification": "UNRESOLVED",
+      "quote": "I'm just going to point out a few right we closed below we kind of came back up here are the Wicks these are the kind of retests near the zones"
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_CONFIRMATION:vwop retest#0",
+      "object": "vwop retest",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "VWAP is always a big retest spot ... then I'm looking to take puts on a VWOP retest, not a pre-market low retest"
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:vwop retest#0",
+      "object": "vwop retest",
+      "classification": "UNRESOLVED",
+      "quote": "really, really, really nice trade here on this VWOP retest"
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_RETEST:ema#0",
+      "object": "ema",
+      "classification": "OPTIONAL",
+      "quote": "You also trade EMA retest sometimes."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_STRUCTURE:daily fvg 4h hour candle#0",
+      "object": "daily fvg 4h hour candle",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "this will be our key level your goal is to enter short as soon as the key level is tapped"
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_RETEST:key level tap#0",
+      "object": "key level tap",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "as soon as the key level is tapped and you notice that 15 minute CRT"
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_SESSION:one day time frame#0",
+      "object": "one day time frame",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "let's hop onto a one day time frame the daily time frame to look for a key level to have four confirmations for the trade"
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_RETEST:retest#0",
+      "object": "retest",
+      "classification": "CONTEXTUAL",
+      "quote": "We look to buy from the demand zone when it is retested because we expect to see more of that institutional buying kicking in."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_BIAS:future selling#0",
+      "object": "future selling",
+      "classification": "CONTEXTUAL",
+      "quote": "So future selling is expected once the market returns to this level."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_RETEST:supply zones#0",
+      "object": "supply zones",
+      "classification": "CONTEXTUAL",
+      "quote": "once the market returns to this level."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_SESSION:time frame#0",
+      "object": "time frame",
+      "classification": "CONTEXTUAL",
+      "quote": "Let's say we begin on the 4hour time frame and we are looking at a supply zone."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_BIAS:retracement opportunity#0",
+      "object": "retracement opportunity",
+      "classification": "CONTEXTUAL",
+      "quote": "we're basically now looking for a retracement opportunity to then buy from further inside of the first leg of price action"
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_STRUCTURE:market reaches level#0",
+      "object": "market reaches level",
+      "classification": "ALTERNATIVE",
+      "quote": "what we can do inside of the top zone is use what I call a standard confirmation."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_CONFIRMATION:lower time frame structure changes in agreement with larger trend direction#0",
+      "object": "lower time frame structure changes in agreement with larger trend direction",
+      "classification": "OPTIONAL",
+      "quote": "what we can do inside of the top zone is use what I call a standard confirmation."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "FILTER:1hour zone context#0",
+      "object": "1hour zone context",
+      "classification": "CONTEXTUAL",
+      "quote": "but that's because this is a 1hour zone."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_STRUCTURE:price movement#0",
+      "object": "price movement",
+      "classification": "CONTEXTUAL",
+      "quote": "if we go over on the 5-minut time frame and dig into this larger demand zone"
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:vwap#0",
+      "object": "vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "Every course I bought, every video I watched, every guru I follow said the same thing. VWAP is support."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_RETEST:retest#0",
+      "object": "retest",
+      "classification": "CONTEXTUAL",
+      "quote": "Often, they'll retest again just like they did right here."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:stop placement rule#0",
+      "object": "stop placement rule",
+      "classification": "UNRESOLVED",
+      "quote": "The stop is going to go beyond the price level or beyond the testing candle wick."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:trend#0",
+      "object": "trend",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "VWAP plays a better magnet than it does a trading level except in a trend."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:opening range breakout zone#0",
+      "object": "opening range breakout zone",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "That is your opening range breakout zone that you wait for price action to break out."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_RETEST:high or low initial candle with overlapping fvg#0",
+      "object": "high or low initial candle with overlapping fvg",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "step number three, we're going to wait for the market to retest that high or low of this initial candle"
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_RETEST:fvg#0",
+      "object": "fvg",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we are going to wait for again wait for that retest into that fair value gap."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:fvg#0",
+      "object": "fvg",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we do have a displacement through that level. We have a fair value gap."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_RETEST:high price level#0",
+      "object": "high price level",
+      "classification": "CONTEXTUAL",
+      "quote": "Now, we trade back up to the high. And do we get our entry reason?"
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_SESSION:new york open time zone#0",
+      "object": "new york open time zone",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "We come to our charts right before 9:30 open in the New York hill zone."
+    }
+  ]
+}
