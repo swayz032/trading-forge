@@ -106,6 +106,14 @@ async function main() {
   let failed = 0;
 
   for (const spec of SPECS) {
+    // deep-scan scripts F-6 (2026-07-06): actually SKIP the Postgres cred when its password is unset. The earlier
+    // fix only console.warn'd but still fell through and POSTed a credential with an empty password. A DB
+    // credential with an empty password must never be created — refuse it here, not just warn about it.
+    if (spec.name === "Postgres LIVE_PG" && !PG_PWD) {
+      console.warn(`  x  ${spec.name}  — SKIPPED (no LIVE_PG_PASSWORD/PGPASSWORD in env; refusing to create an empty-password credential)`);
+      skipped++;
+      continue;
+    }
     if (map[spec.name]) {
       console.log(`  =  ${spec.name}  — already in map (${map[spec.name]})`);
       skipped++;
