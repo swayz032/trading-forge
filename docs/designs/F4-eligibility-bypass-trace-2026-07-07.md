@@ -74,3 +74,21 @@ Bounded grep of backtester.py + structural_stops.py:
   survival for unregistered strategies? + is the parity rationale correct or should the fix register-all-archetypes?).
 - **Exposure unchanged: 0/120 unregistered, 0 PAPER+ → latent. Pass-3 impact NIL (within-concept A/B cancels).**
 **F-4 trace COMPLETE at the fact/judgment boundary. Facts frozen; three rulings queued for dawn.**
+
+## PRECISE SKIP-ENUMERATION (fact) — in-gate BYPASSED vs separate STILL-APPLY (2026-07-07)
+Traced the comment's other "still apply" claims (DLL, daily-trade-cap, lunch/PM, macro) the same way as the ceiling:
+- **BYPASSED (inside `evaluate_signal`, AFTER the :109 early TAKE):** A+ overlay (kill-zone / liquidity-sweep / 3R /
+  confluence≥4 / bias-confidence), **Check 0 structural-stop-ceiling SKIP (:115)**, **in-gate `max_trades_hit` (:204)**,
+  **in-gate `daily_loss_used_pct > 0.6` REDUCE (:278)**.
+- **STILL APPLY (SEPARATE gates in `paper-signal-service.ts`, not inside evaluate_signal → fire regardless of
+  registration):** `evaluateDailyTradeCap` (:42), `evaluateCrossSymbolDll` (:76), `evaluateLunchBlackoutGate` (:43),
+  `calendarBlocked` macro-blackout (:2300+), + backtester execution-cap ceiling (Point B).
+- **So the comment "DLL / daily-trade-cap / lunch / macro still apply" is TRUE for the separate live-pipeline gates,
+  but the IN-GATE DLL-reduce + max-trades checks ARE bypassed (imprecise-but-directionally-correct comment).**
+- **NET for a LIVE unregistered strategy:** loses the A+ quality overlay + ceiling-SKIP semantics + in-gate DLL-reduce/
+  max-trades; KEEPS daily-trade-cap, cross-symbol-DLL, lunch, macro-blackout, execution-cap ceiling. **Partial
+  filtering loss (quality/A+ + ceiling-skip), NOT "zero eligibility filtering."** (Corrects grader's "zero eligibility
+  filtering at full size" — the separate loss/compliance gates remain.)
+- **Backtest-side separate gates (does the backtester run its own DLL/max-trades outside apply_eligibility_gate) NOT
+  traced — a factual follow-up.** Exposure still 0/120 unregistered, 0 PAPER+. Pass-3 impact still NIL (A/B cancels).
+**F-4 skip-enumeration now PRECISE. The grader's "all 9 / zero filtering" is corrected to a specific partial-loss set.**
