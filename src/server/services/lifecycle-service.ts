@@ -3451,6 +3451,7 @@ export class LifecycleService {
                   toState: "PAPER",
                   firmsFailing,
                   details,
+                  correlationId,
                 });
                 continue;
               }
@@ -3486,6 +3487,7 @@ export class LifecycleService {
                 fromState: "TESTING",
                 toState: "PAPER",
                 error: gateErr instanceof Error ? gateErr.message : String(gateErr),
+                correlationId,
               });
               continue;
             }
@@ -3613,6 +3615,7 @@ export class LifecycleService {
               score: exportCheck.score,
               band: exportCheck.band,
               reasons: (exportCheck as Record<string, unknown>).reasons ?? null,
+              correlationId,
             });
 
             exportabilityBlocked = true;
@@ -4596,6 +4599,7 @@ export class LifecycleService {
                 score: exportCheckSh.score,
                 band: exportCheckSh.band,
                 reasons: (exportCheckSh as Record<string, unknown>).reasons ?? null,
+                correlationId: tickCorrelationId,
               });
 
               exportabilityBlockedSh = true;
@@ -7086,6 +7090,7 @@ export class LifecycleService {
             rollingSharpe,
             tradingDays,
             message: `Strategy "${s.name}" qualified for deployment — review in library`,
+            correlationId: correlationId ?? null,
           });
 
           AlertFactory.deployReady(
