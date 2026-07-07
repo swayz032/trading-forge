@@ -278,3 +278,25 @@ L = 0.** Fact 2's two-axis subtlety resolves favorably: no window-arithmetic lag
 - **Boundary caveat (ratification):** L=0 holds for `detect_swings`/`detect_bos` AS breaker/unicorn call them today
   (`bos = detect_bos(df, detect_swings(df, swing_lookback))`); a future refactor to a non-centered/differently-shifted
   swing basis needs re-measurement. AWAITING RATIFICATION → then streaming implementation.
+
+## ★★ DEFECT-10 BATCH — RATIFIED, FINAL SCOPE, IMPLEMENTING (2026-07-07)
+Axis receipt ratified (L=0, both legs agree; truncated-replay killed the hidden-lag counter-case on data). Second-order
+dividend noted: `detect_bos`'s strict `<` pointer advance makes the swing layer conservative by one bar at the
+CONSUMPTION boundary too — the exoneration deepens.
+**Boundary caveat → CONTRACT ASSERTION (teeth, not footnote):** "L=0 holds for the contract as called today" is the kind
+of true-now statement that rots silently — a future non-centered swing refactor would reintroduce the look-ahead
+INVISIBLY, downstream, passing all its own tests. So L=0 becomes a CHECKED INVARIANT: a miniature truncated-replay
+fixture (handful of BOS recomputed on truncated history, asserted identical) in CI PERMANENTLY; if the swing basis
+changes it fails with "re-derive the observability axis before trusting streaming validity." Documenting-an-assumption →
+enforcing-one (this program's whole defect history is documented-but-unenforced assumptions).
+**FINAL BATCH SCOPE (implementing):** (1) breaker streaming `valid_at(t)=any matching BOS in [broken_at-3,min(t,broken_at
++3)]` (direct bar-index, no lag term) + unicorn analogous ±1/±5; (2) mitigation.py strict `entry_bar > bos_bar` assert;
+(3) test_audit_a12 lint extension (forbid forward-index reads in validity; WHITELIST centered-window-then-shift);
+(4) **L=0 contract fixture** (truncated-replay CI test, the caveat's permanent form). Then fresh-context re-review:
+⊆ invariant BOTH flavors (streaming-absent-from-batch = set-membership BUG → fail outright; same-set-different-entry-bar
+= fine at +4, labeled-suspect in-window). Then paired impact reads vs `c948bcd` timestamps; tripwire ARMED.
+**IMPACT-REPORT PRE-READ (locked before numbers):** the WIN-RATE DELTA on the +1..+3 (peeked) entries is the
+retro-scoping number. Higher-win-rate peeked → historical equity inherits another "optimistic" annotation (alongside
+Defect 4); flat delta → look-ahead real but NON-EXPLOITATIVE, annotation says so. **Both readings pre-registered
+acceptable; neither reopens certified TRADE-COUNT findings absent the tripwire firing. The receipt SCOPES, does not
+re-litigate.**
