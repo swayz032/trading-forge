@@ -2005,6 +2005,7 @@
       "docs/system-topology.generated.json"
     ],
     "scheduler_jobs": [
+      "n8n-data-backup-daily",
       "n8n-drift-detector-monthly",
       "n8n-drift-detector-weekly",
       "n8n-execution-scrape",
