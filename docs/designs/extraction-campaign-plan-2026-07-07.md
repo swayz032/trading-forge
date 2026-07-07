@@ -32,3 +32,24 @@ Fable-5's proposal: ≥5% supported / 1–5% marginal / ~0% falsified (rate = % 
    - **The trap this closes:** a LOW rate with ≥1 real survivor must NOT trigger the falsification pivot — you'd pivot away from a working strategy. Zero-survivors pivots the SCOUT; ≥1-survivor scales the one found regardless of rate.
 3. **Calibration honesty on 5%/1%:** these are pre-registered best-estimates carrying an institutional prior — retail-educator edges survive rigorous validation at plausibly LOW rates, so even 1–5% may be a genuine find, and ~0% is a real and expected-possible outcome, not a shock. Label them as estimates, not laws.
 **Refined H2 rule (proposed for lock): read at N≥N_min; MISSION met on ≥1 robust survivor (scale it); CONVEYOR: ≥5% scale-scout / 1–5% marginal-needs-differentiation / 0-survivors falsify-source-and-pivot-scout. LOCKED 2026-07-07: N_min=30 (gates RATE only, never the survivor read); robust-survivor definition + survivor-forensics protocol frozen in the pre-registration.**
+
+## ★★ PHASE 0 — LOCKED EXECUTION SEQUENCE (adversarial-review corrected, 2026-07-07)
+Reordered by dependency (one reorder, one merge, one added gate):
+**0.5 — re-baseline PRE-REGISTRATION frozen FIRST** (`re-baseline-preregistration-2026-07-07.md`) — the judge's exam
+written before it studies; the 7/8/9 batch CANNOT land until this is ratified (else the re-validation criteria are
+authored by someone who's seen the corrected numbers). LOAD-BEARING gate the original ordering left open.
+**#2 tally BEFORE #1 fix** — the macro-window tally is Defect-9's DESIGN INPUT, not its epilogue. The mask fix must know
+what it masks (which windows, severity tiers, whether the mask's absence ever flipped zero/nonzero in v2-traded).
+Tally on the CURRENT engine (emit timestamps live, cross-ref STATIC_EVENTS). Fixing-first-tallying-second inverts the
+dependency (ratifying a mask spec blind to its empirical footprint).
+**Sequence:** 0.5 pre-reg (paper, ratify) ‖ #3 receipt (fire-and-forget on tower, running) → #2 tally → Defect-9 spec
+(follows the tally's numbers) → ratify → 7/8/9 batch (#1) → #3 receipt lands whenever tower finishes → #4 seam trace →
+#5 re-baseline (runs the 0.5 exam).
+**#3 needs NO ratification** — pure read on the committed engine, displacement-accounting reads pre-locked at the
+invariant ruling (removed-vs-freed P&L, fraction-in-window, win-rate delta).
+**#4 seam trace ADDITION:** don't just check the tie-break convention — COUNT its live-reachable frequency in the
+historical record (emit timestamps again). Once-a-year = documented seam; weekly = fix. fix-vs-document ruling is
+EMPIRICAL not aesthetic.
+**Phase-1 dependency registered (not tonight): #7 BEFORE #6.** (b)'s 14-concept fidelity adjudication is the certificate
+machinery's SHAKEDOWN CRUISE; its failure modes are DESIGN INPUT for the extractor build. Plan had 6->7; dependency runs
+7->6.
