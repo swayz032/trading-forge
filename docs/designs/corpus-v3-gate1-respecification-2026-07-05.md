@@ -783,3 +783,30 @@ FAILs+knowledge > passes+ignorance — is the whole thesis of the methodology, d
 **3. On the pending NEUTRAL adjudication (stated now, to be held then):** whichever way it lands, the boundary
 hypothesis DYING is as clean a result as it SURVIVING. The falsification test is the point, not the answer. A finding
 you'd only run if you wanted it to survive isn't a test.
+
+## ★★ NEUTRAL-ADJUDICATION BRIEF — FROZEN (morning item #6, insulated track) 2026-07-07
+Falsification test of the descriptive-mandatory BOUNDARY HYPOTHESIS (Ruling 1 PROVISIONAL). Insulated: revises the
+taxonomy only; classifier track stays CLOSED; spent escape stays spent.
+**Blinding (brief's first paragraph):** fresh context, NO classifier outputs / demotion labels / census tags / prior
+verdicts / knowledge that a hypothesis rides on the answer. Rater told ONLY: the task, the taxonomy, the anchor requirement.
+**1. Population — mixed + shuffled (NOT NEUTRALs-only — that telegraphs all-hard + destroys base-rate):** all 25 NEUTRAL
+targets + **5 IMPERATIVE controls (known-gate)** + **5 DESCRIPTIVE clear-scene-setting controls (known-context)** = 35
+items shuffled. Rater told "classify each condition's gate-strength from the transcript quote" — never that a census
+happened, never which items are targets. **SPLIT = 5+5 (set by claude): controls guard OPPOSITE reading directions —
+imperatives validate the SURVIVAL reading (rater CAN detect mandatory), descriptives validate the FALSIFICATION reading
+(rater doesn't OVER-call); equal weight, ≥4/5 bar each.**
+**2. Disposition schema — CLOSED taxonomy (same lesson as the (a)-(d) ruling):** four forced choices — mandatory-gate /
+optional-confluence / contextual-scene-setting / **cannot-determine-from-quote (FIRST-CLASS, COST-FREE)** — each requiring
+the VERBATIM quote span justifying it. cannot-determine is load-bearing: a rater honestly saying "this quote doesn't
+determine gate-strength" is EVIDENCE FOR the hypothesis, not a null; the brief must make it cost-free or the rater forces
+determinations = manufactured signal.
+**3. Pre-registered hypothesis read (BEFORE any disposition):** FALSIFICATION = ≥2 NEUTRALs receive confident
+mandatory-gate dispositions with clean quote anchors AND controls pass → descriptive-mandatory recoverable, wall has a
+door, finding REVISES. 0-1 → hypothesis SURVIVES (scoped: this corpus, this instrument). ≥2 threshold MIRRORS Ruling-1's
+counter-case verbatim (number fixed before tonight). **CONTROL PASS BAR (gates the read): ≥4/5 imperatives classified
+mandatory-gate AND ≤1/5 descriptives classified mandatory-gate — either fails → NEUTRAL dispositions QUARANTINED as noise.**
+**4. Afrikaans — dual-anchor rule:** any Afrikaans-source item carries BOTH original + cert-EN; disposition anchored to
+the ORIGINAL, translation as aid (the rater-flip, the program's most verdict-consequential event, turned on a translated
+reading). Rater can't work original → disposition flagged translation-mediated + down-weighted in the read.
+**Data path (F-5 rule):** anchors extracted from TRANSCRIPT quotes, never spec-side strings; the packet DECLARES its
+source. Next: build the blinded transcript-anchored packet (sealed control answer-key) → dispatch the blind rater.
