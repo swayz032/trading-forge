@@ -358,3 +358,32 @@ its adjudication is the merge gate, by design.**
 **F-2 STATUS: implementation CLOSED + committed (remediated), MERGE pending daylight flip-audit. The full honest
 sequence on record: fixed(prefix) → filed-CLOSED(premature) → blade → independent-review-FAILED → ratified-remediation
 → scope-locked-implement → independent-re-review-CONFORMANT+GREEN → implementation-CLOSED → merge-pending-flip-audit.**
+
+## ★★ F-2 MERGED — quarantine lifted, fully CLOSED (ruling on sight, 2026-07-07 morning)
+Flip-audit ruled on sight: **16:1 by flip-class** — all 7 collision-kills are genuine substring artifacts of the exact
+shape the original defect predicted (break⊂breakout, test⊂retest, high⊂higher, "2"⊂price-literals — the bug in its
+purest form); all 9 recoveries are the singularizer doing its designed job; the 1 miss is the pre-dispositioned
+"crossing" case (safe direction). **Merge gate certifies matcher behavior = collision-class signal vs singularizer
+noise, which is a property of string-PAIRS not string PROVENANCE — so the proxy caveat doesn't threaten the ruling
+("zones→zone recovers" is true whatever the string's origin).** QUARANTINE LIFTED. `b3f2c2c` is the merged/closed F-2.
+Record carries the tally as **"16:1 by flip-class, measured on the object-string proxy" — scoped, not laundered.**
+`-ing` singularizer extension REGISTERED as a candidate improvement (post-cert; code does NOT reopen — one marginal
+safe-direction case doesn't restart a cleanly-closed loop). **F-2 STATUS: FULLY CLOSED.**
+Full honest sequence: fixed(prefix) → filed-CLOSED(premature) → blade → independent-review-FAILED → ratified-remediation
+→ scope-locked-implement → independent-re-review-CONFORMANT+GREEN → implementation-CLOSED → flip-audit-16:1 → MERGED.
+
+## ★★ F-5 REGISTERED — coverage-gate reference-population integrity (F-2-adjacent finding, census-first)
+The F-2 flip-audit surfaced a bigger input-side finding that does NOT slide past as a footnote. The coverage gate
+(`classify()`) has been measuring extraction completeness against `entry_conditions[].object` fragments — COMPILER
+RESIDUE ("2", "sells", "fvg fvg" are not things an educator said) — NOT against what the speaker actually named
+(`SpeakerItem.name`), because the v3 spec schema carries no `entry_sequence`/`confluences` prose (the known schema-leak,
+`project_spec_compiler_field_leak_audit_2026_07_03`). **A correct matcher fed a proxy corpus certifies PROXY coverage.**
+F-2 fixed the matcher; F-5 is the INPUT question. **CONSEQUENCE FOR (b):** if the coverage gate as wired into (b)'s
+pipeline consumes the same leaked-schema proxy, then (b)'s "extractions must be genuinely complete" guarantee has a
+MEASUREMENT GAP that F-2's fix — however clean — cannot close, because the gate checks completeness against the WRONG
+reference set. **FIRST ACTION = CENSUS, NOT FIX (facts-first):** (1) where does `SpeakerItem.name` actually originate in
+the current pipeline; (2) what did it look like PRE-leak; (3) what would the flip table look like against a CLEAN name
+corpus if one is recoverable. If the schema-leak audit already scoped this → the census is a doc-read. Slots into the
+morning order as item #3 (after the Defect-4 census read). **F-5 also SHARPENS the NEUTRAL brief (item #6): adjudication
+anchors must come from TRANSCRIPT QUOTES, never spec-side strings — we just watched spec-side strings turn out to be
+compiler residue.**
