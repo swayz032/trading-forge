@@ -283,3 +283,32 @@ Every remaining item is behind daylight, a reserved judgment, or a review of wor
 - NEUTRAL-adjudication dispatch — waits on a drafted brief.
 There is NO executable tonight that isn't a repeat of the F-2 pattern. STOP is the ruling. The record is now honest
 about sequence.
+
+## ★★ F-2 REVIEW COMPLETE (independent accuracy-validator, fresh eyes) → REVIEW FAILED, defect-candidate (2026-07-07)
+The owed F-2 review ran via an independent accuracy-validator (separate context, did NOT write the fix — the "that's
+why you have agents" mechanism). Verdict on the 3 pre-registered checks:
+- **Check 1 (collision class real) — HOLDS.** 7/7 independent constructed cases (cross⊂across, order⊂disorder,
+  trend⊂trendy, level⊂levels, gap⊂gaping, low⊂glow, high⊂highway) confirm the OLD substring logic false-greened → the
+  mid-word bug is a real general class, and the fix genuinely closes it (verified beyond the author's range/band).
+- **Check 2 (prefix threshold vs REAL corpus name distribution) — FAILS.** The author-surfaced lead CONFIRMED material.
+  Against 456 real concept names from the 14 v3-shadow fixtures (freq-ranked ≥4-char words: entry/price/candle/range 32/
+  high 27/band 16/order 11/trend 8...), the prefix rule false-matches high-frequency real names: high→highly/highlight,
+  range→ranger, band→bandana, trend→trending, level→leveling, break→breakfast, order block→"orderly...blockage".
+  **8/10 adversarial cases FALSE POSITIVE.** The words the fix's OWN morphology test uses (band, range) ARE
+  prefix-collision words, untested in that direction.
+- **Check 3 (tests lock the CLASS) — FAILS.** The 2 F-2 tests only lock the mid-word/suffix class; the prefix-collision
+  class the fix INTRODUCES is completely unlocked (0 tests).
+- **OVERALL: (c) defect-candidate.** Same failure mode (false-green masking incomplete extraction) reintroduced via a
+  different mechanism (~80% adversarial FP on real corpus words).
+**REMEDIATION (independently specified, NOT applied — applying is another instrument code change = needs the pre-change
+ruling, NOT tired):** replace `nameInUnit`'s `t.startsWith(w)` (extraction-coverage-gate.ts:~489) with EXACT-token match
+after the file's EXISTING crude singularizer (`normalizeForDedup`'s `.replace(/\b(\w+?)s\b/g, "$1")`), or a narrow
+suffix allowlist (s/es only) — keeps genuine plurals (bands→band, levels→level), kills bandana/ranger/trending/
+breakfast/orderly. PLUS add prefix-collision regression tests (e.g. name "trend" vs unit "the trending topic" → missing;
+"order block" vs "orderly...blockage" → coverage_failed).
+**STATUS: F-2 = REVIEW-FAILED / defect-candidate. Committed `0db52b4` sits on `extraction/100pct-evidence` marked
+defect-confirmed (NOT deployed, NOT merged live — safe to hold). Do NOT revert (revert restores the mid-word bug); the
+remediation fixes BOTH. Remediation waits for the pre-change ruling + fresh (non-tired) application.**
+**LESSON, proven end-to-end: the tired fix passed 27/27 and looked clean — an independent grader found a material
+defect in minutes. The retroactive blade was NOT theater; it stopped a defect-carrying "CLOSED" from reaching (b)'s
+coverage gate. doer≠grader binds the author's own fixes; "looks clean" ≠ reviewed.**
