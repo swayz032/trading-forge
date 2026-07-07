@@ -236,3 +236,29 @@ inherits engine bar-close convention), mitigation `entry_bar > bos_bar` strict a
 centered-window-then-shift construction — target is forward reads in validity, NOT correctly-reindexed centered windows),
 and the new acceptance INVARIANT: run both engines, assert per-pair streaming-trade-set ⊆ batch-trade-set (verified, not
 claimed). Tripwire armed (any N=9 or v2-traded pair zero/nonzero flip → STOP + re-derive).
+
+## ★★ DEFECT-10 FIX BATCH — RATIFIED + LAUNCHED (2026-07-07)
+Two batch-spec additions (Fable-5, both closing holes the packet opened):
+1. **Axis derivation needs an EMPIRICAL leg (truncated-replay receipt), not just a code-read.** "Is `bos_list[j]`
+   knowable at bar j?" → for a sample of BOS events, recompute detection using ONLY data through bar j (truncated-history
+   replay) and check the BOS list is IDENTICAL to the full-history computation at index j. Identical → confirmation-
+   shifted as designed, streaming applies at j directly. Any BOS at j only-with-future-data → observability lag is real,
+   window arithmetic must carry it. **Step-1 deliverable = derivation + truncated-replay verification → operator ratify
+   → then code.** (Same move as F-2's flip-enumeration: the derivation ships with its own receipt.)
+2. **⊆ invariant read pre-registered (two failure flavors, separately labeled):** per-pair `streaming_trades ⊆
+   batch_trades`. (a) a trade in streaming ABSENT from batch = fix-logic BUG (monotone validity can't admit what batch
+   rejected — Fact 1 guarantees) → FAILS the batch. (b) identical trade sets with DIFFERENT entry bars = expected/fine
+   for entries at +4 onward, SUSPECT for entries formerly inside the window. Re-review checks BOTH, separately labeled —
+   without the split, "⊆ holds" could read green while entry-timing drift hides inside it.
+**Batch sequence (launched):** axis-derivation + truncated-replay receipt → OPERATOR RATIFY → streaming implementation
+(breaker + unicorn on the ratified axis) + mitigation `entry_bar > bos_bar` strict assert + `test_audit_a12` causality-
+lint extension (whitelist centered-window-then-shift) → re-review (split ⊆ invariant verified per-pair) → paired
+batch-vs-streaming impact reads vs `c948bcd` timestamps (fraction + win-rate-delta on +1..+3 = Defect-10 materiality
+RECEIPT, documentation not precondition). Tripwire ARMED (any N=9 or v2-traded zero/nonzero flip → STOP + reopen
+reference under contradicting-evidence protocol).
+
+## STANDING LAUNCH PROTOCOL (register — held 3× running) 2026-07-07
+The F-2 line — **staged, not started; ratification NEVER inferred from the packet landing** — has held three times
+(F-2 remediation, timestamp-emit, Defect-10). No longer a lesson; it is the PROGRAM'S STANDING LAUNCH PROTOCOL: any
+instrument-touching change stages its full spec, produces its ratification packet, and waits for EXPLICIT ratification
+before code — the packet landing is never the authorization. Write into the discipline docs when next touched. → also memory.
