@@ -399,6 +399,24 @@ function parseEnvWeights(): Record<string, number> | null {
  * Returns a map of factor → resolved weight (NOT renormalised here — caller decides
  * whether to renormalise when a partial override set is provided).
  */
+// deep-scan signal-gen F-3 (2026-07-06): a per-strategy or env weight OVERRIDE map is not guaranteed to sum to
+// 1.00 — a partial or mis-entered map (or a stale 9-factor map merged into the 11-factor defaults) silently
+// skews the weighted confluence score, changing the effective 0.72 threshold with NO signal to the operator.
+// The existing design contract is that override weights are used RAW (operator owns making them sum to 1.00),
+// so we do NOT renormalize (that would change graded behavior). Instead we make the skew LOUD: warn when an
+// override doesn't sum to 1.00 so it can never quietly move the threshold. Code defaults already sum to 1.00.
+function warnOnWeightSumDrift(weights: Record<string, number>, source: string): Record<string, number> {
+  const sum = Object.values(weights).reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
+  if (Math.abs(sum - 1.0) > 1e-6) {
+    logger.warn(
+      { source, sum },
+      "confluence-score: weight override does NOT sum to 1.00 — the effective 0.72 threshold is skewed; " +
+        "used as-is (raw-override contract), but the operator should correct the map to sum to 1.00",
+    );
+  }
+  return weights;
+}
+
 function resolveWeights(strategy: ScoringStrategy): {
   weights: Record<string, number>;
   source: WeightedScoreResult["weightsSource"];
@@ -410,7 +428,7 @@ function resolveWeights(strategy: ScoringStrategy): {
     for (const [factor, cfg] of Object.entries(CODE_DEFAULTS)) {
       merged[factor] = strategy.confluence_score_weights[factor] ?? cfg.weight;
     }
-    return { weights: merged, source: "strategy_override" };
+    return { weights: warnOnWeightSumDrift(merged, "strategy_override"), source: "strategy_override" };
   }
 
   // Priority 2: env var
@@ -420,7 +438,7 @@ function resolveWeights(strategy: ScoringStrategy): {
     for (const [factor, cfg] of Object.entries(CODE_DEFAULTS)) {
       merged[factor] = envWeights[factor] ?? cfg.weight;
     }
-    return { weights: merged, source: "env_default" };
+    return { weights: warnOnWeightSumDrift(merged, "env_default"), source: "env_default" };
   }
 
   // Priority 3: code defaults
@@ -766,10 +784,21 @@ function evalVwapAlignment(
 function evalKillzoneActive(
   ctx: SignalContext,
 ): { satisfied: boolean; reason: string } {
-  const tsDate: Date =
+  // deep-scan signal-gen F-4 (2026-07-06): fail CLOSED on a missing bar timestamp instead of a Date.now()
+  // wall-clock fallback. The old `?? Date.now()` silently broke replay determinism — a replayed historical bar
+  // with no timestamp would evaluate the killzone against the CURRENT wall-clock, not the bar's real time. No
+  // live caller omits bar.timestamp today; this guards a future replay/backfill context (killzone is a time
+  // window, so an unknown time must not claim "active").
+  const tsRaw: Date | null =
     ctx.timestampUTC instanceof Date
       ? ctx.timestampUTC
-      : new Date(ctx.bar.timestamp ?? Date.now());
+      : ctx.bar.timestamp != null
+        ? new Date(ctx.bar.timestamp)
+        : null;
+  if (tsRaw == null || Number.isNaN(tsRaw.getTime())) {
+    return { satisfied: false, reason: "killzone_timestamp_unavailable" };
+  }
+  const tsDate: Date = tsRaw;
 
   const zones = activeKillzones(tsDate);
   if (zones.length > 0) {
