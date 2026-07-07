@@ -212,3 +212,27 @@ generate_event_mask`'s documented contract). **Default path (no explicit `event_
 supply an event_calendar (→ default path never hit → latent), or can prod hit the default (→ live-impacting)? (2) if
 production hits it, this is entry-suppressing (safe-direction) but corrupts backtest edge measurement. Candidate finding,
 mechanism-confirmed by the reviewer, production-reachability TRIAGE PARKED.
+
+## ★★ RATIFICATION FOUR-FACT PACKET (launch gate) 2026-07-07
+Form-level streaming-validity fix RATIFIED (Fable-5); launch gated on these four facts:
+- **FACT 1 — polarity: ALL POSITIVE-EXISTENTIAL, no vetoes.** Breaker (`bos_found=True` iff matching BOS), unicorn ±1
+  (`has_displacement=True` iff matching displacement), unicorn ±5 (FVG must-exist-within filter) — all validity-ENABLING.
+  → the ⊆ + safe-direction properties HOLD; monotone false→true; veto-inversion risk does NOT materialize. **Load-bearing,
+  CLEAN.**
+- **FACT 2 — provenance: TWO AXES confirmed (your suspicion right).** `broken_at` (order_flow.py:110/221) = break-EVENT
+  bar; `bos` (market_structure.py:86 `detect_bos(df, swings)`) = derived from the confirmation-time-shifted SWING layer.
+  The ±3 spans break-event-time vs confirmation-derived-BOS-time. **Fix consequence:** apply streaming on the axis where
+  `bos_list[j]` is OBSERVABLE; re-derive the window arithmetic there, NOT naively on `broken_at`. Exact `bos_list[j]`
+  observability (already-confirmation-shifted → knowable at j, or needs data past j?) = the fix owner's FIRST-LINE
+  derivation, ratified before code.
+- **FACT 3 — decision-timing:** backtester.py:72-93 next-bar-fill (signal from bar N data, np.roll +1 → fill N+1).
+  Decision uses data THROUGH t (close). → pins `min(t, broken_at+3)`, NOT `min(t-1, +3)`.
+- **FACT 4 — source:** windows are IMPLEMENTATION SLACK around definitional "at the break" (breaker docstring "validated
+  by BOS at the break point") / "during the displacement" (unicorn ordered sequence), uncited to ICT. → streaming
+  PRESERVES the definition (removes the forward peek the slack allowed), does NOT redefine.
+**NET: facts 1/3/4 clean; fact 2 shapes the fix spec (observability-axis application + re-derived arithmetic = fix
+owner's first line). Ratification packet complete.** Plus the form-level ratified elements: streaming class (monotone,
+inherits engine bar-close convention), mitigation `entry_bar > bos_bar` strict assert, causality-lint (whitelist the
+centered-window-then-shift construction — target is forward reads in validity, NOT correctly-reindexed centered windows),
+and the new acceptance INVARIANT: run both engines, assert per-pair streaming-trade-set ⊆ batch-trade-set (verified, not
+claimed). Tripwire armed (any N=9 or v2-traded pair zero/nonzero flip → STOP + re-derive).
