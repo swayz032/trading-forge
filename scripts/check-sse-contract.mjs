@@ -25,14 +25,16 @@
 // broadcast NOR an n8n-emitted type still falls into "unknown/dead".
 //
 // EXIT BEHAVIOUR:
-//   exit 1 (HARD FAIL) — any safety-critical event (matching SAFETY_RE below) is
-//     server-only (broadcast but NOT in frontend catalog). These events represent
-//     immediate trading risk (kill-switch, DLL breach, outage, position breach) and
-//     MUST be handled in the frontend with sticky persistent toasts. Silence is a
-//     production safety gap.
-//   exit 0 (ADVISORY) — non-safety drift remains advisory because some server events
-//     are broadcast via a variable (not a literal) and would false-positive here.
-//     The value is that the contract is VISIBLE + diffable in CI.
+//   deep-scan observability F-1 (2026-07-06) — HONESTY CORRECTION. The "exit 1 HARD FAIL when a safety-critical
+//   event is server-only" behaviour below applies ONLY when the frontend SSE catalog EXISTS. That catalog
+//   (amber-vision-main/src/types/sse-events.ts) was DELETED with the old React SPA, so this script now hits the
+//   early `existsSync(CATALOG)` SKIP (exit 0) on EVERY run — it enforces nothing today. Do NOT read a green
+//   check:sse-contract as "safety-critical SSE events are handled". They are NOT verified here. The ACTUAL
+//   operator-alerting path for kill-switch/DLL/halt/breach is now (a) Discord notifyCritical/notifyWarning at the
+//   gate sites and (b) Slumhouse's 10s poll of /api/production/status — NOT SSE-to-UI toasts. REAL FOLLOW-UP:
+//   repoint CATALOG at a typed Slumhouse SSE contract, OR replace this gate with one that asserts every
+//   safety-critical SSE broadcast has a paired Discord notify. Until then this is a documented no-op, not a guard.
+//   (The stale exit-1 logic below is retained only so a future catalog repoint re-activates it.)
 
 import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
