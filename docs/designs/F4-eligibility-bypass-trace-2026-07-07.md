@@ -223,3 +223,12 @@ materiality resolves; (4) F-2 under the blade; (5) look-ahead materiality. **Pas
 pass-3 Gate-3 dispatch waits on (1) AND (2).** Morning queue = 5 rulings, one possibly track-killing (imperative-vs-
 descriptive), one possibly engine-changing (macro-mask). The stop is HONORED: the factual frontier is exhausted, all
 that remains is judgment, and judgment waits for daylight.
+
+## DEFECT-4 BLAST-RADIUS CENSUS (fire-and-forget, night-shift) — LAUNCHED + SELF-CONTRADICTED
+`docs/replay-results/defect4-blast-radius-census-2026-07-07.json` written. **It failed its own reality check:** the
+estimate (every multi-year class run >>$1 → uncompletable) is CONTRADICTED by the fact that tonight's Gate-3 class-path
+runs COMPLETED (0 reconciliation errors over the pinned ~6y window). **Morning triage step 2 MUST reconcile this
+BEFORE trusting any blast-radius claim** — candidate resolutions: estimate over-predicts / class-path applies roll cost
+to NEITHER net_pnl nor equity (no divergence → Defect-4 mischaracterized) / ae7a2560's $52.67 had a different root
+cause. The census is a flagged ESTIMATE, not a fact. This is itself a useful night-shift yield: the blast-radius
+question is NOT settled and the Defect-4 characterization may need revisiting — added to morning step 2.

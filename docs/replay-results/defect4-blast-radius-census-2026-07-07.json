@@ -1,0 +1,86 @@
+{
+ "census": "defect-4 blast radius (roll cost omitted from class-path equity loop)",
+ "generated": "night-shift 2026-07-07",
+ "note": "ESTIMATE \u2014 conservative per-roll = ticks\u00d7tick$\u00d7base_contracts; real cost varies by actual position size/roll dates. FACTS for morning triage, not a verdict.",
+ "n_concepts": 14,
+ "concepts": [
+  "75DJN5UVQnw",
+  "c8VLqF0XDR4",
+  "FqxEKDxemtI",
+  "HfZTCZTDfWk",
+  "jlShztsY3oA",
+  "ktkqq7QsN9Q",
+  "KXWRtV2LOVc",
+  "m-G1ag77aVc",
+  "N7uP9V0Iktc",
+  "NMUd0oX_7Pg",
+  "oDLt9zh33LE",
+  "snNkQSyWX4k",
+  "sVkmZklJDHI",
+  "UBvfsImdI2U"
+ ],
+ "per_symbol_window": [
+  {
+   "symbol": "MES",
+   "window": "gate3_pinned(~6y)",
+   "years": 6,
+   "rolls": 24,
+   "per_roll_usd": 22.5,
+   "accumulated_roll_usd": 540.0,
+   "exceeds_$1_tolerance": true,
+   "would_error_in_class_equity_loop": true
+  },
+  {
+   "symbol": "MES",
+   "window": "mode_ab_full(~11y)",
+   "years": 11,
+   "rolls": 44,
+   "per_roll_usd": 22.5,
+   "accumulated_roll_usd": 990.0,
+   "exceeds_$1_tolerance": true,
+   "would_error_in_class_equity_loop": true
+  },
+  {
+   "symbol": "MNQ",
+   "window": "gate3_pinned(~6y)",
+   "years": 6,
+   "rolls": 24,
+   "per_roll_usd": 9.0,
+   "accumulated_roll_usd": 216.0,
+   "exceeds_$1_tolerance": true,
+   "would_error_in_class_equity_loop": true
+  },
+  {
+   "symbol": "MNQ",
+   "window": "mode_ab_full(~11y)",
+   "years": 11,
+   "rolls": 44,
+   "per_roll_usd": 9.0,
+   "accumulated_roll_usd": 396.0,
+   "exceeds_$1_tolerance": true,
+   "would_error_in_class_equity_loop": true
+  },
+  {
+   "symbol": "MCL",
+   "window": "gate3_pinned(~6y)",
+   "years": 6,
+   "rolls": 72,
+   "per_roll_usd": 360.0,
+   "accumulated_roll_usd": 25920.0,
+   "exceeds_$1_tolerance": true,
+   "would_error_in_class_equity_loop": true
+  },
+  {
+   "symbol": "MCL",
+   "window": "mode_ab_full(~11y)",
+   "years": 11,
+   "rolls": 132,
+   "per_roll_usd": 360.0,
+   "accumulated_roll_usd": 47520.0,
+   "exceeds_$1_tolerance": true,
+   "would_error_in_class_equity_loop": true
+  }
+ ],
+ "headline": "[SUPERSEDED BY CONTRADICTION_FLAG \u2014 do not use headline until reconciled]",
+ "CONTRADICTION_FLAG": "\u2605 The estimate (all runs >>$1 -> uncompletable) is CONTRADICTED by observation: tonight Gate-3 ran class-path backtests on all 14 concepts over the pinned ~6y window and COMPLETED with 0 reconciliation errors (post-Defect-6). So either (a) the per-roll estimate over-predicts by orders of magnitude, (b) the class-path does not actually apply RollSpreadCost to net_pnl either (roll=$0 both sides -> no divergence -> Defect-4 mischaracterized), or (c) ae7a2560s $52.67 had a DIFFERENT root cause than roll-cost. RECONCILE FIRST at morning triage step 2 BEFORE trusting the blast-radius headline. The census is an ESTIMATE that failed its own reality check \u2014 a fact, flagged, not resolved tired."
+}
