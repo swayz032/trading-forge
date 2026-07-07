@@ -502,3 +502,36 @@ Two parts, the tally reshaped both:
   source (date + release-time + event-type match) BEFORE the mask consumes the calendar. Plus: no code that reads the
   calendar changes behavior until the verification passes.
 **AWAITING RATIFY-ON-SIGHT of Part B spec → then Part B implements (agent-loop) → Part A → batch.**
+
+## ★★ PART B RATIFIED-AS-AMENDED — 3 additions (invisible-error-class extensions) 2026-07-07
+1. **Mask must match on event TIMESTAMPS, never DATES — the trap inside the trap.** If the consuming mask keys on
+   date-granularity ("is this bar's DATE an event date?"), a full-precision backfill flattens to ALL-DAY masking — the
+   decisive pair's 00:05 ET entry would be suppressed by a 14:00 announcement 13h later (causally absurd, silently
+   rewrites the tally's own conclusion). **Part B acceptance gains: confirm the consuming mask's window semantics
+   (timestamp-anchored ±N min vs date-flattened). Parity = match run_backtest + live `calendarBlocked` semantics → TRACE
+   THEIRS FIRST; if theirs are date-flattened too → shared-convention finding to RULE on, not silently inherit.** This is
+   a Part-A design input (mask window defined in MINUTES around the release timestamp).
+2. **Scheduled releases ONLY; unscheduled/emergency OUT-OF-SCOPE + registered (known limitation).** 2020 = trap year:
+   March 3 + March 15 (Sunday) emergency FOMC cuts outside the 14:00 convention. FRED scheduled-meeting series may omit
+   or nonstandard-time them. A mask keyed to scheduled events = DEFINED instrument; partial ad-hoc inclusion = UNDEFINED.
+   Hand-check sample MUST include March 2020 to confirm the EXCLUSION behaves as specced (not half-ingesting a Sunday cut).
+3. **Hand-check INDEPENDENCE (doer≠grader for DATA — F-2 with dates for tokens):** the ~10-date verification is performed
+   by an agent that did NOT build the backfill, against PRIMARY sources directly (not the backfill's own formatted
+   output). Sample composition: March-2020 boundary + ≥1 DST-transition-adjacent date (CPI early-Nov/mid-March, ET-vs-UTC
+   slip) + one EIA holiday-shifted release (EIA moves crude off uniform Wed-10:30 around federal holidays) + remainder
+   spread across the 4 years.
+**LOOP: mask-semantics trace (Part-A design input, doing FIRST) → Part B backfill + verification fixture → INDEPENDENT
+hand-check (composition above) → Part A implements against full calendar w/ window convention matched to run_backtest/live.**
+
+## ★ MASK-SEMANTICS TRACE RESULT (Part-A design input) — TIMESTAMP-anchored, addition-#1 risk cleared 2026-07-07
+The consuming mask is TIMESTAMP-anchored (±30 min around release), NOT date-flattened — on BOTH sides, parity-built:
+- **Live** `paper-signal-service.ts:2284` — "FOMC/CPI/NFP ±30min blackout"; :134 "blackout windows are ±30 min".
+- **Backtest** `src/engine/context/blackout_gate.py` — `BlackoutWindow [start,end)` in ET, docstring: "PARITY with
+  paper-signal-service.ts blackout windows … so expectancy is consistent across IS and live." Calendar tuple shape =
+  `(date, time_et, name)`; `economic_calendar.py` default "SIT_OUT ±30 min".
+**→ Addition #1 RESOLVED: no date-flattening. A full-precision release-timestamp backfill is honored (±30-min windows,
+not all-day). The decisive pair's 00:05 ET entry is correctly NOT masked (not within ±30 min of any release).**
+**PART A design (locked by this trace): the class-path mask uses the SAME ±30-min timestamp window around the backfilled
+release times, matching `blackout_gate.py` + live. Part B feeds the calendar source (STATIC_EVENTS / calendar-sync) from
+which the ±30-min windows derive.** (No shared-convention finding to rule on — the existing convention is already the
+correct timestamp-anchored one.)
