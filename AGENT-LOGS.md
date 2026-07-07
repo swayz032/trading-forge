@@ -4,6 +4,19 @@
 
 ---
 
+### Session Log — 2026-07-06 All-domains-to-9 loop — Round 7: 5-AGENT parallel sweep of remaining surfaces + specialist fix wave
+
+**Mission:** operator "run 5 agents over the codebase" + "don't stop until PROOF the codebase is clean" — grade the surfaces prior waves hadn't independently covered (migrations, governor/production, observability/audit, n8n, cross-system contracts, unswept LLM-guard services), fix every real CRITICAL/HIGH, land FF-only, then an independent from-zero certification = the proof.
+**Graded from zero (bands):** migrations-schema (6), governor-production (5), observability-audit (5), n8n-relay (4), cross-system-contracts (4→5), unswept-services (6). Recon/audit-chain/crypto/kill-switch-core/DSR/compiler-contract verified SOLID.
+**Fixed + landed FF-only (`b7dac14`→`db2b294`, ~15 fixes):**
+- **CRITICAL:** pine-export live-order gateway bypass (missing LIVE_ORDER_GATEWAY_URL → direct-post to TradersPost skipping kill-switch/compliance/firm-cap → now fail-CLOSED for archetype+paperRouting; `a1c9e64`); MC payout-denial gate DEAD (TS read `per_firm[firm].consistency_fail_rate` Python never merged there → 40%-consistency block never fired → merged from firm_survival, `db2b294`); n8n drift-detector false-green on deactivated workflows + no-diff live-workflow overwrite + backup-cron-never-wired (`d6e9493`); macro-gate null-regime silent fail-open for index longs (`b7dac14`).
+- **HIGH:** agent-service Layer-2 auditor fail-open→closed; bias-state regime-vocab (4 institutional playbooks → UNKNOWN disabled the preferred_regimes filter → mapped); frankenstein/adversarial parsePythonJson validation (gates a real promotion); strategy-assignment MFFU collaborative-trading now BLOCKS (was insert-and-warn); prompt-evolution+meta-optimizer+evolution-service autonomous loops now gate on auto_patch_loop_enabled kill switch (were ungated — operator's phone-tap halt didn't stop them); dsl-sanitizer missing 2 Wave-25 archetypes (Python hard-rejected the DSL); commission constant 0.37→0.62 reconcile; migrations immutability guard (edit to an applied migration → boot crash-loop, no CI guard); relay token timingSafeEqual.
+- **MED:** composite-health digest coverage floor (HEALTHY on 8/13 dark); backtester margin/roll audit-payloads dropped by allowlist; SSE-check false-green docstring honesty.
+**Verification:** every fix tsc-clean + relevant vitest/pytest GREEN + isolation CLEAN, committed FF-only. 3 specialist fixers (n8n-orchestration, pine-export, general gate/contract) worked isolated worktrees; landed via cherry-pick onto the real phase-0 line (they'd rebased onto a STALE local phase-0 ref `5ad9620` — §11b local-ref-divergence trap — parent re-landed clean). Independent from-zero CERTIFICATION of the 15 fixes dispatched (proof gate).
+**Carry-forward (LOW/doc):** governor dead Python-CLI routes (500s, observability); strategy-assignments route 409 mapping (block enforced, generic 500 msg); QUANTUM_RL_KILL_SWITCH doc-default 0.30-vs-"30.0" hazard; 2 stale pine-export test files (assert old behavior, don't import real service); governance_labels.dsr_passed latent disconnect (masked). **OPERATOR CONFIRM:** SSE-to-UI intentionally retired for Discord+poll (then repoint check:sse-contract + drop continue-on-error).
+
+---
+
 ### Session Log — 2026-07-06 All-domains-to-9 loop — Round 6: FULL-CODEBASE from-zero sweep (waves 2-4, ~10 CRITICAL + 11 HIGH + 8 MED)
 
 **Mission:** operator "/loop until every inch is 9" — independent from-zero grading of EVERY cluster (doer≠grader), fix every real CRITICAL/HIGH on the spot, land FF-only on `hardening/phase-0`.
