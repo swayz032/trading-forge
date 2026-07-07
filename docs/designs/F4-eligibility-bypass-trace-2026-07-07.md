@@ -403,3 +403,21 @@ rollover day pay any roll → total tiny, not ~$540.
   corpus re-baseline equity metrics AFFECTED. Fix = add `_roll_cost_usd_cls` to the class equity loop (mirror net_pnl),
   **pre-re-baseline tier with Defects 7/8/9** — nothing ships before that batch. Census JSON headline corrected to the
   reconciled verdict.
+
+## ★ F-5 PROVENANCE CENSUS (morning item #3, facts-only) — feared gap is a REVIEW-TIME ARTIFACT 2026-07-07
+Traced where `SpeakerItem.name` (the coverage gate's reference population) actually originates in the pipeline:
+- **`SpeakerItem.name` = TRANSCRIPT-enumerated.** `runCoverageEnumeration(transcript)` (extraction-coverage-gate.ts:311)
+  enumerates named items from the transcript via the windowed LLM pass; `runCoverageGate` calls it (:568). Pipeline
+  (decision-atom.ts:7): **Transcript → Clause → SpeakerItem → DecisionAtom → spec.** SpeakerItem is UPSTREAM of the spec;
+  the leaked `entry_conditions[].object` strings are DOWNSTREAM.
+- **Gate comparison corpus = the 8-field extraction** (`ExtractionSnapshot` = entry_sequence/confluences prose = the
+  extractor output), NOT the compiled v3 spec.
+- **The flip-audit's `entry_conditions[].object` proxy was forced by the OFFLINE reviewer's cache** (spec files, no
+  live enumeration output) — a REVIEW-TIME artifact, NOT the production data path.
+- **The schema-leak (spec compiler drops prose → entry_conditions) is REAL but DOWNSTREAM of the coverage gate** — the
+  gate never consumes the compiled spec. So (b)'s "extractions genuinely complete" guarantee does NOT carry the
+  measurement gap F-5 feared: in production the gate measures transcript-named items vs prose extraction, correct-by-design.
+**F-5 DISPOSITION (recommended, operator rules): LOW.** Residual to fully close: a cheap WIRING-TRACE confirming (b)'s
+runtime hands the gate the 8-field extraction and never the compiled spec (the gate's TYPE + W3.1 role say so; provenance
+traced, exact (b) call-site not). F-5 also still SHARPENS the NEUTRAL brief (item #6): adjudication anchors from
+transcript quotes, never spec-side strings — validated here (transcript IS the correct upstream source).
