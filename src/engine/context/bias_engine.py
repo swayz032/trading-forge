@@ -1040,6 +1040,25 @@ def compute_bias(
     daily_bars_for_narrative is the full daily DataFrame for PDH/PDL context.
     current_bar_idx is the exec-TF bar index for traceability in replay.
 
+    CALLER CONTRACT (deep-scan #22, verified 2026-07-06 — confirmed, not
+    fixed; see htf_narrative.py::compute_htf_narrative docstring for the
+    full explanation): `intraday_bars` is forwarded to
+    `compute_htf_narrative()` UNSLICED. `current_bar_idx` is NOT used to
+    truncate it — it indexes a DIFFERENT frame (the exec-TF DataFrame) and
+    is stored only for replay traceability
+    (`HtfNarrative.computed_at_bar_idx`). The caller of `compute_bias()`
+    MUST pass an `intraday_bars` frame that already ends at "now" (no bars
+    at or after the current bar) — otherwise `daily_dealing.current_quadrant`
+    (which reads `intraday_bars["close"][-1]` as "current price") and the
+    Asian/London/NY session-window filters can see future price action,
+    the same class of look-ahead leak FIX 1 closed for
+    `compute_htf_context()`'s four_h_df/one_h_df. As of this note there is
+    NO production caller that passes `intraday_bars` into `compute_bias()`
+    (`context_runner.py` and `backtester.py` both omit it) — this path is
+    presently dormant/inert in the shipped engine. Any future wiring (e.g.
+    a live-paper narrative cron) MUST pre-truncate `intraday_bars` to the
+    current bar before calling.
+
     Returns DailyBiasState with net_bias (-100..+100) and bias_confidence (0..1).
     """
     # Derive direction hint from HTF trend for pd_location scoring
