@@ -56,6 +56,7 @@ from src.engine.firm_config import (
     FIRM_RULES,
 )
 from src.engine.indicators.core import compute_atr
+from src.engine.indicators.market_structure import detect_bos, detect_swings
 from src.engine.monte_carlo import optimal_block_length
 
 # ─── Audit Result Collector ────────────────────────────────────────────────
@@ -1197,6 +1198,164 @@ def test_cat12_source_of_truth_conflicts():
                fix_pr=("Resolve source-of-truth conflicts: " + "; ".join(failures)))
     else:
         record(12, "Source-of-truth conflicts", "PASS", evidence)
+
+
+# ─── Defect-10 regression lint: forward-window validity must be bar-gated ──
+
+
+def test_defect10_no_forward_window_gates_without_valid_from():
+    """Defect-10 lint: forward-scanning validity windows in breaker/unicorn/
+    mitigation MUST feed a per-bar `valid_from` gate, never a single per-zone
+    boolean that admits ALL retests regardless of WHEN within the window the
+    qualifying event actually occurred (the bug: an entry at broken_at+1
+    admitted by a BOS that only appears at broken_at+3 — its own future).
+
+    This is a read-only static lint, not one of the 12 A12 categories — it
+    does not call record()/participate in the pass/fail-count report.
+
+    WHITELIST: `market_structure.py::detect_swings()`'s centered-window-then-
+    shift construction (`rolling_max(..., center=True)` + `+ half_window`) is
+    a different, already-safe shape — the shift is applied AFTER detection so
+    the swing simply isn't *visible* until the confirmation window completes.
+    It is never scanned by this lint and is not flagged.
+    """
+    findings = []
+    failures = []
+
+    breaker_src = _read("src/engine/strategies/breaker.py")
+    unicorn_src = _read("src/engine/strategies/unicorn.py")
+    mitigation_src = _read("src/engine/strategies/mitigation.py")
+    market_structure_src = _read("src/engine/indicators/market_structure.py")
+
+    # 1) Fix presence: breaker.py and unicorn.py must compute a streaming
+    #    valid_from and use it to gate entries.
+    for name, src in [("breaker.py", breaker_src), ("unicorn.py", unicorn_src)]:
+        has_valid_from = "valid_from" in src
+        findings.append(f"{name} contains valid_from streaming-gate construction: {'OK' if has_valid_from else 'MISSING'}")
+        if not has_valid_from:
+            failures.append(f"{name} missing valid_from — forward-window validity is not bar-gated (Defect-10 regression)")
+
+    # 2) Literal Defect-10 shape: a symmetric forward/backward scanning window
+    #    range(max(0, X - k), min(n, X + k)). This shape is EXPECTED to exist
+    #    (it's how the earliest qualifying event is found) — the lint only
+    #    requires that whenever it appears, the file also contains the
+    #    valid_from bar-gate that consumes its result. It must NEVER appear
+    #    bare (i.e. feeding only a batch boolean) in these strategy files.
+    forward_window_pattern = re.compile(r"range\(\s*max\(0,\s*\w+\s*-\s*\d+\),\s*min\(n,\s*\w+\s*\+\s*\d+\)\s*\)")
+    for name, src in [("breaker.py", breaker_src), ("unicorn.py", unicorn_src)]:
+        windows = forward_window_pattern.findall(src)
+        findings.append(f"{name} forward-scanning windows (range(max(0,X-k), min(n,X+k))): {len(windows)} found")
+        if windows and "valid_from" not in src:
+            failures.append(
+                f"{name} contains a forward-scanning validity window with no valid_from "
+                "bar-level gate anywhere in the file — Defect-10 class look-ahead"
+            )
+
+    # 3) Anti-pattern regression guard: the OLD bare per-zone booleans
+    #    (bos_found / has_displacement) must never reappear WITHOUT a
+    #    co-located valid_from gate in the same file.
+    old_boolean_gate_bare = bool(re.search(r"bos_found\s*=\s*True", breaker_src)) and "valid_from" not in breaker_src
+    findings.append(f"breaker.py bare bos_found boolean gate (no valid_from): {'YES (BAD)' if old_boolean_gate_bare else 'no'}")
+    if old_boolean_gate_bare:
+        failures.append("breaker.py uses a bare per-zone boolean (bos_found) with no valid_from bar-gate — Defect-10 regression")
+
+    old_disp_gate_bare = bool(re.search(r"has_displacement\s*=\s*True", unicorn_src)) and "valid_from" not in unicorn_src
+    findings.append(f"unicorn.py bare has_displacement boolean gate (no valid_from): {'YES (BAD)' if old_disp_gate_bare else 'no'}")
+    if old_disp_gate_bare:
+        failures.append("unicorn.py uses a bare per-zone boolean (has_displacement) with no valid_from bar-gate — Defect-10 regression")
+
+    # 4) mitigation.py: explicit strict entry_bar > bos_bar gate must be present.
+    mitigation_gate = "i <= bos_bar" in mitigation_src
+    findings.append(f"mitigation.py explicit entry_bar > bos_bar gate: {'OK' if mitigation_gate else 'MISSING'}")
+    if not mitigation_gate:
+        failures.append("mitigation.py missing explicit strict entry_bar > bos_bar gate")
+
+    # 5) WHITELIST documentation check (informational, never fails): confirm
+    #    the exonerated swing-layer construction still looks like itself, so
+    #    a future refactor that accidentally changes its shape is visible in
+    #    the audit evidence trail rather than silently drifting.
+    swing_whitelisted = "center=True" in market_structure_src and "+ half_window" in market_structure_src
+    findings.append(
+        f"market_structure.py detect_swings centered-window-then-shift "
+        f"(WHITELISTED, never scanned by this lint): {'present' if swing_whitelisted else 'ABSENT — re-check whitelist scope'}"
+    )
+
+    evidence = "\n  - ".join([""] + findings)
+    assert not failures, "Defect-10 lint failures:" + evidence
+
+
+# ─── L=0 observability-axis contract (truncated-replay fixture) ────────────
+
+
+def test_l0_axis_truncated_replay_contract():
+    """L=0 observability-axis contract fixture.
+
+    The breaker/unicorn streaming-validity fix (Defect-10) indexes `valid_from`
+    directly by bar with NO half_window/lag offset, because `bos_list[j]` is
+    provably knowable at bar j using only data through bar j (an empirical
+    truncated-replay receipt confirmed this axis, L=0, 78/78). This test is
+    the reproducible miniature version of that receipt: recompute
+    detect_bos(detect_swings(df)) on truncated frames df[:j+1] for every BOS
+    event bar j found on the full history, and assert the value at j is
+    IDENTICAL whether computed from the full series or from data truncated
+    to end exactly at j.
+
+    Mimics the DataFrame construction in test_market_structure.py. Lightweight
+    polars only — no vectorbt/backtester import (avoids the documented tower
+    JIT-import hang under pytest collection when anything transitively pulls
+    in the vectorbt-JIT backtester).
+    """
+    from datetime import datetime, timedelta
+
+    def _make_ohlcv(closes: list[float]) -> pl.DataFrame:
+        n = len(closes)
+        dates = [datetime(2023, 1, 1) + timedelta(hours=i) for i in range(n)]
+        opens = [c - 0.5 for c in closes]
+        highs = [c + 1.0 for c in closes]
+        lows = [c - 1.0 for c in closes]
+        return pl.DataFrame({
+            "ts_event": dates,
+            "open": opens,
+            "high": [float(h) for h in highs],
+            "low": [float(l) for l in lows],
+            "close": [float(c) for c in closes],
+            "volume": [10000] * n,
+        })
+
+    def _make_zigzag(n: int = 80) -> list[float]:
+        closes = []
+        base = 100.0
+        for i in range(n):
+            cycle = i % 8
+            if cycle < 5:
+                closes.append(base + cycle * 3.0)
+            else:
+                closes.append(base + (8 - cycle) * 2.0)
+            if cycle == 7:
+                base += 5.0
+        return closes
+
+    closes = _make_zigzag(80)
+    df_full = _make_ohlcv(closes)
+
+    swings_full = detect_swings(df_full, lookback=5)
+    bos_full = detect_bos(df_full, swings_full).to_list()
+
+    check_indices = [i for i, v in enumerate(bos_full) if v is not None]
+    assert len(check_indices) > 0, "fixture produced zero BOS events — widen the zigzag amplitude/period"
+
+    mismatches = []
+    for j in check_indices:
+        df_trunc = df_full[: j + 1]
+        swings_trunc = detect_swings(df_trunc, lookback=5)
+        bos_trunc = detect_bos(df_trunc, swings_trunc).to_list()
+        if bos_trunc[j] != bos_full[j]:
+            mismatches.append((j, bos_full[j], bos_trunc[j]))
+
+    assert not mismatches, (
+        "re-derive the observability axis before trusting streaming validity. "
+        f"Truncated-replay mismatches (bar, full-history value, truncated value): {mismatches}"
+    )
 
 
 # ─── Report Generation ─────────────────────────────────────────────────────

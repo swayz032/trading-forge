@@ -97,11 +97,18 @@ def _find_breakers(closes, ob_indices, ob_tops, ob_bottoms, ob_is_bullish, n_bar
 
 
 @njit(cache=True)
-def _compute_breaker_signals(closes, b_tops, b_bottoms, b_broken_at, b_is_bull, zone_age_limit, n_bars):
+def _compute_breaker_signals(closes, b_tops, b_bottoms, b_broken_at, b_is_bull, zone_age_limit, n_bars, b_valid_from):
     """Generate entry_long/entry_short boolean arrays from breaker zones.
 
     Iterates over breakers (small, ~100-300), vectorized per-breaker scan over bars.
     Total: O(m × age_limit) not O(n × m).
+
+    Defect-10 fix: `b_valid_from[k]` is the earliest bar where the breaker's
+    confirming BOS actually appeared (streaming validity — computed in
+    breaker.py, direct bar-indexing, no half_window/lag offset). A retest
+    at bar i is only admitted once i >= valid_from — this is strictly
+    entry-SUPPRESSING relative to the old "any BOS in window admits the
+    whole batch" behavior (never widens the admitted bar set).
     """
     entry_long = np.zeros(n_bars, dtype=np.bool_)
     entry_short = np.zeros(n_bars, dtype=np.bool_)
@@ -112,8 +119,11 @@ def _compute_breaker_signals(closes, b_tops, b_bottoms, b_broken_at, b_is_bull, 
         top = b_tops[k]
         bot = b_bottoms[k]
         is_bull = b_is_bull[k]
+        valid_from = b_valid_from[k]
 
         for i in range(start, end):
+            if i < valid_from:
+                continue
             c = closes[i]
             if bot <= c <= top:
                 if is_bull:
@@ -221,8 +231,19 @@ def detect_breaker(df: pl.DataFrame, obs: pl.DataFrame) -> pl.DataFrame:
     return pl.DataFrame({"index": idx, "top": top, "bottom": bot, "type": types, "broken_at": broken})
 
 
-def compute_breaker_signals(df: pl.DataFrame, breakers: pl.DataFrame, zone_age_limit: int = 30):
+def compute_breaker_signals(df: pl.DataFrame, breakers: pl.DataFrame, zone_age_limit: int = 30,
+                             valid_from: np.ndarray | None = None):
     """Generate entry signals from breaker zones. Numba-compiled, O(m × age_limit).
+
+    Args:
+        valid_from: Optional per-breaker array (same length/order as `breakers`)
+            giving the earliest bar index at which each breaker's confirming
+            BOS was actually observed (Defect-10 streaming-validity fix —
+            computed by the caller in breaker.py via a direct, non-lagged
+            bar scan). Retests before `valid_from[k]` are suppressed. When
+            omitted, defaults to `broken_at` (a no-op — the entry loop only
+            ever scans i > broken_at anyway), preserving legacy behavior for
+            any caller that has not adopted per-bar validity gating.
 
     Returns (entry_long, entry_short) as numpy boolean arrays.
     """
@@ -232,15 +253,22 @@ def compute_breaker_signals(df: pl.DataFrame, breakers: pl.DataFrame, zone_age_l
 
     b_types = breakers["type"].to_list()
     is_bull = np.array([t == "bullish_breaker" for t in b_types])
+    broken_at = breakers["broken_at"].to_numpy().astype(np.int64)
+
+    if valid_from is None:
+        valid_from_arr = broken_at
+    else:
+        valid_from_arr = np.asarray(valid_from, dtype=np.int64)
 
     return _compute_breaker_signals(
         df["close"].to_numpy(),
         breakers["top"].to_numpy(),
         breakers["bottom"].to_numpy(),
-        breakers["broken_at"].to_numpy().astype(np.int64),
+        broken_at,
         is_bull,
         zone_age_limit,
         len(df),
+        valid_from_arr,
     )
 
 

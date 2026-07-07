@@ -140,29 +140,51 @@ class BreakerStrategy(BaseStrategy):
 
             # Filter breakers: BOS must exist near the break point
             # A valid breaker has BOS confirming the break of the OB
+            #
+            # Defect-10 fix (streaming validity, no look-ahead): the OLD code
+            # computed a single per-breaker boolean "any matching BOS in
+            # [broken_at-3, broken_at+3]" and then let that boolean gate ALL
+            # retest entries on the zone — so an entry at broken_at+1 could be
+            # admitted by a BOS that only appears at broken_at+3 (its own
+            # future). The fix instead records `valid_from` = the EARLIEST bar
+            # in the window carrying a matching BOS (or never-valid if none),
+            # and threads it into compute_breaker_signals so every candidate
+            # entry bar is individually gated on `t >= valid_from`. Direct
+            # bar-indexing — no half_window/lag offset (L=0 axis; see the
+            # test_l0_axis_truncated_replay_contract fixture in
+            # test_audit_a12.py). This is strictly entry-SUPPRESSING relative
+            # to the old behavior: it can only narrow the set of admitted
+            # retest bars, never widen it (streaming_trades ⊆ batch_trades).
             if len(breakers) > 0:
                 bos_list = bos.to_list()
                 valid_indices = []
+                valid_from_list = []
                 for b_idx in range(len(breakers)):
                     broken_at = int(breakers["broken_at"][b_idx])
                     breaker_type = str(breakers["type"][b_idx])
-                    # Check if BOS occurred at or near the break point (±3 bars)
-                    bos_found = False
+                    # Earliest matching BOS in the ±3 window, ascending scan
+                    # so the first hit found IS the earliest (never-valid
+                    # sentinel = None when no match exists anywhere in window).
+                    valid_from = None
                     for check_bar in range(max(0, broken_at - 3), min(n, broken_at + 4)):
                         if bos_list[check_bar] is not None:
                             # Bullish breaker = bearish OB broken = bearish BOS at break
                             if breaker_type == "bullish_breaker" and bos_list[check_bar] == "bullish":
-                                bos_found = True
+                                valid_from = check_bar
                                 break
                             elif breaker_type == "bearish_breaker" and bos_list[check_bar] == "bearish":
-                                bos_found = True
+                                valid_from = check_bar
                                 break
-                    if bos_found:
+                    if valid_from is not None:
                         valid_indices.append(b_idx)
+                        valid_from_list.append(valid_from)
 
                 if valid_indices:
                     validated_breakers = breakers[valid_indices]
-                    entry_long_raw, entry_short_raw = compute_breaker_signals(df, validated_breakers, self.zone_age_limit)
+                    valid_from_arr = np.array(valid_from_list, dtype=np.int64)
+                    entry_long_raw, entry_short_raw = compute_breaker_signals(
+                        df, validated_breakers, self.zone_age_limit, valid_from_arr
+                    )
                 # If no valid breakers after BOS filter, entry arrays stay zeros
 
         # Apply exit logic: ATR stop/target + opposite signal

@@ -357,6 +357,16 @@ def _compute_mb_signals(
         end = min(bos_bar + zone_age_limit, n)
 
         for i in range(start, end):
+            # Strict entry_bar > bos_bar gate (explicit, defensive): entry is
+            # only valid strictly AFTER the BOS confirmation bar, matching
+            # this module's documented contract ("entry only valid after
+            # this" — see _find_mitigation_blocks docstring). `start` already
+            # implies this (bos_bar + 1), but the check is made explicit here
+            # so a future change to `start`'s derivation can't silently
+            # reintroduce a same-bar-or-earlier entry (Defect-10 class).
+            if i <= bos_bar:
+                continue
+
             curr_atr = atr_vals[i]
             if curr_atr <= 0:
                 continue
