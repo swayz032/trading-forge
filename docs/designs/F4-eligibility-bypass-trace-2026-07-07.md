@@ -445,3 +445,31 @@ scrutiny as production ones. (F-5's caveat did this voluntarily; the register ma
 ## ITEM #2 CONFIRMATION (Defect-4 census, re-surfaced): reconciled (a) — see reconciliation entry above. Real blast
 radius = long-history Mode A/B (~11y) equity ONLY; Gate-3/pass-3 (trade-count, ~6y) UNAFFECTED; fix = add
 `_roll_cost_usd_cls` to the class equity loop, pre-re-baseline tier with Defects 7/8/9. Census headline corrected in the JSON.
+
+## ★★ DEFECT-9 TALLY (design input, run BEFORE the fix) — decisive answer + a bigger finding 2026-07-07
+Deliverable: `docs/replay-results/defect9-macro-window-tally-2026-07-07.json`.
+- **DECISIVE: `75DJN5UVQnw_MES` is CLEAN — does NOT flip.** Single trade enters 2020-06-01 00:05 ET (+$9.02, n_trades=1
+  parity-clean vs reference baseline); falls in NO macro window (00:05 ET nowhere near 08:30/10:00/14:00 event times, and
+  the date precedes any calendar event). **→ Defect-9 DOWNGRADES: verdict-variable (Defect-5-class) → DEFENSE-IN-DEPTH.**
+  A real parity gap (class-path lacks the mask run_backtest + live `calendarBlocked` have), but it changed NO verdict at
+  the decisive pair. (Corrects the morning-triage's Defect-5-class provisional tag — the empirical tally grounded it.)
+- **★★ BIGGER FINDING (the tally's real yield) — the macro calendar is EMPTY before 2024-01-02.** STATIC_EVENTS earliest
+  = 2023-02-01 FOMC; engine-authoritative earliest = 2024-01-02. **The macro mask is STRUCTURALLY INERT over ~3.5 of the
+  corpus's ~6 years (2020-2023 trades are un-maskable — no calendar data to mask against).** Affects ANY macro-aware
+  backtest logic over the historical window, not just this mask — and the re-baseline's 2020-2026 Mode A/B has no macro
+  events pre-2024.
+
+## DEFECT-9 SPEC — STAGED (informed by the tally, for operator ratify; NOT implemented — standing launch protocol)
+Two parts, the tally reshaped both:
+- **Part A — add the macro-blackout mask to `run_class_backtest`** (parity with run_backtest + live `calendarBlocked`):
+  entry-suppressing on macro-window dates. DEFENSE-IN-DEPTH tier (not verdict-variable per the tally). Small footprint
+  over the corpus (see Part B). Same agent-loop: spec → ratify → scope-locked implement → independent review.
+- **Part B — the REAL priority: backfill the economic calendar to 2020.** The mask (and all macro-aware logic) is inert
+  pre-2024 without it. Per memory `reference_economic_calendar_apis`: we have FRED/BLS/EIA keys → FOMC/CPI/NFP dates are
+  authoritatively backfillable to 2020. Without Part B, Part A masks almost nothing over the historical corpus, and the
+  re-baseline can't exercise macro logic over 2020-2023. **Part B is arguably the higher-value half.**
+- **Tier + sequencing note:** Defect-9 (defense-in-depth) is LESS urgent than its morning tag; but the calendar-backfill
+  (Part B) touches the re-baseline's validity over the full window — the operator should rule whether Part B lands with
+  the 7/8/9 batch (so the re-baseline exercises real macro data) or is a separate pre-re-baseline item.
+**AWAITING RATIFY: (1) Defect-9 = defense-in-depth (tier confirmed?), (2) Part A + Part B scope, (3) does Part B
+(calendar backfill) block the re-baseline or run parallel?**
