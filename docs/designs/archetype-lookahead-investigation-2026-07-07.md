@@ -38,3 +38,23 @@ Facts recorded (checkable). Materiality = judgment = parked (not resolved tired)
 look-ahead "fix" that tightens the window without confirming materiality could silently change every archetype
 backtest — same class as the H5 structural-stop-parity flag (default OFF until A/B'd). This is pre-live must-fix
 TRIAGE data, not a fix.
+
+## COMPLETION — mitigation.py + unicorn.py traced (2026-07-07)
+- **mitigation.py — likely CLEANEST.** `_identify_mitigation_blocks` documents `bos_bar` = "bar index where
+  BOS confirmed the MB (**entry only valid after this**)". The design GATES entry to after the confirmation bar —
+  the look-ahead guard is explicit. (Design intent verified via the contract comment; line-level enforcement of
+  "entry index > bos_bar" NOT yet asserted — a 1-test check for the fix owner.)
+- **unicorn.py — same narrow forward-window candidate as breaker.** Displacement validation
+  `range(max(0, b_broken_at-1), min(n, b_broken_at+2))` (±1 forward) + FVG proximity `abs(f_bar - b_broken_at) > 5`
+  (±5, includes forward). Both reach PAST the break point; unicorn is anchored `formed_at = b_broken_at`.
+
+## FINAL VERDICT (all 3 traced, doer≠grader)
+- **Grader's "swing window extends past the entry bar" = FALSE POSITIVE across all 3** — the shared swing layer is
+  shifted/clean ("eliminates lookahead bias"); mitigation additionally gates entry-after-BOS explicitly.
+- **Real (narrow) candidates, materiality PARKED:** breaker ±3-forward BOS-near-break window; unicorn ±1 displacement
+  + ±5 FVG forward windows. These are SMALL (1–5 bars) — plausibly immaterial or rounding-tolerant, plausibly a real
+  edge-inflator if entries land in-window. The fix owner (backtest-core) resolves materiality: (a) assert entry index
+  > confirmation bar in each; (b) A/B the window bound (forward vs trailing-only) on real data before any change.
+- **Grade correction:** "F-1/F-2/F-3 = 3 CRITICAL look-aheads" is OVERSTATED as written. Corrected: 0 confirmed
+  CRITICALs; 2 narrow forward-window CANDIDATES (breaker, unicorn) pending materiality; mitigation likely clean. This
+  is the doer≠grader value — a claimed CRITICAL is claims until the code is checked, and here the code mostly checks out.
