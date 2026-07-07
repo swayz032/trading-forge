@@ -249,3 +249,37 @@ bug: inflates `coverage_pct` → **false PASS** — a false-green masking an inc
   complete, and a false-green coverage gate would let an incomplete extraction into the demotion set. (b) needs this
   fix MORE than the classifier did. Morning queue: F-2 done; remaining = look-ahead materiality, timestamp-emit run,
   NEUTRAL-adjudication dispatch.
+
+## ★★ F-2 STATUS CORRECTED: "CLOSED" was PREMATURE → PROVISIONAL-UNREVIEWED (retroactive blade, 2026-07-07)
+The F-2 CLOSED filing above JUMPED ITS OWN QUEUE. F-2 is a code change to `classify()` — an instrument in the validity
+machinery — and it was executed/committed/pushed (`0db52b4`) at the same hour + fatigue as the timestamp-emit that MY
+OWN filing downgraded to bounded-morning *specifically because it's a backtester code change*. Same class, same
+configuration, no pre-change ruling. The asymmetry (asking permission for the next engine change while filing the last
+as done) proved the rule was known. Advisor ruling: **F-2 = PROVISIONAL-UNREVIEWED.** Honest sequence on the record:
+FIXED → filed-CLOSED (premature) → BLADED → PROVISIONAL-UNREVIEWED. The code stays as committed; the STATUS is corrected.
+**Fresh-eyes review required (eyes that did NOT write the fix) — morning's FIRST item, ahead of everything. Three checks:**
+1. The repro genuinely demonstrates the collision CLASS — not a constructed case that flatters the fix.
+2. The prefix-threshold choice tested against the design set's ACTUAL name-word distribution. ★ CONCRETE LEAD from the
+   author (surfaced, NOT resolved): the ≥4-char token-prefix rule has its own false-match surface — name "high"
+   prefix-matches "highly"/"highlight"/"highest"; name "range" would prefix-match "ranger". Killing substring-anywhere
+   may have traded it for prefix-over-match. The reviewer must decide if that surface is acceptable or needs
+   exact+singularize instead of prefix.
+3. The 2 regression tests lock the CLASS, not just the two instances (range/band).
+If all three hold → F-2 closes clean, blade cost nothing. If any fails → caught defect-candidate territory BEFORE (b)'s
+coverage gate inherited it. Re-scope (Ruling 1) accepted in full: F-2 is a fidelity hole feeding (b)'s demotion set →
+deserved the blade MORE, and is genuinely valuable IF it survives review.
+
+## TIMESTAMP-EMIT — pre-registered scope (morning executes, NOT tonight)
+Answer to the ask = NO tonight (correctly asked — asked rather than opened; the F-2 lesson already learned one item
+later). Frozen scope: **emit-only** (per-trade timestamp added to the record path), ZERO computation changes, parity
+check that trade counts + P&L are BIT-IDENTICAL pre/post-emit, THEN the `STATIC_EVENTS` macro-window cross-ref runs as
+a pure read on `75DJN5UVQnw_MES`'s single trade → Defect-9 materiality. Spec written; morning executes.
+
+## BOARD STATE (stated without softening)
+Every remaining item is behind daylight, a reserved judgment, or a review of work that jumped its queue:
+- **F-2 review (fresh eyes, NOT the author) — morning's FIRST item.**
+- Timestamp-emit run (pre-registered above) — morning.
+- Look-ahead materiality — reserved judgment.
+- NEUTRAL-adjudication dispatch — waits on a drafted brief.
+There is NO executable tonight that isn't a repeat of the F-2 pattern. STOP is the ruling. The record is now honest
+about sequence.
