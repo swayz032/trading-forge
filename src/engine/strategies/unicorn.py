@@ -92,9 +92,13 @@ class UnicornStrategy(BaseStrategy):
             b_broken_at = int(breakers["broken_at"][b_idx])
 
             # Validate displacement at the break point
-            # Check a small window around the break for displacement
+            # Check a small window around the break for displacement. The forward
+            # bound is capped at b_broken_at + 1 (EXCLUSIVE) because the Unicorn Zone
+            # built from this breaker gates entries starting at b_broken_at + 1 (see
+            # "formed >= i: continue" below) — reading displacement at or beyond that
+            # bar would decide zone existence using the zone's own future.
             has_displacement = False
-            for d in range(max(0, b_broken_at - 1), min(n, b_broken_at + 2)):
+            for d in range(max(0, b_broken_at - 1), min(n, b_broken_at + 1)):
                 d_val = disp_list[d]
                 if d_val is not None:
                     # Displacement direction must match breaker direction
@@ -122,8 +126,13 @@ class UnicornStrategy(BaseStrategy):
                 f_top = float(fvgs["top"][f_idx])
                 f_bottom = float(fvgs["bottom"][f_idx])
 
-                # FVG should form near the break point (within a few bars)
-                if abs(f_bar - b_broken_at) > 5:
+                # FVG should form near the break point, but never AFTER the earliest
+                # bar this zone can be entered on (b_broken_at + 1). The displacement
+                # that breaks the OB precedes/coincides with the break, so allow up to
+                # 5 bars BEFORE b_broken_at but zero bars after — a symmetric +/-5
+                # window would let zone existence read FVG data from the zone's own
+                # future (up to b_broken_at + 5), which is the look-ahead bug.
+                if f_bar > b_broken_at or f_bar < b_broken_at - 5:
                     continue
 
                 # Check overlap: min(tops) > max(bottoms)

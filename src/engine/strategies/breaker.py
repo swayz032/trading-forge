@@ -146,9 +146,13 @@ class BreakerStrategy(BaseStrategy):
                 for b_idx in range(len(breakers)):
                     broken_at = int(breakers["broken_at"][b_idx])
                     breaker_type = str(breakers["type"][b_idx])
-                    # Check if BOS occurred at or near the break point (±3 bars)
+                    # Check if BOS occurred at or near the break point (up to 3 bars
+                    # before broken_at). The forward bound is capped at broken_at + 1
+                    # (EXCLUSIVE) because compute_breaker_signals() opens the earliest
+                    # entry window at broken_at + 1 — reading bos_list beyond that would
+                    # validate a zone using bars from its own future (look-ahead bias).
                     bos_found = False
-                    for check_bar in range(max(0, broken_at - 3), min(n, broken_at + 4)):
+                    for check_bar in range(max(0, broken_at - 3), min(n, broken_at + 1)):
                         if bos_list[check_bar] is not None:
                             # Bullish breaker = bearish OB broken = bearish BOS at break
                             if breaker_type == "bullish_breaker" and bos_list[check_bar] == "bullish":
