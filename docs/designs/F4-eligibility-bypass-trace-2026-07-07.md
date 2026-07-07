@@ -312,3 +312,25 @@ remediation fixes BOTH. Remediation waits for the pre-change ruling + fresh (non
 **LESSON, proven end-to-end: the tired fix passed 27/27 and looked clean — an independent grader found a material
 defect in minutes. The retroactive blade was NOT theater; it stopped a defect-carrying "CLOSED" from reaching (b)'s
 coverage gate. doer≠grader binds the author's own fixes; "looks clean" ≠ reviewed.**
+
+## F-2 REMEDIATION LOOP — ratified + dispatched (2026-07-07)
+**Spec RATIFIED (Fable-5, inverted protocol):** exact-token match + the file's existing singularizer
+(`normalizeForDedup`'s `\b(\w+?)s\b→$1`) + prefix-collision regression tests. Deciding property = failure direction:
+exact-token loses verb-form morphology → false-MISSING (re-check cost), NOT false-COVERED (false-cert cost); a validity
+gate must fail toward suspicion.
+**Attack (Tonio) — ratification STANDS, 1 refinement.** Counter-case (false-MISSING cry-wolf → override) has a real
+edge: the singularizer bounds PLURALS but NOT verb forms (`retested`/`crossing`/`swept` miss their noun names → verb-form
+false-MISSING is a genuine residual). But it does NOT read stronger than the rebuttal: cry-wolf needs the noise LARGE
+AND UNMEASURED, and it's measured (flip-enumeration) + merge-gated + safe-direction. Refinement: the flip-enumeration
+must CATEGORIZE each COVERED↔MISSING flip — collision-correction / plural-preserved / verb-form-false-MISSING — so the
+daylight audit adjudicates the counter-case's exact mechanism, not a blended total.
+**Loop conditions (Fable-5):** implementer gets the spec VERBATIM, scope-locked to `nameInUnit` + singularizer wiring +
+the specified tests (any "while I'm in here" VOIDS the run). Re-review agent: FRESH context, NO access to implementer's
+reasoning, verifies CHARACTER-LEVEL conformance + runs the suite + enumerates+CATEGORIZES every corpus verdict-flip
+(facts only). **Binary acceptance:** zero spec deviations + full suite green → implementation CLOSES tonight; ANY
+deviation/addition/flagged-judgment/caveat → automatic PROVISIONAL, morning resolves (gray = hold, by rule).
+**Branch stays QUARANTINED tonight either way; MERGE waits on the daylight flip-audit** (verb-form-false-MISSING must be
+collision-noise-tolerable, not gate-crying-wolf). **PRECEDENT LINE:** this loop works ONLY because F-2 verification is
+statically mechanical (code diff + test suite = binary). Timestamp-emit / look-ahead / NEUTRAL do NOT inherit it —
+their verification is an empirical/validity READ, which waits for daylight regardless of whose hands type. Agent loops
+replace tired HANDS, not validity READS.
