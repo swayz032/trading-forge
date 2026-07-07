@@ -9,6 +9,7 @@ import {
 import { eq, and, desc } from "drizzle-orm";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
 import { logger } from "../lib/logger.js";
+import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
 
 const router = Router();
 
@@ -144,9 +145,22 @@ router.get("/rulesets/:firm", async (req: Request, res: Response) => {
 });
 
 // ─── PATCH /api/compliance/rulesets/:id/verify ──────────────
-// Human approves an updated ruleset
+// Human approves an updated ruleset. deep-scan routes F-1 (CRITICAL 2026-07-06): this clears
+// complianceRulesets.driftDetected, which paper-execution-service.ts reads as a LIVE entry-blocking gate — so
+// this route SILENTLY UNBLOCKS trading for a firm. Previously it (a) sat behind only the shared API_KEY (used by
+// crons/n8n/scripts, not just the operator), (b) hardcoded verifiedBy:"human" regardless of who called it, and
+// (c) wrote NO audit row. Now: require Office operator authority (cookie / loopback-direct), and write a
+// correlationId-stamped audit row so the human sign-off is real + reconstructable.
 router.patch("/rulesets/:id/verify", async (req: Request, res: Response) => {
+  if (!requireOfficeControlAuthority(req, res, "compliance.ruleset_verify_denied")) return;
   const { id } = req.params;
+  const correlationId = (req as unknown as { id?: string }).id ?? null;
+
+  const [priorRuleset] = await db
+    .select({ status: complianceRulesets.status, driftDetected: complianceRulesets.driftDetected, firm: complianceRulesets.firm })
+    .from(complianceRulesets)
+    .where(eq(complianceRulesets.id, String(id)))
+    .limit(1);
 
   const updated = await db
     .update(complianceRulesets)
@@ -165,6 +179,20 @@ router.patch("/rulesets/:id/verify", async (req: Request, res: Response) => {
     res.status(404).json({ error: "Ruleset not found" });
     return;
   }
+
+  void db
+    .insert(auditLog)
+    .values({
+      action: "compliance.ruleset_verified",
+      entityType: "compliance_ruleset",
+      entityId: String(id),
+      decisionAuthority: "human",
+      input: { rulesetId: String(id), prior_status: priorRuleset?.status ?? null, prior_driftDetected: priorRuleset?.driftDetected ?? null, firm: priorRuleset?.firm ?? null } as Record<string, unknown>,
+      result: { status: "verified", driftDetected: false } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    })
+    .catch((err: unknown) => logger.warn({ err, rulesetId: id }, "compliance.ruleset_verified audit insert failed (non-blocking)"));
 
   const response: ComplianceVerifyResponse = {
     ruleset: updated[0],
@@ -421,16 +449,24 @@ router.post("/drift/:firm/cascade", idempotencyMiddleware, async (req: Request, 
 });
 
 // ─── PATCH /api/compliance/drift/:id/resolve ────────────────
+// deep-scan routes F-2 (HIGH 2026-07-06): resolvedBy used to be taken verbatim from req.body — a caller could
+// spoof the attribution of who resolved a compliance-drift event, and no audit row was written. Now: require
+// Office operator authority, set resolvedBy to the trusted "human" (never a client string; the guard confirmed
+// the operator), keep only the operator's notes, and write a correlationId-stamped audit row.
 router.patch("/drift/:id/resolve", async (req: Request, res: Response) => {
+  if (!requireOfficeControlAuthority(req, res, "compliance.drift_resolve_denied")) return;
   const { id } = req.params;
-  const { resolvedBy, notes } = req.body;
+  const correlationId = (req as unknown as { id?: string }).id ?? null;
+  const notes = typeof (req.body as { notes?: unknown } | undefined)?.notes === "string"
+    ? (req.body as { notes: string }).notes.slice(0, 2000)
+    : null;
 
   const updated = await db
     .update(complianceDriftLog)
     .set({
       resolved: true,
       resolvedAt: new Date(),
-      resolvedBy: resolvedBy || "human",
+      resolvedBy: "human",
       notes,
     })
     .where(eq(complianceDriftLog.id, String(id)))
@@ -440,6 +476,20 @@ router.patch("/drift/:id/resolve", async (req: Request, res: Response) => {
     res.status(404).json({ error: "Drift event not found" });
     return;
   }
+
+  void db
+    .insert(auditLog)
+    .values({
+      action: "compliance.drift_resolved",
+      entityType: "compliance_drift_log",
+      entityId: String(id),
+      decisionAuthority: "human",
+      input: { driftId: String(id), notes } as Record<string, unknown>,
+      result: { resolved: true } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    })
+    .catch((err: unknown) => logger.warn({ err, driftId: id }, "compliance.drift_resolved audit insert failed (non-blocking)"));
 
   res.json({ drift: updated[0], message: "Drift resolved." });
 });
