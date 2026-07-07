@@ -81,3 +81,23 @@ gates entry-after-BOS); grade corrected 3-CRITICAL → 0-confirmed + 2 narrow fo
 unicorn ±1/±5), materiality parked. F-4 (eligibility): corroborates known deep-scan-#21 carry-forward, mechanism-trace
 parked, zero current exposure. Net: the grader surfaced real triage value, but its CRITICAL grades were overstated as
 written — exactly why claims get checked against code before they are believed.
+
+## LOOK-AHEAD REACHABILITY TRACE (breaker) — the ±3 candidate is REACHABLE (fact, 2026-07-07)
+- `compute_breaker_signals` (`order_flow.py:224`, numba) fires retest entries within `zone_age_limit` (default 30)
+  bars of `broken_at` — so entries ARE reachable at broken_at+1, +2, +3.
+- The BOS-near-break validity (`breaker.py:141`) used BOS in [broken_at-3, broken_at+3]; that per-breaker validity
+  boolean gates ALL retest entries on the zone.
+- **Therefore an early-retest entry at broken_at+k (k∈{1,2,3}) was admitted using a validity flag that read
+  bos_list[up to broken_at+3] — bars ≥ the entry bar → a REACHABLE forward look-ahead of ≤3 bars.** Entries at
+  broken_at+4..+30 use validity fully in their past (no leak).
+- **UPGRADE: the ±3 forward-window candidate is CONFIRMED REACHABLE, not immaterial-by-construction.** Bounded: ≤3
+  bars, only the first ~3 of a 30-bar retest window (retest entries often cluster early, so the affected fraction is
+  NOT negligible-by-inspection — that's the measurement).
+- **MATERIALITY still PARKED (judgment):** magnitude of edge inflation (A/B the validity window forward-vs-trailing on
+  real corpus data; measure the fraction of entries in broken_at+1..+3 and their win-rate delta). unicorn ±1/±5 is
+  structurally analogous (FVG retest later; ±1 displacement + ±5 FVG forward windows) — same reachability class,
+  not separately traced.
+- **Net correction to grader:** the "swing window" mechanism is a false positive, BUT a REAL (small, ≤3-bar) reachable
+  look-ahead exists in breaker's ±3 forward BOS-validation window (and analogously unicorn). The grader was
+  directionally right that a look-ahead exists, wrong on the mechanism (validation window, not swing window) and
+  silent on magnitude (bounded ≤3 bars). NOT dismissed; NOT confirmed-CRITICAL; magnitude is the parked ruling.
