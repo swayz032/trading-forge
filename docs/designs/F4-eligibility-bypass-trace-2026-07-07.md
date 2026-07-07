@@ -92,3 +92,21 @@ Traced the comment's other "still apply" claims (DLL, daily-trade-cap, lunch/PM,
 - **Backtest-side separate gates (does the backtester run its own DLL/max-trades outside apply_eligibility_gate) NOT
   traced — a factual follow-up.** Exposure still 0/120 unregistered, 0 PAPER+. Pass-3 impact still NIL (A/B cancels).
 **F-4 skip-enumeration now PRECISE. The grader's "all 9 / zero filtering" is corrected to a specific partial-loss set.**
+
+## BACKTEST-SIDE SEPARATE GATES CONFIRMED — F-4 net severity collapses (fact, 2026-07-07)
+Backtester has its OWN separate enforcement outside `apply_eligibility_gate`: `_apply_max_trades_per_day`
+(backtester.py:2751) + `apply_dll_halt` (DLL circuit breaker at the entry-signal layer, per :952-953). So the
+comment's "DLL / max-trades still run in BOTH backtest + live" is CONFIRMED on both sides.
+- **KEY CONSEQUENCE:** the in-gate `max_trades_hit`(:204) + `daily_loss-reduce`(:278) that the bypass skips are
+  DUPLICATES of the separate gates that still fire. So max-trades and DLL are **NOT actually lost** for unregistered —
+  the separate gates catch them. Only the redundant in-gate copy is skipped.
+- **DEFINITIVE NET — what an unregistered strategy GENUINELY loses (no separate gate covers it):**
+  1. The **A+ quality overlay** (kill-zone / liquidity-sweep / 3R / confluence≥4 / bias-confidence) — the eligibility
+     gate's UNIQUE function; no separate gate → GENUINELY LOST.
+  2. The **structural-stop-ceiling SKIP semantics** (Check 0) — execution-cap ceiling still bounds the stop, but the
+     §4 "skip the trade if structure needs a wider-than-ceiling stop" behavior is lost (taken-with-clamped-stop instead).
+  Everything else (max-trades, DLL, lunch, macro-blackout, execution-cap) STILL APPLIES via separate gates.
+- **F-4 CRITICAL → precisely characterized:** NOT "zero eligibility filtering / bypasses all 9 checks." It is a
+  NARROW, LATENT (0/120 unregistered, 0 PAPER+), 0-exposure loss of {A+ quality overlay + ceiling-SKIP semantics} for
+  any future unregistered strategy — with all loss/compliance gates intact. Pass-3 impact NIL (A/B cancels). Materiality
+  of the two genuine losses = PARKED. This is the doer≠grader endpoint: a claimed CRITICAL, traced to a narrow latent gap.
