@@ -13549,6 +13549,31 @@ DLL base SETTLED **$1,340**. Memory: [[reference_fabricated_mock_masks_null_colu
 
 ---
 
+### Session Log — 2026-07-07 Deep-Scan #22 — whole-codebase scan + 2 fix waves (landed phase-0) + independent cert in flight
+
+**Mission:** operator `/goal` — real loop, don't stop until every domain/subsystem is independently band 9 (backtest engine emphasized). Whole-codebase deep scan for bugs/blockers/wiring, institutional-grade, no lying.
+
+**Baseline hazard found FIRST (surfaced to operator):** local `hardening/phase-0` had DIVERGED — **97 commits BEHIND origin, 11 ahead on a Corpus-v3 research tangent**, with an abandoned merge-conflict index (UU `test_walk_forward.py`, UD `lifecycle-sse-correlation.test.ts`) + ~35 worktrees (8 locked). Scanned a CLEAN isolated worktree pinned to origin `0ae2e17` instead (grading rule 4: measure current artifacts). **`main` is 342 commits behind `origin/hardening/phase-0`** (last merge ~deep-scan #14, `3916174`); operator confirmed main IS the deploy branch → deployed backend is stale (pre-live by design so no live-capital risk). Operator directive: land ds22 fixes on phase-0, THEN merge phase-0→main.
+
+**Scan:** 11 read-only auditors across 10 domains (backtest / paper+gates / observability / cross-system+CI / accuracy-false-green / factory / quantum / pine / n8n / autonomy / frontend+data). Result: **3 CRITICAL, 6 HIGH, ~9 MED, ~10 LOW.** Verified-clean large + real (archetype lockstep, framework-overlay authority, kill-switch 9-layer, ratio_adj/timezone, Office auth, B14 ruin-CI now genuinely live, reconciliation expected_pnl null-guard, HMAC idempotency).
+
+**Work completed — 2 fix waves, doer≠grader, isolated worktrees off origin SHA, FF-landed:**
+- **Fix-wave-1 → `phase-0 @ 48b27ff`** (engine `fb7500f/44c36d0/81fc39d` + TS `73d8fcb..b054fc3`): CRITICAL #1 HTF look-ahead leak (`htf_context.py::_filter_htf_bars_before`, failure-inject test FAIL→PASS); CRITICAL #2 CPCV bypass on class path (`run_walk_forward_class` honors WF_MODE=cpcv + `_run_walk_forward_cpcv_class`); 3 RED CI gates → GREEN (system-map cron register, family-grade-postscript wrap `paper-execution:4831`, migration-immutability re-freeze **+ wired into ci.yml**); correlationId threaded onto ~25 SSE broadcasts (incl. kill-switch); gate-contract-keys 4/7→7/7; parseFloat `||50_000` sizing fail-open → `parseAccountNumericOrDefault`.
+- **Fix-wave-2 → `phase-0 @ 1dc8b4b`** (`70e04ab/894af00/5c94493/94a3ff9/1dc8b4b`): **CRITICAL #3** — Path-C/A confluence was dead-on-arrival (graduator wrote `use_weighted_scoring`/`confirming_indicators` at wrong JSONB location; every graduated strategy silently fell to legacy Path B + could fail-close-block entries) → now stamped inside `config.entry_quality` (used REAL `confirmingIndicators` objects, not bare v11 tags, to avoid Path A fail-close), round-trip test FAIL→PASS; factory HIGHs (ARCHETYPE_IMPLIED_FACTORS→canonical-11, factor_quality requires realCount≥2); frontend fabricated MC histogram REMOVED (deleted `synthesizeBell`, 3 honest states, no re-randomizing shape reaches operator) + honest gate pills; quantum dead-code removed (`rl-training-cpcv-gate.ts` orphan) + `normalizeRLConfidence` consolidated to single source; cleanup (n8n retired-model drift check + key-regex, 12-day-stale Pine test fixed, pine `direct`-mode escape-hatch guarded, BW alert postscript, contract-specs ES/NQ/CL→micro landmine closed, wfe-gate docstring); CLAUDE.md §12 CPCV-purge pointer corrected → `db_loader.py`.
+
+**Verification:** combined tree GREEN — 5 CI gates cold-run EXIT 0 (production-isolation, 2026-compliance, system-map:check, family-grade-postscript, gate-contract-keys) + migration-immutability 3/3 + 88 cross-track vitest + engine 483-pass targeted sweep / 7007 collected-0-errors. tsc: only the 1 pre-existing unrelated `cme-outage...beforeEach` error (A/B confirmed via stash). NOTE (verification hygiene): `node node_modules/.bin/vitest` is a SHELL wrapper node can't parse → false-RED; and piping a gate through `tail` masks its exit — use `node node_modules/vitest/vitest.mjs run` and capture the command's own `$?`.
+
+**Certification (doer≠grader):** 3 independent `accuracy-validator` graders dispatched against `1dc8b4b` (verify via 2 non-overlapping paths + failure-injection, hunt vacuous-green). **Verdicts IN FLIGHT at session pause (weekly usage ending).** No band is VERIFIED-9 until they report — do NOT claim "all 9" yet.
+
+**Carry-forward for next session (in priority order):**
+1. Collect the 3 cert verdicts (agents: engine+factory, ci+observability, frontend+quantum+cleanup). Close any surviving/new HIGH they surface (loop continues per /goal).
+2. **Merge `hardening/phase-0` (1dc8b4b) → `main`** (operator-approved) — main DIVERGED (342 commits), expect conflicts; resolve, re-run 3 gates, FF/merge. This is what makes all fixes reach the stale deploy branch.
+3. Git hygiene: reconcile the diverged LOCAL `hardening/phase-0` (97 behind/11 Corpus-v3 ahead + abandoned conflict index) — park Corpus-v3 on its own branch, re-sync local to origin; prune ~35 stale + 8 locked worktrees; remove ds22 fix worktrees (tf-ds22-fix-*, tf-ds22-f*-*, tf-ds22-scan) once merged.
+4. Honest residuals (may cap a domain <9 until closed): backtest FIX-1 is day-cache-granular not per-bar; frontend has no HTML/inline-JS regression harness; A1 is a behavior-change-at-scale (watch paper-signal volume); dead top-level `config.confirming_indicators` string-array still unread (out-of-scope, flag).
+5. LIVE-INFRA operator items (Railway, out of repo): verify `/__ocg` (:18789) has its own auth (ungated by relay proxy token); repoint retired-model nodes → `gemma4:e4b-it-qat` in live n8n; confirm `OLLAMA_PROXY_TOKEN` header on live n8n nodes; verify Kasa smart-plug physically installed before any PAPER+ promotion.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
