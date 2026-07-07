@@ -170,3 +170,29 @@ Axis 2 = the run_backtest/run_class_backtest fork (≥6 historical defects). Cur
 + parity guards). **Registered as a named architectural liability on the POST-CERT refactor track** alongside the
 run_class_backtest sibling refactor. Ceiling skip-vs-clamp (Axis-1) is the one that already bites; it is the canary.
 Materiality/prioritization = parked (judgment). Facts only per charter.
+
+## ★★ AXIS-2 SURVEY — CANDIDATE 7TH/8TH DEFECTS (STOP-AND-PARK fired, 2026-07-07)
+Proactive `run_backtest` vs `run_class_backtest` enforcement-parity survey (the corpus uses run_class_backtest).
+Method: function-level string census + shared `_apply_backtest_parity_gates` coverage check + direct body grep of the
+run_class_backtest span (L6509-7500). Findings (CANDIDATES — coarse census + body grep, NOT full-call-graph-confirmed):
+- **partial-fill (`apply_fill_model` / `apply_volume_partial_fills`) — CANDIDATE FULL GAP.** Present in run_backtest,
+  absent from run_class body + shared helper + NOT in the eligibility overlay → corpus backtests likely use IDEALIZED
+  fills (optimistic edge). Directly contradicts §12 "Backtest partial fill model DEFAULT ON."
+- **VIX-margin (`apply_vix_margin_expansion` / `margin_expansion`) — CANDIDATE FULL GAP.** Same absence pattern →
+  corpus backtests likely DON'T reduce sizing on high-VIX days (over-sizing). Contradicts §12 "VIX margin expansion ON."
+- **macro-blackout (`apply_blackout_mask_to_entries`) — CANDIDATE PARTIAL GAP.** Macro IS in the shared
+  `apply_eligibility_gate` overlay (registered strategies covered), but the SEPARATE belt-and-suspenders mask that
+  run_backtest has is absent → matters for unregistered / defense-in-depth (interacts with F-4's overlay-bypass:
+  an unregistered strategy loses BOTH the overlay macro AND has no separate mask → trades through FOMC/CPI/NFP).
+- **cross-symbol-DLL (`apply_cross_symbol_dll_to_entries`) — CANDIDATE.** `_apply_dll_halt_to_entries` is shared (DLL
+  covered), but the CROSS-symbol aggregation specifically may differ — verify.
+- SHARED (both apply, confirmed present): eligibility, dll_halt, max_trades, dsl_stop/time-stop, trade_management,
+  stop_ceiling, RollSpreadCost(string — but Defect-4 showed the equity-loop USAGE still diverges; census is coarse).
+
+**These JOIN the 6 known class-path defects (1/4/5/6) → run_class_backtest systematically under-mirrors run_backtest;
+the duplicate-logic liability (Axis-2) is broader than the fixed 6.** Consequence: corpus RE-BASELINE equity metrics
+(Mode A/B: Sharpe/DSR/WFE/B14) are likely OPTIMISTIC (idealized fills, no VIX taper). Gate-3 revival/regression verdict
+is A/B-cancelled (both arms use run_class_backtest), so tonight's certified 9/9 + FAIL are NOT invalidated.
+**STOP-AND-PARK per charter (7th-defect-smell, careful-not-tired verification, pass-3-downstream consequences):**
+morning = full-call-graph confirm each candidate (are they applied upstream of run_class_backtest?), then materiality/
+fix on the post-cert backtest-core parity refactor track. NOT fixed, NOT tired-verified tonight.
