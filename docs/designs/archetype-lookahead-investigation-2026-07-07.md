@@ -101,3 +101,26 @@ written — exactly why claims get checked against code before they are believed
   look-ahead exists in breaker's ±3 forward BOS-validation window (and analogously unicorn). The grader was
   directionally right that a look-ahead exists, wrong on the mechanism (validation window, not swing window) and
   silent on magnitude (bounded ≤3 bars). NOT dismissed; NOT confirmed-CRITICAL; magnitude is the parked ruling.
+
+## COMPLETENESS TRACES — mitigation enforcement + unicorn reachability (2026-07-07)
+- **mitigation.py — design-clean, enforcement UNVERIFIED (honest, not upgraded).** `_identify_mitigation_blocks`
+  tracks `bos_bar` (bar where BOS confirmed the MB) and documents "entry only valid after this" (lines 221, 274-325).
+  BUT the trace shows only zone CREATION with bos_bar, NOT the entry-loop gate (`entry_bar > bos_bar`). Design intent
+  is right; the enforcing line was not located → stays "likely clean, 1-line assert for the fix owner." NOT claimed
+  confirmed-clean.
+- **unicorn.py — REACHABLE, analogous to breaker (fact).** `max_zone_age=20`; entries fire on retest from formed_at+1
+  (loop `for i in range(n)`, `bars_held = i - long_entry_bar`), INSIDE the ±1 displacement window [b_broken_at-1,+1]
+  and ±5 FVG proximity (abs(f_bar - b_broken_at) ≤ 5). Same reachable forward look-ahead class as breaker, bounded ≤5
+  bars, magnitude parked.
+
+## GRADER-FINDINGS TRIAGE — FULL-DEPTH COMPLETE (2026-07-07)
+Final state of all 4, code-anchored, verdicts parked:
+- **F-1/F-2/F-3 (look-ahead):** swing-window mechanism = FALSE POSITIVE (shifted/clean). REAL bounded reachable
+  look-aheads exist: breaker ±3 (≤3 bars, entries broken_at+1..3 of a 30-bar window, REACHABLE-confirmed), unicorn
+  ±1/±5 (≤5 bars, REACHABLE-confirmed). mitigation design-clean/enforcement-unverified. Magnitude = parked ruling.
+  Grade: "3 CRITICAL" → 2 reachable-small-look-aheads + 1 design-clean; directionally-right-wrong-mechanism.
+- **F-4 (eligibility):** intentional parity bypass; skip-vs-clamp ceiling divergence for unregistered (Check-0 SKIP
+  bypassed, execution-cap applies); 0 live exposure; pass-3 impact NIL (A/B cancels). 3 rulings parked (see F4 doc).
+**Net:** the grader surfaced genuine issues but every CRITICAL grade was overstated as written; the corrected,
+code-anchored picture is 2 small-bounded reachable look-aheads + 1 latent-zero-exposure parity divergence — all with
+materiality parked for dawn, none with pass-3-pending-run consequences. Doer≠grader did its job: claims → checked facts.
