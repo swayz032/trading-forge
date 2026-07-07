@@ -565,3 +565,19 @@ not gold-noise; Gate 1′ is the gold-quality instrument and it is working).
 7. **Reuse named honestly:** this is the 3rd adaptive evaluation against the SAME 9 pairs; Gate 3's independence DECAYS
    each pass. The genuinely fresh data is the post-flip corpus re-baseline (null-cal → Mode A/B); any anomaly there
    REOPENS certification.
+
+## PASS-3 ENUMERATION (pre-reg point 2) — quarantine POSSIBLE, launch clean (2026-07-06)
+Retracement/level idioms in the 143-condition DESIGN set (jlShztsY3oA's 3 conditions EXCLUDED = the test):
+- **Focused (fib/retracement/premium-discount): 4 (2 JUSTIFIED_MANDATORY, 2 CONTEXTUAL).**
+- **Broad (+level/support/resistance/zone/retest): 36 (14 JUSTIFIED_MANDATORY, 14 CONTEXTUAL, 4 UNRESOLVED, 3 OPTIONAL, 1 ALTERNATIVE).**
+- **NON-ZERO → the pre-registered STOP+ESCALATE trigger does NOT fire → pass-3 launches CLEAN.** The rule can be
+  designed from design-set retracement/level-gate instances (incl. mandatory ones), jlShztsY3oA held as the test.
+- **INTEGRITY (self-caught near-miss):** the first 2 enumeration passes returned 0 — a JOIN BUG (split key format is
+  `video||condition_id`, matched on bare `condition_id`). Caught by an implausibility check (a trading corpus cannot
+  have 0 level/retest idioms), not trusted. Same discipline as the rater flip: verify decision-gating numbers; a
+  false-0 here would have triggered a false escalate. Fixed join → 143/143 rows matched → real count above.
+- **REMAINING pre-reg gate before rule code:** point-1 independent verification of the pass-2 held-out-improvement
+  (67.24%→67.92% margin, 2.00×→1.70× overfit) — currently parent-recomputed from the pass-2 agent's heldout-result.json
+  artifact; a fully-fresh re-measurement (live gemma) is the stronger independence and is the next gate. Design-instance
+  vetting (confirm the 4 focused matches are genuine retracement-level GATES, not loose quote-matches) happens during
+  rule design.
