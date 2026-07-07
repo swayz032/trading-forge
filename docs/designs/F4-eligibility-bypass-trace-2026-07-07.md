@@ -110,3 +110,36 @@ comment's "DLL / max-trades still run in BOTH backtest + live" is CONFIRMED on b
   NARROW, LATENT (0/120 unregistered, 0 PAPER+), 0-exposure loss of {A+ quality overlay + ceiling-SKIP semantics} for
   any future unregistered strategy — with all loss/compliance gates intact. Pass-3 impact NIL (A/B cancels). Materiality
   of the two genuine losses = PARKED. This is the doer≠grader endpoint: a claimed CRITICAL, traced to a narrow latent gap.
+
+## F-4 THREE PREDICATES — RUN + CONDITIONAL RULING RESOLVED (2026-07-07)
+- **(i) registry coverage — PASS.** Measured 0/120 unregistered, all in the 174-entry ALL_STRATS (code-comment,
+  2026-07-05 read-only live DB).
+- **(ii) separate REDUCE twin — PASS (Catch 1 = FALSE ALARM, caught by verifying).** `evaluateCrossSymbolDll`
+  (cross-symbol-pnl.ts:328-357) emits `action="reduce_size"` at the 60% band via the escalation ladder
+  `force_close(95%) > halt(67%) > reduce_size(60%) > none` + `reduceSizeFactor` (default 0.50). The glide-path de-risk
+  IS separately enforced → an unregistered strategy does NOT lose it. NOTE: an initial empty-grep nearly mis-concluded
+  "no twin"; the definitive read (return-type + ladder) settled it. Verify-don't-conclude-from-empty-grep held.
+- **(iii) ceiling equivalence — PARTIAL FAIL (Catch 2 SUBSTANTIATED).** Ceiling VALUES equivalent (structural_stops.py
+  INSTRUMENT_STOP_CONFIG 14/62/1.0 == backtester `_get_stop_ceiling_for_symbol` 14/62/1.0). But ACTIONS DIVERGE: bypassed
+  Check-0 = SKIP ("SKIP TRADE, never clamp", structural_stops.py:108); retained backtester = CLAMP (max_stop_points).
+  The bypassed SKIP is STRICTER → the retained clamp is NOT a substitute. Skip-semantics is genuinely lost for
+  unregistered (risk bounded by clamp, but wide-structure trades TAKEN not SKIPPED — an edge-quality gap, risk-bounded).
+
+## CONDITIONAL RULING RESOLUTION
+Per the pre-issued ruling ("any predicate fails → ruling voids, F-4 promotes"): (i)+(ii) PASS; (iii) does NOT cleanly
+confirm. So the clean LOW/latent ruling does NOT finalize tonight — F-4's skip-semantics loss (bounded, risk-clamped,
+0 current exposure) is a CONFIRMED gap flagged for the morning F-4 materiality finalization. **The can-still-fail leg
+HOLDS** (per the licensor's intent) — F-4 is not rubber-stamped LOW; it carries one substantiated open item (iii).
+
+## DUPLICATE-ENFORCEMENT — upgraded to NAMED ARCHITECTURAL LIABILITY (the night's real finding)
+The predicate run confirms the pattern at FOUR in-gate/separate-path twin sites, not two:
+1. max-trades: in-gate `:204` ↔ separate `_apply_max_trades_per_day` (backtester) / `evaluateDailyTradeCap` (live).
+2. DLL: in-gate `:278` (reduce) ↔ separate `evaluateCrossSymbolDll` / `apply_dll_halt`.
+3. REDUCE glide: in-gate `:278` ↔ separate `evaluateCrossSymbolDll` reduce_size(60%).
+4. structural-stop ceiling: in-gate Check-0 SKIP ↔ separate backtester clamp (VALUE-same, ACTION-divergent — the ONE
+   that is NOT a faithful twin).
+**One instance is a bug; four is a house style** — the same in-gate-copy-shadowing-separate-service architecture that
+grew the six run_backtest/run_class_backtest defects. FREEZE as: "duplicate-enforcement is a named architectural
+liability (≥4 confirmed sites); cure class known (single-source enforcement + parity guards); register next to the
+sibling run_class_backtest refactor on the POST-CERT track." Site 4 (ceiling skip-vs-clamp) is where the divergence
+already bites — the canary for the class.
