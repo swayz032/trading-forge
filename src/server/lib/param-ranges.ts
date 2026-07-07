@@ -39,6 +39,11 @@ export const CANONICAL_PARAM_RANGES: Record<string, RangeMap> = {
   session_open_breakout: { range_minutes: [5, 60],  buffer_ticks: [1, 10] },
   macd_crossover:        { fast_period: [8, 16],    slow_period: [20, 30],  signal_period: [7, 12] },
   vwap_fade:             { atr_extension_threshold: [1.0, 3.0], confirmation_bars: [1, 5], vwap_touch_exit: [0, 1] },
+  // deep-scan cross-system F-2 (2026-07-06): mirror pattern_library.py's vwap_band_reject + anchored_vwap_retest
+  // (Wave 25 Pass 5 archetypes). They were in the Python ENTRY_PATTERNS validator but NOT in the TS sanitizer, so
+  // an LLM-hallucinated extra param passed through unsanitized and Python hard-rejected the whole DSL.
+  vwap_band_reject:      { band_sigma: [1.5, 2.5], confirmation_bars: [1, 3], require_close_inside: [0, 1] },
+  anchored_vwap_retest:  { anchor_lookback_bars: [1, 100], confirmation_bars: [1, 3], tolerance_ticks: [1, 10] },
   event_driven_fade:     { atr_move_threshold: [1.5, 4.0], event_window_minutes: [5, 30], confirmation_bars: [1, 3] },
   overnight_drift:       { drift_atr_threshold: [0.5, 2.0], asia_lookback_bars: [4, 24],  min_drift_bars: [2, 12] },
   // bounce_off_level — MA-as-S/R archetype (price bounces off single MA).
