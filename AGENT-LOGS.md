@@ -13435,6 +13435,13 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 AGENT-LOGS.md had pre-existing uncommitted modifications from another session before this one — swept knowingly into commit 8ced3b2 (append-only log content).
 
+**Session continuation #2 (same day) — Ollama watchdog SHIPPED + deep-scan/ratify-packet skills + operator rulings:**
+- ★ OPERATOR RULING: settings.json sbp_/Databento key exposure = accepted risk (private project, local-only file) — item CLOSED, do not re-flag. Memory updated.
+- NEW `scripts/ollama-watchdog.ps1` + scheduled task `TF-OllamaWatchdog` (every 5 min, user session — ollama is user-level). Detects both A1 branches (dead process; orphan-VRAM wedge = resident-but-hanging + idle GPU), busy-vs-wedged guard via nvidia-smi GPU-util ≥15%, 2-consecutive-failure threshold, ≤3 kill-cycles/24h then alert-only, warm-keeper side effect (keep_alive=-1 re-pin), kill switch = `bin\ollama-watchdog.DISABLED`, log `bin\ollama-watchdog.log`, alerts via :4100 sidecar (Bearer API_KEY) → DISCORD_WEBHOOK_URL fallback. VERIFIED live: PS5.1 empty-array-unroll bug found+fixed in first dry-run; warm-keeper re-pinned non-resident gemma (expires 2318); manual task fire Last Result 0; autonomous 17:12:04 fire HEALTHY(resident=True); install notice delivered to Discord through authed sidecar.
+- Side-find (carry-forward, src untouched): `boot-migration-runner.ts fireDiscordCritical` posts to :4100 with NO Authorization header → its primary path 401s and always falls back to the direct webhook. Degraded-primary, not broken. Fix opportunistically next time that file is open.
+- NEW skills `deep-scan` (phases 0-6; finding admissibility file:line+repro; verify-before-fix false-positive gate; instrument fixes require ratify-packet; zero-carry-forward default) + `ratify-packet` (staged-not-started; packet parts; ratify-vs-not table; agent-loop discipline). GREEN 2/2 on haiku — refused the tempting 3-line backtester fix, rejected cross-packet "fire" + "board is moving" as authorization, rejected 6→9 self-grade, MED fix-or-justify.
+- tf-debugging A1 row updated: ollama now SUPERVISED (check watchdog log first). CLAUDE.md §11 gained deep-scan + ratify-packet rows. Project skills now 6 total.
+
 ## CLAUDE.md Wave Close-Out Archive (moved 2026-07-09)
 
 > Moved verbatim from CLAUDE.md §2 on 2026-07-09 to keep CLAUDE.md a living-conventions file (its own header mandate). Nothing edited, order preserved (§2 file order, not chronological).
