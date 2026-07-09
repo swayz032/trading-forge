@@ -13626,6 +13626,29 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-09 Deep-Scan #22 X5 RATIFIED — CPCV-WFE combined-fold fix; X5 backtest 8→9; board now uniform 9
+
+**Mission:** close the ONE open item from the 8→9 arc — the CPCV-mode WFE denominator asymmetry that held X5 backtest at 8 — by obtaining explicit operator ratification and shipping the fix under the standing instrument-touching protocol (ratify → agent-loop → doer≠grader cert → land).
+
+**The decision:** presented the ratification packet (receipts: `walk_forward.py` numerator `agg_sharpe` line 573 = pooled/combined OOS Sharpe; denominator `mean(per_path_is_sharpes)` = asymmetric per-path average; contradicts the documented "combined-fold Sharpe (OOS/IS)" contract in CLAUDE.md §4/§12). **Operator ratified option (a): fix to combined/combined.** That is explicit ratification of THIS packet — instrument code authorized.
+
+**Work completed (all landed FF on `hardening/phase-0`, then merged to `main`):**
+- **The fix (`d6b286a`)** — new pure helper `_combined_fold_sharpe(pnls)` (mirrors `agg_sharpe`'s mean/std ddof=1 × sqrt(252) exactly); new `all_is_pnls` accumulator in BOTH CPCV functions (`_run_walk_forward_cpcv` DSL path + `_run_walk_forward_cpcv_class`), extended ONLY on IS-backtest success (aligned with `per_path_is_sharpes` discipline — no desync); WFE now `agg_sharpe / _combined_fold_sharpe(all_is_pnls)`; `wfe_status` `cpcv_per_path_is` → `cpcv_combined_fold`; basis label → `combined_fold_is_sharpe`. `per_path_is_sharpes` UNTOUCHED — still the BIF/PBO IS basis (out of scope). `wfe-gate.ts` accepts BOTH status strings (backward-compat for in-flight/serialized rows; new emits combined_fold). y5 integration test + `test_walk_forward_cpcv` mirror updated to the ratified contract (mirror replaced with real-helper tests).
+- **RED-proof:** reverting the denominator to the old formula yields `wfe_overall=0.7005` (per-path) vs ratified `0.9777` (combined-fold) on a divergent fixture — and **0.70 sits exactly on the WFE hard floor**, so the fix is genuinely gate-outcome-shifting (why it was ratification-gated, not a silent edit).
+- **Cap-close (`94e270f`)** — closed the two residuals the independent certifier flagged: (1) class-path `TestClassCpcvWfeCombinedFold` with per-path-dispersed IS variance (the shared mock fed identical IS pnls, hiding class-path regressions), RED-proven against the reverted class denominator; (2) gate-chain Suite 12b — pure-function `cpcv_combined_fold` cases (BLOCK@0.65 / PASS@0.80 / fail-closed-on-null / 0.70 boundary) + a PARITY loop proving new and legacy strings gate identically.
+
+**Verification / Certification (doer≠grader):** independent `accuracy-validator` certified `d6b286a` **VERIFIED 8, "safe to land: Yes"** — re-derived the formula on both paths, reproduced the RED-proof (0.7005→0.9777) with its OWN fixture, confirmed the class path via its own dispersed harness (production 1.7147 = combined-fold, ≠ per-path 1.0912), confirmed `daily_pnls` is real (not fabricated → no false-degenerate), confirmed scope-lock + the pre-existing `test_e2e_backtest::test_walk_forward_mode` failure (default WF_MODE=cpcv → windows:[], fails identically on base). Its one MEDIUM (two missing CI regression guards, not defects) was then closed by `94e270f`, taking X5 to **9**. 3 CI gates EXIT 0 (production-isolation / 2026-compliance / system-map:check driftItems=[]) on the landed tree.
+
+**FINAL BOARD — every domain independently VERIFIED 9:** X1 gate-strictness · X2 cross-system+observability · X3 frontend · X4 pine · X5 backtest · X6 factory+confluence — **uniform 9**. X5's ratification packet is CLOSED (no longer the open item). `main = c819bfa` (contains `phase-0 = 94e270f`); gap origin/main..phase-0 = 0.
+
+**Known-facts updates:** none new (CPCV-WFE basis change documented in CLAUDE.md §12 WFE row + memory `project_deepscan22_8to9_board`).
+
+**Carry-forward for next session:**
+1. Git hygiene: prune ds22 worktrees (`tf-ds22-*`, `tf-mainfix`, `tf-x5-mainmerge`/`tf-mainmerge-journal` leftover dirs are Windows-locked but worktree-metadata-pruned) + quarantine the diverged LOCAL shared checkout (staged deletions of hardening controls — do NOT replay).
+2. LIVE-INFRA (Railway, unchanged): `/__ocg` auth; repoint retired n8n models; Kasa install before PAPER+.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
