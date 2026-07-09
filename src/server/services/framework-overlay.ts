@@ -268,8 +268,22 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
     applied.push(`style_c.tp1_at_r=${FRAMEWORK.styleC.tp1_at_r}`);
   }
   if (cfg.exit_type === "trailing_stop") {
+    // X6 fix (deep-scan #22 Track X6, 2026-07-09): a stray legacy/foreign
+    // `styleD` key inside the INCOMING exit_params must never survive into
+    // the overlaid config — Style D is DEAD per Wave 23 (CLAUDE.md §4/§13).
+    // The spread below intentionally preserves unknown incoming keys
+    // (forward-compat for genuinely new fields), so styleD must be
+    // explicitly denied here rather than relying on the spread to drop it —
+    // otherwise a mis-extraction that injects `exit_params.styleD` would
+    // silently ride through the overlay alongside the canonical Style C keys.
+    const incomingExitParams = { ...(cfg.exit_params ?? {}) } as Record<string, unknown>;
+    if ("styleD" in incomingExitParams) {
+      delete incomingExitParams.styleD;
+      applied.push("exit_params.styleD REMOVED (Style D is dead — Wave 23 Style C canonical)");
+      warnings.push("exit_params contained a legacy 'styleD' key — stripped; Style C 33/33/33 is the only canonical exit");
+    }
     cfg.exit_params = {
-      ...(cfg.exit_params ?? {}),
+      ...incomingExitParams,
       // Style C 33/33/33 schedule — primary contract for graduator + future engine support
       style: "c",
       partials: [
