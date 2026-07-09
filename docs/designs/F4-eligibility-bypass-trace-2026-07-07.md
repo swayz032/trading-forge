@@ -573,3 +573,18 @@ confirmed** (2020 = 7 scheduled, no March; Mar 17-18 was cancelled). `generate_e
   FRED Feb/May dedup to the sync. Left out per scope-lock (avoids live-DB writes + un-deduped-FRED regression). REGISTER.
 **ACCEPTANCE: NOT committed until the INDEPENDENT hand-check (fresh agent, primary sources) passes — per the ratified
 Part-B acceptance ("nothing that reads the calendar changes behavior until verification passes").**
+
+## ★★ PART B ACCEPTED — independent hand-check PASS (2026-07-09)
+Fresh accuracy-validator, 12-date sample vs PRIMARY sources fetched directly (federalreserve.gov + eia.gov; bls.gov 403 →
+DOL embargo PDFs + 5+ news orgs off the same BLS wire). **ALL MATCH, zero discrepancies:**
+- March-2020 boundary: 7 scheduled FOMC 2020 confirmed vs Fed historical page; Mar-3 + Mar-15 emergencies correctly
+  ABSENT; Mar-17-18 confirmed cancelled.
+- DST-adjacent: NFP 2020-11-06, CPI 2021-03-10 (08:30 ET) — MATCH.
+- **EIA holiday-shifts (highest-risk, derived): 2023-07-06 / 2020-11-12 / 2022-06-23 ALL MATCH eia.gov's OWN archive.**
+- Remainder: FOMC 2022-11-02, NFP 2023-01-06, CPI 2022-06-10 — MATCH.
+**ONE RESIDUAL (flagged, bounded, NOT a blocker):** EIA per-date release TIMES aren't in EIA's archive (date only) → the
+11:00-ET holiday-shift TIME is CONVENTION-verified (documented Dec-6-2018 example), not per-date-primary-verified. Affects
+only ±30-min boundary bars on holiday-week EIA releases. The DATES (where a derived model most likely errs) are all
+primary-confirmed. → minor follow-up (nail the exact EIA holiday-shift time if a boundary case ever bites); does NOT block
+acceptance (the ratified gate = hand-check passes → accept). **PART B COMMITTED. Durability follow-up (sync 2020-anchor)
+still registered.**
