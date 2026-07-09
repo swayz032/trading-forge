@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T04:23:41.120Z",
+  "generatedAt": "2026-07-09T19:44:44.473Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -22,7 +22,8 @@
     "slumhouse_users_table:manual_gate:operator",
     "ts_python_parity_ci_gate:manual_gate:ci_gate",
     "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
-    "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT"
+    "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+    "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
   ],
   "subsystemCounts": {
     "total": 73,

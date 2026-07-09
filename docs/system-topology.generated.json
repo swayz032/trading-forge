@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-07T04:23:41.120Z",
+  "generatedAt": "2026-07-09T19:44:44.473Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -400,7 +400,7 @@
         ],
         "preferredName": "Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-01T07:00:07.398Z",
         "lastFailureAt": null,
@@ -408,7 +408,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 204h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -953,7 +953,9 @@
       "failingWorkflowBlockers": [],
       "sourceMissingWorkflowBlockers": [],
       "redeployWorkflowBlockers": [],
-      "staleWorkflowBlockers": [],
+      "staleWorkflowBlockers": [
+        "Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
+      ],
       "runtimeControlBlockers": [],
       "blockers": [
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
@@ -975,7 +977,8 @@
         "slumhouse_users_table:manual_gate:operator",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
-        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT"
+        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
       ]
     },
     "readiness": {
@@ -1005,7 +1008,8 @@
         "synthetic_black_swan_survival:experimental_governance",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
-        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT"
+        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
       ],
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
