@@ -1,4 +1,5 @@
 import "./load-env.js";
+import { appendFamilyGradePostscript } from "./lib/notification-helpers.js";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -831,7 +832,11 @@ export const server = app.listen(port, () => {
         import("./services/notification-service.js").then(({ notifyCritical }) => {
           notifyCritical(
             `[CRITICAL] ${orphansFound} orphaned paper position(s) detected at startup`,
-            `What happened: ${orphansFound} position(s) were open in the database with no active session when the server restarted.\nAuto-remediation attempted: yes — stuckSessionIds populated; blocked sessions prevent duplicate opens.\nWhy it failed: sessions were not active at restart; positions require manual review.\nYour action: Review audit_log for paper.orphaned_position_detected entries and close positions via the dashboard or call clearStuckSessionId() after confirming each is closed.`,
+            appendFamilyGradePostscript(
+              `What happened: ${orphansFound} position(s) were open in the database with no active session when the server restarted.\nAuto-remediation attempted: yes — stuckSessionIds populated; blocked sessions prevent duplicate opens.\nWhy it failed: sessions were not active at restart; positions require manual review.\nYour action: Review audit_log for paper.orphaned_position_detected entries and close positions via the dashboard or call clearStuckSessionId() after confirming each is closed.`,
+              "After a restart, the bot found open practice trades that were left without an owner and needs a human to look at them.",
+              "Tell Tony to review these positions on the dashboard and close any that should not be open.",
+            ),
           );
         }).catch((notifyErr: unknown) => {
           logger.error({ err: notifyErr }, "Startup: notification-service import failed during orphan CRITICAL alert (non-blocking)");

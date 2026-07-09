@@ -18,6 +18,7 @@ import * as path from "node:path";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -136,7 +137,11 @@ function loadCorrelationMatrix(): CorrelationMatrix {
     try {
       notifyWarning(
         "Correlated-position guard DEGRADED — concentration protection is OFF",
-        `correlation_matrix.yaml failed to load (${errMsg}). All correlated pairs (e.g. MES+MNQ) are currently ALLOWED. Restore the file to re-enable the guard.`,
+        appendFamilyGradePostscript(
+          `correlation_matrix.yaml failed to load (${errMsg}). All correlated pairs (e.g. MES+MNQ) are currently ALLOWED. Restore the file to re-enable the guard.`,
+          "A safety rule that stops the bot from doubling up on two markets that move together is temporarily off.",
+          "Tell Tony to restore the correlation file. Until then the bot may take two similar trades at once.",
+        ),
       );
     } catch { /* alert is best-effort */ }
     return fallback;
