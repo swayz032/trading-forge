@@ -13574,6 +13574,28 @@ DLL base SETTLED **$1,340**. Memory: [[reference_fabricated_mock_masks_null_colu
 
 ---
 
+### Session Log — 2026-07-09 Deep-Scan #22 CONT — F-1 closed, residuals→8, phase-0→main MERGED (production current)
+
+**Mission:** continue the /goal loop from the 2026-07-07 ds22 pause (F-1 open HIGH + cert verdicts) to independently-verified bands with zero open HIGHs, then merge phase-0→main (operator-approved) so the stale deploy branch catches up.
+
+**Work completed (all landed FF on `hardening/phase-0`, then merged to `main`):**
+- **F-1 (open HIGH) FIXED** — `hardening/ds22-f1-sizing` (`8bffa1b`): new pure `deriveEvidenceBackedConfluenceCount()` in `confluence-provenance.ts` reads `entry_quality.confluence_factors` + `factor_sources` (NOT the `confirming_indicators` objects FIX A1 populated), so graduator AUTO_FLOOR confluence can no longer inflate the 1.5×/2× position-size upsize. Fail-pre/pass-post sizing test proven. 22 tests.
+- **8→9 residual closers** (all landed `70e04ab..de35600` via merges + `system-map:sync`): frontend real vm-execution regression harness locking the no-fabrication invariant (`recipe-no-fabrication.test.ts`, `3761832`, RED-proven); Pine D4 mirror→real integration test driving `compileDualPineExport`/`compilePineExport` (`1a5fa7a`, RED-proven per call site); quantum RL/MC namespace-separation structural lock (`test_ds22_rl_mc_namespace_separation.py`, `b709b08`, 17 tests, RED-proven).
+- **loop-3 (F-1 re-cert MEDIUM) CLOSED** — `hardening/ds22-l3-sizinggate` (`ae0b8f5`): the F-1 fix, by using the correct field, ALSO activated a previously-dead confluence-weighted UPSIZE (size-INCREASE / risk direction). Gated behind `CONFLUENCE_SIZE_UPSIZE_ENABLED` (env, default **false**) in `resolveConfluenceMultiplier()` — default OFF is a byte-identical size no-op vs pre-ds22; F-1 count-correctness stays unconditional; opt-in with data per "ship strict, loosen with data." 71+197 tests.
+- **`phase-0` → `main` MERGED** (`07b4de3`) — operator-approved. main was 342 commits behind (last synced ~deep-scan #14); production deploy branch is now CURRENT. Only 4 conflicts, ALL generated system-map artifacts (took phase-0 versions + `system-map:sync` + registered the one `main`-only cron `ollama-keepwarm-watchdog` in the registry). `origin/main..origin/hardening/phase-0` = **0**. All 3 CI gates green on the merged result.
+
+**Verification:** combined-tree cold-run — 5 CI gates EXIT 0 (production-isolation / 2026-compliance / system-map:check driftItems=[] / family-grade-postscript / gate-contract-keys 7/7) + 88 cross-track vitest + engine sweep + tsc (only the 1 pre-existing `cme-outage…beforeEach`). INDEPENDENT re-certs (doer≠grader, each RED-proven a deliberate regression): F-1 CONFIRMED-CLOSED; frontend harness/pine integration/quantum namespace all REAL locks (none mirror/vacuous); loop-3 default-OFF no-op CONFIRMED 3 ways.
+
+**FINAL BOARD — every domain independently VERIFIED 8, ZERO open HIGH:** backtest 8 / cross-system+observability 8 / quantum 8 / cleanup+pine 8 / frontend 8 / factory+confluence 8. NOT a uniform 9 — 9 needs whole-surface failure-injection + zero residuals per domain; honest residuals remain (heuristic CI-gate strictness; structural-only quantum lock; scoped frontend/pine coverage). 8-with-zero-HIGH is the rubric's institutional-core ceiling for a maintained production system.
+
+**Carry-forward for next session:**
+1. Git hygiene: the LOCAL shared checkout is diverged (137 behind / 77 ahead of origin) with staged DELETIONS of hardening controls (`check-gate-contract-keys.ts`, `scheduler-drift.ts`) — a stale-stash that would ROLL BACK hardening if landed. QUARANTINE (bundle for forensics), park the 77 Corpus-v3-line commits on their own branch, re-sync local `hardening/phase-0` to origin. Do NOT replay the dirty payload. Prune the ds22 worktrees (tf-ds22-*) + the ~35 stale/8 locked worktrees.
+2. Toward a genuine 9 per domain (optional, high-effort): AST-strict gate-contract check (vs regex canary); behavioral DB test for quantum namespace; whole-surface failure-injection sweeps.
+3. Doc: add a §4 note that `confluence_size_multiplier` is gated by `CONFLUENCE_SIZE_UPSIZE_ENABLED` (default false); operator opt-in to activate confluence-weighted upsize with data.
+4. LIVE-INFRA (Railway, unchanged): `/__ocg` auth; repoint retired n8n models; Kasa install before PAPER+.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
