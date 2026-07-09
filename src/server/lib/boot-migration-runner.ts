@@ -77,19 +77,32 @@ interface Journal {
 }
 
 /**
- * Read a UTF-8 text file and strip a leading byte-order-mark (BOM) if present.
+ * Read a UTF-8 text file, strip a leading byte-order-mark (BOM), and normalize
+ * CRLF line endings to LF.
  *
- * WHY: PowerShell (the operator's primary shell) writes files as UTF-8/UTF-16
- * WITH a BOM by default. A BOM (U+FEFF) at the start of _journal.json makes
- * JSON.parse throw ("Unexpected token ï»¿"), and a BOM at the start of a
+ * WHY (BOM): PowerShell (the operator's primary shell) writes files as UTF-8/
+ * UTF-16 WITH a BOM by default. A BOM (U+FEFF) at the start of _journal.json
+ * makes JSON.parse throw ("Unexpected token ï»¿"), and a BOM at the start of a
  * migration .sql makes Postgres reject the first statement — either one
  * fail-closes the boot-migration-runner and takes the WHOLE API offline
- * (2026-06-24 production-down incident). Stripping the BOM on read makes the
- * boot path robust to this entire class of file-encoding corruption.
+ * (2026-06-24 production-down incident).
+ *
+ * WHY (CRLF): this tower's git checkout has core.autocrlf=true, which silently
+ * converts LF (git's canonical stored form) to CRLF on disk. hashOf() (below)
+ * feeds this file's content into a sha256 used to decide "already applied" —
+ * if the tracked hash was stamped from LF content (e.g. by a different
+ * environment, or a stamp/backfill script) while the on-disk file is CRLF, the
+ * hash never matches, the migration looks unapplied forever, and re-running it
+ * collides with tables the ORIGINAL apply already created (2026-07-09
+ * incident: 0000_previous_nuke.sql, CREATE TABLE "alerts" already exists →
+ * fail-closed boot → NSSM crash-loop). Normalizing CRLF→LF on read makes the
+ * hash (and the SQL text actually executed) invariant to this purely
+ * cosmetic, OS/git-checkout-dependent difference.
  */
-function readUtf8StripBom(filePath: string): string {
+export function readUtf8StripBom(filePath: string): string {
   const raw = fs.readFileSync(filePath, "utf8");
-  return raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+  const noBom = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+  return noBom.replace(/\r\n/g, "\n");
 }
 
 // ─── Path resolution ──────────────────────────────────────────────────────────
@@ -290,22 +303,92 @@ function extractPgPassword(databaseUrl: string): string {
   }
 }
 
+// 2026-07-09 incident (alert-fatigue fix, generalizes the ds21-w2 dup-when pattern above to
+// EVERY fireDiscordCritical call): a crash-loop with no rate limiting on this function sent an
+// unbounded stream of identical Discord CRITICALs — ~9000 restart attempts, one alert per
+// restart, no backoff. This throttles the SEND only (never the underlying failure detection or
+// any audit_log row a caller writes) so an unchanged failure doesn't re-ping the operator every
+// few seconds. Keyed on a hash of (title + message) so a genuinely NEW/different failure always
+// fires immediately — only an EXACT repeat within the window is suppressed. File-based, same as
+// the dup-when marker, for the same reason: no DB query added to the fail-closed boot path.
+// Env override lets tests (and any future alternate deployment layout) point this at a
+// throwaway path instead of the real bin/ directory — mirrors the MIGRATIONS_DIR override
+// pattern already used in this file.
+const _criticalAlertDedupPath =
+  process.env.BOOT_MIGRATION_CRITICAL_ALERT_DEDUP_PATH ||
+  path.resolve(_dirname, "..", "..", "..", "..", "bin", "boot-migration-critical-alert-dedup.json");
+const _CRITICAL_ALERT_DEDUP_MS = 15 * 60 * 1000; // 15 min — informative cadence, not a spam flood
+
+function _shouldFireCriticalDiscord(title: string, message: string): boolean {
+  const signature = crypto.createHash("sha256").update(`${title}\n${message}`).digest("hex");
+  try {
+    const all = JSON.parse(fs.readFileSync(_criticalAlertDedupPath, "utf8")) as Record<
+      string,
+      number
+    >;
+    const last = all[signature];
+    if (typeof last === "number" && Date.now() - last < _CRITICAL_ALERT_DEDUP_MS) {
+      return false; // identical title+message already alerted within the window
+    }
+    all[signature] = Date.now();
+    // Prune stale entries opportunistically so this file never grows unbounded across
+    // many distinct failure types over the life of the process.
+    for (const k of Object.keys(all)) {
+      if (Date.now() - all[k] >= _CRITICAL_ALERT_DEDUP_MS) delete all[k];
+    }
+    const dir = path.dirname(_criticalAlertDedupPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(_criticalAlertDedupPath, JSON.stringify(all), "utf8");
+  } catch {
+    // missing/corrupt marker file → fire (fail-open on the dedup mechanism itself; never let a
+    // dedup bug silently swallow a real CRITICAL)
+    try {
+      const dir = path.dirname(_criticalAlertDedupPath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(_criticalAlertDedupPath, JSON.stringify({ [signature]: Date.now() }), "utf8");
+    } catch (e) {
+      logger.warn({ err: e, path: _criticalAlertDedupPath }, "boot-migration: failed to write critical-alert dedup marker (non-fatal)");
+    }
+  }
+  return true;
+}
+
 /**
  * Fire Discord CRITICAL via the local relay (matches alert-service.ts pattern),
  * falling back to direct webhook. Fire-and-forget — never throws.
+ *
+ * Rate-limited to at most one identical (title+message) alert per 15 minutes
+ * (see _shouldFireCriticalDiscord) so a crash-loop cannot flood Discord.
  */
 export async function fireDiscordCritical(title: string, message: string): Promise<void> {
+  if (!_shouldFireCriticalDiscord(title, message)) {
+    logger.warn(
+      { title },
+      "boot-migration: Discord CRITICAL suppressed (identical alert fired within the last 15 min)",
+    );
+    return;
+  }
   const discordPort = process.env.DISCORD_ALERT_PORT || "4100";
 
-  // Primary: local relay (same pattern as alert-service.ts)
+  // Primary: local relay (same pattern as alert-service.ts C2 fix, 2026-06-29).
+  // Bearer header required — the sidecar returns 401 without it. fetch() only
+  // throws on network failure, never on a non-2xx status, so response.ok MUST
+  // be checked or a 401 resolves normally and silently drops the alert instead
+  // of falling through to the webhook fallback below.
   try {
-    await fetch(`http://localhost:${discordPort}/alert/alerts`, {
+    const apiKey = process.env.API_KEY;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (apiKey) {
+      headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+    const response = await fetch(`http://localhost:${discordPort}/alert/alerts`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ title, message, severity: "critical" }),
       signal: AbortSignal.timeout(4000),
     });
-    return;
+    if (response.ok) return;
+    // Non-2xx (e.g. missing/invalid API_KEY) — fall through to direct webhook.
   } catch {
     // Fall through to direct webhook
   }

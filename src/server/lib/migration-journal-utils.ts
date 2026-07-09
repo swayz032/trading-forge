@@ -57,17 +57,32 @@ export const KNOWN_OUT_OF_BAND_APPLIED_WHENS: ReadonlySet<number> = new Set([
  * backfilled (its hash won't match) — it falls through to `toApply` and is applied, never silently
  * marked-applied-without-schema. (deep-scan re-cert Finding B hardening.)
  */
+// 2026-07-09 RECOMPUTED: boot-migration-runner's readUtf8StripBom now also normalizes
+// CRLF→LF (this tower's git checkout has core.autocrlf=true, which silently converts
+// LF-stored git blobs to CRLF on disk — see readUtf8StripBom's docstring). The old hashes
+// below were stale under the new normalized algorithm, which caused these already-applied
+// migrations to look unapplied and attempt to re-run — the SAME failure class as the
+// incident that prompted the CRLF fix (0000_previous_nuke.sql: CREATE TABLE "alerts"
+// collided with an already-existing table, fail-closed boot, NSSM crash-loop). Verified
+// live (read-only, 2026-07-09) that all 10 files are byte-identical to their single git
+// commit (`git diff HEAD` clean) — content unchanged since the original 2026-07-05
+// out-of-band verification, so that verification's conclusion still holds; only the
+// fingerprint needed correcting. Verified (read-only, 2026-07-09) the schema effects of
+// all 10 are still live: system_parameters/system_parameter_history/lifecycle_shadow_
+// signals/needs_archetype_queue/slumhouse_users/quantum_mc_runs/broker_accounts tables
+// present; strategies.paper_account_routing + its CHECK constraint present; both A/B
+// seed rows present; broker_accounts_firm_id_check includes 'paper'.
 export const KNOWN_OUT_OF_BAND_APPLIED_HASHES: ReadonlyMap<string, string> = new Map([
-  ["9221cbe8a762b0ec034e4d56a60d650ec56f5f5f5bee56a53d800c268f3563d7", "0044a_system_parameters_tables"],
-  ["26a8a67e6934c7d68a273cc0fe380348f065bc6f7824e271630f4f7e923ee344", "0052_fk_cascade_hardening"],
-  ["a1f50c5143b98b5ac85f3b556e65caa41a9ea6215b846cdfef2f7fec99e9d898", "0147_quantum_mc_runs_replay_uniqueness"],
-  ["1604a45a5bfee65f6d3fdc1b0e2a3494c64892e94789ddfa35db87cbf67ceb45", "0159_broker_accounts_ab_paper_routing"],
-  ["92b267614b9dd34391467f9ca14a67252fb058938e84976bdb885e249baa0f16", "0148_backtests_compliance_mode"],
-  ["6226f021e27bb8fea9c565f4a119ad76d712edca2ee117f42eb2e0f27b6647bc", "0160_shadow_signals"],
-  ["8350ce96e295a795aed9ff50d2906ea0eae56f9ca9f3c30937970a1d2e7dffbe", "0152_strategies_needs_revision_states"],
-  ["df54b99b2a4ae16ea866324cd91d79db1af6708e4f298a0aad1e8a4376a6d966", "0162_needs_archetype_queue"],
-  ["cd015c0f78ac89bee9665b0ff2ae888a13f682b1afa4296de4db3f2d9fbf95ab", "0153_pipeline_modes_autopause"],
-  ["520f32f67d4680d6218f445177f48919c41a855303264372ae9a9d66189ad589", "0164_slumhouse_users"],
+  ["554e34e0b57c317f9a492faf424bab24609c2a5dc447c457a877e26dedd7fb5d", "0044a_system_parameters_tables"],
+  ["13f3098bd86a0647e74451d9d4b40e2fd408354a2ee3790f11ee52784e665640", "0052_fk_cascade_hardening"],
+  ["8a990ac03e44fe7adca62b553ffc993028e34172a1ee6f86e1a12243d1285ca5", "0147_quantum_mc_runs_replay_uniqueness"],
+  ["4197c4200560fe35eed742b7b031c1fca6fe13299d6a5eaa272ab4cc51d99034", "0159_broker_accounts_ab_paper_routing"],
+  ["2a62fedb6e9dd39a9fb4aebd2d32a969ad3bdf459e4727603d9a5f994dbf0443", "0148_backtests_compliance_mode"],
+  ["f1685456e0cbbf3885e282bad61b9f578a4f77385dc10e001b8e3ebde33bc879", "0160_shadow_signals"],
+  ["decf587e31100ddbf83c8463d51ee79b77091876a11ad95ee5772def8900bce8", "0152_strategies_needs_revision_states"],
+  ["7fc225e1a21cb2c890bb8b2d7f430a3f6f6e4138cffaf901a8e925c2e4ee081e", "0162_needs_archetype_queue"],
+  ["fd386be36d175e6462a941c6e02ea893b99f5c858ed33348b2edd7a3c4c1f1d9", "0153_pipeline_modes_autopause"],
+  ["dd26e57c3d4b099ed0be75e46c1e6d1c29f4e0e821647b13bbe285fae03851f1", "0164_slumhouse_users"],
 ]);
 
 export interface MigrationPlan<E> {
