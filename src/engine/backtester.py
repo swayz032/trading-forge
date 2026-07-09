@@ -44,6 +44,7 @@ from src.engine.config import (
     CONTRACT_SPECS,
     AdaptiveExitContext,
     BacktestRequest,
+    EventCalendarConfig,
     IndicatorConfig,
     LiquidityLevelSnapshot,
     StrategyConfig,
@@ -6541,6 +6542,7 @@ def run_class_backtest(
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext] — Wave 25 Gap B
     exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
+    event_calendar: Optional[EventCalendarConfig] = None,  # Defect-9: macro-blackout mask parity
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -6773,6 +6775,37 @@ def run_class_backtest(
     short_entries_np = df["entry_short"].to_numpy()
     long_exits_np = df["exit_long"].to_numpy()
     short_exits_np = df["exit_short"].to_numpy()
+
+    # ─── Economic event mask (Defect-9: class-path macro-blackout parity) ──────
+    # run_backtest() blacks out FOMC/CPI/NFP/EIA windows via generate_event_mask()
+    # inside generate_signals() (backtester.py:~3883 + signals.py:288-290). The class
+    # path had ZERO such mask, so class-path backtests traded through macro events that
+    # both the DSL path AND live blackout. Mirror ONLY the DSL explicit-policies path:
+    #   • EXPLICIT-POLICIES ONLY — same guard shape as run_backtest's
+    #     `if request.event_calendar and request.event_calendar.policies`.
+    #   • The default-fallback `_build_default_event_mask_et` branch is DELIBERATELY
+    #     NOT mirrored — it carries a registered polarity-inversion bug. With no
+    #     policies, the class path applies NO mask (byte-identical to legacy).
+    #   • True = SIT_OUT; suppression is `entry & ~mask` — identical to generate_signals.
+    #   • Product-scoped inside generate_event_mask (EIA→crude only, CPI/NFP→index only,
+    #     FOMC/Minutes→all) via the class `symbol` (strategy.symbol, resolved line ~6561).
+    #   • ADDITION 4: fail-closed coverage guard raises EmptyCalendarError on a wiped
+    #     calendar rather than silently no-op'ing.
+    #   • ±window is policy-driven (window_minutes, default 30) — never hardcoded here.
+    #   • Defense-in-depth tier: applied BEFORE the eligibility/parity gates and the
+    #     np.roll next-bar shift — the SAME logical position run_backtest applies it.
+    if event_calendar is not None and event_calendar.policies and "ts_event" in df.columns:
+        from src.engine.economic_calendar import apply_class_event_mask
+        _event_policies = [p.model_dump() for p in event_calendar.policies]
+        long_entries_np, short_entries_np, _event_mask = apply_class_event_mask(
+            long_entries_np, short_entries_np, df["ts_event"], _event_policies,
+            symbol, start_date, end_date,
+        )
+        print(
+            f"  Class macro-blackout: suppressed entries on {int(_event_mask.sum())} "
+            f"event-window bars (SIT_OUT) for {symbol}",
+            file=sys.stderr,
+        )
 
     # ─── Strategy validation gate (runtime) ──────────────────
     if concept and val_spec is not None:

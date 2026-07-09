@@ -1336,3 +1336,132 @@ def get_event_slippage_multipliers(
         multipliers[in_window] = 3.0
 
     return multipliers
+
+
+# ─── Class-path macro-blackout (Defect-9, 2026-07-09) ────────────────────────
+# run_backtest() (the DSL path) blacks out FOMC/CPI/NFP/EIA windows via
+# generate_event_mask() inside generate_signals(); run_class_backtest() (the
+# class path) had NO such mask, so class-path backtests traded through macro
+# events that both the DSL path and live blackout. The two helpers below mirror
+# the DSL explicit-policies mask into the class path WITHOUT touching the
+# registered polarity-inversion bug in run_backtest's default `_build_default_
+# event_mask_et` fallback (that fallback is deliberately NOT mirrored — when no
+# policies are supplied, the class path applies NO mask, byte-identical to
+# legacy behavior).
+
+
+class EmptyCalendarError(RuntimeError):
+    """Raised when event policies ARE supplied but the resolved calendar has zero
+    events inside the backtest date window (e.g. a wiped/empty calendar).
+
+    Fail-closed by design: a silent calendar wipe would let a class-path backtest
+    trade through macro events with NO blackout while *looking* like it applied one.
+    Turning that into a loud failure is the whole point of the coverage guard.
+    """
+
+
+def count_events_in_window(
+    policies: list[dict],
+    start_date: str,
+    end_date: str,
+) -> int:
+    """Count actionable policy events whose date falls within [start_date, end_date].
+
+    SYMBOL-AGNOSTIC on purpose — this is a *calendar-liveness* check (is the
+    resolved calendar populated for the window?), NOT a per-symbol scoping check.
+    An EIA-only policy on an index symbol legitimately masks nothing, but the EIA
+    calendar itself is still alive; product scoping is `generate_event_mask`'s job.
+
+    Only SIT_OUT / REDUCE policies count (IGNORE/WIDEN don't blackout). Uses the
+    same authoritative `_events_for_type()` source the mask uses, so a wiped JSON
+    snapshot / STATIC_EVENTS is detected identically to how the mask would see it.
+
+    Dates are compared on the ET calendar date (YYYY-MM-DD prefix of start/end),
+    matching how the mask resolves event dates.
+    """
+    try:
+        start = datetime.strptime(str(start_date)[:10], "%Y-%m-%d").date()
+        end = datetime.strptime(str(end_date)[:10], "%Y-%m-%d").date()
+    except (ValueError, TypeError) as exc:
+        raise ValueError(
+            f"economic_calendar.count_events_in_window: unparseable window "
+            f"start_date={start_date!r} end_date={end_date!r}"
+        ) from exc
+
+    count = 0
+    for policy in policies:
+        action = policy.get("action", "SIT_OUT")
+        if action not in ("SIT_OUT", "REDUCE"):
+            continue
+        event_type = policy.get("event_type") or ""
+        for evt in _events_for_type(event_type):
+            try:
+                d = datetime.strptime(evt["date"], "%Y-%m-%d").date()
+            except (ValueError, KeyError, TypeError):
+                continue
+            if start <= d <= end:
+                count += 1
+    return count
+
+
+def assert_events_present_in_window(
+    policies: list[dict],
+    start_date: str,
+    end_date: str,
+) -> int:
+    """Fail-closed coverage guard: raise EmptyCalendarError if the resolved calendar
+    has NO actionable events inside [start_date, end_date]. Returns the event count
+    on success (>0). Happy-path is a pure count — it never mutates anything, so a
+    populated calendar leaves downstream mask behavior byte-identical.
+    """
+    n = count_events_in_window(policies, start_date, end_date)
+    if n == 0:
+        event_types = sorted({(p.get("event_type") or "?") for p in policies})
+        raise EmptyCalendarError(
+            "economic_calendar: event policies were supplied "
+            f"(event_types={event_types}) but the resolved calendar has ZERO "
+            f"events within the backtest window [{start_date} .. {end_date}]. "
+            "Refusing to run a macro-blackout backtest against an empty/wiped "
+            "calendar — this would silently trade through FOMC/CPI/NFP/EIA. "
+            "Verify economic_release_dates.json / STATIC_EVENTS is populated for "
+            "this window (run the economic-calendar sync), or shorten the window "
+            "to one that contains real events."
+        )
+    return n
+
+
+def apply_class_event_mask(
+    long_entries: np.ndarray,
+    short_entries: np.ndarray,
+    timestamps: pl.Series,
+    policies: list[dict],
+    symbol: str,
+    start_date: str,
+    end_date: str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Class-path macro-blackout: coverage guard + SIT_OUT entry suppression.
+
+    Byte-identical to the DSL path's event-mask suppression. run_backtest applies
+    the mask inside generate_signals() as `entry & ~event_mask` (signals.py:288-290,
+    where `event_mask` True = SIT_OUT via generate_event_mask). This helper computes
+    the SAME `generate_event_mask(timestamps, policies, symbol)` and applies the SAME
+    `entry & ~mask` suppression, so the class path and DSL path suppress identical
+    bars for identical (policies, calendar, symbol).
+
+    ADDITION 4: runs the fail-closed coverage guard FIRST — a wiped calendar raises
+    EmptyCalendarError rather than silently no-op'ing.
+
+    Returns (masked_long_entries, masked_short_entries, event_mask). event_mask is
+    True where the bar is inside an event window (SIT_OUT).
+    """
+    # ADDITION 4 — fail-closed coverage guard (raises on a wiped calendar).
+    assert_events_present_in_window(policies, start_date, end_date)
+
+    # True = SIT_OUT (inside an event window). Product-scoped inside generate_event_mask.
+    event_mask = generate_event_mask(timestamps, policies, symbol)
+
+    # Suppress entries where mask is True — identical to generate_signals' `entry & ~mask`.
+    block = ~event_mask.astype(bool)
+    masked_long = np.asarray(long_entries) & block
+    masked_short = np.asarray(short_entries) & block
+    return masked_long, masked_short, event_mask
