@@ -552,3 +552,24 @@ State frozen mid-execution by the account weekly usage limit (killed the Part B 
 - **RESUME ORDER (Jul 11, unchanged locked sequence):** Part B builder → independent hand-check → Part A (class-path
   mask, ±30min window matched) → 7/8 land → seam trace (w/ live-frequency count) → re-baseline (runs the 0.5 exam +
   the amended calendar-suppression retroactive-materiality read). #3 receipt re-run in parallel (gates nothing).
+
+## ★ PART B BACKFILL — BUILT (awaiting independent hand-check before acceptance/commit) 2026-07-09
+Builder deliverable (uncommitted, scope-locked, no consumption logic touched): **336 events 2020-2023** into BOTH paths
+(`economic_release_dates.json` primary +336 / `STATIC_EVENTS` fallback +336, parity-asserted; 2024+ 416 rows preserved).
+Per type×yr: FOMC 7/8/8/8 (Fed cal 14:00 ET), CPI 12×4 (FRED rel_id 10, 08:30), NFP 12×4 (FRED rel_id 50, 08:30),
+EIA 53/52/52/52 (EIA v2, 10:30 / holiday-shift Thu 11:00). **March-2020 emergency FOMC (Mar-3 + Mar-15 Sunday) EXCLUDED,
+confirmed** (2020 = 7 scheduled, no March; Mar 17-18 was cancelled). `generate_event_mask` verified DST-anchored ±30min
+(2020 FOMC 14:00 ET = 18:00 UTC EDT; 2023 EIA holiday-shift 11:00 ET); D1 drift-test passes; AST clean.
+**TWO FLAGS:**
+- **EIA dates are DERIVED** (no release-timestamp endpoint — EIA v2 returns only period=week-ending-Fri; FRED lacks the
+  Petroleum Status Report). Real reported weeks + a holiday model (Thu 11:00 for any observed federal holiday Mon/Tue/Wed
+  of the release week — improves on prod's Monday-only generator). → the independent hand-check must FOCUS on EIA
+  holiday-weeks (the highest-risk type). FRED CPI/NFP + Fed FOMC are authoritative.
+- **★ DURABILITY RISK (registered follow-up):** `_events_for_type` returns the JSON list whenever the type is present,
+  falling to STATIC only when a type is ENTIRELY absent. So a future `economic-calendar-sync-service.ts` run
+  (monthly/boot cron) regenerates the JSON from `HISTORICAL_ANCHOR="2024-01-01"` and SILENTLY WIPES the 2020-2023 rows
+  (STATIC won't rescue — the types remain present in the regenerated JSON). **Durability fix (separate, deliberate):**
+  extend sync to `HISTORICAL_ANCHOR="2020-01-01"` + FOMC 2020-2023 in `FOMC_ANNOUNCE_DATES` + `EIA_EVENTS` to 2020 + add
+  FRED Feb/May dedup to the sync. Left out per scope-lock (avoids live-DB writes + un-deduped-FRED regression). REGISTER.
+**ACCEPTANCE: NOT committed until the INDEPENDENT hand-check (fresh agent, primary sources) passes — per the ratified
+Part-B acceptance ("nothing that reads the calendar changes behavior until verification passes").**
