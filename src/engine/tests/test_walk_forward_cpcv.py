@@ -24,6 +24,7 @@ from src.engine.config import (
     StrategyConfig,
 )
 from src.engine.walk_forward import (
+    _combined_fold_sharpe,
     _cpcv_fold_embargo_strips,
     _run_walk_forward_cpcv,
     split_walk_forward_windows,
@@ -429,110 +430,67 @@ class TestCpcvBilateralEmbargoIntegration:
         assert result["wf_metadata"].get("n_paths", -1) >= 0, "n_paths must be non-negative"
 
 
-# ─── FIX 1 (deep-scan #9): CPCV WFE from per-path IS Sharpes ────────────────
-# Pure-math unit tests: avoid full _run_walk_forward_cpcv execution.
-# Tests the WFE computation logic extracted from _run_walk_forward_cpcv.
+# ─── CPCV WFE — combined-fold IS basis (X5 RATIFIED 2026-07-09) ─────────────
+# Exercises the REAL production helper `_combined_fold_sharpe` (imported, not
+# reimplemented) + the real `_run_walk_forward_cpcv` result contract. Replaces
+# the former per-path-average mirror (deep-scan #9 FIX 1) after the operator
+# ratified option (a): the CPCV WFE IS basis is now the pooled combined-fold IS
+# Sharpe, symmetric with the pooled OOS numerator. wfe_status="cpcv_combined_fold".
 
-class TestFix1CpcvWfeFromPerPathIs:
-    """FIX 1: CPCV WFE computed from per-path IS Sharpes (E1 data).
+class TestCpcvWfeCombinedFold:
+    """CPCV WFE IS basis is the combined-fold (pooled) IS Sharpe.
 
-    Before: wfe_overall=None, wfe_status="cpcv_not_applicable" always.
-    After:  wfe_overall = round(agg_sharpe / mean(per_path_is_sharpes), 4)
-            wfe_status = "cpcv_per_path_is"
-    Exact contract: TS reads wfe_status verbatim.
+    Before X5 (pre-2026-07-09): wfe_overall = round(agg_sharpe /
+        mean(per_path_is_sharpes), 4), wfe_status="cpcv_per_path_is" (asymmetric).
+    After X5 (ratified): wfe_overall = round(agg_sharpe /
+        _combined_fold_sharpe(all_is_pnls), 4), wfe_status="cpcv_combined_fold".
+    TS wfe-gate.ts accepts both status strings; new runs emit combined_fold.
     """
 
-    def _compute_cpcv_wfe(
-        self,
-        per_path_is_sharpes: list[float],
-        agg_sharpe: float,
-    ) -> tuple[float | None, str, dict | None]:
-        """Replicate the FIX 1 WFE logic from _run_walk_forward_cpcv."""
-        import math
-        if not per_path_is_sharpes:
-            return None, "cpcv_not_applicable", None
-        is_basis = float(np.mean(per_path_is_sharpes))
-        if is_basis <= 0 or not math.isfinite(is_basis):
-            return 0.0, "degenerate_is", {
-                "n_paths_with_is": len(per_path_is_sharpes),
-                "is_basis": "per_path_is_sharpe_mean",
-                "oos_basis": "agg_sharpe",
-            }
-        wfe = round(agg_sharpe / is_basis, 4)
-        basis = {
-            "n_paths_with_is": len(per_path_is_sharpes),
-            "is_basis": "per_path_is_sharpe_mean",
-            "oos_basis": "agg_sharpe",
-        }
-        return wfe, "cpcv_per_path_is", basis
+    def test_combined_fold_sharpe_matches_pooled_formula(self):
+        """The real helper equals mean/std(ddof=1)*sqrt(252) over the pooled series."""
+        pnls = [5.0, -3.0, 8.0, -1.0, 4.0, -2.0, 6.0, 0.5]
+        arr = np.array(pnls, dtype=float)
+        expected = float(np.mean(arr) / np.std(arr, ddof=1) * np.sqrt(252))
+        assert _combined_fold_sharpe(pnls) == pytest.approx(expected, rel=1e-9)
 
-    def test_wfe_computed_when_is_available(self):
-        """IS Sharpes available → wfe_overall computed, status=cpcv_per_path_is."""
-        per_path_is = [2.0, 2.5, 1.8, 2.2, 2.1, 1.9]  # mean = 2.083
-        agg_sharpe = 1.0
-        wfe, status, basis = self._compute_cpcv_wfe(per_path_is, agg_sharpe)
-        assert status == "cpcv_per_path_is"
-        assert wfe is not None
-        assert isinstance(wfe, float)
-        expected = round(1.0 / float(np.mean(per_path_is)), 4)
-        assert wfe == pytest.approx(expected, rel=1e-5)
-
-    def test_wfe_status_exact_string(self):
-        """wfe_status must be exactly 'cpcv_per_path_is' (TS reads verbatim)."""
-        _, status, _ = self._compute_cpcv_wfe([1.5, 2.0, 1.8], 0.9)
-        assert status == "cpcv_per_path_is", (
-            f"Expected 'cpcv_per_path_is', got {status!r}. TS reads this verbatim."
+    def test_combined_fold_diverges_from_mean_of_per_path_sharpes(self):
+        """A/B: pooling per-path IS P&L differs from averaging per-path Sharpes when
+        per-path variance is dispersed — the exact reason the ratified fix matters."""
+        path_a = list(np.random.RandomState(11).normal(8.0, 10.0, 40))
+        path_b = list(np.random.RandomState(12).normal(8.0, 30.0, 40))  # wide
+        combined = _combined_fold_sharpe(path_a + path_b)
+        mean_of_per_path = float(np.mean([_combined_fold_sharpe(path_a),
+                                          _combined_fold_sharpe(path_b)]))
+        assert abs(combined - mean_of_per_path) / abs(mean_of_per_path) > 0.02, (
+            f"combined={combined:.4f} vs mean-per-path={mean_of_per_path:.4f} — "
+            f"expected material divergence on dispersed per-path variance"
         )
 
-    def test_wfe_degenerate_is_when_zero_basis(self):
-        """IS basis = 0 → wfe_overall=0.0, status=degenerate_is."""
-        wfe, status, _ = self._compute_cpcv_wfe([0.0, 0.0, 0.0], 1.0)
-        assert status == "degenerate_is"
-        assert wfe == pytest.approx(0.0)
+    def test_combined_fold_empty_returns_zero(self):
+        """Empty pooled IS series → 0.0 (routes WFE gate to degenerate_is → BLOCK)."""
+        assert _combined_fold_sharpe([]) == 0.0
 
-    def test_wfe_degenerate_is_when_negative_basis(self):
-        """IS basis < 0 → wfe_overall=0.0, status=degenerate_is."""
-        wfe, status, _ = self._compute_cpcv_wfe([-1.0, -0.5, -0.8], 1.0)
-        assert status == "degenerate_is"
-        assert wfe == pytest.approx(0.0)
+    def test_combined_fold_zero_variance_returns_zero(self):
+        """Zero-variance pooled series → 0.0 (no divide-by-zero; conservative BLOCK)."""
+        assert _combined_fold_sharpe([3.0, 3.0, 3.0, 3.0]) == 0.0
 
-    def test_wfe_not_applicable_when_no_is_data(self):
-        """No IS Sharpes → wfe_overall=None, status=cpcv_not_applicable (BYPASS 1)."""
-        wfe, status, basis = self._compute_cpcv_wfe([], 1.0)
-        assert wfe is None
-        assert status == "cpcv_not_applicable"
-        assert basis is None
-
-    def test_wfe_basis_dict_keys(self):
-        """wfe_cpcv_basis dict contains required keys when IS available."""
-        _, _, basis = self._compute_cpcv_wfe([2.0, 1.8, 2.2], 1.0)
-        assert basis is not None
-        assert basis["is_basis"] == "per_path_is_sharpe_mean"
-        assert basis["oos_basis"] == "agg_sharpe"
-        assert basis["n_paths_with_is"] == 3
-
-    def test_wfe_basis_dict_none_when_no_is(self):
-        """wfe_cpcv_basis is None when E1 data absent."""
-        _, _, basis = self._compute_cpcv_wfe([], 1.0)
-        assert basis is None
-
-    def test_wfe_replay_determinism(self):
-        """Same inputs → same wfe_overall (pure function)."""
-        per_path_is = [2.0, 2.5, 1.8, 2.2, 2.1, 1.9]
-        agg = 1.0
-        wfe1, _, _ = self._compute_cpcv_wfe(per_path_is, agg)
-        wfe2, _, _ = self._compute_cpcv_wfe(per_path_is, agg)
-        assert wfe1 == wfe2
+    def test_combined_fold_replay_determinism(self):
+        """Pure function — same input, same output."""
+        pnls = [5.0, -3.0, 8.0, -1.0, 4.0]
+        assert _combined_fold_sharpe(pnls) == _combined_fold_sharpe(pnls)
 
     def test_cpcv_result_wfe_status_key_present(self):
-        """_run_walk_forward_cpcv result always has wfe_status key (backward compat)."""
+        """_run_walk_forward_cpcv result always has wfe_status/wfe_overall keys;
+        status is one of the valid CPCV values (now including cpcv_combined_fold)."""
         data = _make_data(600)
         req = _make_request()
         result = _run_walk_forward_cpcv(request=req, data=data, n_splits=6, k_test_groups=2)
         assert "wfe_status" in result, "wfe_status key must always be present"
         assert "wfe_overall" in result, "wfe_overall key must always be present"
-        # Status must be one of the valid values
-        valid = {"cpcv_per_path_is", "degenerate_is", "cpcv_not_applicable"}
+        # Valid set: cpcv_combined_fold is the ratified producer output; the legacy
+        # cpcv_per_path_is is retained only for backward-compat on old serialized rows.
+        valid = {"cpcv_combined_fold", "cpcv_per_path_is", "degenerate_is", "cpcv_not_applicable"}
         assert result["wfe_status"] in valid, (
             f"wfe_status={result['wfe_status']!r} not in valid set {valid}"
         )

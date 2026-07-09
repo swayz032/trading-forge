@@ -28,12 +28,14 @@
  *     - wfe_overall undefined/null AND wfe_status absent/undefined → genuine legacy
  *       (pre-W27.5 backtests where the key was never written) → grandfather pass.
  *
- * Deep-scan #9 FIX K (2026-07-02) — CPCV per-path IS contract:
- *   When walk_forward.py runs CPCV mode AND per-path IS Sharpe is available, it
- *   emits wfe_status="cpcv_per_path_is" + a REAL numeric wfe_overall.  This is
- *   distinct from "cpcv_not_applicable" (IS Sharpe unavailable → gate exempt).
- *   The gate ENFORCES the same WFE_HARD_FLOOR as plain-WF and surfaces
- *   wfeBasis="cpcv_per_path_is" in the result for audit traceability.
+ * CPCV real-IS contract (deep-scan #9 FIX K 2026-07-02; X5 ratified 2026-07-09):
+ *   When walk_forward.py runs CPCV mode AND a per-path IS basis is available, it
+ *   emits a REAL numeric wfe_overall with wfe_status ∈ {"cpcv_combined_fold"
+ *   (current — symmetric combined-fold OOS/IS), "cpcv_per_path_is" (legacy
+ *   asymmetric per-path-average, accepted for backward-compat only)}.  Both are
+ *   distinct from "cpcv_not_applicable" (IS unavailable → gate exempt).  The gate
+ *   ENFORCES the same WFE_HARD_FLOOR as plain-WF and surfaces wfeBasis=<status>
+ *   in the result for audit traceability.
  *
  * NOTE on WFE_WARN_FLOOR: The floor is retained as a named constant and env knob
  * so callers can observe how deep below the hard floor a strategy is, but it no
@@ -120,9 +122,10 @@ export function getWfeWarnFloor(): number {
  *                    (G2a hardening 2026-06-22 — producer emits 0.0 + "degenerate_is"
  *                    when IS windows yield non-positive / absent Sharpe; this MUST NOT
  *                    be treated as a legacy null / grandfather pass).
- *                    When "cpcv_per_path_is" the gate ENFORCES the same hard floor as
- *                    plain-WF (deep-scan #9 FIX K 2026-07-02 — CPCV ran with per-path
- *                    IS Sharpe; wfe_overall is a real value and must be evaluated).
+ *                    When "cpcv_combined_fold" (X5 ratified 2026-07-09) or the legacy
+ *                    "cpcv_per_path_is" the gate ENFORCES the same hard floor as plain-WF
+ *                    (CPCV ran with a real IS basis; wfe_overall is a real value and must
+ *                    be evaluated).
  */
 export function evaluateWfeGate(
   wfeOverall: number | null | undefined,
@@ -164,23 +167,30 @@ export function evaluateWfeGate(
     };
   }
 
-  // Deep-scan #9 FIX K (2026-07-02) — CPCV per-path IS path:
-  // walk_forward.py CPCV mode emitted wfe_status="cpcv_per_path_is" AND a real
-  // numeric wfe_overall (IS Sharpe computed per path and aggregated).  This is distinct
-  // from "cpcv_not_applicable" (no per-path IS available → gate exempt) and from
-  // "degenerate_is" (WF ran but IS windows non-positive → hard block regardless of value).
-  // ENFORCE the same WFE_HARD_FLOOR as plain-WF; surface wfeBasis="cpcv_per_path_is"
-  // in the returned detail so callers can record the evaluation basis in audit rows.
-  if (wfeStatus === "cpcv_per_path_is") {
+  // Deep-scan #9 FIX K (2026-07-02) — CPCV real-IS path:
+  // walk_forward.py CPCV mode emits a CPCV IS-basis status + a real numeric
+  // wfe_overall.  Two accepted status strings (both enforce the hard floor):
+  //   - "cpcv_combined_fold" (X5 RATIFIED 2026-07-09) — symmetric combined-fold
+  //     OOS Sharpe / combined-fold IS Sharpe (pooled per-path IS daily P&L).
+  //     This is the current producer output and the institutional contract.
+  //   - "cpcv_per_path_is" (deep-scan #9, pre-ratification) — asymmetric
+  //     per-path-average IS denominator.  Kept accepted for backward-compat with
+  //     any in-flight backtest or serialized audit_log row emitted before the
+  //     X5 ratification; new runs never emit it.
+  // Both are distinct from "cpcv_not_applicable" (no per-path IS → gate exempt)
+  // and "degenerate_is" (WF ran but IS non-positive → hard block regardless).
+  // ENFORCE the same WFE_HARD_FLOOR as plain-WF; surface wfeBasis=<actual status>
+  // so callers record the true evaluation basis in audit rows.
+  if (wfeStatus === "cpcv_combined_fold" || wfeStatus === "cpcv_per_path_is") {
     if (wfeOverall == null) {
-      // Fail-closed: producer claimed per_path_is but emitted no wfe_overall — BLOCK.
+      // Fail-closed: producer claimed a CPCV IS basis but emitted no wfe_overall — BLOCK.
       return {
         status: "blocked",
         passed: false,
         wfeOverall: null,
         hardFloor: effectiveHardFloor,
         warnFloor: effectiveWarnFloor,
-        wfeBasis: "cpcv_per_path_is",
+        wfeBasis: wfeStatus,
         auditAction: "lifecycle.wfe_hard_floor_block",
       };
     }
@@ -192,7 +202,7 @@ export function evaluateWfeGate(
         wfeOverall: wfeCpcv,
         hardFloor: effectiveHardFloor,
         warnFloor: effectiveWarnFloor,
-        wfeBasis: "cpcv_per_path_is",
+        wfeBasis: wfeStatus,
         auditAction: null,
       };
     }
@@ -204,7 +214,7 @@ export function evaluateWfeGate(
       wfeOverall: wfeCpcv,
       hardFloor: effectiveHardFloor,
       warnFloor: effectiveWarnFloor,
-      wfeBasis: "cpcv_per_path_is",
+      wfeBasis: wfeStatus,
       auditAction: "lifecycle.wfe_hard_floor_block",
     };
   }

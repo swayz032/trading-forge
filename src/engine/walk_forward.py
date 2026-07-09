@@ -294,6 +294,29 @@ def _cpcv_fold_embargo_strips(
     return strip_start, strip_end
 
 
+def _combined_fold_sharpe(pnls: list[float]) -> float:
+    """Combined-fold (pooled) annualized Sharpe over a concatenated daily-P&L series.
+
+    This is the EXACT aggregation used for the CPCV OOS numerator ``agg_sharpe``
+    (mean/std ddof=1 × sqrt(252) over all pooled daily P&Ls). Ratified 2026-07-09
+    (Deep-Scan #22 X5): the CPCV WFE IS basis is computed with THIS same helper so
+    ``wfe_overall = combined-OOS-Sharpe / combined-IS-Sharpe`` — symmetric
+    combined-fold / combined-fold, matching the documented "combined-fold Sharpe
+    (OOS / IS)" contract in CLAUDE.md §4 / §12. The prior basis
+    ``mean(per_path_is_sharpes)`` was an asymmetric per-path-average denominator.
+    Empty or zero-variance input → 0.0 (routes the WFE gate to degenerate_is, the
+    conservative BLOCK direction). ``per_path_is_sharpes`` is UNTOUCHED and remains
+    the BIF/PBO IS basis — this helper only feeds the WFE ratio.
+    """
+    if not pnls:
+        return 0.0
+    arr = np.array(pnls, dtype=float)
+    std = float(np.std(arr, ddof=1))
+    if std <= 0 or not np.isfinite(std):
+        return 0.0
+    return float(np.mean(arr) / std * np.sqrt(252))
+
+
 def _run_walk_forward_cpcv(
     request: BacktestRequest,
     data: Optional[pl.DataFrame] = None,
@@ -364,6 +387,10 @@ def _run_walk_forward_cpcv(
     # When an IS backtest fails, the entry is skipped (path count stays aligned
     # by only appending when BOTH IS and OOS succeed for the same path index).
     per_path_is_sharpes: list[float] = []
+    # X5 ratified 2026-07-09: per-path IS daily P&L pooled for the combined-fold
+    # WFE IS basis (symmetric with all_oos_pnls). Extended only on IS-backtest
+    # success, mirroring per_path_is_sharpes' alignment discipline.
+    all_is_pnls: list[float] = []
 
     _shared_req = BacktestRequest(
         strategy=config,
@@ -516,6 +543,9 @@ def _run_walk_forward_cpcv(
         try:
             _is_bt_result = run_backtest(_shared_req, data=is_data)
             per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
+            # X5 ratified 2026-07-09: pool this path's IS daily P&L for the
+            # combined-fold WFE IS basis (same series agg_sharpe uses on OOS).
+            all_is_pnls.extend(list(_is_bt_result.get("daily_pnls", [])))
         except Exception as _is_bt_exc:
             print(
                 f"  CPCV: IS backtest for path {n_paths} failed ({_is_bt_exc!r}). "
@@ -961,11 +991,18 @@ def _run_walk_forward_cpcv(
     # FIX 1 (deep-scan #9): CPCV WFE — compute from per-path IS Sharpes (E1 data).
     # Previous: always emitted wfe_overall=None, wfe_status="cpcv_not_applicable"
     # regardless of whether per_path_is_sharpes was populated.
-    # New: when E1 IS backtests succeeded (_has_full_is=True), compute
-    #   wfe_overall = agg_sharpe / mean(per_path_is_sharpes)
-    #   wfe_status  = "cpcv_per_path_is"
-    # When IS basis is non-positive or non-finite:
-    #   wfe_overall = 0.0, wfe_status = "degenerate_is"
+    # RATIFIED 2026-07-09 (Deep-Scan #22 X5): when E1 IS backtests succeeded
+    # (_has_full_is=True), compute the SYMMETRIC combined-fold ratio
+    #   wfe_overall = agg_sharpe / _combined_fold_sharpe(all_is_pnls)
+    #   wfe_status  = "cpcv_combined_fold"
+    # Both numerator and denominator are pooled-across-paths Sharpes (same
+    # mean/std ddof=1 × sqrt(252) aggregation) — matches the documented
+    # "combined-fold Sharpe (OOS / IS)" contract in CLAUDE.md §4 / §12. The
+    # prior basis mean(per_path_is_sharpes) was an asymmetric per-path-average
+    # denominator (operator-ratified fix, packet cpcv-wfe 2026-07-09).
+    # per_path_is_sharpes stays the BIF/PBO IS basis — UNTOUCHED here.
+    # When IS basis is non-positive / non-finite / empty: wfe_overall = 0.0,
+    #   wfe_status = "degenerate_is" (helper returns 0.0 → conservative BLOCK).
     # When E1 data absent (_has_full_is=False): keep cpcv_not_applicable unchanged.
     import math as _math_wfe_cpcv
     _cpcv_wfe_overall: Optional[float] = None
@@ -973,27 +1010,29 @@ def _run_walk_forward_cpcv(
     _cpcv_wfe_basis: Optional[dict] = None
 
     if _has_full_is and per_path_is_sharpes:
-        _cpcv_is_basis = float(np.mean(per_path_is_sharpes))
+        _cpcv_is_basis = _combined_fold_sharpe(all_is_pnls)
         if _cpcv_is_basis <= 0 or not _math_wfe_cpcv.isfinite(_cpcv_is_basis):
             _cpcv_wfe_overall = 0.0
             _cpcv_wfe_status = "degenerate_is"
             print(
-                "  WFE (CPCV): IS basis <= 0 or non-finite — emitting wfe_overall=0.0 "
-                "(degenerate_is); TS gate will BLOCK.",
+                "  WFE (CPCV): combined-fold IS basis <= 0 / non-finite / empty — "
+                "emitting wfe_overall=0.0 (degenerate_is); TS gate will BLOCK.",
                 file=sys.stderr,
             )
         else:
             _cpcv_wfe_overall = round(agg_sharpe / _cpcv_is_basis, 4)
-            _cpcv_wfe_status = "cpcv_per_path_is"
+            _cpcv_wfe_status = "cpcv_combined_fold"
             print(
                 f"  WFE (CPCV): {_cpcv_wfe_overall:.4f} "
-                f"(OOS={agg_sharpe:.4f} / IS_mean={_cpcv_is_basis:.4f}, "
-                f"n_paths_with_is={len(per_path_is_sharpes)}, status=cpcv_per_path_is)",
+                f"(OOS={agg_sharpe:.4f} / IS_combined={_cpcv_is_basis:.4f}, "
+                f"n_is_pnls={len(all_is_pnls)}, n_paths_with_is={len(per_path_is_sharpes)}, "
+                f"status=cpcv_combined_fold)",
                 file=sys.stderr,
             )
         _cpcv_wfe_basis = {
             "n_paths_with_is": len(per_path_is_sharpes),
-            "is_basis": "per_path_is_sharpe_mean",
+            "n_is_pnls": len(all_is_pnls),
+            "is_basis": "combined_fold_is_sharpe",
             "oos_basis": "agg_sharpe",
         }
     else:
@@ -2559,6 +2598,9 @@ def _run_walk_forward_cpcv_class(
     all_oos_pnl_records: list[dict] = []
     all_oos_equity: list[float] = []
     per_path_is_sharpes: list[float] = []
+    # X5 ratified 2026-07-09: pooled per-path IS daily P&L for the combined-fold
+    # WFE IS basis (parity with the main _run_walk_forward_cpcv path).
+    all_is_pnls: list[float] = []
 
     def _ts_col_cpcv_cls(df: pl.DataFrame) -> str:
         for col in ("ts_event", "ts_et"):
@@ -2679,6 +2721,9 @@ def _run_walk_forward_cpcv_class(
                     skip_eligibility_gate=skip_eligibility_gate,
                 )
                 per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
+                # X5 ratified 2026-07-09: pool this path's IS daily P&L for the
+                # combined-fold WFE IS basis (parity with the main CPCV path).
+                all_is_pnls.extend(list(_is_bt_result.get("daily_pnls", [])))
             except Exception as _is_bt_exc:
                 print(
                     f"  CPCV (class): IS backtest for path {n_paths} failed ({_is_bt_exc!r}). "
@@ -2837,20 +2882,23 @@ def _run_walk_forward_cpcv_class(
     except Exception as _pbo_exc_cls:
         print(f"  PBO (CPCV class): computation failed ({_pbo_exc_cls!r}).", file=sys.stderr)
 
-    # ── WFE — combined-fold OOS Sharpe / per-path IS Sharpe mean ──────────────
+    # ── WFE — combined-fold OOS Sharpe / combined-fold IS Sharpe ──────────────
+    # X5 ratified 2026-07-09: symmetric combined/combined basis (parity with the
+    # main _run_walk_forward_cpcv path). Was mean(per_path_is_sharpes).
     _wfe_overall_cls: Optional[float] = None
     _wfe_status_cls: str = "cpcv_not_applicable"
     if _has_full_is_cls and per_path_is_sharpes:
-        _is_basis_cls = float(np.mean(per_path_is_sharpes))
+        _is_basis_cls = _combined_fold_sharpe(all_is_pnls)
         if _is_basis_cls <= 0 or not np.isfinite(_is_basis_cls):
             _wfe_overall_cls = 0.0
             _wfe_status_cls = "degenerate_is"
         else:
             _wfe_overall_cls = round(agg_sharpe / _is_basis_cls, 4)
-            _wfe_status_cls = "cpcv_per_path_is"
+            _wfe_status_cls = "cpcv_combined_fold"
         print(
             f"  WFE (CPCV class): {_wfe_overall_cls} status={_wfe_status_cls} "
-            f"(OOS={agg_sharpe:.4f}, n_paths_with_is={len(per_path_is_sharpes)})",
+            f"(OOS={agg_sharpe:.4f}, IS_combined={_is_basis_cls:.4f}, "
+            f"n_is_pnls={len(all_is_pnls)}, n_paths_with_is={len(per_path_is_sharpes)})",
             file=sys.stderr,
         )
     else:
