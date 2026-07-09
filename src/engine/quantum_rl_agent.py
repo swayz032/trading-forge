@@ -1583,6 +1583,61 @@ def _emit_audit_row(
         _rl_logger.warning("_emit_audit_row: failed to insert audit row for %s: %s", action, exc)
 
 
+# ─── quantum_rl_runs persistence seam (deep-scan #22 Track X2) ───────────────
+#
+# Extracted from the inline INSERT block inside train_regime_conditioned_policies
+# so the namespace-separation invariant ("RL output never lands in
+# quantum_mc_runs") can be BEHAVIORALLY tested — not just source-regex-scanned.
+# The training loop still opens its own real psycopg2 connection in production
+# (see call site below); this function only takes an already-open, DB-API-
+# compatible connection and issues the INSERT. Byte-identical SQL/params to the
+# pre-refactor inline block; the only change is the injectable seam.
+def persist_rl_run(conn, row: dict) -> None:
+    """Insert a single quantum_rl_runs row using an already-open DB connection.
+
+    Args:
+        conn: DB-API-compatible connection — must support `.cursor()` returning
+            a context-manager cursor with positional-parameter `.execute()`,
+            plus `.commit()`. In production this is a real psycopg2 connection
+            opened by the caller; in tests it may be a fake/pglite-style double
+            that records the executed SQL + params without touching a live DB.
+        row: dict with keys strategy_id, regime, state_vector, action,
+            confidence_score, effective_confidence, reward, ci_high,
+            drawdown_penalty, governance_labels, cpcv_fold_id, seed.
+
+    Raises:
+        Whatever `conn.cursor()` / `cur.execute()` raises — the caller (the
+        training loop) is responsible for catching and recording
+        write_failures, exactly as it did around the pre-refactor inline block.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO quantum_rl_runs
+                (strategy_id, regime, state_vector, action,
+                 confidence_score, effective_confidence, reward,
+                 ci_high_at_evaluation, drawdown_penalty,
+                 governance_labels, cpcv_fold_id, seed)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                row["strategy_id"],
+                row["regime"],
+                json.dumps(row["state_vector"]),
+                row["action"],
+                row["confidence_score"],
+                row["effective_confidence"],
+                row["reward"],
+                row["ci_high"],
+                row["drawdown_penalty"],
+                json.dumps(row["governance_labels"]),
+                row["cpcv_fold_id"],
+                row["seed"],
+            ),
+        )
+    conn.commit()
+
+
 # ─── Regime-conditioned training loop ────────────────────────────────────────
 
 def train_regime_conditioned_policies(
@@ -1992,32 +2047,26 @@ def train_regime_conditioned_policies(
                     import psycopg2
                     conn = psycopg2.connect(db_url)
                     try:
-                        with conn.cursor() as cur:
-                            cur.execute(
-                                """
-                                INSERT INTO quantum_rl_runs
-                                    (strategy_id, regime, state_vector, action,
-                                     confidence_score, effective_confidence, reward,
-                                     ci_high_at_evaluation, drawdown_penalty,
-                                     governance_labels, cpcv_fold_id, seed)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                                """,
-                                (
-                                    strategy_id,
-                                    regime,
-                                    json.dumps(batch_state_vector),
-                                    batch_action,
-                                    batch_confidence_score,
-                                    batch_effective_confidence,
-                                    float(np.mean(batch_rewards)) if batch_rewards else 0.0,
-                                    batch_ci_high,
-                                    None,  # drawdown_penalty — not tracked at batch granularity
-                                    json.dumps(governance_payload),
-                                    None,  # cpcv_fold_id — bar-level fold join not wired here
-                                    regime_seed,  # Fix 8: persist seed for replay reproducibility
-                                ),
-                            )
-                        conn.commit()
+                        # deep-scan #22 Track X2: INSERT extracted to
+                        # persist_rl_run() (injectable seam) — same SQL/params
+                        # as before, now behaviorally testable without a live DB.
+                        persist_rl_run(
+                            conn,
+                            {
+                                "strategy_id": strategy_id,
+                                "regime": regime,
+                                "state_vector": batch_state_vector,
+                                "action": batch_action,
+                                "confidence_score": batch_confidence_score,
+                                "effective_confidence": batch_effective_confidence,
+                                "reward": float(np.mean(batch_rewards)) if batch_rewards else 0.0,
+                                "ci_high": batch_ci_high,
+                                "drawdown_penalty": None,  # not tracked at batch granularity
+                                "governance_labels": governance_payload,
+                                "cpcv_fold_id": None,  # bar-level fold join not wired here
+                                "seed": regime_seed,  # Fix 8: persist seed for replay reproducibility
+                            },
+                        )
                     finally:
                         conn.close()
                 except Exception as db_exc:
