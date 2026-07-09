@@ -19,7 +19,7 @@ import {
   stripPythonCommentsAndDocstrings,
   checkSurface,
   type GateSurface,
-} from "../../../scripts/check-gate-contract-keys.ts";
+} from "../../../scripts/check-gate-contract-keys.js";
 
 const tmp = mkdtempSync(path.join(tmpdir(), "ds22-x1-gck-"));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
