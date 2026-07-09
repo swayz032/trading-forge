@@ -5309,9 +5309,25 @@ export async function evaluateSignals(
       // `entry_quality.factor_sources` (the graduation-time provenance map) — see
       // `deriveEvidenceBackedConfluenceCount()` in confluence-provenance.ts.
       //
-      // Excluding auto_floor factors only ever REDUCES size (fail-safe). NOTE: this gates on
+      // Excluding auto_floor factors only ever REDUCES the COUNT relative to the immediate
+      // pre-fix (buggy) value (fail-safe on the count derivation itself). NOTE: this gates on
       // PROVENANCE (evidence-backed); gating additionally on per-bar SATISFACTION is a tracked
       // follow-up (needs Stage-2 result threading).
+      //
+      // Deep-scan #22 loop-3 (2026-07-09) — honest behavior statement: this F-1 fix, landed
+      // alone, would have a SIDE EFFECT of silently ACTIVATING the confluence-weighted upsize
+      // for most strategies (confluence_factors is near-universally populated by the graduator,
+      // unlike the old buggy confirming_indicators read which was usually empty). To avoid a
+      // silent size-INCREASE shipping by accident, resolveConfluenceMultiplier() in
+      // risk-sizing.ts now gates the ACTUAL multiplier application behind
+      // CONFLUENCE_SIZE_UPSIZE_ENABLED (env, default false):
+      //   - flag OFF (default): multiplier is pinned to 1.0 — size is UNCHANGED from historical
+      //     (pre-ds22) behavior, a size no-op, regardless of confluenceCount computed below.
+      //   - flag ON: the evidence-backed, auto_floor-excluded confluenceCount drives the
+      //     1.0x/1.5x/2.0x upsize as W23H.4 originally intended.
+      // confluenceCount itself is still computed and threaded into sizingInputs/confluenceAudit
+      // below regardless of the flag — it stays correct and observable either way; the flag only
+      // gates whether it is ALLOWED to move finalContracts.
       const confluenceCount = deriveEvidenceBackedConfluenceCount(entryQualityForSizing);
 
       // Per-strategy confluence_size_multiplier_map from config (set by framework-overlay W23H.4)

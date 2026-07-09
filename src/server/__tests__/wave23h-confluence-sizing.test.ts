@@ -20,13 +20,26 @@
  * callers emit it via insertAuditRow(). Tests verify the payload shape is correct.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import {
   computeRiskDerivedContracts,
   resolveConfluenceMultiplier,
   DEFAULT_CONFLUENCE_MULTIPLIER,
   type RiskSizingInputs,
 } from "../lib/risk-sizing.js";
+
+// Deep-scan #22 loop-3 (2026-07-09): the confluence-weighted upsize is now gated behind
+// CONFLUENCE_SIZE_UPSIZE_ENABLED (default false — see risk-sizing.ts::resolveConfluenceMultiplier).
+// This file specifically tests the upsize FEATURE, so it opts in for its entire duration and
+// restores the prior value afterward so it doesn't leak into other test files.
+const _PRIOR_UPSIZE_ENV = process.env.CONFLUENCE_SIZE_UPSIZE_ENABLED;
+beforeAll(() => {
+  process.env.CONFLUENCE_SIZE_UPSIZE_ENABLED = "true";
+});
+afterAll(() => {
+  if (_PRIOR_UPSIZE_ENV === undefined) delete process.env.CONFLUENCE_SIZE_UPSIZE_ENABLED;
+  else process.env.CONFLUENCE_SIZE_UPSIZE_ENABLED = _PRIOR_UPSIZE_ENV;
+});
 
 // ── Standard MES base-6 config (Wave 23 canonical) ──────────────────────────
 const MES_CFG_BASE6: RiskSizingInputs["positionSizeConfig"] = {
