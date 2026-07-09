@@ -535,3 +535,20 @@ not all-day). The decisive pair's 00:05 ET entry is correctly NOT masked (not wi
 release times, matching `blackout_gate.py` + live. Part B feeds the calendar source (STATIC_EVENTS / calendar-sync) from
 which the ±30-min windows derive.** (No shared-convention finding to rule on — the existing convention is already the
 correct timestamp-anchored one.)
+
+## PHASE 0 CHECKPOINT — weekly-limit interruption (2026-07-09; agents reset Jul 11 7pm ET)
+State frozen mid-execution by the account weekly usage limit (killed the Part B builder + the #2 broader-footprint resume + #3 receipt):
+- **DONE + recorded:** 0.5 re-baseline pre-reg (ratified-as-amended); Defect-9 decisive tally (75DJN5UVQnw_MES CLEAN,
+  calendar-coverage gap = zero events pre-2024-01-02); mask-semantics trace (TIMESTAMP-anchored ±30min, Part-A shape
+  locked, addition-#1 cleared); Part B spec + 3 additions ratified.
+- **INCOMPLETE (agent-limit, resume Jul 11):** (a) Part B calendar backfill 2020-2024 (FRED/BLS/EIA keys present in .env;
+  scheduled-only, release-time ET/DST, March-2020 emergencies excluded) + verification fixture — builder produced
+  nothing before the cut; (b) INDEPENDENT hand-check (~10 dates vs primary sources, composition: March-2020 boundary +
+  DST-adjacent CPI + EIA holiday-shift + spread) — doer≠grader, MUST be a fresh agent; (c) #3 Defect-10 real-corpus
+  receipt (displacement net / fraction-in-window / win-rate delta / tripwire) — real data confirmed reachable, run cut.
+- **NOT rushed under limit pressure (deliberate):** the Part B backfill demands the care the spec named (timestamp
+  convention, March-2020 exclusion, EIA holiday-shifts) + an INDEPENDENT hand-check that agents can't run until the
+  reset. A hasty self-built + self-checked backfill would be the exact F-2-for-data pattern the ratification forbade.
+- **RESUME ORDER (Jul 11, unchanged locked sequence):** Part B builder → independent hand-check → Part A (class-path
+  mask, ±30min window matched) → 7/8 land → seam trace (w/ live-frequency count) → re-baseline (runs the 0.5 exam +
+  the amended calendar-suppression retroactive-materiality read). #3 receipt re-run in parallel (gates nothing).
