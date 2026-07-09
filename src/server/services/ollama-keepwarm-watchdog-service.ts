@@ -54,6 +54,7 @@ import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { shouldEmitAlert, markAlertEmitted, clearAlertKey } from "../lib/alert-dedup.js";
 import { notifyCritical, notifyInfo } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import {
   recheckOllamaHealth,
   setOllamaUnhealthy,
@@ -448,18 +449,22 @@ export async function runOllamaKeepaliveWatchdogTick(): Promise<void> {
       markAlertEmitted(ALERT_KEY_CIRCUIT_OPEN, "CRITICAL");
       notifyCritical(
         "Ollama gemma4 extraction DOWN — cloud fallback active",
-        [
-          `Recovery ladder (Steps A+B) exhausted after ${_consecutiveUnhealthyTicks} consecutive unhealthy ticks.`,
-          `Model ${model} could not be restored in VRAM.`,
-          `Extraction routing to cloud fallback (gpt-5-mini) — no action needed unless cloud budget is a concern.`,
-          "",
-          "**Operator runbook:**",
-          "1. Check Ollama log: `%LOCALAPPDATA%\\Ollama\\server.log` — look for 'aborting load'",
-          "2. Run: `ollama ps` — if empty, model is unloaded",
-          "3. Verify OLLAMA_KEEP_ALIVE=-1 is set as a User environment variable (persist across reboots)",
-          "4. Restart Ollama: stop + start `ollama serve`",
-          "5. Wait 3-5 min — watchdog will auto-detect recovery and flip OLLAMA_HEALTHY back to true",
-        ].join("\n"),
+        appendFamilyGradePostscript(
+          [
+            `Recovery ladder (Steps A+B) exhausted after ${_consecutiveUnhealthyTicks} consecutive unhealthy ticks.`,
+            `Model ${model} could not be restored in VRAM.`,
+            `Extraction routing to cloud fallback (gpt-5-mini) — no action needed unless cloud budget is a concern.`,
+            "",
+            "**Operator runbook:**",
+            "1. Check Ollama log: `%LOCALAPPDATA%\\Ollama\\server.log` — look for 'aborting load'",
+            "2. Run: `ollama ps` — if empty, model is unloaded",
+            "3. Verify OLLAMA_KEEP_ALIVE=-1 is set as a User environment variable (persist across reboots)",
+            "4. Restart Ollama: stop + start `ollama serve`",
+            "5. Wait 3-5 min — watchdog will auto-detect recovery and flip OLLAMA_HEALTHY back to true",
+          ].join("\n"),
+          "The bot's local AI (which reads strategy videos) went offline; it automatically switched to the cloud AI backup, so the bot keeps working normally.",
+          "No urgent action — the bot is fine on cloud backup. If you want to restore the free local AI to save on cloud costs, ask Tony to restart Ollama on the tower.",
+        ),
         {
           correlationId,
           consecutiveUnhealthyTicks: _consecutiveUnhealthyTicks,
