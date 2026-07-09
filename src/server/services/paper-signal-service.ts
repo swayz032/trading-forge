@@ -34,7 +34,7 @@ import { getSessionShapeScore } from "./volume-profile-service.js";
 import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confirming-indicator-evaluator.js";
 // W23H.4: confluence-weighted sizing — replaces legacy dynamic_atr block
 import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-sizing.js";
-import { evidenceBackedFactorCount } from "../lib/confluence-provenance.js";
+import { deriveEvidenceBackedConfluenceCount, type FactorSource } from "../lib/confluence-provenance.js";
 // W23H.4: audit row writer for sizing.confluence_multiplier_applied
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 // W23H.3: per-strategy allowed_entry_windows time gates
@@ -5287,21 +5287,32 @@ export async function evaluateSignals(
       // Firm contract cap from firm_config lookup (same as prior P1-6(a))
       const firmCap = getFirmContractCap(sessionRow.firmId, symbol);
 
-      // W23H.4: confluence_count = confirming_indicators.length + 1 (primary always counts).
+      // W23H.4: confluence_count = evidence-backed confluence_factors + 1 (primary always counts).
       // Re-read entry_quality from config here because entryQuality is scoped inside the
       // antiSetupBlocked else-block and not visible at this level. Same derivation as Stage 2.
       const rawConfigForSizing = config as unknown as Record<string, unknown>;
       const entryQualityForSizing = (
         rawConfigForSizing.entry_quality ??
         (rawConfigForSizing.strategy as Record<string, unknown> | undefined)?.entry_quality
-      ) as { confirming_indicators?: string[] } | undefined;
-      // HARDENING 2026-06-30 (confluence→sizing): size only on EVIDENCE-BACKED confirmations. Auto-floor
-      // confluences (graduator-injected regime_match / structural_setup — AUTO_FLOOR_FACTORS) are Trading
-      // Forge overlay, NOT the YouTube-extracted edge, and must NEVER justify the 1.5×/2× size upsize.
-      // Excluding them only ever REDUCES size (fail-safe). NOTE: this gates on PROVENANCE (evidence-backed);
-      // gating additionally on per-bar SATISFACTION is a tracked follow-up (needs Stage-2 result threading).
-      const confirmingForSizing = entryQualityForSizing?.confirming_indicators ?? [];
-      const confluenceCount = evidenceBackedFactorCount(confirmingForSizing) + 1;
+      ) as { confluence_factors?: string[]; factor_sources?: Record<string, FactorSource> } | undefined;
+      // HARDENING 2026-06-30 (confluence→sizing), FIXED deep-scan #22 FIX F-1 (2026-07-09): size
+      // only on EVIDENCE-BACKED confluence_factors. Auto-floor confluences (graduator-injected
+      // regime_match / structural_setup — AUTO_FLOOR_FACTORS, or anything tagged "auto_floor" in
+      // the per-factor factor_sources provenance map) are Trading Forge overlay, NOT the
+      // YouTube-extracted edge, and must NEVER justify the 1.5×/2× size upsize.
+      //
+      // FIX F-1: the prior derivation read `entry_quality.confirming_indicators` — an array of
+      // `{indicator, params, direction}` OBJECTS (deep-scan #22 FIX A1) — into a function typed
+      // for `string[]`. AUTO_FLOOR_FACTORS.has(object) is always false, so the exclusion never
+      // fired and every confluence strategy was credited fully evidence-backed. The CORRECT field
+      // is `entry_quality.confluence_factors` (the string[] Stage 2 already reads at :4880) +
+      // `entry_quality.factor_sources` (the graduation-time provenance map) — see
+      // `deriveEvidenceBackedConfluenceCount()` in confluence-provenance.ts.
+      //
+      // Excluding auto_floor factors only ever REDUCES size (fail-safe). NOTE: this gates on
+      // PROVENANCE (evidence-backed); gating additionally on per-bar SATISFACTION is a tracked
+      // follow-up (needs Stage-2 result threading).
+      const confluenceCount = deriveEvidenceBackedConfluenceCount(entryQualityForSizing);
 
       // Per-strategy confluence_size_multiplier_map from config (set by framework-overlay W23H.4)
       const confluenceSizeMultiplierMap = (rawPositionSize?.confluence_size_multiplier as Record<number, number> | undefined) ?? undefined;
