@@ -209,11 +209,29 @@ describe("FIX A1 — static source contracts", () => {
   });
 
   it("paper-signal-service.ts reader still declares both fields inside the entry_quality read-path type (unchanged contract)", () => {
-    const readerIdx = PAPER_SIGNAL_SRC.indexOf("const entryQuality = (");
+    // Deep-scan #22 Z6 (2026-07-09): the inline entryQuality read + type
+    // annotation was extracted into a pure, importable leaf
+    // (src/server/lib/confluence-path-resolver.ts::resolveConfluenceDispatch)
+    // so a pglite test (deepscan22-y6-path-c-db-roundtrip.test.ts) can drive
+    // the REAL decision logic instead of a hand-copied mirror. The contract
+    // this test protects — both fields reachable from paper-signal-service.ts's
+    // dispatch — now spans two files: paper-signal-service.ts must call the
+    // resolver, and the resolver's EntryQualityForDispatch type must declare
+    // both fields.
+    expect(PAPER_SIGNAL_SRC).toContain(
+      'import { resolveConfluenceDispatch } from "../lib/confluence-path-resolver.js"',
+    );
+    expect(PAPER_SIGNAL_SRC).toContain("resolveConfluenceDispatch(rawConfig)");
+
+    const RESOLVER_SRC = fs.readFileSync(
+      path.resolve(__dirname, "../lib/confluence-path-resolver.ts"),
+      "utf8",
+    );
+    const readerIdx = RESOLVER_SRC.indexOf("export interface EntryQualityForDispatch");
     expect(readerIdx).toBeGreaterThan(0);
-    const block = PAPER_SIGNAL_SRC.slice(readerIdx, readerIdx + 1100);
+    const block = RESOLVER_SRC.slice(readerIdx, readerIdx + 1100);
     expect(block).toContain("confirming_indicators?: ConfirmingIndicator[]");
     expect(block).toContain("use_weighted_scoring?: boolean");
-    expect(block).toContain("rawConfig.entry_quality");
+    expect(RESOLVER_SRC).toContain("rawConfig.entry_quality");
   });
 });

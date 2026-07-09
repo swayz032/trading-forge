@@ -43,6 +43,13 @@ const PAPER_SIGNAL_SRC = fs.readFileSync(
   path.resolve(__dirname, "../services/paper-signal-service.ts"),
   "utf-8",
 );
+// Deep-scan #22 Z6 (2026-07-09): the entryQuality reader block was extracted
+// out of paper-signal-service.ts into a pure leaf — see
+// src/server/lib/confluence-path-resolver.ts::resolveConfluenceDispatch.
+const RESOLVER_SRC = fs.readFileSync(
+  path.resolve(__dirname, "../lib/confluence-path-resolver.ts"),
+  "utf-8",
+);
 
 // ═════════════════════════════════════════════════════════════════════════
 // Control 1 — Path-C wiring (ds22 CRITICAL#3): wrong-location JSONB-key
@@ -121,10 +128,21 @@ describe("X6 Control 1 — Path-C wiring: JSONB-key-location fault injection", (
     expect(customIndicators).toHaveLength(1);
   });
 
-  it("static pin: reader block in paper-signal-service.ts still reads ONLY rawConfig.entry_quality (or strategy.entry_quality) — no top-level fallback", () => {
-    const readerIdx = PAPER_SIGNAL_SRC.indexOf("const entryQuality = (");
+  it("static pin: paper-signal-service.ts delegates to resolveConfluenceDispatch(), whose reader block reads ONLY rawConfig.entry_quality (or strategy.entry_quality) — no top-level fallback", () => {
+    // Deep-scan #22 Z6 (2026-07-09): the reader block used to live inline in
+    // paper-signal-service.ts; it is now a pure extracted leaf. Pin BOTH
+    // halves of the contract: paper-signal-service.ts must call the resolver
+    // (not reimplement the read inline), and the resolver's reader block
+    // must preserve the no-top-level-fallback invariant this control exists
+    // to guard.
+    expect(PAPER_SIGNAL_SRC).toContain(
+      'import { resolveConfluenceDispatch } from "../lib/confluence-path-resolver.js"',
+    );
+    expect(PAPER_SIGNAL_SRC).toContain("resolveConfluenceDispatch(rawConfig)");
+
+    const readerIdx = RESOLVER_SRC.indexOf("const entryQuality = (");
     expect(readerIdx).toBeGreaterThan(0);
-    const block = PAPER_SIGNAL_SRC.slice(readerIdx, readerIdx + 400);
+    const block = RESOLVER_SRC.slice(readerIdx, readerIdx + 400);
     expect(block).toContain("rawConfig.entry_quality");
     // Must NOT read a bare top-level use_weighted_scoring / confirming_indicators
     // sibling key as a fallback — that would silently reopen the dead path.
