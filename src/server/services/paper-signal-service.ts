@@ -31,7 +31,9 @@ import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateFo
 import type { EntryDecisionContext } from "../db/jsonb-shapes.js";
 import { getSessionShapeScore } from "./volume-profile-service.js";
 // Wave 23H.D: per-strategy confirming_indicators evaluator
-import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confirming-indicator-evaluator.js";
+import { evaluateConfirmingIndicators } from "./confirming-indicator-evaluator.js";
+// Deep-scan #22 Z6: Path-C/A/B dispatch decision — pure, importable leaf (was inline)
+import { resolveConfluenceDispatch } from "../lib/confluence-path-resolver.js";
 // W23H.4: confluence-weighted sizing — replaces legacy dynamic_atr block
 import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-sizing.js";
 import { deriveEvidenceBackedConfluenceCount, type FactorSource } from "../lib/confluence-provenance.js";
@@ -4159,26 +4161,17 @@ export async function evaluateSignals(
       // Fail-open: if biasState is null (engine failed earlier) → no block.
       // Audit: signal.not_active_strategy_for_regime on block.
       const rawConfig = config as unknown as Record<string, unknown>;
-      const entryQuality = (
-        rawConfig.entry_quality ??
-        (rawConfig.strategy as Record<string, unknown> | undefined)?.entry_quality
-      ) as {
-        confluence_factors?: string[];
-        min_factors_satisfied?: number;
-        extraction_provenance?: string;
-        /** W23G.11 per-strategy confirming indicators (W23H.D: evaluated at signal time) */
-        confirming_indicators?: ConfirmingIndicator[];
-        /**
-         * Wave 25 W25.1: opt-in to weighted probabilistic scoring (Path C).
-         * When true, Stage 2 uses evaluateWeightedConfluence() instead of boolean counting.
-         * Default false — existing strategies continue on Path A or B unchanged.
-         */
-        use_weighted_scoring?: boolean;
-      } | undefined;
-
-      const isLegacyStrategy =
-        !entryQuality ||
-        entryQuality.extraction_provenance === "legacy_no_confluence";
+      // Deep-scan #22 Z6 (2026-07-09): entryQuality/isLegacyStrategy/useWeightedScoring/
+      // usePerStrategy/customIndicators are all computed once here via the extracted pure
+      // resolveConfluenceDispatch() leaf (src/server/lib/confluence-path-resolver.ts) —
+      // BEHAVIOR-PRESERVING extraction of what was previously three separate inline
+      // computations (entryQuality read + isLegacyStrategy here; useWeightedScoring at the
+      // former :4363; customIndicators/usePerStrategy at the former :4767-4768). Nothing
+      // mutates rawConfig/entryQuality between here and those original call sites, so
+      // hoisting the computation is byte-identical — the values are read, not recomputed,
+      // at their original use sites below.
+      const { entryQuality, isLegacyStrategy, useWeightedScoring, usePerStrategy, customIndicators } =
+        resolveConfluenceDispatch(rawConfig);
 
       let stage1Blocked = false;
       if (!isLegacyStrategy && biasState && biasState.activeStrategyId !== null) {
@@ -4359,8 +4352,10 @@ export async function evaluateSignals(
           //
           //   Path B (Wave 23.C): confirming_indicators is absent/empty
           //     → canonical-5 factor boolean: satisfiedCount >= minRequired
-
-          const useWeightedScoring = entryQuality.use_weighted_scoring === true && !isLegacyStrategy;
+          //
+          // useWeightedScoring already resolved above via resolveConfluenceDispatch()
+          // (deep-scan #22 Z6) — same value as entryQuality.use_weighted_scoring === true
+          // && !isLegacyStrategy, computed once instead of recomputed here.
 
           // A-1 (Wave 25 Pass 2): pathCFailed flag — set in catch block when Path C
           // (evaluateWeightedConfluence) throws. When true, execution falls through to
@@ -4764,8 +4759,9 @@ export async function evaluateSignals(
           // ── W23H.D dispatcher: per-strategy vs canonical 5 (Path B fallback) ──
           // Runs when: (a) strategy does not opt into Path C, OR
           //            (b) Path C threw an error (A-1 fallback — pathCFailed=true)
-          const customIndicators = entryQuality.confirming_indicators ?? [];
-          const usePerStrategy = customIndicators.length > 0;
+          // customIndicators/usePerStrategy already resolved above via
+          // resolveConfluenceDispatch() (deep-scan #22 Z6) — same values as
+          // entryQuality.confirming_indicators ?? [] / customIndicators.length > 0.
 
           // Determine signal direction from config.side for directional evaluation
           const signalDir = (config.side === "short" ? "short" : "long") as "long" | "short";

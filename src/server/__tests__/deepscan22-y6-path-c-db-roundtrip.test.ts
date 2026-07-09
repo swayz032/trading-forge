@@ -1,6 +1,6 @@
 /**
  * deepscan22-y6-path-c-db-roundtrip.test.ts — Deep-scan #22 cap-closer Y6,
- * Task 1 (2026-07-09).
+ * Task 1 (2026-07-09). REPOINTED to a direct import for Z6 (2026-07-09).
  *
  * WHY THIS EXISTS
  * ----------------
@@ -19,20 +19,32 @@
  * `confirming_indicators` nested INSIDE `config.entry_quality` (the FIX-A1
  * correct shape — see `deepscan22-fix-a1-entry-quality-dead-path.test.ts`),
  * SELECTs it back out through Drizzle (a genuine DB round trip — JSONB
- * write, storage, and read), and only THEN applies the reader logic —
- * copied verbatim from `paper-signal-service.ts` (same mirror convention
- * used by every other test file touching this dispatcher, documented in
- * that file's header: direct-bucket-graduator.ts / paper-signal-service.ts
- * both bootstrap DATABASE_URL via a module-top-level `db/index.js` import
- * that pglite-backed tests cannot load without a real Postgres connection).
+ * write, storage, and read), and only THEN applies the reader logic.
  *
- * A companion negative case INSERTs the WRONG (pre-FIX-A1 regression) shape
- * — `use_weighted_scoring` / `confirming_indicators` as top-level config
- * SIBLINGS of `entry_quality`, never inside it — through the SAME real DB
- * round trip, and proves Path C (and Path A) stay dead.
+ * Z6 UPDATE (deep-scan #22 cap-closer, 2026-07-09): the reader logic used to
+ * be copied verbatim from `paper-signal-service.ts` as an inline MIRROR (the
+ * same convention several other tests touching this dispatcher still use,
+ * because `paper-signal-service.ts` bootstraps DATABASE_URL via a
+ * module-top-level `db/index.js` import that a pglite-backed test cannot
+ * load). That mirror was the X6 residual: a semantic edit to the REAL reader
+ * in `paper-signal-service.ts` that didn't happen to touch the pinned
+ * substrings in §3 below would drift undetected, because this file was never
+ * actually calling the production code.
  *
- * Static-pin assertions (§3) tie the inline mirror to the live source so a
- * future edit to the real reader expression is caught here too.
+ * The dispatch decision has since been extracted into a pure, DB-free,
+ * logger-free leaf — `resolveConfluenceDispatch()` in
+ * `src/server/lib/confluence-path-resolver.ts` — specifically so this test
+ * (and any other pglite-backed test) can import and call the REAL production
+ * function directly. This file now does exactly that: no mirror, no
+ * hand-copied logic. The behavior-preservation of the extraction itself is
+ * verified separately (existing paper-signal Path-C tests +
+ * deepscan22-fix-a1-entry-quality-dead-path.test.ts +
+ * deepscan22-loop3-confluence-upsize-gate.test.ts all still pass unchanged).
+ *
+ * Static-pin assertions (§3) now confirm paper-signal-service.ts actually
+ * DELEGATES to the resolver (rather than reimplementing the logic inline
+ * again, which would silently reopen the mirror-drift gap this file exists
+ * to close).
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
@@ -42,47 +54,18 @@ import * as path from "path";
 import { createTestDb } from "./helpers/pglite-db.js";
 import type { TestDb } from "./helpers/pglite-db.js";
 import { strategies } from "../db/schema.js";
+import { resolveConfluenceDispatch } from "../lib/confluence-path-resolver.js";
+import type { ConfirmingIndicator as ConfirmingIndicatorShape } from "../services/confirming-indicator-evaluator.js";
 
 const PAPER_SIGNAL_SRC = fs.readFileSync(
   path.resolve(__dirname, "../services/paper-signal-service.ts"),
   "utf-8",
 );
 
-interface ConfirmingIndicatorShape {
-  indicator: string;
-  params: Record<string, number>;
-  direction: "agree" | "disagree" | "either";
-}
-
-interface EntryQualityShape {
-  confluence_factors?: string[];
-  min_factors_satisfied?: number;
-  extraction_provenance?: string;
-  confirming_indicators?: ConfirmingIndicatorShape[];
-  use_weighted_scoring?: boolean;
-}
-
-// Exact reader mirror of paper-signal-service.ts:4162-4177 + 4363 + 4767-4768
-// (same convention as deepscan22-x6-factory-failure-injection.test.ts Control 1
-// and deepscan22-fix-a1-entry-quality-dead-path.test.ts — direct-bucket-graduator.ts
-// and paper-signal-service.ts both bootstrap DATABASE_URL at module-top-level
-// `import { db } from "../db/index.js"`, which a pglite-backed test file cannot
-// load without a live Postgres connection; the established pattern is a verbatim
-// inline mirror pinned against the real source via static string assertions, §3
-// below).
+// Direct import of the REAL production dispatch function — no mirror.
+// See src/server/lib/confluence-path-resolver.ts::resolveConfluenceDispatch.
 function readEntryQualityAndDispatch(config: Record<string, unknown>) {
-  const rawConfig = config as unknown as Record<string, unknown>;
-  const entryQuality = (
-    rawConfig.entry_quality ??
-    (rawConfig.strategy as Record<string, unknown> | undefined)?.entry_quality
-  ) as EntryQualityShape | undefined;
-
-  const isLegacyStrategy =
-    !entryQuality || entryQuality.extraction_provenance === "legacy_no_confluence";
-  const useWeightedScoring = entryQuality?.use_weighted_scoring === true && !isLegacyStrategy;
-  const customIndicators = entryQuality?.confirming_indicators ?? [];
-  const usePerStrategy = customIndicators.length > 0;
-  return { entryQuality, useWeightedScoring, usePerStrategy, customIndicators };
+  return resolveConfluenceDispatch(config);
 }
 
 describe("Y6 Task 1 — Path-C full DB round trip (PGlite): FIX-A1 correct shape vs pre-FIX-A1 regression shape", () => {
@@ -195,29 +178,58 @@ describe("Y6 Task 1 — Path-C full DB round trip (PGlite): FIX-A1 correct shape
 });
 
 // ═════════════════════════════════════════════════════════════════════════
-// Static pin — ties the inline reader mirror above to the live source so a
-// future drift in paper-signal-service.ts is caught here, not just in the
-// existing X6/FIX-A1 static-contract tests.
+// Static pin — Z6 UPDATE (2026-07-09): now that this file DIRECTLY IMPORTS
+// resolveConfluenceDispatch() instead of mirroring it, the round-trip tests
+// above already exercise the real decision logic end-to-end — the mirror-
+// drift gap is closed by the import, not by these string pins. This describe
+// block now guards a NARROWER, still-real risk: that paper-signal-service.ts
+// quietly stops delegating to the resolver and reimplements the dispatch
+// inline again (which would silently reopen the exact gap Z6 closed), and
+// that the resolver's own reader expression + decision logic haven't drifted
+// from the documented contract.
 // ═════════════════════════════════════════════════════════════════════════
 
-describe("Y6 Task 1 — static pin: mirrored reader matches paper-signal-service.ts", () => {
-  it("reader block reads ONLY rawConfig.entry_quality (or strategy.entry_quality) — no top-level fallback", () => {
-    const readerIdx = PAPER_SIGNAL_SRC.indexOf("const entryQuality = (");
+const RESOLVER_SRC = fs.readFileSync(
+  path.resolve(__dirname, "../lib/confluence-path-resolver.ts"),
+  "utf-8",
+);
+
+describe("Y6 Task 1 (Z6-repointed) — static pin: paper-signal-service.ts delegates to the real resolver", () => {
+  it("paper-signal-service.ts imports and calls resolveConfluenceDispatch(rawConfig) — no inline reimplementation", () => {
+    expect(PAPER_SIGNAL_SRC).toContain(
+      'import { resolveConfluenceDispatch } from "../lib/confluence-path-resolver.js"',
+    );
+    expect(PAPER_SIGNAL_SRC).toContain(
+      "const { entryQuality, isLegacyStrategy, useWeightedScoring, usePerStrategy, customIndicators } =",
+    );
+    expect(PAPER_SIGNAL_SRC).toContain("resolveConfluenceDispatch(rawConfig)");
+    // The old inline recomputation sites must be GONE — if either literal
+    // reappears, someone reimplemented the dispatch inline again alongside
+    // the resolver call, reopening the exact drift risk this file exists to
+    // guard against.
+    expect(PAPER_SIGNAL_SRC).not.toContain(
+      "const useWeightedScoring = entryQuality.use_weighted_scoring === true && !isLegacyStrategy;",
+    );
+    expect(PAPER_SIGNAL_SRC).not.toContain("const customIndicators = entryQuality.confirming_indicators ?? [];");
+  });
+
+  it("resolver reader block reads ONLY rawConfig.entry_quality (or strategy.entry_quality) — no top-level fallback", () => {
+    const readerIdx = RESOLVER_SRC.indexOf("const entryQuality = (");
     expect(readerIdx).toBeGreaterThan(0);
-    const block = PAPER_SIGNAL_SRC.slice(readerIdx, readerIdx + 400);
+    const block = RESOLVER_SRC.slice(readerIdx, readerIdx + 400);
     expect(block).toContain("rawConfig.entry_quality");
     expect(block).not.toMatch(/rawConfig\.use_weighted_scoring/);
     expect(block).not.toMatch(/rawConfig\.confirming_indicators(?!\s*\?)/);
   });
 
-  it("useWeightedScoring assignment requires entry_quality.use_weighted_scoring === true AND !isLegacyStrategy", () => {
-    expect(PAPER_SIGNAL_SRC).toContain(
-      "const useWeightedScoring = entryQuality.use_weighted_scoring === true && !isLegacyStrategy;",
+  it("resolver useWeightedScoring assignment requires entry_quality.use_weighted_scoring === true AND !isLegacyStrategy", () => {
+    expect(RESOLVER_SRC).toContain(
+      "const useWeightedScoring = entryQuality?.use_weighted_scoring === true && !isLegacyStrategy;",
     );
   });
 
-  it("customIndicators/usePerStrategy derive from entry_quality.confirming_indicators", () => {
-    expect(PAPER_SIGNAL_SRC).toContain("const customIndicators = entryQuality.confirming_indicators ?? [];");
-    expect(PAPER_SIGNAL_SRC).toContain("const usePerStrategy = customIndicators.length > 0;");
+  it("resolver customIndicators/usePerStrategy derive from entry_quality.confirming_indicators", () => {
+    expect(RESOLVER_SRC).toContain("const customIndicators = entryQuality?.confirming_indicators ?? [];");
+    expect(RESOLVER_SRC).toContain("const usePerStrategy = customIndicators.length > 0;");
   });
 });
