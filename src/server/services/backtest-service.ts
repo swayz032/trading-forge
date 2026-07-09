@@ -555,6 +555,12 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       endDate: config.end_date,
       dataSource: "databento",
       specProvenanceRef: deriveSpecProvenanceRef(configRecord),
+      // D7 amendment (2026-07-09): stamp the OPERATIVE partial-fill state — true
+      // only when this payload actually carries a fill_model. Both engines gate
+      // the fill block on `if fill_model:`; no production path populates it, so
+      // this resolves to false (honest dormant stamp) rather than the old
+      // env-flag lie (`BACKTEST_PARTIAL_FILL_ENABLED` true but model never ran).
+      fillModelPresent: config.fill_model != null,
     };
     const builtStamp = buildProvenanceStamp(stampOpts);
     provenanceStampValue = assertProvenanceStamp(builtStamp, stampOpts);

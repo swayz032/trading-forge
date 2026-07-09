@@ -45,6 +45,7 @@ from src.engine.config import (
     AdaptiveExitContext,
     BacktestRequest,
     EventCalendarConfig,
+    FillProbabilityConfig,
     IndicatorConfig,
     LiquidityLevelSnapshot,
     StrategyConfig,
@@ -5655,6 +5656,12 @@ def run_backtest(
     #   1 = long entry, -1 = short entry, 0 = no signal.
     # Where both long and short fire on the same bar (shouldn't happen in
     # practice but possible in rare edge cases), long takes priority.
+    # SEAM (D7 packet, ratified): this long-priority resolution applies ONLY to the
+    # A7 correlation signal vector (a DIAGNOSTIC used for the A7 duplicate-signal
+    # gate), NOT to trade execution. Execution passes entries + short_entries to
+    # vbt.Portfolio.from_signals with no conflict arg and defers to vectorbt's default
+    # conflict mode (drop-both on a same-bar long+short collision). Do NOT read this
+    # A7 diagnostic rule as the execution conflict rule — they are different layers.
     # Stored as Python list[int] for JSON serialization — TS side compresses
     # to gzip int8 bytes before DB storage (zlib.gzipSync).
     _signal_vector_np = np.zeros(len(_pre_roll_long_np), dtype=np.int8)
@@ -6543,6 +6550,13 @@ def run_class_backtest(
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext] — Wave 25 Gap B
     exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
     event_calendar: Optional[EventCalendarConfig] = None,  # Defect-9: macro-blackout mask parity
+    # D7 amendment (2026-07-09): partial-fill activation surface. Mirrors
+    # run_backtest's `if request.fill_model:` gate (backtester.py:4524) — the fill
+    # model is DORMANT unless a caller explicitly passes a fill_model. No src/server
+    # path populates it today (exactly as none populates BacktestRequest.fill_model),
+    # so production run_class_backtest applies ZERO fill degradation = parity with
+    # run_backtest's operative dormancy. See the D7 fill block below.
+    fill_model: Optional[FillProbabilityConfig] = None,
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -6900,12 +6914,54 @@ def run_class_backtest(
     diag_post_gate_long = int(np.sum(long_entries_np))
     diag_post_gate_short = int(np.sum(short_entries_np))
 
-    # ─── Shift entry signals by 1 bar (next-bar fill) ──────────
+    # ─── D7 fill model + shift entry signals by 1 bar (next-bar fill) ────────
     # Signal on bar N → fill on bar N+1. Eliminates lookahead bias.
-    long_entries_np = np.roll(long_entries_np, 1)
-    long_entries_np[0] = False
-    short_entries_np = np.roll(short_entries_np, 1)
-    short_entries_np[0] = False
+    #
+    # Defect-7 (D7) parity: run_backtest applies the two-stage fill model
+    # (apply_fill_model RSI/type gate + apply_volume_partial_fills volume gate) to
+    # its POST-gate/PRE-roll entries BEFORE building its portfolio, then rolls +1
+    # and re-aligns the adjusted sizes to the rolled entry bars
+    # (backtester.py:4522-4663). run_class_backtest previously rolled with NO fill
+    # preprocessing → idealised (optimistic) fills. Mirror it via the shared helper
+    # so the class engine degrades identically.
+    #
+    # ─── D7 amendment (2026-07-09): activation-surface alignment ─────────────
+    # OUTER gate is now the optional `fill_model` PARAMETER, mirroring
+    # run_backtest's `if request.fill_model:` (backtester.py:4524) — NOT the
+    # BACKTEST_PARTIAL_FILL_ENABLED env flag. Rationale (F-1): run_backtest's whole
+    # fill block is gated on `if request.fill_model:` and NO src/server path ever
+    # populates BacktestRequest.fill_model, so production run_backtest is DORMANT
+    # (zero fill degradation). Gating the class path on the env flag (default ON)
+    # would make the class engine degrade while the DSL engine does not — a NEW
+    # class-vs-DSL asymmetry. Mirroring run_backtest's PRODUCTION surface keeps both
+    # engines dormant in production → parity preserved.
+    #
+    #   fill_model absent (None, the default; no caller passes it today, exactly as
+    #     none populates run_backtest's) → plain roll, ZERO degradation =
+    #     byte-identical no-op, matching run_backtest's operative dormancy.
+    #   fill_model present (a caller explicitly passes one) → the EXISTING,
+    #     already-verified apply_fill_model_and_roll_signals helper runs UNCHANGED
+    #     (fill + roll + re-align atomically; mirrors run_backtest's market-order
+    #     path — Stage 1 is a strict market no-op; Stage 2 volume degradation is the
+    #     actual D7 gap). The INNER env-flag inside apply_volume_partial_fills is the
+    #     mechanism gate and stays as-is (unchanged). The helper introduces NO new
+    #     order_qty/bar_volume division ahead of the fail-loud zero-volume guard (the
+    #     only ratio lives inside apply_volume_partial_fills, which maps volume<=0 to
+    #     np.inf before dividing), so volume==0 still routes to
+    #     check_zero_volume_trade_critical() downstream, not to a ZeroDivision.
+    _cls_partial_fill_audit: dict = {}
+    if fill_model:
+        import src.engine.fill_model as _cls_fm  # noqa: PLC0415 — lazy import, sibling module
+        long_entries_np, short_entries_np, sizes, _cls_partial_fill_audit = (
+            _cls_fm.apply_fill_model_and_roll_signals(
+                long_entries_np, short_entries_np, sizes, df, symbol=symbol,
+            )
+        )
+    else:
+        long_entries_np = np.roll(long_entries_np, 1)
+        long_entries_np[0] = False
+        short_entries_np = np.roll(short_entries_np, 1)
+        short_entries_np[0] = False
 
     # ─── Max trades per day filter ──────────────────────────────
     # run_class_backtest doesn't have a BacktestRequest, so we accept max_trades_per_day
@@ -7881,6 +7937,31 @@ def run_class_backtest(
         # GATE3-DEFECT-6 fix (2026-07-06) — mirrors run_backtest's
         # "eligibility_gate_mode" key (deep-scan #18c C-3 fix); see note above.
         "eligibility_gate_mode": _cls_eligibility_gate_mode,
+        # Defect-7 (D7) — Partial fill model audit (class-path parity with
+        # run_backtest's engine_audit.partial_fill_modeled, backtester.py:5819).
+        # This is the D7 engagement counter (Addition 2): total_orders / partial_fills
+        # / avg_fill_ratio make fill-degradation engagements countable at re-baseline.
+        # PRE-REGISTRATION RESOLVED (D7 amendment 2026-07-09): the original packet
+        # pre-registered "near-zero engagements at base micro size". That is
+        # SUPERSEDED by the activation-surface alignment above — **partial-fill:
+        # dormant by construction, both engines, engagements N/A**. run_backtest
+        # gates on `if request.fill_model:` and NO src/server path populates it, and
+        # this class path now mirrors that same `if fill_model:` gate, so BOTH
+        # engines apply zero fill degradation in production. Engagement is not
+        # "near-zero"; it is structurally absent until a caller explicitly passes a
+        # fill_model. The partial_fill_modeled audit key is KEPT and now honestly
+        # reports that dormant state. Empty {} = dormant path (fill_model absent,
+        # byte-identical legacy roll); populated dict = engaged path (fill_model
+        # explicitly passed).
+        # Schema note: run_backtest nests this under engine_audit; the class result
+        # has no engine_audit block, so it rides at top level under the same key name.
+        "partial_fill_modeled": _cls_partial_fill_audit if _cls_partial_fill_audit else {
+            "enabled": False,
+            "total_orders": 0,
+            "partial_fills": 0,
+            "avg_fill_ratio": 1.0,
+            "avg_slippage_delta_per_partial": None,
+        },
     }
 
 

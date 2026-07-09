@@ -355,6 +355,50 @@ describe("Provenance stamp — hash stability (overlay_config_hash)", () => {
     expect(hash14pt).not.toBe(hash12pt);
   });
 
+  it("partial_fill_enabled reflects OPERATIVE fill_model presence, NOT the env flag (D7 amendment 2026-07-09)", () => {
+    // Record-integrity: the stamp must be true ONLY when a fill_model is actually
+    // present in the payload, false when absent. run_backtest / run_class_backtest
+    // both gate the fill block on `if fill_model:` and no production path populates
+    // it, so the honest stamp is false. Env flag default is ON, proving the stamp
+    // no longer derives from it.
+    for (const key of TRACKED_VARS) {
+      delete process.env[key];
+    }
+    // Env flag ON (its default) — if the stamp still read the env flag, absent and
+    // present would produce the SAME hash. They must differ.
+    process.env["BACKTEST_PARTIAL_FILL_ENABLED"] = "true";
+
+    const hashAbsent = computeOverlayConfigHash(false); // fill_model absent → dormant
+    const hashPresent = computeOverlayConfigHash(true); // fill_model present → engaged
+
+    expect(hashAbsent).not.toBe(hashPresent);
+    expect(hashAbsent).toHaveLength(64);
+
+    // Default (no arg) resolves to the dormant/absent branch — the production reality.
+    expect(computeOverlayConfigHash()).toBe(hashAbsent);
+
+    // And it is INSENSITIVE to the env flag while fill_model is absent (the whole
+    // point: the env flag no longer drives the stamp).
+    process.env["BACKTEST_PARTIAL_FILL_ENABLED"] = "false";
+    expect(computeOverlayConfigHash(false)).toBe(hashAbsent);
+  });
+
+  it("buildProvenanceStamp threads fillModelPresent into the hash (D7 amendment 2026-07-09)", () => {
+    for (const key of TRACKED_VARS) {
+      delete process.env[key];
+    }
+    // Absent (default) — production reality: honest dormant stamp.
+    const stampAbsent = buildProvenanceStamp(DEFAULT_STAMP_OPTS);
+    // Present — a caller explicitly passing a fill_model.
+    const stampPresent = buildProvenanceStamp({
+      ...DEFAULT_STAMP_OPTS,
+      fillModelPresent: true,
+    });
+    expect(stampAbsent.overlay_config_hash).not.toBe(stampPresent.overlay_config_hash);
+    // Omitting the field == false == the dormant branch.
+    expect(stampAbsent.overlay_config_hash).toBe(computeOverlayConfigHash(false));
+  });
+
   it("buildDataSnapshotId is stable for same inputs", () => {
     const id1 = buildDataSnapshotId("MES", "5m", "2025-01-01", "2025-06-01");
     const id2 = buildDataSnapshotId("MES", "5m", "2025-01-01", "2025-06-01");

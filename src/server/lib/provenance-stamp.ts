@@ -96,7 +96,14 @@ function canonicalJson(obj: unknown): string {
 interface EffectiveOverlayConfig {
   // deepscan8: flipped default ON (2026-07-02) — the primary reason this module exists
   static_c_partials_enabled: boolean;
-  // Wave 27.5 Pass C default — partial fill modeling
+  // D7 amendment (2026-07-09): OPERATIVE partial-fill state, NOT the env flag.
+  // true ONLY when the backtest payload actually carries a fill_model; false when
+  // absent. run_backtest / run_class_backtest both gate the fill block on
+  // `if fill_model:`, and no src/server path populates fill_model today, so this
+  // resolves to false on every current row — an HONEST stamp of the dormant state.
+  // (Previously stamped `envBool("BACKTEST_PARTIAL_FILL_ENABLED", true)`
+  // unconditionally, which was actively false on every row: the env flag was true
+  // but the model never ran because fill_model was None.)
   partial_fill_enabled: boolean;
   // Wave 27.5 Pass C default — compliance gate mode
   compliance_mode: string;
@@ -132,12 +139,18 @@ function envFloat(key: string, defaultVal: number): number {
   return Number.isFinite(parsed) ? parsed : defaultVal;
 }
 
-function captureEffectiveOverlayConfig(): EffectiveOverlayConfig {
+function captureEffectiveOverlayConfig(
+  // D7 amendment (2026-07-09): whether the backtest payload carried a fill_model.
+  // Defaults false — the operative production reality (no caller populates it).
+  fillModelPresent = false,
+): EffectiveOverlayConfig {
   return {
     // deepscan8 flipped this ON (default "1" = enabled).
     // "0"/"false"/"no" = disabled; anything else = enabled
     static_c_partials_enabled: envBool("BACKTEST_STATIC_C_PARTIALS_ENABLED", true),
-    partial_fill_enabled: envBool("BACKTEST_PARTIAL_FILL_ENABLED", true),
+    // D7 amendment: OPERATIVE state = fill_model present in payload, NOT the env
+    // flag. False on every current row (dormant by construction) — honest.
+    partial_fill_enabled: fillModelPresent,
     compliance_mode: process.env["BACKTEST_COMPLIANCE_MODE"] ?? "enforce",
     roll_spread_itemized: envBool("BACKTEST_ROLL_SPREAD_ITEMIZED", true),
     zero_volume_trade_critical_fail_loud: envBool(
@@ -168,8 +181,8 @@ function captureEffectiveOverlayConfig(): EffectiveOverlayConfig {
  * A change to any env-controlled framework parameter → different hash → rows
  * are marked non-comparable by inspection of this field.
  */
-export function computeOverlayConfigHash(): string {
-  const cfg = captureEffectiveOverlayConfig();
+export function computeOverlayConfigHash(fillModelPresent = false): string {
+  const cfg = captureEffectiveOverlayConfig(fillModelPresent);
   const canonical = canonicalJson(cfg);
   return createHash("sha256").update(canonical, "utf8").digest("hex");
 }
@@ -231,6 +244,14 @@ export interface ProvenanceStampOptions {
    * Use "none" for manually-crafted strategies.
    */
   specProvenanceRef: string;
+  /**
+   * D7 amendment (2026-07-09): whether the backtest payload carried a fill_model.
+   * Feeds `partial_fill_enabled` in the overlay-config hash as OPERATIVE state
+   * (true only when the fill model is actually present), NOT the env flag.
+   * Defaults false — no production caller populates fill_model, so the stamp
+   * honestly records the dormant partial-fill state.
+   */
+  fillModelPresent?: boolean;
 }
 
 // ─── Build stamp ──────────────────────────────────────────────────────────────
@@ -251,7 +272,9 @@ export function buildProvenanceStamp(opts: ProvenanceStampOptions): ProvenanceSt
       opts.dataSource ?? "databento",
     ),
     gate_battery_version: GATE_BATTERY_VERSION,
-    overlay_config_hash: computeOverlayConfigHash(),
+    // D7 amendment: hash the OPERATIVE partial-fill state (fill_model present in
+    // payload), not the env flag. Dormant (false) on every current row.
+    overlay_config_hash: computeOverlayConfigHash(opts.fillModelPresent ?? false),
     spec_provenance_ref: opts.specProvenanceRef,
     git_sha: gitSha,
     stamped_at: new Date().toISOString(),

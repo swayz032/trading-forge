@@ -473,3 +473,156 @@ def apply_volume_partial_fills(
         )
 
     return adjusted_sizes, fill_ratios, audit_payload
+
+
+def _combine_partial_fill_audits(long_audit: dict, short_audit: dict) -> dict:
+    """Merge long-side + short-side partial-fill audit dicts into one.
+
+    Byte-for-byte mirror of backtester.py run_backtest's long/short audit merge
+    (search "engine_audit.partial_fill_modeled reflects BOTH directions",
+    backtester.py:4623-4644). Kept here so run_class_backtest reports the SAME
+    combined-count schema without duplicating the merge arithmetic.
+
+    Combines total_orders + partial_fills as sums and avg_fill_ratio as an
+    order-count-weighted mean. Schema keys are identical to the single-direction
+    audit_payload emitted by apply_volume_partial_fills().
+    """
+    combined = dict(long_audit) if long_audit else {}
+    if not combined:
+        return dict(short_audit) if short_audit else {}
+    long_n = long_audit.get("total_orders", 0)
+    short_n = short_audit.get("total_orders", 0)
+    combined_n = long_n + short_n
+    combined_partials = (
+        long_audit.get("partial_fills", 0) + short_audit.get("partial_fills", 0)
+    )
+    if combined_n > 0:
+        combined_avg_ratio = (
+            long_audit.get("avg_fill_ratio", 1.0) * long_n
+            + short_audit.get("avg_fill_ratio", 1.0) * short_n
+        ) / combined_n
+    else:
+        combined_avg_ratio = 1.0
+    combined["total_orders"] = combined_n
+    combined["partial_fills"] = combined_partials
+    combined["avg_fill_ratio"] = round(combined_avg_ratio, 4)
+    return combined
+
+
+def apply_fill_model_and_roll_signals(
+    long_entries: np.ndarray,
+    short_entries: np.ndarray,
+    sizes: np.ndarray,
+    df: pl.DataFrame,
+    *,
+    symbol: str = "MES",
+    spread_multiplier: float = 1.0,
+    fill_config: dict | None = None,
+    order_type: str = "market",
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict]:
+    """Apply the fill model to POST-gate/PRE-roll signals, then roll + re-align.
+
+    Defect-7 (D7) parity helper. run_backtest applies the two-stage fill model
+    (apply_fill_model RSI/type gate + apply_volume_partial_fills volume gate) to
+    its entries BEFORE building its vbt.Portfolio, then shifts entries +1 bar
+    (next-bar fill) and re-aligns the adjusted sizes to the rolled entry bars.
+    run_class_backtest built its portfolio with NO such preprocessing → idealised
+    (optimistic) fills. This helper reproduces run_backtest's EXACT sequence so the
+    class engine degrades identically.
+
+    Faithful mirror of backtester.py run_backtest lines 4522-4663 (long: 4522-4574,
+    short: 4593-4663). SAME underlying functions, SAME seeds (long=42, short=43),
+    SAME order (Stage 1 apply_fill_model → Stage 2 apply_volume_partial_fills →
+    save adjusted → np.roll(+1) → re-align adjusted sizes to rolled entry bars).
+    If run_backtest's fill sequence ever changes, THIS helper must change in lockstep.
+
+    Class-path fill defaults: order_type="market" (guaranteed fill — class/ICT
+    strategies do not declare limit fill configs), so Stage 1 (apply_fill_model)
+    is a strict no-op (compute_fill_probabilities_v2 returns all-1.0 fill probs →
+    no entry masked, no size halved) and consumes RNG harmlessly. The active stage
+    for the class path is Stage 2 (volume-based partial fill), which is itself
+    env-gated by BACKTEST_PARTIAL_FILL_ENABLED inside apply_volume_partial_fills.
+
+    Zero-volume safety (D7 acceptance clause 5): this helper introduces NO new
+    order_qty/bar_volume division ahead of the fail-loud zero-volume guard. The
+    only ratio computed here lives inside apply_volume_partial_fills, which maps
+    volume<=0/NaN to np.inf BEFORE dividing (fill_model.py:339) — a zero-volume bar
+    yields ratio 0 → zone-1 → fill_ratio 1.0, never a ZeroDivision. The
+    check_zero_volume_trade_critical() guard in _apply_static_styleC_management still
+    owns volume==0 downstream.
+
+    Args:
+        long_entries: Boolean long-entry signals (post-gate, PRE-roll).
+        short_entries: Boolean short-entry signals (post-gate, PRE-roll).
+        sizes: Float per-bar position sizes (contracts).
+        df: DataFrame with 'volume' (for Stage 2) and indicator columns.
+        symbol: Contract symbol (tick size for Stage 1 spread awareness; market no-op).
+        spread_multiplier: Spread multiplier for Stage 1 (market no-op).
+        fill_config: Fill-probability config dict; defaults to DEFAULT_FILL_CONFIG.
+        order_type: Order type for Stage 1; defaults to "market".
+
+    Returns:
+        (long_entries_rolled, short_entries_rolled, sizes_adjusted, combined_audit)
+        combined_audit: long+short merged partial-fill audit (see
+        _combine_partial_fill_audits) — the D7 engagement counter.
+
+    P&L contract: sizes_adjusted are integer contracts consumed by the futures P&L
+    formula in backtester.py. NEVER passed to vectorbt slippage/fees.
+    """
+    cfg = fill_config if fill_config is not None else dict(DEFAULT_FILL_CONFIG)
+
+    long_entries = np.asarray(long_entries).copy()
+    short_entries = np.asarray(short_entries).copy()
+    sizes = np.asarray(sizes, dtype=np.float64).copy()
+
+    # ── LONG: Stage 1 (RSI/type gate, seed=42) then Stage 2 (volume gate) ──
+    long_fill_probs = compute_fill_probabilities_v2(
+        df, cfg, long_entries,
+        order_type=order_type, symbol=symbol, spread_multiplier=spread_multiplier,
+    )
+    long_entries, sizes = apply_fill_model(long_entries, long_fill_probs, sizes, seed=42)
+    sizes, _long_vol_ratios, long_audit = apply_volume_partial_fills(long_entries, sizes, df)
+    long_adjusted_sizes = sizes.copy()  # snapshot BEFORE roll for re-alignment
+
+    # ── Shift long entries +1 bar (next-bar fill) + re-align adjusted sizes ──
+    long_entries = np.roll(long_entries, 1)
+    long_entries[0] = False
+    shifted_long_mask = long_entries.astype(bool)
+    long_pre_shift_indices = np.where(shifted_long_mask)[0] - 1
+    long_valid = long_pre_shift_indices >= 0
+    for idx, pre_idx in zip(
+        np.where(shifted_long_mask)[0][long_valid], long_pre_shift_indices[long_valid],
+        strict=False,
+    ):
+        sizes[idx] = long_adjusted_sizes[pre_idx]
+
+    # ── SHORT: Stage 1 (seed=43) then Stage 2 on sizes.copy() (post long re-align) ──
+    short_fill_probs = compute_fill_probabilities_v2(
+        df, cfg, short_entries,
+        order_type=order_type, symbol=symbol, spread_multiplier=spread_multiplier,
+    )
+    short_entries, short_adjusted_sizes = apply_fill_model(
+        short_entries, short_fill_probs, sizes.copy(), seed=43
+    )
+    short_adjusted_sizes, _short_vol_ratios, short_audit = apply_volume_partial_fills(
+        short_entries, short_adjusted_sizes, df
+    )
+    # Merge short degradation into main sizes at PRE-roll short bars (safe: a bar
+    # can't be both a long and short entry). Mirror of backtester.py:4648-4649.
+    short_fill_mask = short_entries.astype(bool)
+    sizes[short_fill_mask] = short_adjusted_sizes[short_fill_mask]
+
+    # ── Shift short entries +1 bar + re-align adjusted sizes ──
+    short_entries = np.roll(short_entries, 1)
+    short_entries[0] = False
+    shifted_short_mask = short_entries.astype(bool)
+    pre_shift_indices = np.where(shifted_short_mask)[0] - 1
+    valid = pre_shift_indices >= 0
+    for idx, pre_idx in zip(
+        np.where(shifted_short_mask)[0][valid], pre_shift_indices[valid],
+        strict=False,
+    ):
+        sizes[idx] = short_adjusted_sizes[pre_idx]
+
+    combined_audit = _combine_partial_fill_audits(long_audit, short_audit)
+    return long_entries, short_entries, sizes, combined_audit
