@@ -13596,6 +13596,36 @@ DLL base SETTLED **$1,340**. Memory: [[reference_fabricated_mock_masks_null_colu
 
 ---
 
+### Session Log — 2026-07-09 Deep-Scan #22 8→9 ARC — five of six domains to genuine independently-verified 9; X5 held at 8 (CPCV-WFE ratification-gated)
+
+**Mission:** continue the /goal loop past the 8-with-zero-HIGH board (prior entry) toward a genuine band 9 per domain — where 9 requires the institutional core PLUS whole-surface failure-injection PLUS zero residuals, doer≠grader, re-measured from zero. Not a relabel of 8. Honesty paramount ("NO LIEN").
+
+**What "8→9" required (why the prior board was honestly 8, not 9):** each 8 carried a small, *enumerated* residual that was coverage-shaped, not a defect — heuristic/regex CI-gate canaries (not AST-strict), structural-only quantum namespace lock (no behavioral DB test), scoped frontend/pine coverage (mirror-reimplementation tests rather than real integration through the production call site), and per-item (not whole-surface) fault-injection. Closing each residual with a RED-proven real test is the 8→9 lift.
+
+**Work completed (Tracks X1–X6 → Y (cap-closers) → Z6/Z7 (mirror eradication); all landed FF on `hardening/phase-0`, then merged to `main`):**
+- **X1/Y1 — gate strictness (cross-system) → 9.** `check-gate-contract-keys.ts` + `check-family-grade-postscript.ts` upgraded from regex canary to **AST-strict** via the TypeScript compiler API (X1); fault-injection suites wired into CI as a NEW blocking `check:gate-fault-injection` step (`eebeea6`) + merged (`ab84e70`). A regex canary can pass on syntactically-adjacent garbage; the AST walk cannot. Closes the "heuristic-gate strictness" residual.
+- **X3/Y3 — frontend no-fabrication → 9.** Real vm-execution regression harness now locks the no-fabrication invariant *through the actual inline recipe/kitchen JS* (progress-line gate meter + calendar heat gauge, `d5053d8`), plus the promised RED-proof artifact `scripts/ds22-x3-red-prove.sh` (`fd77d42`). Closes the "no automated regression harness for inline recipe.html/kitchen.html JS" residual — the prior 8's single biggest cap.
+- **X4/Y4 — Pine parity → 9.** (a) Static Pine-vs-engine result-equivalence test SHIPPED (two independent oracles must agree entry/exit bar+price within 2-tick tolerance; RED-proof meta-tests confirm injected divergence is caught) — CLAUDE.md §7 + §12 doc-delta (`d56a734`). (b) **Real bug found + fixed:** the DEFAULT live export path `compile_strategy()` → `strategy_shell` shipped an **NFP-only** inline blackout, so family-distributed Pine lacked the FOMC/CPI macro blackout the rest of the system enforces — now emits the shared full `_build_event_blackout_block()` (`fff9d66`), RED-then-GREEN coverage (`6d2c731`), and a false X4 docstring ("compile_strategy is legacy/unused") corrected — it is the live path (`d74bddc`).
+- **X6/Y6 — factory/confluence → 9.** Prior X6 leaned on reader-level + re-implementation proxies. Y6 replaced them with (1) a **full Path-C DB round-trip via PGlite** (`841123e`) proving the graduator→`config.entry_quality`→dispatch wiring end-to-end against a real Postgres shape, and (2) **real-scanner registry-completeness fault injection** (`f512eab`) that fails the REAL scanner on a missing registration rather than a mirror. **Z6/Z7 hardening:** the Path-C/A/B dispatch decision was extracted into a pure, importable `confluence-path-resolver.ts::resolveConfluenceDispatch()` (`65bc46b`), the static pins + Y6 mirror repointed to the real resolver (`d37218f`), and the dispatch-mirror pattern **eradicated codebase-wide** (test-only) so no test re-implements the branch it claims to verify (`856344b`). Closes the "structural-only / mirror" residual class.
+- **X2 — cross-system+observability → 9** on the strength of X1's AST-strict gates + the CI-blocking fault-injection wiring (the two heuristic canaries that capped it at 8 are now strict).
+- **X5/Y5 — backtest → HELD AT 8 (ratification-gated, NOT a shortcoming).** Y5 shipped the CPCV-mode WFE + HTF caller-loop integration coverage (`abdaf51`, `39bc23c`). During that work the independent grader surfaced that **CPCV-mode WFE uses an asymmetric denominator** — `wfe_overall = agg_sharpe / mean(per_path_is_sharpes)` (combined-fold OOS Sharpe over the *average* per-path IS Sharpe) rather than combined-IS/combined-OOS. That is an **instrument-touching** question (it changes a promotion-gate's measured value), so per the ratify-packet standing rule it was **STAGED as a ratification packet and HELD** — no formula code written. X5 cannot move to 9 until the operator rules. This is the launch protocol working, not a defect.
+
+**Verification:** combined-tree cold-run — CI gates EXIT 0 (production-isolation / 2026-compliance / system-map:check driftItems=[] / family-grade-postscript AST-strict / gate-contract-keys AST-strict 7/7 / **new** check:gate-fault-injection) + cross-track vitest + engine sweep + tsc (only the 1 pre-existing unrelated `cme-outage…beforeEach`). Every 8→9 closer was **RED-proven first** (deliberate regression fails the new test) so none is vacuous-green. Re-certs by independent `accuracy-validator` graders (doer≠grader), 2 non-overlapping paths + failure-injection each.
+
+**FINAL BOARD (independently VERIFIED, doer≠grader, re-measured from zero):**
+`X1 gate-strictness = 9 · X2 cross-system+observability = 9 · X3 frontend = 9 · X4 pine = 9 · X6 factory+confluence = 9 · X5 backtest = 8 (CPCV-WFE ratification-gated).`
+Five of six domains at a genuine 9 (institutional core + whole-surface failure-injection + zero open residuals, each RED-proven). X5 is the ONE domain not at 9 — and it is *held there by protocol*, not by a defect: the CPCV-WFE denominator is instrument-touching and awaits explicit operator ratification. Do NOT relabel X5 to 9; do NOT claim "all 9."
+
+**Landed to production:** `main = fafe012` (merge of `phase-0 = 856344b`); `origin/main..origin/hardening/phase-0 = 0`. The stale deploy branch carries the full 8→9 arc.
+
+**Carry-forward for next session:**
+1. **AWAIT operator ruling on the CPCV-WFE ratification packet** — the ONLY thing holding X5 at 8. Three options staged: (a) fix to combined-IS/combined-OOS, (b) affirm per-path-average as CPCV-correct and document, (c) defer. X5 → 9 the moment the operator picks. No formula code until then (ratify-packet standing rule; instrument-touching).
+2. Git hygiene: prune the ds22 worktrees (`tf-ds22-*`, `tf-mainfix`, `tf-ds22-yland2`, `tf-ds22-z6/z7`, this `journal` worktree once landed) + the diverged LOCAL shared checkout quarantine noted in the prior entry (staged deletions of hardening controls — do NOT replay).
+3. Memory pins to add: **rm -rf on a node_modules JUNCTION deletes the TARGET's contents** (wiped the shared main install this arc; recover via `npm ci`) — remove the *link*, never the tree; and the CPCV-WFE ratification-pending finding.
+4. LIVE-INFRA (Railway, unchanged): `/__ocg` auth; repoint retired n8n models; Kasa install before PAPER+.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
