@@ -611,3 +611,36 @@ class path.
   STOP (locked read-order).
 **AWAITING RATIFY → then agent-loop (scope-locked implement → independent review w/ the parity + suppression + tripwire
 reads) → 7/8 land → seam trace → re-baseline.**
+
+---
+
+## #3 Defect-10 REAL-CORPUS MATERIALITY RECEIPT — LANDED (gates nothing; goes to the record)
+`docs/replay-results/defect10-real-corpus-receipt-2026-07-07.json` (agent a7048b871416e4c65, 12 engine×pair runs in-session).
+
+**Scope catch (declared deviation, well-reasoned).** The task's suggested populations (14 v3-shadow concepts / N=9-reference)
+are Corpus-v3-classifier DSL/crossover artifacts that never touch `breaker.py`/`unicorn.py` → running them = a bit-identical
+zero-diff receipt measuring NOTHING about Defect-10. Agent instead ran the population Defect-10 ACTUALLY affects:
+**BreakerStrategy × {MES,MNQ,MCL} + UnicornStrategy × {MES,MNQ,MCL} = 6 pairs**, real ratio-adj S3 15min,
+2020-06-01→2026-07-01 (135K bars/sym), identical local parquet copied byte-for-byte into both worktrees. Batch engine =
+`0008bcb` (parent of `59dbc2a`); streaming engine = `hardening/phase-0` HEAD. This also confirms the earlier tripwire-scoping
+read: the N=9 tripwire is IRRELEVANT to Defect-10 (classifier track, not the archetype engine fix).
+
+**Direction CONFIRMED — the look-ahead was optimistically inflating (expected direction; joins Defect-4):**
+1. **Displacement:** removed(a) 84 trades / −$4,499.55; freed(b+c merged) 46 / −$10,682.01; **NET (freed−removed) = −$6,182.46**
+   — the correct (streaming) engine reports LOWER P&L → batch was inflated.
+2. **Fraction in window:** 84/3,253 = **2.58%** of batch trades were forward-window admissions (the streaming gate is the sole diff).
+3. **Win-rate delta:** peeked 41.7% (n=84) vs clean 32.8% (n=3,169) = **+8.9pp aggregate**, MIXED per-pair (3/6 negative).
+4. **Tripwire: DID NOT FIRE.** All 6 pairs nonzero both engines (451–713 trades); no zero↔nonzero flip; no FULL-STOP. Safe-direction.
+
+**Two honest caveats (agent flagged, not papered over):**
+- **Proxy method.** Trade records carry `entry_idx`/`entry_timestamp`/pnl but NOT zone-level `broken_at`/`valid_from`, so the
+  (a)/(b)/(c) split is a realized-trade proximity-pairing PROXY (median 4 bars, matching the bar-39/43 example), NOT the ratified
+  4-predicate raw-candidate taxonomy. The rigorous zero-(d) result stands from the FIXTURE verification (breaker 600 + unicorn 205,
+  zero (d)s); this real-corpus receipt is coarser by necessity.
+- **★ 30 unexplained streaming-only additions / −$3,441.45** — FLAGGED, not claimed clean. Most likely proxy-unpairable (b)/(c)
+  rather than genuine (d)s (fixture pass established zero (d)s under the real taxonomy), but the receipt's proxy can't classify them
+  definitively. Resolving proxy-artifact-vs-genuine-(d) would need a zone-instrumented re-run — a follow-up that does NOT reopen the
+  fix's acceptance (fixture-verified). Registered for the operator's awareness.
+
+**Verdict: materiality receipt only — gates nothing, reopens no certified finding.** Defect-10's real-corpus magnitude is now on
+the record (was synthetic-directional-only). The re-baseline's own Defect-10 read (0.5 pre-reg) remains the authoritative post-fix number.
