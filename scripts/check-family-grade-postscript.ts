@@ -1,206 +1,236 @@
 /**
- * CI Lint: Family-Grade Postscript Audit (Global M1 sweep)
+ * CI Lint: Family-Grade Postscript Audit — STRICT / whole-tree (deep-scan #22 Track X1)
  *
- * Verifies that every notifyCritical() and notifyWarning() call site in the
- * owned files wraps its message body in appendFamilyGradePostscript().
+ * Every operator-facing critical/warning alert must carry a plain-English family postscript so a
+ * non-technical family member paged on Discord knows what happened and what to do.  The wrapper is
+ * `appendFamilyGradePostscript(operatorBody, plainEnglishWhat, plainEnglishAction)`
+ * (src/server/lib/notification-helpers.ts).
  *
- * SCOPE: All files that have been globally swept in the F1 session.
- *        Extend OWNED_FILES_RELATIVE as each additional module is swept.
+ * ── Why this was rewritten ─────────────────────────────────────────────────────────────────────
+ * The PRIOR implementation was a line-window HEURISTIC over 48 HAND-LISTED files: for each
+ * `notify*(` line it scanned ±N raw lines for the substring `appendFamilyGradePostscript`.  Two
+ * structural weaknesses:
+ *   1. SCOPE — only 48 files were audited; any `notify*` call in the other ~380 server files was
+ *      invisible.  A real bare `notifyCritical` outside the list shipped unnoticed.
+ *   2. STRICTNESS — a raw-text window match is fooled by an unrelated mention of the wrapper name
+ *      within the window, and (conversely) a legitimate wrap via an IMPORT ALIAS
+ *      (`const { appendFamilyGradePostscript: appendFGP } = await import(...)`) was invisible to a
+ *      literal substring scan, producing false positives.
  *
- * Exits non-zero with the list of offending file:line if any bare call is found.
+ * ── This version ───────────────────────────────────────────────────────────────────────────────
+ * Parses EVERY server .ts file (src/server, recursive; excluding tests + .d.ts) with the
+ * finds every `notifyCritical(` / `notifyWarning(` CALL EXPRESSION (function DEFINITIONS are not
+ * calls, so the wrapper definitions are naturally excluded), and verifies the call is family-grade
+ * wrapped by one of three STRUCTURAL means:
+ *   (a) direct   — an argument subtree contains a call to `appendFamilyGradePostscript` OR any of
+ *                  its resolved import/destructure aliases in that file;
+ *   (b) indirect — an argument is an identifier bound in that file from a wrapper call
+ *                  (`const body = appendFGP(...); notifyCritical(title, body, meta)`);
+ *   (c) sentinel — an argument literally contains the family sentinel "--- For family members ---".
  *
- * Acceptance criteria for a "wrapped" call:
- *   - Forward window (call site + 10 lines): appendFamilyGradePostscript(...)
- *     inline in the notify args (canonical 3-arg pattern)
- *   - Backward window (25 lines before call): const body = appendFamilyGradePostscript(...)
- *     (indirect const-variable pattern — 25 lines covers fullBody build-up patterns)
- *   - Any window containing the canonical family-grade sentinel phrase:
- *     "--- For family members ---"
- *   - Function definitions of notify helpers are excluded (they ARE the wrappers)
+ * Run:  node node_modules/tsx/dist/cli.mjs scripts/check-family-grade-postscript.ts
+ * Exit 0: every server-side notify call is family-grade wrapped.
+ * Exit 1: one or more unwrapped sites (file:line printed).
  *
- * Run: npx tsx scripts/check-family-grade-postscript.ts
- * Exit 0: all owned-file sites wrapped
- * Exit 1: one or more unwrapped sites found
+ * Test hook: TF_FGP_SCAN_ROOT overrides the scan root (absolute dir) — the failure-injection test
+ *            points it at a temp fixture tree to prove RED on an unwrapped notifyCritical.
  */
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
-import * as fs from "fs";
-import * as path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SERVER_DIR = path.resolve(__dirname, "../src/server");
-
-// ─── Owned files (relative to SERVER_DIR) ─────────────────────────────────────
-// Previously swept (pre-F1 session):
-//   services/broker-router.ts, services/model-router.ts,
-//   services/scout-watchdog-service.ts, scheduler.ts
-// F1 global sweep (2026-06-24):
-//   All files below — extend list as additional modules are swept.
-const OWNED_FILES_RELATIVE: string[] = [
-  // Pre-F1 (M11) — already covered
-  "services/broker-router.ts",
-  "services/model-router.ts",
-  "services/scout-watchdog-service.ts",
-  "scheduler.ts",
-  // Routes
-  "routes/admin.ts",
-  "routes/admin-recovery.ts",
-  "routes/admin-frozen-policy-override.ts",
-  "routes/live-order.ts",
-  "routes/paper.ts",
-  "routes/pine-export.ts",
-  // Lib
-  "lib/confluence-quality-audit.ts",
-  "lib/dlq-service.ts",
-  "lib/quantum-replay-runner.ts",
-  "lib/startup-config-check.ts",
-  // Services — A-D
-  "services/alert-service.ts",
-  "services/backtest-service.ts",
-  "services/bitwarden-session-refresh-service.ts",
-  "services/broker-error-budget-service.ts",
-  "services/compliance-refresh-service.ts",
-  "services/consistency-tracker-service.ts",
-  "services/contract-specs-service.ts",
-  "services/db-backup-service.ts",
-  "services/dd-velocity-gate.ts",
-  "services/dead-mans-heartbeat-service.ts",
-  "services/deployed-strategy-starvation-watchdog.ts",
-  "services/discord-fanout-audit-service.ts",
-  // Services — F-W
-  "services/fill-reconciliation-service.ts",
-  "services/graduated-strategy-drift-checker.ts",
-  "services/monte-carlo-service.ts",
-  "services/n8n-workflow-deployer.ts",
-  "services/paper-execution-service.ts",
-  "services/pine-delivery-service.ts",
-  "services/pine-export-recipient-service.ts",
-  "services/regime-coverage-monitor-service.ts",
-  "services/regime-drift-detector-service.ts",
-  "services/settlement-reconciliation-service.ts",
-  "services/strategy-assignment-service.ts",
-  "services/strategy-production-check-service.ts",
-  "services/trade-critique-service.ts",
-  "services/webhook-latency-monitor-service.ts",
-  "services/weekly-drift-halt-service.ts",
-  "services/windows-health-check-service.ts",
-  // Lifecycle (F1 + F3)
-  "services/lifecycle-service.ts",
-  // CF5 final sweep (2026-06-24): 5 deferred files now scoped (scheduler.ts already in M11 scope)
-  "services/paper-signal-service.ts",
-  "production/paper-journal-recon.ts",
-  "services/quantum-replay-weekly-service.ts",
-  "services/pattern-aggregator-service.ts",
-  "services/remote-power-cycle-service.ts",
-];
-
-// The canonical wrapper function name
-const WRAPPER_FN = "appendFamilyGradePostscript";
-
-// Canonical sentinel in the body (alternative acceptance)
+const WRAPPER_CANONICAL = "appendFamilyGradePostscript";
 const FAMILY_SENTINEL = "--- For family members ---";
+const NOTIFY_NAMES = new Set(["notifyCritical", "notifyWarning"]);
 
-// Forward window: catches inline appendFamilyGradePostscript() in args
-const LOOKAHEAD_LINES = 10;
-
-// Backward window: catches const fullBody = appendFamilyGradePostscript(...)
-// patterns where the variable is built before the notify call.
-// Set to 60 to handle cases where the fullBody variable is shared across
-// multiple notify branches in a single function (e.g. consistency-tracker
-// where fullBody at line 370 is reused at lines 392, 421, and 474).
-const LOOKBACK_LINES = 60;
-
-interface Offender {
-  file: string;
-  line: number;
+export interface Offender {
+  file: string; // repo-relative
+  line: number; // 1-based
+  callee: string;
   source: string;
 }
 
-function hasWrapper(lines: string[], callIdx: number): boolean {
-  // Forward: inline appendFamilyGradePostscript() call in the notify args
-  const forwardEnd = Math.min(callIdx + LOOKAHEAD_LINES, lines.length);
-  const forwardWindow = lines.slice(callIdx, forwardEnd).join("\n");
-  if (forwardWindow.includes(WRAPPER_FN) || forwardWindow.includes(FAMILY_SENTINEL)) return true;
+function parse(src: string, fileName: string): ts.SourceFile {
+  return ts.createSourceFile(fileName, src, ts.ScriptTarget.Latest, /*setParentNodes*/ true, ts.ScriptKind.TS);
+}
 
-  // Backward: const body = appendFamilyGradePostscript(...) variable pattern
-  const backStart = Math.max(0, callIdx - LOOKBACK_LINES);
-  const backWindow = lines.slice(backStart, callIdx).join("\n");
-  if (backWindow.includes(WRAPPER_FN)) return true;
+/** All local names in a file that alias `appendFamilyGradePostscript` (static import + destructure). */
+export function resolveWrapperAliases(sf: ts.SourceFile): Set<string> {
+  const names = new Set<string>([WRAPPER_CANONICAL]);
+  const visit = (node: ts.Node): void => {
+    // static: import { appendFamilyGradePostscript as X } / import { appendFamilyGradePostscript }
+    if (ts.isImportSpecifier(node)) {
+      const original = node.propertyName?.text ?? node.name.text;
+      if (original === WRAPPER_CANONICAL) names.add(node.name.text);
+    }
+    // dynamic destructure: const { appendFamilyGradePostscript: X } = await import(...)
+    //                  or  .then(({ appendFamilyGradePostscript: X }) => ...)
+    if (ts.isBindingElement(node)) {
+      const original =
+        node.propertyName && (ts.isIdentifier(node.propertyName) || ts.isStringLiteralLike(node.propertyName))
+          ? node.propertyName.text
+          : ts.isIdentifier(node.name)
+            ? node.name.text
+            : undefined;
+      if (original === WRAPPER_CANONICAL && ts.isIdentifier(node.name)) names.add(node.name.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return names;
+}
 
+/** Local variable names bound from a wrapper call (`const body = appendFGP(...)`, `x = appendFGP(...)`). */
+export function resolveWrapperBoundVars(sf: ts.SourceFile, wrapperNames: Set<string>): Set<string> {
+  const vars = new Set<string>();
+  const subtreeHasWrapperCall = (node: ts.Node): boolean => {
+    let hit = false;
+    const walk = (n: ts.Node): void => {
+      if (hit) return;
+      if (ts.isCallExpression(n)) {
+        const callee = n.expression;
+        const nm = ts.isIdentifier(callee) ? callee.text : ts.isPropertyAccessExpression(callee) ? callee.name.text : "";
+        if (wrapperNames.has(nm)) {
+          hit = true;
+          return;
+        }
+      }
+      ts.forEachChild(n, walk);
+    };
+    walk(node);
+    return hit;
+  };
+  const visit = (node: ts.Node): void => {
+    if (ts.isVariableDeclaration(node) && node.initializer && ts.isIdentifier(node.name)) {
+      if (subtreeHasWrapperCall(node.initializer)) vars.add(node.name.text);
+    }
+    if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ts.isIdentifier(node.left)
+    ) {
+      if (subtreeHasWrapperCall(node.right)) vars.add(node.left.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return vars;
+}
+
+function argIsWrapped(arg: ts.Node, wrapperNames: Set<string>, boundVars: Set<string>, sf: ts.SourceFile): boolean {
+  // (b) indirect const/var
+  if (ts.isIdentifier(arg) && boundVars.has(arg.text)) return true;
+  // (a) direct wrapper call anywhere in the arg subtree
+  let hit = false;
+  const walk = (n: ts.Node): void => {
+    if (hit) return;
+    if (ts.isCallExpression(n)) {
+      const callee = n.expression;
+      const nm = ts.isIdentifier(callee) ? callee.text : ts.isPropertyAccessExpression(callee) ? callee.name.text : "";
+      if (wrapperNames.has(nm)) {
+        hit = true;
+        return;
+      }
+    }
+    ts.forEachChild(n, walk);
+  };
+  walk(arg);
+  if (hit) return true;
+  // (c) inline family sentinel
+  if (arg.getText(sf).includes(FAMILY_SENTINEL)) return true;
   return false;
 }
 
-function checkFile(filePath: string, relPath: string): Offender[] {
+export function checkFileSource(src: string, relPath: string): Offender[] {
+  const sf = parse(src, relPath);
+  const wrapperNames = resolveWrapperAliases(sf);
+  const boundVars = resolveWrapperBoundVars(sf, wrapperNames);
   const offenders: Offender[] = [];
-  const raw = fs.readFileSync(filePath, "utf-8");
-  const lines = raw.split("\n");
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!;
-
-    // Skip comments, imports, JSDoc
-    const isCommentLine = line.trimStart().startsWith("//") || line.trimStart().startsWith("*");
-    if (isCommentLine) continue;
-
-    const isImportLine = line.trimStart().startsWith("import ");
-    if (isImportLine) continue;
-
-    if (line.includes("@param") || line.includes("* ")) continue;
-
-    // Skip function DEFINITIONS of the notify helpers themselves (they ARE the wrappers).
-    // Matches: "export function notifyCritical(" and "function notifyWarning(" etc.
-    if (/\bfunction\s+notify(Critical|Warning|Info)\s*\(/.test(line)) continue;
-
-    const hasNotifyCall =
-      /\bnotifyCritical\s*\(/.test(line) || /\bnotifyWarning\s*\(/.test(line);
-    if (!hasNotifyCall) continue;
-
-    if (!hasWrapper(lines, i)) {
-      offenders.push({
-        file: relPath,
-        line: i + 1,
-        source: line.trim().slice(0, 120),
-      });
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node)) {
+      const callee = node.expression;
+      const nm = ts.isIdentifier(callee)
+        ? callee.text
+        : ts.isPropertyAccessExpression(callee)
+          ? callee.name.text
+          : "";
+      if (NOTIFY_NAMES.has(nm)) {
+        const wrapped = node.arguments.some((a) => argIsWrapped(a, wrapperNames, boundVars, sf));
+        if (!wrapped) {
+          const { line } = sf.getLineAndCharacterOfPosition(node.getStart(sf));
+          offenders.push({
+            file: relPath,
+            line: line + 1,
+            callee: nm,
+            source: node.getText(sf).split("\n")[0]!.trim().slice(0, 120),
+          });
+        }
+      }
     }
-  }
-
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
   return offenders;
 }
 
-function main() {
-  console.log("[check-family-grade-postscript] Scanning owned files for unwrapped notify calls...\n");
-  console.log(`  Owned scope: ${OWNED_FILES_RELATIVE.length} files\n`);
-
-  const allOffenders: Offender[] = [];
-
-  for (const rel of OWNED_FILES_RELATIVE) {
-    const full = path.join(SERVER_DIR, rel);
-    if (!fs.existsSync(full)) {
-      console.warn(`  [WARN] Owned file not found — skipping: ${rel}`);
-      continue;
+function walkTsFiles(dir: string, root: string, acc: string[] = []): string[] {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      if (e.name === "__tests__" || e.name === "node_modules") continue;
+      walkTsFiles(p, root, acc);
+    } else if (e.name.endsWith(".ts") && !e.name.endsWith(".test.ts") && !e.name.endsWith(".d.ts")) {
+      acc.push(p);
     }
-    const found = checkFile(full, rel);
-    allOffenders.push(...found);
   }
+  return acc;
+}
 
-  if (allOffenders.length === 0) {
-    console.log("[check-family-grade-postscript] PASS — all owned-file notify calls are family-grade wrapped.\n");
+export function checkTree(serverDir: string): Offender[] {
+  const files = walkTsFiles(serverDir, serverDir);
+  const offenders: Offender[] = [];
+  for (const full of files) {
+    const rel = path.relative(path.dirname(serverDir), full).replace(/\\/g, "/");
+    offenders.push(...checkFileSource(fs.readFileSync(full, "utf8"), rel));
+  }
+  return offenders;
+}
+
+// ─── CLI ─────────────────────────────────────────────────────────────────────────────────────
+
+function isMain(): boolean {
+  try {
+    return path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+}
+
+if (isMain()) {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const scanRoot = process.env.TF_FGP_SCAN_ROOT
+    ? path.resolve(process.env.TF_FGP_SCAN_ROOT)
+    : path.resolve(here, "..", "src", "server");
+
+  console.log(`[check-family-grade-postscript] AST scan of ${scanRoot} for unwrapped notify calls...`);
+  const offenders = checkTree(scanRoot);
+
+  if (offenders.length === 0) {
+    console.log(
+      "[check-family-grade-postscript] PASS — every notifyCritical/notifyWarning call in src/server is family-grade wrapped.",
+    );
     process.exit(0);
   }
 
-  console.error(
-    `[check-family-grade-postscript] FAIL — ${allOffenders.length} unwrapped call site(s) found:\n`,
-  );
-  for (const o of allOffenders) {
-    console.error(`  ${o.file}:${o.line}`);
+  console.error(`[check-family-grade-postscript] FAIL — ${offenders.length} unwrapped notify call site(s):\n`);
+  for (const o of offenders) {
+    console.error(`  ${o.file}:${o.line}  (${o.callee})`);
     console.error(`    ${o.source}`);
   }
   console.error(
-    "\n  Each notifyCritical/notifyWarning call must wrap its message body with appendFamilyGradePostscript().",
+    `\n  Wrap each message body: notify${"X"}('title', appendFamilyGradePostscript('technical', 'family what', 'family action'), meta)`,
   );
-  console.error("  Canonical 3-arg pattern:");
-  console.error("    notifyCritical('title', appendFamilyGradePostscript('technical', 'family what', 'family action'), meta)");
   process.exit(1);
 }
-
-main();

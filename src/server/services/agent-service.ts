@@ -23,6 +23,7 @@ import { sandboxCheckCode } from "./llm-sandbox-service.js";
 import { checkDslDiversity, persistDslFeatureVector, auditDslDiversityRejection } from "./dsl-diversity-service.js";
 // FIX 6 (2026-07-02): Discord WARN for dsl_critic fail-open invocation visibility
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 // Pass 4 — Scout substance validation (Tier-1 regex + Tier-2 LLM auditor + premium format)
 import {
   tier1RegexFilter,
@@ -222,7 +223,11 @@ async function _emitCriticFailOpenAudit(journalId: string, reason: string): Prom
   if (_shouldSendCriticFailOpenDiscord()) {
     notifyWarning(
       "DSL Critic Fail-Open",
-      `DSL quality critic invocation failed (fail-open) — strategies passing WITHOUT critic review. Reason: ${reason}. Check audit_log action=dsl_critic.invocation_failed_fail_open for full event list.`,
+      appendFamilyGradePostscript(
+        `DSL quality critic invocation failed (fail-open) — strategies passing WITHOUT critic review. Reason: ${reason}. Check audit_log action=dsl_critic.invocation_failed_fail_open for full event list.`,
+        "The quality reviewer that normally checks new strategies is offline, so strategies are being approved without that safety check.",
+        "No action needed right now, but tell Tony so he can restart the reviewer before more strategies are approved.",
+      ),
       { journal_id: journalId, reason },
     );
   }
@@ -991,7 +996,11 @@ export class AgentService {
         }).catch((writeErr) => logger.warn({ err: writeErr }, "audit_log write failed for auditor-error fail-closed"));
         notifyWarning(
           "Layer-2 Auditor Error — Promotion BLOCKED (fail-closed)",
-          `graduated-strategy-auditor threw while auditing "${String((sanitizedDsl as any)?.name ?? "unknown")}". The Layer-2 audit gate failed CLOSED and REFUSED the promotion. Investigate the auditor — no audit certification means no promotion.`,
+          appendFamilyGradePostscript(
+            `graduated-strategy-auditor threw while auditing "${String((sanitizedDsl as any)?.name ?? "unknown")}". The Layer-2 audit gate failed CLOSED and REFUSED the promotion. Investigate the auditor — no audit certification means no promotion.`,
+            "A safety check errored out while reviewing a new strategy, so the system refused to promote it (the safe choice).",
+            "Nothing is at risk. Let Tony know so he can fix the checker and let the strategy try again.",
+          ),
           { dsl_name: (sanitizedDsl as any)?.name, correlationId },
         );
         return {

@@ -454,8 +454,14 @@ DIRECT** — preserving everything. **TradingView Pine is for (a) the FAMILY's S
 status (deep-scan #8 w2, 2026-07-02): Strategy-Tester-vs-broker P&L reconciliation harness SHIPPED —
 `npx tsx scripts/pine-broker-reconcile.ts --strategy <id> --csv <tester-export.csv>` (2-tick tolerance
 per §8, both TradingView export shapes, `pine_parity.reconciliation_run` audit row); VWAP session-reset
-unified to Globex 18:00 ET (deep-scan #6 Track D). Still open: no static Pine-vs-engine
-result-equivalence test — the runtime reconciliation harness is the operating control for deployed bots.
+unified to Globex 18:00 ET (deep-scan #6 Track D). Static Pine-vs-engine result-equivalence test
+SHIPPED (deep-scan #22 Track X4, `src/engine/tests/test_ds22_x4_pine_engine_static_equivalence.py`): for the
+faithful-archetype class, two independent oracles (real `generate_signals`/`_apply_stop_only_management` vs.
+regex-extracted-and-reinterpreted compiled Pine text) must agree on entry/exit bar + price within 2-tick
+tolerance; RED-proof meta-tests confirm the checker catches injected divergence. Full Slumdawg remains
+untestable-by-design (Pine cannot express it — HARD-blocked, not a gap). The runtime reconciliation harness
+(`pine-broker-reconcile.ts`) remains the operating control for live numerical parity on real market data — a
+distinct, still-necessary check this static test does not replace.
 
 ### Cost split (lean — don't double-pay)
 - **Topstep accounts → TopstepX** ($14.50/mo sub covers Topstep accounts + the TopstepX copier). No TradersPost.

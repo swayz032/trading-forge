@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema.js";
 import { logger } from "../lib/logger.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -108,10 +109,14 @@ export async function runDbHealthProbe(): Promise<void> {
         .then(({ notifyWarning }) => {
           notifyWarning(
             "DB Pool: Postgres connection health probe failing",
-            `SELECT 1 health probe failed: ${errorMsg}. ` +
-              `The Postgres connection pool may be experiencing reconnects. ` +
-              `This is surfaced proactively for 30-day unattended operation — ` +
-              `check database server status and network connectivity.`,
+            appendFamilyGradePostscript(
+              `SELECT 1 health probe failed: ${errorMsg}. ` +
+                `The Postgres connection pool may be experiencing reconnects. ` +
+                `This is surfaced proactively for 30-day unattended operation — ` +
+                `check database server status and network connectivity.`,
+              "The bot is having trouble talking to its database, which stores every trade and setting.",
+              "If the dashboard turns red or stops updating, tell Tony to check the database and internet connection.",
+            ),
             { error: errorMsg, wasHealthy },
           );
         })

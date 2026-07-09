@@ -36,6 +36,7 @@ import { randomUUID } from "crypto";
 // respects pause even when called directly (e.g. operator manual trigger, tests).
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { notifyWarning } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE, FACTORY_EVENTS } from "../routes/sse.js";
 
@@ -119,7 +120,11 @@ async function _emitYtQuotaExhausted(correlationId?: string): Promise<void> {
     _ytQuotaState.warnedToday = true;
     notifyWarning(
       "YouTube quota exhausted",
-      `YouTube Data API daily budget of ${YOUTUBE_DAILY_QUOTA_BUDGET} units reached (${_ytQuotaState.usedUnits} used). YouTube layer disabled for the rest of the UTC day. Resets at midnight UTC.`,
+      appendFamilyGradePostscript(
+        `YouTube Data API daily budget of ${YOUTUBE_DAILY_QUOTA_BUDGET} units reached (${_ytQuotaState.usedUnits} used). YouTube layer disabled for the rest of the UTC day. Resets at midnight UTC.`,
+        "The research bot used up today's free YouTube search allowance, so it will look at fewer new videos until tomorrow.",
+        "Nothing to do — it resets automatically at midnight. Only tell Tony if you see this every single day.",
+      ),
       { used_units: _ytQuotaState.usedUnits, budget: YOUTUBE_DAILY_QUOTA_BUDGET, utc_day: _ytQuotaState.utcDay },
     );
   }
@@ -2026,9 +2031,13 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
         _zeroExtractState.warnedToday = true;
         notifyWarning(
           "Scout conveyor stalled — 3+ consecutive zero-extract cycles",
-          `The autonomous scout cycle has produced 0 layer mentions for ${_zeroExtractState.consecutiveZeroCycles} consecutive cycles. ` +
-          `Latest cycle: ${cycleIndex}, symbol group: ${symbolGroup}. ` +
-          `Check Brave/Exa API keys, YouTube API quota, and pipeline status.`,
+          appendFamilyGradePostscript(
+            `The autonomous scout cycle has produced 0 layer mentions for ${_zeroExtractState.consecutiveZeroCycles} consecutive cycles. ` +
+              `Latest cycle: ${cycleIndex}, symbol group: ${symbolGroup}. ` +
+              `Check Brave/Exa API keys, YouTube API quota, and pipeline status.`,
+            "The bot that discovers new strategy ideas has come up empty several times in a row — it may be stuck.",
+            "Tell Tony so he can check the research API keys; existing strategies keep trading normally in the meantime.",
+          ),
           {
             consecutive_zero_cycles: _zeroExtractState.consecutiveZeroCycles,
             cycle_index: cycleIndex,
