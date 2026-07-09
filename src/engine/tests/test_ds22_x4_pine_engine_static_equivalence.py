@@ -37,9 +37,24 @@ Two INDEPENDENT oracles evaluate the SAME synthetic 5-minute MES bar series:
 
   (b) PINE oracle — compiles the SAME StrategyDSL via the real, live
       production entry point src.engine.pine_compiler.compile_dual_artifacts()
-      (verified to be what src/server/services/pine-export-service.ts
-      actually invokes — grep confirms compile_strategy() is legacy/unused
-      by the service). The emitted STRATEGY artifact's Pine TEXT is then
+      (invoked by src/server/services/pine-export-service.ts's
+      compileDualPineExport(), reached only when a caller explicitly requests
+      exportType="pine_dual" or the CLI passes --dual).
+      CORRECTION (deep-scan #22 Track Y4, 2026-07-09): an earlier version of
+      this docstring claimed compile_strategy() was "legacy/unused" — that was
+      FALSE. compile_strategy() (the non-dual CLI branch) is the DEFAULT live
+      path: compilePineExport() calls it via runPineCompiler() (no --dual
+      flag) and is itself called from monte-carlo-service.ts, quantum-mc-
+      service.ts, scheduler.ts, strategies.ts, and routes/pine-export.ts's
+      default (non-"pine_dual") branch — i.e. every auto-recompile and every
+      default-exportType export in production. This test exercises
+      compile_dual_artifacts() only; it does NOT cover compile_strategy()'s
+      strategy_shell artifact. See
+      test_ds22_y4_strategy_shell_event_blackout.py for shell-specific
+      blackout coverage (Track Y4 fix: the shell previously reimplemented its
+      own NFP-only blackout instead of calling the shared
+      _build_event_blackout_block() helper — fixed to call the same helper
+      compile_dual_artifacts() uses). The emitted STRATEGY artifact's Pine TEXT is then
       parsed via regex to extract the actual numbers the compiler chose to
       emit (SMA periods, ATR stop multiplier, use_target, the FOMC/CPI/NFP
       blackout expressions, the anti-setup expression, the daily loss /

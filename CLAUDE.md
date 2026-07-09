@@ -461,7 +461,10 @@ regex-extracted-and-reinterpreted compiled Pine text) must agree on entry/exit b
 tolerance; RED-proof meta-tests confirm the checker catches injected divergence. Full Slumdawg remains
 untestable-by-design (Pine cannot express it — HARD-blocked, not a gap). The runtime reconciliation harness
 (`pine-broker-reconcile.ts`) remains the operating control for live numerical parity on real market data — a
-distinct, still-necessary check this static test does not replace.
+distinct, still-necessary check this static test does not replace. (Track Y4, `test_ds22_y4_strategy_shell_event_blackout.py`:
+the DEFAULT live export path `compile_strategy()` → `strategy_shell` now emits the shared full FOMC/CPI/NFP
+`_build_event_blackout_block()` — previously it shipped an NFP-only inline blackout, so family-distributed Pine
+lacked the FOMC/CPI macro blackout the rest of the system enforces; RED-proof meta-test guards the regression.)
 
 ### Cost split (lean — don't double-pay)
 - **Topstep accounts → TopstepX** ($14.50/mo sub covers Topstep accounts + the TopstepX copier). No TradersPost.
