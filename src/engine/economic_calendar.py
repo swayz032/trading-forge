@@ -19,13 +19,18 @@ Wave hardening 2026-06-22 Phase 1 — MFFU Feb-2026 policy — correct T1 set:
     the EIA petroleum report shifts to Thursday 11:00 ET.
     Dates generated via generate_eia_dates_for_year() — operator MUST verify
     against the official EIA 2026 schedule (image in MFFU policy doc §5).
-    Product scope: EIA affects CL/MCL ONLY (crude-energy traders per MFFU Feb-2026).
+    Product scope: EIA affects CL/MCL/QM ONLY (crude-energy traders per MFFU Feb-2026).
 
-EVENT_PRODUCT_SCOPE: separate dict keyed by event_type listing affected_products.
-  Chosen over adding a 4th element to _ECONOMIC_EVENTS tuples because the
-  existing tuple shape (date, time_et, name) is unpacked in multiple consumers;
-  a separate map is non-invasive and allows future product-aware filtering without
-  touching all existing call sites.
+EVENT_PRODUCT_SCOPE (2026-07-08 scope fix — NOW ACTIVELY CONSUMED): separate dict keyed by
+  event_type listing affected products, mirroring the TS reference of truth
+  `news-policy.ts::eventAffectsSymbol`. Threaded through the shared chokepoint
+  `_get_events_for_policies(policies, symbol)` so all three consumers (mask / size-reduction
+  / slippage) product-scope events consistently. Convention:
+    • FOMC / FOMC_MINUTES → ALL products    • CPI / NFP → equity-index ONLY    • EIA → crude ONLY
+  Chosen over adding a 4th element to _ECONOMIC_EVENTS tuples because the existing tuple
+  shape (date, time_et, name) is unpacked in multiple consumers; a separate map is
+  non-invasive. (Was previously dead code — an EIA event blacked out index symbols and
+  CPI/NFP had no index-only scoping. Fixed by threading a REQUIRED symbol param.)
 """
 
 from __future__ import annotations
@@ -39,26 +44,59 @@ import polars as pl
 
 
 # ─── Product scope map ────────────────────────────────────────────
-# Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — correct T1 set.
-# Keyed by event_type. Empty list = affects all products (no filter applied).
+# Ratified live convention (2026-07-08 scope fix) — the Python macro-blackout mask MUST
+# agree with the TS reference of truth `src/server/lib/news-policy.ts::eventAffectsSymbol`
+# across the known symbol universe.
+# Convention (the pin — non-negotiable):
+#   • FOMC / FOMC_MINUTES → ALL products (rate decisions move everything)
+#   • CPI / NFP           → equity-INDEX products ONLY
+#   • EIA                 → CRUDE products ONLY
+#
+# Keyed by event_type. Empty list = affects all products (no product filter).
+# Non-empty list = the event affects ONLY the listed symbols.
 # Separate from STATIC_EVENTS tuples to avoid breaking existing (date, time_et)
 # unpack consumers.
 #
-# EIA: crude-energy-only per MFFU Feb-2026 policy §5 ("For energy traders: EIA").
-# FOMC / FOMC_MINUTES / CPI / NFP: all products (all traders).
+# INDEX_SYMBOLS / CRUDE_SYMBOLS mirror the TS sets in news-policy.ts EXACTLY so the parity
+# gate (scripts/check-ts-python-event-product-scope-parity.ts) holds across the full symbol
+# universe. QM is included in CRUDE_SYMBOLS to match the TS set.
+#
 # GDP / PCE / ISM / PPI: historical data only (NOT T1 per Feb-2026 policy);
-#   listed as empty list so non-blackout consumers can still query them.
+#   listed as empty list so non-blackout consumers can still query them (all products).
+INDEX_SYMBOLS: list[str] = ["MES", "MNQ", "ES", "NQ", "M2K", "RTY", "MYM", "YM"]
+CRUDE_SYMBOLS: list[str] = ["MCL", "CL", "QM"]
+
 EVENT_PRODUCT_SCOPE: dict[str, list[str]] = {
     "FOMC":         [],             # all products
     "FOMC_MINUTES": [],             # all products
-    "CPI":          [],             # all products
-    "NFP":          [],             # all products
-    "EIA":          ["MCL", "CL"],  # crude-energy only (MFFU §5 energy-trader clause)
+    "CPI":          INDEX_SYMBOLS,  # equity-index ONLY (matches TS eventAffectsSymbol)
+    "NFP":          INDEX_SYMBOLS,  # equity-index ONLY (matches TS eventAffectsSymbol)
+    "EIA":          CRUDE_SYMBOLS,  # crude ONLY — MCL/CL/QM (matches TS eventAffectsSymbol)
     "GDP":          [],             # NOT T1 per Feb-2026; kept for non-blackout reference
     "PCE":          [],             # NOT T1 per Feb-2026; kept for non-blackout reference
     "ISM":          [],             # NOT T1 per Feb-2026; kept for non-blackout reference
     "PPI":          [],             # NOT T1 per Feb-2026; kept for non-blackout reference
 }
+
+# Union of every symbol we can product-scope. A product-scoped event (CPI/NFP/EIA) with a
+# symbol OUTSIDE this universe must fail loudly (never silently treat as all-or-none).
+_KNOWN_PRODUCT_SYMBOLS: frozenset[str] = frozenset(INDEX_SYMBOLS) | frozenset(CRUDE_SYMBOLS)
+
+
+def symbol_passes_event_scope(event_type: str, symbol: str) -> bool:
+    """Whether a product-scoped event of `event_type` affects `symbol`.
+
+    Mirrors TS `news-policy.ts::eventAffectsSymbol` exactly:
+      • empty scope list (FOMC/FOMC_MINUTES/GDP/…) or unknown event_type → True (all products)
+      • non-empty scope list (CPI/NFP → index, EIA → crude) → True iff symbol ∈ list
+
+    Case-insensitive on both event_type and symbol, matching the TS `.toUpperCase()`.
+    Pure — no I/O, no side effects. Used by the parity-gate subprocess.
+    """
+    scope = EVENT_PRODUCT_SCOPE.get((event_type or "").upper(), [])
+    if not scope:
+        return True  # empty list / unknown event type = affects all products
+    return (symbol or "").upper() in scope
 
 
 # ─── EIA petroleum report date generator ─────────────────────────
@@ -885,20 +923,91 @@ STATIC_EVENTS: dict[str, list[dict]] = {
     # ─── FOMC Minutes (14:00 ET, ~3 weeks after each FOMC meeting) ───────────
     # Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — FOMC_MINUTES.
     # T1 event for ALL traders per MFFU Feb-2026 policy.
-    # Dates are the "~3 weeks after FOMC" approximation (21 calendar days).
-    # TODO: Operator MUST verify exact release dates against the Fed's published
-    # Minutes calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
-    # The Fed typically releases Minutes at 2:00 PM ET on the specified date.
-    # These approximate dates may shift by 1-3 days from the computed "+21 days".
+    #
+    # 2020-2025 rows are ARCHIVAL FACTS — the exact "Minutes: (Released Month DD,
+    # YYYY)" release date the Fed published for each SCHEDULED meeting, TRANSCRIBED
+    # (not +21-derived). Primary sources (federalreserve.gov):
+    #   fomccalendars.htm                (2021-2026 "Released ..." release dates)
+    #   fomchistorical2020.htm           (2020 archival — historical materials lag)
+    # Minutes drop at 2:00 PM ET, normally exactly 3 weeks after the meeting's
+    # decision day; a handful land 1-2 days EARLY when +21 would fall on/after a
+    # holiday (2020-11-25, 2023-11-21, 2024-11-26, 2025-12-30 = pre-Thanksgiving /
+    # pre-New-Year shifts). The transcribed archival date wins over the arithmetic.
+    #
+    # SCHEDULED-MEETINGS ONLY: the March-2020 emergency actions (Mar 2 conference
+    # call + Mar 15 unscheduled cut that replaced the cancelled Mar 17-18 scheduled
+    # meeting; their minutes were released Apr 8, 2020) are EXCLUDED — the macro
+    # instrument covers scheduled-meeting artifacts only. That is why 2020 has 7
+    # rows, not 8 (this mirrors the March-2020 emergency FOMC-statement exclusion).
+    #
+    # 2026 rows dated <= 2026-07-09 are ARCHIVAL (actual Fed release dates verified
+    # on fomccalendars.htm). Rows dated after 2026-07-09 remain the "~3 weeks after
+    # FOMC" (+21) FUTURE approximation and may shift 1-3 days; replace each with its
+    # archival date as the Minutes are published.
+    # TODO: verify future-projection rows against fomccalendars.htm as they release.
     "FOMC_MINUTES": [
-        # 2026 — computed as FOMC date + 21 calendar days
-        # FOMC 2026-01-28 + 21 = 2026-02-18 (Wednesday)
+        # ── 2020 archival (fomchistorical2020.htm; March emergency EXCLUDED) ──
+        {"date": "2020-02-19", "time_et": "14:00"},  # Jan 28-29 mtg
+        {"date": "2020-05-20", "time_et": "14:00"},  # Apr 28-29 mtg
+        {"date": "2020-07-01", "time_et": "14:00"},  # Jun 9-10 mtg
+        {"date": "2020-08-19", "time_et": "14:00"},  # Jul 28-29 mtg
+        {"date": "2020-10-07", "time_et": "14:00"},  # Sep 15-16 mtg
+        {"date": "2020-11-25", "time_et": "14:00"},  # Nov 4-5 mtg (early: +21 = Nov 26, pre-Thanksgiving)
+        {"date": "2021-01-06", "time_et": "14:00"},  # Dec 15-16, 2020 mtg
+        # ── 2021 archival (fomccalendars.htm) ──
+        {"date": "2021-02-17", "time_et": "14:00"},  # Jan 26-27 mtg
+        {"date": "2021-04-07", "time_et": "14:00"},  # Mar 16-17 mtg
+        {"date": "2021-05-19", "time_et": "14:00"},  # Apr 27-28 mtg
+        {"date": "2021-07-07", "time_et": "14:00"},  # Jun 15-16 mtg
+        {"date": "2021-08-18", "time_et": "14:00"},  # Jul 27-28 mtg
+        {"date": "2021-10-13", "time_et": "14:00"},  # Sep 21-22 mtg
+        {"date": "2021-11-24", "time_et": "14:00"},  # Nov 2-3 mtg (Wed pre-Thanksgiving)
+        {"date": "2022-01-05", "time_et": "14:00"},  # Dec 14-15, 2021 mtg
+        # ── 2022 archival (fomccalendars.htm) ──
+        {"date": "2022-02-16", "time_et": "14:00"},  # Jan 25-26 mtg
+        {"date": "2022-04-06", "time_et": "14:00"},  # Mar 15-16 mtg
+        {"date": "2022-05-25", "time_et": "14:00"},  # May 3-4 mtg
+        {"date": "2022-07-06", "time_et": "14:00"},  # Jun 14-15 mtg
+        {"date": "2022-08-17", "time_et": "14:00"},  # Jul 26-27 mtg
+        {"date": "2022-10-12", "time_et": "14:00"},  # Sep 20-21 mtg
+        {"date": "2022-11-23", "time_et": "14:00"},  # Nov 1-2 mtg (Wed pre-Thanksgiving)
+        {"date": "2023-01-04", "time_et": "14:00"},  # Dec 13-14, 2022 mtg
+        # ── 2023 archival (fomccalendars.htm) ──
+        {"date": "2023-02-22", "time_et": "14:00"},  # Jan 31-Feb 1 mtg
+        {"date": "2023-04-12", "time_et": "14:00"},  # Mar 21-22 mtg
+        {"date": "2023-05-24", "time_et": "14:00"},  # May 2-3 mtg
+        {"date": "2023-07-05", "time_et": "14:00"},  # Jun 13-14 mtg
+        {"date": "2023-08-16", "time_et": "14:00"},  # Jul 25-26 mtg
+        {"date": "2023-10-11", "time_et": "14:00"},  # Sep 19-20 mtg
+        {"date": "2023-11-21", "time_et": "14:00"},  # Oct 31-Nov 1 mtg (early: +21 = Nov 22, pre-Thanksgiving)
+        {"date": "2024-01-03", "time_et": "14:00"},  # Dec 12-13, 2023 mtg
+        # ── 2024 archival (fomccalendars.htm) ──
+        {"date": "2024-02-21", "time_et": "14:00"},  # Jan 30-31 mtg
+        {"date": "2024-04-10", "time_et": "14:00"},  # Mar 19-20 mtg
+        {"date": "2024-05-22", "time_et": "14:00"},  # Apr 30-May 1 mtg
+        {"date": "2024-07-03", "time_et": "14:00"},  # Jun 11-12 mtg (Wed pre-July 4)
+        {"date": "2024-08-21", "time_et": "14:00"},  # Jul 30-31 mtg
+        {"date": "2024-10-09", "time_et": "14:00"},  # Sep 17-18 mtg
+        {"date": "2024-11-26", "time_et": "14:00"},  # Nov 6-7 mtg (early: +21 = Nov 28, pre-Thanksgiving)
+        {"date": "2025-01-08", "time_et": "14:00"},  # Dec 17-18, 2024 mtg
+        # ── 2025 archival (fomccalendars.htm) ──
+        {"date": "2025-02-19", "time_et": "14:00"},  # Jan 28-29 mtg
+        {"date": "2025-04-09", "time_et": "14:00"},  # Mar 18-19 mtg
+        {"date": "2025-05-28", "time_et": "14:00"},  # May 6-7 mtg
+        {"date": "2025-07-09", "time_et": "14:00"},  # Jun 17-18 mtg
+        {"date": "2025-08-20", "time_et": "14:00"},  # Jul 29-30 mtg
+        {"date": "2025-10-08", "time_et": "14:00"},  # Sep 16-17 mtg
+        {"date": "2025-11-19", "time_et": "14:00"},  # Oct 28-29 mtg
+        {"date": "2025-12-30", "time_et": "14:00"},  # Dec 9-10 mtg (early: +21 = Dec 31, pre-New-Year)
+        # 2026 — rows <= 2026-07-09 are ARCHIVAL; later rows are +21 FUTURE approx
+        # Jan 27-28 mtg — ARCHIVAL release Feb 18, 2026 (fomccalendars.htm)
         {"date": "2026-02-18", "time_et": "14:00"},
-        # FOMC 2026-03-18 + 21 = 2026-04-08 (Wednesday)
+        # Mar 17-18 mtg — ARCHIVAL release Apr 8, 2026 (fomccalendars.htm)
         {"date": "2026-04-08", "time_et": "14:00"},
-        # FOMC 2026-05-06 + 21 = 2026-05-27 (Wednesday)
-        {"date": "2026-05-27", "time_et": "14:00"},
-        # FOMC 2026-06-17 + 21 = 2026-07-08 (Wednesday)
+        # Apr 28-29 mtg — ARCHIVAL release May 20, 2026 (fomccalendars.htm)
+        #   REPAIRED from 2026-05-27, which was +21 off the SUPERSEDED May 6 mtg date
+        {"date": "2026-05-20", "time_et": "14:00"},
+        # Jun 16-17 mtg — ARCHIVAL release Jul 8, 2026 (fomccalendars.htm)
         {"date": "2026-07-08", "time_et": "14:00"},
         # FOMC 2026-07-29 + 21 = 2026-08-19 (Wednesday)
         {"date": "2026-08-19", "time_et": "14:00"},
@@ -1019,15 +1128,54 @@ def _events_for_type(event_type: str) -> list[dict]:
 
 def _get_events_for_policies(
     policies: list[dict],
+    symbol: str,
 ) -> list[tuple[datetime, str, str, int]]:
-    """Build flat list of (event_dt_et, event_type, action, window_min).
+    """Build flat list of (event_dt_et, event_type, action, window_min) for `symbol`.
+
+    Shared chokepoint for all three consumers (mask / size-reduction / slippage) so the
+    per-symbol product scope is applied consistently. A policy's event is included ONLY
+    when `symbol_passes_event_scope(event_type, symbol)` — so an EIA (crude) event does not
+    black out an index symbol, and CPI/NFP only affect index products (matches the TS
+    reference `news-policy.ts::eventAffectsSymbol`).
+
+    SYMBOL REQUIRED, NEVER GUESS:
+      • symbol is None → ValueError (callers must thread the real backtest symbol).
+      • a product-scoped event (CPI/NFP/EIA) is in the policy set AND symbol is outside the
+        known product universe → ValueError (refuse to guess scope). All-products events
+        (FOMC/FOMC_MINUTES) accept any non-None symbol.
 
     Reads authoritative DB dates (economic_release_dates) per event type, falling back to
     the hardcoded STATIC_EVENTS — so backtest dates match the live gate.
     """
+    if symbol is None:
+        raise ValueError(
+            "economic_calendar: symbol is REQUIRED for event-product scoping "
+            "(never guess). Pass the backtest/strategy symbol into "
+            "generate_event_mask / generate_size_reduction / get_event_slippage_multipliers."
+        )
+
+    sym = symbol.upper()
+
+    # If any product-scoped event (CPI/NFP/EIA) is in the policy set, the symbol MUST be a
+    # recognized product — otherwise we cannot decide scope and must fail loudly rather than
+    # silently treat it as all-or-none.
+    has_product_scoped = any(
+        EVENT_PRODUCT_SCOPE.get((p["event_type"] or "").upper(), [])
+        for p in policies
+    )
+    if has_product_scoped and sym not in _KNOWN_PRODUCT_SYMBOLS:
+        raise ValueError(
+            f"economic_calendar: symbol {symbol!r} is not in the known product universe "
+            f"(index={INDEX_SYMBOLS}, crude={CRUDE_SYMBOLS}) but a product-scoped event "
+            f"(CPI/NFP/EIA) is in the policy set. Refusing to guess product scope."
+        )
+
     events = []
     for policy in policies:
         event_type = policy["event_type"]
+        # Per-symbol product filter — the single, consistent scoping chokepoint.
+        if not symbol_passes_event_scope(event_type, sym):
+            continue
         action = policy.get("action", "SIT_OUT")
         window = policy.get("window_minutes", 30)
 
@@ -1083,12 +1231,16 @@ def _check_in_window(
 def generate_event_mask(
     timestamps: pl.Series,
     policies: list[dict],
+    symbol: str,
 ) -> np.ndarray:
     """Generate boolean mask — True = bar is within an event window (SIT_OUT).
 
     Args:
         timestamps: Polars Series of bar timestamps (UTC)
         policies: List of policy dicts with event_type, action, window_minutes
+        symbol: REQUIRED — the product symbol (e.g. "MES"/"MCL"). Used to product-scope
+            events (an EIA event does not mask an index symbol; CPI/NFP mask index only).
+            None → ValueError; unknown symbol with a product-scoped event → ValueError.
 
     Returns:
         numpy bool array, True where entries should be blocked
@@ -1096,7 +1248,7 @@ def generate_event_mask(
     n = len(timestamps)
     mask = np.zeros(n, dtype=bool)
 
-    events = _get_events_for_policies(policies)
+    events = _get_events_for_policies(policies, symbol)
     if not events:
         return mask
 
@@ -1116,12 +1268,16 @@ def generate_event_mask(
 def generate_size_reduction(
     timestamps: pl.Series,
     policies: list[dict],
+    symbol: str,
 ) -> np.ndarray:
     """Generate size multiplier array — 1.0 normal, 0.5 REDUCE, 0.0 SIT_OUT.
 
     Args:
         timestamps: Polars Series of bar timestamps (UTC)
         policies: List of policy dicts
+        symbol: REQUIRED — the product symbol used to product-scope events (see
+            generate_event_mask). None → ValueError; unknown symbol with a product-scoped
+            event → ValueError.
 
     Returns:
         numpy float array of size multipliers
@@ -1129,7 +1285,7 @@ def generate_size_reduction(
     n = len(timestamps)
     reduction = np.ones(n, dtype=np.float64)
 
-    events = _get_events_for_policies(policies)
+    events = _get_events_for_policies(policies, symbol)
     if not events:
         return reduction
 
@@ -1150,12 +1306,16 @@ def generate_size_reduction(
 def get_event_slippage_multipliers(
     timestamps: pl.Series,
     policies: list[dict],
+    symbol: str,
 ) -> np.ndarray:
     """Get slippage multipliers for event windows — 3.0x during events.
 
     Args:
         timestamps: Polars Series of bar timestamps (UTC)
         policies: List of policy dicts
+        symbol: REQUIRED — the product symbol used to product-scope events (see
+            generate_event_mask). None → ValueError; unknown symbol with a product-scoped
+            event → ValueError.
 
     Returns:
         numpy float array of slippage multipliers (1.0 outside events, 3.0 inside)
@@ -1163,7 +1323,7 @@ def get_event_slippage_multipliers(
     n = len(timestamps)
     multipliers = np.ones(n, dtype=np.float64)
 
-    events = _get_events_for_policies(policies)
+    events = _get_events_for_policies(policies, symbol)
     if not events:
         return multipliers
 

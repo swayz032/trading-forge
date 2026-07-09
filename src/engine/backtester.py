@@ -3878,8 +3878,10 @@ def run_backtest(
             get_event_slippage_multipliers,
         )
         policies = [p.model_dump() for p in request.event_calendar.policies]
-        event_mask = generate_event_mask(df["ts_event"], policies)
-        event_slippage_mult = get_event_slippage_multipliers(df["ts_event"], policies)
+        # 2026-07-08 scope fix: thread the backtest symbol so events are product-scoped
+        # (EIA → crude only; CPI/NFP → index only; FOMC → all). Was previously universal.
+        event_mask = generate_event_mask(df["ts_event"], policies, config.symbol)
+        event_slippage_mult = get_event_slippage_multipliers(df["ts_event"], policies, config.symbol)
     elif "ts_event" in df.columns:
         # P1-D fix: CLAUDE.md mandates default SIT_OUT ±30 min for FOMC/CPI/NFP.
         # When no event_calendar is supplied, apply a conservative time-of-day blackout:

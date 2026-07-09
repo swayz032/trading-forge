@@ -27,6 +27,7 @@
     "check:gate-contract-keys": "npx tsx scripts/check-gate-contract-keys.ts",
     "check:spec-binding-plan-parity": "npx tsx scripts/check-spec-binding-plan-parity.ts",
     "check:ts-python-tier1-parity": "npx tsx scripts/check-ts-python-tier1-parity.ts",
+    "check:ts-python-event-scope-parity": "npx tsx scripts/check-ts-python-event-product-scope-parity.ts",
     "check:ts-python-pm-factor-parity": "npx tsx scripts/check-ts-python-pm-factor-parity.ts",
     "check:ts-python-firm-rules-version": "npx tsx scripts/check-ts-python-firm-rules-version.ts",
     "check:archetype-lockstep": "npx tsx scripts/check-archetype-lockstep.ts",
