@@ -206,21 +206,34 @@ export class CircuitBreaker {
  */
 export class CircuitBreakerRegistry {
   private static readonly _breakers = new Map<string, CircuitBreaker>();
-  private static _onStateChange: ((name: string, from: string, to: string) => void) | null = null;
+  private static _onStateChangeCallbacks: Array<(name: string, from: string, to: string) => void> = [];
 
   /**
    * Register a callback invoked whenever any breaker transitions state.
-   * Only one callback is supported — last call wins.
+   *
+   * MULTI-SUBSCRIBER (deep-scan #21 HIGH fix, 2026-07-05): every call APPENDS
+   * a new callback to an internal list — it no longer replaces a prior
+   * registration. All registered callbacks fire, in registration order, on
+   * every transition (OPEN and CLOSE both notify, matching prior behavior).
+   * A throwing callback is caught + logged and does NOT prevent the other
+   * registered callbacks from running.
+   *
+   * Before this fix, "last call wins" meant index.ts's generic
+   * `AlertFactory.circuitOpen(name)` handler (registered at module load,
+   * after broker-router.ts's import resolves) silently overwrote
+   * broker-router.ts's TradersPost-specific handler (Discord "orders safely
+   * blocked" alert + `broadcastSSE("broker:degraded", ...)` + CLOSE-recovery
+   * log) on every boot. Both handlers now coexist.
    */
   static setOnStateChange(cb: (name: string, from: string, to: string) => void): void {
-    this._onStateChange = cb;
+    this._onStateChangeCallbacks.push(cb);
   }
 
-  /** Fire the onStateChange callback (called by CircuitBreaker instances). */
+  /** Fire every registered onStateChange callback (called by CircuitBreaker instances). */
   static _notifyStateChange(name: string, from: string, to: string): void {
-    if (this._onStateChange) {
+    for (const cb of this._onStateChangeCallbacks) {
       try {
-        this._onStateChange(name, from, to);
+        cb(name, from, to);
       } catch (err) {
         logger.error({ err, breaker: name, from, to }, "CircuitBreaker onStateChange callback error");
       }
@@ -242,6 +255,6 @@ export class CircuitBreakerRegistry {
   /** Remove all breakers — intended for tests only. */
   static _resetForTests(): void {
     this._breakers.clear();
-    this._onStateChange = null;
+    this._onStateChangeCallbacks = [];
   }
 }

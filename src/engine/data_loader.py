@@ -58,6 +58,77 @@ def _get_connection() -> duckdb.DuckDBPyConnection:
     return _con
 
 
+# ─── S3 Read Pre-Flight Guard (deep-scan #21 Wave-2 MED, 2026-07-05) ──────────
+#
+# CERTIFIED FINDING: DuckDB's native httpfs S3 reader (`con.execute(sql).fetchdf()`
+# in load_ohlcv below) can SEGFAULT / raise a Windows access violation — a native
+# crash outside the Python exception machinery — when AWS credentials are
+# missing/invalid (reproduced by deep-scan #21 Band B: no AWS_*/S3_BUCKET env ->
+# segfault across 3 tests). A bare `except Exception:` around that call CANNOT
+# catch a native crash, so the whole backtest subprocess died uncontrolled instead
+# of returning a structured error — surfacing to the TS python-runner as an opaque
+# non-zero exit with no diagnosable reason.
+#
+# FIX: verify the exact env-var contract `_get_connection()` documents above
+# (AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY — DuckDB auto-reads these once httpfs
+# is loaded; no other credential source is wired anywhere in this codebase — see
+# the same convention in src/data/scripts/upload_to_s3.py and
+# black_swan_evaluator.py) BEFORE DuckDB ever touches the network. Missing creds
+# now raise a clean, structured DataLoadConfigError instead of crashing the
+# process. No-ops for non-S3 sources, so local_path / warm-cache reads (the vast
+# majority of calls) are byte-identical to before this change.
+#
+# HONEST RESIDUAL (documented per deep-scan #21 instructions): this closes the
+# reproducible crash class — missing/absent credentials, the one Band B actually
+# reproduced. It does NOT guarantee protection against a truncated S3 object or a
+# network drop mid-transfer DURING the DuckDB fetchdf() call itself — those
+# failures occur inside DuckDB's native C++ S3 client after this guard has already
+# passed, which a Python-level pre-flight cannot wrap without real flaky-S3 /
+# truncated-object test infrastructure (deliberately corrupted fixtures + simulated
+# connection drops) that is out of scope here. A config guard is the fully
+# testable, fully safe subset of the fix; the remaining native-crash surface is
+# narrower (mid-read network failure) but not eliminated.
+
+class DataLoadConfigError(RuntimeError):
+    """Raised when an S3 parquet read is refused pre-flight instead of risking a
+    DuckDB native crash. See the module note above `_check_s3_read_config` for why
+    this exists and what it does/doesn't cover."""
+
+
+def _check_s3_read_config(s3_path: str) -> None:
+    """Pre-flight guard: refuse an S3 read with a clean, catchable exception when
+    AWS credentials are absent, instead of letting DuckDB's native S3 reader
+    attempt (and potentially native-crash on) a read it cannot authenticate.
+
+    No-op for any path that is not an 's3://' URI — local files, `local_path=`
+    fixtures, and warm local-cache reads never reach this check and are completely
+    unaffected (byte-identical happy path). On the happy path for real S3 reads
+    (creds present), this is a single dict lookup pair — negligible overhead, zero
+    behavior change to the actual read.
+    """
+    if not s3_path.startswith("s3://"):
+        return
+
+    has_access_key = bool(os.environ.get("AWS_ACCESS_KEY_ID"))
+    has_secret_key = bool(os.environ.get("AWS_SECRET_ACCESS_KEY"))
+    if has_access_key and has_secret_key:
+        return
+
+    missing = []
+    if not has_access_key:
+        missing.append("AWS_ACCESS_KEY_ID")
+    if not has_secret_key:
+        missing.append("AWS_SECRET_ACCESS_KEY")
+
+    raise DataLoadConfigError(
+        f"S3 read for '{s3_path}' aborted before DuckDB: missing "
+        f"{' and '.join(missing)}. DuckDB's native S3 (httpfs) reader can "
+        f"native-crash the whole backtest subprocess on a bad-credentials read "
+        f"instead of raising a catchable exception — refusing the read pre-flight "
+        f"instead. Set the missing credential(s) in the environment before retrying."
+    )
+
+
 # ─── Local Cache ──────────────────────────────────────────────────
 # Phase 12 perf fix: 24-hour TTL + BACKTEST_CACHE_BUST env var for invalidation.
 #
@@ -103,14 +174,26 @@ def _write_cache_sidecar(
     source: str,
     adjusted: bool,
     dataset_hash: str,
+    *,
+    is_partial: bool = False,
+    range_start: Optional[str] = None,
+    range_end: Optional[str] = None,
 ) -> None:
     """Write provenance JSON alongside a cache parquet (deep-scan #10 FIX 7).
 
     Guards against cache poisoning: a subsequent read can verify that the file
     written under the ratio_adj/ path is genuinely ratio-adjusted.
 
-    Schema: {source, adjusted, written_at, dataset_hash}
+    Schema: {source, adjusted, written_at, dataset_hash, is_partial, range_start, range_end}
     File name: <parquet_name>.provenance.json (e.g. ratio_adj/15min.parquet.provenance.json)
+
+    deepscan16 Wave-1 Track2 CRITICAL E-4: is_partial / range_start / range_end are
+    additive fields. When the caller could only fetch a date-filtered slice (the
+    intended full-history re-fetch failed) it MUST pass is_partial=True + the actual
+    [range_start, range_end] covered by what got written to disk. _check_cache_sidecar
+    below refuses to serve a sidecar with is_partial=True — this is what stops a
+    truncated request-scoped slice from silently being treated as "complete history"
+    by every other caller that shares the same full-history cache key.
     """
     import datetime as _dt
     import json as _json
@@ -120,6 +203,9 @@ def _write_cache_sidecar(
         "adjusted": adjusted,
         "written_at": _dt.datetime.utcnow().isoformat() + "Z",
         "dataset_hash": dataset_hash,
+        "is_partial": is_partial,
+        "range_start": range_start,
+        "range_end": range_end,
     }
     try:
         sidecar.write_text(_json.dumps(payload), encoding="utf-8")
@@ -136,6 +222,11 @@ def _check_cache_sidecar(cache_file: Path, adjusted: bool) -> bool:
     Rules:
     - Sidecar absent (legacy cache) → allow with one-time INFO per file per process.
     - Sidecar present, adjusted=False for a ratio_adj-path read → WARN, return False.
+    - Sidecar present, is_partial=True (deepscan16 E-4) → WARN, return False. A partial
+      write means the intended full-history re-fetch failed and only a request-scoped
+      date slice landed on disk under the full-history cache key; the ONLY safe read
+      behavior is to treat it as a cache miss so the caller re-attempts a full fetch
+      rather than silently trusting the truncated slice as complete history.
     - Sidecar present, consistent → return True.
     """
     import json as _json
@@ -156,6 +247,15 @@ def _check_cache_sidecar(cache_file: Path, adjusted: bool) -> bool:
             print(
                 f"WARN: Cache sidecar for {cache_file.name} says adjusted=false "
                 f"(expected adjusted=true for ratio_adj path) — treating as cache miss",
+                file=sys.stderr,
+            )
+            return False
+        if data.get("is_partial", False):
+            print(
+                f"WARN: Cache sidecar for {cache_file.name} is_partial=true "
+                f"(range {data.get('range_start')}..{data.get('range_end')} — truncated "
+                f"full-history refetch fallback) — treating as cache miss until a full "
+                f"refresh succeeds",
                 file=sys.stderr,
             )
             return False
@@ -736,6 +836,11 @@ def load_ohlcv(
     _from_cache = source.startswith(str(CACHE_DIR))
     _verify_ratio_adjusted_source(source, adjusted, from_cache=_from_cache)
 
+    # Deep-scan #21 Wave-2 MED: refuse an S3 read with a clean exception when AWS
+    # creds are absent, instead of risking a DuckDB native crash (see guard docstring
+    # above _check_s3_read_config). No-op for local_path / cache sources.
+    _check_s3_read_config(source)
+
     sql = f"""
         SELECT ts_event, open, high, low, close, volume
         FROM read_parquet('{source}')
@@ -755,6 +860,10 @@ def load_ohlcv(
             # Previously the guard was only on the primary path; a raw fallback with
             # adjusted=True would silently serve unadjusted data (and poison the cache).
             _verify_ratio_adjusted_source(legacy, adjusted, from_cache=False)
+            # Deep-scan #21 Wave-2 MED: same pre-flight guard on the legacy fallback
+            # S3 read — defense in depth in case a future caller reaches this branch
+            # without having gone through the primary source's guard above.
+            _check_s3_read_config(legacy)
             legacy_sql = f"""
                 SELECT ts_event, open, high, low, close, volume
                 FROM read_parquet('{legacy}')
@@ -805,19 +914,66 @@ def load_ohlcv(
                 # date-range requests (including crisis scenarios in stress_test.py
                 # that need 2008-2020 data) all hit the local cache.
                 full_sql = f"SELECT ts_event, open, high, low, close, volume FROM read_parquet('{source}') ORDER BY ts_event"
+                # deepscan16 Wave-1 Track2 CRITICAL E-4: track WHICH dataframe actually
+                # landed on disk (full_df vs the date-filtered `df` fallback) so the
+                # sidecar's dataset_hash/range fields describe the real cached bytes,
+                # never the wider dataset we merely intended to write.
+                _cache_write_is_partial = False
+                _written_df = None
                 try:
                     full_pdf = con.execute(full_sql).fetchdf()
                     full_df = pl.from_pandas(full_pdf)
                     full_df.write_parquet(str(tmp_cache), compression="zstd")
-                except Exception:
-                    # Fallback: cache the filtered slice (better than nothing)
+                    _written_df = full_df
+                except Exception as _full_fetch_err:
+                    # Full-history re-fetch failed — the ONLY data we have is the
+                    # already date-filtered `df` from this request. Previously this
+                    # slice was written under the identical full-history cache key
+                    # with no marker, so every OTHER caller (including crisis-window
+                    # backtests needing 2008-2020 data) would silently read a
+                    # truncated "complete history" cache. Now: still write it (better
+                    # than nothing for THIS request's own range) but flag it
+                    # is_partial=True in the sidecar so _check_cache_sidecar refuses
+                    # to serve it as complete history on the next read.
+                    print(
+                        f"WARNING: full-history re-fetch failed for {data_symbol} {timeframe} "
+                        f"({_full_fetch_err!r}); caching date-filtered slice "
+                        f"[{start}..{end}] as PARTIAL — will not be trusted as complete "
+                        f"history by future reads",
+                        file=sys.stderr,
+                    )
                     df.write_parquet(str(tmp_cache), compression="zstd")
+                    _written_df = df
+                    _cache_write_is_partial = True
                 # Atomic replace — other readers see either old or new, never partial write
                 _os_m4.replace(str(tmp_cache), str(cache_file))
                 size_kb = cache_file.stat().st_size / 1024
-                print(f"Cache atomic-write: {data_symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
-                # FIX 7 (deep-scan #10): write provenance sidecar alongside the cache file
-                _write_cache_sidecar(cache_file, source=source, adjusted=adjusted, dataset_hash=compute_dataset_hash(df))
+                _write_kind = "PARTIAL slice" if _cache_write_is_partial else "full history"
+                print(
+                    f"Cache atomic-write ({_write_kind}): {data_symbol} {timeframe} → "
+                    f"{cache_file} ({size_kb:.0f} KB)",
+                    file=sys.stderr,
+                )
+                # FIX 7 (deep-scan #10) + E-4: write provenance sidecar alongside the
+                # cache file, describing the dataframe that was ACTUALLY written
+                # (_written_df), not the filtered `df` from this request's own query.
+                _range_start_val = None
+                _range_end_val = None
+                try:
+                    if _written_df is not None and len(_written_df) > 0 and "ts_event" in _written_df.columns:
+                        _range_start_val = str(_written_df["ts_event"].min())
+                        _range_end_val = str(_written_df["ts_event"].max())
+                except Exception:
+                    pass
+                _write_cache_sidecar(
+                    cache_file,
+                    source=source,
+                    adjusted=adjusted,
+                    dataset_hash=compute_dataset_hash(_written_df if _written_df is not None else df),
+                    is_partial=_cache_write_is_partial,
+                    range_start=_range_start_val,
+                    range_end=_range_end_val,
+                )
             except Exception as e:
                 # Clean up temp file if atomic replace failed
                 try:

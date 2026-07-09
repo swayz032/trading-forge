@@ -28,9 +28,13 @@ const PARALLEL = req("PARALLEL_API_KEY");
 const TAVILY = req("TAVILY_API_KEY");
 const OPENAI = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
 if (!OPENAI) { console.error("Missing OPENAI_API_KEY/OPENAI_KEY"); process.exit(1); }
-const PG_PWD = "AigUZpOqoXkUfhuTTZuvzoSCbDOjfAKh";   // operator-supplied (parent brief)
+const PG_PWD = process.env.LIVE_PG_PASSWORD || process.env.PGPASSWORD || process.env.PG_PASSWORD || "";  // deep-scan scripts F-1 (CRITICAL 2026-07-06): read from env, NEVER hardcode a live DB password in source
 
 interface CredSpec { name: string; type: string; data: Record<string, any>; }
+
+if (!PG_PWD) {
+  console.warn("[wave9-recovery-creds] LIVE_PG_PASSWORD/PGPASSWORD not set — SKIPPING the Postgres LIVE_PG credential (set it in env to include it).");
+}
 
 const SPECS: CredSpec[] = [
   { name: "Brave Search", type: "httpHeaderAuth", data: { name: "X-Subscription-Token", value: BRAVE } },
@@ -102,6 +106,14 @@ async function main() {
   let failed = 0;
 
   for (const spec of SPECS) {
+    // deep-scan scripts F-6 (2026-07-06): actually SKIP the Postgres cred when its password is unset. The earlier
+    // fix only console.warn'd but still fell through and POSTed a credential with an empty password. A DB
+    // credential with an empty password must never be created — refuse it here, not just warn about it.
+    if (spec.name === "Postgres LIVE_PG" && !PG_PWD) {
+      console.warn(`  x  ${spec.name}  — SKIPPED (no LIVE_PG_PASSWORD/PGPASSWORD in env; refusing to create an empty-password credential)`);
+      skipped++;
+      continue;
+    }
     if (map[spec.name]) {
       console.log(`  =  ${spec.name}  — already in map (${map[spec.name]})`);
       skipped++;

@@ -39,22 +39,17 @@ import math
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-from unittest.mock import patch
 
-import numpy as np
 import polars as pl
 import pytest
 
 # ─── Subject imports ──────────────────────────────────────────────────────────
 # Import specific functions — do NOT import the module top-level to avoid
 # any transitive vectorbt import chain.
-
 from src.engine.gate_block_analyzer import (
-    BIG_MOVE_MIN_R,
     BIG_MOVE_POINTS,
     MAX_HOLD_BARS,
     MIN_SIGNALS_FOR_VERDICT,
-    NEUTRAL_BAND_R,
     BlockedSignal,
     CounterfactualResult,
     GateVerdict,
@@ -62,13 +57,11 @@ from src.engine.gate_block_analyzer import (
     _compute_pnl,
     _compute_slippage_dollars,
     _compute_verdict,
-    _find_entry_bar_idx,
     generate_report,
     normalize_gate_key,
     run_gate_block_analysis,
     simulate_counterfactual,
 )
-
 
 # ─── Synthetic bar builder ────────────────────────────────────────────────────
 
@@ -116,8 +109,20 @@ def _make_big_move_bars(
     entry_price: float = 5000.0,
     move_pts: float = 18.0,
     atr: float = 4.0,
+    with_timestamps: bool = False,
+    base_ts: Optional[str] = None,
 ) -> pl.DataFrame:
-    """Bars that produce a big favorable move to trigger TP2 (2R = 8pts at ATR=4)."""
+    """Bars that produce a big favorable move to trigger TP2 (2R = 8pts at ATR=4).
+
+    deepscan16 Wave-1 Track2 MED #24: with_timestamps (default False, opt-in)
+    adds a ts_event column matching _make_signal's default created_at so
+    run_gate_block_analysis's real _find_entry_bar_idx() call can locate bar 0
+    the same way it does with real bar data. Without this column,
+    _find_entry_bar_idx now returns -1 (INDETERMINATE) rather than the old
+    fabricated "assume bar 0" fallback — end-to-end tests that go through
+    run_gate_block_analysis (not simulate_counterfactual directly with an
+    explicit entry_bar_idx) must opt in.
+    """
     # Bar 0 is entry bar (open = entry_price)
     # Bars 1-5: high keeps rising until ≥2R is hit
     opens = [entry_price] * n
@@ -126,14 +131,21 @@ def _make_big_move_bars(
     closes = [entry_price + move_pts - 0.25] * n
     atrs = [atr] * n
     volumes = [1000.0] * n
-    return pl.DataFrame({
+    data: dict = {
         "open": opens,
         "high": highs,
         "low": lows,
         "close": closes,
         "atr_14": atrs,
         "volume": volumes,
-    })
+    }
+    if with_timestamps:
+        import datetime as _dt
+        from datetime import timedelta
+
+        base = _dt.datetime.fromisoformat(base_ts or "2026-06-24T14:00:00")
+        data["ts_event"] = [(base + timedelta(minutes=5 * i)).isoformat() for i in range(n)]
+    return pl.DataFrame(data)
 
 
 def _make_loser_bars(
@@ -142,22 +154,35 @@ def _make_loser_bars(
     entry_price: float = 5000.0,
     drop_pts: float = 8.0,  # more than risk_points (≤6pt) → stop hit
     atr: float = 4.0,
+    with_timestamps: bool = False,
+    base_ts: Optional[str] = None,
 ) -> pl.DataFrame:
-    """Bars that produce an immediate stop-out (loser)."""
+    """Bars that produce an immediate stop-out (loser).
+
+    deepscan16 Wave-1 Track2 MED #24: see _make_big_move_bars docstring — same
+    opt-in with_timestamps contract.
+    """
     opens = [entry_price] * n
     highs = [entry_price + 0.5] * n
     lows = [entry_price - drop_pts] * n  # below stop
     closes = [entry_price - drop_pts + 0.25] * n
     atrs = [atr] * n
     volumes = [1000.0] * n
-    return pl.DataFrame({
+    data: dict = {
         "open": opens,
         "high": highs,
         "low": lows,
         "close": closes,
         "atr_14": atrs,
         "volume": volumes,
-    })
+    }
+    if with_timestamps:
+        import datetime as _dt
+        from datetime import timedelta
+
+        base = _dt.datetime.fromisoformat(base_ts or "2026-06-24T14:00:00")
+        data["ts_event"] = [(base + timedelta(minutes=5 * i)).isoformat() for i in range(n)]
+    return pl.DataFrame(data)
 
 
 def _make_signal(
@@ -258,7 +283,9 @@ def test_big_move_threshold_boundary():
         )
 
     # Just below threshold (move stops short of TP2 at 2R=8pt, so exit may be trailing)
-    result_below = _run_with_mfe(threshold_mes - 0.5)
+    # Pre-existing: this call's result is unused (kept for the exercised code path /
+    # future assertion); prefixed to silence ruff F841 without changing test behavior.
+    _result_below = _run_with_mfe(threshold_mes - 0.5)
     # MFE may still be below threshold if bars don't reach far enough
     # is_big_move is False when MFE < threshold AND MFE < BIG_MOVE_MIN_R * risk_points
     # risk_points = 6.0; BIG_MOVE_MIN_R * 6 = 12.0; threshold=14
@@ -711,9 +738,17 @@ def test_full_run_with_injected_signals_and_data_loader(tmp_path):
         for i in range(6)  # 6 signals to exceed MIN_SIGNALS_FOR_VERDICT
     ]
 
-    # Mock data loader that returns big-move bars
+    # Mock data loader that returns big-move bars.
+    # deepscan16 Wave-1 Track2 MED #24: with_timestamps=True is now required —
+    # _find_entry_bar_idx() no longer fabricates "assume bar 0" when ts_event is
+    # absent (fixed to return -1 / INDETERMINATE per its documented contract).
+    # base_ts matches _make_signal's default created_at (2026-06-24T14:00:00 UTC)
+    # so the real bar-lookup logic locates bar 0 the same way it would on real data.
     def _mock_loader(**kwargs):
-        return _make_big_move_bars(entry_price=entry_price, move_pts=18.0, atr=atr)
+        return _make_big_move_bars(
+            entry_price=entry_price, move_pts=18.0, atr=atr,
+            with_timestamps=True, base_ts="2026-06-24T14:00:00",
+        )
 
     result = run_gate_block_analysis(
         report_name="test-full-run",
@@ -757,14 +792,22 @@ def test_mixed_gate_types_produce_separate_verdicts(tmp_path):
 
     call_count = {"n": 0}
 
+    # deepscan16 Wave-1 Track2 MED #24: with_timestamps=True required — see
+    # test_full_run_with_injected_signals_and_data_loader for the full rationale.
     def _mock_loader(**kwargs):
         # Determine which signal is being processed by call order
         n = call_count["n"]
         call_count["n"] += 1
         if n < 6:
-            return _make_big_move_bars(entry_price=entry_price, move_pts=18.0, atr=atr)
+            return _make_big_move_bars(
+                entry_price=entry_price, move_pts=18.0, atr=atr,
+                with_timestamps=True, base_ts="2026-06-24T14:00:00",
+            )
         else:
-            return _make_loser_bars(entry_price=entry_price, drop_pts=8.0, atr=atr)
+            return _make_loser_bars(
+                entry_price=entry_price, drop_pts=8.0, atr=atr,
+                with_timestamps=True, base_ts="2026-06-24T14:00:00",
+            )
 
     result = run_gate_block_analysis(
         report_name="test-mixed-gates",

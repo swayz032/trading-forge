@@ -28,6 +28,7 @@ import { callOpenAI, getFallback, loadSystemPrompt, setAppendixCache } from "./m
 import { OllamaClient } from "./ollama-client.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
+import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 
 // ─── Constants ─────────────────────────────────────────────────
 
@@ -201,9 +202,45 @@ export async function getActivePromptContentForStrategy(
  * Main weekly job: analyze journal entries, synthesize patterns,
  * store updated prompt appendix with A/B testing.
  */
+/**
+ * Kill-switch gate for the autonomous prompt-mutation loops. Both
+ * runPromptEvolution (LLM-generated prompt versions) and resolveAbTests
+ * (winner promotion / prompt activation) are AUTONOMOUS mutation loops, so they
+ * run ONLY at AUTOPILOT (mode >= 2 → autonomousOn). OFF (0) and OBSERVE (1) both
+ * halt and emit `auto_patch.loop_halted_skip`, mirroring pattern-aggregator +
+ * quantum-replay-weekly. readLearningLoopMode() is fail-CLOSED (absent row /
+ * non-numeric / DB error → mode 0 → halt). Returns true when the loop should HALT.
+ */
+async function _promptLoopHalted(loop: string): Promise<boolean> {
+  const { autonomousOn, mode } = await readLearningLoopMode();
+  if (autonomousOn) return false;
+  logger.info({ loop, mode }, `prompt-evolution: kill switch engaged (mode<2) — skipping ${loop}`);
+  await db
+    .insert(auditLog)
+    .values({
+      action: "auto_patch.loop_halted_skip",
+      entityType: "system_parameters",
+      status: "success",
+      result: { service: "prompt-evolution", loop, mode, reason: "kill_switch" } as Record<string, unknown>,
+      decisionAuthority: "scheduler",
+    })
+    .catch((err) => logger.warn({ err, loop }, "prompt-evolution: loop_halted_skip audit write failed (non-blocking)"));
+  return true;
+}
+
 export async function runPromptEvolution(): Promise<void> {
   const startTime = Date.now();
   logger.info("Prompt evolution: starting weekly analysis");
+
+  // Kill-switch gate — autonomous mutation loop; halt unless AUTOPILOT (mode>=2).
+  if (await _promptLoopHalted("runPromptEvolution")) {
+    broadcastSSE("prompt-evolution:complete", {
+      status: "halted",
+      reason: "kill_switch",
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
 
   // 1. Fetch journal entries from past 7 days (only tested/failed, not scouted)
   const cutoff = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
@@ -367,6 +404,11 @@ export async function runPromptEvolution(): Promise<void> {
  */
 export async function resolveAbTests(): Promise<void> {
   logger.info("Prompt A/B resolution: starting");
+
+  // Kill-switch gate — autonomous activation/mutation loop; halt unless AUTOPILOT.
+  if (await _promptLoopHalted("resolveAbTests")) {
+    return;
+  }
 
   const runningTests = await db
     .select()

@@ -142,7 +142,11 @@ describe("checkStartupSecrets — Deep-Scan H11 + H13", () => {
   });
 
   it("leaves other missing secrets as WARNINGS (not errors)", async () => {
-    const restore = applyEnv({ LIVE_ORDER_GATEWAY_URL: undefined });
+    // deepscan17 G-3 (2026-07-05): VALID_ENV sets TRADING_FORGE_PUBLIC_URL, so
+    // an unset LIVE_ORDER_GATEWAY_URL now auto-derives instead of warning —
+    // clear both to still exercise "missing secret stays a WARNING, not an
+    // ERROR" for this variable.
+    const restore = applyEnv({ LIVE_ORDER_GATEWAY_URL: undefined, TRADING_FORGE_PUBLIC_URL: undefined });
     try {
       const { checkStartupSecrets } = await import("../lib/startup-config-check.js");
       const result = await checkStartupSecrets();

@@ -28,17 +28,48 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 // F-5 fix (2026-05-20): MCL pointValue corrected from 10.0 → 100.0.
 // MCL = Micro Crude Light; 1 tick = $0.01/bbl × 100 bbl = $1.00/tick.
 // 1 point = 100 ticks × $1.00 = $100/point. CLAUDE.md §4 is authoritative.
-// firm-config.ts CONTRACT_SPECS (the TRUE single source of truth) already had 100.0.
+//
+// D6 fix (deep-scan #22, 2026-07-06): ES/NQ/CL are MICRO ALIASES here, matching
+// src/shared/firm-config.ts CONTRACT_SPECS and src/engine/config.py CONTRACT_SPECS
+// (the true single sources of truth). Previously this table held the FULL-SIZE MINI
+// point values for ES/NQ (50/20) — a latent 10× risk-inflation landmine if a literal
+// ES/NQ/CL symbol ever reached a P&L path through getContractSpec(). The mini point
+// values now live in MINI_SPECS_HARDCODED and are ONLY reachable via
+// getContractSpec(sym, "mini") while TF_PHASE_5_ENABLED=true — exactly how config.py
+// / firm-config.ts gate them.
+//
+// PHASE_5 gate: read from env (case-insensitive, default false) — mirrors
+// firm-config.ts PHASE_5_ENABLED. Micro is the safety default whenever it is off.
+export const PHASE_5_ENABLED: boolean =
+  (process.env["TF_PHASE_5_ENABLED"] ?? "false").toLowerCase() === "true";
+
+const MICRO_ALIAS_MAP: Record<string, string> = { ES: "MES", NQ: "MNQ", CL: "MCL" };
+const MICRO_ALIAS_SYMBOLS = new Set(Object.keys(MICRO_ALIAS_MAP));
+
 export const CONTRACT_SPECS_HARDCODED: Record<string, {
   multiplier: number;
   tickSize: number;
   pointValue: number;
 }> = {
-  ES:  { multiplier: 50.0,  tickSize: 0.25, pointValue: 50.0  },
-  NQ:  { multiplier: 20.0,  tickSize: 0.25, pointValue: 20.0  },
   MES: { multiplier: 5.0,   tickSize: 0.25, pointValue: 5.0   },
   MNQ: { multiplier: 2.0,   tickSize: 0.25, pointValue: 2.0   },
   MCL: { multiplier: 100.0, tickSize: 0.01, pointValue: 100.0 },
+  // ES/NQ/CL — MICRO aliases (S3 data-path labels). Point values = MICRO, NOT full-size.
+  ES:  { multiplier: 5.0,   tickSize: 0.25, pointValue: 5.0   },
+  NQ:  { multiplier: 2.0,   tickSize: 0.25, pointValue: 2.0   },
+  CL:  { multiplier: 100.0, tickSize: 0.01, pointValue: 100.0 },
+};
+
+// Phase-5 FULL-SIZE MINI specs — gated behind contract_class="mini" + TF_PHASE_5_ENABLED.
+// Point values are 10× the micro equivalents. Never returned unless BOTH conditions hold.
+export const MINI_SPECS_HARDCODED: Record<string, {
+  multiplier: number;
+  tickSize: number;
+  pointValue: number;
+}> = {
+  ES: { multiplier: 50.0,   tickSize: 0.25, pointValue: 50.0   },
+  NQ: { multiplier: 20.0,   tickSize: 0.25, pointValue: 20.0   },
+  CL: { multiplier: 1000.0, tickSize: 0.01, pointValue: 1000.0 },
 };
 
 export interface ContractSpec {
@@ -59,9 +90,51 @@ function invalidateCache(): void {
   specsCache.clear();
 }
 
-/** Get the latest authoritative spec for a symbol, with hardcoded fallback. */
-export async function getContractSpec(symbol: string): Promise<ContractSpec> {
-  const cached = specsCache.get(symbol);
+/**
+ * Get the latest authoritative spec for a symbol, with hardcoded fallback.
+ *
+ * D6 (deep-scan #22): `contractClass` gates full-size MINI resolution. Default
+ * behavior (undefined / "micro") ALWAYS resolves ES/NQ/CL to their MICRO point
+ * values — a literal mini symbol on a P&L path can never silently pull 10× values.
+ * `contractClass="mini"` returns the full-size mini spec ONLY when
+ * TF_PHASE_5_ENABLED=true; otherwise it throws (fail-closed), mirroring
+ * config.py::resolve_contract_spec / firm-config.ts::resolveContractSpec.
+ */
+export async function getContractSpec(
+  symbol: string,
+  contractClass?: "micro" | "mini",
+): Promise<ContractSpec> {
+  const sym = symbol.toUpperCase();
+
+  // ── Phase-5 MINI path — explicit opt-in only, gated on TF_PHASE_5_ENABLED ──
+  if (contractClass === "mini") {
+    if (!PHASE_5_ENABLED) {
+      throw new Error(
+        `contract-specs-service: contract_class="mini" requested for '${sym}' but ` +
+          `TF_PHASE_5_ENABLED=false — refusing to return 10× full-size mini point values ` +
+          `(would silently inflate risk). Set TF_PHASE_5_ENABLED=true to trade minis.`,
+      );
+    }
+    const mini = MINI_SPECS_HARDCODED[sym];
+    if (!mini) {
+      throw new Error(`No mini spec for '${sym}'. Valid mini symbols: ${Object.keys(MINI_SPECS_HARDCODED).join(", ")}.`);
+    }
+    return {
+      symbol: sym,
+      multiplier: mini.multiplier,
+      tickSize: mini.tickSize,
+      pointValue: mini.pointValue,
+      expiryDate: null,
+      source: "hardcoded_fallback",
+      pulledAt: null,
+    };
+  }
+
+  // ── Default (micro) path — ES/NQ/CL resolve to their micro equivalent so a
+  //    stray mini symbol never pulls 10× values from a DB row or fallback. ──
+  const effectiveSymbol = MICRO_ALIAS_SYMBOLS.has(sym) ? MICRO_ALIAS_MAP[sym] : sym;
+
+  const cached = specsCache.get(effectiveSymbol);
   if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
     return cached.spec;
   }
@@ -70,13 +143,13 @@ export async function getContractSpec(symbol: string): Promise<ContractSpec> {
     const [row] = await db
       .select()
       .from(contractSpecsAuthoritative)
-      .where(eq(contractSpecsAuthoritative.symbol, symbol))
+      .where(eq(contractSpecsAuthoritative.symbol, effectiveSymbol))
       .orderBy(desc(contractSpecsAuthoritative.pulledAt))
       .limit(1);
 
     if (row) {
       const spec: ContractSpec = {
-        symbol,
+        symbol: effectiveSymbol,
         multiplier: Number(row.multiplier),
         tickSize: Number(row.tickSize),
         pointValue: Number(row.pointValue),
@@ -84,21 +157,21 @@ export async function getContractSpec(symbol: string): Promise<ContractSpec> {
         source: "databento_definition",
         pulledAt: row.pulledAt,
       };
-      specsCache.set(symbol, { spec, cachedAt: Date.now() });
+      specsCache.set(effectiveSymbol, { spec, cachedAt: Date.now() });
       return spec;
     }
   } catch (err) {
-    logger.warn({ err, symbol }, "contract-specs-service: DB read failed — using hardcoded fallback");
+    logger.warn({ err, symbol: effectiveSymbol }, "contract-specs-service: DB read failed — using hardcoded fallback");
   }
 
-  // Fallback to hardcoded values
-  const hardcoded = CONTRACT_SPECS_HARDCODED[symbol];
+  // Fallback to hardcoded (micro) values
+  const hardcoded = CONTRACT_SPECS_HARDCODED[effectiveSymbol];
   if (!hardcoded) {
-    throw new Error(`Unknown symbol: ${symbol}. No spec in DB or hardcoded reference.`);
+    throw new Error(`Unknown symbol: ${effectiveSymbol}. No spec in DB or hardcoded reference.`);
   }
 
   const fallback: ContractSpec = {
-    symbol,
+    symbol: effectiveSymbol,
     multiplier: hardcoded.multiplier,
     tickSize: hardcoded.tickSize,
     pointValue: hardcoded.pointValue,
@@ -106,14 +179,16 @@ export async function getContractSpec(symbol: string): Promise<ContractSpec> {
     source: "hardcoded_fallback",
     pulledAt: null,
   };
-  specsCache.set(symbol, { spec: fallback, cachedAt: Date.now() });
+  specsCache.set(effectiveSymbol, { spec: fallback, cachedAt: Date.now() });
   return fallback;
 }
 
 /** Get specs for all tracked symbols. */
 export async function getAllContractSpecs(): Promise<ContractSpec[]> {
   const symbols = Object.keys(CONTRACT_SPECS_HARDCODED);
-  return Promise.all(symbols.map(getContractSpec));
+  // Arrow wrapper: getContractSpec now takes an optional 2nd (contractClass) arg,
+  // so a bare `.map(getContractSpec)` would bind Array.map's index → contractClass.
+  return Promise.all(symbols.map((s) => getContractSpec(s)));
 }
 
 export interface DefinitionPullResult {

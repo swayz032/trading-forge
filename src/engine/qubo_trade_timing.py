@@ -266,8 +266,14 @@ def decode_timing_schedule(
     solution: list[bool],
     blocks: list[SessionBlock],
     historical_returns: Optional[np.ndarray] = None,
+    method: Optional[str] = None,
 ) -> TimingSchedule:
-    """Convert binary solution to human-readable timing schedule."""
+    """Convert binary solution to human-readable timing schedule.
+
+    method: label of the solver that produced `solution`. When None it is
+    derived from NEAL_AVAILABLE — the same flag solve_timing() branches on — so
+    a classical greedy fallback is honestly tagged "greedy_classical_fallback"
+    instead of silently inheriting the model default "sqa" (deep-scan Q-2)."""
     for i, (trade, block) in enumerate(zip(solution, blocks)):
         block.trade = trade
         if historical_returns is not None and i < len(historical_returns):
@@ -283,6 +289,10 @@ def decode_timing_schedule(
             if b.trade and i < len(historical_returns)
         )
 
+    resolved_method = method if method is not None else (
+        "sqa" if NEAL_AVAILABLE else "greedy_classical_fallback"
+    )
+
     return TimingSchedule(
         blocks=blocks,
         total_blocks=len(blocks),
@@ -290,6 +300,7 @@ def decode_timing_schedule(
         skipped_blocks=skipped,
         expected_return=float(expected_return),
         expected_cost_savings=float(skipped / max(len(blocks), 1) * 100),
+        method=resolved_method,
     )
 
 

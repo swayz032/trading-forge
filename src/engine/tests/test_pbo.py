@@ -33,11 +33,15 @@ class TestPboKnownAnswer:
 
         If IS half and OOS half are comparably good, the IS-best-is-OOS-worst
         fraction is low.
+
+        FIX 2 (ds21): supply real is_metric_values. A robust strategy has IS
+        performance that tracks OOS performance (no artificial inflation) — so
+        the fixture supplies is_metric_values == oos sharpes.
         """
         # Monotonically increasing Sharpe: no degradation = robust
         sharpes = [0.5, 0.8, 1.0, 1.2, 1.4, 1.8]
         windows = _make_windows(sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=sharpes)
         assert result["pbo"] is not None
         # Robust strategy: PBO should not be extreme (may not be < 0.5 mathematically
         # for all orderings, but n_combinations must be > 0)
@@ -46,13 +50,16 @@ class TestPboKnownAnswer:
     def test_clear_overfit_case_pbo_interpretation(self):
         """When IS half is always better than OOS half, PBO is high.
 
-        We fabricate windows where the first 3 (IS) have higher Sharpe than
-        the last 3 (OOS), so that most IS/OOS splits show IS dominance.
+        FIX 2 (ds21): the OOS-as-IS proxy is banned — supply a genuinely
+        inflated IS series (OOS + constant shift) to simulate a curve-fit
+        strategy whose in-sample numbers overstate true out-of-sample edge.
         """
-        # First 3 windows very strong, last 3 weak (degradation pattern)
+        # OOS degrades from strong to weak; IS is uniformly inflated relative
+        # to the true OOS series (classic overfit fabrication pattern).
         sharpes_overfit = [3.0, 2.8, 2.5, 0.2, 0.1, -0.1]
+        is_values = [v + 2.0 for v in sharpes_overfit]
         windows = _make_windows(sharpes_overfit)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=is_values)
         assert result["pbo"] is not None
         assert result["n_combinations"] > 0
         # PBO should be elevated (IS > OOS in many combinations)
@@ -62,7 +69,7 @@ class TestPboKnownAnswer:
         """PBO must always be in [0, 1]."""
         sharpes = [1.0, 0.5, 1.5, 0.8, 2.0, 0.3]
         windows = _make_windows(sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=sharpes)
         assert result["pbo"] is not None
         assert 0.0 <= result["pbo"] <= 1.0
 
@@ -71,7 +78,7 @@ class TestPboKnownAnswer:
         from math import comb
         sharpes = [1.0, 1.1, 1.2, 0.9, 0.8, 0.7]
         windows = _make_windows(sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=sharpes)
         expected = comb(6, 3)  # C(6, 3) = 20
         assert result["n_combinations"] == expected
 
@@ -88,7 +95,7 @@ class TestPboKnownAnswer:
         """4 windows is the minimum — must compute successfully."""
         sharpes = [1.0, 0.8, 1.2, 0.9]
         windows = _make_windows(sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=sharpes)
         assert result["pbo"] is not None
         assert result["n_combinations"] > 0
 
@@ -96,7 +103,7 @@ class TestPboKnownAnswer:
         """Negative Sharpes are valid inputs (strategy losing money)."""
         sharpes = [-0.5, -0.3, -0.8, -0.2, 0.1, -0.4]
         windows = _make_windows(sharpes)
-        result = compute_pbo(windows)
+        result = compute_pbo(windows, is_metric_values=sharpes)
         assert result["pbo"] is not None
         assert 0.0 <= result["pbo"] <= 1.0
 

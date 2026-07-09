@@ -16,30 +16,54 @@ PURPOSE:
   src.engine.monte_carlo.run_monte_carlo(), the SAME functions backtest-service.ts's WF harness
   and scripts/null_gate_calibration.py already call. No new gate math is introduced here.
 
-WHY THIS SCRIPT TARGETS DSL-SPEC STRATEGIES via run_walk_forward() (NOT run_walk_forward_class()):
+DUAL DISPATCH — DSL specs via run_walk_forward(), class/compiled specs via
+run_walk_forward_class() (fixed 2026-07-04, see CORRECTNESS FIX note below):
   Two WF entry points exist in src/engine/walk_forward.py:
-    - run_walk_forward(request: BacktestRequest, ...)        — DSL-config strategies (the
-      `strategies` table's config JSONB shape). Per OOS window it calls run_backtest(), whose
-      default use_eligibility_gate=True routes through apply_eligibility_gate(), which is the
+    - run_walk_forward(request: BacktestRequest, ...)        — DSL-config strategies (a
+      `strategies` table config JSONB with a literal boolean entry expression, e.g.
+      "close > sma_20"). Per OOS window it calls run_backtest(), whose default
+      use_eligibility_gate=True routes through apply_eligibility_gate(), which is the
       function that actually reads TF_CONFLUENCE_OVERLAY_DISABLED. This path RESPECTS the
-      Mode A/B toggle.
-    - run_walk_forward_class(strategy: BaseStrategy, ...)    — Python-class archetype strategies
-      (used by confluence-overlay-ablation.py / overlay-attribution.py for SINGLE backtests via
-      run_class_backtest). CRITICAL FINDING (verified 2026-07-02 while building this harness):
-      run_walk_forward_class() hardcodes `skip_eligibility_gate=True` on every OOS window
-      (src/engine/walk_forward.py:2435, comment: "Eligibility gate OFF for backtesting — test
-      the STRATEGY, not the gate ... will be re-enabled when the bias engine and context layer
-      are properly calibrated"). That means Mode A and Mode B would be IDENTICAL for any
-      class-based strategy run through the WALK-FORWARD path — the overlay is never exercised.
-      This is a real engine-side gap (class-based WF has no overlay-respecting battery path
-      today) but it is `src/engine/**` — out of this agent's file boundary to fix. Reported as
-      a coordination finding, not patched here.
-  Consequence: this harness accepts BacktestRequest-shaped SPEC DICTS (exactly
-  scripts/null_gate_calibration.py's `BacktestRequest.model_validate(spec)` shape — see that
-  script's `generate_null_specs()` for the canonical shape), not Python class dotted-paths.
+      Mode A/B toggle and is UNCHANGED by the 2026-07-04 fix below.
+    - run_walk_forward_class(strategy: BaseStrategy, ...)    — Python-class / compiled-spec
+      strategies. Every Corpus v2 (spec_onboarding) CANDIDATE strategy is one of these: either
+      condition-compiled (`entry_long`/`entry_short` = "spec_conditions:<hash>", executed via
+      SpecConditionStrategy built by src.engine.spec_condition_compiler.from_compiled_spec())
+      or archetype-matched (`entry_long`/`entry_short` = "archetype_dispatch:<key>",
+      `entry_indicator` = "archetype:<key>" — dispatched THE SAME WAY today, via
+      from_compiled_spec(), since spec-onboarding-service.ts stamps `compiled_spec` onto every
+      graduated strategy unconditionally, regardless of archetype match; see
+      backtester.py main()'s `elif config.get("compiled_spec"):` CLI branch, which this harness's
+      `_build_class_strategy()` mirrors). skip_eligibility_gate=False is passed explicitly (see
+      run_walk_forward_class's docstring — the class-path default silently skips the gate
+      unless a caller either passes False or sets TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED=true;
+      this harness cannot depend on a runner env var, so it opts in explicitly on every call so
+      apply_eligibility_gate()'s own TF_CONFLUENCE_OVERLAY_DISABLED branch decides Mode A vs B
+      — exactly the same mechanism the DSL path already uses).
+  ENGINE-SIDE STATISTICAL GAP (real, NOT a harness bug, reported not patched — out of file
+  boundary per the correctness-fix mandate): run_walk_forward_class()'s return dict has no
+  `wf_metadata` (WFE is structurally None — the function passes `avg_is_sharpe=None`
+  unconditionally because it "does not support Optuna optimization", see the comment directly
+  above its `run_cross_validation()` call) and no `pbo_overall` (no per-path CPCV aggregation on
+  the class path today). DSR IS available, just nested at `cross_validation.deflated_sharpe`
+  instead of `wf_metadata.dsr`. Every mode_a/mode_b result explicitly carries `"wfe": null` /
+  `"pbo": null` for class-path strategies with `mode_ab.class_path_wfe_pbo_unavailable: true` so
+  compute_verdict()'s None-handling (already present) degrades gracefully to a
+  sharpe/dsr/trade-count-only verdict instead of silently fabricating a WFE/PBO number.
   "Gate-eligible strategies" already live in the `strategies` table as this exact config JSONB;
   export them to a JSON array (one spec per element) and pass via --strategy-list-file. See
   docs/overlay-unfreeze-protocol.md "Operator commands" for the export one-liner.
+
+  CORRECTNESS FIX (2026-07-04): prior to this fix, run_spec_worker() ALWAYS routed every spec
+  through `BacktestRequest.model_validate(spec)` + run_walk_forward() regardless of shape.
+  BacktestRequest has no `compiled_spec` field and pydantic's default `extra="ignore"` silently
+  dropped it (+ direction, regime_gate, entry_quality, exit_plan_config, entry_type, time_stop)
+  — so every Corpus v2 spec (100% condition-compiled or archetype, 0% plain DSL) hit a
+  ValidationError (missing strategy.name/symbol/indicators/exit) in ~0.1s and reported
+  INDETERMINATE for both modes. That was a harness dispatch failure, not a research result. The
+  fix ADDS the class-path branch above; the DSL branch (run_walk_forward + BacktestRequest) is
+  BYTE-IDENTICAL to before for any spec that is not detected as class/compiled — see
+  `_is_class_or_compiled_spec()`.
 
 WHY THIS RUNS DIRECTLY AGAINST THE PYTHON ENGINE (not through POST /api/backtests):
   TF_CONFLUENCE_OVERLAY_DISABLED is read ONLY by src/engine/backtester.py::apply_eligibility_gate
@@ -78,13 +102,13 @@ by another agent's file boundary):
   THIS script's own output packet is the source of truth for which mode produced which row —
   every result record carries an explicit "mode_ab" block with overlay_disabled: bool.
 
-COORDINATION FINDING #2 (engine-side, out of file boundary, reported not fixed):
-  run_walk_forward_class() hardcodes the eligibility gate OFF on every OOS window (see above).
-  Any future harness that wants a Mode A/B walk-forward comparison for CLASS-based archetype
-  strategies (bounce_off_level, ict_bias_aligned_continuation, mitigation, ote, ...) needs an
-  engine-side fix first (either thread skip_eligibility_gate through from the caller, or read
-  TF_CONFLUENCE_OVERLAY_DISABLED the same way apply_eligibility_gate does). Flagged for
-  whichever agent owns src/engine/walk_forward.py.
+COORDINATION FINDING #2 (CLOSED 2026-07-04): run_walk_forward_class()'s `skip_eligibility_gate`
+  is a real parameter today (was, at time of writing, already fixed upstream in
+  src/engine/walk_forward.py — this harness does not modify that file). This harness closes ITS
+  side of the gap by always passing `skip_eligibility_gate=False` explicitly for class/compiled
+  specs (see run_battery_for_mode) instead of relying on the function's own
+  TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED-gated default (which stays skip=True for every OTHER
+  caller, preserving backward compat everywhere except this harness's own calls).
 
 GOVERNANCE / PERSISTENCE CONTRACT:
   This script NEVER writes to the `backtests` or `quantum_mc_runs` tables — no DB import exists
@@ -420,7 +444,123 @@ def spec_id_for(spec: dict) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
 
 
-# ─── Single-mode battery runner (reuses run_walk_forward + run_monte_carlo verbatim) ──────────
+# ─── Execution-path detection (DSL vs class/compiled) ─────────────────────────────────────────
+#
+# CORRECTNESS FIX (2026-07-04): mirrors src/server/lib/handler-driven-entry.ts's dispatch-marker
+# recognition (DISPATCH_MARKER_PREFIXES = ["archetype_dispatch:", "spec_conditions:"] + the
+# "archetype:" entry_indicator prefix) and backtester.py main()'s CLI dispatch condition
+# (`isinstance(config, dict) and config.get("compiled_spec")`). The `compiled_spec` truthy check
+# is the PRIMARY signal and matches production exactly: every spec_onboarding-sourced strategy
+# (Corpus v2) carries `compiled_spec` unconditionally per spec-onboarding-service.ts, regardless
+# of whether it matched a named archetype — so in production TODAY, archetype_dispatch: and
+# spec_conditions: strategies both execute via the SAME from_compiled_spec() -> SpecConditionStrategy
+# path (backtester.py:7548-7623). The marker-prefix checks are a defensive fallback for specs that
+# carry the markers without a compiled_spec payload (e.g. hand-built test fixtures).
+
+DISPATCH_MARKER_PREFIXES = ("archetype_dispatch:", "spec_conditions:")
+
+
+def _is_class_or_compiled_spec(spec: dict) -> bool:
+    """True when `spec` must execute via run_walk_forward_class() instead of run_walk_forward().
+
+    Detection order mirrors backtester.py main()'s CLI branch priority:
+      1. top-level `strategy_class` truthy (direct-bucket-graduator.ts's ARCHETYPE_CLASS_MAP
+         convention — e.g. bounce_off_level / ict_bias_aligned_continuation. This population
+         carries REAL compiled engine grammar in entry_long/entry_short, not a dispatch marker,
+         so it would otherwise be silently misrouted to the DSL branch below).
+      2. `compiled_spec` truthy (Band B/C spec-onboarding — the actual production signal for
+         every Corpus v2 CANDIDATE strategy today).
+      3. `entry_indicator` starts with "archetype:" (handler-driven-entry.ts convention).
+      4. `entry_long` / `entry_short` start with "archetype_dispatch:" or "spec_conditions:".
+    """
+    if not isinstance(spec, dict):
+        return False
+    strat = spec.get("strategy") if isinstance(spec.get("strategy"), dict) else {}
+    if spec.get("strategy_class") or strat.get("strategy_class"):
+        return True
+    if spec.get("compiled_spec"):
+        return True
+    entry_indicator = strat.get("entry_indicator") or spec.get("entry_indicator")
+    if isinstance(entry_indicator, str) and entry_indicator.startswith("archetype:"):
+        return True
+    for key in ("entry_long", "entry_short"):
+        marker = strat.get(key) or spec.get(key) or ""
+        if isinstance(marker, str) and marker.startswith(DISPATCH_MARKER_PREFIXES):
+            return True
+    return False
+
+
+def _build_class_strategy(spec: dict):
+    """Build the BaseStrategy instance run_walk_forward_class() needs, mirroring
+    backtester.py main()'s CLI dispatch: an explicit top-level `strategy_class` dotted path
+    (direct-bucket-graduator.ts's ARCHETYPE_CLASS_MAP convention — `_load_strategy_class`
+    equivalent, no-arg `cls()`) takes priority over `compiled_spec`
+    (spec-onboarding-service.ts's Band B/C convention — every Corpus v2 CANDIDATE strategy today,
+    via src.engine.spec_condition_compiler.from_compiled_spec()).
+
+    FAILS LOUD (raises ValueError) rather than defaulting symbol/name — see the comments below
+    for why a silent default would produce a wrong-but-plausible-looking number instead of an
+    honest error, which is the exact failure mode this correctness fix exists to prevent.
+    """
+    strat_cfg = spec.get("strategy") if isinstance(spec.get("strategy"), dict) else {}
+    strategy_class = spec.get("strategy_class") or strat_cfg.get("strategy_class")
+    symbol = strat_cfg.get("symbol") or spec.get("symbol")
+    timeframe = strat_cfg.get("timeframe") or spec.get("timeframe")
+    strategy_name = strat_cfg.get("name") or spec.get("name")
+
+    if not symbol:
+        raise ValueError(
+            "class/compiled spec missing strategy.symbol -- refusing to default to MES. "
+            "The exported strategy-list JSON must carry the DB `strategies.symbol` column "
+            "(a top-level DB column, separate from the `config` JSONB blob) for every entry -- "
+            "defaulting here would silently backtest the WRONG symbol's data for any MNQ/MCL "
+            "strategy in the batch."
+        )
+    if not timeframe:
+        raise ValueError("class/compiled spec missing strategy.timeframe -- refusing to guess.")
+    if not strategy_name:
+        # Fail LOUD rather than silently degrade into apply_eligibility_gate()'s "unregistered
+        # strategy bypass" passthrough (backtester.py: a strategy_name absent from
+        # playbook_router.py's ALL_STRATS skips the gate ENTIRELY for both modes -> Mode A and
+        # Mode B become byte-identical with zero error surfaced -- exactly the false-negative
+        # verification bar #3 in the task spec exists to catch).
+        raise ValueError(
+            "class/compiled spec missing strategy.name (or top-level 'name') -- without the "
+            "exact DB `strategies.name` value, apply_eligibility_gate()'s playbook_router "
+            "registration check cannot match and the strategy will silently bypass the "
+            "eligibility gate in BOTH modes (identical results, no error surfaced)."
+        )
+
+    if strategy_class:
+        # Mirrors backtester.py::_load_strategy_class() exactly (dotted-path import + no-arg
+        # cls()) -- no post-construction attribute overrides, since ARCHETYPE_CLASS_MAP classes
+        # own their own symbol/timeframe/name defaults and production never overrides them either.
+        import importlib
+
+        module_path, class_name = strategy_class.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        cls = getattr(module, class_name)
+        return cls()
+
+    compiled_spec = spec.get("compiled_spec")
+    if not compiled_spec:
+        raise ValueError(
+            "spec was detected as class/compiled (matched an archetype_dispatch: / "
+            "spec_conditions: / archetype: marker) but carries neither a top-level "
+            "strategy_class nor a compiled_spec payload -- cannot build an executable strategy."
+        )
+    from src.engine.spec_condition_compiler import from_compiled_spec
+
+    return from_compiled_spec(
+        compiled_spec,
+        symbol=symbol,
+        timeframe=timeframe,
+        strategy_name=strategy_name,
+    )
+
+
+# ─── Single-mode battery runner (reuses run_walk_forward / run_walk_forward_class +
+# run_monte_carlo verbatim) ─────────────────────────────────────────────────────────────────────
 
 def run_battery_for_mode(
     spec: dict,
@@ -441,10 +581,15 @@ def run_battery_for_mode(
     prior_env = os.environ.get("TF_CONFLUENCE_OVERLAY_DISABLED")
     os.environ["TF_CONFLUENCE_OVERLAY_DISABLED"] = "true" if overlay_disabled else "false"
 
+    execution_path = "class" if _is_class_or_compiled_spec(spec) else "dsl"
+
     result: dict = {
         "mode": mode,
         "overlay_disabled": overlay_disabled,
         "error": None,
+        # Path-trace (verification bar #4): which dispatch this spec+mode pair actually took,
+        # so a future debugging session never has to re-derive it from spec shape by hand.
+        "execution_path": execution_path,
         "wfe": None,
         "dsr": None,
         "dsr_pass": None,
@@ -460,35 +605,85 @@ def run_battery_for_mode(
     validate_mode_ab_labels(result["mode_ab"])
 
     start_t = time.time()
+    firm_key = spec.get("firm_key") or "topstep_50k"
     try:
-        from src.engine.config import BacktestRequest
+        if execution_path == "class":
+            # ─── Class/compiled path (Corpus v2 — archetype_dispatch: / spec_conditions:) ──
+            strategy = _build_class_strategy(spec)
 
-        clean_spec = {k: v for k, v in spec.items() if not k.startswith("_") and k != "id"}
-        request = BacktestRequest.model_validate(clean_spec)
+            from src.engine.walk_forward import run_walk_forward_class
+            wf_result = run_walk_forward_class(
+                strategy=strategy,
+                start_date=spec.get("start_date", "2010-01-01"),
+                end_date=spec.get("end_date", "2030-12-31"),
+                slippage_ticks=spec.get("slippage_ticks", 1.0),
+                commission_per_side=spec.get("commission_per_side"),
+                firm_key=firm_key,
+                embargo_bars=spec.get("embargo_bars", 0),
+                # Mirrors the DSL path's run_backtest(use_eligibility_gate=True) default:
+                # explicitly opt IN to the eligibility gate so apply_eligibility_gate()'s OWN
+                # internal TF_CONFLUENCE_OVERLAY_DISABLED branch decides Mode A vs B. Without
+                # this, run_walk_forward_class()'s own default (env-var-gated, skip=True unless
+                # TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED=true) would make Mode A and Mode B
+                # byte-identical for every class-based strategy regardless of the env var this
+                # harness sets above — see run_battery_for_mode's docstring "COORDINATION FINDING
+                # #2 (CLOSED)" note in the module docstring.
+                skip_eligibility_gate=False,
+            )
 
-        from src.engine.walk_forward import run_walk_forward
-        wf_result = run_walk_forward(request, wf_mode="cpcv")
+            oos_metrics = wf_result.get("oos_metrics", {}) or {}
+            trades = wf_result.get("trades", []) or []
+            daily_pnls = wf_result.get("daily_pnls", []) or []
+            cross_val = wf_result.get("cross_validation", {}) or {}
+            deflated = cross_val.get("deflated_sharpe", {}) or {}
 
-        wf_meta = wf_result.get("wf_metadata", {}) or {}
-        oos_metrics = wf_result.get("oos_metrics", {}) or {}
-        trades = wf_result.get("trades", []) or []
-        daily_pnls = wf_result.get("daily_pnls", []) or []
+            # ENGINE-SIDE GAP (documented, not a harness bug — see module docstring): WFE and
+            # PBO are NOT computed by run_walk_forward_class() today (no per-window Optuna IS
+            # Sharpe -> WFE is structurally None; no per-path CPCV aggregation -> no pbo_overall
+            # key at all). DSR IS available, just nested under cross_validation.deflated_sharpe
+            # instead of wf_metadata.dsr. Leaving wfe/pbo explicit None (rather than omitting the
+            # keys) keeps compute_verdict()'s existing None-safe _delta() helper behaving
+            # identically to the DSL path's legacy-null case.
+            result["wfe"] = cross_val.get("wfe")
+            result["dsr"] = deflated.get("dsr")
+            result["dsr_pass"] = deflated.get("significant")
+            result["pbo"] = None
+            result["mode_ab"]["class_path_wfe_pbo_unavailable"] = True
+            result["sharpe"] = oos_metrics.get("sharpe_ratio")
+            result["trade_count"] = oos_metrics.get("total_trades", len(trades))
+            result["trades"] = trades
+            result["daily_pnls"] = daily_pnls
+            equity_curve_source = []  # run_walk_forward_class emits no equity_bars/equity_curve key
+        else:
+            # ─── DSL path (unchanged — byte-identical to pre-fix behavior) ─────────────────
+            from src.engine.config import BacktestRequest
 
-        result["wfe"] = wf_meta.get("wfe_overall")
-        result["dsr"] = wf_meta.get("dsr")
-        result["dsr_pass"] = wf_meta.get("dsr_pass")
-        result["pbo"] = wf_result.get("pbo_overall")
-        result["sharpe"] = oos_metrics.get("sharpe_ratio")
-        result["trade_count"] = oos_metrics.get("total_trades", len(trades))
-        result["trades"] = trades
-        result["daily_pnls"] = daily_pnls
+            clean_spec = {k: v for k, v in spec.items() if not k.startswith("_") and k != "id"}
+            request = BacktestRequest.model_validate(clean_spec)
+
+            from src.engine.walk_forward import run_walk_forward
+            wf_result = run_walk_forward(request, wf_mode="cpcv")
+
+            wf_meta = wf_result.get("wf_metadata", {}) or {}
+            oos_metrics = wf_result.get("oos_metrics", {}) or {}
+            trades = wf_result.get("trades", []) or []
+            daily_pnls = wf_result.get("daily_pnls", []) or []
+
+            result["wfe"] = wf_meta.get("wfe_overall")
+            result["dsr"] = wf_meta.get("dsr")
+            result["dsr_pass"] = wf_meta.get("dsr_pass")
+            result["pbo"] = wf_result.get("pbo_overall")
+            result["sharpe"] = oos_metrics.get("sharpe_ratio")
+            result["trade_count"] = oos_metrics.get("total_trades", len(trades))
+            result["trades"] = trades
+            result["daily_pnls"] = daily_pnls
+            equity_curve_source = wf_result.get("equity_bars", wf_result.get("equity_curve", []))
 
         if include_mc and result["trade_count"] and result["trade_count"] >= MIN_TRADES_FOR_VERDICT:
             try:
                 from src.engine.config import MonteCarloRequest
                 from src.engine.monte_carlo import run_monte_carlo
 
-                firm_key = clean_spec.get("firm_key") or "topstep_50k"
                 trades_pnl = [float(t.get("PnL", t.get("pnl", 0)) or 0.0) for t in trades]
                 mc_req = MonteCarloRequest(
                     backtest_id=f"mode_ab_{mode}_{sid}",
@@ -498,7 +693,7 @@ def run_battery_for_mode(
                     seed=seed,
                     use_gpu=False,
                 )
-                equity_curve = list(wf_result.get("equity_bars", wf_result.get("equity_curve", [])))
+                equity_curve = list(equity_curve_source)
                 mc_result = run_monte_carlo(mc_req, trades_pnl, daily_pnls, equity_curve)
 
                 # Prefer the canonical risk_metrics.probability_of_ruin_ci.ci_high location
@@ -563,6 +758,12 @@ def run_spec_worker(item: dict) -> dict:
         "timeframe": spec.get("strategy", {}).get("timeframe"),
         "start_date": spec.get("start_date"),
         "end_date": spec.get("end_date"),
+        # Path-trace (verification bar #4): top-level for fast manifest scanning without
+        # digging into mode_a/mode_b. Both modes always take the same path for a given spec
+        # (detection is spec-shape-based, not mode-based) — asserted defensively here so a
+        # future divergence (e.g. a bug that mutates spec between modes) fails loudly instead
+        # of silently reporting only one mode's path.
+        "execution_path": mode_a_slim.get("execution_path"),
         "mode_a": mode_a_slim,
         "mode_b": mode_b_slim,
         "verdict": verdict,

@@ -87,6 +87,11 @@
       <span id="sh-exec-mode-badge" style="display:none;margin-left:10px;font-size:9px;padding:3px 10px;border-radius:999px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;vertical-align:middle;"></span>
     </p>
 
+    <!-- deepscan17-wave2 (2026-07-05): tower-disconnect banner. NEVER let a stale
+         "Kill Switch · Green" sit silently on a family PWA when the tower is down. -->
+    <div id="sh-stale-banner" role="alert" style="display:none;margin:0 0 12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;letter-spacing:0.03em;color:#ffd9a0;background:rgba(120,80,0,0.25);border:1px solid rgba(255,190,90,0.4);"></div>
+    <p id="sh-account-disclosure" class="sh-sub" style="display:none;margin-top:-4px;color:var(--mute,#8a938a);"></p>
+
     <div id="sh-banner" class="sh-banner"></div>
 
     <!-- 2x2 grid: row heights are dictated by left column (Anam tall, Pot short),
@@ -172,9 +177,85 @@
   </script>
 
   <script>
+    // ─── Kill-switch staleness watchdog (deepscan17-wave2, 2026-07-05) ──────
+    // WHY: the crib is a family PWA left open on a screen. The page fetches
+    // /slumhouse/api/crib once and never refreshes, so a dead tower leaves
+    // "Kill Switch · Green / bot running" frozen with zero signal. Mirror the
+    // Office (office-risk.js): re-poll, track the last SUCCESSFUL poll, and
+    // degrade the safety-critical stat + show a disconnect banner when the poll
+    // fails or the data ages past threshold. NEVER a silent frozen-green tile.
+    const KILL_POLL_MS = 15000;   // re-fetch cadence
+    const KILL_TICK_MS = 1000;    // "Xs ago" counter refresh
+    const KILL_STALE_MS = 45000;  // older than this (or poll failing) ⇒ degrade
+    let killLastState = "red";    // last known kill-switch color
+    let killLastOkTs = 0;         // ms epoch of last SUCCESSFUL /api/crib poll
+    // deepscan18 H-F2 (2026-07-05): tracks whether the initial full render succeeded.
+    // When the tower is down AT LOAD the render IIFE bails before building any tiles, so
+    // a later recovery poll has nothing to update — it must reload to run the full render.
+    let cribInitialRenderOk = false;
+
+    function updateStaleBanner(stale, ageSecs) {
+      const banner = document.getElementById("sh-stale-banner");
+      if (!banner) return;
+      if (stale) {
+        banner.textContent =
+          "Can't reach the tower — showing the last status from " + ageSecs +
+          "s ago. Safety switches are NOT being checked right now. If this stays up, tell Tony.";
+        banner.style.display = "block";
+      } else {
+        banner.style.display = "none";
+      }
+    }
+
+    // Re-renders the kill-switch tile in place. stale=true forces an explicit
+    // "Unknown / data stale" state so a frozen page never reads as "bot running".
+    function renderKillTile(state, stale, ageSecs) {
+      const cur = document.getElementById("sh-killswitch-tile");
+      if (!cur) return;
+      cur.replaceWith(killStat(state, { stale: stale, ageSecs: ageSecs }));
+    }
+
+    function killTick() {
+      if (!killLastOkTs) return;
+      const age = Date.now() - killLastOkTs;
+      if (age > KILL_STALE_MS) {
+        const ageSecs = Math.round(age / 1000);
+        renderKillTile(killLastState, true, ageSecs);
+        updateStaleBanner(true, ageSecs);
+      }
+    }
+
+    async function killPoll() {
+      // SH.fetchJSON returns null on any failure (never throws). On null we keep
+      // the last-known state; killTick() degrades the tile as it ages.
+      const data = await SH.fetchJSON("/slumhouse/api/crib");
+      const ks = data && data.banner && data.banner.killSwitch;
+      if (ks === "green" || ks === "red") {
+        // deepscan18 H-F2: if the initial cold-load failed (blank crib — the kill tile
+        // and banner content were never built), recover by reloading to run the full
+        // render now that the tower is reachable again. Otherwise update in place.
+        if (!cribInitialRenderOk) { location.reload(); return; }
+        killLastState = ks;
+        killLastOkTs = Date.now();
+        renderKillTile(killLastState, false, 0);
+        updateStaleBanner(false, 0);
+      }
+    }
+
     (async () => {
       const data = await SH.fetchJSON("/slumhouse/api/crib");
-      if (!data) return;
+      if (!data) {
+        // deepscan18 H-F2 (2026-07-05): tower down AT LOAD. Previously this early-return
+        // left a blank crib with NO disconnect banner and NO recovery (the watchdog +
+        // re-poll intervals used to be registered further down inside this IIFE, so a
+        // first-fetch failure skipped them entirely). Surface the disconnect banner
+        // immediately so a family member never stares at a blank page thinking all is
+        // well; the killPoll interval (registered unconditionally below) reloads on
+        // recovery. Mirrors office-risk.js start(), which polls unconditionally.
+        updateStaleBanner(true, 0);
+        return;
+      }
+      cribInitialRenderOk = true;
       const { el, sparkline, sparkTrend } = SH;
 
       // ─── Execution mode badge ───────────────────────────────────────
@@ -186,6 +267,17 @@
         badge.style.background = isLive ? "rgba(163,255,18,0.14)" : "rgba(255,255,255,0.06)";
         badge.style.color = isLive ? "var(--lime)" : "var(--mute,#666)";
         badge.style.display = "inline-block";
+      }());
+
+      // ─── Account-data disclosure (deepscan17-wave2, 2026-07-05) ─────────
+      // Backend emits accountDisclosure (plain English) when account-scoped
+      // numbers are NOT real (no broker mapping, or live-mode not wired). Surface
+      // it so a bare $0 never reads as "I lost nothing".
+      (function () {
+        const note = document.getElementById("sh-account-disclosure");
+        if (!note || !data.accountDisclosure) return;
+        note.textContent = data.accountDisclosure;
+        note.style.display = "block";
       }());
 
       // ─── Premium fintech banner ─────────────────────────────────────
@@ -238,7 +330,13 @@
       b.appendChild(potTile);
 
       // Kill switch (live pulse, no chart)
-      b.appendChild(killStat(bag.killSwitch));
+      killLastState = bag.killSwitch === "green" ? "green" : "red";
+      killLastOkTs = Date.now();
+      b.appendChild(killStat(killLastState));
+      // deepscan18 H-F2: the staleness watchdog + re-poll intervals are now registered
+      // UNCONDITIONALLY after this IIFE (see below) so a tower-down-at-load still gets a
+      // disconnect banner + recovery. They used to be registered here, inside the IIFE,
+      // which the cold-load early-return skipped — leaving a blank, silent, dead crib.
 
       // ─── Discord feed — premium intake list ─────────────────────────
       const df = document.getElementById("sh-discord-feed");
@@ -370,6 +468,15 @@
       });
     })();
 
+    // deepscan18 H-F2 (2026-07-05): register the staleness watchdog + re-poll intervals
+    // UNCONDITIONALLY, outside the async render IIFE above. This runs even when the initial
+    // /api/crib fetch fails (tower down at load) — so the crib always re-polls, always shows
+    // the disconnect banner while unreachable, and always recovers when the tower returns
+    // (killPoll reloads the page on the first successful poll if the cold-load render bailed).
+    // Mirrors office-risk.js start() which polls unconditionally regardless of first-fetch.
+    setInterval(killTick, KILL_TICK_MS);
+    setInterval(killPoll, KILL_POLL_MS);
+
     function stat(opts) {
       const { el, sparkline, sparkTrend } = SH;
       const node = el("div", { class: "sh-stat" });
@@ -416,28 +523,40 @@
       const v = (typeof displayValue === "number")
         ? displayValue
         : parseFloat(String(displayValue).replace(/[^\d.\-−]/g, "")) || 0;
+      // deep-scan slumhouse-frontend F-2 (2026-07-06): render a FLAT baseline (every point = the current value)
+      // instead of a Math.sin()+Math.random() wave. The old wavy series visually read as a real up/down TREND to
+      // a family member glancing at the tile — fabricating movement that never happened + re-randomizing each load.
+      // A flat line honestly signals "no historical trend data yet" without inventing a shape.
       const out = [];
-      const drift = Math.abs(v) * 0.04 + 1;
-      for (let i = 0; i < N - 1; i++) {
-        out.push(v * 0.6 + Math.sin(i * 0.7) * drift + (Math.random() - 0.5) * drift * 0.4);
-      }
-      out.push(v); // last point lands on the current value
+      for (let i = 0; i < N; i++) out.push(v);
       return out;
     }
 
-    function killStat(state) {
+    // deepscan17-wave2 (2026-07-05): opts.stale forces an explicit "data stale"
+    // state (amber "Unknown", off-toggle) so a frozen page can never keep showing
+    // a reassuring green "bot running" when the tower is unreachable.
+    function killStat(state, opts) {
       const { el } = SH;
-      const isGreen = state === "green";
-      const node = el("div", { class: "sh-stat" });
+      opts = opts || {};
+      const stale = !!opts.stale;
+      const isGreen = state === "green" && !stale;
+      const node = el("div", { class: "sh-stat" + (stale ? " sh-stat-stale" : ""), id: "sh-killswitch-tile" });
 
+      const trendText = stale ? "STALE" : (isGreen ? "LIVE" : "HALT");
       node.appendChild(el("div", { class: "sh-stat-row" },
         el("div", { class: "sh-stat-label" }, "Kill Switch"),
-        el("span", { class: "sh-stat-trend " + (isGreen ? "" : "down") }, isGreen ? "LIVE" : "HALT"),
+        el("span", { class: "sh-stat-trend " + (isGreen ? "" : "down") }, trendText),
       ));
-      node.appendChild(el("div", { class: "sh-stat-val " + (isGreen ? "green" : "red") }, isGreen ? "Green" : "Red"));
-      node.appendChild(el("div", { class: "sh-stat-sub" }, isGreen ? "bot running" : "bot halted"));
+      const valText = stale ? "Unknown" : (isGreen ? "Green" : "Red");
+      const valClass = stale ? "amber" : (isGreen ? "green" : "red");
+      node.appendChild(el("div", { class: "sh-stat-val " + valClass }, valText));
+      const subText = stale
+        ? ("data stale — last seen " + (opts.ageSecs || 0) + "s ago")
+        : (isGreen ? "bot running" : "bot halted");
+      node.appendChild(el("div", { class: "sh-stat-sub" }, subText));
 
-      // 3D toggle switch visual — fills the chart slot
+      // 3D toggle switch visual — fills the chart slot. Stale ⇒ show "off" so the
+      // green ON position never implies a running bot we can no longer confirm.
       const toggleSlot = el("div", { class: "sh-stat-spark sh-killswitch-slot" });
       const toggle = el("div", { class: "sh-killswitch " + (isGreen ? "on" : "off") });
       const track = el("div", { class: "sh-killswitch-track" });

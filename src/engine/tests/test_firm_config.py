@@ -24,41 +24,28 @@ from src.engine.config import (
 
 class TestFirmCommissions:
     def test_all_production_firms_present(self):
-        """All production-verified prop firms have commission data.
+        """Only the two canonical prop firms remain (migration 0097, 2026-05-10 — Topstep + MFFU ONLY).
 
-        The original 8 firms are the production-verified set with confirmed
-        commission rates. `top_one_50k`, `yrm_prop_50k`, and `fundingpips_50k`
-        are pending live-rule confirmation (see firm_config.py header comments)
-        and use conservative defaults until verified against docs/prop-firm-rules.md.
+        deep-scan Backtest #9 (stale-fixture fix): the 9 legacy firms (alpha/tradeify/apex/tpt/ffn/
+        earn2trade/top_one/yrm/fundingpips) were removed; FIRM_COMMISSIONS must be EXACTLY the 2-firm set.
         """
-        production_firms = {
-            "topstep_50k", "mffu_50k", "tpt_50k", "apex_50k",
-            "tradeify_50k", "alpha_50k", "ffn_50k", "earn2trade_50k",
-        }
-        pending_firms = {"top_one_50k", "yrm_prop_50k", "fundingpips_50k"}
+        expected = {"topstep_50k", "mffu_50k"}
         actual = set(FIRM_COMMISSIONS.keys())
-        assert production_firms.issubset(actual), f"Missing production firms: {production_firms - actual}"
-        assert actual.issubset(production_firms | pending_firms), f"Unknown firms: {actual - (production_firms | pending_firms)}"
+        assert actual == expected, f"FIRM_COMMISSIONS drift vs canonical 2-firm set: {actual ^ expected}"
 
-    def test_alpha_zero_commission(self):
-        """Alpha Futures has zero commissions."""
-        alpha = get_commission_per_side("alpha_50k", "MES")
-        assert alpha == 0.00
+    def test_topstep_cheaper_than_mffu(self):
+        """Topstep ($0.62/side MES) is cheaper than MFFU ($0.95/side MES) — surviving firms differ.
 
-        # Verify it's cheapest across all firms for MES
+        Replaces the deleted alpha-zero / tradeify-most-expensive tests (those firms were pruned by
+        migration 0097). Asserts the two surviving firms' real, differentiated commissions.
+        """
+        topstep = get_commission_per_side("topstep_50k", "MES")
+        mffu = get_commission_per_side("mffu_50k", "MES")
+        assert topstep >= 0 and mffu >= 0
+        assert topstep < mffu, f"expected Topstep cheaper than MFFU, got {topstep} vs {mffu}"
+        # Topstep is the cheapest across all surviving firms for MES.
         for firm_key in FIRM_COMMISSIONS:
-            comm = get_commission_per_side(firm_key, "MES")
-            assert comm >= alpha
-
-    def test_tradeify_most_expensive(self):
-        """Tradeify has the most expensive commissions at $1.29/side."""
-        tradeify = get_commission_per_side("tradeify_50k", "MES")
-        assert tradeify == 1.29
-
-        # Verify it's most expensive across all firms for MES
-        for firm_key in FIRM_COMMISSIONS:
-            comm = get_commission_per_side(firm_key, "MES")
-            assert comm <= tradeify
+            assert get_commission_per_side(firm_key, "MES") >= topstep
 
     def test_unknown_firm_raises(self):
         """Unknown firm_key raises ValueError."""
@@ -71,43 +58,41 @@ class TestFirmCommissions:
             get_commission_per_side("mffu_50k", "INVALID")
 
     def test_commission_impacts_net_pnl(self):
-        """$260/day gross: passes Alpha net gate, may fail Tradeify net gate.
+        """$260/day gross: the cheaper firm (Topstep) keeps more net profit than MFFU.
 
-        Alpha: $0.00/side × 2 sides × 2 trades/day = $0.00 → net $260.00
-        Tradeify: $1.29/side × 2 sides × 2 trades/day = $5.16 → net $254.84
-
-        Both pass $250 gate, but Alpha keeps more profit.
+        Topstep: $0.62/side × 2 sides × 2 trades/day = $2.48 → net $257.52
+        MFFU:    $0.95/side × 2 sides × 2 trades/day = $3.80 → net $256.20
+        Both clear the $250 gate; Topstep keeps more.
         """
         gross_daily = 260.0
         trades_per_day = 2  # round trips
 
-        alpha_comm = get_commission_per_side("alpha_50k", "MES")
-        tradeify_comm = get_commission_per_side("tradeify_50k", "MES")
+        topstep_comm = get_commission_per_side("topstep_50k", "MES")
+        mffu_comm = get_commission_per_side("mffu_50k", "MES")
 
-        alpha_net = gross_daily - (alpha_comm * 2 * trades_per_day)
-        tradeify_net = gross_daily - (tradeify_comm * 2 * trades_per_day)
+        topstep_net = gross_daily - (topstep_comm * 2 * trades_per_day)
+        mffu_net = gross_daily - (mffu_comm * 2 * trades_per_day)
 
-        assert alpha_net >= 250, f"Alpha net ${alpha_net:.2f} should pass $250 gate"
-        assert alpha_net > tradeify_net, "Alpha should keep more profit than Tradeify"
+        assert topstep_net >= 250, f"Topstep net ${topstep_net:.2f} should pass $250 gate"
+        assert topstep_net > mffu_net, "Topstep (cheaper) should keep more profit than MFFU"
 
 
 # ─── Task 3.12: Contract Cap Tests ──────────────────────────────
 
 class TestContractCaps:
-    def test_production_firms_default_15(self):
-        """Production-verified firms default to 15 contracts for all micro symbols.
+    def test_production_firms_caps_within_bounds(self):
+        """Both canonical firms return a contract cap within [CONTRACT_CAP_MIN, CONTRACT_CAP_MAX]
+        for every micro symbol (Topstep=50, MFFU=40 as of the 2026 firm config).
 
-        Pending firms (top_one_50k, yrm_prop_50k, fundingpips_50k) use a
-        conservative cap pending live-rule verification; covered separately.
+        deep-scan Backtest #9 (stale-fixture fix): the old assertion hard-coded cap==15 for 8 pruned
+        firms — replaced with the real 2-firm caps asserted against the config's own bounds.
         """
-        production_firms = {
-            "topstep_50k", "mffu_50k", "tpt_50k", "apex_50k",
-            "tradeify_50k", "alpha_50k", "ffn_50k", "earn2trade_50k",
-        }
-        for firm_key in production_firms:
+        from src.engine.firm_config import CONTRACT_CAP_MIN, CONTRACT_CAP_MAX
+        for firm_key in {"topstep_50k", "mffu_50k"}:
             for symbol in ["MES", "MNQ", "MCL"]:
-                assert get_contract_cap(firm_key, symbol) == 15, (
-                    f"{firm_key} {symbol} cap is not 15"
+                cap = get_contract_cap(firm_key, symbol)
+                assert CONTRACT_CAP_MIN <= cap <= CONTRACT_CAP_MAX, (
+                    f"{firm_key} {symbol} cap {cap} outside [{CONTRACT_CAP_MIN},{CONTRACT_CAP_MAX}]"
                 )
 
     def test_pending_firms_conservative_cap(self):

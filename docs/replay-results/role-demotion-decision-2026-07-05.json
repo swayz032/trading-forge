@@ -1,0 +1,133 @@
+{
+  "mediator_gate": {
+    "struct_conf": {
+      "mean_depth_off": 12.428571428571429,
+      "mean_depth_arm": 11.357142857142858,
+      "pct_drop": 0.08620689655172412,
+      "n_strategies_dropped": 21,
+      "n_strategies_total": 42,
+      "is_mediator_gate_subject": true,
+      "mediator_fired": true,
+      "verdict": "MEDIATOR_FIRED"
+    },
+    "struct_alt": {
+      "mean_depth_off": 12.428571428571429,
+      "mean_depth_arm": 12.428571428571429,
+      "pct_drop": 0.0,
+      "n_strategies_dropped": 0,
+      "n_strategies_total": 42,
+      "is_mediator_gate_subject": true,
+      "mediator_fired": false,
+      "verdict": "INVALID_NO_DEPTH_DROP"
+    },
+    "struct_ctx": {
+      "mean_depth_off": 12.428571428571429,
+      "mean_depth_arm": 7.642857142857143,
+      "pct_drop": 0.3850574712643678,
+      "n_strategies_dropped": 39,
+      "n_strategies_total": 42,
+      "is_mediator_gate_subject": true,
+      "mediator_fired": true,
+      "verdict": "MEDIATOR_FIRED"
+    },
+    "struct_all": {
+      "mean_depth_off": 12.428571428571429,
+      "mean_depth_arm": 6.571428571428571,
+      "pct_drop": 0.471264367816092,
+      "n_strategies_dropped": 39,
+      "n_strategies_total": 42,
+      "is_mediator_gate_subject": true,
+      "mediator_fired": true,
+      "verdict": "MEDIATOR_FIRED"
+    },
+    "exec_all": {
+      "mean_depth_off": 12.428571428571429,
+      "mean_depth_arm": 12.428571428571429,
+      "pct_drop": 0.0,
+      "n_strategies_dropped": 0,
+      "n_strategies_total": 42,
+      "is_mediator_gate_subject": false,
+      "mediator_fired": null,
+      "verdict": "NOT_APPLICABLE_VALIDATION_ARM_ONLY"
+    }
+  },
+  "attribution_ranking": [
+    {
+      "arm": "struct_ctx",
+      "n_revival_vs_off": 9,
+      "n_zero_trade": 3,
+      "n_zero_trade_off": 12,
+      "mean_firing_rate_per_100_bars": 9.195875291457199,
+      "firing_rate_lift_vs_off": 2.8558650820962432,
+      "rank": 1
+    },
+    {
+      "arm": "struct_alt",
+      "n_revival_vs_off": 0,
+      "n_zero_trade": 12,
+      "n_zero_trade_off": 12,
+      "mean_firing_rate_per_100_bars": 6.340010209360956,
+      "firing_rate_lift_vs_off": 0.0,
+      "rank": 2
+    },
+    {
+      "arm": "struct_conf",
+      "n_revival_vs_off": 0,
+      "n_zero_trade": 12,
+      "n_zero_trade_off": 12,
+      "mean_firing_rate_per_100_bars": 5.098835539529158,
+      "firing_rate_lift_vs_off": -1.241174669831798,
+      "rank": 3
+    }
+  ],
+  "exec_all_vs_struct_all_agreement": {
+    "n_common_strategies": 42,
+    "n_agree": 42,
+    "n_disagree": 0,
+    "agreement_rate": 1.0,
+    "disagreements": []
+  },
+  "sds_paired_delta_off_vs_struct_all": {
+    "n_paired_strategies": 24,
+    "point_sds_before": 3.22682114145222,
+    "point_sds_after": 3.8856310821485986,
+    "point_delta": 0.6588099406963788,
+    "n_boot_valid": 300,
+    "delta_ci_90": [
+      -0.19889582077651002,
+      1.8140480817774638
+    ],
+    "delta_median": 0.531646947875325,
+    "frac_delta_positive": 0.8566666666666667,
+    "ci_excludes_zero": false,
+    "min_effect": 0.2,
+    "ci_entirely_above_min_effect": false,
+    "ci_entirely_below_min_effect": false,
+    "verdict": "INCONCLUSIVE",
+    "verdict_note": "verdict is a CANDIDATE label only \u2014 CONCLUSIVE_NEGATIVE requires the sample-floor (>=15 strategies, >=5 families at gating-fidelity>=0.80) AND gating-fidelity preconditions to ALSO hold; the caller (not this script) certifies those and states the final pre-registered decision."
+  },
+  "pre_registered_decision": {
+    "verdict": "FALSIFIER_B_INTERACTION_DOMINANT",
+    "dri_note": "DRI (extraction over-specification) is a STATIC per-strategy audit metric computed once in docs/replay-results/dri-audit-2026-07-05.json \u2014 it does not itself move within this experiment (demoting conditions changes EXECUTION, not the frozen audit classification). 'DRI down' in the falsifier language is read here as the STRUCTURAL analogue already measured directly: conjunction depth down (the executable proxy for DRI's hard-conjunction count) \u2014 see struct_all's mediator-gate row.",
+    "conjunction_depth_pct_drop_struct_all": 0.471264367816092,
+    "firing_rate_off": 6.340010209360956,
+    "firing_rate_struct_all": 8.39211794266806,
+    "firing_rate_up": true,
+    "revival_count_struct_all": 9,
+    "revival_up": true,
+    "sds_point_before": 3.22682114145222,
+    "sds_point_after": 3.8856310821485986,
+    "sds_point_delta": 0.6588099406963788,
+    "sds_delta_ci_90": [
+      -0.19889582077651002,
+      1.8140480817774638
+    ],
+    "sds_ci_entirely_above_min_effect": false,
+    "min_effect": 0.2,
+    "n_paired_strategies": 24
+  },
+  "sample": {
+    "n_strategies": 42,
+    "n_families": 14
+  }
+}

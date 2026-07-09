@@ -122,7 +122,9 @@ export async function handleWorkflowBackup(
         input: { workflowId } as Record<string, unknown>,
         result: { error: errMsg } as Record<string, unknown>,
       })
-      .catch(() => {});
+      // deepscan17: the failure-path audit itself was swallowed silently — a backup failure
+      // whose audit write also failed left ZERO queryable record. Log loudly (§10b).
+      .catch((auditErr) => logger.warn({ auditErr, workflowId }, "workflow_backup.failed audit write failed — backup-failure record dropped"));
     return res.status(500).json({ error: "workflow_backup_persist_failed", message: errMsg });
   }
 }

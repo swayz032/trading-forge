@@ -49,7 +49,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { serverMediatedOrders, auditLog, productionTrades } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -57,6 +57,7 @@ import { broadcastSSE } from "../routes/sse.js";
 import { isServerMediatedExecutionEnabled } from "./server-mediated-executor.js";
 import { notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { CONTRACT_SPECS } from "../../shared/firm-config.js";
 import type { BrokerResult } from "./broker-router.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -435,6 +436,93 @@ export async function updateOrderToNeedsReconcile(params: {
 
 // ─── Fill ingestion ───────────────────────────────────────────────────────────
 
+// ─── X-1 option a (Deep-Scan #18b, 2026-07-05): actual_pnl computation ────────
+//
+// Honest, bounded computation. actual_pnl is populated ONLY when ALL of the
+// following real, already-recorded inputs are available:
+//   1. This fill fully closes an exit order (newStatus === "filled").
+//   2. A prior FILLED entry order exists in the same session for the same
+//      symbol, filled at or before this exit's fill time.
+//   3. The symbol resolves to a known point value (CONTRACT_SPECS).
+// When any input is unavailable, actual_pnl is left null — a genuine gap in
+// evidence, never a guessed number. Nothing here is estimated: entry price and
+// exit price both come from real broker fill confirmations already persisted
+// on serverMediatedOrders rows.
+const EXIT_ACTIONS = new Set(["exit_long", "exit_short", "exit"]);
+const ENTRY_DIRECTION: Record<string, 1 | -1> = { enter_long: 1, enter_short: -1 };
+
+function resolveFillPointValue(symbol: string): number | null {
+  const upper = (symbol ?? "").toUpperCase();
+  // Micros matched before minis so "MESU2026" resolves to MES, not ES (mirrors
+  // broker-router.ts::resolveRouteContractSpec's longest-prefix-first intent).
+  for (const key of ["MES", "MNQ", "MCL", "ES", "NQ", "CL"] as const) {
+    if (upper.startsWith(key)) {
+      const spec = CONTRACT_SPECS[key];
+      if (spec && typeof spec.pointValue === "number") return spec.pointValue;
+    }
+  }
+  const direct = CONTRACT_SPECS[upper];
+  return direct && typeof direct.pointValue === "number" ? direct.pointValue : null;
+}
+
+async function computeActualPnlForFullExit(params: {
+  orderRow: typeof serverMediatedOrders.$inferSelect;
+  newStatus: OrderStatus;
+  newAvgPrice: number;
+  newFilledQty: number;
+}): Promise<number | null> {
+  const { orderRow, newStatus, newAvgPrice, newFilledQty } = params;
+
+  if (newStatus !== "filled") return null; // only a fully-closed exit has a final realized PnL
+  if (!EXIT_ACTIONS.has(orderRow.intendedAction)) return null;
+
+  try {
+    const candidateEntries = await db
+      .select({
+        intendedAction: serverMediatedOrders.intendedAction,
+        filledAvgPrice: serverMediatedOrders.filledAvgPrice,
+        filledAt: serverMediatedOrders.filledAt,
+      })
+      .from(serverMediatedOrders)
+      .where(
+        and(
+          eq(serverMediatedOrders.sessionId, orderRow.sessionId),
+          eq(serverMediatedOrders.intendedSymbol, orderRow.intendedSymbol),
+          eq(serverMediatedOrders.status, "filled"),
+        ),
+      )
+      .orderBy(desc(serverMediatedOrders.filledAt))
+      .limit(10);
+
+    const entryRow = candidateEntries.find(
+      (r) =>
+        (r.intendedAction === "enter_long" || r.intendedAction === "enter_short") &&
+        r.filledAvgPrice !== null &&
+        (!orderRow.filledAt || !r.filledAt || r.filledAt.getTime() <= orderRow.filledAt.getTime()),
+    );
+    if (!entryRow || entryRow.filledAvgPrice === null) return null;
+
+    const direction = ENTRY_DIRECTION[entryRow.intendedAction];
+    const pointValue = resolveFillPointValue(orderRow.intendedSymbol);
+    if (!direction || pointValue === null) return null;
+
+    const entryPrice = Number(entryRow.filledAvgPrice);
+    if (!Number.isFinite(entryPrice) || !Number.isFinite(newAvgPrice) || !Number.isFinite(newFilledQty)) {
+      return null;
+    }
+
+    const pnl = direction * (newAvgPrice - entryPrice) * newFilledQty * pointValue;
+    return Number.isFinite(pnl) ? Math.round(pnl * 100) / 100 : null;
+  } catch (err) {
+    // Fail-soft — a PnL-computation failure must never block fill ingestion.
+    logger.warn(
+      { err, orderId: orderRow.id },
+      "fill-reconciliation: actual_pnl computation failed (non-blocking, left null)",
+    );
+    return null;
+  }
+}
+
 /**
  * ingestFillEvent — the core Phase 1 fill-reconciliation function.
  *
@@ -625,17 +713,29 @@ export async function ingestFillEvent(
     return { outcome: "fill_error", error: err instanceof Error ? err.message : String(err) };
   }
 
-  // ── Phase-4C hook: populate production_trades fill IDs ────────────────────
+  // ── Phase-4C hook: populate production_trades fill IDs + actual_pnl ───────
   // When a fill is confirmed, update production_trades with the real broker fill ID
   // so the daily reconciliation can compare actual fills vs expected.
   // This closes the "tradovate_fill_id" gap in reconciliation-service.ts.
+  //
+  // X-1 option a (Deep-Scan #18b, 2026-07-05): actual_pnl is now computed via
+  // computeActualPnlForFullExit() — honest, bounded (see docstring above), never
+  // fabricated. Left null (via undefined -> omitted from `set`) whenever the
+  // computation cannot be grounded in real recorded fill data.
   if (fillEvent.broker_fill_id && orderRow.correlationId) {
     try {
+      const actualPnl = await computeActualPnlForFullExit({
+        orderRow,
+        newStatus,
+        newAvgPrice,
+        newFilledQty,
+      });
+
       await db
         .update(productionTrades)
         .set({
           tradovateFillId: fillEvent.broker_fill_id,
-          // actual_pnl would be computed from filled_avg_price vs entry — left for future Phase
+          ...(actualPnl !== null ? { actualPnl: String(actualPnl) } : {}),
         })
         .where(eq(productionTrades.correlationId, orderRow.correlationId));
     } catch (err) {

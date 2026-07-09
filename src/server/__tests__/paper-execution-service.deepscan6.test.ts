@@ -135,8 +135,12 @@ describe("M1 — closePosition: dailyPnlBreakdown written inside transaction", (
 
     // The db.update(paperSessions) that used to write dailyPnlBreakdown must be gone
     expect(body).not.toContain("db.update(paperSessions)");
-    // The db.select re-read for the consistency check must still be present
-    expect(body).toContain("db.select({ dailyPnlBreakdown:");
+    // deep-scan #15 FIX M4: checkConsistencyRule now DEFERS to the authoritative
+    // consistency tracker (single source of truth) instead of its own local
+    // dailyPnlBreakdown re-read + firmConfig.consistencyRule ratio calc.
+    expect(body).toContain("getConsistencyState");
+    // The old local single-threshold calc must be gone (it could disagree with the tracker).
+    expect(body).not.toContain("firmConfig.consistencyRule");
   });
 
   it("checkConsistencyRule no longer accepts tradePnl parameter", () => {

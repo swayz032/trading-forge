@@ -107,22 +107,22 @@ class TestMigration0152Idempotency:
     """Migration 0152 must be idempotent (CREATE TABLE IF NOT EXISTS)."""
 
     def test_migration_file_exists(self):
-        """Migration file 0152_quantum_rl_runs.sql must exist."""
+        """Migration file 0158_quantum_rl_runs.sql must exist."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         assert migration_path.exists(), f"Migration file not found: {migration_path}"
 
     def test_migration_uses_if_not_exists(self):
         """Migration must use CREATE TABLE IF NOT EXISTS for idempotency."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "CREATE TABLE IF NOT EXISTS" in content, "Migration must be idempotent (IF NOT EXISTS)"
 
     def test_migration_creates_correct_table(self):
         """Migration must create quantum_rl_runs table, not quantum_mc_runs."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "quantum_rl_runs" in content
         # Verify this migration creates quantum_rl_runs not quantum_mc_runs
@@ -137,7 +137,7 @@ class TestMigration0152Idempotency:
     def test_migration_has_governance_comment(self):
         """Migration must document namespace separation rationale."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "circular" in content.lower() or "IAE-vs-RL" in content or "namespace" in content.lower()
 
@@ -147,7 +147,7 @@ class TestMigration0152Idempotency:
         journal_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "meta" / "_journal.json"
         journal = json.loads(journal_path.read_text())
         tags = [e["tag"] for e in journal["entries"]]
-        assert "0152_quantum_rl_runs" in tags, f"0152_quantum_rl_runs not in journal. Found: {tags[-5:]}"
+        assert "0158_quantum_rl_runs" in tags, f"0158_quantum_rl_runs not in journal. Found: {tags[-5:]}"
 
 
 # ─── Test 2: Column presence in migration SQL ────────────────────────────────
@@ -175,7 +175,7 @@ class TestMigration0152Columns:
     def test_all_columns_present(self):
         """All required columns must appear in the migration SQL."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         for col in self.EXPECTED_COLUMNS:
             assert col in content, f"Column '{col}' not found in migration"
@@ -183,14 +183,14 @@ class TestMigration0152Columns:
     def test_bigserial_primary_key(self):
         """id column must be BIGSERIAL PRIMARY KEY."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "BIGSERIAL PRIMARY KEY" in content
 
     def test_governance_labels_jsonb_not_null(self):
         """governance_labels must be JSONB NOT NULL."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "governance_labels" in content
         assert "JSONB NOT NULL" in content or "jsonb NOT NULL" in content.lower()
@@ -204,21 +204,21 @@ class TestMigration0152Indexes:
     def test_strategy_evaluated_index_exists(self):
         """idx_quantum_rl_runs_strategy_evaluated must be in migration."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "idx_quantum_rl_runs_strategy_evaluated" in content
 
     def test_regime_action_index_exists(self):
         """idx_quantum_rl_runs_regime_action must be in migration."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "idx_quantum_rl_runs_regime_action" in content
 
     def test_cpcv_fold_index_exists(self):
         """idx_quantum_rl_runs_cpcv_fold must be in migration (partial index)."""
         import pathlib
-        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0152_quantum_rl_runs.sql"
+        migration_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "0158_quantum_rl_runs.sql"
         content = migration_path.read_text()
         assert "idx_quantum_rl_runs_cpcv_fold" in content
 
@@ -457,23 +457,29 @@ class TestRewardFunctionCiHigh:
         assert abs(shaped - (realized_r - expected_ci_pen)) < 1e-6
 
     def test_ci_high_below_threshold_no_penalty(self):
-        """ci_high=0.30 must produce zero ci_high penalty (max(0, 0.30 − 0.40)=0)."""
-        env = _make_env()
+        """ci_high strictly BELOW the (env-tracked) threshold must produce zero ci_high penalty.
 
+        CORRECTED 2026-07-06: was hardcoded to ci_high=0.30 vs a 0.40 threshold; the threshold was tightened
+        to 0.20 (tracks the production B14 gate), so 0.30 is now ABOVE it. Reference _RL_CI_HIGH_THRESHOLD so
+        this stays correct at any threshold value.
+        """
+        env = _make_env()
         realized_r = 1.0
-        ci_high = 0.30
+        ci_high = _RL_CI_HIGH_THRESHOLD - 0.05  # strictly below → no penalty
 
         shaped, ci_pen, dd_pen = env.compute_shaped_reward(
             realized_r, ci_high=ci_high, drawdown_penalty=0.0
         )
 
-        assert ci_pen == 0.0, f"Expected 0 ci_high penalty for ci_high=0.30, got {ci_pen}"
+        assert ci_pen == 0.0, f"Expected 0 ci_high penalty for ci_high below threshold, got {ci_pen}"
         assert abs(shaped - realized_r) < 1e-6
 
     def test_ci_high_exactly_at_threshold_no_penalty(self):
-        """ci_high exactly at 0.40 threshold must produce zero ci_high penalty."""
+        """ci_high exactly AT the (env-tracked) threshold must produce zero ci_high penalty (max(0, 0)=0)."""
         env = _make_env()
-        shaped, ci_pen, _ = env.compute_shaped_reward(1.0, ci_high=0.40, drawdown_penalty=0.0)
+        shaped, ci_pen, _ = env.compute_shaped_reward(
+            1.0, ci_high=_RL_CI_HIGH_THRESHOLD, drawdown_penalty=0.0
+        )
         assert ci_pen == 0.0
 
     def test_reward_alpha_default_is_correct(self):
@@ -623,6 +629,81 @@ class TestLoadBacktestBarData:
         # Only IS bar should be returned
         assert len(bars) == 1, f"Expected 1 IS bar, got {len(bars)}"
         assert bars[0]["timestamp"].startswith("2024-02"), f"Wrong timestamp: {bars[0]['timestamp']}"
+
+    def test_cpcv_purge_emits_audit_event_sentinel(self, capsys):
+        """Deep-Scan #18: a purged OOS bar must emit an AUDIT_EVENT_JSON stderr sentinel
+        (event=quantum_rl.training_cpcv_purge_violation) so quantum-rl-training-runner.ts
+        writes the documented audit row — previously the purge was silent."""
+        from src.engine.replay.db_loader import load_backtest_bar_data
+
+        wf_row = {
+            "id": "fold-1", "window_index": 0,
+            "is_start": "2024-01-01", "is_end": "2024-03-31",
+            "oos_start": "2024-04-01", "oos_end": "2024-06-30",
+        }
+        is_trade = {
+            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=timezone.utc),
+            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=timezone.utc),
+            "direction": "long", "entry_price": 4200.0, "exit_price": 4215.0,
+            "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
+            "session_type": "rth", "macro_regime": "TRENDING",
+        }
+        oos_trade = {
+            "entry_time": datetime(2024, 5, 10, 10, 30, tzinfo=timezone.utc),
+            "exit_time": datetime(2024, 5, 10, 11, 0, tzinfo=timezone.utc),
+            "direction": "long", "entry_price": 4350.0, "exit_price": 4365.0,
+            "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
+            "session_type": "rth", "macro_regime": "RANGE_BOUND",
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchall.side_effect = [[wf_row], [is_trade, oos_trade]]
+        mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+        with patch("src.engine.replay.db_loader._get_db_connection", return_value=mock_conn):
+            bars = load_backtest_bar_data(backtest_id=42, cpcv_purge=True)
+
+        assert len(bars) == 1  # OOS bar purged
+        captured = capsys.readouterr()
+        sentinels = [ln for ln in captured.err.splitlines() if ln.startswith("AUDIT_EVENT_JSON ")]
+        assert len(sentinels) == 1, f"expected 1 AUDIT_EVENT_JSON sentinel, stderr={captured.err!r}"
+        payload = json.loads(sentinels[0][len("AUDIT_EVENT_JSON "):])
+        assert payload["event"] == "quantum_rl.training_cpcv_purge_violation"
+        assert payload["status"] == "warning"
+        assert payload["purged_bar_count"] == 1
+        assert payload["bars_retained"] == 1
+        assert payload["backtest_id"] == 42
+        assert payload["malformed_fold_count"] == 0
+
+    def test_cpcv_no_purge_no_malformed_fold_emits_no_sentinel(self, capsys):
+        """No purge + no malformed fold → no sentinel (avoid audit noise on clean runs)."""
+        from src.engine.replay.db_loader import load_backtest_bar_data
+
+        wf_row = {
+            "id": "fold-1", "window_index": 0,
+            "is_start": "2024-01-01", "is_end": "2024-03-31",
+            "oos_start": "2024-04-01", "oos_end": "2024-06-30",
+        }
+        is_trade = {
+            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=timezone.utc),
+            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=timezone.utc),
+            "direction": "long", "entry_price": 4200.0, "exit_price": 4215.0,
+            "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
+            "session_type": "rth", "macro_regime": "TRENDING",
+        }
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        mock_cursor.fetchall.side_effect = [[wf_row], [is_trade]]
+        mock_conn.cursor.return_value.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_conn.cursor.return_value.__exit__ = MagicMock(return_value=False)
+
+        with patch("src.engine.replay.db_loader._get_db_connection", return_value=mock_conn):
+            bars = load_backtest_bar_data(backtest_id=7, cpcv_purge=True)
+
+        assert len(bars) == 1
+        captured = capsys.readouterr()
+        assert "AUDIT_EVENT_JSON " not in captured.err
 
     def test_cpcv_purge_false_returns_all_bars(self):
         """cpcv_purge=False must return all bars (debug-only mode)."""

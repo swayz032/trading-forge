@@ -51,13 +51,39 @@ class TestDsrHonestFormula:
         )
         assert result["passes"] is True
 
-    def test_weak_sharpe_fails_many_trials(self):
-        """Sharpe=1.0 with N=100 trials should fail DSR (curve-fitted territory)."""
+    def test_weak_sharpe_fails_many_trials_with_short_track_record(self):
+        """Sharpe=1.0 with N=100 trials FAILS DSR only when the track record is short.
+
+        deepscan17 B-2/B-7 fix (2026-07-05): previously this assertion held at
+        n_observations=252 too, but that was an artifact of two compounding bugs
+        (missing sigma_SR scaling on the expected-max term + wrong kurtosis constant)
+        that made DSR punitive almost independent of n_observations. Under the
+        corrected Bailey-LdP formula, SE(SR_hat) shrinks as n_observations grows
+        (Mertens 2002), so the same observed Sharpe becomes MORE credible with a
+        longer track record even under heavy multiple-testing — a long, high-Sharpe
+        record is not plausibly explained by trying 100 noisy variants. The
+        overfitting-vulnerable case (curve-fit territory) is SHORT track record +
+        many trials, reproduced here with n_observations=20.
+        """
+        result = compute_deflated_sharpe_ratio(
+            observed_sharpe=1.0, n_trials=100, n_observations=20,
+        )
+        assert result["passes"] is False
+
+    def test_weak_sharpe_passes_many_trials_with_long_track_record(self):
+        """Sharpe=1.0 with N=100 trials over a full year (252 obs) now PASSES DSR.
+
+        deepscan17 B-2/B-7 fix (2026-07-05): regression test asserting the
+        corrected (less punitive at realistic n_observations) direction the audit
+        specified. Locks in the fixed formula's output so a future regression to
+        the old (unscaled sr_expected_max / kurtosis-3) formula is caught — the old
+        formula produced dsr approx -24 / p_value approx 1.0 / passes=False here.
+        """
         result = compute_deflated_sharpe_ratio(
             observed_sharpe=1.0, n_trials=100, n_observations=252,
         )
-        # With 100 trials, SR* ≈ 3.3 — Sharpe of 1.0 is far below threshold
-        assert result["passes"] is False
+        assert result["passes"] is True
+        assert result["dsr"] > 0
 
     def test_symmetric_vs_skewed_differ(self):
         """Skewed/fat-tailed returns produce a different DSR than symmetric returns.
@@ -156,9 +182,15 @@ class TestDsrHonestContract:
         d = self._make_dsr_honest(observed_sharpe=3.0, n_trials=5)
         assert d["dsr_passed"] is True
 
-    def test_dsr_passed_false_for_weak_edge_many_trials(self):
-        """Weak Sharpe with many trials → dsr_passed=False."""
-        d = self._make_dsr_honest(observed_sharpe=1.0, n_trials=100)
+    def test_dsr_passed_false_for_weak_edge_many_trials_short_track(self):
+        """Weak Sharpe + many trials + SHORT track record → dsr_passed=False.
+
+        deepscan17 B-2/B-7 fix (2026-07-05): the default n_obs=252 in this helper
+        no longer fails here post-fix (see TestDsrHonestFormula for why a full-year
+        track record makes DSR materially more forgiving) — pass n_obs=20 to
+        reproduce the genuinely overfitting-vulnerable short-track-record case.
+        """
+        d = self._make_dsr_honest(observed_sharpe=1.0, n_trials=100, n_obs=20)
         assert d["dsr_passed"] is False
 
     def test_n_trials_stored_in_result(self):

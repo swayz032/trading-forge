@@ -1,0 +1,5057 @@
+{
+ "specs_analyzed": 117,
+ "buckets": [
+  {
+   "type": "WAIT_STRUCTURE",
+   "primitive": "structure_engine.compute_structure_state",
+   "count": 726
+  },
+  {
+   "type": "WAIT_BIAS",
+   "primitive": "bias_engine.classify_institutional_regime",
+   "count": 453
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "primitive": "spec_condition_compiler.candle_confirmation_check",
+   "count": 399
+  },
+  {
+   "type": "FILTER",
+   "primitive": "entry_quality.confluence_factor_presence",
+   "count": 381
+  },
+  {
+   "type": "WAIT_RETEST",
+   "primitive": "spec_condition_compiler.retest_touch_check",
+   "count": 198
+  },
+  {
+   "type": "CONFIRM_DIRECTION",
+   "primitive": "bias_engine.classify_institutional_regime",
+   "count": 24
+  },
+  {
+   "type": "VERIFY_STRUCTURE",
+   "primitive": "structure_engine.compute_structure_state",
+   "count": 15
+  }
+ ],
+ "tokens": [
+  {
+   "token": "fvg",
+   "breadth": 18,
+   "count": 24,
+   "types": {
+    "WAIT_STRUCTURE": 9,
+    "FILTER": 6,
+    "WAIT_RETEST": 6,
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "breakout",
+   "breadth": 18,
+   "count": 21,
+   "types": {
+    "WAIT_CONFIRMATION": 15,
+    "VERIFY_STRUCTURE": 3,
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "retest",
+   "breadth": 18,
+   "count": 21,
+   "types": {
+    "WAIT_RETEST": 15,
+    "WAIT_CONFIRMATION": 6
+   }
+  },
+  {
+   "token": "price",
+   "breadth": 18,
+   "count": 18,
+   "types": {
+    "WAIT_RETEST": 12,
+    "WAIT_CONFIRMATION": 3,
+    "CONFIRM_DIRECTION": 3
+   }
+  },
+  {
+   "token": "sweep",
+   "breadth": 15,
+   "count": 18,
+   "types": {
+    "WAIT_STRUCTURE": 12,
+    "FILTER": 3,
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "vwap",
+   "breadth": 12,
+   "count": 21,
+   "types": {
+    "WAIT_STRUCTURE": 9,
+    "FILTER": 6,
+    "WAIT_RETEST": 3,
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "bullish bias",
+   "breadth": 12,
+   "count": 15,
+   "types": {
+    "WAIT_BIAS": 12,
+    "CONFIRM_DIRECTION": 3
+   }
+  },
+  {
+   "token": "break",
+   "breadth": 12,
+   "count": 12,
+   "types": {
+    "WAIT_CONFIRMATION": 12
+   }
+  },
+  {
+   "token": "market direction",
+   "breadth": 12,
+   "count": 12,
+   "types": {
+    "WAIT_BIAS": 12
+   }
+  },
+  {
+   "token": "price location",
+   "breadth": 12,
+   "count": 12,
+   "types": {
+    "FILTER": 9,
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "break retest",
+   "breadth": 9,
+   "count": 12,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "WAIT_RETEST": 9
+   }
+  },
+  {
+   "token": "level",
+   "breadth": 9,
+   "count": 9,
+   "types": {
+    "WAIT_RETEST": 3,
+    "FILTER": 6
+   }
+  },
+  {
+   "token": "trend",
+   "breadth": 9,
+   "count": 9,
+   "types": {
+    "WAIT_BIAS": 6,
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "bearish bias",
+   "breadth": 9,
+   "count": 9,
+   "types": {
+    "WAIT_BIAS": 9
+   }
+  },
+  {
+   "token": "trend direction",
+   "breadth": 9,
+   "count": 9,
+   "types": {
+    "FILTER": 3,
+    "WAIT_BIAS": 6
+   }
+  },
+  {
+   "token": "price direction",
+   "breadth": 9,
+   "count": 9,
+   "types": {
+    "WAIT_BIAS": 9
+   }
+  },
+  {
+   "token": "mss",
+   "breadth": 6,
+   "count": 12,
+   "types": {
+    "WAIT_STRUCTURE": 6,
+    "WAIT_CONFIRMATION": 6
+   }
+  },
+  {
+   "token": "price break",
+   "breadth": 6,
+   "count": 12,
+   "types": {
+    "WAIT_CONFIRMATION": 6,
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "range",
+   "breadth": 6,
+   "count": 9,
+   "types": {
+    "WAIT_STRUCTURE": 6,
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "trend line break",
+   "breadth": 6,
+   "count": 9,
+   "types": {
+    "FILTER": 6,
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "trend line",
+   "breadth": 6,
+   "count": 9,
+   "types": {
+    "WAIT_STRUCTURE": 6,
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "liquidity zones",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "trading range",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "resistance level",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "downtrend",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_BIAS": 3,
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market bias",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_BIAS": 6
+   }
+  },
+  {
+   "token": "rejection",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_CONFIRMATION": 3,
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "directional bias",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_BIAS": 6
+   }
+  },
+  {
+   "token": "daily bias",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_BIAS": 6
+   }
+  },
+  {
+   "token": "price action",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_RETEST": 3,
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "reversal",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_CONFIRMATION": 6
+   }
+  },
+  {
+   "token": "moving averages",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "price retest",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_RETEST": 6
+   }
+  },
+  {
+   "token": "price movement",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "price action structure",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "overall trend",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_BIAS": 6
+   }
+  },
+  {
+   "token": "price reversal",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_CONFIRMATION": 3,
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "order block",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "volume profile",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "safety line",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "FILTER": 6
+   }
+  },
+  {
+   "token": "price movement direction",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_BIAS": 3,
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "breakout retest",
+   "breadth": 6,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "price break action line",
+   "breadth": 3,
+   "count": 9,
+   "types": {
+    "WAIT_RETEST": 3,
+    "WAIT_STRUCTURE": 3,
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "lower highs formation",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_BIAS": 3,
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "vwop retest",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_CONFIRMATION": 3,
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "ema",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "CONFIRM_DIRECTION": 3,
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "fvg fvg",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "ema20",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "FILTER": 3,
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "close above third standard",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "FILTER": 3,
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "supply zones",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "stop placement",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "high time frame draws",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "high time frame key",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 6
+   }
+  },
+  {
+   "token": "bos",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "breakout event",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_STRUCTURE": 3,
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market structure",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_BIAS": 3,
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "mss change state delivery",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_CONFIRMATION": 3,
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "smt divergence",
+   "breadth": 3,
+   "count": 6,
+   "types": {
+    "WAIT_CONFIRMATION": 3,
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price holds pre market",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price tried break below",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price break below retest",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "level above low first",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "retest into area",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "30 minute high pre",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "upside movement",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "15minute orb opening range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "trend context",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "vwap location",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "higher time frame trend",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "checklist usage",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "sitting out",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "breakout direction",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "breakout downside",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "regular trading hours gap",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "wicks upside five minute",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "fake out bias",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "look use range breakouts",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "get retest area interest",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "range setting",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle close relative range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "big buyers pushing market",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "candle close demand zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "demand zone hold",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price relative ema200",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "impulsive move",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "range supply level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "trend line break close",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "larger point view trend",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "ideal entries",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "plan",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bullish uptrend",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "CONFIRM_DIRECTION": 3
+   }
+  },
+  {
+   "token": "rejection down",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "uptrend break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "therefore am bearish biased",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "short bias",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "prior support level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "prior support",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "short trades",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "but got severely rejected",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "rejection 60 psych level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "ema50 cross ema20",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "no want level hit",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "reversal signal",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "trend break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "break downtrend structure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "downtrend break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "CONFIRM_DIRECTION": 3
+   }
+  },
+  {
+   "token": "smas gauge reaction near",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "volume coming",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "ema period",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "vwap retest vs pre",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "apple pre market high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "ema retest",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "apple retest pre market",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "ema level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "vwop retest number one",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "ema trend confirmation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "pre market high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "higher time frame chart",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "weekly chart structure hh",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "market bias bearish bullish",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "mss identification",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "market structure weekly daily",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "fvgs",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "discount old low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "markets trading into fvgs",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "market structure higher lows",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "market structure deterioration",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bearish fvgs",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "long bias",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "mss taking out old",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "low breakout",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "strong rejection",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "market structure going upside",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "bearish fvg",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "level above fair bearish",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "rejection continuation higher",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bullish fvg retesting rejecting",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "liquidity rate",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "liquidity pool level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "sweep old high bearish",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "closure below old high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "old low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "next candle close above",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bullish rejection",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "swing high range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle body size",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market structure break fvg",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "displacement",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "swing point",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "displacement through fvg",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "liquidity sweeps",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bias",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "selling opportunities",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "selling opportunities favored",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "bos occurrence",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "retracement after bos",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "price continues its intended",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price reaction fvg",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "liquidity sweep vs bos",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "wick formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "buying opportunity 15m timeframe",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "fvg fill",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "moving average",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "move down retrace into",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "flat 20s",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "retracement consolidation into 20",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "price distance 20 period",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price respecting 20 ma",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "ema 20 ema 200",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "uptrend",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "even if we look",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "two minute 20 ma",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "CONFIRM_DIRECTION": 3
+   }
+  },
+  {
+   "token": "20 ma two drop",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "20 ma rising under",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "initial move up",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "consolidation into 20 breakout",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "another leg higher",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "momentum waning buyers losing",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "binger band standard deviation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "ballinger bands second set",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "ballinger bands bases",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "currency pair close",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "trading time",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "binger band inside line",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "consolidation range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "distribution real move",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "candle 2 wick size",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "distribution expansion candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "protected swing formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "daily bias alignment",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "distribution higher",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "protected swing",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "protected swing new higher",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price expansion higher",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "reversal off previous candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "opposing run",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "close over down close",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "closure through downclosed candles",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "fractal alignment",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "swing high low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bearish structure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "continuation higher",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "open low high close",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "three fast steps",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "momentum strength",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "cci",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "ema crossover trade",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "cci indicator",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "cci line visibility",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "ema10 length",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "previous support zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "breakout confirmation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "consolidation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price tap back into",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "high point creation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "break above high low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "direction trade sells buys",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "break above recent high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "reason looking recent high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "swing high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "swing high break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price break above swing",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "last candle before impulse",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "future selling",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "trend direction shift",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "demand zone market low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "retracement opportunity",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "lowest possible zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market reaches level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "lower time frame structure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "market return into area",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "1hour zone context",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "fvg into",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price relative vwap",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "vwap volume profile combination",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "vwap slope",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "session vwap reset time",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "vwap anchor point",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "vwap behavior context",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "vwap behavior",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "vwap usage adaptation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "directional bias higher time",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "vwap slope change volume",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "vwap reference point",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "vwap hierarchy",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "multiple time frames aligned",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "market structure component",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "top down analysis",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "(empty)",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "previous range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "going short",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "continuing freefall",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "range breakout",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price action pattern break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "range catalyst breakout",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price sweep low trade",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "symptoms sweep",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "previous day high previous",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price sweep through lows",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "liquidity generation low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price level low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "low respect",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "break lows",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "prominent wick",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "pool liquidity",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "wick left",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "initial reversal participation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bullish candles",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price close below ema",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "closures below 21 ema",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "take out high brought",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "trading style",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "first move inside poi",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "liquidity pool",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "hourly zone formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price retrace",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "bullish candle structure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "swing count",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "tightening going up other",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "break range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "going back down lower",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price action structure confirmation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "timeframe constraint",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "sweeps sweeps consolidation before",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "most recent swing price",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price action state",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "bullish trend",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price hits 4hour order",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "low time frame reversal",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "wait number three which",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "liquidity high time frame",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price relative 1 hour",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "reversal triggers",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "fvg get filled",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "we get bos downside",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "VERIFY_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bos confirmation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bullish closure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "london s action asian",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "asian session lows london",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "sweep out london lows",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bos inverse value gap",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "s p 500 lows",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "5 sma crossing below",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "5 sma",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "low price level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "cross",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "cross down retrace",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "daily fvg 4h hour",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "key level tap",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "6 m candle 9",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "range high low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "crt selection criteria",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "sweep type",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "timed purge crt forms",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "candle low closing back",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "15minute crt range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price close above order",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price break above 4hour",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bullish bias day",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price break below candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bearishness rest day session",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "key hidden level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "but by using hidden",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price touch hidden level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "bullish candle formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "overextended zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "strong impulse market",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "danger zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "candle box definition",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "long initiative",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "simple move",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "bear scenario",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "bearish start",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "bullishness",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "liquidity",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "liquidity sweep",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price sweep",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "optimal level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price close below zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "premature level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "opposite side break rebalance",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price return rejection",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "if it s kind",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "first impulse which was",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "liquidity initiation sweep",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "hidden level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "previous candle close",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "retracement",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "impulse range sweep",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "strong reversal trigger",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "return above",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "price break rebalance",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "impulsing back up",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "entire range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle range range break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "structure confirmation within range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "fibonacci retracement level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "downward tendency line",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "vwap resistance",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price rejection it",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price near vwap",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "vwap trading level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "range continuation bias",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price holding reentering vwap",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "area",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "contextual opportunity quality",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "setups taking place",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "moving out value",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "continuation trend day",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "pierce band",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "stop placement rule",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "value area break back",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price break into value",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price acceptance rejection towards",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "market condition",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "vwap test",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "low candle body s",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "market move nature",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "making low bottom wick",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "po3 1m timeframe",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bullish po3 structure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bullish fvg",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "gap up",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "liquidity point",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "fibonacci level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market retracement",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "price action only",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market structure bearish",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price alignment daily supply",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price interaction daily supply",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "liquidity high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "overall short position",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "supply zone over here",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market retrace towards daily",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "liquidity supply zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "liquidity low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "supply zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "confluence conditions",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "supply zone formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "major structure level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "trading application",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "structure level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "next level price going",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "level has been tested",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "most recent swing high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "uptrend continuation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "break level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "retest start",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "level tested multiple times",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "counter trend bearish levels",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "major structure level daily",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "support level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "confirmation pattern",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "candles can go below",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "when they re counter",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "break trade down yet",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price push back up",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "price has gotten into",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "VERIFY_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "double top",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "termination zone close condition",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "swing low before impulsive",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "support test frequency",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "retest area",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "first 15 minutes candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "15 minutes candle closure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "manipulation candle characteristics",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "opening candle qualification",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "reversal candles",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "time window location",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "sharp red move downward",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "next candle break above",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "reversal pattern",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "low opening candle high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "these manipulation candles are",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "bullish reversal",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "reversal formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "directional push",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "opening 15 minute candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "volume comparison",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "manipulation likelihood",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "market readiness reversal",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "wait reversal candle signal",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "scenario three large candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "institutional money readiness",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "mss mss",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "downside delivery",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "CONFIRM_DIRECTION": 3
+   }
+  },
+  {
+   "token": "unswept low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "sweep candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "color liquidity swap",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price close below consecutive",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price level relative mss",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "low sweep",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "stop placement relative low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price movement relative opening",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "mss cisd",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "opening range breakout orb",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "opening range breakout zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "first 15minute candle range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "overlapping fvg crosses higher",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "fvg breaks out range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "high low initial candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "traps",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "bearish candle trading into",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "candle breakout",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "order block formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "so rules stay same",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "candle interaction",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "high rejection",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "fvg inversion",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle close above order",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "breaking close below forms",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "high price level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "close above box form",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "trade into high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "daily fvg",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "delivery closing through up",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "sells",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "fvg overlapping range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "start analysis",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "last touch point",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price has not poked",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "trend line trading",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "downward trend lines",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "trend lines",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price break action",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price break line",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "action line safety line",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "analysis direction",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "break safety line",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "displacement break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "breakout high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "direction bullish",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "CONFIRM_DIRECTION": 3
+   }
+  },
+  {
+   "token": "fvg prints 5 minute",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "fvg be valid one",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market dip into zone",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "execution timing",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "candle close below both",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "candles retest one both",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "zone sitting right here",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "go back up",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price retest average",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "wicks retest zones",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "consolidation period",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "avoiding two mistakes",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "range boundaries",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "fvg sequence",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "gap being printed outside",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "fvg formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "930 candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price break high low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "third candle reversal",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bearish crt long crt",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "it s just ripping",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price movement bias",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "trade execution",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "market activity",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price break reversal",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "move opposite end candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price action relative trend",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price reaching approaching trendline",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "reversal signals",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "line work action",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "reversal details",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "trendline bounce scenario",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "trend line bounce",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price action visibility",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "connection points verification",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "VERIFY_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle close break retest",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "trade scope",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price level touch",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "contact points",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "VERIFY_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "contact points count",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "trend line modification",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "trend line breakout",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "break trendline two touch",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "direction movement downward",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "touch points",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "distance calculation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price crossing level potential",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "confirmation rule",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "break retest range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "second level confirmation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "trend line tool usage",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "data breakout potential",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "trendline break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "session high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "trapped longs selling break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "session highs lows",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "volume",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price movement relative range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "chart scope candle selection",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "when price comes back",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "breakout orders",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price breaking direction",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "clean break",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle closures respect level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "looking shorts",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price failing close above",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "untested session low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "strong rejection candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "close below level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "price level interaction",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "third rejection off untested",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price breakout direction",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "breakout structure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "signs strength",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price rejection off midline",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle closures above midline",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "candle closure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "new york low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "break retest bounce off",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "market move below opening",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bullish engulfing",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bullish engulfing condition 1",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "opposing fvg downside",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "market taking out swing",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "market trade lower",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "ebp range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "flip bullish",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "bullish candle expansion higher",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "50 level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "ebp closure condition",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "fvg below market",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price level above fvg",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "candle closures region",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "weekly bias",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "breakout range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "price breakout level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "price movement relative previous",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "close within range",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "key level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "clear green positive movement",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "reversal candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "price retest level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "reversal candlestick formation",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "negative movement",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "breakout level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "bullish engulfing candle",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "trading range box",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "volume range determination",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "low volume node",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "value area high breakout",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "market condition sellers",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "low range structure",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "sellers being stronger low",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "p b shape profile",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "explosive moves",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "price trend direction",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "market movement",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "downwards move after shorts",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_CONFIRMATION": 3
+   }
+  },
+  {
+   "token": "value area high",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "bears control market under",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "market under point control",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "FILTER": 3
+   }
+  },
+  {
+   "token": "point control",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_RETEST": 3
+   }
+  },
+  {
+   "token": "first level",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  },
+  {
+   "token": "trade right side market",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_BIAS": 3
+   }
+  },
+  {
+   "token": "volume profile top swing",
+   "breadth": 3,
+   "count": 3,
+   "types": {
+    "WAIT_STRUCTURE": 3
+   }
+  }
+ ]
+}

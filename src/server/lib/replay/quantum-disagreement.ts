@@ -70,6 +70,36 @@ export interface AnalysisResult {
   folds: FoldMetrics[];
 }
 
+// ─── Disagreement Recompute (quantum-rl-bridge Gap 2 parity fix, 2026-07-06) ──
+
+/**
+ * Recompute the IAE-vs-classical disagreement metric from the two PERSISTED
+ * columns (`quantum_mc_runs.estimated_value` / `.classical_value`) exactly as
+ * `src/engine/replay/quantum_replay.py::ReplayResult.disagreement` computes it
+ * in-memory (that in-memory value is never persisted — only
+ * `tolerance_delta`/`within_tolerance` are — so this recompute is the only
+ * place TS can reconstruct it from the DB).
+ *
+ * Parity-pinned against `quantum_replay.py:374-376`:
+ *   disagreement = abs(quantum_estimate - stored_classical_ruin) / max(abs(stored_classical_ruin), 1e-6)
+ *
+ * Gap 2 finding (2026-07-06): the pre-fix TS recompute
+ * (`scripts/replay-grade-quantum.ts`, formerly inlined) used
+ * `Math.max(c, 1e-6)` — WITHOUT `Math.abs()` around `c` in the denominator.
+ * `estimated_value`/`classical_value` are `numeric` columns with no CHECK
+ * constraint (schema.ts:1029-1030); for the two real `event_type`s ("breach"
+ * | "ruin") the values are probabilities in [0,1] so `c` and `abs(c)` are
+ * numerically identical in practice TODAY — but the formulas are NOT the same
+ * function. A negative `classical_value` (e.g. future event_type, or
+ * corrupted/legacy row) makes the pre-fix TS denominator collapse toward
+ * `1e-6` instead of tracking `abs(c)` the way Python does, producing a wildly
+ * inflated disagreement value where Python would not. Fixed to match Python
+ * exactly (`Math.abs()` added) so the two engines can never diverge on sign.
+ */
+export function computeReplayDisagreement(quantumEstimate: number, storedClassical: number): number {
+  return Math.abs(quantumEstimate - storedClassical) / Math.max(Math.abs(storedClassical), 1e-6);
+}
+
 // ─── Spearman Rank Correlation ────────────────────────────────────────────────
 
 /**

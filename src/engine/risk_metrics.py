@@ -549,11 +549,16 @@ def compute_deflated_sharpe_ratio(
         )
 
     # Corrected standard deviation of Sharpe for non-normality
+    # FIX (deepscan17 B-7, 2026-07-05): Mertens (2002) / Bailey-LdP PSR formula is
+    # (kurtosis - 1)/4, not (kurtosis - 3)/4. At normal kurtosis=3 this must reduce
+    # to Lo (2002)'s Var(SR_hat) ~= (1 + SR^2/2)/n, i.e. a 0.5*SR^2 contribution —
+    # (kurtosis-1)/4 = 0.5 at kurtosis=3 matches; (kurtosis-3)/4 = 0 at kurtosis=3
+    # silently dropped that term, understating sharpe_std for every normal-ish return series.
     if sharpe_std <= 0:
         # Compute from return moments
         sr = observed_sharpe
         sharpe_std = math.sqrt(
-            (1 - skewness * sr + ((kurtosis - 3) / 4) * sr ** 2)
+            (1 - skewness * sr + ((kurtosis - 1) / 4) * sr ** 2)
             / max(1, n_observations - 1)
         )
 
@@ -561,7 +566,21 @@ def compute_deflated_sharpe_ratio(
         sharpe_std = 1e-10
 
     # DSR test statistic
-    dsr = (observed_sharpe - sr_expected_max) / sharpe_std
+    # FIX (deepscan17 B-2, 2026-07-05): sr_expected_max above is the z-scale order
+    # statistic of the expected max of N standard-normal variables (Bailey-LdP bracket
+    # term). Per Bailey & Lopez de Prado (2014) Section 4, the actual deflation
+    # threshold SR* on the SHARPE scale is sigma_SR * bracket_term, not the bracket
+    # term alone (mlfinlab's deflated_sharpe_ratio does the same scaling). We have no
+    # access to the true cross-sectional sigma_SR across the N trials (only n_trials
+    # count is passed in), so — consistent with common practical DSR implementations —
+    # we use the observed strategy's own Sharpe standard error (sharpe_std) as the
+    # proxy scale. Previously sr_expected_max (~1-2.5 in raw z-units) was subtracted
+    # directly from observed_sharpe (~1-3, Sharpe-scale) as if they were the same
+    # scale, then divided by a much smaller sharpe_std (~0.05-0.3) — amplifying a
+    # scale-mismatch error into a wildly over-punitive dsr and hard-failing good
+    # strategies at realistic n_trials.
+    sr_benchmark = sr_expected_max * sharpe_std
+    dsr = (observed_sharpe - sr_benchmark) / sharpe_std
 
     # p-value from standard normal CDF
     p_value = 1.0 - float(sp_stats.norm.cdf(dsr))

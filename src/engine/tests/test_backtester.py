@@ -106,11 +106,14 @@ class TestSlippage:
         from src.engine.indicators.core import compute_atr
         spec = CONTRACT_SPECS["MES"]
 
-        # Mixed vol: first 15 bars tight, next 15 bars wide
-        n = 30
+        # deep-scan Backtest re-cert (stale-fixture fix): the old fixture put the low-vol section
+        # (bars 0-14) entirely inside the ATR(14) warmup, so slippage[:10] was ALL-NaN → nanmean=NaN →
+        # the comparison silently failed. Widen to 50 bars (25 tight / 25 wide) and compare POST-warmup
+        # low-vol bars (14..24) against fully-ramped high-vol bars (38..49).
+        n = 50
         dates = [datetime(2023, 1, 1) + timedelta(days=i) for i in range(n)]
-        highs = [4002.0] * 15 + [4050.0] * 15  # Tight then wide
-        lows = [3998.0] * 15 + [3950.0] * 15
+        highs = [4002.0] * 25 + [4050.0] * 25  # 25 tight then 25 wide
+        lows = [3998.0] * 25 + [3950.0] * 25
         df = pl.DataFrame({
             "ts_event": dates,
             "open":   [4000.0] * n,
@@ -124,9 +127,10 @@ class TestSlippage:
         df_with_atr = df.with_columns(atr.alias("atr_14"))
         slippage = compute_slippage(df_with_atr, spec, atr_period=14)
 
-        # Last bars (high vol) should have higher slippage than first bars (low vol)
-        avg_first = np.nanmean(slippage[:10])
-        avg_last = np.nanmean(slippage[20:])
+        # Post-warmup low-vol vs fully-ramped high-vol (skip the ATR(14) NaN warmup).
+        avg_first = np.nanmean(slippage[14:25])
+        avg_last = np.nanmean(slippage[38:])
+        assert not math.isnan(avg_first) and not math.isnan(avg_last), "post-warmup windows must have valid ATR"
         assert avg_last > avg_first
 
     def test_slippage_in_dollars(self):

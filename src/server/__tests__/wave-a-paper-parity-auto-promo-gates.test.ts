@@ -21,7 +21,7 @@ vi.mock("../production/kill-switch.js", () => ({
 }));
 vi.mock("../lib/metrics-registry.js", () => ({
   strategyPromotions: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
-  pboBLocksTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  pboBlocksTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
   lifecycleShadowPromotionsTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
 }));
 vi.mock("../lib/b14-ci-gate.js", () => ({

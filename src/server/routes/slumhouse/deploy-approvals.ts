@@ -35,6 +35,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { backtests, monteCarloRuns, strategies } from "../../db/schema.js";
 import { adminSessionFromCookie } from "../../lib/slumhouse/admin-session.js";
+import { checkSlumhouseOrigin } from "../../lib/slumhouse/require-session.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 import { logger } from "../../lib/logger.js";
 import type { LifecycleService } from "../../services/lifecycle-service.js";
@@ -302,7 +303,12 @@ export async function buildDeployEvidence(strategyId: string): Promise<{
   else if (!wfeOk) blockers.push(`Kept too little edge on unseen data: WFE ${wfe.toFixed(2)} (floor ${wfeFloor}).`);
 
   // ── DSR — informational only ───────────────────────────────────────────────
-  const dsr = asNum(extras?.deflated_sharpe);
+  // deepscan17: resultExtras.deflated_sharpe is a nested dict {dsr, expected_max_sr,
+  // significant} (cross_validation.py output), NOT a scalar — asNum(dict) was always NaN,
+  // so this card ALWAYS rendered "deflated_sharpe missing" even when DSR computed fine.
+  // Unwrap .dsr; stay robust to a future flattened-scalar shape if the DSR impls are unified.
+  const dsRaw = extras?.deflated_sharpe as unknown;
+  const dsr = typeof dsRaw === "number" ? dsRaw : asNum((dsRaw as { dsr?: unknown } | null | undefined)?.dsr);
   evidence.push({
     key: "dsr",
     headline:
@@ -418,6 +424,9 @@ deployApprovalsRouter.post(
   "/slumhouse/admin/deploy-approvals/:id/approve",
   async (req: Request, res: Response): Promise<void> => {
     if (!requireAdminSession(req, res)) return;
+    // deep-scan Slumhouse F-3: CSRF Origin guard on the highest-stakes state-mutating POST (moves a
+    // strategy to/from live capital) — matches every sibling Slumhouse control-surface POST.
+    if (!checkSlumhouseOrigin(req, res)) return;
     const strategyId = String(req.params.id ?? "");
     const correlationId = randomUUID();
 
@@ -483,6 +492,9 @@ deployApprovalsRouter.post(
   "/slumhouse/admin/deploy-approvals/:id/reject",
   async (req: Request, res: Response): Promise<void> => {
     if (!requireAdminSession(req, res)) return;
+    // deep-scan Slumhouse F-3: CSRF Origin guard on the highest-stakes state-mutating POST (moves a
+    // strategy to/from live capital) — matches every sibling Slumhouse control-surface POST.
+    if (!checkSlumhouseOrigin(req, res)) return;
     const strategyId = String(req.params.id ?? "");
     const correlationId = randomUUID();
     const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";

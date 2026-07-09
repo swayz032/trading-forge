@@ -5,9 +5,13 @@
  *
  * CF1 — metrics-registry.ts pboBlocksTotal rename clean-up:
  *   lifecycle-service.ts has been migrated from the deprecated pboBLocksTotal alias
- *   to the canonical pboBlocksTotal export.  The deprecated alias is retained in
- *   metrics-registry.ts until the remaining 6 test files outside the cf1 owned-file
- *   list are updated (sub-carry-forward documented in the alias JSDoc).
+ *   to the canonical pboBlocksTotal export.  The deprecated alias was originally
+ *   retained in metrics-registry.ts pending migration of 6 test files outside the
+ *   cf1 owned-file list (sub-carry-forward CF1.1).
+ *
+ *   CF1.1 CLOSED (deepscan15 2026-07-03): those 6 test files have been migrated to
+ *   the canonical pboBlocksTotal import and the deprecated alias export has been
+ *   removed from metrics-registry.ts entirely.
  *
  * CF3 — caller-side gatewayOptions threading (M5 carry-forward):
  *   M5 (commit 3dbdd4e) closed the placeholder-substitution gap inside pine_compiler.py
@@ -63,29 +67,24 @@ describe("CF1 — lifecycle-service.ts uses pboBlocksTotal (canonical name)", ()
   });
 });
 
-describe("CF1 — metrics-registry.ts deprecated alias disposition", () => {
-  it("metrics-registry.ts still exports pboBLocksTotal alias (sub-carry-forward: 6 test files not yet migrated)", () => {
+describe("CF1.1 CLOSED (deepscan15 2026-07-03) — metrics-registry.ts deprecated alias removed", () => {
+  it("metrics-registry.ts no longer exports the deprecated pboBLocksTotal alias", () => {
     const src = readSrc("src/server/lib/metrics-registry.ts");
-    // Alias must still exist until wave29-prod-hardening-prom-counters.test.ts,
-    // wave29-pass-d1-observability.test.ts, wave-a-paper-parity-*.test.ts, and
-    // wave-b-paper-parity-pbo-regime-label.test.ts are updated.
-    expect(src).toContain("export const pboBLocksTotal = pboBlocksTotal");
+    // The sub-carry-forward is closed: all 6 test files that used to import the
+    // capital-L typo alias have been migrated to the canonical pboBlocksTotal in
+    // the same commit that removes this export.
+    expect(src).not.toContain("export const pboBLocksTotal");
   });
 
-  it("metrics-registry.ts deprecated alias JSDoc documents the sub-carry-forward", () => {
+  it("metrics-registry.ts source documents the CF1.1 closure", () => {
     const src = readSrc("src/server/lib/metrics-registry.ts");
-    // The alias comment must document WHY it still exists (the 6 test files)
-    expect(src).toContain("@deprecated");
-    // Sub-carry-forward text must be present
-    expect(src).toContain("Sub-carry-forward");
+    expect(src).toContain("CF1.1 CLOSED");
   });
 
-  it("pboBlocksTotal (canonical) is declared before pboBLocksTotal (alias) in source order", () => {
+  it("pboBlocksTotal (canonical) is still the sole exported counter for this metric", () => {
     const src = readSrc("src/server/lib/metrics-registry.ts");
     const primaryIdx = src.indexOf("export const pboBlocksTotal = new Counter");
-    const aliasIdx = src.indexOf("export const pboBLocksTotal = pboBlocksTotal");
     expect(primaryIdx).toBeGreaterThan(-1);
-    expect(aliasIdx).toBeGreaterThan(primaryIdx);
   });
 });
 

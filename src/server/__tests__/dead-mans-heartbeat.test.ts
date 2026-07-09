@@ -27,6 +27,12 @@ vi.mock("../services/alert-service.js", () => ({
 }));
 vi.mock("../services/notification-service.js", () => ({
   notifyCritical: vi.fn().mockResolvedValue(undefined),
+  // Pre-existing gap (unrelated to deep-scan #16): the FINDING #6 no-heartbeat-
+  // rows-during-RTH branch calls notifyWarning(), which this mock never
+  // exported — "no-op when no heartbeat rows exist" threw "No notifyWarning
+  // export is defined on the mock". Fixed in passing while touching this file
+  // for the escalation-ladder recency fix (Band G) tests below.
+  notifyWarning: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("../lib/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
@@ -267,6 +273,61 @@ describe("dead-mans-heartbeat-service", () => {
       expect(selfRestartCalls.length).toBeGreaterThanOrEqual(1);
     });
 
+    // deep-scan #16 A-1: /api/admin/self-restart sits behind the general `/api`
+    // Bearer auth gate (index.ts authMiddleware) — only carter/tradingview/
+    // broker-fill-callback are mounted ahead of it. This self-heal fetch used
+    // to send ONLY X-Restart-Signature and got 401'd before verifyRestartHmac
+    // ever ran. Verify the caller now attaches Authorization: Bearer <API_KEY>
+    // when configured, and — critically — omits it (rather than sending a
+    // broken "Bearer undefined") when API_KEY is unset, so local/dev callers
+    // still fall through to the existing cookie/bypass/503 paths unchanged.
+    it("attaches Authorization: Bearer <API_KEY> header when API_KEY is configured", async () => {
+      process.env["API_KEY"] = "test-api-key-abc123";
+      setEtHour(13);
+      const staleTs = uniqueStaleTs();
+      (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValue([{ ts: staleTs }]);
+      const insertValues = vi.fn().mockResolvedValue([]);
+      (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert.mockReturnValue({ values: insertValues });
+      (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+      });
+      fetchMock.mockResolvedValue({ ok: true, status: 200 });
+      try {
+        const { runHeartbeatStaleCheck } = await import("../services/dead-mans-heartbeat-service.js");
+        await runHeartbeatStaleCheck();
+        const selfRestartCall = fetchMock.mock.calls.find(
+          (c: unknown[]) => typeof (c[0] as string) === "string" && (c[0] as string).includes("/api/admin/self-restart"),
+        );
+        expect(selfRestartCall).toBeDefined();
+        const opts = selfRestartCall?.[1] as { headers?: Record<string, string> };
+        expect(opts.headers?.["Authorization"]).toBe("Bearer test-api-key-abc123");
+        expect(opts.headers?.["X-Restart-Signature"]).toEqual(expect.any(String));
+      } finally {
+        delete process.env["API_KEY"];
+      }
+    });
+
+    it("omits Authorization header (not 'Bearer undefined') when API_KEY is unset", async () => {
+      delete process.env["API_KEY"];
+      setEtHour(13);
+      const staleTs = uniqueStaleTs();
+      (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValue([{ ts: staleTs }]);
+      const insertValues = vi.fn().mockResolvedValue([]);
+      (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert.mockReturnValue({ values: insertValues });
+      (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+      });
+      fetchMock.mockResolvedValue({ ok: true, status: 200 });
+      const { runHeartbeatStaleCheck } = await import("../services/dead-mans-heartbeat-service.js");
+      await runHeartbeatStaleCheck();
+      const selfRestartCall = fetchMock.mock.calls.find(
+        (c: unknown[]) => typeof (c[0] as string) === "string" && (c[0] as string).includes("/api/admin/self-restart"),
+      );
+      expect(selfRestartCall).toBeDefined();
+      const opts = selfRestartCall?.[1] as { headers?: Record<string, string> };
+      expect(opts.headers?.["Authorization"]).toBeUndefined();
+    });
+
     it("writes auto_restart_attempted audit row before the fetch", async () => {
       setEtHour(13);
       const staleTs = uniqueStaleTs();
@@ -337,6 +398,58 @@ describe("dead-mans-heartbeat-service", () => {
         (c: unknown[]) => typeof (c[0] as string) === "string" && (c[0] as string).includes("/api/admin/self-restart"),
       );
       expect(selfRestartCalls.length).toBe(0);
+    });
+
+    // deep-scan #16 Band G: before the fix, the in-memory fast-path dedup in
+    // runHeartbeatStaleCheck() keyed EXCLUSIVELY on `lastAt.getTime() ===
+    // _lastAlertedForTs.getTime()` — once set, it matched forever because
+    // `lastAt` (the stuck last-successful-heartbeat) never advances while the
+    // backend stays hung. A "false-200" self-restart (HTTP 200 returned but the
+    // process never actually recovers, e.g. it restarted into the same hang)
+    // collapsed the ENTIRE escalation ladder (2nd/3rd attempt, 24h-cap alert,
+    // Kasa power-cycle) down to a single alert, ever, for the rest of the
+    // 14-day vacation window. This test proves the ladder now re-opens after
+    // ESCALATION_REALERT_INTERVAL_MS (~25 min) even though lastAt is identical.
+    it("escalation ladder re-opens after ~25 min even though lastAt is still stuck (false-200 recovery)", async () => {
+      vi.useFakeTimers();
+      try {
+        setEtHour(13);
+        const staleTs = uniqueStaleTs();
+        (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValue([{ ts: staleTs }]);
+        (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert.mockReturnValue({
+          values: vi.fn().mockResolvedValue([]),
+        });
+        (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = vi.fn().mockReturnValue({
+          from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+        });
+        // false-200: the self-restart endpoint reports success but the backend
+        // never actually recovers (lastAt never advances on the next tick).
+        fetchMock.mockResolvedValue({ ok: true, status: 200 });
+
+        const { runHeartbeatStaleCheck } = await import("../services/dead-mans-heartbeat-service.js");
+
+        await runHeartbeatStaleCheck();
+        const firstSelfRestartCount = fetchMock.mock.calls.filter(
+          (c: unknown[]) => typeof c[0] === "string" && (c[0] as string).includes("/api/admin/self-restart"),
+        ).length;
+        expect(firstSelfRestartCount).toBeGreaterThanOrEqual(1);
+
+        // Advance past the ~25-min recency window. `lastAt` (staleTs) never
+        // changes — this is exactly the stuck-incident scenario.
+        vi.advanceTimersByTime(26 * 60 * 1000);
+
+        await runHeartbeatStaleCheck();
+        const secondSelfRestartCount = fetchMock.mock.calls.filter(
+          (c: unknown[]) => typeof c[0] === "string" && (c[0] as string).includes("/api/admin/self-restart"),
+        ).length;
+
+        // Before the fix: second tick sees the SAME lastAt it already alerted
+        // for and silently skips forever (ladder collapsed to 1 alert, ever).
+        // After the fix: recency-bounded dedup re-opens the gate on this tick.
+        expect(secondSelfRestartCount).toBeGreaterThan(firstSelfRestartCount);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("fires escalation alert when self-restart fetch rejects (port unreachable)", async () => {

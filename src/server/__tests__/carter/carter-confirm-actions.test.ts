@@ -168,6 +168,45 @@ describe("Carter YELLOW confirm handlers — token gating", () => {
     expectAuditExecuted();
   });
 
+  // deep-scan #16 A-1: /api/admin/self-restart sits behind the general `/api`
+  // Bearer auth gate — this internal call used to send ONLY the route's own
+  // X-Restart-Signature HMAC and got 401'd by the gate before it ever reached
+  // verifyRestartHmac. Verify the fix attaches Authorization: Bearer <API_KEY>
+  // when configured (production), and omits it when unset so dev/test callers
+  // keep falling through to the existing cookie/bypass/503 paths unchanged.
+  it("confirm_self_restart attaches Authorization: Bearer <API_KEY> when configured", async () => {
+    process.env.API_KEY = "test-api-key-xyz789";
+    try {
+      const params = { reason: "deploy" };
+      const token = await proposeToken("self_restart", params);
+      await CARTER_CONFIRM_HANDLERS.confirm_self_restart(params, token);
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/api/admin/self-restart"),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            "X-Restart-Signature": expect.any(String),
+            "Authorization": "Bearer test-api-key-xyz789",
+          }),
+        }),
+      );
+    } finally {
+      delete process.env.API_KEY;
+    }
+  });
+
+  it("confirm_self_restart omits Authorization header when API_KEY is unset", async () => {
+    delete process.env.API_KEY;
+    const params = { reason: "deploy" };
+    const token = await proposeToken("self_restart", params);
+    await CARTER_CONFIRM_HANDLERS.confirm_self_restart(params, token);
+    const call = fetchMock.mock.calls.find(
+      (c: unknown[]) => typeof c[0] === "string" && (c[0] as string).includes("/api/admin/self-restart"),
+    );
+    expect(call).toBeDefined();
+    const opts = call?.[1] as { headers?: Record<string, string> };
+    expect(opts.headers?.["Authorization"]).toBeUndefined();
+  });
+
   it("confirm_trigger_n8n_workflow rejects without a token, fires webhook with one", async () => {
     const params = { workflowWebhookPath: "my-flow" };
     const rejected = await CARTER_CONFIRM_HANDLERS.confirm_trigger_n8n_workflow(params) as { error?: string };

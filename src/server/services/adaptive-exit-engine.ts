@@ -239,9 +239,24 @@ export interface ExitPlanInput {
   /** Optional: Pass 4 decay result; used to tighten exits on aged confluence. */
   weightedScore?: WeightedScoreResult;
   correlationId?: string;
+  /**
+   * Testing seam ONLY (deepscan17 2026-07-05). Production callers omit this —
+   * defaults to the real DB-backed getNearestLiquidity inside buildLiquidityTargets.
+   * Lets the parity harness exercise the real composite-rank-score liquidity
+   * selection algorithm against deterministic fixtures instead of a live DB.
+   */
+  liquidityFetcher?: LiquidityFetcher;
 }
 
 // ─── W25.12 — Liquidity-Mapped TP Engine ────────────────────────────────────
+
+// deepscan17 (2026-07-05): testing seam. Production always uses the real
+// DB-backed getNearestLiquidity (default param below); the TS<->Python parity
+// harness (scripts/wave26-ts-python-exit-parity.ts) injects a fake-DAL-backed
+// call to the SAME getNearestLiquidity so the real composite-rank-score
+// algorithm runs against deterministic fixtures instead of live liquidity_levels
+// rows. No behavior change for any existing caller.
+export type LiquidityFetcher = typeof getNearestLiquidity;
 
 /**
  * Pick TP1 from the nearest INTRADAY liquidity level with implied R >= minR.
@@ -254,6 +269,7 @@ async function buildLiquidityTargets(
   symbol: string,
   entry: ExitPlanInput["entry"],
   atr: number,
+  fetchLiquidity: LiquidityFetcher = getNearestLiquidity,
 ): Promise<{ tp1: ExitTarget; tp2: ExitTarget }> {
   const stopDistance = Math.abs(entry.price - entry.stop);
   const direction: "above" | "below" = entry.direction === "long" ? "above" : "below";
@@ -263,7 +279,7 @@ async function buildLiquidityTargets(
 
   let candidates: RankedLevel[] = [];
   try {
-    candidates = await getNearestLiquidity(symbol, entry.price, direction, maxDistance);
+    candidates = await fetchLiquidity(symbol, entry.price, direction, maxDistance);
   } catch (err) {
     logger.warn({ err, symbol }, "adaptive-exit-engine: getNearestLiquidity failed — using R-multiple fallback");
   }
@@ -511,7 +527,7 @@ export async function computeExitPlan(opts: ExitPlanInput): Promise<ExitPlan> {
   const regime = marketState.regime ?? "UNKNOWN";
 
   // ─ W25.12: Liquidity-mapped TP targets ─
-  const { tp1, tp2 } = await buildLiquidityTargets(symbol, entry, marketState.atr);
+  const { tp1, tp2 } = await buildLiquidityTargets(symbol, entry, marketState.atr, opts.liquidityFetcher);
 
   // ─ W25.13: Regime scaling schedule ─
   const scaling = buildScalingSchedule(regime, config);

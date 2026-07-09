@@ -258,11 +258,26 @@ def _find_mitigation_blocks(
             if prev_sl_price is None:
                 continue
 
-            # Check: after OB, did price FAIL to make new LL?
-            # Scan forward from OB to find if price went below prior swing low
-            made_new_ll = False
+            # Find bullish BOS after the OB (confirms structure shift). BOS must be
+            # located BEFORE the "made new LL" validity check below, because the
+            # earliest entry into this zone is bos_bar + 1 — the "did price fail to
+            # make a new LL" condition must be decidable using only bars strictly
+            # before that entry bar, never bars from the zone's own future.
             scan_end = min(ob_idx + 60, n)  # reasonable lookahead
+            bos_bar = None
             for i in range(ob_idx + 1, scan_end):
+                if bos_list[i] == "bullish":
+                    bos_bar = i
+                    break
+
+            if bos_bar is None:
+                continue
+
+            # Check: after OB and up to (and including) the BOS bar, did price FAIL
+            # to make a new LL? Bounded at bos_bar + 1 (exclusive) — the earliest bar
+            # this zone can be entered on — so validity never reads the zone's future.
+            made_new_ll = False
+            for i in range(ob_idx + 1, bos_bar + 1):
                 if lows_arr[i] < prev_sl_price:
                     made_new_ll = True
                     break
@@ -270,15 +285,7 @@ def _find_mitigation_blocks(
             if made_new_ll:
                 continue  # This would be a breaker setup, not mitigation
 
-            # Find bullish BOS after the OB (confirms structure shift)
-            bos_bar = None
-            for i in range(ob_idx + 1, scan_end):
-                if bos_list[i] == "bullish":
-                    bos_bar = i
-                    break
-
-            if bos_bar is not None:
-                mb_zones.append((ob_top, ob_bottom, "long", bos_bar))
+            mb_zones.append((ob_top, ob_bottom, "long", bos_bar))
 
     # ── Bearish Mitigation Blocks (from failed bullish OBs) ──
     # A bullish OB forms near a swing low in an uptrend.
@@ -303,10 +310,24 @@ def _find_mitigation_blocks(
             if prev_sh_price is None:
                 continue
 
-            # Check: after OB, did price FAIL to make new HH?
-            made_new_hh = False
+            # Find bearish BOS after the OB (confirms structure shift). Same ordering
+            # fix as the bullish branch above: locate bos_bar FIRST, then bound the
+            # "made new HH" validity scan to bos_bar + 1 (exclusive) — never read past
+            # the earliest entry bar (bos_bar + 1) when deciding zone validity.
             scan_end = min(ob_idx + 60, n)
+            bos_bar = None
             for i in range(ob_idx + 1, scan_end):
+                if bos_list[i] == "bearish":
+                    bos_bar = i
+                    break
+
+            if bos_bar is None:
+                continue
+
+            # Check: after OB and up to (and including) the BOS bar, did price FAIL
+            # to make a new HH?
+            made_new_hh = False
+            for i in range(ob_idx + 1, bos_bar + 1):
                 if highs_arr[i] > prev_sh_price:
                     made_new_hh = True
                     break
@@ -314,15 +335,7 @@ def _find_mitigation_blocks(
             if made_new_hh:
                 continue  # Would be a breaker, not mitigation
 
-            # Find bearish BOS after the OB (confirms structure shift)
-            bos_bar = None
-            for i in range(ob_idx + 1, scan_end):
-                if bos_list[i] == "bearish":
-                    bos_bar = i
-                    break
-
-            if bos_bar is not None:
-                mb_zones.append((ob_top, ob_bottom, "short", bos_bar))
+            mb_zones.append((ob_top, ob_bottom, "short", bos_bar))
 
     return mb_zones
 

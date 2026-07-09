@@ -44,6 +44,9 @@ import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluatePboGate } from "../lib/pbo-gate.js";
 import { evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
 import { evaluateBifGate } from "../lib/bif-gate.js";
+import { evaluateSlippageSurvivalGate } from "../lib/slippage-survival-gate.js";
+// deep-scan #15 FIX M1: shared evidence-completeness roll-up accounting.
+import { isIncompleteEvidenceStatus, slippageEvidenceBucket } from "../lib/evidence-completeness.js";
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 // Deep-scan #5 F-2 (2026-06-29): import the PURE frozen-policy fns from the DB-free module
 // (frozen-policy-hash.js) NOT frozen-policy-contract.js — the latter imports ../db/index.js,
@@ -53,6 +56,7 @@ import {
   backtests,
   strategies,
   lifecycleShadowSignals,
+  quantumRlRuns,
 } from "../db/schema.js";
 import {
   compareShadowToBacktest,
@@ -2095,5 +2099,404 @@ describe("WFE gate — cpcv_per_path_is status floor enforcement + basis surfaci
     // CRITICAL: wfeBasis is absent — the producer's CPCV context is INVISIBLE to the consumer.
     // This documents the producer→consumer key-name sensitivity for wfe_status.
     expect(result.wfeBasis).toBeUndefined();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 13 — Slippage-Survival gate — backtests.slippage_survival JSONB round-trip (Wave A, PGlite)
+//
+// Design spec: docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+// Producer (parallel Python track): src/engine/statistics/slippage_survival.py
+// Consumer: src/server/lib/slippage-survival-gate.ts, wired at PAPER → DEPLOY_READY
+// in lifecycle-service.ts (manual PATCH path + autonomous cron path).
+//
+// This suite boots the REAL pglite schema (CORE_DDL, not mocked), inserts
+// producer-shape rows into the real `backtests.slippage_survival` column via
+// Drizzle, and runs the REAL gate reader against the round-tripped JSONB —
+// proving the producer key and the consumer key are the same key.
+// ════════════════════════════════════════════════════════════════════════════════
+
+describe("Slippage-Survival gate — backtests.slippage_survival JSONB round-trip (Suite 13 — PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID    = "e2000001-0000-0000-0000-000000000001";
+  const BT_FRAGILE  = "e2000001-0000-0000-0000-000000000010"; // breaks_at=2.0 → BLOCK (<= 2.0 default threshold)
+  const BT_SURVIVOR = "e2000001-0000-0000-0000-000000000011"; // breaks_at=null → PASS (survives every multiple)
+  const BT_WRONGKEY = "e2000001-0000-0000-0000-000000000012"; // wrong key (break_at) → must NOT silently pass as "clean"
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "slippage-survival-integration-test",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_FRAGILE,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER shape: edge dies at 2x slippage (fragile — living on optimistic fills).
+        slippageSurvival: {
+          schema_version: 1,
+          multiples: [1.0, 2.0, 3.0],
+          pf: { "1x": 1.4, "2x": 0.9, "3x": 0.5 },
+          expectancy_r: { "1x": 0.3, "2x": -0.1, "3x": -0.4 },
+          breaks_at: 2.0,
+          retention_2x: -0.33,
+          n_trades: 100,
+          insufficient_sample: false,
+          computed_at: "2026-07-03T00:00:00Z",
+        },
+      },
+      {
+        id: BT_SURVIVOR,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER shape: edge survives every swept multiple — explicit breaks_at: null.
+        slippageSurvival: {
+          schema_version: 1,
+          multiples: [1.0, 2.0, 3.0],
+          pf: { "1x": 1.9, "2x": 1.6, "3x": 1.3 },
+          expectancy_r: { "1x": 0.5, "2x": 0.35, "3x": 0.2 },
+          breaks_at: null,
+          retention_2x: 0.7,
+          n_trades: 214,
+          insufficient_sample: false,
+          computed_at: "2026-07-03T00:00:00Z",
+        },
+      },
+      {
+        id: BT_WRONGKEY,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // DISCONNECT: producer drifts to writing `break_at` instead of `breaks_at`.
+        // The real value (2.0, which WOULD block) is present but under the wrong key.
+        // Consumer must NOT silently interpret this as a clean survivor.
+        slippageSurvival: {
+          schema_version: 1,
+          break_at: 2.0, // WRONG KEY
+          n_trades: 100,
+        } as unknown as Record<string, unknown>,
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectSlippageSurvival(btId: string) {
+    const [row] = await ctx.db
+      .select({ slippageSurvival: backtests.slippageSurvival })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    return row?.slippageSurvival as Record<string, unknown> | null;
+  }
+
+  it("JSONB round-trip preserves breaks_at, n_trades, and retention_2x", async () => {
+    const ss = await selectSlippageSurvival(BT_FRAGILE);
+    expect(ss).toBeDefined();
+    expect(ss?.breaks_at).toBe(2.0);
+    expect(ss?.n_trades).toBe(100);
+    expect(ss?.retention_2x).toBe(-0.33);
+  });
+
+  it("BLOCK: breaks_at=2.0 (at or below the default 2.0 block multiple) → gate blocks (gate enabled)", async () => {
+    const ss = await selectSlippageSurvival(BT_FRAGILE);
+    const result = evaluateSlippageSurvivalGate(ss as any, { enabled: true });
+
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("blocked");
+    expect(result.reason).toBe("slippage_survival.blocked_breaks_at_at_or_below_threshold");
+    expect(result.auditPayload.breaks_at).toBe(2.0);
+  });
+
+  it("advisory-only by default: same fragile row PASSES when the gate is disabled (SLIPPAGE_SURVIVAL_GATE_ENABLED default false)", async () => {
+    const ss = await selectSlippageSurvival(BT_FRAGILE);
+    const result = evaluateSlippageSurvivalGate(ss as any); // no opts — reads env default (unset → disabled)
+
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("disabled");
+    // The underlying fragile breaks_at is still surfaced for observability even while disabled.
+    expect(result.auditPayload.breaks_at).toBe(2.0);
+  });
+
+  it("PASS: breaks_at=null (survives every swept multiple) → gate passes cleanly (gate enabled)", async () => {
+    const ss = await selectSlippageSurvival(BT_SURVIVOR);
+    const result = evaluateSlippageSurvivalGate(ss as any, { enabled: true });
+
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("clean");
+    expect(result.reason).toBe("slippage_survival.clean");
+    expect(result.auditPayload.breaks_at).toBeNull();
+  });
+
+  it("DISCONNECT (wrong key): producer writes break_at=2.0; consumer reads breaks_at=undefined → must NOT silently pass as clean", async () => {
+    const ss = await selectSlippageSurvival(BT_WRONGKEY);
+
+    // Prove the wrong key was written and IS present in the JSONB.
+    expect((ss as any)?.break_at).toBe(2.0);
+    // Prove the correct key is genuinely absent (not just null) — this is the shape
+    // distinction the gate uses to detect malformed producer output.
+    expect(Object.prototype.hasOwnProperty.call(ss ?? {}, "breaks_at")).toBe(false);
+
+    const result = evaluateSlippageSurvivalGate(ss as any, { enabled: true });
+
+    // Fail-OPEN (never fabricate a block from malformed data) — but MUST be
+    // distinguishable from a genuine "clean" survivor. This is the core assertion:
+    // a broken producer must never look identical to a real clean pass.
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("malformed");
+    expect(result.status).not.toBe("clean");
+    expect(result.reason).toBe("slippage_survival.malformed_missing_breaks_at");
+    expect(result.auditPayload.breaks_at).toBeNull();
+  });
+
+  // ── FIX M1 (deep-scan #15): evidence-completeness ROLL-UP accounting ──────────
+  // A malformed slippage row must be counted as INCOMPLETE evidence in the
+  // >=3-incomplete promotion governor — NOT silently booked as "complete". This
+  // rounds the DB row → real gate → real bucket helper → real incomplete predicate,
+  // exactly the path the cron uses (lifecycle-service.ts) to accumulate
+  // gateEvidenceStatuses before the lifecycle.promotion_evidence_incomplete block.
+  it("FIX M1: a malformed slippage_survival row (trades, no breaks_at) is booked INCOMPLETE (not complete)", async () => {
+    const ss = await selectSlippageSurvival(BT_WRONGKEY);
+    // Sanity: the row has trades but no breaks_at key (the malformed shape).
+    expect((ss as any)?.n_trades).toBe(100);
+    expect(Object.prototype.hasOwnProperty.call(ss ?? {}, "breaks_at")).toBe(false);
+
+    // Real gate → real bucket helper (the exact push the cron makes at line ~5449).
+    const gateResult = evaluateSlippageSurvivalGate(ss as any, { enabled: true });
+    const bucket = slippageEvidenceBucket(gateResult.status);
+
+    // The malformed row books the INCOMPLETE "malformed" bucket, NOT "complete".
+    expect(gateResult.status).toBe("malformed");
+    expect(bucket).toBe("malformed");
+    expect(bucket).not.toBe("complete");
+    expect(isIncompleteEvidenceStatus(bucket)).toBe(true);
+  });
+
+  it("FIX M1: malformed slippage pushes a 2-legacy gate stack to the >=3-incomplete governor threshold", async () => {
+    const ss = await selectSlippageSurvival(BT_WRONGKEY);
+    const gateResult = evaluateSlippageSurvivalGate(ss as any, { enabled: true });
+
+    // Two earlier gates already grandfather-passed on legacy evidence; the malformed
+    // slippage gate is the third INCOMPLETE → triggers lifecycle.promotion_evidence_incomplete.
+    const gateEvidenceStatuses = [
+      "legacy_null",                              // e.g. a pre-Wave-3 BIF
+      "legacy_proceed",                           // e.g. a legacy orchestrator gate
+      slippageEvidenceBucket(gateResult.status),  // FIX M1: malformed → INCOMPLETE
+    ];
+    const incompleteCount = gateEvidenceStatuses.filter(isIncompleteEvidenceStatus).length;
+    expect(incompleteCount).toBe(3);
+    expect(incompleteCount >= 3).toBe(true);
+
+    // Regression contrast: the OLD accounting booked malformed as "complete" → only
+    // 2 incomplete → the broken-producer strategy would have DODGED the governor.
+    const oldBuggy = ["legacy_null", "legacy_proceed", "complete"];
+    expect(oldBuggy.filter(isIncompleteEvidenceStatus).length).toBe(2);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 14 — FIX M3: broker_accounts firm↔broker_type topology CHECK constraint
+// (migration 0190, mirrored in pglite CORE_DDL) round-trip through PGlite
+// ════════════════════════════════════════════════════════════════════════════════
+
+describe("FIX M3: broker_accounts firm↔broker_type topology CHECK constraint (PGlite)", () => {
+  let ctx: TestDb;
+
+  beforeAll(async () => { ctx = await createTestDb(); });
+  afterAll(async () => { await ctx.close(); });
+
+  it("ACCEPTS topstep + topstepx (valid topology)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["topstep", "topstepx"],
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it("ACCEPTS topstep_50k + topstepx (suffix normalized)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["topstep_50k", "topstepx"],
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  // deepscan15 L1: mixed-case tier suffix. Before the lower-first regex fix, the SQL
+  // CHECK stripped BEFORE lowercasing with a lowercase-only 'k', so 'Topstep_50K' did
+  // NOT normalize to 'topstep' → the DB would have WRONGLY rejected a valid topstepx row
+  // while the TS guard (lowercases first) accepted it. Now both agree.
+  it("ACCEPTS Topstep_50K + topstepx (case-insensitive normalize — L1 regression)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["Topstep_50K", "topstepx"],
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it("ACCEPTS mffu + traderspost (valid topology)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["mffu", "traderspost"],
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it("REJECTS topstep + traderspost (the M3 core violation — Topstep never TradersPost)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["topstep", "traderspost"],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("REJECTS topstep_50k + traderspost (suffix normalized violation)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["topstep_50k", "traderspost"],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("REJECTS mffu + topstepx (only Topstep may route TopstepX)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["mffu", "topstepx"],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("REJECTS an UPDATE that would flip a valid topstep row to traderspost", async () => {
+    const [row] = (await ctx.pg.query<{ account_id: string }>(
+      `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2) RETURNING account_id`,
+      ["topstep", "topstepx"],
+    )).rows;
+    await expect(
+      ctx.pg.query(
+        `UPDATE broker_accounts SET broker_type = 'traderspost' WHERE account_id = $1`,
+        [row.account_id],
+      ),
+    ).rejects.toThrow();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 15 — deepscan16 W1 T4: quantum_rl_runs producer/schema/consumer round-trip
+//
+// F-1/F-2/F-3/F-4 fixed the quantum_rl_agent.py INSERT shape, schema.ts
+// strategy_id type (INTEGER -> UUID), and rl-signal-fetcher.ts's Number(uuid)
+// bug. This suite proves the FIXED producer shape round-trips through the
+// real quantum_rl_runs DDL (mirrors migration 0158/0165 exactly — see
+// helpers/pglite-db.ts), and that both known pre-fix breakage shapes
+// (nonexistent columns; non-UUID strategy_id) are rejected by the real DDL,
+// not silently accepted.
+// ════════════════════════════════════════════════════════════════════════════════
+
+describe("quantum_rl_runs — producer/schema/consumer round-trip (PGlite, deepscan16 W1 T4)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID = "aa150001-0000-0000-0000-000000000001";
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "rl-suite-15-strategy",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+  });
+  afterAll(async () => { await ctx.close(); });
+
+  it("ACCEPTS the FIXED quantum_rl_agent.py INSERT shape and reads it back via Drizzle", async () => {
+    // Exact column set quantum_rl_agent.py's fixed INSERT now targets (F-1 fix).
+    await ctx.db.insert(quantumRlRuns).values({
+      strategyId: STRAT_ID,
+      regime: "TRENDING",
+      stateVector: { daily_atr: 4.2, institutional_regime: "TRENDING" },
+      action: "act",
+      confidenceScore: 0.62,
+      effectiveConfidence: 0.31,
+      reward: 1.25,
+      ciHighAtEvaluation: 0.18,
+      drawdownPenalty: null,
+      governanceLabels: {
+        experimental: true,
+        authoritative: false,
+        decision_role: "challenger_only",
+        training_mode: true,
+        sr_is: 0.8,
+        sr_oos: 0.6,
+        n_training_iterations: 20,
+      },
+      cpcvFoldId: null,
+      seed: 42,
+    });
+
+    const [row] = await ctx.db
+      .select()
+      .from(quantumRlRuns)
+      .where(eq(quantumRlRuns.strategyId, STRAT_ID));
+
+    expect(row).toBeDefined();
+    expect(row.regime).toBe("TRENDING");
+    expect(row.action).toBe("act");
+    expect(Number(row.reward)).toBeCloseTo(1.25, 5);
+    // F-3 regression guard: consumer-side lookup must use the UUID string
+    // directly (Number(uuid) => NaN would have returned zero rows here).
+    const gl = row.governanceLabels as Record<string, unknown>;
+    expect(gl.sr_is).toBe(0.8);
+    expect(gl.sr_oos).toBe(0.6);
+    expect(gl.n_training_iterations).toBe(20);
+    expect(gl.training_mode).toBe(true);
+  });
+
+  it("REJECTS the PRE-FIX column shape (status/method/total_return/sharpe_ratio do not exist)", async () => {
+    // Exact column list the broken INSERT used before the F-1 fix.
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO quantum_rl_runs
+           (strategy_id, status, method, total_return, sharpe_ratio, governance_labels, seed, created_at)
+         VALUES ($1, 'completed', $2, $3, $4, $5, $6, NOW())`,
+        [STRAT_ID, "pennylane_vqc_regime_trending", "10.0", "1.5", JSON.stringify({ training_mode: true }), 42],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("REJECTS a non-UUID strategy_id (the pre-F-2 INTEGER-typed shape)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO quantum_rl_runs
+           (strategy_id, regime, state_vector, action, confidence_score,
+            effective_confidence, reward, governance_labels)
+         VALUES ($1, 'TRENDING', '{}'::jsonb, 'act', 0.5, 0.5, 1.0, '{}'::jsonb)`,
+        [12345],
+      ),
+    ).rejects.toThrow();
   });
 });

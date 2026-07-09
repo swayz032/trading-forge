@@ -154,7 +154,10 @@ function verifyLiveOrderHmac(
 // ─── Archetype registry ───────────────────────────────────────────────────────
 // Hard-coded list of known archetype keys. Keep in sync with
 // ARCHETYPE_REGISTRY in direct-bucket-graduator.ts.
-// TODO: add CI lint to detect drift between this array and ARCHETYPE_REGISTRY.
+// Deep-scan #16 Wave 2 (H-3, 2026-07-04): drift against the graduator registry is
+// now enforced by CI — scripts/check-archetype-lockstep.ts (npm run
+// check:archetype-lockstep) parses this Set and fails if it diverges from
+// ARCHETYPE_REGISTRY. Add new archetypes to graduator + engine + THIS set together.
 const ARCHETYPE_REGISTRY_KEYS: ReadonlySet<string> = new Set([
   "ict_silver_bullet_ny_am",
   "ict_silver_bullet_london",

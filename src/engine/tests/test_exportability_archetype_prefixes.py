@@ -231,26 +231,69 @@ class TestFaithfulFlagBehavior:
         assert result.exportable is False
 
     def test_archetype_prefix_fast_path_takes_priority_over_confluence_gate(self):
-        """The archetype: prefix fast-path returns alert_only=True before confluence checks.
+        """The archetype: prefix fast-path returns alert_only=True/60.0 before the §6
+        confluence gate loop runs — band/score/exportable are STRUCTURAL for archetypes,
+        never touched by the confluence check that non-archetype strategies go through.
 
-        When entry_indicator starts with 'archetype:', the scorer returns immediately with
-        the structural alert-only band.  The confluence gate check (use_weighted_scoring=True)
-        is reached only for NON-archetype strategies.  Alert-only Pine cannot express
-        confluence gating anyway, but faithful=True here because the Pine is exactly what
-        it claims: a passive marker + alertcondition with no execution logic.
-
-        Non-archetype + weighted confluence still produces faithful=False (tested above).
+        Deep-Scan #21 Wave-2 (2026-07-05) CERTIFIED FINDING FIX: this test used to assert
+        faithful is True here — a false-green. An archetype carrying
+        entry_quality.use_weighted_scoring=True genuinely CANNOT have its 11-factor
+        confluence gating reproduced by the alert-only Pine recipe (Pine fires on the raw
+        indicator alone) — so faithful must be False, honestly. exportable/score/band stay
+        True/60.0/alert_only regardless: the alert-only Pine artifact is still a legitimate,
+        compilable PRODUCT (a passive marker + alertcondition) even when it doesn't capture
+        full fidelity. The archetype's promotion eligibility is unaffected by this honest
+        faithful=False — pine-export-service.ts::checkExportability() exempts direct-routed
+        archetypes from the faithfulness requirement (they execute via broker-router, never
+        through Pine — see lifecycle-archetype-promotion.test.ts).
         """
         result = score_exportability({
             "entry_indicator": "archetype:ict_ote",
             "entry_quality": {"use_weighted_scoring": True},
         })
-        # Fast-path: archetype prefix returns before confluence check fires
+        # Fast-path: archetype prefix returns before confluence check fires — band/score/
+        # exportable are the structural alert-only contract regardless of faithful.
         assert result.band == "alert_only"
         assert result.score == 60.0
         assert result.exportable is True
-        # faithful=True because alert-only Pine is exactly what it claims (passive marker)
+        # faithful=False (HONEST): Pine's alert-only recipe cannot reproduce 11-factor
+        # weighted confluence gating. The deductions list must say so.
+        assert result.faithful is False
+        assert any("confluence" in d.lower() for d in result.deductions)
+
+    def test_archetype_with_style_c_exits_faithful_false(self):
+        """Deep-Scan #21 Wave-2: archetype + Style C partials → faithful=False (honest),
+        exportable/score/band still the structural alert-only contract."""
+        result = score_exportability({
+            "entry_indicator": "archetype:silver_bullet",
+            "exit_params": {"style": "c", "partials": [0.33, 0.33, 0.34]},
+        })
+        assert result.band == "alert_only"
+        assert result.score == 60.0
+        assert result.exportable is True
+        assert result.faithful is False
+        assert any("exit semantics" in d.lower() for d in result.deductions)
+
+    def test_archetype_with_multi_tf_faithful_false(self):
+        """Deep-Scan #21 Wave-2: archetype + declared HTF alignment → faithful=False
+        (honest) — Pine renders a single chart timeframe."""
+        result = score_exportability({
+            "entry_indicator": "archetype:bounce_off_level",
+            "daily_tf": "1D",
+        })
+        assert result.band == "alert_only"
+        assert result.score == 60.0
+        assert result.exportable is True
+        assert result.faithful is False
+        assert any("multi-tf" in d.lower() for d in result.deductions)
+
+    def test_archetype_plain_no_inexpressible_features_faithful_true(self):
+        """Deep-Scan #21 Wave-2 control case: a plain archetype with none of the §6
+        inexpressible features is genuinely faithful — the alert-only Pine recipe IS
+        a complete, honest representation of a plain entry signal."""
+        result = score_exportability({"entry_indicator": "archetype:wyckoff_spring"})
         assert result.faithful is True
+        assert result.deductions == []
 
 
 # ─── ExportabilityResult shape ────────────────────────────────────────────────

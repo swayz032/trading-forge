@@ -1,0 +1,14 @@
+{
+  "n_paired_strategies": 39,
+  "point_sds_before": 2.147080418305574,
+  "point_sds_after": 2.145688174944221,
+  "point_delta": -0.0013922433613529073,
+  "n_boot_valid": 300,
+  "delta_ci_90": [
+    -0.005708937958039017,
+    0.0016297258027254795
+  ],
+  "delta_median": -0.0010420753322230025,
+  "frac_delta_positive": 0.28,
+  "ci_excludes_zero": false
+}

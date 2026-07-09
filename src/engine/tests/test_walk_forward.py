@@ -106,10 +106,19 @@ class TestOptimizer:
 # ─── Walk-Forward Integration ─────────────────────────────────────
 
 class TestWalkForward:
+    # ds21 note (out-of-scope discovery, same root cause as FIX 2 in
+    # test_pbo_wired_in_wf.py): WF_MODE default flipped "plain" → "cpcv"
+    # (2026-06-22 institutional hardening, see walk_forward.py:1136-1147).
+    # `_run_walk_forward_cpcv()` hardcodes `"windows": []` in its return dict
+    # (per-window detail isn't part of the CPCV-mode contract — see
+    # walk_forward.py:1023) so `len(result["windows"])` is always 0 under the
+    # new default. These tests were written when "plain" was the default and
+    # specifically exercise the plain-mode per-window contract, so they must
+    # now request wf_mode="plain" explicitly.
     def test_walk_forward_returns_oos_metrics(self):
         data = _make_synthetic_data(1000)
         config = _make_config()
-        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0)
+        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0, wf_mode="plain")
 
         assert "oos_metrics" in result
         assert "windows" in result
@@ -118,7 +127,7 @@ class TestWalkForward:
     def test_walk_forward_has_per_window_results(self):
         data = _make_synthetic_data(1000)
         config = _make_config()
-        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0)
+        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0, wf_mode="plain")
 
         for window in result["windows"]:
             assert "is_sharpe" in window or "oos_sharpe" in window or "oos_metrics" in window
@@ -127,7 +136,7 @@ class TestWalkForward:
         """Aggregate metrics must come from OOS data only."""
         data = _make_synthetic_data(1000)
         config = _make_config()
-        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0)
+        result = run_walk_forward(config, data=data, n_splits=3, embargo_bars=0, wf_mode="plain")
 
         # The aggregate oos_metrics should exist and be from OOS
         assert "oos_metrics" in result
@@ -185,6 +194,31 @@ class TestEmbargo:
         for (is_d, oos_d), (is_e, oos_e) in zip(windows_default, windows_explicit_20):
             assert len(is_d) == len(is_e), "IS sizes must match default vs explicit-20"
             assert len(oos_d) == len(oos_e), "OOS sizes must match default vs explicit-20"
+
+    def test_backtest_request_embargo_default_is_20(self):
+        """deep-scan Backtest re-cert HIGH: BacktestRequest.embargo_bars (the PRODUCTION dispatch path
+        through backtester.py) must default to 20, not 0. A 0 request-default silently OVERRODE
+        run_walk_forward()'s protective 20 on every production CPCV/WF run → zero purge → IS/OOS leakage.
+        """
+        from src.engine.config import BacktestRequest
+
+        assert BacktestRequest.model_fields["embargo_bars"].default == 20
+
+    def test_no_unsafe_embargo_zero_default_in_backtester_dispatch(self):
+        """deep-scan Backtest re-VERIFY HIGH: the CLI dispatch for archetype (Band B) + compiled-spec
+        (Band C) strategies calls run_walk_forward_class(embargo_bars=config.get("embargo_bars", <D>)).
+        <D> MUST NOT be 0 — a 0 raw-dict default overrode the function's safe =20 (no caller sets the
+        key), running the CANONICAL production paths with ZERO CPCV purge (the exact leakage F-1 targets,
+        reopened on 2 of 3 dispatch paths). Source-structural guard against reintroduction.
+        """
+        import pathlib
+
+        backtester = pathlib.Path(__file__).parent.parent / "backtester.py"
+        text = backtester.read_text(encoding="utf-8")
+        assert 'config.get("embargo_bars", 0)' not in text, (
+            "unsafe embargo_bars=0 default in backtester.py dispatch — disables CPCV purge on "
+            "archetype/compiled-spec walk-forwards"
+        )
 
     def test_default_embargo_produces_gap_vs_zero(self):
         """Default embargo=20 creates shorter OOS windows than explicit embargo=0."""
@@ -282,6 +316,15 @@ class TestF12ClassWFOptimizeGuard:
                     pl.lit(False).alias("exit_long"),
                     pl.lit(False).alias("exit_short"),
                 ])
+            # FIX 4 (ds21): BaseStrategy gained abstract get_params() /
+            # get_default_config() (see src/engine/strategy_base.py:61-69) —
+            # this dummy predates those and can no longer be instantiated
+            # without them. Minimal stubs only; the F-12 guard under test
+            # fires before either method would ever be called.
+            def get_params(self) -> dict:
+                return {}
+            def get_default_config(self) -> dict:
+                return {"name": self.name, "symbol": self.symbol, "timeframe": self.timeframe}
 
         strategy = _DummyStrategy()
         with pytest.raises(NotImplementedError, match="Wave 24"):
@@ -312,6 +355,15 @@ class TestF12ClassWFOptimizeGuard:
                     pl.lit(False).alias("exit_long"),
                     pl.lit(False).alias("exit_short"),
                 ])
+            # FIX 4 (ds21): BaseStrategy gained abstract get_params() /
+            # get_default_config() (see src/engine/strategy_base.py:61-69) —
+            # this dummy predates those and can no longer be instantiated
+            # without them. Minimal stubs only; the F-12 guard under test
+            # fires before either method would ever be called.
+            def get_params(self) -> dict:
+                return {}
+            def get_default_config(self) -> dict:
+                return {"name": self.name, "symbol": self.symbol, "timeframe": self.timeframe}
 
         strategy = _DummyStrategy()
         try:
@@ -324,6 +376,18 @@ class TestF12ClassWFOptimizeGuard:
         except NotImplementedError as e:
             if "Wave 24" in str(e):
                 pytest.fail(f"F-12 guard fired when optimize=False: {e}")
+        except Exception:
+            # FIX 4 (ds21): the docstring/comment above has always documented
+            # that "other errors (data load, etc.) — that's OK" for this test —
+            # it exists purely to prove the F-12 NotImplementedError guard does
+            # NOT fire at optimize=False, not to prove a full WF run succeeds.
+            # No `data=` is passed here, so run_walk_forward_class falls
+            # through to load_ohlcv() against real S3 data; in sandboxes
+            # without AWS credentials that raises a RuntimeError, which the
+            # original bare `except NotImplementedError` did not catch and
+            # therefore let escape as an unrelated test failure. Broadening
+            # the catch makes the test actually honor its documented intent.
+            pass
 
 
 # ─── FIX 4 (deep-scan #9): plain-WF embargo calibration basis ────────────────

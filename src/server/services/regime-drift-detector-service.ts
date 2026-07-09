@@ -589,11 +589,20 @@ async function _evaluateStrategyDrift(
         );
         // FINDING #3 FIX: CRITICAL alert so operator knows before the 25h zombie sweep fires.
         // True atomicity deferred — requires threading db.transaction() through LifecycleService.
+        // Deep-scan #16 Band G: this second zombie-DECLINING failure path (step2 itself
+        // failing here, vs. the 25h compensating-sweep recovery failing above) was raw
+        // technical jargon with NO appendFamilyGradePostscript — an unattended family
+        // operator would see lifecycle-transition internals instead of a plain-English
+        // "no trades are at risk" reassurance + action. Matches the sweep-path pattern above.
         notifyCritical(
           `[regime-drift] Strategy ${strategyName} stuck in zombie DECLINING — step2 failed`,
-          `Strategy "${strategyName}" (${strategyId}) was moved DEPLOYED → DECLINING but the ` +
-          `second step (DECLINING → TESTING) failed: ${step2.error ?? "unknown error"}. ` +
-          `The strategy is now in zombie DECLINING state. The compensating sweep will retry within 25h.`,
+          appendFamilyGradePostscript(
+            `Strategy "${strategyName}" (${strategyId}) was moved DEPLOYED → DECLINING but the ` +
+            `second step (DECLINING → TESTING) failed: ${step2.error ?? "unknown error"}. ` +
+            `The strategy is now in zombie DECLINING state. The compensating sweep will retry within 25h.`,
+            "A strategy got stuck part-way through being paused and the bot could not auto-fix it.",
+            "No trades are at risk — the strategy is halted. Tell Tony to reset its status when convenient.",
+          ),
           { strategyId, strategyName, correlationId, step2_error: step2.error },
         );
         await insertAuditRowSafe({

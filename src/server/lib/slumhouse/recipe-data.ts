@@ -16,9 +16,12 @@ import { db } from "../../db/index.js";
 import { formatBag, lifecycleToStation, oddsOuttaHundred } from "./translate.js";
 import { getB14CiHighThreshold } from "../b14-ci-gate.js";
 import { getWfeHardFloor } from "../wfe-gate.js";
+import { resolveGateJourney, type Gate, type GateSignals } from "./gate-journey.js";
+import { getStrategySourceUrl } from "../strategy-source-resolver.js";
 
 export interface RecipeData {
   identity: { id: string; name: string; symbol: string; stationStreet: string; lifecycleState: string };
+  youtubeUrl: string | null;
   slumdawgScore: number;
   backtest: {
     totalMade: string;
@@ -48,12 +51,18 @@ export interface RecipeData {
   };
   calendar: Array<{ date: string; pnl: number; trades: number }>;
   otherTests: Array<{ name: string; sentence: string; status: "pass" | "warn" | "fail" }>;
+  // Per-gate metric detail — the left card switches to show one of these when a gate is clicked.
+  gateMetrics: Record<string, { what: string; value: string; threshold: string; verdict: "pass" | "warn" | "fail" }>;
+  gateJourney: Gate[];
+  dead: boolean;
 }
 
 export async function assembleRecipeData(args: { strategyId: string }): Promise<RecipeData> {
   // 1. Strategy identity (required)
   const [strat] = (await db.execute(sql`
-    SELECT id::text AS id, name, symbol, lifecycle_state
+    SELECT id::text AS id, name, symbol, lifecycle_state,
+           config->'metadata'->>'source_url' AS meta_source_url,
+           config->'compiled_spec'->>'video' AS spec_video
     FROM strategies WHERE id = ${args.strategyId}::uuid LIMIT 1
   `).catch(() => [] as any[])) as any[];
 
@@ -235,6 +244,99 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
   ];
 
+  // Per-gate metric detail — the left card swaps to one of these on gate click.
+  const wfeFloor = getWfeHardFloor();
+  const hasB15 = extras?.b15_passed !== undefined || extras?.b15_status !== undefined;
+  const hasCompliance = extras?.compliance_pass_rate != null;
+  const gateMetrics: RecipeData["gateMetrics"] = {
+    "Surprise Test": {
+      what: "Walk-Forward Efficiency — how well it holds up on data it never trained on.",
+      value: wfe > 0 ? wfe.toFixed(2) : "Not run yet",
+      threshold: "needs ≥ " + wfeFloor.toFixed(2),
+      verdict: otherTests[0].status,
+    },
+    "Sloppy Bot Test": {
+      what: "Knocked every dial ±20% off — did the edge survive the jitter?",
+      value: hasB15 ? (b15Passed ? "Held together" : "Fell apart") : "Not run yet",
+      threshold: "SDR ≥ 0.85 · PSI ≤ 0.05 · RWS ≤ 0.20",
+      verdict: otherTests[1].status,
+    },
+    "Worst Day Test": {
+      what: "Ran it through the worst historical crashes to see if it blows up.",
+      value: ciHighRaw !== null ? "Ruin odds " + Math.round(ciHigh * 100) + "%" : "Not run yet",
+      threshold: "worst year " + formatBag(worstYear),
+      verdict: otherTests[2].status,
+    },
+    "Every Mood Test": {
+      what: "Played it in 5 market moods — trending, choppy, crashing, sleeping, wild.",
+      value: b10Pass === true ? "Won every one" : b10Pass === false ? "Cracked in some" : "Not run yet",
+      threshold: "must survive all 5 regimes",
+      verdict: otherTests[3].status,
+    },
+    "Real or Lucky": {
+      what: "Shuffled the wins to see if the edge was real or just a hot streak.",
+      value: frankPass === true ? "Real edge" : frankPass === false ? "Just luck" : "Not run yet",
+      threshold: "must beat the shuffle",
+      verdict: otherTests[4].status,
+    },
+    "Preseason": {
+      what: "30 days of fake money on the live market — did it actually make money?",
+      value: paperTotal !== 0 ? formatBag(paperTotal) : "Not run yet",
+      threshold: "must end green",
+      verdict: otherTests[5].status,
+    },
+    "Real-Time Match": {
+      what: "Compared its live-called shots against the tested signals.",
+      value: shadow ? (shadowDiv * 100).toFixed(1) + "% drift" : "Not run yet",
+      threshold: "needs < 5% drift",
+      verdict: otherTests[6].status,
+    },
+    "Plays Clean": {
+      what: "Checked every trade against the prop-firm rulebook.",
+      value: hasCompliance ? Math.round(compliancePassRate * 100) + "% clean" : "Not run yet",
+      threshold: "needs 100% clean",
+      verdict: otherTests[7].status,
+    },
+  };
+
+  // ── Strategy progress line (Slumhouse gate journey) ─────────────────────
+  // Derive the 7 boolean gate signals from the already-computed otherTests
+  // statuses + lifecycle, then resolve the 8-gate journey. `backtested` is
+  // true when the composite score is above zero OR a completed backtest row
+  // exists (same evidence the Backtest/Preseason panels read).
+  const testStatus = (name: string) => otherTests.find((t) => t.name === name)?.status;
+  const signals: GateSignals = {
+    backtested: slumdawgScore > 0 || Boolean(bt),
+    wfe_pass: testStatus("Surprise Test") === "pass",
+    frankenstein_pass: testStatus("Real or Lucky") === "pass",
+    blackswan_pass: testStatus("Worst Day Test") === "pass",
+    paper_done: testStatus("Preseason") === "pass",
+    shadow_pass: testStatus("Real-Time Match") === "pass",
+    compliance_pass: testStatus("Plays Clean") === "pass",
+  };
+  const lifecycleUpper = String(strat.lifecycle_state).toUpperCase();
+  const dead = lifecycleUpper === "GRAVEYARD" || lifecycleUpper === "DECLINING";
+  const gateJourney = resolveGateJourney({ lifecycleState: String(strat.lifecycle_state), signals });
+
+  // Source video URL for the recipe YouTube button. The current spec-onboarded
+  // library stores the real video URL in config.metadata.source_url — prefer that
+  // (117/117 coverage). Fall back to the bucket-based resolver (older bucket-
+  // graduated strategies), then null (client shows a search link).
+  let youtubeUrl: string | null = null;
+  const metaUrl = strat.meta_source_url ?? strat.spec_video ?? null;
+  if (typeof metaUrl === "string" && /^https?:\/\//.test(metaUrl)) {
+    youtubeUrl = metaUrl;
+  } else {
+    try {
+      const urls = await getStrategySourceUrl(String(strat.name));
+      if (Array.isArray(urls) && urls.length > 0) {
+        youtubeUrl = urls.find((u) => /youtube\.com|youtu\.be/i.test(String(u))) ?? urls[0];
+      }
+    } catch {
+      /* fail-soft — button falls back to a search link */
+    }
+  }
+
   return {
     identity: {
       id: String(strat.id),
@@ -243,6 +345,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
       stationStreet: lifecycleToStation(strat.lifecycle_state),
       lifecycleState: String(strat.lifecycle_state),
     },
+    youtubeUrl,
     slumdawgScore,
     backtest: {
       totalMade: formatBag(totalPnl),
@@ -277,6 +380,9 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     calendar: dailyList,
     otherTests,
+    gateMetrics,
+    gateJourney,
+    dead,
   };
 }
 

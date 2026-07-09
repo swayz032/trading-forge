@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { eq, sql, desc, asc, and, ilike } from "drizzle-orm";
 import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
@@ -10,6 +11,7 @@ import { LifecycleService } from "../services/lifecycle-service.js";
 import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 import { assertCrossValidatedSource } from "../services/agent-service.js";
 import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
+import { buildDeployEvidence } from "./slumhouse/deploy-approvals.js";
 
 export const strategyRoutes = Router();
 const lifecycleService = new LifecycleService();
@@ -505,11 +507,34 @@ if __name__ == "__main__":
   res.type("text/plain").send(py);
 });
 
+// deep-scan routes F-1 (HIGH, 2026-07-06): validate the SHAPE of strategy writes before they hit the DB.
+// req.body.config (arbitrary client JSON) flows into strategies.config JSONB, which later drives sizing
+// (risk-sizing.ts), the backtester, paper-signal-service, and lifecycle promotion. It was written with ZERO
+// type enforcement — a leaked API key or compromised n8n workflow could inject a malformed config (wrong
+// types, config-as-array/string/null) that silently corrupts downstream logic. Enforce the top-level shape
+// (types + config-must-be-an-object); intentionally NOT constraining the JSONB internals (too varied — the
+// per-field verifiers + gates own semantic validation), just the structural contract.
+const strategyWriteSchema = z.object({
+  // All four are NOT NULL columns on `strategies` — required for CREATE, enforced-when-present for PATCH (partial).
+  name: z.string().min(1).max(200),
+  description: z.string().max(8000).nullish(),
+  symbol: z.string().min(1).max(24),
+  timeframe: z.string().min(1).max(24),
+  config: z.record(z.string(), z.unknown()), // plain object — rejects array/string/null
+  tags: z.array(z.string().max(120)).max(64).optional(),
+});
+const strategyUpdateSchema = strategyWriteSchema.partial(); // PATCH: every field optional (partial update)
+
 // Create strategy
 // P2D (Wave 9, 2026-05-17): operator_manual / backfill sources are trusted but
 // still require an audit row. All other sources must pass assertCrossValidatedSource.
 strategyRoutes.post("/", async (req, res) => {
-  const { name, description, symbol, timeframe, config, tags } = req.body;
+  const parsed = strategyWriteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_strategy_body", details: parsed.error.flatten() });
+    return;
+  }
+  const { name, description, symbol, timeframe, config, tags } = parsed.data;
   const source: string = (config as any)?.source ?? (config as any)?.metadata?.source ?? "unknown";
   const OPERATOR_EXEMPT_SOURCES = new Set(["operator_manual", "backfill"]);
 
@@ -523,7 +548,10 @@ strategyRoutes.post("/", async (req, res) => {
       result: { reason: "operator_exempt_source" } as Record<string, unknown>,
       status: "accepted",
       decisionAuthority: "operator",
-    }).catch(() => void 0);
+      // deepscan17: this is the SOLE compliance record that a cross-validation-EXEMPT
+      // (operator_manual/backfill) strategy entered the system unguarded — swallowing it
+      // let an unguarded strategy go live traceless. Log loudly on failure (§10b).
+    }).catch((auditErr) => logger.warn({ auditErr, name, source }, "strategies.operator_insert_unguarded audit write failed — unguarded-insert compliance record dropped"));
   } else {
     // All other sources must satisfy cross-validation provenance
     const insertTags: string[] = Array.isArray(tags) ? tags : [];
@@ -551,7 +579,13 @@ strategyRoutes.patch("/:id", async (req, res) => {
     return;
   }
 
-  const { name, description, symbol, timeframe, config, tags } = req.body;
+  // deep-scan routes F-1 (HIGH): validate the update shape (partial — every field optional) before the DB write.
+  const parsedPatch = strategyUpdateSchema.safeParse(req.body);
+  if (!parsedPatch.success) {
+    res.status(400).json({ error: "invalid_strategy_body", details: parsedPatch.error.flatten() });
+    return;
+  }
+  const { name, description, symbol, timeframe, config, tags } = parsedPatch.data;
   const [row] = await db
     .update(strategies)
     .set({
@@ -654,6 +688,32 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
   if (!requireOfficeControlAuthority(req, res, "strategy.deploy_mutation_blocked")) return;
   const strategyId = req.params.id;
 
+  // deep-scan Slumhouse F-1 (CRITICAL): this legacy route performs the SAME DEPLOY_READY→DEPLOYED live-
+  // capital transition as the Office deploy-approvals card, but previously SKIPPED the server-side
+  // evidence gate — a stale/failing strategy could reach live via curl at the same auth tier, bypassing
+  // WFE/PBO/B14/staleness. Re-derive evidence + fail CLOSED, matching deploy-approvals.ts exactly.
+  const correlationId = randomUUID();
+  try {
+    const ev = await buildDeployEvidence(strategyId);
+    if (!ev.approvable) {
+      res.status(409).json({
+        error: "evidence_not_approvable",
+        evidenceState: ev.evidenceState,
+        blockers: ev.blockers,
+        correlationId,
+      });
+      return;
+    }
+  } catch (evErr) {
+    logger.warn({ strategyId, err: evErr, correlationId }, "deploy: evidence build failed — fail-CLOSED (refusing deploy)");
+    res.status(409).json({
+      error: "evidence_unavailable",
+      message: "Could not read deploy evidence — refusing to deploy until it loads clean.",
+      correlationId,
+    });
+    return;
+  }
+
   // Capture pre-deploy metrics snapshot for the audit record before the transition
   let metricsSnapshot: Record<string, unknown> = {};
   try {
@@ -714,6 +774,7 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
     {
       actor: "human_release",
       reason: "manual_tradingview_deployment_approval",
+      correlationId, // deep-scan Slumhouse F-2: §2 chain — was null on this legacy path
     },
   );
   if (!result.success) {
@@ -737,6 +798,7 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
       result: metricsSnapshot,
       status: "success",
       decisionAuthority: "human",
+      correlationId, // deep-scan Slumhouse F-2: link to the transition + evidence check
     });
   } catch (auditErr) {
     // Audit failure must not roll back an approved deploy — log it for investigation
@@ -748,36 +810,55 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
   // mirroring lifecycle-service.triggerPineCompile so a manual deploy targets the
   // same firm the strategy actually qualified for. Falls back to topstep_50k only
   // if no passing firm is found or propCompliance data is missing.
-  import("../services/pine-export-service.js").then(async ({ compilePineExport }) => {
+  //
+  // DS#20 T-E4: the dynamic-import + destructure used to sit OUTSIDE the try/catch
+  // below (guarded only by a bare outer `.catch(() => {})`), so a failure in the
+  // import itself (module resolution) or the destructure was fully silent — a
+  // human-approved DEPLOY could silently never generate its Pine artifact with no
+  // logged trace. Moving the import inside the same try/catch that already logs
+  // firmKey-resolution failures routes every failure mode through logger.error.
+  // Behavior is unchanged: a firmKey-resolution failure still falls back to the
+  // default "topstep_50k" and still attempts the export; only an import/destructure
+  // failure now aborts the export (it has no compilePineExport reference to call).
+  (async () => {
     let firmKey = "topstep_50k";
     try {
-      const [latestBt] = await db
-        .select({ propCompliance: backtests.propCompliance })
-        .from(backtests)
-        .where(and(eq(backtests.strategyId, strategyId), eq(backtests.status, "completed")))
-        .orderBy(desc(backtests.createdAt))
-        .limit(1);
+      const { compilePineExport } = await import("../services/pine-export-service.js");
 
-      if (latestBt?.propCompliance) {
-        const propResults = latestBt.propCompliance as Record<string, { passed?: boolean; pass?: boolean }>;
-        const passingFirm = Object.entries(propResults).find(
-          ([, r]) => r.passed === true || r.pass === true,
-        );
-        if (passingFirm) {
-          firmKey = passingFirm[0];
+      try {
+        const [latestBt] = await db
+          .select({ propCompliance: backtests.propCompliance })
+          .from(backtests)
+          .where(and(eq(backtests.strategyId, strategyId), eq(backtests.status, "completed")))
+          .orderBy(desc(backtests.createdAt))
+          .limit(1);
+
+        if (latestBt?.propCompliance) {
+          const propResults = latestBt.propCompliance as Record<string, { passed?: boolean; pass?: boolean }>;
+          const passingFirm = Object.entries(propResults).find(
+            ([, r]) => r.passed === true || r.pass === true,
+          );
+          if (passingFirm) {
+            firmKey = passingFirm[0];
+          }
         }
+      } catch (firmResolveErr) {
+        logger.warn(
+          { strategyId, err: firmResolveErr },
+          "deploy: firmKey resolution from propCompliance failed (defaulting to topstep_50k)",
+        );
       }
-    } catch (firmResolveErr) {
-      logger.warn(
-        { strategyId, err: firmResolveErr },
-        "deploy: firmKey resolution from propCompliance failed (defaulting to topstep_50k)",
+
+      compilePineExport(strategyId, firmKey, "pine_indicator").catch((err: unknown) =>
+        logger.error({ err, strategyId, firmKey }, "Post-deploy Pine export failed"),
+      );
+    } catch (importErr) {
+      logger.error(
+        { strategyId, err: importErr },
+        "deploy: post-deploy Pine export module load failed — Pine artifact NOT generated",
       );
     }
-
-    compilePineExport(strategyId, firmKey, "pine_indicator").catch((err: unknown) =>
-      logger.error({ err, strategyId, firmKey }, "Post-deploy Pine export failed"),
-    );
-  }).catch(() => {});
+  })();
 
   // Broadcast deploy SSE so dashboard and any listeners know immediately
   broadcastSSE("strategy:deployed", {

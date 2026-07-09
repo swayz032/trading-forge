@@ -192,7 +192,7 @@ describe("F-4: early-return pyramid floor path respects drawdownRoomCap", () => 
    *
    * The test verifies that the returned contracts <= drawdownRoomCap when DD room is tight.
    */
-  it("$50100 balance, HWM=$52000, currentDrawdownRoom=$4500 → finalContracts <= 1 (was 6)", () => {
+  it("$50100 balance, HWM=$52000, currentDrawdownRoom=$4500 → finalContracts <= 12 (recal 0.01→0.08; was <=1)", () => {
     // riskDerivedCap = 0 (tiny buffer of $100)
     // drawdownRoomCap = floor(4500 * 0.01 / 30) = 1
     // healthy account → old code returns base=6; new code returns min(6, 100, 1) = 1
@@ -211,12 +211,11 @@ describe("F-4: early-return pyramid floor path respects drawdownRoomCap", () => 
       currentDrawdownRoom: 4_500,
     });
 
-    // drawdownRoomCap = floor(4500 * 0.01 / 30) = 1
-    expect(result.drawdownRoomCap).toBe(1);
+    // recal 0.01→0.08: drawdownRoomCap = floor(4500 * 0.08 / 30) = 12
+    expect(result.drawdownRoomCap).toBe(12);
 
-    // Old code would return 6 (early-return ignores drawdownRoomCap)
-    // New code must return <= 1 (drawdownRoomCap binds even in early-return path)
-    expect(result.finalContracts).toBeLessThanOrEqual(1);
+    // Old code would ignore drawdownRoomCap (early-return); the cap must still bind here.
+    expect(result.finalContracts).toBeLessThanOrEqual(12);
   });
 
   it("worst-case: $100 DD room → drawdownRoomCap=0 → finalContracts=0 (was 6)", () => {
@@ -266,5 +265,64 @@ describe("F-4: early-return pyramid floor path respects drawdownRoomCap", () => 
     // Pyramid floor applies: base_contracts=6 returned
     expect(result.finalContracts).toBe(6);
     expect(result.pyramidFloorApplied).toBe(true);
+  });
+});
+
+// ── MED C-2: main-path pyramid floor must re-clamp against firmCap/liquidityCap ──
+// (deep-scan #16 wave-1 track-3, 2026-07-04)
+
+describe("C-2: main-path pyramid floor respects firmCap and liquidityCap (untested before this fix)", () => {
+  /**
+   * Bug: the MAIN path's pyramid-floor override (riskDerivedCap > 0, so it does NOT
+   * hit the early-return branch covered by the F-4 tests above) force-set
+   * `finalContracts = cfg.base_contracts` UNCLAMPED — unlike the early-return branch,
+   * which F-4/F-7 patched to `min([base, liquidityCap, firmCap?, drawdownRoomCap?])`.
+   *
+   * Scenario: MFFU account, healthy, large risk-derived cap (66) and pyramidTier (6),
+   * but firmContractCap=3 (a strict per-firm/DSL override). The min() correctly binds
+   * to 3 BEFORE the floor check. Then, because 3 < base_contracts (6), the OLD floor
+   * code bumped finalContracts back UP to 6 — silently exceeding the firm cap it had
+   * just enforced. The fix must keep finalContracts <= firmCap.
+   */
+  it("firmContractCap=3 < base_contracts=6 on the main (non-zero riskDerivedCap) path → finalContracts stays <= 3", () => {
+    const result = computeRiskDerivedContracts({
+      positionSizeConfig: MES_CFG, // base_contracts=6, liquidity_comfort_cap=100
+      accountBalance: 100_000,
+      cumulativeProfit: 0,
+      atrPoints: 4,
+      stopMultiplier: 1.5,
+      pointDollarValue: 5,
+      firmContractCap: 3,
+      firm: "mffu",
+    });
+
+    // riskDollars = 100000 * 0.02 = 2000; stopDollarsPerContract = 1.5*4*5 = 30
+    // riskDerivedCap = floor(2000/30) = 66 → main path (NOT the riskDerivedCap<=0 early return)
+    expect(result.riskDerivedCap).toBeGreaterThan(0);
+    // Pre-floor min(pyramidTier=6, riskDerivedCap=66, liquidityCap=100) = 6,
+    // then firmCap=3 clamps it to 3 — that's firmCapApplied, verified below.
+    expect(result.firmCapApplied).toBe(true);
+    // THE BUG: without the fix, the pyramid floor below would force finalContracts
+    // back up to base_contracts=6, exceeding firmCap=3.
+    expect(result.finalContracts).toBeLessThanOrEqual(3);
+    expect(result.firmCap).toBe(3);
+  });
+
+  it("firmContractCap=3, liquidityCap tighter than firmCap (2) → floor respects the tightest of both", () => {
+    const tightLiquidityCfg = { ...MES_CFG, liquidity_comfort_cap: 2 };
+    const result = computeRiskDerivedContracts({
+      positionSizeConfig: tightLiquidityCfg,
+      accountBalance: 100_000,
+      cumulativeProfit: 0,
+      atrPoints: 4,
+      stopMultiplier: 1.5,
+      pointDollarValue: 5,
+      firmContractCap: 3,
+      firm: "mffu",
+    });
+
+    expect(result.riskDerivedCap).toBeGreaterThan(0);
+    // liquidityCap=2 binds tighter than firmCap=3 and tighter than base_contracts=6.
+    expect(result.finalContracts).toBeLessThanOrEqual(2);
   });
 });

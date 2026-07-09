@@ -34,7 +34,13 @@ const JOURNAL_PATH = path.join(MIG_DIR, 'meta/_journal.json');
 function hashOfMigrationFile(tag) {
   const filePath = path.join(MIG_DIR, `${tag}.sql`);
   if (!fs.existsSync(filePath)) return null;
-  const sqlText = fs.readFileSync(filePath, 'utf-8');
+  let sqlText = fs.readFileSync(filePath, 'utf-8');
+  // deep-scan re-cert hardening: match boot-migration-runner's readUtf8StripBom — strip a leading
+  // BOM so the stamped ledger hash EQUALS the runtime hashOf. Without this, a BOM-prefixed .sql
+  // (recurring PowerShell-authored corruption per CLAUDE.md) would be stamped with a hash the runtime
+  // never matches → the applied migration is misclassified as pending on the next boot (and, for a
+  // pre-idempotency-lesson migration, re-applied → "already exists" → crash-loop).
+  if (sqlText.charCodeAt(0) === 0xFEFF) sqlText = sqlText.slice(1);
   return crypto.createHash('sha256').update(sqlText).digest('hex');
 }
 

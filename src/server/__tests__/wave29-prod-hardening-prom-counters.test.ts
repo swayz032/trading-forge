@@ -6,7 +6,7 @@
  * the 4 Discord escalations fire with the correct severity on HARD gate trips.
  *
  * Coverage:
- *   Counter #1  — pboBLocksTotal increments on lifecycle.pbo_overfit_block
+ *   Counter #1  — pboBlocksTotal increments on lifecycle.pbo_overfit_block
  *   Counter #2  — lifecycleShadowPromotionsTotal increments on SHADOW→PAPER outcomes
  *   Counter #3  — rlKillSwitchTotal increments on kill_switch_engaged SSE
  *   Counter #4  — shadowSignalsTotal increments on shadow signal write
@@ -97,7 +97,7 @@ vi.mock("../services/notification-service.js", () => ({
 
 import {
   promRegistry,
-  pboBLocksTotal,
+  pboBlocksTotal,
   shadowSignalsTotal,
   rlTrainingEpochsTotal,
   rlKillSwitchTotal,
@@ -140,9 +140,9 @@ async function getGaugeValue(metricName: string): Promise<number | null> {
   return values[0]?.value ?? null;
 }
 
-// ─── §1: Counter #1 — pboBLocksTotal ─────────────────────────────────────────
+// ─── §1: Counter #1 — pboBlocksTotal ─────────────────────────────────────────
 
-describe("Counter #1 — pboBLocksTotal", () => {
+describe("Counter #1 — pboBlocksTotal", () => {
   it("is registered in promRegistry", async () => {
     const metrics = await promRegistry.getMetricsAsJSON();
     expect(metrics.map((m) => m.name)).toContain("tf_pbo_blocks_total");
@@ -150,7 +150,7 @@ describe("Counter #1 — pboBLocksTotal", () => {
 
   it("increments when called with a regime label", async () => {
     const before = await getCounterValue("tf_pbo_blocks_total", { regime: "TRENDING" });
-    pboBLocksTotal.labels({ regime: "TRENDING" }).inc();
+    pboBlocksTotal.labels({ regime: "TRENDING" }).inc();
     const after = await getCounterValue("tf_pbo_blocks_total", { regime: "TRENDING" });
     expect(after).toBe(before + 1);
   });
@@ -158,12 +158,12 @@ describe("Counter #1 — pboBLocksTotal", () => {
   it("accepts all institutional regime values without error", () => {
     const regimes = ["TRENDING", "EXPANSION", "RANGE_BOUND", "COMPRESSION", "HIGH_VOL_MACRO", "LOW_LIQ_CHOP"];
     for (const r of regimes) {
-      expect(() => pboBLocksTotal.labels({ regime: r }).inc()).not.toThrow();
+      expect(() => pboBlocksTotal.labels({ regime: r }).inc()).not.toThrow();
     }
   });
 
   it("falls back to UNKNOWN regime label without throwing", () => {
-    expect(() => pboBLocksTotal.labels({ regime: "UNKNOWN" }).inc()).not.toThrow();
+    expect(() => pboBlocksTotal.labels({ regime: "UNKNOWN" }).inc()).not.toThrow();
   });
 });
 

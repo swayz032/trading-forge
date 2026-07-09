@@ -97,14 +97,27 @@ def compute_bif(
                     IS Sharpe from run_walk_forward() (_combined_is_sharpe),
                     which is the same value used by the WFE gate — no new
                     IS backtest required.
-                    For CPCV mode: pass mean(path_OOS_sharpes) as a documented
-                    proxy for the IS Sharpe (M1 limitation: both this proxy and
-                    wf_sharpe derive from the same concatenated OOS series, so
-                    BIF ≈ 1.0 and the block gate never fires in default CPCV mode).
-                    The result dict carries bif_proxy_basis="oos_mean_not_is" so the
-                    TS BIF gate can emit a non-blocking audit warn.
-                    Per-path IS Sharpes (true IS fold data) are a Wave 30 carry-forward;
-                    see comment in _run_walk_forward_cpcv().
+                    For CPCV mode: deepscan #7 (2026-07-02) E1 fix — the PREFERRED
+                    basis is mean(per_path_is_sharpes), true per-path IN-SAMPLE
+                    Sharpes from a lightweight IS-only backtest run per CPCV path
+                    inside _run_walk_forward_cpcv(). This is a genuine IS vs OOS
+                    comparison, not a proxy, so BIF reflects real selection
+                    inflation and the block gate can fire.
+                    FAIL-LOUD FALLBACK (deepscan16 Wave-1 Track2 B-2, confirmed
+                    still wired 2026-07-04): when per-path IS backtests are
+                    partially/fully unavailable, the caller falls back to
+                    mean(path_OOS_sharpes) — the same concatenated OOS series as
+                    wf_sharpe, so BIF≈1.0 and the block gate is effectively inert
+                    for that run. The caller MUST tag this degraded run
+                    bif_reliable=False + bif_proxy_basis="oos_mean_not_is" (vs
+                    bif_reliable=True + bif_proxy_basis="cpcv_per_path_is" on the
+                    genuine-IS path) so the TS BIF gate treats it as
+                    unavailable/legacy (visible, non-blocking audit-warn) rather
+                    than silently passing bif≈1.0 as a clean result. compute_bif()
+                    itself does not emit bif_proxy_basis/bif_reliable — the CPCV
+                    caller (_run_walk_forward_cpcv() in walk_forward.py) annotates
+                    the returned dict with both keys immediately after calling this
+                    function; see the "BIF computation (CPCV mode)" block there.
         wf_sharpe:  Walk-forward (OOS) aggregate Sharpe ratio — agg_sharpe
                     from run_walk_forward() or _run_walk_forward_cpcv().
         k_eff:      Effective number of independent trials tested.

@@ -45,7 +45,7 @@ import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/ss
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, slippageSurvivalBlocksTotal, auditWriteFailuresTotal, b14GateTotal, wfeGateTotal, parameterDriftGateTotal, dslGuardsGateTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -76,6 +76,170 @@ import {
 // Reads backtests.bif / backtests.kEff stamped from Python WF result fields `bif` / `k_eff`.
 // Hard-blocks when bif > BIF_BLOCK_THRESHOLD (default 4.0). Grandfather-passes on null.
 import { evaluateBifGate } from "../lib/bif-gate.js";
+// Wave A — Slippage-Survival promotion gate (PAPER → DEPLOY_READY).
+// Reads backtests.slippageSurvival JSONB (Python fixed-signal re-price sweep).
+// Default-OFF (SLIPPAGE_SURVIVAL_GATE_ENABLED=false) — advisory-only until the
+// operator opts in; hard-blocks when breaks_at <= SLIPPAGE_SURVIVAL_BLOCK_MULT
+// once enabled. Grandfather-passes on legacy null.
+import { evaluateSlippageSurvivalGate } from "../lib/slippage-survival-gate.js";
+// deep-scan #15 FIX M1: shared evidence-completeness roll-up accounting.
+// isIncompleteEvidenceStatus + *EvidenceBucket keep the cron path and the
+// manual/deferred path (paper-to-deploy-ready-gates.ts) in lockstep and ensure a
+// "malformed" (broken-producer) gate status counts as INCOMPLETE, not "complete".
+import {
+  isIncompleteEvidenceStatus,
+  slippageEvidenceBucket,
+  bifEvidenceBucket,
+} from "../lib/evidence-completeness.js";
+
+// ─── Deep-scan #16 Wave-1 Track 5 (HIGH E-6) — hard-gate observability helpers ──
+//
+// B14 ci_high, WFE, and parameter-drift gates write audit_log + SSE on every
+// evaluation but previously incremented NO Prometheus counter — a promotion
+// pipeline could sit blocked for weeks with no Grafana panel moving. These
+// three tiny helpers derive a closed-set `outcome` label from each gate's pure
+// result object and increment the corresponding registry counter. Called
+// immediately after every `evaluateXGate(...)` invocation in this file so the
+// increment site can never silently fall out of sync with a new branch.
+//
+// Non-blocking by design (wrapped in try/catch): a counter-increment failure
+// must never affect a promotion decision.
+type LifecycleGateTransition = "TESTING_TO_PAPER" | "SHADOW_TO_PAPER" | "PAPER_TO_DEPLOY_READY";
+
+function _incB14GateCounter(
+  transition: LifecycleGateTransition,
+  result: { passed: boolean; legacyFallback?: boolean },
+): void {
+  try {
+    const outcome = !result.passed ? "block" : result.legacyFallback ? "legacy" : "pass";
+    b14GateTotal.labels({ transition, outcome }).inc();
+  } catch { /* non-blocking counter */ }
+}
+
+function _incWfeGateCounter(
+  transition: LifecycleGateTransition,
+  result: { passed: boolean; status: string },
+): void {
+  try {
+    const isLegacy = result.status === "legacy_null" || result.status === "cpcv_exempt";
+    const outcome = isLegacy ? "legacy" : result.passed ? "pass" : "block";
+    wfeGateTotal.labels({ transition, outcome }).inc();
+  } catch { /* non-blocking counter */ }
+}
+
+function _incParameterDriftGateCounter(
+  transition: LifecycleGateTransition,
+  result: { passed: boolean; status: string },
+): void {
+  try {
+    const isLegacy = result.status === "legacy_null" || result.status === "cpcv_exempt";
+    const outcome = isLegacy ? "legacy" : result.passed ? "pass" : "block";
+    parameterDriftGateTotal.labels({ transition, outcome }).inc();
+  } catch { /* non-blocking counter */ }
+}
+
+// ─── Deep-scan #16 Wave 2 Track G2 (E-1) — DSL guards_failed HARD promotion gate ──
+//
+// Wave 1 stamped result["dsl_guards"]["guards_failed"]=true (backtester.py) when the
+// E.3/E.4/E.5 risk-guard block (stop-ceiling / time-stop / DLL-halt) threw mid-backtest
+// and NONE of those guards ran for that run. backtest-service.ts already persists the
+// whole dsl_guards object into backtests.result_extras.dsl_guards and increments
+// tf_backtest_dsl_guards_failed_total (producer-side signal — see the "E-1 guards_failed
+// consumer" note in backtest-service.ts), but until this track NOTHING blocked promotion
+// on it — an unguarded backtest could still reach PAPER / DEPLOY_READY and, downstream,
+// live capital. This pure evaluator + its 3 call sites (TESTING→PAPER, SHADOW→PAPER,
+// PAPER→DEPLOY_READY) close that gap using the SAME evidence-gate pattern as
+// evaluateB14CiGate / evaluateWfeGate / evaluateParameterDriftGate: a plain object in,
+// a { passed, auditAction, auditPayload } out, zero DB access, fully unit-testable.
+//
+// Legacy contract: pre-Wave-1-Track-2 backtests never emitted dsl_guards.guards_failed
+// AT ALL (the key is absent, not false) — those grandfather-pass with a documented warn,
+// mirroring lifecycle.wfe_unavailable_legacy / lifecycle.dsr_unavailable_legacy. Once a
+// backtest genuinely emits guards_failed=false, the gate reports a clean "pass" (no
+// audit-worthy event; the caller may still choose to write a routine success row).
+interface DslGuardsGateInput {
+  guards_failed?: boolean | null;
+  guards_failed_reason?: string | null;
+}
+
+interface DslGuardsGateResult {
+  /** True when the gate allows promotion; false when it blocks. */
+  passed: boolean;
+  /** Terminal state string, mirrors the other lifecycle gate helpers' `status`. */
+  status: "pass" | "blocked" | "legacy_proceed";
+  /** Canonical audit action name; null on a clean (non-legacy) pass. */
+  auditAction: "lifecycle.dsl_guards_failed_block" | "lifecycle.dsl_guards_unavailable_legacy" | null;
+  /** Human-readable reason string (mirrors the audit action). */
+  reason: string;
+  /** Full audit payload — merge into the audit_log result field. */
+  auditPayload: {
+    guards_failed: boolean | null;
+    guards_failed_reason: string | null;
+    status: string;
+    blocked: boolean;
+  };
+}
+
+function evaluateDslGuardsGate(
+  dslGuards: DslGuardsGateInput | null | undefined,
+): DslGuardsGateResult {
+  // Legacy: the field is ABSENT (undefined), not merely falsy. A real backtest that
+  // ran the guards cleanly always stamps guards_failed=false explicitly (see
+  // _dsl_guards_meta default in backtester.py) — only a pre-Track-2 backtest, or a
+  // resultExtras blob missing the dsl_guards key entirely, hits this branch.
+  if (dslGuards == null || typeof dslGuards !== "object" || dslGuards.guards_failed === undefined) {
+    return {
+      passed: true,
+      status: "legacy_proceed",
+      auditAction: "lifecycle.dsl_guards_unavailable_legacy",
+      reason: "lifecycle.dsl_guards_unavailable_legacy",
+      auditPayload: {
+        guards_failed: null,
+        guards_failed_reason: null,
+        status: "legacy_proceed",
+        blocked: false,
+      },
+    };
+  }
+
+  if (dslGuards.guards_failed === true) {
+    return {
+      passed: false,
+      status: "blocked",
+      auditAction: "lifecycle.dsl_guards_failed_block",
+      reason: "lifecycle.dsl_guards_failed_block",
+      auditPayload: {
+        guards_failed: true,
+        guards_failed_reason: dslGuards.guards_failed_reason ?? null,
+        status: "blocked",
+        blocked: true,
+      },
+    };
+  }
+
+  return {
+    passed: true,
+    status: "pass",
+    auditAction: null,
+    reason: "lifecycle.dsl_guards_pass",
+    auditPayload: {
+      guards_failed: false,
+      guards_failed_reason: null,
+      status: "pass",
+      blocked: false,
+    },
+  };
+}
+
+function _incDslGuardsGateCounter(
+  transition: LifecycleGateTransition,
+  result: { passed: boolean; status: string },
+): void {
+  try {
+    const outcome = result.status === "legacy_proceed" ? "legacy" : result.passed ? "pass" : "block";
+    dslGuardsGateTotal.labels({ transition, outcome }).inc();
+  } catch { /* non-blocking counter */ }
+}
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -150,8 +314,18 @@ const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
   // Wave 29 Pass A.1: SHADOW → PAPER after A.3 divergence gate clears (≥20 signals, <5% divergence).
   // SHADOW → DEPLOY_READY direct is INVALID — must go through PAPER first (full paper history required).
   SHADOW: ["PAPER", "DECLINING", "GRAVEYARD"],
-  PAPER: ["DEPLOY_READY", "DECLINING", "GRAVEYARD"],  // Demotable on drift
-  DEPLOY_READY: ["PILOT", "DEPLOYED", "PAPER", "GRAVEYARD"],  // Human approves PILOT canary OR legacy direct deploy OR back to paper
+  // (deepscan18 D-D2 2026-07-05) NEEDS_REVISION added as a valid target from PAPER and
+  // DEPLOY_READY. The stale-detector cron (strategy-stale-detector.ts demoteToNeedsRevision)
+  // demotes stale PAPER / DEPLOY_READY strategies to NEEDS_REVISION via raw SQL and writes a
+  // TYPED lifecycle_transitions ledger row for that edge. VALID_TRANSITIONS previously omitted
+  // these two edges, so the ledger accumulated rows for transitions the contract declared
+  // impossible — a contract/ledger inconsistency that any transition-validity audit would flag.
+  // NEEDS_REVISION is a research-side rework detour (loops back to CANDIDATE only, or GRAVEYARD);
+  // it is NOT a capital-ward state, so no gate logic rides these demotion edges by design.
+  // PILOT / DEPLOYED are intentionally NOT given this edge — they are DEMOTION_EXEMPT_STATES
+  // (real capital) and the stale-detector CAS explicitly excludes them (NOT IN DEPLOYED/PILOT).
+  PAPER: ["DEPLOY_READY", "DECLINING", "NEEDS_REVISION", "GRAVEYARD"],  // Demotable on drift; NEEDS_REVISION = stale-detector rework detour
+  DEPLOY_READY: ["PILOT", "DEPLOYED", "PAPER", "NEEDS_REVISION", "GRAVEYARD"],  // Human approves PILOT canary OR legacy direct deploy OR back to paper; NEEDS_REVISION = stale-detector rework detour
   // B8: PILOT canary state — 5 sessions, 1 contract.
   // PILOT → DEPLOYED: automatic after 5 sessions (rolling Sharpe > 1.0, no compliance violations).
   // PILOT → GRAVEYARD: automatic if any kill switch fires.
@@ -505,6 +679,12 @@ export class LifecycleService {
           bif: backtests.bif, kEff: backtests.kEff,
           // (deepscan7 F-1 2026-07-02) propCompliance feeds the compliance-drift hard block below.
           propCompliance: backtests.propCompliance,
+          // Wave A (2026-07-03) — Slippage-Survival gate input; manual-path parity with the
+          // cron sweep block below.
+          slippageSurvival: backtests.slippageSurvival,
+          // A-1 (deepscan17 2026-07-05) — result_extras.dsl_guards feeds the DSL guards HARD
+          // gate below (manual-path parity with the cron sweep, which reads the same field).
+          resultExtras: backtests.resultExtras,
         }).from(backtests).where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed"))).orderBy(desc(backtests.createdAt)).limit(1);
 
         // ── (deepscan7 F-1 2026-07-02) Compliance-drift HARD block — cron-path parity ──
@@ -540,7 +720,7 @@ export class LifecycleService {
                 note: "Manual operator override required — cannot verify compliance ruleset integrity",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "lifecycle.drift_check_infra_error audit insert failed (non-blocking)");
             });
             return { success: false, error: `drift_check_infrastructure_error: ${errMsg}` };
@@ -563,16 +743,152 @@ export class LifecycleService {
                 reason: "compliance ruleset drift_detected — promotion held until human revalidation",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
             });
             broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
               strategyId: id,
               drift_firms: driftFirms,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             return { success: false, error: "compliance ruleset drift_detected — promotion held until human revalidation" };
           }
+        }
+
+        // ── A-1 (deepscan17 2026-07-05) — DSL guards_failed HARD gate: PAPER → DEPLOY_READY (manual) ──
+        // Cron parity: checkAutoPromotions gates PAPER→DEPLOY_READY on
+        // result_extras.dsl_guards.guards_failed=true (unguarded backtest — E.3/E.4/E.5 risk
+        // guards threw mid-run, so stop-ceiling / time-stop / DLL enforcement never ran). The
+        // manual PATCH path delegates PAPER→DEPLOY_READY to evaluatePaperToDeployReadyGates
+        // (B14/WFE/drift/BIF), which has ZERO dsl_guards references — so a correctly-signed
+        // manual/n8n/Carter promotion of a guards_failed strategy reached DEPLOY_READY and,
+        // downstream, live capital. Enforced inline here (same dual-call-site pattern the
+        // slippage-survival + BIF gates use) BEFORE the on-demand survival-twin Python replay,
+        // so an unguarded backtest never spends a subprocess. evaluateDslGuardsGate is total
+        // (never throws) and is the SAME pure evaluator the 3 cron sites call; any resultExtras
+        // shape error is caught by the outer PAPER→DEPLOY_READY fail-CLOSED handler.
+        {
+          const dslGuardsInputP2D = ((latestBtP2D?.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+            | DslGuardsGateInput
+            | null;
+          const dslGuardsResultP2D = evaluateDslGuardsGate(dslGuardsInputP2D);
+          _incDslGuardsGateCounter("PAPER_TO_DEPLOY_READY", dslGuardsResultP2D);
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
+            strategyId: id,
+            ...dslGuardsResultP2D.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
+            passed: dslGuardsResultP2D.passed,
+            reason: dslGuardsResultP2D.reason,
+          });
+
+          await db.insert(auditLog).values({
+            action: dslGuardsResultP2D.auditAction ?? "lifecycle.dsl_guards_pass",
+            entityId: id,
+            entityType: "strategy",
+            status: !dslGuardsResultP2D.passed ? "failure" : dslGuardsResultP2D.status === "legacy_proceed" ? "warning" : "success",
+            decisionAuthority: "gate",
+            input: { fromState, toState },
+            result: dslGuardsResultP2D.auditPayload,
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate (PAPER→DEPLOY_READY manual path) audit insert failed (non-blocking)");
+          });
+
+          if (!dslGuardsResultP2D.passed) {
+            logger.warn(
+              { strategyId: id, guardsFailedReason: dslGuardsResultP2D.auditPayload.guards_failed_reason, transition: "PAPER→DEPLOY_READY" },
+              "DSL guards gate BLOCKED PAPER→DEPLOY_READY (manual path): guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            return { success: false, error: "lifecycle.dsl_guards_failed_block" };
+          }
+          this._resetHardGateCounter(id, "dsl_guards_failed", correlationId);
+        }
+
+        // ── A7 (deepscan17-wave2 2026-07-05) — Signal Correlation HARD gate: PAPER → DEPLOY_READY (manual) ──
+        // Cron parity: checkAutoPromotions gates PAPER→DEPLOY_READY on checkSignalCorrelationGate
+        // (cosine similarity > 0.85 vs ANY DEPLOYED strategy — also blocks when no signal vector
+        // exists). The manual PATCH path delegated PAPER→DEPLOY_READY to evaluatePaperToDeployReadyGates,
+        // which has ZERO A7 references — so a correctly-signed manual/n8n/Carter promotion of a
+        // signal-duplicate strategy reached DEPLOY_READY and, downstream, live capital (same class as
+        // the A-1 DSL-guards manual-path gap just closed). Enforced inline here (dual-call-site pattern)
+        // BEFORE the on-demand survival-twin Python replay so a duplicate never spends a subprocess.
+        // Ramp-up/legacy behavior lives inside checkSignalCorrelationGate (the SAME helper the cron
+        // calls). Fail-CLOSED on infra error. Manual-path convention: NO _maybeAutoGraveyard.
+        try {
+          const { checkSignalCorrelationGate } = await import("./signal-correlation-service.js");
+          const sigCorrelationResultP2D = await checkSignalCorrelationGate(id);
+
+          if (!sigCorrelationResultP2D.allowed) {
+            logger.warn(
+              {
+                strategyId: id,
+                reason: sigCorrelationResultP2D.reason,
+                maxSimilarity: sigCorrelationResultP2D.maxSimilarity,
+                blockingStrategyId: sigCorrelationResultP2D.blockingStrategyId,
+                transition: "PAPER→DEPLOY_READY",
+              },
+              "A7 signal correlation gate: BLOCKED PAPER→DEPLOY_READY promotion (manual path)",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.promotion_blocked_signal_correlation",
+              entityId: id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: {
+                reason: sigCorrelationResultP2D.reason,
+                max_similarity: sigCorrelationResultP2D.maxSimilarity,
+                blocking_strategy_id: sigCorrelationResultP2D.blockingStrategyId,
+                threshold: 0.85,
+              },
+              correlationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: id, err: auditErr }, "A7 audit insert (manual path) failed (non-blocking)");
+            });
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            return { success: false, error: "lifecycle.promotion_blocked_signal_correlation" };
+          }
+
+          logger.info(
+            {
+              strategyId: id,
+              reason: sigCorrelationResultP2D.reason,
+              maxSimilarity: sigCorrelationResultP2D.maxSimilarity,
+              transition: "PAPER→DEPLOY_READY",
+            },
+            "A7 signal correlation gate: PASSED (manual path)",
+          );
+          this._resetHardGateCounter(id, "signal_correlation", correlationId);
+        } catch (sigCorrelationErr) {
+          // Fail-closed on infra error — same policy as the cron A7 site + the manual DSL-guards gate.
+          const msg = sigCorrelationErr instanceof Error ? sigCorrelationErr.message : String(sigCorrelationErr);
+          logger.warn(
+            { strategyId: id, err: sigCorrelationErr },
+            "A7 signal correlation gate: infrastructure error — blocking promotion (fail-closed, manual path)",
+          );
+          await db.insert(auditLog).values({
+            action: "lifecycle.promotion_blocked_signal_correlation",
+            entityId: id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState, toState },
+            result: {
+              reason: `A7 gate infrastructure error (fail-closed): ${msg}`,
+              max_similarity: null,
+              blocking_strategy_id: null,
+              threshold: 0.85,
+            },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ err: auditErr, correlationId }, "A7 gate fail-closed audit insert (manual path) failed (non-blocking)");
+            auditWriteFailuresTotal.labels({ action: "lifecycle.a7_gate_error" }).inc();
+          });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          return { success: false, error: "lifecycle.promotion_blocked_signal_correlation" };
         }
 
         const [latestMcP2D] = latestBtP2D ? await db.select({
@@ -692,9 +1008,64 @@ export class LifecycleService {
               input: { fromState, toState },
               result: bifCpcvResult.auditPayload as Record<string, unknown>,
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "lifecycle.bif_cpcv_unmeasured audit insert failed (non-blocking)");
             });
+          }
+        }
+
+        // ── Wave A (2026-07-03) — Slippage-Survival gate, manual-path enforcement ──
+        // paper-to-deploy-ready-gates.ts is the shared pure evaluator owned by the
+        // Pass 5 Track A carve-out; rather than touch it, this gate is enforced
+        // inline here (manual PATCH path) and again in the cron sweep below —
+        // mirroring the BIF gate's dual-call-site pattern (manual + cron parity).
+        // Advisory-only while SLIPPAGE_SURVIVAL_GATE_ENABLED=false (default).
+        // deepscan15 F-1: capture the slippage evidence bucket in an outer-scoped var
+        // so the evidence-completeness governor below counts it on the MANUAL path too
+        // (the shared evaluatePaperToDeployReadyGates has no slippage dimension). Without
+        // this, a malformed slippage producer was INCOMPLETE in cron but invisible here.
+        let slippageEvidenceStatusP2D: string | null = null;
+        {
+          const slippageSurvivalResultP2D = evaluateSlippageSurvivalGate(
+            (latestBtP2D?.slippageSurvival ?? null) as import("../lib/slippage-survival-gate.js").SlippageSurvivalDict | null,
+          );
+          slippageEvidenceStatusP2D = slippageEvidenceBucket(slippageSurvivalResultP2D.status);
+
+          await db.insert(auditLog).values({
+            action: "slippage_survival.gate_evaluated",
+            entityId: id,
+            entityType: "strategy",
+            status: slippageSurvivalResultP2D.passed
+              ? (slippageSurvivalResultP2D.status === "clean" || slippageSurvivalResultP2D.status === "disabled" ? "success" : "warning")
+              : "failure",
+            decisionAuthority: "gate",
+            input: { fromState, toState },
+            result: slippageSurvivalResultP2D.auditPayload as Record<string, unknown>,
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: id, err: auditErr }, "slippage_survival.gate_evaluated audit insert (manual path) failed (non-blocking)");
+          });
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.SLIPPAGE_SURVIVAL_EVALUATED, {
+            strategyId: id,
+            ...slippageSurvivalResultP2D.auditPayload,
+            passed: slippageSurvivalResultP2D.passed,
+            reason: slippageSurvivalResultP2D.reason,
+            // §2 correlation_id mandate: thread the same id the audit row carries so
+            // an SSE consumer can stitch a block back to its triggering backtest.
+            correlationId,
+          });
+
+          if (!slippageSurvivalResultP2D.passed) {
+            try {
+              slippageSurvivalBlocksTotal.labels({ breaks_at: String(slippageSurvivalResultP2D.auditPayload.breaks_at) }).inc();
+            } catch { /* non-blocking counter */ }
+            logger.warn(
+              { strategyId: id, breaks_at: slippageSurvivalResultP2D.auditPayload.breaks_at, threshold: slippageSurvivalResultP2D.auditPayload.block_mult, transition: "PAPER→DEPLOY_READY" },
+              "Slippage-Survival gate BLOCKED PAPER→DEPLOY_READY (manual path): edge dies at or below block multiple (living on optimistic fills)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            return { success: false, error: slippageSurvivalResultP2D.reason };
           }
         }
 
@@ -713,10 +1084,17 @@ export class LifecycleService {
           // silently counted as outcome="clean". Map that distinct reason to its own label.
           const bifReliableForCounter =
             ((wfResults?.wf_metadata as Record<string, unknown> | null)?.bif_reliable) === false;
+          // deep-scan promotion L-2: thread the computation-error sentinel so this outcome-counter reflects the
+          // true fail-closed verdict (a real compute_bif failure counts as blocked, not clean).
+          const bifCompErrorCounter =
+            (wfResults as Record<string, unknown> | null)?.bif_computation_error === true;
           const bifResult = evaluateBifGate(
             latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
             latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
-            bifReliableForCounter ? { bifReliable: false } : undefined,
+            {
+              bifReliable: bifReliableForCounter ? false : undefined,
+              computationError: bifCompErrorCounter,
+            },
           );
           const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
             ? "cpcv_unmeasured"
@@ -738,7 +1116,7 @@ export class LifecycleService {
             input: { fromState, toState }, result: gatePdrResult.auditPayload ?? { reason: gatePdrResult.reason },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "PAPER→DEPLOY_READY evaluator audit failed (non-blocking)"); });
-          broadcastSSE(LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED, { strategyId: id, reason: gatePdrResult.reason, passed: false });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED, { strategyId: id, correlationId, reason: gatePdrResult.reason, passed: false });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
           return { success: false, error: gatePdrResult.reason ?? "PAPER→DEPLOY_READY gate failed" };
         }
@@ -808,7 +1186,7 @@ export class LifecycleService {
               input: { fromState, toState },
               result: { error: freezeMsg, note: "first-time freeze write failed — promotion blocked; retry once the DB write succeeds" },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (manual freeze-write) audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
             });
@@ -823,8 +1201,14 @@ export class LifecycleService {
         // Same ≥3 threshold, same lifecycle.promotion_evidence_incomplete audit action.
         // Runs AFTER the first-time freeze, mirroring the cron's gate ordering.
         {
-          const incompleteCount = gatePdrResult.incompleteGateCount ?? 0;
-          const evidenceStatuses = gatePdrResult.gateEvidenceStatuses ?? [];
+          // deepscan15 F-1: fold the inline slippage-survival evidence bucket into the
+          // manual-path count so cron+manual parity is REAL for the slippage dimension
+          // (was cron-only). A malformed slippage producer now counts INCOMPLETE here too.
+          const evidenceStatuses = [...(gatePdrResult.gateEvidenceStatuses ?? [])];
+          if (slippageEvidenceStatusP2D !== null) evidenceStatuses.push(slippageEvidenceStatusP2D);
+          const incompleteCount =
+            (gatePdrResult.incompleteGateCount ?? 0) +
+            (slippageEvidenceStatusP2D !== null && isIncompleteEvidenceStatus(slippageEvidenceStatusP2D) ? 1 : 0);
           if (incompleteCount >= 3) {
             logger.warn(
               { strategyId: id, incompleteCount, gateEvidenceStatuses: evidenceStatuses, transition: "PAPER→DEPLOY_READY" },
@@ -844,7 +1228,7 @@ export class LifecycleService {
                 note: "Strategy must complete institutional-grade backtests before promotion proceeds",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "promotion_evidence_incomplete audit insert failed (non-blocking)");
             });
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTION_EVIDENCE_INCOMPLETE, {
@@ -853,7 +1237,7 @@ export class LifecycleService {
               incomplete_count: incompleteCount,
               total_gates: evidenceStatuses.length,
               gate_evidence_statuses: evidenceStatuses,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             return {
               success: false,
@@ -894,7 +1278,7 @@ export class LifecycleService {
             input: { fromState, toState }, result: shadowGateResult.auditPayload ?? { reason: shadowGateResult.reason },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "SHADOW→PAPER evaluator audit failed (non-blocking)"); });
-          broadcastSSE(LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED, { strategyId: id, reason: shadowGateResult.reason, passed: false });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED, { strategyId: id, correlationId, reason: shadowGateResult.reason, passed: false });
           return { success: false, error: shadowGateResult.reason ?? "SHADOW→PAPER gate failed" };
         }
       } catch (shadowGateErr) {
@@ -903,6 +1287,95 @@ export class LifecycleService {
         const shadowErrMsg = shadowGateErr instanceof Error ? shadowGateErr.message : String(shadowGateErr);
         logger.warn({ strategyId: id, err: shadowGateErr }, "SHADOW→PAPER evaluator: infrastructure error — blocking promotion (fail-closed)");
         return { success: false, error: `shadow_to_paper_gate_evaluator_error: ${shadowErrMsg}` };
+      }
+    }
+
+    // ── A-1 (deepscan17 2026-07-05) — DSL guards_failed HARD gate: MANUAL path into PAPER ──
+    // checkAutoPromotions (the autonomous cron) blocks BOTH forward edges into PAPER on
+    // result_extras.dsl_guards.guards_failed=true (E.3/E.4/E.5 risk guards threw mid-run — the
+    // stop-ceiling / time-stop / DLL-halt enforcement never ran, so the backtest is UNGUARDED,
+    // not clean). Those cron call sites live entirely inside checkAutoPromotions; the manual
+    // PATCH /:id/lifecycle path (this function) had NO such gate, so a correctly-HMAC-signed
+    // manual/n8n/Carter promotion of a guards_failed strategy reached PAPER (and downstream live
+    // capital). Mirrors the cron gate via the SAME pure evaluator: same audit actions, same SSE,
+    // same counter, same fail-CLOSED posture. Covers TESTING→PAPER (legacy) + SHADOW→PAPER
+    // (canonical); DEPLOY_READY→PAPER demotion is excluded (moving away from capital, not toward
+    // it — matches the cron's forward-only gating). Runs BEFORE the heavy gate stack so an
+    // unguarded backtest is rejected early. Self-contained fetch of the latest completed backtest
+    // (no dependency on the promotionEvidence block below). No _maybeAutoGraveyard here: burial is
+    // a repeated-autonomous-failure escalation, not a single-operator-attempt outcome (mirrors the
+    // manual path's other gates, which block-and-return without burying).
+    if ((fromState === "TESTING" || fromState === "SHADOW") && toState === "PAPER") {
+      const dslGuardsTransition: LifecycleGateTransition =
+        fromState === "SHADOW" ? "SHADOW_TO_PAPER" : "TESTING_TO_PAPER";
+      try {
+        const [btDslGuards] = await (tx ?? db)
+          .select({ resultExtras: backtests.resultExtras })
+          .from(backtests)
+          .where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed")))
+          .orderBy(desc(backtests.createdAt))
+          .limit(1);
+        const dslGuardsInput = ((btDslGuards?.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+          | DslGuardsGateInput
+          | null;
+        const dslGuardsResult = evaluateDslGuardsGate(dslGuardsInput);
+        _incDslGuardsGateCounter(dslGuardsTransition, dslGuardsResult);
+
+        broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
+          strategyId: id,
+          ...dslGuardsResult.auditPayload,
+          correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #3 F-6: match paired audit row (manual-promotion block)
+          passed: dslGuardsResult.passed,
+          reason: dslGuardsResult.reason,
+        });
+
+        await db.insert(auditLog).values({
+          action: dslGuardsResult.auditAction ?? "lifecycle.dsl_guards_pass",
+          entityId: id,
+          entityType: "strategy",
+          status: !dslGuardsResult.passed ? "failure" : dslGuardsResult.status === "legacy_proceed" ? "warning" : "success",
+          decisionAuthority: "gate",
+          input: { fromState, toState },
+          result: dslGuardsResult.auditPayload,
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr: unknown) => {
+          logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate (manual path into PAPER) audit insert failed (non-blocking)");
+        });
+
+        if (!dslGuardsResult.passed) {
+          logger.warn(
+            { strategyId: id, guardsFailedReason: dslGuardsResult.auditPayload.guards_failed_reason, transition: `${fromState}→PAPER` },
+            "DSL guards gate BLOCKED (manual path): guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+          );
+          strategyPromotions.labels({ from_state: fromState, to_state: "PAPER", actor: "system_gate" }).inc();
+          return { success: false, error: "lifecycle.dsl_guards_failed_block" };
+        }
+        this._resetHardGateCounter(id, "dsl_guards_failed", options.correlationId ?? null);
+      } catch (dslGuardsErr) {
+        // Fail-CLOSED: this gate protects live capital from an UNGUARDED backtest (same severity
+        // class as B14) — a read/parse error must not silently allow promotion. In practice the
+        // resultExtras blob is already-parsed JS, so this guards against unexpected shape errors,
+        // not DB connectivity.
+        try { dslGuardsGateTotal.labels({ transition: dslGuardsTransition, outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
+        logger.warn({ strategyId: id, err: dslGuardsErr }, "DSL guards gate (manual path into PAPER): read failed — blocking promotion (fail-closed)");
+        await db.insert(auditLog).values({
+          action: "lifecycle.dsl_guards_gate_error_fail_closed",
+          entityId: id,
+          entityType: "strategy",
+          status: "failure",
+          decisionAuthority: "gate",
+          input: { fromState, toState },
+          result: {
+            reason: "lifecycle.dsl_guards_gate_error_fail_closed",
+            error: dslGuardsErr instanceof Error ? dslGuardsErr.message : String(dslGuardsErr),
+            note: "DSL guards gate threw on manual promotion into PAPER — promotion blocked",
+          },
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr: unknown) => {
+          logger.warn({ strategyId: id, err: auditErr }, "DSL guards gate fail-closed audit insert (manual path into PAPER) failed (non-blocking)");
+        });
+        strategyPromotions.labels({ from_state: fromState, to_state: "PAPER", actor: "system_gate" }).inc();
+        return { success: false, error: "lifecycle.dsl_guards_gate_error_fail_closed" };
       }
     }
 
@@ -1172,7 +1645,7 @@ export class LifecycleService {
               strategyId: id,
               age_days: parseFloat(ageDays.toFixed(1)),
               limit_days: stalenessDays,
-              correlation_id: options.correlationId ?? null,
+              correlationId: options.correlationId ?? null,
             });
             return { success: false, error };
           }
@@ -1410,8 +1883,14 @@ export class LifecycleService {
     // Two separate thresholds:
     //   PBO_OVERFIT_THRESHOLD     (0.5)  — W27.5 warn threshold (walk_forward.py)
     //   PBO_OVERFIT_THRESHOLD_PCT (0.15) — this gate (Wave 29 lifecycle hard gate)
+    // deep-scan promotion L-1 (CRITICAL, 2026-07-06): the PBO<15% overfitting gate must fire on EVERY path
+    // into a capital-adjacent stage (SHADOW/PAPER), not just from TESTING. VALID_TRANSITIONS still permits the
+    // legacy CANDIDATE→SHADOW edge (reachable via the HMAC PATCH /:id/lifecycle route, whose secret is shared
+    // with n8n/Carter automation, not human-only) — and it previously skipped PBO entirely because this guard
+    // only matched fromState==="TESTING". Adding CANDIDATE closes the bypass so an overfit strategy can never
+    // reach paper capital un-PBO-checked. (SHADOW→PAPER already gets the separate divergence gate.)
     if (
-      fromState === "TESTING" &&
+      (fromState === "TESTING" || fromState === "CANDIDATE") &&
       (toState === "SHADOW" || toState === "PAPER") &&
       promotionEvidence.backtestId
     ) {
@@ -1481,6 +1960,7 @@ export class LifecycleService {
             }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_overfit_block audit row write failed"));
             // Emit SSE event lifecycle:pbo_evaluated
             broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+              correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE (manual path) carries correlationId
               strategyId: id,
               fromState,
               toState,
@@ -1544,6 +2024,7 @@ export class LifecycleService {
 
           // Emit SSE event lifecycle:pbo_evaluated on every evaluation
           broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE (manual path) carries correlationId
             strategyId: id,
             fromState,
             toState,
@@ -1554,8 +2035,49 @@ export class LifecycleService {
           });
         }
       } catch (pboW29Err) {
-        // Non-blocking: PBO gate failure must not abort a promotion.
-        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: pboW29Err }, "lifecycle.pbo_gate (Wave 29): read/eval failed (non-blocking — promotion continues)");
+        // (deepscan18 D-D3 2026-07-05) FAIL-CLOSED per CLAUDE.md §12 ("there is no
+        // PBO-bypass path"). Previously this catch logged a warn and CONTINUED, so any
+        // read/eval error (DB blip, malformed walk_forward_results shape, evaluatePboGate
+        // throw) silently BYPASSED the Wave 29 Pass A.2 PBO overfit HARD gate at
+        // TESTING → SHADOW/PAPER — the exact fail-OPEN posture every sibling HARD gate on
+        // this transition rejects (the B14 CI gate, DSL-guards gate, and A7 gate all
+        // fail-CLOSED on infra error). Now blocks the promotion with a loud audit row +
+        // Prom counter + SSE, matching the sibling gates. Additive-signal gates elsewhere
+        // (BIF read-error) legitimately fail-OPEN, but PBO is a §12 HARD gate with no
+        // bypass path, so an unreadable PBO must hold the strategy, not wave it through.
+        const pboErrMsg = pboW29Err instanceof Error ? pboW29Err.message : String(pboW29Err);
+        logger.error(
+          { strategyId: id, fromState, toState, backtestId: promotionEvidence.backtestId, err: pboW29Err },
+          "lifecycle.pbo_gate (Wave 29): read/eval error — BLOCKING promotion (fail-CLOSED per §12, no PBO-bypass path)",
+        );
+        insertAuditRow({
+          action: "lifecycle.pbo_gate_error_fail_closed",
+          entityType: "strategy",
+          entityId: id,
+          decisionAuthority: "gate",
+          status: "failure",
+          input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+          result: {
+            reason: "pbo_gate_infrastructure_error",
+            error: pboErrMsg,
+            note: "PBO read/eval threw — promotion blocked fail-CLOSED (§12: no PBO-bypass path). Re-run the backtest to produce a measurable PBO, then retry.",
+          } as Record<string, unknown>,
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_gate_error_fail_closed audit row write failed"));
+        try {
+          broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE (manual path) carries correlationId
+            strategyId: id,
+            fromState,
+            toState,
+            pbo: null,
+            threshold: null,
+            blocked: true,
+            error: true,
+          });
+        } catch { /* non-blocking SSE */ }
+        try { pboBlocksTotal.labels({ regime: "gate_error" }).inc(); } catch { /* non-blocking counter */ }
+        return { success: false, error: `lifecycle.pbo_gate_error_fail_closed: ${pboErrMsg}` };
       }
     }
 
@@ -1590,7 +2112,10 @@ export class LifecycleService {
             const dsrPassed = dsrHonest.dsr_passed as boolean | undefined;
             const dsrValue = dsrHonest.dsr as number | null ?? null;
             const nTrials = dsrHonest.n_trials as number | null ?? null;
-            const dsrThreshold = parseFloat(process.env.DSR_HONEST_THRESHOLD ?? "1.5");
+            // deepscan17-wave2 (2026-07-05): Wave-1 moved the engine DSR default to 1.645;
+            // this is the audit-log MESSAGE STRING default only (the gate decision reads the
+            // persisted dsr_passed boolean), kept in sync so the reason text is not misleading.
+            const dsrThreshold = parseFloat(process.env.DSR_HONEST_THRESHOLD ?? "1.645");
 
             if (dsrPassed === false) {
               const error =
@@ -1969,7 +2494,7 @@ export class LifecycleService {
               note: "Manual operator override required — cannot verify compliance ruleset integrity",
             },
             correlationId: correlationIdTp,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: id, err: auditErr }, "lifecycle.drift_check_infra_error (T→P manual) audit insert failed (non-blocking)");
           });
           return { success: false, error: `drift_check_infrastructure_error: ${errMsg}` };
@@ -1992,13 +2517,15 @@ export class LifecycleService {
               reason: "compliance ruleset drift_detected — promotion held until human revalidation",
             },
             correlationId: correlationIdTp,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: id, err: auditErr }, "compliance-drift (T→P manual) audit insert failed (non-blocking)");
           });
           broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
             strategyId: id,
             drift_firms: driftFirmsTp,
-            correlation_id: correlationIdTp,
+            // deep-scan Obs re-verify F-3c: canonical camelCase key (its 4 sibling COMPLIANCE_DRIFT_BLOCKED
+            // sites all emit correlationId) — one join key across all 33 lifecycle SSE broadcasts.
+            correlationId: correlationIdTp,
           });
           return { success: false, error: "compliance ruleset drift_detected — promotion held until human revalidation" };
         }
@@ -2053,7 +2580,7 @@ export class LifecycleService {
             note: "T→P baseline freeze write failed (manual path) — promotion blocked; retry once the DB write succeeds",
           },
           correlationId: correlationIdFreeze,
-        }).catch((auditErr) => {
+        }).catch((auditErr: unknown) => {
           logger.warn({ err: auditErr, correlationId: correlationIdFreeze }, "frozen_policy.hash_compute_failed (T→P manual freeze-write) audit insert failed (non-blocking)");
           auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
         });
@@ -2511,7 +3038,7 @@ export class LifecycleService {
     // H3 fix 2026-06-28: replaced bare .catch(() => {}) with logger.error so
     // DB-write failures are visible in logs.  Fire-and-forget semantic preserved
     // (no re-throw; strategy retirement continues regardless).
-    AlertFactory.decayAlert(strategyId, "retire").catch((err) =>
+    AlertFactory.decayAlert(strategyId, "retire").catch((err: unknown) =>
       logger.error(
         { err, strategyId, context: "decay-alert-db-write" },
         "AlertFactory.decayAlert failed — alert not persisted",
@@ -2522,6 +3049,20 @@ export class LifecycleService {
       { strategyId, failureModes, name: strategy.name },
       "Strategy auto-buried in graveyard",
     );
+
+    // deepscan18 (E-E1): the frontend has carried a `strategy:graveyard_burial`
+    // dashboard tile (useSSE.ts) since it was catalogued, but this — the ONLY
+    // production call site of buryInGraveyard() — never actually broadcast it.
+    // The tile was dead: correctly typed, correctly subscribed, never fired.
+    // Payload matches the pre-existing StrategyGraveyardBurialData contract
+    // (Trading_forge_frontend/.../types/sse-events.ts) exactly.
+    broadcastSSE("strategy:graveyard_burial", {
+      strategyId,
+      name: strategy.name,
+      failureModes,
+      deathReason: `Auto-retired: ${failureModes.join(", ")}`,
+      correlationId: correlationId ?? null,
+    });
   }
 
   /**
@@ -2608,6 +3149,7 @@ export class LifecycleService {
           });
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+            correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
             strategyId: s.id,
             from: "CANDIDATE",
             to: "TESTING",
@@ -2665,6 +3207,7 @@ export class LifecycleService {
         if (shadowResult.success) {
           promoted.push(s.id);
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+            correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
             strategyId: s.id,
             from: "TESTING",
             to: "SHADOW",
@@ -2746,14 +3289,14 @@ export class LifecycleService {
                 backtest_created_at: latestBt.createdAt,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale auto-check audit insert failed (non-blocking)");
             });
             broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
               strategyId: s.id,
               age_days: parseFloat(ageDays.toFixed(1)),
               limit_days: stalenessDays,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             continue;
           }
@@ -2830,13 +3373,13 @@ export class LifecycleService {
                   reason: "compliance ruleset drift_detected — promotion held until human revalidation",
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift (T→P cron) audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                 strategyId: s.id,
                 drift_firms: driftFirms,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;
             }
@@ -2860,7 +3403,7 @@ export class LifecycleService {
               note: "Cron will retry next tick once the underlying error is resolved",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error (T→P cron) audit insert failed (non-blocking)");
           });
           continue;
@@ -2898,7 +3441,7 @@ export class LifecycleService {
                     reason: "compliance_gate.check_freshness failed — promotion held until ruleset is fresh and violation-free",
                   },
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "compliance_blocked audit insert failed (non-blocking)");
                 });
                 broadcastSSE("strategy:compliance_blocked", {
@@ -2908,6 +3451,7 @@ export class LifecycleService {
                   toState: "PAPER",
                   firmsFailing,
                   details,
+                  correlationId,
                 });
                 continue;
               }
@@ -2931,7 +3475,7 @@ export class LifecycleService {
                   error: gateErr instanceof Error ? gateErr.message : String(gateErr),
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 // Deep-scan #5 H3 (2026-06-29): was silently swallowed — a gate-BLOCK decision
                 // dropped with zero visibility if the DB was under pressure.
                 logger.warn({ err: auditErr, correlationId }, "compliance_gate_error audit insert failed (non-blocking)");
@@ -2943,6 +3487,7 @@ export class LifecycleService {
                 fromState: "TESTING",
                 toState: "PAPER",
                 error: gateErr instanceof Error ? gateErr.message : String(gateErr),
+                correlationId,
               });
               continue;
             }
@@ -3018,7 +3563,7 @@ export class LifecycleService {
               note: "gateResult JSONB missing on latest backtest — survival-score gate skipped, promotion proceeded",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "survival-score-gate-missing-data audit insert failed (non-blocking)");
           });
         }
@@ -3055,7 +3600,7 @@ export class LifecycleService {
               } as Record<string, unknown>,
               status: "failure",
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
               logger.warn({ err: auditErr, correlationId }, "exportability_block audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "lifecycle.exportability_block" }).inc();
@@ -3070,6 +3615,7 @@ export class LifecycleService {
               score: exportCheck.score,
               band: exportCheck.band,
               reasons: (exportCheck as Record<string, unknown>).reasons ?? null,
+              correlationId,
             });
 
             exportabilityBlocked = true;
@@ -3079,6 +3625,37 @@ export class LifecycleService {
           } else {
             // Gate passed — reset consecutive counter
             this._resetHardGateCounter(s.id, "exportability_blocked", tickCorrelationId);
+
+            // Deep-Scan #21 Wave-2 (2026-07-05): the gate can now pass a strategy whose
+            // Pine artifact is honestly unfaithful (exportCheck.faithful === false) when
+            // it is a direct-routed archetype/uncatalogued strategy (exportCheck.
+            // isDirectRoutedArchetype === true) — Pine is a visual-only aid for those; the
+            // strategy executes server-side via broker-router regardless of Pine fidelity.
+            // Log this exemption non-blocking so it is NOT an invisible pass-through: the
+            // strategy's Pine artifact genuinely omits validated logic, and any operator or
+            // downstream consumer inspecting the promotion history should see WHY the gate
+            // passed a non-faithful export rather than assuming faithful=true.
+            if (exportCheck.isDirectRoutedArchetype && exportCheck.faithful === false) {
+              db.insert(auditLog).values({
+                action: "strategy.lifecycle.exportability_archetype_direct_route_exempt",
+                entityType: "strategy",
+                entityId: s.id,
+                decisionAuthority: "gate",
+                input: { fromState: "TESTING", toState: "PAPER" },
+                result: {
+                  note: "Archetype/uncatalogued strategy executes DIRECT via broker-router — "
+                    + "Pine faithfulness is not required for promotion. Pine export (if ever "
+                    + "generated) is a visual-only aid and honestly omits the logic below.",
+                  score: exportCheck.score,
+                  band: exportCheck.band,
+                  deductions: exportCheck.deductions,
+                } as Record<string, unknown>,
+                status: "success",
+                correlationId,
+              }).catch((auditErr: unknown) => {
+                logger.warn({ err: auditErr, correlationId, strategyId: s.id }, "exportability_archetype_direct_route_exempt audit insert failed (non-blocking)");
+              });
+            }
           }
         } catch (err) {
           // Pass 8 Track A (2026-06-23): Convert fail-OPEN to fail-CLOSED.
@@ -3110,7 +3687,7 @@ export class LifecycleService {
             } as Record<string, unknown>,
             status: "warn",
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ auditErr, strategyId: s.id }, "exportability_infra_error audit insert failed (non-blocking)");
           });
 
@@ -3167,6 +3744,7 @@ export class LifecycleService {
               : null;
 
             const b14CiResultTp = evaluateB14CiGate(ruinCiTp, pointEstimateTp);
+            _incB14GateCounter("TESTING_TO_PAPER", b14CiResultTp);
 
             await db.insert(auditLog).values({
               action: "b14.gate_evaluated",
@@ -3177,11 +3755,12 @@ export class LifecycleService {
               input: { fromState: "TESTING", toState: "PAPER" },
               result: b14CiResultTp.auditPayload,
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (TESTING→PAPER) audit insert failed (non-blocking)");
             });
 
             broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+              correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
               strategyId: s.id,
               ...b14CiResultTp.auditPayload,
               passed: b14CiResultTp.passed,
@@ -3208,6 +3787,7 @@ export class LifecycleService {
             // run — an absent one means MC errored or is still pending, a genuine failure
             // that must BLOCK (retries next cron cycle once MC completes), not slip through.
             const b14TpNoMc = evaluateB14CiGate(null, null);
+            _incB14GateCounter("TESTING_TO_PAPER", b14TpNoMc);
             await db.insert(auditLog).values({
               action: "b14.gate_evaluated",
               entityId: s.id,
@@ -3217,7 +3797,7 @@ export class LifecycleService {
               input: { fromState: "TESTING", toState: "PAPER" },
               result: { ...b14TpNoMc.auditPayload, note: "no completed MC run for latest backtest — fail-closed (MC auto-fires post-backtest; absent = errored/pending)" },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (TESTING→PAPER no-MC fail-closed) audit insert failed (non-blocking)");
             });
             logger.warn(
@@ -3232,6 +3812,7 @@ export class LifecycleService {
           // B14 CI is a hard gate protecting against high ruin probability. A gate that
           // cannot run must block promotion, not silently allow it.
           const b14TpErrMsg = b14TpErr instanceof Error ? b14TpErr.message : String(b14TpErr);
+          try { b14GateTotal.labels({ transition: "TESTING_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn({ strategyId: s.id, err: b14TpErr }, "B14 CI gate (TESTING→PAPER): read failed — blocking promotion (fail-closed)");
           await db.insert(auditLog).values({
             action: "b14.gate_error_fail_closed",
@@ -3246,7 +3827,7 @@ export class LifecycleService {
               note: "B14 CI gate threw on TESTING→PAPER path — promotion blocked; retries next cron cycle",
             },
             correlationId: tickCorrelationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
           });
           strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
@@ -3260,8 +3841,10 @@ export class LifecycleService {
           const wfeStatusTp = wfResultsTp?.wfe_status != null ? String(wfResultsTp.wfe_status) : null;
 
           const wfeResultTp = evaluateWfeGate(wfeOverallTp, undefined, undefined, wfeStatusTp);
+          _incWfeGateCounter("TESTING_TO_PAPER", wfeResultTp);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
+            correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
             strategyId: s.id,
             wfe_overall: wfeResultTp.wfeOverall,
             status: wfeResultTp.status,
@@ -3293,7 +3876,7 @@ export class LifecycleService {
                 status: wfeResultTp.status,
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate (TESTING→PAPER) audit insert failed (non-blocking)");
             });
 
@@ -3311,7 +3894,136 @@ export class LifecycleService {
           }
         } catch (wfeTpErr) {
           // Fail-open: WFE gate read failure is non-blocking
+          try { wfeGateTotal.labels({ transition: "TESTING_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn({ strategyId: s.id, err: wfeTpErr }, "WFE gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+        }
+
+        // DS#20 T-A1 (2026-07-05): PBO overfit HARD gate — TESTING→PAPER (cron legacy fast-track).
+        // §12 documents PBO < 0.15 as a HARD gate on BOTH TESTING→SHADOW and TESTING→PAPER with
+        // "no PBO-bypass path". It WAS wired only into the manual _promoteStrategyInner path (the
+        // single evaluatePboGate call site) and was MISSING from this autonomous cron legacy
+        // fast-track — so a vacation-mode auto-promotion could push a genuinely overfit strategy
+        // (pbo_overall > threshold) straight to PAPER that a manual click would BLOCK (Deep-Scan
+        // #20 Band A F-1). Mirrors the manual PBO block + the sibling cron B14 fail-CLOSED pattern.
+        // FAIL-CLOSED on infra error per §12 (matches manual deepscan18 D-D3 posture).
+        try {
+          const pboWfMetaTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const pboOverallTp = pboWfMetaTp?.pbo_overall as number | null | undefined;
+          const pboOverallPValueTp = pboWfMetaTp?.pbo_overall_p_value as number | null | undefined;
+          const innerWfMetaTp = (pboWfMetaTp?.wf_metadata as Record<string, unknown> | null) ?? null;
+          const pboDegenReasonTp = (innerWfMetaTp?.pbo_degenerate_reason as string | null | undefined) ?? null;
+
+          const pboResultTp = evaluatePboGate(
+            { pbo_overall: pboOverallTp, pbo_p_value: pboOverallPValueTp, pbo_degenerate_reason: pboDegenReasonTp },
+          );
+
+          if (!pboResultTp.ok) {
+            const pboBlockActionTp =
+              pboResultTp.reason === "lifecycle.pbo_plain_wf_degenerate_block"
+                ? "lifecycle.pbo_plain_wf_degenerate_block"
+                : "lifecycle.pbo_overfit_block";
+            const regimeLabelTp = s.regimeTrainedOn ?? "unknown";
+            try { pboBlocksTotal.labels({ regime: regimeLabelTp }).inc(); } catch { /* non-blocking counter */ }
+            await db.insert(auditLog).values({
+              action: pboBlockActionTp,
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: pboResultTp.auditPayload as Record<string, unknown>,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) block audit insert failed (non-blocking)");
+            });
+            broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+              correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
+              strategyId: s.id,
+              fromState: "TESTING",
+              toState: "PAPER",
+              pbo: pboResultTp.pbo,
+              threshold: pboResultTp.threshold,
+              blocked: true,
+            });
+            logger.warn(
+              { strategyId: s.id, pbo: pboResultTp.pbo, threshold: pboResultTp.threshold, reason: pboResultTp.reason, transition: "TESTING→PAPER" },
+              "PBO gate BLOCKED TESTING→PAPER (cron): pbo_overall exceeds institutional threshold",
+            );
+            strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            await this._maybeAutoGraveyard(s.id, "pbo_overfit", { pbo: pboResultTp.pbo, threshold: pboResultTp.threshold }, "TESTING", tickCorrelationId);
+            continue;
+          }
+
+          // PBO passed (or legacy/cpcv-unavailable grandfather) — emit the matching audit + SSE.
+          if (pboResultTp.legacyNull) {
+            await db.insert(auditLog).values({
+              action: "lifecycle.pbo_unavailable_legacy",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: pboResultTp.auditPayload as Record<string, unknown>,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) legacy audit insert failed (non-blocking)");
+            });
+          } else if (pboResultTp.reason === "lifecycle.pbo_cpcv_is_unavailable") {
+            await db.insert(auditLog).values({
+              action: "lifecycle.pbo_cpcv_is_unavailable",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: pboResultTp.auditPayload as Record<string, unknown>,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) cpcv-unavailable audit insert failed (non-blocking)");
+            });
+          }
+          broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
+            strategyId: s.id,
+            fromState: "TESTING",
+            toState: "PAPER",
+            pbo: pboResultTp.pbo,
+            threshold: pboResultTp.threshold,
+            blocked: false,
+            legacy_null: pboResultTp.legacyNull,
+          });
+          this._resetHardGateCounter(s.id, "pbo_overfit", tickCorrelationId);
+        } catch (pboTpErr) {
+          // FAIL-CLOSED per §12 ("no PBO-bypass path") — mirrors the sibling B14 fail-closed catch
+          // above and the manual path's deepscan18 D-D3 posture. An unreadable/failed PBO must
+          // HOLD the strategy in TESTING, not wave it through to PAPER.
+          const pboTpErrMsg = pboTpErr instanceof Error ? pboTpErr.message : String(pboTpErr);
+          logger.warn({ strategyId: s.id, err: pboTpErr }, "PBO gate (TESTING→PAPER cron): read/eval error — BLOCKING promotion (fail-CLOSED per §12)");
+          try { pboBlocksTotal.labels({ regime: "gate_error" }).inc(); } catch { /* non-blocking counter */ }
+          await db.insert(auditLog).values({
+            action: "lifecycle.pbo_gate_error_fail_closed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: { reason: "pbo_gate_infrastructure_error", error: pboTpErrMsg, note: "PBO gate threw on TESTING→PAPER cron path — promotion blocked; retries next cron cycle" },
+            correlationId: tickCorrelationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "PBO fail-closed audit insert (TESTING→PAPER cron) failed (non-blocking)");
+          });
+          broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
+            strategyId: s.id,
+            fromState: "TESTING",
+            toState: "PAPER",
+            pbo: null,
+            threshold: null,
+            blocked: true,
+            error: true,
+          });
+          strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+          continue;
         }
 
         // FIX 1: Parameter drift gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
@@ -3326,8 +4038,10 @@ export class LifecycleService {
           const paramStabilityStatusTp = (driftWfResultsTp?.param_stability_status as string | null | undefined) ?? null;
 
           const driftResultTp = evaluateParameterDriftGate(driftClassificationTp, driftConfidenceTp, paramStabilityStatusTp);
+          _incParameterDriftGateCounter("TESTING_TO_PAPER", driftResultTp);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
+            correlationId: tickCorrelationId, // deep-scan Obs F-3: SSE carries correlationId
             strategyId: s.id,
             classification: driftResultTp.classification,
             confidence: driftResultTp.confidence,
@@ -3350,7 +4064,7 @@ export class LifecycleService {
                 status: driftResultTp.status,
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate (TESTING→PAPER) audit insert failed (non-blocking)");
             });
 
@@ -3368,6 +4082,7 @@ export class LifecycleService {
           }
         } catch (driftTpErr) {
           // Fail-open: drift gate read failure is non-blocking
+          try { parameterDriftGateTotal.labels({ transition: "TESTING_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn({ strategyId: s.id, err: driftTpErr }, "Parameter drift gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
         }
 
@@ -3434,6 +4149,83 @@ export class LifecycleService {
           logger.warn({ strategyId: s.id, err: dsrTpErr }, "DSR gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
         }
 
+        // ── E-1 (deepscan16 Wave 2 Track G2) — DSL guards_failed HARD gate: TESTING → PAPER ──
+        // Reads backtests.result_extras.dsl_guards.guards_failed (Wave-1 Track 2 producer
+        // field). guards_failed=true means the E.3/E.4/E.5 risk-guard block threw mid-backtest
+        // and NONE of the stop-ceiling / time-stop / DLL-halt guards ran for that run — the
+        // backtest is UNGUARDED, not clean, and must not promote toward live capital.
+        // `latestBt` here is the full-row select a few gates above (no extra DB round trip).
+        try {
+          const dslGuardsTp = ((latestBt.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+            | DslGuardsGateInput
+            | null;
+          const dslGuardsResultTp = evaluateDslGuardsGate(dslGuardsTp);
+          _incDslGuardsGateCounter("TESTING_TO_PAPER", dslGuardsResultTp);
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
+            strategyId: s.id,
+            ...dslGuardsResultTp.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
+            passed: dslGuardsResultTp.passed,
+            reason: dslGuardsResultTp.reason,
+          });
+
+          await db.insert(auditLog).values({
+            action: dslGuardsResultTp.auditAction ?? "lifecycle.dsl_guards_pass",
+            entityId: s.id,
+            entityType: "strategy",
+            status: !dslGuardsResultTp.passed ? "failure" : dslGuardsResultTp.status === "legacy_proceed" ? "warning" : "success",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: dslGuardsResultTp.auditPayload,
+            correlationId: tickCorrelationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (TESTING→PAPER) audit insert failed (non-blocking)");
+          });
+
+          if (!dslGuardsResultTp.passed) {
+            logger.warn(
+              { strategyId: s.id, guardsFailedReason: dslGuardsResultTp.auditPayload.guards_failed_reason, transition: "TESTING→PAPER" },
+              "DSL guards gate BLOCKED TESTING→PAPER: guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+            );
+            strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            try {
+              await this._maybeAutoGraveyard(s.id, "dsl_guards_failed", { guardsFailedReason: dslGuardsResultTp.auditPayload.guards_failed_reason }, "TESTING", tickCorrelationId);
+            } catch (graveyardErr) {
+              logger.warn({ strategyId: s.id, err: graveyardErr }, "dsl_guards_failed _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+            }
+            continue; // block decision wins regardless of graveyard write outcome
+          }
+          // Gate passed (or legacy grandfather) — reset consecutive counter
+          this._resetHardGateCounter(s.id, "dsl_guards_failed", tickCorrelationId);
+        } catch (dslGuardsTpErr) {
+          // Fail-CLOSED: this gate protects live capital from an UNGUARDED backtest
+          // (same severity class as B14) — a read/parse error must not silently allow
+          // promotion. In practice `latestBt.resultExtras` is already-parsed JS from the
+          // row this function loaded upstream, so this branch guards against unexpected
+          // shape errors, not DB connectivity.
+          try { dslGuardsGateTotal.labels({ transition: "TESTING_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
+          logger.warn({ strategyId: s.id, err: dslGuardsTpErr }, "DSL guards gate (TESTING→PAPER): read failed — blocking promotion (fail-closed)");
+          await db.insert(auditLog).values({
+            action: "lifecycle.dsl_guards_gate_error_fail_closed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: {
+              reason: "lifecycle.dsl_guards_gate_error_fail_closed",
+              error: dslGuardsTpErr instanceof Error ? dslGuardsTpErr.message : String(dslGuardsTpErr),
+              note: "DSL guards gate threw on TESTING→PAPER path — promotion blocked; retries next cron cycle",
+            },
+            correlationId: tickCorrelationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+          continue;
+        }
+
         // ── (deepscan8 Track D 2026-07-02) Frozen-policy baseline stamp — T→P cron path ──
         // Stamps frozen_policy_hash at TESTING→PAPER so the P→DR drift check
         // (evaluateFrozenPolicyDriftAtPromotion) compares against the TRUE config baseline
@@ -3480,7 +4272,7 @@ export class LifecycleService {
                 note: "T→P baseline freeze write failed (cron path) — cron retries next cycle",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "frozen_policy.hash_compute_failed (T→P cron freeze-write) audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
             });
@@ -3493,6 +4285,7 @@ export class LifecycleService {
           promoted.push(s.id);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+            correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
             strategyId: s.id,
             from: "TESTING",
             to: "PAPER",
@@ -3606,14 +4399,14 @@ export class LifecycleService {
                   backtest_created_at: latestBtSh.createdAt,
                 },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale (SHADOW→PAPER) audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
                 strategyId: s.id,
                 age_days: parseFloat(ageDaysSh.toFixed(1)),
                 limit_days: stalenessDaysSh,
-                correlation_id: tickCorrelationId,
+                correlationId: tickCorrelationId,
               });
               continue;
             }
@@ -3679,13 +4472,13 @@ export class LifecycleService {
                     reason: "compliance ruleset drift_detected — promotion held until human revalidation",
                   },
                   correlationId: tickCorrelationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift (SHADOW→PAPER cron) audit insert failed (non-blocking)");
                 });
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                   strategyId: s.id,
                   drift_firms: driftFirmsSh,
-                  correlation_id: tickCorrelationId,
+                  correlationId: tickCorrelationId,
                 });
                 continue;
               }
@@ -3709,7 +4502,7 @@ export class LifecycleService {
                 note: "Cron will retry next tick once the underlying error is resolved",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error (SHADOW→PAPER cron) audit insert failed (non-blocking)");
             });
             continue;
@@ -3760,7 +4553,7 @@ export class LifecycleService {
                 note: "gateResult JSONB missing on latest backtest — survival-score gate skipped, promotion proceeded",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "survival-score-gate-missing-data (SHADOW→PAPER) audit insert failed (non-blocking)");
             });
           }
@@ -3793,7 +4586,7 @@ export class LifecycleService {
                 } as Record<string, unknown>,
                 status: "failure",
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "exportability_block (SHADOW→PAPER) audit insert failed (non-blocking)");
                 auditWriteFailuresTotal.labels({ action: "lifecycle.exportability_block" }).inc();
               });
@@ -3806,12 +4599,39 @@ export class LifecycleService {
                 score: exportCheckSh.score,
                 band: exportCheckSh.band,
                 reasons: (exportCheckSh as Record<string, unknown>).reasons ?? null,
+                correlationId: tickCorrelationId,
               });
 
               exportabilityBlockedSh = true;
               await this._maybeAutoGraveyard(s.id, "exportability_blocked", { score: exportCheckSh.score, band: exportCheckSh.band }, "SHADOW", tickCorrelationId);
             } else {
               this._resetHardGateCounter(s.id, "exportability_blocked", tickCorrelationId);
+
+              // Deep-Scan #21 Wave-2 (2026-07-05): mirror of the TESTING→PAPER exemption
+              // audit above — surface (non-blocking) when this gate pass relied on the
+              // archetype/uncatalogued direct-route exemption rather than genuine Pine
+              // faithfulness, so no consumer is misled about what the Pine artifact covers.
+              if (exportCheckSh.isDirectRoutedArchetype && exportCheckSh.faithful === false) {
+                db.insert(auditLog).values({
+                  action: "strategy.lifecycle.exportability_archetype_direct_route_exempt",
+                  entityType: "strategy",
+                  entityId: s.id,
+                  decisionAuthority: "gate",
+                  input: { fromState: "SHADOW", toState: "PAPER" },
+                  result: {
+                    note: "Archetype/uncatalogued strategy executes DIRECT via broker-router — "
+                      + "Pine faithfulness is not required for promotion. Pine export (if ever "
+                      + "generated) is a visual-only aid and honestly omits the logic below.",
+                    score: exportCheckSh.score,
+                    band: exportCheckSh.band,
+                    deductions: exportCheckSh.deductions,
+                  } as Record<string, unknown>,
+                  status: "success",
+                  correlationId: tickCorrelationId,
+                }).catch((auditErr: unknown) => {
+                  logger.warn({ err: auditErr, correlationId: tickCorrelationId, strategyId: s.id }, "exportability_archetype_direct_route_exempt (SHADOW→PAPER) audit insert failed (non-blocking)");
+                });
+              }
             }
           } catch (exportErrSh) {
             const infraErrMsgSh = exportErrSh instanceof Error ? exportErrSh.message : String(exportErrSh);
@@ -3831,7 +4651,7 @@ export class LifecycleService {
               } as Record<string, unknown>,
               status: "warn",
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ auditErr, strategyId: s.id }, "exportability_infra_error (SHADOW→PAPER) audit insert failed (non-blocking)");
             });
             broadcastSSE("strategy:exportability_infra_error", {
@@ -3870,6 +4690,7 @@ export class LifecycleService {
                 : null;
 
               const b14CiResultSh = evaluateB14CiGate(ruinCiSh, pointEstimateSh);
+              _incB14GateCounter("SHADOW_TO_PAPER", b14CiResultSh);
 
               await db.insert(auditLog).values({
                 action: "b14.gate_evaluated",
@@ -3880,11 +4701,12 @@ export class LifecycleService {
                 input: { fromState: "SHADOW", toState: "PAPER" },
                 result: b14CiResultSh.auditPayload,
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (SHADOW→PAPER) audit insert failed (non-blocking)");
               });
 
               broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
                 strategyId: s.id,
                 ...b14CiResultSh.auditPayload,
                 passed: b14CiResultSh.passed,
@@ -3904,6 +4726,7 @@ export class LifecycleService {
               this._resetHardGateCounter(s.id, "b14_ci_high", tickCorrelationId);
             } else {
               const b14ShNoMc = evaluateB14CiGate(null, null);
+              _incB14GateCounter("SHADOW_TO_PAPER", b14ShNoMc);
               await db.insert(auditLog).values({
                 action: "b14.gate_evaluated",
                 entityId: s.id,
@@ -3913,7 +4736,7 @@ export class LifecycleService {
                 input: { fromState: "SHADOW", toState: "PAPER" },
                 result: { ...b14ShNoMc.auditPayload, note: "no completed MC run for latest backtest — fail-closed (MC auto-fires post-backtest; absent = errored/pending)" },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (SHADOW→PAPER no-MC fail-closed) audit insert failed (non-blocking)");
               });
               logger.warn(
@@ -3925,6 +4748,7 @@ export class LifecycleService {
             }
           } catch (b14ShErr) {
             const b14ShErrMsg = b14ShErr instanceof Error ? b14ShErr.message : String(b14ShErr);
+            try { b14GateTotal.labels({ transition: "SHADOW_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
             logger.warn({ strategyId: s.id, err: b14ShErr }, "B14 CI gate (SHADOW→PAPER): read failed — blocking promotion (fail-closed)");
             await db.insert(auditLog).values({
               action: "b14.gate_error_fail_closed",
@@ -3939,7 +4763,7 @@ export class LifecycleService {
                 note: "B14 CI gate threw on SHADOW→PAPER path — promotion blocked; retries next cron cycle",
               },
               correlationId: tickCorrelationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert (SHADOW→PAPER) failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
@@ -3953,8 +4777,10 @@ export class LifecycleService {
             const wfeStatusSh = wfResultsSh?.wfe_status != null ? String(wfResultsSh.wfe_status) : null;
 
             const wfeResultSh = evaluateWfeGate(wfeOverallSh, undefined, undefined, wfeStatusSh);
+            _incWfeGateCounter("SHADOW_TO_PAPER", wfeResultSh);
 
             broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
+              correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
               strategyId: s.id,
               wfe_overall: wfeResultSh.wfeOverall,
               status: wfeResultSh.status,
@@ -3983,7 +4809,7 @@ export class LifecycleService {
                   status: wfeResultSh.status,
                 },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate (SHADOW→PAPER) audit insert failed (non-blocking)");
               });
 
@@ -3999,6 +4825,7 @@ export class LifecycleService {
               this._resetHardGateCounter(s.id, "wfe_hard_floor", tickCorrelationId);
             }
           } catch (wfeShErr) {
+            try { wfeGateTotal.labels({ transition: "SHADOW_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
             logger.warn({ strategyId: s.id, err: wfeShErr }, "WFE gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
           }
 
@@ -4013,8 +4840,10 @@ export class LifecycleService {
             const paramStabilityStatusSh = (driftWfResultsSh?.param_stability_status as string | null | undefined) ?? null;
 
             const driftResultSh = evaluateParameterDriftGate(driftClassificationSh, driftConfidenceSh, paramStabilityStatusSh);
+            _incParameterDriftGateCounter("SHADOW_TO_PAPER", driftResultSh);
 
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
+              correlationId: tickCorrelationId, // deep-scan Obs F-3: SSE carries correlationId
               strategyId: s.id,
               classification: driftResultSh.classification,
               confidence: driftResultSh.confidence,
@@ -4037,7 +4866,7 @@ export class LifecycleService {
                   status: driftResultSh.status,
                 },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate (SHADOW→PAPER) audit insert failed (non-blocking)");
               });
 
@@ -4053,6 +4882,7 @@ export class LifecycleService {
               this._resetHardGateCounter(s.id, "parameter_overfit_drift", tickCorrelationId);
             }
           } catch (driftShErr) {
+            try { parameterDriftGateTotal.labels({ transition: "SHADOW_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
             logger.warn({ strategyId: s.id, err: driftShErr }, "Parameter drift gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
           }
 
@@ -4102,6 +4932,75 @@ export class LifecycleService {
             logger.warn({ strategyId: s.id, err: dsrShErr }, "DSR gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
           }
 
+          // ── E-1 (deepscan16 Wave 2 Track G2) — DSL guards_failed HARD gate: SHADOW → PAPER ──
+          // Mirrors the TESTING→PAPER gate exactly so a shadow-destined strategy cannot
+          // bypass the guards_failed check via the SHADOW ladder. `latestBtSh` is a
+          // full-row select above (no extra DB round trip).
+          try {
+            const dslGuardsSh = ((latestBtSh.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+              | DslGuardsGateInput
+              | null;
+            const dslGuardsResultSh = evaluateDslGuardsGate(dslGuardsSh);
+            _incDslGuardsGateCounter("SHADOW_TO_PAPER", dslGuardsResultSh);
+
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
+              strategyId: s.id,
+              ...dslGuardsResultSh.auditPayload,
+              correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
+              passed: dslGuardsResultSh.passed,
+              reason: dslGuardsResultSh.reason,
+            });
+
+            await db.insert(auditLog).values({
+              action: dslGuardsResultSh.auditAction ?? "lifecycle.dsl_guards_pass",
+              entityId: s.id,
+              entityType: "strategy",
+              status: !dslGuardsResultSh.passed ? "failure" : dslGuardsResultSh.status === "legacy_proceed" ? "warning" : "success",
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: dslGuardsResultSh.auditPayload,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (SHADOW→PAPER) audit insert failed (non-blocking)");
+            });
+
+            if (!dslGuardsResultSh.passed) {
+              logger.warn(
+                { strategyId: s.id, guardsFailedReason: dslGuardsResultSh.auditPayload.guards_failed_reason, transition: "SHADOW→PAPER" },
+                "DSL guards gate BLOCKED SHADOW→PAPER: guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+              );
+              strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+              try {
+                await this._maybeAutoGraveyard(s.id, "dsl_guards_failed", { guardsFailedReason: dslGuardsResultSh.auditPayload.guards_failed_reason }, "SHADOW", tickCorrelationId);
+              } catch (graveyardErr) {
+                logger.warn({ strategyId: s.id, err: graveyardErr }, "dsl_guards_failed _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+              }
+              continue;
+            }
+            this._resetHardGateCounter(s.id, "dsl_guards_failed", tickCorrelationId);
+          } catch (dslGuardsShErr) {
+            try { dslGuardsGateTotal.labels({ transition: "SHADOW_TO_PAPER", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
+            logger.warn({ strategyId: s.id, err: dslGuardsShErr }, "DSL guards gate (SHADOW→PAPER): read failed — blocking promotion (fail-closed)");
+            await db.insert(auditLog).values({
+              action: "lifecycle.dsl_guards_gate_error_fail_closed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: {
+                reason: "lifecycle.dsl_guards_gate_error_fail_closed",
+                error: dslGuardsShErr instanceof Error ? dslGuardsShErr.message : String(dslGuardsShErr),
+                note: "DSL guards gate threw on SHADOW→PAPER path — promotion blocked; retries next cron cycle",
+              },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (SHADOW→PAPER) failed (non-blocking)");
+            });
+            strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+            continue;
+          }
+
           // Frozen-policy baseline stamp — SHADOW → PAPER cron path
           {
             let currentRegimeShCron = "UNKNOWN";
@@ -4143,7 +5042,7 @@ export class LifecycleService {
                   note: "SHADOW→PAPER baseline freeze write failed (cron path) — cron retries next cycle",
                 },
                 correlationId: tickCorrelationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "frozen_policy.hash_compute_failed (SHADOW→PAPER cron freeze-write) audit insert failed (non-blocking)");
                 auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
               });
@@ -4194,6 +5093,7 @@ export class LifecycleService {
             });
 
             broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, {
+              correlationId, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE must carry correlationId (audit row does)
               strategyId: s.id,
               ok: false,
               divergence_pct: divergenceResult.divergence_pct,
@@ -4259,6 +5159,7 @@ export class LifecycleService {
           });
 
           broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, {
+            correlationId, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE must carry correlationId (audit row does)
             strategyId: s.id,
             ok: true,
             divergence_pct: divergenceResult.divergence_pct,
@@ -4393,14 +5294,14 @@ export class LifecycleService {
                   backtest_created_at: latestBt.createdAt,
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale PAPER audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
                 strategyId: s.id,
                 age_days: parseFloat(ageDays.toFixed(1)),
                 limit_days: stalenessDays,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;  // skip to next strategy — inside the outer try
             }
@@ -4429,13 +5330,13 @@ export class LifecycleService {
                   reason: "compliance ruleset drift_detected — promotion held until human revalidation",
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                 strategyId: s.id,
                 drift_firms: driftFirms,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;
             }
@@ -4464,7 +5365,7 @@ export class LifecycleService {
               note: "Manual operator override required — cannot verify compliance ruleset integrity",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error audit insert failed (non-blocking)");
           });
           continue;
@@ -4520,7 +5421,7 @@ export class LifecycleService {
                   note: "Hard gate activates after 30 days of MRP data",
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B10 MRP advisory audit insert failed (non-blocking)");
               });
             } else {
@@ -4585,7 +5486,7 @@ export class LifecycleService {
                 threshold: 0.85,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "A7 audit insert failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -4628,7 +5529,7 @@ export class LifecycleService {
               threshold: 0.85,
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
             logger.warn({ err: auditErr, correlationId }, "A7 gate fail-closed audit insert failed (non-blocking)");
             auditWriteFailuresTotal.labels({ action: "lifecycle.a7_gate_error" }).inc();
@@ -4703,7 +5604,7 @@ export class LifecycleService {
                     b14_hard_gate_enabled: true,
                   },
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 audit insert failed (non-blocking)");
                 });
                 strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -4736,7 +5637,7 @@ export class LifecycleService {
                 input: { fromState: "PAPER", toState: "DEPLOY_READY", evaluated_via: "on_demand_replay" },
                 result: { survival_twin_status: od.status, reason: od.reason, per_firm: od.perFirm ?? null, replay_error: od.error ?? null },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B14 survival-twin on-demand audit insert failed (non-blocking)");
               });
 
@@ -4787,6 +5688,7 @@ export class LifecycleService {
                   : null;
 
                 const b14CiResult = evaluateB14CiGate(ruinCi, pointEstimate);
+                _incB14GateCounter("PAPER_TO_DEPLOY_READY", b14CiResult);
 
                 // Always emit audit row so dashboard can show gate evaluation history.
                 await db.insert(auditLog).values({
@@ -4798,11 +5700,12 @@ export class LifecycleService {
                   input: { fromState: "PAPER", toState: "DEPLOY_READY" },
                   result: b14CiResult.auditPayload,
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate audit insert failed (non-blocking)");
                 });
 
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                  correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
                   strategyId: s.id,
                   ...b14CiResult.auditPayload,
                   passed: b14CiResult.passed,
@@ -4848,6 +5751,7 @@ export class LifecycleService {
                 // evaluator) ALREADY hard-blocks absent MC here; this makes the autonomous
                 // cron path match. evaluateB14CiGate(null,null) returns passed=false.
                 const b14NoMcResult = evaluateB14CiGate(null, null);
+                _incB14GateCounter("PAPER_TO_DEPLOY_READY", b14NoMcResult);
                 await db.insert(auditLog).values({
                   action: "b14.gate_evaluated",
                   entityId: s.id,
@@ -4857,10 +5761,11 @@ export class LifecycleService {
                   input: { fromState: "PAPER", toState: "DEPLOY_READY" },
                   result: { ...b14NoMcResult.auditPayload, note: "no completed MC run for latest backtest — fail-closed" },
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (no-MC fail-closed) audit insert failed (non-blocking)");
                 });
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                  correlationId, // deep-scan Obs re-verify F-3: gate-eval SSE carries correlationId (audit row does)
                   strategyId: s.id,
                   ...b14NoMcResult.auditPayload,
                   passed: false,
@@ -4878,6 +5783,7 @@ export class LifecycleService {
           } catch (b14Err) {
             // Hardening 2026-06-22 (F-2): DB hiccup in B14 gate must BLOCK promotion,
             // not fall through silently. Pattern matches A7 signal-correlation gate catch.
+            try { b14GateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
             logger.warn(
               { strategyId: s.id, err: b14Err },
               "B14 Survival Twin gate: infrastructure error — blocking promotion (fail-closed)",
@@ -4891,7 +5797,7 @@ export class LifecycleService {
               input: { fromState: "PAPER", toState: "DEPLOY_READY" },
               result: { reason: "b14.gate_error_fail_closed", error: String(b14Err) },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -4956,7 +5862,7 @@ export class LifecycleService {
                   hard_gate_enabled: b15HardGateEnabled,
                 },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B15 audit insert failed (non-blocking)");
               });
               if (b15HardGateEnabled) {
@@ -5037,8 +5943,10 @@ export class LifecycleService {
           const paramStabilityStatus = (driftWfResults?.param_stability_status as string | null | undefined) ?? null;
 
           const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence, paramStabilityStatus);
+          _incParameterDriftGateCounter("PAPER_TO_DEPLOY_READY", driftResult);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
+            correlationId: tickCorrelationId, // deep-scan Obs F-3: SSE carries correlationId
             strategyId: s.id,
             classification: driftResult.classification,
             confidence: driftResult.confidence,
@@ -5073,7 +5981,7 @@ export class LifecycleService {
                 status: driftResult.status,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate audit insert failed (non-blocking)");
             });
             if (isBlock) {
@@ -5097,6 +6005,7 @@ export class LifecycleService {
           }
         } catch (driftErr) {
           // Fail-open: drift gate read failure is non-blocking.
+          try { parameterDriftGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn(
             { strategyId: s.id, err: driftErr },
             "Parameter drift gate: read failed (non-blocking — promotion continues)",
@@ -5111,10 +6020,107 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: driftErr instanceof Error ? driftErr.message : String(driftErr), note: "infra read failure — fail-open, promotion continues" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "parameter_drift_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
+        }
+
+        // ── E-1 (deepscan16 Wave 2 Track G2) — DSL guards_failed HARD gate: PAPER → DEPLOY_READY ──
+        // Reads backtests.result_extras.dsl_guards.guards_failed (Wave-1 Track 2 producer
+        // field). guards_failed=true means the E.3/E.4/E.5 risk-guard block threw mid-backtest
+        // and NONE of the stop-ceiling / time-stop / DLL-halt guards ran for that run — the
+        // backtest is UNGUARDED, not clean, and must not promote toward live capital. This is
+        // the LAST-CHANCE gate before DEPLOY_READY, so it runs regardless of whether the
+        // strategy arrived via TESTING→PAPER or SHADOW→PAPER (both already gate it too — this
+        // is intentional defense-in-depth, matching how B14/WFE/parameter-drift all re-evaluate
+        // at every hop rather than trusting an earlier hop's pass).
+        try {
+          const [latestBtForDslGuards] = await db
+            .select({ resultExtras: backtests.resultExtras })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const dslGuards = ((latestBtForDslGuards?.resultExtras as Record<string, unknown> | null)?.dsl_guards ?? null) as
+            | DslGuardsGateInput
+            | null;
+          const dslGuardsResult = evaluateDslGuardsGate(dslGuards);
+          _incDslGuardsGateCounter("PAPER_TO_DEPLOY_READY", dslGuardsResult);
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
+            strategyId: s.id,
+            ...dslGuardsResult.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
+            passed: dslGuardsResult.passed,
+            reason: dslGuardsResult.reason,
+          });
+
+          await db.insert(auditLog).values({
+            action: dslGuardsResult.auditAction ?? "lifecycle.dsl_guards_pass",
+            entityId: s.id,
+            entityType: "strategy",
+            status: !dslGuardsResult.passed ? "failure" : dslGuardsResult.status === "legacy_proceed" ? "warning" : "success",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: dslGuardsResult.auditPayload,
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate (PAPER→DEPLOY_READY) audit insert failed (non-blocking)");
+          });
+
+          if (!dslGuardsResult.passed) {
+            logger.warn(
+              { strategyId: s.id, guardsFailedReason: dslGuardsResult.auditPayload.guards_failed_reason, transition: "PAPER→DEPLOY_READY" },
+              "DSL guards gate BLOCKED PAPER→DEPLOY_READY: guards_failed=true (E.3/E.4/E.5 risk guards did not run — unguarded backtest)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            try {
+              await this._maybeAutoGraveyard(s.id, "dsl_guards_failed", { guardsFailedReason: dslGuardsResult.auditPayload.guards_failed_reason }, "PAPER", correlationId);
+            } catch (graveyardErr) {
+              logger.warn({ strategyId: s.id, err: graveyardErr }, "dsl_guards_failed _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+            }
+            continue; // block decision wins regardless of graveyard write outcome
+          }
+          // Gate passed (or legacy grandfather) — reset consecutive counter.
+          // Deliberately NOT pushed into gateEvidenceStatuses: that array feeds the
+          // SEPARATE >=3-incomplete "evidence completeness" governor
+          // (evidence-completeness.ts). Every backtest today is pre-Track-2 and would
+          // book "legacy_proceed" (an isIncompleteEvidenceStatus "legacy" match) on
+          // this brand-new gate, silently tipping strategies that currently sit at
+          // 2-incomplete over the 3-incomplete threshold — an unintended change to a
+          // DIFFERENT hard gate's blocking behavior. This gate's own pass/block
+          // decision (above) is unaffected either way.
+          this._resetHardGateCounter(s.id, "dsl_guards_failed", correlationId);
+        } catch (dslGuardsErr) {
+          // Fail-CLOSED: same severity class as B14 — a read/parse error must not
+          // silently allow an unguarded backtest to promote to DEPLOY_READY.
+          try { dslGuardsGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
+          logger.warn({ strategyId: s.id, err: dslGuardsErr }, "DSL guards gate (PAPER→DEPLOY_READY): read failed — blocking promotion (fail-closed)");
+          await db.insert(auditLog).values({
+            action: "lifecycle.dsl_guards_gate_error_fail_closed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: {
+              reason: "lifecycle.dsl_guards_gate_error_fail_closed",
+              error: dslGuardsErr instanceof Error ? dslGuardsErr.message : String(dslGuardsErr),
+              note: "DSL guards gate threw on PAPER→DEPLOY_READY path — promotion blocked; retries next cron cycle",
+            },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSL guards gate fail-closed audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Wave B Fix 1: DSR walk-forward gate (PAPER → DEPLOY_READY) ──────────
@@ -5158,7 +6164,7 @@ export class LifecycleService {
               input: { fromState: "PAPER", toState: "DEPLOY_READY" },
               result: dsrGateResult.auditPayload,
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "DSR gate (PAPER→DEPLOY_READY) audit insert failed (non-blocking)");
             });
 
@@ -5209,7 +6215,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: dsrPdrErr instanceof Error ? dsrPdrErr.message : String(dsrPdrErr), note: "infra read failure — fail-open, promotion continues" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "dsr_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
@@ -5247,10 +6253,16 @@ export class LifecycleService {
           const bifNum = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
           const kEffNum = latestBtForBif?.kEff != null ? Number(latestBtForBif.kEff) : null;
 
+          // deep-scan promotion L-2: read the computation-error sentinel (top-level of walkForwardResults)
+          // so a REAL compute_bif() failure fails the gate CLOSED instead of grandfathering as legacy-null.
+          const bifCompError =
+            (latestBtForBif?.walkForwardResults as Record<string, unknown> | null)?.bif_computation_error === true;
           const bifResult = evaluateBifGate(
             bifNum,
             kEffNum,
-            bifReliableFalse ? { bifReliable: false, proxyBasis: bifProxyBasis } : { proxyBasis: bifProxyBasis },
+            bifReliableFalse
+              ? { bifReliable: false, proxyBasis: bifProxyBasis, computationError: bifCompError }
+              : { proxyBasis: bifProxyBasis, computationError: bifCompError },
           );
 
           const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
@@ -5275,12 +6287,13 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: bifResult.auditPayload as Record<string, unknown>,
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "BIF gate audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
           });
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.BIF_EVALUATED, {
             strategyId: s.id,
+            correlationId, // deep-scan Obs re-verify F-3b: BIF is a HARD gate; SSE must carry correlationId (audit row does)
             ...bifResult.auditPayload,
             passed: bifResult.passed,
             reason: bifResult.reason,
@@ -5302,7 +6315,10 @@ export class LifecycleService {
           }
           // Gate passed (clean / warn / cpcv_unmeasured / legacy) — reset consecutive counter
           this._resetHardGateCounter(s.id, "bif_blocked", correlationId);
-          gateEvidenceStatuses.push(bifResult.legacyNull ? "legacy_null" : "complete");
+          // FIX M1: route through the shared bucket helper. A malformed/producer-error
+          // BIF reason books INCOMPLETE "malformed" instead of a false "complete"
+          // (BIF coerces garbage bif → legacyNull today, so this is forward-safe).
+          gateEvidenceStatuses.push(bifEvidenceBucket(bifResult.legacyNull, bifResult.reason));
         } catch (bifErr) {
           logger.warn(
             { strategyId: s.id, err: bifErr },
@@ -5318,8 +6334,97 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: bifErr instanceof Error ? bifErr.message : String(bifErr), note: "infra read failure — fail-open, promotion continues" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "bif_infra_error_proceeded audit insert failed (non-blocking)");
+          });
+          gateEvidenceStatuses.push("data_unavailable");
+        }
+
+        // ── Wave A (2026-07-03) — Slippage-Survival gate, cron-path enforcement ──
+        // Mirrors the BIF block immediately above (same fetch/evaluate/audit/SSE/
+        // block/reset-counter shape). Default-OFF via SLIPPAGE_SURVIVAL_GATE_ENABLED
+        // (advisory-only — never alters flow while disabled); legacy-null and
+        // insufficient-sample both grandfather-pass with a warn. See design spec:
+        // docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+        try {
+          const [latestBtForSlippage] = await db
+            .select({ slippageSurvival: backtests.slippageSurvival })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const slippageSurvivalResult = evaluateSlippageSurvivalGate(
+            (latestBtForSlippage?.slippageSurvival ?? null) as import("../lib/slippage-survival-gate.js").SlippageSurvivalDict | null,
+          );
+
+          await db.insert(auditLog).values({
+            action: "slippage_survival.gate_evaluated",
+            entityId: s.id,
+            entityType: "strategy",
+            status: slippageSurvivalResult.passed
+              ? (slippageSurvivalResult.status === "clean" || slippageSurvivalResult.status === "disabled" ? "success" : "warning")
+              : "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: slippageSurvivalResult.auditPayload as Record<string, unknown>,
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival.gate_evaluated audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.SLIPPAGE_SURVIVAL_EVALUATED, {
+            strategyId: s.id,
+            ...slippageSurvivalResult.auditPayload,
+            passed: slippageSurvivalResult.passed,
+            reason: slippageSurvivalResult.reason,
+            // §2 correlation_id mandate: thread the same id the audit row carries.
+            correlationId,
+          });
+
+          if (!slippageSurvivalResult.passed) {
+            try {
+              slippageSurvivalBlocksTotal.labels({ breaks_at: String(slippageSurvivalResult.auditPayload.breaks_at) }).inc();
+            } catch { /* non-blocking counter */ }
+            logger.warn(
+              { strategyId: s.id, breaks_at: slippageSurvivalResult.auditPayload.breaks_at, threshold: slippageSurvivalResult.auditPayload.block_mult, transition: "PAPER→DEPLOY_READY" },
+              "Slippage-Survival gate BLOCKED PAPER→DEPLOY_READY: edge dies at or below block multiple (living on optimistic fills)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            try {
+              await this._maybeAutoGraveyard(s.id, "slippage_survival_blocked", { breaks_at: slippageSurvivalResult.auditPayload.breaks_at, threshold: slippageSurvivalResult.auditPayload.block_mult }, "PAPER", correlationId);
+            } catch (graveyardErr) {
+              logger.warn({ strategyId: s.id, err: graveyardErr }, "slippage_survival _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+            }
+            continue; // block decision wins regardless of graveyard write outcome
+          }
+          this._resetHardGateCounter(s.id, "slippage_survival_blocked", correlationId);
+          // FIX M1: a malformed (wrong-key / broken-producer) slippage_survival row
+          // now books INCOMPLETE "malformed" — previously it was silently booked
+          // "complete", letting a broken-producer strategy dodge the >=3-incomplete
+          // governor. legacy_null keeps its existing bucket; genuine passes → "complete".
+          gateEvidenceStatuses.push(slippageEvidenceBucket(slippageSurvivalResult.status));
+        } catch (slippageSurvivalErr) {
+          logger.warn(
+            { strategyId: s.id, err: slippageSurvivalErr },
+            "Slippage-Survival gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+          );
+          await db.insert(auditLog).values({
+            action: "lifecycle.slippage_survival_infra_error_proceeded",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: slippageSurvivalErr instanceof Error ? slippageSurvivalErr.message : String(slippageSurvivalErr), note: "infra read failure — fail-open, promotion continues" },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
         }
@@ -5390,6 +6495,23 @@ export class LifecycleService {
               spaConsistentP,
             });
 
+            // Deep-scan #16 Wave-1 Track 5 (HIGH E-6): the Pass E orchestrator's wfe_floor
+            // sub-gate is a SECOND WFE evaluation site (distinct from the standalone WFE-gate
+            // helper invocation used for TESTING→PAPER/SHADOW→PAPER above — see the
+            // F-5 removal note near line ~5123). It has no `status`/`legacyFallback` field,
+            // only {passed, data_available} — data_available===false means the gate had
+            // no backtest data to evaluate (mapped to "legacy" for consistency with the
+            // other two counters' semantics).
+            {
+              const wfeFloorRes = orchResult.gate_results.wfe_floor;
+              const wfeFloorOutcome = wfeFloorRes.data_available === false
+                ? "legacy"
+                : wfeFloorRes.passed ? "pass" : "block";
+              try {
+                wfeGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: wfeFloorOutcome }).inc();
+              } catch { /* non-blocking counter */ }
+            }
+
             // Remove b14 from orchestrator result to avoid double-counting
             const gatesToEvaluate: Array<"wfe_floor" | "cpcv_n_paths" | "wrc_p" | "spa_p"> =
               ["wfe_floor", "cpcv_n_paths", "wrc_p", "spa_p"];
@@ -5432,7 +6554,7 @@ export class LifecycleService {
                     data_available: gateRes.data_available,
                   },
                   correlationId,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   logger.warn({ strategyId: s.id, gate, err: auditErr }, "Pass E gate_failed audit insert failed (non-blocking)");
                 });
                 // data_available: false → strategy just lacks data yet (TRANSIENT); don't count toward burial.
@@ -5490,7 +6612,7 @@ export class LifecycleService {
                 },
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "Pass E gates_cleared audit insert failed (non-blocking)");
             });
             // Track A.2: check orchestrator data availability for evidence scoring
@@ -5504,6 +6626,9 @@ export class LifecycleService {
           // F-4 Hardening 2026-06-23: Fail-CLOSED on orchestrator infrastructure error.
           // The orchestrator evaluates WFE-0.80, CPCV-15, WRC, and SPA — all institutional gates.
           // An orchestrator that cannot run must BLOCK promotion, not silently allow it.
+          // Deep-scan #16 Wave-1 Track 5: this orchestrator failure blocks the wfe_floor
+          // sub-gate too (it never got the chance to evaluate) — count it as an error.
+          try { wfeGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           const orchErrMsg = orchErr instanceof Error ? orchErr.message : String(orchErr);
           logger.warn(
             { strategyId: s.id, err: orchErr },
@@ -5522,7 +6647,7 @@ export class LifecycleService {
               note: "Pass E orchestrator threw — promotion blocked (fail-closed); retries next cron cycle",
             },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "orchestrator fail-closed audit insert failed (non-blocking)");
           });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
@@ -5594,7 +6719,7 @@ export class LifecycleService {
                 agreement,
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "composite shadow evaluation audit insert failed (non-blocking)");
             });
 
@@ -5647,7 +6772,7 @@ export class LifecycleService {
                 note: "composite shadow gate threw — promotion proceeds via Wave 27.5 hard gates alone",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
               logger.warn({ err: auditErr, correlationId }, "composite_shadow_evaluation_error audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "composite.shadow_evaluation_error" }).inc();
@@ -5701,14 +6826,14 @@ export class LifecycleService {
                 note: "Operator must POST /api/admin/frozen-policy-override with HMAC + rationale ≥50 chars",
               },
               correlationId,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "frozen_policy drift-block audit failed (non-blocking)");
             });
             broadcastSSE(LIFECYCLE_GATE_EVENTS.FROZEN_POLICY_DRIFT_BLOCKED, {
               strategyId: s.id,
               current_hash: driftResult.currentHash,
               frozen_hash: driftResult.frozenHash ?? null,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             continue; // skip this strategy in the current pass
           }
@@ -5753,7 +6878,7 @@ export class LifecycleService {
                 input: { fromState: "PAPER", toState: "DEPLOY_READY" },
                 result: { error: freezeMsg, note: "first-time freeze write failed — promotion blocked; retries next cron cycle" },
                 correlationId,
-              }).catch((auditErr) => {
+              }).catch((auditErr: unknown) => {
                 // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
                 logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (freeze-write) audit insert failed (non-blocking)");
                 auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
@@ -5777,7 +6902,7 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: msg, note: "hash compute exception — promotion blocked until manual investigation" },
             correlationId,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
             logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (exception) audit insert failed (non-blocking)");
             auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
@@ -5797,7 +6922,7 @@ export class LifecycleService {
         // block promotion this cycle (strategy retries next cron pass).
         {
           const incompleteCount = gateEvidenceStatuses.filter(
-            (st) => st.includes("legacy") || st === "data_unavailable",
+            isIncompleteEvidenceStatus,
           ).length;
           if (incompleteCount >= 3) {
             logger.warn(
@@ -5823,7 +6948,7 @@ export class LifecycleService {
                 note: "Strategy must complete institutional-grade backtests before promotion proceeds",
               },
               correlationId: correlationId ?? null,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "promotion_evidence_incomplete audit insert failed (non-blocking)");
             });
             notifyWarning(
@@ -5845,7 +6970,7 @@ export class LifecycleService {
               incomplete_count: incompleteCount,
               total_gates: gateEvidenceStatuses.length,
               gate_evidence_statuses: gateEvidenceStatuses,
-              correlation_id: correlationId ?? null,
+              correlationId: correlationId ?? null,
             });
 
             // ─── FIX 3 (DEBT-3) 2026-06-24: auto-backtest enqueue on evidence-incomplete ────
@@ -5965,6 +7090,7 @@ export class LifecycleService {
             rollingSharpe,
             tradingDays,
             message: `Strategy "${s.name}" qualified for deployment — review in library`,
+            correlationId: correlationId ?? null,
           });
 
           AlertFactory.deployReady(
@@ -5984,7 +7110,7 @@ export class LifecycleService {
               input: { rollingSharpe, tradingDays },
               result: { error: String(e) },
               correlationId: correlationId ?? null,
-            }).catch((auditErr) => {
+            }).catch((auditErr: unknown) => {
               // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
               logger.warn({ err: auditErr, correlationId }, "deploy_ready_alert_failed audit insert failed (non-blocking)");
               auditWriteFailuresTotal.labels({ action: "lifecycle.deploy_ready_alert_failed" }).inc();
@@ -6019,7 +7145,7 @@ export class LifecycleService {
           // Fire-and-forget — must never block the promotion success path.
           {
             const incompleteCountFinal = gateEvidenceStatuses.filter(
-              (st) => st.includes("legacy") || st === "data_unavailable",
+              isIncompleteEvidenceStatus,
             ).length;
             const compositeEvidenceScoreFinal = 1.0 - (incompleteCountFinal / 8.0);
             db.execute(
@@ -6421,7 +7547,7 @@ export class LifecycleService {
             status: "pending",
             decisionAuthority: "scheduler",
             correlationId: correlationId ?? null,
-          }).catch((auditErr) => {
+          }).catch((auditErr: unknown) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "regen.auto_triggered audit insert failed (non-blocking)");
           });
 
@@ -6557,6 +7683,7 @@ export class LifecycleService {
           if (killResult.success) {
             result.killed++;
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+              correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
               strategyId: s.id,
               from: "PILOT",
               to: "GRAVEYARD",
@@ -6616,6 +7743,7 @@ export class LifecycleService {
           if (promoteResult.success) {
             result.promoted++;
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+              correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
               strategyId: s.id,
               from: "PILOT",
               to: "DEPLOYED",
@@ -6668,7 +7796,7 @@ export class LifecycleService {
                   input: { fromState: "PILOT", toState: "DEPLOYED" },
                   result: { error: errMsg, attempts: 3, note: "Pine compile failed after 3 retries (30s/2m/10m)" },
                   correlationId: correlationId ?? null,
-                }).catch((auditErr) => {
+                }).catch((auditErr: unknown) => {
                   // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
                   logger.warn({ err: auditErr, correlationId }, "deployed_pine_compile_failed audit insert failed (non-blocking)");
                   auditWriteFailuresTotal.labels({ action: "lifecycle.deployed_pine_compile_failed" }).inc();
@@ -6684,7 +7812,7 @@ export class LifecycleService {
                   ),
                 );
               }
-            })().catch((err) => {
+            })().catch((err: unknown) => {
               logger.error({ strategyId: s.id, err }, "PILOT auto-promote: Pine export retry wrapper threw unexpectedly");
             });
           } else {
@@ -6714,6 +7842,7 @@ export class LifecycleService {
           if (failResult.success) {
             result.killed++;
             broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+              correlationId, // deep-scan Obs re-verify F-3: SSE promotion event must carry correlationId (audit row does)
               strategyId: s.id,
               from: "PILOT",
               to: "GRAVEYARD",

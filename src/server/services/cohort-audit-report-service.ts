@@ -110,8 +110,11 @@ async function _fetchRows(
 
     return rows as AuditRow[];
   } catch (err) {
-    logger.warn({ err, action }, "cohort-audit-report: query failed — returning empty");
-    return [];
+    // deep-scan services HIGH (2026-07-06): do NOT collapse a DB error to [] — an empty result then reads in
+    // the operator go/no-go Markdown as a genuinely healthy "0 events", masking that we could not read the
+    // audit trail at all. Fail LOUD so the report surfaces the error instead of fabricating a clean verdict.
+    logger.error({ err, action }, "cohort-audit-report: query FAILED — throwing (must not fabricate a healthy report)");
+    throw new Error(`cohort-audit-report: audit query failed for action=${action}: ${(err as Error)?.message ?? err}`);
   }
 }
 
@@ -127,8 +130,9 @@ async function _fetchCount(action: string, since: Date): Promise<number> {
       .where(and(eq(auditLog.action, action), gte(auditLog.createdAt, since)));
     return (rows[0]?.cnt as number) ?? 0;
   } catch (err) {
-    logger.warn({ err, action }, "cohort-audit-report: count query failed — returning 0");
-    return 0;
+    // deep-scan services HIGH: same as above — a DB error must not read as a healthy "0 count".
+    logger.error({ err, action }, "cohort-audit-report: count query FAILED — throwing (must not fabricate 0)");
+    throw new Error(`cohort-audit-report: count query failed for action=${action}: ${(err as Error)?.message ?? err}`);
   }
 }
 

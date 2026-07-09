@@ -5,7 +5,8 @@
  * the hardening/phase-0 branch (2026-06-24):
  *
  *   L1 — metrics-registry.ts: pboBLocksTotal typo fixed → pboBlocksTotal;
- *          deprecated alias retained for backward-compat.
+ *          deprecated alias retained for backward-compat, then fully removed
+ *          once all consumers migrated (CF1.1 CLOSED, deepscan15 2026-07-03).
  *   L2 — sse.ts WAVE29_EVENTS JSDoc: stale lifecycle-service.ts line numbers
  *          replaced with stable function/method anchors.
  *   L3 — scheduler.ts auto-disable alert references docs/admin-runbook.md;
@@ -38,30 +39,26 @@ describe("L1 — metrics-registry pboBlocksTotal rename", () => {
     expect(typeof registry.pboBlocksTotal.labels).toBe("function");
   });
 
-  it("deprecated alias pboBLocksTotal still exports for backward compat (other test files not yet migrated)", async () => {
+  it("CF1.1 CLOSED (deepscan15 2026-07-03): deprecated pboBLocksTotal alias no longer exports", async () => {
     const registry = await import("../lib/metrics-registry.js");
-    // cf1 (2026-06-24): lifecycle-service.ts has been migrated to pboBlocksTotal.
-    // Alias retained because wave29-prod-hardening-prom-counters.test.ts,
-    // wave29-pass-d1-observability.test.ts, wave-a-paper-parity-*.test.ts, and
-    // wave-b-paper-parity-pbo-regime-label.test.ts still import the old name
-    // (not in cf1 owned-file list).  Remove alias once those files are updated.
-    expect(registry.pboBLocksTotal).toBeDefined();
-    expect(registry.pboBLocksTotal).toBe(registry.pboBlocksTotal);
+    // All 6 dependent test files (wave29-prod-hardening-prom-counters.test.ts,
+    // wave29-pass-d1-observability.test.ts, wave-a-paper-parity-*.test.ts) have been
+    // migrated to import pboBlocksTotal directly, in the same commit that removes
+    // this export. wave-b-paper-parity-pbo-regime-label.test.ts never imported the
+    // alias (it used an unrelated same-named local variable).
+    expect((registry as Record<string, unknown>).pboBLocksTotal).toBeUndefined();
+    expect(registry.pboBlocksTotal).toBeDefined();
   });
 
-  it("pboBlocksTotal and pboBLocksTotal increment the same Prometheus series (alias parity)", async () => {
-    const { pboBlocksTotal, pboBLocksTotal, promRegistry } = await import(
-      "../lib/metrics-registry.js"
-    );
+  it("pboBlocksTotal increments the tf_pbo_blocks_total Prometheus series", async () => {
+    const { pboBlocksTotal, promRegistry } = await import("../lib/metrics-registry.js");
 
     const metrics = await promRegistry.getMetricsAsJSON();
     const before = (metrics.find((m: { name: string }) => m.name === "tf_pbo_blocks_total")
       ?.values as Array<{ labels: { regime: string }; value: number }>)
       ?.find((v) => v.labels.regime === "RANGE_BOUND")?.value ?? 0;
 
-    // cf1: lifecycle-service.ts now increments via pboBlocksTotal directly.
-    // Verify alias still forwards to the same counter (for other callers not yet migrated).
-    pboBLocksTotal.labels({ regime: "RANGE_BOUND" }).inc();
+    pboBlocksTotal.labels({ regime: "RANGE_BOUND" }).inc();
 
     const updatedMetrics = await promRegistry.getMetricsAsJSON();
     const after = (updatedMetrics.find((m: { name: string }) => m.name === "tf_pbo_blocks_total")
@@ -69,28 +66,19 @@ describe("L1 — metrics-registry pboBlocksTotal rename", () => {
       ?.find((v) => v.labels.regime === "RANGE_BOUND")?.value ?? 0;
 
     expect(after).toBe(before + 1);
-
-    // Also verify the canonical name observes the same increment
-    const afterCanonical = (updatedMetrics.find((m: { name: string }) => m.name === "tf_pbo_blocks_total")
-      ?.values as Array<{ labels: { regime: string }; value: number }>)
-      ?.find((v) => v.labels.regime === "RANGE_BOUND")?.value ?? 0;
-
-    expect(afterCanonical).toBe(after);
-    void pboBlocksTotal; // used in assertion chain above via registry
   });
 
-  it("source text declares pboBlocksTotal as the primary export", () => {
+  it("source text declares pboBlocksTotal as the sole export for this metric", () => {
     const src = readSrc("src/server/lib/metrics-registry.ts");
-    // Primary declaration must appear before the alias declaration
     const primaryIdx = src.indexOf("export const pboBlocksTotal = new Counter");
-    const aliasIdx = src.indexOf("export const pboBLocksTotal = pboBlocksTotal");
     expect(primaryIdx).toBeGreaterThan(-1);
-    expect(aliasIdx).toBeGreaterThan(primaryIdx);
+    // The deprecated alias export must be gone entirely.
+    expect(src).not.toContain("export const pboBLocksTotal");
   });
 
-  it("alias is annotated with @deprecated in JSDoc", () => {
+  it("source documents the CF1.1 closure (alias removal) in place of the old @deprecated JSDoc", () => {
     const src = readSrc("src/server/lib/metrics-registry.ts");
-    expect(src).toContain("@deprecated");
+    expect(src).toContain("CF1.1 CLOSED");
     expect(src).toContain("pboBlocksTotal");
   });
 

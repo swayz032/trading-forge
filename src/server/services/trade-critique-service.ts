@@ -30,12 +30,19 @@ import {
   tradeCritique,
   systemParameters,
   auditLog,
+  brokerAccounts,
 } from "../db/schema.js";
 import { callOpenAI, getFallback, loadSystemPrompt } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
 import { notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { logger } from "../lib/logger.js";
+// Wave 1 — institutional RAG grounding + faithfulness verification.
+// Both are behind default-OFF feature flags (CRITIQUE_RAG_ENABLED /
+// CRITIQUE_FAITHFULNESS_CHECK). When the flags are off, neither is invoked and
+// behavior is byte-identical to the pre-Wave-1 single-message critique call.
+import { retrieveCritiqueKnowledge } from "./critique-knowledge-retriever.js";
+import { checkCritiqueFaithfulness } from "./critique-faithfulness-check.js";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -187,6 +194,50 @@ function deriveDataCompleteness(missingFields: string[]): "full" | "partial" | "
   if (missingFields.length === 0) return "full";
   if (missingFields.length <= 4) return "partial";
   return "minimal";
+}
+
+// ─── Account resolution (data bridge, 2026-07-05) ────────────────────────────
+
+/**
+ * Resolve the broker_accounts.account_id that a trade_critique row should carry,
+ * from the paper_positions -> paper_sessions -> firmId chain.
+ *
+ * paper_sessions has no direct account_id column today (see schema.ts), so this
+ * mirrors the SAME "first enabled broker_accounts row for this firmId" convention
+ * already established for live-order routing (paper-execution-service.ts's
+ * `_resolveSmeContextForExit` + the Server-Mediated Execution entry-routing block
+ * in paper-signal-service.ts) — a deliberate, documented approximation: today the
+ * operator runs one enabled broker account per real firm (mffu/topstep), so the
+ * lookup is unambiguous in practice. If/when true multi-account-per-firm paper
+ * trading ships, this (and its two SME siblings) will need a session-level
+ * account_id column to disambiguate — tracked as a known limitation, not silently
+ * guessed around.
+ *
+ * Deliberately does NOT consult `strategies.paper_account_routing` /
+ * `slumdawg-baseline` / `slumdawg-rl-challenger` (Wave 29 Pass C.3 A/B paper
+ * routing) — those broker_accounts rows live under the sentinel `firm_id='paper'`
+ * and exist purely for RL-challenger observability bookkeeping. Every strategy
+ * defaults to `paper_account_routing='baseline'`, so resolving through that path
+ * here would misattribute real MFFU/Topstep sessions' critiques to the internal
+ * paper sandbox account — a worse error than leaving accountId null.
+ *
+ * Fail-soft: returns null (never throws) on missing firmId or any DB error, and
+ * the caller logs a structured warn so the gap is visible rather than silently
+ * swallowed.
+ */
+async function resolveAccountIdForCritique(firmId: string | null | undefined): Promise<string | null> {
+  if (!firmId) return null;
+  try {
+    const [acct] = await db
+      .select({ accountId: brokerAccounts.accountId })
+      .from(brokerAccounts)
+      .where(and(eq(brokerAccounts.firmId, firmId), eq(brokerAccounts.enabled, true)))
+      .limit(1);
+    return acct?.accountId ?? null;
+  } catch (err) {
+    logger.warn({ err, firmId }, "trade_critique: accountId resolution query failed — leaving null (fail-soft)");
+    return null;
+  }
 }
 
 // ─── R computation ───────────────────────────────────────────────────────────
@@ -466,12 +517,26 @@ async function _runCritiqueInternal(
   // ─── 3. Detect missing Wave 25 fields ───────────────────────────
   // Wave 25 adds fields that may not yet be populated for older positions.
   // `pos` and `strategy` are typed as `any` (raw DB select), so direct access is fine.
+  //
+  // Data bridge (2026-07-05): paper_positions has no top-level columns for these
+  // fields (confirmed against schema.ts) — `pos.structureState` etc. above were
+  // always undefined in production. paper-signal-service.ts now captures whichever
+  // of these fields the deciding signal actually knew at entry and merges them into
+  // paper_positions.exit_plan.entryContext (see EntryDecisionContext in
+  // jsonb-shapes.ts). Read that JSONB path as the primary source, keeping the
+  // original top-level-column checks first for forward-compat if those columns are
+  // ever added directly. `narrative_phase` and `backtest_expected_r_by_regime` are
+  // NOT bridged — the Wave 25 Pass 6 narrative-state machine and per-regime
+  // expected-R are genuinely disconnected from the live signal path today (see
+  // jsonb-shapes.ts EntryDecisionContext doc comment) — left absent, not fabricated.
+  const entryCtx = (pos.exitPlan as { entryContext?: Record<string, unknown> } | null | undefined)
+    ?.entryContext ?? null;
   const wave25Context: Wave25ContextFields = {
-    structureState:           pos.structureState ?? pos.structure_state ?? null,
+    structureState:           pos.structureState ?? pos.structure_state ?? entryCtx?.structureState ?? null,
     narrativePhase:           pos.narrativePhase ?? pos.narrative_phase ?? null,
-    confluenceScore:          pos.confluenceScore ?? pos.confluence_score ?? null,
-    confluenceFactorsActive:  pos.confluenceFactorsActive ?? pos.confluence_factors_active ?? null,
-    nearestLiquidityLevel:    pos.nearestLiquidityLevel ?? pos.nearest_liquidity_level ?? null,
+    confluenceScore:          pos.confluenceScore ?? pos.confluence_score ?? entryCtx?.confluenceScore ?? null,
+    confluenceFactorsActive:  pos.confluenceFactorsActive ?? pos.confluence_factors_active ?? entryCtx?.confluenceFactorsActive ?? null,
+    nearestLiquidityLevel:    pos.nearestLiquidityLevel ?? pos.nearest_liquidity_level ?? entryCtx?.nearestLiquidityLevel ?? null,
     backtestExpectedRByRegime: strategy ? strategy.backtestExpectedRByRegime ?? null : null,
   };
 
@@ -526,7 +591,14 @@ async function _runCritiqueInternal(
       take_profit:           (strategy as any).takeProfit ?? null,
     } : null,
     context: {
-      regime_at_entry:              (pos as any).regimeAtEntry ?? null,
+      // Data bridge (2026-07-05): regimeAtEntry/atrAtEntry are not top-level
+      // paper_positions columns; fall back to the exit_plan JSONB bridge —
+      // entryCtx.regimeAtEntry (new, EntryDecisionContext) then the pre-existing
+      // F9 exitPlan.entryRegime (older positions written before this bridge).
+      regime_at_entry:              (pos as any).regimeAtEntry
+        ?? entryCtx?.regimeAtEntry
+        ?? (pos.exitPlan as { entryRegime?: string } | null | undefined)?.entryRegime
+        ?? null,
       structure_state:              wave25Context.structureState,
       narrative_phase:              wave25Context.narrativePhase,
       confluence_score:             wave25Context.confluenceScore,
@@ -534,7 +606,7 @@ async function _runCritiqueInternal(
       nearest_liquidity_level:      wave25Context.nearestLiquidityLevel,
       backtest_expected_r_by_regime: wave25Context.backtestExpectedRByRegime,
       topstep_daily_pnl_breakdown:  (session as any)?.dailyPnlBreakdown ?? null,
-      atr_at_entry:                 (pos as any).atrAtEntry ?? null,
+      atr_at_entry:                 (pos as any).atrAtEntry ?? entryCtx?.atrAtEntry ?? null,
       session_type:                 (pos as any).sessionType ?? null,
     },
     realized_r:       realizedR,
@@ -549,8 +621,31 @@ async function _runCritiqueInternal(
   let usedProvider: "openai" | "ollama" = "openai";
   let usedModel = "gpt-5.4";
 
+  // Wave 1 — institutional RAG grounding (default OFF via CRITIQUE_RAG_ENABLED).
+  // When ON, retrieve a structured INSTITUTIONAL REFERENCE block and pass it as a
+  // SEPARATE grounding message BEFORE the raw trade JSON, so the trade data stays
+  // primary and the reference is context. On ANY retrieval error, fall back to the
+  // no-RAG path (never fail the critique). When OFF: referenceBlock stays null and
+  // the call is byte-identical to the pre-Wave-1 single-message behavior.
+  let referenceBlock: string | null = null;
+  if (process.env.CRITIQUE_RAG_ENABLED === "true") {
+    try {
+      referenceBlock = await retrieveCritiqueKnowledge(llmInput);
+    } catch (ragErr) {
+      logger.warn({ positionId, err: ragErr }, "trade_critique: RAG retrieval failed — using no-RAG path");
+      referenceBlock = null;
+    }
+  }
+
+  const cloudMessages = referenceBlock
+    ? [
+        { role: "user" as const, content: referenceBlock },
+        { role: "user" as const, content: userPrompt },
+      ]
+    : [{ role: "user" as const, content: userPrompt }];
+
   // Cloud attempt
-  rawJson = await callOpenAI("trade_critique", [{ role: "user", content: userPrompt }]);
+  rawJson = await callOpenAI("trade_critique", cloudMessages);
   if (rawJson) {
     usedProvider = "openai";
     usedModel = "gpt-5.4";
@@ -560,7 +655,14 @@ async function _runCritiqueInternal(
     const fallback = getFallback("trade_critique");
     const fallbackModel = fallback?.model ?? "gemma4:e4b-it-qat";
     const systemPrompt = loadSystemPrompt("trade_critique");
-    const fullPrompt = systemPrompt ? `${systemPrompt}\n\nUser input:\n${userPrompt}` : userPrompt;
+    // Byte-identical to legacy when referenceBlock is null; injects grounding
+    // before the user input only when RAG is enabled and retrieval succeeded.
+    let fullPrompt = systemPrompt ? `${systemPrompt}\n\nUser input:\n${userPrompt}` : userPrompt;
+    if (referenceBlock) {
+      fullPrompt = systemPrompt
+        ? `${systemPrompt}\n\n${referenceBlock}\n\nUser input:\n${userPrompt}`
+        : `${referenceBlock}\n\nUser input:\n${userPrompt}`;
+    }
     try {
       const ollama = new OllamaClient();
       const ollamaResp = await ollama.generate(fallbackModel, fullPrompt, undefined, true);
@@ -663,15 +765,49 @@ async function _runCritiqueInternal(
     return { status: "failed", positionId };
   }
 
+  // ─── 6b. Faithfulness check (Wave 1 — default OFF via CRITIQUE_FAITHFULNESS_CHECK) ──
+  // Advisory-only: verifies each material attribution weight is supported by a
+  // present data field, and every parameter_hint.field is whitelisted. Attaches
+  // nothing to the DB (no schema change this wave — persistence is a follow-up);
+  // logs the result structured. Never blocks the critique.
+  if (process.env.CRITIQUE_FAITHFULNESS_CHECK === "true") {
+    try {
+      const faithfulness = checkCritiqueFaithfulness(parsed as Record<string, unknown>, llmInput);
+      logger.info(
+        {
+          positionId,
+          supported: faithfulness.supported,
+          flags: faithfulness.flags,
+          correlationId: correlationId ?? null,
+        },
+        "trade_critique: faithfulness check",
+      );
+    } catch (faithErr) {
+      logger.warn({ positionId, err: faithErr }, "trade_critique: faithfulness check errored (non-blocking)");
+    }
+  }
+
   // ─── 7. Persist critique row (skipped in dry-run) ───────────────
   let persistedId: string | undefined;
   if (!dryRun) {
+    // Account resolution (data bridge, 2026-07-05): resolve via session.firmId ->
+    // first enabled broker_accounts row. See resolveAccountIdForCritique doc comment
+    // for the multi-account-per-firm limitation and why A/B paper-routing accounts
+    // are deliberately excluded from this resolution.
+    const resolvedAccountId = await resolveAccountIdForCritique(session?.firmId ?? null);
+    if (session?.firmId && !resolvedAccountId) {
+      logger.warn(
+        { positionId, sessionId: session?.id ?? null, firmId: session.firmId },
+        "trade_critique: no enabled broker_accounts row found for session firmId — accountId left null (not fabricated)",
+      );
+    }
+
     const [row] = await db
       .insert(tradeCritique)
       .values({
         positionId,
         sessionId:           session?.id ?? null,
-        accountId:           null,  // paper positions don't have direct account_id today
+        accountId:           resolvedAccountId,
         strategyId:          strategyId ?? null,
         grade:               validation.pes.grade,
         technicalDiagnosis:  validation.td as unknown as Record<string, unknown>,

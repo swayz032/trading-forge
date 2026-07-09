@@ -238,44 +238,41 @@ export async function runSettlementReconciliation(correlationId?: string): Promi
     if (!dailyPnls || typeof dailyPnls !== "object") continue;
 
     for (const [tradeDate, backtestDailyPnl] of Object.entries(dailyPnls)) {
+      const pnl = Number(backtestDailyPnl);
+      if (pnl === 0) continue; // no P&L that day → nothing to settlement-validate
+
       const settlementPrice = await getSettlementPrice(bt.symbol, tradeDate).catch(() => null);
-      if (settlementPrice == null) continue;
 
-      // Compute settlement-based PnL approximation
-      // This is a rough check: we compare whether the magnitudes align
-      // In a full implementation you'd need entry price + contracts to compute exactly
-      // For now: alert if the reported daily PnL is extreme relative to settlement move
-      const pnlMagnitude = Math.abs(Number(backtestDailyPnl));
-      const settlementProxy = settlementPrice * 0.001; // 0.1% of settlement as rough scale
-
-      if (settlementProxy > 0 && pnlMagnitude > 0) {
-        const deltaPct = Math.abs((pnlMagnitude - settlementProxy) / settlementProxy);
-        const alerted = deltaPct > RECONCILIATION_THRESHOLD;
-
-        if (alerted) {
-          alertsFired++;
-          findings.push({
-            strategyId: String(bt.strategyId),
-            strategyName: bt.id,
-            tradeDate,
-            symbol: bt.symbol,
-            backtestClosePnl: Number(backtestDailyPnl),
-            settlementPnl: settlementProxy,
-            deltaPct,
-            threshold: RECONCILIATION_THRESHOLD,
-            alerted: true,
-          });
-        }
+      // deep-scan long-tail F-3 (CRITICAL, 2026-07-06): the prior code computed a P&L "delta" by comparing
+      // |dailyPnl| (DOLLARS) against settlementPrice * 0.001 (a fraction of a raw index PRICE LEVEL, e.g.
+      // MES 5900 → $5.90) — incommensurable units → deltaPct was ~always huge → constant false alerts AND
+      // false "settlement-verified P&L" confidence. A real settlement-based P&L requires per-trade entry
+      // price + contracts + point value, which dailyPnls (date→$) does NOT carry. Until that data is
+      // threaded, this is an HONEST settlement-DATA-AVAILABILITY check only: flag a P&L date that has NO
+      // CME settlement price on record (a real validation GAP), and NEVER fabricate a magnitude delta.
+      if (settlementPrice == null) {
+        alertsFired++;
+        findings.push({
+          strategyId: String(bt.strategyId),
+          strategyName: bt.id,
+          tradeDate,
+          symbol: bt.symbol,
+          backtestClosePnl: pnl,
+          settlementPnl: 0,   // unavailable: no CME settlement price on record for this date
+          deltaPct: 0,        // not computable without per-trade entry price + contracts
+          threshold: RECONCILIATION_THRESHOLD,
+          alerted: true,
+        });
       }
     }
   }
 
   if (alertsFired > 0) {
     await notifyWarning(
-      "Settlement reconciliation: PnL delta exceeded threshold",
+      "Settlement reconciliation: missing CME settlement data for P&L dates",
       appendFamilyGradePostscript(
-        `${alertsFired} strategy/date combinations show >0.5% PnL delta vs CME settlement. Review daily_statistics table.`,
-        "The bot found a discrepancy in settlement records.",
+        `${alertsFired} strategy/date combinations have backtest P&L but NO CME settlement price on record — settlement validation is INCOMPLETE for those dates (a data-availability GAP, not a P&L mismatch; true P&L-vs-settlement reconciliation needs per-trade entry price + contracts, not yet threaded). Check the settlement price feed.`,
+        "The bot is missing some settlement records.",
         "No action needed — the bot is tracking this automatically. Call Tony to review.",
       ),
       { alertsFired, strategiesChecked: recentBacktests.length, correlationId },

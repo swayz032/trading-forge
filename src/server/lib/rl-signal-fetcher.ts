@@ -33,6 +33,7 @@ import { db } from "../db/index.js";
 import { quantumRlRuns, backtests, monteCarloRuns } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { evaluateRlDsrGate } from "./rl-dsr-gate.js";
+import { normalizeRLConfidence } from "./score-normalization.js";
 import { rlKillSwitchTotal } from "./metrics-registry.js";
 import { broadcastSSE } from "../routes/sse.js";
 
@@ -102,7 +103,10 @@ async function _computeKillSwitchState(
       evaluatedAt: quantumRlRuns.evaluatedAt,
     })
     .from(quantumRlRuns)
-    .where(eq(quantumRlRuns.strategyId, Number(strategyId)))
+    // F-3 fix (deepscan16 W1 T4): quantumRlRuns.strategyId is a UUID column
+    // (schema.ts F-2 fix) — Number(strategyId) on a UUID string always
+    // produced NaN, so this WHERE clause never matched any row.
+    .where(eq(quantumRlRuns.strategyId, strategyId))
     .orderBy(desc(quantumRlRuns.evaluatedAt))
     .limit(lookbackSessions);
 
@@ -200,7 +204,9 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
         regime: quantumRlRuns.regime,
       })
       .from(quantumRlRuns)
-      .where(eq(quantumRlRuns.strategyId, Number(strategyId)))
+      // F-3 fix (deepscan16 W1 T4): see the identical fix in
+      // _computeKillSwitchState above — Number(uuid) => NaN, always empty.
+      .where(eq(quantumRlRuns.strategyId, strategyId))
       .orderBy(desc(quantumRlRuns.evaluatedAt))
       .limit(1);
 
@@ -228,38 +234,6 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
     // of the avgEffectiveConf×2 proxy when the training loop has emitted sr_is.
     const killSwitch = await _computeKillSwitchState(strategyId, 20, srIs);
 
-    if (!killSwitch.dormant) {
-      logger.warn(
-        { strategyId, reason: killSwitch.reason, sharpeGap: killSwitch.sharpe_gap_ratio },
-        "rl-signal-fetcher: kill switch triggered — RL subsystem unavailable",
-      );
-      // Wave 29 Pass D.1: emit SSE quantum_rl:kill_switch_engaged so dashboard
-      // subscribers and the operator receive immediate visibility.
-      const killSwitchReason = killSwitch.sharpe_gap_ratio !== null &&
-        killSwitch.sharpe_gap_ratio > RL_KILL_SWITCH_SHARPE_GAP_THRESHOLD
-        ? "sharpe_gap_30pct"
-        : killSwitch.sessions_evaluated < 5
-        ? "insufficient_samples"
-        : "manual";
-      broadcastSSE("quantum_rl:kill_switch_engaged", {
-        strategy_id: strategyId,
-        reason: killSwitchReason,
-        sharpe_gap_ratio: killSwitch.sharpe_gap_ratio,
-        sessions_evaluated: killSwitch.sessions_evaluated,
-        kill_switch_reason_detail: killSwitch.reason,
-      });
-      // Wave 29 prod hardening: increment Prom counter (counter #3)
-      try {
-        rlKillSwitchTotal.labels({ reason: killSwitchReason }).inc();
-      } catch (_promErr) { /* non-blocking */ }
-      return {
-        confidence: null,
-        available: false,
-        computed_at: new Date(latestRun.evaluatedAt),
-        unavailable_reason: `kill_switch_active: ${killSwitch.reason}`,
-      };
-    }
-
     // Step 3: DSR gate check
     // F-1 fix (2026-06-28): TS probit DSR is authoritative when all three
     // governance inputs are present. Python's persisted dsr_passed flag is a
@@ -278,7 +252,54 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
       dsrGatePassed = dsrPassed;
     }
 
-    if (!dsrGatePassed) {
+    // Step 4: single source-of-truth gating + normalization.
+    // deep-scan #22 fix-wave-2 Track C (FIX C2, 2026-07-07): this used to
+    // re-implement the two-gate (kill_switch_dormant AND dsr_passed) + clamp
+    // contract inline, byte-for-byte duplicating score-normalization.ts's
+    // normalizeRLConfidence() — an unshared duplicate of safety-critical
+    // gating logic is a silent-divergence risk on future edits (e.g. a
+    // future PR tightening the kill-switch tolerance in one copy and not the
+    // other). normalizeRLConfidence() is now called here as the ONE place the
+    // gate math lives; this function is responsible only for computing the
+    // three inputs (DB reads, kill-switch stats, DSR probit calc) and for
+    // presentational diagnostics on the reject path.
+    const rawConfidence = Number(latestRun.effectiveConfidence);
+    const normalizedConfidence = normalizeRLConfidence(rawConfidence, dsrGatePassed, killSwitch.dormant);
+
+    if (normalizedConfidence === null) {
+      if (!killSwitch.dormant) {
+        logger.warn(
+          { strategyId, reason: killSwitch.reason, sharpeGap: killSwitch.sharpe_gap_ratio },
+          "rl-signal-fetcher: kill switch triggered — RL subsystem unavailable",
+        );
+        // Wave 29 Pass D.1: emit SSE quantum_rl:kill_switch_engaged so dashboard
+        // subscribers and the operator receive immediate visibility.
+        const killSwitchReason = killSwitch.sharpe_gap_ratio !== null &&
+          killSwitch.sharpe_gap_ratio > RL_KILL_SWITCH_SHARPE_GAP_THRESHOLD
+          ? "sharpe_gap_30pct"
+          : killSwitch.sessions_evaluated < 5
+          ? "insufficient_samples"
+          : "manual";
+        broadcastSSE("quantum_rl:kill_switch_engaged", {
+          strategy_id: strategyId,
+          reason: killSwitchReason,
+          sharpe_gap_ratio: killSwitch.sharpe_gap_ratio,
+          sessions_evaluated: killSwitch.sessions_evaluated,
+          kill_switch_reason_detail: killSwitch.reason,
+        });
+        // Wave 29 prod hardening: increment Prom counter (counter #3)
+        try {
+          rlKillSwitchTotal.labels({ reason: killSwitchReason }).inc();
+        } catch (_promErr) { /* non-blocking */ }
+        return {
+          confidence: null,
+          available: false,
+          computed_at: new Date(latestRun.evaluatedAt),
+          unavailable_reason: `kill_switch_active: ${killSwitch.reason}`,
+        };
+      }
+      // Kill switch dormant but normalization still returned null → DSR gate
+      // is the remaining reason (normalizeRLConfidence's only other branch).
       return {
         confidence: null,
         available: false,
@@ -287,11 +308,8 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
       };
     }
 
-    // Step 4: return effective confidence
-    const confidence = Math.max(0, Math.min(1, Number(latestRun.effectiveConfidence)));
-
     return {
-      confidence,
+      confidence: normalizedConfidence,
       available: true,
       computed_at: new Date(latestRun.evaluatedAt),
     };

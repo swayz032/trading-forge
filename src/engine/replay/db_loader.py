@@ -791,6 +791,10 @@ def load_backtest_bar_data(
 
         # Build OOS date ranges for CPCV purge gate
         oos_ranges: list[tuple[str, str]] = []
+        # Deep-Scan #18 (2026-07-05): collect malformed folds + purge count so the
+        # documented quantum_rl.training_cpcv_purge_violation audit can actually fire
+        # (previously the purge was silent — logger.warning only).
+        _malformed_folds: list[dict] = []
         if cpcv_purge:
             for row in wf_rows:
                 is_end = row["is_end"]
@@ -807,6 +811,12 @@ def load_backtest_bar_data(
                                 "backtest %s fold %s: oos_start=%s <= is_end=%s — fold excluded",
                                 backtest_id, str(row["id"]), oos_start, is_end,
                             )
+                            _malformed_folds.append({
+                                "fold_id": str(row["id"]),
+                                "reason": "oos_start_before_or_eq_is_end",
+                                "oos_start": str(oos_start),
+                                "is_end": str(is_end),
+                            })
                             continue
                         if oos_end is not None:
                             oos_ranges.append((str(oos_start), str(oos_end)))
@@ -816,6 +826,11 @@ def load_backtest_bar_data(
                             "for fold %s (backtest %s): %s — fold excluded",
                             str(row["id"]), backtest_id, exc,
                         )
+                        _malformed_folds.append({
+                            "fold_id": str(row["id"]),
+                            "reason": "unparseable_fold_dates",
+                            "detail": str(exc),
+                        })
                         continue
 
         # 2. Load backtest_trades as bar proxies (one trade = one bar event)
@@ -847,6 +862,7 @@ def load_backtest_bar_data(
         return []
 
     bars: list[dict] = []
+    _purged_bar_count = 0
     for row in trade_rows:
         entry_time = row["entry_time"]
         if isinstance(entry_time, datetime):
@@ -876,6 +892,7 @@ def load_backtest_bar_data(
                     pass
 
         if cpcv_purge and in_oos:
+            _purged_bar_count += 1
             continue
 
         bar: dict = {
@@ -894,6 +911,33 @@ def load_backtest_bar_data(
             "_cpcv_purged": in_oos and cpcv_purge,
         }
         bars.append(bar)
+
+    # Deep-Scan #18 (2026-07-05): make the documented quantum_rl.training_cpcv_purge_violation
+    # audit REAL. This function is RL-training-only (sole caller quantum_rl_agent.py). The purge
+    # is SAFE (OOS bars excluded → no leakage) but was previously silent (logger.warning only),
+    # so the documented operator-facing audit never fired. Emit an AUDIT_EVENT_JSON stderr
+    # sentinel — the canonical Python→TS audit bridge (mirrors backtester.py) — so
+    # quantum-rl-training-runner.ts writes the audit row (this subprocess cannot write audit_log
+    # directly). We RECORD the purge (and any malformed fold); we do NOT "refuse" — purge-and-
+    # continue is the correct safe behavior, and the payload (purged_bar_count / bars_retained)
+    # states it honestly.
+    if cpcv_purge and (_purged_bar_count > 0 or _malformed_folds):
+        try:
+            import json as _audit_json
+            import sys as _audit_sys
+            _audit_payload = {
+                "event": "quantum_rl.training_cpcv_purge_violation",
+                "status": "warning",
+                "backtest_id": backtest_id,
+                "purged_bar_count": _purged_bar_count,
+                "bars_retained": len(bars),
+                "oos_folds_checked": len(oos_ranges),
+                "malformed_fold_count": len(_malformed_folds),
+                "malformed_folds": _malformed_folds[:10],
+            }
+            print(f"AUDIT_EVENT_JSON {_audit_json.dumps(_audit_payload)}", file=_audit_sys.stderr, flush=True)
+        except Exception:  # noqa: BLE001 — telemetry must never break training
+            pass
 
     return bars
 

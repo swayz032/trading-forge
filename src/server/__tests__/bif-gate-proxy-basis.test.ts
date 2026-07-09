@@ -138,3 +138,28 @@ describe("evaluateBifGate — M1 proxy-basis warn (bif.proxy_basis_oos_mean)", (
     expect(r.auditPayload.block_threshold).toBe(5.0);
   });
 });
+
+describe("evaluateBifGate — L-2 computation-error fail-closed (deep-scan 2026-07-06)", () => {
+  it("computationError=true → FAILS CLOSED (blocked), distinct from legacy-null grandfather", () => {
+    // A modern compute_bif() throw emits bif=null + bif_computation_error=true. Must block, NOT grandfather.
+    const r = evaluateBifGate(null, 4, { computationError: true });
+    expect(r.passed).toBe(false);
+    expect(r.reason).toBe("bif.computation_error_fail_closed");
+    expect(r.legacyNull).toBe(false);
+    expect(r.auditPayload.blocked).toBe(true);
+    expect(r.auditPayload.computation_error).toBe(true);
+  });
+
+  it("genuine legacy-null (no computationError) still grandfathers (passed, legacyNull) — unchanged", () => {
+    const r = evaluateBifGate(null, 4, {});
+    expect(r.passed).toBe(true);
+    expect(r.legacyNull).toBe(true);
+    expect(r.reason).toBe("bif.legacy_null_pre_wave3");
+  });
+
+  it("computationError=false with a real bif value evaluates normally (no false fail-closed)", () => {
+    const r = evaluateBifGate(1.5, 4, { computationError: false });
+    expect(r.passed).toBe(true); // 1.5 < warn 2.0
+    expect(r.reason).not.toBe("bif.computation_error_fail_closed");
+  });
+});

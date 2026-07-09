@@ -115,6 +115,8 @@ export interface BifGateResult {
      * real IS-vs-OOS evaluation. Audit-visible; gate always passes.
      */
     cpcv_unmeasured?: boolean;
+    /** deep-scan L-2: present when compute_bif() threw and the gate failed CLOSED (not grandfathered). */
+    computation_error?: boolean;
   };
 }
 
@@ -152,6 +154,13 @@ export function evaluateBifGate(
      * do NOT block on a measurement-limitation.
      */
     bifReliable?: boolean | null;
+    /**
+     * deep-scan promotion L-2 (HIGH, 2026-07-06): walk_forward.py now emits `bif_computation_error=true` when
+     * compute_bif() actually THREW (vs a genuine pre-Wave-3 backtest that never emitted `bif` at all). A real
+     * computation failure must FAIL CLOSED (like WFE degenerate_is / PBO worst-case / parameter-drift
+     * classifier_error) — NOT be grandfathered as legacy-null. Pass the Python flag here.
+     */
+    computationError?: boolean | null;
   },
 ): BifGateResult {
   const warnThreshold = opts?.warnThreshold ?? getBifWarnThreshold();
@@ -201,6 +210,35 @@ export function evaluateBifGate(
         reason: "bif.cpcv_unmeasured",
         proxy_basis_warn: proxyBasisWarn,
         cpcv_unmeasured: true,
+      },
+    };
+  }
+
+  // ── 0b. Computation error — compute_bif() THREW (deep-scan L-2) ────────────
+  // Distinct from legacy-null: this is a MODERN backtest whose BIF computation failed. It must FAIL CLOSED
+  // (block promotion) — the same fail-safe contract the sibling gates use (WFE degenerate_is, PBO worst-case
+  // 1.0, parameter-drift classifier_error). Grandfathering it as legacy-null would be a silent fail-OPEN on a
+  // real error, the exact bug this closes.
+  if (opts?.computationError === true) {
+    logger.error(
+      { bif: bifNum, k_eff: kEffNum },
+      "BIF gate: bif_computation_error=true (compute_bif threw) — FAIL CLOSED (bif.computation_error_fail_closed); " +
+        "NOT grandfathered. Investigate the walk_forward BIF path for this backtest.",
+    );
+    return {
+      passed: false,
+      reason: "bif.computation_error_fail_closed",
+      legacyNull: false,
+      auditPayload: {
+        bif: null,
+        k_eff: kEffNum,
+        warn_threshold: warnThreshold,
+        block_threshold: blockThreshold,
+        blocked: true,
+        legacy_null: false,
+        reason: "bif.computation_error_fail_closed",
+        proxy_basis_warn: proxyBasisWarn,
+        computation_error: true,
       },
     };
   }

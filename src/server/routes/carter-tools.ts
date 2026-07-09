@@ -28,6 +28,7 @@ import { verifyCarterToolAuth } from "../lib/carter/carter-auth.js";
 import { getCarterTool } from "../lib/carter/tool-registry.js";
 import { CARTER_READ_HANDLERS } from "../lib/carter/carter-reads.js";
 import { CARTER_ACTION_HANDLERS, CARTER_CONFIRM_HANDLERS } from "../lib/carter/carter-actions.js";
+import { runWithCarterCorrelationId } from "../lib/carter/carter-correlation-context.js";
 import { listOpenIssues } from "../lib/carter/carter-issues-store.js";
 
 export const carterToolsRouter = Router();
@@ -104,7 +105,9 @@ carterToolsRouter.post("/:tool", async (req: Request, res: Response): Promise<vo
       ? ((params as Record<string, unknown>)["token"] as string)
       : undefined;
   try {
-    const result = await handler(params, token);
+    // deep-scan Carter F-1: run the handler inside the ambient correlation context (req.id) so the inner
+    // carter.action_executed + lifecycle.* rows link to the outer carter.tool_invoked row on ONE id.
+    const result = await runWithCarterCorrelationId(correlationId, () => handler(params, token));
     const durationMs = Date.now() - startMs;
 
     await insertAuditRowSafe({

@@ -16,6 +16,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { logger } from "../lib/logger.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { notifyWarning } from "./notification-service.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -114,6 +116,29 @@ function loadCorrelationMatrix(): CorrelationMatrix {
       { err, yamlPath },
       "Tier 5.3.1: correlation_matrix.yaml not loaded — guard defaults to pass-through (all pairs allowed)",
     );
+    // deep-scan long-tail F-2 (CRITICAL): a missing/corrupt matrix silently disabled portfolio
+    // concentration protection with NO operator-visible signal. Emit an audit row + Discord WARN so the
+    // fail-OPEN is loud, not silent. Fire-and-forget: this loader is cached (getCorrelationMatrix memoizes
+    // _matrix), so the alert fires ONCE per process on first load, never per signal.
+    const errMsg = err instanceof Error ? err.message : String(err);
+    void insertAuditRowSafe({
+      action: "compliance.correlation_matrix_load_failed",
+      entityType: "system",
+      entityId: "correlation_matrix",
+      status: "warning",
+      decisionAuthority: "gate",
+      result: {
+        yamlPath,
+        error: errMsg,
+        impact: "correlated-position guard is PASS-THROUGH (all correlated pairs allowed) until the matrix loads",
+      },
+    }).catch(() => { /* audit is best-effort */ });
+    try {
+      notifyWarning(
+        "Correlated-position guard DEGRADED — concentration protection is OFF",
+        `correlation_matrix.yaml failed to load (${errMsg}). All correlated pairs (e.g. MES+MNQ) are currently ALLOWED. Restore the file to re-enable the guard.`,
+      );
+    } catch { /* alert is best-effort */ }
     return fallback;
   }
 }
@@ -193,7 +218,14 @@ export function checkCorrelatedPositionGuard(
       // Cross-firm (Topstep ↔ MFFU) correlated positions: always block.
       const proposedIsTopstep = (proposedFirmId ?? "").toLowerCase() === "topstep";
       const blockingIsTopstep = (pos.firmId ?? "").toLowerCase() === "topstep";
-      const sameUser     = proposedUserId != null && pos.userId != null && proposedUserId === pos.userId;
+      // deep-scan long-tail F-4: paper_sessions has no userId column, and per CLAUDE.md §9 family members
+      // run SEPARATE deployments — so within THIS deployment every account is the one operator's. Treat
+      // "userId absent on both sides" as same-operator (the real single-operator case); if an explicit
+      // userId is ever added, it still must match on both sides. Previously `sameUser` required non-null
+      // userIds and was therefore ALWAYS false → the exception was unreachable dead code.
+      const sameUser =
+        (proposedUserId == null && pos.userId == null) ||
+        (proposedUserId != null && pos.userId != null && proposedUserId === pos.userId);
       const sameStrategy = proposedStrategyId != null && pos.strategyId != null && proposedStrategyId === pos.strategyId;
 
       if (proposedIsTopstep && blockingIsTopstep && sameUser && sameStrategy) {

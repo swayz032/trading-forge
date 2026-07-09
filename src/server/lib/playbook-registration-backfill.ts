@@ -112,6 +112,25 @@ export function classifyStrategyForBackfill(
     };
   }
 
+  // Retired strategies (GRAVEYARD) must NEVER enter the research roster. The old
+  // library was deliberately retired (Band B); registering it would pull thin/
+  // wrong-mechanism extractions back into overlay research runs and pollute the
+  // corpus. Surface it (honest, not silently skipped) but never register it —
+  // registration is only for strategies that can legitimately be researched.
+  if (lifecycleState === "GRAVEYARD") {
+    return {
+      id: row.id,
+      name,
+      symbol,
+      source,
+      lifecycleState,
+      status: "unresolvable",
+      archetypeKey: null,
+      proposedCategory: null,
+      reason: "retired_graveyard_excluded_from_registration",
+    };
+  }
+
   const entryIndicator = extractEntryIndicator(row.config);
   const archetypeKey = archetypeKeyFromIndicator(entryIndicator);
 

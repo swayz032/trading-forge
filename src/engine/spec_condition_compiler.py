@@ -40,11 +40,44 @@ import numpy as np
 import polars as pl
 
 from src.engine.context.structural_stops import compute_structural_stop
+from src.engine.indicators.bias_native import compute_bias_signal
+from src.engine.indicators.confirmation_native import compute_confirmation_signal
 from src.engine.indicators.core import compute_atr, compute_ema
+from src.engine.indicators.fvg_native import compute_fvg_signal
 from src.engine.indicators.market_structure import detect_swings
+from src.engine.indicators.mss_native import compute_mss_signal
+from src.engine.indicators.sweep_native import compute_sweep_signal
+from src.engine.role_demotion_audit import get_classifications_for_video, is_demotable
 from src.engine.session_windows import is_in_killzone
-from src.engine.spec_family_bindings import BindingPlan, ConditionBinding, compile_binding_plan
+from src.engine.spec_family_bindings import (
+    BindingPlan,
+    ConditionBinding,
+    compile_binding_plan,
+    or_branches_enabled,
+    role_demotion_mode,
+)
 from src.engine.strategy_base import BaseStrategy
+
+FVG_PRIMITIVE_NAME: str = "fvg_native.compute_fvg_signal"
+# Composition Fidelity Experiment (docs/designs/composition-fidelity-experiment-2026-07-05.md)
+# bundle primitive names — MUST match the literal strings spec_family_bindings.resolve_bundle_
+# primitive() returns (that module has zero import surface by design, so these are independently
+# duplicated string constants, same convention as FVG_PRIMITIVE_NAME above).
+BIAS_PRIMITIVE_NAME: str = "bias_native.compute_bias_signal"
+CONFIRMATION_PRIMITIVE_NAME: str = "confirmation_native.compute_confirmation_signal"
+SWEEP_PRIMITIVE_NAME: str = "sweep_native.compute_sweep_signal"
+MSS_PRIMITIVE_NAME: str = "mss_native.compute_mss_signal"
+BUNDLE_BEARISH_KEYWORDS: tuple[str, ...] = ("bearish", "short", "down", "sell")
+BUNDLE_BULLISH_KEYWORDS: tuple[str, ...] = ("bullish", "long", "up ", "buy")
+"""Binding-plan primitive marker used by spec_family_bindings.bind_condition() when
+TF_FVG_IDENTITY_ENABLED routes a WAIT_STRUCTURE/FILTER FVG-family condition to the fresh
+fvg_native detector (see that module's FVG Identity Dispatch Experiment docstring). Checked
+HERE (not just `b.type in (WAIT_STRUCTURE, FILTER)`) so the FVG-bound conditions get their OWN
+evaluator result — a distinct object into per_condition_bool / spec_trace — instead of being
+silently folded back into the shared generic structure/confluence array every other
+WAIT_STRUCTURE/FILTER condition uses. This is the whole point of the experiment (point-8:
+routing to a DIFFERENT primitive is not the same as PRESERVING identity unless the executable
+path actually evaluates that primitive)."""
 
 # ─── Named constants (CLAUDE.md §13: no magic numbers inline) ────────────────
 STRUCTURE_RECOMPUTE_CADENCE_BARS: int = 10   # perf: structure state is slow-changing
@@ -57,6 +90,10 @@ CANDLE_WICK_RATIO_THRESHOLD: float = 0.4
 MIN_BARS_REQUIRED: int = 30
 ATR_PERIOD: int = 14
 TICK_SIZE_BY_SYMBOL: dict[str, float] = {"MES": 0.25, "MNQ": 0.25, "MCL": 0.01}
+_DEMOTION_GROUP_OFFSET: int = 1_000_000
+"""Hard-Constraint Demotion Experiment: offset added to struct_alt/struct_all's synthetic
+per-strategy ALTERNATIVE OR-group index so it can never collide with the spec's own 0-based
+or_branches indices in `_effective_or_branch_map()` (see that method's docstring)."""
 
 
 def retest_touch_check(
@@ -156,6 +193,7 @@ class SpecConditionStrategy(BaseStrategy):
         trace: bool = False,
         binding_plan: BindingPlan | None = None,
         strategy_name: str | None = None,
+        restore_condition_ids: frozenset[str] | None = None,
     ) -> None:
         self.compiled_spec = compiled_spec
         self.spec = compiled_spec.get("spec", {}) if "spec" in compiled_spec else compiled_spec
@@ -163,7 +201,73 @@ class SpecConditionStrategy(BaseStrategy):
         self.symbol = symbol
         self.timeframe = timeframe
         self.trace_enabled = trace
-        self.binding_plan = binding_plan or compile_binding_plan(self.spec)
+        # Composition Fidelity Experiment (default None — 100% backward compatible; see
+        # spec_family_bindings.compile_binding_plan's restore_condition_ids docstring).
+        self.restore_condition_ids = restore_condition_ids
+
+        # ─── Hard-Constraint Demotion Experiment (docs/designs/hard-constraint-demotion-
+        # experiment-2026-07-05.md) ──────────────────────────────────────────────────
+        # Resolve TF_ROLE_DEMOTION_MODE + the audited (video, condition_id) -> classification
+        # map ONCE per instance, up front, so both compile_binding_plan() (structural modes) and
+        # compute() (exec_all masking) share the SAME resolved map — never re-read from disk per
+        # bar/call. `video` comes straight off compiled_spec (present on every spec_onboarding
+        # artifact; see role_demotion_audit.py). mode="off" (every pre-experiment caller and any
+        # spec with no `video`) means demotion_classifications stays empty and every downstream
+        # check (struct_demotes / is_demotable) is a guaranteed no-op — byte-identical to
+        # pre-experiment behavior with zero avoidable file I/O.
+        self.role_demotion_mode: str = role_demotion_mode()
+        self._demotion_classifications: dict[str, str] = {}
+        video = compiled_spec.get("video")
+        if self.role_demotion_mode != "off" and video:
+            all_condition_ids = [str(c.get("id", "")) for c in (self.spec.get("entry_conditions") or [])]
+            all_condition_ids += [str(c.get("id", "")) for c in (self.spec.get("invalidations") or [])]
+            self._demotion_classifications = get_classifications_for_video(str(video), all_condition_ids)
+
+        self.binding_plan = binding_plan or compile_binding_plan(
+            self.spec,
+            restore_condition_ids=restore_condition_ids,
+            demotion_classifications=self._demotion_classifications or None,
+        )
+        # OR-Branches Honoring Fix (docs/designs/or-branches-honoring-fix-2026-07-05.md): map every
+        # condition_id that is a member of an or_branch group to that group's index. Built
+        # unconditionally (cheap — pure dict construction over an already-parsed spec) regardless
+        # of TF_OR_BRANCHES_ENABLED, so the flag alone (checked at gating time in compute(), not
+        # here) decides whether the mapping is ACTED on — same "always compute, flag-gate the
+        # effect" discipline as self.approximation. `setdefault` means a condition_id that
+        # (incorrectly) appears in more than one branch keeps its FIRST branch assignment rather
+        # than raising — an honest defensive fallback for a malformed spec, never a crash.
+        self._or_branch_of_condition: dict[str, int] = {}
+        or_branches_raw = self.spec.get("or_branches")
+        if isinstance(or_branches_raw, list):
+            for branch_idx, branch_ids in enumerate(or_branches_raw):
+                if not isinstance(branch_ids, list):
+                    continue
+                for cid in branch_ids:
+                    self._or_branch_of_condition.setdefault(str(cid), branch_idx)
+
+        # Hard-Constraint Demotion Experiment, struct_alt / struct_all: every condition_id this
+        # STRATEGY (video) had classified ALTERNATIVE is grouped into ONE per-strategy OR_GROUP —
+        # "any alternative route holding is enough." Deliberately a SEPARATE dict from
+        # `_or_branch_of_condition` above (disjoint mechanism, disjoint flag: TF_ROLE_DEMOTION_MODE
+        # vs TF_OR_BRANCHES_ENABLED — see _effective_or_branch_map()) so the two experiments can be
+        # measured independently and never silently interact. When a video has only ONE
+        # ALTERNATIVE-classified condition (the common case in the 14-video audited sample — no
+        # sibling alternative exists to OR with), this degenerates to a single-member "group" that
+        # is mathematically a no-op on conjunction depth for THAT condition — an honest, real
+        # limitation of the current audit sample, not a bug, and not synthetically patched with a
+        # fabricated always-true filler (see module-level design note in
+        # docs/designs/hard-constraint-demotion-experiment-2026-07-05.md).
+        self._demotion_alternative_ids: frozenset[str] = frozenset(
+            cid for cid, cls in self._demotion_classifications.items() if cls == "ALTERNATIVE"
+        )
+        self._demotion_or_active: bool = self.role_demotion_mode in ("struct_alt", "struct_all") and bool(
+            self._demotion_alternative_ids
+        )
+        self._demotion_or_branch_of_condition: dict[str, int] = {}
+        if self._demotion_or_active:
+            for cid in self._demotion_alternative_ids:
+                self._demotion_or_branch_of_condition[cid] = 0  # single per-strategy group
+
         # OVERLAY-VISIBILITY CONTRACT (Band C follow-up, closes the same bug
         # class B2 closed for archetype-mapped onboards): `apply_eligibility_gate()`
         # in backtester.py checks `strategy_name` against playbook_router.py's
@@ -191,6 +295,15 @@ class SpecConditionStrategy(BaseStrategy):
         self.approximation: bool = self.binding_plan.approximation_used
         # Populated by compute() when trace_enabled=True.
         self.last_trace: list[dict] = []
+        # DIAGNOSTIC-ONLY (composition-fidelity-experiment-2026-07-05.md Step 0): always
+        # populated by compute() regardless of trace_enabled — read-only per-condition boolean
+        # arrays keyed by condition_id, the SAME arrays compute() ANDs together to derive
+        # spine_satisfied. Zero effect on entry_long/entry_short/exit_long/exit_short (additive
+        # attribute only, mirrors the last_trace pattern) — used by
+        # scripts/composition-gating-diagnostic.py to measure per-condition true-frequency and
+        # the smallest-AND-subset ("gating set") that reproduces the strategy's real entry bars,
+        # BLIND to any before/after SDS comparison (Step 0 runs on baseline-mode compute() only).
+        self.last_per_condition_bool: dict[str, np.ndarray] = {}
 
     # ─── BaseStrategy interface ────────────────────────────────────────────
     def get_params(self) -> dict:
@@ -267,6 +380,177 @@ class SpecConditionStrategy(BaseStrategy):
             out[i] = (not bullish_lean) if want_bearish else bullish_lean
         return out
 
+    def _eval_fvg(self, open_: np.ndarray, high: np.ndarray, low: np.ndarray, close: np.ndarray) -> np.ndarray:
+        """FVG identity dispatch (experiment): evaluate via the fresh, isolated
+        fvg_native detector rather than the generic structure_engine activity check.
+        `any_active` (bullish OR bearish) is the per-bar gating signal — directional FVG
+        selection (long vs short) is out of scope for this experiment; direction is still
+        decided the same way as every other spec (self.spec['direction'] + the EMA-slope
+        proxy for "both"), unchanged by this evaluator."""
+        result = compute_fvg_signal(open_, high, low, close)
+        return result.any_active
+
+    @staticmethod
+    def _select_directional(result: Any, object_text: str) -> np.ndarray:
+        """Composition Fidelity Experiment: given a native evaluator's directional Result
+        (bullish_active/bearish_active/any_active) and the condition's OWN object text, pick the
+        sub-signal that matches the object's stated direction when the text names one — otherwise
+        fall back to `any_active` (a real, condition-family-specific signal, still a faithful
+        improvement over the previous single shared undifferentiated array, honestly used when
+        the object text itself gives no directional hint)."""
+        norm = f" {(object_text or '').strip().lower()} "
+        if any(kw in norm for kw in BUNDLE_BEARISH_KEYWORDS):
+            return result.bearish_active
+        if any(kw in norm for kw in BUNDLE_BULLISH_KEYWORDS):
+            return result.bullish_active
+        return result.any_active
+
+    @staticmethod
+    def _select_directional_arrays(bullish: np.ndarray, bearish: np.ndarray, object_text: str) -> np.ndarray:
+        """BUG FIX 2 (docs/designs/or-branches-honoring-fix-2026-07-05.md): the legacy
+        WAIT_CONFIRMATION path (`candle_confirmation_check`, predates the confirmation_native.py
+        Result dataclass) OR-blended `bullish_confirm | bearish_confirm` unconditionally — a
+        short-side confirmation condition was satisfied by a BULLISH rejection candle just as
+        readily as a bearish one, discarding direction entirely. This selects directionally the
+        SAME way `_select_directional` already does for the native-bundle Result objects (object
+        text keyword match, no spec.direction fallback — mirrors confirmation_native.py's own
+        bullish_active/bearish_active split): a condition whose object names a direction binds to
+        the matching raw array; a condition that names no direction falls back to the OR (any
+        confirmation candle, either direction) — the same honest fallback `_select_directional`
+        uses for `any_active`."""
+        norm = f" {(object_text or '').strip().lower()} "
+        if any(kw in norm for kw in BUNDLE_BEARISH_KEYWORDS):
+            return bearish
+        if any(kw in norm for kw in BUNDLE_BULLISH_KEYWORDS):
+            return bullish
+        return bullish | bearish
+
+    def _resolve_wait_bias_bearish(self, object_text: str) -> bool:
+        """BUG FIX 1 (docs/designs/or-branches-honoring-fix-2026-07-05.md): `_eval_wait_bias` used
+        to be called with `want_bearish=False` hard-coded at every call site — every WAIT_BIAS /
+        CONFIRM_DIRECTION condition was treated bullish regardless of what its object actually
+        named (a condition whose object literally says "bearish bias" still got the bullish-lean
+        EMA check). Resolves want_bearish the same way bias_native.py's directional split would:
+        object-text keyword first (same BUNDLE_BEARISH/BULLISH_KEYWORDS convention as
+        `_select_directional`) — falling back to the strategy's spec-level `direction` field only
+        when the object names no direction of its own (short -> bearish; long/both -> bullish-lean,
+        matching the pre-fix default for the common long/both case while correcting the short
+        case, which was silently wrong 100% of the time before this fix)."""
+        norm = f" {(object_text or '').strip().lower()} "
+        if any(kw in norm for kw in BUNDLE_BEARISH_KEYWORDS):
+            return True
+        if any(kw in norm for kw in BUNDLE_BULLISH_KEYWORDS):
+            return False
+        return str(self.spec.get("direction", "long")) == "short"
+
+    def _effective_or_branch_map(self) -> dict[str, int]:
+        """Union of the two INDEPENDENT OR-grouping mechanisms this class supports, each gated by
+        its own flag so the two experiments never silently interact:
+          - `_or_branch_of_condition` (OR-Branches Honoring Fix, TF_OR_BRANCHES_ENABLED) — the
+            spec's OWN `or_branches` groups, as extracted.
+          - `_demotion_or_branch_of_condition` (Hard-Constraint Demotion Experiment, struct_alt /
+            struct_all under TF_ROLE_DEMOTION_MODE) — ALTERNATIVE-classified conditions of THIS
+            strategy, grouped together.
+        Demotion group indices are offset into a disjoint namespace (`_DEMOTION_GROUP_OFFSET`) so
+        they can never collide with the spec's own 0-based or_branches indices even when both
+        mechanisms are (independently) active in the same process. `setdefault` on the demotion
+        side mirrors the same "first assignment wins, never crash on overlap" defensiveness as the
+        or_branches map's own construction — a condition_id that is BOTH a native or_branch member
+        AND demotion-classified ALTERNATIVE keeps its native (or_branches_enabled) group when that
+        mechanism is active, since it is checked first below."""
+        merged: dict[str, int] = {}
+        if or_branches_enabled():
+            merged.update(self._or_branch_of_condition)
+        if self._demotion_or_active:
+            for cid, idx in self._demotion_or_branch_of_condition.items():
+                merged.setdefault(cid, _DEMOTION_GROUP_OFFSET + idx)
+        return merged
+
+    def _combine_spine_or_branches(self, per_condition_bool: dict[str, np.ndarray], n: int, or_map: dict[str, int]) -> np.ndarray:
+        """OR-Branches Honoring Fix (docs/designs/or-branches-honoring-fix-2026-07-05.md) +
+        Hard-Constraint Demotion Experiment struct_alt/struct_all (docs/designs/hard-constraint-
+        demotion-experiment-2026-07-05.md): generalized to accept ANY condition_id->group-index
+        map (see `_effective_or_branch_map()`), not just the spec's own or_branches. Spine
+        conditions that are members of the SAME group combine via ANY-holds (logical OR); each
+        group's single OR-result then enters the spine conjunction as ONE term — exactly where an
+        individual AND'd condition would have sat — replacing the previous per-alternative AND that
+        silently required every alternative to hold simultaneously (the confirmed 726-groups/
+        576-spine-alternatives/93-strategies over-conjunction defect). Conditions with no group
+        membership are completely unaffected (still individually ANDed, same as neither-flag-on)
+        — this is what makes nested and_groups-containing-or_branches correct "per the extracted
+        structure" without any special-case code: an and_group's members that also belong to a
+        group are folded into that group's OR term before the final AND runs, and every other
+        and_group member (no group membership) is ANDed exactly as before."""
+        branch_results: dict[int, np.ndarray] = {}
+        standalone_ids: list[str] = []
+        for cid, arr in per_condition_bool.items():
+            branch_idx = or_map.get(cid)
+            if branch_idx is None:
+                standalone_ids.append(cid)
+                continue
+            if branch_idx in branch_results:
+                branch_results[branch_idx] = branch_results[branch_idx] | arr
+            else:
+                branch_results[branch_idx] = arr.copy()
+
+        spine_satisfied = np.ones(n, dtype=bool)
+        for cid in standalone_ids:
+            spine_satisfied &= per_condition_bool[cid]
+        for arr in branch_results.values():
+            spine_satisfied &= arr
+        return spine_satisfied
+
+    def _apply_exec_all_masking(self, per_condition_bool: dict[str, np.ndarray], n: int) -> dict[str, np.ndarray]:
+        """Hard-Constraint Demotion Experiment, exec_all arm (docs/designs/hard-constraint-
+        demotion-experiment-2026-07-05.md Section 2, EXECUTION masking `D_exec`): produces the SAME
+        net per-bar masking effect as struct_all (OPTIONAL/CONTEXTUAL -> vacuously-true; ALTERNATIVE
+        -> ANY-holds across this strategy's OTHER ALTERNATIVE-classified conditions), applied
+        directly to the already-computed per-condition boolean arrays — WITHOUT touching
+        binding_plan.role/executed or any or_branch/group topology (spine_total/spine_bound/
+        conjunction_depth() are therefore IDENTICAL to baseline for this arm, by design — see
+        conjunction_depth()'s docstring). This validates that struct_all's result isn't merely a
+        topology artifact of the role/executed rewrite; it is never the primary decision (spec
+        Section 6 applies the pre-registered decision to struct_all, not exec_all)."""
+        if not self._demotion_classifications:
+            return per_condition_bool
+        out = dict(per_condition_bool)
+        alt_arrays = [out[cid] for cid in self._demotion_alternative_ids if cid in out]
+        alt_any: np.ndarray | None = None
+        if alt_arrays:
+            alt_any = alt_arrays[0].copy()
+            for arr in alt_arrays[1:]:
+                alt_any |= arr
+        for cid in list(out.keys()):
+            cls = self._demotion_classifications.get(cid)
+            if cls in ("OPTIONAL", "CONTEXTUAL"):
+                out[cid] = np.ones(n, dtype=bool)
+            elif cls == "ALTERNATIVE" and alt_any is not None:
+                out[cid] = alt_any
+        return out
+
+    def conjunction_depth(self) -> int:
+        """The DAG mediator the Hard-Constraint Demotion Experiment measures per arm (docs/designs/
+        hard-constraint-demotion-experiment-2026-07-05.md Section 4): the number of distinct
+        AND-connected terms in the EXECUTED spine, after OR-merging. A structural arm (struct_conf/
+        struct_alt/struct_ctx/struct_all) MUST drop this materially relative to "off" for the same
+        strategy or the intervention did not fire for that strategy — INVALID, not a null result
+        (spec Section 6 + Section 8). `exec_all` and "off" ALWAYS report the identical depth for
+        the same spec — exec_all is execution-masking only and never touches binding_plan.role/
+        executed or or_branch/group membership (see _apply_exec_all_masking's docstring); this is
+        expected and by design, not a measurement bug."""
+        executed_spine_ids = [b.condition_id for b in self.binding_plan.bindings if b.role == "spine" and b.executed]
+        or_map = self._effective_or_branch_map()
+        seen_groups: set[int] = set()
+        depth = 0
+        for cid in executed_spine_ids:
+            grp = or_map.get(cid)
+            if grp is None:
+                depth += 1
+            elif grp not in seen_groups:
+                seen_groups.add(grp)
+                depth += 1
+        return depth
+
     def _eval_wait_retest(self, close: np.ndarray, high: np.ndarray, low: np.ndarray, n: int) -> np.ndarray:
         if n < RETEST_LEVEL_EMA_PERIOD + 2:
             return np.zeros(n, dtype=bool)
@@ -281,6 +565,7 @@ class SpecConditionStrategy(BaseStrategy):
         false_col = pl.lit(False)
         if n < MIN_BARS_REQUIRED:
             self.last_trace = []
+            self.last_per_condition_bool = {}
             return df.with_columns(
                 [
                     false_col.alias("entry_long"),
@@ -297,9 +582,25 @@ class SpecConditionStrategy(BaseStrategy):
         ts_list = _bars_to_ts_list(df)
 
         bullish_confirm, bearish_confirm = candle_confirmation_check(open_, high, low, close)
-        wait_bias_bull = None
+        # BUG FIX 1 cache: want_bearish is now resolved PER-BINDING (object text + spec.direction
+        # fallback, see _resolve_wait_bias_bearish) rather than hard-coded False — different
+        # WAIT_BIAS/CONFIRM_DIRECTION bindings on the same spec can therefore legitimately need
+        # different directions, so this caches the EMA-slope proxy array per want_bearish value
+        # (at most 2 entries: True and False) instead of the single `wait_bias_bull` variable the
+        # pre-fix code relied on.
+        wait_bias_cache: dict[bool, np.ndarray] = {}
         wait_structure = None
         wait_retest = None
+        fvg_signal = None
+        # Composition Fidelity Experiment bundle caches (each computed at most once per compute()
+        # call, mirroring fvg_signal's caching above) — separate cache per family so a spec with
+        # e.g. both a restored WAIT_BIAS and a restored WAIT_CONFIRMATION condition evaluates each
+        # native primitive exactly once and shares its result ONLY across conditions bound to that
+        # SAME primitive (never across families).
+        bias_result = None
+        confirmation_result = None
+        sweep_result = None
+        mss_result = None
 
         spine_bindings = [b for b in self.binding_plan.bindings if b.role == "spine"]
         per_condition_bool: dict[str, np.ndarray] = {}
@@ -318,22 +619,54 @@ class SpecConditionStrategy(BaseStrategy):
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
                 continue
 
-            if b.type == "WAIT_SESSION":
+            if b.primitive == FVG_PRIMITIVE_NAME:
+                # FVG identity dispatch (experiment) — checked BEFORE the generic
+                # WAIT_STRUCTURE/FILTER type dispatch below so an FVG-family binding
+                # never falls through to the shared generic structure/confluence
+                # array, regardless of whether its condition `type` is WAIT_STRUCTURE
+                # or FILTER. Distinct object into per_condition_bool / spec_trace.
+                if fvg_signal is None:
+                    fvg_signal = self._eval_fvg(open_, high, low, close)
+                per_condition_bool[b.condition_id] = fvg_signal
+            elif b.primitive == BIAS_PRIMITIVE_NAME:
+                # Composition-bundle restoration (experiment) — checked BEFORE the generic
+                # WAIT_BIAS/CONFIRM_DIRECTION type dispatch below, same placement discipline as
+                # the FVG check above. Directional sub-signal selected from THIS condition's own
+                # object text (see _select_directional) — fixes the pre-existing bug where every
+                # WAIT_BIAS condition shared one bullish-only-checked array regardless of what its
+                # object actually named.
+                if bias_result is None:
+                    bias_result = compute_bias_signal(open_, high, low, close)
+                per_condition_bool[b.condition_id] = self._select_directional(bias_result, b.object)
+            elif b.primitive == CONFIRMATION_PRIMITIVE_NAME:
+                if confirmation_result is None:
+                    confirmation_result = compute_confirmation_signal(open_, high, low, close)
+                per_condition_bool[b.condition_id] = self._select_directional(confirmation_result, b.object)
+            elif b.primitive == SWEEP_PRIMITIVE_NAME:
+                if sweep_result is None:
+                    sweep_result = compute_sweep_signal(open_, high, low, close)
+                per_condition_bool[b.condition_id] = self._select_directional(sweep_result, b.object)
+            elif b.primitive == MSS_PRIMITIVE_NAME:
+                if mss_result is None:
+                    mss_result = compute_mss_signal(open_, high, low, close)
+                per_condition_bool[b.condition_id] = self._select_directional(mss_result, b.object)
+            elif b.type == "WAIT_SESSION":
                 per_condition_bool[b.condition_id] = self._eval_wait_session(b, ts_list, n)
             elif b.type in ("WAIT_STRUCTURE", "VERIFY_STRUCTURE"):
                 if wait_structure is None:
                     wait_structure = self._eval_wait_structure(n, df)
                 per_condition_bool[b.condition_id] = wait_structure
             elif b.type in ("WAIT_BIAS", "CONFIRM_DIRECTION"):
-                if wait_bias_bull is None:
-                    wait_bias_bull = self._eval_wait_bias(close, n, want_bearish=False)
-                per_condition_bool[b.condition_id] = wait_bias_bull
+                want_bearish = self._resolve_wait_bias_bearish(b.object)
+                if want_bearish not in wait_bias_cache:
+                    wait_bias_cache[want_bearish] = self._eval_wait_bias(close, n, want_bearish=want_bearish)
+                per_condition_bool[b.condition_id] = wait_bias_cache[want_bearish]
             elif b.type == "WAIT_RETEST":
                 if wait_retest is None:
                     wait_retest = self._eval_wait_retest(close, high, low, n)
                 per_condition_bool[b.condition_id] = wait_retest
             elif b.type == "WAIT_CONFIRMATION":
-                per_condition_bool[b.condition_id] = bullish_confirm | bearish_confirm
+                per_condition_bool[b.condition_id] = self._select_directional_arrays(bullish_confirm, bearish_confirm, b.object)
             elif b.type == "FILTER":
                 # Static presence-only pass-through — see module docstring
                 # ("no standalone per-bar confluence primitive exists").
@@ -341,10 +674,28 @@ class SpecConditionStrategy(BaseStrategy):
             else:
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
 
+        # Hard-Constraint Demotion Experiment, exec_all arm ONLY (docs/designs/hard-constraint-
+        # demotion-experiment-2026-07-05.md Section 2): mask the per-bar arrays post-hoc, WITHOUT
+        # touching binding_plan.role/executed or any or_branch/group topology (see
+        # _apply_exec_all_masking's docstring). No-op for every other mode, including "off".
+        if self.role_demotion_mode == "exec_all":
+            per_condition_bool = self._apply_exec_all_masking(per_condition_bool, n)
+
+        self.last_per_condition_bool = per_condition_bool
+
         if per_condition_bool:
-            spine_satisfied = np.ones(n, dtype=bool)
-            for arr in per_condition_bool.values():
-                spine_satisfied &= arr
+            # OR-Branches Honoring Fix + Hard-Constraint Demotion Experiment struct_alt/struct_all:
+            # both flag-gated, both byte-identical OFF (default). _effective_or_branch_map() is
+            # empty unless at least one of the two independent flags is active AND has a non-empty
+            # group map for THIS spec — in which case it falls straight to the strict-AND branch
+            # below, same as neither-flag-on.
+            or_map = self._effective_or_branch_map()
+            if or_map:
+                spine_satisfied = self._combine_spine_or_branches(per_condition_bool, n, or_map)
+            else:
+                spine_satisfied = np.ones(n, dtype=bool)
+                for arr in per_condition_bool.values():
+                    spine_satisfied &= arr
         else:
             spine_satisfied = np.ones(n, dtype=bool)
 
@@ -361,9 +712,10 @@ class SpecConditionStrategy(BaseStrategy):
             entry_long = entry_signal
         elif direction == "short":
             entry_short = entry_signal
-        else:  # "both" — direct via EMA-slope proxy at the firing bar
-            if wait_bias_bull is None:
-                wait_bias_bull = self._eval_wait_bias(close, n, want_bearish=False)
+        else:  # "both" — direct via EMA-slope proxy (bullish lean) at the firing bar
+            if False not in wait_bias_cache:
+                wait_bias_cache[False] = self._eval_wait_bias(close, n, want_bearish=False)
+            wait_bias_bull = wait_bias_cache[False]
             entry_long = entry_signal & wait_bias_bull
             entry_short = entry_signal & ~wait_bias_bull
 
@@ -500,6 +852,7 @@ def from_compiled_spec(
     timeframe: str = "5m",
     trace: bool = False,
     strategy_name: str | None = None,
+    restore_condition_ids: frozenset[str] | None = None,
 ) -> SpecConditionStrategy:
     """Factory mirroring the `_load_strategy_class` -> `cls()` pattern in
     backtester.py, but parameterized with the actual spec payload since this
@@ -509,7 +862,15 @@ def from_compiled_spec(
     string spec-onboarding-service.ts's B2 playbook registration writes into
     playbook_router.py) so the eligibility-gate overlay-visibility contract
     holds — see SpecConditionStrategy.__init__ docstring comment.
+
+    `restore_condition_ids`: Composition Fidelity Experiment bundle-restoration target set,
+    default None (100% backward compatible — see compile_binding_plan's docstring).
     """
     return SpecConditionStrategy(
-        compiled_spec=compiled_spec, symbol=symbol, timeframe=timeframe, trace=trace, strategy_name=strategy_name
+        compiled_spec=compiled_spec,
+        symbol=symbol,
+        timeframe=timeframe,
+        trace=trace,
+        strategy_name=strategy_name,
+        restore_condition_ids=restore_condition_ids,
     )

@@ -99,13 +99,19 @@ interface LiveMetrics {
 async function computeLiveMetrics(lookbackDays: number): Promise<LiveMetrics> {
   const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
 
-  // Fetch daily P&L sums from production_trades
-  const dailyRows = await db.execute<{ trade_date: string; daily_pnl: string; trade_count: string; slippage_avg: string }>(
+  // Fetch daily P&L sums from production_trades.
+  // deep-scan market-data F-2 (2026-07-06): the live-Sharpe leg read SUM(expected_pnl), but broker-router writes
+  // expected_pnl=null by design (never fabricates a number) → every day's SUM was null→0 → stdDev=0 → sharpe=null
+  // → the drift-detector auto-HALT leg has been permanently DARK, indistinguishable from a transient "need more
+  // days". FIX: prefer the REAL realized P&L (actual_pnl, written by fill-reconciliation) via COALESCE, and count
+  // the non-null P&L rows so we can loudly distinguish "structurally dark (no real P&L ever)" from "N<2 days".
+  const dailyRows = await db.execute<{ trade_date: string; daily_pnl: string; trade_count: string; pnl_rows: string; slippage_avg: string }>(
     sql`
       SELECT
         DATE(bar_timestamp) AS trade_date,
-        SUM(expected_pnl) AS daily_pnl,
+        SUM(COALESCE(actual_pnl, expected_pnl)) AS daily_pnl,
         COUNT(*) AS trade_count,
+        COUNT(COALESCE(actual_pnl, expected_pnl)) AS pnl_rows,
         AVG(actual_slippage - expected_slippage) AS slippage_avg
       FROM production_trades
       WHERE bar_timestamp >= ${cutoff.toISOString()}
@@ -114,12 +120,25 @@ async function computeLiveMetrics(lookbackDays: number): Promise<LiveMetrics> {
     `
   );
 
-  if (dailyRows.length < 2) {
-    // Insufficient data for Sharpe computation
+  // Structural-dark detection: if NO row across the whole lookback carries a non-null P&L, the live-Sharpe leg
+  // cannot compute — surface it distinctly so it is never mistaken for a transient "insufficient data" green.
+  const totalPnlRows = dailyRows.reduce((s, r) => s + Number(r.pnl_rows ?? 0), 0);
+  if (dailyRows.length >= 2 && totalPnlRows === 0) {
+    logger.warn(
+      { lookbackDays, tradeDays: dailyRows.length },
+      "drift-detector: live-Sharpe leg is STRUCTURALLY DARK — production_trades has trades but ZERO non-null P&L " +
+        "(expected_pnl is null by design; actual_pnl unpopulated until fill-reconciliation runs). The >2σ auto-HALT " +
+        "cannot fire on live Sharpe. This is a DISTINCT structural gap, not a transient 'need more days' state.",
+    );
     return { sharpe: null, winRate: null, avgSlippage: null };
   }
 
-  const dailyPnls = dailyRows.map((r: { trade_date: string; daily_pnl: string; trade_count: string; slippage_avg: string }) => Number(r.daily_pnl ?? 0));
+  if (dailyRows.length < 2) {
+    // Insufficient data for Sharpe computation (transient — genuinely too few trade-days yet)
+    return { sharpe: null, winRate: null, avgSlippage: null };
+  }
+
+  const dailyPnls = dailyRows.map((r: { trade_date: string; daily_pnl: string; trade_count: string; pnl_rows: string; slippage_avg: string }) => Number(r.daily_pnl ?? 0));
   const n = dailyPnls.length;
   const mean = dailyPnls.reduce((a: number, b: number) => a + b, 0) / n;
   const variance = dailyPnls.reduce((s: number, x: number) => s + (x - mean) ** 2, 0) / (n - 1);

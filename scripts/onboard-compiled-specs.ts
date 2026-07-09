@@ -10,7 +10,21 @@
  *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path>                  # dry run (default)
  *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --apply          # writes to DB
  *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --manifest <path.json>
- *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --timeframe 15m
+ *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --timeframe 15m   # EXPLICIT override for a known-uniform batch only
+ *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --skip-dsl-critic # escape hatch — skip the LLM DSL critic (offline/quota reruns only)
+ *
+ * DSL CRITIC (Deep-scan #16 Wave 2 H-1, 2026-07-04): the DSL quality critic now
+ * runs by DEFAULT on this path (gate parity with direct-bucket-graduator, which
+ * runs it unconditionally). It is fail-OPEN on any infra error, so it never
+ * hard-blocks onboarding when the LLM is unreachable. Pass --skip-dsl-critic to
+ * opt out (the old default). The removed --with-dsl-critic opt-in flag is gone.
+ *
+ * TIMEFRAME (Timeframe Integrity Fix, 2026-07-03): --timeframe is now an
+ * EXPLICIT operator override for a known-uniform batch ONLY. When omitted, the
+ * exec timeframe is RECOVERED per-spec from the artifact prose. There is NO
+ * silent "5m" default — a spec whose timeframe can't be recovered is QUARANTINED
+ * (loud `onboard.timeframe_unrecoverable` audit + counted as zero-success, exit 1),
+ * never onboarded at a guessed 5m.
  *
  * FLAG NAMING NOTE: this CLI dynamically imports spec-onboarding-service.ts,
  * which (via direct-bucket-graduator.ts / agent-service.ts) transitively
@@ -41,7 +55,13 @@ interface Args {
   dir: string;
   manifest: string | null;
   apply: boolean;
-  timeframe: string;
+  /**
+   * EXPLICIT operator override ONLY. null (default) → per-spec recovery in
+   * spec-onboarding-service via recoverSpecTimeframe(). NO silent "5m" default —
+   * unrecoverable specs are quarantined, not onboarded at a guessed TF.
+   * (Timeframe Integrity Fix, 2026-07-03.)
+   */
+  timeframe: string | null;
   playbookRouterPath: string;
 }
 
@@ -55,7 +75,8 @@ function parseArgs(argv: string[]): Args {
     dir: get("--specs-dir") ?? "tmp/generalization",
     manifest: get("--manifest"),
     apply: argv.includes("--apply"),
-    timeframe: get("--timeframe") ?? "5m",
+    timeframe: get("--timeframe"), // null unless operator explicitly overrides; NEVER defaults to 5m
+
     playbookRouterPath: get("--playbook-router") ?? resolve(process.cwd(), "src/engine/context/playbook_router.py"),
   };
 }
@@ -103,18 +124,27 @@ async function main(): Promise<number> {
 
     const result = await onboardSpecArtifact(raw, {
       dryRun: !args.apply,
-      timeframe: args.timeframe,
+      timeframe: args.timeframe ?? undefined,
       playbookRouterPath: args.playbookRouterPath,
-      // Batch CLI runs skip the live LLM critic by default to keep a 40-video
-      // batch from making 40+ network calls to Ollama/OpenAI on every run;
-      // the auditor + Gate 1/2/3 (deterministic, no LLM) still fully gate.
-      // Set --with-dsl-critic to opt in.
-      skipDslCritic: !process.argv.includes("--with-dsl-critic"),
+      // Deep-scan #16 Wave 2 (H-1, 2026-07-04): the DSL quality critic now runs
+      // by DEFAULT on the spec-onboarding path to restore gate parity with the
+      // direct-bucket-graduator path (which runs the critic unconditionally).
+      // Previously this CLI skipped the critic by default (--with-dsl-critic to
+      // opt in), so the live spec-onboarded library was onboarded WITHOUT it —
+      // a gate-parity asymmetry. The critic is fail-OPEN on any infra error
+      // (spec-onboarding-service.ts dsl_critic_fail_open), so running it by
+      // default does NOT hard-block onboarding when Ollama/OpenAI is unreachable;
+      // it only rejects genuine anti-pattern DSL. Escape hatch --skip-dsl-critic
+      // preserves the old behavior for offline/quota-constrained batch reruns.
+      skipDslCritic: process.argv.includes("--skip-dsl-critic"),
     });
     results.push(result);
 
     if (!result.ok) {
-      console.log(`  REJECTED (malformed artifact): ${file} — ${result.reason}`);
+      const isQuarantine = typeof result.reason === "string" && result.reason.startsWith("timeframe_unrecoverable");
+      console.log(
+        `  ${isQuarantine ? "QUARANTINED (timeframe unrecoverable — flag for re-extraction)" : "REJECTED (malformed artifact)"}: ${file} — ${result.reason}`,
+      );
       zeroSuccessSpecs++;
       continue;
     }

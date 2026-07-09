@@ -60,6 +60,7 @@ import { sqaRegistry } from "../lib/sqa-promise-registry.js";
 import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
 import { notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { criticOptimizerRecoveryForceFailTotal } from "../lib/metrics-registry.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 
@@ -788,6 +789,20 @@ export async function triggerCriticOptimizerAsync(
         })
         .where(eq(criticOptimizationRuns.id, run.id));
 
+      // Deep-scan #16 Wave 2 Track G2 (#18/#22): logAudit("critic-optimizer.run")
+      // previously fired ONLY on the kill/failure branches above — a successful
+      // cycle that generated candidates and proceeded to replay was invisible to
+      // any audit_log query filtered on this action. This row makes the
+      // success/candidates-generated outcome equally discoverable.
+      await logAudit("critic-optimizer.run", "critic_optimization", run.id, evidence, {
+        outcome: "candidates_generated",
+        candidates_generated: criticResult.candidates.length,
+        candidates_inserted: asyncCandidatesInserted,
+        parent_score: criticResult.parent_composite_score,
+        critic_evaluation: criticEvaluation,
+        path: "async",
+      }, correlationId);
+
       broadcastSSE("critic:candidates_ready", { runId: run.id, count: criticResult.candidates.length });
 
       // Replay candidates — outer catch covers pre-try throws in replayCandidatesAsync
@@ -1206,6 +1221,18 @@ export async function triggerCriticOptimizer(
         executionTimeMs: criticResult.execution_time_ms,
       })
       .where(eq(criticOptimizationRuns.id, run.id));
+
+    // Deep-scan #16 Wave 2 Track G2 (#18/#22): mirrors the async-path success
+    // audit above — logAudit("critic-optimizer.run") previously fired ONLY on the
+    // kill/failure branches, so a successful sync-path cycle was equally invisible.
+    await logAudit("critic-optimizer.run", "critic_optimization", run.id, evidence, {
+      outcome: "candidates_generated",
+      candidates_generated: criticResult.candidates.length,
+      candidates_inserted: syncCandidatesInserted,
+      parent_score: criticResult.parent_composite_score,
+      critic_evaluation: criticEvaluation,
+      path: "sync",
+    }, correlationId);
 
     broadcastSSE("critic:candidates_ready", { runId: run.id, count: criticResult.candidates.length });
 
@@ -2112,7 +2139,11 @@ async function replayCandidatesAsync(
   // Y2 fix: Compare forge scores on the same 0-100 scale.
   // Parent Python composite objective uses a different scale than forge score.
   // can be negative or >1). strat.forgeScore is always 0-100, matching replayForgeScore.
-  const parentForgeScore = Number(strat.forgeScore ?? 0);
+  // deep-scan services HIGH (2026-07-06): a null forgeScore (parent never scored) must NOT default to 0 — the
+  // child would then trivially "beat" a fabricated 0 baseline (compositeScore > 0) and spawn a whole generation
+  // on nothing. Fail CLOSED: an unscored parent is UNBEATABLE (Infinity), so no child promotes until the parent
+  // has a real forge score. (parentForgeScore is used ONLY in the `compositeScore > parentForgeScore` compare.)
+  const parentForgeScore = strat.forgeScore != null ? Number(strat.forgeScore) : Number.POSITIVE_INFINITY;
 
   // B2 fix: hoisted so it's in scope at all 2 runBacktest call sites below.
   // Populated inside the C-3 try block; defaults to 1 (no deflation) on any error.
@@ -2614,6 +2645,26 @@ async function replayCandidatesAsync(
             eq(criticCandidates.replayStatus, "pending"),
           ),
         );
+
+      // Deep-scan #16 Wave 2 Track G2 (#18/#22): this crash-recovery force-fail
+      // was previously traced ONLY via logger.warn above — no counter, no
+      // dedicated audit row — so a recurring crash-mid-replay pattern for a given
+      // strategy/run was invisible to Prometheus/Grafana and hard to reconstruct
+      // from audit_log alone (the generic "critic-optimizer.complete" row below
+      // only carries the COUNT, not which candidates were force-failed or why).
+      try { criticOptimizerRecoveryForceFailTotal.inc(); } catch { /* non-blocking counter */ }
+      await logAudit(
+        "critic-optimizer.stuck_candidates_force_failed",
+        "critic_optimization",
+        runId,
+        null,
+        {
+          stuck_candidate_ids: stuckIds,
+          count: stuckCandidates.length,
+          failure_reason: "replay_incomplete",
+        },
+        correlationId,
+      );
     }
 
     await logAudit("critic-optimizer.complete", "critic_optimization", runId, null, {
@@ -2746,7 +2797,11 @@ export async function manualReplayCandidates(
   // Y2 fix: Use strat.forgeScore (0-100) as the parent baseline.
   // parentCompositeScore from the run is the Python composite objective (different scale,
   // can be negative or >1) and cannot be compared against replayForgeScore directly.
-  const parentForgeScore = Number(strat.forgeScore ?? 0);
+  // deep-scan services HIGH (2026-07-06): a null forgeScore (parent never scored) must NOT default to 0 — the
+  // child would then trivially "beat" a fabricated 0 baseline (compositeScore > 0) and spawn a whole generation
+  // on nothing. Fail CLOSED: an unscored parent is UNBEATABLE (Infinity), so no child promotes until the parent
+  // has a real forge score. (parentForgeScore is used ONLY in the `compositeScore > parentForgeScore` compare.)
+  const parentForgeScore = strat.forgeScore != null ? Number(strat.forgeScore) : Number.POSITIVE_INFINITY;
 
   // B2 fix: fetch trial_n_total from persisted evidence packet so DSR deflation
   // receives the correct cumulative mutation count during manual replay.

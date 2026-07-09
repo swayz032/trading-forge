@@ -113,11 +113,11 @@ describe("Inst-10: Drawdown-room-anchored sizing (Wave 25 Pass 2)", () => {
 
       const result = computeRiskDerivedContracts(input);
 
-      // drawdownRoomCap = floor(4500 × 0.01 / 30) = floor(45 / 30) = floor(1.5) = 1
-      expect(result.drawdownRoomCap).toBe(1);
-      // Since base_contracts = 6 and drawdownRoomCap = 1, the cap overrides pyramid floor
-      // (per Inst-10 design: DD room cap takes priority over pyramid floor)
-      expect(result.finalContracts).toBe(1);
+      // recal 0.01→0.08 (2026-06-23): drawdownRoomCap = floor(4500 × 0.08 / 30) = floor(360 / 30) = 12.
+      // At the old 1% rate this cap was 1 and BOUND finalContracts to 1; at 8% the cap (12) no longer binds —
+      // the pyramid base (fixture base_contracts=6) is now the tightest min() term, so finalContracts=6.
+      expect(result.drawdownRoomCap).toBe(12);
+      expect(result.finalContracts).toBe(6);
     });
 
     it("Topstep: drawdownRoomCap IS the binding constraint → drawdownRoomCapBinding=true", () => {
@@ -129,16 +129,16 @@ describe("Inst-10: Drawdown-room-anchored sizing (Wave 25 Pass 2)", () => {
         accountStartingFloor: 50_000,
         trailingDD: 2_000,
         cumulativeProfit: 50_000,   // large pyramid tier
-        currentDrawdownRoom: 9_000, // $9K DD room → drawdownRoomCap = floor(9000×0.01/30) = 3
+        currentDrawdownRoom: 9_000, // $9K DD room → drawdownRoomCap = floor(9000×0.08/30) = 24 (recal 0.01→0.08)
         firmContractCap: 200,
       });
 
       const result = computeRiskDerivedContracts(input);
 
-      // drawdownRoomCap = floor(9000 × 0.01 / 30) = 3
-      expect(result.drawdownRoomCap).toBe(3);
+      // recal 0.01→0.08: drawdownRoomCap = floor(9000 × 0.08 / 30) = 24
+      expect(result.drawdownRoomCap).toBe(24);
       expect(result.drawdownRoomCapBinding).toBe(true);
-      expect(result.finalContracts).toBe(3);
+      expect(result.finalContracts).toBe(24);
       expect(result.confluenceAudit.binding_constraint).toBe("drawdown_room");
     });
   });
@@ -186,14 +186,14 @@ describe("Inst-10: Drawdown-room-anchored sizing (Wave 25 Pass 2)", () => {
       // At 1.0%: drawdownRoomCap = floor(9000 × 0.010 / 30) = floor(90/30) = 3
       // The test documents the expected behavior; the env var effect is tested in pytest (sizing.py).
 
-      // With default 1%: $9K room, $30 stop → cap = 3
+      // With default 8% (recal 0.01→0.08 2026-06-23): $9K room, $30 stop → cap = floor(9000×0.08/30) = 24
       const inputDefault = makeTopstepInput({
         currentDrawdownRoom: 9_000,
         firmContractCap: 200,
         cumulativeProfit: 50_000,
       });
       const resultDefault = computeRiskDerivedContracts(inputDefault);
-      expect(resultDefault.drawdownRoomCap).toBe(3);
+      expect(resultDefault.drawdownRoomCap).toBe(24);
 
       // The env var halving is covered by the pytest (test_wave25_drawdown_room.py)
       // which can patch the module-level constant. Here we verify the formula:
@@ -235,14 +235,14 @@ describe("Inst-10: Drawdown-room-anchored sizing (Wave 25 Pass 2)", () => {
         accountBalance: 52_000,
         highWaterBalance: 52_000,
         cumulativeProfit: 0,        // base tier = 6 contracts
-        currentDrawdownRoom: 100_000, // massive room → cap = floor(100000×0.01/30) = 33
+        currentDrawdownRoom: 100_000, // massive room → cap = floor(100000×0.08/30) = 266 (recal 0.01→0.08)
         firmContractCap: 50,
       });
 
       const result = computeRiskDerivedContracts(input);
 
-      // drawdownRoomCap = floor(100000 × 0.01 / 30) = 33 (not binding vs pyramid tier)
-      expect(result.drawdownRoomCap).toBe(33);
+      // recal 0.01→0.08: drawdownRoomCap = floor(100000 × 0.08 / 30) = 266 (still not binding vs pyramid tier)
+      expect(result.drawdownRoomCap).toBe(266);
       expect(result.drawdownRoomCapBinding).toBe(false);
       // Account is healthy (52K/50K = 1.04 ≥ 0.85) and Topstep trail uses buffer-pct.
       // On a fresh Topstep: buffer = 52000 - 50000 = $2000 → riskDollars = $40

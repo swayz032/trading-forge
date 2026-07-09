@@ -21,13 +21,14 @@
  */
 
 import { eq } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import { db } from "../db/index.js";
-import { auditLog, brokerAccounts } from "../db/schema.js";
+import { auditLog, brokerAccounts, productionTrades, strategies } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { loadBrokerCredentials } from "../lib/credential-loader.js";
-import { submitWebhookOrder } from "../integrations/traderspost/client.js";
+import { submitWebhookOrder, buildDeterministicIdempotencyKey } from "../integrations/traderspost/client.js";
 import type { IdempotencyKeyInputs } from "../integrations/traderspost/client.js";
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
@@ -35,7 +36,12 @@ import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getEnabledFirms } from "./strategy-assignment-service.js";
-import { getFirmLimit, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
+import { getFirmLimit, CONTRACT_CAP_MAX, getFirmAccount, CONTRACT_SPECS, DEFAULT_ACCOUNT_SIZE } from "../../shared/firm-config.js";
+// deep-scan #15 FIX M3: shared firm↔broker_type topology invariant (single source
+// of truth for the F-3 dispatch guard AND the insert/update-time guard).
+import { validateFirmBrokerTopology, normalizeFirmKey } from "../lib/firm-broker-topology.js";
+// deep-scan #15 FIX M5: route-level MFFU 2%-per-trade enforcement helpers.
+import { getStopCeilingPts } from "../lib/contract-class.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 import { traderspostRejectsTotal } from "../lib/metrics-registry.js";
 
@@ -74,6 +80,16 @@ const _traderspostBreaker = CircuitBreakerRegistry.get(TRADERSPOST_CIRCUIT_BREAK
 let _tpBreacherAlertedOpen = false;
 
 // State-change hook: fires once per transition.
+//
+// deep-scan #21 HIGH fix (2026-07-05): setOnStateChange is now MULTI-SUBSCRIBER
+// (see circuit-breaker.ts::CircuitBreakerRegistry.setOnStateChange). Previously
+// "last call wins" meant index.ts's generic AlertFactory.circuitOpen(name)
+// handler — registered at that module's own top-level body, which per ES
+// module execution order runs AFTER this module's imports resolve — silently
+// OVERWROTE this handler on every boot, so the TradersPost-specific Discord
+// "orders safely blocked" alert + broker:degraded SSE + CLOSE-recovery log
+// never fired. Both handlers now coexist; this one still only reacts to
+// TRADERSPOST_CIRCUIT_BREAKER_KEY transitions.
 CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
   if (name !== TRADERSPOST_CIRCUIT_BREAKER_KEY) return;
 
@@ -353,6 +369,28 @@ export const BROKER_ORDER_ROUTED_EVENT = "broker:order_routed";
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
+/**
+ * FIX M5: resolve a CONTRACT_SPECS entry (symbol root + point value) from a
+ * TradingView-style ticker (e.g. "MESU2026", "MES", "ES1!"). Micros are matched
+ * BEFORE minis so "MCLF2026" resolves to MCL (not CL) and "MESU2026" to MES (not
+ * ES). Returns null when no known contract root matches — the caller then skips
+ * the 2% check rather than guessing a point value (which would risk a false block).
+ */
+function resolveRouteContractSpec(ticker: string | null | undefined): { symbol: string; pointValue: number } | null {
+  const upper = (ticker ?? "").toUpperCase();
+  if (!upper) return null;
+  // Micros first (MES/MNQ/MCL), then minis (ES/NQ/CL) — longest-prefix-first intent.
+  for (const key of ["MES", "MNQ", "MCL", "ES", "NQ", "CL"] as const) {
+    if (upper.startsWith(key)) {
+      const s = CONTRACT_SPECS[key];
+      if (s && typeof s.pointValue === "number") return { symbol: key, pointValue: s.pointValue };
+    }
+  }
+  const direct = CONTRACT_SPECS[upper];
+  if (direct && typeof direct.pointValue === "number") return { symbol: upper, pointValue: direct.pointValue };
+  return null;
+}
+
 async function writeAuditLog(
   accountId: string,
   signal: WebhookSignal,
@@ -385,6 +423,143 @@ async function writeAuditLog(
   } catch (auditErr) {
     // Audit failure must never block the caller — log and continue
     logger.error({ auditErr, accountId }, "broker-router: failed to write audit log row (non-blocking)");
+  }
+}
+
+// ─── X-1 option a (Deep-Scan #18b, 2026-07-05): production_trades writer ──────
+//
+// Prior to this fix, `production_trades` had NO writer anywhere in the codebase
+// (Phase 4C scaffolded the columns; nothing ever INSERTed a row). That left
+// reconciliation-service.ts's fetchProxyCountsFromProductionTrades() reading
+// zero rows forever — daily recon could only report yellow/UNVERIFIABLE, never
+// a confirmed-clean green. This writes one row per successful TradersPost order
+// submission so recon has real data to compare against.
+//
+// HARD SAFETY CONTRACT (this touches the live-money order path):
+//   - FAIL-SOFT: this function must NEVER throw. Called fire-and-forget (`void`)
+//     AFTER submitResult has already resolved, so a write failure — or even the
+//     write itself taking time — can never delay or block order execution.
+//   - IDEMPOTENT: keyed on traderspost_webhook_id = the SAME deterministic
+//     bar-scoped idempotency key TradersPost itself dedupes on (see
+//     buildDeterministicIdempotencyKey in traderspost/client.ts). A retry of the
+//     same bar/signal produces the same key; `onConflictDoNothing` against the
+//     partial unique index (migration 0194) makes a retry a silent no-op rather
+//     than a duplicate row.
+//   - ADDITIVE ONLY: does not read or alter anything routeOrder() uses to decide
+//     the order outcome — this fires strictly after the outcome is already final.
+//
+// strategy_version_hash is best-effort observability: a SHA-256 canonical-JSON
+// hash of the strategy's current `config` (mirrors the sorted-key pattern used by
+// firm-rules-version.ts / frozen-policy-contract.ts). Nothing reads this column
+// yet (Phase 4C had zero writers OR readers), so a degraded fallback on lookup
+// failure is safe — it never blocks or corrupts a downstream consumer.
+//
+// expected_pnl is intentionally left NULL: routeOrder()/WebhookSignal carries no
+// take-profit target, so a genuine expected-PnL figure cannot be computed at this
+// layer without fabricating one. Per CLAUDE.md, never fabricate a number to fill
+// a column — NULL is the honest value until a real TP target is threaded through.
+function sortedKeyReplacer(_key: string, value: unknown): unknown {
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    const sorted: Record<string, unknown> = {};
+    for (const k of Object.keys(value as Record<string, unknown>).sort()) {
+      sorted[k] = (value as Record<string, unknown>)[k];
+    }
+    return sorted;
+  }
+  return value;
+}
+
+async function computeStrategyVersionHashForRouting(strategyId: string): Promise<string> {
+  const fallback = `unavailable:${createHash("sha256").update(strategyId, "utf8").digest("hex")}`;
+  try {
+    const rows = await db
+      .select({ config: strategies.config })
+      .from(strategies)
+      .where(eq(strategies.id, strategyId))
+      .limit(1);
+    const config = rows[0]?.config;
+    if (config === undefined || config === null) return fallback;
+    const canonical = JSON.stringify(config, sortedKeyReplacer);
+    return createHash("sha256").update(canonical, "utf8").digest("hex");
+  } catch {
+    // Fail-soft: an unreadable strategy row must never block the writer.
+    return fallback;
+  }
+}
+
+// Exported (not just internal) so unit tests can exercise the writer directly
+// without needing to thread a full routeOrder() call through every upstream gate.
+export async function writeProductionTradeRow(params: {
+  accountId: string;
+  signal: WebhookSignal;
+  idempotencyKey: string;
+  correlationId?: string | null;
+}): Promise<void> {
+  const { accountId, signal, idempotencyKey, correlationId } = params;
+
+  try {
+    if (!signal.strategyId) {
+      // production_trades.strategy_id is NOT NULL (uuid). Without a strategy id
+      // there is nothing safe to key the row on — skip silently. This is an
+      // observability write, not a correctness-critical one; the order itself
+      // already routed successfully before this function was ever invoked.
+      logger.debug(
+        { accountId, correlationId },
+        "broker-router: production_trades write skipped — signal has no strategyId",
+      );
+      return;
+    }
+
+    const strategyVersionHash = await computeStrategyVersionHashForRouting(signal.strategyId);
+
+    // Canonical +1 (long) / -1 (short) / 0 (exit/flat) encoding.
+    const signalValue =
+      signal.action === "enter_long" ? 1 : signal.action === "enter_short" ? -1 : 0;
+
+    let barTimestamp: Date;
+    if (signal.barTimestamp) {
+      const parsed = new Date(signal.barTimestamp);
+      barTimestamp = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    } else {
+      barTimestamp = new Date();
+    }
+
+    await db
+      .insert(productionTrades)
+      .values({
+        strategyId: signal.strategyId,
+        strategyVersionHash,
+        barTimestamp,
+        signalValue,
+        traderspostWebhookId: idempotencyKey,
+        expectedPnl: null,
+        correlationId: correlationId ?? null,
+      })
+      .onConflictDoNothing({ target: productionTrades.traderspostWebhookId });
+  } catch (err) {
+    // Fail-soft: log + audit a warning, never throw. This must never be allowed
+    // to affect routeOrder()'s already-returned order outcome.
+    logger.warn(
+      { err, accountId, correlationId },
+      "broker-router: production_trades.write_failed (non-blocking, recon-observability only)",
+    );
+    db.insert(auditLog)
+      .values({
+        action: "broker_router.production_trades_write_failed",
+        entityType: "broker_account",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { accountId, ticker: signal.ticker, action: signal.action } as Record<string, unknown>,
+        result: { error: err instanceof Error ? err.message : String(err) } as Record<string, unknown>,
+        status: "warning",
+        correlationId: correlationId ?? null,
+      })
+      .catch((auditErr: unknown) => {
+        logger.error(
+          { err: auditErr },
+          "broker-router: production_trades_write_failed audit write also failed (non-blocking)",
+        );
+      });
   }
 }
 
@@ -595,8 +770,11 @@ export async function routeOrder(
   // conflate "wrong known broker" with "broker_type we don't recognize at all".
   {
     const KNOWN_BROKER_TYPES = ["traderspost", "topstepx"] as const;
-    const invariantFirmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
-    const expectedBrokerType = invariantFirmKey === "topstep" ? "topstepx" : "traderspost";
+    // FIX M3: derive the invariant from the shared helper so the runtime dispatch
+    // guard and the write-time guard / DB CHECK constraint can never drift.
+    const topology = validateFirmBrokerTopology(account.firmId, account.brokerType);
+    const invariantFirmKey = topology.firmKey;
+    const expectedBrokerType = topology.expectedBrokerType;
     if (
       (KNOWN_BROKER_TYPES as readonly string[]).includes(account.brokerType) &&
       account.brokerType !== expectedBrokerType
@@ -788,6 +966,148 @@ export async function routeOrder(
     } catch (clampErr) {
       // Firm-cap clamp failure is non-fatal — log and proceed
       logger.error({ err: clampErr, accountId, correlationId }, "broker-router: route-time cap clamp failed — proceeding without clamp");
+    }
+  }
+
+  // ── FIX M5: route-level MFFU 2%-per-trade enforcement ──────────────────────
+  // The F-5 Python compliance gate below passes intended_max_loss + account_balance
+  // as NULL (they are not available at route time), so the 2%-per-trade rule is
+  // structurally SKIPPED there. A caller reaching routeOrder() DIRECTLY (manual
+  // order / future automation) therefore bypasses the 2% rule entirely — the
+  // richer paper-execution-service check never runs for that path.
+  //
+  // This block closes that gap: it derives the intended max loss from the signal's
+  // own risk geometry (quantity × stop-distance × point value) and enforces the
+  // firm's 2% rule against the firm's NOMINAL account size. Only fires for entry
+  // actions on firms that carry the 2% rule (MFFU). Exits add no per-trade risk.
+  //
+  // deepscan15 L2 note: nominal size is the conservative basis ONLY when live funded
+  // equity >= nominal. On a DRAWN-DOWN account (equity < nominal) a nominal-basis 2%
+  // ceiling UNDER-enforces relative to 2% of actual equity — live equity is not
+  // available at route time, so paper-execution-service (which has the live balance)
+  // remains the authoritative 2% enforcer; this route-level guard is a defense-in-depth
+  // upper bound, not the primary check.
+  if (signal.action === "enter_long" || signal.action === "enter_short") {
+    try {
+      const firmKey = normalizeFirmKey(account.firmId); // deepscan15 L4: shared helper (was inline regex)
+      const acct = getFirmAccount(firmKey);
+      const twoPctRule = acct?.twoPercentRulePct;
+      const contracts = typeof signal.quantity === "number" ? signal.quantity : NaN;
+      const spec = resolveRouteContractSpec(signal.ticker);
+
+      if (
+        acct &&
+        typeof twoPctRule === "number" &&
+        twoPctRule > 0 &&
+        Number.isFinite(contracts) &&
+        contracts > 0 &&
+        spec
+      ) {
+        // Stop distance: prefer the signal's real entry↔stop geometry; fall back to
+        // the firm/symbol stop ceiling (conservative upper bound) when either price
+        // is missing so the check still runs rather than silently skipping.
+        const hasPrices =
+          typeof signal.price === "number" &&
+          Number.isFinite(signal.price) &&
+          typeof signal.stopPrice === "number" &&
+          Number.isFinite(signal.stopPrice) &&
+          signal.price !== signal.stopPrice;
+        const stopDistancePts = hasPrices
+          ? Math.abs((signal.price as number) - (signal.stopPrice as number))
+          : getStopCeilingPts(spec.symbol);
+
+        const intendedMaxLoss = contracts * stopDistancePts * spec.pointValue;
+        const accountBalance = acct.accountSize ?? DEFAULT_ACCOUNT_SIZE;
+        const maxAllowedLoss = twoPctRule * accountBalance;
+
+        if (intendedMaxLoss > maxAllowedLoss) {
+          const result: BrokerResult = {
+            success: false,
+            reason: "compliance_violation",
+            accountId,
+            firmId: account.firmId,
+            brokerType: account.brokerType,
+            error:
+              `two_percent_rule_block: intended max loss $${intendedMaxLoss.toFixed(2)} ` +
+              `exceeds ${(twoPctRule * 100).toFixed(1)}% of account $${accountBalance.toFixed(0)} ` +
+              `(cap $${maxAllowedLoss.toFixed(2)})`,
+          };
+          logger.warn(
+            {
+              accountId,
+              firmId: account.firmId,
+              contracts,
+              stopDistancePts,
+              pointValue: spec.pointValue,
+              intendedMaxLoss,
+              accountBalance,
+              maxAllowedLoss,
+              twoPctRule,
+              stopBasis: hasPrices ? "signal_geometry" : "stop_ceiling_fallback",
+              correlationId,
+            },
+            "broker-router: BLOCKED — route-level MFFU 2%-per-trade rule (intended loss exceeds 2% of account)",
+          );
+          await db.insert(auditLog).values({
+            action: "broker_router.two_percent_rule_block",
+            entityType: "broker_account",
+            entityId: null,
+            decisionAuthority: "system",
+            input: {
+              accountId,
+              firmId: account.firmId,
+              ticker: signal.ticker,
+              action: signal.action,
+              quantity: contracts,
+            } as Record<string, unknown>,
+            result: {
+              intendedMaxLoss,
+              accountBalance,
+              maxAllowedLoss,
+              twoPctRule,
+              stopDistancePts,
+              pointValue: spec.pointValue,
+              stopBasis: hasPrices ? "signal_geometry" : "stop_ceiling_fallback",
+            } as Record<string, unknown>,
+            status: "blocked",
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) => {
+            logger.error({ err, accountId, correlationId }, "broker-router: two_percent_rule_block audit write failed (non-blocking)");
+          });
+          broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+          await writeAuditLog(accountId, signal, result, correlationId);
+          return result;
+        }
+      }
+    } catch (twoPctErr) {
+      // Fail-OPEN: this is a route-level defense-in-depth guard. A bug here must
+      // not block legitimate orders — paper-execution-service remains the primary
+      // 2% enforcement path. Log so the skipped check is visible.
+      logger.error(
+        { err: twoPctErr, accountId, firmId: account.firmId, correlationId },
+        "broker-router: route-level 2% check threw — proceeding (fail-open; paper-execution-service is primary)",
+      );
+      // deepscan15 L2: a silently-skipped compliance check must be reconstructable —
+      // write an audit row like every other skip/decision in this file (log-only left
+      // the fail-open invisible to a post-incident audit_log trace).
+      await db.insert(auditLog).values({
+        action: "broker_router.two_percent_rule_check_error",
+        entityType: "broker_account",
+        entityId: null,
+        decisionAuthority: "system",
+        input: {
+          accountId,
+          firmId: account.firmId,
+          ticker: signal.ticker,
+          action: signal.action,
+          quantity: signal.quantity,
+        } as Record<string, unknown>,
+        result: { error: String(twoPctErr), failOpen: true, primaryEnforcer: "paper-execution-service" } as Record<string, unknown>,
+        status: "warn",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => {
+        logger.error({ err: auditErr, accountId, correlationId }, "broker-router: two_percent_rule_check_error audit write failed (non-blocking)");
+      });
     }
   }
 
@@ -1084,6 +1404,20 @@ export async function routeOrder(
     broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
     await writeAuditLog(accountId, signal, result, correlationId);
 
+    // ── X-1 option a (Deep-Scan #18b): production_trades writer ──────────────
+    // Fire-and-forget, SUCCESS path only. Fired after the broker call and the
+    // audit/SSE emission above are already complete — cannot delay or block the
+    // order. See writeProductionTradeRow() docstring for the fail-soft +
+    // idempotency contract.
+    if (submitResult.success) {
+      void writeProductionTradeRow({
+        accountId,
+        signal,
+        idempotencyKey: buildDeterministicIdempotencyKey(idempotencyInputs),
+        correlationId,
+      });
+    }
+
     // ── Pass 4 Track C / M11: per-call TradersPost rejection Discord + Prom ───
     // Fires AFTER audit+SSE so observability is preserved even if the
     // notification helper throws. Distinct from the credential-vault failure at
@@ -1129,12 +1463,26 @@ export async function routeOrder(
           },
         );
       } else {
+        // deep-scan execution F-3 (2026-07-06): a 4xx reject (HTTP status present) genuinely did NOT reach the
+        // broker — but a network/timeout error (no HTTP response → statusCode null) is AMBIGUOUS: per
+        // traderspost/client.ts the broker MAY have already processed the order before the socket timed out
+        // (client.ts deliberately does NOT retry timeouts for this reason). Asserting "did NOT reach" on a
+        // timeout could prompt the operator to re-fire the same trade → a real duplicate, the exact thing the
+        // idempotency key exists to prevent, defeated by a misleading alert. Soften the copy for that case.
+        const ambiguousDelivery = submitResult.statusCode == null;
+        const detail = ambiguousDelivery
+          ? "A TradersPost order timed out / hit a network error. It MAY OR MAY NOT have reached the broker — " +
+            "check the TradersPost/broker dashboard before assuming it didn't. Do NOT blindly re-fire it."
+          : "TradersPost rejected an order. The order did NOT reach the broker.";
+        const familyDetail = ambiguousDelivery
+          ? "Tell Tony: 'A TradersPost order timed out.' Do NOT re-place it — the broker MIGHT have it; check the dashboard first."
+          : "Tell Tony: 'A TradersPost order was rejected.' If you cannot reach him, no action is required — the broker did not receive the order.";
         notifyWarning(
-          `TradersPost reject for ${signal.ticker ?? "unknown"}`,
+          `TradersPost ${ambiguousDelivery ? "timeout/network error" : "reject"} for ${signal.ticker ?? "unknown"}`,
           appendFamilyGradePostscript(
             `Account ${accountId} on ${signalActionStr}: HTTP ${statusCodeStr}, body=${truncatedBody}`,
-            "TradersPost rejected an order. The order did NOT reach the broker.",
-            "Tell Tony: 'A TradersPost order was rejected.' If you cannot reach him, no action is required — the broker did not receive the order.",
+            detail,
+            familyDetail,
           ),
           {
             correlationId: correlationId ?? null,

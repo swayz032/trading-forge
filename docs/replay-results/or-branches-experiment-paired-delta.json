@@ -1,0 +1,19 @@
+{
+  "n_paired_strategies": 33,
+  "point_sds_before": 2.7468046520635525,
+  "point_sds_after": 2.7468046520635525,
+  "point_delta": 0.0,
+  "n_boot_valid": 1000,
+  "delta_ci_90": [
+    0.0,
+    0.0
+  ],
+  "delta_median": 0.0,
+  "frac_delta_positive": 0.0,
+  "ci_excludes_zero": false,
+  "min_effect": 0.2,
+  "ci_entirely_above_min_effect": false,
+  "ci_entirely_below_min_effect": true,
+  "verdict": "CONCLUSIVE_NEGATIVE_CANDIDATE",
+  "verdict_note": "verdict is a CANDIDATE label only \u2014 CONCLUSIVE_NEGATIVE requires the sample-floor (>=15 strategies, >=5 families at gating-fidelity>=0.80) AND gating-fidelity preconditions to ALSO hold; the caller (not this script) certifies those and states the final pre-registered decision."
+}

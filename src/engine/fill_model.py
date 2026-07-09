@@ -309,6 +309,21 @@ def compute_volume_based_fill_ratios(
     if volume_threshold is None:
         volume_threshold = _get_partial_fill_volume_threshold()
 
+    # B-12 fix (deepscan17, 2026-07-05): validate volume_threshold before it
+    # reaches the zone-2 linear-interpolation denominator. An out-of-range
+    # value (env misconfiguration: negative, >=1.0, or non-finite) either
+    # divides by a near-zero/negative denominator or shifts zone 2's input
+    # domain so ratio_in_zone leaves [0,1] — producing fill_ratios outside the
+    # documented [0.5, 1.0] contract. A negative threshold is the worse case:
+    # clamping it to the boundary 0.0 would make EVERY order (even a tiny,
+    # well-volumed one) fall into zone 2, degrading fills that should never
+    # be touched. Falling back to the documented default (0.1) on any
+    # invalid input preserves the intended "small orders never degrade"
+    # semantics instead of silently reinterpreting a bad config as "always
+    # degrade" or "never degrade above 99%".
+    if not np.isfinite(volume_threshold) or volume_threshold < 0.0 or volume_threshold >= 1.0:
+        volume_threshold = 0.1
+
     n = len(df)
     fill_ratios = np.ones(n, dtype=np.float64)
 
@@ -324,6 +339,10 @@ def compute_volume_based_fill_ratios(
     safe_volume = np.where((volume > 0) & np.isfinite(volume), volume, np.inf)
 
     order_q = np.asarray(order_quantities, dtype=np.float64)
+    # B-12 fix: NaN/negative order quantities must not corrupt the ratio —
+    # treat as "no order" (ratio 0, zone 1, no degradation) rather than
+    # propagating NaN or a spurious sign into the zone masks below.
+    order_q = np.where(np.isfinite(order_q) & (order_q > 0), order_q, 0.0)
     # Ratio of order size to bar volume
     qty_vol_ratio = order_q / safe_volume
 
@@ -340,6 +359,13 @@ def compute_volume_based_fill_ratios(
         fill_ratios[zone2_mask] = 1.0 - 0.5 * ratio_in_zone
 
     fill_ratios[zone3_mask] = 0.5
+
+    # B-12 fix: defensive final clamp to the documented [0.5, 1.0] contract.
+    # With volume_threshold now validated above this is a no-op on the normal
+    # path — it exists so a future change to the zone math (or an edge case
+    # this audit didn't enumerate) fails safe into the documented range
+    # instead of silently violating the contract every caller depends on.
+    fill_ratios = np.clip(fill_ratios, 0.5, 1.0)
 
     return fill_ratios
 
@@ -382,7 +408,11 @@ def apply_volume_partial_fills(
             "total_orders": 0,
             "partial_fills": 0,
             "avg_fill_ratio": 1.0,
-            "avg_slippage_delta_per_partial": 0.0,
+            # B-18 fix (deepscan17, 2026-07-05): see main computation below —
+            # this field was a permanent 0.0 placeholder claiming a computed
+            # value that never existed. None = "not computed" (honest), not a
+            # fabricated zero.
+            "avg_slippage_delta_per_partial": None,
         }
 
     adjusted_sizes = sizes.copy()
@@ -397,11 +427,22 @@ def apply_volume_partial_fills(
     for idx in entry_indices:
         ratio = fill_ratios[idx]
         if ratio < 1.0 and not np.isnan(adjusted_sizes[idx]):
+            # B-13 fix (deepscan17, 2026-07-05): PREVIOUS BUG — partial_fills was
+            # only incremented when the INTEGER size actually changed
+            # (`new_size < original_size`). For a 1-contract order,
+            # int(1 * 0.7) floors to 0, then max(1.0, 0) clamps back up to 1 —
+            # new_size == original_size, so the counter never fired even
+            # though a genuine volume-based degradation occurred (ratio<1.0).
+            # A 1-contract order simply has no smaller integer representation
+            # ("0.7 contracts" isn't tradeable) — that does not mean no
+            # partial fill happened. Count every ratio<1.0 order as a partial
+            # fill for audit purposes; only gate the SIZE reduction itself on
+            # whether the integer math actually produces a smaller size.
             original_size = adjusted_sizes[idx]
             new_size = max(1.0, int(original_size * ratio))  # floor, minimum 1 contract
+            partial_fills += 1
             if new_size < original_size:
                 adjusted_sizes[idx] = float(new_size)
-                partial_fills += 1
         fill_ratio_sum += fill_ratios[idx]
 
     avg_fill_ratio = fill_ratio_sum / total_orders if total_orders > 0 else 1.0
@@ -411,7 +452,16 @@ def apply_volume_partial_fills(
         "total_orders": total_orders,
         "partial_fills": partial_fills,
         "avg_fill_ratio": round(avg_fill_ratio, 4),
-        "avg_slippage_delta_per_partial": 0.0,  # Placeholder — slippage delta computed in backtester
+        # B-18 fix (deepscan17, 2026-07-05): PREVIOUS BUG — this field was a
+        # hardcoded 0.0 dressed up as a computed metric ("Placeholder —
+        # slippage delta computed in backtester", which never happened
+        # anywhere in backtester.py either). This function only has SIZE
+        # information (no price/spread data), so it cannot honestly compute
+        # a price-based slippage delta — fabricating one would misrepresent
+        # fill-model fidelity (CLAUDE.md: never fake profitability). None
+        # signals "not computed at this layer" rather than a false zero that
+        # reads as "measured and found to be zero."
+        "avg_slippage_delta_per_partial": None,
         "volume_threshold": volume_threshold,
     }
 

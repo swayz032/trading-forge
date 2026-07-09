@@ -801,3 +801,128 @@ class TestSplitWindowsDefaultEmbargo:
             f"Default embargo=20 ({oos_default} OOS bars) must be < "
             f"explicit embargo=0 ({oos_zero} OOS bars)"
         )
+
+
+# ─── Deepscan17 B-3 fix (2026-07-05): CPCV warmup must never contain future
+# data ────────────────────────────────────────────────────────────────────
+#
+# BUG: _run_walk_forward_cpcv passed the FULL (unrestricted) is_data as
+# warmup_data to run_backtest() for every combinatorial path. For combos like
+# test_fold_indices=(0,1), every IS fold (2,3,4,5) is chronologically AFTER
+# the OOS window; run_backtest()'s warmup prepend
+# (`data = pl.concat([warmup_data, data])`, no re-sort by ts_event) then put
+# FUTURE bars ahead of the OOS window, seeding rolling indicators with
+# lookahead information. Only combo (4,5) was leak-free, by accident (its IS
+# folds are all chronologically prior).
+#
+# FIX: restrict the warmup frame passed to run_backtest() to IS folds
+# strictly BEFORE the earliest OOS fold index in each combo. is_data itself
+# (unrestricted) is left unchanged for the separate per-path IS-Sharpe
+# evaluation, which is a legitimate full-IS-sample use, not an indicator
+# warmup.
+
+class TestB3CpcvWarmupNoFutureLeak:
+    """Integration-level regression: every warmup frame _run_walk_forward_cpcv
+    actually hands to run_backtest() must end strictly before its paired OOS
+    frame begins."""
+
+    def test_warmup_never_extends_past_oos_start(self, monkeypatch):
+        """Monkeypatch run_backtest to capture every (data, warmup_data) pair
+        across all 15 combinatorial paths and assert no warmup frame's last
+        timestamp is >= its OOS frame's first timestamp."""
+        import src.engine.walk_forward as wf_mod
+
+        data = _make_data(600)
+        req = _make_request()
+
+        captured_calls = []
+
+        def _fake_run_backtest(request, data=None, warmup_data=None):
+            captured_calls.append((data, warmup_data))
+            return {"sharpe_ratio": 0.0, "total_return": 0.0, "trades": [], "daily_pnls": []}
+
+        monkeypatch.setattr(wf_mod, "run_backtest", _fake_run_backtest)
+
+        wf_mod._run_walk_forward_cpcv(
+            request=req, data=data, n_splits=6, k_test_groups=2, embargo_bars=5,
+        )
+
+        assert len(captured_calls) > 0, "Expected at least one captured run_backtest call"
+
+        checked_nonempty_warmup = 0
+        for oos_data, warmup_data in captured_calls:
+            if warmup_data is None or len(warmup_data) == 0:
+                continue
+            warmup_max_ts = warmup_data["ts_event"][-1]
+            oos_min_ts = oos_data["ts_event"][0]
+            checked_nonempty_warmup += 1
+            assert warmup_max_ts < oos_min_ts, (
+                f"B-3 REGRESSION: warmup data extends to {warmup_max_ts} which is "
+                f">= the OOS window start {oos_min_ts} — future data leaked into "
+                f"the indicator-warmup prefix"
+            )
+        # At least one path (e.g. a late combo like (4,5)) must still receive
+        # real, non-empty, correctly-bounded warmup data — the fix must not
+        # degenerate into "never pass warmup".
+        assert checked_nonempty_warmup > 0, (
+            "Expected at least one CPCV path to receive non-empty warmup data"
+        )
+
+
+class TestB3WarmupRestrictionPureLogic:
+    """Pure-math replication of the exact fold-selection logic added to
+    _run_walk_forward_cpcv: warmup_data_for_oos = folds with fi < min(test_fold_indices).
+    Mirrors the TestFix1CpcvWfeFromPerPathIs pattern above — direct, fast,
+    deterministic coverage of the selection rule independent of full-backtest
+    plumbing."""
+
+    def _select_warmup_fold_indices(self, is_fold_indices, test_fold_indices):
+        """Replicates walk_forward.py's warmup-restriction selection exactly:
+        `_earliest_test_fold = min(test_fold_indices)`
+        `[fi for fi in sorted(is_fold_indices) if fi < _earliest_test_fold]`
+        """
+        earliest_test_fold = min(test_fold_indices)
+        return [fi for fi in sorted(is_fold_indices) if fi < earliest_test_fold]
+
+    def test_earliest_combo_0_1_gets_no_warmup_folds(self):
+        """test_fold_indices=(0,1): all 4 IS folds (2,3,4,5) are chronologically
+        AFTER this OOS window — pre-fix bug used all 4 as 'warmup'."""
+        selected = self._select_warmup_fold_indices([2, 3, 4, 5], (0, 1))
+        assert selected == [], (
+            "B-3 REGRESSION: combo (0,1) has no IS fold chronologically before "
+            "it — warmup must be empty, not the pre-fix bug's 4 future folds"
+        )
+
+    def test_latest_combo_4_5_gets_all_prior_folds_as_warmup(self):
+        """test_fold_indices=(4,5) was the only leak-free combo pre-fix (by
+        accident, since all its IS folds happen to be chronologically prior).
+        Post-fix it must still get its full prior-fold warmup set."""
+        selected = self._select_warmup_fold_indices([0, 1, 2, 3], (4, 5))
+        assert selected == [0, 1, 2, 3]
+
+    def test_middle_combo_2_3_excludes_future_folds_4_5(self):
+        """test_fold_indices=(2,3): IS folds are (0,1,4,5). Folds 4,5 are
+        chronologically AFTER this OOS window and must be excluded even
+        though they are legitimately IS folds for this combo."""
+        selected = self._select_warmup_fold_indices([0, 1, 4, 5], (2, 3))
+        assert selected == [0, 1], (
+            "B-3 REGRESSION: chronologically-future IS folds 4,5 leaked into "
+            "the warmup set for combo (2,3)"
+        )
+
+    def test_noncontiguous_combo_1_4_only_keeps_fold_before_earliest(self):
+        """test_fold_indices=(1,4) (non-contiguous): IS folds are (0,2,3,5).
+        Only fold 0 is chronologically before the earliest test fold (1)."""
+        selected = self._select_warmup_fold_indices([0, 2, 3, 5], (1, 4))
+        assert selected == [0]
+
+    def test_selection_never_includes_a_test_fold_index(self):
+        """Sanity: the restricted warmup set can never overlap the test set,
+        for every C(6,2) combination (would indicate a logic error, not the
+        B-3 bug specifically, but worth locking down alongside it)."""
+        from itertools import combinations
+        n_splits = 6
+        for test_indices in combinations(range(n_splits), 2):
+            is_indices = [i for i in range(n_splits) if i not in test_indices]
+            selected = self._select_warmup_fold_indices(is_indices, test_indices)
+            assert not set(selected).intersection(test_indices)

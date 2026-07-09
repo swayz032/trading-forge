@@ -49,6 +49,10 @@ import {
   type PlaybookCategory,
 } from "../lib/playbook-registration.js";
 import { logger } from "../lib/logger.js";
+// deepscan17 H-3: factor-quality observability (leaf lib — no service cycle).
+import { emitFactorQualityClassified, emitThinConfluenceWarning } from "../lib/confluence-quality-audit.js";
+import { recoverSpecTimeframe } from "../lib/spec-timeframe-recovery.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
 // ─── Lazy dynamic imports (sever static circular-import edges) ─────────────
 //
@@ -117,21 +121,38 @@ async function getAgentServiceModule(): Promise<AgentServiceModule> {
 // on an infra/import error — so it is not routed through the same
 // dynamic-import-inside-try/catch pattern.
 //
-// This is a DELIBERATE, DOCUMENTED, BYTE-IDENTICAL mirror of
-// agent-service.ts's exported `assertCrossValidatedSource` (verified against
-// its source at the time of writing) — not a divergent reimplementation. If
-// agent-service.ts's version changes, this one must change with it. Fixing
-// this properly means applying the SAME "sever static edge, dynamic-import
-// at call time" pattern one level deeper inside agent-service.ts itself
-// (its own edge to backtest-service.ts) — a legitimate, larger architectural
-// fix flagged in docs/spec-onboarding-runbook.md, out of scope for this band.
+// This began as a DELIBERATE, DOCUMENTED mirror of agent-service.ts's exported
+// `assertCrossValidatedSource`. Deep-scan #16 Wave 2 (H-6, 2026-07-04)
+// INTENTIONALLY DIVERGED it: the canonical version's `tags.includes("cross-validated")`
+// branch is a legitimate signal for its multi-layer graduation callers, but it was a
+// false guarantee here — this file's sole caller self-stamps "cross-validated" on
+// every insert, so the tag branch verified nothing. The local guard now trusts the
+// spec_onboarding path by SOURCE IDENTITY (provenance = certified-compiler artifact +
+// auditor + DSL critic), not by a self-stamped tag. The larger architectural fix
+// (sever the static edge to backtest-service.ts, dynamic-import at call time) remains
+// flagged in docs/spec-onboarding-runbook.md, out of scope for this band.
 function assertCrossValidatedSourceLocal(source: string, tags: string[]): void {
   const EXEMPT_SOURCES = new Set(["clone", "b4_regen", "evolved"]);
   if (EXEMPT_SOURCES.has(source)) return;
   if (source === "graduated_bucket") return;
-  if (tags.includes("cross-validated")) return;
+  // Deep-scan #16 Wave 2 (H-6, 2026-07-04): the spec-onboarding path is trusted
+  // by SOURCE IDENTITY, not by a self-stamped tag. Previously this guard passed
+  // whenever `tags` contained "cross-validated" — but the sole caller
+  // (onboardSpecArtifact, source always "spec_onboarding") stamps that exact tag
+  // UNCONDITIONALLY on every insert, so the tag branch was a decorative no-op that
+  // guaranteed nothing (any junk config could pass by self-stamping the string).
+  // The spec_onboarding path's real provenance is the certified-compiler artifact
+  // contract + the graduated-strategy auditor + the DSL quality critic (now run by
+  // DEFAULT per H-1) — NOT the presence of a caller-controlled tag. So we allow it
+  // by explicit source identity and DROP the circular tag-based escape for this
+  // local guard. NOTE: this is a DELIBERATE divergence from agent-service.ts's
+  // exported assertCrossValidatedSource (whose "cross-validated" tag is meaningful
+  // for its own multi-layer graduation callers); `tags` is retained in the
+  // signature for call-site symmetry and future diagnostics.
+  if (source === "spec_onboarding") return;
+  void tags;
   throw new Error(
-    `strategy_insert_violation: only graduated_bucket source or cross-validated tag is allowed; got source=${source}`,
+    `strategy_insert_violation: only graduated_bucket / spec_onboarding source (or exempt clone/regen source) is allowed; got source=${source}`,
   );
 }
 
@@ -340,7 +361,15 @@ export type SymbolCode = "MES" | "MNQ" | "MCL";
 export interface OnboardSpecOptions {
   /** Default: MES leader + Wave 25 [MES, MNQ, MCL] fan-out (spec artifacts carry no market field). */
   symbols?: SymbolCode[];
-  /** Default "5m" — CONTRACT AMBIGUITY: the spec artifact carries no timeframe field. See runbook. */
+  /**
+   * EXPLICIT operator override for a known-uniform batch ONLY. When set, this TF
+   * is applied verbatim to every symbol and per-spec recovery is skipped.
+   * When UNSET (the default), the exec timeframe is RECOVERED per-spec from the
+   * artifact prose via recoverSpecTimeframe(). There is NO silent "5m" default:
+   * a spec whose timeframe cannot be recovered is QUARANTINED (fail-loud audit
+   * `onboard.timeframe_unrecoverable`), NEVER onboarded at a guessed 5m.
+   * (Timeframe Integrity Fix, 2026-07-03.)
+   */
   timeframe?: string;
   dryRun: boolean;
   /** Absolute path to playbook_router.py; overridable so tests point at a temp copy. */
@@ -439,7 +468,55 @@ export async function onboardSpecArtifact(
 
   const symbols: SymbolCode[] =
     opts.symbols ?? (inferSymbolSet(null, conceptName, "MES") as SymbolCode[]);
-  const timeframe = opts.timeframe ?? "5m";
+
+  // ── Per-spec timeframe (Timeframe Integrity Fix, 2026-07-03) ──────────────
+  // THE ONE INVIOLABLE PRINCIPLE: never silently default a timeframe to "5m".
+  // Explicit operator --timeframe override wins (known-uniform batch); otherwise
+  // recover the educator's exec (lower/trigger) + higher (context) TF from the
+  // artifact prose. If genuinely unrecoverable → QUARANTINE the whole spec with
+  // a loud `onboard.timeframe_unrecoverable` audit — never a guessed-5m row.
+  let timeframe: string;
+  let higherTimeframe: string | null = null;
+  let timeframeSource: string;
+  let timeframeConfidence = 1;
+  let timeframeEvidence = "operator override";
+  if (typeof opts.timeframe === "string" && opts.timeframe.length > 0) {
+    timeframe = opts.timeframe;
+    timeframeSource = "operator_override";
+  } else {
+    const rec = recoverSpecTimeframe(artifact);
+    if (!rec.recovered || !rec.exec_timeframe) {
+      if (!opts.dryRun) {
+        await insertAuditRowSafe({
+          action: "onboard.timeframe_unrecoverable",
+          entityType: "strategy",
+          status: "warning",
+          input: { video, spec_hash: specHash, concept: conceptName },
+          result: { evidence: rec.evidence, confidence: rec.confidence },
+          decisionAuthority: "gate",
+        });
+      }
+      logger.warn(
+        { video, specHash, conceptName, evidence: rec.evidence },
+        "spec_onboarding.timeframe_unrecoverable_quarantine",
+      );
+      return {
+        video,
+        specHash,
+        ok: false,
+        reason: `timeframe_unrecoverable: ${rec.evidence}`,
+        archetypeMatch,
+        conceptName,
+        confluenceFactors,
+        perSymbol: [],
+      };
+    }
+    timeframe = rec.exec_timeframe;
+    higherTimeframe = rec.higher_timeframe;
+    timeframeSource = "recovered_from_spec";
+    timeframeConfidence = rec.confidence;
+    timeframeEvidence = rec.evidence;
+  }
   const sourceUrl = `https://www.youtube.com/watch?v=${video}`;
   // Band C: condition-compiled specs (no named archetype, binding plan cleared
   // coverage) get a RESOLVED category from spine+trigger condition vocabulary,
@@ -488,6 +565,7 @@ export async function onboardSpecArtifact(
       archetype: archetypeMatch.matched ? (archetypeMatch.archetypeKey as string) : null,
       entry_long,
       entry_short,
+      entry_indicator: entryIndicator,
     });
     if (!gate1.pass) {
       logger.warn({ video, specHash, symbol, reason: gate1.reason }, "spec_onboarding.rejected_incomplete_bidirectional");
@@ -519,6 +597,10 @@ export async function onboardSpecArtifact(
         entry_long,
         entry_short,
         entry_indicator: entryIndicator,
+        // Per-spec exec timeframe (trigger TF). Higher/context TF carried alongside.
+        timeframe,
+        trigger_tf: timeframe,
+        ...(higherTimeframe ? { htf_tf: higherTimeframe } : {}),
         stop_loss: { type: "atr", multiplier: 1.5 },
         position_size: { type: "risk_derived_pyramid" },
       },
@@ -530,6 +612,13 @@ export async function onboardSpecArtifact(
         graph_canonical_hash: artifact.graph_canonical_hash,
         ledger_d: artifact.ledger_d,
         pipeline_version: artifact.pipeline_version ?? null,
+        timeframe_recovery: {
+          exec_timeframe: timeframe,
+          higher_timeframe: higherTimeframe,
+          source: timeframeSource,
+          confidence: timeframeConfidence,
+          evidence: timeframeEvidence,
+        },
       },
     };
 
@@ -661,6 +750,9 @@ export async function onboardSpecArtifact(
         symbol,
         symbols: [symbol],
         timeframe,
+        // Wave 25 multi-TF columns: exec → trigger_tf, context → htf_tf.
+        triggerTf: timeframe,
+        ...(higherTimeframe ? { htfTf: higherTimeframe } : {}),
         config: finalConfig,
         lifecycleState,
         preferredRegime,
@@ -684,6 +776,35 @@ export async function onboardSpecArtifact(
         reason: regResult.reason,
       });
       continue;
+    }
+
+    // ── deepscan17 H-3: factor-quality telemetry (Gate 2 always; Gate 3 on fallback_only) ──
+    // The graduator emits these for bucket-graduated strategies; spec-onboarding computed
+    // factor_quality above but never emitted the observability — so the entire live 120-strategy
+    // library had ZERO factor-quality signal (no graduation.factor_quality_classified audit, no
+    // tf_graduation_factor_quality_total Prometheus, no thin-confluence Discord advisory). Emit here,
+    // after the row is durably registered, so library debt is visible for the whole corpus.
+    try {
+      emitFactorQualityClassified({
+        strategy_id: inserted.id,
+        strategy_name: strategyName,
+        correlation_id: null,
+        factor_quality,
+        factor_sources: factor_sources as Record<string, "extracted" | "auto_floor" | "kb_inferred">,
+        confluence_factors: mergedFactors,
+      });
+      if (factor_quality === "fallback_only") {
+        emitThinConfluenceWarning({
+          strategy_id: inserted.id,
+          strategy_name: strategyName,
+          correlation_id: null,
+          factor_quality: "fallback_only",
+          confluence_factors: mergedFactors,
+          source_url: sourceUrl ?? null,
+        });
+      }
+    } catch (helperErr: unknown) {
+      logger.warn({ err: String(helperErr), strategyId: inserted.id, strategyName }, "deepscan17 H-3: factor-quality telemetry emit failed (non-blocking)");
     }
 
     // ── needs_archetype_queue routing (honest parking, never silently dropped) ──

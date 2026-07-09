@@ -428,6 +428,23 @@ export async function handleCommand(
 
   // /setup channel
   if (cmd === "setup" && sub === "channel") {
+    // deep-scan libs/discord F-1 (CRITICAL, 2026-07-06): this MUTATES control-relevant alert routing (CHANNEL_MAP —
+    // where compliance / macro / governor / skip / tournament alerts post). It had ZERO authorization, and Discord
+    // grants "Use Application Commands" to @everyone by default while #slumdawg-feed is a community/friend channel —
+    // so any guild member could silently redirect the operator's alerts away, breaking the "Discord ping on RED"
+    // workflow (CLAUDE.md §3). Gate it to an operator allowlist, FAIL-CLOSED: if OPERATOR_DISCORD_IDS is unset the
+    // mutation is denied (a control command with no configured operator must not run).
+    const operatorIds = (process.env.OPERATOR_DISCORD_IDS ?? "")
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+    if (operatorIds.length === 0 || !operatorIds.includes(interaction.user.id)) {
+      await interaction.reply({
+        embeds: [errorEmbed("Not authorized — /setup channel is operator-only. (Set OPERATOR_DISCORD_IDS to enable.)")],
+        ephemeral: true,
+      });
+      return;
+    }
     const type = interaction.options.getString("type", true);
     const channel = interaction.options.getChannel("channel", true);
 

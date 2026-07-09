@@ -36,6 +36,7 @@ import {
 } from "../db/schema.js";
 import { eq, sql, gte, lt, and, sum, count } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+import { deriveReconSeverity } from "../lib/recon-severity.js";
 import { AlertFactory } from "../services/alert-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { runDashboardSnapshots } from "../services/dashboard-snapshot-service.js";
@@ -67,7 +68,7 @@ export interface ReconciliationResult {
   traderspostLogCount: number;
   tradovateFillsCount: number;
   mffuDashboardPnl: number | null;
-  expectedPnl: number;
+  expectedPnl: number | null;
   // 5th source (Track 8): TradingView marker count for the day.
   // null when the tradingview_markers table does not exist yet (pre-Track-8 installs).
   tradingviewMarkerCount: number | null;
@@ -121,12 +122,20 @@ async function fetchProductionTradesCount(date: Date): Promise<number> {
 /**
  * Sum expected_pnl from production_trades for the given trading date.
  */
-async function fetchExpectedPnl(date: Date): Promise<number> {
+async function fetchExpectedPnl(date: Date): Promise<number | null> {
   const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
 
   const rows = await db
-    .select({ total: sum(productionTrades.expectedPnl) })
+    .select({
+      total: sum(productionTrades.expectedPnl),
+      // deep-scan Accuracy HIGH: count() ignores NULLs. expectedPnl is written null by design
+      // (broker-router — no server-mediated fill ingest populates it yet). Returning 0 for an
+      // unpopulated column makes |mffu_pnl - 0| = mffu_pnl → a false RED once the degraded-source
+      // clamp is lifted (RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true). Return null instead so the
+      // P&L checks SKIP rather than compare MFFU P&L against a fabricated $0.
+      populated: sql<string>`count(expected_pnl)`,
+    })
     .from(productionTrades)
     .where(
       and(
@@ -135,6 +144,8 @@ async function fetchExpectedPnl(date: Date): Promise<number> {
       )
     );
 
+  const populated = Number(rows[0]?.populated ?? 0);
+  if (populated === 0) return null; // unpopulated by design — NOT a real $0
   return Number(rows[0]?.total ?? 0);
 }
 
@@ -174,6 +185,20 @@ export const INDEPENDENT_SOURCE_COUNT = 2; // productionTrades + MFFU snapshot
 /** Minimum independent sources before severity is clamped to at most "yellow". */
 export const MIN_INDEPENDENT_SOURCES_FOR_RED = 3;
 
+/**
+ * deep-scan A: are the traderspost / tradovate COUNT legs independent of the
+ * production_trades count?  Today they are 1:1 PROXIES (fetchTraderspostLogCount /
+ * fetchTradovateFillsCount both return the shared production_trades count — see the
+ * F-7 GAP docstring above), so count checks 1 & 2 would be self-comparisons that can
+ * NEVER surface a mismatch. Recording those as "0 mismatches (pass)" overstates
+ * assurance — it reads like a 3-way count reconciliation actually ran. This flag gates
+ * checks 1 & 2 so they are SKIPPED (and recorded as not-independently-verifiable) until
+ * Option B (a TradersPost webhook-confirm consumer writing traderspost_confirmed_at, or
+ * live tradovate_fill_id under server-mediated execution) makes the legs genuinely
+ * independent. Flip to `true` in the SAME change that wires the distinct-column queries.
+ */
+export const PROXY_COUNT_LEGS_INDEPENDENT = false;
+
 async function fetchProxyCountsFromProductionTrades(date: Date): Promise<number> {
   const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
@@ -191,15 +216,41 @@ async function fetchProxyCountsFromProductionTrades(date: Date): Promise<number>
   return Number(rows[0]?.cnt ?? 0);
 }
 
+/** deep-scan A / Option B: the operator opts the traderspost leg into REAL independence
+ *  (count of TradersPost-CONFIRMED rows) once the POST /api/traderspost/order-status webhook
+ *  is wired and orders flow. Default false → proxy mode (unchanged). */
+export function isTraderspostConfirmIndependent(): boolean {
+  return process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT === "true";
+}
+
+/** Option B: count production_trades rows TradersPost has confirmed (traderspost_confirmed_at
+ *  IS NOT NULL) in the day window — a GENUINELY independent "confirmed" leg vs the server "sent"
+ *  count. Migration 0197 adds the column; stamped by traderspost-confirm.ts. */
+async function fetchTraderspostConfirmedCount(date: Date): Promise<number> {
+  const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayEnd = new Date(dayStart.getTime() + 86_400_000);
+  const rows = await db
+    .select({ cnt: count() })
+    .from(productionTrades)
+    .where(
+      and(
+        gte(productionTrades.barTimestamp, dayStart),
+        lt(productionTrades.barTimestamp, dayEnd),
+        sql`${productionTrades.traderspostConfirmedAt} IS NOT NULL`,
+      ),
+    );
+  return Number(rows[0]?.cnt ?? 0);
+}
+
 /**
- * Proxy for TradersPost log count. Until Phase 4C wires traderspost_webhook_id,
- * returns the same productionTrades count (re-uses the shared query result supplied
- * by the caller).
+ * TradersPost log count. When RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true (Option B webhook wired),
+ * returns the genuinely-independent CONFIRMED count. Otherwise a 1:1 proxy of the production_trades
+ * count (re-uses the caller's shared query result).
  */
 async function fetchTraderspostLogCount(date: Date, sharedCount: number): Promise<number> {
-  // When traderspost_webhook_id is populated, query that column instead.
-  // For now, return the pre-fetched shared count to avoid a duplicate SQL round-trip.
-  void date; // date retained in signature for Phase 4C wiring
+  if (isTraderspostConfirmIndependent()) {
+    return fetchTraderspostConfirmedCount(date);
+  }
   return sharedCount;
 }
 
@@ -334,7 +385,7 @@ export async function runDailyReconciliation(
     let traderspostLogCount: number;
     let tradovateFillsCount: number;
     let mffuDashboardPnl: number | null;
-    let expectedPnl: number;
+    let expectedPnl: number | null;
     let tradingviewMarkerCount: number | null;
 
     try {
@@ -384,7 +435,7 @@ export async function runDailyReconciliation(
         traderspostLogCount: 0,
         tradovateFillsCount: 0,
         mffuDashboardPnl: null,
-        expectedPnl: 0,
+        expectedPnl: null, // deep-scan Accuracy re-verify F-2: genuine null (contract), not placeholder 0
         tradingviewMarkerCount: null,
         mismatchCount: 1,
         mismatchDetails: [
@@ -414,29 +465,57 @@ export async function runDailyReconciliation(
     // ── Compare: build mismatch_details ───────────────────────────────────
     const mismatches: MismatchDetail[] = [];
 
-    // Check 1: production_trades.count === traderspost_log.count
-    if (productionTradesCount !== traderspostLogCount) {
-      mismatches.push({
-        source: "production_trades_vs_traderspost",
-        expected: productionTradesCount,
-        actual: traderspostLogCount,
-        delta: traderspostLogCount - productionTradesCount,
-      });
+    // ⚠ F-3 (confirmation-latency window — OPERATOR MUST ACCEPT BEFORE FLIPPING THE FLAG): check 1
+    // is a strict same-day equality. A trade sent shortly before the recon run whose TradersPost
+    // confirmation webhook hasn't landed yet would count as a transient sent≠confirmed mismatch
+    // (timing, not a real breach). Typical webhook latency is seconds, but before setting
+    // RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true the operator must either accept this transient-alert
+    // risk in writing OR add a grace window (exclude trades within N min of the recon boundary).
+    // Check 1: production_trades (SENT) vs traderspost (CONFIRMED). deep-scan A / Option B:
+    // when RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true, traderspostLogCount is the genuinely
+    // independent count of TradersPost-confirmed rows (traderspost_confirmed_at IS NOT NULL,
+    // stamped by POST /api/traderspost/order-status) — a REAL sent-vs-confirmed reconciliation.
+    // Otherwise the leg is a 1:1 proxy of production_trades (self-comparison → fake pass), so the
+    // check is skipped and logged rather than silently "passing".
+    const traderspostConfirmIndependent = isTraderspostConfirmIndependent();
+    if (traderspostConfirmIndependent || PROXY_COUNT_LEGS_INDEPENDENT) {
+      if (productionTradesCount !== traderspostLogCount) {
+        mismatches.push({
+          source: traderspostConfirmIndependent
+            ? "production_trades_vs_traderspost_confirmed"
+            : "production_trades_vs_traderspost",
+          expected: productionTradesCount,
+          actual: traderspostLogCount,
+          delta: traderspostLogCount - productionTradesCount,
+        });
+      }
+    } else {
+      logger.info(
+        { productionTradesCount },
+        "reconciliation: count check 1 SKIPPED — traderspost leg is a proxy of production_trades. " +
+          "Wire the Option-B webhook (POST /api/traderspost/order-status) and set " +
+          "RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true post go-live to make it a real sent-vs-confirmed check.",
+      );
     }
 
-    // Check 2: traderspost_log.count === tradovate_fills.count
-    if (traderspostLogCount !== tradovateFillsCount) {
-      mismatches.push({
-        source: "traderspost_vs_tradovate_fills",
-        expected: traderspostLogCount,
-        actual: tradovateFillsCount,
-        delta: tradovateFillsCount - traderspostLogCount,
-      });
+    // Check 2: traderspost vs tradovate_fills — STILL a proxy (tradovate fill IDs need SME/live
+    // fill population), so gated on PROXY_COUNT_LEGS_INDEPENDENT only.
+    if (PROXY_COUNT_LEGS_INDEPENDENT) {
+      if (traderspostLogCount !== tradovateFillsCount) {
+        mismatches.push({
+          source: "traderspost_vs_tradovate_fills",
+          expected: traderspostLogCount,
+          actual: tradovateFillsCount,
+          delta: tradovateFillsCount - traderspostLogCount,
+        });
+      }
     }
 
     // Check 3: tradovate_fills.pnl ≈ mffu_dashboard_pnl (within tolerance)
-    // Skip if mffu_dashboard_pnl is null (not yet wired or snapshot failed)
-    if (mffuDashboardPnl !== null) {
+    // Skip if mffu_dashboard_pnl is null (not yet wired or snapshot failed) OR expectedPnl is null
+    // (deep-scan Accuracy HIGH: production_trades.expected_pnl unpopulated → cannot compare; comparing
+    // against a fabricated $0 would false-alert. Skip honestly — the degraded-source clamp reflects it).
+    if (mffuDashboardPnl !== null && expectedPnl !== null) {
       const pnlDelta = Math.abs(mffuDashboardPnl - expectedPnl);
       if (pnlDelta > RECON_CONFIG.PNL_TOLERANCE_DOLLARS) {
         mismatches.push({
@@ -491,42 +570,82 @@ export async function runDailyReconciliation(
 
     // ── Derive severity ────────────────────────────────────────────────────
     const mismatchCount = mismatches.length;
-    let severity: ReconSeverity;
-    if (mismatchCount === 0) {
-      severity = "green";
-    } else if (mismatchCount < RECON_CONFIG.RED_MISMATCH_COUNT) {
-      severity = "yellow";
-    } else {
-      severity = "red";
-    }
-
-    // Also red if mffu PnL delta > tolerance (already captured in mismatches above,
-    // but the check ensures red even if mismatch_count is 1 due to only that check)
-    if (
-      mffuDashboardPnl !== null &&
-      Math.abs(mffuDashboardPnl - expectedPnl) > RECON_CONFIG.PNL_TOLERANCE_DOLLARS
-    ) {
-      severity = "red";
-    }
-
-    // M-7: Degraded-reconciliation mode — when fewer than MIN_INDEPENDENT_SOURCES_FOR_RED
-    // independent data sources are available, we cannot be confident that a "red"
-    // verdict reflects genuine mismatches rather than proxy-count tautologies.
-    // Cap severity at "yellow" so operators see degraded mode, not a false red alarm.
-    if (
-      INDEPENDENT_SOURCE_COUNT < MIN_INDEPENDENT_SOURCES_FOR_RED &&
-      severity === "red"
-    ) {
-      severity = "yellow";
+    // Deep-Scan #18b X-1 (2026-07-05): "green" must mean VERIFIED agreement, not the
+    // all-zeros tautology. production_trades has no writer wired (Phase 4C incomplete),
+    // so productionTradesCount is structurally always 0; when every source is empty the
+    // reconciliation verified NOTHING — reporting green off 0/0/0/null was a false-green
+    // on the operator's primary ProductionStatusPanel (the panel §3 tells the operator to
+    // trust). Require ≥1 independent source to have actually produced data before a
+    // zero-mismatch run can be called green; otherwise it is UNVERIFIABLE → yellow
+    // (degraded), never green. Green becomes meaningful again once the production_trades
+    // writers are wired (X-1 fix sketch option a) or a real broker source produces rows.
+    const hasVerifiableData =
+      productionTradesCount > 0 ||
+      traderspostLogCount > 0 ||
+      tradovateFillsCount > 0 ||
+      (tradingviewMarkerCount !== null && tradingviewMarkerCount > 0) ||
+      mffuDashboardPnl !== null;
+    // deep-scan A / Option B fix (F-1): effective independent-source count includes the TradersPost
+    // CONFIRMED leg when Option B is wired (RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true), so the
+    // degraded clamp lifts and a genuine sent-vs-confirmed breach reaches RED instead of being
+    // permanently capped at yellow.
+    const effectiveIndependentSources =
+      INDEPENDENT_SOURCE_COUNT + (isTraderspostConfirmIndependent() ? 1 : 0);
+    const { severity: derivedSeverity, degraded } = deriveReconSeverity({
+      mismatchCount,
+      hasVerifiableData,
+      effectiveIndependentSources,
+      redMismatchCount: RECON_CONFIG.RED_MISMATCH_COUNT,
+      minIndependentSourcesForRed: MIN_INDEPENDENT_SOURCES_FOR_RED,
+    });
+    let severity: ReconSeverity = derivedSeverity;
+    if (mismatchCount === 0 && !hasVerifiableData) {
       logger.warn(
         {
           reconDate: reconDateStr,
-          independentSourceCount: INDEPENDENT_SOURCE_COUNT,
+          productionTradesCount,
+          traderspostLogCount,
+          tradovateFillsCount,
+          tradingviewMarkerCount,
+          mffuDashboardPnl,
+        },
+        "reconciliation UNVERIFIABLE — all data sources empty/null (production_trades has no writer wired); reporting yellow (degraded), NOT a confirmed-clean green"
+      );
+    }
+
+    // Also red if mffu PnL delta > tolerance. deep-scan Observability re-cert F-1: this override runs
+    // AFTER deriveReconSeverity, so it must respect the SAME independent-source bar the clamp enforces —
+    // otherwise a MFFU-PnL delta against an unverified (empty production_trades) expected side would
+    // report an unconfirmable RED. Force RED only with enough independent sources; in degraded mode
+    // the disagreement still degrades a clean green to yellow, but never fabricates a red.
+    if (
+      mffuDashboardPnl !== null &&
+      expectedPnl !== null &&
+      Math.abs(mffuDashboardPnl - expectedPnl) > RECON_CONFIG.PNL_TOLERANCE_DOLLARS
+    ) {
+      if (effectiveIndependentSources >= MIN_INDEPENDENT_SOURCES_FOR_RED) {
+        severity = "red";
+      } else if (severity === "green") {
+        severity = "yellow"; // surface the MFFU disagreement without asserting an unverified red
+      }
+    }
+
+    // Degraded-reconciliation mode (M-7 + ds21 Bands A+D). The CLAMP itself now lives in
+    // deriveReconSeverity() above, keyed on the DYNAMIC effectiveIndependentSources (F-1 fix) — so
+    // it correctly LIFTS once Option B is wired (3 independent sources) and a genuine breach can
+    // reach red. Here we only LOG the degraded downgrade. Before Option B: traderspost/tradovate
+    // counts are 1:1 proxies of production_trades (self-comparison can't mismatch), so red/green are
+    // capped at yellow ("ran, but cannot independently confirm" — the honest state).
+    if (degraded) {
+      logger.warn(
+        {
+          reconDate: reconDateStr,
+          effectiveIndependentSources,
           minRequired: MIN_INDEPENDENT_SOURCES_FOR_RED,
-          originalSeverity: "red",
           downgradedSeverity: "yellow",
         },
-        "reconciliation: degraded mode — insufficient independent sources; severity capped at yellow"
+        "reconciliation: degraded mode — insufficient independent sources; red/green capped at yellow " +
+          "(wire the Option-B confirm webhook + set RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true to lift this)"
       );
     }
 
@@ -551,7 +670,9 @@ export async function runDailyReconciliation(
 
     // ── Fire alert on mismatch ─────────────────────────────────────────────
     if (alertFired) {
-      await AlertFactory.criticalReconciliationMismatch(reconDateStr, mismatchCount, mismatches);
+      // deep-scan Observability #5: pass reconRunId so the Discord alert is traceable back to the
+      // daily_reconciliation row + audit_log correlation chain (was dropped at this last hop).
+      await AlertFactory.criticalReconciliationMismatch(reconDateStr, mismatchCount, mismatches, reconRunId);
     }
 
     logger.info(
@@ -578,7 +699,7 @@ interface WriteReconRowParams {
   traderspostLogCount: number;
   tradovateFillsCount: number;
   mffuDashboardPnl: number | null;
-  expectedPnl: number;
+  expectedPnl: number | null;
   // 5th source: may be null when tradingview_markers table is not yet present.
   tradingviewMarkerCount: number | null;
   mismatchCount: number;
@@ -603,10 +724,13 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
       traderspostLogCount: params.traderspostLogCount,
       tradovateFillsCount: params.tradovateFillsCount,
       mffuDashboardPnl: params.mffuDashboardPnl !== null ? String(params.mffuDashboardPnl) : null,
-      expectedPnl: String(params.expectedPnl),
+      expectedPnl: params.expectedPnl !== null ? String(params.expectedPnl) : null, // deep-scan Accuracy re-verify: persist genuine NULL when unpopulated (col nullable via mig 0198) so buildPnlToday null-guards it
       mismatchCount: params.mismatchCount,
       mismatchDetails: params.mismatchDetails as unknown as Record<string, unknown>[],
       alertFired: params.alertFired,
+      // ds21: persist the authoritative (clamped) severity so the read path can't
+      // recompute a weaker false-green from mismatch_count alone.
+      severity: params.severity,
       ranAt,
     })
     .onConflictDoUpdate({
@@ -616,10 +740,11 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
         traderspostLogCount: params.traderspostLogCount,
         tradovateFillsCount: params.tradovateFillsCount,
         mffuDashboardPnl: params.mffuDashboardPnl !== null ? String(params.mffuDashboardPnl) : null,
-        expectedPnl: String(params.expectedPnl),
+        expectedPnl: params.expectedPnl !== null ? String(params.expectedPnl) : null, // deep-scan Accuracy re-verify: persist genuine NULL when unpopulated (col nullable via mig 0198) so buildPnlToday null-guards it
         mismatchCount: params.mismatchCount,
         mismatchDetails: params.mismatchDetails as unknown as Record<string, unknown>[],
         alertFired: params.alertFired,
+        severity: params.severity,
         ranAt,
       },
     });
@@ -653,12 +778,15 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
       logger.error({ err }, "reconciliation: audit_log write failed (non-blocking)")
     );
 
-  // SSE event
+  // SSE event. deep-scan Observability re-cert F-2: carry correlationId so the SSE hop of the
+  // bar→handler→DB→SSE→audit_log chain is traceable (Discord + audit already carry it; SSE was the
+  // one hop still dropping it — a dashboard push can now be joined to its daily_reconciliation row).
   broadcastSSE("production:reconciliation-completed", {
     reconDate: params.reconDate,
     severity: params.severity,
     mismatchCount: params.mismatchCount,
     ranAt: ranAt.toISOString(),
+    correlationId: params.correlationId,
   });
 
   return {
@@ -694,6 +822,8 @@ export async function getDailyReconciliationStatus(
     .select({
       reconDate: dailyReconciliation.reconDate,
       mismatchCount: dailyReconciliation.mismatchCount,
+      // ds21: read the persisted authoritative severity (incl. the degraded-mode clamp).
+      severity: dailyReconciliation.severity,
       ranAt: dailyReconciliation.ranAt,
     })
     .from(dailyReconciliation)
@@ -711,11 +841,23 @@ export async function getDailyReconciliationStatus(
 
   const row = rows[0];
   const mc = row.mismatchCount;
-  let severity: ReconSeverity = "green";
-  if (mc >= RECON_CONFIG.RED_MISMATCH_COUNT) {
-    severity = "red";
-  } else if (mc >= RECON_CONFIG.YELLOW_MISMATCH_COUNT) {
-    severity = "yellow";
+  // ds21 CRITICAL (deep-scan #21 Band D): prefer the PERSISTED severity written at run time.
+  // Previously this recomputed severity from mismatch_count alone (green whenever mc===0),
+  // which discarded the write-path degraded-mode clamp and resurrected the false-green the
+  // compute path just closed (the primary ProductionStatusPanel reads through here). Only fall
+  // back to the mismatch-count recompute for legacy rows written before the severity column
+  // existed (severity === null).
+  let severity: ReconSeverity;
+  if (row.severity === "green" || row.severity === "yellow" || row.severity === "red") {
+    severity = row.severity;
+  } else {
+    // Legacy row (no persisted severity) — recompute from mismatch count.
+    severity = "green";
+    if (mc >= RECON_CONFIG.RED_MISMATCH_COUNT) {
+      severity = "red";
+    } else if (mc >= RECON_CONFIG.YELLOW_MISMATCH_COUNT) {
+      severity = "yellow";
+    }
   }
 
   return {

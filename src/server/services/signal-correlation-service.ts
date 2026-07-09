@@ -38,6 +38,7 @@ import { strategies, backtests, strategySignalVectors } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 
 import { A7_CORRELATION_THRESHOLD } from "../lib/correlation-constants.js";
 
@@ -241,13 +242,23 @@ export async function computePairwiseCorrelation(
         "A7: signal correlation EXCEEDS threshold — strategies may be duplicates",
       );
 
-      // Fire alert (non-blocking — never throws)
+      // Fire alert (non-blocking — createAlert() awaits db.insert(alerts) and
+      // rethrows on failure; deepscan18 — a bare .catch(()=>{}) here meant the
+      // ONE record of an A7 §12-gate CRITICAL signal-correlation breach could
+      // vanish traceless on a DB hiccup. Log loud + count so a spike in dropped
+      // A7 alerts during a session is visible on the metrics dashboard.
       AlertFactory.signalCorrelation(
         candidateStrategyId,
         refId,
         sim,
         SIGNAL_CORRELATION_THRESHOLD,
-      ).catch(() => {});
+      ).catch((alertErr) => {
+        logger.error(
+          { alertErr, candidateStrategyId, refStrategyId: refId, similarity: sim.toFixed(4) },
+          "A7: signal-correlation CRITICAL alert write failed (deepscan18) — breach detected but not persisted/notified",
+        );
+        auditWriteFailuresTotal.labels({ action: "signal_correlation.alert_write_failed" }).inc();
+      });
     }
   }
 

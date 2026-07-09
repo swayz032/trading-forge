@@ -48,8 +48,21 @@ import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 
 // ─── Constants ─────────────────────────────────────────────────
 
-const DEFAULT_WINDOW = Number(process.env.PATTERN_AGGREGATOR_WINDOW ?? "20");
-const MIN_CRITIQUES =  Number(process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES ?? "10");
+/**
+ * FIX (deepscan17-wave2 H4, 2026-07-05): `Number(env ?? "10")` alone lets a
+ * malformed env value (empty string, non-numeric garbage) produce NaN. Every
+ * downstream comparison against NaN (e.g. `rows.length < MIN_CRITIQUES`) is
+ * always false, which silently DISABLES the min-sample gate instead of
+ * falling back to the documented default. Guard with Number.isFinite so a
+ * malformed env falls back cleanly and the gate stays active.
+ */
+function _parseEnvInt(raw: string | undefined, fallback: number): number {
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+const DEFAULT_WINDOW = _parseEnvInt(process.env.PATTERN_AGGREGATOR_WINDOW, 20);
+const MIN_CRITIQUES = _parseEnvInt(process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES, 10);
 const KILL_SWITCH_PARAM = "auto_patch_loop_enabled";
 const PROMPT_TYPE = "strategy_proposer";
 const MIN_SAMPLES_PER_VARIANT = 20;
@@ -59,7 +72,7 @@ const CONSEC_FAIL_KEY = "pattern_aggregator_consecutive_failures";
 const CONSEC_FAIL_THRESHOLD = 3;
 
 // F-7: readiness-nudge dedup window (env LEARNING_LOOP_READY_NUDGE_DAYS, default 7)
-const NUDGE_DEDUP_DAYS = Number(process.env.LEARNING_LOOP_READY_NUDGE_DAYS ?? "7");
+const NUDGE_DEDUP_DAYS = _parseEnvInt(process.env.LEARNING_LOOP_READY_NUDGE_DAYS, 7);
 const NUDGE_ACTION = "auto_patch.loop_ready_but_disabled";
 
 // ─── Consecutive-failure tracking (F-6) ──────────────────────────────────────
@@ -214,8 +227,12 @@ interface CritiqueSummaryRow {
  * 10. Audit row
  *
  * @param dryRun - When true, suppresses prompt_versions INSERT, A/B test row creation,
- *   and audit_log writes. setAppendixCache() STILL fires (in-memory only — safe for
- *   replay). LLM call still fires; result returned for inspection. Pass 2 replay uses this.
+ *   audit_log writes, AND the setAppendixCache() in-memory cache update (FIX
+ *   deepscan17-wave2 H3, 2026-07-05 — the cache is read synchronously by
+ *   buildPromptSync() for every live strategy-proposer call, so mutating it
+ *   from a dry run would inject unapproved content into live generation).
+ *   LLM call still fires; result returned for inspection so a Pass 2 replay
+ *   caller can grade the WOULD-BE appendix output without any live side effect.
  */
 export async function runPatternAggregator(dryRun: boolean = false): Promise<PatternAggregatorResult> {
   const startTime = Date.now();
@@ -399,7 +416,25 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
     };
   }
 
-  // ── Step 7 + 8: Persist prompt_versions + A/B test (skipped in dry-run) ─────
+  // ── Step 7 + 8 + 9: Persist prompt_versions + A/B test + appendix cache ─────
+  // (all skipped in dry-run)
+  //
+  // FIX (deepscan17-wave2 H3, 2026-07-05): setAppendixCache() previously fired
+  // UNCONDITIONALLY — even for dryRun=true callers — on the theory that an
+  // in-memory-only mutation is "safe for replay". It is not: buildPromptSync()
+  // in model-router.ts reads this SAME module-level cache synchronously for
+  // every live strategy-proposer call. Any caller that invokes
+  // runPatternAggregator(true) in the same process as the running server
+  // (e.g. the Pass 2 in-process replay harness this file's docstring
+  // anticipates) would silently inject ungated, unapproved appendix content
+  // into live strategy generation — bypassing the prompt_versions/A-B-test
+  // isActive approval gate this whole service exists to enforce. The
+  // wave27-dry-run-side-effects.test.ts harness's own stated contract is that
+  // dryRun=true "suppresses ALL production side effects"; the appendix cache
+  // is a production side effect (it drives live LLM prompts) that was missing
+  // from that list. A dry run must never mutate state any live code path
+  // reads — cache update now shares the same dryRun guard as
+  // prompt_versions/A-B-test persistence.
   let newVersionId: string | null = null;
   let abTestId: string | null = null;
 
@@ -412,14 +447,18 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
       logger.error({ err }, "Pattern aggregator: failed to persist prompt_versions — continuing without persistence");
       // Non-fatal: still update the in-memory cache below
     }
-  }
 
-  // ── Step 9: Update appendix cache immediately (always fires — in-memory, safe) ──
-  setAppendixCache(PROMPT_TYPE, trimmedOutput);
-  logger.info(
-    { promptType: PROMPT_TYPE, contentLength: trimmedOutput.length },
-    "Pattern aggregator: appendix cache updated",
-  );
+    setAppendixCache(PROMPT_TYPE, trimmedOutput);
+    logger.info(
+      { promptType: PROMPT_TYPE, contentLength: trimmedOutput.length },
+      "Pattern aggregator: appendix cache updated",
+    );
+  } else {
+    logger.info(
+      { promptType: PROMPT_TYPE, contentLength: trimmedOutput.length },
+      "Pattern aggregator: dryRun=true — appendix cache NOT mutated (would corrupt live strategy generation)",
+    );
+  }
 
   // ── Step 10: Audit + return ────────────────────────────────────────────────
   const durationMs = Date.now() - startTime;

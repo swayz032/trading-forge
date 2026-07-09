@@ -529,6 +529,17 @@ PLAYBOOK_TO_REGIME = {
     "MEAN_REVERSION_SHORT":     "RANGE_BOUND",
     "ORB_LONG":                 "TRENDING_UP",
     "ORB_SHORT":                "TRENDING_DOWN",
+    # Wave 25 Pass 6 institutional playbooks (playbook_router.py) — MUST be
+    # present here or PLAYBOOK_TO_REGIME.get(..., "UNKNOWN") returns UNKNOWN,
+    # which resolveActiveStrategy() treats as "no regime filtering" (any
+    # strategy eligible) — silently DISABLING the preferred_regimes gate during
+    # these 4 institutional regimes. Map each to its institutional_regime label
+    # (matches playbook_router.PLAYBOOK_ROUTING[*]["institutional_regime"] and
+    # the Pass-6 8-value regime vocabulary strategies tag in preferred_regimes).
+    "DISPLACEMENT_CONTINUATION":  "EXPANSION",
+    "BREAKOUT_PREP":              "COMPRESSION",
+    "REDUCED_SIZING":             "HIGH_VOL_MACRO",
+    "LATE_CYCLE_MEAN_REVERSION":  "LATE_CYCLE_OVERHEATING",
     # Legacy compat: old 5-playbook names from compute_bias() pre-W23H.A
     "FULL_LONG":                "TRENDING_UP",
     "LEAN_LONG":                "TRENDING_UP",

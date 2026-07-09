@@ -24,16 +24,52 @@ from unittest.mock import MagicMock, patch
 # Helpers
 # ---------------------------------------------------------------------------
 
+# Track the optional-dep MagicMock stubs THIS module inserts, so tearDownModule can restore
+# sys.modules. Leaving the stubs in place poisons every test file that runs AFTER this one in the
+# same pytest process (deep-scan #21 cross-file pollution: 3 tests in test_wave29_pass_c2_training_loop.py
+# falsely FAIL in a full-suite run because pennylane/qiskit stayed mocked — a "detector can lie" case where
+# the file is green in isolation but red under CI's real collection order).
+_STUBBED_DEPS: set = set()
+# The quantum_rl_agent module object that pre-existed this file's first reload (other test files bind
+# `import src.engine.quantum_rl_agent as _rl_agent` to THIS object at collection time). We restore this
+# exact object in tearDownModule so module identity + PENNYLANE_AVAILABLE match what those files expect.
+_ORIGINAL_RL_MODULE = None
+
+
 def _reload_module():
     """Reload quantum_rl_agent so module-level env-var reads pick up fresh env."""
+    global _ORIGINAL_RL_MODULE
+    _existing = sys.modules.get("src.engine.quantum_rl_agent")
+    if _existing is not None and _ORIGINAL_RL_MODULE is None:
+        _ORIGINAL_RL_MODULE = _existing  # snapshot once, before any mock-stubbing
     if "src.engine.quantum_rl_agent" in sys.modules:
         del sys.modules["src.engine.quantum_rl_agent"]
-    # Stub heavy optional deps so the module can load in test context.
+    # Stub heavy optional deps so the module can load in test context. Record only the ones we
+    # actually inserted (were absent) so teardown removes exactly those, never a real installed dep.
     for dep in ["pennylane", "qiskit", "qiskit_ibm_runtime", "pennylane_qiskit"]:
         if dep not in sys.modules:
             sys.modules[dep] = MagicMock()
+            _STUBBED_DEPS.add(dep)
     import src.engine.quantum_rl_agent as m
     return m
+
+
+def tearDownModule():
+    """Restore sys.modules after this file's tests run — remove the MagicMock stubs _reload_module
+    inserted + the reloaded quantum_rl_agent — so a later test file re-imports against the real (or
+    genuinely-absent) deps instead of our mocks. Without this, full-suite pytest leaves pennylane/qiskit
+    mocked for every subsequent file (deep-scan #21 pollution)."""
+    for dep in _STUBBED_DEPS:
+        sys.modules.pop(dep, None)
+    _STUBBED_DEPS.clear()
+    # Restore the ORIGINAL quantum_rl_agent module object (the one other test files' `_rl_agent` bindings
+    # point at, with PENNYLANE_AVAILABLE computed against the true dep state). Our del+mock-reload replaced
+    # it with a mock-baked module (PENNYLANE_AVAILABLE=True → VQC path → 0 quantum_rl_runs INSERTs captured
+    # in test_wave29_pass_c2_training_loop.py). Restoring the exact original object fixes module identity.
+    if _ORIGINAL_RL_MODULE is not None:
+        sys.modules["src.engine.quantum_rl_agent"] = _ORIGINAL_RL_MODULE
+    else:
+        sys.modules.pop("src.engine.quantum_rl_agent", None)
 
 
 # ---------------------------------------------------------------------------

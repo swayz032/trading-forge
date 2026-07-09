@@ -151,8 +151,10 @@ describe("M8 — LIFECYCLE_GATE_EVENTS catalog in sse.ts", () => {
     expect(LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED).toBe("lifecycle:shadow_to_paper_blocked");
     expect(LIFECYCLE_GATE_EVENTS.PROMOTED).toBe("lifecycle:promoted");
 
-    // 12 total entries
-    expect(Object.keys(LIFECYCLE_GATE_EVENTS).length).toBe(12);
+    // ds21-w2: this was a brittle exact-count (`=== 12`) that silently went red as events were
+    // added over time (it was already 14 before ds21). The specific-name assertions above are the
+    // real contract; keep only a FLOOR here so adding a new lifecycle event never breaks this test.
+    expect(Object.keys(LIFECYCLE_GATE_EVENTS).length).toBeGreaterThanOrEqual(18);
   });
 
   it("catalog constant values are stable strings — no mutation possible (const assertion)", async () => {

@@ -37,6 +37,7 @@ import { randomUUID } from "crypto";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { notifyWarning } from "../services/notification-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { broadcastSSE, FACTORY_EVENTS } from "../routes/sse.js";
 
 const BACKEND_URL = `http://localhost:${process.env.PORT ?? 4000}`;
 const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY || "";
@@ -858,6 +859,36 @@ async function postLayerMention(opts: {
       signal: AbortSignal.timeout(45_000),
     });
     const respBody = await res.json().catch(() => ({})) as any;
+
+    // Deep-scan #15 FIX-3 (2026-07-03): SCOUT_IDEA_EXTRACTED was declared in
+    // sse.ts's FACTORY_EVENTS catalog with full payload docs but had ZERO
+    // broadcastSSE call sites anywhere in the repo — a documented-but-dead
+    // event. postLayerMention() is the single choke point every layer (web /
+    // youtube / reddit, rich-DSL AND CV-only) already flows through, so it is
+    // the correct place to wire this rather than duplicating a broadcast at
+    // each of the 4 extractStrategyFromText() call sites above. Gated on
+    // opts.richIdea being present — that's what distinguishes a real LLM-
+    // extracted idea (this event's namesake) from a thin CV-only mention.
+    // Fire-and-forget; never blocks or fails the mention post.
+    if (opts.richIdea && typeof opts.richIdea === "object") {
+      try {
+        broadcastSSE(FACTORY_EVENTS.SCOUT_IDEA_EXTRACTED, {
+          concept_name: opts.conceptName,
+          layer: opts.layer,
+          source_provider: opts.sourceProvider,
+          source_url: opts.sourceUrl,
+          market: opts.market,
+          timeframe: opts.timeframe ?? null,
+          entry_indicator: typeof opts.richIdea.entry_indicator === "string" ? opts.richIdea.entry_indicator : null,
+          accepted: Boolean(respBody?.accepted),
+          bucket_id: respBody?.bucket_id ?? null,
+          correlation_id: opts.correlationId ?? null,
+        });
+      } catch (sseErr) {
+        logger.warn({ sseErr, concept: opts.conceptName, layer: opts.layer }, "autonomous-scout: factory:scout_idea_extracted SSE broadcast failed (non-blocking)");
+      }
+    }
+
     return { accepted: Boolean(respBody?.accepted), status: respBody?.status, bucketId: respBody?.bucket_id };
   } catch (e) {
     logger.warn({ err: e instanceof Error ? e.message : String(e), concept: opts.conceptName, layer: opts.layer }, "autonomous-scout: postLayerMention failed");
@@ -1768,7 +1799,7 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
             status: "info",
             decisionAuthority: "autonomous_scout",
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr) => logger.warn({ auditErr, videoId: v.videoId, conceptName: c.conceptName, correlationId }, "scout.reddit_enrichment_attempted audit write failed (deepscan18) — Layer-2 Reddit-enrichment provenance not recorded")); // §10b: don't drop this audit silently
         } catch { /* non-blocking */ }
 
         const enrichment = await fetchRedditEnrichment(c.conceptName).catch(() => null);
@@ -1802,7 +1833,7 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
               status: "success",
               decisionAuthority: "autonomous_scout",
               correlationId,
-            }).catch(() => {});
+            }).catch((auditErr) => logger.warn({ auditErr, videoId: v.videoId, conceptName: c.conceptName, correlationId }, "scout.reddit_enriched audit write failed (deepscan18) — Layer-2 Reddit-enrichment provenance not recorded")); // §10b: don't drop this audit silently
 
             const enrichedOk = await postLayerMention({
               conceptName: c.conceptName,
@@ -1842,7 +1873,7 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
             status: "rejected",
             decisionAuthority: "autonomous_scout",
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr) => logger.warn({ auditErr, videoId: v.videoId, conceptName: c.conceptName, correlationId }, "scout.reddit_enriched_but_extract_failed audit write failed (deepscan18) — Layer-2 Reddit-enrichment provenance not recorded")); // §10b: don't drop this audit silently
           // fall through to CV-only fallback below
         }
       }

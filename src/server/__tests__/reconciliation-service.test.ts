@@ -187,22 +187,93 @@ beforeEach(() => {
 
 describe("ReconciliationService — runDailyReconciliation", () => {
 
-  // ── Test 1: Happy path ──────────────────────────────────────────────────────
-  it("returns severity=green when all source counts match and no PnL delta", async () => {
-    // All DB selects return count=3
+  // ── Test 1 (Deep-Scan #18b X-1): a zero-source run is UNVERIFIABLE, not green ──
+  // This test PREVIOUSLY asserted severity=green with a mock that "looked like" count=3
+  // but actually fed the service ZERO rows — fetchProxyCountsFromProductionTrades AWAITS
+  // `.select().from().where()` directly, so a `.where().limit()`-only mock never delivered
+  // the count. So it was asserting green on all-zeros: exactly the false-green X-1 fixes
+  // (production_trades has no writer wired → the recon verifies NOTHING). Corrected: a
+  // zero-source reconciliation now reports "yellow" (degraded/unverifiable), never a
+  // confirmed-clean green.
+  //
+  // COVERAGE GAP (honest): a genuine "green" requires ≥1 independent source to actually
+  // produce data (X-1 fix-sketch option a: wire the production_trades writers). That path
+  // cannot be exercised through this proxy mock today; when the writers land, add a test
+  // that feeds real non-zero counts and asserts green.
+  it("returns severity=yellow (UNVERIFIABLE), not a false-green, when the production_trades proxy yields zero rows", async () => {
     const { db } = await import("../db/index.js");
     vi.mocked(db.select).mockReturnValue({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
-          limit: vi.fn(async () => [{ cnt: 3, total: "450" }]),
+          limit: vi.fn(async () => [{ cnt: 0, total: "0" }]),
           orderBy: vi.fn(() => ({ limit: vi.fn(async () => []) })),
         })),
       })),
     } as unknown as ReturnType<typeof db.select>);
 
     const result = await reconModule.runDailyReconciliation(new Date("2026-05-09"));
-    expect(result.severity).toBe("green");
+    expect(result.severity).toBe("yellow");
     expect(result.mismatchCount).toBe(0);
+    expect(result.alertFired).toBe(false);
+  });
+
+  // ── Test 1b (Deep-Scan #18b X-1, genuine-green coverage-gap closed 2026-07-05) ──
+  // The X-1 fix landed a writer for production_trades (broker-router.ts) — this test
+  // exercises the recon path the writer makes reachable: when the production_trades
+  // proxy source actually yields non-zero rows (hasVerifiableData=true) AND every
+  // comparison agrees (production_trades vs traderspost proxy vs tradovate proxy vs
+  // tradingview markers), the recon must report a genuine severity=green — not the
+  // false-green tautology the X-1 fix eliminated (all-zeros), but a real agreement
+  // over real (mocked) non-zero data. This closes the coverage gap the Test 1 comment
+  // above documented: "that path cannot be exercised through this proxy mock today;
+  // when the writers land, add a test that feeds real non-zero counts and asserts green."
+  // ds21 (deep-scan #21 Bands A+D): this test previously asserted severity=green with real
+  // non-zero production_trades rows. That was itself the false-green the scan certified: the
+  // traderspost/tradovate "sources" are 1:1 proxies of production_trades (the SAME shared query),
+  // so Checks 1 & 2 compare a value to itself and can NEVER mismatch — that is self-agreement,
+  // not independent verification. With only INDEPENDENT_SOURCE_COUNT=2 architecturally-independent
+  // sources (< MIN_INDEPENDENT_SOURCES_FOR_RED=3), the honest verdict is yellow (UNVERIFIED /
+  // degraded), NOT green. Green becomes reachable again only when a genuinely independent source
+  // is wired and INDEPENDENT_SOURCE_COUNT is bumped to ≥3 (Phase 4C).
+  it("caps at yellow (UNVERIFIED) with non-zero production_trades rows — proxy counts are not independent verification", async () => {
+    const { db } = await import("../db/index.js");
+
+    // Every count-producing select() resolves to the SAME non-zero count (3) —
+    // production_trades, its traderspost proxy, and its tradovate proxy are all
+    // derived from the SAME shared query per the M-7 consolidation, so they agree
+    // by construction once the underlying table has real rows.
+    //
+    // NOTE: fetchProxyCountsFromProductionTrades()/fetchExpectedPnl() await
+    // `.where(...)` DIRECTLY (no `.limit()` call) — so `.where()` itself must be a
+    // real thenable resolving to the rows array, not just an object exposing a
+    // `.limit()` method (that shape only serves callers that chain `.limit()`).
+    const rows = [{ cnt: 3, total: "450" }];
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn(() =>
+          Object.assign(Promise.resolve(rows), {
+            limit: vi.fn(async () => rows),
+            orderBy: vi.fn(() => ({ limit: vi.fn(async () => []) })),
+          }),
+        ),
+      })),
+    } as unknown as ReturnType<typeof db.select>);
+
+    // TradingView marker count (5th source, via raw db.execute) must also agree
+    // with the traderspost proxy count (3) for a clean green — the shared mock's
+    // default `{ rows: [] }` shape would otherwise read as 0 and force a mismatch.
+    vi.mocked(db.execute).mockResolvedValueOnce(
+      [{ cnt: "3" }] as unknown as Awaited<ReturnType<typeof db.execute>>,
+    );
+
+    const result = await reconModule.runDailyReconciliation(new Date("2026-05-09"));
+
+    expect(result.productionTradesCount).toBe(3);
+    expect(result.traderspostLogCount).toBe(3);
+    expect(result.tradovateFillsCount).toBe(3);
+    expect(result.mismatchCount).toBe(0);
+    // ds21: honest severity is yellow (degraded/unverified), NOT green — only 2 independent sources.
+    expect(result.severity).toBe("yellow");
     expect(result.alertFired).toBe(false);
   });
 
@@ -337,19 +408,41 @@ describe("ReconciliationService — runDailyReconciliation", () => {
 
 describe("ReconciliationService — getDailyReconciliationStatus", () => {
 
-  // ── Test 11: Returns green when no mismatches ───────────────────────────
-  it("returns severity=green when mismatch_count=0", async () => {
+  // ── Test 11: LEGACY fallback — row with no persisted severity recomputes from mismatch_count ──
+  // ds21: rows written before the severity column existed have severity=null; the read path
+  // falls back to the mismatch-count recompute (mc=0 → green) ONLY for these legacy rows.
+  it("returns severity=green when mismatch_count=0 AND severity is null (legacy row fallback)", async () => {
     const { db } = await import("../db/index.js");
     vi.mocked(db.select).mockReturnValue({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
-          limit: vi.fn(async () => [{ reconDate: "2026-05-09", mismatchCount: 0, ranAt: new Date() }]),
+          limit: vi.fn(async () => [{ reconDate: "2026-05-09", mismatchCount: 0, severity: null, ranAt: new Date() }]),
         })),
       })),
     } as unknown as ReturnType<typeof db.select>);
 
     const status = await reconModule.getDailyReconciliationStatus(new Date("2026-05-09"));
     expect(status.severity).toBe("green");
+    expect(status.mismatchCount).toBe(0);
+  });
+
+  // ── Test 11b: ds21 CRITICAL regression — persisted severity WINS over mismatch_count recompute ──
+  // The primary ProductionStatusPanel reads through here. Before ds21 it recomputed green whenever
+  // mismatch_count=0, discarding the write-path degraded-mode clamp and resurrecting the false-green.
+  // Now a row persisted as yellow (the honest degraded-mode verdict) must return yellow even though
+  // mismatch_count=0 would otherwise recompute to green.
+  it("honors persisted severity=yellow over a mismatch_count=0 recompute (no false-green resurrection)", async () => {
+    const { db } = await import("../db/index.js");
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          limit: vi.fn(async () => [{ reconDate: "2026-05-09", mismatchCount: 0, severity: "yellow", ranAt: new Date() }]),
+        })),
+      })),
+    } as unknown as ReturnType<typeof db.select>);
+
+    const status = await reconModule.getDailyReconciliationStatus(new Date("2026-05-09"));
+    expect(status.severity).toBe("yellow");
     expect(status.mismatchCount).toBe(0);
   });
 

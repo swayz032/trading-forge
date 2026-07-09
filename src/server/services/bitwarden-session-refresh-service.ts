@@ -25,6 +25,7 @@ import { AlertFactory, createAlert } from "./alert-service.js";
 import { notifyCritical } from "./notification-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { getVaultMode } from "../lib/credential-loader.js";
 
 const execAsync = promisify(exec);
 // F-3 / F-6: execFileAsync avoids spawning a shell, so:
@@ -124,7 +125,7 @@ export async function refreshBwSession(): Promise<string> {
 // ─── Main check function ──────────────────────────────────────────────────────
 
 export interface BwRefreshResult {
-  status: "no_action" | "refreshed" | "failed" | "unknown_expiry";
+  status: "no_action" | "refreshed" | "failed" | "unknown_expiry" | "vault_mode_disabled";
   hoursRemaining: number | null;
   error?: string;
 }
@@ -134,6 +135,7 @@ export interface BwRefreshResult {
  * Called by the scheduler at 6 AM ET.
  *
  * Behavior:
+ *   - If TF_VAULT_MODE !== "bitwarden": no-op (see below)
  *   - If expiry > 72h: no-op
  *   - If expiry <= 72h: refresh + audit_log + Discord alert
  *   - If refresh fails: notifyCritical (fail-CLOSED) + audit_log
@@ -141,6 +143,25 @@ export interface BwRefreshResult {
  */
 export async function runBwSessionRefreshCheck(): Promise<BwRefreshResult> {
   const cronCorrelationId = randomUUID();
+
+  // Deep-scan #16 Band G: this cron fires every 6h regardless of vault mode.
+  // In `env`-mode deployments (TF_VAULT_MODE=env — the operator's current
+  // .env setting), BW_SESSION is never set, so estimateBwSessionExpiryHours()
+  // always returns null, which the code below treated as "unknown_expiry" and
+  // fired a WARN Discord alert ("session expiry check inconclusive") EVERY
+  // 6 hours for 30 days straight — junk noise the operator can never resolve
+  // because there is no Bitwarden vault to unlock in this mode. Guard here so
+  // the check is a genuine no-op (info-level, no alert) when Bitwarden isn't
+  // the active vault backend; it becomes live again automatically the moment
+  // TF_VAULT_MODE=bitwarden is set.
+  if (getVaultMode() !== "bitwarden") {
+    logger.info(
+      { correlationId: cronCorrelationId },
+      "bitwarden-refresh: TF_VAULT_MODE is not 'bitwarden' — skipping (no-op, no alert)",
+    );
+    return { status: "vault_mode_disabled", hoursRemaining: null };
+  }
+
   logger.info({ correlationId: cronCorrelationId }, "bitwarden-refresh: starting daily expiry check");
 
   const hoursRemaining = await estimateBwSessionExpiryHours();

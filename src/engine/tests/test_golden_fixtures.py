@@ -27,13 +27,10 @@ Tolerances:
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
-from typing import Dict, List
 
 import numpy as np
 import pytest
-
 
 # ─── Fixture loader ────────────────────────────────────────────────
 
@@ -59,7 +56,7 @@ def _load_expected() -> dict:
 # The point is to test the system's output matches these formulas, not to
 # use the system to verify itself (circular).
 
-def _compute_pf_from_trades(trades: List[dict], use_net: bool = True) -> float:
+def _compute_pf_from_trades(trades: list[dict], use_net: bool = True) -> float:
     """Compute profit factor from a flat trade list.
 
     Args:
@@ -81,33 +78,33 @@ def _compute_pf_from_trades(trades: List[dict], use_net: bool = True) -> float:
     return total_wins / total_losses
 
 
-def _compute_net_pnl(trades: List[dict]) -> float:
+def _compute_net_pnl(trades: list[dict]) -> float:
     """Sum of net_pnl across all trades."""
     return sum(t["net_pnl"] for t in trades)
 
 
-def _compute_gross_pf(trades: List[dict]) -> float:
+def _compute_gross_pf(trades: list[dict]) -> float:
     """Profit factor on gross_pnl (before commission)."""
     return _compute_pf_from_trades(trades, use_net=False)
 
 
-def _compute_net_pf(trades: List[dict]) -> float:
+def _compute_net_pf(trades: list[dict]) -> float:
     """Profit factor on net_pnl (after commission)."""
     return _compute_pf_from_trades(trades, use_net=True)
 
 
-def _compute_total_commission(trades: List[dict]) -> float:
+def _compute_total_commission(trades: list[dict]) -> float:
     """Total commission paid across all trades."""
     return sum(t["commission"] for t in trades)
 
 
-def _compute_win_rate(trades: List[dict]) -> float:
+def _compute_win_rate(trades: list[dict]) -> float:
     """Win rate = n_winners / n_trades using net_pnl."""
     n_winners = sum(1 for t in trades if t["net_pnl"] > 0)
     return n_winners / len(trades)
 
 
-def _compute_max_drawdown(trades: List[dict]) -> float:
+def _compute_max_drawdown(trades: list[dict]) -> float:
     """Max drawdown from the cumulative P&L equity curve (dollar terms).
 
     The equity curve starts at 0 (no initial capital offset).
@@ -119,7 +116,7 @@ def _compute_max_drawdown(trades: List[dict]) -> float:
     return float(np.max(drawdowns))
 
 
-def _compute_sharpe_from_trades(trades: List[dict], periods_per_year: float = 252.0) -> float:
+def _compute_sharpe_from_trades(trades: list[dict], periods_per_year: float = 252.0) -> float:
     """Annualized Sharpe ratio from trade P&L series (ddof=1).
 
     Matches risk_metrics.compute_sharpe_distribution() formula exactly:
@@ -132,6 +129,56 @@ def _compute_sharpe_from_trades(trades: List[dict], periods_per_year: float = 25
     if std == 0:
         return 0.0
     return float(mean / std * np.sqrt(periods_per_year))
+
+
+# ─── DS#20 T-B2 — production math-truth anchors ────────────────────
+# The helpers above are a deliberate, self-contained reimplementation (see
+# module docstring) — that keeps this suite import-light and fast. But a
+# reimplementation-only suite cannot catch a regression in PRODUCTION metric
+# code: it would only ever compare the reimplementation against itself.
+#
+# src.engine.risk_metrics is the one production module that expresses Sharpe
+# and max-drawdown as standalone, engine-decoupled functions operating on
+# cumulative-P&L arrays (it backs Monte Carlo path-distribution metrics, not a
+# trade-schema calculator). It imports only numpy/os — verified import-safe
+# under pytest (no vectorbt/backtester in its import chain; see DS#20 report).
+# A single trade sequence is modeled as a single path (n_sims=1) so the exact
+# same production formulas apply. Profit factor / net P&L / total commission
+# have NO standalone production equivalent to anchor against — that arithmetic
+# lives inline inside src/engine/backtester.py's run_backtest() (bar-by-bar
+# trade construction, not a reusable trades-in/metric-out function) and is
+# out of scope for this anchor; see DS#20 fix-wave report for the honest gap.
+#
+# If risk_metrics.py's Sharpe or max-drawdown formula regresses, these
+# companion assertions fail the golden suite — closing the "reimplementation
+# validates only itself" gap for the two metrics that do have a real anchor.
+
+def _compute_max_dd_via_risk_metrics(trades: list[dict]) -> float:
+    """Anchor against src.engine.risk_metrics.compute_max_drawdown_distribution (DS#20 T-B2)."""
+    pytest.importorskip("src.engine.risk_metrics")
+    from src.engine.risk_metrics import compute_max_drawdown_distribution
+
+    net_pnls = np.array([t["net_pnl"] for t in trades], dtype=float)
+    path = np.cumsum(net_pnls).reshape(1, -1)
+    dist = compute_max_drawdown_distribution(path, initial_capital=0.0, percentiles=[0.5])
+    return dist["p50"]
+
+
+def _compute_sharpe_via_risk_metrics(trades: list[dict], periods_per_year: float = 252.0) -> float:
+    """Anchor against src.engine.risk_metrics.compute_sharpe_distribution (DS#20 T-B2).
+
+    compute_sharpe_distribution derives per-step P&L via np.diff(paths, axis=1),
+    which drops the leading element — prepend a 0.0 "start of path" point so the
+    diff regenerates the exact per-trade net_pnl series the local reimplementation
+    consumes directly.
+    """
+    pytest.importorskip("src.engine.risk_metrics")
+    from src.engine.risk_metrics import compute_sharpe_distribution
+
+    net_pnls = np.array([t["net_pnl"] for t in trades], dtype=float)
+    path = np.concatenate(([0.0], np.cumsum(net_pnls))).reshape(1, -1)
+    dist = compute_sharpe_distribution(path, percentiles=[0.5], periods_per_year=periods_per_year)
+    return dist["p50"]
 
 
 # ─── Fixture 1: fixture_perfect ────────────────────────────────────
@@ -238,6 +285,36 @@ class TestFixturePerfect:
                 f"Trade {trade['trade_id']}: commission {trade['commission']} != {expected_comm}"
             )
 
+    def test_max_drawdown_and_sharpe_match_production_risk_metrics(self):
+        """DS#20 T-B2: production anchor.
+
+        src.engine.risk_metrics.compute_max_drawdown_distribution /
+        compute_sharpe_distribution (production, not a reimplementation) must
+        agree with the local reimplementation AND with the hand-computed
+        expected value. A drift in risk_metrics.py now fails this suite.
+        """
+        local_max_dd = _compute_max_drawdown(self.trades)
+        prod_max_dd = _compute_max_dd_via_risk_metrics(self.trades)
+        assert abs(prod_max_dd - local_max_dd) < 0.01, (
+            f"Production risk_metrics max_dd ({prod_max_dd:.4f}) diverges from local "
+            f"reimplementation ({local_max_dd:.4f}) — exactly the drift this anchor exists to catch."
+        )
+        expected_dd = self.expected["max_dd_dollars"]
+        tol_dd = self.expected["max_dd_tolerance"]
+        assert abs(prod_max_dd - expected_dd) <= tol_dd, (
+            f"Production risk_metrics max_dd ${prod_max_dd:.2f} != hand-computed ${expected_dd:.2f}"
+        )
+
+        local_sharpe = _compute_sharpe_from_trades(self.trades)
+        prod_sharpe = _compute_sharpe_via_risk_metrics(self.trades)
+        assert abs(prod_sharpe - local_sharpe) < 0.001, (
+            f"Production risk_metrics sharpe ({prod_sharpe:.6f}) diverges from local "
+            f"reimplementation ({local_sharpe:.6f})."
+        )
+        assert prod_sharpe > 0, (
+            f"Expected positive production Sharpe for profitable strategy, got {prod_sharpe:.4f}"
+        )
+
 
 # ─── Fixture 2: fixture_losing ──────────────────────────────────────
 
@@ -318,6 +395,31 @@ class TestFixtureLosing:
         """Net PF must be below 1.0 — this is a losing strategy."""
         net_pf = _compute_net_pf(self.trades)
         assert net_pf < 1.0, f"Net PF {net_pf:.4f} should be < 1.0 for a losing strategy"
+
+    def test_max_drawdown_and_sharpe_match_production_risk_metrics(self):
+        """DS#20 T-B2: production anchor (see TestFixturePerfect for full rationale).
+
+        No hand-computed max_dd/sharpe values are stored for this fixture, so
+        this only asserts local-vs-production agreement plus the sign this
+        fixture is meant to demonstrate (a catastrophically losing strategy
+        must show a negative-Sharpe path).
+        """
+        local_max_dd = _compute_max_drawdown(self.trades)
+        prod_max_dd = _compute_max_dd_via_risk_metrics(self.trades)
+        assert abs(prod_max_dd - local_max_dd) < 0.01, (
+            f"Production risk_metrics max_dd ({prod_max_dd:.4f}) diverges from local "
+            f"reimplementation ({local_max_dd:.4f})."
+        )
+
+        local_sharpe = _compute_sharpe_from_trades(self.trades)
+        prod_sharpe = _compute_sharpe_via_risk_metrics(self.trades)
+        assert abs(prod_sharpe - local_sharpe) < 0.001, (
+            f"Production risk_metrics sharpe ({prod_sharpe:.6f}) diverges from local "
+            f"reimplementation ({local_sharpe:.6f})."
+        )
+        assert prod_sharpe < 0, (
+            f"Expected negative production Sharpe for a PF=0.5 losing strategy, got {prod_sharpe:.4f}"
+        )
 
 
 # ─── Fixture 3: fixture_marginal ────────────────────────────────────
@@ -409,6 +511,28 @@ class TestFixtureMarginal:
         expected = self.expected["win_rate"]
         tol = self.expected["win_rate_tolerance"]
         assert abs(win_rate - expected) <= tol
+
+    def test_max_drawdown_and_sharpe_match_production_risk_metrics(self):
+        """DS#20 T-B2: production anchor (see TestFixturePerfect for full rationale).
+
+        No hand-computed max_dd/sharpe values are stored for this fixture, so
+        this only asserts local-vs-production agreement — the "close call"
+        boundary fixture is exactly the kind of case where a subtle PF/Sharpe
+        formula drift could silently flip a promotion-gate decision.
+        """
+        local_max_dd = _compute_max_drawdown(self.trades)
+        prod_max_dd = _compute_max_dd_via_risk_metrics(self.trades)
+        assert abs(prod_max_dd - local_max_dd) < 0.01, (
+            f"Production risk_metrics max_dd ({prod_max_dd:.4f}) diverges from local "
+            f"reimplementation ({local_max_dd:.4f})."
+        )
+
+        local_sharpe = _compute_sharpe_from_trades(self.trades)
+        prod_sharpe = _compute_sharpe_via_risk_metrics(self.trades)
+        assert abs(prod_sharpe - local_sharpe) < 0.001, (
+            f"Production risk_metrics sharpe ({prod_sharpe:.6f}) diverges from local "
+            f"reimplementation ({local_sharpe:.6f})."
+        )
 
 
 # ─── Fixture 4: fixture_regime_shift ────────────────────────────────
@@ -510,6 +634,29 @@ class TestFixtureRegimeShift:
         fold2_pf = _compute_gross_pf(fold2_trades)
         assert fold1_pf > 2.0, f"Fold 1 PF {fold1_pf:.4f} should be > 2.0"
         assert fold2_pf < 1.0, f"Fold 2 PF {fold2_pf:.4f} should be < 1.0"
+
+    def test_max_drawdown_and_sharpe_match_production_risk_metrics(self):
+        """DS#20 T-B2: production anchor (see TestFixturePerfect for full rationale).
+
+        Applied to the combined 200-trade regime-shift path (early profitable
+        epoch followed by late losing epoch) — the walk-forward degradation
+        shape this fixture exists to exercise.
+        """
+        all_trades = self.early_epoch["trades"] + self.late_epoch["trades"]
+
+        local_max_dd = _compute_max_drawdown(all_trades)
+        prod_max_dd = _compute_max_dd_via_risk_metrics(all_trades)
+        assert abs(prod_max_dd - local_max_dd) < 0.01, (
+            f"Production risk_metrics max_dd ({prod_max_dd:.4f}) diverges from local "
+            f"reimplementation ({local_max_dd:.4f})."
+        )
+
+        local_sharpe = _compute_sharpe_from_trades(all_trades)
+        prod_sharpe = _compute_sharpe_via_risk_metrics(all_trades)
+        assert abs(prod_sharpe - local_sharpe) < 0.001, (
+            f"Production risk_metrics sharpe ({prod_sharpe:.6f}) diverges from local "
+            f"reimplementation ({local_sharpe:.6f})."
+        )
 
 
 # ─── Fixture 5: fixture_fees_killer ─────────────────────────────────
@@ -623,6 +770,30 @@ class TestFixtureFeesKiller:
                 f"Trade {trade['trade_id']}: net_pnl={actual_net:.4f} != "
                 f"gross_pnl({trade['gross_pnl']:.4f}) - commission({trade['commission']:.4f}) = {expected_net:.4f}"
             )
+
+    def test_max_drawdown_and_sharpe_match_production_risk_metrics(self):
+        """DS#20 T-B2: production anchor (see TestFixturePerfect for full rationale).
+
+        This is the fee-flip fixture (gross_pf > 1.0, net_pf < 1.0) — the
+        production Sharpe anchor must agree with the local reimplementation AND
+        must be negative on the net_pnl series (fees turn this into a loser).
+        """
+        local_max_dd = _compute_max_drawdown(self.trades)
+        prod_max_dd = _compute_max_dd_via_risk_metrics(self.trades)
+        assert abs(prod_max_dd - local_max_dd) < 0.01, (
+            f"Production risk_metrics max_dd ({prod_max_dd:.4f}) diverges from local "
+            f"reimplementation ({local_max_dd:.4f})."
+        )
+
+        local_sharpe = _compute_sharpe_from_trades(self.trades)
+        prod_sharpe = _compute_sharpe_via_risk_metrics(self.trades)
+        assert abs(prod_sharpe - local_sharpe) < 0.001, (
+            f"Production risk_metrics sharpe ({prod_sharpe:.6f}) diverges from local "
+            f"reimplementation ({local_sharpe:.6f})."
+        )
+        assert prod_sharpe < 0, (
+            f"Expected negative production Sharpe (fee-flip loser), got {prod_sharpe:.4f}"
+        )
 
 
 # ─── Cross-fixture consistency checks ──────────────────────────────

@@ -62,25 +62,37 @@ def _post_cost_telemetry(
     status: str,
     error_message: Optional[str] = None,
 ) -> None:
-    """Fire-and-forget POST to /api/quantum/cost. Never raises.
+    """TRULY fire-and-forget POST to /api/quantum/cost — runs on a daemon thread so it NEVER blocks
+    the caller. Never raises.
 
-    Uses lazy import of requests so the module-level namespace stays clean
-    (challenger isolation test: no HTTP client in vars(module)).
+    institutional-grade perf (2026-07-06): the previous implementation did a SYNCHRONOUS
+    requests.post(..., timeout=1.0). When the cost endpoint is unreachable (any non-server context —
+    tests, CLI, off-server invocation) that blocked collect_quantum_noise for up to a full second per
+    call, roughly DOUBLING its wall-clock and blowing the 500ms signal-path budget. Telemetry must never
+    be on the critical path. Lazy import of requests keeps the module-level namespace clean (challenger
+    isolation test: no HTTP client in vars(module)).
     """
+    def _send() -> None:
+        try:
+            import requests as _requests  # noqa: PLC0415 — lazy import for isolation
+            url = _get_cost_endpoint()
+            if url is None:
+                return
+            payload: dict[str, Any] = {
+                "moduleName": "entropy_filter",
+                "wallClockMs": wall_clock_ms,
+                "status": status,
+            }
+            if error_message is not None:
+                payload["errorMessage"] = error_message
+            _requests.post(url, json=payload, timeout=1.0)
+        except Exception:  # noqa: BLE001 — never raise from telemetry path
+            pass
+
     try:
-        import requests as _requests  # noqa: PLC0415 — lazy import for isolation
-        url = _get_cost_endpoint()
-        if url is None:
-            return
-        payload: dict[str, Any] = {
-            "moduleName": "entropy_filter",
-            "wallClockMs": wall_clock_ms,
-            "status": status,
-        }
-        if error_message is not None:
-            payload["errorMessage"] = error_message
-        _requests.post(url, json=payload, timeout=1.0)
-    except Exception:  # noqa: BLE001 — never raise from telemetry path
+        import threading  # noqa: PLC0415 — lazy, keeps module namespace clean
+        threading.Thread(target=_send, name="quantum-cost-telemetry", daemon=True).start()
+    except Exception:  # noqa: BLE001 — even thread spawn failure must not break the filter
         pass
 
 # ─── Governance Labels ────────────────────────────────────────────────────────
@@ -188,7 +200,11 @@ def _build_qcnn_circuit(features: np.ndarray, params: np.ndarray, dev: Any) -> f
     params shape: (36,) — 8 RY conv1 + 8 RY conv2 + 4 conditional RY + 16 CNOT phases (no params for CNOT)
     Actually: params = [conv1_ry(0..7), conv2_ry(0..7), pool_ry(0..3)] → shape (20,)
     """
-    @qml.qnode(dev, diff_method="backprop")
+    # institutional-grade perf (2026-07-06): this QCNN is FORWARD-ONLY inference (a noise SCORE, never
+    # trained/differentiated), so no gradient method is needed. diff_method=None runs on the fast C++
+    # lightning.qubit backend (backprop is default.qubit-only and was forcing the ~2000ms/call Python path
+    # that blew the 500ms signal-path budget). Forward expval is numerically identical across diff methods.
+    @qml.qnode(dev, diff_method=None)
     def circuit(features_vec: np.ndarray, params_vec: np.ndarray) -> float:
         # ── Amplitude Encoding ──────────────────────────────────────────────
         qml.AmplitudeEmbedding(features=features_vec, wires=range(N_QUBITS), normalize=True)

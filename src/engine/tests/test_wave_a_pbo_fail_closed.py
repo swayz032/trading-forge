@@ -8,12 +8,16 @@ walk_forward.pbo_computation_failed into pbo_audit_actions.
 """
 from __future__ import annotations
 
-import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-sys.modules.setdefault("vectorbt", MagicMock())
+# deep-scan B: this file imports only src.engine.risk_metrics (pure stats — it does NOT
+# transitively pull vectorbt), so the old module-level
+# `sys.modules.setdefault("vectorbt", MagicMock())` was unnecessary here AND leaked a
+# PERMANENT vectorbt stub into sys.modules that poisoned later same-process tests needing
+# REAL vectorbt (e.g. test_pnl_accuracy commission math → 3 spurious failures when this file
+# ran before it). Removed: no vectorbt stub is needed for this file.
 
 # We test the aggregation helper directly without mocking the full backtest stack.
 # The PBO block lives in run_walk_forward() — we test it via a targeted mock

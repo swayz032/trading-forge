@@ -75,14 +75,15 @@ function makeThrowingDal(): PickerDataAccessLayer {
 
 describe("W23H.C composite vs MAX-Sharpe", () => {
   it("strategy B wins composite despite lower Sharpe because it was never picked (recency=1.0)", async () => {
-    // Strategy A: sharpe=0.9 → dsr_norm=0.3, pf=0, recency=0.1 (picked 270 days ago), div=1.0
-    //   composite_A = 0.3*0.25 + 0*0.25 + 0.1*0.25 + 1.0*0.25 = 0.075+0+0.025+0.25 = 0.35
+    // deepscan17: dsr is a CDF in [0,1], used directly (no /3). B still wins on recency.
+    // Strategy A: dsr=0.9 → dsr_norm=0.9, pf=0, recency=0.1 (picked 270 days ago), div=1.0
+    //   composite_A = 0.9*0.25 + 0*0.25 + 0.1*0.25 + 1.0*0.25 = 0.225+0+0.025+0.25 = 0.5
     //
-    // Strategy B: sharpe=0.7 → dsr_norm=0.233, pf=0, recency=1.0 (never picked), div=1.0
-    //   composite_B = 0.233*0.25 + 0*0.25 + 1.0*0.25 + 1.0*0.25 = 0.058+0+0.25+0.25 = 0.558 ← WINNER
+    // Strategy B: dsr=0.7 → dsr_norm=0.7, pf=0, recency=1.0 (never picked), div=1.0
+    //   composite_B = 0.7*0.25 + 0*0.25 + 1.0*0.25 + 1.0*0.25 = 0.175+0+0.25+0.25 = 0.675 ← WINNER
     //
-    // Strategy C: sharpe=0.5 → dsr_norm=0.167, pf=0, recency=0.5 (picked 30d ago), div=1.0
-    //   composite_C = 0.167*0.25 + 0*0.25 + 0.5*0.25 + 1.0*0.25 = 0.042+0+0.125+0.25 = 0.417
+    // Strategy C: dsr=0.5 → dsr_norm=0.5, pf=0, recency=0.5 (picked 30d ago), div=1.0
+    //   composite_C = 0.5*0.25 + 0*0.25 + 0.5*0.25 + 1.0*0.25 = 0.125+0+0.125+0.25 = 0.5
 
     const daysSinceA = 270; // recency = 1/(1+270/30) = 1/10 = 0.1
     const daysSinceC = 30;  // recency = 1/(1+30/30) = 1/2 = 0.5
@@ -311,7 +312,7 @@ describe("W23H.C audit event component scores shape", () => {
 
   it("composite is the equal-weight sum of four components", async () => {
     // Set up specific component values via DAL:
-    // DSR = 1.5 → norm = 0.5
+    // DSR = 0.8 (CDF in [0,1], used directly) → norm = 0.8
     // PF: 3 wins of $300, 1 loss of $100 → PF = 900/100 = 9.0 → norm = min(9/3,1) = 1.0
     // Recency: picked 15 days ago → 1/(1+15/30) = 1/(1+0.5) = 0.667
     // Diversification: 0 prior picks → 1.0
@@ -324,7 +325,7 @@ describe("W23H.C audit event component scores shape", () => {
       backtests: [
         {
           strategyId: ID_A,
-          resultExtras: { deflated_sharpe: { dsr: 1.5 } },
+          resultExtras: { deflated_sharpe: { dsr: 0.8 } },
           createdAt: new Date(BASE_NOW.getTime() - 1 * 24 * 3600 * 1000),
         },
       ],
@@ -356,7 +357,7 @@ describe("W23H.C audit event component scores shape", () => {
     expect(s.composite).toBeCloseTo(expectedComposite, 6);
 
     // Verify approximate component values
-    expect(s.rolling_30d_deflated_sharpe).toBeCloseTo(0.5, 3);   // 1.5/3=0.5
+    expect(s.rolling_30d_deflated_sharpe).toBeCloseTo(0.8, 3);   // deepscan17: dsr=0.8 CDF, used directly
     expect(s.regime_conditional_pf).toBe(1.0);                    // capped at 1.0
     expect(s.recency_penalty).toBeCloseTo(1 / (1 + 15 / 30), 3); // ≈ 0.667
     expect(s.diversification_score).toBe(1.0);

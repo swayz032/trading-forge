@@ -18,7 +18,9 @@ import { adminOfficeRouter } from "./admin.js";
 import { deployApprovalsRouter } from "./deploy-approvals.js";
 import { cribApiRouter } from "./api/crib.js";
 import { kitchenApiRouter } from "./api/kitchen.js";
+import { menuApiRouter } from "./api/menu.js";
 import { recipeApiRouter } from "./api/recipe.js";
+import { reportsApiRouter } from "./api/reports.js";
 import { anamSessionRouter } from "./api/anam-session.js";
 import { carterSessionRouter } from "./api/carter-session.js";
 import { carterInboxRouter } from "./api/carter-inbox.js";
@@ -112,7 +114,9 @@ slumhouseRouter.get([
 // API namespaces (full /slumhouse/api/... paths already declared in each module)
 slumhouseRouter.use(cribApiRouter);
 slumhouseRouter.use(kitchenApiRouter);
+slumhouseRouter.use(menuApiRouter);
 slumhouseRouter.use(recipeApiRouter);
+slumhouseRouter.use(reportsApiRouter);
 slumhouseRouter.use(anamSessionRouter);
 slumhouseRouter.use(carterSessionRouter);
 slumhouseRouter.use(carterInboxRouter);

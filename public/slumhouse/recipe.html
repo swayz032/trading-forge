@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Slumhouse · The Recipe</title>
   <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+  <link rel="stylesheet" href="/slumhouse/progress-line.css">
   <link rel="icon" type="image/png" sizes="32x32" href="/slumhouse/icons/slumdawg-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/slumhouse/icons/slumdawg-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/slumhouse/icons/slumdawg-180.png">
@@ -22,10 +23,10 @@
     .r-hero {
       position: relative;
       background:
-        linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.88) 100%),
-        url('/slumhouse/images/slumdawg-command.png');
+        linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.86) 100%),
+        url('/slumhouse/images/slumdawg-kitchen.png');
       background-size: cover;
-      background-position: center 30%;
+      background-position: center 35%;
       border: 1px solid rgba(255, 255, 255, 0.06);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015), 0 12px 40px rgba(0, 0, 0, 0.6);
       border-radius: 18px;
@@ -85,7 +86,10 @@
         0 0 70px rgba(163, 255, 18, 0.12);
     }
 
-    /* Empty state — chart still animates, just dimmer + with overlay label */
+    /* Empty state — placeholder only (baseline shelf, no bars). The overlay label
+       sits on top. The .mc-bar-* dim rule below is a defensive no-op: the empty
+       render path (buildMCEmptyPlaceholder) draws NO bars, so nothing fabricated
+       is ever shown behind the overlay (DS22 Track B A2 fix). */
     .r-mc-chart-3d.empty .mc-bar-front,
     .r-mc-chart-3d.empty .mc-bar-side,
     .r-mc-chart-3d.empty .mc-bar-top { opacity: 0.4; }
@@ -451,8 +455,33 @@
     .r-feed-light.pass { background: var(--lime); box-shadow: 0 0 10px var(--lime); }
     .r-feed-light.warn { background: var(--warm); }
     .r-feed-light.fail { background: var(--red); }
+    .r-feed-light.wait { background: #2a2f2a; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    /* YouTube button (replaces the Slumdawg Score ring, top-right of the recipe hero) */
+    .r-yt { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; white-space: nowrap;
+      color: #fff; background: linear-gradient(180deg, #ff2f2f, #cc0000); padding: 11px 16px; border-radius: 12px;
+      font-size: 13px; font-weight: 800; box-shadow: 0 8px 22px rgba(200,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25); transition: transform 0.15s, box-shadow 0.15s; }
+    .r-yt:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(200,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+    .r-yt svg { flex: 0 0 auto; }
+    /* Clickable gate rows + the swapped-in gate-metric card */
+    .r-feed-click { cursor: pointer; border-radius: 8px; margin: 0 -8px; padding-left: 8px; padding-right: 8px; transition: background 0.12s; }
+    .r-feed-click:hover { background: rgba(163,255,18,0.05); }
+    .r-gate-back { font-size: 12px; color: var(--lime); text-decoration: none; white-space: nowrap; }
+    .r-gate-back:hover { text-decoration: underline; }
+    .r-gate-big { font-size: 42px; font-weight: 800; letter-spacing: -0.02em; margin: 20px 0 6px; line-height: 1; color: var(--ink); }
+    .r-gate-big.green { color: var(--lime); } .r-gate-big.red { color: var(--red); } .r-gate-big.amber { color: var(--warm); }
+    .r-gate-thresh { font-size: 12px; color: var(--dim); }
+    .r-gate-verdict { display: inline-block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 18px; padding: 6px 12px; border-radius: 9px; }
+    .r-gate-verdict.green { color: var(--lime); background: rgba(163,255,18,0.1); } .r-gate-verdict.red { color: var(--red); background: rgba(255,80,80,0.1); } .r-gate-verdict.amber { color: var(--warm); background: rgba(255,200,120,0.1); }
+    /* Left card stretches to Monte Carlo's height; gate card fills it premium-style */
+    .r-grid { align-items: stretch; }
+    #r-left { display: flex; flex-direction: column; }
+    #r-left > .r-panel { flex: 1; display: flex; flex-direction: column; }
+    .r-gate-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px; padding: 12px 0; }
+    .r-gate-big { font-size: 56px; margin: 0; }
+    .r-gate-sentence { font-size: 13.5px; color: var(--dim); line-height: 1.65; margin-top: 10px; max-width: 92%; }
     .r-feed-name { font-size: 12px; font-weight: 700; color: var(--ink); }
-    .r-feed-desc { font-size: 11px; color: var(--dim); margin-top: 2px; line-height: 1.45; }
+    .r-feed-sub { font-size: 11px; font-weight: 600; color: var(--lime); opacity: 0.72; margin-top: 3px; }
+    .r-feed-desc { font-size: 11px; color: var(--dim); margin-top: 3px; line-height: 1.45; }
 
     /* ─── Recipe responsive (must live here so it beats source-order cascade) ─ */
     @media (max-width: 1100px) {
@@ -595,6 +624,7 @@
   </div>
 
   <script src="/slumhouse/slumhouse.js"></script>
+  <script src="/slumhouse/progress-line.js"></script>
   <script>
     (async () => {
       const id = new URLSearchParams(location.search).get("id");
@@ -618,6 +648,16 @@
     const HISTORICAL_FIRST_YEAR = 2015;
     const HISTORICAL_LAST_YEAR = 2026;
 
+    // ── Premium title + gate-title map (mirrors kitchen.html) ──
+    function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+    var PREMIUM=[[/silver\s*bullet/i,"Silver Bullet"],[/opening\s*range|\borb\b|open(ing)?\s*(range\s*)?break|session\s*open/i,"Opening Heist"],[/mean\s*revers|rubber|revert/i,"The Rubber Band"],[/support|\bbounce\b|demand\s*zone|off\s*(a\s*)?level|level\s*bounce/i,"The Bounce"],[/resist|supply\s*zone|rejection|reject/i,"The Rejection"],[/break\s*out|breakout|range\s*break/i,"The Breakout"],[/squeeze|bollinger|keltner|coil|nr7/i,"Squeeze Play"],[/manipulat|\btrap\b|stop\s*hunt|sweep|liquidity\s*grab/i,"The Trap"],[/reversal|reverse|\bflip\b/i,"The Flip"],[/vwap|\bfade\b/i,"The Fade"],[/gap\s*(and|&)?\s*go|gap\s*fill|\bgap\b/i,"Gap & Go"],[/fvg|order\s*block|\bict\b|\bsmt\b|imbalance/i,"The Sweep"],[/trend|continuation|momentum|pullback|rider/i,"Trend Rider"],[/scalp/i,"Quick Bite"],[/\brsi\b|oversold|overbought|connors/i,"The Dip Snatch"],[/\bema\b|moving\s*average|\bsma\b|golden\s*cross|crossover/i,"The Crossover"]];
+    var FILLER={i:1,use:1,my:1,the:1,a:1,an:1,of:1,or:1,and:1,to:1,look:1,lets:1,"let's":1,minute:1,min:1,trade:1,strategy:1,setup:1,entry:1,overall:1,using:1,with:1,on:1,for:1,how:1};
+    function cleanName(name){var n=String(name||"").replace(/_/g," ").replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi,"").replace(/\s+\d+\s*m(in)?\b/gi,"").replace(/\s+\d+\s*h\b/gi,"").replace(/\s+/g," ").trim();var w=n.split(" ").filter(Boolean);var k=w.filter(function(x){return !FILLER[x.toLowerCase()];});return ((k.length?k:w).slice(0,3).join(" ").trim())||"House Special";}
+    function premiumTitle(name){var n=String(name||"").replace(/_/g," ");for(var i=0;i<PREMIUM.length;i++){if(PREMIUM[i][0].test(n))return PREMIUM[i][1];}return cleanName(n);}
+    var GATE_TITLE={"Surprise Test":"Holds Up","Real or Lucky":"Real Edge","Worst Day Test":"Crash-Proof","Preseason":"Paper Trial","Real-Time Match":"Live Match","Plays Clean":"Rule-Safe","Sloppy Bot Test":"Handles Rough","Every Mood Test":"Every Market"};
+    // Short "what this test means" — mirrors the Kitchen progress-bar sub-labels.
+    var GATE_SUB={"Surprise Test":"works on data it never saw","Real or Lucky":"a real edge, not just luck","Worst Day Test":"survives a market crash","Preseason":"made money on fake cash","Real-Time Match":"live trading matches the test","Plays Clean":"won't break firm rules","Sloppy Bot Test":"survives sloppy, jittered settings","Every Mood Test":"works in every market mood"};
+
     function render(r) {
       const { el } = SH;
       const app = document.getElementById("r-app");
@@ -628,7 +668,7 @@
       app.appendChild(el("div", { class: "r-hero" },
         el("div", { style: "min-width:0" },
           el("div", { class: "r-hero-name" },
-            r.identity.name,
+            premiumTitle(r.identity.name),
             el("span", { class: "r-hero-badge" }, "● " + r.identity.stationStreet),
           ),
           el("div", { class: "r-hero-caveat" },
@@ -637,19 +677,24 @@
             ". Numbers below are from backtest replay and Monte Carlo simulation."
           ),
         ),
-        el("div", { class: "r-hero-score" },
-          el("div", { class: "r-ring", style: ringStyle }, el("span", {}, String(r.slumdawgScore))),
-          el("div", { class: "r-ring-lbl" }, "Slumdawg Score"),
-        ),
+        (function () {
+          var yt = r.youtubeUrl || ("https://www.youtube.com/results?search_query=" + encodeURIComponent(cleanName(r.identity.name) + " trading strategy"));
+          var btn = el("a", { class: "r-yt", href: yt, target: "_blank", rel: "noopener", title: "Watch the video this play came from" });
+          btn.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg><span>Watch the source</span>';
+          return btn;
+        })(),
       ));
 
-      // 2-col: Backtest + Monte Carlo (both pitch-black glassy 3D)
+      // 2-col: [switchable metrics card] + Monte Carlo. The left card starts on
+      // Backtest and swaps to a gate's metrics when a gate is clicked.
       const grid = el("div", { class: "r-grid" });
-      grid.appendChild(renderBacktest(r));
+      const left = el("div", { id: "r-left" });
+      left.appendChild(renderBacktest(r));
+      grid.appendChild(left);
       grid.appendChild(renderMC(r));
       app.appendChild(grid);
 
-      // Bottom: 3D multi-year calendar + Other tests
+      // Bottom: 3D multi-year calendar + gate tests
       const bot = el("div", { class: "r-bot" });
       bot.appendChild(renderCalendar(r));
       bot.appendChild(renderFeed(r));
@@ -685,27 +730,46 @@
     function renderMC(r) {
       const { el } = SH;
       const mc = r.monteCarlo || {};
+      // deep-scan slumhouse-frontend F-1 (CRITICAL 2026-07-06) + DS22 Track B B1 (2026-07-07):
+      // The 3D histogram is a REAL distribution ONLY when the server shipped a per-path
+      // distribution (>=30 samples). In the common case the MC engine emits only percentiles
+      // (P5/P50/P95). We must NOT fabricate a bell shape between them (the prior code called
+      // synthesizeBell() — an unseeded Box-Muller draw that re-randomized every reload, presenting
+      // a made-up shape a family member would trust to judge safety). Three honest render states:
+      //   "real"   → >=30 recorded samples → true histogram (the ONLY state that shows a shape)
+      //   "bounds" → percentiles only      → three discrete P5/P50/P95 markers, NO curve between
+      //   "empty"  → no MC yet             → placeholder, no bars, nothing fabricated
+      // No Math.random()-driven shape can reach the rendered view (synthesizeBell removed).
+      const mcState = mcRenderState(mc);
       const panel = el("div", { class: "r-panel r-panel-mc" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Monte Carlo", el("span", { class: "src whatif" }, "🧪 What-if")),
         ),
-        el("div", { class: "r-cap" },
-          "We made the bot play the same year ",
-          el("b", {}, "1,000 different times"),
-          ". Here's where the money landed:",
-        ),
+        mcState === "real"
+          ? el("div", { class: "r-cap" },
+              "We made the bot play the same year ",
+              el("b", {}, "1,000 different times"),
+              ". Here's where the money landed:",
+            )
+          : mcState === "bounds"
+          ? el("div", { class: "r-cap" },
+              "We only have the ",
+              el("b", {}, "worst, typical, and best year"),
+              " recorded for this play — shown below as three points. The full shape between them isn't available, so we don't draw one.",
+            )
+          : el("div", { class: "r-cap" },
+              "Not tested enough times yet — the spread of outcomes shows up here after the first backtest.",
+            ),
       );
 
-      // Empty state: no real MC data — chart still animates with synthesized
-      // demo bars + a "WAITING FOR FIRST BACKTEST" overlay.
-      const hasMCData = (Array.isArray(mc.distribution) && mc.distribution.length > 0)
-        || mc.worstYearRaw || mc.medianYearRaw || mc.bestYearRaw;
+      // "empty" = nothing real to show → placeholder only (no fabricated bars/bell).
+      const hasMCData = mcState !== "empty";
 
       // 3D chart stage
       const chart3d = el("div", { class: "r-mc-chart-3d" + (hasMCData ? "" : " empty") },
         el("div", { class: "r-mc-chart-stage" }),
       );
-      chart3d.querySelector(".r-mc-chart-stage").innerHTML = buildMCHistogram(mc);
+      chart3d.querySelector(".r-mc-chart-stage").innerHTML = buildMCHistogram(mc, mcState);
       panel.appendChild(chart3d);
 
       panel.appendChild(el("div", { class: "r-mc-legend" },
@@ -760,21 +824,33 @@
       return panel;
     }
 
+    // ─── MC render-state decision (single source of truth: caption + chart) ──
+    // "real"   → >=30 recorded per-path samples (ONLY state that draws a distribution shape)
+    // "bounds" → percentiles only → discrete P5/P50/P95 markers, NO curve between them
+    // "empty"  → no MC data yet → placeholder, nothing fabricated
+    function mcRenderState(mc) {
+      const samples = Array.isArray(mc.distribution) ? mc.distribution : [];
+      if (samples.length >= 30) return "real";
+      const hasPct = [mc.worstYearRaw, mc.medianYearRaw, mc.bestYearRaw]
+        .some(function (v) { return Number.isFinite(v) && v !== 0; }) || samples.length > 0;
+      return hasPct ? "bounds" : "empty";
+    }
+
     // ─── MC histogram (SVG, plain-English labels, 3D bars) ───────────────
-    function buildMCHistogram(mc) {
+    // Renders a TRUE distribution ONLY when the server shipped >=30 real per-path
+    // samples. Otherwise shows honest percentile bounds or an empty placeholder —
+    // never a synthesized/random bell (F-1 + DS22 Track B B1 fix; synthesizeBell removed).
+    function buildMCHistogram(mc, mcState) {
       const W = 540, H = 200, padL = 8, padR = 8, padT = 10, padB = 30;
       const innerW = W - padL - padR;
       const innerH = H - padT - padB;
+      const state = mcState || mcRenderState(mc);
 
-      // 1) Get a sample of final-year P&Ls — real if we have it, synthesized otherwise
-      let samples = Array.isArray(mc.distribution) ? mc.distribution.slice() : [];
-      if (samples.length < 30) {
-        // Synthesize ~1000 from worst/median/best — asymmetric "bell-ish"
-        samples = synthesizeBell(mc.worstYearRaw, mc.medianYearRaw, mc.bestYearRaw, 1000);
-      }
-      if (samples.length === 0) {
-        return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#666" font-size="12" font-family="inherit">no fake years yet</text></svg>`;
-      }
+      if (state === "empty") return buildMCEmptyPlaceholder(W, H, padL, padT, innerW, innerH);
+      if (state === "bounds") return buildMCPercentileBounds(mc, W, H, padL, padT, innerW, innerH);
+
+      // state === "real": >=30 recorded samples — genuine histogram from real data.
+      const samples = mc.distribution.slice();
 
       // 2) Build buckets
       const minV = Math.min(...samples);
@@ -868,24 +944,55 @@
       `;
     }
 
-    // Synthesize ~N samples from worst/median/best to approximate a bell when
-    // the MC engine didn't ship the full distribution. Skewed normal-ish.
-    function synthesizeBell(worst, median, best, n) {
-      const out = [];
-      const w = Number(worst) || -5000;
-      const m = Number(median) || 0;
-      const b = Number(best) || 5000;
-      const sigmaL = Math.max(1, (m - w) / 1.645);
-      const sigmaR = Math.max(1, (b - m) / 1.645);
-      for (let i = 0; i < n; i++) {
-        // Box-Muller normal
-        const u1 = Math.max(1e-9, Math.random());
-        const u2 = Math.random();
-        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-        const v = m + z * (z < 0 ? sigmaL : sigmaR);
-        out.push(v);
+    // Honest "percentile bounds only" view — three discrete P5/P50/P95 markers on a
+    // $0 break-even axis. Draws NO distribution shape between the points, because the
+    // server gave us three numbers, not a recorded distribution. Deterministic — no
+    // Math.random(), so nothing changes on reload.
+    function buildMCPercentileBounds(mc, W, H, padL, padT, innerW, innerH) {
+      const pts = [
+        { v: Number(mc.worstYearRaw),  color: "#ff7878", label: "BAD",    sub: "worst (P5)" },
+        { v: Number(mc.medianYearRaw), color: "#a3ff12", label: "NORMAL", sub: "typical (P50)" },
+        { v: Number(mc.bestYearRaw),   color: "#c5ff5f", label: "GOOD",   sub: "best (P95)" },
+      ].filter(function (p) { return Number.isFinite(p.v); });
+      if (pts.length === 0) return buildMCEmptyPlaceholder(W, H, padL, padT, innerW, innerH);
+
+      const vals = pts.map(function (p) { return p.v; }).concat([0]);
+      const minV = Math.min.apply(null, vals);
+      const maxV = Math.max.apply(null, vals);
+      const range = Math.max(1, maxV - minV);
+      const xOf = function (v) { return padL + Math.max(0, Math.min(innerW, ((v - minV) / range) * innerW)); };
+      const cy = padT + innerH * 0.5;
+
+      const zeroX = xOf(0);
+      const zeroLine = `<line x1="${zeroX.toFixed(1)}" x2="${zeroX.toFixed(1)}" y1="${padT}" y2="${padT + innerH}" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"/>
+        <text x="${zeroX.toFixed(1)}" y="${(padT + innerH + 26).toFixed(1)}" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9" font-family="inherit" font-weight="800" letter-spacing="0.06em">BROKE EVEN</text>`;
+      const shelf = `<rect x="${padL - 2}" y="${padT + innerH}" width="${innerW + 4}" height="3" fill="rgba(255,255,255,0.06)"/>`;
+
+      let marks = "";
+      for (const p of pts) {
+        const x = xOf(p.v);
+        marks += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${padT}" y2="${padT + innerH}" stroke="${p.color}" stroke-width="1.3" stroke-dasharray="3 3" opacity="0.6"/>`;
+        marks += `<circle cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" r="11" fill="none" stroke="${p.color}" stroke-width="1" opacity="0.4"/>`;
+        marks += `<circle cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.5" fill="${p.color}" opacity="0.95"/>`;
+        marks += `<text x="${x.toFixed(1)}" y="12" text-anchor="middle" fill="${p.color}" font-size="9" font-family="inherit" font-weight="800" letter-spacing="0.06em">${p.label}</text>`;
+        marks += `<text x="${x.toFixed(1)}" y="${(padT + innerH + 16).toFixed(1)}" text-anchor="middle" fill="${p.color}" font-size="8" font-family="inherit" font-weight="700" opacity="0.85">${p.sub}</text>`;
       }
-      return out;
+
+      return `
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+          ${shelf}
+          ${zeroLine}
+          ${marks}
+        </svg>
+      `;
+    }
+
+    // Genuinely empty state — a baseline shelf only. No bars, no bell, nothing
+    // fabricated. The "WAITING FOR FIRST BACKTEST" overlay (.r-mc-chart-3d.empty::after)
+    // sits on top via CSS.
+    function buildMCEmptyPlaceholder(W, H, padL, padT, innerW, innerH) {
+      const shelf = `<rect x="${padL - 2}" y="${padT + innerH}" width="${innerW + 4}" height="3" fill="rgba(255,255,255,0.06)"/>`;
+      return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${shelf}</svg>`;
     }
 
     // ─── 3D Slumdawg Calendar — monthly grid with weekly + monthly totals ─
@@ -1093,20 +1200,65 @@
 
     function renderFeed(r) {
       const { el } = SH;
+      var untested = ((r.backtest && r.backtest.tradesCount) || 0) === 0 && (r.slumdawgScore || 0) === 0;
       const panel = el("div", { class: "r-panel" },
-        el("div", { class: "r-h" }, "Other Tests"),
-        el("div", { class: "r-cap" }, "Every other system this play had to pass. Green = passed, amber = warning, red = failed."),
+        el("div", { class: "r-h" }, "The Gates"),
+        el("div", { class: "r-cap" }, untested
+          ? "This play hasn't been cooked yet. Tap a gate to see its number in the panel on the left."
+          : "Every gate this play had to clear. Tap one to see its number in the panel on the left."),
       );
       for (const t of (r.otherTests || [])) {
-        panel.appendChild(el("div", { class: "r-feed-row" },
-          el("div", { class: "r-feed-light " + t.status }),
+        var status = untested ? "wait" : t.status;
+        var desc = untested ? "Not run yet." : t.sentence;
+        var row = el("div", { class: "r-feed-row r-feed-click" },
+          el("div", { class: "r-feed-light " + status }),
           el("div", {},
-            el("div", { class: "r-feed-name" }, t.name),
-            el("div", { class: "r-feed-desc" }, t.sentence),
+            el("div", { class: "r-feed-name" }, GATE_TITLE[t.name] || t.name),
+            GATE_SUB[t.name] ? el("div", { class: "r-feed-sub" }, GATE_SUB[t.name]) : null,
+            el("div", { class: "r-feed-desc" }, desc),
           ),
-        ));
+        );
+        (function (name) { row.addEventListener("click", function () { switchLeftToGate(r, name); }); })(t.name);
+        panel.appendChild(row);
       }
       return panel;
+    }
+
+    function switchLeftToGate(r, name) {
+      const left = document.getElementById("r-left");
+      if (!left) return;
+      left.innerHTML = "";
+      left.appendChild(renderGateMetric(r, name));
+      left.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    function switchLeftToBacktest(r) {
+      const left = document.getElementById("r-left");
+      if (!left) return;
+      left.innerHTML = "";
+      left.appendChild(renderBacktest(r));
+    }
+    function renderGateMetric(r, name) {
+      const { el } = SH;
+      var untested = ((r.backtest && r.backtest.tradesCount) || 0) === 0 && (r.slumdawgScore || 0) === 0;
+      var m = (r.gateMetrics && r.gateMetrics[name]) || { what: "", value: "Not run yet", threshold: "", verdict: "warn" };
+      var verdict = untested ? "warn" : m.verdict;
+      var value = untested ? "Not run yet" : m.value;
+      var vclass = verdict === "pass" ? "green" : verdict === "fail" ? "red" : "amber";
+      var vword = verdict === "pass" ? "Cleared ✓" : verdict === "fail" ? "Failed ✗" : "Not run yet";
+      var t = (r.otherTests || []).find(function (x) { return x.name === name; });
+      var sentence = untested ? "This gate hasn't been run yet — it needs a backtest first." : (t ? t.sentence : "");
+      var back = el("a", { href: "#", class: "r-gate-back" }, "‹ Backtest");
+      back.addEventListener("click", function (e) { e.preventDefault(); switchLeftToBacktest(r); });
+      return el("div", { class: "r-panel" },
+        el("div", { class: "r-head" }, el("div", { class: "r-h" }, GATE_TITLE[name] || name, el("span", { class: "src replay" }, "🔬 The Gate")), back),
+        el("div", { class: "r-cap" }, m.what),
+        el("div", { class: "r-gate-body" },
+          el("div", { class: "r-gate-big " + vclass }, value),
+          m.threshold ? el("div", { class: "r-gate-thresh" }, m.threshold) : null,
+          el("div", { class: "r-gate-verdict " + vclass }, vword),
+          sentence ? el("div", { class: "r-gate-sentence" }, sentence) : null,
+        ),
+      );
     }
 
     // ─── Helpers ────────────────────────────────────────────────────

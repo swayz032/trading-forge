@@ -1,0 +1,68 @@
+/* Slumhouse strategy progress line — v6 "matte premium black" component.
+   Self-contained (literal colors). Rendered by progress-line.js into any
+   container that already provides the surrounding glass card. */
+.pl-stage{perspective:1600px;perspective-origin:50% 32%;padding:38px 0 2px}
+.pl-track{position:relative;transform:rotateX(30deg);transform-style:preserve-3d;height:150px;margin:0 1%}
+.pl-rail{position:absolute;top:56px;left:0;right:0;height:16px;border-radius:999px;background:linear-gradient(180deg,#070907,#0e120e 45%,#141814);
+  box-shadow:inset 0 4px 10px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08),inset 0 -1px 2px rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.05)}
+.pl-fill{position:absolute;top:59px;left:0;height:10px;border-radius:999px;overflow:hidden;background:linear-gradient(90deg,#5a9c0a,#8ae017 72%,#d4ff9a);
+  box-shadow:0 0 8px rgba(150,230,40,.5),0 0 20px rgba(150,230,40,.26),0 4px 12px rgba(90,160,10,.3)}
+.pl-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.38) 12%,transparent 24%);background-size:240px 100%;animation:pl-sheen 2.8s linear infinite;mix-blend-mode:screen}
+@keyframes pl-sheen{from{background-position:-240px 0}to{background-position:120% 0}}
+.pl-fill.pl-dead{background:linear-gradient(90deg,#5a9c0a 52%,#c0362f);box-shadow:0 0 14px rgba(200,60,50,.38)}
+.pl-fill.pl-dead::after{display:none}
+
+.pl-nodes{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between}
+.pl-node{position:relative;width:64px;text-align:center;transform-style:preserve-3d}
+.pl-node .pl-shadow{position:absolute;top:94px;left:50%;width:38px;height:11px;margin-left:-19px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.72),transparent 70%);filter:blur(3.5px)}
+
+.pl-orb{position:relative;width:44px;height:44px;margin:38px auto 0;border-radius:50%;transform-style:preserve-3d}
+.pl-orb .pl-bezel{position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(from 215deg,#333a33,#545c54 24%,#333a33 50%,#454d45 74%,#333a33);box-shadow:0 7px 15px rgba(0,0,0,.55)}
+.pl-orb .pl-body{position:absolute;inset:0;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;
+  background:radial-gradient(circle at 50% 32%,#1b1f1a 0%,#121611 34%,#0a0d0a 66%,#060806 100%);
+  box-shadow:inset 0 -9px 16px rgba(0,0,0,.9),inset 0 8px 14px rgba(255,255,255,.015),inset 0 0 0 1px rgba(255,255,255,.03)}
+.pl-orb .pl-body::after{content:"";position:absolute;inset:3px;border-radius:50%;border:1px solid transparent;opacity:.9}
+.pl-orb .pl-reflect{position:absolute;top:47px;left:6px;right:6px;height:16px;border-radius:50%;transform:scaleY(-.55);opacity:.16;filter:blur(2px);background:radial-gradient(circle at 50% 30%,rgba(160,180,150,.5),transparent 60%)}
+
+.pl-pass .pl-bezel{background:conic-gradient(from 215deg,#2f4a08,#b4ff2e 26%,#2f4a08 52%,#a6f21e 76%,#2f4a08)}
+.pl-pass .pl-body{color:#b4ff2e} .pl-pass .pl-body::after{border-color:rgba(180,255,46,.4)}
+.pl-pass .pl-orb{animation:pl-float 5s ease-in-out infinite}
+.pl-pass:nth-child(2) .pl-orb{animation-delay:.6s}.pl-pass:nth-child(3) .pl-orb{animation-delay:1.2s}.pl-pass:nth-child(4) .pl-orb{animation-delay:1.8s}
+@keyframes pl-float{0%,100%{transform:translateZ(4px)}50%{transform:translateZ(13px)}}
+
+.pl-now .pl-bezel{background:conic-gradient(from 215deg,#5c3f0d,#ffce5c 26%,#5c3f0d 52%,#ffe08a 76%,#5c3f0d)}
+.pl-now .pl-body{color:#ffce5c} .pl-now .pl-body::after{border-color:rgba(255,206,92,.5)}
+.pl-now .pl-orb{animation:pl-cook 2.4s ease-in-out infinite}
+@keyframes pl-cook{0%,100%{transform:translateZ(8px) scale(1)}50%{transform:translateZ(20px) scale(1.05)}}
+.pl-now .pl-halo{position:absolute;top:30px;left:50%;width:64px;height:64px;margin-left:-32px;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,rgba(255,206,92,0) 0deg,rgba(255,206,92,.5) 90deg,rgba(255,206,92,0) 190deg);filter:blur(4px);opacity:.55;animation:pl-spin 3.4s linear infinite}
+@keyframes pl-spin{to{transform:rotate(360deg)}}
+
+.pl-fail .pl-bezel{background:conic-gradient(from 215deg,#4a1010,#ff6b6b 26%,#4a1010 52%,#ff9a9a 76%,#4a1010)}
+.pl-fail .pl-body{color:#ff6b6b} .pl-fail .pl-body::after{border-color:rgba(255,107,107,.4)}
+
+.pl-wait .pl-body{color:#454d45} .pl-wait .pl-body::after{border-color:rgba(255,255,255,.05)}
+
+.pl-lbl{margin-top:16px;transform:rotateX(-30deg)}
+.pl-lbl b{display:block;font-size:11px;font-weight:800;line-height:1.15;color:#eef3ee}
+.pl-lbl span{display:block;color:#98a298;font-size:9.5px;margin-top:3px;line-height:1.25}
+.pl-pass .pl-lbl b{color:#b4ff2e}.pl-now .pl-lbl b{color:#ffce5c}.pl-fail .pl-lbl b{color:#ff6b6b}.pl-wait .pl-lbl b{color:#7a847a}
+.pl-legend{display:flex;gap:20px;margin-top:22px;font-size:11px;color:#98a298}
+.pl-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.pl-l-pass i{background:#b4ff2e}.pl-l-now i{background:#ffce5c}.pl-l-fail i{background:#ff6b6b}.pl-l-wait i{background:#2a2f2a}
+
+/* ─── Compact mode — shrunken inline line for cook-off variant rows ───
+   Put .pl-compact on the container BEFORE calling renderProgressLine. Smaller
+   orbs (~28px), flatter track, no reflection/shadow, tighter labels. */
+.pl-compact .pl-stage{perspective:1100px;padding:20px 0 0}
+.pl-compact .pl-track{transform:rotateX(24deg);height:78px}
+.pl-compact .pl-rail{top:30px;height:9px}
+.pl-compact .pl-fill{top:32px;height:5px}
+.pl-compact .pl-node{width:38px}
+.pl-compact .pl-orb{width:28px;height:28px;margin-top:20px}
+.pl-compact .pl-orb .pl-body{font-size:10px}
+.pl-compact .pl-orb .pl-reflect{display:none}
+.pl-compact .pl-node .pl-shadow{display:none}
+.pl-compact .pl-now .pl-halo{top:16px;width:40px;height:40px;margin-left:-20px}
+.pl-compact .pl-lbl{margin-top:9px}
+.pl-compact .pl-lbl b{font-size:8.5px;font-weight:700;line-height:1.1}
+.pl-compact .pl-lbl span{display:none}

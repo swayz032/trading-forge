@@ -32,6 +32,7 @@ import { indicatorRoutes } from "./routes/indicators.js";
 import { backtestRoutes } from "./routes/backtests.js";
 import { agentRoutes } from "./routes/agent.js";
 import { carterWebhookRouter } from "./routes/carter-webhook.js";
+import { tradersPostConfirmRouter } from "./routes/traderspost-confirm.js";
 import { carterToolsRouter } from "./routes/carter-tools.js";
 import { monteCarloRoutes } from "./routes/monte-carlo.js";
 import complianceRoutes from "./routes/compliance.js";
@@ -111,7 +112,7 @@ import { liveOrderRoutes } from "./routes/live-order.js";
 import { fillCallbackRoutes } from "./routes/fill-callback.js";
 import { leakDetectionRoutes } from "./routes/leak-detection.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
-import { checkStartupSecrets } from "./lib/startup-config-check.js";
+import { checkStartupSecrets, startBootConfigReminderMonitor } from "./lib/startup-config-check.js";
 import { insertAuditRowSafe } from "./lib/audit-log-helper.js";
 
 // ─── Boot correlation (deepscan7 D2 / obs-M5, 2026-07-02) ─────────
@@ -156,9 +157,22 @@ await runPendingMigrations(bootCorrelationId);
 // Never throws — warn-only, never fail boot.
 await checkStartupSecrets();
 
+// deepscan17 G-1/G-3 (2026-07-05): a single boot-time WARN for the boot-launcher
+// and LIVE_ORDER_HMAC_SECRET gaps is easy to miss during a 30-day vacation.
+// This starts a 24h repeat that re-fires Discord only while each gap persists.
+// Idempotent + fail-soft — safe to call once here regardless of NODE_ENV/platform.
+startBootConfigReminderMonitor();
+
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
 // and any future notification channels (SNS/email) are aware immediately.
+//
+// deep-scan #21 HIGH fix (2026-07-05): setOnStateChange is now MULTI-SUBSCRIBER
+// (see circuit-breaker.ts::CircuitBreakerRegistry.setOnStateChange) — this
+// generic handler ADDS to, rather than replaces, any handler registered by an
+// earlier-imported module (e.g. broker-router.ts's TradersPost-specific
+// Discord/SSE/CLOSE-recovery handler, registered at that module's load time
+// via a transitive route import above). Both now fire on every transition.
 CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
   if (to === "OPEN") {
     AlertFactory.circuitOpen(name);
@@ -255,13 +269,31 @@ app.use("/api/carter/webhook", carterWebhookRouter);
 // Middleware
 app.use(express.json({ limit: "10mb" }));
 
+// Option B (deep-scan A): TradersPost order-status confirmation consumer. External callback —
+// mounted AFTER express.json (needs parsed body) but BEFORE authMiddleware (has its own optional
+// shared-secret gate via X-TradersPost-Confirm-Secret / TRADERSPOST_CONFIRM_SECRET). Only stamps
+// production_trades.traderspost_confirmed_at; no order flow. Inert until the operator wires it.
+app.use("/api/traderspost", tradersPostConfirmRouter);
+
 // Correlation ID — must be first /api middleware so all subsequent handlers have req.log
 app.use("/api", correlationMiddleware);
 
 // Rate limiting (before auth gate)
 app.use("/api", standardRateLimit);
 
-// Health check (no auth) — enhanced with DB connectivity + system metrics
+// Health check (no auth) — enhanced with DB connectivity + system metrics.
+//
+// Deep-scan #16 Wave 3 (#25b): the DB migration version + time-since-last-
+// successful-backtest fields added in Wave 2 (Track G2, #25) live ONLY on
+// `/api/health/dashboard` — the operator-facing diagnostic endpoint — and are
+// INTENTIONALLY NOT mirrored onto this base route. This is a k8s/load-balancer
+// LIVENESS probe: it is hit at high frequency and must stay fast + bounded (note
+// the Promise.race 2s cap on the single SELECT 1 below, added precisely so an
+// exhausted pool can't cascade into restart loops). The migration check is 2 more
+// DB round-trips and the backtest-freshness check is a 3rd — adding DB query load
+// proportional to probe frequency to a liveness probe is the wrong trade-off, and
+// those helpers are diagnostic (schema-drift / dead-conveyor detection), not
+// liveness signals. Read them from `/api/health/dashboard`, not here.
 app.get("/api/health", async (_req, res) => {
   const startMs = Date.now();
   let dbStatus = "ok";
@@ -663,17 +695,16 @@ app.use("/api", (err: Error, _req: express.Request, res: express.Response, _next
   res.status(500).json({ error: "Internal server error" });
 });
 
-// ─── Serve Frontend (production) ──────────────────────────────
-// Vite builds to Trading_forge_frontend/amber-vision-main/dist/
-// In prod (Railway), serve the built SPA from Express directly.
+// ─── Frontend ──────────────────────────────────────────────────
+// 2026-07-06: the old amber-vision-main React SPA was DELETED — Slumhouse (the PWA served by
+// slumhouseRouter from public/slumhouse/*, mounted above) is the ONLY frontend now. Bare/unknown
+// non-API routes redirect to the Slumhouse entry (the router handles all /slumhouse/* + /slumhouse/api/*).
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const frontendDist = path.resolve(__dirname, "../../Trading_forge_frontend/amber-vision-main/dist");
+void __dirname; // retained for other path.resolve uses / future static roots
 
-app.use(express.static(frontendDist));
-
-// SPA catch-all: any non-API route serves index.html (Express 5 syntax)
-app.get("/{*splat}", (_req, res) => {
-  res.sendFile(path.join(frontendDist, "index.html"));
+app.get("/{*splat}", (req, res) => {
+  if (req.path.startsWith("/api")) { res.status(404).json({ error: "not_found" }); return; }
+  res.redirect(302, "/slumhouse/");
 });
 
 process.on("unhandledRejection", (reason, _promise) => {

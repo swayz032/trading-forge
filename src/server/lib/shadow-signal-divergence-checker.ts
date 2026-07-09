@@ -263,7 +263,11 @@ export function compareShadowToBacktest(
     //  sole failure, which is captured by the unmatched branch above.)
   }
 
-  const divergingCount = violations.length;
+  // deep-scan Paper F-1: divergence_pct is the FRACTION OF SIGNALS that diverge (documented [0,1]).
+  // A single signal can push 2 violations (direction + size), so violations.length overcounts and
+  // can exceed sampleSize (→ divergence_pct > 1.0, breaking the bound + overstating the gate). Count
+  // DISTINCT diverging signals by shadow_idx; per_signal_violations still carries the full detail.
+  const divergingCount = new Set(violations.map((v) => v.shadow_idx)).size;
   const divergencePct = divergingCount / sampleSize;
 
   // ── Threshold gate: ≥ 5% divergence (boundary inclusive) → BLOCK ─────────

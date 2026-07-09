@@ -273,7 +273,16 @@ def apply_eligibility_gate(
     from src.engine.context.structural_stops import compute_structural_stop
     from src.engine.context.structural_targets import compute_targets
 
-    gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}, "skipped_signals": []}
+    # H5 fix (deep-scan #15, 2026-07-03): "structural_stop_map" captures, per
+    # admission bar, the STRUCTURAL stop distance that justified the signal
+    # passing the ceiling check below — so the trade-management loop can use
+    # the SAME stop instead of independently recomputing a fresh ATR-clamped
+    # distance. Keyed by int(bar_idx); always present (possibly empty) so
+    # callers can safely read it via gate_stats.get("structural_stop_map", {}).
+    gate_stats = {
+        "total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}, "skipped_signals": [],
+        "structural_stop_map": {},
+    }
 
     # ABLATION TOGGLE (2026-06-30, #4 two-mode backtest reporting): when TF_CONFLUENCE_OVERLAY_DISABLED=true the
     # institutional confluence overlay (this 7-layer A+ eligibility gate) is OFF, so the backtest measures the PURE
@@ -434,6 +443,17 @@ def apply_eligibility_gate(
                 max_stop_points=_get_stop_ceiling_for_symbol(symbol),
             )
 
+            # H5 fix (deep-scan #15, 2026-07-03): record the structural stop
+            # distance for this admission bar. Recorded regardless of the
+            # eventual TAKE/REDUCE/SKIP decision — cheap, and harmless for
+            # SKIPped signals since they never become a trade and are never
+            # looked up by the management loop.
+            gate_stats["structural_stop_map"][int(idx)] = {
+                "distance": abs(entry_price - stop_plan.stop_price),
+                "stop_price": stop_plan.stop_price,
+                "stop_reason": stop_plan.stop_reason,
+            }
+
             # Structural targets
             target_plan = compute_targets(
                 direction=direction,
@@ -518,6 +538,41 @@ def apply_eligibility_gate(
             gate_stats["skipped_signals"].append({"bar_idx": int(idx), "reason": "context_error"})
 
     return filtered, exit_signals, gate_stats
+
+
+def _build_eligibility_gate_mode_disclosure(
+    long_gate_stats: Optional[dict] = None,
+    short_gate_stats: Optional[dict] = None,
+) -> dict:
+    """C-3 fix (deep-scan #18c, 2026-07-05): build the additive
+    ``result["eligibility_gate_mode"]`` disclosure dict from the raw
+    ``gate_stats`` blobs returned by ``apply_eligibility_gate()`` for each side.
+
+    Prior to this fix, the main backtest path (``run_backtest()``) captured
+    the per-side gate_stats ONLY to extract ``structural_stop_map`` — the
+    ``"mode"`` field (one of ``source_entry_only`` / ``passthrough_htf_unavailable``
+    / ``passthrough_strategy_unregistered`` / ``tf_institutional_overlay``) was
+    computed by ``apply_eligibility_gate()`` but discarded, so a strategy
+    flipping from ``passthrough_strategy_unregistered`` to
+    ``tf_institutional_overlay`` (e.g. after ``playbook_router.ALL_STRATS``
+    registration) produced NO queryable record on the persisted backtest row.
+
+    Pure function — no I/O, no side effects, replay-deterministic. Callers pass
+    ``None`` for a side that never ran (gate disabled entirely via
+    ``use_eligibility_gate=False``, or no ``entry_short`` column present).
+
+    Returns:
+        {"long": <mode|None>, "long_passthrough_reason": <str|None>,
+         "short": <mode|None>, "short_passthrough_reason": <str|None>}
+    """
+    long_gate_stats = long_gate_stats or {}
+    short_gate_stats = short_gate_stats or {}
+    return {
+        "long": long_gate_stats.get("mode"),
+        "long_passthrough_reason": long_gate_stats.get("passthrough_reason"),
+        "short": short_gate_stats.get("mode"),
+        "short_passthrough_reason": short_gate_stats.get("passthrough_reason"),
+    }
 
 
 # G2: Backtest/Paper parity gates — skip engine + anti-setup filter + compliance gate.
@@ -888,6 +943,7 @@ def _apply_naked_management(
     df,
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    structural_stop_map: dict | None = None,
 ) -> list[dict]:
     """Exit Policy A — 'naked': session-EOD time exit ONLY.
 
@@ -923,9 +979,20 @@ def _apply_naked_management(
         if original_exit_idx - entry_idx > MAX_HOLD_BARS:
             original_exit_idx = entry_idx + MAX_HOLD_BARS
 
+        is_short = "Short" in direction_str
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # H5 fix (deep-scan #15, 2026-07-03): prefer the structural admission
+        # stop over the ATR clamp (see _resolve_stop_risk_points docstring).
+        # Policy A never actually places a stop (time-exit only) — risk_points
+        # here is metadata/reporting only — but it must stay consistent with
+        # the other 4 sites for R:R comparability across exit-policy axes.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
+            structural_stop_map=structural_stop_map,
+        )
 
         exit_price = original_exit_p
         exit_idx = original_exit_idx
@@ -963,6 +1030,7 @@ def _apply_naked_management(
             "size": size,
             "direction": direction_str,
             "risk_points": round(risk_points, 2),
+            "stop_basis": stop_basis,
             "exit_price": exit_price,
             "exit_idx": exit_idx,
             "exit_reason": exit_reason,
@@ -984,6 +1052,7 @@ def _apply_stop_only_management(
     df,
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    structural_stop_map: dict | None = None,
 ) -> list[dict]:
     """Exit Policy B — 'stop_only': initial stop loss + 15:55 ET time-stop.
 
@@ -1020,7 +1089,14 @@ def _apply_stop_only_management(
         is_short = "Short" in direction_str
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
+        # (see _resolve_stop_risk_points docstring) instead of the raw ATR clamp.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
+            structural_stop_map=structural_stop_map,
+        )
 
         # Initial stop — FIXED for the whole trade (no trailing, no BE move)
         if is_short:
@@ -1094,6 +1170,7 @@ def _apply_stop_only_management(
             "size": size,
             "direction": direction_str,
             "risk_points": round(risk_points, 2),
+            "stop_basis": stop_basis,
             "exit_price": exit_price,
             "exit_idx": exit_idx,
             "exit_reason": exit_reason,
@@ -1120,8 +1197,18 @@ def _apply_trade_management(
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext]
     exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
+    structural_stop_map: dict | None = None,
 ) -> list[dict]:
     """Bar-by-bar trade management dispatcher.
+
+    structural_stop_map (H5 fix, deep-scan #15, 2026-07-03): optional
+    {"long": {bar_idx: {...}}, "short": {...}} built by the caller from
+    apply_eligibility_gate()'s gate_stats["structural_stop_map"]. When
+    provided (and BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED is not disabled),
+    every downstream management function resolves its per-trade risk_points
+    from the STRUCTURAL admission stop instead of independently recomputing
+    an ATR-clamped distance. None (default) preserves pre-fix behavior
+    exactly — see _resolve_stop_risk_points().
 
     Wave 25 Gap B: branches on exit_engine to route to either the static Style C
     path (existing, unchanged) or the new adaptive path (Python mirror of TS engine).
@@ -1153,12 +1240,14 @@ def _apply_trade_management(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, df, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
+            structural_stop_map=structural_stop_map,
         )
     if exit_policy == "stop_only":
         return _apply_stop_only_management(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, df, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
+            structural_stop_map=structural_stop_map,
         )
     # exit_policy="full_overlay" (default) — fall through to existing dispatch below
 
@@ -1168,6 +1257,7 @@ def _apply_trade_management(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, df, adaptive_ctx, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
+            structural_stop_map=structural_stop_map,
         )
 
     # Wave 1 Track 1A: extract liquidity snapshot for static TP2 mapping.
@@ -1186,6 +1276,7 @@ def _apply_trade_management(
         spec, htf_cache, df, open_np=open_np,
         atr_stop_multiplier=atr_stop_multiplier,
         liquidity_snapshot=_static_liq_snapshot,
+        structural_stop_map=structural_stop_map,
     )
 
 
@@ -1201,6 +1292,7 @@ def _apply_static_styleC_management(
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
     liquidity_snapshot: Optional[list] = None,  # Wave 1 Track 1A: intraday levels for TP2 mapping
+    structural_stop_map: dict | None = None,  # H5 fix (deep-scan #15, 2026-07-03)
 ) -> list[dict]:
     """Style C static trade management.
 
@@ -1290,7 +1382,16 @@ def _apply_static_styleC_management(
         # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
         # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
+        # (the one that actually justified this trade passing the ceiling check
+        # in apply_eligibility_gate) instead of independently recomputing an
+        # ATR-clamped distance. See _resolve_stop_risk_points() docstring.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
+            structural_stop_map=structural_stop_map,
+        )
         # Min breathing room: 2pt for MES/ES (tick_size=0.25), scaled for other instruments
         tick = spec.tick_size if spec else 0.25
         min_trail = max(2.0, tick * 8)  # 8 ticks minimum breathing room
@@ -1452,28 +1553,45 @@ def _apply_static_styleC_management(
                         new_trail = bar_low + (2.0 * atr_at_bar)
                         trail_stop_p = min(trail_stop_p, new_trail)
 
-            # ── Blended exit price (mirrors adaptive path lines 1333-1354) ────
+            # ── Blended exit price (deepscan17 B-1 fix, 2026-07-05) ───────────
+            # PREVIOUS BUG: any stop_loss/trailing_stop/time_stop exit discarded
+            # banked TP1/TP2 profit outright (final_exit_p = exit_price_p), even
+            # though TP1->BE+1->eventual stop is the DESIGNED Style C lifecycle,
+            # not an edge case — this corrupted P&L on the MAJORITY of Style C
+            # trades feeding every downstream Sharpe/PF/DSR promotion gate.
+            # FIX: blend unconditionally from the filled fractions. The UNFILLED
+            # remainder uses exit_price_p (the actual stop/trail/time fill,
+            # gap-aware) when that's what closed the trade, else the bar close
+            # at the original signal exit (unchanged from the pre-fix "signal"
+            # branches). exit_reason_p is left untouched when the trade
+            # genuinely closed via stop/trailing/time_stop — the label still
+            # describes WHY it closed; only the price now reflects the banked
+            # partials. Repro (deepscan17 audit): MES long entry 5000, TP1 fill
+            # 5010 (33%), stop moves BE+1 5000.25, then trailing_stop with TP2
+            # unfilled -> blended = 0.33*5010 + 0.67*5000.25 = 5003.4675, not
+            # the pre-fix 5000.25.
             if exit_reason_p in ("stop_loss", "trailing_stop", "time_stop"):
-                final_exit_p = exit_price_p
-            elif tp1_filled_p and tp2_filled_p:
+                runner_exit_p = exit_price_p
+            else:
                 runner_exit_p = (
-                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else tp2_price_p
+                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else exit_price_p
                 )
+
+            if tp1_filled_p and tp2_filled_p:
                 final_exit_p = (
                     TP1_FRACTION_C * tp1_price_p
                     + TP2_FRACTION_C * tp2_price_p
                     + RUNNER_FRACTION_C * runner_exit_p
                 )
-                exit_reason_p = "take_profit"
+                if exit_reason_p not in ("stop_loss", "trailing_stop", "time_stop"):
+                    exit_reason_p = "take_profit"
             elif tp1_filled_p:
-                runner_exit_p = (
-                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else exit_price_p
-                )
                 final_exit_p = (
                     TP1_FRACTION_C * tp1_price_p
                     + (TP2_FRACTION_C + RUNNER_FRACTION_C) * runner_exit_p
                 )
-                exit_reason_p = "take_profit"
+                if exit_reason_p not in ("stop_loss", "trailing_stop", "time_stop"):
+                    exit_reason_p = "take_profit"
             else:
                 final_exit_p = exit_price_p
 
@@ -1485,6 +1603,7 @@ def _apply_static_styleC_management(
                 "size": size,
                 "direction": direction_str,
                 "risk_points": round(risk_points, 2),
+                "stop_basis": stop_basis,
                 "exit_price": final_exit_p,
                 "exit_idx": exit_idx_p,
                 "exit_reason": exit_reason_p,
@@ -1529,6 +1648,7 @@ def _apply_static_styleC_management(
             "size": size,
             "direction": direction_str,
             "risk_points": round(risk_points, 2),
+            "stop_basis": stop_basis,
         }
 
         # If no structural TP gives >= 2R, use original exit (no TP enforcement
@@ -1682,6 +1802,7 @@ def _apply_adaptive_management(
     adaptive_ctx,   # AdaptiveExitContext — required (caller already checked not None)
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    structural_stop_map: dict | None = None,  # H5 fix (deep-scan #15, 2026-07-03)
 ) -> list[dict]:
     """Adaptive exit management — Wave 25 Gap B Python implementation.
 
@@ -1796,7 +1917,14 @@ def _apply_adaptive_management(
         # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
         # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
+        # instead of the raw ATR clamp. See _resolve_stop_risk_points() docstring.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
+            structural_stop_map=structural_stop_map,
+        )
         tick = spec.tick_size if spec else 0.25
 
         # Initial stop price
@@ -1950,12 +2078,35 @@ def _apply_adaptive_management(
 
                 elif runner_method == "chandelier":
                     # Chandelier: ATR-based trail below the most recent bar high (longs).
+                    # B-9 fix (deepscan17, 2026-07-05): TS adaptive-exit-engine.ts uses
+                    # a regime-aware chandelier multiplier (Wave 26 Pass L Tweak 1) —
+                    # 2.5x for TRENDING_UP/TRENDING_DOWN/EXPANSION (StratBase 2026-02:
+                    # PF 1.56 @ 2.5x vs PF 1.44 @ 2.0x on trending regimes), 2.0x
+                    # otherwise (env STOP_CHANDELIER_MULTIPLIER_TRENDING). This branch
+                    # hardcoded 2.0x unconditionally, ignoring regime_default (already
+                    # in scope from the top of this function) — a TS<->Python parity
+                    # gap. Dormant under the DEFAULT regime->method map (chandelier is
+                    # only routed for HIGH_VOL_MACRO by default; trending regimes route
+                    # to anchored_vwap) but activates the moment an operator maps a
+                    # trending regime to chandelier via exit_plan_config.
+                    _is_trending_regime = regime_default in ("TRENDING_UP", "TRENDING_DOWN", "EXPANSION")
+                    if _is_trending_regime:
+                        try:
+                            _chandelier_mult = float(
+                                os.environ.get("STOP_CHANDELIER_MULTIPLIER_TRENDING", "2.5")
+                            )
+                            if not math.isfinite(_chandelier_mult):
+                                _chandelier_mult = 2.5
+                        except (TypeError, ValueError):
+                            _chandelier_mult = 2.5
+                    else:
+                        _chandelier_mult = 2.0
                     atr_at_bar = float(atr_np[bar]) if bar < len(atr_np) and not np.isnan(atr_np[bar]) else atr_at_entry
                     if not is_short:
-                        new_trail = bar_high - (2.0 * atr_at_bar)
+                        new_trail = bar_high - (_chandelier_mult * atr_at_bar)
                         trail_stop = max(trail_stop, new_trail)
                     else:
-                        new_trail = bar_low + (2.0 * atr_at_bar)
+                        new_trail = bar_low + (_chandelier_mult * atr_at_bar)
                         trail_stop = min(trail_stop, new_trail)
 
                 else:
@@ -1969,26 +2120,38 @@ def _apply_adaptive_management(
                         new_trail = bar_low + max(risk_points, min_trail)
                         trail_stop = min(trail_stop, new_trail)
 
-        # ── Blended exit price ──────────────────────────────────────────
+        # ── Blended exit price (deepscan17 B-1 fix, 2026-07-05) ──────────
         # Multi-leg scaling: approximate P&L from separate lot fills.
+        # PREVIOUS BUG: same as _apply_static_styleC_management — a
+        # stop/trailing/time_stop exit discarded any TP1/TP2 profit already
+        # banked instead of blending it in. See that function's docstring
+        # for the full repro. FIX: blend unconditionally; the UNFILLED
+        # remainder uses exit_price (actual stop/trail/time fill, gap-aware)
+        # when that's what closed the trade, else bar close at signal exit.
+        # exit_reason is left untouched for genuine stop/trailing/time_stop
+        # closes — it still describes WHY the trade closed.
         if exit_reason in ("stop_loss", "trailing_stop", "time_stop"):
-            # Stop / time-stop always overrides scale-out — single price
-            final_exit = exit_price
-        elif tp1_filled and tp2_filled:
-            runner_exit = float(close_np[exit_idx]) if exit_idx < len(close_np) else tp2_price
+            runner_exit = exit_price
+        else:
+            runner_exit = (
+                float(close_np[exit_idx]) if exit_idx < len(close_np) else exit_price
+            )
+
+        if tp1_filled and tp2_filled:
             final_exit = (
                 scaling.tp1_pct * tp1_price
                 + scaling.tp2_pct * tp2_price
                 + scaling.runner_pct * runner_exit
             )
-            exit_reason = "take_profit"
+            if exit_reason not in ("stop_loss", "trailing_stop", "time_stop"):
+                exit_reason = "take_profit"
         elif tp1_filled:
-            runner_exit = float(close_np[exit_idx]) if exit_idx < len(close_np) else exit_price
             final_exit = (
                 scaling.tp1_pct * tp1_price
                 + (scaling.tp2_pct + scaling.runner_pct) * runner_exit
             )
-            exit_reason = "take_profit"
+            if exit_reason not in ("stop_loss", "trailing_stop", "time_stop"):
+                exit_reason = "take_profit"
         else:
             final_exit = exit_price
 
@@ -2000,6 +2163,7 @@ def _apply_adaptive_management(
             "size": size,
             "direction": direction_str,
             "risk_points": round(risk_points, 2),
+            "stop_basis": stop_basis,
             "exit_price": final_exit,
             "exit_idx": exit_idx,
             "exit_reason": exit_reason,
@@ -2768,6 +2932,85 @@ def _get_stop_ceiling_for_symbol(symbol: str) -> float:
     return default
 
 
+# ─── H5 fix — admission-stop parity (deep-scan #15, 2026-07-03) ─────────────
+# FINDING: apply_eligibility_gate() computes compute_structural_stop() per
+# signal (sweep_wick > order_block > FVG > swing_point, ceiling-checked) to
+# decide TAKE/REDUCE/SKIP — but historically discarded that stop_plan after the
+# decision. The trade-management loops (naked / stop_only / static Style C /
+# adaptive / R:R reporting) then independently recomputed
+# risk_points = min(ceiling, atr_at_entry * atr_stop_multiplier) — a DIFFERENT,
+# purely ATR-based stop the strategy's own risk model never validated. So the
+# simulated stop-out fired at a price admission never approved.
+#
+# FIX: apply_eligibility_gate() now threads its per-bar structural distance
+# forward via gate_stats["structural_stop_map"] (see above). Callers merge the
+# long/short maps into {"long": {...}, "short": {...}} and pass it to
+# _apply_trade_management() / the 4 management functions, which resolve their
+# risk_points via _resolve_stop_risk_points() below instead of the raw ATR
+# clamp. Byte-identical fallback preserved when the flag is off or no
+# structural entry exists for the trade's admission bar.
+def _structural_stop_parity_enabled() -> bool:
+    """Feature flag for the H5 admission-stop-parity fix.
+
+    Default OFF (2026-07-03, operator decision): the fix is correct and shipped,
+    but flipping it ON re-baselines every backtest (old vs new numbers stop being
+    apples-to-apples). To avoid a surprising system-wide change, it defaults OFF —
+    backtests keep their legacy atr_at_entry * atr_stop_multiplier ceiling-clamp
+    behavior BYTE-IDENTICALLY until the operator opts in after reviewing the real
+    A/B magnitude on their own strategies. Set
+    BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED=true to activate the corrected
+    structural-stop management (and re-run backtests before comparing metrics).
+    """
+    return os.environ.get("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "false").lower() in ("1", "true", "yes")
+
+
+def _resolve_stop_risk_points(
+    entry_idx: int,
+    is_short: bool,
+    atr_fallback_points: float,
+    stop_ceiling: float,
+    structural_stop_map: dict | None,
+) -> tuple:
+    """Resolve the per-trade stop distance (risk_points) for trade management.
+
+    H5 fix (deep-scan #15, 2026-07-03). Prefers the STRUCTURAL admission stop
+    distance captured by apply_eligibility_gate() over the legacy
+    atr_at_entry * atr_stop_multiplier clamp, when available and enabled.
+
+    `structural_stop_map` is the {"long": {bar_idx: {...}}, "short": {...}}
+    dict built by callers from apply_eligibility_gate()'s gate_stats. Lookup
+    key is `entry_idx - 1` because vectorbt's "Entry Idx" is the FILL bar
+    (signal bar shifted +1 by the next-bar-fill np.roll(entries_np, 1)), while
+    apply_eligibility_gate recorded distances against the original SIGNAL bar.
+
+    The ceiling is still applied as a belt-and-suspenders hard cap even though
+    an admitted trade's structural distance is already <= ceiling by
+    construction (compute_structural_stop sets skip_trade=True and the gate
+    discards the signal otherwise) — never trust a second code path blindly.
+
+    Falls back to `atr_fallback_points` (byte-identical to pre-fix behavior)
+    when the flag is off, no map was threaded through (e.g. htf_cache
+    unavailable — the gate ran in passthrough mode), or the admission bar
+    genuinely has no recorded structural entry.
+
+    Returns (risk_points: float, stop_basis: str) with stop_basis in
+    {"structural", "atr_fallback"}.
+    """
+    if structural_stop_map and _structural_stop_parity_enabled():
+        direction_key = "short" if is_short else "long"
+        sub_map = (
+            structural_stop_map.get(direction_key)
+            if isinstance(structural_stop_map, dict) else None
+        )
+        if sub_map:
+            signal_bar_idx = entry_idx - 1
+            entry = sub_map.get(signal_bar_idx)
+            distance = entry.get("distance") if isinstance(entry, dict) else entry
+            if distance is not None and distance > 0:
+                return min(float(distance), stop_ceiling), "structural"
+    return atr_fallback_points, "atr_fallback"
+
+
 # ─── Wave 1 Track 1A — Stop floor per symbol ─────────────────────────────────
 # A floor widens a stop that is too tight (prevents trivial fills from noise).
 # Floor is applied BEFORE the ceiling check.  Precedence:
@@ -2806,6 +3049,141 @@ def _get_stop_floor_for_symbol(symbol: str) -> Optional[float]:
         except ValueError:
             return default
     return default
+
+
+# ── Slippage-Survival Gate (Wave A, 2026-07-03) — engine producer ──────────
+# Design spec: docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+#
+# The engine ALWAYS computes + emits this block (cheap — reuses per-trade
+# GrossPnL/SlippageCost already computed by the P&L loop). Gate ENABLE and
+# BLOCK-multiple threshold logic live entirely on the TS side
+# (src/server/lib/slippage-survival-gate.ts) — this module does NOT read
+# SLIPPAGE_SURVIVAL_GATE_ENABLED or SLIPPAGE_SURVIVAL_BLOCK_MULT. It only
+# reads the sweep-shape config (which multiples to test, and the survival
+# thresholds the pure sweep math itself needs to compute `breaks_at`):
+#   SLIPPAGE_SURVIVAL_MULTIPLES    (default "1,2,3")
+#   SLIPPAGE_SURVIVAL_MIN_PF       (default 1.0)
+#   SLIPPAGE_SURVIVAL_MIN_TRADES   (default 20)
+def _parse_slippage_survival_multiples() -> list[float]:
+    """Parse SLIPPAGE_SURVIVAL_MULTIPLES ("1,2,3") into an ascending, positive-only float list.
+
+    Review-pass fix (2026-07-03): `breaks_at` short-circuits on the FIRST
+    not-alive multiple in the order the list is iterated — a misconfigured
+    env var like "3,2,1" would evaluate 3x before 1x/2x and report the wrong
+    `breaks_at`. Sorting ascending here (not just documenting "callers must
+    pass ascending") makes this correct-by-construction regardless of how
+    the env var is set. Non-positive values (0 or negative multiples are not
+    a meaningful stress level) are dropped.
+    """
+    raw = os.environ.get("SLIPPAGE_SURVIVAL_MULTIPLES", "1,2,3")
+    try:
+        parsed = [float(x.strip()) for x in raw.split(",") if x.strip() != ""]
+        positive_sorted = sorted(m for m in parsed if m > 0)
+        return positive_sorted if positive_sorted else [1.0, 2.0, 3.0]
+    except (ValueError, TypeError):
+        return [1.0, 2.0, 3.0]
+
+
+def _parse_slippage_survival_min_pf() -> float:
+    """Parse SLIPPAGE_SURVIVAL_MIN_PF (default 1.0).
+
+    Review-pass fix (2026-07-03): guard against a negative override (would
+    make every multiple trivially "alive" on the PF leg of the alive-check,
+    since profit factor is never negative) — fall back to the institutional
+    default rather than accepting a nonsensical threshold, matching the
+    defensiveness already present on the TS-side env readers.
+    """
+    try:
+        parsed = float(os.environ.get("SLIPPAGE_SURVIVAL_MIN_PF", "1.0"))
+        return parsed if parsed >= 0 else 1.0
+    except (ValueError, TypeError):
+        return 1.0
+
+
+def _parse_slippage_survival_min_trades() -> int:
+    """Parse SLIPPAGE_SURVIVAL_MIN_TRADES (default 20).
+
+    Review-pass fix (2026-07-03): guard against a negative override (would
+    make `insufficient_sample` structurally impossible to trigger, since
+    `n_trades < negative` is never true for a non-negative trade count) —
+    fall back to the institutional default, matching the TS-side pattern.
+    """
+    try:
+        parsed = int(float(os.environ.get("SLIPPAGE_SURVIVAL_MIN_TRADES", "20")))
+        return parsed if parsed >= 0 else 20
+    except (ValueError, TypeError):
+        return 20
+
+
+def _compute_slippage_survival_block(trades_list: list[dict]) -> dict:
+    """Build the `result["slippage_survival"]` JSONB block for a completed backtest.
+
+    Sources per-trade gross P&L + per-trade slippage/commission/roll dollars
+    from the SAME "GrossPnL" / "SlippageCost" / "CommissionCost" /
+    "RollSpreadCost" keys the P&L loop already writes onto each trade dict
+    (see run_backtest()/run_class_backtest() trade-construction loops) — no
+    new per-trade capture needed, no re-run of the backtest.
+
+    Review-pass fix (2026-07-03): commission + roll are now threaded through
+    so the sweep's net_pnl_M holds them FIXED and stresses only slippage
+    (`net_pnl_M = gross - commission - roll - M*slippage`) — the v1 formula
+    silently omitted commission/roll, inflating the 1x baseline relative to
+    the trade's TRUE realized net and letting fee-heavy net-losers show
+    "alive at 1x". "CommissionCost"/"RollSpreadCost" default to 0.0 when
+    absent from a trade dict (some paths legitimately have no roll cost —
+    e.g. no rollover day in the backtest window); "GrossPnL"/"SlippageCost"
+    are NOT given this leniency here because by construction every trade in
+    `trades_list` was JUST written by the SAME function call that builds
+    this block (backtester.py:4771-4775 / :6577-6581) — there is no
+    realistic path for those two keys to be absent in this direct-call
+    context (unlike the WF aggregate case in walk_forward.py, which
+    explicitly checks for and reports missing Gross/Slippage keys as an
+    error envelope rather than defaulting).
+
+    Calls the pure helper `compute_slippage_survival()` (no I/O, no clock)
+    and then additively stamps `computed_at` here in the caller — the pure
+    helper is required to stay clock-free for the replay-determinism
+    contract; the wall-clock timestamp is purely informational/audit
+    metadata and must never affect the sweep math itself.
+
+    Fail-soft: a computation error never aborts the primary backtest result;
+    it degrades to a documented error envelope so the failure is VISIBLE
+    (audit-able) rather than silently absent (the #1 pinned producer-gate
+    disconnect failure class).
+    """
+    from datetime import datetime, timezone
+
+    try:
+        from src.engine.statistics.slippage_survival import compute_slippage_survival
+
+        gross_pnls = [float(t.get("GrossPnL", 0.0)) for t in trades_list]
+        slippage_dollars = [float(t.get("SlippageCost", 0.0)) for t in trades_list]
+        commission_dollars = [float(t.get("CommissionCost", 0.0)) for t in trades_list]
+        roll_dollars = [float(t.get("RollSpreadCost", 0.0)) for t in trades_list]
+
+        block = compute_slippage_survival(
+            gross_pnls=gross_pnls,
+            slippage_dollars=slippage_dollars,
+            commission_dollars=commission_dollars,
+            roll_dollars=roll_dollars,
+            multiples=_parse_slippage_survival_multiples(),
+            min_pf=_parse_slippage_survival_min_pf(),
+            min_trades=_parse_slippage_survival_min_trades(),
+        )
+        block["computed_at"] = datetime.now(timezone.utc).isoformat()
+        return block
+    except Exception as _ss_err:
+        print(
+            f"WARNING: slippage_survival computation failed (non-fatal, "
+            f"degraded envelope emitted): {_ss_err}",
+            file=sys.stderr,
+        )
+        return {
+            "schema_version": 1,
+            "error": str(_ss_err)[:300],
+            "n_trades": len(trades_list) if isinstance(trades_list, list) else 0,
+            "computed_at": datetime.now(timezone.utc).isoformat(),
+        }
 
 
 def _apply_dsl_stop_loss_and_time_stop(
@@ -3600,6 +3978,13 @@ def run_backtest(
     # behavior (gate at entry evaluation time, not indicator computation time).
     # Empty list → no restriction (backward compatible).
     skipped_outside_window_count = 0
+    # deepscan16 Wave-1 Track2 HIGH E-10: count of signals dropped because their bar
+    # timestamp was malformed/None and could not be checked against the declared
+    # entry-window restriction. Distinct from skipped_outside_window_count (a
+    # successfully-checked bar that fell outside the window) so operators/
+    # accuracy-validator can tell "window enforced, bar excluded" apart from
+    # "window could NOT be enforced, bar dropped defensively".
+    bad_timestamp_entry_window_count = 0
     _entry_windows_raw = getattr(config, "allowed_entry_windows", None)
     if _entry_windows_raw:
         import datetime as _dt
@@ -3637,6 +4022,13 @@ def run_backtest(
                     continue
 
                 # Convert ts to UTC-aware datetime for window check
+                # deepscan16 Wave-1 Track2 HIGH E-10 fix: a corrupted/malformed/None
+                # ts_event previously fell through to "allow signal" (fail-OPEN) with
+                # no counter and no log — silently bypassing the strategy's declared
+                # trading-window restriction and inflating promotion metrics. Both
+                # unparseable-timestamp branches below now fail-CLOSED (drop the
+                # signal, same as an out-of-window bar) and increment a dedicated
+                # counter so the result dict / promotion layer can see it happened.
                 if isinstance(ts_val, str):
                     # ISO string — parse to datetime
                     ts_str = ts_val.replace("T", " ").replace("Z", "+00:00")
@@ -3645,20 +4037,22 @@ def run_backtest(
                         if bar_dt.tzinfo is None:
                             bar_dt = bar_dt.replace(tzinfo=_dt.timezone.utc)
                     except Exception:
-                        # Unparseable timestamp — allow signal (fail-open)
-                        _new_long.append(el)
+                        # Unparseable timestamp — fail-CLOSED (drop signal)
+                        bad_timestamp_entry_window_count += (1 if el else 0) + (1 if es else 0)
+                        _new_long.append(False)
                         if _new_short is not None:
-                            _new_short.append(es)
+                            _new_short.append(False)
                         continue
                 elif isinstance(ts_val, _dt.datetime):
                     bar_dt = ts_val
                     if bar_dt.tzinfo is None:
                         bar_dt = bar_dt.replace(tzinfo=_dt.timezone.utc)
                 else:
-                    # Unknown type — allow signal (fail-open)
-                    _new_long.append(el)
+                    # Unknown/None type — fail-CLOSED (drop signal)
+                    bad_timestamp_entry_window_count += (1 if el else 0) + (1 if es else 0)
+                    _new_long.append(False)
                     if _new_short is not None:
-                        _new_short.append(es)
+                        _new_short.append(False)
                     continue
 
                 in_any_window = is_bar_in_any_window(bar_dt, _entry_windows)
@@ -3681,6 +4075,16 @@ def run_backtest(
                 print(
                     f"W23H.3 entry windows: masked {skipped_outside_window_count} entry signals "
                     f"outside windows {_entry_windows_raw}",
+                    file=sys.stderr,
+                )
+            if bad_timestamp_entry_window_count > 0:
+                # deepscan16 Wave-1 Track2 HIGH E-10: dedicated log line (mirrors the
+                # masked-count log above) so a corrupted ts_event run is visible in
+                # stderr, not just in the result dict.
+                print(
+                    f"W23H.3 WARNING: {bad_timestamp_entry_window_count} entry signals dropped "
+                    f"(fail-closed) due to unparseable/None bar timestamps — entry-window "
+                    f"restriction could not be evaluated for these bars",
                     file=sys.stderr,
                 )
 
@@ -4027,8 +4431,22 @@ def run_backtest(
     # ─── Eligibility gate (Wave 2.8 integration point) ─────────
     entries_np = df["entry_long"].to_numpy()
     exits_np = df["exit_long"].to_numpy()
+    # H5 fix (deep-scan #15, 2026-07-03): merged {"long": {...}, "short": {...}}
+    # structural-stop-distance map threaded to _apply_trade_management() below
+    # so the management loop uses the SAME stop that justified admission.
+    _dsl_structural_stop_map: dict = {"long": {}, "short": {}}
+    # C-3 fix (deep-scan #18c, 2026-07-05): surface gate_stats["mode"] (+
+    # "passthrough_reason") from apply_eligibility_gate() into the persisted
+    # result via _build_eligibility_gate_mode_disclosure() so the
+    # passthrough<->gated flip is queryable, not silently dropped. See that
+    # helper's docstring for the full rationale. _dsl_long_gate_stats /
+    # _dsl_short_gate_stats default to None so a run with
+    # use_eligibility_gate=False (or no entry_short column) still produces a
+    # well-shaped (if partially null) disclosure dict.
+    _dsl_long_gate_stats: Optional[dict] = None
+    _dsl_short_gate_stats: Optional[dict] = None
     if use_eligibility_gate:
-        entries_np, exits_np, _ = apply_eligibility_gate(
+        entries_np, exits_np, _dsl_long_gate_stats = apply_eligibility_gate(
             entries_np, exits_np, df,
             direction="long", symbol=config.symbol,
             firm_key=request.firm_key,
@@ -4036,6 +4454,7 @@ def run_backtest(
             strategy_name=_dsl_strategy_name,
             passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
         )
+        _dsl_structural_stop_map["long"] = _dsl_long_gate_stats.get("structural_stop_map", {})
         # Update DataFrame with filtered signals
         df = df.with_columns([
             pl.Series("entry_long", entries_np),
@@ -4045,7 +4464,7 @@ def run_backtest(
         if "entry_short" in df.columns:
             short_entries_np = df["entry_short"].to_numpy()
             short_exits_np = df["exit_short"].to_numpy()
-            short_entries_np, short_exits_np, _ = apply_eligibility_gate(
+            short_entries_np, short_exits_np, _dsl_short_gate_stats = apply_eligibility_gate(
                 short_entries_np, short_exits_np, df,
                 direction="short", symbol=config.symbol,
                 firm_key=request.firm_key,
@@ -4053,10 +4472,14 @@ def run_backtest(
                 strategy_name=_dsl_strategy_name,
                 passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
             )
+            _dsl_structural_stop_map["short"] = _dsl_short_gate_stats.get("structural_stop_map", {})
             df = df.with_columns([
                 pl.Series("entry_short", short_entries_np),
                 pl.Series("exit_short", short_exits_np),
             ])
+    _dsl_eligibility_gate_mode = _build_eligibility_gate_mode_disclosure(
+        _dsl_long_gate_stats, _dsl_short_gate_stats,
+    )
 
     # ─── G2 parity gate (skip + anti-setup, default off) ────────
     # W27.5 C.2: per-backtest compliance_mode override wins over env var.
@@ -4170,6 +4593,7 @@ def run_backtest(
         if request.fill_model:
             from src.engine.fill_model import (
                 apply_fill_model,
+                apply_volume_partial_fills,
                 compute_fill_probabilities_v2,
             )
             fill_config = request.fill_model.model_dump()
@@ -4180,6 +4604,42 @@ def run_backtest(
                 spread_multiplier=spread_multiplier,
             )
             short_entries_np, short_adjusted_sizes = apply_fill_model(short_entries_np, short_fill_probs, sizes.copy(), seed=43)
+
+            # B-6 fix (deepscan17, 2026-07-05): PREVIOUS BUG — Stage 2
+            # (volume-based partial fill, HIGH #6) was applied to the long
+            # entry mask only (see apply_volume_partial_fills call above on
+            # entries_np/sizes). Short entries only ever went through Stage 1
+            # (RSI/type-based apply_fill_model) — a large-size short entry on
+            # a thin-volume bar was backtested as fully filled while the
+            # symmetric long entry on the same bar/volume would have been
+            # degraded. Apply the identical Stage 2 model to the short mask
+            # so both directions share the same fill-realism contract.
+            short_adjusted_sizes, _short_vol_fill_ratios, _short_partial_fill_audit = (
+                apply_volume_partial_fills(short_entries_np, short_adjusted_sizes, df)
+            )
+            # Merge short-side counts into the long-side audit dict so
+            # engine_audit.partial_fill_modeled reflects BOTH directions
+            # rather than under-reporting (schema unchanged — same keys,
+            # combined counts).
+            if _partial_fill_audit:
+                _long_n = _partial_fill_audit.get("total_orders", 0)
+                _short_n = _short_partial_fill_audit.get("total_orders", 0)
+                _combined_n = _long_n + _short_n
+                _combined_partials = (
+                    _partial_fill_audit.get("partial_fills", 0)
+                    + _short_partial_fill_audit.get("partial_fills", 0)
+                )
+                if _combined_n > 0:
+                    _combined_avg_ratio = (
+                        _partial_fill_audit.get("avg_fill_ratio", 1.0) * _long_n
+                        + _short_partial_fill_audit.get("avg_fill_ratio", 1.0) * _short_n
+                    ) / _combined_n
+                else:
+                    _combined_avg_ratio = 1.0
+                _partial_fill_audit["total_orders"] = _combined_n
+                _partial_fill_audit["partial_fills"] = _combined_partials
+                _partial_fill_audit["avg_fill_ratio"] = round(_combined_avg_ratio, 4)
+
             # Merge short partial fill adjustments into main sizes array
             # (safe: same bar can't have both long and short entry)
             short_fill_mask = short_entries_np.astype(bool)
@@ -4238,12 +4698,22 @@ def run_backtest(
     # Blackout gate: parity with paper-signal-service.ts blackout_windows.
     # Cross-symbol DLL: parity with cross-symbol-pnl.ts evaluateCrossSymbolDll().
     # Both are fail-safe: any error is logged and the run continues without them.
+    # deepscan16 Wave-1 Track2 E-1: guards_failed/guards_failed_reason default to the
+    # clean (guards-ran) state. The E.3/E.4/E.5 try/except below (search "CRITICAL #1")
+    # flips these to True/<reason> on ANY exception so the result dict carries a
+    # machine-readable "guards did not run" signal instead of silently proceeding
+    # clean. guards_failed_audit_action names the row the TS backtest-service should
+    # write to audit_log — mirrors the pbo_audit_actions / cross_symbol_dll disclosure
+    # pattern already used in this module (Python has no direct DB access here).
     _dsl_guards_meta: dict = {
         "stop_ceiling_skips": 0,
         "time_stop_exits": 0,
         "dll_halt_blocks": 0,
         "blackout_skips": 0,
         "cross_symbol_dll_halts": 0,
+        "guards_failed": False,
+        "guards_failed_reason": None,
+        "guards_failed_audit_action": None,
     }
 
     _guard_ts_list_early = (
@@ -4473,8 +4943,18 @@ def run_backtest(
             short_exits_pd = pd.Series(_guard_exit_short, index=short_exits_pd.index)
 
     except Exception as _dsl_guard_err:
-        # Guards are fail-safe: if anything goes wrong, log and continue without them.
-        # The backtest still runs; it just won't have E.3/E.4/E.5 enforcement.
+        # deepscan16 Wave-1 Track2 CRITICAL E-1 fix: this catch-all previously logged
+        # one stderr line and silently proceeded CLEAN — an unguarded backtest (no ATR
+        # stop-ceiling / no 67% DLL halt / no 15:55 hard time-stop) could show great
+        # Sharpe/PF/DSR and sail through WFE/PBO/B14 to DEPLOY_READY with zero
+        # machine-readable trace that the guards never ran. Guards are still fail-safe
+        # (the backtest itself does not abort), but the result dict now carries an
+        # explicit "guards did not run" flag + reason + audit-action name (mirrors the
+        # cross_symbol_dll disclosure block above) so the promotion layer / an operator
+        # / accuracy-validator can treat this run as UNGUARDED rather than clean.
+        _dsl_guards_meta["guards_failed"] = True
+        _dsl_guards_meta["guards_failed_reason"] = repr(_dsl_guard_err)
+        _dsl_guards_meta["guards_failed_audit_action"] = "backtest.dsl_guards_failed"
         print(
             f"[DSL guards] ERROR — guards skipped (non-fatal): {_dsl_guard_err!r}",
             file=sys.stderr,
@@ -4578,6 +5058,7 @@ def run_backtest(
             vbt_managed_trades = _apply_trade_management(
                 trades_records, high_np, low_np, vbt_close_np, vbt_atr_np,
                 spec, _dsl_htf_cache, df, open_np=vbt_open_np,
+                structural_stop_map=_dsl_structural_stop_map,
             )
             vbt_gap_through_count = sum(m.get("gap_through_stop_count", 0) for m in vbt_managed_trades)
             if vbt_gap_through_count > 0:
@@ -4618,6 +5099,12 @@ def run_backtest(
             df["ts_event"].to_list() if "ts_event" in df.columns else []
         )
         _roll_spread_audit_rows: list[dict] = []
+        # deep-scan backtest-engine F-2 (HIGH, 2026-07-06): capture FULL-PRECISION (entry, exit) prices per
+        # trade so the bar-level equity loop below reconciles against the same values `gross`/`net_pnl` used,
+        # NOT the 4-decimal ROUNDED trade-dict fields. The rounded fields (round(exit_p, 4) at ~line 5225)
+        # accumulate representation error that trips the $1 reconciliation guard at MCL's $100/point scale —
+        # the SAME "Defect-6" bug fixed only in run_class_backtest via _raw_price_pairs_cls (~line 7187).
+        _raw_price_pairs: list[tuple[float, float]] = []
 
         for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
@@ -4627,15 +5114,23 @@ def run_backtest(
 
             # C4: Use managed exit price (correct intraday stop/TP price) when
             # available; fall back to vectorbt's bar-close exit price otherwise.
+            # H5 fix (deep-scan #15, 2026-07-03): also carry forward the
+            # risk_points/stop_basis the management loop actually used, so the
+            # R:R computed below (site 5 of the H5 fix) can never diverge from
+            # the risk basis the trade was actually managed against.
             if trade_i < len(vbt_managed_trades):
                 mgmt = vbt_managed_trades[trade_i]
                 exit_p = mgmt["exit_price"]
                 exit_idx = mgmt["exit_idx"]
                 exit_reason = mgmt.get("exit_reason", "signal")
+                _mgmt_risk_points = mgmt.get("risk_points")
+                _mgmt_stop_basis = mgmt.get("stop_basis", "atr_fallback")
             else:
                 exit_p = float(row["Avg Exit Price"])
                 exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
                 exit_reason = "signal"
+                _mgmt_risk_points = None
+                _mgmt_stop_basis = "atr_fallback"
 
             # H2 FIX: Real brokers charge per integer contract only.
             # Fractional sizes (e.g. 4.3) from risk-derived sizing must be floored
@@ -4742,14 +5237,26 @@ def run_backtest(
             trade["RollSpreadCost"] = round(_roll_cost_usd, 4)
 
             # ─── Per-trade R:R (reward / risk) ─────────────────────
-            # Risk = ATR at entry × atr_sl_mult × point_value (1R stop in $)
-            # L3 FIX: Read atr_multiplier from config instead of hardcoded 2.0.
-            # The W23-D R-multiple gate depends on this being correct.
-            atr_col_name = "atr_14"
-            atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
-            sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
-            # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not flat 6.0pt (see mgmt loops above).
-            risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(_symbol_of_spec(spec)))
+            # H5 fix (deep-scan #15, 2026-07-03): read the risk_points the
+            # management loop ACTUALLY used (captured above as _mgmt_risk_points)
+            # instead of independently recomputing atr_at_entry * sl_mult. This
+            # guarantees R:R reporting can never diverge from the stop basis the
+            # trade was actually managed against (structural or ATR-fallback —
+            # see _resolve_stop_risk_points()). Falls back to the legacy ATR
+            # recompute only when no managed-trade record exists for this trade
+            # (mirrors the exit_p/exit_idx/exit_reason fallback above).
+            if _mgmt_risk_points is not None:
+                risk_points = _mgmt_risk_points
+            else:
+                # Risk = ATR at entry × atr_sl_mult × point_value (1R stop in $)
+                # L3 FIX: Read atr_multiplier from config instead of hardcoded 2.0.
+                # The W23-D R-multiple gate depends on this being correct.
+                atr_col_name = "atr_14"
+                atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
+                sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
+                # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not flat 6.0pt (see mgmt loops above).
+                risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(_symbol_of_spec(spec)))
+            trade["stop_basis"] = _mgmt_stop_basis
             risk_dollars = risk_points * spec.point_value
             if risk_dollars > 0 and size > 0:
                 reward_dollars = net_pnl / size
@@ -4783,6 +5290,8 @@ def run_backtest(
                 trade["mfe"] = None
 
             trades_list.append(trade)
+            # deep-scan backtest-engine F-2: parallel full-precision price capture (same order as trades_list).
+            _raw_price_pairs.append((entry_p, exit_p))
 
         trade_pnls_arr = np.array(trade_pnls_list)
         winners = trade_pnls_arr[trade_pnls_arr > 0]
@@ -4806,11 +5315,18 @@ def run_backtest(
     bar_dollar_pnls = np.zeros(n_bars)
 
     if trades_list:
-        for trade in trades_list:
+        for _bar_pnl_i, trade in enumerate(trades_list):
             t_entry_idx = int(trade.get("Entry Idx", 0))
             t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
-            t_entry_p = float(trade.get("Avg Entry Price", 0))
-            t_exit_p = float(trade.get("Avg Exit Price", 0))
+            # deep-scan backtest-engine F-2: read the FULL-PRECISION captured prices (index-aligned with
+            # trades_list) so the equity curve reconciles against the same values gross/net_pnl used — NOT the
+            # 4-decimal ROUNDED trade-dict fields (which drift the recon guard at MCL's $100/point scale).
+            if _bar_pnl_i < len(_raw_price_pairs):
+                t_entry_p, t_exit_p = _raw_price_pairs[_bar_pnl_i]
+            else:
+                # Defensive fallback (should never trigger — the two lists append in lockstep).
+                t_entry_p = float(trade.get("Avg Entry Price", 0))
+                t_exit_p = float(trade.get("Avg Exit Price", 0))
             # F-6 FIX: Use int() to match the integer contract count used in P&L
             # computation. float(Size) was correct today (sizes are integer-valued
             # floats) but would silently misreconcile if fractional-Kelly sizing is
@@ -4848,13 +5364,21 @@ def run_backtest(
             entry_slip = float(trade.get("EntrySlipCost", slip_cost / 2.0))
             exit_slip = float(trade.get("ExitSlipCost", slip_cost / 2.0))
             half_comm = comm_cost / 2.0
+            # deep-scan backtest-engine F-1 (CRITICAL, 2026-07-06): the DSL path's bar-level equity loop never
+            # deducted RollSpreadCost even though net_pnl (trade-level) subtracts it — the SAME "Defect-4" bug
+            # that was fixed ONLY in run_class_backtest (~line 7450). On a backtest holding a position across a
+            # real CME roll day at canonical size (9 MES × $3.75 = ~$33.75 > the $1 recon tolerance) the equity
+            # curve diverged from summed-trade P&L → run_backtest's own reconciliation guard HARD-CRASHED with
+            # "RECONCILIATION FAILED" (or drifted at tiny sizes). Deduct the combined entry+exit roll charge at
+            # the EXIT bar, exactly like the class path. Equity-curve-only change; trade signals/counts unchanged.
+            roll_cost = float(trade.get("RollSpreadCost", 0.0))
             if t_entry_idx < n_bars:
                 bar_dollar_pnls[t_entry_idx] -= (entry_slip + half_comm)
             if t_exit_idx < n_bars:
-                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm)
-            assert abs((entry_slip + half_comm) + (exit_slip + half_comm) - (slip_cost + comm_cost)) < 0.01, (
+                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm + roll_cost)
+            assert abs((entry_slip + half_comm) + (exit_slip + half_comm + roll_cost) - (slip_cost + comm_cost + roll_cost)) < 0.01, (
                 f"Friction split invariant: entry_slip={entry_slip:.4f}, exit_slip={exit_slip:.4f}, "
-                f"comm={comm_cost:.4f}, expected_total={slip_cost + comm_cost:.4f}"
+                f"comm={comm_cost:.4f}, roll={roll_cost:.4f}, expected_total={slip_cost + comm_cost + roll_cost:.4f}"
             )
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
@@ -5268,6 +5792,13 @@ def run_backtest(
             "forge_score_version": _full_forge_result.get("forge_score_version", "unknown"),
             # W23H.3: count of entry signals masked by allowed_entry_windows (0 when no windows configured)
             "skipped_outside_window_count": skipped_outside_window_count,
+            # deepscan16 Wave-1 Track2 HIGH E-10: count of entry signals dropped
+            # (fail-closed) because their bar timestamp was malformed/None and could
+            # not be evaluated against allowed_entry_windows. Non-zero here means the
+            # entry-window restriction could NOT be fully enforced for some bars —
+            # distinct from skipped_outside_window_count (successfully-evaluated bars
+            # that fell outside the window).
+            "bad_timestamp_entry_window_count": bad_timestamp_entry_window_count,
             # HIGH #5 — Symmetric exit slippage audit (Wave 27.5 Pass C.1).
             # session_mult_avg: average session multiplier applied to entry/exit slips.
             # asymmetry_delta: difference between entry avg and exit avg — should be ~0
@@ -5290,12 +5821,16 @@ def run_backtest(
                 "n_trades": len(_h5_entry_slips),
             },
             # HIGH #6 — Partial fill model audit (Wave 27.5 Pass C.1).
+            # B-18 fix (deepscan17, 2026-07-05): mirror fill_model.py's honest
+            # None (not-computed) for avg_slippage_delta_per_partial rather
+            # than a fabricated 0.0 — this fallback fires when fill_model
+            # wasn't even requested, so "measured 0.0" would be doubly false.
             "partial_fill_modeled": _partial_fill_audit if _partial_fill_audit else {
                 "enabled": False,
                 "total_orders": 0,
                 "partial_fills": 0,
                 "avg_fill_ratio": 1.0,
-                "avg_slippage_delta_per_partial": 0.0,
+                "avg_slippage_delta_per_partial": None,
             },
         },
         # CRITICAL #1 — DSL guard summary (E.3/E.4/E.5 enforcement).
@@ -5307,6 +5842,14 @@ def run_backtest(
         # - liquidity_haircut_applied: True when depth-ratio haircut != 1.0 (Wave 24 Pass 2)
         # All counts are 0 when guards are not applicable (e.g. unit-test data
         # that has no 15:55 bar, or ATR always under ceiling).
+        # - guards_failed / guards_failed_reason / guards_failed_audit_action
+        #   (deepscan16 Wave-1 Track2 CRITICAL E-1): guards_failed=True means the
+        #   E.3/E.4/E.5 try/except above hit an exception and NONE of the guards ran
+        #   for this backtest — treat stop_ceiling_skips/time_stop_exits/dll_halt_blocks
+        #   as UNKNOWN, not zero. The promotion layer MUST treat guards_failed=True as
+        #   an invalid/unguarded run, not a clean pass. TS backtest-service.ts should
+        #   write guards_failed_audit_action ("backtest.dsl_guards_failed") to
+        #   audit_log when set (same disclosure pattern as cross_symbol_dll below).
         "dsl_guards": {
             **_dsl_guards_meta,
             "vol_scale_applied": _parity_metadata["vol_scale_applied"],
@@ -5330,6 +5873,14 @@ def run_backtest(
         # FIX 2 (deep-scan #10): HTF passthrough disclosure — True when eligibility gate
         # ran in passthrough mode (htf_cache unavailable). Additive; TS persists it.
         "htf_passthrough": _dsl_htf_passthrough,
+        # C-3 fix (deep-scan #18c, 2026-07-05): eligibility gate mode disclosure.
+        # {"long": <mode>, "long_passthrough_reason": <str|None>, "short": <mode>,
+        #  "short_passthrough_reason": <str|None>}. <mode> is one of
+        # source_entry_only / passthrough_htf_unavailable /
+        # passthrough_strategy_unregistered / tf_institutional_overlay / None
+        # (gate disabled or side absent). Additive key — TS persists via the
+        # result_extras allowlist in backtest-service.ts::buildResultExtras.
+        "eligibility_gate_mode": _dsl_eligibility_gate_mode,
     }
     # Also embed parity gate stats in run_receipt for backward-compat TS readers.
     # This is done after the result dict is built to avoid mutating run_receipt template.
@@ -5365,6 +5916,12 @@ def run_backtest(
     # Additive list: empty when no roll days in date range or itemisation disabled.
     if "_roll_spread_audit_rows" in dir():
         result["roll_spread_costs"] = _roll_spread_audit_rows  # noqa: F821
+
+    # ─── Slippage-Survival Gate (Wave A, 2026-07-03) — engine producer ─────────
+    # ALWAYS computed + emitted (cheap fixed-signal re-price sweep over the
+    # already-computed per-trade GrossPnL/SlippageCost). Gate enable/threshold
+    # logic lives on the TS side; see _compute_slippage_survival_block() docstring.
+    result["slippage_survival"] = _compute_slippage_survival_block(trades_list)
 
     # ─── Pass B-2: Invariant Harness (always runs — cheap pure validation) ───
     # Runs AFTER result dict is fully assembled, BEFORE determinism check.
@@ -5441,7 +5998,36 @@ def run_backtest(
                 or len(_wf_windows)
                 or 1
             )
-            _dsr_threshold = float(os.environ.get("DSR_HONEST_THRESHOLD", "1.5"))
+            # B-11 fix (deepscan17, 2026-07-05): default re-calibrated 1.5 -> 1.645.
+            # A sibling fix (risk_metrics.py B-2, same date) corrected
+            # compute_deflated_sharpe_ratio()'s dsr formula from a scale-mismatched
+            # (observed - z_bracket) / sharpe_std — which produced wildly
+            # over-punitive, mostly-negative dsr values that this 1.5 threshold was
+            # informally calibrated against — to the proper Bailey/Lopez-de-Prado
+            # z-scale statistic dsr = observed_sharpe/sharpe_std - sr_expected_max,
+            # which is ~N(0,1) under the null. On the corrected scale, dsr >= 1.5
+            # is only ~one-tailed p=0.067 — LOOSER than the p<0.05 standard
+            # compute_deflated_sharpe_ratio() itself already uses for its own
+            # "passes" field (p_value < 0.05 <=> dsr > norm.ppf(0.95) = 1.645).
+            # 1.5 unchanged would make this "honest DSR" gate (SHADOW -> PAPER,
+            # lifecycle-service.ts wave24-dsr-honest-gate) LOOSER than the DSR
+            # module's own internal pass/fail bar for the identical statistic —
+            # an inconsistency invisible before B-2 because the old formula's
+            # values never landed anywhere near either threshold in a stable way.
+            # 1.645 aligns both checks on the same institutional p<0.05 standard
+            # (CLAUDE.md "ship gates strict, then loosen with data" — this is the
+            # stricter direction, not looser). Risk of metric drift: strategies
+            # sitting in dsr in [1.5, 1.645) that PREVIOUSLY passed this gate will
+            # now BLOCK at SHADOW -> PAPER; nothing that previously blocked can
+            # newly pass. Downstream: lifecycle-service.ts's Wave 24 Item 19 gate
+            # reads the persisted dsr_passed boolean directly (not the threshold
+            # value) — this Python-side change is authoritative. The TS-side
+            # DSR_HONEST_THRESHOLD default (lifecycle-service.ts:1962, used only
+            # for the audit-log message text, not the gate decision) should be
+            # updated to "1.645" to match for display consistency — out of scope
+            # here (lifecycle-service.ts is not an owned file for this agent);
+            # flagged as carry-forward.
+            _dsr_threshold = float(os.environ.get("DSR_HONEST_THRESHOLD", "1.645"))
 
             if _total_trades_inv > 0 and _n_obs_inv > 1:
                 _dsr_honest = _compute_dsr_inv(
@@ -6246,6 +6832,27 @@ def run_class_backtest(
             compliance_mode_override=_cls_compliance_mode,
         )
 
+    # H5 fix (deep-scan #15, 2026-07-03): merged {"long": {...}, "short": {...}}
+    # structural-stop-distance map threaded to _apply_trade_management() below.
+    # .get() defaults handle the skip_eligibility_gate branch's empty_stats dict
+    # (which has no "structural_stop_map" key) safely.
+    _cls_structural_stop_map: dict = {
+        "long": long_gate_stats.get("structural_stop_map", {}),
+        "short": short_gate_stats.get("structural_stop_map", {}),
+    }
+
+    # GATE3-DEFECT-6 fix (2026-07-06): mirror deep-scan #18c's C-3 fix
+    # (`_build_eligibility_gate_mode_disclosure`), which surfaced
+    # gate_stats["mode"] (+ "passthrough_reason") into run_backtest's
+    # result["eligibility_gate_mode"] so the passthrough<->gated flip is
+    # queryable — but was only ever wired into run_backtest, never mirrored to
+    # this sibling. Pure additive telemetry (does NOT affect trade signals,
+    # counts, or P&L — computation-preserving, unlike Defect 5), so this is a
+    # low-risk class-(a) fix: same helper, same shape, both engine paths.
+    _cls_eligibility_gate_mode = _build_eligibility_gate_mode_disclosure(
+        long_gate_stats, short_gate_stats,
+    )
+
     # Merge gate stats
     gate_stats = {
         "long": long_gate_stats,
@@ -6339,6 +6946,144 @@ def run_class_backtest(
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
 
+    # ─── GATE3-DEFECT-5 fix (2026-07-06): DSL guards parity ──────────────────
+    # Systematic sibling-parity audit (corpus-v3-gate1-respecification-2026-07-05.md
+    # §"GATE 3 RE-RUN — SYSTEMATIC SIBLING-PARITY AUDIT") found run_class_backtest
+    # NEVER called _apply_dsl_stop_loss_and_time_stop() (E.3 ATR stop-ceiling
+    # entry-skip + E.5 15:55 ET time-stop-on-signal-array) or
+    # _apply_dll_halt_to_entries() (E.4 67% personal-DLL entry halt / 95%
+    # force-close) — both are unconditionally applied inside run_backtest() (Wave 21)
+    # and are documented CRITICAL institutional hard gates (deepscan16 Wave-1
+    # Track2 CRITICAL E-1: "an unguarded backtest ... could show great
+    # Sharpe/PF/DSR and sail through WFE/PBO/B14 to DEPLOY_READY with zero
+    # machine-readable trace"). Every strategy compiled through the class path —
+    # the path the whole corpus runs through, per CLAUDE.md §2b — had been
+    # running fully UNGUARDED for both DLL halt and the unconditional stop-ceiling/
+    # time-stop layer (the 7-layer eligibility gate's structural-stop SKIP and the
+    # shared _apply_trade_management's 15:55 flatten are still separately in
+    # force for the class path; this closes the gap for cases where the
+    # eligibility gate is skipped/bypassed, and closes DLL halt entirely — DLL
+    # halt has NO other enforcement anywhere in the class path).
+    #
+    # Mirrors run_backtest's exact call pattern (same shared functions, same
+    # fail-safe try/except wrapper) so a data-shape surprise here degrades to a
+    # visible/auditable "guards_failed" state rather than crashing the backtest.
+    #
+    # NOTE — this IS a trade-signal-affecting fix (unlike Defect 4's equity-only
+    # fix): DLL halt suppresses entries and the ATR-ceiling check skips entries
+    # whose structural stop exceeds the per-symbol ceiling, so it can change
+    # trade counts. It is applied identically to v2 and every v3-shadow spec in
+    # this re-run (engine-level, not spec-level), so the v2-vs-v3 comparison
+    # stays apples-to-apples — both arms are measured on the same corrected
+    # engine, not one arm silently unguarded.
+    _cls_dsl_guards_meta: dict = {
+        "stop_ceiling_skips": 0,
+        "time_stop_exits": 0,
+        "dll_halt_blocks": 0,
+        "guards_failed": False,
+        "guards_failed_reason": None,
+        "guards_failed_audit_action": None,
+    }
+    try:
+        _guard_entry_long_cls = entries_pd.to_numpy().astype(bool)
+        _guard_exit_long_cls = exits_pd.to_numpy().astype(bool)
+        _guard_entry_short_cls = short_entries_pd.to_numpy().astype(bool)
+        _guard_exit_short_cls = short_exits_pd.to_numpy().astype(bool)
+        _guard_close_np_cls = df["close"].to_numpy()
+        _guard_atr_np_cls = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 0.0)
+        _guard_ts_cls = (
+            df["ts_et"].to_list() if "ts_et" in df.columns
+            else (df["ts_event"].to_list() if "ts_event" in df.columns else None)
+        )
+        _guard_ts_et_cls = df["ts_et"].to_list() if "ts_et" in df.columns else None
+        _guard_vix_np_cls: Optional[np.ndarray] = df["vix"].to_numpy() if "vix" in df.columns else None
+        _guard_stop_mult_cls = (
+            float(strategy.config.stop_loss.multiplier)
+            if hasattr(strategy, "config") and hasattr(strategy.config, "stop_loss") and strategy.config.stop_loss
+            else 1.5
+        )
+
+        # E.3 + E.5
+        (
+            _guard_entry_long_cls,
+            _guard_exit_long_cls,
+            _guard_entry_short_cls,
+            _guard_exit_short_cls,
+            _dsl_sl_meta_cls,
+        ) = _apply_dsl_stop_loss_and_time_stop(
+            _guard_entry_long_cls,
+            _guard_exit_long_cls,
+            _guard_entry_short_cls,
+            _guard_exit_short_cls,
+            high_np,
+            low_np,
+            _guard_atr_np_cls,
+            _guard_ts_cls,
+            stop_multiplier=_guard_stop_mult_cls,
+            symbol=symbol,
+            close_np=_guard_close_np_cls,
+            ts_et_timestamps=_guard_ts_et_cls,
+            vix_np=_guard_vix_np_cls,
+        )
+        _cls_dsl_guards_meta["stop_ceiling_skips"] = len(_dsl_sl_meta_cls.get("skipped_trades", []))
+        _cls_dsl_guards_meta["time_stop_exits"] = _dsl_sl_meta_cls.get("time_stop_exits", 0)
+
+        # E.4 — DLL halt. Firm DLL comes from firm_config; default $1000 (Topstep).
+        _guard_firm_dll_cls = 1000.0
+        if firm_key:
+            from src.engine.firm_config import FIRM_RULES as _guard_firm_rules_cls
+            _guard_firm_dll_cls = _guard_firm_rules_cls.get(firm_key, {}).get("daily_loss_limit") or 1000.0
+        _guard_dll_pct_cls = float(os.environ.get("DLL_HALT_PCT", "0.67"))
+        _guard_ts_arr_cls = np.array(
+            _guard_ts_cls if _guard_ts_cls is not None else [""] * len(_guard_entry_long_cls)
+        )
+
+        _guard_entry_long_cls, _guard_entry_short_cls, _dll_meta_cls = _apply_dll_halt_to_entries(
+            _guard_entry_long_cls,
+            _guard_entry_short_cls,
+            _guard_exit_long_cls,
+            _guard_exit_short_cls,
+            high_np,
+            low_np,
+            _guard_close_np_cls,
+            _guard_atr_np_cls,
+            _guard_ts_arr_cls,
+            spec.point_value,
+            sizes_clean,
+            commission,
+            personal_dll_pct=_guard_dll_pct_cls,
+            firm_dll=_guard_firm_dll_cls,
+        )
+        _cls_dsl_guards_meta["dll_halt_blocks"] = _dll_meta_cls.get("entries_suppressed", 0)
+
+        if (_cls_dsl_guards_meta["stop_ceiling_skips"] or _cls_dsl_guards_meta["time_stop_exits"]
+                or _cls_dsl_guards_meta["dll_halt_blocks"]):
+            print(
+                f"[Class guards] E.3 stop_ceiling_skips={_cls_dsl_guards_meta['stop_ceiling_skips']} "
+                f"E.5 time_stop_exits={_cls_dsl_guards_meta['time_stop_exits']} "
+                f"E.4 dll_halt_blocks={_cls_dsl_guards_meta['dll_halt_blocks']}",
+                file=sys.stderr,
+            )
+
+        # Write guard-modified arrays back into the pandas Series that vectorbt reads.
+        entries_pd = pd.Series(_guard_entry_long_cls, index=entries_pd.index)
+        exits_pd = pd.Series(_guard_exit_long_cls, index=exits_pd.index)
+        short_entries_pd = pd.Series(_guard_entry_short_cls, index=short_entries_pd.index)
+        short_exits_pd = pd.Series(_guard_exit_short_cls, index=short_exits_pd.index)
+    except Exception as _cls_guard_err:
+        # Fail-safe: mirror run_backtest's deepscan16 Wave-1 Track2 CRITICAL E-1
+        # pattern — an exception here must NOT silently proceed unguarded with no
+        # trace. The backtest still completes (fail-safe), but result["dsl_guards"]
+        # carries guards_failed=True so the promotion layer treats this run as
+        # UNGUARDED rather than clean.
+        _cls_dsl_guards_meta["guards_failed"] = True
+        _cls_dsl_guards_meta["guards_failed_reason"] = repr(_cls_guard_err)
+        _cls_dsl_guards_meta["guards_failed_audit_action"] = "backtest.dsl_guards_failed"
+        print(
+            f"[Class guards] ERROR — guards skipped (non-fatal): {_cls_guard_err!r}",
+            file=sys.stderr,
+        )
+
     # ─── Run vectorbt Portfolio (long + short) ────────────────
     # vectorbt handles SIGNAL TIMING only — no slippage/fees.
     # We compute all P&L ourselves with correct futures math.
@@ -6409,6 +7154,7 @@ def run_class_backtest(
             exit_engine=exit_engine,
             adaptive_ctx=adaptive_ctx,
             exit_policy=exit_policy,
+            structural_stop_map=_cls_structural_stop_map,
         )
         {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
@@ -6429,6 +7175,31 @@ def run_class_backtest(
     winner_loser_ratio = 0.0
     trades_list: list[dict] = []
     trade_pnls_arr = np.array([])
+    # Default arrays for winners/losers/avg values — used in expectancy_per_trade
+    # calculation below. Overwritten inside `if trades_records is not None:` when
+    # trades exist. GATE3-DEFECT-1 FIX (corpus-v3 gate3 re-run protocol, 2026-07-06):
+    # mirrors the C2 FIX (deepscan5 2026-06-29) hoist already applied to the sibling
+    # run_backtest() at line ~5032-5035. Without this hoist, a zero-signal class
+    # backtest (total_trades==0, trades_records=None) skips the block below entirely
+    # and `winners`/`losers` are referenced unconditionally further down in the
+    # "expectancy_per_trade" dict entry — UnboundLocalError on every zero-signal run.
+    winners = np.array([])
+    losers = np.array([])
+    avg_winner = 0.0
+    avg_loser = 0.0
+    # GATE3-DEFECT-1 FIX (continued): _roll_spread_audit_rows_cls is read
+    # unconditionally at the "roll_spread_costs" dict entry near the function's
+    # return (~line 7600) but was previously only assigned inside this same
+    # `if trades_records is not None:` block (MED #5, Wave 27.5 Pass D.1) — same
+    # unbound-on-zero-signal defect class as winners/losers above, caught by the
+    # GATE3-DEFECT-1 regression test actually exercising the zero-signal path
+    # end-to-end (test_gate3_defect1_class_backtest_zero_signal.py).
+    _roll_spread_audit_rows_cls: list[dict] = []
+    # GATE3-DEFECT-6 FIX (corpus-v3-gate1-respecification.md "DEFECT 6 (MCL
+    # reconciliation)", 2026-07-06): full-precision (entry_p, exit_p) pairs, one
+    # per trade in the SAME order as trades_list.append(trade) below. See the
+    # fix note at the bar_dollar_pnls loop for why this parallel array exists.
+    _raw_price_pairs_cls: list[tuple[float, float]] = []
 
     if trades_records is not None:
         trade_pnls_list = []
@@ -6442,7 +7213,6 @@ def run_class_backtest(
         _ts_et_list_roll_cls = df["ts_et"].to_list() if "ts_et" in df.columns else (
             df["ts_event"].to_list() if "ts_event" in df.columns else []
         )
-        _roll_spread_audit_rows_cls: list[dict] = []
 
         for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
@@ -6457,10 +7227,12 @@ def run_class_backtest(
                 exit_idx = mgmt["exit_idx"]
                 exit_reason = mgmt["exit_reason"]
                 risk_pts = mgmt["risk_points"]
+                _cls_stop_basis = mgmt.get("stop_basis", "atr_fallback")
             else:
                 exit_p = float(row["Avg Exit Price"])
                 exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
                 exit_reason = "signal"
+                _cls_stop_basis = "atr_fallback"
                 # C4 + M2 FIX (deepscan5 2026-06-29): per-symbol ceiling (was flat 6.0pt) AND
                 # config stop multiplier _cls_stop_mult (was hardcoded 2.0, overstating risk 33%
                 # for the Slumdawg 1.5× default — understated R:R on the class path).
@@ -6534,6 +7306,10 @@ def run_class_backtest(
             net_pnl = gross - slip_cost - comm_cost - _roll_cost_usd_cls
 
             trade_pnls_list.append(net_pnl)
+            # GATE3-DEFECT-6 FIX: capture the FULL-PRECISION entry_p/exit_p used in
+            # `gross` above (not yet rounded) — one entry per trade, same order as
+            # trades_list.append(trade) below, so the two lists stay index-aligned.
+            _raw_price_pairs_cls.append((entry_p, exit_p))
 
             trade: dict = {}
             for col in trades_records.columns:
@@ -6563,6 +7339,7 @@ def run_class_backtest(
             else:
                 trade["rr"] = 0.0
             trade["risk_points"] = round(risk_pts, 2)
+            trade["stop_basis"] = _cls_stop_basis
 
             # ─── Per-trade MAE/MFE ($ excursion from entry) ───────
             try:
@@ -6611,11 +7388,40 @@ def run_class_backtest(
     bar_dollar_pnls = np.zeros(n_bars)
 
     if trades_list:
-        for trade in trades_list:
+        for _bar_pnl_i, trade in enumerate(trades_list):
             t_entry_idx = int(trade.get("Entry Idx", 0))
             t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
-            t_entry_p = float(trade.get("Avg Entry Price", 0))
-            t_exit_p = float(trade.get("Avg Exit Price", 0))
+            # GATE3-DEFECT-6 FIX (corpus-v3-gate1-respecification.md "DEFECT 6 (MCL
+            # reconciliation)", 2026-07-06): read the FULL-PRECISION entry/exit prices
+            # captured in _raw_price_pairs_cls (same values `gross`/`net_pnl` used
+            # above), NOT the display-rounded `trade["Avg Entry/Exit Price"]` fields
+            # (round(...,4), added only for JSON-output readability). Reading the
+            # rounded fields here made this loop's per-bar mark-to-market sum
+            # (equity_total) disagree with net_pnl's sum (trades_total) by the
+            # 4-decimal-place rounding quantum on TWO prices per trade — negligible
+            # in dollar terms for MES ($5/pt) and MNQ ($2/pt), but amplified 20-50x
+            # by MCL's $100/pt point value across thousands of trades, tripping the
+            # $1 reconciliation tolerance on 8/42 pairs (all MCL) in the Gate 3
+            # reference re-derivation. Diagnosis (numeric, confirmed via one-off
+            # instrumented run of snNkQSyWX4k_MCL demotion, 2484 trades): recomputing
+            # trades_total with these SAME rounded prices reproduced equity_total to
+            # 4 decimal places exactly (diff 0.0000) — i.e. no dollars were missing;
+            # this was a pure representation mismatch (H-B), not an omitted cost term
+            # (H-A). Fix removes the mismatch at its source instead of widening the
+            # validity-check tolerance: the $1 gate stays exactly as strict as before
+            # for every symbol, so it still catches a genuine Defect-4-class omission
+            # on MCL. Verdict-variable-preserving, NOT computation-preserving: refines
+            # equity-derived numbers only (equity curve, drawdown, daily P&L); does
+            # NOT touch entry logic, trade signals, or trade counts, which is all
+            # Gate 3's frozen rule measures.
+            if _bar_pnl_i < len(_raw_price_pairs_cls):
+                t_entry_p, t_exit_p = _raw_price_pairs_cls[_bar_pnl_i]
+            else:
+                # Defensive fallback (should never trigger — _raw_price_pairs_cls is
+                # appended 1:1 with trades_list in the loop above): fall back to the
+                # rounded trade-dict fields rather than crashing.
+                t_entry_p = float(trade.get("Avg Entry Price", 0))
+                t_exit_p = float(trade.get("Avg Exit Price", 0))
             # F-6 FIX (class path): Use int() to match the P&L loop's int(size)
             # contract floor. float(Size) was a dormant mismatch — integer-valued
             # today but would break reconciliation if fractional-Kelly sizing lands.
@@ -6648,13 +7454,30 @@ def run_class_backtest(
             entry_slip = float(trade.get("EntrySlipCost", slip_cost / 2.0))
             exit_slip = float(trade.get("ExitSlipCost", slip_cost / 2.0))
             half_comm = comm_cost / 2.0
+            # GATE3-DEFECT-4 fix (2026-07-06, corpus-v3-gate1-respecification.md
+            # "GATE 3 RE-RUN — SYSTEMATIC SIBLING-PARITY AUDIT"): `net_pnl` above
+            # (line ~7128) subtracts SlippageCost + CommissionCost + RollSpreadCost,
+            # but this bar-level equity loop previously deducted only slip + comm —
+            # RollSpreadCost was silently dropped from bar_dollar_pnls, so equity
+            # under-counted roll-day trades relative to net_pnl by exactly the roll
+            # cost. Bounded pre-fix: the $1 reconciliation tolerance below caught it
+            # on every historically COMPLETED run (roll cost is small vs $1), so no
+            # completed backtest was ever actually WRONG beyond that tolerance — see
+            # FROZEN FINDING in the design doc. Deduct the whole per-trade roll cost
+            # at the EXIT bar (mirrors the existing slip/comm split pattern; roll
+            # cost is not itself split entry/exit because it is already a single
+            # combined entry+exit roll-day charge from compute_roll_spread_cost()).
+            # verdict-variable-preserving, NOT computation-preserving: changes
+            # equity curves + equity-derived metrics only; does NOT change trade
+            # signals or counts, which is all Gate 3's frozen rule measures.
+            roll_cost = float(trade.get("RollSpreadCost", 0.0))
             if t_entry_idx < n_bars:
                 bar_dollar_pnls[t_entry_idx] -= (entry_slip + half_comm)
             if t_exit_idx < n_bars:
-                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm)
-            assert abs((entry_slip + half_comm) + (exit_slip + half_comm) - (slip_cost + comm_cost)) < 0.01, (
+                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm + roll_cost)
+            assert abs((entry_slip + half_comm) + (exit_slip + half_comm + roll_cost) - (slip_cost + comm_cost + roll_cost)) < 0.01, (
                 f"Friction split invariant: entry_slip={entry_slip:.4f}, exit_slip={exit_slip:.4f}, "
-                f"comm={comm_cost:.4f}, expected_total={slip_cost + comm_cost:.4f}"
+                f"comm={comm_cost:.4f}, roll={roll_cost:.4f}, expected_total={slip_cost + comm_cost + roll_cost:.4f}"
             )
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
@@ -6906,6 +7729,12 @@ def run_class_backtest(
         information_ratio_class = None
     # ─────────────────────────────────────────────────────────────
 
+    # ─── Slippage-Survival Gate (Wave A, 2026-07-03) — engine producer ─────────
+    # ALWAYS computed + emitted (class/archetype backtest path). Mirrors the
+    # run_backtest() DSL-path wiring above; see _compute_slippage_survival_block()
+    # docstring for the full contract + fail-soft rationale.
+    _slippage_survival_block_cls = _compute_slippage_survival_block(trades_list)
+
     return {
         "total_return": round(total_return, 6),
         "sharpe_ratio": round(sharpe, 4),
@@ -7004,6 +7833,20 @@ def run_class_backtest(
         },
         # MED #5 (Wave 27.5 Pass D.1) — Roll spread cost audit (class backtest path).
         "roll_spread_costs": _roll_spread_audit_rows_cls,
+        # Slippage-Survival Gate (Wave A, 2026-07-03) — see block computed above.
+        "slippage_survival": _slippage_survival_block_cls,
+        # GATE3-DEFECT-5 fix (2026-07-06) — DSL guard summary (E.3/E.4/E.5
+        # enforcement), same schema key/shape as run_backtest's "dsl_guards" so
+        # downstream consumers (TS backtest-service.ts guards_failed audit) get
+        # the same contract from both engine paths. vol_scale_applied /
+        # liquidity_haircut_applied (Wave 24 Pass 2 parity_metadata) are NOT
+        # ported in this fix — that subsystem is position-sizing-only (not
+        # signal/trade-count), out of scope for this class-(a) audit pass, and
+        # carried forward as a documented gap (see audit classification table).
+        "dsl_guards": _cls_dsl_guards_meta,
+        # GATE3-DEFECT-6 fix (2026-07-06) — mirrors run_backtest's
+        # "eligibility_gate_mode" key (deep-scan #18c C-3 fix); see note above.
+        "eligibility_gate_mode": _cls_eligibility_gate_mode,
     }
 
 
@@ -7111,7 +7954,10 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 # commission_per_side value in the JSON, which is preserved).
                 commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
-                embargo_bars=config.get("embargo_bars", 0),
+                embargo_bars=config.get("embargo_bars", 20),  # deep-scan Backtest re-verify HIGH: was 0 —
+                # a raw-dict default of 0 OVERRODE run_walk_forward_class's safe =20 on the
+                # archetype (Band B) + compiled-spec (Band C) dispatch paths (no caller sets
+                # the key), so those production walk-forwards ran with ZERO CPCV purge (leakage).
             )
             # Compute tier from OOS metrics (walk-forward doesn't do this itself)
             oos = result.get("oos_metrics", {})
@@ -7243,7 +8089,10 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 # commission_per_side value in the JSON, which is preserved).
                 commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
-                embargo_bars=config.get("embargo_bars", 0),
+                embargo_bars=config.get("embargo_bars", 20),  # deep-scan Backtest re-verify HIGH: was 0 —
+                # a raw-dict default of 0 OVERRODE run_walk_forward_class's safe =20 on the
+                # archetype (Band B) + compiled-spec (Band C) dispatch paths (no caller sets
+                # the key), so those production walk-forwards ran with ZERO CPCV purge (leakage).
             )
         else:
             result = run_class_backtest(

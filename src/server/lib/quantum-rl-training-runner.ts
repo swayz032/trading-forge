@@ -34,12 +34,16 @@ import { tmpdir } from "os";
 import { createHash } from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { systemParameters, auditLog } from "../db/schema.js";
+import { systemParameters, auditLog, rlTrainingRuns } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { notifyCritical } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "./notification-helpers.js";
 // FIX 7 (deepscan8): register spawned process with graceful-shutdown set
-import { registerExternalPythonSubprocess } from "./python-runner.js";
+// FIX H2 (deepscan15 2026-07-03): acquire/release a shared python-runner semaphore
+// slot around this bespoke spawn so it counts toward MAX_PYTHON_SUBPROCESSES and
+// the pythonSubprocess{Active,Queued} stats — previously this spawn bypassed the
+// semaphore entirely.
+import { registerExternalPythonSubprocess, acquireExternalPythonSlot, releaseExternalPythonSlot } from "./python-runner.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -309,6 +313,59 @@ function _buildTrainingEnv(): NodeJS.ProcessEnv {
   };
 }
 
+// ── AUDIT_EVENT_JSON stderr bridge (Deep-Scan #18, 2026-07-05) ──────────────────
+//
+// The spawned Python training subprocess (quantum_rl_agent → db_loader.py
+// load_backtest_bar_data) cannot write audit_log directly. It emits canonical
+// `AUDIT_EVENT_JSON {json}` stderr sentinels (mirrors backtester.py) for CPCV purge
+// events. Parse them from the child's full stderr on close and write the documented
+// audit rows here (the runner already owns a DB handle). Closes the Band-H gap where
+// quantum_rl.training_cpcv_purge_violation was documented but never actually fired.
+const _AUDIT_EVENT_SENTINEL = "AUDIT_EVENT_JSON ";
+const _MAX_AUDIT_EVENTS_PER_RUN = 50; // flood guard
+
+export function _writeStderrAuditEvents(
+  stderrText: string,
+  strategyId: number | string,
+  correlationId?: string,
+): number {
+  let emitted = 0;
+  for (const rawLine of stderrText.split("\n")) {
+    const trimmed = rawLine.trim();
+    if (!trimmed.startsWith(_AUDIT_EVENT_SENTINEL)) continue;
+    if (emitted >= _MAX_AUDIT_EVENTS_PER_RUN) break;
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(trimmed.slice(_AUDIT_EVENT_SENTINEL.length));
+    } catch {
+      continue; // malformed sentinel — skip
+    }
+    const action = typeof payload.event === "string" ? payload.event : null;
+    if (!action) continue;
+    emitted++;
+    const status = typeof payload.status === "string" ? payload.status : "info";
+    const { event: _event, status: _status, ...rest } = payload;
+    void _event;
+    void _status;
+    db.insert(auditLog)
+      .values({
+        action,
+        entityType: "strategy",
+        entityId: String(strategyId),
+        status,
+        correlationId: correlationId ?? null,
+        result: rest,
+      })
+      .catch((auditErr: unknown) =>
+        logger.warn(
+          { err: String(auditErr), strategyId, action },
+          "quantum-rl-training-runner: AUDIT_EVENT_JSON audit row write failed (non-blocking)",
+        ),
+      );
+  }
+  return emitted;
+}
+
 // ── Output type ───────────────────────────────────────────────────────────────
 
 export interface RlTrainingAutoFireResult {
@@ -316,6 +373,34 @@ export interface RlTrainingAutoFireResult {
   regimesTrained: number;
   durationMs: number;
   stdoutSnippet: string;
+}
+
+// ── DS#20 T-G2: rl_training_runs pending-row lifecycle helper ──────────────────
+/**
+ * Transitions the pending-row inserted before spawn to a terminal status.
+ * Fail-soft (never throws) — a finalize-write failure must not affect the
+ * caller's resolve/reject path, it only means the bookkeeping row is left in
+ * `running` until scheduler.ts's stale-pending-sweeper (30-min cutoff) sweeps it.
+ */
+function _finalizeRlTrainingRunRow(
+  rlTrainingRunId: string | null,
+  status: "completed" | "failed",
+  extra: { executionTimeMs?: number; comparisonResult?: Record<string, unknown> } = {},
+): void {
+  if (!rlTrainingRunId) return;
+  db.update(rlTrainingRuns)
+    .set({
+      status,
+      executionTimeMs: extra.executionTimeMs ?? null,
+      comparisonResult: extra.comparisonResult ?? null,
+    })
+    .where(eq(rlTrainingRuns.id, rlTrainingRunId))
+    .catch((err: unknown) =>
+      logger.warn(
+        { err: String(err), rlTrainingRunId, status },
+        "quantum-rl-training-runner: rl_training_runs finalize update failed (non-blocking)",
+      ),
+    );
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -364,7 +449,7 @@ export async function runRlTrainingForStrategy(
       status: "success",
       correlationId: correlationId ?? null,
       result: { reason: "cooldown_expired", cooldown_ms: _circuitBreakerCooldownMs },
-    }).catch((auditErr) =>
+    }).catch((auditErr: unknown) =>
       logger.warn(
         { err: String(auditErr), strategyId },
         "quantum-rl-training-runner: circuit_breaker_closed audit row failed (non-blocking)",
@@ -382,6 +467,53 @@ export async function runRlTrainingForStrategy(
 
   const timeoutMs = getTrainingTimeoutMs();
   const pythonCmd = getPythonCmd();
+
+  // ── DS#20 T-G2: pending job-tracking row BEFORE spawn ──────────────────────
+  // §13 "Don't create fire-and-forget runs without a pending DB row" — prior to
+  // this fix the subprocess was spawned with no DB row at all, so a both-process
+  // death (OS OOM-kill / power loss) left the training attempt invisible AND the
+  // circuit-breaker counter never incremented (the process never reached a
+  // close/error/timeout handler to record the failure).
+  //
+  // Target table: rl_training_runs — NOT quantum_rl_runs. quantum_rl_runs
+  // (Wave 29 Pass C.1) has no status column at all and its NOT-NULL columns
+  // (regime, state_vector, action, confidence_score, effective_confidence,
+  // reward, governance_labels) are real per-decision RL outputs that don't
+  // exist until training completes; rl-signal-fetcher.ts reads the LATEST
+  // quantum_rl_runs row per strategy to drive the composite-health kill-switch
+  // + DSR-floor gate (score-normalization.ts), so a fabricated placeholder row
+  // there would corrupt that advisory signal the moment it's inserted. Instead
+  // this mirrors the existing legacy pattern in backtest-service.ts:2336
+  // ("Insert running row before Python call" into rl_training_runs), which is
+  // already covered by scheduler.ts's stale-pending-sweeper (rl_training_runs,
+  // 30-min cutoff) — so the boot-time orphan sweep is already in place for this
+  // table with no further scheduler changes needed.
+  //
+  // Fail-soft: an insert failure must NOT block the spawn (challenger-only,
+  // advisory-only research signal — losing one data point is fine; blocking
+  // training on a DB hiccup is not).
+  let rlTrainingRunId: string | null = null;
+  try {
+    const [rlRow] = await db.insert(rlTrainingRuns).values({
+      strategyId: String(strategyId),
+      status: "running",
+      method: "pennylane_vqc",
+      episodes: trainingEpochs,
+      governanceLabels: {
+        experimental: true,
+        authoritative: false,
+        decision_role: "challenger_only",
+        training_mode: true,
+        source: "quantum-rl-training-runner_auto_fire",
+      },
+    }).returning({ id: rlTrainingRuns.id });
+    rlTrainingRunId = rlRow?.id ?? null;
+  } catch (pendingRowErr) {
+    logger.warn(
+      { err: String(pendingRowErr), strategyId, correlationId },
+      "quantum-rl-training-runner: rl_training_runs pending-row insert failed (non-blocking) — spawn proceeds without crash-visibility row",
+    );
+  }
 
   // Derive deterministic per-strategy seed so two training runs on the same
   // strategy produce reproducible results (Wave 29 Pass 1 hardening Fix 4).
@@ -407,7 +539,13 @@ export async function runRlTrainingForStrategy(
 
   const start = Date.now();
 
-  return new Promise<RlTrainingAutoFireResult>((resolve, reject) => {
+  // FIX H2 (deepscan15): acquire a backtest-lane slot BEFORE spawning so this
+  // subprocess counts toward MAX_PYTHON_SUBPROCESSES / getPythonSubprocessStats().
+  // Released once the wrapped promise settles (resolve or reject), covering the
+  // timeout / close / spawn-error paths below.
+  await acquireExternalPythonSlot("backtest");
+  try {
+    return await new Promise<RlTrainingAutoFireResult>((resolve, reject) => {
     let proc: ChildProcess;
     try {
       proc = spawn(pythonCmd, args, {
@@ -418,6 +556,7 @@ export async function runRlTrainingForStrategy(
       registerExternalPythonSubprocess(proc);
     } catch (spawnErr) {
       _recordRlFailure(String(spawnErr));
+      _finalizeRlTrainingRunRow(rlTrainingRunId, "failed");
       reject(spawnErr);
       return;
     }
@@ -448,6 +587,7 @@ export async function runRlTrainingForStrategy(
         }, 2000);
       }
       _recordRlFailure(`timed out after ${timeoutMs}ms`);
+      _finalizeRlTrainingRunRow(rlTrainingRunId, "failed");
       reject(new Error(`quantum-rl-training-runner timed out after ${timeoutMs}ms for strategyId=${strategyId}`));
     }, timeoutMs);
 
@@ -466,13 +606,19 @@ export async function runRlTrainingForStrategy(
       }
     });
 
-    proc.on("close", (code) => {
+    proc.on("close", (code: number | null) => {
       clearTimeout(timer);
       if (settled) return;
       settled = true;
 
       const durationMs = Date.now() - start;
       const stdoutSnippet = stdout.slice(-500);
+
+      // Deep-Scan #18: surface any AUDIT_EVENT_JSON sentinels the training subprocess
+      // emitted (e.g. quantum_rl.training_cpcv_purge_violation from db_loader.py) as
+      // real audit_log rows. Runs regardless of exit code — a purge is worth recording
+      // even if training later failed.
+      _writeStderrAuditEvents(stderr, strategyId, correlationId);
 
       if (code === 0) {
         // Parse regimes trained from JSON output
@@ -485,6 +631,10 @@ export async function runRlTrainingForStrategy(
         } catch { /* non-JSON stdout — regimes unknown */ }
 
         _recordRlSuccess();
+        _finalizeRlTrainingRunRow(rlTrainingRunId, "completed", {
+          executionTimeMs: durationMs,
+          comparisonResult: { regimesTrained },
+        });
         logger.info(
           { strategyId, correlationId, durationMs, regimesTrained },
           "quantum-rl-training-runner: subprocess completed successfully",
@@ -497,17 +647,22 @@ export async function runRlTrainingForStrategy(
           "quantum-rl-training-runner: subprocess exited with non-zero code",
         );
         _recordRlFailure(`exit ${code}: ${errMsg.slice(0, 200)}`);
+        _finalizeRlTrainingRunRow(rlTrainingRunId, "failed", { executionTimeMs: durationMs });
         reject(new Error(`quantum_rl_agent train failed (exit ${code}) for strategyId=${strategyId}: ${errMsg.slice(0, 200)}`));
       }
     });
 
-    proc.on("error", (err) => {
+    proc.on("error", (err: unknown) => {
       clearTimeout(timer);
       if (settled) return;
       settled = true;
       logger.error({ strategyId, correlationId, err }, "quantum-rl-training-runner: spawn error");
       _recordRlFailure(String(err));
+      _finalizeRlTrainingRunRow(rlTrainingRunId, "failed");
       reject(err);
     });
-  });
+    });
+  } finally {
+    releaseExternalPythonSlot("backtest");
+  }
 }

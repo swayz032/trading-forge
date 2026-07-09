@@ -1874,7 +1874,8 @@
       "signal.starvation_critical",
       "webhook.broker_ack",
       "webhook.latency_high",
-      "portfolio.regime_coverage_gap"
+      "portfolio.regime_coverage_gap",
+      "pine_reconciliation.staleness_checked"
     ],
     "metrics_surfaces": [
       "/api/health",
@@ -1888,6 +1889,7 @@
       "CircuitBreakerRegistry.statusAll"
     ],
     "scheduler_jobs": [
+      "account-key-uniqueness-sanity",
       "agent-health-sweep",
       "data-integrity-suite",
       "deployed-pine-artifact-check",
@@ -1900,8 +1902,7 @@
       "idempotency-cleanup",
       "metrics-collector",
       "metrics-heartbeat",
-      "ollama-keepwarm-watchdog",
-      "position-drift-reconcile",
+      "pine-reconciliation-staleness-check",
       "pre-trading-day-health-check",
       "python-pool-saturation-check",
       "regime-coverage-check",
@@ -2004,6 +2005,7 @@
       "docs/system-topology.generated.json"
     ],
     "scheduler_jobs": [
+      "n8n-data-backup-daily",
       "n8n-drift-detector-monthly",
       "n8n-drift-detector-weekly",
       "n8n-execution-scrape",
@@ -2106,7 +2108,8 @@
       "/api/broker-error-budget",
       "/api/broker/fill-callback",
       "/api/live-order",
-      "/api/strategy-assignments"
+      "/api/strategy-assignments",
+      "/api/traderspost"
     ],
     "engine_subsystems": [
       "broker_router",
@@ -2205,6 +2208,7 @@
       "heartbeat-ooh-check",
       "heartbeat-stale-check",
       "heartbeat-write",
+      "ollama-keepwarm-watchdog",
       "prop-firm-cookie-refresh"
     ],
     "routes": [
@@ -4858,6 +4862,82 @@
     "criticality": "high"
   },
   {
+    "id": "portfolio_drift_demotion",
+    "domain": "lifecycle",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Deep-Scan #16 Wave 3. Daily 17:00 ET cron (DST-safe double-fire at 21,22 UTC minute :43 with ET-hour==17 guard, mirrors regime-drift-detector + strategy-age-revalidation patterns) that restores the demotion the live n8n 'Daily Portfolio Monitor' workflow (node 'Log Drift Alert and Transition') was SUPPOSED to do but silently did NOT — its PATCH /api/strategies/:id/lifecycle sent no HMAC timestamp+signature so every call 401'd (or 503 with secret unset) and onError:continueRegularOutput swallowed it into a false-green. Scans every DEPLOYED strategy; any whose persisted strategies.rolling_sharpe_30d (refreshed 4-hourly by the rolling-sharpe cron via metrics-aggregator) is below PORTFOLIO_DRIFT_SHARPE_FLOOR (default 1.0) is auto-demoted DEPLOYED -> DECLINING -> TESTING (two-step preserves transition observability). FAIL-SAFE on NULL rolling Sharpe (skip via portfolio_drift_demotion.no_sharpe_data_skipped info audit, NEVER demote) — the dead n8n node's ||0 default would have demoted everything. DEFAULT-OFF: with PORTFOLIO_DRIFT_DEMOTION_ENABLED unset/false the sweep runs in effective dry-run (detect + tf_portfolio_drift_demotions_total telemetry + advisory Discord + portfolio_drift_demotion.dry_run audit, NO lifecycle mutation) so the operator validates the rolling-Sharpe scale on real DEPLOYED strategies before flipping to live demotion. Zombie DECLINING (step2 DECLINING->TESTING fails) is recovered by the regime-drift-detector's existing zombie-DECLINING compensating sweep (not duplicated). _PIPELINE_GATE_EXEMPT (runs even when pipeline paused); _tryAcquireJobLock prevents overlap re-entry. Closes the silent-dead-auto-demotion failure mode where the n8n portfolio-drift demotion showed GREEN while no demotion ever occurred.",
+    "data_sources": [
+      "strategies.rolling_sharpe_30d"
+    ],
+    "reads_from": [
+      "strategies"
+    ],
+    "writes_to": [
+      "strategies",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "portfolio_drift_demotion.no_sharpe_data_skipped",
+      "portfolio_drift_demotion.dry_run",
+      "portfolio_drift_demotion.strategy_eval_failed",
+      "portfolio_drift_demotion.completed",
+      "strategy.portfolio_drift_detected",
+      "lifecycle.portfolio_drift_demotion",
+      "lifecycle.portfolio_drift_zombie_declining"
+    ],
+    "metrics_surfaces": [
+      "tf_portfolio_drift_demotions_total"
+    ],
+    "telemetry_sources": [
+      "audit_log.portfolio_drift_demotion.*",
+      "audit_log.strategy.portfolio_drift_detected",
+      "audit_log.lifecycle.portfolio_drift_demotion",
+      "scheduler:portfolio-drift-demotion:21,22-utc",
+      "sse:lifecycle:portfolio_drift_demoted",
+      "prometheus:tf_portfolio_drift_demotions_total"
+    ],
+    "scheduler_jobs": [
+      "portfolio-drift-demotion"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "src/server/services/portfolio-drift-demotion-service.ts::runPortfolioDriftDemotion",
+      "scheduler.ts::portfolio-drift-demotion-cron"
+    ],
+    "database_tables": [
+      "strategies",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-soft",
+    "health_check": "src/server/__tests__/ds16w3-portfolio-drift-demotion.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log.portfolio_drift_demotion.completed",
+      "scheduler:portfolio-drift-demotion:21,22-utc"
+    ],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+      "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "high"
+  },
+  {
     "id": "ab_comparison",
     "domain": "observability",
     "owner_surface": "node-frontend",
@@ -5439,6 +5519,79 @@
     ],
     "ownership_boundary": "repo-runtime",
     "learning_boundary": "none",
+    "deployment_authority": "operator_only",
+    "criticality": "important"
+  },
+  {
+    "id": "fade_the_losers",
+    "domain": "research",
+    "owner_surface": "node",
+    "automation_mode": "manual_invoke",
+    "manual_gate": "operator_invoke_for_cohort_validation",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Wave B (2026-07-03). Turns the graveyard's PROVEN DIRECTIONAL losers into fresh edge candidates: if a directional strategy consistently lost with statistical significance, its inverse (short a persistent long-loser) may hold edge. fade-inverter.ts (pure) swaps direction long<->short + moves the losing entry condition to the opposite side (untraded side -> BIDIR_SENTINEL 'high < low'); regime PRESERVED not flipped; stop/TP/Style-C exits/sizing/confluence UNTOUCHED. fade-the-losers-service.ts cohort selector (strategy_graveyard JOIN strategies; fadeable = directional AND significant loser (n_trades >= FADE_MIN_TRADES default 30 AND (expectancy<0 OR profit_factor<1.0)) AND performance-failure death (FADE_EXCLUDE_DEATH_REASONS skips 0-trade/data/compliance/look-ahead/curve-fit/PBO/Frankenstein/consistency/rejected_by_gate) AND not already-faded (no fade-of-fade + cross-run + per-run dedupe)) then creates each inversion as a NEW CANDIDATE through the SAME unchanged gate ladder every strategy walks (Gate 1 auditBidirectionalCompleteness -> framework overlay -> Gate 2 classifyFactorSources -> auditGraduatedConfig -> DSL critic -> single-entry guard -> playbook registration). NEVER a raw INSERT, NEVER a relaxed/exempt path. CLI-only (scripts/fade-the-losers.ts), dry-run default -> --apply. No autonomous cron. source='fade_the_losers' tag is provenance-only (fades fold into corpus-FDR incidentally via their backtest; distinct testing-family grouping is a future enhancement).",
+    "data_sources": [
+      "strategy_graveyard.searchable_metrics",
+      "strategy_graveyard.backtest_summary",
+      "strategy_graveyard.death_reason",
+      "strategy_graveyard.failure_modes",
+      "strategies.config"
+    ],
+    "reads_from": [
+      "strategy_graveyard",
+      "strategies"
+    ],
+    "writes_to": [
+      "strategies",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "fade.candidate_created",
+      "fade.skipped_not_directional",
+      "fade.skipped_insufficient_trades",
+      "fade.skipped_degenerate_death",
+      "fade.skipped_already_faded"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log.fade.*"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "src/server/lib/fade-inverter.ts::invertStrategyConfig",
+      "src/server/services/fade-the-losers-service.ts::selectFadeCohort",
+      "src/server/services/fade-the-losers-service.ts::createFadedCandidate",
+      "src/server/services/fade-the-losers-service.ts::runFadeTheLosers",
+      "scripts/fade-the-losers.ts::main"
+    ],
+    "database_tables": [
+      "strategy_graveyard",
+      "strategies",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-closed",
+    "health_check": "src/server/lib/__tests__/fade-inverter.test.ts + src/server/services/__tests__/fade-the-losers-service.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log.fade.candidate_created"
+    ],
+    "evidence_queries": [
+      "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20",
+      "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
     "deployment_authority": "operator_only",
     "criticality": "important"
   }

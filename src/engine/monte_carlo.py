@@ -145,9 +145,19 @@ def trade_resample(
         xp = np
 
     trades_xp = xp.asarray(trades)
-    # Use PCG64DXSM for authoritative reproducibility (CPU path)
-    rng = create_authoritative_rng(seed)[0] if xp is np else xp.random.default_rng(seed)
-    indices = rng.integers(0, len(trades), size=(n_sims, len(trades)))
+    # DS#20 T-B1 (2026-07-05): derive the resample INDICES on CPU with the authoritative
+    # PCG64DXSM generator, then hand only the (cheap) index array to the GPU for the gather.
+    # Previously the GPU branch seeded cupy's own `default_rng(seed)` — a DIFFERENT generator
+    # family than PCG64DXSM — so this method (trade_resample, the DEFAULT MC method:
+    # method="trade_resample", use_gpu defaults True) produced a DIFFERENT bootstrap resample
+    # (and hence a different probability_of_ruin_ci.ci_high straddling the B14 0.20 hard gate)
+    # depending on whether the run executed on the GPU tower or a CPU-only CI/dev box. This is
+    # the exact non-determinism block_bootstrap() fixed in deepscan18 B-E1 (lines ~506-524) but
+    # which was never applied to this sibling default method. Random DRAWS are now identical
+    # CPU vs GPU for a given seed; only the vectorized gather + cumsum run on device.
+    cpu_rng = create_authoritative_rng(seed)[0]
+    indices_np = cpu_rng.integers(0, len(trades), size=(n_sims, len(trades)))
+    indices = indices_np if xp is np else xp.asarray(indices_np)
     sampled = trades_xp[indices]
     paths = xp.cumsum(sampled, axis=1)
 
@@ -488,16 +498,47 @@ def block_bootstrap(
 
     n_trades = len(trades)
     p = 1.0 / expected_block_length
-    # F-1: Use PCG64DXSM (same family as every other MC path) instead of SFC64.
-    rng = create_authoritative_rng(seed)[0]
 
     # GPU path: use CuPy vectorized bootstrap when available
+    #
+    # FIX (deepscan18 B-E1, 2026-07-05): previously this called
+    # `block_bootstrap_gpu(trades, n_sims, expected_block_length, seed)`, which
+    # internally seeded `xp.random.default_rng(seed)` ON THE GPU (cupy's own RNG
+    # algorithm/stream) — a DIFFERENT generator family than the authoritative
+    # PCG64DXSM (`create_authoritative_rng`) the CPU/Numba path below uses. Same
+    # seed therefore produced a DIFFERENT bootstrap resample on GPU (tower) vs
+    # CPU (CI / non-GPU dev boxes), and hence a different
+    # `probability_of_ruin_ci.ci_high` straddling the B14 0.20 hard-gate
+    # threshold depending on which machine happened to run the backtest.
+    # `use_gpu` defaults true end-to-end, so this was the common path in prod,
+    # not an edge case.
+    #
+    # FIX: generate the resample INDICES (start_pos/block_draws/restart_pos) on
+    # CPU with the authoritative RNG — the exact same call sequence/shapes the
+    # Numba core below uses — and hand only those (cheap) index arrays to the
+    # GPU for the gather + cumsum. The random DRAWS are now identical CPU vs
+    # GPU for a given seed; only the vectorized gather runs on device. See
+    # gpu_pipeline.block_bootstrap_gpu() and test_mc_gpu_cpu_determinism.py.
     if GPU_AVAILABLE and n_sims >= 1000:
         try:
             from src.engine.gpu_pipeline import block_bootstrap_gpu
-            return block_bootstrap_gpu(trades, n_sims, expected_block_length, seed)
+            _idx_rng = create_authoritative_rng(seed)[0]
+            _start_pos = _idx_rng.integers(0, n_trades, size=n_sims)
+            _block_draws = _idx_rng.random(size=(n_sims, n_trades))
+            _restart_pos = _idx_rng.integers(0, n_trades, size=(n_sims, n_trades))
+            return block_bootstrap_gpu(
+                trades, n_sims, expected_block_length, seed,
+                start_pos=_start_pos, block_draws=_block_draws, restart_pos=_restart_pos,
+            )
         except Exception:
             pass  # Fall through to CPU
+
+    # F-1: Use PCG64DXSM (same family as every other MC path) instead of SFC64.
+    # NOTE: created here (not before the GPU attempt above) so the CPU-only
+    # code path below is byte-identical to pre-deepscan18 behavior — the GPU
+    # branch now derives its own index arrays from a fresh, independently-seeded
+    # authoritative RNG rather than sharing/consuming this one.
+    rng = create_authoritative_rng(seed)[0]
 
     if NUMBA_AVAILABLE:
         # Pre-generate all random numbers (Numba doesn't support default_rng)
@@ -1362,8 +1403,14 @@ def _compute_sharpe_ratios(paths: np.ndarray, periods_per_year: float = 252.0) -
     daily = np.diff(paths, axis=1)
     means = np.mean(daily, axis=1)
     stds = np.std(daily, axis=1, ddof=1)
-    stds = np.where(stds == 0, 1e-10, stds)
-    return means / stds * np.sqrt(periods_per_year)
+    # FIX (deepscan17 B-8, 2026-07-05): this was the pre-FIX-8 pattern — replacing
+    # near-zero std with 1e-10 explodes Sharpe to ~1e10-1e13 for flat/breakeven
+    # paths, corrupting confidence_intervals.sharpe_ratio percentiles fed to B14/
+    # prop-firm sim consumers. Mirrors the guard already applied in
+    # risk_metrics.py::compute_sharpe_distribution (FIX 8) and
+    # compute_lo_sharpe_distribution (E6): stds < 1e-8 -> Sharpe = 0.0 (no edge
+    # signal, not an infinitely profitable one).
+    return np.where(stds < 1e-8, 0.0, means / stds * np.sqrt(periods_per_year))
 
 
 def _compute_percentiles(values: np.ndarray, levels: list[float]) -> dict:
@@ -2054,6 +2101,16 @@ def run_monte_carlo(
                     )
                     _firm_ruin_ci["ruin_basis"] = "firm_breach"
                     _firm_ruin_ci["ruin_firm"] = _fk
+                    # deep-scan payout-denial-gate fix (2026-07-06):
+                    # b14-ci-gate.ts reads per_firm[firm].consistency_fail_rate to fire the
+                    # Topstep 40%-consistency payout-denial BLOCK, but consistency_fail_rate
+                    # was only ever written at firm_survival[firm] top-level (this loop built
+                    # per_firm entries fresh from compute_mc_confidence_intervals, which does
+                    # not carry it) — so the payout-denial gate could NEVER fire. Merge the
+                    # key from the source firm_survival dict so the TS gate has real data.
+                    _cfr = _fsurv.get("consistency_fail_rate")
+                    if _cfr is not None:
+                        _firm_ruin_ci["consistency_fail_rate"] = _cfr
                     per_firm_ruin_cis[_fk] = _firm_ruin_ci
                     # FIX 3 (deep-scan #9 2026-07-02): Select worst firm by ci_high, not
                     # point_estimate. B14 gates on ci_high; using point_estimate misaligns

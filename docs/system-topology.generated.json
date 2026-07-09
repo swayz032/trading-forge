@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-03T19:55:50.389Z",
+  "generatedAt": "2026-07-09T20:09:54.887Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,13 +15,13 @@
     ]
   },
   "counts": {
-    "routes": 78,
-    "schedulerJobs": 106,
-    "workflowFiles": 28,
-    "canonicalWorkflows": 28,
+    "routes": 79,
+    "schedulerJobs": 110,
+    "workflowFiles": 20,
+    "canonicalWorkflows": 20,
     "engineSubsystems": 29,
     "databaseTables": 110,
-    "registrySubsystems": 71
+    "registrySubsystems": 73
   },
   "routes": [
     "/api/ab-comparison",
@@ -97,6 +97,7 @@
     "/api/synthetic-black-swan",
     "/api/tournament",
     "/api/trade-journal",
+    "/api/traderspost",
     "/api/tradingview",
     "/api/validation",
     "/api/validation-cadence",
@@ -106,6 +107,7 @@
   "schedulerJobs": [
     "a-plus-auditor-scan",
     "ab-comparison-weekly-digest",
+    "account-key-uniqueness-sanity",
     "agent-health-sweep",
     "anti-setup-effectiveness",
     "anti-setup-mine",
@@ -161,6 +163,7 @@
     "meta-parameter-review",
     "metrics-collector",
     "metrics-heartbeat",
+    "n8n-data-backup-daily",
     "n8n-drift-detector-monthly",
     "n8n-drift-detector-weekly",
     "n8n-execution-scrape",
@@ -173,8 +176,10 @@
     "paper-journal-recon-daily",
     "paper-vs-backtest",
     "pattern-aggregator",
+    "pine-reconciliation-staleness-check",
     "pipeline-resume-drain",
     "portfolio-correlation",
+    "portfolio-drift-demotion",
     "position-drift-reconcile",
     "pre-market-briefing-discord",
     "pre-market-prep",
@@ -212,581 +217,399 @@
     "weekly-drift-detection"
   ],
   "workflows": [
-    "0A_health_monitor_66HEjQavpvirY6g5",
-    "10A_master_orchestration_8HKXzNmo9KF59SBu",
-    "11A_critic_optimization_pVT6svNTljjBoQbW",
-    "3A_workflow_backup_J0p8oYkONmN7pYn6",
-    "5A_weekly_tournament_2rVOEn4LnMAubTmW",
-    "5G_brave_search_scout_z2c7zJmSx5dNle6P",
-    "5H_reddit_scout_ZMgHYjcTq4YTRQXh",
-    "5I_tavily_scout_TMT3g7HenJ5etiwv",
-    "6D_compliance_gate_RumAJUp4iS1TYlNm",
-    "7A_auto_evolution_MIIxmilbgZv3SUBh",
-    "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
-    "8B_source_quality_review_LQtqeWAcNOlkqROH",
-    "9A_nightly_self_critique_26ruSYvIjqHGOhsd",
-    "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
-    "Daily_Compliance_Check_WT9sVMzG83rg1L29",
-    "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
-    "Daily_Scout_5E_7GCDtSCifGgdpeuq",
-    "Macro_Data_Sync_X2IjKuYseGukxKDj",
-    "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
-    "Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
-    "Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
-    "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
-    "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
-    "Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-    "Strategy_Tournament_hPXhUaSC3ScznZE9",
-    "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
-    "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
-    "Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
+    "0A_health_monitor_DGEk1D478xWJClKD",
+    "10A_master_orchestration_LTH2vot3Mv9B5AHb",
+    "14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
+    "3A_workflow_backup_5bfT33w0TylM0Hbk",
+    "5A_weekly_tournament_iGjDyKYpxNFzoXCw",
+    "5P_nemo_scenario_generator_0ooxmt74fCtHiTo6",
+    "6D_compliance_gate_UJUSRydbOZHDq7LB",
+    "7A_auto_evolution_eEt2dJrZbV6C7TRL",
+    "Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
+    "Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
+    "Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
+    "Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
+    "Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+    "Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
+    "Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
+    "Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
+    "Pre_Session_Skip_Check_flOq70zNhT3Umemt",
+    "Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+    "TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV",
+    "Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp"
   ],
   "workflowSummary": {
-    "filesScanned": 28,
-    "canonicalCount": 28,
+    "filesScanned": 20,
+    "canonicalCount": 20,
     "duplicateVariantsCollapsed": 0,
     "byState": {
-      "production-active": 28,
+      "production-active": 20,
       "built-inactive": 0,
       "broken": 0,
       "external-non-core": 0
     },
     "items": [
       {
-        "canonicalName": "0A_health_monitor_66HEjQavpvirY6g5",
+        "canonicalName": "0A_health_monitor_DGEk1D478xWJClKD",
         "variants": [
-          "0A_health_monitor_66HEjQavpvirY6g5"
+          "0A_health_monitor_DGEk1D478xWJClKD"
         ],
-        "preferredName": "0A_health_monitor_66HEjQavpvirY6g5",
-        "state": "production-active",
-        "healthStatus": "unknown",
-        "failureCount": 1,
-        "lastSuccessAt": null,
-        "lastFailureAt": "2026-03-22T17:45:31.359Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "No successful execution found in recent n8n execution history.",
-          "No live success timestamp is available for this active workflow.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "10A_master_orchestration_8HKXzNmo9KF59SBu",
-        "variants": [
-          "10A_master_orchestration_8HKXzNmo9KF59SBu"
-        ],
-        "preferredName": "10A_master_orchestration_8HKXzNmo9KF59SBu",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-03T09:00:00.476Z",
-        "lastFailureAt": "2026-04-03T09:00:00.435Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "11A_critic_optimization_pVT6svNTljjBoQbW",
-        "variants": [
-          "11A_critic_optimization_pVT6svNTljjBoQbW"
-        ],
-        "preferredName": "11A_critic_optimization_pVT6svNTljjBoQbW",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 0,
-        "lastSuccessAt": "2026-04-03T07:00:00.347Z",
-        "lastFailureAt": null,
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "3A_workflow_backup_J0p8oYkONmN7pYn6",
-        "variants": [
-          "3A_workflow_backup_J0p8oYkONmN7pYn6"
-        ],
-        "preferredName": "3A_workflow_backup_J0p8oYkONmN7pYn6",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 0,
-        "lastSuccessAt": "2026-04-03T07:00:02.218Z",
-        "lastFailureAt": null,
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "5A_weekly_tournament_2rVOEn4LnMAubTmW",
-        "variants": [
-          "5A_weekly_tournament_2rVOEn4LnMAubTmW"
-        ],
-        "preferredName": "5A_weekly_tournament_2rVOEn4LnMAubTmW",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 0,
-        "lastSuccessAt": "2026-03-22T23:00:05.306Z",
-        "lastFailureAt": null,
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "5G_brave_search_scout_z2c7zJmSx5dNle6P",
-        "variants": [
-          "5G_brave_search_scout_z2c7zJmSx5dNle6P"
-        ],
-        "preferredName": "5G_brave_search_scout_z2c7zJmSx5dNle6P",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-02T22:00:53.486Z",
-        "lastFailureAt": "2026-03-21T22:00:17.476Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "5H_reddit_scout_ZMgHYjcTq4YTRQXh",
-        "variants": [
-          "5H_reddit_scout_ZMgHYjcTq4YTRQXh"
-        ],
-        "preferredName": "5H_reddit_scout_ZMgHYjcTq4YTRQXh",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-03T06:19:39.025Z",
-        "lastFailureAt": "2026-03-26T22:30:06.037Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "5I_tavily_scout_TMT3g7HenJ5etiwv",
-        "variants": [
-          "5I_tavily_scout_TMT3g7HenJ5etiwv"
-        ],
-        "preferredName": "5I_tavily_scout_TMT3g7HenJ5etiwv",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-02T23:00:06.283Z",
-        "lastFailureAt": "2026-03-21T23:00:16.239Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "6D_compliance_gate_RumAJUp4iS1TYlNm",
-        "variants": [
-          "6D_compliance_gate_RumAJUp4iS1TYlNm"
-        ],
-        "preferredName": "6D_compliance_gate_RumAJUp4iS1TYlNm",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-03T08:00:00.333Z",
-        "lastFailureAt": "2026-03-23T08:00:00.559Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "7A_auto_evolution_MIIxmilbgZv3SUBh",
-        "variants": [
-          "7A_auto_evolution_MIIxmilbgZv3SUBh"
-        ],
-        "preferredName": "7A_auto_evolution_MIIxmilbgZv3SUBh",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-03T07:00:00.310Z",
-        "lastFailureAt": "2026-03-23T07:00:00.345Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
-        "variants": [
-          "8A_idea_to_strategy_vlCaiWM7F0AH1RRY"
-        ],
-        "preferredName": "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 0,
-        "lastSuccessAt": "2026-04-02T23:32:03.238Z",
-        "lastFailureAt": null,
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "8B_source_quality_review_LQtqeWAcNOlkqROH",
-        "variants": [
-          "8B_source_quality_review_LQtqeWAcNOlkqROH"
-        ],
-        "preferredName": "8B_source_quality_review_LQtqeWAcNOlkqROH",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-03T06:19:42.296Z",
-        "lastFailureAt": "2026-04-03T06:12:00.644Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "9A_nightly_self_critique_26ruSYvIjqHGOhsd",
-        "variants": [
-          "9A_nightly_self_critique_26ruSYvIjqHGOhsd"
-        ],
-        "preferredName": "9A_nightly_self_critique_26ruSYvIjqHGOhsd",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 0,
-        "lastSuccessAt": "2026-04-03T06:00:52.869Z",
-        "lastFailureAt": null,
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
-        "variants": [
-          "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF"
-        ],
-        "preferredName": "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-01T07:00:00.752Z",
-        "lastFailureAt": "2026-04-01T07:00:00.523Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Daily_Compliance_Check_WT9sVMzG83rg1L29",
-        "variants": [
-          "Daily_Compliance_Check_WT9sVMzG83rg1L29"
-        ],
-        "preferredName": "Daily_Compliance_Check_WT9sVMzG83rg1L29",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-02T13:00:00.326Z",
-        "lastFailureAt": "2026-03-20T13:00:06.022Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
-        "variants": [
-          "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX"
-        ],
-        "preferredName": "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-02T21:00:01.147Z",
-        "lastFailureAt": "2026-03-23T21:00:00.758Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "variants": [
-          "Daily_Scout_5E_7GCDtSCifGgdpeuq"
-        ],
-        "preferredName": "Daily_Scout_5E_7GCDtSCifGgdpeuq",
+        "preferredName": "0A_health_monitor_DGEk1D478xWJClKD",
         "state": "production-active",
         "healthStatus": "unknown",
         "failureCount": 0,
         "lastSuccessAt": null,
         "lastFailureAt": null,
-        "sourceStatus": "missing",
+        "sourceStatus": "valid",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
+        "liveSyncStatus": "live-aligned",
         "notes": [
-          "Restored from repository canonical workflow set.",
-          "No live success timestamp is available for this active workflow.",
-          "Workflow export is missing from workflows/n8n."
+          "Canonical global error-sink workflow (CLAUDE.md §2) — triggered only as the errorWorkflow target of other workflows' failures, not on its own schedule. Zero direct executions is expected, not a health signal.",
+          "No live success timestamp is available for this active workflow."
         ]
       },
       {
-        "canonicalName": "Macro_Data_Sync_X2IjKuYseGukxKDj",
+        "canonicalName": "10A_master_orchestration_LTH2vot3Mv9B5AHb",
         "variants": [
-          "Macro_Data_Sync_X2IjKuYseGukxKDj"
+          "10A_master_orchestration_LTH2vot3Mv9B5AHb"
         ],
-        "preferredName": "Macro_Data_Sync_X2IjKuYseGukxKDj",
+        "preferredName": "10A_master_orchestration_LTH2vot3Mv9B5AHb",
         "state": "production-active",
         "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-02T23:00:17.868Z",
-        "lastFailureAt": "2026-03-31T23:02:55.957Z",
-        "sourceStatus": "missing",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T09:00:04.304Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
+        "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
+          "Workflow health inferred from live success timestamp."
         ]
       },
       {
-        "canonicalName": "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
+        "canonicalName": "14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
         "variants": [
-          "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9"
+          "14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT"
         ],
-        "preferredName": "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
+        "preferredName": "14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T07:00:26.090Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "3A_workflow_backup_5bfT33w0TylM0Hbk",
+        "variants": [
+          "3A_workflow_backup_5bfT33w0TylM0Hbk"
+        ],
+        "preferredName": "3A_workflow_backup_5bfT33w0TylM0Hbk",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T06:00:04.767Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "5A_weekly_tournament_iGjDyKYpxNFzoXCw",
+        "variants": [
+          "5A_weekly_tournament_iGjDyKYpxNFzoXCw"
+        ],
+        "preferredName": "5A_weekly_tournament_iGjDyKYpxNFzoXCw",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T23:00:00.913Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "5P_nemo_scenario_generator_0ooxmt74fCtHiTo6",
+        "variants": [
+          "5P_nemo_scenario_generator_0ooxmt74fCtHiTo6"
+        ],
+        "preferredName": "5P_nemo_scenario_generator_0ooxmt74fCtHiTo6",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T14:00:07.710Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "6D_compliance_gate_UJUSRydbOZHDq7LB",
+        "variants": [
+          "6D_compliance_gate_UJUSRydbOZHDq7LB"
+        ],
+        "preferredName": "6D_compliance_gate_UJUSRydbOZHDq7LB",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T08:00:01.462Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "7A_auto_evolution_eEt2dJrZbV6C7TRL",
+        "variants": [
+          "7A_auto_evolution_eEt2dJrZbV6C7TRL"
+        ],
+        "preferredName": "7A_auto_evolution_eEt2dJrZbV6C7TRL",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T07:20:01.637Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
+        "variants": [
+          "Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
+        ],
+        "preferredName": "Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
+        "state": "production-active",
+        "healthStatus": "stale",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-01T07:00:07.398Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Last known success is 205h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+        ]
+      },
+      {
+        "canonicalName": "Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
+        "variants": [
+          "Daily_Compliance_Check_b8CSc84wQzJ4lEGH"
+        ],
+        "preferredName": "Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-03T13:00:06.335Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
+        "variants": [
+          "Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx"
+        ],
+        "preferredName": "Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-03T21:00:01.728Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
+        "variants": [
+          "Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq"
+        ],
+        "preferredName": "Macro_Data_Sync_Evening_7pm_Regime_Summary_pSKkMAYwaV0GzBUq",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T23:01:21.174Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+        "variants": [
+          "Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC"
+        ],
+        "preferredName": "Macro_Data_Sync_Morning_7am_Skip_Classifier_hhGHmV0JSlpI5raC",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-05T11:00:58.088Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
+        "variants": [
+          "Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd"
+        ],
+        "preferredName": "Monthly_Robustness_Check_RIK5eQ0rFEG78Vtd",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-01T10:00:01.398Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Monthly cadence (~30-day cycle) — staleAfterHours overridden to 840h (35 days) so this workflow isn't misreported as \"stale\" for ~3 weeks out of every cycle under the global 192h default.",
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
+        "variants": [
+          "Post_Session_Skip_Review_ao1OK1SCNVMQbCPK"
+        ],
+        "preferredName": "Post_Session_Skip_Review_ao1OK1SCNVMQbCPK",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-03T21:30:04.262Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
+        "variants": [
+          "Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk"
+        ],
+        "preferredName": "Pre_Session_Compliance_Gate_VB3PLAMAJ4q9gthk",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-03T13:15:02.151Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Pre_Session_Skip_Check_flOq70zNhT3Umemt",
+        "variants": [
+          "Pre_Session_Skip_Check_flOq70zNhT3Umemt"
+        ],
+        "preferredName": "Pre_Session_Skip_Check_flOq70zNhT3Umemt",
+        "state": "production-active",
+        "healthStatus": "healthy",
+        "failureCount": 0,
+        "lastSuccessAt": "2026-07-03T13:00:02.603Z",
+        "lastFailureAt": null,
+        "sourceStatus": "valid",
+        "sourceValidationErrors": [],
+        "liveSyncStatus": "live-aligned",
+        "notes": [
+          "Workflow health inferred from live success timestamp."
+        ]
+      },
+      {
+        "canonicalName": "Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "variants": [
+          "Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT"
+        ],
+        "preferredName": "Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
         "state": "production-active",
         "healthStatus": "unknown",
         "failureCount": 0,
         "lastSuccessAt": null,
         "lastFailureAt": null,
-        "sourceStatus": "missing",
+        "sourceStatus": "valid",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
+        "liveSyncStatus": "live-aligned",
         "notes": [
-          "No successful execution found in recent n8n execution history.",
-          "No live success timestamp is available for this active workflow.",
-          "Workflow export is missing from workflows/n8n."
+          "Webhook/on-demand gateway workflow — no recurring schedule, so zero executions in the lookback window is expected, not a health signal.",
+          "No live success timestamp is available for this active workflow."
         ]
       },
       {
-        "canonicalName": "Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
+        "canonicalName": "TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV",
         "variants": [
-          "Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd"
+          "TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV"
         ],
-        "preferredName": "Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-01T06:22:42.196Z",
-        "lastFailureAt": "2026-04-03T06:00:12.848Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
-        "variants": [
-          "Post_Session_Skip_Review_LayXj1mbHh4aGSM9"
-        ],
-        "preferredName": "Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-02T21:30:05.623Z",
-        "lastFailureAt": "2026-04-02T21:30:05.270Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
-        "variants": [
-          "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en"
-        ],
-        "preferredName": "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-02T13:15:06.730Z",
-        "lastFailureAt": "2026-04-02T13:15:06.441Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
-        "variants": [
-          "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F"
-        ],
-        "preferredName": "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-04-02T13:00:06.080Z",
-        "lastFailureAt": "2026-04-02T13:00:05.475Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "variants": [
-          "Strategy_Generation_Loop_eCr7cyb0aPArFCZc"
-        ],
-        "preferredName": "Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "state": "production-active",
-        "healthStatus": "unknown",
-        "failureCount": 0,
-        "lastSuccessAt": null,
-        "lastFailureAt": null,
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "No successful execution found in recent n8n execution history.",
-          "No live success timestamp is available for this active workflow.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Strategy_Tournament_hPXhUaSC3ScznZE9",
-        "variants": [
-          "Strategy_Tournament_hPXhUaSC3ScznZE9"
-        ],
-        "preferredName": "Strategy_Tournament_hPXhUaSC3ScznZE9",
+        "preferredName": "TF_Health_Watchdog_auto_restart_Discord_alert_pajWJxqX37zKkooV",
         "state": "production-active",
         "healthStatus": "healthy",
         "failureCount": 0,
-        "lastSuccessAt": "2026-04-03T10:00:06.116Z",
+        "lastSuccessAt": "2026-07-06T02:15:00.561Z",
         "lastFailureAt": null,
-        "sourceStatus": "missing",
+        "sourceStatus": "valid",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
+        "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
+          "Workflow health inferred from live success timestamp."
         ]
       },
       {
-        "canonicalName": "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
+        "canonicalName": "Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp",
         "variants": [
-          "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB"
+          "Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp"
         ],
-        "preferredName": "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
+        "preferredName": "Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp",
         "state": "production-active",
         "healthStatus": "healthy",
         "failureCount": 0,
-        "lastSuccessAt": "2026-03-23T00:00:00.536Z",
+        "lastSuccessAt": "2026-07-06T00:00:01.390Z",
         "lastFailureAt": null,
-        "sourceStatus": "missing",
+        "sourceStatus": "valid",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
+        "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
-        "variants": [
-          "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
-        ],
-        "preferredName": "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
-        "state": "production-active",
-        "healthStatus": "unknown",
-        "failureCount": 0,
-        "lastSuccessAt": null,
-        "lastFailureAt": null,
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Restored from repository canonical workflow set.",
-          "No live success timestamp is available for this active workflow.",
-          "Workflow export is missing from workflows/n8n."
-        ]
-      },
-      {
-        "canonicalName": "Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy",
-        "variants": [
-          "Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
-        ],
-        "preferredName": "Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy",
-        "state": "production-active",
-        "healthStatus": "healthy",
-        "failureCount": 1,
-        "lastSuccessAt": "2026-03-21T13:01:32.840Z",
-        "lastFailureAt": "2026-03-21T13:01:32.412Z",
-        "sourceStatus": "missing",
-        "sourceValidationErrors": [],
-        "liveSyncStatus": "source-missing",
-        "notes": [
-          "Workflow health inferred from live success timestamp.",
-          "Workflow export is missing from workflows/n8n."
+          "Workflow health inferred from live success timestamp."
         ]
       }
     ]
@@ -935,34 +758,34 @@
     "workflow_backups"
   ],
   "registryCoverage": {
-    "registryEntries": 71,
-    "autonomousSubsystems": 63,
+    "registryEntries": 73,
+    "autonomousSubsystems": 64,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 65,
+      "runtime-proven": 67,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 65,
+      "active": 67,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 66,
+      "active_preprod": 68,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 64,
+      "runtime_proven_autonomous": 66,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 58,
+      "not_collecting": 60,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -970,13 +793,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 57,
+      "deterministic_instrumented": 59,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 62,
+      "deterministic_instrumented": 64,
       "manual_gated": 2
     },
     "manualGates": [
@@ -992,8 +815,8 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 78,
-      "schedulerJobs": 106,
+      "routes": 79,
+      "schedulerJobs": 110,
       "engineSubsystems": 29,
       "databaseTables": 110
     },
@@ -1020,16 +843,17 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 58,
-      "dataCollectionComplete": 71,
-      "auditabilityComplete": 71,
-      "failureVisibilityComplete": 71,
-      "authorityCorrect": 71,
+      "automationComplete": 59,
+      "dataCollectionComplete": 73,
+      "auditabilityComplete": 73,
+      "failureVisibilityComplete": 73,
+      "authorityCorrect": 73,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
         "carter_voice_agent",
         "exit_engine_ab_harness",
+        "fade_the_losers",
         "phase5_contract_spec_scaffold",
         "slumhouse_frontend",
         "slumhouse_routes",
@@ -1040,7 +864,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 64,
+        "production_autonomous": 66,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1075,6 +899,7 @@
         "parameter_robustness_gate",
         "pbo_overfit_gate",
         "pine_export_preparation",
+        "portfolio_drift_demotion",
         "pre_market_briefing_service",
         "pre_market_institutional_expansion",
         "quantum_experimental",
@@ -1100,6 +925,7 @@
         "adaptive_exit_engine",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "fade_the_losers",
         "frozen_policy_contract",
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
@@ -1126,43 +952,17 @@
       "inactiveWorkflowCandidates": [],
       "brokenWorkflowBlockers": [],
       "failingWorkflowBlockers": [],
-      "sourceMissingWorkflowBlockers": [
-        "0A_health_monitor_66HEjQavpvirY6g5",
-        "10A_master_orchestration_8HKXzNmo9KF59SBu",
-        "11A_critic_optimization_pVT6svNTljjBoQbW",
-        "3A_workflow_backup_J0p8oYkONmN7pYn6",
-        "5A_weekly_tournament_2rVOEn4LnMAubTmW",
-        "5G_brave_search_scout_z2c7zJmSx5dNle6P",
-        "5H_reddit_scout_ZMgHYjcTq4YTRQXh",
-        "5I_tavily_scout_TMT3g7HenJ5etiwv",
-        "6D_compliance_gate_RumAJUp4iS1TYlNm",
-        "7A_auto_evolution_MIIxmilbgZv3SUBh",
-        "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
-        "8B_source_quality_review_LQtqeWAcNOlkqROH",
-        "9A_nightly_self_critique_26ruSYvIjqHGOhsd",
-        "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
-        "Daily_Compliance_Check_WT9sVMzG83rg1L29",
-        "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
-        "Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "Macro_Data_Sync_X2IjKuYseGukxKDj",
-        "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
-        "Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
-        "Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
-        "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
-        "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
-        "Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "Strategy_Tournament_hPXhUaSC3ScznZE9",
-        "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
-        "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
-        "Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
-      ],
+      "sourceMissingWorkflowBlockers": [],
       "redeployWorkflowBlockers": [],
-      "staleWorkflowBlockers": [],
+      "staleWorkflowBlockers": [
+        "Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
+      ],
       "runtimeControlBlockers": [],
       "blockers": [
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+        "fade_the_losers:manual_gate:operator_invoke_for_cohort_validation",
         "frozen_policy_contract:manual_gate:operator_hmac_override",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
@@ -1177,39 +977,9 @@
         "replay_harness_engine:manual_gate:operator-approve",
         "slumhouse_users_table:manual_gate:operator",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
-        "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
-        "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
-        "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
-        "workflow-source-missing:0A_health_monitor_66HEjQavpvirY6g5",
-        "workflow-source-missing:10A_master_orchestration_8HKXzNmo9KF59SBu",
-        "workflow-source-missing:11A_critic_optimization_pVT6svNTljjBoQbW",
-        "workflow-source-missing:3A_workflow_backup_J0p8oYkONmN7pYn6",
-        "workflow-source-missing:5A_weekly_tournament_2rVOEn4LnMAubTmW",
-        "workflow-source-missing:5G_brave_search_scout_z2c7zJmSx5dNle6P",
-        "workflow-source-missing:5H_reddit_scout_ZMgHYjcTq4YTRQXh",
-        "workflow-source-missing:5I_tavily_scout_TMT3g7HenJ5etiwv",
-        "workflow-source-missing:6D_compliance_gate_RumAJUp4iS1TYlNm",
-        "workflow-source-missing:7A_auto_evolution_MIIxmilbgZv3SUBh",
-        "workflow-source-missing:8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
-        "workflow-source-missing:8B_source_quality_review_LQtqeWAcNOlkqROH",
-        "workflow-source-missing:9A_nightly_self_critique_26ruSYvIjqHGOhsd",
-        "workflow-source-missing:Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
-        "workflow-source-missing:Daily_Compliance_Check_WT9sVMzG83rg1L29",
-        "workflow-source-missing:Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
-        "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "workflow-source-missing:Macro_Data_Sync_X2IjKuYseGukxKDj",
-        "workflow-source-missing:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
-        "workflow-source-missing:Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
-        "workflow-source-missing:Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
-        "workflow-source-missing:Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
-        "workflow-source-missing:Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
-        "workflow-source-missing:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "workflow-source-missing:Strategy_Tournament_hPXhUaSC3ScznZE9",
-        "workflow-source-missing:Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
-        "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
-        "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
+        "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
+        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
       ]
     },
     "readiness": {
@@ -1220,6 +990,7 @@
         "cloud_qmc_ising:experimental_governance",
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+        "fade_the_losers:manual_gate:operator_invoke_for_cohort_validation",
         "frozen_policy_contract:manual_gate:operator_hmac_override",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
@@ -1237,39 +1008,9 @@
         "slumhouse_users_table:manual_gate:operator",
         "synthetic_black_swan_survival:experimental_governance",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
-        "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
-        "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
-        "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
-        "workflow-source-missing:0A_health_monitor_66HEjQavpvirY6g5",
-        "workflow-source-missing:10A_master_orchestration_8HKXzNmo9KF59SBu",
-        "workflow-source-missing:11A_critic_optimization_pVT6svNTljjBoQbW",
-        "workflow-source-missing:3A_workflow_backup_J0p8oYkONmN7pYn6",
-        "workflow-source-missing:5A_weekly_tournament_2rVOEn4LnMAubTmW",
-        "workflow-source-missing:5G_brave_search_scout_z2c7zJmSx5dNle6P",
-        "workflow-source-missing:5H_reddit_scout_ZMgHYjcTq4YTRQXh",
-        "workflow-source-missing:5I_tavily_scout_TMT3g7HenJ5etiwv",
-        "workflow-source-missing:6D_compliance_gate_RumAJUp4iS1TYlNm",
-        "workflow-source-missing:7A_auto_evolution_MIIxmilbgZv3SUBh",
-        "workflow-source-missing:8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
-        "workflow-source-missing:8B_source_quality_review_LQtqeWAcNOlkqROH",
-        "workflow-source-missing:9A_nightly_self_critique_26ruSYvIjqHGOhsd",
-        "workflow-source-missing:Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
-        "workflow-source-missing:Daily_Compliance_Check_WT9sVMzG83rg1L29",
-        "workflow-source-missing:Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
-        "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "workflow-source-missing:Macro_Data_Sync_X2IjKuYseGukxKDj",
-        "workflow-source-missing:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
-        "workflow-source-missing:Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
-        "workflow-source-missing:Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
-        "workflow-source-missing:Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
-        "workflow-source-missing:Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
-        "workflow-source-missing:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
-        "workflow-source-missing:Strategy_Tournament_hPXhUaSC3ScznZE9",
-        "workflow-source-missing:Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
-        "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
-        "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
+        "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
+        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
       ],
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
@@ -1277,6 +1018,7 @@
         "cloud_qmc_ising",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "fade_the_losers",
         "frozen_policy_contract",
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
@@ -1874,7 +1616,8 @@
           "/api/broker-error-budget",
           "/api/broker/fill-callback",
           "/api/live-order",
-          "/api/strategy-assignments"
+          "/api/strategy-assignments",
+          "/api/traderspost"
         ],
         "schedulerJobs": [
           "broker-error-budget-check",
@@ -3220,6 +2963,96 @@
         "coverageGaps": []
       },
       {
+        "id": "fade_the_losers",
+        "domain": "research",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "manual_invoke",
+        "decisionAuthority": "gate",
+        "manualGate": "operator_invoke_for_cohort_validation",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:operator_invoke_for_cohort_validation"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log.fade.*",
+          "audit_log.fade.candidate_created",
+          "fade.candidate_created",
+          "fade.skipped_already_faded",
+          "fade.skipped_degenerate_death",
+          "fade.skipped_insufficient_trades",
+          "fade.skipped_not_directional"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "strategies",
+          "strategies.config",
+          "strategy_graveyard",
+          "strategy_graveyard.backtest_summary",
+          "strategy_graveyard.death_reason",
+          "strategy_graveyard.failure_modes",
+          "strategy_graveyard.searchable_metrics"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "incomplete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [
+          "manual_gate:operator_invoke_for_cohort_validation"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.fade.*",
+          "audit_log.fade.candidate_created",
+          "fade.candidate_created",
+          "fade.skipped_already_faded",
+          "fade.skipped_degenerate_death",
+          "fade.skipped_insufficient_trades",
+          "fade.skipped_not_directional",
+          "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20",
+          "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/server/lib/__tests__/fade-inverter.test.ts + src/server/services/__tests__/fade-the-losers-service.test.ts",
+        "freshnessSignals": [
+          "audit_log.fade.candidate_created"
+        ],
+        "evidenceQueries": [
+          "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20",
+          "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20"
+        ],
+        "coverageGaps": []
+      },
+      {
         "id": "frankenstein_randomization_gate",
         "domain": "qualification",
         "ownerSurface": "python-node",
@@ -4069,6 +3902,7 @@
           "CircuitBreakerRegistry.statusAll",
           "metrics:snapshot SSE",
           "paper.session_auto_stop",
+          "pine_reconciliation.staleness_checked",
           "portfolio.regime_coverage_gap",
           "regret.score-fill",
           "scheduler:job-complete SSE",
@@ -4118,6 +3952,7 @@
           "health-dashboard-runtime",
           "metrics:snapshot SSE",
           "paper.session_auto_stop",
+          "pine_reconciliation.staleness_checked",
           "portfolio.regime_coverage_gap",
           "regret.score-fill",
           "scheduler:job-complete SSE",
@@ -4141,6 +3976,7 @@
           "/api/webhook-latency"
         ],
         "schedulerJobs": [
+          "account-key-uniqueness-sanity",
           "agent-health-sweep",
           "data-integrity-suite",
           "deployed-pine-artifact-check",
@@ -4153,8 +3989,7 @@
           "idempotency-cleanup",
           "metrics-collector",
           "metrics-heartbeat",
-          "ollama-keepwarm-watchdog",
-          "position-drift-reconcile",
+          "pine-reconciliation-staleness-check",
           "pre-trading-day-health-check",
           "python-pool-saturation-check",
           "regime-coverage-check",
@@ -4290,6 +4125,7 @@
           "heartbeat-ooh-check",
           "heartbeat-stale-check",
           "heartbeat-write",
+          "ollama-keepwarm-watchdog",
           "prop-firm-cookie-refresh"
         ],
         "healthCheck": "/api/health/dashboard",
@@ -4725,6 +4561,107 @@
           "pine-export-artifacts",
           "deploy-approval-audit-events",
           "pine-route-coverage"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "portfolio_drift_demotion",
+        "domain": "lifecycle",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "high",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log.lifecycle.portfolio_drift_demotion",
+          "audit_log.portfolio_drift_demotion.*",
+          "audit_log.portfolio_drift_demotion.completed",
+          "audit_log.strategy.portfolio_drift_detected",
+          "lifecycle.portfolio_drift_demotion",
+          "lifecycle.portfolio_drift_zombie_declining",
+          "portfolio_drift_demotion.completed",
+          "portfolio_drift_demotion.dry_run",
+          "portfolio_drift_demotion.no_sharpe_data_skipped",
+          "portfolio_drift_demotion.strategy_eval_failed",
+          "prometheus:tf_portfolio_drift_demotions_total",
+          "scheduler:portfolio-drift-demotion:21,22-utc",
+          "sse:lifecycle:portfolio_drift_demoted",
+          "strategy.portfolio_drift_detected",
+          "tf_portfolio_drift_demotions_total"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "strategies",
+          "strategies.rolling_sharpe_30d"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.lifecycle.portfolio_drift_demotion",
+          "audit_log.portfolio_drift_demotion.*",
+          "audit_log.portfolio_drift_demotion.completed",
+          "audit_log.strategy.portfolio_drift_detected",
+          "lifecycle.portfolio_drift_demotion",
+          "lifecycle.portfolio_drift_zombie_declining",
+          "portfolio_drift_demotion.completed",
+          "portfolio_drift_demotion.dry_run",
+          "portfolio_drift_demotion.no_sharpe_data_skipped",
+          "portfolio_drift_demotion.strategy_eval_failed",
+          "prometheus:tf_portfolio_drift_demotions_total",
+          "scheduler:portfolio-drift-demotion:21,22-utc",
+          "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+          "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20",
+          "sse:lifecycle:portfolio_drift_demoted",
+          "strategy.portfolio_drift_detected",
+          "tf_portfolio_drift_demotions_total"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "portfolio-drift-demotion"
+        ],
+        "healthCheck": "src/server/__tests__/ds16w3-portfolio-drift-demotion.test.ts",
+        "freshnessSignals": [
+          "audit_log.portfolio_drift_demotion.completed",
+          "scheduler:portfolio-drift-demotion:21,22-utc"
+        ],
+        "evidenceQueries": [
+          "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+          "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20"
         ],
         "coverageGaps": []
       },
@@ -7848,6 +7785,7 @@
           "/api/n8n"
         ],
         "schedulerJobs": [
+          "n8n-data-backup-daily",
           "n8n-drift-detector-monthly",
           "n8n-drift-detector-weekly",
           "n8n-execution-scrape",
@@ -8793,7 +8731,8 @@
         "/api/broker-error-budget",
         "/api/broker/fill-callback",
         "/api/live-order",
-        "/api/strategy-assignments"
+        "/api/strategy-assignments",
+        "/api/traderspost"
       ],
       "schedulerJobs": [
         "broker-error-budget-check",
@@ -10139,6 +10078,96 @@
       "coverageGaps": []
     },
     {
+      "id": "fade_the_losers",
+      "domain": "research",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "manual_invoke",
+      "decisionAuthority": "gate",
+      "manualGate": "operator_invoke_for_cohort_validation",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:operator_invoke_for_cohort_validation"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log.fade.*",
+        "audit_log.fade.candidate_created",
+        "fade.candidate_created",
+        "fade.skipped_already_faded",
+        "fade.skipped_degenerate_death",
+        "fade.skipped_insufficient_trades",
+        "fade.skipped_not_directional"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "strategies",
+        "strategies.config",
+        "strategy_graveyard",
+        "strategy_graveyard.backtest_summary",
+        "strategy_graveyard.death_reason",
+        "strategy_graveyard.failure_modes",
+        "strategy_graveyard.searchable_metrics"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "incomplete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [
+        "manual_gate:operator_invoke_for_cohort_validation"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.fade.*",
+        "audit_log.fade.candidate_created",
+        "fade.candidate_created",
+        "fade.skipped_already_faded",
+        "fade.skipped_degenerate_death",
+        "fade.skipped_insufficient_trades",
+        "fade.skipped_not_directional",
+        "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20",
+        "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/server/lib/__tests__/fade-inverter.test.ts + src/server/services/__tests__/fade-the-losers-service.test.ts",
+      "freshnessSignals": [
+        "audit_log.fade.candidate_created"
+      ],
+      "evidenceQueries": [
+        "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20",
+        "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20"
+      ],
+      "coverageGaps": []
+    },
+    {
       "id": "frankenstein_randomization_gate",
       "domain": "qualification",
       "ownerSurface": "python-node",
@@ -10988,6 +11017,7 @@
         "CircuitBreakerRegistry.statusAll",
         "metrics:snapshot SSE",
         "paper.session_auto_stop",
+        "pine_reconciliation.staleness_checked",
         "portfolio.regime_coverage_gap",
         "regret.score-fill",
         "scheduler:job-complete SSE",
@@ -11037,6 +11067,7 @@
         "health-dashboard-runtime",
         "metrics:snapshot SSE",
         "paper.session_auto_stop",
+        "pine_reconciliation.staleness_checked",
         "portfolio.regime_coverage_gap",
         "regret.score-fill",
         "scheduler:job-complete SSE",
@@ -11060,6 +11091,7 @@
         "/api/webhook-latency"
       ],
       "schedulerJobs": [
+        "account-key-uniqueness-sanity",
         "agent-health-sweep",
         "data-integrity-suite",
         "deployed-pine-artifact-check",
@@ -11072,8 +11104,7 @@
         "idempotency-cleanup",
         "metrics-collector",
         "metrics-heartbeat",
-        "ollama-keepwarm-watchdog",
-        "position-drift-reconcile",
+        "pine-reconciliation-staleness-check",
         "pre-trading-day-health-check",
         "python-pool-saturation-check",
         "regime-coverage-check",
@@ -11209,6 +11240,7 @@
         "heartbeat-ooh-check",
         "heartbeat-stale-check",
         "heartbeat-write",
+        "ollama-keepwarm-watchdog",
         "prop-firm-cookie-refresh"
       ],
       "healthCheck": "/api/health/dashboard",
@@ -11644,6 +11676,107 @@
         "pine-export-artifacts",
         "deploy-approval-audit-events",
         "pine-route-coverage"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "portfolio_drift_demotion",
+      "domain": "lifecycle",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "high",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log.lifecycle.portfolio_drift_demotion",
+        "audit_log.portfolio_drift_demotion.*",
+        "audit_log.portfolio_drift_demotion.completed",
+        "audit_log.strategy.portfolio_drift_detected",
+        "lifecycle.portfolio_drift_demotion",
+        "lifecycle.portfolio_drift_zombie_declining",
+        "portfolio_drift_demotion.completed",
+        "portfolio_drift_demotion.dry_run",
+        "portfolio_drift_demotion.no_sharpe_data_skipped",
+        "portfolio_drift_demotion.strategy_eval_failed",
+        "prometheus:tf_portfolio_drift_demotions_total",
+        "scheduler:portfolio-drift-demotion:21,22-utc",
+        "sse:lifecycle:portfolio_drift_demoted",
+        "strategy.portfolio_drift_detected",
+        "tf_portfolio_drift_demotions_total"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "strategies",
+        "strategies.rolling_sharpe_30d"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.lifecycle.portfolio_drift_demotion",
+        "audit_log.portfolio_drift_demotion.*",
+        "audit_log.portfolio_drift_demotion.completed",
+        "audit_log.strategy.portfolio_drift_detected",
+        "lifecycle.portfolio_drift_demotion",
+        "lifecycle.portfolio_drift_zombie_declining",
+        "portfolio_drift_demotion.completed",
+        "portfolio_drift_demotion.dry_run",
+        "portfolio_drift_demotion.no_sharpe_data_skipped",
+        "portfolio_drift_demotion.strategy_eval_failed",
+        "prometheus:tf_portfolio_drift_demotions_total",
+        "scheduler:portfolio-drift-demotion:21,22-utc",
+        "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20",
+        "sse:lifecycle:portfolio_drift_demoted",
+        "strategy.portfolio_drift_detected",
+        "tf_portfolio_drift_demotions_total"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "portfolio-drift-demotion"
+      ],
+      "healthCheck": "src/server/__tests__/ds16w3-portfolio-drift-demotion.test.ts",
+      "freshnessSignals": [
+        "audit_log.portfolio_drift_demotion.completed",
+        "scheduler:portfolio-drift-demotion:21,22-utc"
+      ],
+      "evidenceQueries": [
+        "SELECT * FROM audit_log WHERE action = 'portfolio_drift_demotion.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.portfolio_drift_detected','lifecycle.portfolio_drift_demotion') ORDER BY created_at DESC LIMIT 20"
       ],
       "coverageGaps": []
     },
@@ -14767,6 +14900,7 @@
         "/api/n8n"
       ],
       "schedulerJobs": [
+        "n8n-data-backup-daily",
         "n8n-drift-detector-monthly",
         "n8n-drift-detector-weekly",
         "n8n-execution-scrape",

@@ -72,6 +72,11 @@ const mockState = vi.hoisted(() => ({
   // Error injection
   selectShouldThrow: false,
   updateShouldThrow: false,
+
+  // X-1 option a (Deep-Scan #18b): captures every db.update(productionTrades).set(...)
+  // payload so tests can assert on tradovate_fill_id / actual_pnl without inspecting
+  // implementation internals.
+  productionTradesSetCalls: [] as Record<string, unknown>[],
 }));
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -125,15 +130,20 @@ vi.mock("../db/index.js", () => ({
         returning: vi.fn().mockResolvedValue([]),
       })),
     })),
-    update: vi.fn(() => ({
-      set: vi.fn(() => ({
-        where: vi.fn(() => ({
-          returning: vi.fn().mockImplementation(async () => {
-            if (mockState.updateShouldThrow) throw new Error("db_update_fail");
-            return mockState.updatedRows;
-          }),
-        })),
-      })),
+    update: vi.fn((table: { tableName?: string }) => ({
+      set: vi.fn((vals: Record<string, unknown>) => {
+        if (table?.tableName === "production_trades") {
+          mockState.productionTradesSetCalls.push(vals);
+        }
+        return {
+          where: vi.fn(() => ({
+            returning: vi.fn().mockImplementation(async () => {
+              if (mockState.updateShouldThrow) throw new Error("db_update_fail");
+              return mockState.updatedRows;
+            }),
+          })),
+        };
+      }),
     })),
   },
 }));
@@ -164,14 +174,17 @@ vi.mock("../db/schema.js", () => ({
   },
   auditLog: { action: "action" },
   productionTrades: {
+    tableName: "production_trades",
     correlationId: "correlationId",
     tradovateFillId: "tradovateFillId",
+    actualPnl: "actualPnl",
   },
 }));
 
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((col: unknown, val: unknown) => ({ col, val })),
   and: vi.fn((...args: unknown[]) => ({ and: args })),
+  desc: vi.fn((col: unknown) => ({ desc: col })),
   sql: Object.assign(
     vi.fn((_strings: TemplateStringsArray) => "sql"),
     { as: vi.fn(), mapWith: vi.fn() }
@@ -296,6 +309,7 @@ beforeEach(() => {
   mockState.sseBroadcasts = [];
   mockState.selectShouldThrow = false;
   mockState.updateShouldThrow = false;
+  mockState.productionTradesSetCalls = [];
   vi.clearAllMocks();
 });
 
@@ -891,6 +905,156 @@ describe("fill-reconciliation — Phase-4C hook", () => {
     // The Phase-4C productionTrades update is non-blocking (fire-and-forget)
     // The primary outcome must still be fill_ingested
     expect(result.outcome).toBe("fill_ingested");
+
+    // An enter_long fill is not an exit — actual_pnl must NOT be attempted.
+    expect(mockState.productionTradesSetCalls).toHaveLength(1);
+    expect(mockState.productionTradesSetCalls[0]).toEqual({
+      tradovateFillId: "tradovate-fill-phase4c",
+    });
+  });
+});
+
+// ─── X-1 option a (Deep-Scan #18b, 2026-07-05): actual_pnl computation ────────
+//
+// These tests exercise computeActualPnlForFullExit() indirectly through
+// ingestFillEvent(). They reuse the shared db.select mock's `orderRows` array:
+// element 0 is matched as the exit order being filled (the standard
+// broker_order_ref lookup), and any additional elements serve double-duty as
+// the candidate list for the "find a prior filled entry order" query — both
+// queries land on `selectCallCount >= 2` and read from the same `orderRows`
+// array in this mock, so a single fixture array exercises both queries
+// coherently without new mock plumbing.
+describe("fill-reconciliation — Phase-4C actual_pnl computation (X-1 option a)", () => {
+  it("computes actual_pnl for a fully-closed exit using the real entry fill price (honest, not fabricated)", async () => {
+    mockState.flagEnabled = true;
+    mockState.orderRows = [
+      makeOrderRow({
+        id: "exit-order-1",
+        brokerOrderRef: "tp-ref-exit-1",
+        correlationId: "corr-exit-pnl-1",
+        intendedAction: "exit_long",
+        intendedSymbol: "MES",
+        intendedQty: 1,
+        filledQty: 0,
+        filledAvgPrice: null,
+        status: "acked",
+        filledAt: null,
+      }),
+      makeOrderRow({
+        id: "entry-order-1",
+        intendedAction: "enter_long",
+        intendedSymbol: "MES",
+        status: "filled",
+        filledQty: 1,
+        filledAvgPrice: "5000.00",
+        filledAt: new Date("2026-05-09T14:00:00.000Z"),
+      }),
+    ];
+
+    const result = await ingestFillEvent(
+      {
+        broker_order_ref: "tp-ref-exit-1",
+        symbol: "MES",
+        filled_qty: 1,
+        filled_avg_price: 5010.0,
+        status: "filled",
+        broker_fill_id: "tradovate-fill-exit-1",
+      },
+      "corr-exit-pnl-1",
+    );
+
+    expect(result.outcome).toBe("fill_ingested");
+    expect(mockState.productionTradesSetCalls).toHaveLength(1);
+    // MES point value = 5.00 (real CONTRACT_SPECS, not mocked); direction long = +1;
+    // (5010.00 - 5000.00) * 1 contract * 5.00/pt = 50.00 — derived entirely from real
+    // recorded fill prices, never fabricated.
+    expect(mockState.productionTradesSetCalls[0]).toEqual({
+      tradovateFillId: "tradovate-fill-exit-1",
+      actualPnl: "50",
+    });
+  });
+
+  it("leaves actual_pnl null (honest gap) when no matching prior entry fill exists", async () => {
+    mockState.flagEnabled = true;
+    mockState.orderRows = [
+      makeOrderRow({
+        id: "exit-order-orphan",
+        brokerOrderRef: "tp-ref-exit-orphan",
+        correlationId: "corr-exit-orphan",
+        intendedAction: "exit_long",
+        intendedSymbol: "MES",
+        intendedQty: 1,
+        filledQty: 0,
+        filledAvgPrice: null,
+        status: "acked",
+        filledAt: null,
+      }),
+      // No prior filled enter_long/enter_short row for MES in this fixture.
+    ];
+
+    const result = await ingestFillEvent(
+      {
+        broker_order_ref: "tp-ref-exit-orphan",
+        symbol: "MES",
+        filled_qty: 1,
+        filled_avg_price: 5010.0,
+        status: "filled",
+        broker_fill_id: "tradovate-fill-exit-orphan",
+      },
+      "corr-exit-orphan",
+    );
+
+    expect(result.outcome).toBe("fill_ingested");
+    expect(mockState.productionTradesSetCalls).toHaveLength(1);
+    // actual_pnl key is OMITTED entirely (never set to a fabricated 0 or guess).
+    expect(mockState.productionTradesSetCalls[0]).toEqual({
+      tradovateFillId: "tradovate-fill-exit-orphan",
+    });
+  });
+
+  it("leaves actual_pnl null on a PARTIAL exit fill (only a fully-closed exit has a final realized PnL)", async () => {
+    mockState.flagEnabled = true;
+    mockState.orderRows = [
+      makeOrderRow({
+        id: "exit-order-partial",
+        brokerOrderRef: "tp-ref-exit-partial",
+        correlationId: "corr-exit-partial",
+        intendedAction: "exit_long",
+        intendedSymbol: "MES",
+        intendedQty: 2, // 1 of 2 filled → still partially_filled
+        filledQty: 0,
+        filledAvgPrice: null,
+        status: "acked",
+        filledAt: null,
+      }),
+      makeOrderRow({
+        id: "entry-order-partial",
+        intendedAction: "enter_long",
+        intendedSymbol: "MES",
+        status: "filled",
+        filledQty: 2,
+        filledAvgPrice: "5000.00",
+        filledAt: new Date("2026-05-09T14:00:00.000Z"),
+      }),
+    ];
+
+    const result = await ingestFillEvent(
+      {
+        broker_order_ref: "tp-ref-exit-partial",
+        symbol: "MES",
+        filled_qty: 1,
+        filled_avg_price: 5010.0,
+        status: "partially_filled",
+        broker_fill_id: "tradovate-fill-exit-partial",
+      },
+      "corr-exit-partial",
+    );
+
+    expect(result.outcome).toBe("partial_fill_accumulated");
+    expect(mockState.productionTradesSetCalls).toHaveLength(1);
+    expect(mockState.productionTradesSetCalls[0]).toEqual({
+      tradovateFillId: "tradovate-fill-exit-partial",
+    });
   });
 });
 

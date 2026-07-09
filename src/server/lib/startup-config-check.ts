@@ -35,17 +35,630 @@
  *     Unset OR equal to the known deploy-time placeholder OR shorter than
  *     MIN_SECRET_LENGTH → warn so the operator knows to rotate.
  *
+ *   Boot launcher activation (deepscan17 G-1, 2026-07-05; AUTO-APPLY added deepscan18 G-2, 2026-07-05)
+ *     scripts/tower-boot.mjs is a self-healing launcher (verifies critical
+ *     deps, npm-installs if node_modules is incomplete, then boots via tsx)
+ *     that NSSM must be explicitly repointed at (scripts/install-tower-launcher.ps1,
+ *     one-time elevated). The launcher can exist on disk and never be wired
+ *     up with no signal to the operator — deepscan17 closed the silent-gap
+ *     half of that (detecting the TF_LAUNCHED_VIA_BOOT_WRAPPER marker
+ *     tower-boot.mjs stamps on its own process.env before spawning the tsx
+ *     child, inherited by default) but only ALERTED. deepscan18 G-2 closes
+ *     the carry-forward: this module now AUTO-APPLIES the fix itself —
+ *     repointing NSSM's AppParameters via `nssm set` + read-back verification,
+ *     then triggering a graceful self-restart via the existing HMAC-signed
+ *     POST /api/admin/self-restart endpoint (same in-process self-call
+ *     pattern dead-mans-heartbeat-service.ts uses for its own auto-restart) —
+ *     so the operator never has to run the .ps1 installer by hand. Hard
+ *     safety rails: production+win32 only, DB-backed once-per-24h backoff
+ *     (never a restart loop), a real `nssm get` read-back before restarting
+ *     (a failed `nssm set` leaves the existing working tsx invocation
+ *     untouched and falls back to the original loud alert), and every
+ *     attempt/outcome is audit-logged before AND after. The eligibility
+ *     decision and the nssm command construction are both pure functions
+ *     (shouldAutoApplyLauncher / buildNssmSetCommand + buildNssmGetCommand)
+ *     unit-tested independent of the actual `nssm`/`fetch` I/O. See
+ *     runBootConfigReminderCheck() for the once-daily retry when auto-apply
+ *     itself failed (e.g. permission denied) — it does NOT re-alert once the
+ *     launcher is active or once the daily attempt cap is reached.
+ *
  * Import logger from ./logger.js (not ../index.js) per CLAUDE.md §13 feedback rule.
  */
 
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { createHmac, randomUUID } from "node:crypto";
 import { logger } from "./logger.js";
 import { appendFamilyGradePostscript } from "./notification-helpers.js";
+
+const execFileAsync = promisify(execFile);
 
 /** Minimum recommended secret length (32 chars — same as self-restart docs). */
 const MIN_SECRET_LENGTH = 32;
 
 /** Known placeholder value shipped in .env.example for SLUMDAWG_WEBHOOK_SECRET. */
 const SLUMDAWG_PLACEHOLDER = "slumdawg-rotate-me-after-first-deploy-2026-05-25";
+
+/** One-line activation command surfaced in every boot-launcher alert (deepscan17 G-1). */
+const BOOT_LAUNCHER_ACTIVATION_CMD = "scripts\\install-tower-launcher.ps1";
+
+/**
+ * True only when the boot-launcher-active check is meaningful: the production
+ * Windows tower, where NSSM is the thing that decides whether tower-boot.mjs
+ * or tsx-directly gets invoked. `npm run dev` / vitest / CI run on the same
+ * OS but never go through NSSM, so gating on NODE_ENV=production (the value
+ * wave19-nssm-migrate.ps1 sets via NSSM AppEnvironmentExtra) avoids a
+ * false-positive CRITICAL every time a developer runs the server locally.
+ */
+export function isBootLauncherCheckApplicable(): boolean {
+  return process.platform === "win32" && process.env.NODE_ENV === "production";
+}
+
+/**
+ * True when this process was launched via scripts/tower-boot.mjs rather than
+ * NSSM invoking tsx directly. See tower-boot.mjs for how the marker is set.
+ */
+export function isBootLauncherActive(): boolean {
+  return process.env.TF_LAUNCHED_VIA_BOOT_WRAPPER === "1";
+}
+
+/**
+ * Fires the boot-launcher-inactive Discord CRITICAL. Shared between the
+ * immediate boot-time check below and the daily reminder tick
+ * (runBootConfigReminderCheck) so the message only lives in one place.
+ * Never throws — notify failures are caught and logged.
+ */
+async function fireBootLauncherInactiveAlert(): Promise<void> {
+  const msg =
+    "The self-healing tower-boot.mjs launcher exists on disk but NSSM is still " +
+    "launching tsx DIRECTLY. If node_modules is ever incomplete at a restart " +
+    "(see reference_tower_restart_dep_wipe_trap), the process crash-loops into " +
+    "a Paused service with NO auto-recovery — the exact outage this launcher " +
+    "was built to prevent.\n\n" +
+    `Activate (one-time, elevated, ~30 seconds): right-click ${BOOT_LAUNCHER_ACTIVATION_CMD} ` +
+    "and choose 'Run with PowerShell' (accept the elevation prompt). It repoints " +
+    "NSSM, restarts the service, and verifies /api/health for you.";
+
+  try {
+    const { notifyCritical } = await import("../services/notification-service.js");
+    notifyCritical(
+      "Tower self-healing launcher is NOT active",
+      appendFamilyGradePostscript(
+        msg,
+        "A safety upgrade that auto-fixes a missing-file restart problem is sitting unused.",
+        "Ask Tony to run install-tower-launcher.ps1 (one click, as Administrator). No trading impact today.",
+      ),
+      { activation_command: BOOT_LAUNCHER_ACTIVATION_CMD },
+    );
+  } catch (notifyErr) {
+    logger.warn({ err: notifyErr }, "startup-config-check: Discord notify failed (non-blocking)");
+  }
+}
+
+// ─── G-2 auto-apply (deepscan18, 2026-07-05) ───────────────────────────────
+//
+// Converts the deepscan17 G-1 alert-only carry-forward into a self-healing
+// path: when the boot launcher is inactive, the running process repoints
+// NSSM at scripts/tower-boot.mjs itself and triggers its own graceful
+// restart, rather than waiting for the operator to run
+// scripts/install-tower-launcher.ps1 by hand.
+
+/** Windows service name NSSM manages — matches install-tower-launcher.ps1. */
+const NSSM_SERVICE_NAME = "TradingForgeAPI";
+
+/** Default nssm.exe path — matches install-tower-launcher.ps1; override via TF_NSSM_PATH. */
+const DEFAULT_NSSM_PATH = "C:\\Users\\tonio\\bin\\nssm\\nssm.exe";
+
+/**
+ * Backoff window + attempt cap: at most ONE auto-apply attempt per 24h.
+ * This is the anti-restart-loop rail — a persistently-failing `nssm set`
+ * (e.g. a permissions regression) can fire at most once a day, each attempt
+ * fully audited, rather than retrying on every boot-config check tick.
+ */
+const BOOT_LAUNCHER_AUTO_APPLY_BACKOFF_MS = 24 * 60 * 60 * 1000;
+const BOOT_LAUNCHER_AUTO_APPLY_MAX_ATTEMPTS_PER_WINDOW = 1;
+
+const NSSM_EXEC_TIMEOUT_MS = 15_000;
+const AUTO_APPLY_RESTART_FETCH_TIMEOUT_MS = 8_000;
+
+/** Everything the eligibility decision depends on, gathered by the caller so the decision itself stays pure/testable. */
+export interface BootLauncherAutoApplyState {
+  /** win32 + NODE_ENV=production (same gate as isBootLauncherCheckApplicable). */
+  applicable: boolean;
+  /** TF_LAUNCHED_VIA_BOOT_WRAPPER marker is already set — nothing to do. */
+  alreadyActive: boolean;
+  /** Operator opt-out via BOOT_LAUNCHER_AUTO_APPLY_ENABLED=false (default enabled). */
+  autoApplyEnabled: boolean;
+  /** ADMIN_RESTART_HMAC_SECRET must be set — it authenticates the follow-up self-restart call. */
+  hasRestartSecret: boolean;
+  /** A lightweight elevation/SCM-write heuristic (net session) succeeded. */
+  hasScmWritePrivilege: boolean;
+  /** Both nssm.exe and the tower-boot.mjs launcher file exist on disk. */
+  nssmAndLauncherPresent: boolean;
+  /** DB-backed count of auto-apply attempts already recorded in the backoff window. */
+  attemptsInWindow: number;
+  /** Max attempts allowed within the window (idempotency + anti-restart-loop). */
+  maxAttemptsPerWindow: number;
+}
+
+/**
+ * Pure eligibility decision — no I/O, fully unit-testable. Every gate must
+ * hold for auto-apply to proceed; any single false condition falls back to
+ * the existing loud alert (fireBootLauncherInactiveAlert).
+ */
+export function shouldAutoApplyLauncher(state: BootLauncherAutoApplyState): boolean {
+  return (
+    state.applicable &&
+    !state.alreadyActive &&
+    state.autoApplyEnabled &&
+    state.hasRestartSecret &&
+    state.hasScmWritePrivilege &&
+    state.nssmAndLauncherPresent &&
+    state.attemptsInWindow < state.maxAttemptsPerWindow
+  );
+}
+
+/** argv shape for an nssm.exe invocation — deliberately not a shell string (no quoting/injection surface). */
+export interface NssmCommandSpec {
+  cmd: string;
+  args: string[];
+}
+
+/**
+ * Pure command-builder for `nssm set <service> AppParameters <launcherPath>`.
+ * Throws on any empty/whitespace-only argument rather than silently building
+ * a malformed command that would mutate the wrong service or param.
+ */
+export function buildNssmSetCommand(
+  nssmPath: string,
+  serviceName: string,
+  launcherPath: string,
+): NssmCommandSpec {
+  const nssm = (nssmPath ?? "").trim();
+  const svc = (serviceName ?? "").trim();
+  const launcher = (launcherPath ?? "").trim();
+  if (!nssm) throw new Error("buildNssmSetCommand: nssmPath must be non-empty");
+  if (!svc) throw new Error("buildNssmSetCommand: serviceName must be non-empty");
+  if (!launcher) throw new Error("buildNssmSetCommand: launcherPath must be non-empty");
+  return { cmd: nssm, args: ["set", svc, "AppParameters", launcher] };
+}
+
+/** Pure command-builder for the read-back verification: `nssm get <service> AppParameters`. */
+export function buildNssmGetCommand(nssmPath: string, serviceName: string): NssmCommandSpec {
+  const nssm = (nssmPath ?? "").trim();
+  const svc = (serviceName ?? "").trim();
+  if (!nssm) throw new Error("buildNssmGetCommand: nssmPath must be non-empty");
+  if (!svc) throw new Error("buildNssmGetCommand: serviceName must be non-empty");
+  return { cmd: nssm, args: ["get", svc, "AppParameters"] };
+}
+
+/** Resolves the nssm.exe path from env override or the documented default. */
+function resolveNssmPath(): string {
+  const override = process.env.TF_NSSM_PATH;
+  return override && override.trim().length > 0 ? override.trim() : DEFAULT_NSSM_PATH;
+}
+
+/** Resolves the tower-boot.mjs launcher path from env override or cwd-relative default. */
+function resolveLauncherPath(): string {
+  const override = process.env.TF_TOWER_BOOT_LAUNCHER_PATH;
+  if (override && override.trim().length > 0) return override.trim();
+  return join(process.cwd(), "scripts", "tower-boot.mjs");
+}
+
+/**
+ * DB-backed count of auto-apply attempts within the backoff window.
+ * FAIL-CLOSED on query error (opposite of the heartbeat's fail-open count):
+ * this gate guards a MUTATING action (rewriting NSSM config), so an
+ * unreadable audit trail must never be interpreted as "clear to proceed" —
+ * treat it as at-cap and fall back to the alert-only path instead.
+ */
+async function countAutoApplyAttemptsInWindow(): Promise<number> {
+  try {
+    const { db } = await import("../db/index.js");
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte, count } = await import("drizzle-orm");
+    const windowStart = new Date(Date.now() - BOOT_LAUNCHER_AUTO_APPLY_BACKOFF_MS);
+    const rows = await db
+      .select({ n: count() })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, "boot_launcher.auto_apply_attempted"),
+          gte(auditLog.createdAt, windowStart),
+        ),
+      );
+    return Number(rows[0]?.n ?? 0);
+  } catch (err) {
+    logger.warn(
+      { err },
+      "startup-config-check: boot-launcher auto-apply attempt-count query failed — " +
+        "failing CLOSED (treating as at-cap) so a broken DB read can never risk a restart loop",
+    );
+    return BOOT_LAUNCHER_AUTO_APPLY_MAX_ATTEMPTS_PER_WINDOW;
+  }
+}
+
+/**
+ * Lightweight Windows elevation / SCM-write heuristic. `net session` with no
+ * arguments exits 0 only when the calling process holds administrator/
+ * LocalSystem privilege — the same class of check install-tower-launcher.ps1
+ * itself performs (via WindowsPrincipal) before touching NSSM. NSSM services
+ * normally run as LocalSystem by default, which satisfies this; a demoted
+ * invocation (e.g. a developer's unelevated `npm run dev`) will not, and this
+ * function is only ever consulted when isBootLauncherCheckApplicable() is
+ * already true (win32 + NODE_ENV=production), so it never fires in dev/CI.
+ */
+async function hasScmWritePrivilegeWindows(): Promise<boolean> {
+  if (process.platform !== "win32") return false;
+  try {
+    await execFileAsync("net", ["session"], { timeout: 5_000, windowsHide: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Shared audit-row writer for the two terminal auto-apply outcomes (succeeded / failed). */
+async function insertAutoApplyOutcomeAudit(
+  correlationId: string,
+  action: "boot_launcher.auto_apply_succeeded" | "boot_launcher.auto_apply_failed",
+  status: "success" | "failure",
+  extra: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const { db } = await import("../db/index.js");
+    const { auditLog } = await import("../db/schema.js");
+    await db.insert(auditLog).values({
+      action,
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {} as Record<string, unknown>,
+      result: { correlationId, ...extra } as Record<string, unknown>,
+      status,
+      correlationId,
+    });
+  } catch (err) {
+    logger.warn({ err, correlationId }, `startup-config-check: ${action} audit write failed (non-blocking)`);
+  }
+}
+
+/**
+ * Triggers a graceful self-restart via the existing HMAC-signed
+ * POST /api/admin/self-restart route, mirroring the in-process self-call
+ * pattern dead-mans-heartbeat-service.ts uses for its own auto-restart
+ * (same HMAC payload shape, same Bearer-passthrough-when-configured
+ * behavior so the request survives the /api Bearer gate).
+ */
+async function triggerSelfRestartAfterAutoApply(parentCorrelationId: string): Promise<void> {
+  const secret = process.env.ADMIN_RESTART_HMAC_SECRET;
+  if (!secret) return; // defensive only — shouldAutoApplyLauncher already required this to be set
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const reason = "boot_launcher_auto_apply";
+  const sig = createHmac("sha256", secret).update(`${timestamp}:${reason}`, "utf8").digest("hex");
+  const port = process.env.PORT ?? "4000";
+  const url = `http://localhost:${port}/api/admin/self-restart`;
+  const headers: Record<string, string> = { "Content-Type": "application/json", "X-Restart-Signature": sig };
+  const apiKey = process.env.API_KEY;
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+  try {
+    const resp = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ timestamp, reason, parentCorrelationId }),
+      signal: AbortSignal.timeout(AUTO_APPLY_RESTART_FETCH_TIMEOUT_MS),
+    });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "<unreadable>");
+      throw new Error(`self-restart endpoint returned HTTP ${resp.status}: ${body}`);
+    }
+    logger.warn(
+      { parentCorrelationId },
+      "startup-config-check: boot-launcher auto-apply triggered self-restart — NSSM will respawn via the new launcher",
+    );
+  } catch (err) {
+    // NSSM config IS fixed at this point (the set+readback already succeeded) —
+    // only the immediate restart failed. The fix activates on the NEXT restart
+    // (deploy, crash, or manual) with zero further action; this is a soft
+    // WARN, not a "never brick the service" violation, because nothing was
+    // left in a broken state — the CURRENT process just keeps running its
+    // current (working) tsx-direct invocation a little longer than intended.
+    logger.error(
+      { err, parentCorrelationId },
+      "startup-config-check: boot-launcher auto-apply succeeded but the follow-up self-restart call " +
+        "failed — NSSM config is fixed but the CURRENT process is still on the OLD launch path until next restart",
+    );
+    try {
+      const { notifyCritical } = await import("../services/notification-service.js");
+      notifyCritical(
+        "Boot launcher auto-applied but the follow-up restart call failed",
+        appendFamilyGradePostscript(
+          "NSSM was successfully repointed at the self-healing tower-boot.mjs launcher, but the request " +
+            "to restart immediately failed. The fix takes effect on the NEXT restart (deploy, crash, or " +
+            "manual) with no operator action required — the trading process itself is unaffected right now.",
+          "A safety upgrade was applied but needs one more restart to fully activate.",
+          "No action needed — it activates automatically the next time the bot restarts.",
+        ),
+        { parentCorrelationId, error: err instanceof Error ? err.message : String(err) },
+      );
+    } catch {
+      /* non-blocking */
+    }
+  }
+}
+
+/**
+ * Attempts to auto-apply the boot-launcher fix: gather state → decide via the
+ * pure shouldAutoApplyLauncher() → if eligible, run `nssm set` + `nssm get`
+ * read-back verification → on success, audit + notify + trigger a graceful
+ * self-restart; on any failure, audit the failure and return "failed" so the
+ * caller falls back to the original loud alert with the existing tsx
+ * invocation left completely untouched (a failed `nssm set` never partially
+ * applies).
+ */
+export async function attemptBootLauncherAutoApply(): Promise<"applied" | "skipped" | "failed"> {
+  // Hard safety rail — NEVER take the mutating nssm/subprocess/DB path under
+  // vitest, independent of NODE_ENV. This module runs on the operator's real
+  // tower box, where nssm.exe and tower-boot.mjs genuinely exist on disk at
+  // their default/derived paths — and the deepscan17/pass1 test suites
+  // legitimately set NODE_ENV=production to exercise the (previously
+  // side-effect-free) alert-only gate. Without this guard, `vitest run`
+  // would risk actually executing `nssm set` / a real elevation probe / a
+  // real DB query as a side effect of running the test suite — exactly what
+  // this fix wave was told never to do. Vitest sets process.env.VITEST="true"
+  // for every worker (verified empirically); production never sets it.
+  if (process.env.VITEST) return "skipped";
+
+  const applicable = isBootLauncherCheckApplicable();
+  const alreadyActive = isBootLauncherActive();
+  if (!applicable || alreadyActive) return "skipped";
+
+  const autoApplyEnabled = process.env.BOOT_LAUNCHER_AUTO_APPLY_ENABLED !== "false";
+  const hasRestartSecretRaw = process.env.ADMIN_RESTART_HMAC_SECRET;
+  const hasRestartSecret = !!(hasRestartSecretRaw && hasRestartSecretRaw.trim().length > 0);
+  const nssmPath = resolveNssmPath();
+  const launcherPath = resolveLauncherPath();
+  const nssmAndLauncherPresent = existsSync(nssmPath) && existsSync(launcherPath);
+
+  // Cheap-gates-first short-circuit: only pay for the real subprocess
+  // elevation probe and the real DB round-trip when every synchronous,
+  // in-memory gate already holds. This is both an efficiency win (no point
+  // probing privilege for a launcher that isn't even installed) and a
+  // defense-in-depth safety property (fewer real-world side effects fire
+  // when the feature is disabled, unconfigured, or files are missing).
+  if (!autoApplyEnabled || !hasRestartSecret || !nssmAndLauncherPresent) {
+    const state: BootLauncherAutoApplyState = {
+      applicable,
+      alreadyActive,
+      autoApplyEnabled,
+      hasRestartSecret,
+      hasScmWritePrivilege: false,
+      nssmAndLauncherPresent,
+      attemptsInWindow: 0,
+      maxAttemptsPerWindow: BOOT_LAUNCHER_AUTO_APPLY_MAX_ATTEMPTS_PER_WINDOW,
+    };
+    logger.info(
+      { event: "boot_launcher.auto_apply_not_eligible", state },
+      "startup-config-check: boot-launcher auto-apply not eligible this tick — falling back to alert-only",
+    );
+    return "skipped";
+  }
+
+  const hasScmWritePrivilege = await hasScmWritePrivilegeWindows();
+  const attemptsInWindow = await countAutoApplyAttemptsInWindow();
+
+  const state: BootLauncherAutoApplyState = {
+    applicable,
+    alreadyActive,
+    autoApplyEnabled,
+    hasRestartSecret,
+    hasScmWritePrivilege,
+    nssmAndLauncherPresent,
+    attemptsInWindow,
+    maxAttemptsPerWindow: BOOT_LAUNCHER_AUTO_APPLY_MAX_ATTEMPTS_PER_WINDOW,
+  };
+
+  if (!shouldAutoApplyLauncher(state)) {
+    logger.info(
+      { event: "boot_launcher.auto_apply_not_eligible", state },
+      "startup-config-check: boot-launcher auto-apply not eligible this tick — falling back to alert-only",
+    );
+    return "skipped";
+  }
+
+  const correlationId = randomUUID();
+  const setCmd = buildNssmSetCommand(nssmPath, NSSM_SERVICE_NAME, launcherPath);
+
+  // Audit BEFORE mutating anything so the attempt is DB-visible even if the
+  // process dies mid-nssm-call or mid-restart.
+  try {
+    const { db } = await import("../db/index.js");
+    const { auditLog } = await import("../db/schema.js");
+    await db.insert(auditLog).values({
+      action: "boot_launcher.auto_apply_attempted",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { nssm_path: nssmPath, launcher_path: launcherPath, command: setCmd } as Record<string, unknown>,
+      result: { status: "pending", correlationId } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    });
+  } catch (auditErr) {
+    logger.warn(
+      { err: auditErr, correlationId },
+      "startup-config-check: boot-launcher auto-apply pre-attempt audit failed (non-blocking)",
+    );
+  }
+
+  logger.warn(
+    { correlationId, command: `${setCmd.cmd} ${setCmd.args.join(" ")}` },
+    "startup-config-check: AUTO-APPLYING boot launcher — repointing NSSM AppParameters",
+  );
+
+  try {
+    await execFileAsync(setCmd.cmd, setCmd.args, { timeout: NSSM_EXEC_TIMEOUT_MS, windowsHide: true });
+
+    const getCmd = buildNssmGetCommand(nssmPath, NSSM_SERVICE_NAME);
+    const { stdout } = await execFileAsync(getCmd.cmd, getCmd.args, {
+      timeout: NSSM_EXEC_TIMEOUT_MS,
+      windowsHide: true,
+    });
+    const readback = stdout.toString().trim();
+    if (readback !== launcherPath) {
+      throw new Error(`readback mismatch: nssm get returned "${readback}", expected "${launcherPath}"`);
+    }
+
+    await insertAutoApplyOutcomeAudit(correlationId, "boot_launcher.auto_apply_succeeded", "success", {
+      readback,
+    });
+
+    try {
+      const { notifyCritical } = await import("../services/notification-service.js");
+      notifyCritical(
+        "Tower self-healing launcher AUTO-APPLIED — restarting now",
+        appendFamilyGradePostscript(
+          "NSSM was automatically repointed at the self-healing tower-boot.mjs launcher " +
+            `(${setCmd.cmd} ${setCmd.args.join(" ")}). Triggering a graceful self-restart now so the new ` +
+            "config takes effect. If this had failed, no changes would have been made and the existing " +
+            "launch would have stayed exactly as it was.",
+          "A safety upgrade fixed itself automatically. The trading bot will restart briefly.",
+          "No action needed — the bot will be back online within a minute.",
+        ),
+        { correlationId, command: `${setCmd.cmd} ${setCmd.args.join(" ")}` },
+      );
+    } catch (notifyErr) {
+      logger.warn(
+        { err: notifyErr, correlationId },
+        "startup-config-check: auto-apply success notify failed (non-blocking)",
+      );
+    }
+
+    await triggerSelfRestartAfterAutoApply(correlationId);
+    return "applied";
+  } catch (execErr) {
+    const errMsg = execErr instanceof Error ? execErr.message : String(execErr);
+    logger.error(
+      { err: execErr, correlationId },
+      "startup-config-check: boot-launcher auto-apply FAILED — leaving existing tsx launch untouched, falling back to alert",
+    );
+    await insertAutoApplyOutcomeAudit(correlationId, "boot_launcher.auto_apply_failed", "failure", {
+      error: errMsg,
+    });
+    return "failed";
+  }
+}
+
+/**
+ * Fires the LIVE_ORDER_HMAC_SECRET-unset Discord WARN. Shared between the
+ * immediate boot-time check and the daily reminder tick, mirroring the KASA
+ * partial-config notify pattern (operator body + family-grade postscript).
+ * Never throws — notify failures are caught and logged.
+ */
+async function fireLiveOrderHmacUnsetAlert(): Promise<void> {
+  const msg =
+    "LIVE_ORDER_HMAC_SECRET is NOT SET. The live-order route (Path B: Pine → " +
+    "TF gateway → TradersPost) returns 503 fail-CLOSED on every inbound Pine " +
+    "alert until this is configured. " +
+    "Set LIVE_ORDER_HMAC_SECRET (≥32 random chars) in .env and restart the " +
+    "backend if you are using Path B.";
+
+  try {
+    const { notifyWarning } = await import("../services/notification-service.js");
+    notifyWarning(
+      "LIVE_ORDER_HMAC_SECRET not configured — Path B live-order route disabled",
+      appendFamilyGradePostscript(
+        msg,
+        "A security setting for one order-routing path is missing.",
+        "No action needed if you don't use TradingView Pine alerts through the TF gateway. Otherwise ask Tony to set it.",
+      ),
+      { env_var: "LIVE_ORDER_HMAC_SECRET" },
+    );
+  } catch (notifyErr) {
+    logger.warn({ err: notifyErr }, "startup-config-check: Discord notify failed (non-blocking)");
+  }
+}
+
+// ─── G-3 gateway-URL localhost/private-range WARN (deepscan18, 2026-07-05) ──
+//
+// Pre-deepscan18, an auto-derived OR explicit LIVE_ORDER_GATEWAY_URL that
+// resolved to localhost/127.0.0.1/a private LAN range only got an info-level
+// log line under production — the public Railway relay can never reach such
+// a URL, so Path B webhook registrations/callback links silently break and
+// Pine alerts fall back to the less-safe direct-to-TradersPost path. This is
+// now a WARN + Discord notify (immediate + daily repeat), same escalation
+// shape as the LIVE_ORDER_HMAC_SECRET-unset alert above.
+
+const PRIVATE_HOSTNAME_SUFFIXES = [".local"];
+// Node's URL.hostname keeps the bracket form for IPv6 literals (e.g. "[::1]"),
+// so both the bare and bracketed forms are listed.
+const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "[::1]", "0.0.0.0"]);
+
+/**
+ * Pure detector — no I/O, no env reads. Returns true when `urlStr`'s hostname
+ * is localhost, an IPv4 loopback/private-range address (RFC 1918: 10/8,
+ * 172.16/12, 192.168/16, plus 127/8 loopback), or a `.local` mDNS hostname.
+ * An unparseable URL returns false (other validation already flags malformed
+ * URLs; this function's only job is the localhost/private-range signal).
+ */
+export function isLocalOrPrivateGatewayUrl(urlStr: string): boolean {
+  let host: string;
+  try {
+    host = new URL(urlStr).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+
+  if (LOCAL_HOSTNAMES.has(host)) return true;
+  if (PRIVATE_HOSTNAME_SUFFIXES.some((suffix) => host.endsWith(suffix))) return true;
+
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    if (a === 127) return true; // loopback
+    if (a === 10) return true; // 10.0.0.0/8
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true; // 192.168.0.0/16
+  }
+
+  return false;
+}
+
+/**
+ * Fires the LIVE_ORDER_GATEWAY_URL-is-local/private Discord WARN. Shared
+ * between the immediate boot-time check and the daily reminder tick.
+ * Never throws — notify failures are caught and logged.
+ */
+async function fireLiveOrderGatewayLocalUrlAlert(value: string): Promise<void> {
+  const msg =
+    `LIVE_ORDER_GATEWAY_URL resolves to a localhost/private-network address (${value}) under ` +
+    "NODE_ENV=production. The public Railway relay cannot reach this URL, so Path B webhook " +
+    "registrations and callback links will be broken, and Pine alerts silently fall back to the " +
+    "direct-to-TradersPost path (bypasses kill-switch/compliance/firm-cap). " +
+    "Set TRADING_FORGE_PUBLIC_URL (recommended — LIVE_ORDER_GATEWAY_URL auto-derives from it) or " +
+    "LIVE_ORDER_GATEWAY_URL directly to the PUBLIC relay URL, e.g. " +
+    "https://tf-relay-production.up.railway.app/api/live-order.";
+
+  try {
+    const { notifyWarning } = await import("../services/notification-service.js");
+    notifyWarning(
+      "LIVE_ORDER_GATEWAY_URL points at localhost/private network — Path B unreachable publicly",
+      appendFamilyGradePostscript(
+        msg,
+        "A trading link is configured to point at this computer only, not the internet.",
+        "No action needed if you don't use TradingView Pine alerts through the TF gateway. Otherwise ask Tony to fix it.",
+      ),
+      { env_var: "LIVE_ORDER_GATEWAY_URL", value },
+    );
+  } catch (notifyErr) {
+    logger.warn({ err: notifyErr }, "startup-config-check: Discord notify failed (non-blocking)");
+  }
+}
 
 /**
  * Runs boot-time validation of all HMAC/security secrets required by the
@@ -115,6 +728,51 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
     warnings.push("ADMIN_RESTART_HMAC_SECRET_TOO_SHORT");
   }
 
+  // ── Boot launcher activation (deepscan17 G-1, 2026-07-05; AUTO-APPLY deepscan18 G-2) ─
+  // NSSM STILL invokes tsx directly today (verified live via `nssm get
+  // TradingForgeAPI AppParameters`) — tower-boot.mjs exists but is inert
+  // until it is repointed. deepscan17 only alerted; deepscan18 G-2 now tries
+  // to fix this itself FIRST (attemptBootLauncherAutoApply — production +
+  // win32 only, DB-backed once-per-24h backoff, nssm set + get read-back
+  // verification, self-restart on success) and only falls back to the loud
+  // alert when auto-apply is ineligible or fails. A failed `nssm set` never
+  // partially applies — the existing tsx invocation is left completely
+  // untouched, so this can never brick the service.
+  if (isBootLauncherCheckApplicable() && !isBootLauncherActive()) {
+    const autoApplyOutcome = await attemptBootLauncherAutoApply();
+    if (autoApplyOutcome === "applied") {
+      warnings.push("BOOT_LAUNCHER_AUTO_APPLIED");
+      logger.warn(
+        { event: "boot_launcher.auto_applied" },
+        "[STARTUP] self-healing boot launcher was inactive — AUTO-APPLIED the fix and triggered a self-restart",
+      );
+    } else {
+      const msg =
+        "The self-healing tower-boot.mjs launcher exists but NSSM is still invoking " +
+        "tsx DIRECTLY, and automatic repointing was " +
+        (autoApplyOutcome === "failed" ? "ATTEMPTED but FAILED" : "not eligible this tick") +
+        ". If node_modules is ever incomplete at restart time, the process crash-loops into a " +
+        "Paused service outage with no auto-recovery. " +
+        `Manual fallback (one-time, elevated): run ${BOOT_LAUNCHER_ACTIVATION_CMD} as Administrator.`;
+
+      logger.warn(
+        {
+          event: "boot_launcher.inactive",
+          auto_apply_outcome: autoApplyOutcome,
+          activation_command: BOOT_LAUNCHER_ACTIVATION_CMD,
+        },
+        `[STARTUP CRITICAL] ${msg}`,
+      );
+      warnings.push("BOOT_LAUNCHER_NOT_ACTIVE");
+      await fireBootLauncherInactiveAlert();
+    }
+  } else if (isBootLauncherCheckApplicable()) {
+    logger.info(
+      { event: "boot_launcher.active" },
+      "startup-config-check: self-healing boot launcher is ACTIVE (tower-boot.mjs)",
+    );
+  }
+
   // ── LIVE_ORDER_HMAC_SECRET ────────────────────────────────────────────────
   // Required by live-order.ts Path B HMAC verification (live-order.ts:100).
   // Missing or too short → route returns 503 fail-CLOSED on every Pine alert.
@@ -132,6 +790,11 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
         `[STARTUP WARN] ${msg}`,
       );
       warnings.push("LIVE_ORDER_HMAC_SECRET_NOT_SET");
+      // deepscan17 G-3 (2026-07-05): this previously only logged — zero Discord
+      // visibility for a route that fail-CLOSED 503s every Pine alert. Escalated
+      // to a WARN notify here + a daily repeat via runBootConfigReminderCheck
+      // while the secret stays unset (mirrors the KASA partial-config pattern).
+      await fireLiveOrderHmacUnsetAlert();
     } else if (liveOrderSecret.trim().length < MIN_SECRET_LENGTH) {
       const msg =
         `LIVE_ORDER_HMAC_SECRET is set but SHORTER THAN RECOMMENDED (${liveOrderSecret.trim().length} chars < ${MIN_SECRET_LENGTH}). ` +
@@ -147,20 +810,63 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
   }
 
   // ── LIVE_ORDER_GATEWAY_URL ────────────────────────────────────────────────
-  // Used by live-order.ts for self-reference / callback link generation (Path B).
-  // Missing → callback links in Discord notifications and webhook registrations
-  // will produce broken placeholder URLs.
+  // Used by live-order.ts for self-reference / callback link generation (Path B),
+  // and by pine-gateway-options.ts / webhook-builder.ts / lifecycle-service.ts /
+  // pine-export-service.ts to decide tf_gateway-vs-direct mode. Missing → those
+  // callers fall back to the LESS SAFE direct-to-TradersPost path (bypassing
+  // the kill-switch, compliance gate, firm-cap clamp, and circuit breaker) and
+  // block archetype strategies from promoting to PAPER.
+  //
+  // deepscan17 G-3 (2026-07-05): auto-derive from TRADING_FORGE_PUBLIC_URL
+  // instead of requiring a second, redundant env var — same base URL, same
+  // derivation pine-export-service.ts already applies for tf_marker_webhook_url
+  // (`${tfPublicUrl}/api/tradingview/marker`). Every downstream reader above
+  // reads process.env.LIVE_ORDER_GATEWAY_URL fresh at call time, and this runs
+  // BEFORE app.listen() and before any of those modules execute, so mutating
+  // it here closes the gap for every caller with zero operator action.
   {
     const gatewayUrl = process.env.LIVE_ORDER_GATEWAY_URL;
     if (!gatewayUrl || gatewayUrl.trim().length === 0) {
-      const msg =
-        "LIVE_ORDER_GATEWAY_URL is NOT SET. " +
-        "Path B live-order callback links will produce broken URLs in Discord " +
-        "alerts and webhook registrations. " +
-        "Set LIVE_ORDER_GATEWAY_URL to the public relay URL (e.g. https://tf-relay-production.up.railway.app).";
+      const publicUrl = process.env.TRADING_FORGE_PUBLIC_URL;
+      if (publicUrl && publicUrl.trim().length > 0) {
+        const derived = `${publicUrl.trim().replace(/\/+$/, "")}/api/live-order`;
+        process.env.LIVE_ORDER_GATEWAY_URL = derived;
+        logger.info(
+          { env_var: "LIVE_ORDER_GATEWAY_URL", derived_from: "TRADING_FORGE_PUBLIC_URL", value: derived },
+          "startup-config-check: LIVE_ORDER_GATEWAY_URL was unset — auto-derived from TRADING_FORGE_PUBLIC_URL",
+        );
+      } else {
+        const msg =
+          "LIVE_ORDER_GATEWAY_URL is NOT SET and could not be auto-derived " +
+          "(TRADING_FORGE_PUBLIC_URL is also unset). " +
+          "Path B live-order callback links will produce broken URLs in Discord " +
+          "alerts and webhook registrations, and Pine alerts fall back to the " +
+          "direct-to-TradersPost path (bypasses kill-switch/compliance/firm-cap). " +
+          "Set TRADING_FORGE_PUBLIC_URL (recommended — this auto-derives from it) " +
+          "or set LIVE_ORDER_GATEWAY_URL directly " +
+          "(e.g. https://tf-relay-production.up.railway.app/api/live-order).";
 
-      logger.warn({ env_var: "LIVE_ORDER_GATEWAY_URL" }, `[STARTUP WARN] ${msg}`);
-      warnings.push("LIVE_ORDER_GATEWAY_URL_NOT_SET");
+        logger.warn({ env_var: "LIVE_ORDER_GATEWAY_URL" }, `[STARTUP WARN] ${msg}`);
+        warnings.push("LIVE_ORDER_GATEWAY_URL_NOT_SET");
+      }
+    }
+
+    // G-3 (deepscan18, 2026-07-05): re-read the FINAL value (whether explicit
+    // or freshly auto-derived above) and WARN when it resolves to
+    // localhost/private-range under production — previously info-logged only.
+    const finalGatewayUrl = process.env.LIVE_ORDER_GATEWAY_URL;
+    if (
+      process.env.NODE_ENV === "production" &&
+      finalGatewayUrl &&
+      finalGatewayUrl.trim().length > 0 &&
+      isLocalOrPrivateGatewayUrl(finalGatewayUrl)
+    ) {
+      logger.warn(
+        { env_var: "LIVE_ORDER_GATEWAY_URL", value: finalGatewayUrl },
+        `[STARTUP WARN] LIVE_ORDER_GATEWAY_URL resolves to a localhost/private-network address (${finalGatewayUrl}) under production.`,
+      );
+      warnings.push("LIVE_ORDER_GATEWAY_URL_IS_LOCAL_OR_PRIVATE");
+      await fireLiveOrderGatewayLocalUrlAlert(finalGatewayUrl);
     }
   }
 
@@ -390,8 +1096,9 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
       {
         checked: [
           "ADMIN_RESTART_HMAC_SECRET",
+          "TF_LAUNCHED_VIA_BOOT_WRAPPER (win32 production only, auto-apply on inactive)",
           "LIVE_ORDER_HMAC_SECRET",
-          "LIVE_ORDER_GATEWAY_URL",
+          "LIVE_ORDER_GATEWAY_URL (unset/derive + localhost/private-range WARN)",
           "TRADING_FORGE_PUBLIC_URL",
           "SLUMDAWG_WEBHOOK_SECRET",
           "ADMIN_PROMOTE_HMAC_SECRET",
@@ -404,4 +1111,103 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
   }
 
   return { warnings, errors };
+}
+
+// ─── Daily reminder loop (deepscan17, 2026-07-05) ──────────────────────────
+// A single boot-time WARN is exactly the "easily missed" pattern the
+// autonomous-readiness charter forbids for a 30-day-unattended tower — the
+// operator only sees these log lines if they're SSH'd in and scrolling.
+// This re-runs the two persistent (non-self-healing) boot-config gaps once a
+// day for as long as the process lives, so Discord — the channel the
+// operator actually watches on vacation — gets a nudge every day the gap
+// stays open, not just once at whatever moment the service last restarted.
+
+const DAILY_REMINDER_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+let _reminderTimer: ReturnType<typeof setInterval> | null = null;
+let _reminderInitialized = false;
+
+/**
+ * Re-evaluates the two persistent boot-config gaps and re-fires Discord only
+ * while each condition is still true. Exported for direct unit testing —
+ * startBootConfigReminderMonitor() just calls this on a timer. Fail-soft: a
+ * reminder tick must never throw (would kill the interval's error handling
+ * upstream) or crash the process.
+ */
+export async function runBootConfigReminderCheck(): Promise<void> {
+  try {
+    if (isBootLauncherCheckApplicable() && !isBootLauncherActive()) {
+      // deepscan18 G-2: retry auto-apply once per day (the DB-backed backoff
+      // inside attemptBootLauncherAutoApply is what actually caps this to
+      // once per 24h — calling it every tick is safe and is how a transient
+      // failure, e.g. a permissions regression that later gets fixed by hand,
+      // self-heals without waiting for the next full process restart).
+      const autoApplyOutcome = await attemptBootLauncherAutoApply();
+      if (autoApplyOutcome !== "applied") {
+        logger.warn(
+          { event: "boot_launcher.inactive_reminder", auto_apply_outcome: autoApplyOutcome },
+          "[STARTUP CRITICAL][DAILY REMINDER] self-healing boot launcher still not active",
+        );
+        await fireBootLauncherInactiveAlert();
+      }
+    }
+
+    const liveOrderSecret = process.env.LIVE_ORDER_HMAC_SECRET;
+    if (!liveOrderSecret || liveOrderSecret.trim().length === 0) {
+      logger.warn(
+        { event: "live_order_hmac_secret.unset_reminder" },
+        "[STARTUP WARN][DAILY REMINDER] LIVE_ORDER_HMAC_SECRET still unset",
+      );
+      await fireLiveOrderHmacUnsetAlert();
+    }
+
+    const gatewayUrl = process.env.LIVE_ORDER_GATEWAY_URL;
+    if (
+      process.env.NODE_ENV === "production" &&
+      gatewayUrl &&
+      gatewayUrl.trim().length > 0 &&
+      isLocalOrPrivateGatewayUrl(gatewayUrl)
+    ) {
+      logger.warn(
+        { event: "live_order_gateway_url.local_or_private_reminder", value: gatewayUrl },
+        "[STARTUP WARN][DAILY REMINDER] LIVE_ORDER_GATEWAY_URL still resolves to localhost/private-network",
+      );
+      await fireLiveOrderGatewayLocalUrlAlert(gatewayUrl);
+    }
+  } catch (err) {
+    logger.warn({ err }, "startup-config-check: daily reminder tick failed (non-blocking)");
+  }
+}
+
+/**
+ * Starts the daily boot-config reminder loop. Idempotent — safe to call more
+ * than once (repeat calls are no-ops). Call once from index.ts after boot.
+ * The timer is unref'd so it never keeps the process alive on its own —
+ * app.listen()'s open socket already does that job; this just means the
+ * reminder loop doesn't block a clean shutdown or hang a test process.
+ */
+export function startBootConfigReminderMonitor(): void {
+  if (_reminderInitialized) return;
+  _reminderInitialized = true;
+
+  _reminderTimer = setInterval(() => {
+    runBootConfigReminderCheck().catch((err) => {
+      logger.warn({ err }, "startup-config-check: daily reminder interval threw unexpectedly");
+    });
+  }, DAILY_REMINDER_INTERVAL_MS);
+  _reminderTimer.unref?.();
+
+  logger.info(
+    { event: "boot_config_reminder.monitor_started", intervalMs: DAILY_REMINDER_INTERVAL_MS },
+    "startup-config-check: daily boot-config reminder monitor started",
+  );
+}
+
+/** Stops the daily reminder loop. Exposed for tests / graceful shutdown. */
+export function stopBootConfigReminderMonitor(): void {
+  if (_reminderTimer !== null) {
+    clearInterval(_reminderTimer);
+    _reminderTimer = null;
+  }
+  _reminderInitialized = false;
 }

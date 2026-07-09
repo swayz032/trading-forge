@@ -5,6 +5,14 @@ import { logger } from "../index.js";
 import { getFirmAccount, getTightestDrawdown, type FirmAccountConfig } from "../../shared/firm-config.js";
 import { tracer } from "../lib/tracing.js";
 import { isUsDst } from "../lib/dst-utils.js";
+// deepscan18 (2026-07-05) C-C2 fix: the "global daily loss" gate below used to
+// sum dailyPnlBreakdown[today] across EVERY active session system-wide and
+// compare that ONE sum to a single hardcoded limit — silently netting
+// independent accounts together (see the gate f) rewrite below). Reuses the
+// SAME account-resolution helper kill-switch.ts Layer 2 / cross-symbol-pnl.ts
+// use, so this gate and the kill-switch DLL gate can never disagree about
+// which sessions belong to the same account.
+import { resolveAccountKey, resolvePersonalDllDollars } from "./cross-symbol-pnl.js";
 
 // ── F-1 Fix: halt new entries at DLL_HALT_PCT × firmDLL (matching kill-switch Layer 2) ──
 // CLAUDE.md §4: "HALT new entries at 67% (env: DLL_HALT_PCT)"
@@ -73,26 +81,35 @@ export function toFuturesTradingDayString(date: Date = new Date()): string {
 // acts as a safety net for any cache-warming that might slip past the
 // invalidation call (e.g. manual DB edits, test isolation).
 //
-// NOTE: This is an AGGREGATE cache (total across all sessions), not per-session,
-// because the check sums across all active sessions.  A per-session approach
-// would require fetching and summing every other session on each miss anyway.
-// Aggregate is simpler and correct.
+// NOTE: This is an AGGREGATE cache (total across all sessions sharing a scope),
+// not per-session, because the check sums across sessions.  A per-session
+// approach would require fetching and summing every other session on each
+// miss anyway.  Aggregate is simpler and correct.
+//
+// deepscan18 (2026-07-05) C-C2 fix: cache key now includes the aggregation
+// SCOPE (resolved account key, or the household sentinel when
+// RISK_GATE_HOUSEHOLD_LOSS_SCOPE is opted in) alongside the ET date, so one
+// account's cached aggregate is never read back for a DIFFERENT account.
 
 const globalDailyLossCache = new Map<string, { value: number; updatedAt: number }>();
 const GLOBAL_DAILY_LOSS_CACHE_TTL_MS = 30_000;
 
-function getCachedGlobalDailyLoss(etDate: string): number | null {
-  const cached = globalDailyLossCache.get(etDate);
+function _dailyLossCacheKey(etDate: string, scopeKey: string): string {
+  return `${etDate}:${scopeKey}`;
+}
+
+function getCachedGlobalDailyLoss(etDate: string, scopeKey: string): number | null {
+  const cached = globalDailyLossCache.get(_dailyLossCacheKey(etDate, scopeKey));
   if (cached === undefined) return null;
   if (Date.now() - cached.updatedAt > GLOBAL_DAILY_LOSS_CACHE_TTL_MS) {
-    globalDailyLossCache.delete(etDate);
+    globalDailyLossCache.delete(_dailyLossCacheKey(etDate, scopeKey));
     return null;
   }
   return cached.value;
 }
 
-function setCachedGlobalDailyLoss(etDate: string, value: number): void {
-  globalDailyLossCache.set(etDate, { value, updatedAt: Date.now() });
+function setCachedGlobalDailyLoss(etDate: string, scopeKey: string, value: number): void {
+  globalDailyLossCache.set(_dailyLossCacheKey(etDate, scopeKey), { value, updatedAt: Date.now() });
 }
 
 /**
@@ -133,6 +150,15 @@ const DEFAULT_MAX_CONTRACTS: Record<string, number> = {
 const DEFAULT_SESSION_DRAWDOWN = getTightestDrawdown()?.maxDrawdown ?? 2_000;
 const DEFAULT_GLOBAL_LOSS_LIMIT = 5_000;
 const DEFAULT_MAX_POSITIONS = 1;
+
+// deepscan18 (2026-07-05) C-C2: opt-in (default OFF) escape hatch back to the
+// PRE-fix system-wide netting behavior, for an operator who deliberately wants
+// ONE combined loss ceiling across every account/firm they run (a genuine
+// household cap), rather than each account measured independently against its
+// own $5,000 limit (the new default — see gate f) below). Must be explicit;
+// silently netting independent accounts together is exactly the bug being fixed.
+const RISK_GATE_HOUSEHOLD_LOSS_SCOPE = process.env.RISK_GATE_HOUSEHOLD_LOSS_SCOPE === "true";
+const HOUSEHOLD_LOSS_SCOPE_KEY = "__household__";
 
 /**
  * Resolve firm config from session's firmId. Returns null if no firmId
@@ -247,17 +273,30 @@ export async function checkRiskGate(
     const todayPnl = breakdown[today] ?? 0;
     const todayLoss = todayPnl < 0 ? Math.abs(todayPnl) : 0;
 
-    // Halt threshold = DLL_HALT_PCT × firm DLL (e.g. 0.67 × $1000 = $670 for Topstep)
-    const dllHaltThreshold = firmConfig.dailyLossLimit * DLL_HALT_PCT;
+    // deep-scan long-tail F-1 (operator-approved 2026-07-06): UNIFY the DLL base with the two other
+    // gates on this same signal path. This gate previously used firmConfig.dailyLossLimit (Topstep=$1000
+    // → $670 halt) while kill-switch.ts Layer 2 + cross-symbol-pnl.ts use resolvePersonalDllDollars
+    // (Topstep 50k → $2,000 trailing-DD → $1,340 halt). They CONTRADICTED 2× for the primary firm.
+    // Operator chose the trailing-DD base ($1,340) — Topstep's real account-closure constraint is the
+    // trailing max drawdown, not the softer $1,000 daily figure. resolvePersonalDllDollars is firm-aware:
+    // Topstep → $2,000 (trailing DD); others (MFFU) → DEFAULT_PERSONAL_DLL_DOLLARS ($1,000, unchanged $670).
+    const trailingDdOverride = (session.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
+    const accountStartingFloor = parseFloat(session.startingCapital as string) || 50_000;
+    const personalDllBase = resolvePersonalDllDollars({
+      firmId: session.firmId,
+      trailingDdOverride,
+      accountStartingFloor,
+    });
+    const dllHaltThreshold = personalDllBase * DLL_HALT_PCT;
 
     if (todayLoss >= dllHaltThreshold) {
       logger.warn(
-        { sessionId, todayLoss, dllHaltThreshold, dailyLossLimit: firmConfig.dailyLossLimit, DLL_HALT_PCT },
+        { sessionId, todayLoss, dllHaltThreshold, personalDllBase, DLL_HALT_PCT },
         "Risk gate: daily loss halt threshold hit",
       );
       return {
         allowed: false,
-        reason: `Daily loss halt threshold reached ($${todayLoss.toFixed(2)} today vs $${dllHaltThreshold.toFixed(2)} halt limit [${Math.round(DLL_HALT_PCT * 100)}% of $${firmConfig.dailyLossLimit} for ${session.firmId}])`,
+        reason: `Daily loss halt threshold reached ($${todayLoss.toFixed(2)} today vs $${dllHaltThreshold.toFixed(2)} halt limit [${Math.round(DLL_HALT_PCT * 100)}% of $${personalDllBase} personal DLL for ${session.firmId}])`,
         check: "daily_loss_limit",
       };
     }
@@ -286,37 +325,68 @@ export async function checkRiskGate(
     }
   }
 
-  // ── f) Global daily loss limit across all active sessions ──
+  // ── f) Daily loss limit — scoped to this session's account (deepscan18 C-C2) ──
   // Use CME futures trading-day key so the aggregate matches dailyPnlBreakdown entries.
   // Trades closed 17:00–23:59 ET are attributed to the NEXT trading day (5pm ET cutoff).
+  //
+  // deepscan18 C-C2 fix: this gate previously summed dailyPnlBreakdown[today]
+  // across EVERY active session system-wide and compared the ONE sum to a
+  // single hardcoded $5,000 limit, regardless of which account a session
+  // belonged to. Under multi-account Phase 3/4 scaling that silently NETS
+  // independent accounts: Account A losing $3,000 + Account B losing $3,000 =
+  // $6,000 combined -> BOTH accounts get rejected even though NEITHER
+  // individually breached $5,000. Fixed: the aggregate is scoped to the
+  // resolved account key (cross-symbol-pnl.ts::resolveAccountKey) of the
+  // session being gated — each account is measured against its OWN limit.
+  //
+  // For the single-account-per-firm operator setup today (no config.account_key
+  // set anywhere), every active session resolves to the SAME account key, so
+  // the scoped aggregate is IDENTICAL to the old system-wide sum — behavior is
+  // byte-for-byte unchanged for current operation. A genuine cross-account
+  // household cap (opt-in, NOT default) is available via
+  // RISK_GATE_HOUSEHOLD_LOSS_SCOPE=true for an operator who deliberately wants
+  // one combined ceiling across every account they run.
   const today = toFuturesTradingDayString();
+  const accountKey = resolveAccountKey(session);
+  const lossScopeKey = RISK_GATE_HOUSEHOLD_LOSS_SCOPE ? HOUSEHOLD_LOSS_SCOPE_KEY : accountKey;
 
   // Fix 3: try aggregate cache before issuing the full-table DB query.
   // Cache is invalidated by invalidateDailyLossCache() on every trade close.
   // 30-second TTL is a safety net only.
-  let totalTodayLoss = getCachedGlobalDailyLoss(today);
+  let totalTodayLoss = getCachedGlobalDailyLoss(today, lossScopeKey);
   if (totalTodayLoss === null) {
     const activeSessions = await db
       .select({
+        firmId: paperSessions.firmId,
+        config: paperSessions.config,
         dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
       })
       .from(paperSessions)
       .where(eq(paperSessions.status, "active"));
 
-    totalTodayLoss = activeSessions.reduce((sum, s) => {
+    const scopedSessions = RISK_GATE_HOUSEHOLD_LOSS_SCOPE
+      ? activeSessions
+      : activeSessions.filter((s) => resolveAccountKey(s) === accountKey);
+
+    totalTodayLoss = scopedSessions.reduce((sum, s) => {
       const breakdown = (s.dailyPnlBreakdown as Record<string, number> | null) ?? {};
       const todayPnl = breakdown[today] ?? 0;
       return sum + (todayPnl < 0 ? Math.abs(todayPnl) : 0);
     }, 0);
 
-    setCachedGlobalDailyLoss(today, totalTodayLoss);
+    setCachedGlobalDailyLoss(today, lossScopeKey, totalTodayLoss);
   }
 
   if (totalTodayLoss >= DEFAULT_GLOBAL_LOSS_LIMIT) {
-    logger.warn({ totalTodayLoss, limit: DEFAULT_GLOBAL_LOSS_LIMIT }, "Risk gate: global daily loss limit hit");
+    logger.warn(
+      { totalTodayLoss, limit: DEFAULT_GLOBAL_LOSS_LIMIT, accountKey, householdScope: RISK_GATE_HOUSEHOLD_LOSS_SCOPE },
+      "Risk gate: daily loss limit hit for account scope",
+    );
     return {
       allowed: false,
-      reason: `Global daily loss across all sessions ($${totalTodayLoss.toFixed(2)} today) exceeds $${DEFAULT_GLOBAL_LOSS_LIMIT} limit`,
+      reason: RISK_GATE_HOUSEHOLD_LOSS_SCOPE
+        ? `Household daily loss across all accounts ($${totalTodayLoss.toFixed(2)} today) exceeds $${DEFAULT_GLOBAL_LOSS_LIMIT} limit`
+        : `Daily loss for account "${accountKey}" ($${totalTodayLoss.toFixed(2)} today) exceeds $${DEFAULT_GLOBAL_LOSS_LIMIT} limit`,
       check: "global_daily_loss",
     };
   }

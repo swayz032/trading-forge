@@ -11,6 +11,13 @@ import { parsePythonJson } from "../../shared/utils.js";
 import { compilePineExport } from "./pine-export-service.js";
 import { tracer } from "../lib/tracing.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
+import { quantumMcRunsTotal } from "../lib/metrics-registry.js";
+// FIX H2 (deepscan15 2026-07-03): route this bespoke spawn through the shared
+// python-runner semaphore accounting so it counts toward MAX_PYTHON_SUBPROCESSES
+// and the pythonSubprocess{Active,Queued} stats — previously this spawn bypassed
+// the semaphore entirely (see acquireExternalPythonSlot JSDoc for the false-green
+// /api/health failure mode this closes).
+import { acquireExternalPythonSlot, releaseExternalPythonSlot } from "../lib/python-runner.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -45,58 +52,66 @@ export interface QuantumRuntimeStatus {
   authorityBoundary: "challenger_only";
 }
 
-function runPythonQuantumMC(configPath: string, timeoutMs: number = 300_000): Promise<QuantumResult> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", "src.engine.quantum_mc", "--input-json", configPath];
+async function runPythonQuantumMC(configPath: string, timeoutMs: number = 300_000): Promise<QuantumResult> {
+  // FIX H2 (deepscan15): acquire a backtest-lane slot BEFORE spawning so this
+  // subprocess counts toward MAX_PYTHON_SUBPROCESSES / getPythonSubprocessStats().
+  // Released in the finally below regardless of resolve/reject/timeout path.
+  await acquireExternalPythonSlot("backtest");
+  try {
+    return await new Promise<QuantumResult>((resolve, reject) => {
+      const pythonCmd = process.platform === "win32" ? "python" : "python3";
+      const args = ["-m", "src.engine.quantum_mc", "--input-json", configPath];
 
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
+      const proc = spawn(pythonCmd, args, {
+        env: { ...process.env },
+        cwd: PROJECT_ROOT,
+      });
 
-    const TIMEOUT_MS = timeoutMs;
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        proc.kill("SIGTERM");
-        reject(new Error(`Quantum MC timed out after ${TIMEOUT_MS / 1000}s`));
-      }
-    }, TIMEOUT_MS);
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "quantum-mc-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (code === 0) {
-        try {
-          resolve(parsePythonJson<QuantumResult>(stdout));
-        } catch {
-          reject(new Error(`Failed to parse quantum MC output: ${stdout.slice(0, 500)}`));
+      const TIMEOUT_MS = timeoutMs;
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          proc.kill("SIGTERM");
+          reject(new Error(`Quantum MC timed out after ${TIMEOUT_MS / 1000}s`));
         }
-      } else {
-        reject(new Error(`Quantum MC failed (exit ${code}): ${stderr.slice(0, 500)}`));
-      }
-    });
+      }, TIMEOUT_MS);
 
-    proc.on("error", (err) => {
-      clearTimeout(timer);
-      if (!settled) {
+      let stdout = "";
+      let stderr = "";
+
+      proc.stdout.on("data", (data) => (stdout += data.toString()));
+      proc.stderr.on("data", (data) => {
+        stderr += data.toString();
+        logger.info({ component: "quantum-mc-engine" }, data.toString().trim());
+      });
+
+      proc.on("close", (code) => {
+        clearTimeout(timer);
+        if (settled) return;
         settled = true;
-        reject(err);
-      }
+        if (code === 0) {
+          try {
+            resolve(parsePythonJson<QuantumResult>(stdout));
+          } catch {
+            reject(new Error(`Failed to parse quantum MC output: ${stdout.slice(0, 500)}`));
+          }
+        } else {
+          reject(new Error(`Quantum MC failed (exit ${code}): ${stderr.slice(0, 500)}`));
+        }
+      });
+
+      proc.on("error", (err) => {
+        clearTimeout(timer);
+        if (!settled) {
+          settled = true;
+          reject(err);
+        }
+      });
     });
-  });
+  } finally {
+    releaseExternalPythonSlot("backtest");
+  }
 }
 
 export async function runQuantumMC(
@@ -120,24 +135,59 @@ export async function runQuantumMC(
   qmcSpan.setAttribute("eventType", eventType);
   qmcSpan.setAttribute("firmKey", firmKey);
 
-  // Fetch backtest
-  const [bt] = await db.select().from(backtests).where(eq(backtests.id, backtestId));
-  if (!bt) throw new Error(`Backtest ${backtestId} not found`);
-  if (bt.status !== "completed") throw new Error(`Backtest not completed (status: ${bt.status})`);
+  // Deep-scan #16 Wave-1 Track 5 (HIGH E-8): the backtest fetch + "running" row insert
+  // below happen BEFORE the try block further down — if either throws (backtest not
+  // found/completed, or a DB error on the insert itself), there is no quantumMcRuns row
+  // to attach a failure audit to, and the caller's catch previously had nothing but a
+  // bare logger.error. Wrap this pre-insert phase so a failure here is still counted +
+  // audited (against the backtestId, since no run row exists yet) before re-throwing.
+  let bt: typeof backtests.$inferSelect;
+  let qmcRow: typeof quantumMcRuns.$inferSelect;
+  try {
+    // Fetch backtest
+    const [btRow] = await db.select().from(backtests).where(eq(backtests.id, backtestId));
+    if (!btRow) throw new Error(`Backtest ${backtestId} not found`);
+    if (btRow.status !== "completed") throw new Error(`Backtest not completed (status: ${btRow.status})`);
+    bt = btRow;
 
-  // Insert running quantum run
-  // Insert a running row with a provisional method label — updated after the Python
-  // engine returns so we reflect the actual execution path (iae or classical_fallback).
-  const [qmcRow] = await db
-    .insert(quantumMcRuns)
-    .values({
-      backtestId,
-      status: "running",
-      method: "iae",  // provisional — overwritten below once result is available
-      governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
-    })
-    .returning();
-  qmcSpan.setAttribute("qmcRunId", qmcRow.id);
+    // Insert running quantum run
+    // Insert a running row with a provisional method label — updated after the Python
+    // engine returns so we reflect the actual execution path (iae or classical_fallback).
+    const [qmcRowInserted] = await db
+      .insert(quantumMcRuns)
+      .values({
+        backtestId,
+        status: "running",
+        method: "iae",  // provisional — overwritten below once result is available
+        governanceLabels: { experimental: true, authoritative: false, decision_role: "challenger_only" },
+      })
+      .returning();
+    qmcRow = qmcRowInserted;
+    qmcSpan.setAttribute("qmcRunId", qmcRow.id);
+  } catch (preInsertErr) {
+    const preInsertErrMsg = preInsertErr instanceof Error ? preInsertErr.message : String(preInsertErr);
+    try { quantumMcRunsTotal.labels({ outcome: "pre_insert_error" }).inc(); } catch { /* non-blocking counter */ }
+    logger.error(
+      { backtestId, eventType, firmKey, err: preInsertErr },
+      "quantum-mc-service: pre-insert phase failed (no quantumMcRuns row exists yet) — attributing failure audit to the backtest",
+    );
+    await db.insert(auditLog).values({
+      action: "quantum-mc.run",
+      entityType: "backtest",
+      entityId: backtestId,
+      input: { backtestId, eventType, firmKey },
+      result: { error: preInsertErrMsg, stage: "pre_insert" },
+      status: "failure",
+      decisionAuthority: "agent",
+      errorMessage: preInsertErrMsg,
+      correlationId,
+    }).catch((auditErr) => {
+      logger.warn({ backtestId, err: auditErr }, "quantum-mc.run (pre_insert failure) audit insert failed (non-blocking)");
+    });
+    qmcSpan.setAttribute("status", "failed");
+    qmcSpan.end();
+    throw preInsertErr;
+  }
 
   // Hoist cost telemetry vars OUTSIDE try block so catch handler can reference
   // them even if early failures throw before they would have been initialized
@@ -367,6 +417,7 @@ export async function runQuantumMC(
     qmcSpan.setAttribute("status", "completed");
     qmcSpan.setAttribute("backend", result.backend_used);
     qmcSpan.end();
+    try { quantumMcRunsTotal.labels({ outcome: "completed" }).inc(); } catch { /* non-blocking counter */ }
     return { id: qmcRow.id, status: "completed", ...result };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
@@ -399,6 +450,7 @@ export async function runQuantumMC(
 
     qmcSpan.setAttribute("status", "failed");
     qmcSpan.end();
+    try { quantumMcRunsTotal.labels({ outcome: "failed" }).inc(); } catch { /* non-blocking counter */ }
     return { id: qmcRow.id, status: "failed", error: errorMsg };
   }
 }

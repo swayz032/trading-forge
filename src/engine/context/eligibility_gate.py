@@ -81,6 +81,55 @@ def evaluate_signal(
     direction = signal.get("direction", "long")
     strategy_name = signal.get("strategy_name", "unknown")
 
+    # ds21 (deep-scan #21 residual — paper/backtest parity): unregistered-strategy bypass.
+    # Mirrors backtester.py::apply_eligibility_gate's `passthrough_strategy_unregistered` branch:
+    # if strategy_name is not registered to ANY playbook (not in ALL_STRATS), the 7-layer
+    # eligibility OVERLAY does not apply. The backtest validated these strategies with the overlay
+    # bypassed, so the live/paper path MUST bypass it too — otherwise check #2 below SKIPs every
+    # signal for the ~100 graduated strategies whose names aren't in the 174-entry ALL_STRATS list,
+    # while backtest trades them (the promotion-breaking paper/backtest divergence).
+    # MEASURED 2026-07-05 (read-only live DB): the "~100 unregistered" figure was STALE at that
+    # time for the graduated DSL library — ALL_STRATS covers that population. This branch stayed
+    # a LIVE CRITICAL FAIL-OPEN, though, for a DIFFERENT population: the 22 hand-coded archetype
+    # classes in src/engine/strategies/*.py. F-4 FIX (deep-scan #21 Band-B2 carry-forward,
+    # 2026-07-06): 7 of those 22 (bounce_off_level, ict_bias_aligned_continuation,
+    # gann_box_4h_continuation, unicorn, turtle_soup, smt_reversal, ict_2022) were never added to
+    # playbook_router.ALL_STRATS, so this bypass fired for every one of their live signals —
+    # action=TAKE unconditionally, skipping Check 0 (structural-stop-ceiling) below and all 8
+    # other hard-SKIP checks. All 7 are now registered (see playbook_router.py's F-4 comment
+    # block for per-archetype category rationale); see
+    # test_strategy_registry_completeness.py for the regression guard that would have caught
+    # this had it existed sooner. The overlay remains the ONLY thing bypassed for any strategy
+    # that legitimately IS unregistered (the graduated-DSL grandfather population): the separate
+    # framework/risk gates (DLL, daily-trade-cap, lunch/PM taper, macro blackout, Stage-2 A+
+    # confluence) still run in BOTH engines. Registered strategies (in ALL_STRATS) continue
+    # through the full gate below, including check #2's per-playbook allow-list. Local import
+    # mirrors the backtester's circular-import-safe pattern.
+    #
+    # DEFENSE-IN-DEPTH VERIFIED (2026-07-06): Check 0 (stop_plan.skip_trade, below) is
+    # intentionally NOT reordered ahead of this bypass. Backtester.py's mirror bypass
+    # (apply_eligibility_gate(), ~backtester.py:303-322) returns BEFORE compute_structural_stop()
+    # is ever invoked for an unregistered strategy (that call happens later, inside the per-bar
+    # loop, only reached on the non-bypass path) — so the backtest engine performs NO
+    # structural-stop-ceiling check at all for a genuinely-unregistered strategy, not a check that
+    # happens to pass. Moving Check 0 ahead of the bypass here would make live STRICTER than
+    # backtest for that (now-empty, but not permanently guaranteed empty) population — a NEW
+    # parity mismatch, not a fix of one. If a future strategy is added without registration, both
+    # engines must continue to treat it identically (fully bypassed in both, or fully gated in
+    # both via registration) rather than partially gated in one.
+    from src.engine.context.playbook_router import ALL_STRATS
+    _strat_norm = strategy_name.lower().replace("strategy", "").strip().replace("_", "")
+    _all_norm = [s.lower().replace("_", "") for s in ALL_STRATS]
+    if _strat_norm and _strat_norm not in _all_norm:
+        reasoning.append(
+            f"Strategy {strategy_name!r} unregistered (not in playbook_router.ALL_STRATS) — "
+            "eligibility overlay bypassed for backtest parity (framework + Stage-2 gates still apply)"
+        )
+        return EligibilityDecision(
+            action="TAKE", confidence=bias_state.bias_confidence, reasoning=reasoning,
+            bias_state=bias_state, playbook=playbook.playbook,
+        )
+
     # ─── Hard SKIP checks ─────────────────────────────────────
 
     # Check 0 (deep-scan #8 2026-07-02): structural stop exceeds per-symbol ceiling.

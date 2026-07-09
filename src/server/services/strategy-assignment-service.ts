@@ -66,6 +66,21 @@ export interface CollaborativeTradingWarning {
   rule: "mffu_no_collaborative_trading";
 }
 
+/**
+ * Thrown when a strategy assignment is REFUSED because it would create an MFFU
+ * collaborative-trading ban risk (CLAUDE.md §6 hard rule). 409 Conflict — the
+ * caller must assign a DIFFERENT strategy to this family member (§9).
+ */
+export class CollaborativeTradingBlockedError extends Error {
+  readonly statusCode = 409;
+  readonly warning: CollaborativeTradingWarning;
+  constructor(message: string, warning: CollaborativeTradingWarning) {
+    super(message);
+    this.name = "CollaborativeTradingBlockedError";
+    this.warning = warning;
+  }
+}
+
 // ─── Pipeline-pause guard ─────────────────────────────────────────────────────
 
 class PipelinePausedError extends Error {
@@ -101,9 +116,20 @@ const DEFAULT_ENABLED_FIRMS = ["topstep", "mffu"] as const;
 let enabledFirmsCache: { value: string[]; expiresAt: number } | null = null;
 const ENABLED_FIRMS_TTL_MS = 60_000;
 
+// deep-scan #15 FIX (getEnabledFirms hardening): last SUCCESSFULLY-READ enabled
+// set. On a DB read error we return THIS (the last operator-confirmed allowlist)
+// rather than blindly resetting to DEFAULT_ENABLED_FIRMS — a transient read error
+// must NEVER silently re-enable a firm the operator intentionally disabled. Only a
+// true cold start (no confirmed read yet this process) falls back to DEFAULT.
+let lastConfirmedEnabledFirms: string[] | null = null;
+
 /**
  * Returns the currently-enabled firms for this Trading Forge instance.
  * Cached for 60s. Callers should treat the array as read-only.
+ *
+ * FAIL-SAFE (deep-scan #15): a DB read error does NOT expand the enabled set.
+ * It returns the last-known-good confirmed set (or DEFAULT only on cold start)
+ * and emits a loud audit row so the degraded read is never silent.
  *
  * Test helpers reset the cache via `__resetEnabledFirmsCache()` (exported).
  */
@@ -113,32 +139,79 @@ export async function getEnabledFirms(): Promise<string[]> {
     return enabledFirmsCache.value;
   }
 
-  let value: string[] = [...DEFAULT_ENABLED_FIRMS];
   try {
     const [row] = await db
       .select({ enabledFirms: instanceConfig.enabledFirms })
       .from(instanceConfig)
       .where(eq(instanceConfig.id, 1))
       .limit(1);
+
+    let value: string[];
     if (row && Array.isArray(row.enabledFirms) && row.enabledFirms.length > 0) {
       value = (row.enabledFirms as unknown[])
         .filter((v): v is string => typeof v === "string");
+    } else {
+      // Row missing or empty is a legitimate "instance not configured yet" state —
+      // DEFAULT is the correct answer here (NOT a read error). Record it as confirmed.
+      value = [...DEFAULT_ENABLED_FIRMS];
     }
-  } catch (err) {
-    logger.warn(
-      { err: err instanceof Error ? err.message : String(err) },
-      "strategy-assignment: instance_config read failed; using default enabled_firms",
-    );
-    // fall through with DEFAULT_ENABLED_FIRMS
-  }
 
-  enabledFirmsCache = { value, expiresAt: now + ENABLED_FIRMS_TTL_MS };
-  return value;
+    // Successful read → this is now the last-known-good.
+    lastConfirmedEnabledFirms = value;
+    enabledFirmsCache = { value, expiresAt: now + ENABLED_FIRMS_TTL_MS };
+    return value;
+  } catch (err) {
+    // ── FAIL-SAFE: DB read error ─────────────────────────────────────────────
+    // Do NOT reset to DEFAULT — that could re-enable a firm the operator disabled.
+    // Prefer the last-known-good confirmed set; only cold-start falls back to DEFAULT.
+    const usingLastKnownGood = lastConfirmedEnabledFirms !== null;
+    const value = usingLastKnownGood
+      ? [...(lastConfirmedEnabledFirms as string[])]
+      : [...DEFAULT_ENABLED_FIRMS];
+
+    logger.error(
+      {
+        err: err instanceof Error ? err.message : String(err),
+        usingLastKnownGood,
+        enabledFirms: value,
+      },
+      "strategy-assignment: instance_config read FAILED — fail-safe enabled_firms " +
+        (usingLastKnownGood
+          ? "(returning last-known-good confirmed set — NOT re-expanding to default)"
+          : "(cold start — no confirmed read yet; using conservative default)"),
+    );
+
+    // Loud audit so the degraded read is observable, not silent.
+    db.insert(auditLog).values({
+      action: "enabled_firms.read_error_failsafe",
+      entityType: "instance_config",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {},
+      result: {
+        error: err instanceof Error ? err.message : String(err),
+        usingLastKnownGood,
+        returnedEnabledFirms: value,
+        note: usingLastKnownGood
+          ? "returned last-known-good confirmed set — a read error must not re-enable a disabled firm"
+          : "cold start — no prior confirmed read; used conservative DEFAULT_ENABLED_FIRMS",
+      },
+      status: "warning",
+    }).catch((auditErr: unknown) => {
+      logger.warn({ err: auditErr }, "strategy-assignment: enabled_firms.read_error_failsafe audit insert failed (non-blocking)");
+    });
+
+    // Cache with a SHORT TTL so we retry the DB soon rather than pinning the
+    // degraded value for a full 60s window.
+    enabledFirmsCache = { value, expiresAt: now + 5_000 };
+    return value;
+  }
 }
 
-/** Test-only: reset the 60s cache. Safe in production (no-op outside tests). */
+/** Test-only: reset the 60s cache + last-known-good. Safe in production (no-op outside tests). */
 export function __resetEnabledFirmsCache(): void {
   enabledFirmsCache = null;
+  lastConfirmedEnabledFirms = null;
 }
 
 // ─── Collaborative-trading detection ─────────────────────────────────────────
@@ -325,47 +398,64 @@ export async function assignStrategyToAccount(
   );
 
   if (warning) {
-    logger.warn(
-      { warning },
-      "strategy-assignment: MFFU collaborative-trading warning — assigning anyway but surfacing compliance event",
+    // FAIL-CLOSED: MFFU's collaborative-trading rule is a HARD compliance boundary
+    // (CLAUDE.md §6 — "2+ accounts running identical/opposite strategies → ban").
+    // The detector already excludes Topstep multi-account (allowed) and the
+    // operator's own account (null family label), so a firing warning is a real
+    // ban-risk assignment. BLOCK it (refuse + audit + Discord) rather than
+    // insert-and-warn, which was a fail-OPEN on a bannable violation.
+    logger.error(
+      { warning, accountId, strategyId, correlationId },
+      "strategy-assignment: MFFU collaborative-trading risk — BLOCKING assignment (fail-closed compliance boundary)",
     );
 
-    broadcastSSE("compliance:collaborative_trading_warning", {
+    broadcastSSE("compliance:collaborative_trading_blocked", {
       strategyId: warning.strategyId,
       firmId: warning.firmId,
       affectedAccountIds: warning.affectedAccountIds,
       familyMemberLabels: warning.familyMemberLabels,
       rule: warning.rule,
+      blocked: true,
       timestamp: new Date().toISOString(),
     });
 
-    // Discord alert — operator must be notified of MFFU collaborative-trading risk
+    // Discord alert — operator must be notified of the BLOCKED assignment
     notifyCritical(
-      "MFFU Collaborative-Trading Warning",
+      "MFFU Collaborative-Trading — Assignment BLOCKED",
       appendFamilyGradePostscript(
-        `Strategy ${strategyId} is being assigned to account ${accountId} on MFFU. ` +
-          `2+ family members running the same strategy on MFFU risks collaborative-trading detection. ` +
-          `Affected accounts: ${warning.affectedAccountIds.join(", ")}. Labels: ${warning.familyMemberLabels.join(", ")}.`,
+        `Strategy ${strategyId} was REFUSED assignment to account ${accountId} on MFFU. ` +
+          `2+ family members running the same strategy on MFFU is a collaborative-trading BAN risk, so the assignment was blocked. ` +
+          `Affected accounts: ${warning.affectedAccountIds.join(", ")}. Labels: ${warning.familyMemberLabels.join(", ")}. ` +
+          `Assign a DIFFERENT strategy to this family member on MFFU (§9).`,
         "A trading strategy couldn't be assigned to an account.",
-        "No action needed — the bot will retry. Call Tony if trading doesn't start within an hour.",
+        "No action needed automatically — a different strategy is needed for this account. Call Tony if unsure.",
       ),
       { strategyId, firmId: warning.firmId, affectedAccountIds: warning.affectedAccountIds },
     );
 
     await db.insert(auditLog).values({
-      action: "strategy_assignment.collaborative_trading_warning",
+      action: "strategy_assignment.collaborative_trading_blocked",
       entityType: "strategy",
       entityId: strategyId,
-      decisionAuthority: "system",
+      decisionAuthority: "gate",
       input: { accountId, strategyId, firmId: account.firmId, familyMemberLabel } as Record<string, unknown>,
       result: {
-        severity: "warning",
+        severity: "blocked",
         rule: warning.rule,
         affectedAccountIds: warning.affectedAccountIds,
       } as Record<string, unknown>,
-      status: "success",
+      status: "failure",
       correlationId,
+    }).catch((err) => {
+      logger.warn({ err, accountId, strategyId }, "strategy-assignment: collaborative-trading-blocked audit write failed (non-blocking)");
     });
+
+    throw new CollaborativeTradingBlockedError(
+      `Strategy ${strategyId} cannot be assigned to account ${accountId} on MFFU — collaborative-trading ban risk ` +
+        `(${warning.affectedAccountIds.length} family accounts would run the same strategy). ` +
+        `Assign a different strategy to this family member (CLAUDE.md §6/§9).`,
+      warning,
+    );
   }
 
   // Insert the assignment

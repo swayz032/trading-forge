@@ -7,6 +7,9 @@ import { logger } from "../index.js";
 import { toEasternDateString } from "./paper-risk-gate.js";
 import { getDevelopingSessionPoc } from "./volume-profile-service.js";
 import { initSmtBarBufferProvider } from "./smt-live-service.js";
+import { db } from "../db/index.js";
+import { auditLog } from "../db/schema.js";
+import { paperStreamLifecycleTotal } from "../lib/metrics-registry.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -560,6 +563,24 @@ export function startStream(sessionId: string, symbols: string[]): void {
   }
 
   logger.info({ sessionId, symbols }, "Paper trading stream started");
+
+  // Deep-scan #16 Wave 2 Track G2 (#21): startStream/stopStream/stopAllStreams
+  // previously had NO audit/metric trace — the safety-critical TESTING→PAPER
+  // stream lifecycle left no durable record beyond an in-process log line.
+  // Fire-and-forget + non-blocking: startStream is synchronous by design and
+  // called from hot paths — this must never become async or block on the DB.
+  try { paperStreamLifecycleTotal.labels({ event: "start" }).inc(); } catch { /* non-blocking counter */ }
+  db.insert(auditLog).values({
+    action: "paper_stream.started",
+    entityType: "paper_session",
+    entityId: sessionId,
+    status: "info",
+    decisionAuthority: "system",
+    input: { symbols },
+    result: { symbolCount: symSet.size },
+  }).catch((err) => {
+    logger.warn({ err, sessionId }, "paper-trading-stream: paper_stream.started audit write failed (non-blocking)");
+  });
 }
 
 /**
@@ -580,6 +601,21 @@ export function stopStream(sessionId: string): void {
   sessionSymbols.delete(sessionId);
   sessionLocks.delete(sessionId);
   logger.info({ sessionId }, "Paper trading stream stopped");
+
+  // Deep-scan #16 Wave 2 Track G2 (#21): see startStream's comment above — same
+  // fire-and-forget, non-blocking counter+audit pair for the stop path.
+  try { paperStreamLifecycleTotal.labels({ event: "stop" }).inc(); } catch { /* non-blocking counter */ }
+  db.insert(auditLog).values({
+    action: "paper_stream.stopped",
+    entityType: "paper_session",
+    entityId: sessionId,
+    status: "info",
+    decisionAuthority: "system",
+    input: { symbols: [...syms] },
+    result: { symbolCount: syms.size },
+  }).catch((err) => {
+    logger.warn({ err, sessionId }, "paper-trading-stream: paper_stream.stopped audit write failed (non-blocking)");
+  });
 }
 
 /**
@@ -591,6 +627,21 @@ export function stopAllStreams(): void {
     stopStream(sessionId);
   }
   logger.info({ count: sessionIds.length }, "All paper trading streams stopped");
+
+  // Deep-scan #16 Wave 2 Track G2 (#21): batch-level marker — each underlying
+  // session already emitted its own "stop" event/audit row above via stopStream().
+  try { paperStreamLifecycleTotal.labels({ event: "stop_all" }).inc(); } catch { /* non-blocking counter */ }
+  db.insert(auditLog).values({
+    action: "paper_stream.stopped_all",
+    entityType: "paper_session",
+    entityId: null,
+    status: "info",
+    decisionAuthority: "system",
+    input: {},
+    result: { sessionCount: sessionIds.length, sessionIds },
+  }).catch((err) => {
+    logger.warn({ err, sessionCount: sessionIds.length }, "paper-trading-stream: paper_stream.stopped_all audit write failed (non-blocking)");
+  });
 }
 
 /**

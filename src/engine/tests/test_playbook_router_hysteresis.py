@@ -14,14 +14,52 @@
 import datetime
 import pytest
 
-from src.engine.context.playbook_router import (
-    route_playbook,
-    PlaybookDecision,
-    ROUTER_HASH,
-    ROUTER_VERSION,
-    HYSTERESIS_THRESHOLD,
-    MIN_DWELL_MINUTES,
+# ds21 FIX 1 (Deep-Scan #21 Python test-integrity cluster):
+# Hysteresis (HYSTERESIS_THRESHOLD / MIN_DWELL_MINUTES / prior_playbook /
+# prior_playbook_started_at / hysteresis_applied) is a TS-side-only feature —
+# those symbols exist in schema.ts / bias-decisions.ts but were NEVER
+# implemented in src/engine/context/playbook_router.py. route_playbook()
+# there takes no prior_playbook* kwargs and PlaybookDecision has no
+# hysteresis_applied field. This test module was speculative/orphaned from
+# day one on the Python side and its bare `from ... import HYSTERESIS_THRESHOLD`
+# aborts the ENTIRE `pytest src/engine/` collection run (exit 2, zero tests
+# executed) because pytest collection errors are fatal to the whole session.
+#
+# Per the ds21 mandate: production code is correct (Python playbook_router
+# genuinely has no hysteresis logic — implementing it would be a new
+# subsystem, which is out of scope for a test-integrity fix wave). The fix
+# is to stop collection from aborting on this orphaned module, not to build
+# a Python hysteresis implementation to satisfy it.
+pytestmark = pytest.mark.skip(
+    reason=(
+        "hysteresis is a TS-side feature (schema.ts / bias-decisions.ts); "
+        "the Python playbook_router has no hysteresis/dwell implementation "
+        "(no HYSTERESIS_THRESHOLD, MIN_DWELL_MINUTES, prior_playbook* kwargs, "
+        "or hysteresis_applied field) — orphaned test, ds21 library-debt."
+    )
 )
+
+try:
+    from src.engine.context.playbook_router import (
+        route_playbook,
+        PlaybookDecision,
+        ROUTER_HASH,
+        ROUTER_VERSION,
+        HYSTERESIS_THRESHOLD,
+        MIN_DWELL_MINUTES,
+    )
+except ImportError:
+    # Guard so the module still IMPORTS cleanly under the skip marker above —
+    # pytest evaluates module-level code (including imports) during collection
+    # even for skipped modules. Do not remove this guard without first adding
+    # real hysteresis symbols to playbook_router.py.
+    route_playbook = None  # type: ignore[assignment]
+    PlaybookDecision = None  # type: ignore[assignment]
+    ROUTER_HASH = None  # type: ignore[assignment]
+    ROUTER_VERSION = None  # type: ignore[assignment]
+    HYSTERESIS_THRESHOLD = None  # type: ignore[assignment]
+    MIN_DWELL_MINUTES = None  # type: ignore[assignment]
+
 from src.engine.context.bias_engine import DailyBiasState, compute_bias
 from src.engine.context.htf_context import HTFContext
 from src.engine.context.session_context import SessionContext

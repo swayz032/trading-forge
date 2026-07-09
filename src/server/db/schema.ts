@@ -36,6 +36,7 @@ import {
   real,
   index,
   uniqueIndex,
+  check,
   customType,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
@@ -63,7 +64,15 @@ export const strategies = pgTable("strategies", {
   symbols: text("symbols").array().notNull().default(sql`ARRAY['MES']::TEXT[]`),
   timeframe: text("timeframe").notNull(),
   config: jsonb("config").notNull(), // Full strategy definition JSON
-  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD | NEEDS_ARCHETYPE | NEEDS_REVISION
+  // deepscan18 D-D4 (2026-07-05): full 12-state enumeration — SHADOW was missing (the
+  // Wave 29 Pass A.1 skew-measurement stage, TESTING → SHADOW → PAPER). Column stays
+  // free-text by design (lifecycle-service.ts VALID_TRANSITIONS is the authoritative
+  // state machine); a DB CHECK constraint on the 12 states would be reasonable
+  // defense-in-depth but is intentionally deferred so a future state add is a one-line
+  // VALID_TRANSITIONS edit, not a migration. Canonical 12: CANDIDATE, TESTING, SHADOW,
+  // PAPER, DEPLOY_READY, PILOT, DEPLOYED, DECLINING, RETIRED, GRAVEYARD, NEEDS_ARCHETYPE,
+  // NEEDS_REVISION.
+  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | SHADOW | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD | NEEDS_ARCHETYPE | NEEDS_REVISION
   lifecycleChangedAt: timestamp("lifecycle_changed_at").defaultNow(),
   preferredRegime: text("preferred_regime"), // TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL (single — deprecated in W24)
   // W23H.B: multi-regime array. Supersedes preferredRegime. Both readable; single deprecated in W24.
@@ -230,6 +239,16 @@ export const backtests = pgTable(
     // HARD GATE: persistence refused when PROVENANCE_STAMP_ENFORCE=true (default) and stamp missing.
     // Applied migration: 0186_backtest_provenance_stamp.sql (idx 189).
     provenanceStamp: jsonb("provenance_stamp"),
+    // Slippage-Survival Gate (Wave A, 2026-07-03) — design spec:
+    // docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+    // Producer (Python, src/engine/statistics/slippage_survival.py) writes a
+    // fixed-signal re-price sweep at 1x/2x/3x slippage multiples:
+    //   { schema_version, multiples, pf, expectancy_r, breaks_at, retention_2x,
+    //     n_trades, insufficient_sample, computed_at }
+    // Consumer: src/server/lib/slippage-survival-gate.ts (pure reader), wired at
+    // PAPER → DEPLOY_READY. NULL on pre-2026-07-03 rows (legacy grandfather PASS).
+    // Applied migration: 0189_backtests_slippage_survival.sql (idx 192).
+    slippageSurvival: jsonb("slippage_survival"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -937,11 +956,16 @@ export const paperSignalLogs = pgTable(
     indicatorSnapshot: jsonb("indicator_snapshot"),    // RSI, ATR, VWAP values at signal time
     acted: boolean("acted").default(false),            // was a position opened?
     reason: text("reason"),                           // if not acted, why (cooldown, risk gate, etc.)
+    // ds21-w2 (deep-scan #21 Band D): per-bar signal telemetry now carries the trace id so the
+    // bar→handler→DB→SSE→audit reconstruction chain (§2 mandate) links here too. Nullable — legacy
+    // rows + insert sites without correlationId in scope stay null; the value is threaded where available.
+    correlationId: text("correlation_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
     index("paper_signal_logs_session_idx").on(table.sessionId),
     index("paper_signal_logs_created_idx").on(table.createdAt),
+    index("paper_signal_logs_correlation_idx").on(table.correlationId),
   ]
 );
 
@@ -2485,6 +2509,9 @@ export const productionTrades = pgTable(
     complianceCheckId: integer("compliance_check_id"),
     traderspostWebhookId: text("traderspost_webhook_id"),
     tradovateFillId: text("tradovate_fill_id"),
+    // Option B (deep-scan A, migration 0197): stamped by POST /api/traderspost/order-status when
+    // TradersPost confirms the order — the independent "confirmed" leg for reconciliation.
+    traderspostConfirmedAt: timestamp("traderspost_confirmed_at", { withTimezone: true }),
     expectedSlippage: numeric("expected_slippage"),
     actualSlippage: numeric("actual_slippage"),
     expectedPnl: numeric("expected_pnl"),
@@ -2495,6 +2522,15 @@ export const productionTrades = pgTable(
   (table) => [
     index("production_trades_strategy_idx").on(table.strategyId),
     index("production_trades_bar_timestamp_idx").on(table.barTimestamp.desc()),
+    // Deep-Scan #18b X-1 option a (2026-07-05, migration 0194): idempotency guard for
+    // broker-router.ts's production_trades writer. traderspost_webhook_id is the
+    // deterministic bar-scoped idempotency key (see traderspost/client.ts::
+    // buildDeterministicIdempotencyKey) — a retry of the same bar/signal event
+    // produces the SAME key, so ON CONFLICT DO NOTHING against this index prevents
+    // a duplicate row. Partial (WHERE NOT NULL) mirrors smo_broker_fill_id_uq above.
+    uniqueIndex("production_trades_traderspost_webhook_id_uq")
+      .on(table.traderspostWebhookId)
+      .where(sql`traderspost_webhook_id IS NOT NULL`),
   ],
 );
 
@@ -2564,10 +2600,18 @@ export const dailyReconciliation = pgTable(
     traderspostLogCount: integer("traderspost_log_count").notNull(),
     tradovateFillsCount: integer("tradovate_fills_count").notNull(),
     mffuDashboardPnl: numeric("mffu_dashboard_pnl"),
-    expectedPnl: numeric("expected_pnl").notNull(),
+    // deep-scan Accuracy re-verify: nullable — a genuine NULL means "expected_pnl unpopulated"
+    // (broker-router writes production_trades.expected_pnl null by design). Migration 0198. Consumers
+    // null-guard it instead of comparing against a fabricated $0. See buildPnlToday / fetchExpectedPnl.
+    expectedPnl: numeric("expected_pnl"),
     mismatchCount: integer("mismatch_count").notNull().default(0),
     mismatchDetails: jsonb("mismatch_details").notNull().default(sql`'[]'::jsonb`),
     alertFired: boolean("alert_fired").notNull().default(false),
+    // ds21 (deep-scan #21 Bands A+D): persist the authoritative severity computed at run time
+    // (incl. the degraded-mode/independent-source clamp). Nullable for legacy rows written before
+    // this column existed — the read path (getDailyReconciliationStatus) falls back to a
+    // mismatch-count recompute only when this is null, so it never resurrects a false-green.
+    severity: text("severity"),
     ranAt: timestamp("ran_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -2680,6 +2724,19 @@ export const brokerAccounts = pgTable(
   (table) => [
     index("broker_accounts_firm_idx").on(table.firmId),
     index("broker_accounts_enabled_idx").on(table.enabled),
+    // deep-scan #15 FIX M3 (migration 0190): firm↔broker_type topology invariant.
+    // normalized firm 'topstep' ⇒ broker_type 'topstepx' (never traderspost);
+    // any other firm (e.g. 'mffu') ⇒ broker_type 'traderspost'. Enforces CLAUDE.md §7
+    // at the DB level so a mis-seeded row can never be persisted.
+    // deepscan15 L3 NOTE: the RUNTIME constraint is applied NOT VALID by migration 0190
+    // (existing-row-safe); this declared check() has no NOT VALID equivalent in Drizzle,
+    // so a `drizzle-kit generate` diff may show a spurious re-add/validate — do NOT ship
+    // that; 0190 is the source of truth for this constraint's validation state.
+    check(
+      "broker_accounts_firm_broker_topology_chk",
+      sql`(regexp_replace(lower(${table.firmId}), '_[0-9]+k$', '')  = 'topstep' AND ${table.brokerType} = 'topstepx')
+        OR (regexp_replace(lower(${table.firmId}), '_[0-9]+k$', '') <> 'topstep' AND ${table.brokerType} = 'traderspost')`,
+    ),
   ],
 );
 
@@ -3073,7 +3130,11 @@ export const quantumRlRuns = pgTable(
     // Surrogate key — bigserial for high-volume append workload
     id:                   bigserial("id", { mode: "bigint" }).primaryKey(),
     // FK to the strategy being evaluated. Cascade on strategy deletion.
-    strategyId:           integer("strategy_id")
+    // F-2 fix (deepscan16 W1 T4): was declared INTEGER against the real UUID
+    // migration (0158 line 35: `strategy_id UUID NOT NULL REFERENCES
+    // strategies(id)`) — every Drizzle-typed read/write on this column was
+    // silently type-mismatched against the live DB column.
+    strategyId:           uuid("strategy_id")
                             .notNull()
                             .references(() => strategies.id, { onDelete: "cascade" }),
     // When this RL decision was produced (wall-clock UTC)

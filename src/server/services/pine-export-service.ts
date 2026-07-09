@@ -12,7 +12,7 @@ import { parsePythonJson } from "../../shared/utils.js";
 import { getPythonSubprocessStats } from "../lib/python-runner.js";
 import { assertNotShadow, PineExportShadowError } from "../lib/pine-export-shadow-guard.js";
 import { emitPineShadowRefused } from "../lib/pine-shadow-observability.js";
-import { notifyWarning } from "./notification-service.js";
+import { notifyWarning, notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 // Pass 4 Track B: pure gateway-options helper — isolated from DB module for testability
 import { deriveGatewayOptions, type GatewayOptions } from "../lib/pine-gateway-options.js";
@@ -91,12 +91,15 @@ interface CompilerOutput {
  * exportability score + deductions without persisting an export artifact.
  * Lifecycle service can use this as a hard gate before writing PAPER state.
  *
- * Returns { ok, score, band, deductions, recommendations }. `ok` is true iff
- * the strategy compiles AND BOTH the compiler's `exportable` AND `faithful`
- * flags are set.
+ * Returns { ok, score, band, deductions, recommendations, faithful,
+ * isDirectRoutedArchetype }. `ok` is true iff the strategy compiles AND the
+ * compiler's `exportable` flag is set AND (the compiler's `faithful` flag is
+ * set OR the strategy is a direct-routed archetype/uncatalogued strategy —
+ * see the Deep-Scan #21 Wave-2 note below).
  *
  * Semantic-fidelity model (2026-06-22 FAIL-LOUD mandate):
- *   ok=true  → the exported Pine faithfully reproduces the validated strategy logic.
+ *   ok=true  → the exported Pine faithfully reproduces the validated strategy logic
+ *              (or the strategy is exempt — see below).
  *   ok=false → one or more features (Style C exits / confluence gating / multi-TF
  *               alignment) cannot be expressed in Pine.  The strategy executes
  *               server-side via broker-router (server-mediated execution); Pine is
@@ -104,6 +107,30 @@ interface CompilerOutput {
  *
  * faithful defaults to true when absent in compiler output (backward-compat with
  * compiler versions prior to 2026-06-22).
+ *
+ * ── Deep-Scan #21 Wave-2 (2026-07-05) — archetype/uncatalogued direct-route exemption ──
+ * exportability.py's `archetype:`/`uncatalogued:` fast-path now reports `faithful`
+ * HONESTLY (previously hardcoded `true` unconditionally — a false-green: an archetype
+ * carrying Style-C exits / 11-factor confluence / multi-TF gating would report
+ * faithful=true even though Pine genuinely cannot reproduce that logic).
+ *
+ * BUT archetype/uncatalogued strategies execute DIRECT via broker-router — never
+ * through Pine (CLAUDE.md §7 "Pine parity wall") — so Pine's inability to reproduce
+ * their entry/exit logic is IRRELEVANT to how they actually execute. Gating promotion
+ * on an honest faithful=false for these strategies would strand them at TESTING for a
+ * reason that has zero bearing on their real (direct) execution path.
+ *
+ * This function therefore detects the archetype/uncatalogued prefix on
+ * `strat.config.entry_indicator` (or `indicators[0].type` fallback — mirrors
+ * exportability.py's own detection exactly) and does NOT require `faithful` for
+ * those strategies' `ok` to be true. The `faithful` value returned below is ALWAYS
+ * the compiler's honest value (never coerced to true) — no consumer of this result
+ * is misled about whether Pine actually reproduces the strategy. `isDirectRoutedArchetype`
+ * is surfaced so callers (e.g. lifecycle-service.ts) can log/audit that an exemption
+ * was applied, rather than the exemption being invisible.
+ *
+ * Non-archetype (Pine-routed) strategies are UNCHANGED: ok still requires
+ * exportable && faithful, full stop.
  *
  * NOTE: This is a thin wrapper over the existing compiler — it does not
  * yet perform full semantic-equivalence checking (running the strategy in
@@ -119,27 +146,50 @@ export async function checkExportability(strategyId: string): Promise<{
   deductions: string[];
   recommendations: string[];
   error?: string;
+  faithful?: boolean; // Deep-Scan #21 Wave-2: honest value, never coerced for archetypes
+  isDirectRoutedArchetype?: boolean;
 }> {
   try {
     const [strat] = await db.select().from(strategies).where(eq(strategies.id, strategyId));
     if (!strat) {
       return { ok: false, score: null, band: null, deductions: ["strategy_not_found"], recommendations: [] };
     }
-    // Dry-run: run the dual compiler with persist=false — only inspect
-    // exportability metadata. No DB rows are written.
+    // Dry-run (persist=false) — inspect exportability metadata, no DB writes.
     const result = await compileDualPineExport(strategyId, undefined, undefined, false);
 
     const exportable = !!result?.exportability?.exportable;
     // faithful defaults to true when absent (backward-compat — pre-2026-06-22 compiler output
     // does not have this field; treat those as faithful to avoid blocking existing pipelines).
+    // This is ALWAYS the honest compiler value — never coerced for archetypes.
     const faithful = result?.exportability?.faithful !== false;
 
+    // Deep-Scan #21 Wave-2: detect the archetype:/uncatalogued: direct-route prefix from
+    // the strategy's own config — mirrors exportability.py::score_exportability's exact
+    // detection (entry_indicator first, indicators[0].type fallback) so the two stay in
+    // lockstep. Archetypes/uncatalogued strategies execute DIRECT via broker-router —
+    // never through Pine (CLAUDE.md §7) — so they are exempt from the faithfulness
+    // requirement below. `faithful` itself is NEVER coerced true for them; only `ok` is.
+    const cfg = (strat.config ?? {}) as Record<string, unknown>;
+    let entryIndicatorRaw = typeof cfg.entry_indicator === "string" ? cfg.entry_indicator : "";
+    if (!entryIndicatorRaw) {
+      const inds = Array.isArray(cfg.indicators) ? cfg.indicators : [];
+      const first = inds[0];
+      entryIndicatorRaw = typeof first === "object" && first !== null
+        ? String((first as Record<string, unknown>).type ?? "")
+        : String(first ?? "");
+    }
+    const isDirectRoutedArchetype =
+      entryIndicatorRaw.startsWith("archetype:") || entryIndicatorRaw.startsWith("uncatalogued:");
+    const gateOk = exportable && (faithful || isDirectRoutedArchetype);
+
     return {
-      ok: exportable && faithful,
+      ok: gateOk,
       score: result?.exportability?.score ?? null,
       band: result?.exportability?.band ?? null,
       deductions: result?.exportability?.deductions ?? [],
       recommendations: result?.exportability?.recommendations ?? [],
+      faithful,
+      isDirectRoutedArchetype,
     };
   } catch (err) {
     return {
@@ -149,6 +199,8 @@ export async function checkExportability(strategyId: string): Promise<{
       deductions: ["compiler_error"],
       recommendations: [],
       error: err instanceof Error ? err.message : String(err),
+      faithful: undefined,
+      isDirectRoutedArchetype: false,
     };
   }
 }
@@ -557,6 +609,135 @@ export async function compileDualPineExport(
     // snake_case keys (gateway_mode, gateway_url) match pine_compiler.py exactly.
     {
       const { opts: gwOpts, shouldAuditFallback } = deriveGatewayOptions(strategyId, gatewayOptions);
+
+      // F-1 fix (deep-scan CRITICAL, 2026-07-06): a live-order-eligible strategy —
+      // archetype Pine + the operator's own paper_account_routing set — must NEVER
+      // silently degrade to the unguarded "direct" TradersPost path just because
+      // LIVE_ORDER_GATEWAY_URL is unset. That path skips the kill-switch, compliance
+      // gate, firm-cap clamp, and circuit breaker — exactly the gates a live-order
+      // artifact is supposed to get. A single missing env var after a redeploy must
+      // NOT be able to produce a live-money artifact with zero safety gates.
+      //
+      // Family / monitor-only exports (no "archetype:" entry_indicator, no
+      // paper_account_routing) are NOT live-order artifacts in this sense —
+      // TradingView Pine -> TradersPost direct is their documented, intentional
+      // path (CLAUDE.md §7/§8/§9, family members have no TF gateway to route
+      // through) — so they are explicitly NOT blocked here; only the
+      // env-driven fallback (shouldAuditFallback) is gated, never an explicit
+      // caller opt-in (deriveGatewayOptions already treats explicit opt-in as a
+      // deliberate operator decision with shouldAuditFallback=false).
+      const gwEntryIndicator = typeof strategyConfig["entry_indicator"] === "string"
+        ? (strategyConfig["entry_indicator"] as string)
+        : "";
+      const gwPaperRouting = (strategy as unknown as { paperAccountRouting?: string | null }).paperAccountRouting;
+      const isLiveOrderProductionContext = gwEntryIndicator.startsWith("archetype:")
+        && gwPaperRouting != null && gwPaperRouting !== "";
+
+      if (shouldAuditFallback && isLiveOrderProductionContext) {
+        const refusalReason = "live_order_gateway_unavailable_fail_closed";
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.live_order_gateway_refused",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: {
+              strategyId,
+              correlationId: correlationId ?? null,
+              entryIndicator: gwEntryIndicator,
+              paperAccountRouting: gwPaperRouting,
+            } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: refusalReason,
+              gateway_mode_would_have_been: "direct",
+            } as Record<string, unknown>,
+            status: "blocked",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.error({ auditErr, strategyId }, "pine-export-gateway-refusal: audit write failed");
+        }
+        notifyCritical(
+          `Pine export REFUSED: live-order gateway unavailable for strategy ${strategyId}`,
+          appendFamilyGradePostscript(
+            `LIVE_ORDER_GATEWAY_URL is not set. Strategy ${strategyId} is an archetype strategy with ` +
+            `paper_account_routing='${gwPaperRouting}' (a live-order-eligible production context) — refusing ` +
+            "to silently fall back to the unguarded direct-to-TradersPost path, which would bypass the " +
+            "kill-switch, compliance gate, firm-cap clamp, and circuit breaker.",
+            "The system BLOCKED a live-trading Pine export because a required safety gateway is not configured.",
+            "Set LIVE_ORDER_GATEWAY_URL in your production .env before re-exporting this strategy.",
+          ),
+          { strategyId, reason: refusalReason, entryIndicator: gwEntryIndicator, paperAccountRouting: gwPaperRouting },
+        );
+        if (persist && exportId) {
+          await db
+            .update(strategyExports)
+            .set({ status: "failed", errorMessage: refusalReason })
+            .where(eq(strategyExports.id, exportId));
+          await db.insert(auditLog).values({
+            action: "pine-export.compile-dual",
+            entityType: "strategy_export",
+            entityId: exportId,
+            input: { strategyId, firmKey, exportType: "pine_dual", correlationId },
+            result: { error: refusalReason, status: "failure" },
+            status: "failure",
+            decisionAuthority: "system",
+            errorMessage: refusalReason,
+          });
+        }
+        broadcastSSE("pine:export-failed", {
+          strategyId,
+          errorCode: "live_order_gateway_unavailable",
+          message: refusalReason,
+          durationMs: Date.now() - startMs,
+        });
+        return { id: exportId, status: "failed", error: refusalReason, reason: refusalReason, ok: false };
+      }
+
+      // D4 fix (deep-scan #22, 2026-07-06): explicit gatewayOptions={mode:"direct"}
+      // escape hatch. deriveGatewayOptions treats an explicit caller opt-in as a
+      // deliberate operator decision (shouldAuditFallback=false), so the F-1
+      // fail-closed guard above NEVER fires for it — reopening the closed CRITICAL.
+      // A future misconfigured caller could pass mode:"direct" for a live-order
+      // context (paper_account_routing set = the operator's own A/B-routed
+      // sub-account) and silently bypass the kill-switch / compliance gate /
+      // firm-cap clamp / circuit breaker. Refuse it: override to tf_gateway and
+      // write an audit row so the reopening can never happen silently. No caller
+      // passes direct today; this is defense-in-depth against a future regression.
+      if (
+        gatewayOptions?.mode === "direct" &&
+        gwPaperRouting != null &&
+        gwPaperRouting !== ""
+      ) {
+        gwOpts.mode = "tf_gateway";
+        delete gwOpts.gatewayUrl;
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.direct_mode_overridden_live_context",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: {
+              strategyId,
+              correlationId: correlationId ?? null,
+              requestedMode: "direct",
+              paperAccountRouting: gwPaperRouting,
+              entryIndicator: gwEntryIndicator,
+            } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: "explicit_direct_refused_for_live_order_context",
+              overridden_to: "tf_gateway",
+            } as Record<string, unknown>,
+            status: "warn",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.error({ auditErr, strategyId }, "pine-export-gateway-direct-override: audit write failed");
+        }
+      }
+
       const strategyObj = config["strategy"] as Record<string, unknown>;
       const innerConfig = (typeof strategyObj["config"] === "object" && strategyObj["config"] !== null
         ? strategyObj["config"]
@@ -667,9 +848,17 @@ export async function compileDualPineExport(
     // the archetype alertcondition message, eliminating the operator-manual text-replace
     // step that caused silent order drops when skipped (the literal placeholder bug).
     //
-    // Fail-soft: if the lookup fails or returns no row, we log a warning and proceed
-    // without the token — the artifact will contain the literal placeholder (legacy path),
-    // and the operator must substitute manually. We do NOT block the export.
+    // F-2 fix (deep-scan HIGH, 2026-07-06): previously fail-soft — if the lookup
+    // failed or returned no row, we logged a warning and PROCEEDED without the
+    // token, shipping an artifact with the literal "<live-order-token-placeholder>"
+    // string baked in. Because the post-compile assertion further below only fires
+    // when BOTH account_id AND live_order_token were truthy PRE-resolution, a
+    // resolution FAILURE (live_order_token staying unset) skipped that assertion
+    // entirely — so a tf_gateway-routed artifact with a resolved account_id but an
+    // unresolvable token could ship silently and drop every live alert at
+    // /api/live-order. Fail CLOSED instead: a resolved account_id + tf_gateway mode
+    // means this IS a live-order artifact, and it MUST carry a real (non-placeholder)
+    // token before compilation proceeds — never gets shipped with a bare placeholder.
     {
       const strategyObj = config["strategy"] as Record<string, unknown>;
       const innerConfig = (typeof strategyObj?.["config"] === "object" && strategyObj["config"] !== null
@@ -678,6 +867,8 @@ export async function compileDualPineExport(
       const resolvedGatewayMode = innerConfig["gateway_mode"];
       const resolvedAccountId: string | undefined = config.account_id as string | undefined;
       if (resolvedGatewayMode === "tf_gateway" && resolvedAccountId && !config.live_order_token) {
+        let resolvedToken: string | null = null;
+        let tokenLookupError: unknown = null;
         try {
           const assignmentRows = await db
             .select({ hmacSecret: accountStrategyAssignments.hmacSecret })
@@ -689,21 +880,75 @@ export async function compileDualPineExport(
               ),
             )
             .limit(1);
-          const resolvedToken = assignmentRows[0]?.hmacSecret ?? null;
-          if (resolvedToken) {
-            config.live_order_token = resolvedToken;
-          } else {
-            logger.warn(
-              { strategyId, resolvedAccountId },
-              "pine-export: no account_strategy_assignments row for account+strategy — live_order_token will be literal placeholder (operator must substitute manually)",
-            );
-          }
+          resolvedToken = assignmentRows[0]?.hmacSecret ?? null;
         } catch (tokenErr) {
-          // Fail-soft — do not block the export
-          logger.warn(
-            { strategyId, resolvedAccountId, err: tokenErr },
-            "pine-export: live_order_token lookup failed (non-blocking) — artifact will contain literal placeholder",
+          tokenLookupError = tokenErr;
+        }
+
+        if (resolvedToken) {
+          config.live_order_token = resolvedToken;
+        } else {
+          // F-2 fail-closed: no fallback to a placeholder-carrying live artifact.
+          const refusalReason = "live_order_token_unresolved_fail_closed";
+          logger.error(
+            { strategyId, resolvedAccountId, tokenLookupError },
+            "pine-export: live_order_token did not resolve for a tf_gateway-routed strategy — " +
+            "REFUSING export rather than shipping an artifact with the literal placeholder token " +
+            "(would silently drop every live alert at /api/live-order).",
           );
+          try {
+            await db.insert(auditLog).values({
+              action: "pine_export.live_order_token_refused",
+              entityType: "strategy",
+              entityId: strategyId,
+              decisionAuthority: "system",
+              input: { strategyId, resolvedAccountId, correlationId: correlationId ?? null } as Record<string, unknown>,
+              result: {
+                strategy_id: strategyId,
+                reason: refusalReason,
+                lookup_error: tokenLookupError instanceof Error ? tokenLookupError.message : null,
+              } as Record<string, unknown>,
+              status: "blocked",
+              correlationId: correlationId ?? null,
+            });
+          } catch (auditErr) {
+            logger.error({ auditErr, strategyId }, "pine-export-token-refusal: audit write failed");
+          }
+          notifyCritical(
+            `Pine export REFUSED: live_order_token unresolved for strategy ${strategyId}`,
+            appendFamilyGradePostscript(
+              `Strategy ${strategyId} resolved a live account_id (${resolvedAccountId}) under tf_gateway mode, ` +
+              "but no account_strategy_assignments.hmac_secret row was found (or the lookup failed) — refusing " +
+              "to ship an artifact with the literal live_order_token placeholder, which would silently drop " +
+              "every live alert at /api/live-order.",
+              "The system BLOCKED a live-trading Pine export because its order-routing token could not be resolved.",
+              "Create the account_strategy_assignments row for this account+strategy pair, then re-export.",
+            ),
+            { strategyId, resolvedAccountId, reason: refusalReason },
+          );
+          if (persist && exportId) {
+            await db
+              .update(strategyExports)
+              .set({ status: "failed", errorMessage: refusalReason })
+              .where(eq(strategyExports.id, exportId));
+            await db.insert(auditLog).values({
+              action: "pine-export.compile-dual",
+              entityType: "strategy_export",
+              entityId: exportId,
+              input: { strategyId, firmKey, exportType: "pine_dual", correlationId },
+              result: { error: refusalReason, status: "failure" },
+              status: "failure",
+              decisionAuthority: "system",
+              errorMessage: refusalReason,
+            });
+          }
+          broadcastSSE("pine:export-failed", {
+            strategyId,
+            errorCode: "live_order_token_unavailable",
+            message: refusalReason,
+            durationMs: Date.now() - startMs,
+          });
+          return { id: exportId, status: "failed", error: refusalReason, reason: refusalReason, ok: false };
         }
       }
     }
@@ -778,7 +1023,16 @@ export async function compileDualPineExport(
     // both present in config), regardless of whether the caller explicitly passed gatewayOptions.
     // Previously gated on `gatewayOptions &&` which created a blind spot when callers passed
     // undefined but the internal A/B routing + env fallback resolved full credentials.
-    if (config.account_id && config.live_order_token) {
+    // F-2 fix (deep-scan HIGH, 2026-07-06): broadened to `config.account_id` alone
+    // (was `config.account_id && config.live_order_token`). Any resolved account_id
+    // marks this as a live-order-routable artifact — the live_order_token resolution
+    // step above now REFUSES the export outright when the token fails to resolve
+    // (rather than silently proceeding with live_order_token unset), so by the time
+    // we reach this point a resolved account_id should always carry a real token too.
+    // Checking account_id alone here is deliberate belt-and-suspenders: it also
+    // catches an account_id-placeholder leak on its own, independent of token state,
+    // instead of requiring both to be truthy before verifying either.
+    if (config.account_id) {
       const artifactsToCheck = [
         result.indicator_artifact,
         result.strategy_artifact,
@@ -1129,6 +1383,127 @@ export async function compilePineExport(
     // snake_case keys (gateway_mode, gateway_url) match pine_compiler.py exactly.
     {
       const { opts: gwOpts, shouldAuditFallback } = deriveGatewayOptions(strategyId, gatewayOptions);
+
+      // F-1 fix (deep-scan CRITICAL, 2026-07-06): mirrors the compileDualPineExport
+      // guard above — a live-order-eligible strategy (archetype Pine + the operator's
+      // own paper_account_routing) must never silently degrade to the unguarded
+      // "direct" TradersPost path just because LIVE_ORDER_GATEWAY_URL is unset.
+      // scheduler.ts / monte-carlo-service.ts / quantum-mc-service.ts / routes/pine-export.ts
+      // all invoke this function with gatewayOptions=undefined, so this is a real,
+      // reachable fallback path for the operator's own archetype strategies — not
+      // just a theoretical one. Family / monitor-only exports (no "archetype:" prefix,
+      // no paper_account_routing) are left untouched (their direct-to-TradersPost path
+      // is intentional per CLAUDE.md §7-§9).
+      const gwEntryIndicator = typeof strategyConfig["entry_indicator"] === "string"
+        ? (strategyConfig["entry_indicator"] as string)
+        : "";
+      const gwPaperRouting = (strategy as unknown as { paperAccountRouting?: string | null }).paperAccountRouting;
+      const isLiveOrderProductionContext = gwEntryIndicator.startsWith("archetype:")
+        && gwPaperRouting != null && gwPaperRouting !== "";
+
+      if (shouldAuditFallback && isLiveOrderProductionContext) {
+        const refusalReason = "live_order_gateway_unavailable_fail_closed";
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.live_order_gateway_refused",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: {
+              strategyId,
+              correlationId: correlationId ?? null,
+              entryIndicator: gwEntryIndicator,
+              paperAccountRouting: gwPaperRouting,
+            } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: refusalReason,
+              gateway_mode_would_have_been: "direct",
+            } as Record<string, unknown>,
+            status: "blocked",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.error({ auditErr, strategyId }, "pine-export-gateway-refusal: audit write failed");
+        }
+        notifyCritical(
+          `Pine export REFUSED: live-order gateway unavailable for strategy ${strategyId}`,
+          appendFamilyGradePostscript(
+            `LIVE_ORDER_GATEWAY_URL is not set. Strategy ${strategyId} is an archetype strategy with ` +
+            `paper_account_routing='${gwPaperRouting}' (a live-order-eligible production context) — refusing ` +
+            "to silently fall back to the unguarded direct-to-TradersPost path, which would bypass the " +
+            "kill-switch, compliance gate, firm-cap clamp, and circuit breaker.",
+            "The system BLOCKED a live-trading Pine export because a required safety gateway is not configured.",
+            "Set LIVE_ORDER_GATEWAY_URL in your production .env before re-exporting this strategy.",
+          ),
+          { strategyId, reason: refusalReason, entryIndicator: gwEntryIndicator, paperAccountRouting: gwPaperRouting },
+        );
+        await db
+          .update(strategyExports)
+          .set({ status: "failed", errorMessage: refusalReason })
+          .where(eq(strategyExports.id, exportId));
+        await db.insert(auditLog).values({
+          action: "pine-export.compile",
+          entityType: "strategy_export",
+          entityId: exportId,
+          input: { strategyId, firmKey, exportType, correlationId },
+          result: { error: refusalReason, status: "failure" },
+          status: "failure",
+          decisionAuthority: "system",
+          errorMessage: refusalReason,
+        });
+        broadcastSSE("pine:export-failed", {
+          strategyId,
+          errorCode: "live_order_gateway_unavailable",
+          message: refusalReason,
+          durationMs: Date.now() - startMs,
+        });
+        return { id: exportId, status: "failed", error: refusalReason, reason: refusalReason, ok: false };
+      }
+
+      // D4 fix (deep-scan #22, 2026-07-06): explicit gatewayOptions={mode:"direct"}
+      // escape hatch. deriveGatewayOptions treats an explicit caller opt-in as a
+      // deliberate operator decision (shouldAuditFallback=false), so the F-1
+      // fail-closed guard above NEVER fires for it — reopening the closed CRITICAL.
+      // A future misconfigured caller could pass mode:"direct" for a live-order
+      // context (paper_account_routing set = the operator's own A/B-routed
+      // sub-account) and silently bypass the kill-switch / compliance gate /
+      // firm-cap clamp / circuit breaker. Refuse it: override to tf_gateway and
+      // write an audit row so the reopening can never happen silently. No caller
+      // passes direct today; this is defense-in-depth against a future regression.
+      if (
+        gatewayOptions?.mode === "direct" &&
+        gwPaperRouting != null &&
+        gwPaperRouting !== ""
+      ) {
+        gwOpts.mode = "tf_gateway";
+        delete gwOpts.gatewayUrl;
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.direct_mode_overridden_live_context",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: {
+              strategyId,
+              correlationId: correlationId ?? null,
+              requestedMode: "direct",
+              paperAccountRouting: gwPaperRouting,
+              entryIndicator: gwEntryIndicator,
+            } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: "explicit_direct_refused_for_live_order_context",
+              overridden_to: "tf_gateway",
+            } as Record<string, unknown>,
+            status: "warn",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.error({ auditErr, strategyId }, "pine-export-gateway-direct-override: audit write failed");
+        }
+      }
+
       const strategyObj = config["strategy"] as Record<string, unknown>;
       const innerConfig = (typeof strategyObj["config"] === "object" && strategyObj["config"] !== null
         ? strategyObj["config"]

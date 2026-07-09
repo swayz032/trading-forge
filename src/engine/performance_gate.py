@@ -325,7 +325,16 @@ def compute_forge_score(
     # Reduced from 25 to 22 to accommodate survival_score component
     if mc_results is not None:
         # MC survival rate (0-9): 99%+ = 9, 90% = 0, linear
-        ruin = mc_results.get("probability_of_ruin", 1.0)
+        # deepscan17: read the BCa conservative bound (probability_of_ruin_ci.ci_high), NOT the
+        # optimistic scalar point estimate — CLAUDE.md §13 bans the scalar for promotion-adjacent
+        # scoring. A low point estimate with a wide/dangerous CI would otherwise inflate forge_score
+        # and mis-prioritise CANDIDATEs at CANDIDATE->TESTING (forge_score >= 50). Fall back to the
+        # scalar only for legacy pre-W27.5-Pass-A MC output that never emitted the _ci key.
+        ruin_ci = mc_results.get("probability_of_ruin_ci")
+        if isinstance(ruin_ci, dict) and ruin_ci.get("ci_high") is not None:
+            ruin = ruin_ci["ci_high"]
+        else:
+            ruin = mc_results.get("probability_of_ruin", 1.0)
         survival_rate = 1.0 - ruin
         mc_survival = min(9, max(0, (survival_rate - 0.90) / 0.09 * 9))
 

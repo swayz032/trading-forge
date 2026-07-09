@@ -79,6 +79,11 @@ export type FirmId = "topstep" | "mffu";
  *
  * Operator can override per-strategy via framework-overlay.ts
  * confluence_size_multiplier config field.
+ *
+ * Deep-scan #22 loop-3 (2026-07-09): this map is only CONSULTED when
+ * CONFLUENCE_SIZE_UPSIZE_ENABLED=true (default false) — see
+ * isConfluenceSizeUpsizeEnabled() / resolveConfluenceMultiplier() below. With
+ * the flag OFF, the multiplier is pinned to 1.0 regardless of this map.
  */
 export const DEFAULT_CONFLUENCE_MULTIPLIER: Record<number, number> = {
   1: 1.0,
@@ -88,13 +93,60 @@ export const DEFAULT_CONFLUENCE_MULTIPLIER: Record<number, number> = {
 };
 
 /**
+ * Deep-scan #22 loop-3 (2026-07-09) — CONFLUENCE_SIZE_UPSIZE_ENABLED activation gate.
+ *
+ * Context: the ds22 FIX F-1 fix (commit 8bffa1b, confluence-provenance.ts
+ * ::deriveEvidenceBackedConfluenceCount) corrected the sizing `confluence_count`
+ * derivation to read the CORRECT evidence-backed field. That fix is pure
+ * correctness on the COUNT. But `entry_quality.confluence_factors` is
+ * near-universally populated (the graduator forces >= 2 factors at
+ * graduation), while the OLD (buggy, pre-F-1) `confirming_indicators` read was
+ * usually empty — so landing F-1's count fix as-is would, as a side effect,
+ * silently ACTIVATE a previously-dead confluence-weighted position-size
+ * UPSIZE (1.0x -> 1.5x/2.0x) for the common strategy shape. A silent
+ * size-INCREASE is a risk-direction behavior change and must not ship without
+ * a conscious operator opt-in (CLAUDE.md: ship gates strict, loosen with data
+ * — not by accident of an unrelated bugfix).
+ *
+ * This flag decouples "is confluence_count correct" (yes, unconditionally —
+ * F-1's fix, always active) from "does the count actually change position
+ * size" (opt-in, default false). With the flag OFF (default):
+ * resolveConfluenceMultiplier() always returns 1.0 — position size is
+ * IDENTICAL to pre-ds22 (pre-F-1) historical behavior, a size NO-OP,
+ * regardless of confluence_count or any configured
+ * confluence_size_multiplier_map. With the flag ON: the (now evidence-backed,
+ * auto_floor-excluded) confluence count drives the upsize as W23H.4 always
+ * intended.
+ *
+ * Fail-safe: any error reading/parsing the env var is treated as false (no
+ * upsize) — the safe default is always "no size change."
+ * Env: CONFLUENCE_SIZE_UPSIZE_ENABLED (default "false")
+ */
+export function isConfluenceSizeUpsizeEnabled(): boolean {
+  try {
+    return process.env.CONFLUENCE_SIZE_UPSIZE_ENABLED === "true";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Resolve the confluence multiplier for a given count using the provided map
  * (or the canonical default map). Clamps below-1 to 1.0 and above-4 to 2.0.
+ *
+ * Deep-scan #22 loop-3 gate: when `upsizeEnabled` is false (the default —
+ * resolved fresh from CONFLUENCE_SIZE_UPSIZE_ENABLED on every call, so no
+ * module reload is needed to react to env changes), this ALWAYS returns 1.0
+ * regardless of `count` or `map` — the confluence-weighted upsize is inert.
+ * This is the single gate point: every caller (computeRiskDerivedContracts
+ * and any direct caller) is covered without needing its own flag check.
  */
 export function resolveConfluenceMultiplier(
   count: number,
   map: Record<number, number> = DEFAULT_CONFLUENCE_MULTIPLIER,
+  upsizeEnabled: boolean = isConfluenceSizeUpsizeEnabled(),
 ): number {
+  if (!upsizeEnabled) return 1.0;
   const clamped = Math.max(1, Math.min(4, count));
   return map[clamped] ?? DEFAULT_CONFLUENCE_MULTIPLIER[clamped] ?? 1.0;
 }
@@ -119,6 +171,12 @@ export interface RiskSizingInputs {
    * Formula: confirming_indicators.length + 1 (primary indicator always counts).
    * Default: 1 (primary indicator only → multiplier 1.0, no behavior change).
    * Callers without confluence data omit this field — backward compat preserved.
+   *
+   * Deep-scan #22 loop-3: even when this is > 1 (evidence-backed confluence
+   * present), the multiplier only activates when CONFLUENCE_SIZE_UPSIZE_ENABLED
+   * (env, default false) is true — see resolveConfluenceMultiplier(). Default OFF
+   * means this field is currently observability-only (still threaded into
+   * confluenceAudit for visibility) and does not change finalContracts.
    */
   confluence_count?: number;
   /**
@@ -524,8 +582,13 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
     : 1.0;
   const accountIsHealthy = accountHealthRatio >= 0.85;
 
-  // Edge case: balance ≤ 0
-  if (input.accountBalance <= 0) {
+  // Edge case: balance ≤ 0 OR non-finite. deep-scan sizing F-1 (HIGH, 2026-07-06): a NaN/undefined/Infinity
+  // accountBalance previously sailed through this (`NaN <= 0` is false) and through every downstream cap/floor,
+  // yielding finalContracts=NaN with rejectionReason=null (Math.max(0, NaN)=NaN, not 0) — a NaN order size that
+  // reaches routeOrder() un-rejected. The live call site guards it with `|| 50_000`, but a pure sizing function
+  // that gates real capital must be self-fail-closed, not caller-dependent (the TopstepX build-out is a future
+  // direct caller). Reject non-finite as an invalid (zero-equivalent) balance.
+  if (!Number.isFinite(input.accountBalance) || input.accountBalance <= 0) {
     return {
       finalContracts: 0,
       pyramidTier,
@@ -887,7 +950,22 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // small, forcing base_contracts would violate the 1%-of-room safety contract.
   let pyramidFloorApplied = false;
   if (!drawdownRoomCapBinding && accountIsHealthy && finalContracts < cfg.base_contracts) {
-    finalContracts = cfg.base_contracts;
+    // MED C-2 fix (deep-scan #16 wave-1 track-3, 2026-07-04): this floor previously
+    // force-set finalContracts = cfg.base_contracts UNCLAMPED — unlike the early-return
+    // branch above (F-7/F-4), which was patched to min([base, liquidityCap, firmCap?,
+    // drawdownRoomCap?]). A misconfigured strategy (or overlay drift writing an oversized
+    // base_contracts) could bypass firmCap/liquidityCap here even though the early-return
+    // path already guards against exactly that. Apply the SAME clamp for consistency —
+    // drawdownRoomCap is deliberately excluded from this min() because entering this branch
+    // already requires !drawdownRoomCapBinding (drawdownRoomCap did not constrain the
+    // pre-floor finalContracts), so re-including it here would only matter in the edge case
+    // where drawdownRoomCap sits between the pre-floor finalContracts and base_contracts —
+    // guard against that edge case too by including it when present, mirroring the
+    // early-return floor's [base_contracts, liquidityCap, firmCap?, drawdownRoomCap?] set.
+    const flooredCandidates: number[] = [cfg.base_contracts, liquidityCap];
+    if (effectiveFirmCap !== null) flooredCandidates.push(effectiveFirmCap);
+    if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
+    finalContracts = Math.min(...flooredCandidates);
     pyramidFloorApplied = true;
   }
 

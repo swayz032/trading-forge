@@ -201,9 +201,16 @@ async function rerunOneStrategy(
     suppressAutoPromote: true,
   } as Parameters<typeof runBacktest>[1];
 
+  // FIX H1 (deepscan15 2026-07-03): derive a correlationId from the original
+  // backtestId so the shadow re-run is linkable back to the row it re-ran, in the
+  // 90-day audit trail. Previously this call explicitly passed `undefined` even
+  // though backtestId was already in scope — the shadow-rerun subprocess and any
+  // audit rows it wrote were untraceable to the original backtest.
+  const shadowRerunCorrelationId = `shadow-rerun:${backtestId}`;
+
   let shadowResult: Awaited<ReturnType<typeof runBacktest>>;
   try {
-    shadowResult = await runBacktest(strategyId, config, undefined, undefined, undefined);
+    shadowResult = await runBacktest(strategyId, config, undefined, undefined, shadowRerunCorrelationId);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     logger.error(

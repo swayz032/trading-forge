@@ -241,9 +241,11 @@ def run_sqa_optimization(
         all_solutions.sort(key=lambda x: x["energy"])
 
         best = all_solutions[0]
+        _method_used = "sqa"
 
     else:
         # Fallback: random search
+        _method_used = "classical_random_search"
         rng = np.random.default_rng(seed)
         all_solutions = []
 
@@ -276,6 +278,9 @@ def run_sqa_optimization(
         n_reads=num_reads,
         n_params=len(param_ranges),
         total_bits=total_bits,
+        # deep-scan Q-2: label the actual solver path — a classical random-search
+        # fallback (neal unavailable) must NOT inherit the model default "sqa".
+        method=_method_used,
         # F-6 (2026-05-21): build_parameter_qubo accepts objective_values but does NOT
         # consume them — the QUBO encodes a structural prior only (mid-range preference
         # + weak inter-param coupling). SQA vs Optuna comparison is therefore illustrative,

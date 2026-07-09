@@ -24,6 +24,7 @@ import { logger } from "../lib/logger.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED, COOLDOWN_DAYS as _COOLDOWN_DAYS_SHARED } from "../lib/lifecycle-constants.js";
 // FIX 1 (deepscan11 Track P, 2026-07-02): assertCrossValidatedSource enforces that
 // evolved children carry an exempted source. "evolved" is added to EXEMPT_SOURCES
@@ -101,6 +102,16 @@ export async function evolveStrategy(
   if (!(await isPipelineActive())) {
     logger.info({ fn: "evolveStrategy", strategyId }, "Skipped: pipeline paused");
     return { status: "skipped", error: "pipeline_paused" };
+  }
+
+  // deep-scan cross-system F-2 (HIGH 2026-07-06): this autonomous DECLINING→regenerate mutation loop must also
+  // honor the operator's auto_patch_loop_enabled kill switch — the documented single phone-tappable halt for
+  // autonomous mutation (pattern-aggregator + quantum-replay-weekly already gate on it). Without this, an operator
+  // who flipped the switch OFF still had this loop regenerate strategies via LLM. Skip unless AUTOPILOT (mode >= 2).
+  const { autonomousOn } = await readLearningLoopMode();
+  if (!autonomousOn) {
+    logger.info({ fn: "evolveStrategy", strategyId }, "Skipped: auto_patch_loop_enabled not AUTOPILOT (kill switch off)");
+    return { status: "skipped", error: "auto_patch_loop_halted" };
   }
 
   // Load strategy
@@ -316,9 +327,13 @@ export async function evolveStrategy(
     robust_ranges: robustRanges,
     current_sharpe: parseFloat(strategy.rollingSharpe30d ?? "0"),
     baseline_sharpe: parentSharpe,
-    window_sharpes: wfResults?.windows
-      ? (wfResults.windows as any[]).map((w: any) => w.oos_metrics?.sharpe_ratio ?? 0)
-      : [],
+    // deep-scan Backtest F-2: in CPCV mode (the default) wfResults.windows is [] by design, which made
+    // window_sharpes silently [] → degraded the param-evolver LLM prompt. Fall back to CPCV's per-PATH
+    // OOS Sharpes (path_sharpes) when there are no per-window results, so the prompt gets real evidence.
+    window_sharpes:
+      (wfResults?.windows as any[] | undefined)?.length
+        ? (wfResults!.windows as any[]).map((w: any) => w.oos_metrics?.sharpe_ratio ?? 0)
+        : ((wfResults?.path_sharpes as number[] | undefined) ?? []),
     mutation_history: priorMutationOutcomes.length > 0
       ? priorMutationOutcomes.map((m) => ({
           param_name: m.paramName,

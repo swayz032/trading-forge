@@ -42,6 +42,47 @@ import { AlertFactory, createAlert } from "../services/alert-service.js";
 import { isExchangeHalted } from "../services/exchange-status-service.js";
 import { isFirmSuspended } from "../services/prop-firm-health-service.js";
 import { isConnectivityDegraded } from "../lib/network-failover.js";
+// deepscan17 (2026-07-05) C-1/C-2 fix: Layer 2 now reads the SAME account-scoped
+// aggregator + tier-aware DLL-base resolver the signal-time gates use
+// (paper-signal-service.ts ~2646-2656, ~3360-3370) instead of its own per-session
+// loop against raw getFirmAccount(firmId).dailyLossLimit. Two implementations of
+// the same safety number could previously disagree on when "95%" was hit.
+import {
+  resolveAccountKey,
+  resolvePersonalDllDollars,
+  getAccountSessionCumulativePnL,
+  evaluateCrossSymbolDll,
+} from "../services/cross-symbol-pnl.js";
+
+// ─── deepscan18 (2026-07-05) Track 1 — Multi-Account Isolation ────────────────
+// deepscan17's C-1 fix scoped the force-close ACTION (forceCloseAllPositions)
+// to the breaching account, but three sibling paths stayed GLOBALLY scoped:
+//
+//   C-C1: evaluateAllKillSwitchLayers()/isHaltedForProduction() took no account
+//   context at all. Layer 2 (checkLayer2DailyLoss), Layer 3 (checkLayer3TrailingDD),
+//   and Layer 7 (checkLayer7FirmSuspension) each iterate every active
+//   account/session/firm and `break` on the FIRST breach found ANYWHERE in the
+//   system, returning ONE decision that every caller receives regardless of
+//   which account is asking. Under single-account operation (today) this is
+//   moot — there is only one account to find. Under Phase 3/4 multi-account
+//   scaling it means Account A's breach falsely halts Account B's entirely
+//   healthy account. Fixed by threading an OPTIONAL account/firm scope through
+//   the whole evaluation chain: omitting it preserves the exact legacy
+//   iterate-and-break-on-first-breach behavior (dashboard reads, and any
+//   caller not yet updated); supplying it narrows Layer 2/3 to sessions
+//   resolving to that account key, and Layer 7 to that one firm.
+//
+//   A-C2: the force-close concurrency guard (_forceCloseInFlight) was a single
+//   module-level boolean shared by EVERY account. Two accounts breaching 95%
+//   within the same FORCE_CLOSE_TIMEOUT_MS window meant the second account's
+//   flatten was silently skipped (deduped) as if it were a duplicate of the
+//   first. Fixed by keying the in-flight guard by account (Map<accountKey|
+//   "__global__", boolean>) — see _isForceCloseInFlight() below. Unscoped
+//   (legacy) callers keep the conservative "true if ANY force-close, anywhere,
+//   is in flight" semantics identical to the old single-boolean behavior.
+
+/** Sentinel scope key for the global (unscoped) cache/in-flight bucket. */
+const GLOBAL_SCOPE_KEY = "__global__";
 
 // ─── FINDING #3 FIX sentinel ─────────────────────────────────────────────────
 // Exported as a verifiable boolean so tests can assert the fix is active without
@@ -60,13 +101,16 @@ const DLL_WARN_PCT        = parseFloat(process.env.DLL_WARN_PCT        ?? "0.80"
 const DLL_FORCE_CLOSE_PCT = parseFloat(process.env.DLL_FORCE_CLOSE_PCT ?? "0.95");
 const TRAILING_DD_BUFFER_DOLLARS = 200; // force-close trigger: $200 inside max drawdown
 
-// ─── Per-session 80% DLL warn dedup ──────────────────────────────────────────
+// ─── Per-account 80% DLL warn dedup ──────────────────────────────────────────
 // Prevents re-firing the 80% approach warning on every bar check within the 1s
-// layer cache TTL. Session IDs are unique per trading session; the Set persists
-// for the process lifetime (acceptable — sessions are per-trading-day, and the
-// process restarts at most once per day). Tests can use unique session IDs to
-// avoid cross-test interference; no explicit clear hook is required.
-const dll80PctWarnedSessionIds = new Set<string>();
+// layer cache TTL. deepscan17 (2026-07-05) C-1 fix: keyed by the RESOLVED account
+// key (see cross-symbol-pnl.ts::resolveAccountKey), not session id — two sessions
+// on the SAME account must not each fire their own warn for what is one combined
+// breach. The Set persists for the process lifetime (acceptable — sessions are
+// per-trading-day, and the process restarts at most once per day). Tests can use
+// unique account keys (via config.account_key) to avoid cross-test interference;
+// no explicit clear hook is required.
+const dll80PctWarnedAccountKeys = new Set<string>();
 
 // ─── Per-layer cache (1s TTL for signal-path budget) ─────────────────────────
 // Each entry holds the last HaltDecision returned and its expiry timestamp.
@@ -80,11 +124,21 @@ interface LayerCacheEntry {
   expiresAt: number;
 }
 
-const layerCache: Map<number, LayerCacheEntry> = new Map();
+// deepscan18 C-C1: the cache key now includes the evaluation SCOPE (accountKey
+// for Layer 2/3, firmId for Layer 7) so an account-scoped decision is never
+// read back for a DIFFERENT account (or for the unscoped/global caller) and
+// vice versa. Layers that don't support scoping (1,4,5,6,8,9) always pass
+// scope=undefined, which resolves to GLOBAL_SCOPE_KEY — identical cache
+// behavior to before this change.
+const layerCache: Map<string, LayerCacheEntry> = new Map();
+
+function _layerCacheKey(layer: number, scope?: string): string {
+  return `${layer}:${scope ?? GLOBAL_SCOPE_KEY}`;
+}
 
 /** Retrieve a cached layer result if still within TTL. */
-function getCachedLayer(layer: number): HaltDecision | null {
-  const entry = layerCache.get(layer);
+function getCachedLayer(layer: number, scope?: string): HaltDecision | null {
+  const entry = layerCache.get(_layerCacheKey(layer, scope));
   if (entry && Date.now() < entry.expiresAt) {
     return entry.decision;
   }
@@ -92,8 +146,8 @@ function getCachedLayer(layer: number): HaltDecision | null {
 }
 
 /** Store a layer result in cache for 1s. */
-function setCachedLayer(layer: number, decision: HaltDecision): void {
-  layerCache.set(layer, { decision, expiresAt: Date.now() + LAYER_CACHE_TTL_MS });
+function setCachedLayer(layer: number, decision: HaltDecision, scope?: string): void {
+  layerCache.set(_layerCacheKey(layer, scope), { decision, expiresAt: Date.now() + LAYER_CACHE_TTL_MS });
 }
 
 // ─── FINDING #1 FIX: confirmed force-close ───────────────────────────────────
@@ -116,19 +170,55 @@ const FORCE_CLOSE_TIMEOUT_MS = parseInt(process.env.FORCE_CLOSE_TIMEOUT_MS ?? "1
 // The guard makes the second (and subsequent) concurrent L2 evaluations return
 // {halted:true, reason:"force_close_in_progress"} immediately until the first
 // completes. This does NOT suppress the halt result — L2 is still reported HALTED.
-let _forceCloseInFlight = false;
+//
+// deepscan18 A-C2 fix: was a single module-level boolean shared by every
+// account — two accounts breaching 95% within the same FORCE_CLOSE_TIMEOUT_MS
+// window meant the SECOND account's force-close was deduped away as if it
+// were a duplicate of the first (it isn't — different account, different
+// positions). Now a Map keyed by resolved accountKey (or GLOBAL_SCOPE_KEY for
+// the system-wide operator-HALT path), so accounts are independently guarded.
+const _forceCloseInFlightByAccount: Map<string, boolean> = new Map();
+
+/**
+ * True when a force-close is currently in flight for the given scope.
+ *
+ * - `accountKey` omitted (legacy/global callers, e.g. dashboard reads or any
+ *   caller not yet account-aware): conservative — true if ANY force-close
+ *   (global or any specific account) is in flight anywhere. This is BYTE-
+ *   IDENTICAL to the old single-shared-boolean semantics for callers that
+ *   don't pass a scope.
+ * - `accountKey` supplied: true only if THIS account's own force-close is in
+ *   flight, OR a genuine system-wide (GLOBAL_SCOPE_KEY) force-close is in
+ *   flight (which is about to/already touched every account, including this
+ *   one). A sibling account's scoped force-close does NOT block this one.
+ */
+function _isForceCloseInFlight(accountKey?: string): boolean {
+  if (accountKey === undefined) {
+    for (const v of _forceCloseInFlightByAccount.values()) {
+      if (v) return true;
+    }
+    return false;
+  }
+  if (_forceCloseInFlightByAccount.get(accountKey)) return true;
+  if (_forceCloseInFlightByAccount.get(GLOBAL_SCOPE_KEY)) return true;
+  return false;
+}
 
 /**
  * Awaited force-close with wall-clock timeout and CRITICAL escalation on failure.
  * On timeout or call failure, writes paper.force_flatten_kill_switch_failed audit
  * and fires a CRITICAL Discord alert so the operator knows positions may be open.
  */
-async function _confirmedForceClose(reason: string, correlationId: string): Promise<boolean> {
+async function _confirmedForceClose(
+  reason: string,
+  correlationId: string,
+  scope?: { accountKey?: string; sessionIds?: string[] },
+): Promise<boolean> {
   const timeoutMs = FORCE_CLOSE_TIMEOUT_MS > 0 ? FORCE_CLOSE_TIMEOUT_MS : 10_000;
   try {
     await Promise.race([
       import("../services/paper-execution-service.js").then(({ forceCloseAllPositions }) =>
-        forceCloseAllPositions(reason)
+        forceCloseAllPositions(reason, { correlationId, scope })
       ),
       new Promise<never>((_, reject) =>
         setTimeout(
@@ -181,10 +271,19 @@ async function _confirmedForceClose(reason: string, correlationId: string): Prom
  * "kill_switch.force_close_deduped" audit row and returns false immediately.
  * The first caller manages _forceCloseInFlight via try/finally.
  */
-async function _safeForceClose(trigger: string, correlationId: string): Promise<boolean> {
-  if (_forceCloseInFlight) {
+async function _safeForceClose(
+  trigger: string,
+  correlationId: string,
+  scope?: { accountKey?: string; sessionIds?: string[] },
+): Promise<boolean> {
+  // deepscan18 A-C2: guard + set/clear are keyed by scope.accountKey (falls
+  // back to GLOBAL_SCOPE_KEY for the unscoped system-wide path) so a scoped
+  // force-close in flight for account A never dedupes a concurrent scoped
+  // force-close for account B.
+  const scopeKey = scope?.accountKey ?? GLOBAL_SCOPE_KEY;
+  if (_isForceCloseInFlight(scope?.accountKey)) {
     logger.warn(
-      { trigger, correlationId },
+      { trigger, correlationId, accountKey: scope?.accountKey },
       "kill-switch: force-close already in-flight — skip concurrent invocation (_safeForceClose dedup, FIX 2)",
     );
     insertAuditRow({
@@ -192,7 +291,7 @@ async function _safeForceClose(trigger: string, correlationId: string): Promise<
       entityType: "system",
       entityId: null,
       decisionAuthority: "system",
-      input: { trigger, correlationId } as Record<string, unknown>,
+      input: { trigger, correlationId, accountKey: scope?.accountKey ?? null } as Record<string, unknown>,
       result: { skipped: true, reason: "force_close_already_in_flight" } as Record<string, unknown>,
       status: "success",
       correlationId,
@@ -201,11 +300,11 @@ async function _safeForceClose(trigger: string, correlationId: string): Promise<
     );
     return false;
   }
-  _forceCloseInFlight = true;
+  _forceCloseInFlightByAccount.set(scopeKey, true);
   try {
-    return await _confirmedForceClose(trigger, correlationId);
+    return await _confirmedForceClose(trigger, correlationId, scope);
   } finally {
-    _forceCloseInFlight = false;
+    _forceCloseInFlightByAccount.set(scopeKey, false);
   }
 }
 
@@ -284,14 +383,45 @@ async function checkLayer1Manual(state: SystemState): Promise<HaltDecision> {
 /**
  * Layer 2: Daily loss limit.
  * Fail-CLOSED: DB error → halted (a crashed DB cannot bypass the DLL gate).
+ *
+ * deepscan17 (2026-07-05) C-1/C-2 rewrite:
+ *   - C-1(a) under-halt: previously evaluated each session's OWN
+ *     dailyPnlBreakdown[today] in isolation against the full firm DLL — two
+ *     sessions on the SAME account (e.g. two Topstep symbols) could each sit
+ *     under the 95% threshold individually while their COMBINED loss exceeded
+ *     it, and neither would halt. Now groups active sessions by the resolved
+ *     account key and reads the combined P&L via the SAME account-scoped
+ *     aggregator (getAccountSessionCumulativePnL / evaluateCrossSymbolDll) the
+ *     signal-time gates use — single source of truth, not a second per-session loop.
+ *   - C-1(b) over-reach: force-close is now scoped to {accountKey} so a breach
+ *     on one account cannot flatten sibling accounts/firms (see
+ *     forceCloseAllPositions in paper-execution-service.ts).
+ *   - C-2: the personal DLL dollar base now comes from resolvePersonalDllDollars
+ *     (session firmId / config.trailing_dd_amount / accountStartingFloor) instead
+ *     of raw getFirmAccount(firmId).dailyLossLimit — the same base the signal-time
+ *     sites use, so the two subsystems can never disagree on what "95%" means.
+ *   - E-2: accepts the signal-path root correlationId and uses it for the
+ *     sizing.dll_* audit rows instead of minting local ones.
+ *
+ * deepscan18 (2026-07-05) C-C1 fix: accepts an OPTIONAL `scopeAccountKey`. When
+ * supplied, evaluation is narrowed to ONLY that account instead of iterating
+ * every active account and returning the first breach found ANYWHERE in the
+ * system — the exact over-broad-halt bug this wave fixes (Account A's breach
+ * must not halt Account B's healthy entries). Omitting it preserves the
+ * verbatim legacy iterate-and-break-on-first-breach behavior (dashboard reads
+ * via getKillSwitchStatus(), and any caller not yet account-aware).
  */
-async function checkLayer2DailyLoss(): Promise<HaltDecision> {
-  const cached = getCachedLayer(2);
+async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: string): Promise<HaltDecision> {
+  const cached = getCachedLayer(2, scopeAccountKey);
   if (cached) return cached;
+
+  // deepscan17 E-2: thread the caller's correlationId through the sizing.dll_*
+  // audit trail; fall back to a fresh id only when none was supplied (e.g. a
+  // direct getKillSwitchStatus() dashboard read with no signal-path root).
+  const effectiveCorrelationId = correlationId ?? randomUUID();
 
   let decision: HaltDecision;
   try {
-    const { getFirmAccount } = await import("../../shared/firm-config.js");
     const _cmeEtFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
     const today = _cmeEtFormatter.format(new Date(Date.now() + 7 * 3_600_000));
 
@@ -299,24 +429,49 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
       .select({
         id: paperSessions.id,
         firmId: paperSessions.firmId,
-        dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
+        config: paperSessions.config,
+        startingCapital: paperSessions.startingCapital,
       })
       .from(paperSessions)
       .where(eq(paperSessions.status, "active"));
 
+    // Group active sessions by RESOLVED account key (not raw firmId) — two
+    // sessions on the same account must be evaluated TOGETHER (C-1 fix above).
+    const accountReps = new Map<string, { firmId: string | null; config: unknown; startingCapital: unknown }>();
     for (const session of activeSessions) {
-      const firmId = session.firmId ?? "mffu";
-      let firmAccount: { dailyLossLimit?: number } | null = null;
-      try {
-        firmAccount = getFirmAccount(firmId) as { dailyLossLimit?: number };
-      } catch {
-        continue;
+      const accountKey = resolveAccountKey(session);
+      if (!accountReps.has(accountKey)) {
+        accountReps.set(accountKey, { firmId: session.firmId, config: session.config, startingCapital: session.startingCapital });
       }
-      const dll = firmAccount?.dailyLossLimit;
-      if (!dll || dll <= 0) continue;
+    }
 
-      const breakdown = session.dailyPnlBreakdown as Record<string, number> | null ?? {};
-      const dayPnl = breakdown[today] ?? 0;
+    // deepscan18 C-C1: when the caller supplies a scope, restrict evaluation to
+    // ONLY that account's entry. Entries iteration order (Map insertion order)
+    // is unchanged for the unscoped case, so the unscoped path is byte-for-byte
+    // identical to before this fix.
+    const accountEntries = [...accountReps.entries()];
+    const repsToEvaluate = scopeAccountKey
+      ? accountEntries.filter(([key]) => key === scopeAccountKey)
+      : accountEntries;
+
+    for (const [accountKey, rep] of repsToEvaluate) {
+      // C-1 fix: combined P&L (realized + open MTM, across ALL sessions scoped to
+      // this account — including stopped/paused, per cross-symbol-pnl.ts) from the
+      // same single source of truth the signal-time DLL gates use.
+      const cumPnL = await getAccountSessionCumulativePnL(accountKey, today);
+
+      // C-2 fix: tier-aware personal DLL base, same resolver the signal-time
+      // sites use (paper-signal-service.ts ~2646-2656, ~3360-3370).
+      const trailingDdOverride = (rep.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
+      const accountStartingFloor = parseFloat(rep.startingCapital as string) || 50_000;
+      const personalDllDollars = resolvePersonalDllDollars({
+        firmId: rep.firmId,
+        trailingDdOverride,
+        accountStartingFloor,
+      });
+
+      const dllResult = evaluateCrossSymbolDll(cumPnL, personalDllDollars);
+      const dayPnl = dllResult.combinedPnL;
 
       // ── M-1 FIX: 95% DLL force-close (highest band — check first) ───────────
       // Python compliance_gate.py:562 force-closes at 95% DLL. Without this
@@ -324,23 +479,25 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
       // a parity break. Layer 3 force-closes on trailing-DD $200 buffer (different
       // axis), so this sub-check does NOT double-fire with Layer 3.
       // Ordering: force_close (95%) > halt (67%) > reduce_size (60%) > none.
-      if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_FORCE_CLOSE_PCT * dll) {
+      if (dllResult.action === "force_close") {
         // F3 FIX: concurrent L2 evaluations (caused by the 100ms runLayerWithTimeout
         // returning fail-OPEN before the 10s _confirmedForceClose finishes) must NOT
         // all call _confirmedForceClose. The first call sets the in-flight flag;
         // subsequent calls return HALTED immediately without re-entering the close.
-        if (_forceCloseInFlight) {
+        // deepscan18 A-C2: guard is now PER-ACCOUNT — a concurrent force-close
+        // in flight for a DIFFERENT account must not dedupe THIS account's own
+        // 95% breach into a no-op.
+        if (_isForceCloseInFlight(accountKey)) {
           logger.warn(
-            { session_id: session.id, firm_id: firmId, day_pnl: dayPnl },
+            { account_key: accountKey, firm_id: rep.firmId, day_pnl: dayPnl },
             "kill-switch L2: force-close already in-flight — skipping concurrent invocation (F3 fix)",
           );
           decision = { halted: true, reason: "force_close_in_progress", layer: 2 };
           break;
         }
-        const fcCorrelationId = randomUUID();
         logger.warn(
-          { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
-          "kill-switch L2: DLL at 95% — force-closing all positions (M-1 fix)"
+          { account_key: accountKey, firm_id: rep.firmId, day_pnl: dayPnl, dll: personalDllDollars, threshold_pct: DLL_FORCE_CLOSE_PCT },
+          "kill-switch L2: DLL at 95% — force-closing all positions for this account (C-1 fix: account-scoped)"
         );
         // Audit — status PENDING until the close actually confirms. The
         // pending → completed/failed pattern prevents a misleading "success" row
@@ -348,30 +505,34 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
         insertAuditRow({
           action: "sizing.dll_force_close",
           entityType: "system",
-          entityId: session.id,
+          entityId: accountKey,
           decisionAuthority: "system",
-          input: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT } as Record<string, unknown>,
+          input: { account_key: accountKey, firm_id: rep.firmId, day_pnl: dayPnl, dll: personalDllDollars, threshold_pct: DLL_FORCE_CLOSE_PCT } as Record<string, unknown>,
           result: { action: "force_close", outcome: "triggered" } as Record<string, unknown>,
           status: "pending",
-          correlationId: fcCorrelationId,
+          correlationId: effectiveCorrelationId,
         }).catch((auditErr) =>
           logger.error({ err: auditErr }, "kill-switch L2: dll 95pct force-close trigger audit failed (non-blocking)")
         );
         // SSE — consistent with existing force-close path in setMode("HALT")
         broadcastSSE("kill_switch:dll_force_close", {
-          session_id: session.id,
-          firm_id: firmId,
+          account_key: accountKey,
+          firm_id: rep.firmId,
           day_pnl: dayPnl,
-          dll,
+          dll: personalDllDollars,
           threshold_pct: DLL_FORCE_CLOSE_PCT,
-          correlationId: fcCorrelationId,
+          correlationId: effectiveCorrelationId,
           forced_at: new Date().toISOString(),
         });
         // FIX 2 (Track M): _safeForceClose manages the _forceCloseInFlight sentinel
         // and deduplicates concurrent calls (e.g. L2 and setMode("HALT") racing).
-        // It sets the flag before calling _confirmedForceClose and clears it in
-        // finally — same semantics as the prior inline try/finally, consolidated.
-        const _fcOk = await _safeForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
+        // C-1 fix: scope:{accountKey} — the flatten hits ONLY this account's open
+        // positions, not every account/firm sharing the process.
+        const _fcOk = await _safeForceClose(
+          `dll_force_close_at_95pct:${accountKey}`,
+          effectiveCorrelationId,
+          { accountKey },
+        );
         // Completion observability (phase-0 deep-scan): record a success audit row ONLY
         // when the force-close actually completed. On failure/timeout, _confirmedForceClose
         // already wrote paper.force_flatten_kill_switch_failed + fired a CRITICAL Discord —
@@ -381,12 +542,12 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
           insertAuditRow({
             action: "sizing.dll_force_close_completed",
             entityType: "system",
-            entityId: session.id,
+            entityId: accountKey,
             decisionAuthority: "system",
-            input: { session_id: session.id, firm_id: firmId } as Record<string, unknown>,
+            input: { account_key: accountKey, firm_id: rep.firmId } as Record<string, unknown>,
             result: { action: "force_close", outcome: "completed" } as Record<string, unknown>,
             status: "success",
-            correlationId: fcCorrelationId,
+            correlationId: effectiveCorrelationId,
           }).catch((auditErr) =>
             logger.error({ err: auditErr }, "kill-switch L2: dll 95pct force-close completed-audit failed (non-blocking)")
           );
@@ -395,28 +556,29 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
           halted: true,
           layer: 2,
           reason: "dll_force_close_at_95pct",
-          detail: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
+          detail: { account_key: accountKey, firm_id: rep.firmId, day_pnl: dayPnl, dll: personalDllDollars, threshold_pct: DLL_FORCE_CLOSE_PCT },
         };
         break;
       }
 
-      // ── A-5 FIX: 80% DLL approach warning (once per session, deduped) ────────
+      // ── A-5 FIX: 80% DLL approach warning (once per account, deduped) ────────
       // No alert exists between the 67% halt and 95% force-close. Families see a
-      // force-close with no prior warning. This warning fires once per session
-      // (deduped via dll80PctWarnedSessionIds) when losses are between 67-95%.
-      // Does NOT halt on its own — falls through to the 67% halt check below.
-      if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_WARN_PCT * dll && !dll80PctWarnedSessionIds.has(session.id)) {
-        dll80PctWarnedSessionIds.add(session.id);
-        const warnCorrelationId = randomUUID();
+      // force-close with no prior warning. This warning fires once per ACCOUNT
+      // (deduped via dll80PctWarnedAccountKeys — C-1 fix: was per-session, which
+      // would double-warn two sessions on the same account for one combined breach)
+      // when losses are between 67-95%. Does NOT halt on its own — falls through
+      // to the 67% halt check below.
+      if (dllResult.dllPct >= DLL_WARN_PCT && !dll80PctWarnedAccountKeys.has(accountKey)) {
+        dll80PctWarnedAccountKeys.add(accountKey);
         insertAuditRow({
           action: "sizing.dll_80pct_approach_warned",
           entityType: "system",
-          entityId: session.id,
+          entityId: accountKey,
           decisionAuthority: "system",
-          input: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_WARN_PCT } as Record<string, unknown>,
+          input: { account_key: accountKey, firm_id: rep.firmId, day_pnl: dayPnl, dll: personalDllDollars, threshold_pct: DLL_WARN_PCT } as Record<string, unknown>,
           result: { warned: true } as Record<string, unknown>,
           status: "success",
-          correlationId: warnCorrelationId,
+          correlationId: effectiveCorrelationId,
         }).catch((auditErr) =>
           logger.error({ err: auditErr }, "kill-switch L2: dll 80pct warn audit failed (non-blocking)")
         );
@@ -429,20 +591,20 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
             "The bot already stopped taking new trades. " +
             "It is still holding its current position. " +
             "No action needed — it will exit automatically if losses continue.",
-          metadata: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll },
+          metadata: { account_key: accountKey, firm_id: rep.firmId, day_pnl: dayPnl, dll: personalDllDollars },
         }).catch((alertErr) =>
           logger.error({ err: alertErr }, "kill-switch L2: dll 80pct approach alert failed (non-blocking)")
         );
       }
 
       // ── Existing 67% halt ──────────────────────────────────────────────────
-      if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_HALT_PCT * dll) {
+      if (dllResult.action === "halt") {
         const reason = `dll_at_${Math.round(DLL_HALT_PCT * 100)}pct_personal_threshold`;
         decision = {
           halted: true,
           layer: 2,
           reason,
-          detail: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll },
+          detail: { account_key: accountKey, firm_id: rep.firmId, day_pnl: dayPnl, dll: personalDllDollars },
         };
         break;
       }
@@ -460,16 +622,22 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
     };
   }
 
-  setCachedLayer(2, decision);
+  setCachedLayer(2, decision, scopeAccountKey);
   return decision;
 }
 
 /**
  * Layer 3: Trailing drawdown.
  * Fail-CLOSED: DB error → halted.
+ *
+ * deepscan18 (2026-07-05) C-C1 fix: accepts an OPTIONAL `scopeAccountKey`,
+ * same rationale/contract as checkLayer2DailyLoss above — narrows evaluation
+ * to sessions belonging to the caller's own account instead of iterating
+ * every active session system-wide and halting on the first breach found
+ * ANYWHERE. Omitting it preserves the legacy global behavior byte-for-byte.
  */
-async function checkLayer3TrailingDD(): Promise<HaltDecision> {
-  const cached = getCachedLayer(3);
+async function checkLayer3TrailingDD(scopeAccountKey?: string): Promise<HaltDecision> {
+  const cached = getCachedLayer(3, scopeAccountKey);
   if (cached) return cached;
 
   let decision: HaltDecision;
@@ -480,13 +648,25 @@ async function checkLayer3TrailingDD(): Promise<HaltDecision> {
       .select({
         id: paperSessions.id,
         firmId: paperSessions.firmId,
+        // deepscan18 C-C1: config is needed to resolveAccountKey() when a scope
+        // is supplied. Harmless additive field for the unscoped path (never
+        // read there), so the unscoped query result/behavior is unchanged.
+        config: paperSessions.config,
         currentEquity: paperSessions.currentEquity,
         realizedPeakEquity: paperSessions.realizedPeakEquity,
       })
       .from(paperSessions)
       .where(eq(paperSessions.status, "active"));
 
-    for (const session of activeSessions) {
+    // deepscan18 C-C1: scope to the caller's own account when supplied — same
+    // resolveAccountKey() used by Layer 2/cross-symbol-pnl.ts, so a scoped
+    // Layer 3 check evaluates exactly the session(s) belonging to the
+    // requesting account, never a sibling account's trailing-DD breach.
+    const sessionsToEvaluate = scopeAccountKey
+      ? activeSessions.filter((s) => resolveAccountKey(s) === scopeAccountKey)
+      : activeSessions;
+
+    for (const session of sessionsToEvaluate) {
       const firmId = session.firmId ?? "mffu";
       let firmAccount: { maxDrawdown?: number; maxDailyDrawdown?: number } | null = null;
       try {
@@ -530,7 +710,7 @@ async function checkLayer3TrailingDD(): Promise<HaltDecision> {
     };
   }
 
-  setCachedLayer(3, decision);
+  setCachedLayer(3, decision, scopeAccountKey);
   return decision;
 }
 
@@ -629,6 +809,7 @@ function checkLayer6CmeOutage(correlationId: string): HaltDecision {
       layer: 6,
       halted: true,
       timestamp: new Date().toISOString(),
+      correlationId,
     });
     decision = { halted: true, layer: 6, reason: "cme_outage_eval_failed", detail: { error: errMsg } };
   }
@@ -640,50 +821,86 @@ function checkLayer6CmeOutage(correlationId: string): HaltDecision {
 /**
  * Layer 7: Firm suspension.
  * Fail-CLOSED: DB unavailable = we cannot verify suspension → halt.
+ *
+ * deepscan18 (2026-07-05) C-C1 fix: accepts an OPTIONAL `scopeFirmId`. When
+ * supplied, checks ONLY that firm's suspension status instead of enumerating
+ * every enabled broker account's firm and halting the caller if ANY of them
+ * is suspended — a DIFFERENT firm's suspension must not halt entries on an
+ * unrelated, healthy firm's account (same over-broad-halt class Layer 2/3 fix
+ * above). Omitting it preserves the legacy global behavior byte-for-byte.
  */
-async function checkLayer7FirmSuspension(correlationId: string): Promise<HaltDecision> {
-  const cached = getCachedLayer(7);
+async function checkLayer7FirmSuspension(correlationId: string, scopeFirmId?: string): Promise<HaltDecision> {
+  const cached = getCachedLayer(7, scopeFirmId);
   if (cached) return cached;
 
   let decision: HaltDecision;
   try {
-    const enabledAccounts = await db
-      .select({ firmId: brokerAccounts.firmId })
-      .from(brokerAccounts)
-      .where(eq(brokerAccounts.enabled, true));
-
-    const firmsChecked = [...new Set(enabledAccounts.map((r) => r.firmId))];
-    const suspendedFirms = firmsChecked.filter((firmId) => isFirmSuspended(firmId));
-
-    if (suspendedFirms.length > 0) {
-      decision = {
-        halted: true,
-        layer: 7,
-        // Name the suspended firm(s) so the operator knows WHICH firm halted the
-        // bot without drilling into detail (deep-scan 2026-06-28).
-        reason: `firm_suspended:${suspendedFirms.join(",")}`,
-        detail: { suspended_firms: suspendedFirms },
-      };
-      // Audit ONLY on actual suspension (deep-scan 2026-06-28). The old code
-      // wrote a "checked firms, nothing suspended" row on every per-second
-      // signal-path eval (up to ~23k+ rows/day RTH), burying real suspension
-      // events in the append-only trust spine. The clean-state result is already
-      // visible via the kill-switch status report + SSE; it does not need an
-      // immutable audit row. Suspension (a real event) still always audits.
-      insertAuditRow({
-        action: "kill_switch.c2_multi_firm_check",
-        entityType: "system",
-        entityId: null,
-        decisionAuthority: "system",
-        input: { firms_checked: firmsChecked } as Record<string, unknown>,
-        result: { suspended_firms: suspendedFirms, halted: decision.halted } as Record<string, unknown>,
-        status: "success",
-        correlationId,
-      }).catch((auditErr) =>
-        logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
-      );
+    if (scopeFirmId) {
+      // Scoped path: the caller already knows it holds an active account on
+      // this firm (it's asking on behalf of that account) — skip the
+      // enabled-broker-accounts enumeration and check ONLY this firm.
+      const suspended = isFirmSuspended(scopeFirmId);
+      if (suspended) {
+        decision = {
+          halted: true,
+          layer: 7,
+          reason: `firm_suspended:${scopeFirmId}`,
+          detail: { suspended_firms: [scopeFirmId], scoped_firm_id: scopeFirmId },
+        };
+        insertAuditRow({
+          action: "kill_switch.c2_multi_firm_check",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { firms_checked: [scopeFirmId], scoped: true } as Record<string, unknown>,
+          result: { suspended_firms: [scopeFirmId], halted: true } as Record<string, unknown>,
+          status: "success",
+          correlationId,
+        }).catch((auditErr) =>
+          logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
+        );
+      } else {
+        decision = { halted: false };
+      }
     } else {
-      decision = { halted: false };
+      const enabledAccounts = await db
+        .select({ firmId: brokerAccounts.firmId })
+        .from(brokerAccounts)
+        .where(eq(brokerAccounts.enabled, true));
+
+      const firmsChecked = [...new Set(enabledAccounts.map((r) => r.firmId))];
+      const suspendedFirms = firmsChecked.filter((firmId) => isFirmSuspended(firmId));
+
+      if (suspendedFirms.length > 0) {
+        decision = {
+          halted: true,
+          layer: 7,
+          // Name the suspended firm(s) so the operator knows WHICH firm halted the
+          // bot without drilling into detail (deep-scan 2026-06-28).
+          reason: `firm_suspended:${suspendedFirms.join(",")}`,
+          detail: { suspended_firms: suspendedFirms },
+        };
+        // Audit ONLY on actual suspension (deep-scan 2026-06-28). The old code
+        // wrote a "checked firms, nothing suspended" row on every per-second
+        // signal-path eval (up to ~23k+ rows/day RTH), burying real suspension
+        // events in the append-only trust spine. The clean-state result is already
+        // visible via the kill-switch status report + SSE; it does not need an
+        // immutable audit row. Suspension (a real event) still always audits.
+        insertAuditRow({
+          action: "kill_switch.c2_multi_firm_check",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { firms_checked: firmsChecked } as Record<string, unknown>,
+          result: { suspended_firms: suspendedFirms, halted: decision.halted } as Record<string, unknown>,
+          status: "success",
+          correlationId,
+        }).catch((auditErr) =>
+          logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
+        );
+      } else {
+        decision = { halted: false };
+      }
     }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
@@ -692,14 +909,14 @@ async function checkLayer7FirmSuspension(correlationId: string): Promise<HaltDec
       halted: true,
       layer: 7,
       reason: "firm_suspension_check_failed",
-      detail: { error: errMsg, fail_closed: true },
+      detail: { error: errMsg, fail_closed: true, ...(scopeFirmId ? { scoped_firm_id: scopeFirmId } : {}) },
     };
     insertAuditRow({
       action: "kill_switch.c2_multi_firm_check",
       entityType: "system",
       entityId: null,
       decisionAuthority: "system",
-      input: { error_message: errMsg, layer: 7 } as Record<string, unknown>,
+      input: { error_message: errMsg, layer: 7, scoped_firm_id: scopeFirmId ?? null } as Record<string, unknown>,
       result: { suspended_firms: [], halted: true, eval_failed: true } as Record<string, unknown>,
       status: "failure",
       correlationId,
@@ -708,7 +925,7 @@ async function checkLayer7FirmSuspension(correlationId: string): Promise<HaltDec
     );
   }
 
-  setCachedLayer(7, decision);
+  setCachedLayer(7, decision, scopeFirmId);
   return decision;
 }
 
@@ -769,6 +986,11 @@ async function runLayerWithTimeout(
   layer: number,
   checkFn: () => Promise<HaltDecision>,
   correlationId: string,
+  // deepscan18 A-C2/C-C1: the caller's account scope (if any) so the FIX 1b
+  // force-close-pending check below is account-aware. Omitted for layers that
+  // don't take a scope (4,5,6,8,9 always pass undefined here) — identical to
+  // pre-fix behavior for those.
+  scopeAccountKeyForForceCloseCheck?: string,
 ): Promise<HaltDecision> {
   const timeoutPromise: Promise<HaltDecision> = new Promise((resolve) => {
     const timer = setTimeout(() => {
@@ -793,7 +1015,9 @@ async function runLayerWithTimeout(
       // window, return HALTED rather than fail-OPEN. This closes the one-entry
       // window that exists when L2 times out at 100ms while _confirmedForceClose
       // is still running (up to FORCE_CLOSE_TIMEOUT_MS = 10s).
-      resolve(_forceCloseInFlight
+      // deepscan18 A-C2: account-scoped — a sibling account's in-flight
+      // force-close must not force THIS account's timeout to resolve HALTED.
+      resolve(_isForceCloseInFlight(scopeAccountKeyForForceCloseCheck)
         ? { halted: true, reason: "layer_timeout_force_close_pending" }
         : { halted: false });
     }, LAYER_CHECK_TIMEOUT_MS);
@@ -824,19 +1048,32 @@ class KillSwitch {
    *
    * Callers on the signal path must use isHaltedForProduction() which wraps this
    * and returns a boolean for backward compatibility.
+   *
+   * deepscan18 (2026-07-05) C-C1 fix: `opts.accountKey` / `opts.firmId` are
+   * OPTIONAL account/firm scopes. When supplied, Layer 2 and Layer 3 evaluate
+   * ONLY the given account, and Layer 7 evaluates ONLY the given firm — a
+   * breach on a DIFFERENT account/firm no longer halts this caller. Omitting
+   * both preserves the exact legacy global (iterate-every-account, halt-on-
+   * first-breach-found-anywhere) behavior — byte-identical for callers that
+   * don't pass a scope (dashboard reads via getKillSwitchStatus(), and any
+   * caller not yet updated to pass one).
    */
   async evaluateAllKillSwitchLayers(
-    opts: { correlationId?: string } = {},
+    opts: { correlationId?: string; accountKey?: string; firmId?: string | null } = {},
   ): Promise<HaltDecision> {
     const correlationId = opts.correlationId ?? randomUUID();
+    const accountKey = opts.accountKey;
+    const firmId = opts.firmId ?? undefined;
 
     // FIX 1a (Track M): fast-path — when a force-close is already in flight,
     // skip all layer checks and return HALTED immediately. Without this guard,
     // runLayerWithTimeout returns halted:false at 100ms (fail-OPEN budget),
     // giving L2 DLL-95% one entry window while the 10s force-close is running.
-    if (_forceCloseInFlight) {
+    // deepscan18 A-C2: account-aware — a sibling account's in-flight
+    // force-close no longer fast-path-halts THIS account's entry evaluation.
+    if (_isForceCloseInFlight(accountKey)) {
       logger.warn(
-        { correlationId },
+        { correlationId, accountKey },
         "kill-switch: force-close in-flight — fast-path halt, all layers bypassed (Track M FIX 1a)",
       );
       return { halted: true, layer: 2, reason: "force_close_in_flight" };
@@ -857,14 +1094,14 @@ class KillSwitch {
     }
 
     // ── Layer 2: Daily loss limit ──
-    const l2 = await runLayerWithTimeout(2, () => checkLayer2DailyLoss(), correlationId);
+    const l2 = await runLayerWithTimeout(2, () => checkLayer2DailyLoss(correlationId, accountKey), correlationId, accountKey);
     if (l2.halted) {
       await this._emitLayerHaltedSignals(l2, correlationId);
       return l2;
     }
 
     // ── Layer 3: Trailing drawdown ──
-    const l3 = await runLayerWithTimeout(3, () => checkLayer3TrailingDD(), correlationId);
+    const l3 = await runLayerWithTimeout(3, () => checkLayer3TrailingDD(accountKey), correlationId, accountKey);
     if (l3.halted) {
       await this._emitLayerHaltedSignals(l3, correlationId);
       return l3;
@@ -894,8 +1131,9 @@ class KillSwitch {
     // ── Layer 7: Firm suspension ──
     const l7 = await runLayerWithTimeout(
       7,
-      () => checkLayer7FirmSuspension(correlationId),
+      () => checkLayer7FirmSuspension(correlationId, firmId),
       correlationId,
+      accountKey,
     );
     if (l7.halted) {
       await this._emitLayerHaltedSignals(l7, correlationId);
@@ -970,9 +1208,15 @@ class KillSwitch {
    * All existing callers (paper-signal-service, paper-execution-service,
    * openPosition) continue to work without changes.
    *
+   * deepscan18 (2026-07-05) C-C1: accepts the same OPTIONAL `accountKey` /
+   * `firmId` scope as evaluateAllKillSwitchLayers() — see that method's
+   * docstring for the full contract. Passed straight through.
+   *
    * Fail-CLOSED: any unhandled error returns true (halted).
    */
-  async isHaltedForProduction(opts: { correlationId?: string } = {}): Promise<boolean> {
+  async isHaltedForProduction(
+    opts: { correlationId?: string; accountKey?: string; firmId?: string | null } = {},
+  ): Promise<boolean> {
     try {
       const decision = await this.evaluateAllKillSwitchLayers(opts);
       return decision.halted;
@@ -1080,12 +1324,16 @@ class KillSwitch {
       );
 
     // SSE broadcast
+    // ds21 (deep-scan #21 Band D): thread the same correlationId used on the audit row
+    // (:1319) into the SSE payload so a dashboard consumer of this capital-safety HALT/RESUME
+    // event can correlate it to its audit trail without timestamp-matching.
     broadcastSSE("production:mode-changed", {
       previousMode,
       newMode: mode,
       reason,
       setBy,
       changedAt: new Date().toISOString(),
+      correlationId: modeChangeCorrelationId,
     });
 
     logger.info(
@@ -1152,7 +1400,7 @@ class KillSwitch {
 
     // ── Layer 2: Daily loss ──
     // Re-use per-layer checker (applies its own cache independently of this call)
-    const l2Result = await checkLayer2DailyLoss();
+    const l2Result = await checkLayer2DailyLoss(evalCorrelationId);
     layers.push({
       layer: 2,
       name: "daily_loss",
@@ -1243,9 +1491,15 @@ class KillSwitch {
     layerCache.clear();
   }
 
-  /** Exposed for tests only. Injects a pre-computed layer result into the cache. */
-  _setLayerCacheForTests(layer: number, decision: HaltDecision): void {
-    setCachedLayer(layer, decision);
+  /**
+   * Exposed for tests only. Injects a pre-computed layer result into the cache.
+   * `scope` is OPTIONAL (deepscan18 C-C1) — omitting it seeds the GLOBAL cache
+   * entry, identical to pre-fix behavior for every existing test that calls
+   * this with 2 args. Pass `scope` (accountKey for L2/L3, firmId for L7) to
+   * seed an account/firm-scoped cache entry for new account-aware tests.
+   */
+  _setLayerCacheForTests(layer: number, decision: HaltDecision, scope?: string): void {
+    setCachedLayer(layer, decision, scope);
   }
 }
 
@@ -1253,15 +1507,46 @@ class KillSwitch {
 
 export const killSwitch = new KillSwitch();
 
-// ─── Test seams (Track M FIX 1 + FIX 2) ─────────────────────────────────────
+// ─── Test seams (Track M FIX 1 + FIX 2, deepscan18 A-C2) ────────────────────
 // Exposed for vitest only — do NOT use in production code.
 
-/** Set _forceCloseInFlight for test isolation of FIX 1a / FIX 1b / FIX 2 scenarios. */
-export function _setForceCloseInFlightForTests(value: boolean): void {
-  _forceCloseInFlight = value;
+/**
+ * Set the force-close in-flight state for test isolation of FIX 1a / FIX 1b /
+ * FIX 2 / deepscan18 A-C2 scenarios.
+ *
+ * deepscan18 A-C2: the underlying state is now a Map keyed by account (see
+ * _isForceCloseInFlight above), not a single boolean. This test seam keeps
+ * its ORIGINAL 1-arg (boolean) signature fully working — every pre-existing
+ * test that calls `_setForceCloseInFlightForTests(true/false)` with no
+ * accountKey continues to pass unmodified:
+ *   - `(true)` with no accountKey sets the GLOBAL scope flag — matches old
+ *     "the one boolean is true" semantics (an unscoped
+ *     _getForceCloseInFlightForTests()/_isForceCloseInFlight(undefined) read
+ *     is conservative and reports true whenever ANY entry is true).
+ *   - `(false)` with no accountKey CLEARS the entire map — matches old
+ *     "nothing in flight, anywhere" semantics and gives clean test isolation
+ *     between test cases regardless of what a previous test scoped.
+ *   - Pass `accountKey` to set/clear ONE account's flag independently for new
+ *     multi-account tests (deepscan18 Track 1).
+ */
+export function _setForceCloseInFlightForTests(value: boolean, accountKey?: string): void {
+  if (accountKey) {
+    _forceCloseInFlightByAccount.set(accountKey, value);
+    return;
+  }
+  if (value === false) {
+    _forceCloseInFlightByAccount.clear();
+  } else {
+    _forceCloseInFlightByAccount.set(GLOBAL_SCOPE_KEY, true);
+  }
 }
 
-/** Read _forceCloseInFlight for test assertions. */
-export function _getForceCloseInFlightForTests(): boolean {
-  return _forceCloseInFlight;
+/**
+ * Read the force-close in-flight state for test assertions.
+ * Omit `accountKey` for the legacy "true if ANY force-close (any scope) is in
+ * flight" read (matches the old single-boolean semantics). Pass `accountKey`
+ * to assert one account's own flag independently of any other account's.
+ */
+export function _getForceCloseInFlightForTests(accountKey?: string): boolean {
+  return _isForceCloseInFlight(accountKey);
 }

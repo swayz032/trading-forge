@@ -24,6 +24,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import path from "node:path";
 import os from "node:os";
+import { createHash } from "node:crypto";
 
 // ─── Mock: node:fs ─────────────────────────────────────────────────────────────
 // We control which files "exist" and their content.
@@ -102,6 +103,12 @@ function extractSqlString(obj: unknown): string {
 
 // Track the SQL statements executed and __drizzle_migrations inserts.
 let _appliedWhens: Set<string> = new Set();
+// F1: the runner now keys "applied" on hash. Tests that mark a migration applied AND mock its .sql
+// file must supply that migration's hash here (when → sha256 of its content) so the hash-keyed plan
+// recognises it as applied. Tests that don't mock the .sql fall back to the when-based check.
+let _appliedHashByWhen: Map<string, string> = new Map();
+// F1 backfill: raw SQL of every `INSERT INTO drizzle.__drizzle_migrations` seen via db.execute.
+let _backfillInserts: string[] = [];
 let _txStmts: string[] = [];
 let _txMigrationsInserted: number[] = [];
 
@@ -126,9 +133,19 @@ const mockTransaction = vi.fn(async (fn: (tx: { execute: typeof mockTxExecute })
 const mockDbExecute = vi.fn(async (sqlObj: unknown) => {
   const rawSql = extractSqlString(sqlObj);
 
+  if (rawSql.includes("INSERT INTO drizzle.__drizzle_migrations")) {
+    // F1 backfill path (also drizzle-bootstrap INSERTs, if any) — capture for assertions.
+    _backfillInserts.push(rawSql);
+    return { rows: [] };
+  }
   if (rawSql.includes("created_at") && rawSql.includes("drizzle_migrations")) {
-    // "SELECT created_at::text AS created_at FROM drizzle.__drizzle_migrations"
-    return { rows: [..._appliedWhens].map((w) => ({ created_at: w })) };
+    // "SELECT created_at::text AS created_at, hash FROM drizzle.__drizzle_migrations"
+    return {
+      rows: [..._appliedWhens].map((w) => ({
+        created_at: w,
+        hash: _appliedHashByWhen.get(w) ?? `nohash-${w}`,
+      })),
+    };
   }
   if (rawSql.toLowerCase().includes("create") || rawSql.includes("__drizzle_migrations")) {
     return { rows: [] };
@@ -211,6 +228,8 @@ beforeEach(() => {
   mockFiles.clear();
   mockExistingPaths.clear();
   _appliedWhens = new Set();
+  _appliedHashByWhen = new Map();
+  _backfillInserts = [];
   _txStmts = [];
   _txMigrationsInserted = [];
   _pgDumpAvailable = true;
@@ -433,6 +452,50 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     expect(discordCall).toBeDefined();
   });
 
+  // ─── Deep-Scan #16 E-5: per-migration SQL file read failure (TOCTOU race) ───
+  // The .sql file passes the existsSync() check a few lines above the read,
+  // but the read itself throws (file removed/replaced/locked in the window
+  // between the two calls, or an AV-scanner lock). Before the fix this
+  // propagated straight out of the loop with ZERO audit row and ZERO Discord
+  // alert — a silent crash-loop. Verify it now alerts loudly before rethrowing.
+  it("per-migration SQL read failure (existsSync true, readFileSync throws): audits + alerts + rethrows (fail-closed)", async () => {
+    const tag = "0130_toctou_race";
+    const entries = [{ idx: 0, when: 6100000, tag }];
+    _appliedWhens = new Set();
+
+    const journalPath = getJournalPath();
+    mockFiles.set(journalPath, makeJournal(entries));
+    mockExistingPaths.add(journalPath);
+
+    const sqlPath = getMigrationSqlPath(tag);
+    // Mark the file as EXISTING (passes the existsSync gate) but never register
+    // its content in mockFiles — the mocked readFileSync throws ENOENT for any
+    // path not in the map, simulating the file vanishing/locking after the
+    // existsSync check ran.
+    mockExistingPaths.add(sqlPath);
+
+    const { runPendingMigrations } = await import("../lib/boot-migration-runner.js");
+    await expect(runPendingMigrations()).rejects.toThrow(/failed to read SQL file/i);
+
+    // Transaction (SQL execution) must never have been reached.
+    expect(mockTransaction).not.toHaveBeenCalled();
+
+    // Loud audit row for the read failure specifically.
+    const readFailureCalls = mockInsertAuditRowSafe.mock.calls.filter(
+      (c) => c[0]?.action === "migration.auto_apply_failed" && c[0]?.input?.phase === "migration_sql_read",
+    );
+    expect(readFailureCalls).toHaveLength(1);
+    expect(readFailureCalls[0][0].input.tag).toBe(tag);
+    expect(readFailureCalls[0][0].status).toBe("failure");
+
+    // Discord CRITICAL fired before the rethrow.
+    expect(mockFetch).toHaveBeenCalled();
+    const discordCall = mockFetch.mock.calls.find(
+      (c) => String(c[0]).includes("/alert/alerts") || String(c[0]).includes("discord.com"),
+    );
+    expect(discordCall).toBeDefined();
+  });
+
   // ─── Case 5: pg_dump unavailable + ALLOW_NO_BACKUP=false → fail-closed ──────
   it("pg_dump unavailable + ALLOW_NO_BACKUP=false: fails-closed before applying any migration", async () => {
     _pgDumpAvailable = false;
@@ -519,6 +582,12 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     ];
     // 0127 already applied, 0128 pending
     _appliedWhens = new Set(["9000000"]);
+    // F1: the plan keys on hash — record 0127's hash so it's recognised as applied (its .sql is
+    // mocked below, so the runner will hash it and must find that hash in the ledger).
+    _appliedHashByWhen.set(
+      "9000000",
+      createHash("sha256").update(makeMigrationSql("0127_applied")).digest("hex"),
+    );
 
     const journalPath = getJournalPath();
     mockFiles.set(journalPath, makeJournal(entries));
@@ -541,6 +610,40 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     );
     expect(successCalls).toHaveLength(1);
     expect(successCalls[0][0].input.migration_name).toBe("0128_pending");
+  });
+
+  // ─── F1 backfill: a verified out-of-band sibling records its ledger row WITHOUT re-running SQL ──
+  it("backfill path: a known out-of-band sibling (hash matches KNOWN set) is backfilled, NOT re-run", async () => {
+    // Feed the runner the REAL 0052 content so its computed hash matches KNOWN_OUT_OF_BAND_APPLIED_HASHES.
+    const realFs = (await vi.importActual<typeof import("node:fs")>("node:fs"));
+    const real0052 = realFs.readFileSync(
+      path.join(process.cwd(), "src/server/db/migrations/0052_fk_cascade_hardening.sql"),
+      "utf8",
+    );
+    const KNOWN_WHEN = 1776200000000;
+    const entries = [{ idx: 0, when: KNOWN_WHEN, tag: "0052_fk_cascade_hardening" }];
+    // The collision `when` is recorded in the ledger (by its partner 0044a), but 0052's HASH is not
+    // (nohash placeholder) — so the plan must BACKFILL 0052 by identity, not re-run it.
+    _appliedWhens = new Set([String(KNOWN_WHEN)]);
+
+    const journalPath = getJournalPath();
+    mockFiles.set(journalPath, makeJournal(entries));
+    mockExistingPaths.add(journalPath);
+    const sqlPath = getMigrationSqlPath("0052_fk_cascade_hardening");
+    mockFiles.set(sqlPath, real0052);
+    mockExistingPaths.add(sqlPath);
+
+    const { runPendingMigrations } = await import("../lib/boot-migration-runner.js");
+    await runPendingMigrations();
+
+    // Ledger row backfilled (INSERT executed) + audited — but NO migration transaction (no re-run).
+    expect(_backfillInserts.length).toBe(1);
+    expect(mockTransaction).not.toHaveBeenCalled();
+    const backfillAudits = mockInsertAuditRowSafe.mock.calls.filter(
+      (c) => c[0]?.action === "boot_migration.ledger_backfilled",
+    );
+    expect(backfillAudits).toHaveLength(1);
+    expect(backfillAudits[0][0].entityId).toBe("0052_fk_cascade_hardening");
   });
 
   // ─── SQL file missing → skips entry without throwing ─────────────────────────
@@ -567,8 +670,11 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     // Only second migration applied
     expect(mockTransaction).toHaveBeenCalledOnce();
 
-    const warnCalls = mockLogger.warn.mock.calls.map((c) => String(c[c.length - 1]));
-    expect(warnCalls.some((m) => m.includes("SQL file missing"))).toBe(true);
+    // 2026-06-28 hardening: the missing-SQL path was upgraded from a silent logger.warn to a
+    // fail-loud logger.error + audit row + Discord CRITICAL (still skip-and-continue by default).
+    // Assert against the current loud path (message is "SQL file MISSING").
+    const errorCalls = mockLogger.error.mock.calls.map((c) => String(c[c.length - 1]));
+    expect(errorCalls.some((m) => /SQL file MISSING/i.test(m))).toBe(true);
   });
 
   // ─── Backup path included in failure audit row ────────────────────────────────

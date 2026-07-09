@@ -1,6 +1,7 @@
 """Wave 29 Pass C.2 — Policy-gradient training loop + kill switch + IBM cloud tests.
 
-Tests (16 total):
+Tests (17 original [16 enumerated + 1 isolation test] + 5 deepscan16 W1 T4
+F-6 additions = 22 total):
   1.  train_regime_conditioned_policies returns dict with entry per regime (>=100 bars)
   2.  Regimes with <100 bars skipped + audit quantum_rl.regime_insufficient_data emitted
   3.  RL_RUNS_GOVERNANCE.training_mode === True on every row insert
@@ -17,6 +18,11 @@ Tests (16 total):
   14. IBM cloud opt-in: opt_in_cloud=False even if env set → local simulator
   15. Auto-fire circuit breaker: 5 consecutive failures opens breaker
   16. Cron window guard: RTH hour (ET=10) → skipped_rth + audit quantum_rl.training_skipped_in_rth_window
+  17. DDL-shape regression: pre-fix INSERT shape rejected, fixed shape accepted
+  18. DDL-shape regression: partial shape missing a required column rejected
+  19. End-to-end: real INSERT emitted by the training loop uses only real columns
+  20. Write-failure surfacing: every INSERT failing → db_write_failed=True + audit status='degraded'
+  21. governance_labels carries sr_is/sr_oos/n_training_iterations (F-5)
 
 Governance:
   - RL stays challenger_only; no writes to quantum_mc_runs
@@ -26,6 +32,7 @@ Governance:
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 import types
@@ -72,6 +79,129 @@ from src.engine.quantum_rl_agent import (  # noqa: E402
 )
 
 # ===========================================================================
+# Schema-aware fake psycopg2 cursor (F-6 fix)
+#
+# Previously every test in this file used a bare MagicMock for the psycopg2
+# cursor, so `cur.execute(sql, params)` was a pure no-op passthrough that
+# accepted ANY SQL string — including the F-1 pre-fix INSERT that targeted
+# nonexistent columns (status/method/total_return/sharpe_ratio) and omitted
+# 6 real NOT-NULL columns. That structural blindness is exactly why the
+# quantum_rl_runs persistence break shipped green: no test exercised the real
+# column contract.
+#
+# This fake validates INSERT INTO quantum_rl_runs statements against the REAL
+# migration 0158/0165 column set (mirrors schema.ts / helpers/pglite-db.ts),
+# and raises a psycopg2-shaped error on:
+#   - referencing a column that does not exist on quantum_rl_runs
+#   - omitting a NOT-NULL column that has no DEFAULT
+#
+# Production code (train_regime_conditioned_policies) already wraps every
+# INSERT in a try/except that logs + tracks write_failures — so these
+# validation errors surface as `results[regime]["db_write_failed"] = True`
+# rather than propagating out of the training loop, exactly mirroring how a
+# real psycopg2.errors.UndefinedColumn would behave against live Postgres.
+# ===========================================================================
+
+# Real quantum_rl_runs columns per migration 0158 + 0165 (mirrors schema.ts).
+_QUANTUM_RL_RUNS_COLUMNS = {
+    "id", "strategy_id", "evaluated_at", "regime", "state_vector", "action",
+    "confidence_score", "effective_confidence", "reward",
+    "ci_high_at_evaluation", "drawdown_penalty", "governance_labels",
+    "cpcv_fold_id", "created_at", "seed",
+}
+# NOT NULL columns with no DEFAULT — every INSERT must supply these.
+_QUANTUM_RL_RUNS_REQUIRED_COLUMNS = {
+    "strategy_id", "regime", "state_vector", "action", "confidence_score",
+    "effective_confidence", "reward", "governance_labels",
+}
+
+
+class _SchemaAwareInsertError(Exception):
+    """Mirrors psycopg2.errors.UndefinedColumn / NotNullViolation for the
+    purposes of this test file — production code catches Exception broadly
+    around the INSERT, so a plain Exception subclass is sufficient."""
+
+
+def _validate_quantum_rl_runs_insert(sql: str) -> None:
+    """Raise _SchemaAwareInsertError if `sql` is an INSERT INTO quantum_rl_runs
+    that references unknown columns or omits a required NOT-NULL column.
+    No-op for any other statement (SELECT backtest lookup, etc.)."""
+    normalized = " ".join(sql.split()).lower()
+    if not normalized.startswith("insert into quantum_rl_runs"):
+        return
+    col_str = sql.split("(", 1)[1].split(")", 1)[0]
+    columns = [c.strip().lower() for c in col_str.split(",")]
+    unknown = [c for c in columns if c not in _QUANTUM_RL_RUNS_COLUMNS]
+    if unknown:
+        raise _SchemaAwareInsertError(
+            f"column(s) {unknown} of relation \"quantum_rl_runs\" does not exist "
+            f"(psycopg2.errors.UndefinedColumn)"
+        )
+    missing_required = _QUANTUM_RL_RUNS_REQUIRED_COLUMNS - set(columns)
+    if missing_required:
+        raise _SchemaAwareInsertError(
+            f"null value in column(s) {sorted(missing_required)} of relation "
+            f"\"quantum_rl_runs\" violates not-null constraint "
+            f"(psycopg2.errors.NotNullViolation)"
+        )
+
+
+class _SchemaAwareQuantumRlCursor:
+    """Fake psycopg2 cursor: validates quantum_rl_runs INSERTs against the
+    real column contract; any other statement is a passthrough driven by a
+    queued `fetchone_results` sequence (list consumed front-to-back)."""
+
+    def __init__(self, fetchone_results=None, captured_inserts=None):
+        self._fetchone_results = list(fetchone_results or [])
+        self._captured_inserts = captured_inserts if captured_inserts is not None else []
+        self.always_raise: Exception | None = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def execute(self, sql, params=None):
+        normalized = " ".join(sql.split()).lower()
+        if not normalized.startswith("insert into quantum_rl_runs"):
+            # Non-quantum_rl_runs statement (e.g. the backtest lookup SELECT) —
+            # always_raise / shape-validation apply only to the quantum_rl_runs
+            # INSERT under test, so this is an unconditional passthrough.
+            return
+        if self.always_raise is not None:
+            raise self.always_raise
+        _validate_quantum_rl_runs_insert(sql)
+        col_str = sql.split("(", 1)[1].split(")", 1)[0]
+        columns = [c.strip().lower() for c in col_str.split(",")]
+        self._captured_inserts.append({"columns": columns, "params": params})
+
+    def fetchone(self):
+        if self._fetchone_results:
+            return self._fetchone_results.pop(0)
+        return None
+
+    def fetchall(self):
+        return []
+
+
+def _make_schema_aware_conn(backtest_id=99, captured_inserts=None, always_raise=None):
+    """Build a fake psycopg2 connection whose cursor enforces the real
+    quantum_rl_runs column contract. First fetchone() call returns the
+    backtest-lookup row `{"id": backtest_id}`; subsequent calls return None."""
+    cur = _SchemaAwareQuantumRlCursor(
+        fetchone_results=[{"id": backtest_id}],
+        captured_inserts=captured_inserts,
+    )
+    cur.always_raise = always_raise
+    conn = MagicMock()
+    conn.cursor.return_value = cur
+    conn.close = MagicMock()
+    conn.commit = MagicMock()
+    return conn
+
+
+# ===========================================================================
 # Helpers
 # ===========================================================================
 
@@ -102,6 +232,8 @@ def _call_train_with_bars(
     strategy_id: int = 1,
     training_epochs: int = 10,   # small for test speed
     seed: int = 42,
+    captured_inserts: list | None = None,
+    always_raise_insert: Exception | None = None,
 ) -> dict:
     """Directly call the regime-conditioned training loop with injected bars.
 
@@ -110,36 +242,21 @@ def _call_train_with_bars(
          path enters load_backtest_bar_data.
       2. Replacing the db_loader module in sys.modules so
          load_backtest_bar_data returns the provided bars.
+
+    F-6 fix: uses the schema-aware fake cursor (_make_schema_aware_conn)
+    instead of a bare MagicMock, so every quantum_rl_runs INSERT this test
+    triggers is validated against the real column contract. Pass
+    `captured_inserts` (a list) to inspect what was actually inserted, or
+    `always_raise_insert` to force every INSERT to fail (write-failure test).
     """
     import psycopg2
     import psycopg2.extras
 
-    # Fake cursor that returns a backtest row on the first fetchone call
-    # (strategy backtest lookup) and None thereafter (INSERT, etc.)
-    _fetchone_calls: list = []
-
-    def _fetchone_side_effect():
-        call_num = len(_fetchone_calls)
-        _fetchone_calls.append(call_num)
-        if call_num == 0:
-            # First call: backtest lookup — return a dict-like row with id
-            return {"id": 99}
-        return None
-
-    fake_cur = MagicMock()
-    fake_cur.__enter__ = MagicMock(return_value=fake_cur)
-    fake_cur.__exit__ = MagicMock(return_value=False)
-    fake_cur.fetchone.side_effect = _fetchone_side_effect
-    fake_cur.execute = MagicMock()
-    fake_cur.fetchall.return_value = []
-
-    fake_conn = MagicMock()
-    fake_conn.cursor.return_value = fake_cur
-    fake_conn.__enter__ = MagicMock(return_value=fake_conn)
-    fake_conn.__exit__ = MagicMock(return_value=False)
-    fake_conn.close = MagicMock()
-    fake_conn.commit = MagicMock()
-
+    fake_conn = _make_schema_aware_conn(
+        backtest_id=99,
+        captured_inserts=captured_inserts,
+        always_raise=always_raise_insert,
+    )
     psycopg2.connect = MagicMock(return_value=fake_conn)  # type: ignore[attr-defined]
 
     # Patch the db_loader import path so load_backtest_bar_data returns injected bars
@@ -148,7 +265,14 @@ def _call_train_with_bars(
     sys.modules["src.engine.replay.db_loader"] = mock_loader
 
     with patch.object(_rl_agent, "_emit_audit_row"), \
-         patch("src.engine.quantum_rl_agent._build_vqc_policy_ibm", return_value=(None, 0, "default.qubit")), \
+         patch(
+             "src.engine.quantum_rl_agent._build_vqc_policy_ibm",
+             # n_params=48 (8 qubits * 3 layers * 2) — NOT 0. The persist block
+             # is gated on `n_params > 0`; a 0 mock here would make every
+             # quantum_rl_runs INSERT a silent no-op and defeat the entire
+             # point of the schema-aware cursor (F-6 fix).
+             return_value=(None, 48, "default.qubit"),
+         ), \
          patch.dict(os.environ, {"DATABASE_URL": "postgresql://fake"}):
         return train_regime_conditioned_policies(
             strategy_id=strategy_id,
@@ -420,7 +544,13 @@ def test_ibm_cloud_disabled_uses_local_simulator():
     with patch.object(_rl_agent, "_emit_audit_row", side_effect=capture_audit), \
          patch.dict(os.environ, {"QUANTUM_CLOUD_ENABLED": "false", "IBM_QUANTUM_TOKEN": "fake-token"}):
 
-        circuit, n_params, label = _rl_agent._build_vqc_policy_ibm(n_qubits=8, n_layers=3)
+        # Pre-existing phase-0 drift fix (unrelated to F-1..F-6): opt_in_cloud
+        # is a required positional/keyword arg on _build_vqc_policy_ibm — this
+        # call site pre-dates that requirement and was failing with
+        # TypeError before any of this session's edits. Gate 1 open here so
+        # the test actually exercises "gate 2 (QUANTUM_CLOUD_ENABLED) alone
+        # closes the cloud path" per the docstring above.
+        circuit, n_params, label = _rl_agent._build_vqc_policy_ibm(n_qubits=8, n_layers=3, opt_in_cloud=True)
 
     # Should use local simulator — either 'default.qubit' (PennyLane available)
     # or 'unavailable' (PennyLane not installed in test env).  Both mean no IBM.
@@ -444,7 +574,9 @@ def test_ibm_cloud_opt_in_false_uses_local_simulator():
              "QUANTUM_RL_IBM_CLOUD_OPT_IN": "false",   # second gate closed
          }):
 
-        circuit, n_params, label = _rl_agent._build_vqc_policy_ibm(n_qubits=8, n_layers=3)
+        # Pre-existing phase-0 drift fix (see identical note above) — gate 1
+        # (opt_in_cloud) closed here, matching this test's own docstring.
+        circuit, n_params, label = _rl_agent._build_vqc_policy_ibm(n_qubits=8, n_layers=3, opt_in_cloud=False)
 
     # _build_vqc_policy_ibm reads env IBM_QUANTUM_TOKEN + QUANTUM_CLOUD_ENABLED;
     # but the OPT_IN env flag is checked at the train_regime_conditioned_policies level,
@@ -477,25 +609,10 @@ def test_circuit_breaker_opens_after_5_failures():
     # the audit path is reachable; _emit_audit_row is fully patched so no real DB hit.
     import psycopg2
 
-    _calls15: list = []
-
-    def _fetchone15():
-        n = len(_calls15)
-        _calls15.append(n)
-        return {"id": 777} if n == 0 else None
-
-    fake_cur15 = MagicMock()
-    fake_cur15.__enter__ = MagicMock(return_value=fake_cur15)
-    fake_cur15.__exit__ = MagicMock(return_value=False)
-    fake_cur15.fetchone.side_effect = _fetchone15
-    fake_cur15.execute = MagicMock()
-    fake_cur15.fetchall.return_value = []
-
-    fake_conn15 = MagicMock()
-    fake_conn15.cursor.return_value = fake_cur15
-    fake_conn15.close = MagicMock()
-    fake_conn15.commit = MagicMock()
-
+    # F-6 fix: schema-aware cursor instead of a bare permissive MagicMock —
+    # this test's TRENDING/150-bars/5-epochs config does exercise the real
+    # INSERT path, so it must be validated against the real column contract too.
+    fake_conn15 = _make_schema_aware_conn(backtest_id=777)
     psycopg2.connect = MagicMock(return_value=fake_conn15)  # type: ignore[attr-defined]
 
     bars = _make_regime_bars(150, "TRENDING")
@@ -504,7 +621,7 @@ def test_circuit_breaker_opens_after_5_failures():
     sys.modules["src.engine.replay.db_loader"] = mock_loader
 
     with patch.object(_rl_agent, "_emit_audit_row", side_effect=capture_audit), \
-         patch("src.engine.quantum_rl_agent._build_vqc_policy_ibm", return_value=(None, 0, "default.qubit")), \
+         patch("src.engine.quantum_rl_agent._build_vqc_policy_ibm", return_value=(None, 48, "default.qubit")), \
          patch.dict(os.environ, {"DATABASE_URL": "postgresql://fake"}):
 
         train_regime_conditioned_policies(
@@ -594,7 +711,13 @@ def test_training_loop_never_writes_to_quantum_mc_runs():
     sys.modules["src.engine.replay.db_loader"] = mock_loader
 
     with patch.object(_rl_agent, "_emit_audit_row", side_effect=capture_emit), \
-         patch("src.engine.quantum_rl_agent._build_vqc_policy_ibm", return_value=(None, 0, "default.qubit")), \
+         patch(
+             "src.engine.quantum_rl_agent._build_vqc_policy_ibm",
+             # n_params=48, not 0 — with 0 the persist block never executes at
+             # all and this isolation test would pass vacuously (no INSERT of
+             # any kind, so trivially "no quantum_mc_runs reference").
+             return_value=(None, 48, "default.qubit"),
+         ), \
          patch.dict(os.environ, {"DATABASE_URL": "postgresql://fake"}):
         psycopg2.connect = MagicMock(return_value=fake_conn)  # type: ignore[attr-defined]
         train_regime_conditioned_policies(
@@ -608,3 +731,228 @@ def test_training_loop_never_writes_to_quantum_mc_runs():
     for sql in executed_sqls:
         assert "quantum_mc_runs" not in sql, \
             f"Training loop must NOT write to quantum_mc_runs. Found: {sql}"
+
+
+# ===========================================================================
+# F-6 new tests: DDL-shape regression + write-failure surfacing +
+# governance_labels sr_is/sr_oos/n_training_iterations coverage (deepscan16 W1 T4)
+# ===========================================================================
+
+def test_ddl_shape_regression_pre_fix_insert_shape_is_rejected():
+    """The PRE-FIX INSERT shape (status/method/total_return/sharpe_ratio,
+    omitting regime/state_vector/action/confidence_score/effective_confidence/
+    reward) must be REJECTED by the schema-aware validator.
+
+    This is the direct regression proof requested by the F-1 fix: run this
+    test against the OLD buggy SQL text and confirm it fails; the CURRENT
+    fixed INSERT (exercised by the second assertion) must NOT fail the same
+    check.
+    """
+    pre_fix_sql = """
+        INSERT INTO quantum_rl_runs
+            (strategy_id, status, method, total_return, sharpe_ratio,
+             governance_labels, seed, created_at)
+        VALUES (%s, 'completed', %s, %s, %s, %s, %s, NOW())
+    """
+    with pytest.raises(_SchemaAwareInsertError):
+        _validate_quantum_rl_runs_insert(pre_fix_sql)
+
+    fixed_sql = """
+        INSERT INTO quantum_rl_runs
+            (strategy_id, regime, state_vector, action,
+             confidence_score, effective_confidence, reward,
+             ci_high_at_evaluation, drawdown_penalty,
+             governance_labels, cpcv_fold_id, seed)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    # Must NOT raise — this is the exact column list the fixed
+    # train_regime_conditioned_policies() INSERT now uses.
+    _validate_quantum_rl_runs_insert(fixed_sql)
+
+
+def test_ddl_shape_regression_missing_required_column_is_rejected():
+    """A shape that references only real columns but OMITS a required
+    NOT-NULL column (e.g. drops 'reward') must also be rejected — proves the
+    validator catches partial-shape regressions, not just unknown-column ones."""
+    missing_reward_sql = """
+        INSERT INTO quantum_rl_runs
+            (strategy_id, regime, state_vector, action,
+             confidence_score, effective_confidence,
+             governance_labels)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    with pytest.raises(_SchemaAwareInsertError):
+        _validate_quantum_rl_runs_insert(missing_reward_sql)
+
+
+def test_training_loop_insert_uses_only_real_columns_end_to_end():
+    """End-to-end: train_regime_conditioned_policies's actual INSERT (not a
+    hand-written string) must round-trip cleanly through the schema-aware
+    cursor with zero write failures, and the captured column list must match
+    the real quantum_rl_runs contract exactly."""
+    captured: list = []
+    bars = _make_regime_bars(150, "TRENDING")
+
+    result = _call_train_with_bars(
+        bars, strategy_id=42, training_epochs=5, seed=1, captured_inserts=captured,
+    )
+
+    assert "TRENDING" in result
+    assert result["TRENDING"]["db_write_failed"] is False
+    assert len(captured) >= 1, "Expected at least one quantum_rl_runs INSERT to be captured"
+
+    for insert in captured:
+        cols = set(insert["columns"])
+        assert cols <= _QUANTUM_RL_RUNS_COLUMNS, f"Unexpected column(s): {cols - _QUANTUM_RL_RUNS_COLUMNS}"
+        assert _QUANTUM_RL_RUNS_REQUIRED_COLUMNS <= cols, \
+            f"Missing required column(s): {_QUANTUM_RL_RUNS_REQUIRED_COLUMNS - cols}"
+
+
+def test_write_failure_surfaces_in_results_and_suppresses_success_audit():
+    """F-1 fix: when the quantum_rl_runs INSERT fails for every batch, the
+    regime's result dict must report db_write_failed=True, and the
+    'quantum_rl.training_completed' audit must NOT report status='success'.
+
+    Confirms the new failure-tracking path actually fires end-to-end, rather
+    than being silently swallowed the way the pre-fix code swallowed every
+    INSERT failure with a DEBUG-only log line and an unconditional
+    status='success' audit.
+    """
+    audit_calls: list[dict] = []
+
+    def capture_audit(action, entity_type, entity_id, status, result, db_url=None):
+        audit_calls.append({"action": action, "status": status, "result": result})
+
+    bars = _make_regime_bars(150, "TRENDING")
+
+    import psycopg2
+    fake_conn = _make_schema_aware_conn(
+        backtest_id=555,
+        always_raise=RuntimeError("simulated DB outage — every INSERT fails"),
+    )
+    psycopg2.connect = MagicMock(return_value=fake_conn)  # type: ignore[attr-defined]
+
+    mock_loader = types.ModuleType("src.engine.replay.db_loader")
+    mock_loader.load_backtest_bar_data = MagicMock(return_value=bars)  # type: ignore[attr-defined]
+    sys.modules["src.engine.replay.db_loader"] = mock_loader
+
+    with patch.object(_rl_agent, "_emit_audit_row", side_effect=capture_audit), \
+         patch("src.engine.quantum_rl_agent._build_vqc_policy_ibm", return_value=(None, 48, "default.qubit")), \
+         patch.dict(os.environ, {"DATABASE_URL": "postgresql://fake"}):
+        result = train_regime_conditioned_policies(
+            strategy_id=555,
+            training_epochs=5,
+            cpcv_purge=False,
+            seed=42,
+        )
+
+    assert "TRENDING" in result
+    assert result["TRENDING"]["db_write_failed"] is True
+
+    completed = [a for a in audit_calls if a["action"] == "quantum_rl.training_completed"]
+    assert len(completed) >= 1
+    assert completed[0]["status"] == "degraded", \
+        "Must NOT report status='success' when every quantum_rl_runs INSERT failed"
+    assert completed[0]["result"]["db_write_failed"] is True
+
+
+def test_governance_labels_carries_sr_is_sr_oos_n_training_iterations():
+    """F-5 fix: governance_labels on every persisted quantum_rl_runs row must
+    carry sr_is/sr_oos/n_training_iterations — rl-signal-fetcher.ts::
+    fetchRlSignal reads these three keys to run the authoritative TS probit
+    DSR gate (evaluateRlDsrGate); without them it silently fell back to the
+    avgEffectiveConf×2 proxy on every call, a dead code path.
+    """
+    captured: list = []
+    bars = _make_regime_bars(150, "TRENDING")
+
+    _call_train_with_bars(
+        bars, strategy_id=7, training_epochs=5, seed=3, captured_inserts=captured,
+    )
+
+    assert len(captured) >= 1
+    # governance_labels is the last positional param in the fixed INSERT's
+    # column order (strategy_id, regime, state_vector, action,
+    # confidence_score, effective_confidence, reward, ci_high_at_evaluation,
+    # drawdown_penalty, governance_labels, cpcv_fold_id, seed).
+    for insert in captured:
+        gl_index = insert["columns"].index("governance_labels")
+        governance_labels = json.loads(insert["params"][gl_index])
+        assert "sr_is" in governance_labels
+        assert "sr_oos" in governance_labels
+        assert "n_training_iterations" in governance_labels
+        assert governance_labels["training_mode"] is True
+        assert governance_labels["decision_role"] == "challenger_only"
+
+
+# ===========================================================================
+# Test 22: governance_labels carries a truthful dsr_passed (quantum-rl-bridge
+# Gap 1 fix, 2026-07-06)
+#
+# Before the fix, _dsr_passed was computed ONCE, after the whole per-regime
+# batch loop, from the fully-accumulated all_episode_rewards — and was never
+# written into governance_payload at all. Every persisted quantum_rl_runs row
+# therefore had a governance_labels dict with NO dsr_passed key, even though
+# rl-signal-fetcher.ts:228 reads `gl["dsr_passed"] === true`. This was masked
+# in production (rl-signal-fetcher.ts:277 takes the TS-probit-authoritative
+# branch whenever sr_is/sr_oos/n_training_iterations are present, so the
+# missing dsr_passed was never actually consulted) but the DB column itself
+# was untruthful — a future consumer reading dsr_passed directly would always
+# see `False` regardless of the real value.
+# ===========================================================================
+
+def test_governance_labels_carries_truthful_dsr_passed():
+    """Every persisted quantum_rl_runs row's governance_labels must carry a
+    real boolean dsr_passed (+ the dsr_value/dsr_floor it was compared
+    against), computed via the same _sharpe_of formula as the post-loop
+    final_sharpe — not omitted, not always-False."""
+    captured: list = []
+    bars = _make_regime_bars(150, "TRENDING")
+
+    result = _call_train_with_bars(
+        bars, strategy_id=8, training_epochs=25, seed=5, captured_inserts=captured,
+    )
+
+    assert "TRENDING" in result
+    assert len(captured) >= 2, (
+        "Expected multiple batch INSERTs (training_epochs=25 spans 2 batches "
+        "of 20) so the per-batch proxy vs final-value equivalence is actually "
+        "exercised across more than one row"
+    )
+
+    dsr_floor_env = float(os.environ.get("QUANTUM_RL_DSR_FLOOR", "0.5"))
+
+    for insert in captured:
+        gl_index = insert["columns"].index("governance_labels")
+        governance_labels = json.loads(insert["params"][gl_index])
+        assert "dsr_passed" in governance_labels, (
+            "governance_labels is missing 'dsr_passed' — the persisted DB "
+            "column is untruthful for any consumer reading it directly"
+        )
+        assert isinstance(governance_labels["dsr_passed"], bool), (
+            f"dsr_passed must be a real boolean, got "
+            f"{type(governance_labels['dsr_passed'])}"
+        )
+        assert "dsr_value" in governance_labels
+        assert "dsr_floor" in governance_labels
+        assert governance_labels["dsr_floor"] == pytest.approx(dsr_floor_env)
+        # dsr_passed must be internally consistent with dsr_value/dsr_floor —
+        # proves it wasn't hardcoded or copy-pasted from a stale computation.
+        expected_passed = governance_labels["dsr_value"] >= governance_labels["dsr_floor"]
+        assert governance_labels["dsr_passed"] == expected_passed
+
+    # The LAST batch's persisted proxy must be mathematically IDENTICAL to the
+    # post-loop final_sharpe/dsr_passed this same training run reports in its
+    # result dict — this is the "verify the reorder doesn't change any
+    # computed value" requirement: both sites now call the same _sharpe_of
+    # helper over the same final all_episode_rewards contents.
+    last_gl_index = captured[-1]["columns"].index("governance_labels")
+    last_governance_labels = json.loads(captured[-1]["params"][last_gl_index])
+    assert last_governance_labels["dsr_value"] == pytest.approx(result["TRENDING"]["final_sharpe"]), (
+        "Last batch's persisted dsr_value must equal the regime's final_sharpe "
+        "— any drift here means the reorder changed a computed value"
+    )
+    assert last_governance_labels["dsr_passed"] == result["TRENDING"]["dsr_passed"], (
+        "Last batch's persisted dsr_passed must equal the regime's final "
+        "dsr_passed — any drift here means the reorder changed a computed value"
+    )

@@ -103,6 +103,14 @@ vi.mock("../lib/audit-log-helper.js", () => ({
   insertAuditRowSafe: vi.fn(async () => true),
 }));
 
+// Deep-scan fix E (2026-07-06): resolveAbTests now gates on the learning-loop
+// kill switch (autonomous mutation loop). Mock AUTOPILOT so the A/B resolution
+// logic under test actually runs (readLearningLoopMode is fail-CLOSED to OFF by
+// default, which would otherwise halt the loop before it reaches concludeTest).
+vi.mock("../lib/learning-loop-mode.js", () => ({
+  readLearningLoopMode: vi.fn(async () => ({ mode: 2, advisoryOn: true, autonomousOn: true })),
+}));
+
 // ── Imports ───────────────────────────────────────────────────────────────────
 
 import { db } from "../db/index.js";

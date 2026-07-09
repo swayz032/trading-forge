@@ -1339,6 +1339,76 @@
       "when": 1783392617607,
       "tag": "0188_backtests_idempotency_lineage_root",
       "breakpoints": true
+    },
+    {
+      "idx": 192,
+      "version": "7",
+      "when": 1783392617608,
+      "tag": "0189_backtests_slippage_survival",
+      "breakpoints": true
+    },
+    {
+      "idx": 193,
+      "version": "7",
+      "when": 1783392617700,
+      "tag": "0190_broker_accounts_firm_broker_topology",
+      "breakpoints": true
+    },
+    {
+      "idx": 194,
+      "version": "7",
+      "when": 1783392617800,
+      "tag": "0191_pilot_sessions_rolling_sharpe_rename",
+      "breakpoints": true
+    },
+    {
+      "idx": 195,
+      "version": "7",
+      "when": 1783392617900,
+      "tag": "0192_agent_health_reports",
+      "breakpoints": true
+    },
+    {
+      "idx": 196,
+      "version": "7",
+      "when": 1783392618000,
+      "tag": "0193_compliance_reviews_invalidation",
+      "breakpoints": true
+    },
+    {
+      "idx": 197,
+      "version": "7",
+      "when": 1783392618100,
+      "tag": "0194_production_trades_writer_idempotency",
+      "breakpoints": true
+    },
+    {
+      "idx": 198,
+      "version": "7",
+      "when": 1783392618200,
+      "tag": "0195_daily_reconciliation_severity",
+      "breakpoints": true
+    },
+    {
+      "idx": 199,
+      "version": "7",
+      "when": 1783392618300,
+      "tag": "0196_paper_signal_logs_correlation_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 200,
+      "version": "7",
+      "when": 1783392618400,
+      "tag": "0197_production_trades_traderspost_confirmed_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 201,
+      "version": "7",
+      "when": 1783392618500,
+      "tag": "0198_daily_reconciliation_expected_pnl_nullable",
+      "breakpoints": true
     }
   ]
 }

@@ -17,7 +17,7 @@
 import { Router, type Request, type Response } from "express";
 import { db } from "../db/index.js";
 import { dailyReconciliation, paperSessions, weeklyDriftReports } from "../db/schema.js";
-import { desc, eq, gte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getDailyReconciliationStatus } from "../production/reconciliation-service.js";
@@ -154,9 +154,14 @@ async function buildPnlToday(): Promise<PnLStatus> {
     }
 
     const row = rows[0];
-    const expected = Number(row.expectedPnl ?? 0);
+    // deep-scan Accuracy re-verify HIGH: expected_pnl is NULL when production_trades.expected_pnl is
+    // unpopulated (broker-router writes it null by design; persisted null via mig 0198). Do NOT coerce
+    // null→0 into a compared baseline — that makes delta = actual - 0 = actual → false YELLOW/RED on the
+    // operator's front-door panel once the MFFU scraper (Phase 4C) returns a real actual. Skip the
+    // P&L-delta severity when expected is unknown (show actual, no fabricated disagreement).
+    const expected = row.expectedPnl !== null ? Number(row.expectedPnl) : null;
     const actual = row.mffuDashboardPnl !== null ? Number(row.mffuDashboardPnl) : null;
-    const delta = actual !== null ? actual - expected : null;
+    const delta = actual !== null && expected !== null ? actual - expected : null;
 
     let severity: OverallSeverity = "green";
     if (delta !== null && Math.abs(delta) > 50) severity = "yellow";
@@ -288,14 +293,30 @@ export async function buildDrawdownDistance(): Promise<DrawdownStatus> {
 
 async function buildLastCleanRecon(): Promise<ReconStatus> {
   try {
-    // Find the most recent day with mismatch_count = 0
+    // Find the most recent day with mismatch_count = 0 AND an authoritative
+    // green severity. deep-scan D.1: mismatch_count=0 alone is a false-green — a
+    // run with NO verifiable data (production_trades/traderspost/tradovate all
+    // empty) trivially has 0 mismatches but ds21's write path persists it as
+    // severity='yellow' (degraded/unverifiable). Requiring severity='green' here
+    // stops ProductionStatusPanel showing GREEN off an unverifiable run. Legacy
+    // rows (severity IS NULL, pre-ds21) fall back to mismatch-only — mirrors the
+    // documented fallback in getDailyReconciliationStatus; never resurrects a
+    // false-green for rows written since the column exists.
     const rows = await db
       .select({
         reconDate: dailyReconciliation.reconDate,
         ranAt: dailyReconciliation.ranAt,
       })
       .from(dailyReconciliation)
-      .where(eq(dailyReconciliation.mismatchCount, 0))
+      .where(
+        and(
+          eq(dailyReconciliation.mismatchCount, 0),
+          or(
+            eq(dailyReconciliation.severity, "green"),
+            isNull(dailyReconciliation.severity),
+          ),
+        ),
+      )
       .orderBy(desc(dailyReconciliation.ranAt))
       .limit(1);
 

@@ -18,6 +18,12 @@ vi.mock("../services/alert-service.js", () => ({
   AlertFactory: {
     notifyBwSessionExpiringSoon: vi.fn().mockResolvedValue(undefined),
   },
+  // Pre-existing gap (unrelated to deep-scan #16): the unknown_expiry branch
+  // calls createAlert() directly (not via AlertFactory), which this mock never
+  // exported — every test that reached that branch threw "createAlert is not
+  // a function". Fixed in passing while touching this file for the
+  // TF_VAULT_MODE guard tests below.
+  createAlert: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("../services/notification-service.js", () => ({
   notifyCritical: vi.fn().mockResolvedValue(undefined),
@@ -52,11 +58,18 @@ describe("bitwarden-session-refresh-service", () => {
     });
     process.env["BW_SESSION"] = "test-session";
     process.env["BW_VAULT_PASSPHRASE"] = "test-pass";
+    // Deep-scan #16 Band G: runBwSessionRefreshCheck() now no-ops unless
+    // TF_VAULT_MODE=bitwarden. All the pre-existing tests below exercise the
+    // "vault is active" code path, so pin the mode explicitly here rather than
+    // relying on ambient env state. The new describe block further down flips
+    // this to unset/"env" to verify the opposite (no-op) behavior.
+    process.env["TF_VAULT_MODE"] = "bitwarden";
   });
 
   afterEach(() => {
     delete process.env["BW_SESSION"];
     delete process.env["BW_VAULT_PASSPHRASE"];
+    delete process.env["TF_VAULT_MODE"];
   });
 
   it("service module is importable", async () => {
@@ -100,6 +113,49 @@ describe("bitwarden-session-refresh-service", () => {
     const result = await runBwSessionRefreshCheck();
     expect(result).toMatchObject({
       status: expect.stringMatching(/^(unknown_expiry|no_action|refreshed|failed)$/),
+    });
+  });
+
+  // Deep-scan #16 Band G: `.env` has TF_VAULT_MODE=env (no Bitwarden vault in
+  // this deployment). Before the fix, runBwSessionRefreshCheck() always fell
+  // through to `estimateBwSessionExpiryHours()` → null (BW_SESSION never
+  // meaningfully set in env-mode) → "unknown_expiry" → a WARN
+  // createAlert("Bitwarden: session expiry check inconclusive") EVERY 6h for
+  // 30 days straight, with no way for the operator to ever resolve it (there
+  // is no vault to unlock). The guard below makes this a genuine no-op.
+  describe("TF_VAULT_MODE guard (deep-scan #16 Band G)", () => {
+    it("no-ops with status vault_mode_disabled when TF_VAULT_MODE is unset (default env mode)", async () => {
+      delete process.env["TF_VAULT_MODE"];
+      const { runBwSessionRefreshCheck } = await import("../services/bitwarden-session-refresh-service.js");
+      const result = await runBwSessionRefreshCheck();
+      expect(result).toEqual({ status: "vault_mode_disabled", hoursRemaining: null });
+    });
+
+    it("no-ops with status vault_mode_disabled when TF_VAULT_MODE=env", async () => {
+      process.env["TF_VAULT_MODE"] = "env";
+      const { runBwSessionRefreshCheck } = await import("../services/bitwarden-session-refresh-service.js");
+      const result = await runBwSessionRefreshCheck();
+      expect(result).toEqual({ status: "vault_mode_disabled", hoursRemaining: null });
+    });
+
+    it("does NOT fire the 'session expiry check inconclusive' WARN alert when vault mode is not bitwarden", async () => {
+      process.env["TF_VAULT_MODE"] = "env";
+      const insertFn = vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
+      (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert = insertFn;
+      const { createAlert } = await import("../services/alert-service.js");
+      const { runBwSessionRefreshCheck } = await import("../services/bitwarden-session-refresh-service.js");
+      await runBwSessionRefreshCheck();
+      // No audit_log row and no createAlert call — the guard exits before
+      // either the unknown_expiry path or the refresh/failure paths.
+      expect(insertFn).not.toHaveBeenCalled();
+      expect(createAlert).not.toHaveBeenCalled();
+    });
+
+    it("still runs the real check when TF_VAULT_MODE=bitwarden (case-insensitive per getVaultMode)", async () => {
+      process.env["TF_VAULT_MODE"] = "BITWARDEN";
+      const { runBwSessionRefreshCheck } = await import("../services/bitwarden-session-refresh-service.js");
+      const result = await runBwSessionRefreshCheck();
+      expect(result.status).not.toBe("vault_mode_disabled");
     });
   });
 });

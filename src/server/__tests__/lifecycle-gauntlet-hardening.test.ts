@@ -306,8 +306,11 @@ describe("F-4 — Orchestrator null-datum gates default to fail-CLOSED", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const orchCatchIdx = src.indexOf("catch (orchErr)");
     expect(orchCatchIdx).toBeGreaterThan(-1);
-    // Use 1800 chars to capture the full catch block including the audit insert, .catch chain, and continue
-    const catchBlock = src.slice(orchCatchIdx, orchCatchIdx + 1800);
+    // Use 2100 chars to capture the full catch block including the audit insert, .catch chain,
+    // and continue. Widened from 1800 (deep-scan #16 Wave-1 Track 5, HIGH E-6) to accommodate
+    // the additive tf_wfe_gate_total error-outcome counter increment line at the top of this
+    // catch block — a non-blocking observability addition, not a control-flow change.
+    const catchBlock = src.slice(orchCatchIdx, orchCatchIdx + 2100);
     // Must skip promotion — either via continue or return
     const hasContinue = catchBlock.includes("continue;");
     expect(hasContinue).toBe(true);
@@ -381,8 +384,11 @@ describe("F-6 — TESTING→PAPER cron B14 CI gate fail-CLOSED", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const catchIdx = src.indexOf("catch (b14TpErr)");
     expect(catchIdx).toBeGreaterThan(-1);
-    // Use 1500 chars to capture full catch block including audit insert and continue
-    const catchBlock = src.slice(catchIdx, catchIdx + 1500);
+    // Use 1700 chars to capture full catch block including audit insert and continue.
+    // Widened from 1500 (deep-scan #16 Wave-1 Track 5, HIGH E-6) to accommodate the
+    // additive tf_b14_gate_total error-outcome counter increment line at the top of
+    // this catch block — a non-blocking observability addition, not a control-flow change.
+    const catchBlock = src.slice(catchIdx, catchIdx + 1700);
     expect(catchBlock).toContain("continue;");
   });
 
@@ -390,7 +396,7 @@ describe("F-6 — TESTING→PAPER cron B14 CI gate fail-CLOSED", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const catchIdx = src.indexOf("catch (b14TpErr)");
     expect(catchIdx).toBeGreaterThan(-1);
-    const catchBlock = src.slice(catchIdx, catchIdx + 1500);
+    const catchBlock = src.slice(catchIdx, catchIdx + 1700);
     expect(catchBlock).toContain("db.insert(auditLog)");
   });
 });

@@ -20,7 +20,9 @@
  *  [pattern-aggregator]
  *   PA-1  dryRun=true  → audit_log.insert NOT called
  *   PA-2  dryRun=false → audit_log.insert IS called
- *   PA-3  (bonus) dryRun=true → setAppendixCache still fires (in-memory cache)
+ *   PA-3  (bonus) dryRun=true → setAppendixCache does NOT fire (FIX deepscan17-wave2 H3,
+ *         2026-07-05 — previously fired unconditionally, corrupting the live in-memory
+ *         cache buildPromptSync() reads synchronously for real strategy generation)
  *
  *  [consistency-tracker]
  *   CT-1  dryRun=true  → insertAuditRowSafe NOT called, notifications NOT fired
@@ -46,7 +48,7 @@
  *   - audit_log writes are detected by asserting db.insert was or was not called.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Hoist-safe module mocks ──────────────────────────────────────────────────
 
@@ -413,7 +415,7 @@ describe("wave27 dryRun — pattern-aggregator-service", () => {
     expect(getDb().insert).toHaveBeenCalled();
   });
 
-  it("PA-3 (bonus): dryRun=true → setAppendixCache still fires (in-memory cache mutated)", async () => {
+  it("PA-3 (bonus, FIXED deepscan17-wave2 H3): dryRun=true → setAppendixCache does NOT fire", async () => {
     buildInsertMock();
 
     // FIX (Wave A Critic Finding MED): dryRun=true skips kill-switch read.
@@ -428,10 +430,100 @@ describe("wave27 dryRun — pattern-aggregator-service", () => {
     const { runPatternAggregator } = await import("../services/pattern-aggregator-service.js");
     await runPatternAggregator(true);
 
-    // setAppendixCache must fire even in dry-run (in-memory only, safe for replay)
-    expect(vi.mocked(setAppendixCache)).toHaveBeenCalledWith("strategy_proposer", newAppendix);
+    // FIX (deepscan17-wave2 H3, 2026-07-05): setAppendixCache is a production
+    // side effect (buildPromptSync reads it synchronously for live strategy
+    // generation) — dryRun=true must NOT mutate it, same as every other
+    // production side effect this suite verifies.
+    expect(vi.mocked(setAppendixCache)).not.toHaveBeenCalled();
     // No DB insert
     expect(getDb().insert).not.toHaveBeenCalled();
+  });
+
+  it("PA-4 (deepscan17-wave2 H3 regression guard): dryRun=false → setAppendixCache DOES fire", async () => {
+    buildInsertMock();
+    buildUpdateMock();
+
+    // dryRun=false: kill switch (index 0) → AUTOPILOT (numeric "2", per
+    // learning-loop-mode.ts 3-mode contract), then critiques (index 1),
+    // then _storeVersionAndABTest selects (maxVer, runningTests, currentActive).
+    buildSelectSequenceMock([
+      [{ currentValue: "2" }],      // kill switch: mode=2 (AUTOPILOT) → autonomousOn=true
+      MOCK_CRITIQUES,               // critiques
+      [{ maxVer: 1 }],              // max version lookup
+      [],                            // no running A/B test
+      [{ id: "av", version: 1, isActive: true, content: "old" }], // current active version
+    ]);
+
+    const newAppendix = "## Pattern Notes (live)\n- Use tighter confluence thresholds";
+    vi.mocked(callOpenAI).mockResolvedValue(newAppendix);
+
+    const { runPatternAggregator } = await import("../services/pattern-aggregator-service.js");
+    await runPatternAggregator(); // dryRun defaults to false
+
+    expect(vi.mocked(setAppendixCache)).toHaveBeenCalledWith("strategy_proposer", newAppendix);
+  });
+});
+
+// ─── Tests: pattern-aggregator-service — malformed numeric env guard ─────────
+//
+// FIX (deepscan17-wave2 H4, 2026-07-05): `Number(env ?? "10")` alone lets a
+// malformed PATTERN_AGGREGATOR_MIN_CRITIQUES value produce NaN or Infinity.
+// `rows.length < NaN` is always false (gate silently DISABLED — any row count
+// "passes"); `rows.length < Infinity` is always true (gate silently WEDGED
+// OPEN — aggregation can never run). Both directions are now guarded via
+// Number.isFinite, falling back to the documented default of 10.
+describe("pattern-aggregator-service — H4 malformed MIN_CRITIQUES env guard", () => {
+  const ORIGINAL_MIN_CRITIQUES = process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    if (ORIGINAL_MIN_CRITIQUES === undefined) {
+      delete process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES;
+    } else {
+      process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES = ORIGINAL_MIN_CRITIQUES;
+    }
+  });
+
+  it("H4-A: MIN_CRITIQUES='not-a-number' (→NaN unguarded) falls back to 10 — gate still blocks 9 rows", async () => {
+    process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES = "not-a-number";
+    buildInsertMock();
+
+    // 9 < fallback-default 10. If the NaN bug were still present, `9 < NaN`
+    // is always false and this would silently skip the gate instead.
+    const nineCritiques = MOCK_CRITIQUES.slice(0, 9);
+    buildSelectSequenceMock([
+      nineCritiques, // index 0: critiques (dryRun=true skips kill-switch read)
+    ]);
+
+    const { runPatternAggregator } = await import("../services/pattern-aggregator-service.js");
+    const result = await runPatternAggregator(true);
+
+    expect(result.status).toBe("insufficient_samples");
+    expect(result.critiques_reviewed).toBe(9);
+  });
+
+  it("H4-B: MIN_CRITIQUES='Infinity' (→Infinity unguarded) falls back to 10 — gate does NOT wedge open on 12 rows", async () => {
+    process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES = "Infinity";
+    buildInsertMock();
+
+    // 12 (MOCK_CRITIQUES.length) >= fallback-default 10. If the Infinity bug
+    // were still present, `12 < Infinity` is always true and this would
+    // wrongly report insufficient_samples forever, permanently disabling
+    // aggregation regardless of how much data accumulates.
+    buildSelectSequenceMock([
+      MOCK_CRITIQUES, // index 0: critiques (dryRun=true skips kill-switch read)
+    ]);
+    vi.mocked(callOpenAI).mockResolvedValue("NO_CHANGE");
+
+    const { runPatternAggregator } = await import("../services/pattern-aggregator-service.js");
+    const result = await runPatternAggregator(true);
+
+    expect(result.status).not.toBe("insufficient_samples");
+    expect(result.status).toBe("no_change");
   });
 });
 

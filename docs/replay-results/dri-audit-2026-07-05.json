@@ -1,0 +1,3361 @@
+{
+  "audit_id": "dri-audit-2026-07-05",
+  "audit_title": "Extraction Over-Specification Audit (Decision Requirement Inflation)",
+  "design_doc": "docs/designs/extraction-overspecification-audit-2026-07-05.md",
+  "date": "2026-07-05",
+  "scope_discipline": "SEMANTIC ONLY. No backtest, no Sharpe/SDS computed in this audit.",
+  "hypothesis_under_test": "The extracted executable representation is systematically more restrictive than the educator's actual decision process — extraction promotes optional/alternative/contextual cues into mandatory hard (spine-role) conditions.",
+  "method": {
+    "data_source": "DB strategies WHERE source='spec_onboarding' AND lifecycle_state='CANDIDATE', config.compiled_spec.spec.entry_conditions, deduped by video (ignoring x3 MCL/MES/MNQ symbol fan-out)",
+    "transcript_source": ".claude/worktrees/extraction-100/tmp/generalization/<video>.transcript.txt",
+    "evidence_method": "Used the extraction pipeline's own stored per-condition char-offset span to slice the exact evidence text out of the transcript, plus a +/-500/250 char context window, so every classification is anchored to the SAME evidence the extractor itself cited.",
+    "classification_taxonomy": [
+      "JUSTIFIED_MANDATORY",
+      "OPTIONAL",
+      "ALTERNATIVE",
+      "CONTEXTUAL",
+      "UNRESOLVED"
+    ],
+    "adversarial_bias": "UNRESOLVED and ambiguous cases were NOT given benefit of the doubt toward JUSTIFIED_MANDATORY - the extractor must earn the mandatory label with explicit gate-language.",
+    "raters": "4 parallel first-pass rater agents (batch1-4, no cross-visibility) + 1 independent second-pass rater agent on a 4-concept/71-condition subsample (blind to first-pass labels) for inter-rater agreement."
+  },
+  "sample": {
+    "concept_count": 14,
+    "family_count": 14,
+    "timeframes": [
+      "5m",
+      "15m",
+      "4h",
+      "1m",
+      "30m",
+      "1h"
+    ]
+  },
+  "sample_concepts_detail": [
+    {
+      "video": "75DJN5UVQnw",
+      "family": "Support/Resistance",
+      "timeframe": "5m"
+    },
+    {
+      "video": "jlShztsY3oA",
+      "family": "Range Breakout (ORB-style)",
+      "timeframe": "5m"
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "family": "General Entry (long/short)",
+      "timeframe": "15m"
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "family": "Bias/Trend",
+      "timeframe": "4h"
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "family": "Indicator (Bollinger Bands)",
+      "timeframe": "5m"
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "family": "MA Crossover",
+      "timeframe": "5m"
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "family": "Risk-Mistake-Avoidance",
+      "timeframe": "1m"
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "family": "Indicator (EMA)",
+      "timeframe": "5m"
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "family": "ICT (Order Block)",
+      "timeframe": "5m"
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "family": "ICT (Discount/Premium)",
+      "timeframe": "30m"
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "family": "ICT (CRT / general entry)",
+      "timeframe": "1h"
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "family": "Candlestick Pattern",
+      "timeframe": "5m"
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "family": "Indicator (VWAP)",
+      "timeframe": "15m"
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "family": "Opening Range Breakout",
+      "timeframe": "5m"
+    }
+  ],
+  "per_concept_dri": [
+    {
+      "video": "75DJN5UVQnw",
+      "family": "Support/Resistance",
+      "timeframe": "5m",
+      "extracted_hard": 1,
+      "transcript_mandatory": 0,
+      "inflation_count": 1,
+      "unresolved_count": 0,
+      "dri": null,
+      "dri_note": "UNDEFINED (0 justified-mandatory found; extracted_hard=1)",
+      "counts": {
+        "JUSTIFIED_MANDATORY": 0,
+        "OPTIONAL": 0,
+        "ALTERNATIVE": 1,
+        "CONTEXTUAL": 0,
+        "UNRESOLVED": 0
+      }
+    },
+    {
+      "video": "jlShztsY3oA",
+      "family": "Range Breakout (ORB-style)",
+      "timeframe": "5m",
+      "extracted_hard": 5,
+      "transcript_mandatory": 0,
+      "inflation_count": 4,
+      "unresolved_count": 1,
+      "dri": null,
+      "dri_note": "UNDEFINED (0 justified-mandatory found; extracted_hard=5)",
+      "counts": {
+        "JUSTIFIED_MANDATORY": 0,
+        "OPTIONAL": 2,
+        "ALTERNATIVE": 0,
+        "CONTEXTUAL": 2,
+        "UNRESOLVED": 1
+      }
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "family": "General Entry (long/short)",
+      "timeframe": "15m",
+      "extracted_hard": 9,
+      "transcript_mandatory": 2,
+      "inflation_count": 5,
+      "unresolved_count": 2,
+      "dri": 4.5,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 2,
+        "OPTIONAL": 2,
+        "ALTERNATIVE": 0,
+        "CONTEXTUAL": 3,
+        "UNRESOLVED": 2
+      }
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "family": "Bias/Trend",
+      "timeframe": "4h",
+      "extracted_hard": 9,
+      "transcript_mandatory": 2,
+      "inflation_count": 7,
+      "unresolved_count": 0,
+      "dri": 4.5,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 2,
+        "OPTIONAL": 1,
+        "ALTERNATIVE": 0,
+        "CONTEXTUAL": 6,
+        "UNRESOLVED": 0
+      }
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "family": "Indicator (Bollinger Bands)",
+      "timeframe": "5m",
+      "extracted_hard": 12,
+      "transcript_mandatory": 6,
+      "inflation_count": 6,
+      "unresolved_count": 0,
+      "dri": 2,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 6,
+        "OPTIONAL": 0,
+        "ALTERNATIVE": 1,
+        "CONTEXTUAL": 5,
+        "UNRESOLVED": 0
+      }
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "family": "MA Crossover",
+      "timeframe": "5m",
+      "extracted_hard": 13,
+      "transcript_mandatory": 4,
+      "inflation_count": 6,
+      "unresolved_count": 3,
+      "dri": 3.25,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 4,
+        "OPTIONAL": 0,
+        "ALTERNATIVE": 0,
+        "CONTEXTUAL": 6,
+        "UNRESOLVED": 3
+      }
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "family": "Risk-Mistake-Avoidance",
+      "timeframe": "1m",
+      "extracted_hard": 10,
+      "transcript_mandatory": 3,
+      "inflation_count": 6,
+      "unresolved_count": 1,
+      "dri": 3.3333333333333335,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 3,
+        "OPTIONAL": 0,
+        "ALTERNATIVE": 1,
+        "CONTEXTUAL": 5,
+        "UNRESOLVED": 1
+      }
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "family": "Indicator (EMA)",
+      "timeframe": "5m",
+      "extracted_hard": 16,
+      "transcript_mandatory": 8,
+      "inflation_count": 3,
+      "unresolved_count": 5,
+      "dri": 2,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 8,
+        "OPTIONAL": 2,
+        "ALTERNATIVE": 0,
+        "CONTEXTUAL": 1,
+        "UNRESOLVED": 5
+      }
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "family": "ICT (Order Block)",
+      "timeframe": "5m",
+      "extracted_hard": 16,
+      "transcript_mandatory": 8,
+      "inflation_count": 3,
+      "unresolved_count": 5,
+      "dri": 2,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 8,
+        "OPTIONAL": 0,
+        "ALTERNATIVE": 0,
+        "CONTEXTUAL": 3,
+        "UNRESOLVED": 5
+      }
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "family": "ICT (Discount/Premium)",
+      "timeframe": "30m",
+      "extracted_hard": 17,
+      "transcript_mandatory": 2,
+      "inflation_count": 15,
+      "unresolved_count": 0,
+      "dri": 8.5,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 2,
+        "OPTIONAL": 3,
+        "ALTERNATIVE": 1,
+        "CONTEXTUAL": 11,
+        "UNRESOLVED": 0
+      }
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "family": "ICT (CRT / general entry)",
+      "timeframe": "1h",
+      "extracted_hard": 20,
+      "transcript_mandatory": 7,
+      "inflation_count": 11,
+      "unresolved_count": 2,
+      "dri": 2.857142857142857,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 7,
+        "OPTIONAL": 1,
+        "ALTERNATIVE": 1,
+        "CONTEXTUAL": 9,
+        "UNRESOLVED": 2
+      }
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "family": "Candlestick Pattern",
+      "timeframe": "5m",
+      "extracted_hard": 25,
+      "transcript_mandatory": 12,
+      "inflation_count": 13,
+      "unresolved_count": 0,
+      "dri": 2.0833333333333335,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 12,
+        "OPTIONAL": 5,
+        "ALTERNATIVE": 1,
+        "CONTEXTUAL": 7,
+        "UNRESOLVED": 0
+      }
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "family": "Indicator (VWAP)",
+      "timeframe": "15m",
+      "extracted_hard": 30,
+      "transcript_mandatory": 11,
+      "inflation_count": 18,
+      "unresolved_count": 1,
+      "dri": 2.727272727272727,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 11,
+        "OPTIONAL": 2,
+        "ALTERNATIVE": 1,
+        "CONTEXTUAL": 15,
+        "UNRESOLVED": 1
+      }
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "family": "Opening Range Breakout",
+      "timeframe": "5m",
+      "extracted_hard": 38,
+      "transcript_mandatory": 19,
+      "inflation_count": 19,
+      "unresolved_count": 0,
+      "dri": 2,
+      "dri_note": null,
+      "counts": {
+        "JUSTIFIED_MANDATORY": 19,
+        "OPTIONAL": 1,
+        "ALTERNATIVE": 0,
+        "CONTEXTUAL": 18,
+        "UNRESOLVED": 0
+      }
+    }
+  ],
+  "corpus_aggregates": {
+    "total_extracted_hard": 221,
+    "total_transcript_mandatory": 84,
+    "total_inflation_strict": 117,
+    "total_unresolved": 20,
+    "median_dri": 2.792207792207792,
+    "dri_values": [
+      2,
+      2,
+      2,
+      2,
+      2.0833333333333335,
+      2.727272727272727,
+      2.857142857142857,
+      3.25,
+      3.3333333333333335,
+      4.5,
+      4.5,
+      8.5
+    ],
+    "inflation_rate_strict": 0.5294117647058824,
+    "inflation_rate_incl_unresolved": 0.6199095022624435
+  },
+  "pre_registered_thresholds": {
+    "over_specification_confirmed_iff": "median DRI >= 1.5 AND inflation_rate >= 0.30",
+    "not_over_specification_iff": "median DRI <= 1.15 AND inflation_rate <= 0.10",
+    "otherwise": "INCONCLUSIVE"
+  },
+  "verdict_strict_excl_unresolved": "OVER-SPECIFICATION CONFIRMED",
+  "verdict_incl_unresolved_as_inflation": "OVER-SPECIFICATION CONFIRMED",
+  "robustness_check_using_second_pass_rater": {
+    "description": "Recomputed corpus aggregates substituting the independent SECOND-PASS rater's classifications (instead of first-pass) for the 4 subsample concepts (jlShztsY3oA, N7uP9V0Iktc, UBvfsImdI2U, ktkqq7QsN9Q), first-pass retained for the other 10 concepts.",
+    "reconciled_median_dri": 3.33,
+    "reconciled_inflation_rate_strict": 0.584,
+    "verdict_unchanged": true,
+    "conclusion": "Verdict (OVER-SPECIFICATION CONFIRMED) is ROBUST to inter-rater disagreement -- using the second, fully independent rater's labels instead of the first for nearly a third of the sample makes the finding STRONGER (higher median DRI, higher inflation rate), not weaker."
+  },
+  "inter_rater_agreement": {
+    "subsample_videos": [
+      "jlShztsY3oA",
+      "N7uP9V0Iktc",
+      "UBvfsImdI2U",
+      "ktkqq7QsN9Q"
+    ],
+    "compared": 71,
+    "agree": 41,
+    "disagree": 30,
+    "agreement_rate": 0.5774647887323944,
+    "disagreements": [
+      {
+        "key": "jlShztsY3oA||WAIT_STRUCTURE:candle range range break#0",
+        "first": "CONTEXTUAL",
+        "second": "JUSTIFIED_MANDATORY",
+        "object": "candle range range break"
+      },
+      {
+        "key": "jlShztsY3oA||FILTER:downward tendency line#0",
+        "first": "UNRESOLVED",
+        "second": "CONTEXTUAL",
+        "object": "downward tendency line"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_BIAS:ema period#0",
+        "first": "OPTIONAL",
+        "second": "ALTERNATIVE",
+        "object": "ema period"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_CONFIRMATION:vwop retest#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "ALTERNATIVE",
+        "object": "vwop retest"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_STRUCTURE:apple pre market high retest#0",
+        "first": "UNRESOLVED",
+        "second": "CONTEXTUAL",
+        "object": "apple pre market high retest"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_RETEST:ema retest#0",
+        "first": "UNRESOLVED",
+        "second": "CONTEXTUAL",
+        "object": "ema retest"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_STRUCTURE:apple retest pre market high#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "CONTEXTUAL",
+        "object": "apple retest pre market high"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_CONFIRMATION:ema level#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "CONTEXTUAL",
+        "object": "ema level"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_STRUCTURE:vwop retest number one#0",
+        "first": "UNRESOLVED",
+        "second": "CONTEXTUAL",
+        "object": "vwop retest number one"
+      },
+      {
+        "key": "N7uP9V0Iktc||EXIT_HINT:position out#0",
+        "first": "UNRESOLVED",
+        "second": "CONTEXTUAL",
+        "object": "position out"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_CONFIRMATION:ema trend confirmation#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "UNRESOLVED",
+        "object": "ema trend confirmation"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_STRUCTURE:vwap#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "CONTEXTUAL",
+        "object": "vwap"
+      },
+      {
+        "key": "N7uP9V0Iktc||FILTER:pre market high#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "CONTEXTUAL",
+        "object": "pre market high"
+      },
+      {
+        "key": "N7uP9V0Iktc||WAIT_STRUCTURE:vwop retest#0",
+        "first": "UNRESOLVED",
+        "second": "CONTEXTUAL",
+        "object": "vwop retest"
+      },
+      {
+        "key": "UBvfsImdI2U||WAIT_SESSION:mnq market trend#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "CONTEXTUAL",
+        "object": "mnq market trend"
+      },
+      {
+        "key": "UBvfsImdI2U||WAIT_BIAS:it s just ripping higher highs higher lows every single time#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "CONTEXTUAL",
+        "object": "it s just ripping higher highs higher lows every single time"
+      },
+      {
+        "key": "UBvfsImdI2U||WAIT_SESSION:mnq#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "CONTEXTUAL",
+        "object": "mnq"
+      },
+      {
+        "key": "UBvfsImdI2U||WAIT_STRUCTURE:price movement#3",
+        "first": "CONTEXTUAL",
+        "second": "JUSTIFIED_MANDATORY",
+        "object": "price movement"
+      },
+      {
+        "key": "UBvfsImdI2U||WAIT_BIAS:price movement bias#0",
+        "first": "CONTEXTUAL",
+        "second": "JUSTIFIED_MANDATORY",
+        "object": "price movement bias"
+      },
+      {
+        "key": "UBvfsImdI2U||WAIT_BIAS:market activity#0",
+        "first": "UNRESOLVED",
+        "second": "CONTEXTUAL",
+        "object": "market activity"
+      },
+      {
+        "key": "UBvfsImdI2U||WAIT_SESSION:hourly candle close#0",
+        "first": "UNRESOLVED",
+        "second": "CONTEXTUAL",
+        "object": "hourly candle close"
+      },
+      {
+        "key": "UBvfsImdI2U||WAIT_BIAS:move to opposite end candle#0",
+        "first": "CONTEXTUAL",
+        "second": "JUSTIFIED_MANDATORY",
+        "object": "move to opposite end candle"
+      },
+      {
+        "key": "ktkqq7QsN9Q||FILTER:vwap trading level#0",
+        "first": "CONTEXTUAL",
+        "second": "JUSTIFIED_MANDATORY",
+        "object": "vwap trading level"
+      },
+      {
+        "key": "ktkqq7QsN9Q||WAIT_BIAS:contextual opportunity quality#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "OPTIONAL",
+        "object": "contextual opportunity quality"
+      },
+      {
+        "key": "ktkqq7QsN9Q||WAIT_BIAS:moving out value#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "UNRESOLVED",
+        "object": "moving out value"
+      },
+      {
+        "key": "ktkqq7QsN9Q||FILTER:pierce band#0",
+        "first": "OPTIONAL",
+        "second": "CONTEXTUAL",
+        "object": "pierce band"
+      },
+      {
+        "key": "ktkqq7QsN9Q||FILTER:stop placement rule#0",
+        "first": "UNRESOLVED",
+        "second": "JUSTIFIED_MANDATORY",
+        "object": "stop placement rule"
+      },
+      {
+        "key": "ktkqq7QsN9Q||WAIT_STRUCTURE:value area break back into#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "UNRESOLVED",
+        "object": "value area break back into"
+      },
+      {
+        "key": "ktkqq7QsN9Q||FILTER:trend#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "UNRESOLVED",
+        "object": "trend"
+      },
+      {
+        "key": "ktkqq7QsN9Q||WAIT_RETEST:price acceptance and rejection towards vwap#0",
+        "first": "JUSTIFIED_MANDATORY",
+        "second": "UNRESOLVED",
+        "object": "price acceptance and rejection towards vwap"
+      }
+    ]
+  },
+  "inflation_by_condition_type": [
+    {
+      "type": "WAIT_STRUCTURE",
+      "total": 59,
+      "JUSTIFIED_MANDATORY": 18,
+      "OPTIONAL": 7,
+      "ALTERNATIVE": 1,
+      "CONTEXTUAL": 27,
+      "UNRESOLVED": 6,
+      "inflated": 35,
+      "inflation_rate": 0.5932203389830508
+    },
+    {
+      "type": "WAIT_SESSION",
+      "total": 39,
+      "JUSTIFIED_MANDATORY": 10,
+      "OPTIONAL": 2,
+      "ALTERNATIVE": 3,
+      "CONTEXTUAL": 20,
+      "UNRESOLVED": 4,
+      "inflated": 25,
+      "inflation_rate": 0.6410256410256411
+    },
+    {
+      "type": "WAIT_BIAS",
+      "total": 30,
+      "JUSTIFIED_MANDATORY": 10,
+      "OPTIONAL": 2,
+      "ALTERNATIVE": 2,
+      "CONTEXTUAL": 15,
+      "UNRESOLVED": 1,
+      "inflated": 19,
+      "inflation_rate": 0.6333333333333333
+    },
+    {
+      "type": "FILTER",
+      "total": 29,
+      "JUSTIFIED_MANDATORY": 12,
+      "OPTIONAL": 3,
+      "ALTERNATIVE": 0,
+      "CONTEXTUAL": 11,
+      "UNRESOLVED": 3,
+      "inflated": 14,
+      "inflation_rate": 0.4827586206896552
+    },
+    {
+      "type": "WAIT_CONFIRMATION",
+      "total": 35,
+      "JUSTIFIED_MANDATORY": 24,
+      "OPTIONAL": 2,
+      "ALTERNATIVE": 0,
+      "CONTEXTUAL": 7,
+      "UNRESOLVED": 2,
+      "inflated": 9,
+      "inflation_rate": 0.2571428571428571
+    },
+    {
+      "type": "WAIT_RETEST",
+      "total": 20,
+      "JUSTIFIED_MANDATORY": 10,
+      "OPTIONAL": 1,
+      "ALTERNATIVE": 0,
+      "CONTEXTUAL": 6,
+      "UNRESOLVED": 3,
+      "inflated": 7,
+      "inflation_rate": 0.35
+    },
+    {
+      "type": "EXIT_HINT",
+      "total": 8,
+      "JUSTIFIED_MANDATORY": 0,
+      "OPTIONAL": 2,
+      "ALTERNATIVE": 1,
+      "CONTEXTUAL": 4,
+      "UNRESOLVED": 1,
+      "inflated": 7,
+      "inflation_rate": 0.875
+    },
+    {
+      "type": "CONFIRM_DIRECTION",
+      "total": 1,
+      "JUSTIFIED_MANDATORY": 0,
+      "OPTIONAL": 0,
+      "ALTERNATIVE": 0,
+      "CONTEXTUAL": 1,
+      "UNRESOLVED": 0,
+      "inflated": 1,
+      "inflation_rate": 1
+    }
+  ],
+  "top_inflated_condition_type_patterns": [
+    {
+      "type": "CONFIRM_DIRECTION",
+      "inflation_rate": "100% (1/1)",
+      "note": "n=1, not statistically meaningful alone but consistent with the pattern below."
+    },
+    {
+      "type": "EXIT_HINT",
+      "inflation_rate": "87.5% (7/8)",
+      "note": "Frequently extracted from narration about the PRESENTER exiting a UI dialog/settings screen, or from a trade-management aside, not an entry gate at all. Highest-confidence over-promotion category."
+    },
+    {
+      "type": "WAIT_SESSION",
+      "inflation_rate": "64.1% (25/39)",
+      "note": "Frequently extracted from scene-setting (\"on the 5 minute chart\", \"during NY session\") that describes WHERE the strategy operates, not a gate the strategy checks. Second largest inflation source by volume (25 conditions)."
+    },
+    {
+      "type": "WAIT_BIAS",
+      "inflation_rate": "63.3% (19/30)",
+      "note": "Frequently extracted from directional narrative/commentary (\"it's just ripping higher highs\") describing what price IS doing in a walkthrough example, not a rule for what price MUST do before entry."
+    },
+    {
+      "type": "WAIT_STRUCTURE",
+      "inflation_rate": "59.3% (35/59)",
+      "note": "LARGEST inflation source by absolute volume (35 of 221 total inflated conditions, 30% of all inflation). Frequently promotes optional/bonus structural confirmations (\"even add something to confirmation of structure\") or descriptive market-structure narration into hard gates."
+    },
+    {
+      "type": "FILTER",
+      "inflation_rate": "48.3% (14/29)",
+      "note": "Mixed: real filters exist (best-justified category besides WAIT_CONFIRMATION) but also several cases of promoting the STRAWMAN/debunked belief the educator explicitly refutes (e.g. VWAP-as-S/R in ktkqq7QsN9Q) into a mandatory filter."
+    },
+    {
+      "type": "WAIT_RETEST",
+      "inflation_rate": "35.0% (7/20)"
+    },
+    {
+      "type": "WAIT_CONFIRMATION",
+      "inflation_rate": "25.7% (9/35)",
+      "note": "BEST-JUSTIFIED category (24/35 = 68.6% JUSTIFIED_MANDATORY) -- confirmation-wait language most reliably carries genuine gate-language (\"wait for...\", \"I need to see...\")."
+    }
+  ],
+  "full_classification_table_first_pass": [
+    {
+      "video": "75DJN5UVQnw",
+      "condition_id": "WAIT_SESSION:timeframe selection#0",
+      "type": "WAIT_SESSION",
+      "object": "timeframe selection",
+      "classification": "ALTERNATIVE",
+      "quote": "scale down to a lower time frame like the 5 minute, 1 minute, or even the 15-second to refine my entry",
+      "rationale": "Three interchangeable timeframe choices joined by 'or' — any one satisfies the step, not a single mandatory timeframe."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "WAIT_SESSION:trading asset#0",
+      "type": "WAIT_SESSION",
+      "object": "trading asset",
+      "classification": "CONTEXTUAL",
+      "quote": "now sê hulle om dit te verhandel op bates met hoë volatiliteit soos die NAS 100 die S&P 500 selfs goud",
+      "rationale": "This is the educator skeptically paraphrasing what 'they' (generic retail advice) say, immediately framed as a 'false strategy' — background setup, not the educator's own gate."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "WAIT_STRUCTURE:candle range range break#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "candle range range break",
+      "classification": "CONTEXTUAL",
+      "quote": "die eerste keer weet hulle 'n vals strategie",
+      "rationale": "Describes the mechanics of the naive/basic ORB approach that the educator explicitly calls a 'false strategy' before presenting the real fix — explanatory background, not an endorsed mandatory gate."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "WAIT_CONFIRMATION:structure confirmation within range box#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "structure confirmation within range box",
+      "classification": "OPTIONAL",
+      "quote": "voeg selfs iets by tot bevestiging van struktuur in die reeks",
+      "rationale": "'voeg selfs iets by' = 'even add something' — explicit bonus/enhancement framing, not a required gate."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "WAIT_STRUCTURE:fibonacci retracement level#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "fibonacci retracement level",
+      "classification": "OPTIONAL",
+      "quote": "prys waarskynlik sal terugtrek na 'n Fibonacci retracement vlak en ook daarvan verwerp",
+      "rationale": "Probabilistic ('waarskynlik'/likely) market-behavior explanation continuing the earlier 'even add' list of optional confluence tools, not a stated hard requirement."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "FILTER:downward tendency line#0",
+      "type": "FILTER",
+      "object": "downward tendency line",
+      "classification": "UNRESOLVED",
+      "quote": "hoekom sal jy kort daarin gaan as jy die bol-strategie wil gebruik",
+      "rationale": "Rhetorical hindsight critique of one bad short trade against the trend, not a prospectively stated 'must check trend line' rule — no clear modal gate language."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_STRUCTURE:price holds pre market high and 30min orb high#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price holds pre market high and 30min orb high",
+      "classification": "OPTIONAL",
+      "quote": "what I like to see is for price to pull back and retest that orb high or low",
+      "rationale": "'What I like to see' is soft preference framing, not a stated mandatory requirement."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_RETEST:level#0",
+      "type": "WAIT_RETEST",
+      "object": "level",
+      "classification": "CONTEXTUAL",
+      "quote": "this is not going to play out every day. This is just one of many setups that we can keep our eye on",
+      "rationale": "Educator explicitly disclaims this as one illustrative example among many, not a universal gate — narrative background."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_STRUCTURE:price tried to break below area#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price tried to break below area",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry",
+      "rationale": "Explicit 'waiting for X before we can' gate language stating the short entry will not be looked for without this sequence."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_RETEST:price break below and retest as resistance#0",
+      "type": "WAIT_RETEST",
+      "object": "price break below and retest as resistance",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "We are waiting for price to break below, come back and retest it as resistance before we can",
+      "rationale": "Same explicit 'waiting for... before we can' gate language directly stating this is a precondition of the short entry."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_STRUCTURE:level above low first 30 minutes#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "level above low first 30 minutes",
+      "classification": "CONTEXTUAL",
+      "quote": "if you didn't get an entry over here, you had another opportunity to go long",
+      "rationale": "Narrates a specific historical example with an alternate opportunity, not a stated required gate condition."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_SESSION:first 30 minutes high#0",
+      "type": "WAIT_SESSION",
+      "object": "first 30 minutes high",
+      "classification": "UNRESOLVED",
+      "quote": "for me personally, I like to use the 30 minute orb more just because it's a little larger of a time frame",
+      "rationale": "SPAN_TEXT is a bare fragment ('first 30 minutes.') and surrounding context is personal preference about ORB duration choice, not modal gate language either way."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_RETEST:retest into area#0",
+      "type": "WAIT_RETEST",
+      "object": "retest into area",
+      "classification": "UNRESOLVED",
+      "quote": "what I was looking for was for price to pull back into this area because the market was very bullish today",
+      "rationale": "Narrates what he personally was watching for on this specific bullish day, not phrased as a general 'must/only enter' rule."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_STRUCTURE:30 minute high pre market high fvg#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "30 minute high pre market high fvg",
+      "classification": "OPTIONAL",
+      "quote": "a lot of confluence as well as large buying participants at this key level",
+      "rationale": "Framed as stacking confluence factors present in one trade example rather than a strict all-required AND-gate."
+    },
+    {
+      "video": "c8VLqF0XDR4",
+      "condition_id": "WAIT_CONFIRMATION:upside movement#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "upside movement",
+      "classification": "CONTEXTUAL",
+      "quote": "this is going to start to pop to the upside right there on that candle up. We took out all these sellers",
+      "rationale": "Post-entry price-action narration of what happened after the trade was taken, not an entry condition."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_SESSION:4 hour chart#0",
+      "type": "WAIT_SESSION",
+      "object": "4 hour chart",
+      "classification": "CONTEXTUAL",
+      "quote": "today I'll share our 4-Hour chart strategy that I use every day",
+      "rationale": "Introductory scene-setting naming the video's topic, no gate language."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_SESSION:currency pair#0",
+      "type": "WAIT_SESSION",
+      "object": "currency pair",
+      "classification": "CONTEXTUAL",
+      "quote": "this strategy Works particularly well for euro dollar pound dollar and dollar Yen",
+      "rationale": "Describes suitability/effectiveness on certain pairs, not a stated requirement restricting entry to only those pairs."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_CONFIRMATION:5 sma crossing below 20 sma 4h chart#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "5 sma crossing below 20 sma 4h chart",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "you don't just want to take the trade you want to wait for a retrace back to the 5 SMA",
+      "rationale": "Explicit 'you don't just want to take the trade, you want to wait for' is direct gate language overriding the raw crossover signal."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_RETEST:5 sma#0",
+      "type": "WAIT_RETEST",
+      "object": "5 sma",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "wait for a retrace back to the 5 SMA",
+      "rationale": "Direct 'wait for' gate language stating the retrace to the 5 SMA is required before entry."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "EXIT_HINT:move stop to break even#0",
+      "type": "EXIT_HINT",
+      "object": "move stop to break even",
+      "classification": "OPTIONAL",
+      "quote": "swing Traders on the other hand can use the same initial pr[ice]... with the twist",
+      "rationale": "Presented as an optional variant management technique for swing traders specifically ('can use... with the twist'), not a mandatory rule for the strategy overall."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_SESSION:eur usd#0",
+      "type": "WAIT_SESSION",
+      "object": "eur usd",
+      "classification": "CONTEXTUAL",
+      "quote": "now back to the euro dollar chart here",
+      "rationale": "Pure scene transition back to a chart example, no modal language."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_STRUCTURE:low price level#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "low price level",
+      "classification": "CONTEXTUAL",
+      "quote": "you can see this low is 1788",
+      "rationale": "Narrating a specific price level in a walkthrough example, not a condition gate."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_CONFIRMATION:cross#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "cross",
+      "classification": "CONTEXTUAL",
+      "quote": "here is when we get the cross and we don't actually enter the trade till over here",
+      "rationale": "Narrates timing of one specific example trade illustrating the already-established retrace rule, not new gate language of its own."
+    },
+    {
+      "video": "HfZTCZTDfWk",
+      "condition_id": "WAIT_CONFIRMATION:cross down and retrace#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "cross down and retrace",
+      "classification": "CONTEXTUAL",
+      "quote": "we get the cross down um right over here and we get the retrace right over here and once again very beautiful move lower",
+      "rationale": "Narrative walkthrough of another chart example, descriptive praise rather than stated modal requirement."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "WAIT_CONFIRMATION:momentum waning buyers losing appetite sellers easing flows#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "momentum waning buyers losing appetite sellers easing flows",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "only once you see that evidence confirmation that turn is happening should you take a trade",
+      "rationale": "Explicit 'only once... should you take a trade' is textbook mandatory gate language."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "FILTER:binger band standard deviation#0",
+      "type": "FILTER",
+      "object": "binger band standard deviation",
+      "classification": "CONTEXTUAL",
+      "quote": "we'll be adding the three standard deviation Binger band I call this strategy the extreme fate",
+      "rationale": "Describes the indicator setup/tooling being introduced for the strategy, explanatory setup rather than a stated entry gate."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "WAIT_STRUCTURE:ballinger bands second set#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "ballinger bands second set",
+      "classification": "CONTEXTUAL",
+      "quote": "that's where adding the second set of Ballinger bands comes into play",
+      "rationale": "Describes constructing the indicator setup on the chart, not phrased as an entry-gate condition."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "FILTER:ballinger bands bases#0",
+      "type": "FILTER",
+      "object": "ballinger bands bases",
+      "classification": "CONTEXTUAL",
+      "quote": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one",
+      "rationale": "Pure chart/visual configuration instruction, not a trading condition."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "WAIT_CONFIRMATION:currency pair close#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "currency pair close",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "the rules for the trade goes as follows if the currency pair... we want to first thing we want to do is see the currency pair close at or above the third standard deviation Binger band",
+      "rationale": "Explicitly introduced as 'the rules for the trade' — declared as a required rule, not optional."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "WAIT_SESSION:event occurrence#0",
+      "type": "WAIT_SESSION",
+      "object": "event occurrence",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "so that's rule number one wait for it to close below the third standard deviation Binger band",
+      "rationale": "Context explicitly labels this 'rule number one' with 'wait for' gate language."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "WAIT_BIAS:trading time#0",
+      "type": "WAIT_BIAS",
+      "object": "trading time",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "when that happens it's not time to trade we need to look for confirmation",
+      "rationale": "Explicit 'it's not time to trade, we need to' is direct gate language deferring entry until confirmation."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "FILTER:binger band inside line#0",
+      "type": "FILTER",
+      "object": "binger band inside line",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "you want to wait for it to close on a downside back above the second standard deviation Binger band the inside line... that's when you go long",
+      "rationale": "Explicit 'wait for... that's when you go long' names this as the actual entry trigger condition."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "EXIT_HINT:touch basis 20 sma#0",
+      "type": "EXIT_HINT",
+      "object": "touch basis 20 sma",
+      "classification": "ALTERNATIVE",
+      "quote": "the second way to exit is when it touches the basis the 20 SMA... or when it touches the Bing[er] band on the other side",
+      "rationale": "Explicitly framed as 'the second way' among multiple interchangeable exit routes joined by 'or'."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "WAIT_SESSION:accuracy don t trade h forhead big news releases should be one cardinal rules anew york regardless what it is#0",
+      "type": "WAIT_SESSION",
+      "object": "accuracy don t trade h forhead big news releases should be one cardinal rules anew york regardless what it is",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "that should be one of your Cardinal rules for any setup regardless of what it is",
+      "rationale": "'Cardinal rule... regardless of what it is' is explicit strong mandatory-rule language."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "FILTER:close above third standard deviation here here and here#0",
+      "type": "FILTER",
+      "object": "close above third standard deviation here here and here",
+      "classification": "CONTEXTUAL",
+      "quote": "closes above the third standard deviation Bing band you wait you sell at this candle here",
+      "rationale": "Narrative walkthrough of additional chart examples repeating the already-established rule, no new modal gate language of its own."
+    },
+    {
+      "video": "FqxEKDxemtI",
+      "condition_id": "WAIT_STRUCTURE:close at or above third standard deviation binger band#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "close at or above third standard deviation binger band",
+      "classification": "CONTEXTUAL",
+      "quote": "the only other time it does it is over here where it closes at or above the third standard devation Binger band",
+      "rationale": "Narrating another specific historical chart instance of the already-established rule, not new gate language."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_STRUCTURE:moving averages#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "moving averages",
+      "classification": "CONTEXTUAL",
+      "quote": "so the first thing that we need to do is add these two moving averages",
+      "rationale": "Describes indicator setup/installation on the platform, not an entry condition the strategy checks."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "EXIT_HINT:exit#0",
+      "type": "EXIT_HINT",
+      "object": "exit",
+      "classification": "CONTEXTUAL",
+      "quote": "now you want to go ahead and exit",
+      "rationale": "Refers to exiting the indicator settings dialog on the platform, not a trade exit."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "FILTER:candle close below both moving averages#0",
+      "type": "FILTER",
+      "object": "candle close below both moving averages",
+      "classification": "UNRESOLVED",
+      "quote": "this was the first step in this scenario we had a candle on the one hour or in this case a 30 minute chart",
+      "rationale": "Narrated as an example walkthrough step with no must/only gate language in this instance."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_RETEST:candles retest one or both averages#0",
+      "type": "WAIT_RETEST",
+      "object": "candles retest one or both averages",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "now what we're looking for is that candles retest one or both of the averages",
+      "rationale": "\"what we're looking for\" frames the retest as the required signal the strategy waits for."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_SESSION:timeframe#0",
+      "type": "WAIT_SESSION",
+      "object": "timeframe",
+      "classification": "CONTEXTUAL",
+      "quote": "but we're sitting on the 30 minute chart today and like anything else this is going to require you to practice practice and practice",
+      "rationale": "General practice advice and which chart he happens to be using today, not an entry gate."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_STRUCTURE:zone sitting right in here#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "zone sitting right in here",
+      "classification": "CONTEXTUAL",
+      "quote": "so this should be our initial exit just based on support and resistance",
+      "rationale": "Describes exit-target rationale from a support/resistance zone, not an entry precondition."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_BIAS:go back up#0",
+      "type": "WAIT_BIAS",
+      "object": "go back up",
+      "classification": "CONTEXTUAL",
+      "quote": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up",
+      "rationale": "Educator navigating the chart UI, not a trading condition."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_CONFIRMATION:price#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "price",
+      "classification": "UNRESOLVED",
+      "quote": "we had the same opportunity here okay where price came above both moving averages right in this candle right here okay",
+      "rationale": "Descriptive narration of another chart example with no explicit mandatory-gate language for this quote."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_SESSION:us session trading#0",
+      "type": "WAIT_SESSION",
+      "object": "us session trading",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "again you have to know what time frames you're trading again I only trade us session",
+      "rationale": "\"I only trade us session\" is explicit gate language restricting the strategy to one session."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_RETEST:price retest average#0",
+      "type": "WAIT_RETEST",
+      "object": "price retest average",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we had price close this candle above both of the averages so it met our Rule now price came back down right here to retest the average so that is our entry",
+      "rationale": "\"so it met our Rule ... so that is our entry\" is explicit mandatory gate language."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_SESSION:crude oil trading context#0",
+      "type": "WAIT_SESSION",
+      "object": "crude oil trading context",
+      "classification": "CONTEXTUAL",
+      "quote": "so you can see that with crude oil because of how quickly it moves we only need",
+      "rationale": "Background explanation of crude oil's volatility characteristics, not an entry gate."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_RETEST:wicks retest zones#0",
+      "type": "WAIT_RETEST",
+      "object": "wicks retest zones",
+      "classification": "UNRESOLVED",
+      "quote": "I'm just going to point out a few right we closed below we kind of came back up here are the Wicks these are the kind of retests near the zones",
+      "rationale": "Descriptive pointing at chart examples without explicit modal gate language in this instance."
+    },
+    {
+      "video": "snNkQSyWX4k",
+      "condition_id": "WAIT_BIAS:consolidation period#0",
+      "type": "WAIT_BIAS",
+      "object": "consolidation period",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we take a cell back down right we're not doing anything during consolidation",
+      "rationale": "\"we're not doing anything during consolidation\" is an explicit stated rule against trading in consolidation."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_STRUCTURE:avoiding two mistakes#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "avoiding two mistakes",
+      "classification": "CONTEXTUAL",
+      "quote": "If I had avoided the two mistakes that I'm about to share with you, I'd be able to be profitable much faster.",
+      "rationale": "Video-intro hook about the topic, not a trading condition."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_STRUCTURE:range boundaries#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "range boundaries",
+      "classification": "CONTEXTUAL",
+      "quote": "we've got the top of the 5m minute range and we've got the bottom of the 5minut range",
+      "rationale": "Describes drawing/building the range levels (setup), not itself a stated entry gate."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_BIAS:price movement direction#0",
+      "type": "WAIT_BIAS",
+      "object": "price movement direction",
+      "classification": "ALTERNATIVE",
+      "quote": "Either the price is going to trade up into the range like this or it may trade low into the range like this.",
+      "rationale": "Explicit \"Either...or\" framing of two interchangeable directional outcomes."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_SESSION:new york session start#0",
+      "type": "WAIT_SESSION",
+      "object": "new york session start",
+      "classification": "CONTEXTUAL",
+      "quote": "the 9:30 candle is when New York opens. And the New York session is the most volatile session",
+      "rationale": "Explanatory background on session mechanics, not modal gate language."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_STRUCTURE:fvg sequence#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "fvg sequence",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "What we are looking for is a fair value gap sequence that is printing outside of the range.",
+      "rationale": "Explicit statement of what the mechanical strategy requires before entry."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_CONFIRMATION:gap being printed outside range#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "gap being printed outside range",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade.",
+      "rationale": "\"As soon as...then we can enter the trade\" is explicit gate language."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_STRUCTURE:fvg formation#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "fvg formation",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed",
+      "rationale": "\"has to actually be formed\" is mandatory modal language defining validity."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_STRUCTURE:930 candle#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "930 candle",
+      "classification": "CONTEXTUAL",
+      "quote": "I have come to the 930 candle right here and I'm going to take my trend tool",
+      "rationale": "Pure narration of the presenter's on-screen actions in an example, not a stated rule."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_SESSION:time frame#0",
+      "type": "WAIT_SESSION",
+      "object": "time frame",
+      "classification": "CONTEXTUAL",
+      "quote": "we're just going to switch over to the one minute time frame and see what's going on",
+      "rationale": "Narration of switching chart timeframe during the example walkthrough."
+    },
+    {
+      "video": "sVkmZklJDHI",
+      "condition_id": "WAIT_CONFIRMATION:break#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "break",
+      "classification": "UNRESOLVED",
+      "quote": "let's just play and see if we get a break. Great. So we have our break to the upside.",
+      "rationale": "Descriptive narration of an example outcome without explicit must/only gate language."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_BIAS:ema period#0",
+      "type": "WAIT_BIAS",
+      "object": "ema period",
+      "classification": "OPTIONAL",
+      "quote": "I've said both in videos. I honestly I've been using the eight... Really no big difference at all.",
+      "rationale": "Educator explicitly says the exact EMA period choice makes no big difference, i.e., not a hard requirement."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "FILTER:vwap#0",
+      "type": "FILTER",
+      "object": "vwap",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "I never take calls under VWAP and I never take puts over VWAP.",
+      "rationale": "\"I never take...I never take\" plus \"a very big rule\" is explicit mandatory gate language."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_CONFIRMATION:vwop retest#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "vwop retest",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "VWAP is always a big retest spot ... then I'm looking to take puts on a VWOP retest, not a pre-market low retest",
+      "rationale": "Presented as the defined mandatory entry trigger tied to the \"big rule\" VWAP framework."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "FILTER:vwap retest vs pre market low retest#0",
+      "type": "FILTER",
+      "object": "vwap retest vs pre market low retest",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Because if it gets above VWAP, you can't take puts. That's our rule.",
+      "rationale": "\"That's our rule\" is explicit mandatory gate language."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:apple pre market high retest#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "apple pre market high retest",
+      "classification": "UNRESOLVED",
+      "quote": "we got a Apple pre-market high, 5m minute close above, a little retest, and then another retest",
+      "rationale": "Introductory narration labeling a chart example, no explicit modal gate language in this span."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_RETEST:ema retest#0",
+      "type": "WAIT_RETEST",
+      "object": "ema retest",
+      "classification": "UNRESOLVED",
+      "quote": "So, this is an EMA retest. As you can see here, Apple retests pre-market high.",
+      "rationale": "Narration introducing another example, no explicit mandatory language for this specific quote."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:apple retest pre market high#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "apple retest pre market high",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "As you can see here, Apple retests pre-market high. So, we take calls. It's over VWAP, so we're good.",
+      "rationale": "\"So, we take calls\" directly ties the pattern to the mandatory entry action."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_CONFIRMATION:ema level#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "ema level",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "it doesn't break under the EMA until right here. So, we don't sell any of our position until right here.",
+      "rationale": "Definitive stated rule for holding the position until the EMA is broken."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:vwop retest number one#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwop retest number one",
+      "classification": "UNRESOLVED",
+      "quote": "but we got a VWOP retest number one, and then dump.",
+      "rationale": "Descriptive narration of a chart outcome, no explicit gate language in this instance."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "EXIT_HINT:position out#0",
+      "type": "EXIT_HINT",
+      "object": "position out",
+      "classification": "UNRESOLVED",
+      "quote": "on this one, you would have taken most your position out over here once it got above",
+      "rationale": "Hypothetical (\"would have taken\") narration of an example, not a definitive stated exit rule."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_CONFIRMATION:ema trend confirmation#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "ema trend confirmation",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "You can take a VWAP retest and a pre-market high retest. You hold against the EMA and let your runners run.",
+      "rationale": "Instructional, rule-like statement of holding behavior tied to the EMA."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:vwap#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwap",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we come and retest VWAP. So, what does that mean? This means we're taking calls here.",
+      "rationale": "\"This means we're taking calls here\" directly states the retest as the mandatory entry trigger."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "FILTER:pre market high#0",
+      "type": "FILTER",
+      "object": "pre market high",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "It's a VWOP retest, above pre-market high, one of the strongest stocks of the day.",
+      "rationale": "Part of the same confirmed combo directly tied to \"This means we're taking calls here.\""
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:vwop retest#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwop retest",
+      "classification": "UNRESOLVED",
+      "quote": "really, really, really nice trade here on this VWOP retest",
+      "rationale": "Recap/praise of trade outcome, not stated gate language in this instance."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "CONFIRM_DIRECTION:ema#0",
+      "type": "CONFIRM_DIRECTION",
+      "object": "ema",
+      "classification": "CONTEXTUAL",
+      "quote": "VWAP we use for retest and to know if we can buy calls or puts or not. EMA we use to know if to sell or not.",
+      "rationale": "General recap explanation of tool purpose, not itself an entry gate statement."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_RETEST:ema#0",
+      "type": "WAIT_RETEST",
+      "object": "ema",
+      "classification": "OPTIONAL",
+      "quote": "You also trade EMA retest sometimes.",
+      "rationale": "\"sometimes\" explicitly marks this as occasional/optional rather than mandatory."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_STRUCTURE:daily fvg 4h hour candle#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "daily fvg 4h hour candle",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "this will be our key level your goal is to enter short as soon as the key level is tapped",
+      "rationale": "\"your goal is to enter... as soon as\" is explicit gate language."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_RETEST:key level tap#0",
+      "type": "WAIT_RETEST",
+      "object": "key level tap",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "as soon as the key level is tapped and you notice that 15 minute CRT",
+      "rationale": "\"as soon as...tapped\" is an explicit gate condition for the entry."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_SESSION:focus scope#0",
+      "type": "WAIT_SESSION",
+      "object": "focus scope",
+      "classification": "CONTEXTUAL",
+      "quote": "we will be focusing solely on the three candle CRTs for example",
+      "rationale": "Describes the video's teaching scope/focus, not an entry condition."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_SESSION:4hour time frame#0",
+      "type": "WAIT_SESSION",
+      "object": "4hour time frame",
+      "classification": "CONTEXTUAL",
+      "quote": "I'm doing this so you guys understand I am not cherry picking anything this is all random",
+      "rationale": "Meta-commentary about teaching methodology/credibility, not a trading gate."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_STRUCTURE:6 m candle 9 00#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "6 m candle 9 00",
+      "classification": "CONTEXTUAL",
+      "quote": "the next candle broke through through the low and continued crashing down there would have been no trade here",
+      "rationale": "Narration of a specific rejected example, describing chart action rather than stating a gate."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_SESSION:2#0",
+      "type": "WAIT_SESSION",
+      "object": "2",
+      "classification": "UNRESOLVED",
+      "quote": "however this is 2 a.m. let's push this over 6 a.m. candle not going to use this one",
+      "rationale": "Educator skips this example without stating an explicit modal rule tying it to time-of-day."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_STRUCTURE:range high and low#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "range high and low",
+      "classification": "UNRESOLVED",
+      "quote": "first candle 6 a.m. creating the range high and low second candle Turtle souping the Range High",
+      "rationale": "Descriptive definition of pattern anatomy in the example, no explicit must/only language."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "FILTER:crt selection criteria#0",
+      "type": "FILTER",
+      "object": "crt selection criteria",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "the reason why I choose this CRT and not anyone any other CRT simply because we respected the low swept it and we respected the high and swept it... one to be chosen",
+      "rationale": "Explicit selection-criteria language for why this range qualifies to be traded."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_STRUCTURE:sweep type#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "sweep type",
+      "classification": "UNRESOLVED",
+      "quote": "the last sweep of course was a turtle soup of the highs that means we are now bearish",
+      "rationale": "Descriptive analysis of this specific example's sweep, no explicit mandatory phrasing."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_CONFIRMATION:timed purge crt forms at 10 m and was purged#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "timed purge crt forms at 10 m and was purged",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we do also have a third confirmation which is the timed Purge the CRT forms at 10: a.m. and was purged at 10:45",
+      "rationale": "Part of the explicit enumerated confirmation-count system required for the trade."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_SESSION:one day time frame#0",
+      "type": "WAIT_SESSION",
+      "object": "one day time frame",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "let's hop onto a one day time frame the daily time frame to look for a key level to have four confirmations for the trade",
+      "rationale": "Directly tied to the stated requirement of \"four confirmations for the trade.\""
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_SESSION:4hour candle turtle#0",
+      "type": "WAIT_SESSION",
+      "object": "4hour candle turtle",
+      "classification": "UNRESOLVED",
+      "quote": "the 10 a.m. 4our candle Turtle souping the 6 a.m. candle low and closing back within the range",
+      "rationale": "Descriptive narration of chart pattern in the example, no explicit modal gate language."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_CONFIRMATION:candle low and closing back within range#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "candle low and closing back within range",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "you now want to locate a 15minute CRT at the lows of the 4our CRT in order to confirm",
+      "rationale": "Instructional step required to obtain confirmation within the stated confirmation-count framework."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_SESSION:15 minute crt range#0",
+      "type": "WAIT_SESSION",
+      "object": "15 minute crt range",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "knowing that the purge must happen between 10 and 12 a.m.",
+      "rationale": "Explicit \"must happen\" modal language."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_STRUCTURE:15minute crt range#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "15minute crt range",
+      "classification": "UNRESOLVED",
+      "quote": "we have a 15minute CRT right over here now why was this not the 15 minutes here to it very well could have been",
+      "rationale": "Pedagogical comparison of chart candidates without explicit stated modal gate language."
+    },
+    {
+      "video": "KXWRtV2LOVc",
+      "condition_id": "WAIT_CONFIRMATION:price close above order block candle#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "price close above order block candle",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "as soon as price closed above this candle you would confirm the order block and enter with the tap right here",
+      "rationale": "\"as soon as...you would confirm...and enter\" is explicit gate language."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_CONFIRMATION:last candle before impulse away#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "last candle before impulse away",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "And my rule is to use the last candle before the impulse away.",
+      "rationale": "Explicitly stated as 'my rule' for defining the demand zone, gate language for the trader's methodology."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_RETEST:retest#0",
+      "type": "WAIT_RETEST",
+      "object": "retest",
+      "classification": "CONTEXTUAL",
+      "quote": "We look to buy from the demand zone when it is retested because we expect to see more of that institutional buying kicking in.",
+      "rationale": "Part of the general supply/demand background theory explained before the actual strategy technique, not a specific stated gate."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_STRUCTURE:supply zones#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "supply zones",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "I used the rule of using the last candle before the impulse to mark my supply zones.",
+      "rationale": "Stated explicitly as 'the rule' used to mark supply zones, a mandatory definitional method."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_BIAS:future selling#0",
+      "type": "WAIT_BIAS",
+      "object": "future selling",
+      "classification": "CONTEXTUAL",
+      "quote": "So future selling is expected once the market returns to this level.",
+      "rationale": "Explanatory background about why supply zones work, not an entry gate check."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_RETEST:supply zones#0",
+      "type": "WAIT_RETEST",
+      "object": "supply zones",
+      "classification": "CONTEXTUAL",
+      "quote": "once the market returns to this level.",
+      "rationale": "Continuation of general supply/demand theory explanation, not a specific mandatory gate."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_SESSION:time frame#0",
+      "type": "WAIT_SESSION",
+      "object": "time frame",
+      "classification": "CONTEXTUAL",
+      "quote": "Let's say we begin on the 4hour time frame and we are looking at a supply zone.",
+      "rationale": "Illustrative example setup ('Let's say'), not a stated requirement."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_BIAS:trend direction shift#0",
+      "type": "WAIT_BIAS",
+      "object": "trend direction shift",
+      "classification": "CONTEXTUAL",
+      "quote": "We're looking at a market which has just shifted in trend direction.",
+      "rationale": "Describes the specific chart example being shown, not asserted as a mandatory gate."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_STRUCTURE:demand zone market low structure#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "demand zone market low structure",
+      "classification": "CONTEXTUAL",
+      "quote": "One area of demand here, which is the last candle before this impulse away, and another here, this larger one at the bottom, which is the very low of this market.",
+      "rationale": "Descriptive labeling of zones on the example chart, not a stated gate requirement."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_BIAS:retracement opportunity#0",
+      "type": "WAIT_BIAS",
+      "object": "retracement opportunity",
+      "classification": "CONTEXTUAL",
+      "quote": "we're basically now looking for a retracement opportunity to then buy from further inside of the first leg of price action",
+      "rationale": "Describes the example walkthrough of zone refinement rather than stating a hard mandatory rule."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "FILTER:lowest possible zone#0",
+      "type": "FILTER",
+      "object": "lowest possible zone",
+      "classification": "CONTEXTUAL",
+      "quote": "So the lowest possible zone in a buying scenario.",
+      "rationale": "Definitional statement explaining what 'extreme zone' means, not a gate check."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_STRUCTURE:market reaches level#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "market reaches level",
+      "classification": "ALTERNATIVE",
+      "quote": "what we can do inside of the top zone is use what I call a standard confirmation.",
+      "rationale": "Presented as an optional alternative technique ('what we can do') to using the extreme zone directly, not a universal mandatory gate."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_CONFIRMATION:lower time frame structure changes in agreement with larger trend direction#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "lower time frame structure changes in agreement with larger trend direction",
+      "classification": "OPTIONAL",
+      "quote": "what we can do inside of the top zone is use what I call a standard confirmation.",
+      "rationale": "Framed as an optional confirmation technique you 'can' use for a specific zone scenario, not mandatory for all entries."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_STRUCTURE:market return into area demand#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "market return into area demand",
+      "classification": "OPTIONAL",
+      "quote": "we would basically want to see the market return into this area of demand and then create a new high.",
+      "rationale": "Continues describing the optional 'standard confirmation' technique introduced earlier, not a universal requirement."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_SESSION:immediate market action from current position#0",
+      "type": "WAIT_SESSION",
+      "object": "immediate market action from current position",
+      "classification": "CONTEXTUAL",
+      "quote": "If we saw this, let's say it happened immediately from where the market is right now.",
+      "rationale": "Hypothetical example framing ('let's say'), not a stated gate condition."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "FILTER:1hour zone context#0",
+      "type": "FILTER",
+      "object": "1hour zone context",
+      "classification": "CONTEXTUAL",
+      "quote": "but that's because this is a 1hour zone.",
+      "rationale": "Explanatory aside about why the zone looks a certain way visually, not an entry condition."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "WAIT_STRUCTURE:price movement#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price movement",
+      "classification": "CONTEXTUAL",
+      "quote": "if we go over on the 5-minut time frame and dig into this larger demand zone",
+      "rationale": "Part of a cautionary discussion about over-refinement, background explanation rather than a gate."
+    },
+    {
+      "video": "m-G1ag77aVc",
+      "condition_id": "FILTER:fvg into#0",
+      "type": "FILTER",
+      "object": "fvg into",
+      "classification": "OPTIONAL",
+      "quote": "There's still some imbalance into this. So, maybe we could place our entry here",
+      "rationale": "Hedged, speculative language ('maybe we could') explicitly framed as a risky idea being cautioned against, not a firm requirement."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:timeframe#0",
+      "type": "WAIT_SESSION",
+      "object": "timeframe",
+      "classification": "ALTERNATIVE",
+      "quote": "Honestly, it doesn't matter... if you really want to wait for the hourly ones, go ahead.",
+      "rationale": "Explicitly states any of the 3 timeframes (1h/30m/15m) work interchangeably ('it doesn't matter')."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_STRUCTURE:price break high or low#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price break high or low",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "what you will do is you will wait for price to come break either that high or the low.",
+      "rationale": "Stated as an imperative required step ('what you will do') in the core CRT process."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_CONFIRMATION:third candle reversal#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "third candle reversal",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "if it doesn't reverse, the strategy is not going to work. It must reverse right after breaking a high or a low.",
+      "rationale": "Explicit 'must reverse' language with the educator emphasizing the strategy fails without it."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_RETEST:price reversal#0",
+      "type": "WAIT_RETEST",
+      "object": "price reversal",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "It must reverse right after breaking a high or a low.",
+      "rationale": "Directly supported by the 'must reverse' mandate stated in the same passage describing this required reversal."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_STRUCTURE:trading range#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "trading range",
+      "classification": "CONTEXTUAL",
+      "quote": "The market literally is trading from orders to orders, right? Liquidity, as some people call it",
+      "rationale": "Explains the market-mechanics reasoning behind why the strategy works, not itself an entry gate."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "EXIT_HINT:trading session termination#0",
+      "type": "EXIT_HINT",
+      "object": "trading session termination",
+      "classification": "OPTIONAL",
+      "quote": "honestly, just close the screens and just log off.",
+      "rationale": "Casual personal recommendation rather than a stated hard rule, especially since he notes the strategy 'works for all sessions.'"
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_CONFIRMATION:bearish crt or long crt#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "bearish crt or long crt",
+      "classification": "CONTEXTUAL",
+      "quote": "How do I know to play a bearish CRT or a long CRT?",
+      "rationale": "A rhetorical question introducing the following explanation, not itself an asserted condition."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:mnq market trend#0",
+      "type": "WAIT_SESSION",
+      "object": "mnq market trend",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "forget shorts. I am not in shorts at all. I don't even care to look for shorts at this moment.",
+      "rationale": "Clear declarative rule that trades are only taken in the direction of the prevailing trend."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_BIAS:it s just ripping higher highs higher lows every single time#0",
+      "type": "WAIT_BIAS",
+      "object": "it s just ripping higher highs higher lows every single time",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "So, forget shorts. I am not in shorts at all. I don't even care to look for shorts at this moment.",
+      "rationale": "The trend-alignment mandate directly follows this trend observation, ruling out counter-trend trades."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:mnq#0",
+      "type": "WAIT_SESSION",
+      "object": "mnq",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "it's an uptrend. I am not going against that. It's like trying to run against the speeding train at that point.",
+      "rationale": "Explicit statement of refusing to trade against the trend, a mandatory directional filter."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_STRUCTURE:price movement#3",
+      "type": "WAIT_STRUCTURE",
+      "object": "price movement",
+      "classification": "CONTEXTUAL",
+      "quote": "The last thing we understand now is that price will try to make a full U-shaped reversal to this high of day level right over here.",
+      "rationale": "Narration of the expected target within the live example, restating the general mechanic without new gate language."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_BIAS:price movement bias#0",
+      "type": "WAIT_BIAS",
+      "object": "price movement bias",
+      "classification": "CONTEXTUAL",
+      "quote": "Okay, since we took out the low, it wants to move to the opposite end.",
+      "rationale": "Descriptive narration within the live example, not stated as an independent mandatory gate."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_RETEST:trade execution#0",
+      "type": "WAIT_RETEST",
+      "object": "trade execution",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "that's the only time I'm taking that trade. If it doesn't break the middle candle, absolutely nothing will be done.",
+      "rationale": "Explicit 'that's the only time' / 'absolutely nothing will be done' gate language."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:process repetition#0",
+      "type": "WAIT_SESSION",
+      "object": "process repetition",
+      "classification": "CONTEXTUAL",
+      "quote": "all I'm really going to do is that exact same process over and over and over again.",
+      "rationale": "Meta-commentary about repeating the process daily, not a specific entry condition."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_BIAS:market activity#0",
+      "type": "WAIT_BIAS",
+      "object": "market activity",
+      "classification": "UNRESOLVED",
+      "quote": "I'm waiting. I'm waiting. I'm watching to see if any CRTs form at all.",
+      "rationale": "Generic filler narration with no distinguishing modal language to classify confidently."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:hourly candle close#0",
+      "type": "WAIT_SESSION",
+      "object": "hourly candle close",
+      "classification": "UNRESOLVED",
+      "quote": "Let's see. Hourly candle just closed and this is a wonderful CRT right here.",
+      "rationale": "Narration of the live example noting a candle closed; no explicit modal/gate language present in this excerpt."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_CONFIRMATION:price break and reversal#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "price break and reversal",
+      "classification": "CONTEXTUAL",
+      "quote": "Price came and broke that low and immediately reversed back up.",
+      "rationale": "Narration describing what happened in the specific live example, not new gate language."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:first crt day#0",
+      "type": "WAIT_SESSION",
+      "object": "first crt day",
+      "classification": "CONTEXTUAL",
+      "quote": "Price continues. Boom. Straight to TP. First CRT of the day.",
+      "rationale": "Narration of the trade outcome in the example, not a stated condition."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_STRUCTURE:price formation#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price formation",
+      "classification": "CONTEXTUAL",
+      "quote": "So, price forms that CRT.",
+      "rationale": "Narration transitioning into a new live example, not itself gate language."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_BIAS:move to opposite end candle#0",
+      "type": "WAIT_BIAS",
+      "object": "move to opposite end candle",
+      "classification": "CONTEXTUAL",
+      "quote": "now wants to make a move to the opposite end of the candle.",
+      "rationale": "Descriptive narration of anticipated price movement in the example, restating the general mechanic."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "first 15 minutes candle formed today",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Now, locate the first 15-minutes candle that formed on today's date.",
+      "rationale": "Imperative required first step of the strategy setup process."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "FILTER:15 minutes candle closure#0",
+      "type": "FILTER",
+      "object": "15 minutes candle closure",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "make sure that first 15-minutes candle has fully closed before marking your range. If the candle is still forming, you need to wait for it to completely close first.",
+      "rationale": "Explicit 'make sure' / 'you need to wait' gate language."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_BIAS:manipulation candle characteristics#0",
+      "type": "WAIT_BIAS",
+      "object": "manipulation candle characteristics",
+      "classification": "CONTEXTUAL",
+      "quote": "A manipulation candle is a fast, aggressive move either up or down.",
+      "rationale": "Definitional explanation of the term, not itself an entry gate check."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_CONFIRMATION:opening candle qualification#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "opening candle qualification",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "To confirm whether your opening candle actually qualifies as a manipulation candle, here's what you do.",
+      "rationale": "Introduces a required confirmation procedure (the ATR check) that must be performed to validate the setup."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_CONFIRMATION:reversal candles#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "reversal candles",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "This is the most critical moment in the whole setup because if neither of these candles appears, the move could just continue... You don't chase it. You wait.",
+      "rationale": "Explicit 'most critical moment' / 'you wait' gate language for the reversal-candle requirement."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "FILTER:time window location#0",
+      "type": "FILTER",
+      "object": "time window location",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "And they must appear outside the box within 60 to 90 minutes of the market open.",
+      "rationale": "Explicit 'must appear' modal mandatory language."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_BIAS:sharp red move downward#0",
+      "type": "WAIT_BIAS",
+      "object": "sharp red move downward",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "This needs to appear after a clear sharp red move downward.",
+      "rationale": "Explicit 'needs to appear after' precondition language."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_STRUCTURE:next candle to break above hammer high#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "next candle to break above hammer high",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Wait for the next candle to break above the hammer high, enter at the open of the candle after that, and set your stop at the low of the hammer.",
+      "rationale": "Explicit 'wait for' entry-trigger gate language."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_CONFIRMATION:reversal pattern#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "reversal pattern",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "right away, we know we are looking for a bullish reversal below the range, specifically a hammer or bullish engulfing candle.",
+      "rationale": "States the specific required confirmation pattern that must be present given the manipulation candle's direction."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_SESSION:5 minute chart#0",
+      "type": "WAIT_SESSION",
+      "object": "5 minute chart",
+      "classification": "CONTEXTUAL",
+      "quote": "We drop to the 5-minute chart and we watch.",
+      "rationale": "Narration of switching timeframe in the live example, not asserted as a stand-alone gate in this excerpt."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "EXIT_HINT:stop goes below low#0",
+      "type": "EXIT_HINT",
+      "object": "stop goes below low",
+      "classification": "CONTEXTUAL",
+      "quote": "Stop goes below the low. And the target profit? The top of the range we drew in step one.",
+      "rationale": "Narration restating the previously established stop-placement rule within the specific worked example."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_STRUCTURE:low opening candle and high#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "low opening candle and high",
+      "classification": "CONTEXTUAL",
+      "quote": "The low of the opening candle and the high.",
+      "rationale": "Explanatory description of the profit targets, not itself an entry gate."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_BIAS:these manipulation candles are often even more prominent#0",
+      "type": "WAIT_BIAS",
+      "object": "these manipulation candles are often even more prominent",
+      "classification": "CONTEXTUAL",
+      "quote": "These manipulation candles are often even more prominent on individual stocks than on the big indexes.",
+      "rationale": "General market-characteristics trivia, not an entry condition."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_BIAS:bullish reversal#0",
+      "type": "WAIT_BIAS",
+      "object": "bullish reversal",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "The manipulation candle was negative, so we're hunting for a bullish reversal below the range on the 5-minute chart.",
+      "rationale": "States the required direction-dependent search criterion that follows directly from the manipulation candle's polarity."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "FILTER:reversal formation#0",
+      "type": "FILTER",
+      "object": "reversal formation",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Those don't count. You need the reversal to form outside the box after a clear directional push.",
+      "rationale": "Explicit 'you need' plus 'those don't count' disqualifying language."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_BIAS:directional push#0",
+      "type": "WAIT_BIAS",
+      "object": "directional push",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "You need the reversal to form outside the box after a clear directional push.",
+      "rationale": "Same explicit 'you need' mandatory requirement."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_SESSION:volume indicator#0",
+      "type": "WAIT_SESSION",
+      "object": "volume indicator",
+      "classification": "OPTIONAL",
+      "quote": "here's the bonus tip I promised you at the beginning... there is one additional layer that can considerably improve your win rate",
+      "rationale": "Explicitly labeled a 'bonus tip' / additional enhancement, not a required gate."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_STRUCTURE:opening 15 minute candle close#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "opening 15 minute candle close",
+      "classification": "OPTIONAL",
+      "quote": "When that opening 15-minute candle closes, before you do anything else, glance down at the volume.",
+      "rationale": "Part of the explicitly optional 'bonus tip' volume-confirmation layer."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "FILTER:volume comparison#0",
+      "type": "FILTER",
+      "object": "volume comparison",
+      "classification": "OPTIONAL",
+      "quote": "Is the volume of this candle above or below that moving average line?",
+      "rationale": "Part of the optional bonus volume-analysis layer, not core spine gating."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_BIAS:manipulation likelihood#0",
+      "type": "WAIT_BIAS",
+      "object": "manipulation likelihood",
+      "classification": "OPTIONAL",
+      "quote": "Manipulation is likely, but the market is not ready to reverse yet.",
+      "rationale": "Part of the optional volume-scenario analysis, framed as additional insight rather than a hard requirement."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_STRUCTURE:market readiness reversal#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "market readiness reversal",
+      "classification": "OPTIONAL",
+      "quote": "the market is not ready to reverse yet.",
+      "rationale": "Part of the optional volume-scenario commentary, not a separately asserted mandatory gate."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_CONFIRMATION:wait reversal candle signal in step three before doing anything#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "wait reversal candle signal in step three before doing anything",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Do not force the entry. Wait for the reversal candle signal in step three before doing anything.",
+      "rationale": "Explicit 'do not force' / 'wait... before doing anything' reinforces the mandatory reversal-candle-wait rule."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "FILTER:scenario three large candle volume below average#0",
+      "type": "FILTER",
+      "object": "scenario three large candle volume below average",
+      "classification": "CONTEXTUAL",
+      "quote": "Scenario three, large candle, volume below average.",
+      "rationale": "A scenario label/definition, not itself an asserted gate action."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_SESSION:wait cleaner opportunity following day#0",
+      "type": "WAIT_SESSION",
+      "object": "wait cleaner opportunity following day",
+      "classification": "ALTERNATIVE",
+      "quote": "Treat this setup with extra caution or skip it entirely and wait for a cleaner opportunity the following day.",
+      "rationale": "Explicit 'or' framing offers alternative responses (caution vs. skip), not a single mandatory rule."
+    },
+    {
+      "video": "NMUd0oX_7Pg",
+      "condition_id": "WAIT_BIAS:institutional money readiness#0",
+      "type": "WAIT_BIAS",
+      "object": "institutional money readiness",
+      "classification": "CONTEXTUAL",
+      "quote": "institutional money has done what it needed to do and is now ready to push price in the opposite direction.",
+      "rationale": "Interpretive commentary explaining why the pattern works, not an entry gate itself."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:vwap#0",
+      "type": "FILTER",
+      "object": "vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "Every course I bought, every video I watched, every guru I follow said the same thing. VWAP is support.",
+      "rationale": "Describes the false conventional belief the educator is refuting, not his own gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:vwap resistance#0",
+      "type": "FILTER",
+      "object": "vwap resistance",
+      "classification": "CONTEXTUAL",
+      "quote": "The VWAP is support. Price bounces off of it. VWAP is resistance. Price rejects from it.",
+      "rationale": "Part of the refuted conventional-wisdom description, not a stated mandatory gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_CONFIRMATION:price rejection from it#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "price rejection from it",
+      "classification": "CONTEXTUAL",
+      "quote": "VWAP is resistance. Price rejects from it. And sometimes that works.",
+      "rationale": "Part of the flawed conventional-wisdom being refuted, not an entry gate the strategy uses."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:volume profile#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "volume profile",
+      "classification": "CONTEXTUAL",
+      "quote": "If you're familiar with the volume profile, you know about the point of control.",
+      "rationale": "Explanatory background concept introducing terminology, not an entry condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:vwap#0",
+      "type": "WAIT_BIAS",
+      "object": "vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "It can be a price magnet where price gravitates toward it.",
+      "rationale": "General principle about VWAP's nature, not a specific mandatory entry check."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:price near vwap#0",
+      "type": "FILTER",
+      "object": "price near vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "And when price is near it, you should expect a lot of noise, not always clean moves.",
+      "rationale": "Descriptive warning about market behavior near VWAP, not phrased as a gate condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:vwap#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "VWAP is a magnet first, and it is a level second.",
+      "rationale": "General principle statement (principle #1), not an entry gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:vwap trading level#0",
+      "type": "FILTER",
+      "object": "vwap trading level",
+      "classification": "CONTEXTUAL",
+      "quote": "Only in specific conditions does it become a trading level.",
+      "rationale": "Vague principle-setting language with no specific condition named here; background framing before the actual setups are defined."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:range continuation bias#0",
+      "type": "WAIT_BIAS",
+      "object": "range continuation bias",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "If the market is ranging, you need to expect it to continue ranging. ... We do not fade the top, and we do not buy the bottom.",
+      "rationale": "Explicit \"you need to\" plus \"we do not\" rule language frames this as a hard trading rule."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:price holding or reentering vwap value area#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price holding or reentering vwap value area",
+      "classification": "CONTEXTUAL",
+      "quote": "When price holds or reenters the VWAP value area, it gravitates to the VWAP.",
+      "rationale": "Explanatory mechanism (principle 3), not phrased as a required entry check."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:breakout#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "breakout",
+      "classification": "CONTEXTUAL",
+      "quote": "Had a little trouble getting through, but once we broke through, the next target was the other side of value.",
+      "rationale": "Narrates a specific past chart example, not a stated rule."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_SESSION:previous few sessions#0",
+      "type": "WAIT_SESSION",
+      "object": "previous few sessions",
+      "classification": "OPTIONAL",
+      "quote": "We want to be mindful of the previous few sessions.",
+      "rationale": "Soft \"want to be mindful\" framing, a consideration for context/targets rather than a hard gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_CONFIRMATION:retest#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "retest",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "If we wanted to take a long, we wait for a pullback.",
+      "rationale": "Explicit \"we wait for\" gate language describing the required entry technique."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_RETEST:area#0",
+      "type": "WAIT_RETEST",
+      "object": "area",
+      "classification": "CONTEXTUAL",
+      "quote": "When we come back to that same area a second time, the trade has fundamentally changed.",
+      "rationale": "Describes reduced probability of a re-touch; explanatory, not a stated gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:contextual opportunity quality#0",
+      "type": "WAIT_BIAS",
+      "object": "contextual opportunity quality",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "So, wait for a new contextual shift and ask yourself, \"What's the next setup that's new?\"",
+      "rationale": "Explicit imperative \"wait for\" instructs against taking stale/repeat setups."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:setups taking place#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "setups taking place",
+      "classification": "CONTEXTUAL",
+      "quote": "If the setups aren't taking place, if they're not playing out, we need to take a step back.",
+      "rationale": "General philosophy about patience/uncertainty, not a specific entry condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:moving out value#0",
+      "type": "WAIT_BIAS",
+      "object": "moving out value",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "This happens when we're moving out of value, and price is now in search of a new value area.",
+      "rationale": "This is the definitional trigger condition for Setup 1 (price discovery continuation)."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_RETEST:retest#0",
+      "type": "WAIT_RETEST",
+      "object": "retest",
+      "classification": "CONTEXTUAL",
+      "quote": "Often, they'll retest again just like they did right here.",
+      "rationale": "\"Often\" signals a typical-but-not-required pattern; descriptive trade commentary, not a gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:continuation trend day#0",
+      "type": "WAIT_BIAS",
+      "object": "continuation trend day",
+      "classification": "CONTEXTUAL",
+      "quote": "This trade plays out over and over again on a continuation trend day.",
+      "rationale": "Descriptive frequency statement, not a mandatory condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:price location#0",
+      "type": "FILTER",
+      "object": "price location",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "First, price has obviously been spending a lot of time within the VWAP value area. It must show price acceptance.",
+      "rationale": "Explicit \"must show\" language within an enumerated \"setup criteria\" list."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:pierce band#0",
+      "type": "FILTER",
+      "object": "pierce band",
+      "classification": "OPTIONAL",
+      "quote": "Sometimes they pierce the band and then they reject hard and immediately.",
+      "rationale": "\"Sometimes\" explicitly signals variable, non-required behavior rather than a gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:stop placement rule#0",
+      "type": "FILTER",
+      "object": "stop placement rule",
+      "classification": "UNRESOLVED",
+      "quote": "The stop is going to go beyond the price level or beyond the testing candle wick.",
+      "rationale": "Declarative description of stop placement with no \"must\"/\"only\" modal language to confirm strict-rule vs. described-practice status."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:value area break back into#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "value area break back into",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Setup number three is the return to value. And this is where we've been in price discovery and then we break back into the value area.",
+      "rationale": "Definitional trigger condition for Setup 3."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:rejection#0",
+      "type": "WAIT_BIAS",
+      "object": "rejection",
+      "classification": "ALTERNATIVE",
+      "quote": "You can also get in on the break into value. But again, be prepared for rejection rather than waiting for acceptance.",
+      "rationale": "Explicitly framed as an alternative, more aggressive entry option (\"You can also\"), not the primary required condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:trend#0",
+      "type": "FILTER",
+      "object": "trend",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "VWAP plays a better magnet than it does a trading level except in a trend.",
+      "rationale": "Restricts the VWAP-bounce setup to trend days specifically; gate-like exception language."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:price break into value trending day#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price break into value trending day",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Entry is on the first test of VWAP after price breaks into value on a trending day.",
+      "rationale": "Explicit \"Entry is on X\" definitional entry criteria."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_RETEST:price acceptance and rejection towards vwap#0",
+      "type": "WAIT_RETEST",
+      "object": "price acceptance and rejection towards vwap",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Price is accepting inside value, touching the bands, looking for rejections, and fading back towards the VWAP.",
+      "rationale": "Summary restatement of Setup 2's mechanics presented as the defining rule."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:market condition#0",
+      "type": "FILTER",
+      "object": "market condition",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "This is on trend days only.",
+      "rationale": "Explicit \"only\" restricts the setup to a specific market condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:vwap test#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwap test",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "It's going to be the first test of VWAP after traveling through price discovery.",
+      "rationale": "Definitional restatement of Setup 4's required trigger."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_SESSION:trading session#0",
+      "type": "WAIT_SESSION",
+      "object": "trading session",
+      "classification": "CONTEXTUAL",
+      "quote": "I trade every single morning from the New York market open to around noon New York time.",
+      "rationale": "Promotional info about when the educator personally streams/trades, not a strategy entry condition."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:opening range breakout orb#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "opening range breakout orb",
+      "classification": "CONTEXTUAL",
+      "quote": "The opening range breakout. Everybody talks about it. Everybody tries it. But almost nobody trades it profitably.",
+      "rationale": "Introductory scene-setting about the topic, not itself an entry condition."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_SESSION:time window#0",
+      "type": "WAIT_SESSION",
+      "object": "time window",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "You mark out the high and the low of the first 15minute candle range. That is your orb box.",
+      "rationale": "Defines the structural time window needed to build the orb box that the whole strategy is anchored to."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:opening range breakout zone#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "opening range breakout zone",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "That is your opening range breakout zone that you wait for price action to break out.",
+      "rationale": "Defines the required box/zone structure used as reference for every subsequent step."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:first 15minute candle range high#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "first 15minute candle range high",
+      "classification": "CONTEXTUAL",
+      "quote": "people go ahead and mark out the high and they mark out the low but they do not look at what the higher time frame is doing",
+      "rationale": "Describes the flawed naive-trader behavior being critiqued, not the educator's own required rule."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_CONFIRMATION:breakout#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "breakout",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Step number one, we are going to wait for a breakout on the fiveminut chart.",
+      "rationale": "Explicit enumerated \"Step number one, we are going to wait for\" gate language."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:overlapping fvg crosses higher low#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "overlapping fvg crosses higher low",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Step number two, we're going to wait for an overlapping fair value gap that crosses the higher low.",
+      "rationale": "Explicit enumerated mandatory step."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_CONFIRMATION:fvg breaks out range#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "fvg breaks out range",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "That fair value gap has to be the same candle that breaks out of the range.",
+      "rationale": "\"Has to be\" is explicit mandatory requirement language."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_RETEST:high or low initial candle with overlapping fvg#0",
+      "type": "WAIT_RETEST",
+      "object": "high or low initial candle with overlapping fvg",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "step number three, we're going to wait for the market to retest that high or low of this initial candle",
+      "rationale": "Explicit enumerated mandatory step."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "FILTER:traps#0",
+      "type": "FILTER",
+      "object": "traps",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "You're filtering out the traps and only trading when the market provides its hand.",
+      "rationale": "\"Only trading when\" is explicit gate language."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_RETEST:fvg#0",
+      "type": "WAIT_RETEST",
+      "object": "fvg",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we are going to wait for again wait for that retest into that fair value gap.",
+      "rationale": "Reiterates the explicit enumerated \"wait for\" requirement."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_CONFIRMATION:bearish candle trading into gap#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "bearish candle trading into gap",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "We're going to get a bearish candle that trades into that gap.",
+      "rationale": "Describes the required retest-candle sequence that gates the entry (opposite-color candle into the gap before the engulf)."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_CONFIRMATION:candle breakout#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "candle breakout",
+      "classification": "CONTEXTUAL",
+      "quote": "they wait for the very first 5m minute candle to close above or below the range.",
+      "rationale": "Describes the naive/wrong approach the educator explicitly says leads to blowing your account, not his own rule."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:order block formation#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "order block formation",
+      "classification": "CONTEXTUAL",
+      "quote": "they receive a change in the state of delivery with downlosed candles closing below this up close candle forming an order block.",
+      "rationale": "Part of the narrated flawed example of how \"they\" (naive traders) misread the setup, not the educator's own required condition."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_BIAS:so rules stay same#0",
+      "type": "WAIT_BIAS",
+      "object": "so rules stay same",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Now, I'm going to show you with the method that I just taught you how we could have avoided this loss. So, the rules stay the same.",
+      "rationale": "Explicitly reapplies the previously-established mandatory rule set to this example, confirming it as fixed/required."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:fvg#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "fvg",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "we do have a displacement through that level. We have a fair value gap.",
+      "rationale": "Confirms the previously-established required FVG condition is present in this worked example."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "FILTER:candle interaction#0",
+      "type": "FILTER",
+      "object": "candle interaction",
+      "classification": "CONTEXTUAL",
+      "quote": "The low of the third candle and the high of the first candle do not touch each other.",
+      "rationale": "This is a terminology definition of what an FVG is, not itself phrased as a gate requirement."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_CONFIRMATION:high rejection#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "high rejection",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "I want to see that high being rejected.",
+      "rationale": "\"I want to see\" is personal-requirement gate language equivalent to \"I need.\""
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:fvg inversion#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "fvg inversion",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "We do. We then inverse that fair value gap.",
+      "rationale": "Part of the required technical sequence; the example ultimately shows no entry because a related condition later fails, confirming this step's necessity."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_CONFIRMATION:candle close above order block#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "candle close above order block",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "The very next candle tries to close above it and form an order block, but that fails. So, we're still not in our trade yet.",
+      "rationale": "The failure of this specific close-above condition explicitly keeps them out of the trade, proving it's a required gate."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_CONFIRMATION:breaking close below forms fvg#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "breaking close below forms fvg",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "I want to see a breaking close below that forms a fair value gap.",
+      "rationale": "\"I want to see\" personal-requirement gate language."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_RETEST:high price level#0",
+      "type": "WAIT_RETEST",
+      "object": "high price level",
+      "classification": "CONTEXTUAL",
+      "quote": "Now, we trade back up to the high. And do we get our entry reason?",
+      "rationale": "Narrates price action in the example, not itself phrased as a rule."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_SESSION:new york open time zone#0",
+      "type": "WAIT_SESSION",
+      "object": "new york open time zone",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "We come to our charts right before 9:30 open in the New York hill zone.",
+      "rationale": "Establishes the required session/time anchor the entire ORB structure depends on."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_CONFIRMATION:close above box to form fvg#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "close above box to form fvg",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "We do close above the box we form a fair value gap.",
+      "rationale": "Confirms the combined close-above-box-plus-FVG condition required by the established method."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_BIAS:trade into high#0",
+      "type": "WAIT_BIAS",
+      "object": "trade into high",
+      "classification": "CONTEXTUAL",
+      "quote": "We see that we do trade into the high.",
+      "rationale": "Narrates price action outcome in the example, not modal gate language."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:order block#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "order block",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "So I want to see a candle closure above it. What does this form? This forms my order block.",
+      "rationale": "Follows explicit \"I want to see\" requirement language describing the resulting mandatory entry trigger."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_SESSION:higher time frame#0",
+      "type": "WAIT_SESSION",
+      "object": "higher time frame",
+      "classification": "CONTEXTUAL",
+      "quote": "We go to a higher time frame and we leave a very small runner running.",
+      "rationale": "Describes post-entry trade/runner management, not an entry gate."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "EXIT_HINT:position exit#0",
+      "type": "EXIT_HINT",
+      "object": "position exit",
+      "classification": "CONTEXTUAL",
+      "quote": "and then eventually we are taken out of our position for a 2.",
+      "rationale": "Describes trade exit/outcome narrative, not an entry condition."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_SESSION:nq trading#0",
+      "type": "WAIT_SESSION",
+      "object": "nq trading",
+      "classification": "CONTEXTUAL",
+      "quote": "starting here on the daily time frame on NQ, what do we see?",
+      "rationale": "Rhetorical narration opening the top-down analysis walkthrough, not a stated gate."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_SESSION:daily time frame#0",
+      "type": "WAIT_SESSION",
+      "object": "daily time frame",
+      "classification": "CONTEXTUAL",
+      "quote": "So looking at this daily time frame, what do we see?",
+      "rationale": "Rhetorical narration, not modal gate language."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_BIAS:market direction#0",
+      "type": "WAIT_BIAS",
+      "object": "market direction",
+      "classification": "CONTEXTUAL",
+      "quote": "I'm looking for the market to trade down where lower.",
+      "rationale": "Soft personal-expectation phrasing during bias-forming analysis, not a hard entry requirement."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:daily fvg#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "daily fvg",
+      "classification": "CONTEXTUAL",
+      "quote": "And if I go out here, we have that daily fair value gap.",
+      "rationale": "Descriptive chart observation during top-down analysis narrative."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_BIAS:delivery closing through up close candles#0",
+      "type": "WAIT_BIAS",
+      "object": "delivery closing through up close candles",
+      "classification": "CONTEXTUAL",
+      "quote": "we do have a nice change in the state of delivery closing through up close candles.",
+      "rationale": "Descriptive bias-forming observation, not phrased as a required gate."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_BIAS:sells#0",
+      "type": "WAIT_BIAS",
+      "object": "sells",
+      "classification": "CONTEXTUAL",
+      "quote": "gives me every excuse in the book to look for sells with this position.",
+      "rationale": "\"Look for\" is soft directional-bias language from top-down analysis, not a stated hard entry gate."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:sweep#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "sweep",
+      "classification": "CONTEXTUAL",
+      "quote": "We sweep. Look at this. We manipulate and we distribute lower.",
+      "rationale": "Narrates observed price action in the walkthrough, not modal gate language."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_SESSION:5minut time frame#0",
+      "type": "WAIT_SESSION",
+      "object": "5minut time frame",
+      "classification": "CONTEXTUAL",
+      "quote": "Dropping to the 5minut time frame here on the 5 minute we have our high we have our low marked out.",
+      "rationale": "Narrative transition between timeframes, not a stated condition."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_STRUCTURE:fvg overlapping with range#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "fvg overlapping with range",
+      "classification": "OPTIONAL",
+      "quote": "It is even better if the fair value gap overlaps with the actual range high.",
+      "rationale": "Explicit \"even better if\" enhancement language elsewhere in the transcript frames overlap as a bonus, not a requirement."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "WAIT_SESSION:market activity#0",
+      "type": "WAIT_SESSION",
+      "object": "market activity",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Now we wait for the market to trade back into that range and then give us an engulfing candle",
+      "rationale": "Explicit \"wait for\" gate language matching the established retest+engulf requirement."
+    },
+    {
+      "video": "oDLt9zh33LE",
+      "condition_id": "EXIT_HINT:daily fvg#0",
+      "type": "EXIT_HINT",
+      "object": "daily fvg",
+      "classification": "CONTEXTUAL",
+      "quote": "The market traded all the way to that daily fair value gap and we're out of this position for a 6.11R.",
+      "rationale": "Describes the trade's exit/target outcome, not an entry condition."
+    }
+  ],
+  "full_classification_table_second_pass_subsample": [
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "WAIT_SESSION:trading asset#0",
+      "type": "WAIT_SESSION",
+      "object": "trading asset",
+      "classification": "CONTEXTUAL",
+      "quote": "Gryp die keerverliese en keer om nou sê hulle om dit te verhandel op bates met hoë volatiliteit soos die NAS 100 die S&P 500 selfs goud",
+      "rationale": "Reports what 'they' (others) say about trading high-volatility assets rather than stating a rule this strategy itself requires."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "WAIT_STRUCTURE:candle range range break#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "candle range range break",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "as 'n reeks hieronder breek as 'n kers uitgaan kort en om nie binne die reeks handel te dryf nie",
+      "rationale": "States the literal breakout trigger mechanic (break of range leads to entry) as the strategy's defining rule, not an optional add-on."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "WAIT_CONFIRMATION:structure confirmation within range box#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "structure confirmation within range box",
+      "classification": "OPTIONAL",
+      "quote": "en voeg selfs iets by tot bevestiging van struktuur in die reeks",
+      "rationale": "'even add something to' (voeg selfs iets by) frames structure confirmation as an enhancement, not a required gate."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "WAIT_STRUCTURE:fibonacci retracement level#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "fibonacci retracement level",
+      "classification": "OPTIONAL",
+      "quote": "prys waarskynlik sal terugtrek na 'n Fibonacci retracement vlak",
+      "rationale": "Uses probabilistic 'likely' framing and presents Fibonacci as a helpful filter tool rather than a mandatory requirement."
+    },
+    {
+      "video": "jlShztsY3oA",
+      "condition_id": "FILTER:downward tendency line#0",
+      "type": "FILTER",
+      "object": "downward tendency line",
+      "classification": "CONTEXTUAL",
+      "quote": "hoekom sal jy kort daarin gaan as jy die bol-strategie wil gebruik",
+      "rationale": "Rhetorical critique of a bad short trade taken against the trend, not a stated entry gate."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_BIAS:ema period#0",
+      "type": "WAIT_BIAS",
+      "object": "ema period",
+      "classification": "ALTERNATIVE",
+      "quote": "I've said both in videos. I honestly I've been using the eight...Really no big difference at all.",
+      "rationale": "Presents 8 vs 9 EMA period as interchangeable options with explicitly no meaningful difference."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "FILTER:vwap#0",
+      "type": "FILTER",
+      "object": "vwap",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "So I have a very big rule as well. I never take calls under VWAP and I never take puts over VWAP.",
+      "rationale": "Explicitly labeled 'a very big rule' using absolute 'never' language."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_CONFIRMATION:vwop retest#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "vwop retest",
+      "classification": "ALTERNATIVE",
+      "quote": "then I'm looking to take puts on a VWOP retest, not a pre-market low retest",
+      "rationale": "Presents a conditional choice between two retest types depending on where VWAP sits relative to pre-market low."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "FILTER:vwap retest vs pre market low retest#0",
+      "type": "FILTER",
+      "object": "vwap retest vs pre market low retest",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Because if it gets above VWAP, you can't take puts. That's our rule.",
+      "rationale": "Explicit 'can't' plus 'That's our rule' is direct gate language."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:apple pre market high retest#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "apple pre market high retest",
+      "classification": "CONTEXTUAL",
+      "quote": "let me show you some real examples using these indicator...This Apple pre-market high retest.",
+      "rationale": "Introduces a specific chart example, not a stated rule."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_RETEST:ema retest#0",
+      "type": "WAIT_RETEST",
+      "object": "ema retest",
+      "classification": "CONTEXTUAL",
+      "quote": "let me show you guys another real example. So, this is an EMA retest.",
+      "rationale": "Narration of a specific example chart, not a gate statement."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:apple retest pre market high#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "apple retest pre market high",
+      "classification": "CONTEXTUAL",
+      "quote": "As you can see here, Apple retests pre-market high.",
+      "rationale": "Example narration describing a specific chart instance."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_CONFIRMATION:ema level#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "ema level",
+      "classification": "CONTEXTUAL",
+      "quote": "it doesn't break under the EMA until right here, $4...So, we don't sell any of our position until right here.",
+      "rationale": "Narrates the outcome of one specific example trade rather than declaring a standing rule."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:vwop retest number one#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwop retest number one",
+      "classification": "CONTEXTUAL",
+      "quote": "So, IWM, as you can see, I just showed that example, but we got a VWOP retest number one, and then dump.",
+      "rationale": "Narrating a specific IWM chart example."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "EXIT_HINT:position out#0",
+      "type": "EXIT_HINT",
+      "object": "position out",
+      "classification": "CONTEXTUAL",
+      "quote": "you would have taken most your position out over here once it got above.",
+      "rationale": "Hypothetical narration of what 'you would have' done in a specific example, not a stated rule."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_CONFIRMATION:ema trend confirmation#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "ema trend confirmation",
+      "classification": "UNRESOLVED",
+      "quote": "You hold against the EMA and let your runners run.",
+      "rationale": "General technique description with no must/only language establishing it as a hard gate."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:vwap#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "we come down, we retest VWAP, and we're above pre-market high...and then we come and retest VWAP.",
+      "rationale": "Live-example narration of a specific PLTR trade, not a rule statement."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "FILTER:pre market high#0",
+      "type": "FILTER",
+      "object": "pre market high",
+      "classification": "CONTEXTUAL",
+      "quote": "It's a VWOP retest, above pre-market high, one of the strongest stocks of the day.",
+      "rationale": "Continues narrating the same specific PLTR example."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_STRUCTURE:vwop retest#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwop retest",
+      "classification": "CONTEXTUAL",
+      "quote": "So, really, really, really nice trade here on this VWOP retest.",
+      "rationale": "Wrap-up praise of a specific example trade, not a gate statement."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "CONFIRM_DIRECTION:ema#0",
+      "type": "CONFIRM_DIRECTION",
+      "object": "ema",
+      "classification": "CONTEXTUAL",
+      "quote": "VWAP we use for retest and to know if we can buy calls or puts or not. EMA we use to know if to sell or not.",
+      "rationale": "Descriptive recap of what each indicator is used for, not modal gate language."
+    },
+    {
+      "video": "N7uP9V0Iktc",
+      "condition_id": "WAIT_RETEST:ema#0",
+      "type": "WAIT_RETEST",
+      "object": "ema",
+      "classification": "OPTIONAL",
+      "quote": "You also trade EMA retest sometimes.",
+      "rationale": "'sometimes' explicitly marks this as non-mandatory."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:timeframe#0",
+      "type": "WAIT_SESSION",
+      "object": "timeframe",
+      "classification": "ALTERNATIVE",
+      "quote": "Honestly, it doesn't matter...So, if you really want to wait for the hourly ones, go ahead.",
+      "rationale": "Presents three timeframes (1h/30m/15m) as interchangeable, explicitly saying it doesn't matter which is used."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_STRUCTURE:price break high or low#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price break high or low",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "what you will do is you will wait for price to come break either that high or the low.",
+      "rationale": "Direct 'wait for' gate language defining the required trigger."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_CONFIRMATION:third candle reversal#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "third candle reversal",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "if it doesn't reverse, the strategy is not going to work. It must reverse right after breaking a high or a low.",
+      "rationale": "Explicit 'must reverse' plus 'the strategy is not going to work' without it."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_RETEST:price reversal#0",
+      "type": "WAIT_RETEST",
+      "object": "price reversal",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "I really want to put a lot of emphasis on this because if it doesn't reverse, the strategy is not going to work.",
+      "rationale": "Same paragraph's explicit 'must reverse' emphasis applies directly to this reversal condition."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_STRUCTURE:trading range#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "trading range",
+      "classification": "CONTEXTUAL",
+      "quote": "That is exactly why it's called candle range theory. We are trading from one range of the candle to the other one.",
+      "rationale": "Explanatory naming/rationale for the strategy, not a new gate statement."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "EXIT_HINT:trading session termination#0",
+      "type": "EXIT_HINT",
+      "object": "trading session termination",
+      "classification": "OPTIONAL",
+      "quote": "if I don't find a setup before like 12:00 or 1:00 p.m. Eastern time, honestly, just close the screens and just log off.",
+      "rationale": "Casual 'honestly, just' framing presents this as a personal habit rather than a mandatory rule."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_CONFIRMATION:bearish crt or long crt#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "bearish crt or long crt",
+      "classification": "CONTEXTUAL",
+      "quote": "How do I know to play a bearish CRT or a long CRT?",
+      "rationale": "Rhetorical question introducing the topic, not itself a condition."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:mnq market trend#0",
+      "type": "WAIT_SESSION",
+      "object": "mnq market trend",
+      "classification": "CONTEXTUAL",
+      "quote": "You can see right now that if I take a look at MNQ, we are on a tear. It's a clear uptrend.",
+      "rationale": "Describes the specific day's example market condition, not a standing gate."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_BIAS:it s just ripping higher highs higher lows every single time#0",
+      "type": "WAIT_BIAS",
+      "object": "it s just ripping higher highs higher lows every single time",
+      "classification": "CONTEXTUAL",
+      "quote": "It's just ripping higher highs, higher lows every single time.",
+      "rationale": "Describes the specific example's price action, scene-setting only."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:mnq#0",
+      "type": "WAIT_SESSION",
+      "object": "mnq",
+      "classification": "CONTEXTUAL",
+      "quote": "if you do go on the 1-hour time frame for a bare example right here, very clearly I can see MNQ is just ripping.",
+      "rationale": "Explicitly introduced 'for a bare example,' confirming this is illustrative narration."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_STRUCTURE:price movement#3",
+      "type": "WAIT_STRUCTURE",
+      "object": "price movement",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "I will wait for price to break this middle candle right over here. This one right here. And that is when my entry will be taken.",
+      "rationale": "Explicit 'I will wait for' plus 'that is when my entry will be taken' gate language."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_BIAS:price movement bias#0",
+      "type": "WAIT_BIAS",
+      "object": "price movement bias",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Okay, since we took out the low, it wants to move to the opposite end.",
+      "rationale": "Same context block contains the explicit entry-trigger gate language ('that is when my entry will be taken')."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_RETEST:trade execution#0",
+      "type": "WAIT_RETEST",
+      "object": "trade execution",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "and that's the only time I'm taking that trade. If it doesn't break the middle candle, absolutely nothing will be done.",
+      "rationale": "'the only time' is explicit exclusive gate language."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:process repetition#0",
+      "type": "WAIT_SESSION",
+      "object": "process repetition",
+      "classification": "CONTEXTUAL",
+      "quote": "all I'm really going to do is that exact same process over and over and over again.",
+      "rationale": "Describes routine repetition of the process day-to-day, not a specific condition."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_BIAS:market activity#0",
+      "type": "WAIT_BIAS",
+      "object": "market activity",
+      "classification": "CONTEXTUAL",
+      "quote": "I'm waiting. I'm waiting. I'm watching to see if any CRTs form at all.",
+      "rationale": "Live narration of watching and waiting, not a stated rule."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:hourly candle close#0",
+      "type": "WAIT_SESSION",
+      "object": "hourly candle close",
+      "classification": "CONTEXTUAL",
+      "quote": "Hourly candle just closed and this is a wonderful CRT right here.",
+      "rationale": "Narrating a specific chart example."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_CONFIRMATION:price break and reversal#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "price break and reversal",
+      "classification": "CONTEXTUAL",
+      "quote": "Price came and broke that low and immediately reversed back up.",
+      "rationale": "Narrates what happened in a specific example instance; no modal language in this context block."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_SESSION:first crt day#0",
+      "type": "WAIT_SESSION",
+      "object": "first crt day",
+      "classification": "CONTEXTUAL",
+      "quote": "Price continues. Boom. Straight to TP. First CRT of the day.",
+      "rationale": "Result narration of a specific trade example."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_STRUCTURE:price formation#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price formation",
+      "classification": "CONTEXTUAL",
+      "quote": "there was this bullish CRT in the morning...So, price forms that CRT.",
+      "rationale": "Narrating a specific example CRT forming."
+    },
+    {
+      "video": "UBvfsImdI2U",
+      "condition_id": "WAIT_BIAS:move to opposite end candle#0",
+      "type": "WAIT_BIAS",
+      "object": "move to opposite end candle",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "middle candle will break, and that is where my entry will be taken. And that is exactly what I'm looking for.",
+      "rationale": "Explicit entry-trigger gate language."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:vwap#0",
+      "type": "FILTER",
+      "object": "vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "Every course I bought, every video I watched, every guru I follow said the same thing. VWAP is support.",
+      "rationale": "Presented as the mistaken belief that cost the educator money and is being debunked, not this strategy's actual rule."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:vwap resistance#0",
+      "type": "FILTER",
+      "object": "vwap resistance",
+      "classification": "CONTEXTUAL",
+      "quote": "VWAP is resistance. Bounce off of VWAP, you buy. Break VWAP, you sell.",
+      "rationale": "Same debunked-belief framing being set up for refutation, not the taught rule."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_CONFIRMATION:price rejection from it#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "price rejection from it",
+      "classification": "CONTEXTUAL",
+      "quote": "Price rejects from it. And sometimes that works. Just often enough to convince you that it's true.",
+      "rationale": "Explicitly flagged as an unreliable old belief ('sometimes... just often enough to convince you')."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:volume profile#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "volume profile",
+      "classification": "CONTEXTUAL",
+      "quote": "If you're familiar with the volume profile, you know about the point of control.",
+      "rationale": "Educational background aside, not an entry condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:vwap#0",
+      "type": "WAIT_BIAS",
+      "object": "vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "It can be a price magnet where price gravitates toward it.",
+      "rationale": "Describes VWAP's general market behavior/principle, not a specific checkable gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:price near vwap#0",
+      "type": "FILTER",
+      "object": "price near vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "when price is near it, you should expect a lot of noise, not always clean moves.",
+      "rationale": "Sets an expectation about market behavior, not a gate condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:vwap#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwap",
+      "classification": "CONTEXTUAL",
+      "quote": "VWAP is a magnet first, and it is a level second.",
+      "rationale": "General characterization of VWAP's nature, no modal gate language in this span."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:vwap trading level#0",
+      "type": "FILTER",
+      "object": "vwap trading level",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Only in specific conditions does it become a trading level.",
+      "rationale": "Explicit 'Only' restricts when VWAP may be treated as a tradeable level."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:range continuation bias#0",
+      "type": "WAIT_BIAS",
+      "object": "range continuation bias",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "you need to expect it to continue ranging...We do not fade the top, and we do not buy the bottom.",
+      "rationale": "'need to' plus explicit 'we do not' prohibitions are direct gate language."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:price holding or reentering vwap value area#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price holding or reentering vwap value area",
+      "classification": "CONTEXTUAL",
+      "quote": "When price holds or reenters the VWAP value area, it gravitates to the VWAP.",
+      "rationale": "States a general market-behavior principle without must/only language."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:breakout#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "breakout",
+      "classification": "CONTEXTUAL",
+      "quote": "We faded this value area extreme, and it went to the VWAP...but once we broke through, the next target was the other side of value.",
+      "rationale": "Narrates a specific example trade, not a gate rule."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_SESSION:previous few sessions#0",
+      "type": "WAIT_SESSION",
+      "object": "previous few sessions",
+      "classification": "OPTIONAL",
+      "quote": "We want to be mindful of the previous few sessions.",
+      "rationale": "Soft suggestion ('want to be mindful of'), not a required gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_CONFIRMATION:retest#0",
+      "type": "WAIT_CONFIRMATION",
+      "object": "retest",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "If we wanted to take a long, we wait for a pullback.",
+      "rationale": "'we wait for' is explicit gate language matching the rubric's own example phrasing."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_RETEST:area#0",
+      "type": "WAIT_RETEST",
+      "object": "area",
+      "classification": "CONTEXTUAL",
+      "quote": "probabilities tell us the first pullback is the highest probability.",
+      "rationale": "Probabilistic quality ranking of setups, not a strict entry gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:contextual opportunity quality#0",
+      "type": "WAIT_BIAS",
+      "object": "contextual opportunity quality",
+      "classification": "OPTIONAL",
+      "quote": "The first contextual opportunity is the best.",
+      "rationale": "Frames repeat setups as lower-probability rather than excluded, matching the earlier acknowledgment that a second trade can still be taken."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:setups taking place#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "setups taking place",
+      "classification": "CONTEXTUAL",
+      "quote": "If the setups aren't taking place, if they're not playing out, we need to take a step back.",
+      "rationale": "Discusses handling uncertainty/failure of the strategy generally, not an entry condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:moving out value#0",
+      "type": "WAIT_BIAS",
+      "object": "moving out value",
+      "classification": "UNRESOLVED",
+      "quote": "This happens when we're moving out of value, and price is now in search of a new value area.",
+      "rationale": "Definitional description of Setup 1's context with no must/only language present in this span to confirm mandatory force."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_RETEST:retest#0",
+      "type": "WAIT_RETEST",
+      "object": "retest",
+      "classification": "CONTEXTUAL",
+      "quote": "Often, they'll retest again just like they did right here.",
+      "rationale": "'Often' explicitly signals a common-but-not-guaranteed tendency, not a gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:continuation trend day#0",
+      "type": "WAIT_BIAS",
+      "object": "continuation trend day",
+      "classification": "CONTEXTUAL",
+      "quote": "This trade plays out over and over again on a continuation trend day.",
+      "rationale": "Descriptive frequency statement, not a gate condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:price location#0",
+      "type": "FILTER",
+      "object": "price location",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "here's the setup criteria. First, price has obviously been spending a lot of time within the VWAP value area. It must show price acceptance.",
+      "rationale": "Explicit 'must show' gate language directly tied to the stated 'setup criteria.'"
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:pierce band#0",
+      "type": "FILTER",
+      "object": "pierce band",
+      "classification": "CONTEXTUAL",
+      "quote": "Sometimes they pierce the band and then they reject hard and immediately.",
+      "rationale": "'Sometimes' describes variable execution behavior, not a required gate."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:stop placement rule#0",
+      "type": "FILTER",
+      "object": "stop placement rule",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "The stop is going to go beyond the price level or beyond the testing candle wick.",
+      "rationale": "Stated as a definitive placement rule with no hedging language."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:value area break back into#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "value area break back into",
+      "classification": "UNRESOLVED",
+      "quote": "this is where we've been in price discovery and then we break back into the value area.",
+      "rationale": "Definitional description of Setup 3 with no must/only language present in this context block."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_BIAS:rejection#0",
+      "type": "WAIT_BIAS",
+      "object": "rejection",
+      "classification": "ALTERNATIVE",
+      "quote": "You can also get in on the break into value. But again, be prepared for rejection rather than waiting for acceptance.",
+      "rationale": "Presents an alternative, more aggressive entry option versus waiting for acceptance."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:trend#0",
+      "type": "FILTER",
+      "object": "trend",
+      "classification": "UNRESOLVED",
+      "quote": "VWAP plays a better magnet than it does a trading level except in a trend.",
+      "rationale": "'Except' qualifies when VWAP acts as a level but lacks explicit must/only phrasing in this span."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:price break into value trending day#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "price break into value trending day",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "Entry is on the first test of VWAP after price breaks into value on a trending day.",
+      "rationale": "Direct declarative statement of the entry trigger condition."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_RETEST:price acceptance and rejection towards vwap#0",
+      "type": "WAIT_RETEST",
+      "object": "price acceptance and rejection towards vwap",
+      "classification": "UNRESOLVED",
+      "quote": "Price is accepting inside value, touching the bands, looking for rejections, and fading back towards the VWAP.",
+      "rationale": "Recap description of Setup 2 without must/only language in this specific context block."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "FILTER:market condition#0",
+      "type": "FILTER",
+      "object": "market condition",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "This is on trend days only.",
+      "rationale": "Explicit 'only' restricts this setup to trend days."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_STRUCTURE:vwap test#0",
+      "type": "WAIT_STRUCTURE",
+      "object": "vwap test",
+      "classification": "JUSTIFIED_MANDATORY",
+      "quote": "This is on trend days only. It's going to be the first test of VWAP after traveling through price discovery.",
+      "rationale": "Same context block contains the explicit 'only' gate qualifier for this setup's entry trigger."
+    },
+    {
+      "video": "ktkqq7QsN9Q",
+      "condition_id": "WAIT_SESSION:trading session#0",
+      "type": "WAIT_SESSION",
+      "object": "trading session",
+      "classification": "CONTEXTUAL",
+      "quote": "if you want to see these setups traded live, I trade every single morning from the New York market open to around noon",
+      "rationale": "Promotional/personal-schedule statement about the educator's Discord, not a strategy entry gate."
+    }
+  ],
+  "what_was_NOT_verified": [
+    "Only 14 of 39 available spec_onboarding CANDIDATE concepts were audited (well above the 12-concept floor, but not exhaustive of the full 39-video corpus).",
+    "and_groups / or_branches structural correctness (whether the compiler correctly ANDs/ORs these conditions at runtime) was NOT tested here -- that was covered by the prior, separate execution-semantics experiments referenced in the task (single-object, composition, OR-honoring).",
+    "No backtest or trade-frequency / SDS behavioral measurement was performed in this audit by design (scope discipline). The follow-on behavioral test is a SEPARATE, later, conditionally-triggered experiment per the design doc.",
+    "The 20 UNRESOLVED conditions (9.0% of the 221-condition sample) were not adjudicated to a final class -- they are reported separately per the pre-registered method and shown under both the strict and inclusive inflation-rate calculations.",
+    "Non-English (e.g. Afrikaans) transcript segments were classified via the rater agents' own translation judgment, not a certified translation -- spot-checked by the auditor (this report author) against one example (jlShztsY3oA) and found consistent, but not independently re-translated for all non-English spans."
+  ]
+}

@@ -65,6 +65,31 @@ describe("recipe-data", () => {
     expect(r.otherTests.find((t) => t.name === "Real-Time Match")?.status).toBe("pass"); // 1.8% < 5%
   });
 
+  // ── Slumhouse progress line — gate journey from otherTests + lifecycle ──
+  it("exposes gateJourney (8 gates matching GATE_DEFS) + dead; GRAVEYARD w/ failed Real or Lucky → real_edge fail", async () => {
+    setupQueries({
+      strategy: [{ id: "s1", name: "dead-strat", symbol: "MES", lifecycle_state: "GRAVEYARD" }],
+      backtest: [{
+        total_pnl: 5000, trade_count: 200, daily_pnls: "[]", equity_curve: "[]",
+        result_extras: JSON.stringify({
+          wfe_overall: 0.78, b15_passed: true, a14_severity: "pass",
+          b10_pass: true, frankenstein_pass: false, compliance_pass_rate: 1.0,
+        }),
+      }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const { GATE_DEFS } = await import("../../lib/slumhouse/gate-journey.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+
+    expect(Array.isArray(r.gateJourney)).toBe(true);
+    expect(r.gateJourney).toHaveLength(8);
+    expect(r.gateJourney.map((g) => g.label)).toEqual(GATE_DEFS.map((d) => d.label));
+    expect(typeof r.dead).toBe("boolean");
+    expect(r.dead).toBe(true);
+    // "Real or Lucky" (frankenstein) failed → the real_edge gate shows fail
+    expect(r.gateJourney.find((g) => g.key === "real_edge")?.status).toBe("fail");
+  });
+
   it("throws strategy_not_found when strategy missing", async () => {
     setupQueries({ strategy: [] });
     const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");

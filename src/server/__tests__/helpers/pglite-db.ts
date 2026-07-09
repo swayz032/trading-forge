@@ -65,6 +65,7 @@ const CORE_DDL = `
 -- 10 core tables: strategies, backtests, monte_carlo_runs,
 -- strategy_health_scores, lifecycle_shadow_signals, audit_log, lifecycle_transitions,
 -- paper_sessions, paper_positions, paper_trades
+-- Plus quantum_rl_runs (deepscan16 W1 T4) and broker_accounts (deepscan15 M3).
 -- DDL mirrors schema.ts column-for-column so Drizzle INSERT statements match.
 
 CREATE TABLE IF NOT EXISTS strategies (
@@ -147,6 +148,7 @@ CREATE TABLE IF NOT EXISTS backtests (
   wrc_result            JSONB,
   spa_result            JSONB,
   provenance_stamp      JSONB,
+  slippage_survival     JSONB,
   error_message         TEXT,
   execution_time_ms     INTEGER,
   created_at            TIMESTAMPTZ DEFAULT NOW(),
@@ -336,6 +338,50 @@ CREATE TABLE IF NOT EXISTS paper_trades (
   fill_probability  NUMERIC,
   roll_spread_cost  NUMERIC,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- deepscan16 W1 T4: quantum_rl_runs — mirrors migration 0158 + 0165 column-for-column
+-- (schema.ts F-2 fix corrected strategy_id from INTEGER to UUID to match this DDL).
+-- Append-only RL training + inference row log, separate namespace from
+-- quantum_mc_runs. See migrations/0158_quantum_rl_runs.sql for full column comments.
+CREATE TABLE IF NOT EXISTS quantum_rl_runs (
+  id                      BIGSERIAL PRIMARY KEY,
+  strategy_id             UUID NOT NULL REFERENCES strategies(id) ON DELETE CASCADE,
+  evaluated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  regime                  TEXT NOT NULL,
+  state_vector            JSONB NOT NULL,
+  action                  TEXT NOT NULL,
+  confidence_score        REAL NOT NULL,
+  effective_confidence    REAL NOT NULL,
+  reward                  REAL NOT NULL,
+  ci_high_at_evaluation   REAL,
+  drawdown_penalty        REAL,
+  governance_labels       JSONB NOT NULL,
+  cpcv_fold_id            INTEGER,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  seed                    INTEGER
+);
+
+-- deep-scan #15 FIX M3: broker_accounts with the firm↔broker_type topology CHECK
+-- constraint (migration 0190). Mirrored here so the gate-chain integration test can
+-- exercise the DB-level invariant (topstep MUST route topstepx, never traderspost;
+-- mffu/others MUST route traderspost). CORE_DDL creates the table fresh so the CHECK
+-- validates immediately (production migration uses NOT VALID for existing-row safety).
+CREATE TABLE IF NOT EXISTS broker_accounts (
+  account_id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  firm_id             TEXT NOT NULL,
+  broker_type         TEXT NOT NULL,
+  api_key_vault_ref   TEXT,
+  account_id_external TEXT,
+  enabled             BOOLEAN NOT NULL DEFAULT TRUE,
+  enabled_symbols     TEXT[] NOT NULL DEFAULT ARRAY['MES'],
+  dll_opted_in        BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT broker_accounts_firm_broker_topology_chk CHECK (
+    (regexp_replace(lower(firm_id), '_[0-9]+k$', '')  = 'topstep' AND broker_type = 'topstepx')
+    OR
+    (regexp_replace(lower(firm_id), '_[0-9]+k$', '') <> 'topstep' AND broker_type = 'traderspost')
+  )
 );
 `;
 

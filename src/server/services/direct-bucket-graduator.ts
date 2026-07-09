@@ -25,8 +25,9 @@
  * candidates that need post-extraction LLM enrichment.
  */
 import { RAW_ARCHETYPES_RESPECTED as RAW_ARCHETYPES_RESPECTED_CANONICAL } from "../lib/archetype-registry-keys.js";
+import { isHandlerDrivenEntry } from "../lib/handler-driven-entry.js";
 import { db } from "../db/index.js";
-import { strategies, strategyPendingBuckets, auditLog, deadLetterQueue } from "../db/schema.js";
+import { strategies, strategyPendingBuckets, auditLog, deadLetterQueue, lifecycleTransitions } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
 import { applyFrameworkOverlay } from "./framework-overlay.js";
 import { compileDslToEngine, compileDslWithConfluence } from "../lib/dsl-compiler.js";
@@ -258,7 +259,7 @@ import { computeWideConceptFingerprintHash } from "./strategy-fingerprint.js";
 // initializing. `../lib/logger.js` is behaviorally equivalent (identical
 // pino config + test-runtime silence guard) and carries no such edge.
 import { logger } from "../lib/logger.js";
-import { broadcastSSE } from "../routes/sse.js";
+import { broadcastSSE, FACTORY_EVENTS } from "../routes/sse.js";
 import { notify } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
@@ -296,11 +297,23 @@ const BIDIR_SENTINEL = "high < low";
  * Gate 1 — Bidirectional Completeness Check.
  *
  * When direction === "both":
- *   Parametric path (no archetype): BOTH entry_long AND entry_short must be
- *   non-empty AND non-sentinel ("high < low").
- *   Structural-archetype path (archetype declared): both may be sentinel OR both
- *   may be real expressions — but never ONE sentinel and ONE empty/sentinel (mixed
- *   state means the LLM extracted only one side).
+ *   Parametric path (no archetype, not handler-driven): BOTH entry_long AND
+ *   entry_short must be non-empty AND non-sentinel ("high < low").
+ *   Handler-driven path (archetype declared, OR entry_long/entry_short/
+ *   entry_indicator match the shared `isHandlerDrivenEntry()` recognizer —
+ *   see src/server/lib/handler-driven-entry.ts): both may be sentinel/marker
+ *   OR both may be real expressions — but never ONE sentinel and ONE
+ *   empty/sentinel (mixed state means the LLM extracted only one side).
+ *
+ * 2026-07-04 dispatch-marker fix: this gate and framework-overlay.ts's
+ * direction="both" coercion guard used to each hand-roll their own "is this
+ * handler-driven" check and drifted apart — framework-overlay.ts didn't
+ * recognize spec-onboarding-service.ts's `archetype_dispatch:<key>` /
+ * `spec_conditions:<hash>` dispatch markers, silently amputating the short
+ * side of spec-onboarded "both" strategies downstream of this gate. Both call
+ * sites now route through the same `isHandlerDrivenEntry()` helper so they
+ * can never drift apart again. The legacy `archetype` field is preserved as
+ * an alternate (OR'd) signal for callers that don't have entry_indicator handy.
  *
  * Single-direction strategies (long/short) are NOT checked — asymmetric is allowed.
  */
@@ -314,6 +327,7 @@ export function auditBidirectionalCompleteness(compiledConfig: {
   archetype?: string | null;
   entry_long?: string;
   entry_short?: string;
+  entry_indicator?: string | null;
 }): BidirectionalAuditResult {
   const direction = compiledConfig.direction ?? "";
 
@@ -324,13 +338,14 @@ export function auditBidirectionalCompleteness(compiledConfig: {
 
   const entryLong  = compiledConfig.entry_long  ?? "";
   const entryShort = compiledConfig.entry_short ?? "";
-  const hasArchetype = Boolean(compiledConfig.archetype);
+  const isHandlerDriven = Boolean(compiledConfig.archetype) ||
+    isHandlerDrivenEntry(entryLong, entryShort, compiledConfig.entry_indicator ?? null);
 
   const longIsSentinel  = entryLong  === BIDIR_SENTINEL || entryLong  === "";
   const shortIsSentinel = entryShort === BIDIR_SENTINEL || entryShort === "";
 
-  if (hasArchetype) {
-    // Structural-archetype path: both sentinel or both real — mixed is a bug
+  if (isHandlerDriven) {
+    // Handler-driven path: both sentinel/marker or both real — mixed is a bug
     if (longIsSentinel !== shortIsSentinel) {
       return {
         pass: false,
@@ -365,6 +380,33 @@ export interface EntryQualityWithSources {
   factor_sources?: Record<string, FactorSourceLabel>;
   /** Telemetric quality tag. Optional/additive — legacy rows omit this key. */
   factor_quality?: "rich" | "thin" | "fallback_only" | null;
+  /**
+   * FIX A1 (deep-scan #22 fix-wave-2, 2026-07-07): Wave 25 W25.1 opt-in flag for
+   * Path C (evaluateWeightedConfluence). paper-signal-service.ts:4176 reads this
+   * field from INSIDE config.entry_quality — it does NOT read the sibling
+   * top-level `strategies.use_weighted_scoring` DB column at signal-evaluation
+   * time (that column is read elsewhere, e.g. by the scoring-strategy loader,
+   * but the paper-signal-service dispatcher's decision point only looks here).
+   * Must be stamped here or Path C is silently dead-on-arrival for every
+   * graduated strategy regardless of what the DB column says.
+   */
+  use_weighted_scoring?: boolean;
+  /**
+   * FIX A1 (deep-scan #22 fix-wave-2, 2026-07-07): W23H.D Path A per-strategy
+   * confirming indicators. paper-signal-service.ts:4162-4170 reads this from
+   * INSIDE config.entry_quality, not from the sibling top-level
+   * `config.confirming_indicators` key the graduator also writes (that
+   * top-level copy is Wave 26 Pass E's bare confluence-factor-tag array —
+   * see direct-bucket-graduator.ts buildV11ConfigAdditions callers — a
+   * DIFFERENT shape than the ConfirmingIndicator{indicator,params,direction}
+   * objects this field requires; do NOT wire that array in here, it would
+   * silently divert Path C's error-fallback into a guaranteed-reject Path A).
+   * This field carries ONLY the genuinely LLM-extracted W23G.11
+   * `confirmingIndicators` (already the correct object shape) when present —
+   * absent/undefined for the (common) case where the LLM did not extract any,
+   * in which case Path A stays dormant and Path B/C behavior is unchanged.
+   */
+  confirming_indicators?: ConfirmingIndicator[];
 }
 
 /**
@@ -2275,6 +2317,29 @@ export async function graduateBucketDirectly(opts: {
     bucketId,
   });
 
+  // Deep-scan #15 FIX-3 (2026-07-03): FRAMEWORK_OVERLAY_APPLIED was declared in
+  // sse.ts's FACTORY_EVENTS catalog with full payload docs but had ZERO
+  // broadcastSSE call sites anywhere in the repo — a documented-but-dead event.
+  // applyFrameworkOverlay() itself stays a pure function (no I/O — see its own
+  // module docstring); the caller (here) is the correct place to turn its
+  // return value into an observable event. Fires once per overlay application
+  // (leader row only — variants re-apply the same overlay per-market and are
+  // not separately broadcast to avoid one graduation flooding N events).
+  // Fire-and-forget: never blocks or fails graduation.
+  try {
+    broadcastSSE(FACTORY_EVENTS.FRAMEWORK_OVERLAY_APPLIED, {
+      concept_name: conceptName,
+      symbol: market,
+      source: "graduated_bucket",
+      bucket_id: bucketId,
+      applied_rules: overlayed.appliedRules,
+      warnings: overlayed.warnings,
+      correlation_id: correlationId ?? null,
+    });
+  } catch (sseErr) {
+    logger.warn({ sseErr }, "direct-graduator: factory:framework_overlay_applied SSE broadcast failed (non-blocking)");
+  }
+
   // ─── Wave 26 Pass G B2 (2026-05-26): GATE 1 — BIDIRECTIONAL COMPLETENESS ──
   // When direction === "both" the compiled engine config must have coherent
   // entry expressions on BOTH sides. Extractions that only captured one
@@ -2287,6 +2352,7 @@ export async function graduateBucketDirectly(opts: {
       archetype: isArchetype && archetypeName ? archetypeName : null,
       entry_long:  String(compiled.strategy?.entry_long  ?? ""),
       entry_short: String(compiled.strategy?.entry_short ?? ""),
+      entry_indicator: compiled.entry_indicator ?? null,
     });
     if (!biAudit.pass) {
       logger.warn(
@@ -2613,7 +2679,22 @@ export async function graduateBucketDirectly(opts: {
   // A richly-extracted strategy (entry_sequence ≥ 3 steps OR targets ≥ 3) is
   // treated as "rich" even if the LLM confluence_factors list was auto-floored.
   // This reflects that the v11 extraction provided institutional-grade detail.
-  const v11RichExtraction = v11EntrySequence.length >= 3 || v11Targets.length >= 3;
+  //
+  // FIX A3 (deep-scan #22 fix-wave-2, 2026-07-07): the promotion previously fired
+  // REGARDLESS of realCount — a 3-step entry_sequence with ZERO real (extracted OR
+  // kb_inferred) confluence factors still got stamped "rich", which (a) suppressed
+  // Gate 3's thin_confluence_warning for a strategy that had NO real evidence behind
+  // its confluence factors, and (b) corrupted the tf_graduation_factor_quality_total
+  // telemetry (a fallback_only strategy reporting as rich). classifyFactorSources()'s
+  // OWN contract (line ~455-457 above) is realCount>=2 → rich; realCount===0 → never
+  // rich. The v11 promotion is a LEGITIMATE upgrade path (thin → rich when the
+  // extraction is otherwise deep) but must never manufacture "rich" out of zero real
+  // evidence — that's exactly the "no confluence WHATSOEVER" case Gate 3 exists to flag.
+  const realFactorCount = Object.values(factor_sources).filter(
+    (src) => src === "extracted" || src === "kb_inferred",
+  ).length;
+  const v11RichExtraction =
+    (v11EntrySequence.length >= 3 || v11Targets.length >= 3) && realFactorCount >= 2;
   const factor_quality: "rich" | "thin" | "fallback_only" =
     v11RichExtraction ? "rich" : rawFactorQuality;
 
@@ -2651,6 +2732,38 @@ export async function graduateBucketDirectly(opts: {
       originalMarket: market,
       confluenceFactors: finalConfluenceFactors,
     });
+
+    // ─── FIX A1 (deep-scan #22 fix-wave-2, 2026-07-07) ────────────────────────
+    // Stamp use_weighted_scoring + confirming_indicators INSIDE entryQualityBlock
+    // (config.entry_quality) — the ONLY location paper-signal-service.ts reads
+    // them from at signal-evaluation time (paper-signal-service.ts:4162-4177).
+    // Previously use_weighted_scoring was written ONLY as the top-level
+    // `strategies.use_weighted_scoring` DB column and confirming_indicators
+    // ONLY as the top-level `config.confirming_indicators` JSONB key — both
+    // dead-on-arrival for the Path C / Path A dispatcher, silently falling every
+    // graduated strategy to Path B (canonical-5 boolean), where Wave-vocab
+    // confluence_factors then hit unknown_factor_fail_closed and could push
+    // below min_factors_satisfied and BLOCK the entry outright.
+    // entryQualityBlock is mutated here (not re-declared) so both the leader
+    // INSERT (below) and the fan-out variant INSERT (further down, same object
+    // reference) pick up the fix identically — Wave 26 Pass H1 Bug 3 field-
+    // parity invariant preserved.
+    // NOTE: confirming_indicators here is intentionally the genuinely
+    // LLM-extracted W23G.11 `confirmingIndicators` (real ConfirmingIndicator
+    // objects) — NOT `v11MergedConfirmingIndicators` (the bare confluence-factor-
+    // tag string array Wave 26 Pass E stamps at the top-level config key). That
+    // string array is NOT the ConfirmingIndicator{indicator,params,direction}
+    // shape confirming-indicator-evaluator.ts requires; wiring it in here would
+    // make Path A engage (since it's non-empty on nearly every graduation) and
+    // then fail EVERY factor as `unknown_indicator:<factor-tag>` — turning the
+    // Path C error-fallback (designed to land safely on Path B) into a
+    // guaranteed-reject Path A instead. `confirmingIndicators` stays undefined
+    // for the common case (no LLM confluence extraction), which correctly keeps
+    // Path A dormant exactly as before this fix.
+    entryQualityBlock.use_weighted_scoring = wave25Defaults.useWeightedScoring;
+    if (confirmingIndicators && confirmingIndicators.length > 0) {
+      entryQualityBlock.confirming_indicators = confirmingIndicators;
+    }
 
     // ─── Wave 26 Pass I (2026-05-26): v11 config additions ────────────────────
     // Build the fields to stamp on every row (leader + variants).
@@ -2821,33 +2934,105 @@ export async function graduateBucketDirectly(opts: {
     // known gaps. Mark lifecycle_state = NEEDS_REVISION so the operator dashboard
     // surfaces these as re-extract debt.
     if (v11ExtractionGapReason) {
-      await db.execute(sql`
-        UPDATE strategies SET lifecycle_state = 'NEEDS_REVISION'
-        WHERE id = ${inserted.id}::uuid
-          AND lifecycle_state NOT IN ('GRAVEYARD', 'RETIRED', 'DEPLOYED', 'PILOT', 'DEPLOY_READY')
-      `).catch((revErr: unknown) =>
-        logger.warn({ err: revErr, strategyId: inserted.id }, "Pass I: NEEDS_REVISION lifecycle update failed (non-blocking)")
-      );
-      insertAuditRowSafe({
-        action: "lifecycle.needs_revision_set",
-        entityType: "strategy",
-        entityId: inserted.id,
-        input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
-        result: {
-          extraction_gap_reason: v11ExtractionGapReason,
-          strategy_name: strategyName,
-          v11_fields_present: v11EntrySequence.length > 0 || v11Targets.length > 0,
-        } as Record<string, unknown>,
-        status: "warning",
-        decisionAuthority: "system",
-        correlationId: correlationId ?? null,
-      }).catch((auditErr: unknown) =>
-        logger.warn({ err: auditErr }, "Pass I: lifecycle.needs_revision_set audit write failed (non-blocking)")
-      );
-      logger.warn(
-        { strategyId: inserted.id, strategyName, extractionGapReason: v11ExtractionGapReason },
-        "direct-graduator Pass I: strategy marked NEEDS_REVISION due to extraction_gap_reason",
-      );
+      // Deep-scan #16 Wave 2 (D-1 + D-2, 2026-07-04):
+      //  D-1: the NEEDS_REVISION UPDATE was previously .catch()-swallowed while the
+      //       `lifecycle.needs_revision_set` audit row was written UNCONDITIONALLY —
+      //       so the audit could claim the transition while the DB row stayed CANDIDATE
+      //       (the conveyor picks it up while the operator's debt view parks it). We now
+      //       run the UPDATE with RETURNING id and only claim the transition (audit +
+      //       ledger) when a row actually changed.
+      //  D-2: the state change + typed `lifecycle_transitions` ledger row + audit row
+      //       are written together in one db.transaction() so 90-day reconstruction from
+      //       the typed ledger is complete (no raw-SQL-only phantom-origin teleport).
+      let transitioned = false;
+      let priorState: string | null = null;
+      try {
+        await db.transaction(async (tx) => {
+          const priorRows = await tx.execute(sql`
+            SELECT lifecycle_state FROM strategies WHERE id = ${inserted.id}::uuid
+          `);
+          priorState = ((priorRows as unknown) as Array<{ lifecycle_state: string }>)[0]?.lifecycle_state ?? null;
+
+          const updated = await tx.execute(sql`
+            UPDATE strategies SET lifecycle_state = 'NEEDS_REVISION'
+            WHERE id = ${inserted.id}::uuid
+              AND lifecycle_state NOT IN ('GRAVEYARD', 'RETIRED', 'DEPLOYED', 'PILOT', 'DEPLOY_READY')
+            RETURNING id
+          `);
+          if (((updated as unknown) as Array<unknown>).length === 0) {
+            // Protected/terminal state or row vanished — the transition did NOT happen.
+            // Do NOT write the ledger/audit inside this tx; the outer branch alerts.
+            return;
+          }
+          transitioned = true;
+
+          // D-2: typed ledger row matching the canonical promoteStrategy shape
+          // (strategyId/fromState/toState/decisionAuthority/reason/correlationId).
+          await tx.insert(lifecycleTransitions).values({
+            strategyId: inserted.id,
+            fromState: priorState ?? "CANDIDATE",
+            toState: "NEEDS_REVISION",
+            decisionAuthority: "gate",
+            reason: `extraction_gap: ${v11ExtractionGapReason}`,
+            correlationId: correlationId ?? null,
+          });
+
+          // Audit row written in the SAME tx so audit + state + ledger are atomic.
+          await tx.insert(auditLog).values({
+            action: "lifecycle.needs_revision_set",
+            entityType: "strategy",
+            entityId: inserted.id,
+            input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+            result: {
+              extraction_gap_reason: v11ExtractionGapReason,
+              strategy_name: strategyName,
+              from_state: priorState ?? "CANDIDATE",
+              v11_fields_present: v11EntrySequence.length > 0 || v11Targets.length > 0,
+            } as Record<string, unknown>,
+            status: "warning",
+            decisionAuthority: "gate",
+            correlationId: correlationId ?? null,
+          });
+        });
+      } catch (revErr: unknown) {
+        transitioned = false;
+        logger.error(
+          { err: revErr, strategyId: inserted.id, strategyName },
+          "Pass I: NEEDS_REVISION transition (state + ledger + audit) failed — NOT claiming the transition",
+        );
+      }
+
+      if (transitioned) {
+        logger.warn(
+          { strategyId: inserted.id, strategyName, extractionGapReason: v11ExtractionGapReason, fromState: priorState },
+          "direct-graduator Pass I: strategy marked NEEDS_REVISION due to extraction_gap_reason",
+        );
+      } else {
+        // D-1: the UPDATE did NOT change the DB (protected state, or it threw).
+        // Emit a distinct failure audit so the mismatch is observable, and DO NOT
+        // claim NEEDS_REVISION. Fire-and-forget (outside the rolled-back tx).
+        insertAuditRowSafe({
+          action: "lifecycle.needs_revision_set_failed",
+          entityType: "strategy",
+          entityId: inserted.id,
+          input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+          result: {
+            extraction_gap_reason: v11ExtractionGapReason,
+            strategy_name: strategyName,
+            prior_state: priorState,
+            note: "NEEDS_REVISION UPDATE affected 0 rows or threw — transition NOT applied; DB state unchanged",
+          } as Record<string, unknown>,
+          status: "failure",
+          decisionAuthority: "gate",
+          correlationId: correlationId ?? null,
+        }).catch((auditErr: unknown) =>
+          logger.warn({ err: auditErr }, "Pass I: lifecycle.needs_revision_set_failed audit write failed (non-blocking)"),
+        );
+        logger.warn(
+          { strategyId: inserted.id, strategyName, extractionGapReason: v11ExtractionGapReason, priorState },
+          "direct-graduator Pass I: NEEDS_REVISION NOT applied (protected state or error) — audit reflects unchanged DB",
+        );
+      }
     }
 
     // ─── Wave 26 Pass G B4 (2026-05-26): GATE 2 — Factor Quality Telemetry ─
@@ -3064,6 +3249,29 @@ export async function graduateBucketDirectly(opts: {
       },
       "direct-graduator: strategy created from bucket"
     );
+
+    // Deep-scan #15 FIX-3 (2026-07-03): STRATEGY_CREATED was declared in
+    // sse.ts's FACTORY_EVENTS catalog with full payload docs but had ZERO
+    // broadcastSSE call sites anywhere in the repo — a documented-but-dead
+    // event. This is the real strategy-row-created completion point (leader
+    // row + any fan-out variants for this bucket). Fire-and-forget; never
+    // blocks or fails graduation.
+    try {
+      broadcastSSE(FACTORY_EVENTS.STRATEGY_CREATED, {
+        strategy_id: inserted.id,
+        name: strategyName,
+        symbol: market,
+        symbols: symbolsArray,
+        source: "graduated_bucket",
+        bucket_id: bucketId,
+        concept_name: conceptName,
+        fan_out_strategy_ids: fanOutStrategyIds,
+        entry_quality_provenance: entryQualityBlock.extraction_provenance,
+        correlation_id: correlationId ?? null,
+      });
+    } catch (sseErr) {
+      logger.warn({ sseErr }, "direct-graduator: factory:strategy_created SSE broadcast failed (non-blocking)");
+    }
 
     // Wave 23F Track D: audit entry_quality attachment
     await db.insert(auditLog).values({

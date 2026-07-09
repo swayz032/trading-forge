@@ -32,6 +32,15 @@ References:
   - src/server/services/adaptive-exit-engine.ts (canonical TS version)
   - src/engine/config.py AdaptiveExitContext + LiquidityLevelSnapshot
   - Wave 25 plan floating-yawning-lantern.md Gap B section
+
+deepscan17 (2026-07-05) B-4/B-15: liquidity TP1/TP2 selection previously ranked by
+pure geometric proximity here vs composite rank score on the TS side (same
+liquidity snapshot -> different TP1/TP2 across engines, untested because every
+harness fixture passed an empty snapshot). _build_liquidity_targets() now
+reproduces the TS three-stage pipeline (direction+distance filter -> composite
+rank sort + top-5 truncation -> day-trader type filter) exactly. Added
+compute_pre_lunch_decision() as a real, importable W25.16 decision function for
+parity testing (previously only the low-level time-check helper was exported).
 """
 
 from __future__ import annotations
@@ -184,6 +193,38 @@ def _compute_r_multiple(
 
 # ─── Liquidity target builder ──────────────────────────────────────────────────
 
+def _snapshot_field(lvl, name: str, default=None):
+    """Read a field from either a LiquidityLevelSnapshot dataclass or a plain dict.
+
+    deepscan17 (2026-07-05) fix: the prior `getattr(...) or dict.get(...)` pattern
+    treated a legitimate 0.0 (falsy) sweep_probability as "missing" and silently
+    discarded it. Explicit None-checks so a real 0.0 survives.
+    """
+    val = lvl.get(name, default) if isinstance(lvl, dict) else getattr(lvl, name, default)
+    return default if val is None else val
+
+
+def _compute_rank_score(
+    htf_significance: float,
+    sweep_probability: float,
+    distance_points: float,
+    max_distance: float,
+) -> float:
+    """Composite rank score for a liquidity candidate.
+
+    PARITY: mirrors computeRankScore() in liquidity-map-service.ts exactly
+    (htf_significance/5 * 0.4 + sweep_probability * 0.4 + proximity_factor * 0.2).
+
+    deepscan17 (2026-07-05) B-4(b): this function did not exist before — Python
+    picked TP1/TP2 by pure geometric proximity while TS ranks by this composite
+    score, so identical liquidity snapshots produced different TP1/TP2 selections
+    across engines. See _build_liquidity_targets() for the fix.
+    """
+    safe_dist = max_distance if max_distance > 0 else 14.0
+    proximity_factor = 1.0 / (1.0 + abs(distance_points) / safe_dist)
+    return (htf_significance / 5.0) * 0.4 + sweep_probability * 0.4 + proximity_factor * 0.2
+
+
 def _build_liquidity_targets(
     entry_price: float,
     stop_price: float,
@@ -193,10 +234,32 @@ def _build_liquidity_targets(
 ) -> tuple[ExitTarget, ExitTarget]:
     """Pick TP1 and TP2 from the liquidity snapshot.
 
-    PARITY: mirrors buildLiquidityTargets() in adaptive-exit-engine.ts.
+    PARITY: mirrors buildLiquidityTargets() in adaptive-exit-engine.ts AND
+    getNearestLiquidity() in liquidity-map-service.ts.
 
-    Day-trader mandate: only INTRADAY_ALLOWED_LEVEL_TYPES pass the filter.
-    PWH/PWL/PMH/PML are explicitly rejected.
+    deepscan17 (2026-07-05) B-4(b) FIX: this function previously sorted candidates
+    by pure geometric proximity (nearest price wins), which diverges from the TS
+    engine's composite rank score (significance + sweep_probability + proximity,
+    computed by getNearestLiquidity() and truncated to top-5 BEFORE the day-trader
+    filter is applied). Identical liquidity snapshots could pick different TP1/TP2
+    on the two engines — the headline adaptive-exit feature was silently ungated
+    by the parity harness (all 5 fixtures passed an empty snapshot). This function
+    now reproduces the TS three-stage pipeline exactly:
+      1. Filter by direction + max-distance across ALL level types (not just
+         intraday-allowed — matches getNearestLiquidity()'s own candidate pool).
+      2. Rank by composite score descending, truncate to top 5
+         (getNearestLiquidity() default maxResults=5).
+      3. THEN filter to INTRADAY_ALLOWED_LEVEL_TYPES (matches
+         buildLiquidityTargets()'s filter applied AFTER the DB call returns).
+    A consequence documented for the record: because truncation happens BEFORE
+    the day-trader filter, a snapshot with 5+ high-rank non-intraday levels (e.g.
+    pwh_iso/pmh) can starve the intraday candidate pool even though qualifying
+    intraday levels exist further down the rank order. This is the TS engine's
+    existing behavior, not something introduced by this fix — Python is now
+    faithful to it rather than silently different.
+
+    Day-trader mandate: only INTRADAY_ALLOWED_LEVEL_TYPES pass the Stage 3 filter.
+    PWH/PWL/PMH/PML are explicitly rejected from ever becoming TP1/TP2 targets.
 
     Fallbacks:
       TP1 fallback → +1R (r_multiple=1.0)
@@ -209,48 +272,48 @@ def _build_liquidity_targets(
     """
     stop_distance = abs(entry_price - stop_price)
 
-    # Max search distance = 1×ATR (don't reach for far-away levels)
+    # Max search distance = 1×ATR (don't reach for far-away levels) — mirrors
+    # getNearestLiquidity()'s distanceCap when buildLiquidityTargets() passes atr.
     max_distance = atr
 
-    # Filter and sort candidates
-    # For long: levels ABOVE entry price (sorted ascending by price)
-    # For short: levels BELOW entry price (sorted descending by price)
-    intraday_candidates = []
+    # ── Stage 1: direction + distance filter across ALL level types ─────────
+    all_candidates = []
     for lvl in liquidity_snapshot:
-        ltype = getattr(lvl, "level_type", None) or (lvl.get("level_type") if isinstance(lvl, dict) else None)
-        price = getattr(lvl, "price", None) or (lvl.get("price") if isinstance(lvl, dict) else None)
-        htf_sig = getattr(lvl, "htf_significance", 1) or (lvl.get("htf_significance", 1) if isinstance(lvl, dict) else 1)
-        sweep_prob = getattr(lvl, "sweep_probability", None) or (lvl.get("sweep_probability") if isinstance(lvl, dict) else None)
-
+        ltype = _snapshot_field(lvl, "level_type")
+        price = _snapshot_field(lvl, "price")
         if ltype is None or price is None:
             continue
-        # Day-trader mandate filter
-        if ltype not in INTRADAY_ALLOWED_LEVEL_TYPES:
-            continue
-        # Direction filter + max distance cap
-        if direction == "long":
-            if price <= entry_price or (price - entry_price) > max_distance:
-                continue
-        else:
-            if price >= entry_price or (entry_price - price) > max_distance:
-                continue
+        htf_sig = _snapshot_field(lvl, "htf_significance", 1)
+        sweep_prob = _snapshot_field(lvl, "sweep_probability", 0.0)
 
+        # PARITY: TS computes `dist = above ? price - fromPrice : fromPrice - price`
+        # and rejects `dist < 0` (behind price) or `dist > distanceCap`. dist == 0
+        # (level exactly at entry) is allowed on the TS side, so it is here too.
+        dist = (price - entry_price) if direction == "long" else (entry_price - price)
+        if dist < 0 or dist > max_distance:
+            continue
+
+        rank_score = _compute_rank_score(htf_sig, sweep_prob, dist, max_distance)
         r = _compute_r_multiple(entry_price, price, direction, stop_price)
-        intraday_candidates.append({
+        all_candidates.append({
             "level_type": ltype,
             "price": price,
             "htf_significance": htf_sig,
             "sweep_probability": sweep_prob,
+            "distance_points": dist,
+            "rank_score": rank_score,
             "r_multiple": r,
         })
 
-    # Sort by proximity (ascending distance from entry)
-    if direction == "long":
-        intraday_candidates.sort(key=lambda c: c["price"])
-    else:
-        intraday_candidates.sort(key=lambda c: -c["price"])
+    # ── Stage 2: composite-rank sort descending + top-5 truncation ──────────
+    # PARITY: getNearestLiquidity() default maxResults=5.
+    all_candidates.sort(key=lambda c: c["rank_score"], reverse=True)
+    top_ranked = all_candidates[:5]
 
-    # ── TP1: nearest with min R >= 0.8 ─────────────────────────────────
+    # ── Stage 3: day-trader mandate filter (applied AFTER truncation) ───────
+    intraday_candidates = [c for c in top_ranked if c["level_type"] in INTRADAY_ALLOWED_LEVEL_TYPES]
+
+    # ── TP1: first candidate in rank order with min R >= 0.8 ────────────────
     tp1_candidate = None
     for c in intraday_candidates:
         if c["r_multiple"] >= 0.8:
@@ -278,7 +341,7 @@ def _build_liquidity_targets(
             r_multiple=1.0,
         )
 
-    # ── TP2: next level after TP1, or +2R fallback (whichever closer) ──
+    # ── TP2: next candidate in rank order (excluding TP1), or +2R fallback ──
     tp2_fallback_r = 2.0
     tp2_fallback_price = (
         entry_price + tp2_fallback_r * stop_distance
@@ -381,6 +444,61 @@ def _is_at_or_after_pre_lunch_et(bar_ts: datetime) -> bool:
         return (et.hour, et.minute) >= (11, 30)
     except Exception:
         return False
+
+
+# ─── Pre-lunch soft-exit decision (W25.16) — pure function ────────────────────
+
+def compute_pre_lunch_decision(
+    regime: str,
+    bar_ts: datetime,
+    entry_price: float,
+    stop_price: float,
+    direction: str,
+    current_pnl_r: float,
+    threshold_r: float,
+) -> dict:
+    """Pre-lunch soft-exit decision — pure function, no I/O.
+
+    deepscan17 (2026-07-05) B-15 fix: added so the TS<->Python parity harness has
+    a real, importable decision function to assert against instead of a
+    tautological echo of the pre_lunch_threshold_r input (the harness previously
+    only checked that both sides stored back the same float it was given, which
+    proves nothing about whether the two engines agree on WHEN the partial fires).
+
+    PARITY: mirrors computePreLunchDecision() in adaptive-exit-engine.ts (same
+    trigger-regime membership check via PRE_LUNCH_TRIGGER_REGIMES, same
+    at-or-after-11:30-ET gate via _is_at_or_after_pre_lunch_et, same BE+0.5R
+    tightened-stop formula) AND the inline pre-lunch block in
+    backtester.py::_apply_adaptive_management (same three-condition AND +
+    half_r_offset formula — see that function's W25.16 comment block). This is a
+    formalization, not a new code path: backtester.py computes its own
+    current_pnl_r per-bar from max-favorable-excursion and is NOT refactored to
+    call this function (backtester.py is out of scope for this fix); the formulas
+    here are copied 1:1 from that block so this function reflects real production
+    behavior rather than a third independent guess.
+
+    Args:
+        current_pnl_r: caller-supplied current profit in R-multiples (TS callers
+            pass this directly; backtester.py derives it from bar-by-bar MFE).
+    """
+    stop_distance = abs(entry_price - stop_price)
+    tightened_stop = (
+        entry_price + 0.5 * stop_distance
+        if direction == "long"
+        else entry_price - 0.5 * stop_distance
+    )
+    should_fire = (
+        regime in PRE_LUNCH_TRIGGER_REGIMES
+        and _is_at_or_after_pre_lunch_et(bar_ts)
+        and current_pnl_r >= threshold_r
+    )
+    return {
+        "should_fire": should_fire,
+        "regime": regime,
+        "profit_r": current_pnl_r,
+        "partial_pct": 0.50 if should_fire else 0.0,
+        "tightened_stop": tightened_stop,
+    }
 
 
 # ─── Main entry point ─────────────────────────────────────────────────────────

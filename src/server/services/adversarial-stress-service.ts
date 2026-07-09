@@ -79,6 +79,31 @@ export interface AdversarialStressRunOutput {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
+/**
+ * Light runtime shape check on the Python adversarial-stress result. This gate
+ * is advisory-only (Phase 0 — does not enforce promotion), so the validation is
+ * correspondingly light: assert the object exists, `status` is a string, and the
+ * key breach metrics are `number | null`. Throws (→ caller reject → fail-soft
+ * "failed" run) on violation rather than trusting a corrupt payload.
+ */
+export function validateAdversarialStressResult(
+  result: unknown,
+): asserts result is AdversarialStressPythonResult {
+  if (result === null || typeof result !== "object") {
+    throw new Error("adversarial_stress: result is not an object");
+  }
+  const r = result as Record<string, unknown>;
+  if (typeof r.status !== "string") {
+    throw new Error(`adversarial_stress: 'status' must be a string, got ${typeof r.status}`);
+  }
+  for (const key of ["worst_case_breach_prob", "breach_minimal_n_trades"] as const) {
+    const v = r[key];
+    if (v !== null && (typeof v !== "number" || !Number.isFinite(v))) {
+      throw new Error(`adversarial_stress: '${key}' must be a finite number or null, got ${JSON.stringify(v)}`);
+    }
+  }
+}
+
 function runPythonAdversarialStress(
   configPath: string,
   timeoutMs: number = ADVERSARIAL_STRESS_TIMEOUT_MS,
@@ -116,9 +141,11 @@ function runPythonAdversarialStress(
       settled = true;
       if (code === 0) {
         try {
-          resolve(parsePythonJson<AdversarialStressPythonResult>(stdout));
-        } catch {
-          reject(new Error(`Failed to parse adversarial stress output: ${stdout.slice(0, 500)}`));
+          const parsed = parsePythonJson<AdversarialStressPythonResult>(stdout);
+          validateAdversarialStressResult(parsed);
+          resolve(parsed);
+        } catch (parseErr) {
+          reject(new Error(`Failed to parse/validate adversarial stress output: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}. stdout: ${stdout.slice(0, 500)}`));
         }
       } else {
         reject(new Error(`Adversarial stress failed (exit ${code}): ${stderr.slice(0, 500)}`));

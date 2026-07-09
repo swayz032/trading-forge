@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls, brokerAccounts } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls, brokerAccounts, accountStrategyAssignments } from "../db/schema.js";
 import { writeLockoutFromKillEvent } from "./strategy-lockout-service.js";
 import { eq, and, isNull, desc, sql, inArray } from "drizzle-orm";
 import { broadcastSSE, PAPER_EXIT_EVENTS } from "../routes/sse.js";
@@ -10,7 +10,11 @@ import { logger } from "../lib/logger.js";
 // TODO: correlation_id not threaded through most call sites in this file.
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { onPaperTradeClose } from "../scheduler.js";
-import { getFirmAccount, CONTRACT_SPECS } from "../../shared/firm-config.js";
+import { CONTRACT_SPECS } from "../../shared/firm-config.js";
+// deep-scan #15 FIX M4: the authoritative single-day consistency rule lives in
+// consistency-tracker-service.ts (40% warn / 50% block firm-wide, false-positive
+// guard). checkConsistencyRule DEFERS to it so the two can never disagree.
+import { CONSISTENCY_RULE_FIRMS, getConsistencyState } from "./consistency-tracker-service.js";
 // Wave 27.5 Pass D.2: symbol-aware commission — replaces the legacy symbol-agnostic
 // getCommissionPerSide(firmId) for position-close P&L calculations.
 import { getCommissionPerSide as getCommissionPerSideBySymbol, getStopCeilingPts } from "../lib/contract-class.js";
@@ -18,7 +22,7 @@ import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCach
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 import { tracer } from "../lib/tracing.js";
 import { withSessionLock } from "../lib/db-locks.js";
-import { paperTrades as paperTradesCounter } from "../lib/metrics-registry.js";
+import { paperTrades as paperTradesCounter, dllHaltTotal } from "../lib/metrics-registry.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 // Phase 4C: production kill switch — checked FIRST in openPosition (fail-CLOSED)
 import { killSwitch } from "../production/kill-switch.js";
@@ -36,13 +40,17 @@ import { isConnectivityDegraded } from "../lib/network-failover.js";
 import { getActiveAssignment } from "./strategy-assignment-service.js";
 // Wave 25.5 Track 1: adaptive exit plan wiring
 import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
-import type { ExitPlanWithRuntimeState } from "../db/jsonb-shapes.js";
+import type { ExitPlanWithRuntimeState, EntryDecisionContext } from "../db/jsonb-shapes.js";
 // Pass 6 Track D: per-call exit-handler Discord visibility
 import { notifyWarning, notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 // 2026-06-29 Fix 2 (HIGH): TS Style C evaluator — primary path replacing Python subprocess.
 // Eliminates per-bar spawn overhead and 1h TP blackout from circuit-breaker open state.
 import { evaluateStyleCExit } from "../lib/style-c-exit-evaluator.js";
+// deepscan17 (2026-07-05) C-1 fix: forceCloseAllPositions scope resolution reuses the
+// SAME account-key resolver cross-symbol-pnl.ts uses for DLL aggregation, so "which
+// account does this position belong to" can never disagree between the two subsystems.
+import { resolveAccountKey } from "./cross-symbol-pnl.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -701,7 +709,26 @@ export async function openPosition(sessionId: string, params: {
     marketState: { regime: string; narrativePhase: string | null };
     weightedScore?: import("./confluence-score.js").WeightedScoreResult;
   };
-}, context?: { correlationId?: string; accountId?: string }) {
+  // Trade-critique data bridge (2026-07-05): entry-time decision context captured by
+  // paper-signal-service.ts at signal time (bar N). Merged into paper_positions.exit_plan
+  // JSONB at INSERT (alongside the existing F9 entryRegime field) so trade-critique-service.ts
+  // can read it at close. Optional — absent when the caller didn't compute it (e.g. manual
+  // opens, other automation) or when nothing was known at signal time; never fabricated.
+  entryContext?: EntryDecisionContext;
+}, context?: {
+  correlationId?: string;
+  accountId?: string;
+  // deepscan18 (2026-07-05) C-C1: OPTIONAL account/firm scope for the kill-
+  // switch halt gate below. Threaded through by callers that already know the
+  // evaluating session's resolved account key (see cross-symbol-pnl.ts::
+  // resolveAccountKey) — today, paper-signal-service.ts's deferred-entry call
+  // site. Distinct from `accountId` above (broker-account assignment id, an
+  // unrelated concept). Omitting it preserves the exact legacy GLOBAL
+  // isHaltedForProduction() behavior byte-for-byte (e.g. the manual
+  // /api/paper/execute/open route, which doesn't pass one).
+  accountKey?: string;
+  firmId?: string | null;
+}) {
   // FIX 4: generate a per-call correlationId when caller does not supply one.
   // This ensures every audit row from openPosition has a reconstructable trace root
   // even for callers that don't thread correlationId (manual opens, automation).
@@ -716,8 +743,13 @@ export async function openPosition(sessionId: string, params: {
   // production_mode='HALT' means the operator has explicitly halted all
   // paper trading activity — no new positions may be opened until they set
   // production_mode back to 'PAPER' or 'LIVE'.
+  //
+  // deepscan18 C-C1: pass through context.accountKey/firmId so a breach on a
+  // SIBLING account/firm doesn't block this account's entry. Both are
+  // undefined for callers that don't supply them, which is the exact legacy
+  // (global) evaluation — byte-identical for those callers.
   try {
-    if (await killSwitch.isHaltedForProduction({ correlationId })) {
+    if (await killSwitch.isHaltedForProduction({ correlationId, accountKey: context?.accountKey, firmId: context?.firmId })) {
       logger.warn(
         { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side, reason: "production_mode_halt" },
         "paper-execution.production-halted: new entry blocked by production kill switch",
@@ -737,6 +769,7 @@ export async function openPosition(sessionId: string, params: {
         symbol: params.symbol,
         side: params.side,
         reason: "production_halt",
+        correlationId,
       });
       return {
         position: null,
@@ -765,6 +798,7 @@ export async function openPosition(sessionId: string, params: {
       symbol: params.symbol,
       side: params.side,
       reason: "production_halt_check_error",
+      correlationId,
     });
     return {
       position: null,
@@ -877,6 +911,7 @@ export async function openPosition(sessionId: string, params: {
       side: params.side,
       exchange: "CME",
       reason: "exchange_halted",
+      correlationId,
     });
     return {
       position: null,
@@ -953,6 +988,7 @@ export async function openPosition(sessionId: string, params: {
         symbol: params.symbol,
         side: params.side,
         reason: "firm_suspended",
+        correlationId,
       });
       return {
         position: null,
@@ -1317,6 +1353,7 @@ export async function openPosition(sessionId: string, params: {
                 halt_pct: killResult.halt_pct_used ?? _effectiveHaltPct,
                 daily_pnl_pct: killResult.daily_pnl_pct,
                 message: `New entries blocked: daily loss reached ${((killResult.halt_pct_used ?? _effectiveHaltPct) * 100).toFixed(0)}% of firm DLL. Existing positions held. Force-close triggers at ${((_effectiveForceClosePct) * 100).toFixed(0)}%.`,
+                correlationId: correlationId ?? null,
               });
             }
 
@@ -1328,6 +1365,13 @@ export async function openPosition(sessionId: string, params: {
             // Force-close (95%) sessions already have positions flattened; the sticky
             // flag provides defense-in-depth but the primary protection is forceClose.
             if (!killResult.force_close) {
+              // HIGH E-3 fix (deep-scan #16 wave-1 track-3, 2026-07-04): the 67% halt-only
+              // trip previously had ZERO Prometheus visibility — no positions close at
+              // halt, so nothing else counts this event. reason mirrors the Python
+              // KILL_REASON_* constant that fired (approaching_daily_loss_limit is the
+              // 67% band; max_trades_per_session / consecutive_loss_limit are the other
+              // halt-only reasons from the same check_kill_switch() gate).
+              dllHaltTotal.labels({ reason: killResult.reason ?? "unknown" }).inc();
               const todayKeyForSticky = toFuturesTradingDayString();
               // FIX 5 (Track M): retry sticky DLL halt flag write once. If the retry
               // also fails, treat the current entry as fail-closed (return early with
@@ -1419,7 +1463,15 @@ export async function openPosition(sessionId: string, params: {
                   { sessionId, firmKey, reason: killResult.reason },
                   "Kill switch (D6): force_close=true — calling forceCloseAllPositions(dll_95_force_close)",
                 );
-                await forceCloseAllPositions("dll_95_force_close");
+                // deepscan17 E-1 fix: thread the caller's correlationId (was silently
+                // dropped — a fresh randomUUID() was minted inside forceCloseAllPositions,
+                // breaking the openPosition->force-close audit chain).
+                // deepscan17 C-1 fix: scope the flatten to THIS session only. The Python
+                // D6 kill-switch result is computed per-session (killResult.daily_pnl_pct
+                // is this session's own P&L, not an account aggregate) — scoping by
+                // sessionId (rather than a resolved accountKey) is the narrowest correct
+                // blast radius for a check that was never account-aware in the first place.
+                await forceCloseAllPositions("dll_95_force_close", { correlationId, scope: { sessionIds: [sessionId] } });
               } catch (forceCloseErr) {
                 // deepscan14 F1: this is the SECOND force-close site (Python
                 // compliance-gate D6 path) — it was failing silently (bare logger.error,
@@ -1484,6 +1536,7 @@ export async function openPosition(sessionId: string, params: {
           sessionId,
           symbol: params.symbol,
           error: killErr instanceof Error ? killErr.message : String(killErr),
+          correlationId,
         });
         AlertFactory.systemError("kill-switch-down", killErr instanceof Error ? killErr : String(killErr));
         const killDownAuditInsert = db.insert(auditLog).values({
@@ -1635,6 +1688,7 @@ export async function openPosition(sessionId: string, params: {
         stage: "freshness",
         status: cached.freshnessStatus,
         message: cached.freshnessMessage,
+        correlationId,
       });
       db.insert(auditLog).values({
         action: "compliance.gate_blocked",
@@ -1779,6 +1833,7 @@ export async function openPosition(sessionId: string, params: {
           status: violationResult.status,
           message: violationResult.message,
           violations: violationResult.violations,
+          correlationId,
         });
         db.insert(auditLog).values({
           action: "compliance.gate_blocked",
@@ -1822,6 +1877,7 @@ export async function openPosition(sessionId: string, params: {
       symbol: params.symbol,
       firm: firmKey,
       error: complianceErr instanceof Error ? complianceErr.message : String(complianceErr),
+      correlationId,
     });
   }
 
@@ -1843,7 +1899,7 @@ export async function openPosition(sessionId: string, params: {
     capturedFillProbability = fillProb;
     if (Math.random() > fillProb) {
       logger.info({ sessionId, symbol: params.symbol, fillProb, orderType }, "Fill probability miss — order not filled");
-      broadcastSSE("paper:fill-miss", { sessionId, symbol: params.symbol, fillProb, orderType });
+      broadcastSSE("paper:fill-miss", { sessionId, symbol: params.symbol, fillProb, orderType, correlationId });
       fillSpan.setAttribute("filled", false);
       fillSpan.end();
       return {
@@ -2122,11 +2178,19 @@ export async function openPosition(sessionId: string, params: {
     entryMacroRegimeCapture = macroSnap?.macroRegime ?? null;
   } catch { /* non-blocking — journal enrichment degrades gracefully */ }
 
-  // Merge entryRegime into the exitPlan JSONB blob. JSONB accepts arbitrary JSON;
-  // the extra field sits alongside the typed ExitPlan fields with no migration needed.
-  const exitPlanForDb: ExitPlanWithRuntimeState | undefined = entryMacroRegimeCapture != null
-    ? ({ ...(exitPlanForInsert ?? {}), entryRegime: entryMacroRegimeCapture } as unknown as ExitPlanWithRuntimeState)
-    : (exitPlanForInsert ?? undefined);
+  // Merge entryRegime + entryContext into the exitPlan JSONB blob. JSONB accepts
+  // arbitrary JSON; both extra fields sit alongside the typed ExitPlan fields with
+  // no migration needed (entryRegime is the pre-existing F9 pattern; entryContext is
+  // the trade-critique data bridge added 2026-07-05 — see EntryDecisionContext in
+  // jsonb-shapes.ts). Byte-identical to prior behavior when both are absent.
+  const exitPlanForDb: ExitPlanWithRuntimeState | undefined =
+    (entryMacroRegimeCapture != null || params.entryContext != null)
+      ? ({
+          ...(exitPlanForInsert ?? {}),
+          ...(entryMacroRegimeCapture != null ? { entryRegime: entryMacroRegimeCapture } : {}),
+          ...(params.entryContext != null ? { entryContext: params.entryContext } : {}),
+        } as unknown as ExitPlanWithRuntimeState)
+      : (exitPlanForInsert ?? undefined);
 
   // FIX 3 (Track M): wrap position INSERT + paper.trade_open audit INSERT in a single
   // transaction so they are atomic. Previously a crash between the two writes left an
@@ -2219,10 +2283,13 @@ export async function openPosition(sessionId: string, params: {
     filled: true,
   };
 
+  // ds21 (deep-scan #21 Band D): thread correlationId (in scope) onto the highest-value
+  // reconstruction event so bar→handler→DB→SSE→audit stays correlatable for a position open.
   broadcastSSE("paper:position-opened", {
     sessionId,
     position,
     executionQuality: executionResult,
+    correlationId,
   });
 
   logger.info({ sessionId, executionResult }, "Paper position opened");
@@ -2263,7 +2330,7 @@ export async function openPosition(sessionId: string, params: {
  *                         Omit for manual/force-close — falls back to base-tick
  *                         slippage (prior behaviour).
  */
-export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number; forceClosePriceUnconfirmed?: boolean }) {
+export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number; forceClosePriceUnconfirmed?: boolean; outcomeOverride?: string }) {
   // BL-9: declared as let so it can be resolved from the position row after the DB read.
   // Callers that do supply context.correlationId (inline signal processing) use that value;
   // external callers (force-close, time-stop) fall back to pos.correlationId persisted at open.
@@ -2276,6 +2343,11 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // was contaminated by proxy-priced closes. A future TradersPost fill-confirmation
   // webhook would reconcile the real broker exit price and clear this flag.
   const forceClosePriceUnconfirmed = context?.forceClosePriceUnconfirmed === true;
+  // HIGH E-2 fix (deep-scan #16 wave-1 track-3, 2026-07-04): callers that need a more
+  // specific outcome label than the default win/loss classification (TIME_STOP_FLATTEN,
+  // intrabar stop breach, force-close) pass outcomeOverride instead of incrementing
+  // paperTradesCounter a SECOND time themselves — see the single increment site below.
+  const outcomeOverride = context?.outcomeOverride;
   const closeSpan = tracer.startSpan("paper.position_close");
   try {
   // Read position outside the lock to get the sessionId for the lock key
@@ -2661,6 +2733,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       contracts: pos.contracts,
       rollDates: rollCost.rollDates,
       costUsd: rollCost.estimatedSpreadCost,
+      correlationId: correlationId ?? null,
     });
   }
 
@@ -2690,16 +2763,21 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       ...metrics,          // includes sessionId from computeMetrics
       strategyId: session?.strategyId ?? null,
       tradeId: trade.id,
+      correlationId: correlationId ?? null,
     });
   } catch (metricsRecordErr) {
     logger.warn({ err: metricsRecordErr, sessionId: pos.sessionId }, "MetricsAggregator.recordTrade failed (non-blocking)");
   }
 
   // Prometheus counter — incremented after transaction commits so partial writes don't count.
+  // HIGH E-2 fix: this is the ONE canonical increment site for a full/final close.
+  // Callers that need a specific reason (time_stop/stop_loss/force_close) pass
+  // context.outcomeOverride instead of incrementing again themselves — counting this
+  // leg twice with two different outcome labels was the double-count bug.
   paperTradesCounter.labels({
     symbol: pos.symbol,
     side: pos.side,
-    outcome: netPnl >= 0 ? "win" : "loss",
+    outcome: outcomeOverride ?? (netPnl >= 0 ? "win" : "loss"),
   }).inc();
 
   // Fix 4.6: Drift detection is independently try/caught and awaited.
@@ -2737,41 +2815,69 @@ async function checkConsistencyRule(
   session: typeof paperSessions.$inferSelect,
 ): Promise<void> {
   if (!session.firmId) return;
-  const firmConfig = getFirmAccount(session.firmId);
-  if (!firmConfig?.consistencyRule) return;
+  // FIX M4 (deep-scan #15): only firms that actually enforce the single-day
+  // consistency rule (Topstep + MFFU). Mirrors the tracker's CONSISTENCY_RULE_FIRMS.
+  if (!CONSISTENCY_RULE_FIRMS.includes(session.firmId)) return;
 
-  // M1 fix (deepscan-6): dailyPnlBreakdown is now written INSIDE the closePosition transaction.
-  // This function re-reads the already-committed value for the consistency-rule check only.
-  // Use CME futures trading-day key (5pm ET cutoff) — must match the key written in the tx.
-  const today = toFuturesTradingDayString();
-  const [updated] = await db.select({ dailyPnlBreakdown: paperSessions.dailyPnlBreakdown })
-    .from(paperSessions).where(eq(paperSessions.id, session.id));
-  const breakdown = (updated?.dailyPnlBreakdown ?? {}) as Record<string, number>;
-
-  // Check consistency: no single day > X% of total profit
-  const breakdownValues = Object.values(breakdown);
-  if (breakdownValues.length === 0) return; // no data yet
-  const totalPnl = breakdownValues.reduce((sum, v) => sum + v, 0);
-  if (totalPnl <= 0) return; // only applies when profitable
-
-  const maxDayPnl = Math.max(...breakdownValues);
-  const maxDayRatio = maxDayPnl / totalPnl;
-
-  if (maxDayRatio > firmConfig.consistencyRule) {
-    const maxDay = Object.entries(breakdown).find(([, v]) => v === maxDayPnl)?.[0] ?? "unknown";
-    const pctStr = (maxDayRatio * 100).toFixed(1);
-    const limitPct = (firmConfig.consistencyRule * 100).toFixed(0);
-    const warning = `Consistency rule: ${pctStr}% from single day (${maxDay}) exceeds ${limitPct}% limit for ${session.firmId}`;
-    logger.warn({ sessionId: session.id, maxDayRatio, limit: firmConfig.consistencyRule }, warning);
-    broadcastSSE("paper:consistency-warning", {
-      sessionId: session.id,
-      firmId: session.firmId,
-      maxDayRatio,
-      limit: firmConfig.consistencyRule,
-      maxDay,
-      message: warning,
-    });
+  // FIX M4: DEFER to the authoritative consistency tracker (single source of
+  // truth) instead of this service's own local single-threshold consistency ratio.
+  // The two previously ran parallel, differently-defined calcs (this one:
+  // session-local dailyPnlBreakdown vs the firm-config single-threshold ratio; the
+  // tracker: firm-wide 40%/50% concentration with a false-positive guard) and could
+  // DISAGREE for the same session. Now both read the same computation.
+  //
+  // dryRun=true suppresses the tracker's OWN audit_log rows + Discord (those are
+  // owned by the entry gate `shouldBlockNewEntry` and the daily-digest cron, so we
+  // do not double-emit). We only re-broadcast the `paper:consistency-warning` SSE
+  // that the Office/dashboard depends on.
+  //
+  // A distinct, non-UUID cache key ("paper-close:<firm>") keeps this dry-run read
+  // from poisoning the tracker's 5s cache shared by the authoritative UUID-keyed
+  // callers (a cache hit there would suppress their real non-dry-run audit path).
+  let state: Awaited<ReturnType<typeof getConsistencyState>>;
+  try {
+    state = await getConsistencyState(`paper-close:${session.firmId}`, new Date(), true);
+  } catch (err) {
+    logger.warn(
+      { sessionId: session.id, firmId: session.firmId, err },
+      "checkConsistencyRule: authoritative consistency tracker read failed (non-blocking)",
+    );
+    return;
   }
+
+  if (state.gateState === "ok") return;
+
+  // Backward-compatible SSE payload: keep sessionId/firmId + the legacy
+  // maxDayRatio/limit/maxDay fields the dashboard reads, now sourced from the
+  // authoritative tracker, plus the richer gateState/concentration fields.
+  const limit = state.gateState === "block_50" ? 0.5 : 0.4;
+  const maxDayRatio = state.currentConcentrationPct / 100;
+  const maxDay = state.highestDayDate ?? "unknown";
+  const warning =
+    `Consistency ${state.gateState === "block_50" ? "BLOCK" : "WARN"} (authoritative): ` +
+    `${state.currentConcentrationPct.toFixed(1)}% single-day concentration ` +
+    `(highest $${state.highestDayProfit.toFixed(2)} on ${maxDay} / cumulative ` +
+    `$${state.cycleCumulativeProfit.toFixed(2)}) for ${session.firmId}`;
+
+  logger.warn(
+    { sessionId: session.id, firmId: session.firmId, gateState: state.gateState, currentConcentrationPct: state.currentConcentrationPct },
+    warning,
+  );
+
+  broadcastSSE("paper:consistency-warning", {
+    sessionId: session.id,
+    firmId: session.firmId,
+    // Authoritative fields from the single source of truth (consistency-tracker-service).
+    gateState: state.gateState,
+    currentConcentrationPct: state.currentConcentrationPct,
+    highestDayDate: state.highestDayDate,
+    falsePositiveSuspected: state.falsePositiveSuspected,
+    // Backward-compatible fields the existing dashboard payload carried.
+    maxDayRatio,
+    limit,
+    maxDay,
+    message: warning,
+  });
 }
 
 // ─── Gap 5: Rolling Sharpe + Decay Detection ─────────────────
@@ -3361,14 +3467,54 @@ async function _resolveSmeContextForExit(
       .limit(1);
     if (!strat) return null;
 
-    // firmId → accountId (first enabled broker account for this firm)
+    // firmId + strategyId → accountId.  DS#20 T-C1 (Band C CRITICAL): resolve the
+    // SPECIFIC account assigned to THIS strategy via account_strategy_assignments
+    // (strategy→account, active, firm-matched) instead of "first enabled broker account
+    // for the firm". The old query silently routed a live modify/flatten (TRAIL, BE+1,
+    // partial-close, 15:55 flatten) for a position on account B to account A the moment a
+    // firm had 2+ enabled accounts — an explicit APPROVED horizontal-scaling lever
+    // (§5 Phase 3 multi-account Topstep, §9 family). FAIL-CLOSED on 0-or-ambiguous: never
+    // guess which account holds a live position — suppress the SME route (paper sim
+    // unaffected) + loud audit. The definitive fix threads an explicit accountId onto
+    // paper_sessions at open time (schema change, deferred); until then this closes the
+    // silent-misroute hole by refusing to guess.
     const firmId = sess.firmId ?? "";
     if (!firmId) return null;
-    const [acct] = await db
-      .select({ accountId: brokerAccounts.accountId })
-      .from(brokerAccounts)
-      .where(and(eq(brokerAccounts.firmId, firmId), eq(brokerAccounts.enabled, true)))
-      .limit(1);
+    const assignedAccts = await db
+      .select({ accountId: accountStrategyAssignments.accountId })
+      .from(accountStrategyAssignments)
+      .innerJoin(brokerAccounts, eq(accountStrategyAssignments.accountId, brokerAccounts.accountId))
+      .where(and(
+        eq(accountStrategyAssignments.strategyId, sess.strategyId),
+        eq(accountStrategyAssignments.status, "active"),
+        eq(brokerAccounts.firmId, firmId),
+        eq(brokerAccounts.enabled, true),
+      ));
+    if (assignedAccts.length !== 1) {
+      // 0 = no active assignment for this strategy on this firm; >1 = ambiguous (same
+      // strategy on multiple accounts of one firm — the approved Topstep multi-account
+      // lever). Either way, do NOT guess which account holds the live position.
+      logger.warn(
+        { sessionId, positionId, strategyId: sess.strategyId, firmId, candidateCount: assignedAccts.length },
+        "SME: could not resolve an unambiguous account for exit routing — suppressing SME route (fail-closed, paper sim unaffected)",
+      );
+      await insertAuditRowSafe({
+        action: "sme.exit_account_unresolved",
+        entityType: "strategy",
+        entityId: sess.strategyId,
+        decisionAuthority: "gate",
+        status: "failure",
+        input: { sessionId, positionId, firmId } as Record<string, unknown>,
+        result: {
+          reason: assignedAccts.length === 0 ? "no_active_assignment" : "ambiguous_multi_account",
+          candidate_count: assignedAccts.length,
+          note: "SME exit routing requires exactly one active account_strategy_assignments match for the strategy+firm; never guess which account holds the live position",
+        } as Record<string, unknown>,
+        correlationId: entryCorrelationId ?? randomUUID(),
+      });
+      return null;
+    }
+    const acct = assignedAccts[0];
     if (!acct?.accountId) return null;
 
     return {
@@ -3532,6 +3678,19 @@ async function bookPartialClose(
         correlationId: correlationId ?? null,
       });
     });
+
+    // HIGH E-2 fix (deep-scan #16 wave-1 track-3, 2026-07-04): partial closes (TP1/TP2 —
+    // the DEFAULT Style C legs and the most common winning-trade path) previously never
+    // incremented tf_paper_trades_total at all, systematically undercounting winners
+    // opposite to the double-counted stop/time-stop/force-close legs. The counter counts
+    // LEGS (one paper_trades row = one increment, see the doc comment on paperTrades in
+    // metrics-registry.ts) — each partial is its own paper_trades row (inserted above),
+    // so it gets its own increment here, exactly once, after the transaction commits.
+    paperTradesCounter.labels({
+      symbol: pos.symbol,
+      side: pos.side,
+      outcome: `partial_${exitReason.toLowerCase()}`,
+    }).inc();
 
     logger.info(
       {
@@ -3913,13 +4072,10 @@ async function applyExitDecision(
       const pnlAtFlatten = spec
         ? direction * (currentPrice - entryPx) * spec.pointValue * pos.contracts
         : null;
-      await closePosition(pos.id, currentPrice, atr, { medianAtr });
-      // FIX 6: count time-stop close in paperTradesCounter
-      paperTradesCounter.labels({
-        symbol: pos.symbol,
-        side: pos.side,
-        outcome: "time_stop",
-      }).inc();
+      // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="time_stop" is
+      // now passed INTO closePosition() instead of incrementing paperTradesCounter a
+      // second time here — this call site was double-counting every time-stop close.
+      await closePosition(pos.id, currentPrice, atr, { medianAtr, outcomeOverride: "time_stop" });
       logger.info(
         {
           positionId: pos.id, strategyId, exitStyle, currentPrice, pnlAtFlatten,
@@ -4100,12 +4256,10 @@ export async function updatePositionPrices(
           const atrForClose = exitBarContext?.atr14[pos.symbol];
           const medianAtrForClose = exitBarContext?.medianAtr14?.[pos.symbol];
           try {
-            await closePosition(pos.id, stopLevel, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose });
-            paperTradesCounter.labels({
-              symbol: pos.symbol,
-              side: pos.side,
-              outcome: "stop_loss",
-            }).inc();
+            // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="stop_loss" is
+            // now passed INTO closePosition() instead of incrementing paperTradesCounter a
+            // second time here — this call site was double-counting every intrabar stop.
+            await closePosition(pos.id, stopLevel, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: "stop_loss" });
             closedByExitHandler.add(pos.id);
             totalUnrealizedDelta -= unrealizedDelta;
             totalUnrealizedPnl   -= unrealizedPnl;
@@ -4129,6 +4283,7 @@ export async function updatePositionPrices(
             broadcastSSE("paper:position-stop-breached", {
               positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
               stopLevel, adversePrice, currentPrice,
+              correlationId: correlationId ?? null,
             });
           } catch (stopCloseErr) {
             logger.error(
@@ -4687,8 +4842,12 @@ export async function checkRollAndFlatten(
           );
           notifyCritical(
             "Roll-day flatten failed",
-            `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
-            `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+            appendFamilyGradePostscript(
+              `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
+              `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+              "The trading bot hit an error trying to close a position before its futures contract rolls to the next month.",
+              "This position may stay open longer than intended. Tell Tony right away.",
+            ),
             { sessionId, positionId: pos.id, symbol: pos.symbol, rollDate: info.roll_date, correlationId },
           );
           await insertAuditRowSafe({
@@ -4750,6 +4909,7 @@ export async function checkRollAndFlatten(
           sessionId, positionId: pos.id, symbol: pos.symbol,
           rollDate: info.roll_date, flattenDate: info.flatten_date,
           pnlAtClose, activeContract: info.active_contract,
+          correlationId,
         });
 
         logger.info(
@@ -4768,6 +4928,7 @@ export async function checkRollAndFlatten(
           sessionId, positionId: pos.id, symbol: pos.symbol,
           daysToRoll: info.days_to_roll, rollDate: info.roll_date,
           flattenDate: info.flatten_date, activeContract: info.active_contract,
+          correlationId,
         });
 
         // Persist warn event (once per day per position is acceptable — duplicate
@@ -4876,15 +5037,44 @@ export async function runSessionEndRollSweep(context?: { correlationId?: string 
 // closePosition call, so the halt→flatten→per-position chain is linkable in
 // the audit_log for 90-day reconstruction.
 //
-// Callers: kill-switch.ts:setMode('HALT') only. Do NOT call from openPosition
-// or any hot path — this is a rare, operator-triggered emergency action.
+// Callers: kill-switch.ts:setMode('HALT') / kill-switch.ts checkLayer2DailyLoss
+// (account-scoped) / openPosition D6 / paper-signal-service.ts cross-symbol
+// force-close. Do NOT call from any per-bar hot path — this is a rare,
+// halt/breach-triggered emergency action.
 //
-export async function forceCloseAllPositions(reason: string): Promise<{ count: number; closed: number; stuck: number }> {
+// deepscan17 (2026-07-05) C-1 fix: this query previously had NO account/firm/
+// session filter — `.where(isNull(paperPositions.closedAt))` alone flattened
+// EVERY open position system-wide, so a single account's DLL-95% breach force-
+// closed every OTHER healthy account/firm sharing the process. `opts.scope`
+// narrows the flatten to one account (via resolveAccountKey, the same key
+// cross-symbol-pnl.ts uses for DLL aggregation) or an explicit session-id list.
+// Omitting scope preserves the original system-wide behavior for the two
+// legitimate system-wide callers (operator HALT via setMode, and any future
+// deliberate full-flatten path) — no existing caller's behavior changes unless
+// it opts in to a scope.
+//
+// deepscan17 E-1 fix: opts.correlationId lets the caller thread its own root
+// correlationId through the whole force-close so the halt->flatten->per-position
+// chain is linkable end-to-end in the audit_log. Defaults to a fresh randomUUID()
+// when the caller has none (unchanged behavior for callers that don't pass one).
+export interface ForceCloseScope {
+  /** Resolved account key (see cross-symbol-pnl.ts::resolveAccountKey) — flattens only this account's open positions. */
+  accountKey?: string;
+  /** Explicit session-id allowlist — takes priority over accountKey when both are set. */
+  sessionIds?: string[];
+}
+
+export async function forceCloseAllPositions(
+  reason: string,
+  opts: { correlationId?: string; scope?: ForceCloseScope } = {},
+): Promise<{ count: number; closed: number; stuck: number }> {
   // FINDING #8 FIX: generate a single batch correlationId that links the batch
   // audit row to every per-position closePosition call in this flatten sweep.
-  const batchCorrelationId = randomUUID();
+  // deepscan17 E-1: prefer the caller's correlationId when supplied.
+  const batchCorrelationId = opts.correlationId ?? randomUUID();
+  const scope = opts.scope;
 
-  const openPositions = await db
+  const openPositionsRaw = await db
     .select({
       id: paperPositions.id,
       sessionId: paperPositions.sessionId,
@@ -4899,6 +5089,30 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
     })
     .from(paperPositions)
     .where(isNull(paperPositions.closedAt));
+
+  // deepscan17 C-1 fix: apply scope in application code (not the query) so the
+  // unscoped default path's query shape — and every existing test mock for it —
+  // is byte-identical to pre-fix behavior. sessionIds takes priority when both
+  // scope fields are set (explicit list is unambiguous); accountKey requires a
+  // second lightweight query to resolve each open position's owning session to
+  // an account key, mirroring cross-symbol-pnl.ts's own resolution pattern.
+  let openPositions = openPositionsRaw;
+  if (scope?.sessionIds && scope.sessionIds.length > 0) {
+    const idSet = new Set(scope.sessionIds);
+    openPositions = openPositionsRaw.filter((p) => p.sessionId && idSet.has(p.sessionId));
+  } else if (scope?.accountKey) {
+    const sessionIds = [...new Set(openPositionsRaw.map((p) => p.sessionId).filter((id): id is string => !!id))];
+    if (sessionIds.length === 0) {
+      openPositions = [];
+    } else {
+      const sessionRows = await db
+        .select({ id: paperSessions.id, firmId: paperSessions.firmId, config: paperSessions.config })
+        .from(paperSessions)
+        .where(inArray(paperSessions.id, sessionIds));
+      const keyBySession = new Map(sessionRows.map((s) => [s.id, resolveAccountKey(s)]));
+      openPositions = openPositionsRaw.filter((p) => p.sessionId && keyBySession.get(p.sessionId) === scope.accountKey);
+    }
+  }
 
   const count = openPositions.length;
 
@@ -4963,14 +5177,11 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
         try {
           // M-4: thread the unconfirmed-price marker into the trade_close write so
           // the paper_trades close row's audit carries the contamination flag too.
-          await closePosition(pos.id, rawEntry, derivedAtr, { correlationId: batchCorrelationId, forceClosePriceUnconfirmed: true });
+          // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="force_close" is
+          // now passed INTO closePosition() instead of incrementing paperTradesCounter a
+          // second time here — this call site was double-counting every force-close.
+          await closePosition(pos.id, rawEntry, derivedAtr, { correlationId: batchCorrelationId, forceClosePriceUnconfirmed: true, outcomeOverride: "force_close" });
           closedCount++;
-          // FIX 6: count force-close in paperTradesCounter
-          paperTradesCounter.labels({
-            symbol: pos.symbol,
-            side: pos.side ?? "unknown",
-            outcome: "force_close",
-          }).inc();
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           errors.push(`pos:${pos.id} err:${msg}`);
@@ -5024,14 +5235,11 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
     try {
       // Close at mark-to-market (currentPrice). Thread the batchCorrelationId so
       // this close is linkable to the halt event in the audit_log.
-      await closePosition(pos.id, rawCurrent, derivedAtr, { correlationId: batchCorrelationId });
+      // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="force_close" is
+      // now passed INTO closePosition() instead of incrementing paperTradesCounter a
+      // second time here — this call site was double-counting every force-close.
+      await closePosition(pos.id, rawCurrent, derivedAtr, { correlationId: batchCorrelationId, outcomeOverride: "force_close" });
       closedCount++;
-      // FIX 6: count force-close in paperTradesCounter
-      paperTradesCounter.labels({
-        symbol: pos.symbol,
-        side: pos.side ?? "unknown",
-        outcome: "force_close",
-      }).inc();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`pos:${pos.id} err:${msg}`);
@@ -5040,18 +5248,21 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
   }
 
   // Audit log the batch flatten event (FINDING #8 FIX: non-null correlationId)
+  // deepscan17 C-1: record the scope so an audit reader can see whether this
+  // was an account-scoped flatten (breach containment) or a system-wide one
+  // (operator HALT) — the two have very different blast radii.
   db.insert(auditLog).values({
     action: "paper.force_flatten_all",
     entityType: "system",
     entityId: null,
     decisionAuthority: "system",
-    input: { reason } as Record<string, unknown>,
+    input: { reason, scope: scope ?? "system_wide" } as Record<string, unknown>,
     result: { reason, count, closed: closedCount, stuck: stuckCount, errors, skipped } as Record<string, unknown>,
     status: errors.length === 0 && stuckCount === 0 ? "success" : "partial_failure",
     correlationId: batchCorrelationId,
   }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: audit_log write failed (non-blocking)"));
 
-  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length });
+  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length, scope: scope ?? null, correlationId: batchCorrelationId });
 
   return { count, closed: closedCount, stuck: stuckCount };
 }

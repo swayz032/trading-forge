@@ -400,6 +400,36 @@ describe("Finding #3 — regime-drift step2 failure fires CRITICAL", () => {
     );
     expect(src).toMatch(/import\s*\{[^}]*notifyCritical[^}]*\}\s*from\s*"\.\/notification-service\.js"/);
   });
+
+  // Deep-scan #16 Band G: the SECOND zombie-DECLINING failure path (step2
+  // itself — DECLINING → TESTING — failing during the live drift-detection
+  // pass, as opposed to the 25h compensating-sweep RECOVERY failure covered
+  // above at "lifecycle.zombie_declining_recovered") used to call
+  // notifyCritical with raw technical jargon and NO
+  // appendFamilyGradePostscript wrapper — an unattended family operator would
+  // see lifecycle-transition internals instead of a plain-English "no trades
+  // are at risk" reassurance + action. Behavioral mocking of this path is
+  // blocked by pre-existing breakage in wave29-pass-b3-regime-drift.test.ts
+  // (11 of 13 tests in that describe block already fail against current
+  // phase-0 code, unrelated to this fix — confirmed via baseline diff), so
+  // this is a source-level regression guard: the step2-failure notifyCritical
+  // call must wrap its body in appendFamilyGradePostscript(...), matching the
+  // already-fixed sweep-recovery path immediately above it in the file.
+  it("regime-drift step2-failure notifyCritical body is wrapped in appendFamilyGradePostscript (deep-scan #16 Band G)", () => {
+    const src = require("fs").readFileSync(
+      require("path").resolve(process.cwd(), "src/server/services/regime-drift-detector-service.ts"),
+      "utf-8"
+    );
+    const marker = "stuck in zombie DECLINING — step2 failed";
+    const idx = src.indexOf(marker);
+    expect(idx).toBeGreaterThan(-1);
+    // The notifyCritical(...) call for this specific alert must have its
+    // second argument be an appendFamilyGradePostscript(...) call, not a bare
+    // template string. Look at the ~400-char window following the marker.
+    const window = src.slice(idx, idx + 600);
+    expect(window).toContain("appendFamilyGradePostscript(");
+    expect(window).toContain("No trades are at risk");
+  });
 });
 
 // ─── Suppress unused variable lint ────────────────────────────────────────────

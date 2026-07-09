@@ -115,6 +115,7 @@ vi.mock("../../integrations/traderspost/client.js", () => ({
     statusCode: 200,
     responseBody: { ok: true },
   }),
+  buildDeterministicIdempotencyKey: vi.fn(() => "test-idempotency-key"),
 }));
 
 vi.mock("../../integrations/traderspost/webhook-builder.js", () => ({
