@@ -660,6 +660,145 @@ describe("kitchen.html kitchenVisual — decorative, deterministic, no data RNG"
 });
 
 // ═════════════════════════════════════════════════════════════════════════════
+// 7b. progress-line.js — the strategy gate meter (renderProgressLine + pctFor).
+//     A real shipped render fn loaded by recipe.html (<script src="progress-line.js">)
+//     that draws a fill BAR whose width is `pctFor(gates)%`. The grader's cited gap:
+//     this meter was NOT under the anti-fabrication lock. The width must be a pure,
+//     deterministic function of the gates' pass/fail STATE — no Math.random /
+//     synthesized shape may reach the rendered width.
+// ═════════════════════════════════════════════════════════════════════════════
+function loadProgressLine() {
+  const src = readFile("progress-line.js");
+  // The file is an IIFE that assigns window.renderProgressLine. Run it and grab
+  // the REAL exported fn (no hand-copied mirror).
+  const sandbox: Record<string, unknown> = {
+    window: {} as Record<string, unknown>,
+    Math,
+    Array,
+    String,
+    Object,
+    Number,
+    JSON,
+    console,
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(src, sandbox, { filename: "progress-line.js" });
+  const renderProgressLine = (sandbox.window as Record<string, unknown>)
+    .renderProgressLine as (c: any, g: unknown, o?: unknown) => void;
+  if (typeof renderProgressLine !== "function") {
+    throw new Error("progress-line.js did not export window.renderProgressLine");
+  }
+  // pctFor is a PRIVATE helper inside the IIFE — slice its real block out and
+  // exercise it directly (same brace-slice technique used elsewhere in this suite).
+  const pctForBlock = sliceFnBlock(src, "function pctFor", "function pctFor");
+  const pctFor = vm.runInNewContext(pctForBlock + "\n;pctFor", { Math }) as (
+    gates: Array<{ status: string }>,
+  ) => number;
+  return { renderProgressLine, pctFor };
+}
+
+describe("progress-line.js gate meter — no fabrication (execution lock)", () => {
+  const { renderProgressLine, pctFor } = loadProgressLine();
+  // 4 gates, 2 cleared (idx 0,1) → lastPass=1, n=3 → round(1/3*100)=33
+  const gates4 = [
+    { key: "a", label: "Backtest", sub: "cleared", status: "pass" },
+    { key: "b", label: "Walk-forward", sub: "cleared", status: "pass" },
+    { key: "c", label: "Monte Carlo", sub: "cooking", status: "now" },
+    { key: "d", label: "Survival", sub: "not yet", status: "wait" },
+  ];
+
+  it("exposes the real render fns", () => {
+    expect(typeof renderProgressLine).toBe("function");
+    expect(typeof pctFor).toBe("function");
+  });
+
+  it("pctFor: fill % is a pure deterministic fn of gate pass state; RNG-free", () => {
+    // (a) determinism — same gates → same pct, twice.
+    expect(pctFor(gates4)).toBe(pctFor(gates4));
+    // (b) traces ONLY to lastPass index / (n-1): 2 passes (lastPass idx1) of 4 gates → 33.
+    expect(pctFor(gates4)).toBe(33);
+    // sensitivity: clearing one more gate advances the meter (data-driven, not fixed art).
+    const gates4b = gates4.map((g, i) => (i === 2 ? { ...g, status: "pass" } : g));
+    expect(pctFor(gates4b)).toBe(67); // lastPass idx2 → round(2/3*100)=67
+    // STATUS is the only driver — relabeling with identical statuses must not move it.
+    const relabeled = gates4.map((g) => ({ ...g, label: g.label + "!", sub: "zzz" }));
+    expect(pctFor(relabeled)).toBe(pctFor(gates4));
+    // honest bounds: no pass → 0%, all pass → 100%.
+    expect(pctFor(gates4.map((g) => ({ ...g, status: "wait" })))).toBe(0);
+    expect(pctFor(gates4.map((g) => ({ ...g, status: "pass" })))).toBe(100);
+    // no fabricated shape drivers anywhere in the executable body.
+    const exec = stripJsComments(String(pctFor));
+    expect(exec).not.toMatch(RANDOM_RE);
+    expect(exec).not.toMatch(SYNTH_RE);
+    expect(exec).not.toMatch(SIN_RE);
+  });
+
+  it("renderProgressLine: rendered fill width == pctFor(gates); deterministic; RNG-free", () => {
+    const c1 = { innerHTML: "" };
+    renderProgressLine(c1, gates4, { legend: false });
+    const c2 = { innerHTML: "" };
+    renderProgressLine(c2, gates4, { legend: false });
+    // (a) determinism: two renders of the same gates → byte-identical HTML.
+    expect(c2.innerHTML).toBe(c1.innerHTML);
+    // (b) the drawn width traces to the pure pct — not a synthesized/random shape.
+    const w = c1.innerHTML.match(/style="width:(\d+)%"/);
+    expect(w, "renderProgressLine did not draw a width bar").not.toBeNull();
+    expect(Number((w as RegExpMatchArray)[1])).toBe(pctFor(gates4));
+    // a different gate STATE → a different rendered width (proves data-driven).
+    const cMore = { innerHTML: "" };
+    renderProgressLine(
+      cMore,
+      gates4.map((g, i) => (i === 2 ? { ...g, status: "pass" } : g)),
+      { legend: false },
+    );
+    expect(cMore.innerHTML).not.toBe(c1.innerHTML);
+    // no fabrication tokens in the render path.
+    const exec = stripJsComments(String(renderProgressLine));
+    expect(exec).not.toMatch(RANDOM_RE);
+    expect(exec).not.toMatch(SYNTH_RE);
+    expect(exec).not.toMatch(SIN_RE);
+  });
+
+  it("renderProgressLine: honest empty state — no gates → 0% meter, no fabricated nodes", () => {
+    const c = { innerHTML: "" };
+    renderProgressLine(c, [], { legend: false });
+    expect(c.innerHTML).toContain('style="width:0%"');
+    expect(c.innerHTML).not.toMatch(RANDOM_RE);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// 7c. recipe.html calendar heat gauge — heatLevelN(|pnl|). The one remaining
+//     data→visual-magnitude mapping in the tree not covered elsewhere: it maps a
+//     dollar P&L magnitude to a 4-step heat tint (a gauge). Must be pure + RNG-free.
+// ═════════════════════════════════════════════════════════════════════════════
+function loadHeatLevel() {
+  const src = readFile("recipe.html");
+  const block = sliceFnBlock(src, "function heatLevelN", "function heatLevelN");
+  return vm.runInNewContext(block + "\n;heatLevelN", {}) as (abs: number) => string;
+}
+
+describe("recipe.html calendar heat gauge (heatLevelN) — no fabrication (execution lock)", () => {
+  const heatLevelN = loadHeatLevel();
+
+  it("heat tint is a pure, monotonic-nondecreasing fn of |pnl|; deterministic; RNG-free", () => {
+    // exact threshold contract (1 lightest → 4 strongest)
+    expect(heatLevelN(50)).toBe("1");
+    expect(heatLevelN(200)).toBe("2");
+    expect(heatLevelN(500)).toBe("3");
+    expect(heatLevelN(1500)).toBe("4");
+    // monotonic non-decreasing in magnitude — the gauge only rises with the number.
+    expect([10, 150, 400, 1000, 5000].map(heatLevelN)).toEqual(["1", "2", "3", "4", "4"]);
+    // deterministic for fixed input.
+    for (const v of [0, 10, 150, 400, 1000]) expect(heatLevelN(v)).toBe(heatLevelN(v));
+    const exec = stripJsComments(String(heatLevelN));
+    expect(exec).not.toMatch(RANDOM_RE);
+    expect(exec).not.toMatch(SYNTH_RE);
+    expect(exec).not.toMatch(SIN_RE);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
 // 8. Cosmetic-RNG / cosmetic-sin confinement across shipped files
 //    (the allowed-uses audit: RNG only mints SVG ids; the one Math.sin only
 //     drives the Carter voice-avatar CSS glow, never a rendered metric)
@@ -670,6 +809,39 @@ describe("shipped Slumhouse files — banned-token confinement audit", () => {
     const lines = exec.split("\n").filter((l) => RANDOM_RE.test(l));
     expect(lines.length).toBeGreaterThan(0);
     for (const l of lines) expect(l).toMatch(/Id\s*=\s*"/);
+  });
+
+  it("progress-line.js: the gate meter carries ZERO banned tokens (pure geometry from gate state)", () => {
+    const exec = stripJsComments(readFile("progress-line.js"));
+    expect(exec).not.toMatch(RANDOM_RE);
+    expect(exec).not.toMatch(SYNTH_RE);
+    expect(exec).not.toMatch(SIN_RE);
+  });
+
+  it("whole tree: EVERY executable Math.random across shipped Slumhouse files is confined to an SVG id-string mint", () => {
+    // Tree-wide superset of the slumhouse.js check above — any render fn anywhere
+    // under public/slumhouse that reaches Math.random for DATA geometry (not an id
+    // string) fails this audit. Today only slumhouse.js mints ids; a reinjected
+    // fabricated shape (see scripts/ds22-x3-red-prove.sh) trips it.
+    for (const f of [
+      "slumhouse.js",
+      "progress-line.js",
+      "crib.html",
+      "kitchen.html",
+      "recipe.html",
+      "office.html",
+      "office-risk.js",
+      "office-conveyor.js",
+      "office-approvals.js",
+    ]) {
+      const exec = stripJsComments(readFile(f));
+      const lines = exec.split("\n").filter((l) => RANDOM_RE.test(l));
+      for (const l of lines) {
+        expect(l, `${f}: Math.random outside an id-string mint → possible fabricated geometry`).toMatch(
+          /Id\s*=\s*"/,
+        );
+      }
+    }
   });
 
   it("office.html: the only executable Math.sin drives the CSS voice-glow, not a rendered number", () => {
