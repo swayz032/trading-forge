@@ -34,6 +34,7 @@ import {
   DEFAULT_CONFLUENCE_MULTIPLIER,
 } from "../lib/risk-sizing.js";
 import { applyFrameworkOverlay } from "../services/framework-overlay.js";
+import { resolveConfluenceDispatch } from "../lib/confluence-path-resolver.js";
 
 const GRADUATOR_SRC = fs.readFileSync(
   path.resolve(__dirname, "../services/direct-bucket-graduator.ts"),
@@ -63,27 +64,11 @@ interface ConfirmingIndicatorShape {
   direction: "agree" | "disagree" | "either";
 }
 
-// Exact reader mirror of paper-signal-service.ts:4161-4177 (static-pinned below).
+// Deep-scan #22 Z7 (2026-07-09): NO local mirror — this calls the REAL
+// production dispatch function directly. See
+// src/server/lib/confluence-path-resolver.ts::resolveConfluenceDispatch.
 function readEntryQualityAndDispatch(config: Record<string, unknown>) {
-  const rawConfig = config as unknown as Record<string, unknown>;
-  const entryQuality = (
-    rawConfig.entry_quality ??
-    (rawConfig.strategy as Record<string, unknown> | undefined)?.entry_quality
-  ) as
-    | {
-        confluence_factors?: string[];
-        extraction_provenance?: string;
-        confirming_indicators?: ConfirmingIndicatorShape[];
-        use_weighted_scoring?: boolean;
-      }
-    | undefined;
-
-  const isLegacyStrategy =
-    !entryQuality || entryQuality.extraction_provenance === "legacy_no_confluence";
-  const useWeightedScoring = entryQuality?.use_weighted_scoring === true && !isLegacyStrategy;
-  const customIndicators = entryQuality?.confirming_indicators ?? [];
-  const usePerStrategy = customIndicators.length > 0;
-  return { entryQuality, useWeightedScoring, usePerStrategy, customIndicators };
+  return resolveConfluenceDispatch(config);
 }
 
 describe("X6 Control 1 — Path-C wiring: JSONB-key-location fault injection", () => {

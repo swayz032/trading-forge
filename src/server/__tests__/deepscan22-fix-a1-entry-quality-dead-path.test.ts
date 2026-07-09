@@ -29,6 +29,7 @@
 import { describe, it, expect } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
+import { resolveConfluenceDispatch } from "../lib/confluence-path-resolver.js";
 
 // ─── Exact reader expression, copied verbatim from paper-signal-service.ts:4161-4177 ──
 interface ConfirmingIndicatorShape {
@@ -46,22 +47,17 @@ interface EntryQualityShape {
   use_weighted_scoring?: boolean;
 }
 
-function readEntryQuality(config: Record<string, unknown>): EntryQualityShape | undefined {
-  const rawConfig = config as unknown as Record<string, unknown>;
-  return (
-    rawConfig.entry_quality ??
-    (rawConfig.strategy as Record<string, unknown> | undefined)?.entry_quality
-  ) as EntryQualityShape | undefined;
-}
-
-// Mirrors the paper-signal-service.ts dispatcher decision points exactly.
+// Deep-scan #22 Z7 (2026-07-09): NO local mirror — calls the REAL production
+// dispatch function directly. See
+// src/server/lib/confluence-path-resolver.ts::resolveConfluenceDispatch.
 function resolveDispatch(config: Record<string, unknown>) {
-  const entryQuality = readEntryQuality(config);
-  const isLegacyStrategy = !entryQuality || entryQuality.extraction_provenance === "legacy_no_confluence";
-  const useWeightedScoring = entryQuality?.use_weighted_scoring === true && !isLegacyStrategy;
-  const customIndicators = entryQuality?.confirming_indicators ?? [];
-  const usePerStrategy = customIndicators.length > 0;
-  return { entryQuality, useWeightedScoring, customIndicators, usePerStrategy };
+  const result = resolveConfluenceDispatch(config);
+  return {
+    entryQuality: result.entryQuality as EntryQualityShape | undefined,
+    useWeightedScoring: result.useWeightedScoring,
+    customIndicators: result.customIndicators as ConfirmingIndicatorShape[],
+    usePerStrategy: result.usePerStrategy,
+  };
 }
 
 describe("FIX A1 — entry_quality dead-path round-trip", () => {
