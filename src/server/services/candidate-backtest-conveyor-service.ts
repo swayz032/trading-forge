@@ -35,6 +35,7 @@ import { logger } from "../lib/logger.js";
 import { candidateConveyorEnqueuedTotal, candidateConveyorRejectionsTotal } from "../lib/metrics-registry.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { getMode as getPipelineMode } from "./pipeline-control-service.js";
 
 // FIX 3 (deepscan11 Track P, 2026-07-02): skip-cooldown map.
@@ -307,9 +308,13 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
       );
       notifyWarning(
         "[candidate-backtest-conveyor] checkAutoPromotions failed",
-        `Auto-promotion check failed after enqueuing ${enqueued} backtest(s). ` +
-        `Strategies may be delayed reaching TESTING stage. ` +
-        `Error: ${promotionErr instanceof Error ? promotionErr.message : String(promotionErr)}`,
+        appendFamilyGradePostscript(
+          `Auto-promotion check failed after enqueuing ${enqueued} backtest(s). ` +
+            `Strategies may be delayed reaching TESTING stage. ` +
+            `Error: ${promotionErr instanceof Error ? promotionErr.message : String(promotionErr)}`,
+          "A background step that moves new strategies to the next testing stage hit an error, so some may be delayed.",
+          "No trading impact. Let Tony know so he can check the conveyor if strategies seem stuck.",
+        ),
         { enqueued, correlationId },
       );
     }
