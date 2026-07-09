@@ -718,3 +718,39 @@ Ledger reconcile per the locked morning order — NOT re-numbered, NOT new defec
 - **D8:** mirror `apply_vix_margin_expansion` into run_class_backtest's sizing (reduce max_contracts on rolling VIX), analogous to run_backtest:4207 — do NOT duplicate the per-bar stop-mult (already shared via vix_np). VIX-absent → fail-soft (no expansion), audit `margin_expansion_unavailable_no_vix`.
 - **Acceptance (agent-loop):** (1) PARITY — class sizing/fill == run_backtest on same inputs (fill-model byte-identical; margin-expansion reduces max_contracts identically at VIX>30/>50); (2) default-ON respected, disabled→byte-identical legacy; (3) diff-stat no-revert (backtester base 8420); (4) regression class suite. Same SAFE method (explicit-SHA worktree, diff-stat before push, independent review).
 - Same pattern as Part A (Defect-9): run_class_backtest systematically under-mirrors run_backtest. AWAITING RATIFY → agent-loop → then seam trace → re-baseline.
+
+---
+
+## RULING (2026-07-09) — Option 2 ratified + sharpened: D7 solo, D8-as-filed CLOSED (not a parity gap), re-baseline proceeds VIX-blind.
+
+### D8-as-filed CLOSED — the sibling-parity obligation is discharged by the finding itself.
+Step-0 Addition-3 proved NO VIX feed reaches ANY backtest dataframe — `load_ohlcv` returns OHLCV only, no caller joins vix, both engines' `if "vix" in df.columns` else-branch fires ("VIX column absent — skipping"). So `run_backtest`'s `apply_vix_margin_expansion` is ALSO dormant → both paths no-op IDENTICALLY → **there is no class-vs-run_backtest parity gap.** D8 is not deferred, it is CLOSED as filed. It re-files as a DIFFERENT, system-level finding (below).
+
+### THREE RECORD CORRECTIONS (land now, not when the feed does):
+1. **★★ KNOWN-FACT PINNED: VIX-margin-expansion is DORMANT SYSTEM-WIDE since Wave 27.5 Pass D** — shipped, §12/CLAUDE.md documents it "DEFAULT ON," but it has NEVER been fed (no vix column on the backtest OHLCV frame, ever). §12's "DEFAULT ON" is a FALSE CLAIM (doc-integrity violation of the proxy-declaration rule) — any future agent diagnosing high-VIX sizing would trust a feature that structurally cannot fire. See memory [[reference_vix_margin_dormant_no_feed_2026_07_09]].
+2. **FUNCTION-POINTER CORRECTION:** the shared per-bar VIX STOP-MULTIPLIER lives in `_apply_dsl_stop_loss_and_time_stop` (backtester.py:3190), NOT `_apply_trade_management` (which has no `vix_np` param). Load-bearing for the future D8-feed implementer. (Empirically proven: high-VIX widened stop → ceiling-skip that low-VIX didn't; `apply_vix_atr_multiplier` tiered 15→1.5/26→2.0/55→2.5.)
+3. **RE-BASELINE RECEIPT line:** "VIX-margin: dormant by construction, engagements N/A" — the pre-registered D8-nonzero expectation resolves to a RECORDED REASON, doesn't silently vanish.
+
+### RE-BASELINE PROCEEDS VIX-BLIND (explicit reasoning on the record — someone will ask why we certified on a VIX-blind instrument):
+- **Defined, consistent instrument** — VIX-margin uniformly absent across every year, both arms, every historical backtest. "Dormant everywhere" = the honest status quo; the exam measures the instrument as it exists.
+- **Common-mode for the Gate-3 verdict** — Gate 3 is arm-vs-arm revival-count comparison; margin-expansion changes contract COUNTS (sizing magnitude) not trade ADMISSION (trade sets), identically for both arms. Second-order at most (integer-rounding on 33/33/34 at small counts), nowhere near the first-order verdict-variability the guards + mask had.
+- **The alternative is the highest-risk move available** — rushing a daily-VIX-onto-intraday join onto the critical path is a look-ahead machine by construction (same-day VIXCLS close on a 09:30 bar = future info, the HTF ts_event trap class already pinned). We do NOT manufacture an invisible error to unblock an exam it barely touches.
+
+### D8-FEED PACKET — re-files under PRODUCTION HARDENING, POST-re-baseline. Spec pre-registered NOW (traps hot):
+- **Trap #1 as-of join:** FRED VIXCLS is a daily close — intraday bars MUST see the PRIOR session's value (or a genuinely timestamped intraday source). Same +1-shift rigor as the HTF pinned fact; fixture probes a bar whose same-day close would leak.
+- **Floor semantics answered explicitly:** can quartering reach ZERO contracts? If yes → feed packet is ADMISSION-variable not just sizing-variable (changes its receipt burden). Must match run_backtest's answer, whatever it is.
+- **Class-path mirror lands IN that packet** where synthetic VIX>30/>50 fixtures prove it ALIVE — never as unfed dead code.
+- **Both-engine materiality receipt** with resurrected pre-reg: Mar–Apr 2020 quartering MUST fire; zero post-feed = escalate.
+- **Provenance hand-check** per Part B protocol (primary-source spot-checks, holiday alignment).
+
+### D7 SOLO — dispatched (wt-d78). Acceptance: Addition 1 full (3-zone + differ-from-disabled non-vacuousness + partial×StyleC + exit-leg + zero-volume) + Addition-2 D7-half (engagement instrumentation, pre-reg near-zero at base size = honest) + base acceptance. Addition 5 (insertion-point) MIGRATED to D8-feed packet (was VIX-specific). Seam doc-line rides in the D7 commit.
+
+### SEAM RULING — ACCEPTED document-only. Re-baseline queue does NOT grow.
+Live has NO same-bar tie-break (single `config.side`/session, paper-signal-service.ts:380) → nothing for the engine to diverge from. Engine long-priority (backtester.py:5656-5664) is A7-DIAGNOSTIC-ONLY; execution defers to vectorbt default (drop-both). Frequency structurally ~never (crosses mutually-exclusive/dup-both→long/incomplete-bidir rejected/archetypes directional). Agent correctly refused to fabricate a count where only a structural bound exists. Doc-line states both facts (rides in D7). **ADJACENT ITEM REGISTERED (parked post-campaign):** whether a `direction:both` archetype's `long_short_split` (backtester.py:5635-5638) maps to ONE live `side`-session or TWO = a direction-coverage trace (future live-deployment representation Q, NOT an arm-vs-arm confound). Named so it can't evaporate.
+
+### CONDUCT (named per launch-protocol working at the subagent tier — where it usually erodes first):
+The 7/8 implementer wrote ZERO lines ahead of a failed pre-check, and REFUSED to carve D7 out of a ratified batch on its own authority (escalated the scope call to the operator). doer≠grader + no-redesign held at the subagent tier.
+
+### CAMPAIGN JOURNAL: Addition 3 was written to catch an inert FIX and instead caught an inert PRODUCTION FEATURE that three waves of green CI never noticed — parity tests pass VACUOUSLY when both sides are dead; only a feed-existence check asked the question no test asked. **Second time this campaign a pre-registered expectation outperformed the entire test suite.** Pattern proven twice: every default-ON institutional feature deserves an engagement-count somewhere a human looks. POST-CAMPAIGN: census of §12 default-ON features for sleeping dormancy (operator wants it eventually, not incidentally).
+
+### RE-BASELINE GATE now sits behind exactly ONE thing: D7's land + review. Then seam→re-baseline (locked order); the frozen 0.5 exam runs on an instrument whose every known divergence is fixed, receipted, or ruled out-of-scope on the record.
