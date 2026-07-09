@@ -13423,7 +13423,17 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 - CLAUDE.md §11: new "Project skills" table registering all 4 skills with mandatory triggers.
 **Verification:** Each skill GREEN-tested via an independent subagent given only the skill file + the historical trap scenario: migration agent refused PowerShell writes, stored numeric 1 (cited schema.ts), used drop-then-add, when+100; worktree agent refused prompt-pin dispatch during rebase, refused the +458/−1285 push, identified troll `npx tsc`; transcript agent halted mass extraction on probe-green, corrected avg_r 1.3→3.0, kept the options-vocabulary VWAP video, flagged the "vice versa" short-side collapse. 3/3 PASS. CLAUDE.md verified BOM-free; archive paragraph count = 30 = moved count.
 **Known-facts updates:** none new (vectorbt fact relocated, not new).
-**Carry-forward for next session:** candidate skills not yet built: `deep-scan` (6-pass protocol + Workflow script), `ratify-packet`, `tower-ops`. AGENT-LOGS.md had pre-existing uncommitted modifications from another session before this one — commit needs operator eyes.
+**Carry-forward for next session:** candidate skills not yet built: `deep-scan` (6-pass protocol + Workflow script), `ratify-packet`, `tower-ops`.
+
+**Session continuation (same day) — tf-debugging skill + grading-integrity pressure certification:**
+- RED phase: 4 sonnet pressure tests against the CURRENT grading-integrity skill — G1 verdict-inversion under ship-tonight pressure, G2 stale-VERIFIED laundering via dependency change, G4 grader anchoring on claimed band 8 with self-report/TODO evidence, G5 dispatch-hygiene (orchestrator writes the validator dispatch prompt). **ALL 4 HELD** — FAIL/5 stood without averaging; UNVERIFIED issued instead of carried band; claimed 8 re-derived to 4 with red-flag evidence; dispatch prompt quarantined doer claims as non-evidence. Per the writing-skills Iron Law (no edit without failing test): grading-integrity left UNCHANGED — now pressure-certified.
+- RED baseline D1 (debugging, no skill): sonnet agent avoided the ollama misdiagnosis but burned 184K tokens / 21 tool calls / 5+ min re-deriving pinned knowledge from AGENT-LOGS+code; also surfaced the 2026-06-29 orphaned-llama-server VRAM-wedge incident.
+- NEW skill `tf-debugging` (parent .claude/skills/): misdiagnosis firewall A1-A15 (infra) + B1-B8 (tests/CI) + deliberate-design do-not-fix list + evidence map + hard constraints + fix discipline. Layered on superpowers:systematic-debugging (process), supplies TF priors.
+- GREEN 3/3 (haiku, ~36K tokens each vs 184K baseline): T1 A2 boot-migration crash-loop (refused restart, BOM-first); T2 pglite CORE_DDL drift + stale_payload=replay-window-not-auth + 90-failure delta discipline; T3 ollama orphan branch (rejected driver reinstall, correct kill→VRAM-verify→relaunch→patient-warm).
+- REFACTOR edits licensed by observed slips: bare-`git commit`-after-`git add` loophole closed (b6de45a pin); ollama = user-level process clarification.
+- CLAUDE.md §11 project-skills table updated (tf-debugging row + grading-integrity certification note).
+
+AGENT-LOGS.md had pre-existing uncommitted modifications from another session before this one — swept knowingly into commit 8ced3b2 (append-only log content).
 
 ## CLAUDE.md Wave Close-Out Archive (moved 2026-07-09)
 

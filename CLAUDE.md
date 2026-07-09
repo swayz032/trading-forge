@@ -536,7 +536,8 @@ The graduation hot-path gained 4 new audit-action namespaces. Future agents shou
 ### Project skills (`.claude/skills/` — invoke via Skill tool; each encodes a documented production failure)
 | Skill | MUST fire when |
 |---|---|
-| `grading-integrity` | Assigning/reporting ANY score, band, grade, or readiness verdict. Doer ≠ grader; no bare numbers; 10 unreachable. |
+| `grading-integrity` | Assigning/reporting ANY score, band, grade, or readiness verdict. Doer ≠ grader; no bare numbers; 10 unreachable. (Pressure-certified 4/4 on 2026-07-09: inversion, staleness, anchoring, dispatch-hygiene scenarios all held.) |
+| `tf-debugging` | Debugging ANY TF failure — BEFORE forming hypotheses or restarting anything. Misdiagnosis firewall: converts documented 100K+-token re-derivations into a table lookup (ollama spiral/orphan, boot-migration crash-loop, pglite DDL drift, clock drift, false-greens…). |
 | `migration-author` | Creating/editing/reviewing any SQL migration or `_journal.json` entry — BEFORE the file lands. (BOM crashloop, 0175 type mismatch, dup-`when`.) |
 | `worktree-session` | Starting/landing any worktree, dispatching `isolation:"worktree"` agents, or verifying inside a worktree. (846-line moving-HEAD revert, troll `npx tsc` false-clean.) |
 | `transcript-audit` | After EVERY gemma probe, before any mass (re-)extraction, and when grading extraction quality or intake rejects. Probe-green ≠ extraction quality. |
