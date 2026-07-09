@@ -2102,6 +2102,64 @@ describe("WFE gate — cpcv_per_path_is status floor enforcement + basis surfaci
   });
 });
 
+// ─── Suite 12b — X5 RATIFIED 2026-07-09: cpcv_combined_fold status ────────────
+// Certifier MEDIUM close-out: Suite 12 exercised only the LEGACY "cpcv_per_path_is"
+// string. Every backtest since the X5 ratification emits "cpcv_combined_fold"
+// (symmetric combined-fold OOS/IS). These pure-function cases lock the gate's
+// behaviour on the NEW string and prove it is byte-identical to the legacy path
+// (wfe-gate.ts:184 shares one branch for both) so backward-compat is real, not asserted.
+describe("WFE gate — cpcv_combined_fold status (Suite 12b — X5 ratified, pure-function)", () => {
+  it("BLOCK: cpcv_combined_fold + wfe_overall=0.65 → blocked + wfeBasis='cpcv_combined_fold'", () => {
+    const result = evaluateWfeGate(0.65, undefined, undefined, "cpcv_combined_fold");
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("blocked");
+    expect(result.wfeOverall).toBe(0.65);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+    expect(result.wfeBasis).toBe("cpcv_combined_fold");
+    expect(result.status).not.toBe("cpcv_exempt");
+    expect(result.status).not.toBe("legacy_null");
+  });
+
+  it("PASS: cpcv_combined_fold + wfe_overall=0.80 → passed + wfeBasis='cpcv_combined_fold'", () => {
+    const result = evaluateWfeGate(0.80, undefined, undefined, "cpcv_combined_fold");
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("passed");
+    expect(result.wfeOverall).toBe(0.80);
+    expect(result.auditAction).toBeNull();
+    expect(result.wfeBasis).toBe("cpcv_combined_fold");
+  });
+
+  it("FAIL-CLOSED: cpcv_combined_fold + null wfe_overall → blocked (producer claimed basis but no value)", () => {
+    const result = evaluateWfeGate(null, undefined, undefined, "cpcv_combined_fold");
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("blocked");
+    expect(result.wfeBasis).toBe("cpcv_combined_fold");
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+  });
+
+  it("BOUNDARY: exactly 0.70 passes on both strings (>= hard floor)", () => {
+    for (const s of ["cpcv_combined_fold", "cpcv_per_path_is"]) {
+      const r = evaluateWfeGate(0.70, undefined, undefined, s);
+      expect(r.passed).toBe(true);
+      expect(r.status).toBe("passed");
+      expect(r.wfeBasis).toBe(s);
+    }
+  });
+
+  it("PARITY: new and legacy CPCV strings gate identically across values (backward-compat is real)", () => {
+    for (const wfe of [null, 0.0, 0.49, 0.50, 0.699, 0.70, 0.85, 1.5]) {
+      const neu = evaluateWfeGate(wfe as number | null, undefined, undefined, "cpcv_combined_fold");
+      const legacy = evaluateWfeGate(wfe as number | null, undefined, undefined, "cpcv_per_path_is");
+      expect(neu.passed).toBe(legacy.passed);
+      expect(neu.status).toBe(legacy.status);
+      expect(neu.auditAction).toBe(legacy.auditAction);
+      // wfeBasis correctly reflects each input status (the one intentional difference).
+      expect(neu.wfeBasis).toBe("cpcv_combined_fold");
+      expect(legacy.wfeBasis).toBe("cpcv_per_path_is");
+    }
+  });
+});
+
 // ════════════════════════════════════════════════════════════════════════════════
 // Suite 13 — Slippage-Survival gate — backtests.slippage_survival JSONB round-trip (Wave A, PGlite)
 //

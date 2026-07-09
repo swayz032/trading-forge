@@ -301,3 +301,132 @@ class TestFix2ProducerKeysStillEmitOnCpcvPath:
         # with 1000 bars / 6 folds).
         assert len(oos_calls) > 0, "No OOS run_class_backtest() calls made — CPCV path did not execute."
         assert len(is_calls) > 0, "No per-path IS run_class_backtest() calls made — BIF/PBO IS basis unavailable."
+
+
+# ─── X5 RATIFIED 2026-07-09: class-path CPCV WFE combined-fold regression ──────
+# Certifier MEDIUM close-out: the class path (_run_walk_forward_cpcv_class) had
+# NO dispersed-variance WFE test — _install_common_mocks feeds IDENTICAL is_daily_pnls
+# every call, so mean(per_path_is_sharpes) and _combined_fold_sharpe(all_is_pnls) are
+# mathematically indistinguishable and a class-path regression would go undetected.
+# This test feeds PER-PATH-VARYING IS series (growing variance) so the two bases
+# diverge >2%, then proves production emits the combined-fold value + status.
+
+
+def _sharpe_local(pnls) -> float:
+    """Same aggregation as _combined_fold_sharpe / agg_sharpe (mean/std ddof=1 *
+    sqrt(252)) — used to compute EXPECTED values from the actually-returned series."""
+    import numpy as np
+    arr = np.array(pnls, dtype=float)
+    std = float(np.std(arr, ddof=1))
+    if std <= 0 or not np.isfinite(std):
+        return 0.0
+    return float(np.mean(arr) / std * np.sqrt(252))
+
+
+def _install_dispersed_variance_mocks(monkeypatch, oos_bars_len: int):
+    """Mock run_class_backtest to return STABLE OOS pnls but PER-PATH-DISPERSED IS
+    pnls (variance grows path-to-path), so mean-of-per-path-IS-Sharpe diverges from
+    the pooled/combined-fold IS Sharpe. Robust OOS/IS discriminator: the OOS call
+    always passes the warmup_data KWARG (even when its value is None for early
+    paths); the IS call omits it entirely — so `"warmup_data" not in kwargs` is the
+    only correct classifier (`.get() is None` misclassifies warmup-None OOS paths)."""
+    import numpy as np
+
+    synthetic = _build_synthetic_ohlcv(oos_bars_len)
+
+    def _fake_load_ohlcv(symbol, timeframe, start_date, end_date):
+        if timeframe == "daily":
+            return synthetic.head(50)
+        return synthetic
+
+    monkeypatch.setattr("src.engine.data_loader.load_ohlcv", _fake_load_ohlcv)
+
+    oos_series_returned: list[list[float]] = []
+    is_series_returned: list[list[float]] = []
+    is_call_idx = {"n": 0}
+
+    # Stable OOS series (same each path) so agg_sharpe is deterministic and the
+    # only moving part under test is the IS basis.
+    oos_series = list(np.random.RandomState(1000).normal(5.0, 20.0, 40))
+
+    def _fake_run_class_backtest(**kwargs):
+        is_call = "warmup_data" not in kwargs
+        if is_call:
+            i = is_call_idx["n"]
+            is_call_idx["n"] += 1
+            # variance grows with path index -> per-path Sharpe dispersion
+            scale = 10.0 + 4.0 * i
+            daily = list(np.random.RandomState(2000 + i).normal(8.0, scale, 40))
+            is_series_returned.append(daily)
+        else:
+            daily = list(oos_series)
+            oos_series_returned.append(daily)
+        return {
+            "total_trades": max(len(daily) * 3, 1),
+            "total_return": float(sum(daily) * 3),
+            "sharpe_ratio": _sharpe_local(daily),
+            "max_drawdown": 5.0,
+            "win_rate": 0.6,
+            "profit_factor": 1.5,
+            "total_trading_days": len(daily),
+            "daily_pnls": daily,
+            "daily_pnl_records": [],
+            "trades": [{"PnL": 5.0} for _ in range(max(len(daily) * 3, 1))],
+            "equity_bars": [],
+            "avg_trade_pnl": 2.0,
+        }
+
+    monkeypatch.setattr(
+        "src.engine.walk_forward.run_class_backtest", _fake_run_class_backtest
+    )
+    return oos_series_returned, is_series_returned
+
+
+class TestClassCpcvWfeCombinedFold:
+    """X5 ratified: _run_walk_forward_cpcv_class WFE IS basis is the combined-fold
+    (pooled) IS Sharpe, symmetric with the DSL path — NOT mean(per_path_is_sharpes)."""
+
+    def test_class_wfe_uses_combined_fold_not_per_path_average(self, monkeypatch):
+        import numpy as np
+        import pytest
+
+        from src.engine.walk_forward import run_walk_forward_class
+
+        monkeypatch.delenv("WF_MODE", raising=False)
+        oos_ret, is_ret = _install_dispersed_variance_mocks(monkeypatch, oos_bars_len=1000)
+
+        result = run_walk_forward_class(
+            strategy=_make_dummy_strategy(),
+            start_date="2026-01-01", end_date="2026-04-01",
+            wf_mode="cpcv",
+        )
+
+        assert result["wf_metadata"]["mode"] == "cpcv", "did not route to CPCV"
+        assert result.get("wfe_status") == "cpcv_combined_fold", (
+            f"class-path wfe_status={result.get('wfe_status')!r} — expected the "
+            f"ratified combined-fold status"
+        )
+
+        # Compute EXPECTED from the series production actually consumed.
+        agg_sharpe = _sharpe_local(np.concatenate([np.array(s) for s in oos_ret]))
+        pooled_is = _sharpe_local(np.concatenate([np.array(s) for s in is_ret]))
+        mean_per_path_is = float(np.mean([_sharpe_local(s) for s in is_ret]))
+
+        # A/B receipt: the two bases must diverge materially on this fixture.
+        assert abs(pooled_is - mean_per_path_is) / abs(pooled_is) > 0.02, (
+            f"class fixture did not disperse IS variance (pooled={pooled_is:.4f}, "
+            f"mean_per_path={mean_per_path_is:.4f}) — cannot distinguish the bases"
+        )
+
+        wfe_combined = round(agg_sharpe / pooled_is, 4)
+        wfe_old_per_path = round(agg_sharpe / mean_per_path_is, 4)
+
+        assert result["wfe_overall"] == pytest.approx(wfe_combined, rel=1e-3), (
+            f"class-path wfe_overall={result['wfe_overall']} must match combined-fold "
+            f"formula ({wfe_combined}); if it matches {wfe_old_per_path} the class "
+            f"path regressed to the per-path-average basis"
+        )
+        assert result["wfe_overall"] != pytest.approx(wfe_old_per_path, rel=0.02), (
+            f"class-path wfe_overall still matches the OLD per-path-average formula "
+            f"({wfe_old_per_path}) — the X5 ratified fix did NOT reach the class path"
+        )
