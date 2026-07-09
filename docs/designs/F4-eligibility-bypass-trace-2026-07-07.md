@@ -644,3 +644,46 @@ read: the N=9 tripwire is IRRELEVANT to Defect-10 (classifier track, not the arc
 
 **Verdict: materiality receipt only — gates nothing, reopens no certified finding.** Defect-10's real-corpus magnitude is now on
 the record (was synthetic-directional-only). The re-baseline's own Defect-10 read (0.5 pre-reg) remains the authoritative post-fix number.
+
+---
+
+## RULING A + B (2026-07-09) — amendment-1/2 traces escalated, both ruled. Scope-wiring fix inserted BEFORE Part A.
+
+### Amendment-1 trace RESULT: run_backtest's macro mask is UNIVERSAL/UNSCOPED (the reference is broken).
+Grep-proven three layers: `generate_event_mask(timestamps, policies)` takes NO symbol; `_get_events_for_policies(policies)`
+appends every event with NO product filter; `EVENT_PRODUCT_SCOPE` (economic_calendar.py:51, correctly declares EIA→crude)
+is DEAD CODE — consumed nowhere (only a stale .pyc matches). So EIA (~208 events, every Wed 2020-2026) blacks out MES/MNQ
+index entries; no CPI/NFP index scoping either. Three conventions in play, none agreeing: your-pin (FOMC all / CPI-NFP
+index-only / EIA crude), code's-dead-map (CPI-NFP all), code's-runtime (universal incl EIA→index).
+
+### RULING A — canonical convention = the ratified live pin (2026-06-22 Known-Facts): FOMC/FOMC_MINUTES→all; CPI/NFP→equity-index-only; EIA→crude-only.
+Not adjudicated fresh — the pin is the authority; runtime + dead-map are two drifts from it. TS `news-policy.ts::eventAffectsSymbol`
+VERIFIED conformant to the pin (INDEX={MES,MNQ,ES,NQ,M2K,RTY,MYM,YM}, CRUDE={MCL,CL,QM}; test "CPI does NOT block crude").
+CONTINGENCY (TS-contradicts-pin) did NOT fire → Python is the sole drifted party → build Python to match TS.
+**Consequences (reshape Part A scope):**
+1. **Scope-wiring fix to run_backtest FIRST** (verdict-variable, lands before re-baseline w/ Defects 7/8 + Part A): correct
+   EVENT_PRODUCT_SCOPE CPI/NFP→index, wire it via a REQUIRED symbol threaded through `_get_events_for_policies` (None/unrecognized
+   RAISES, never guesses); explicit-policies path only, polarity-bugged fallback stays quarantined.
+2. Part A parity anchor MOVES: "matches the RULED convention, both paths" — class-path == CORRECTED run_backtest. Fixtures:
+   1a MES not-suppressed in EIA window / 1b MCL not-suppressed in CPI-NFP window / 1c FOMC suppresses all three.
+3. **TS↔Python parity GATE** (new `check-ts-python-event-product-scope-parity.ts`, sibling to tier1-parity): asserts
+   eventAffectsSymbol ≡ EVENT_PRODUCT_SCOPE — the durable fix for a silently-unwired map.
+4. Counterfactual-universal receipt line-item (arithmetic, no tower time): count trades that sat in EIA-windows-on-index or
+   CPI/NFP-windows-on-crude = what universal WOULD have wrongly suppressed = the dodged-bug magnitude.
+5. Part B stays ACCEPTED (data correctness; scoping is a consumption-layer concern, does not reopen 2b88026).
+
+### Amendment-2 trace RESULT: FOMC_MINUTES exists ONLY 2026(7)+2027(8); ZERO for 2020-2025. Part B didn't add them → absent across the whole history, not just one year.
+### RULING B — TOP-UP (not register-limitation). 2020-2025 Minutes dates are PUBLISHED ARCHIVAL FACTS (federalreserve.gov), not approximations — transcription, same class as Part B's FOMC statements. +21-day self-flag applies only to FUTURE projection.
+Exclude emergency-meeting minutes (scheduled-only; March-2020 emergency minutes folded into April-2020 releases INHERIT the
+exclusion). Under Ruling A: FOMC_MINUTES→all symbols. No receipt residual flag (per-date primary-verified). Runs on Part-B
+machinery; own independent hand-check = acceptance (April-2020 boundary + one DST-adjacent + remainder, fresh agent, primary sources).
+
+### REVISED LOCKED ORDER
+scope-wiring fix (run_backtest + parity gate + fixtures) → Part A (against corrected reference) ‖ Minutes top-up (parallel, own
+hand-check) → 7/8 → seam trace → re-baseline (frozen 0.5 exam + full-window suppression receipt incl. counterfactual-universal
+count + EIA-residual flags). Everything verdict-variable lands before re-baseline; read order unchanged (reference → validity → verdict).
+
+### DISPATCHED 2026-07-09 (both worktree-isolated, pinned 899c35a, parallel — engine-code vs calendar-data, no contention):
+- W1 scope-wiring IMPLEMENTER (backtest-core): EVENT_PRODUCT_SCOPE→pin, thread required symbol, parity gate, fixtures 1a/1b/1c. → independent fresh-context review before land.
+- W2 Minutes TOP-UP builder (general-purpose): 2020-2025 archival Minutes, emergency-excluded, fixture json. → independent hand-check before land.
+Part A implementer HELD until the corrected reference lands + its fixtures green.
