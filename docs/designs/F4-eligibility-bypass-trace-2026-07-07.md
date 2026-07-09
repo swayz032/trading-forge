@@ -588,3 +588,26 @@ only ±30-min boundary bars on holiday-week EIA releases. The DATES (where a der
 primary-confirmed. → minor follow-up (nail the exact EIA holiday-shift time if a boundary case ever bites); does NOT block
 acceptance (the ratified gate = hand-check passes → accept). **PART B COMMITTED. Durability follow-up (sync 2020-anchor)
 still registered.**
+
+## ★★ PART A SPEC — STAGED (class-path macro mask; standing launch protocol → operator ratify before implement) 2026-07-09
+Defect-9 gap CONFIRMED: `run_class_backtest` (6509+) has ZERO blackout/event_mask references; `run_backtest` applies the
+macro mask via `generate_event_mask(df["ts_event"], policies)` (±30-min, lines 3875-3966). Part A mirrors it into the
+class path.
+- **Mechanism:** in `run_class_backtest`, after entry signals generate + before execution, apply
+  `event_mask = generate_event_mask(df["ts_event"], policies)` with T1 policies (FOMC/CPI/NFP + EIA-for-MCL, SIT_OUT
+  ±30 min), suppress entries where blocked. np.roll-safe (mask applied on the same entry-timing axis as existing gates).
+- **★ Polarity — use the EXPLICIT-POLICIES path, NOT the default fallback.** run_backtest's no-event_calendar default
+  fallback (~3885-3945) carries the registered polarity inversion (True=allow vs generate_signals True=block). Part A
+  MUST pass explicit policies + consume the backfilled STATIC_EVENTS/authoritative calendar (now 2020-2026) → avoids the
+  buggy fallback by construction. (The fallback polarity bug stays a SEPARATE registered finding.)
+- **Window convention:** ±30-min timestamp window around release time (matches `blackout_gate.py` + live
+  `paper-signal-service.ts`), per the mask-semantics trace. Backfilled release times (14:00 FOMC / 08:30 CPI-NFP /
+  10:30-or-holiday-11:00 EIA) drive it.
+- **Tier:** DEFENSE-IN-DEPTH (per the tally — not verdict-variable at the decisive pair).
+- **ACCEPTANCE (agent-loop review):** (1) PARITY — class-path event-mask == run_backtest event-mask on identical
+  policies + calendar (no polarity divergence); (2) the pre-registered re-baseline CALENDAR-SUPPRESSION read (0.5
+  amendment) = enumerate suppressed pre-2024 trades, verify EACH sits in a backfilled ±30-min window, report aggregate
+  P&L = retroactive materiality receipt; (3) TRIPWIRE — any suppression OUTSIDE a window OR flipping zero/nonzero = FULL
+  STOP (locked read-order).
+**AWAITING RATIFY → then agent-loop (scope-locked implement → independent review w/ the parity + suppression + tripwire
+reads) → 7/8 land → seam trace → re-baseline.**
