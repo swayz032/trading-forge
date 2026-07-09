@@ -1,0 +1,126 @@
+{
+  "n_nulls": 100,
+  "n_errors": 0,
+  "n_complete": 100,
+  "per_gate": {
+    "wf_cpcv_paths": {
+      "passes": 67,
+      "trials": 100,
+      "rate": 0.67,
+      "ci_95_lower": 0.5731,
+      "ci_95_upper": 0.7544,
+      "noise_floor_projection": {
+        "population": 200,
+        "expected_chance_passes": 134.0,
+        "expected_chance_passes_upper": 150.9
+      }
+    },
+    "dsr": {
+      "passes": 0,
+      "trials": 100,
+      "rate": 0.0,
+      "ci_95_lower": 0.0,
+      "ci_95_upper": 0.037,
+      "noise_floor_projection": {
+        "population": 200,
+        "expected_chance_passes": 0.0,
+        "expected_chance_passes_upper": 7.4
+      }
+    },
+    "pbo": {
+      "passes": 50,
+      "trials": 67,
+      "rate": 0.7463,
+      "ci_95_lower": 0.6307,
+      "ci_95_upper": 0.8351,
+      "noise_floor_projection": {
+        "population": 200,
+        "expected_chance_passes": 149.3,
+        "expected_chance_passes_upper": 167.0
+      }
+    },
+    "wrc": {
+      "passes": 0,
+      "trials": 100,
+      "rate": 0.0,
+      "ci_95_lower": 0.0,
+      "ci_95_upper": 0.037,
+      "noise_floor_projection": {
+        "population": 200,
+        "expected_chance_passes": 0.0,
+        "expected_chance_passes_upper": 7.4
+      }
+    },
+    "spa": {
+      "passes": 0,
+      "trials": 100,
+      "rate": 0.0,
+      "ci_95_lower": 0.0,
+      "ci_95_upper": 0.037,
+      "noise_floor_projection": {
+        "population": 200,
+        "expected_chance_passes": 0.0,
+        "expected_chance_passes_upper": 7.4
+      }
+    },
+    "full_battery": {
+      "passes": 0,
+      "trials": 100,
+      "rate": 0.0,
+      "ci_95_lower": 0.0,
+      "ci_95_upper": 0.037,
+      "noise_floor_projection": {
+        "population": 200,
+        "expected_chance_passes": 0.0,
+        "expected_chance_passes_upper": 7.4
+      }
+    },
+    "b14_mc": {
+      "passes": 0,
+      "trials": 0,
+      "rate": 0.0,
+      "ci_95_lower": 0.0,
+      "ci_95_upper": 1.0,
+      "noise_floor_projection": {
+        "population": 200,
+        "expected_chance_passes": 0.0,
+        "expected_chance_passes_upper": 200.0
+      }
+    }
+  },
+  "full_battery": {
+    "passes": 0,
+    "trials": 100,
+    "rate": 0.0,
+    "ci_95_lower": 0.0,
+    "ci_95_upper": 0.037,
+    "noise_floor_projection": {
+      "population": 200,
+      "expected_chance_passes": 0.0,
+      "expected_chance_passes_upper": 7.4
+    }
+  },
+  "degenerate_counts": {
+    "wf_cpcv_paths": 0,
+    "dsr": 0,
+    "pbo": 33,
+    "wrc": 0,
+    "spa": 0,
+    "full_battery": 0,
+    "b14_mc": 0
+  },
+  "skip_counts": {
+    "wf_cpcv_paths": 0,
+    "dsr": 0,
+    "pbo": 0,
+    "wrc": 0,
+    "spa": 0,
+    "full_battery": 0,
+    "b14_mc": 100
+  },
+  "ci_confidence": 0.95,
+  "n_population_projection": 200,
+  "noise_floor_note": "Full-battery false-pass rate = 0.0% (0/100 nulls). At N=200 strategies: expect 0.0 chance passes. Battery is reasonably selective. Passes beyond 0 are meaningful.",
+  "generated_at": "2026-07-09T23:18:58.811092Z",
+  "gate_battery_version": "2026-07-02"
+}
