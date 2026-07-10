@@ -788,14 +788,35 @@ def _apply_backtest_parity_gates(
                     file=sys.stderr,
                 )
         except Exception as _ce:
-            # Import or check failure: log and continue (gate should never crash the backtest)
             if compliance_mode == "enforce":
+                # MED-6 (deep-scan 2026-07-09, ratified) — FAIL-CLOSED, not fail-open.
+                # PREVIOUS BUG: an exception in the compliance check (import error, rule-eval
+                # crash, malformed snapshot) in ENFORCE mode only printed a WARNING to stderr
+                # and fell through — the backtest then ran with UNFILTERED signals, i.e. enforce
+                # silently degraded to no-compliance-check. That makes the backtest MORE
+                # optimistic than live (which would block) while both feed the same B14/WFE/PBO
+                # promotion gates — the identical fidelity-inflation class as the fill-model gap.
+                # Enforce means "compliance MUST be verifiable"; if the gate cannot run, we
+                # cannot certify compliance → block all signals (mirrors the detected-violation
+                # path at ~line 767) rather than trade as if compliant. Consistent with the
+                # kill-switch fail-CLOSED-on-error philosophy. Shadow mode still continues.
+                parity_stats["compliance_gate_error_enforce_blocked"] = True
+                parity_stats["compliance_gate_error"] = str(_ce)
+                parity_stats["compliance_blocked"] = int(len(signal_indices))
                 print(
-                    f"[parity-gate] WARNING compliance gate error in enforce mode "
-                    f"strategy={strategy_name or '?'} error={_ce}",
+                    f"[compliance.enforce_block] strategy={strategy_name or '?'} "
+                    f"dir={direction} violation_type=gate_error rule=compliance_gate_unavailable "
+                    f"attempted_qty={len(signal_indices)} compliance_mode=enforce error={_ce}",
                     file=sys.stderr,
                 )
+                print(
+                    f"[parity-gate] COMPLIANCE ENFORCE gate-error FAIL-CLOSED "
+                    f"strategy={strategy_name or '?'} blocked={len(signal_indices)} signals error={_ce}",
+                    file=sys.stderr,
+                )
+                return np.zeros_like(out), parity_stats
             else:
+                # Shadow mode: gate errors are non-blocking (observability only).
                 print(
                     f"[parity-gate] DEBUG compliance gate error (shadow) "
                     f"strategy={strategy_name or '?'} error={_ce}",

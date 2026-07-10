@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
@@ -28,6 +29,14 @@ import numpy as np
 
 _DLL_HALT_PCT: float = float(os.environ.get("DLL_HALT_PCT", "0.67"))
 _DLL_FORCE_CLOSE_PCT: float = float(os.environ.get("DLL_FORCE_CLOSE_PCT", "0.95"))
+# MED-7 (deep-scan 2026-07-09, ratified) — backtest/live PARITY: the TS live path
+# (cross-symbol-pnl.ts) has a 4-band DLL ladder force_close(95%) > halt(67%) >
+# reduce_size(60%, ×0.5) > none. The 60% SOFT reduce band (added 2026-06-23) was
+# missing here, so backtests ran FULL size in the 60-67% window while live sizes down —
+# a fidelity gap feeding the same B14/WFE/PBO gates. These mirror DLL_REDUCE_SIZE_PCT /
+# DLL_REDUCE_SIZE_FACTOR in cross-symbol-pnl.ts. Ordering: force_close > halt > reduce_size.
+_DLL_REDUCE_SIZE_PCT: float = float(os.environ.get("DLL_REDUCE_SIZE_PCT", "0.60"))
+_DLL_REDUCE_SIZE_FACTOR: float = float(os.environ.get("DLL_REDUCE_SIZE_FACTOR", "0.50"))
 
 
 @dataclass
@@ -50,6 +59,9 @@ class CrossSymbolDllState:
     force_closed: bool = False
     entries_suppressed: int = 0
     force_close_events: int = 0
+    # MED-7: count of new-entry bars whose size was reduced (60% soft band, ×0.5).
+    # Distinct from entries_suppressed (67% halt) — these trades still fire, just smaller.
+    entries_reduced: int = 0
 
 
 def evaluate_cross_symbol_dll(
@@ -87,6 +99,26 @@ def evaluate_cross_symbol_dll(
     return should_halt, should_force_close
 
 
+def in_reduce_size_band(
+    session_pnl: float,
+    firm_dll: float,
+    reduce_pct: float = _DLL_REDUCE_SIZE_PCT,
+    halt_pct: float = _DLL_HALT_PCT,
+) -> bool:
+    """MED-7: True iff the session loss is in the SOFT reduce_size band [reduce, halt).
+
+    Mirrors cross-symbol-pnl.ts ordering — the reduce band is BELOW the halt band, so a
+    session already at/above the halt threshold is NOT "reduce" (it's halt/force_close and
+    handled by the harder bands). Returns False when non-losing or firm_dll invalid.
+    """
+    if firm_dll <= 0:
+        return False
+    loss = -session_pnl
+    if loss <= 0:
+        return False
+    return (loss >= firm_dll * reduce_pct) and (loss < firm_dll * halt_pct)
+
+
 def apply_cross_symbol_dll_to_bar(
     bar_idx: int,
     entry_long: np.ndarray,
@@ -99,6 +131,9 @@ def apply_cross_symbol_dll_to_bar(
     halt_pct: float = _DLL_HALT_PCT,
     force_close_pct: float = _DLL_FORCE_CLOSE_PCT,
     session_reset: bool = False,
+    sizes: "Optional[np.ndarray]" = None,
+    reduce_pct: float = _DLL_REDUCE_SIZE_PCT,
+    reduce_factor: float = _DLL_REDUCE_SIZE_FACTOR,
 ) -> CrossSymbolDllState:
     """Apply cross-symbol DLL logic for a single bar.
 
@@ -148,6 +183,22 @@ def apply_cross_symbol_dll_to_bar(
         entry_long[bar_idx] = False
         entry_short[bar_idx] = False
         state.entries_suppressed += 1
+
+    # MED-7: SOFT reduce_size band (60-67%). Below the halt threshold, an entry still
+    # fires but at reduced size — mirrors the TS live ladder so backtests don't run
+    # full-size where live would size down. Only applied when a `sizes` array is provided
+    # (backward-compat: sizes=None → byte-identical to pre-MED-7). Never applies once
+    # halted/force-closed (harder bands already zeroed the entry above). Floor at 1
+    # contract (never zero via the soft band — the 67% halt is the zero path), matching
+    # the TS `Math.max(1, …)` reduce floor.
+    elif (
+        sizes is not None
+        and (entry_long[bar_idx] or entry_short[bar_idx])
+        and in_reduce_size_band(state.session_pnl, firm_dll, reduce_pct, halt_pct)
+    ):
+        reduced = sizes[bar_idx] * reduce_factor
+        sizes[bar_idx] = max(1.0, reduced)
+        state.entries_reduced += 1
 
     return state
 
@@ -200,6 +251,9 @@ def apply_cross_symbol_dll_to_entries(
     firm_dll: float,
     halt_pct: float = _DLL_HALT_PCT,
     force_close_pct: float = _DLL_FORCE_CLOSE_PCT,
+    sizes: Optional[np.ndarray] = None,
+    reduce_pct: float = _DLL_REDUCE_SIZE_PCT,
+    reduce_factor: float = _DLL_REDUCE_SIZE_FACTOR,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
     """Vectorised application of cross-symbol DLL across all bars.
 
@@ -221,7 +275,7 @@ def apply_cross_symbol_dll_to_entries(
     if firm_dll <= 0:
         return (
             entry_long, entry_short, exit_long, exit_short,
-            {"entries_suppressed": 0, "force_close_events": 0},
+            {"entries_suppressed": 0, "force_close_events": 0, "entries_reduced": 0},
         )
 
     el = entry_long.copy()
@@ -259,6 +313,9 @@ def apply_cross_symbol_dll_to_entries(
             halt_pct=halt_pct,
             force_close_pct=force_close_pct,
             session_reset=session_reset,
+            sizes=sizes,
+            reduce_pct=reduce_pct,
+            reduce_factor=reduce_factor,
         )
 
     return (
@@ -266,5 +323,10 @@ def apply_cross_symbol_dll_to_entries(
         {
             "entries_suppressed": state.entries_suppressed,
             "force_close_events": state.force_close_events,
+            # MED-7: count of size-reduced entries (60% soft band). 0 when sizes not
+            # passed (single-symbol backtest — cross-symbol DLL is degenerate there by
+            # design, see backtester.py _cs_bar_pnls zero-proxy). Non-zero only when a
+            # real multi-symbol P&L series + sizes array are threaded (paper/future path).
+            "entries_reduced": state.entries_reduced,
         },
     )

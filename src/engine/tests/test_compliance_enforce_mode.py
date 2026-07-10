@@ -120,6 +120,50 @@ def test_enforce_mode_blocks_all_signals_on_violation(capsys):
     assert "enforce" in captured.err.lower()
 
 
+# ─── MED-6: enforce mode FAILS CLOSED when the compliance gate itself throws ──
+
+def test_enforce_mode_fails_closed_when_compliance_gate_raises(capsys):
+    """MED-6 (deep-scan 2026-07-09): a crash INSIDE check_strategy_compliance (import
+    error, rule-eval bug, malformed snapshot) in enforce mode must BLOCK all signals —
+    an unverifiable compliance gate cannot certify compliance, so the backtest must not
+    proceed with unfiltered signals (which would be more optimistic than live). PRE-FIX
+    this only printed a WARNING and let every signal through (fail-OPEN)."""
+    df = _make_minimal_df()
+    signals = _signals_all_true(10)
+
+    with patch("src.engine.compliance.compliance_gate.check_strategy_compliance",
+               side_effect=RuntimeError("compliance rule engine exploded")):
+        out, stats = _apply_backtest_parity_gates(
+            signals, df, "long", "MES", "test_strategy",
+            compliance_mode_override="enforce",
+        )
+
+    # FAIL-CLOSED: all signals blocked, marked, and audited.
+    assert not np.any(out), "enforce mode must ZERO all signals when the gate crashes (fail-closed)"
+    assert stats.get("compliance_gate_error_enforce_blocked") is True
+    assert stats.get("compliance_blocked") == 10
+    assert "compliance rule engine exploded" in str(stats.get("compliance_gate_error", ""))
+    captured = capsys.readouterr()
+    assert "compliance.enforce_block" in captured.err
+    assert "gate_error" in captured.err or "FAIL-CLOSED" in captured.err
+
+
+def test_shadow_mode_continues_when_compliance_gate_raises(capsys):
+    """Shadow mode is observability-only: a gate crash must NOT block (signals pass)."""
+    df = _make_minimal_df()
+    signals = _signals_all_true(10)
+
+    with patch("src.engine.compliance.compliance_gate.check_strategy_compliance",
+               side_effect=RuntimeError("compliance rule engine exploded")):
+        out, stats = _apply_backtest_parity_gates(
+            signals, df, "long", "MES", "test_strategy",
+            compliance_mode_override="shadow",
+        )
+
+    assert np.all(out), "shadow mode must let signals through even when the gate crashes"
+    assert stats.get("compliance_gate_error_enforce_blocked") is not True
+
+
 # ─── Test 1: shadow mode — violations logged, trades NOT blocked ───────────────
 
 def test_shadow_mode_logs_but_does_not_block(capsys):
