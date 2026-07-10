@@ -59,20 +59,30 @@ DELETE FROM strategy_firm_eligibility
   WHERE firm_id NOT IN ('mffu', 'topstep');
 
 -- Step 4: Write audit log entry
+-- deep-scan fresh-bootstrap fix: audit_log has never had `category` or `actor` columns (see
+-- schema.ts / 0000_previous_nuke.sql's original CREATE TABLE — only id/action/entity_type/
+-- entity_id/input/result/status/duration_ms/created_at). This INSERT would fail on a
+-- genuinely fresh bootstrap ("column category of relation audit_log does not exist") and,
+-- separately, also omitted the NOT NULL `status` column. Folding category/actor into the
+-- existing `result` JSONB payload (alongside the rest of the audit detail) preserves the
+-- original semantic information while using only real columns. No ON CONFLICT guard on this
+-- INSERT is intentional and matches the accepted pattern elsewhere (e.g. 0152) — re-running
+-- this migration against a DB where the legacy-firm rows are already gone is a safe idempotent
+-- no-op for steps 1-3 and merely appends a second (harmless, duplicate) audit row here.
 INSERT INTO audit_log (
   id,
   action,
-  category,
-  actor,
+  status,
   result,
   created_at
 )
 VALUES (
   gen_random_uuid(),
   'migration_0097_legacy_firm_cleanup',
-  'compliance',
-  'migration',
+  'success',
   jsonb_build_object(
+    'category', 'compliance',
+    'actor', 'migration',
     'retained_firms', ARRAY['mffu', 'topstep'],
     'removed_firms', ARRAY['apex', 'tpt', 'ffn', 'alpha', 'tradeify', 'earn2trade', 'fundingpips', 'top_one', 'yrm_prop'],
     'backup_tables', ARRAY['firm_adversarial_priors_legacy_backup', 'prop_firm_health_checks_legacy_backup', 'strategy_firm_eligibility_legacy_backup'],

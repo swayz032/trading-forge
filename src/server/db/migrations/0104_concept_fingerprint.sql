@@ -58,7 +58,7 @@ BEGIN
     SELECT 1 FROM pg_indexes
     WHERE indexname = 'idx_buckets_market_concept'
   ) THEN
-    CREATE INDEX idx_buckets_market_concept
+    CREATE INDEX IF NOT EXISTS idx_buckets_market_concept
       ON strategy_pending_buckets(market, concept_name)
       WHERE concept_name IS NOT NULL;
   END IF;
@@ -74,15 +74,30 @@ $$;
 -- The old UNIQUE constraint on fingerprint_hash must be dropped first because
 -- concept-name hashes may differ from the archetype-based hashes.
 -- We use a partial update: only rows with concept_name NOT NULL.
-UPDATE strategy_pending_buckets
-SET fingerprint_hash = encode(
-  digest(
-    market || '|' || lower(regexp_replace(concept_name, '[^a-z0-9]', '', 'gi')),
-    'sha256'
-  ),
-  'hex'
-)
-WHERE concept_name IS NOT NULL;
+--
+-- deep-scan fresh-bootstrap fix: digest() is a pgcrypto function, and pgcrypto is not
+-- CREATE EXTENSION'd until 0128_hmac_secret_encryption.sql (journal idx 130), which runs
+-- AFTER this migration (idx 107) — a genuine forward-reference on the extension, not just
+-- a table. Guarded via a pg_extension existence check so the UPDATE is skipped (not a hard
+-- failure) when pgcrypto isn't installed yet; PL/pgSQL only resolves digest() when the
+-- branch actually executes, so an unmet guard never triggers "function does not exist".
+-- This is also correct on a fresh bootstrap in the intended sense: the migration's own
+-- comment already says the UPDATE is meant to be a no-op with no concept_name rows present.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pgcrypto') THEN
+    UPDATE strategy_pending_buckets
+    SET fingerprint_hash = encode(
+      digest(
+        market || '|' || lower(regexp_replace(concept_name, '[^a-z0-9]', '', 'gi')),
+        'sha256'
+      ),
+      'hex'
+    )
+    WHERE concept_name IS NOT NULL;
+  END IF;
+END
+$$;
 
 -- ─── Add layer column to strategy_pending_mentions ───────────────────────────
 -- Records which scout layer this mention came from (web | youtube | reddit).
@@ -106,7 +121,7 @@ BEGIN
     SELECT 1 FROM pg_indexes
     WHERE indexname = 'idx_mentions_layer'
   ) THEN
-    CREATE INDEX idx_mentions_layer
+    CREATE INDEX IF NOT EXISTS idx_mentions_layer
       ON strategy_pending_mentions(bucket_id, scout_layer);
   END IF;
 END;

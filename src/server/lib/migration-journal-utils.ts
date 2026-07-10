@@ -50,25 +50,40 @@ export const KNOWN_OUT_OF_BAND_APPLIED_WHENS: ReadonlySet<number> = new Set([
 ]);
 
 /**
- * The sha256 (BOM-stripped, matching boot-migration-runner's readUtf8StripBom) of the 10 migrations
- * in the 5 known `when`-collision groups whose schema is verified present in prod. The backfill
- * decision keys on THIS (exact migration identity), not on `when` — so a corrupted/edited/new entry
- * that merely happens to share one of the 5 timestamps but has DIFFERENT content will NOT be
- * backfilled (its hash won't match) — it falls through to `toApply` and is applied, never silently
- * marked-applied-without-schema. (deep-scan re-cert Finding B hardening.)
+ * deep-scan fresh-bootstrap fix (2026-07-10): EMPTIED. This map used to carry the sha256
+ * (BOM-stripped, matching boot-migration-runner's readUtf8StripBom) of the 10 migrations in the
+ * 5 known `when`-collision groups whose schema was verified present in prod (0044a/0052,
+ * 0147/0159, 0148/0160, 0152/0162, 0153/0164). Backfilling them (recording the ledger hash
+ * WITHOUT running the SQL) was safe for THAT SPECIFIC already-existing prod database — but the
+ * SAME hash-keyed decision applies unconditionally on ANY database, including a genuinely fresh
+ * bootstrap (new environment, disaster recovery, PGlite replay test) where none of the 10 tables/
+ * columns exist yet. Backfilling there means their CREATE TABLE / ADD COLUMN / CREATE INDEX SQL
+ * NEVER RUNS — a silent, permanent fresh-bootstrap schema gap (verified via a full-journal PGlite
+ * replay: with the map populated, 10 real migrations' SQL is skipped; system_parameters,
+ * system_parameter_history, lifecycle_shadow_signals, needs_archetype_queue, slumhouse_users, and
+ * 4 idempotent column/index additions never land).
+ *
+ * All 10 were independently re-verified (this scan) to be genuinely idempotent-safe to just
+ * re-apply anywhere: every one uses `CREATE TABLE IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS` /
+ * `CREATE INDEX IF NOT EXISTS` / drop-then-add constraint / `INSERT ... ON CONFLICT DO NOTHING`
+ * (0159's INSERT is covered by the real `(firm_id, account_id_external)` unique index from 0098 —
+ * the no-target ON CONFLICT DO NOTHING catches it). Per the migration-author skill's guidance,
+ * an idempotent-by-construction migration is safe to route through normal `toApply` even under a
+ * changed/mismatched hash — re-running it against the specific prod DB where the schema already
+ * exists out-of-band is a harmless no-op, and running it against a fresh DB actually creates the
+ * schema. This is also more robust than hash-based backfill under the documented CRLF-vs-LF
+ * divergence between worktree histories: if a diverged worktree's prod ledger recorded a backfill
+ * hash that doesn't byte-match THIS tree's file content, `appliedHashes.has(h)` is false anyway and
+ * the entry falls through — the empty map means it then goes to `toApply` (safe, idempotent) rather
+ * than depending on a hash match that line-ending drift can silently break.
+ *
+ * `computeMigrationPlan` takes this as an injectable parameter (5th arg, defaulting to this now-
+ * empty map) so the backfill MECHANISM itself remains unit-testable with a synthetic map — the
+ * mechanism is still valuable if some FUTURE out-of-band-applied, genuinely-non-idempotent
+ * migration is ever discovered. Today, there are none: this map is empty and `toBackfill` is
+ * always `[]` for the real journal.
  */
-export const KNOWN_OUT_OF_BAND_APPLIED_HASHES: ReadonlyMap<string, string> = new Map([
-  ["9221cbe8a762b0ec034e4d56a60d650ec56f5f5f5bee56a53d800c268f3563d7", "0044a_system_parameters_tables"],
-  ["26a8a67e6934c7d68a273cc0fe380348f065bc6f7824e271630f4f7e923ee344", "0052_fk_cascade_hardening"],
-  ["a1f50c5143b98b5ac85f3b556e65caa41a9ea6215b846cdfef2f7fec99e9d898", "0147_quantum_mc_runs_replay_uniqueness"],
-  ["1604a45a5bfee65f6d3fdc1b0e2a3494c64892e94789ddfa35db87cbf67ceb45", "0159_broker_accounts_ab_paper_routing"],
-  ["92b267614b9dd34391467f9ca14a67252fb058938e84976bdb885e249baa0f16", "0148_backtests_compliance_mode"],
-  ["6226f021e27bb8fea9c565f4a119ad76d712edca2ee117f42eb2e0f27b6647bc", "0160_shadow_signals"],
-  ["8350ce96e295a795aed9ff50d2906ea0eae56f9ca9f3c30937970a1d2e7dffbe", "0152_strategies_needs_revision_states"],
-  ["df54b99b2a4ae16ea866324cd91d79db1af6708e4f298a0aad1e8a4376a6d966", "0162_needs_archetype_queue"],
-  ["cd015c0f78ac89bee9665b0ff2ae888a13f682b1afa4296de4db3f2d9fbf95ab", "0153_pipeline_modes_autopause"],
-  ["520f32f67d4680d6218f445177f48919c41a855303264372ae9a9d66189ad589", "0164_slumhouse_users"],
-]);
+export const KNOWN_OUT_OF_BAND_APPLIED_HASHES: ReadonlyMap<string, string> = new Map([]);
 
 export interface MigrationPlan<E> {
   /** run the SQL (genuinely pending — includes a FUTURE when-collision that was never applied) */
@@ -93,12 +108,18 @@ export interface MigrationPlan<E> {
  *
  * The backfill decision keys on the migration HASH (exact identity), NOT `when` — a wrong-content
  * entry sharing a collision timestamp is applied, never marked-applied-without-schema (Finding B).
+ *
+ * `outOfBandHashes` (deep-scan fresh-bootstrap fix, 2026-07-10): defaults to the module-level
+ * `KNOWN_OUT_OF_BAND_APPLIED_HASHES` (currently empty — see its doc comment). Injectable so unit
+ * tests can exercise the backfill MECHANISM with a synthetic map without depending on real
+ * migration content; the runtime call site (boot-migration-runner.ts) relies on the default.
  */
 export function computeMigrationPlan<E extends { when: number; tag: string }>(
   entries: E[],
   appliedWhens: ReadonlySet<string>,
   appliedHashes: ReadonlySet<string>,
   hashOf: (e: E) => string | null,
+  outOfBandHashes: ReadonlyMap<string, string> = KNOWN_OUT_OF_BAND_APPLIED_HASHES,
 ): MigrationPlan<E> {
   const toApply: E[] = [];
   const toBackfill: E[] = [];
@@ -109,7 +130,7 @@ export function computeMigrationPlan<E extends { when: number; tag: string }>(
       continue;
     }
     if (appliedHashes.has(h)) continue; // applied by identity
-    if (KNOWN_OUT_OF_BAND_APPLIED_HASHES.has(h)) {
+    if (outOfBandHashes.has(h)) {
       toBackfill.push(e); // IDENTITY-verified out-of-band sibling (exact content) — record, don't re-run
     } else {
       toApply.push(e); // genuinely pending — a NEW when-collision is now APPLIED, not silently skipped

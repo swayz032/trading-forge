@@ -40,5 +40,5 @@ CREATE TABLE IF NOT EXISTS pilot_sessions (
   created_at        timestamp DEFAULT now() NOT NULL
 );
 
-CREATE INDEX idx_pilot_sessions_strategy ON pilot_sessions(strategy_id);
-CREATE INDEX idx_pilot_sessions_outcome  ON pilot_sessions(strategy_id, outcome);
+CREATE INDEX IF NOT EXISTS idx_pilot_sessions_strategy ON pilot_sessions(strategy_id);
+CREATE INDEX IF NOT EXISTS idx_pilot_sessions_outcome  ON pilot_sessions(strategy_id, outcome);

@@ -27,7 +27,7 @@
 --   HAVING count(DISTINCT result_hash) > 1;
 -- If any row appears: nondeterminism detected. Backtest IDs are the divergent runs.
 
-CREATE TABLE backtest_provenance (
+CREATE TABLE IF NOT EXISTS backtest_provenance (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   backtest_id          uuid REFERENCES backtests(id) NOT NULL,
   data_hash            text NOT NULL,
@@ -44,9 +44,9 @@ CREATE TABLE backtest_provenance (
 --   WHERE data_hash = $1 AND code_git_sha = $2 AND strategy_hash = $3
 -- Also used by result-hasher.ts to check if a provenance row already exists
 -- for a given (data_hash, code_git_sha, strategy_hash) triple before inserting.
-CREATE INDEX idx_backtest_provenance_lookup
+CREATE INDEX IF NOT EXISTS idx_backtest_provenance_lookup
   ON backtest_provenance(data_hash, code_git_sha, strategy_hash);
 
 -- Fast lookup by backtest (for "what provenance does this backtest have?")
-CREATE INDEX idx_backtest_provenance_backtest_id
+CREATE INDEX IF NOT EXISTS idx_backtest_provenance_backtest_id
   ON backtest_provenance(backtest_id);

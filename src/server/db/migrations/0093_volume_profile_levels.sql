@@ -4,7 +4,7 @@
 -- per symbol per session date. Computed daily at 5:30 PM ET after RTH close.
 
 -- UP
-CREATE TABLE daily_volume_profile_levels (
+CREATE TABLE IF NOT EXISTS daily_volume_profile_levels (
   id BIGSERIAL PRIMARY KEY,
   symbol TEXT NOT NULL,
   session_date DATE NOT NULL,
@@ -22,8 +22,8 @@ CREATE TABLE daily_volume_profile_levels (
   UNIQUE(symbol, session_date)
 );
 
-CREATE INDEX idx_vp_levels_symbol_date ON daily_volume_profile_levels(symbol, session_date DESC);
-CREATE INDEX idx_vp_levels_shape ON daily_volume_profile_levels(profile_shape);
+CREATE INDEX IF NOT EXISTS idx_vp_levels_symbol_date ON daily_volume_profile_levels(symbol, session_date DESC);
+CREATE INDEX IF NOT EXISTS idx_vp_levels_shape ON daily_volume_profile_levels(profile_shape);
 
 -- DOWN
 -- DROP INDEX IF EXISTS idx_vp_levels_shape;

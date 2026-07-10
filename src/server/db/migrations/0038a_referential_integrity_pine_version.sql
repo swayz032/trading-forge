@@ -132,7 +132,20 @@ UPDATE quantum_mc_benchmarks SET classical_run_id = NULL
   AND classical_run_id NOT IN (SELECT id FROM monte_carlo_runs);
 
 -- system_parameter_history refs
-DELETE FROM system_parameter_history WHERE param_id NOT IN (SELECT id FROM system_parameters);
+-- deep-scan fresh-bootstrap fix: system_parameter_history + system_parameters are not
+-- CREATE TABLE'd until 0044a_system_parameters_tables.sql (journal idx 46), which runs
+-- AFTER this migration (idx 39). Guard so a fresh-bootstrap replay doesn't hit
+-- "relation system_parameter_history does not exist" — no-op when either table is
+-- absent; 0044a's own idempotent CREATE TABLE IF NOT EXISTS statements will create
+-- both tables cleanly with no orphan rows to clean up on first creation.
+DO $$
+BEGIN
+  IF to_regclass('system_parameter_history') IS NOT NULL
+     AND to_regclass('system_parameters') IS NOT NULL THEN
+    DELETE FROM system_parameter_history WHERE param_id NOT IN (SELECT id FROM system_parameters);
+  END IF;
+END
+$$;
 
 -- critic_candidates replay_backtest_id soft ref
 UPDATE critic_candidates SET replay_backtest_id = NULL
@@ -376,8 +389,13 @@ ALTER TABLE "compliance_drift_log" ADD CONSTRAINT "compliance_drift_log_ruleset_
   FOREIGN KEY ("ruleset_id") REFERENCES "compliance_rulesets"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 
 -- ─── system_parameter_history.param_id → system_parameters.id (CASCADE) ───
-ALTER TABLE "system_parameter_history" DROP CONSTRAINT IF EXISTS "system_parameter_history_param_id_system_parameters_id_fk";
-ALTER TABLE "system_parameter_history" ADD CONSTRAINT "system_parameter_history_param_id_system_parameters_id_fk"
+-- deep-scan fresh-bootstrap fix: guarded with ALTER TABLE IF EXISTS — on a fresh
+-- bootstrap neither table exists yet (both created later by 0044a, idx 46 > 39).
+-- 0044a's own CREATE TABLE already declares `param_id uuid NOT NULL REFERENCES
+-- "system_parameters"("id") ON DELETE CASCADE` inline, so skipping here when the
+-- table is absent is complete — the same CASCADE behavior lands via 0044a instead.
+ALTER TABLE IF EXISTS "system_parameter_history" DROP CONSTRAINT IF EXISTS "system_parameter_history_param_id_system_parameters_id_fk";
+ALTER TABLE IF EXISTS "system_parameter_history" ADD CONSTRAINT "system_parameter_history_param_id_system_parameters_id_fk"
   FOREIGN KEY ("param_id") REFERENCES "system_parameters"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 

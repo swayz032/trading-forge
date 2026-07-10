@@ -10,7 +10,7 @@
 -- unconstrained at column level. This migration adds the FK constraint now that
 -- the referenced table exists.
 
-CREATE TABLE cloud_qmc_runs (
+CREATE TABLE IF NOT EXISTS cloud_qmc_runs (
   id                       uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   backtest_id              uuid        REFERENCES backtests(id) NOT NULL,
   strategy_id              uuid        REFERENCES strategies(id) NOT NULL,
@@ -35,13 +35,20 @@ CREATE TABLE cloud_qmc_runs (
 );
 
 -- Indexes for lifecycle_transitions join and Tier 7 measurement queries
-CREATE INDEX idx_cloud_qmc_runs_backtest    ON cloud_qmc_runs(backtest_id, created_at DESC);
-CREATE INDEX idx_cloud_qmc_runs_strategy    ON cloud_qmc_runs(strategy_id, created_at DESC);
-CREATE INDEX idx_cloud_qmc_runs_status      ON cloud_qmc_runs(status) WHERE status IN ('queued', 'running');
-CREATE INDEX idx_cloud_qmc_runs_ibm_job_id  ON cloud_qmc_runs(ibm_job_id) WHERE ibm_job_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cloud_qmc_runs_backtest    ON cloud_qmc_runs(backtest_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_cloud_qmc_runs_strategy    ON cloud_qmc_runs(strategy_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_cloud_qmc_runs_status      ON cloud_qmc_runs(status) WHERE status IN ('queued', 'running');
+CREATE INDEX IF NOT EXISTS idx_cloud_qmc_runs_ibm_job_id  ON cloud_qmc_runs(ibm_job_id) WHERE ibm_job_id IS NOT NULL;
 
 -- Add FK from lifecycle_transitions.cloud_qmc_run_id to cloud_qmc_runs.id
 -- (The column was added with no FK in migration 0064 — now safe to add constraint)
+-- deep-scan class-2 tail fix: Postgres has no ADD CONSTRAINT IF NOT EXISTS — the correct
+-- idiom is drop-then-add (matches 0052's pattern). This statement was bare, so re-applying
+-- this file after the CREATE TABLE/INDEX guards above (added by the same deep-scan pass)
+-- would still fail with "constraint already exists" on a second run — caught by a Pass 2
+-- re-apply replay against a populated instance.
+ALTER TABLE lifecycle_transitions
+  DROP CONSTRAINT IF EXISTS fk_lifecycle_transitions_cloud_qmc_run;
 ALTER TABLE lifecycle_transitions
   ADD CONSTRAINT fk_lifecycle_transitions_cloud_qmc_run
   FOREIGN KEY (cloud_qmc_run_id) REFERENCES cloud_qmc_runs(id)
