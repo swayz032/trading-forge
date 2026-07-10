@@ -991,12 +991,32 @@ async function runLayerWithTimeout(
   // don't take a scope (4,5,6,8,9 always pass undefined here) — identical to
   // pre-fix behavior for those.
   scopeAccountKeyForForceCloseCheck?: string,
+  // CRIT-2 (deep-scan 2026-07-09, operator-ratified): force-close-TRIGGERING layers
+  // (L2 daily-loss/95%-force-close, L3 trailing-DD, L7 firm-suspension) must fail
+  // CLOSED on timeout, NOT fail-open. Their own thrown-exception paths are already
+  // fail-closed (catch → halted:true); a merely-SLOW check (>100ms under ordinary
+  // Railway-Postgres latency, not an error) previously resolved halted:false and
+  // approved a new entry on an account that should be force-closed — a confused
+  // deputy that silently defeated the documented fail-closed contract. The
+  // _isForceCloseInFlight() guard doesn't help because the very layer that would
+  // DETECT the breach is the one timing out (nothing is in flight yet). Advisory
+  // layers (4/5/8/9) keep failing OPEN (default false) — a slow advisory check must
+  // not block trading.
+  failClosedOnTimeout: boolean = false,
 ): Promise<HaltDecision> {
   const timeoutPromise: Promise<HaltDecision> = new Promise((resolve) => {
     const timer = setTimeout(() => {
+      // A force-close already in flight forces HALTED regardless (FIX 1b, account-scoped).
+      const forceCloseInFlight = _isForceCloseInFlight(scopeAccountKeyForForceCloseCheck);
+      const halted = failClosedOnTimeout || forceCloseInFlight;
+      const reason = forceCloseInFlight
+        ? "layer_timeout_force_close_pending"
+        : failClosedOnTimeout
+          ? "layer_timeout_fail_closed"
+          : undefined;
       logger.warn(
-        { layer, timeout_ms: LAYER_CHECK_TIMEOUT_MS, correlationId },
-        `kill-switch: Layer ${layer} check timed out — failing OPEN (signal path budget exceeded)`,
+        { layer, timeout_ms: LAYER_CHECK_TIMEOUT_MS, correlationId, halted, failClosedOnTimeout },
+        `kill-switch: Layer ${layer} check timed out — failing ${halted ? "CLOSED (force-close-triggering layer)" : "OPEN (advisory layer, signal-path budget exceeded)"}`,
       );
       // Fire-and-forget audit — non-blocking
       insertAuditRow({
@@ -1004,22 +1024,14 @@ async function runLayerWithTimeout(
         entityType: "system",
         entityId: null,
         decisionAuthority: "system",
-        input: { layer, timeout_ms: LAYER_CHECK_TIMEOUT_MS } as Record<string, unknown>,
-        result: { halted: false, fail_open: true } as Record<string, unknown>,
+        input: { layer, timeout_ms: LAYER_CHECK_TIMEOUT_MS, fail_closed_on_timeout: failClosedOnTimeout } as Record<string, unknown>,
+        result: { halted, fail_open: !halted } as Record<string, unknown>,
         status: "failure",
         correlationId,
       }).catch((auditErr) =>
         logger.error({ err: auditErr }, `kill-switch L${layer}: timeout audit_log write failed`),
       );
-      // FIX 1b (Track M): if a force-close started during this layer's budget
-      // window, return HALTED rather than fail-OPEN. This closes the one-entry
-      // window that exists when L2 times out at 100ms while _confirmedForceClose
-      // is still running (up to FORCE_CLOSE_TIMEOUT_MS = 10s).
-      // deepscan18 A-C2: account-scoped — a sibling account's in-flight
-      // force-close must not force THIS account's timeout to resolve HALTED.
-      resolve(_isForceCloseInFlight(scopeAccountKeyForForceCloseCheck)
-        ? { halted: true, reason: "layer_timeout_force_close_pending" }
-        : { halted: false });
+      resolve(halted ? { halted: true, reason: reason ?? "layer_timeout_fail_closed" } : { halted: false });
     }, LAYER_CHECK_TIMEOUT_MS);
     // Prevent the timeout timer from keeping Node alive if the check resolves first
     if (typeof timer.unref === "function") timer.unref();
@@ -1094,14 +1106,17 @@ class KillSwitch {
     }
 
     // ── Layer 2: Daily loss limit ──
-    const l2 = await runLayerWithTimeout(2, () => checkLayer2DailyLoss(correlationId, accountKey), correlationId, accountKey);
+    // CRIT-2: L2 (daily-loss / 95%-force-close) fails CLOSED on timeout — a slow
+    // check must not approve entries on an account that may be at its DLL.
+    const l2 = await runLayerWithTimeout(2, () => checkLayer2DailyLoss(correlationId, accountKey), correlationId, accountKey, true);
     if (l2.halted) {
       await this._emitLayerHaltedSignals(l2, correlationId);
       return l2;
     }
 
     // ── Layer 3: Trailing drawdown ──
-    const l3 = await runLayerWithTimeout(3, () => checkLayer3TrailingDD(accountKey), correlationId, accountKey);
+    // CRIT-2: L3 (trailing-DD) fails CLOSED on timeout — force-close-triggering.
+    const l3 = await runLayerWithTimeout(3, () => checkLayer3TrailingDD(accountKey), correlationId, accountKey, true);
     if (l3.halted) {
       await this._emitLayerHaltedSignals(l3, correlationId);
       return l3;
@@ -1129,11 +1144,14 @@ class KillSwitch {
     }
 
     // ── Layer 7: Firm suspension ──
+    // CRIT-2: fails CLOSED on timeout — a suspended firm must not get new entries
+    // just because the suspension check was slow.
     const l7 = await runLayerWithTimeout(
       7,
       () => checkLayer7FirmSuspension(correlationId, firmId),
       correlationId,
       accountKey,
+      true,
     );
     if (l7.halted) {
       await this._emitLayerHaltedSignals(l7, correlationId);
@@ -1550,3 +1568,8 @@ export function _setForceCloseInFlightForTests(value: boolean, accountKey?: stri
 export function _getForceCloseInFlightForTests(accountKey?: string): boolean {
   return _isForceCloseInFlight(accountKey);
 }
+
+// CRIT-2 (2026-07-09) test seam: direct access to runLayerWithTimeout so tests can
+// prove force-close-triggering layers (failClosedOnTimeout=true) resolve HALTED on
+// timeout while advisory layers (false) resolve fail-open.
+export const _runLayerWithTimeoutForTests = runLayerWithTimeout;
