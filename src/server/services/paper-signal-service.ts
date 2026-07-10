@@ -4513,6 +4513,9 @@ export async function evaluateSignals(
               // resolver's ResolvedCrossAssetContext type — {dxyDirection, us10yDirection,
               // cross_asset_age_hours}. All-null when no pre-market row exists yet →
               // evalCrossAssetAligned falls back to "cross_asset_data_unavailable".
+              // MUST STAY THE LAST ENTRY IN THIS LITERAL (a cert-enforced guard asserts
+              // nothing follows it) — object-literal last-wins semantics then make it
+              // impossible for any later key OR spread to silently null these fields.
               ...crossAssetCtx,
             };
 

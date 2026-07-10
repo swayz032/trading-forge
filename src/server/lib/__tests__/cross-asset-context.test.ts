@@ -225,17 +225,27 @@ describe("wiring contract — paper-signal-service threads cross-asset into weig
       .not.toMatch(/\bcrossAssetCtx\.\w+\s*=[^=]/);
   });
 
-  // F-1 variant (b): `...crossAssetCtx, dxyDirection: null` inside the literal overrides
-  // the spread. Guard: the weightedCtx literal must NOT restate any of the 3 spread keys.
-  it("weightedCtx literal does NOT override any spread cross-asset key (blocks post-spread null override)", () => {
+  // F-1 (b) key-override AND F-5 named-variable second-spread are BOTH definitively closed
+  // by requiring `...crossAssetCtx` to be the LAST entry in the weightedCtx literal:
+  // object-literal last-wins semantics mean nothing after it can exist to override it, so
+  // ANY content (a `key:` OR a `...spread`) between `...crossAssetCtx` and the closing `}`
+  // is forbidden. This is structural, not enumerative — it can't be defeated by a novel
+  // override shape because there is no position after the spread for one to occupy.
+  it("`...crossAssetCtx` is the FINAL entry in the weightedCtx literal (blocks ANY post-spread override — F-1b + F-5)", () => {
     const ctxStart = src.indexOf("const weightedCtx");
-    const ctxEnd = src.indexOf("};", ctxStart);
-    const ctxBlock = src.slice(ctxStart, ctxEnd);
-    for (const key of ["dxyDirection", "us10yDirection", "cross_asset_age_hours"]) {
-      // An explicit `key:` inside the literal after the spread would clobber it.
-      expect(ctxBlock, `weightedCtx literal restates "${key}:" — that overrides ...crossAssetCtx`)
-        .not.toMatch(new RegExp(`\\b${key}\\s*:`));
-    }
+    expect(ctxStart).toBeGreaterThan(-1);
+    // Closing `};` of the literal (the first at the literal's indentation depth).
+    const ctxEnd = src.indexOf("\n            };", ctxStart);
+    expect(ctxEnd, "could not locate weightedCtx literal close").toBeGreaterThan(ctxStart);
+    const spreadIdx = src.lastIndexOf("...crossAssetCtx", ctxEnd);
+    expect(spreadIdx, "...crossAssetCtx not found in weightedCtx literal").toBeGreaterThan(ctxStart);
+    // Everything between the spread and the closing brace must be ONLY a trailing comma +
+    // whitespace + line comments — no key, no other spread.
+    const tail = src.slice(spreadIdx + "...crossAssetCtx".length, ctxEnd);
+    const tailStripped = tail
+      .replace(/\/\/[^\n]*/g, "")   // strip line comments
+      .replace(/[\s,]/g, "");        // strip whitespace + the trailing comma
+    expect(tailStripped, `content follows ...crossAssetCtx in the literal: ${JSON.stringify(tail)}`).toBe("");
   });
 });
 
