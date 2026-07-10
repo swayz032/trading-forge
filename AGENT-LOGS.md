@@ -13710,6 +13710,29 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-10 Deep-scan #23 fix-wave — superseded-report recovery + 4 landed fixes
+
+**Mission:** Execute the fix wave for deep-scan #23's non-instrument carry-forward items (a Workflow-orchestrated 15-finder scan pinned to `hardening/phase-0 @ b4437c80`, independently certified VERIFIED BAND 2 — see memory `project_deepscan23_band2_landing_gap_2026_07_10`), per the user's `/goal` standing directive to keep working rather than stop after reporting findings.
+
+**Work completed:**
+1. Started a fix wave in an isolated worktree (`tf-deepscan23-fixwave`) for 4 non-instrument items: 2 weekly-cron day-of-week bugs (`weekly-drift-2sigma-check`, `n8n-drift-detector-weekly` — both registered on Monday instead of Sunday, guard could never match, never fired since shipping), a stale committed n8n workflow export missing webhook auth, an MFFU doc falsely claiming code-level same-device-ban enforcement, and the `wave26-gemma4-smoke-test.ts --parity-only` gate silently skipping the real check.
+2. Before landing, `git fetch origin hardening/phase-0` revealed the branch had moved ~200 commits ahead — a concurrent session had landed its own extensive campaign (deep-scan #22 continuation: CONT/loop/cap-closer/expansion rounds, Rounds 3-7, Tracks X1-X6) that independently found and fixed nearly all of deep-scan #23's certified findings, including both CRITs (`9000f20b` double-close, `1534f85b` kill-switch fail-open) and the disputed WFE/CPCV formula (`d6b286a6`).
+3. A straight `git rebase` onto the new tip surfaced 85 commits to replay (not the expected 4) — the pinned base `b4437c80` turned out to be an orphaned fork (`git merge-base` found a common ancestor 3 days older than the pin itself, dated 2026-07-06). Aborted the rebase per fail-closed worktree-isolation practice rather than resolve conflicts in unrecognized content.
+4. Reconciled by hand: cut a fresh branch from the live tip (`d0e3408a`), hand-verified each of the 4 fix-wave items against the CURRENT file content (not git ancestry) to confirm none were duplicates of the concurrent campaign — all 4 survived. Cherry-picked the 3 non-scheduler fixes cleanly; hand-re-applied the scheduler cron fix on top of the concurrent session's `scheduleUtc()` UTC-timezone-wrapper rename (additive, not conflicting — upstream fixed a different bug: node-cron's default local-TZ interpretation; the day-of-week digit was untouched by that fix).
+5. Corrected 3 memory files whose "still open" / "disputed" framing was overtaken by the concurrent landing: `project_deepscan23_band2_landing_gap_2026_07_10` (marked SUPERSEDED with a correction block), `project_codebase_9_census_2026_07_09`, `project_deepscan22_8to9_board_2026_07_09` (dispute resolved — the ratified WFE fix is confirmed live on the real tip).
+6. Fast-forward pushed `hardening/deepscan23-fixwave-v2` → `hardening/phase-0` (`d0e3408a..45b53a6e`) after re-confirming the branch was still idle and fast-forwardable immediately before push.
+
+**Verification:** `tsc --noEmit` clean (1 pre-existing unrelated error in `cme-outage-prop-firm-health.test.ts`, confirmed present in origin, not introduced by this wave); `wave25-n8n-drift-cron.test.ts` + `wave25-drift-cron-gate-exempt.test.ts` 8/8 green; smoke-test `--parity-only` now exits a real non-swallowed 1 with the true "PARITY SPEC VALIDATION v12: FAIL" surfaced (4 production fixtures genuinely missing `speaker_concepts` — a real, separate carry-forward, not fabricated to hide); all 3 CI gates green (`check:production-isolation` 0 violations, `check:2026-compliance` OK, `system-map:check` `driftItems: []`).
+
+**Known-facts updates:** Deep-scan #23's BAND 2 verdict was accurate for its pinned SHA at the time it was measured — it was overtaken by a same-day concurrent campaign, not wrong. A scan pinned for multiple hours on a shared branch must re-fetch and re-diff its findings against the live tip immediately before the fix wave lands, not only at Phase 0 — `git fetch` + `git merge-base --is-ancestor <pin> <remote-tip>` is the cheap check that would have caught this sooner.
+
+**Carry-forward for next session:**
+1. Deep-scan #23's remaining carry-forward items (WFE/CPCV — now resolved by the concurrent campaign, verify closed; RL kill-switch zero-call-sites; `prop_compliance.py` stale MFFU FIRM_CONFIGS copy; the `/scout-ideas/strict` orphaned graduation path) need a fresh from-zero check against the current `hardening/phase-0` tip before being treated as still open — do not reuse deep-scan #23's artifact as current truth without re-verifying, per the correction above.
+2. Prune the now-stale worktrees `tf-deepscan23-scan` (read-only scan worktree, safe to remove) and `tf-deepscan23-fixwave` (this session's fix-wave worktree, superseded by the pushed `hardening/deepscan23-fixwave-v2` branch — safe to remove once confirmed merged).
+3. The MFFU same-device `instance_id` collision check remains genuinely unimplemented (doc now correctly says so) — real work item before a 2nd MFFU account (e.g. family) shares device proximity with the operator's.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
