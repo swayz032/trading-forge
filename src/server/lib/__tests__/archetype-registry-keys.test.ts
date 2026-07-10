@@ -9,6 +9,7 @@
 import { describe, it, expect } from "vitest";
 import {
   RAW_ARCHETYPES_RESPECTED,
+  SUBLAYER_VOCAB_NOT_DISPATCHABLE,
   RESOLVABLE_ARCHETYPES,
   entryIndicatorResolvesToArchetype,
 } from "../archetype-registry-keys.js";
@@ -74,5 +75,28 @@ describe("entryIndicatorResolvesToArchetype", () => {
     const out2: { path?: string } = {};
     grad.deriveEntryIndicator("impulse_range_sweep_4h_5m", null, "impulse_range_sweep_4h_5m", out2);
     expect(out2.path).not.toBe("gemma_archetype_respected");
+  });
+});
+
+// HIGH-1/HIGH-2 (deep-scan 2026-07-09, ratified): sub-layer vocab must NOT dispatch as archetypes.
+describe("sub-layer vocabulary is NOT dispatchable (HIGH-1/HIGH-2)", () => {
+  it("dispatchable-archetype set and sub-layer-vocab set are DISJOINT", () => {
+    const overlap = [...SUBLAYER_VOCAB_NOT_DISPATCHABLE].filter((n) => RAW_ARCHETYPES_RESPECTED.has(n));
+    expect(overlap, `in BOTH sets: ${overlap.join(", ")}`).toEqual([]);
+  });
+  it("NO sub-layer vocab name resolves to a dispatchable archetype (would graduate a zombie)", () => {
+    for (const name of SUBLAYER_VOCAB_NOT_DISPATCHABLE) {
+      expect(entryIndicatorResolvesToArchetype(name), `"${name}" must NOT resolve`).toBe(false);
+      expect(entryIndicatorResolvesToArchetype(`archetype:${name}`)).toBe(false);
+    }
+  });
+  it("RESOLVABLE_ARCHETYPES excludes every sub-layer vocab name", () => {
+    for (const name of SUBLAYER_VOCAB_NOT_DISPATCHABLE) {
+      expect(RESOLVABLE_ARCHETYPES.has(name)).toBe(false);
+    }
+  });
+  it("shadowed-alias victim 'trendline_bounce' is sub-layer vocab (can reach its bounce_off_level alias)", () => {
+    expect(SUBLAYER_VOCAB_NOT_DISPATCHABLE.has("trendline_bounce")).toBe(true);
+    expect(entryIndicatorResolvesToArchetype("trendline_bounce")).toBe(false);
   });
 });
