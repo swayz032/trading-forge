@@ -173,6 +173,30 @@ describe("wiring contract — paper-signal-service threads cross-asset into weig
     // exact keys are pinned by ResolvedCrossAssetContext, not repeated by hand.
     expect(ctxBlock).toContain("...crossAssetCtx");
   });
+
+  // F-1 variant (a): reassigning crossAssetCtx to nulls AFTER the real resolver call
+  // reproduces the bug (resolver runs, result clobbered). Guard: crossAssetCtx is
+  // ASSIGNED exactly once, and that single assignment is the resolver call.
+  it("assigns crossAssetCtx exactly once, and only from the resolver (blocks post-assign null-clobber)", () => {
+    // Assignments: `crossAssetCtx = ...` (excludes the `let crossAssetCtx: … =` declaration,
+    // which is `crossAssetCtx:` in TS — the regex below requires whitespace before `=`).
+    const assigns = src.match(/[^:]\bcrossAssetCtx\s*=\s*[^=]/g) ?? [];
+    expect(assigns.length, `crossAssetCtx reassigned ${assigns.length}× (expected exactly 1, from the resolver)`).toBe(1);
+    expect(src).toMatch(/\bcrossAssetCtx\s*=\s*resolveCrossAssetContext\s*\(/);
+  });
+
+  // F-1 variant (b): `...crossAssetCtx, dxyDirection: null` inside the literal overrides
+  // the spread. Guard: the weightedCtx literal must NOT restate any of the 3 spread keys.
+  it("weightedCtx literal does NOT override any spread cross-asset key (blocks post-spread null override)", () => {
+    const ctxStart = src.indexOf("const weightedCtx");
+    const ctxEnd = src.indexOf("};", ctxStart);
+    const ctxBlock = src.slice(ctxStart, ctxEnd);
+    for (const key of ["dxyDirection", "us10yDirection", "cross_asset_age_hours"]) {
+      // An explicit `key:` inside the literal after the spread would clobber it.
+      expect(ctxBlock, `weightedCtx literal restates "${key}:" — that overrides ...crossAssetCtx`)
+        .not.toMatch(new RegExp(`\\b${key}\\s*:`));
+    }
+  });
 });
 
 // ─── Data-flow: resolver output spreads to the exact ctx keys the factor reads ───
