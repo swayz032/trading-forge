@@ -3,7 +3,7 @@ import { eq, desc, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
-import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, stressTestRuns, strategies, auditLog } from "../db/schema.js";
+import { backtests, backtestTrades, backtestMatrix, monteCarloRuns, stressTestRuns, strategies, auditLog, adversarialStressRuns, cloudQmcRuns, backtestProvenance, frankensteinTestRuns, strategySignalVectors, shadowRerunFindings } from "../db/schema.js";
 import { runBacktest } from "../services/backtest-service.js";
 import { runMatrix, getMatrixStatus } from "../services/matrix-backtest-service.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
@@ -540,18 +540,40 @@ backtestRoutes.get("/:id/trades", async (req, res) => {
 });
 
 // ─── DELETE /api/backtests/:id — Cascade delete ──────────────────
+// deep-scan fix wave (2026-07-10): wrapped in db.transaction() so a
+// mid-cascade FK violation rolls back the ENTIRE cascade instead of
+// leaving earlier deletes (e.g. backtestTrades, monteCarloRuns) committed
+// while the parent row stays stuck. Also adds the 6 backtest-scoped tables
+// that carry an implicit-RESTRICT FK on backtest_id with no ON DELETE
+// clause in the live DDL and were NOT covered by the original cascade:
+// adversarial_stress_runs, cloud_qmc_runs, backtest_provenance,
+// frankenstein_test_runs, strategy_signal_vectors, shadow_rerun_findings.
+// (The other 5 tables in the same finding — strategy_lockouts,
+// strategy_firm_eligibility, strategy_dsl_features, tradingview_markers,
+// strategy_pending_buckets.graduated_strategy_id — are strategy-scoped, not
+// backtest-scoped, so they belong only to the strategies.ts DELETE cascade.)
 backtestRoutes.delete("/:id", async (req, res) => {
   const backtestId = req.params.id;
 
-  // Delete related records first (FK constraints)
-  await db.delete(monteCarloRuns).where(eq(monteCarloRuns.backtestId, backtestId));
-  await db.delete(stressTestRuns).where(eq(stressTestRuns.backtestId, backtestId));
-  await db.delete(backtestTrades).where(eq(backtestTrades.backtestId, backtestId));
+  const deleted = await db.transaction(async (tx) => {
+    // Delete related records first (FK constraints)
+    await tx.delete(adversarialStressRuns).where(eq(adversarialStressRuns.backtestId, backtestId));
+    await tx.delete(cloudQmcRuns).where(eq(cloudQmcRuns.backtestId, backtestId));
+    await tx.delete(backtestProvenance).where(eq(backtestProvenance.backtestId, backtestId));
+    await tx.delete(frankensteinTestRuns).where(eq(frankensteinTestRuns.backtestId, backtestId));
+    await tx.delete(strategySignalVectors).where(eq(strategySignalVectors.backtestId, backtestId));
+    await tx.delete(shadowRerunFindings).where(eq(shadowRerunFindings.backtestId, backtestId));
 
-  const [deleted] = await db
-    .delete(backtests)
-    .where(eq(backtests.id, backtestId))
-    .returning({ id: backtests.id });
+    await tx.delete(monteCarloRuns).where(eq(monteCarloRuns.backtestId, backtestId));
+    await tx.delete(stressTestRuns).where(eq(stressTestRuns.backtestId, backtestId));
+    await tx.delete(backtestTrades).where(eq(backtestTrades.backtestId, backtestId));
+
+    const [row] = await tx
+      .delete(backtests)
+      .where(eq(backtests.id, backtestId))
+      .returning({ id: backtests.id });
+    return row;
+  });
 
   if (!deleted) {
     res.status(404).json({ error: "Backtest not found" });

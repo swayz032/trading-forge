@@ -1782,8 +1782,19 @@ export const cloudQmcRuns = pgTable("cloud_qmc_runs", {
 
 export const adversarialStressRuns = pgTable("adversarial_stress_runs", {
   id: uuid("id").primaryKey().defaultRandom(),
-  backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "cascade" }).notNull(),
-  strategyId: uuid("strategy_id").references(() => strategies.id, { onDelete: "cascade" }).notNull(),
+  // deep-scan fix-wave (2026-07-10): removed misleading onDelete:"cascade" —
+  // the LIVE DDL (migration 0066_adversarial_stress_runs.sql) never applied
+  // ON DELETE CASCADE on these two FKs; the columns are plain implicit-RESTRICT
+  // in production. This TS annotation had diverged from reality since 0066
+  // landed. Rather than write a new migration to ALTER the live constraint
+  // (higher-risk on an already-applied migration — ALTER CONSTRAINT touches
+  // production DDL directly), the app-layer cascade in strategies.ts DELETE
+  // /:id and backtests.ts DELETE /:id now explicitly deletes these rows
+  // before the parent row, inside the same db.transaction(). This annotation
+  // is corrected to match the live DDL so schema.ts stops lying about FK
+  // behavior a future reader would otherwise trust.
+  backtestId: uuid("backtest_id").references(() => backtests.id).notNull(),
+  strategyId: uuid("strategy_id").references(() => strategies.id).notNull(),
   nQubits: integer("n_qubits").notNull().default(0),
   nTrades: integer("n_trades").notNull().default(0),
   dailyLossLimit: numeric("daily_loss_limit").notNull(),
