@@ -579,7 +579,9 @@ def _build_eligibility_gate_mode_disclosure(
 # Production defaults (P0-3 hardening):
 #   TF_BACKTEST_SKIP_MODE       ∈ {off, shadow, enforce}  default: enforce
 #   TF_BACKTEST_ANTI_SETUP_MODE ∈ {off, shadow, enforce}  default: enforce
-#   TF_BACKTEST_COMPLIANCE_MODE ∈ {off, shadow, enforce}  default: shadow
+#   BACKTEST_COMPLIANCE_MODE (canonical) / TF_BACKTEST_COMPLIANCE_MODE (legacy alias)
+#     ∈ {off, shadow, enforce}  default: enforce  (W27.5 C.2 — corrected 2026-07-09;
+#     this comment previously said "shadow", contradicting the resolver below at line ~678)
 #
 # In "shadow" mode, decisions are computed and counted but signals pass through
 # unchanged — for parity-delta logging.
