@@ -183,6 +183,18 @@ describe("wiring contract — paper-signal-service threads cross-asset into weig
     expect(src).toContain("preMarketSessions.computedAt");
   });
 
+  // F-3 (cert pass 4): the ROW that feeds the resolver must also be `const` from a single
+  // expression — no mutable `pmRow`/`pmCrossAssetRow` intermediate a future edit could
+  // null out (variant g). The read happens inside a fail-open IIFE; the resolver reads
+  // that same const. Guard: pmRow is const, and there is no mutable row var to reassign.
+  it("the pre-market row feeding the resolver is `const` (no mutable intermediate — blocks variant g)", () => {
+    expect(src).toMatch(/const\s+pmRow\s*=\s*await\s*\(/);
+    expect(src).not.toMatch(/let\s+pmCrossAssetRow\b/);
+    expect(src).not.toMatch(/let\s+pmRow\b/);
+    // The resolver must read that exact const row (not a re-derived/nulled value).
+    expect(src).toMatch(/resolveCrossAssetContext\s*\(\s*pmRow\s*,/);
+  });
+
   it("SPREADS crossAssetCtx into the weightedCtx literal (field names come from the typed resolver output)", () => {
     const ctxStart = src.indexOf("const weightedCtx");
     expect(ctxStart).toBeGreaterThan(-1);

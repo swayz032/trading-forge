@@ -14,7 +14,7 @@ import { getActiveLockout } from "./strategy-lockout-service.js";
 import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } from "./correlated-position-guard.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
-import { resolveCrossAssetContext, type CrossAssetPreMarketRow } from "../lib/cross-asset-context.js";
+import { resolveCrossAssetContext } from "../lib/cross-asset-context.js";
 import {
   CONTRACT_SPECS,
   CONTRACT_CAP_MIN,
@@ -3291,7 +3291,6 @@ export async function evaluateSignals(
     // current bar falls within any blackout window, block the entry signal.
     // [start_utc, end_utc) boundary semantics — matching W23H.3 entry window convention.
     // Fail-open: if no pre_market_sessions row exists, or query errors → no block.
-    let blackoutBlocked = false;
     // Confluence HIGH-1 (deep-scan 2026-07-09, ratified): thread the cross-asset
     // direction reading (DXY / 10Y) from today's pre_market_sessions row into the
     // Path C weightedCtx so `cross_asset_aligned` can actually evaluate. PREVIOUS BUG —
@@ -3299,116 +3298,119 @@ export async function evaluateSignals(
     // never populated them, so evalCrossAssetAligned returned
     // "cross_asset_data_unavailable" (satisfied=false) on EVERY live/paper signal. For
     // MCL that silently capped the achievable score at 0.90 (cross_asset carries 0.10
-    // weight after the MCL internals→cross_asset redistribution). We read the same
-    // pre_market_sessions row the blackout gate already loads. cross_asset_age_hours
-    // is derived from computed_at so the decay engine can taper a stale AM reading.
-    // We only CAPTURE the pre-market row inside the try (the throwable DB read); the
-    // pure cross-asset resolution happens in a `const` AFTER the try so the wiring is
-    // structurally tamper-evident: `const crossAssetCtx` can be assigned exactly once
-    // (a reassignment or a dead/conditional-gated assignment is a COMPILE error), and
-    // the resolver freezes its output (an Object.assign clobber throws at runtime).
-    let pmCrossAssetRow: CrossAssetPreMarketRow | null = null;
-    try {
-      const today = toFuturesTradingDayString(new Date(bar.timestamp));
-      const [pmSession] = await db
-        .select({
-          blackoutWindows: preMarketSessions.blackoutWindows,
-          // Gap 3 (observable): read first_30min_volume_ratio so we can surface
-          // the null → tells operator the DAL is not yet wired.
-          first30minVolumeRatio: preMarketSessions.first30minVolumeRatio,
-          // Confluence HIGH-1: cross-asset direction + freshness for Path C.
-          dxyDirection: preMarketSessions.dxyDirection,
-          us10yDirection: preMarketSessions.us10yDirection,
-          computedAt: preMarketSessions.computedAt,
-        })
-        .from(preMarketSessions)
-        .where(and(
-          eq(preMarketSessions.sessionDate, today),
-          eq(preMarketSessions.symbol, symbol),
-        ))
-        .limit(1);
+    // weight after the MCL internals→cross_asset redistribution).
+    //
+    // STRUCTURAL WIRING GUARANTEE (cert-hardened, 4 passes): the ENTIRE DB-read → row →
+    // ctx chain is `const`-bound from single expressions, so there is NO mutable
+    // intermediate a future edit could silently break. `pmRow` is a const from one
+    // fail-open IIFE (the only throwable part); both the blackout gate AND the
+    // cross-asset resolver read that same const; `crossAssetCtx` is a const from
+    // resolveCrossAssetContext(pmRow) whose output is Object.frozen. A reassignment or a
+    // conditional-gated re-bind of either const is a COMPILE error (TS2588); an
+    // Object.assign clobber of crossAssetCtx throws at runtime (frozen).
+    const today = toFuturesTradingDayString(new Date(bar.timestamp));
+    const pmRow = await (async () => {
+      try {
+        const [row] = await db
+          .select({
+            blackoutWindows: preMarketSessions.blackoutWindows,
+            // Gap 3 (observable): read first_30min_volume_ratio so we can surface
+            // the null → tells operator the DAL is not yet wired.
+            first30minVolumeRatio: preMarketSessions.first30minVolumeRatio,
+            // Confluence HIGH-1: cross-asset direction + freshness for Path C.
+            dxyDirection: preMarketSessions.dxyDirection,
+            us10yDirection: preMarketSessions.us10yDirection,
+            computedAt: preMarketSessions.computedAt,
+          })
+          .from(preMarketSessions)
+          .where(and(
+            eq(preMarketSessions.sessionDate, today),
+            eq(preMarketSessions.symbol, symbol),
+          ))
+          .limit(1);
+        return row ?? null;
+      } catch (blackoutErr) {
+        // Fail-open: query/parse errors → no block, no cross-asset data.
+        logger.warn({ err: blackoutErr, sessionId, symbol }, "W23H.F: pre-market blackout gate error — fail-open, proceeding");
+        return null;
+      }
+    })();
 
-      // Confluence HIGH-1: capture the row for the post-try const resolution below.
-      pmCrossAssetRow = pmSession ?? null;
-
-      if (pmSession?.blackoutWindows) {
-        const windows = pmSession.blackoutWindows as Array<{ event_type: string; start_utc: string; end_utc: string; severity: string }>;
-        if (Array.isArray(windows) && windows.length > 0) {
-          const barTs = new Date(bar.timestamp).getTime();
-          const matched = windows.find(
-            (w) => w.start_utc && w.end_utc &&
-              barTs >= new Date(w.start_utc).getTime() &&
-              barTs < new Date(w.end_utc).getTime(),
+    // ─── W23H.F Stage 0.5a: Pre-market blackout window gate (reads the const pmRow) ──
+    let blackoutBlocked = false;
+    if (pmRow?.blackoutWindows) {
+      const windows = pmRow.blackoutWindows as Array<{ event_type: string; start_utc: string; end_utc: string; severity: string }>;
+      if (Array.isArray(windows) && windows.length > 0) {
+        const barTs = new Date(bar.timestamp).getTime();
+        const matched = windows.find(
+          (w) => w.start_utc && w.end_utc &&
+            barTs >= new Date(w.start_utc).getTime() &&
+            barTs < new Date(w.end_utc).getTime(),
+        );
+        if (matched) {
+          blackoutBlocked = true;
+          span.setAttribute("pre_market_blackout_blocked", true);
+          span.setAttribute("pre_market_blackout_event", matched.event_type);
+          logger.info(
+            { sessionId, symbol, eventType: matched.event_type, severity: matched.severity, barTimestamp: bar.timestamp },
+            "W23H.F: entry blocked — bar falls within pre-market blackout window",
           );
-          if (matched) {
-            blackoutBlocked = true;
-            span.setAttribute("pre_market_blackout_blocked", true);
-            span.setAttribute("pre_market_blackout_event", matched.event_type);
-            logger.info(
-              { sessionId, symbol, eventType: matched.event_type, severity: matched.severity, barTimestamp: bar.timestamp },
-              "W23H.F: entry blocked — bar falls within pre-market blackout window",
-            );
-            db.insert(paperSignalLogs).values({
+          db.insert(paperSignalLogs).values({
+            sessionId,
+            symbol,
+            direction: config.side,
+            signalType: "skipped_pre_market_blackout",
+            price: String(bar.close),
+            indicatorSnapshot: {
+              ...indicators,
+              _blackout_event_type: matched.event_type,
+              _blackout_start_utc: matched.start_utc,
+              _blackout_end_utc: matched.end_utc,
+              _blackout_severity: matched.severity,
+            },
+            acted: false,
+            reason: `signal.skipped_pre_market_blackout: event=${matched.event_type} severity=${matched.severity} window=[${matched.start_utc},${matched.end_utc})`,
+          }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist pre-market blackout block log"));
+          // W24P1 Item 5: mirror skip to audit_log
+          insertAuditRow({
+            action: "signal.skipped_pre_market_blackout",
+            entityType: "signal",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            input: {
               sessionId,
               symbol,
-              direction: config.side,
-              signalType: "skipped_pre_market_blackout",
-              price: String(bar.close),
-              indicatorSnapshot: {
-                ...indicators,
-                _blackout_event_type: matched.event_type,
-                _blackout_start_utc: matched.start_utc,
-                _blackout_end_utc: matched.end_utc,
-                _blackout_severity: matched.severity,
-              },
-              acted: false,
-              reason: `signal.skipped_pre_market_blackout: event=${matched.event_type} severity=${matched.severity} window=[${matched.start_utc},${matched.end_utc})`,
-            }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist pre-market blackout block log"));
-            // W24P1 Item 5: mirror skip to audit_log
-            insertAuditRow({
-              action: "signal.skipped_pre_market_blackout",
-              entityType: "signal",
-              entityId: sessionId,
-              decisionAuthority: "system",
-              input: {
-                sessionId,
-                symbol,
-                event_type: matched.event_type,
-                severity: matched.severity,
-                start_utc: matched.start_utc,
-                end_utc: matched.end_utc,
-              } as Record<string, unknown>,
-              result: { blocked: true, reason: "pre_market_blackout_window" } as Record<string, unknown>,
-              status: "success",
-              correlationId: correlationId ?? null,
-            }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.skipped_pre_market_blackout"));
-          }
+              event_type: matched.event_type,
+              severity: matched.severity,
+              start_utc: matched.start_utc,
+              end_utc: matched.end_utc,
+            } as Record<string, unknown>,
+            result: { blocked: true, reason: "pre_market_blackout_window" } as Record<string, unknown>,
+            status: "success",
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.skipped_pre_market_blackout"));
         }
       }
-
-      // ── Parity Gap 3 (observable): first_30min_volume_ratio null diagnostics ──
-      // first_30min_volume_ratio is structurally null until priorSessionVolume is
-      // wired in pre-market-routine.ts. Log at debug so the paper/backtest
-      // divergence is discoverable in telemetry without blocking trading.
-      // delta_or_volume_signature uses volume_rolling_mean_20 from the bar buffer
-      // as the operative volume reference when this ratio is unavailable.
-      if (pmSession !== undefined && pmSession.first30minVolumeRatio === null) {
-        logger.debug(
-          { sessionId, symbol, correlationId, sessionDate: today },
-          "paper-parity: first_30min_volume_ratio null (priorSessionVolume DAL not wired); delta_or_volume_signature uses bar-derived volume_rolling_mean_20",
-        );
-      }
-    } catch (blackoutErr) {
-      // Fail-open: query/parse errors → no block
-      logger.warn({ err: blackoutErr, sessionId, symbol }, "W23H.F: pre-market blackout gate error — fail-open, proceeding");
     }
 
-    // Confluence HIGH-1: resolve the cross-asset SignalContext slice from the captured
-    // row (domain-validated direction + reading age in hours). `const` = assigned once
-    // and unconditionally (structural guard); resolver returns a FROZEN object (mutation
-    // guard). Missing row → all-null (factor stays cross_asset_data_unavailable).
+    // ── Parity Gap 3 (observable): first_30min_volume_ratio null diagnostics ──
+    // first_30min_volume_ratio is structurally null until priorSessionVolume is
+    // wired in pre-market-routine.ts. Log at debug so the paper/backtest
+    // divergence is discoverable in telemetry without blocking trading.
+    // delta_or_volume_signature uses volume_rolling_mean_20 from the bar buffer
+    // as the operative volume reference when this ratio is unavailable.
+    if (pmRow && pmRow.first30minVolumeRatio === null) {
+      logger.debug(
+        { sessionId, symbol, correlationId, sessionDate: today },
+        "paper-parity: first_30min_volume_ratio null (priorSessionVolume DAL not wired); delta_or_volume_signature uses bar-derived volume_rolling_mean_20",
+      );
+    }
+
+    // Confluence HIGH-1: resolve the cross-asset SignalContext slice from the SAME const
+    // row (domain-validated direction + reading age in hours). Missing row → all-null
+    // FROZEN object (factor stays cross_asset_data_unavailable — unchanged conservative).
     const crossAssetCtx = resolveCrossAssetContext(
-      pmCrossAssetRow,
+      pmRow,
       new Date(bar.timestamp).getTime(),
     );
 
