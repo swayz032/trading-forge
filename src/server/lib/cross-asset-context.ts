@@ -54,7 +54,9 @@ export function resolveCrossAssetContext(
   barTimestampMs: number,
 ): ResolvedCrossAssetContext {
   if (!row) {
-    return { dxyDirection: null, us10yDirection: null, cross_asset_age_hours: null };
+    // Frozen so a caller can never silently mutate the resolved slice back to nulls
+    // (e.g. Object.assign(ctx, {...nulls})) — the cross_asset wiring must be tamper-evident.
+    return Object.freeze({ dxyDirection: null, us10yDirection: null, cross_asset_age_hours: null });
   }
 
   let ageHours: number | null = null;
@@ -67,9 +69,9 @@ export function resolveCrossAssetContext(
     }
   }
 
-  return {
+  return Object.freeze({
     dxyDirection: coerceDirection(row.dxyDirection),
     us10yDirection: coerceDirection(row.us10yDirection),
     cross_asset_age_hours: ageHours,
-  };
+  });
 }

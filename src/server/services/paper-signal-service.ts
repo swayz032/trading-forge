@@ -14,7 +14,7 @@ import { getActiveLockout } from "./strategy-lockout-service.js";
 import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } from "./correlated-position-guard.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
-import { resolveCrossAssetContext, type ResolvedCrossAssetContext } from "../lib/cross-asset-context.js";
+import { resolveCrossAssetContext, type CrossAssetPreMarketRow } from "../lib/cross-asset-context.js";
 import {
   CONTRACT_SPECS,
   CONTRACT_CAP_MIN,
@@ -3302,14 +3302,12 @@ export async function evaluateSignals(
     // weight after the MCL internals→cross_asset redistribution). We read the same
     // pre_market_sessions row the blackout gate already loads. cross_asset_age_hours
     // is derived from computed_at so the decay engine can taper a stale AM reading.
-    // Single object (not 3 loose vars) so it SPREADS into weightedCtx by exact field
-    // name from the resolver's return type — removes the per-field manual-copy break
-    // points the cert flagged (a typo'd `dxyDirection: wrongVar` can't compile).
-    let crossAssetCtx: ResolvedCrossAssetContext = {
-      dxyDirection: null,
-      us10yDirection: null,
-      cross_asset_age_hours: null,
-    };
+    // We only CAPTURE the pre-market row inside the try (the throwable DB read); the
+    // pure cross-asset resolution happens in a `const` AFTER the try so the wiring is
+    // structurally tamper-evident: `const crossAssetCtx` can be assigned exactly once
+    // (a reassignment or a dead/conditional-gated assignment is a COMPILE error), and
+    // the resolver freezes its output (an Object.assign clobber throws at runtime).
+    let pmCrossAssetRow: CrossAssetPreMarketRow | null = null;
     try {
       const today = toFuturesTradingDayString(new Date(bar.timestamp));
       const [pmSession] = await db
@@ -3330,13 +3328,8 @@ export async function evaluateSignals(
         ))
         .limit(1);
 
-      // Confluence HIGH-1: resolve the cross-asset SignalContext slice via the pure
-      // helper (domain-validated direction + reading age in hours). Missing row → all
-      // null (factor stays cross_asset_data_unavailable — unchanged conservative path).
-      crossAssetCtx = resolveCrossAssetContext(
-        pmSession ?? null,
-        new Date(bar.timestamp).getTime(),
-      );
+      // Confluence HIGH-1: capture the row for the post-try const resolution below.
+      pmCrossAssetRow = pmSession ?? null;
 
       if (pmSession?.blackoutWindows) {
         const windows = pmSession.blackoutWindows as Array<{ event_type: string; start_utc: string; end_utc: string; severity: string }>;
@@ -3409,6 +3402,15 @@ export async function evaluateSignals(
       // Fail-open: query/parse errors → no block
       logger.warn({ err: blackoutErr, sessionId, symbol }, "W23H.F: pre-market blackout gate error — fail-open, proceeding");
     }
+
+    // Confluence HIGH-1: resolve the cross-asset SignalContext slice from the captured
+    // row (domain-validated direction + reading age in hours). `const` = assigned once
+    // and unconditionally (structural guard); resolver returns a FROZEN object (mutation
+    // guard). Missing row → all-null (factor stays cross_asset_data_unavailable).
+    const crossAssetCtx = resolveCrossAssetContext(
+      pmCrossAssetRow,
+      new Date(bar.timestamp).getTime(),
+    );
 
     // ─── W23H.F Stage 0.5b: Cross-symbol DLL coordinator ─────────────────────
     // Aggregate realized + open MTM P&L across ALL symbols on this firmId.

@@ -70,6 +70,22 @@ describe("resolveCrossAssetContext — pure resolver", () => {
     expect(r.cross_asset_age_hours).toBeNull();
   });
 
+  it("returns a FROZEN object (mutation guard — Object.assign clobber throws, cert variant d)", () => {
+    const r = resolveCrossAssetContext(
+      { dxyDirection: "down", us10yDirection: "up", computedAt: new Date(BAR_MS) },
+      BAR_MS,
+    );
+    expect(Object.isFrozen(r)).toBe(true);
+    // A silent post-resolution clobber (Object.assign(ctx, {...nulls})) throws in strict
+    // mode rather than quietly reverting the factor to cross_asset_data_unavailable.
+    expect(() => Object.assign(r as unknown as Record<string, unknown>, { dxyDirection: null })).toThrow();
+    expect(r.dxyDirection).toBe("down"); // unchanged
+  });
+
+  it("the all-null (missing row) result is ALSO frozen", () => {
+    expect(Object.isFrozen(resolveCrossAssetContext(null, BAR_MS))).toBe(true);
+  });
+
   it("computed_at in the future relative to the bar → age null (never negative)", () => {
     const r = resolveCrossAssetContext(
       { dxyDirection: "up", us10yDirection: null, computedAt: new Date(BAR_MS + 3_600_000) },
@@ -152,11 +168,13 @@ describe("wiring contract — paper-signal-service threads cross-asset into weig
     "utf-8",
   );
 
-  it("imports and assigns resolveCrossAssetContext output to the hoisted crossAssetCtx", () => {
+  it("binds crossAssetCtx as a `const` from the resolver (compile-time single-assignment guard)", () => {
     expect(src).toContain('from "../lib/cross-asset-context.js"');
-    // The resolver output must be ASSIGNED to the var that weightedCtx spreads —
-    // this catches the cert's injected regression (resolver called but result dropped).
-    expect(src).toMatch(/crossAssetCtx\s*=\s*resolveCrossAssetContext\s*\(/);
+    // `const` (not `let`) → reassignment or dead/conditional-gated assignment is a
+    // COMPILE error, not a silent runtime regression. This is the structural close for
+    // cert variants (a) post-assign clobber and (f) conditional-gated assignment.
+    expect(src).toMatch(/const\s+crossAssetCtx\s*=\s*resolveCrossAssetContext\s*\(/);
+    expect(src).not.toMatch(/let\s+crossAssetCtx\b/);
   });
 
   it("selects the cross-asset columns from preMarketSessions", () => {
