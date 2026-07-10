@@ -488,3 +488,154 @@ def apply_volume_partial_fills(
         )
 
     return adjusted_sizes, fill_ratios, audit_payload
+
+
+# ─── Class-Path (BaseStrategy) Fill Model Wiring ──────────────────────────
+# HIGH bar-alignment/fidelity-gap fix (deep-scan 2026-07-09, ratified): prior to
+# this function, run_class_backtest() (backtester.py) had NO fill-model wiring
+# at all — archetype/class strategies backtested with idealized (100%) fills
+# while run_backtest() (the DSL path) applied Stage-2 volume-based partial
+# fills. This function threads the identical Stage-2 model into the class path,
+# reusing apply_volume_partial_fills() so both engine paths share one fill
+# model implementation (no parallel reimplementation to drift out of sync).
+
+
+def apply_class_path_fill_model(
+    sizes: np.ndarray,
+    df: pl.DataFrame,
+    long_entries_pre_roll: np.ndarray,
+    short_entries_pre_roll: np.ndarray,
+    long_entries_post_roll: np.ndarray,
+    short_entries_post_roll: np.ndarray,
+    volume_threshold: float | None = None,
+) -> tuple[np.ndarray, dict]:
+    """Apply the Stage-2 volume-based partial-fill model to a class-path backtest.
+
+    Mirrors run_backtest()'s DSL wiring EXACTLY (backtester.py ~4523-4671, the
+    long/short Stage-2 apply_volume_partial_fills() calls + post-roll size
+    remap) so archetype/class strategies get the same fill realism DSL
+    strategies get, byte-identical in method (not just spirit).
+
+    ALIGNMENT CONTRACT (the load-bearing part of this fix — get this wrong and
+    the fill ratio uses the wrong bar's volume):
+    The engine fills a bar-N signal on bar N+1 (`np.roll(entries, 1)` in both
+    run_backtest and run_class_backtest — "next-bar fill", see the module
+    docstring in backtester.py). A volume-based degradation ratio must be
+    computed against the EXECUTION bar's volume (N+1), not the signal bar's
+    (N) — an order sized off a busy signal bar that actually fills on a thin
+    next bar must degrade, or Sharpe/PF/DSR are silently inflated.
+
+    This function's contract for achieving that:
+      1. Call apply_volume_partial_fills(..., next_bar_fill=True) with entries
+         and sizes STILL AT THE SIGNAL-BAR INDEX (pre-roll). next_bar_fill=True
+         makes compute_volume_based_fill_ratios() roll the VOLUME array by -1
+         internally, so order_qty[N] (signal bar) is divided by volume[N+1]
+         (execution bar) — the ratio is computed correctly BEFORE any roll of
+         the entries/sizes arrays themselves.
+      2. Save the resulting degraded sizes, still indexed at the signal bar.
+      3. Remap: for every bar where the CALLER's post-roll entries mask is
+         True (execution bar N+1), pull the degraded value from pre-roll index
+         N (execution_idx - 1) of the saved array. This places the
+         correctly-computed degraded size at the bar vectorbt will actually
+         read it from.
+    Do NOT call this with next_bar_fill=False and post-roll entries — that
+    computes the ratio from the execution bar's OWN order size (post-roll, no
+    signal-bar order actually exists there) against the execution bar's SAME
+    bar's volume — which looks aligned but silently double-shifts (the order
+    would be sized as if signalled ON the execution bar, not degraded relative
+    to when it was actually decided).
+
+    Args:
+        sizes: Per-bar position size array (same length/indexing as df — the
+            natural per-bar sizing output of compute_position_sizes(), NOT
+            yet rolled).
+        df: OHLCV frame with a 'volume' column (falls back to no-op if absent,
+            same contract as apply_volume_partial_fills).
+        long_entries_pre_roll / short_entries_pre_roll: boolean entry masks
+            BEFORE the next-bar np.roll (straight from
+            apply_eligibility_gate()/_apply_backtest_parity_gates(), still
+            signal-bar indexed).
+        long_entries_post_roll / short_entries_post_roll: the SAME masks AFTER
+            np.roll(mask, 1); mask[0] = False — the caller (run_class_backtest)
+            already computes this roll for its own downstream vectorbt feed;
+            passed in here (not re-derived) so this function stays a pure,
+            side-effect-free helper independently testable without importing
+            the full backtester module (which transitively pulls vectorbt).
+        volume_threshold: Forwarded to apply_volume_partial_fills (None →
+            reads BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD env, default 0.1).
+
+    Returns:
+        (sizes_with_fill_model, partial_fill_audit) — `sizes_with_fill_model`
+        is a NEW array (input `sizes` is never mutated in place); bars with no
+        entry keep their original per-bar size. `partial_fill_audit` merges
+        long+short stats into the same shape as run_backtest's
+        result["engine_audit"]["partial_fill_modeled"] (total_orders,
+        partial_fills, avg_fill_ratio, avg_slippage_delta_per_partial,
+        volume_threshold) — schema parity so downstream consumers of either
+        engine path read one contract.
+
+    Backward compat: if the caller never invokes this function (fill_model
+    disabled), sizes are untouched — byte-identical to pre-fix behavior. This
+    function itself has no "disabled" branch; the caller (run_class_backtest)
+    gates the call on whether a fill_model config was supplied. The
+    module-level BACKTEST_PARTIAL_FILL_ENABLED env var still applies via
+    apply_volume_partial_fills()'s own internal gate — set it "false" to
+    disable Stage-2 degradation while still passing a fill_model config
+    (mirrors the DSL path's env-gate composability).
+    """
+    working_sizes = sizes.copy()
+
+    # ─── LONG: Stage 2 volume partial fill (mirrors run_backtest ~4546-4548) ──
+    working_sizes, _long_ratios, long_audit = apply_volume_partial_fills(
+        long_entries_pre_roll, working_sizes, df,
+        volume_threshold=volume_threshold, next_bar_fill=True,
+    )
+    long_adjusted_sizes = working_sizes.copy()  # pre-roll indexed, saved for post-roll remap
+
+    # ─── SHORT: Stage 2 volume partial fill on top (mirrors ~4613-4630) ────────
+    # Long/short signal bars never overlap on the same bar (mutually exclusive
+    # entry types), so copying working_sizes (which already carries the LONG
+    # degradation at long-signal bars) forward as the SHORT call's base is safe
+    # — it only touches short-signal bars.
+    short_adjusted_sizes, _short_ratios, short_audit = apply_volume_partial_fills(
+        short_entries_pre_roll, working_sizes.copy(), df,
+        volume_threshold=volume_threshold, next_bar_fill=True,
+    )
+    short_fill_mask = short_entries_pre_roll.astype(bool)
+    working_sizes[short_fill_mask] = short_adjusted_sizes[short_fill_mask]
+
+    # ─── Combine audit stats (mirrors run_backtest ~4635-4652) ─────────────────
+    combined_audit = dict(long_audit)
+    long_n = long_audit.get("total_orders", 0)
+    short_n = short_audit.get("total_orders", 0)
+    combined_n = long_n + short_n
+    combined_partials = long_audit.get("partial_fills", 0) + short_audit.get("partial_fills", 0)
+    if combined_n > 0:
+        combined_avg_ratio = (
+            long_audit.get("avg_fill_ratio", 1.0) * long_n
+            + short_audit.get("avg_fill_ratio", 1.0) * short_n
+        ) / combined_n
+    else:
+        combined_avg_ratio = 1.0
+    combined_audit["total_orders"] = combined_n
+    combined_audit["partial_fills"] = combined_partials
+    combined_audit["avg_fill_ratio"] = round(combined_avg_ratio, 4)
+
+    # ─── Remap onto POST-roll (execution-bar) positions (mirrors ~4572-4578, 4664-4671) ──
+    # Start from the ORIGINAL per-bar sizes so bars with no entry keep their
+    # natural per-bar sizing (compute_position_sizes output), untouched.
+    final_sizes = sizes.copy()
+
+    shifted_long_mask = long_entries_post_roll.astype(bool)
+    long_pre_idx = np.where(shifted_long_mask)[0] - 1
+    long_valid = long_pre_idx >= 0
+    for idx, pre_idx in zip(np.where(shifted_long_mask)[0][long_valid], long_pre_idx[long_valid]):
+        final_sizes[idx] = long_adjusted_sizes[pre_idx]
+
+    shifted_short_mask = short_entries_post_roll.astype(bool)
+    short_pre_idx = np.where(shifted_short_mask)[0] - 1
+    short_valid = short_pre_idx >= 0
+    for idx, pre_idx in zip(np.where(shifted_short_mask)[0][short_valid], short_pre_idx[short_valid]):
+        final_sizes[idx] = short_adjusted_sizes[pre_idx]
+
+    return final_sizes, combined_audit
