@@ -107,15 +107,19 @@ export interface ShadowToPaperGateInput {
  *
  *   "pass"                  — gate cleared; promotion allowed
  *   "blocked"               — divergence_pct >= threshold (hard block)
- *   "insufficient_samples"  — below the minimum sample floor (block until more signals)
- *   "legacy_unavailable"    — shadow_signals table/data absent (grandfather proceed)
+ *   "insufficient_samples"  — below the minimum sample floor, INCLUDING 0/null
+ *                             (fail-CLOSED block; parity with the cron path)
+ *   "legacy_unavailable"    — RETIRED 2026-07-09 (deep-scan HIGH-1): never emitted.
+ *                             0/null signals now fail-CLOSED to insufficient_samples.
+ *                             Member retained only for backward-compat with serialized
+ *                             audit_log rows written before the fix. Do NOT return it.
  *   "warning"               — reserved; not currently emitted
  */
 export type ShadowToPaperGateStatus =
   | "pass"
   | "blocked"
   | "insufficient_samples"
-  | "legacy_unavailable"
+  | "legacy_unavailable" // RETIRED — see note above; no live producer
   | "warning";
 
 /**
@@ -141,12 +145,11 @@ export interface ShadowToPaperGateResult {
   auditAction:
     | "lifecycle.shadow_divergence_blocked"
     | "lifecycle.shadow_divergence_insufficient_samples"
-    | "lifecycle.shadow_divergence_check_unavailable_legacy"
+    | "lifecycle.shadow_divergence_check_unavailable_legacy" // RETIRED 2026-07-09 (HIGH-1) — no live producer; kept for serialized-row compat
     | "lifecycle.shadow_promotion_passed"
     | null;
   /**
-   * Structured payload for the audit_log.result column.
-   * Always present (empty object on legacy_unavailable).
+   * Structured payload for the audit_log.result column. Always present.
    */
   auditPayload: Record<string, unknown>;
   /** Human-readable reason string. */
@@ -164,12 +167,13 @@ export interface ShadowToPaperGateResult {
  * Identical inputs always produce identical outputs.
  *
  * Decision tree (in order):
- *   1. shadowSignals null/empty → legacy_unavailable (proceed; grandfather window)
- *   2. shadowSignals.length < getMinSampleSize() → insufficient_samples (block)
- *   3. compareShadowToBacktest(shadowSignals, backtestExpected).ok === false
+ *   1. shadowSignals null/empty/< getMinSampleSize() → insufficient_samples (BLOCK,
+ *      fail-CLOSED; parity with the cron path — 0/null is NOT a grandfather pass,
+ *      deep-scan HIGH-1 fix 2026-07-09)
+ *   2. compareShadowToBacktest(shadowSignals, backtestExpected).ok === false
  *      a. reason==="insufficient_samples" (re-check from comparator) → insufficient_samples
  *      b. otherwise → blocked (divergence_pct >= threshold)
- *   4. otherwise → pass
+ *   3. otherwise → pass
  *
  * @param input  Pre-loaded signal arrays + context.
  * @param thresholdPct  Optional override for SHADOW_DIVERGENCE_THRESHOLD_PCT (for tests).
