@@ -11,6 +11,7 @@
 const http = require("http");
 const { WebSocketServer } = require("ws");
 const crypto = require("crypto");
+const { sanitizeAndStampHeaders } = require("./ip-sanitize.js");
 
 const PORT = Number(process.env.PORT || 3000);
 const TOKEN = process.env.RELAY_TOKEN;
@@ -83,6 +84,17 @@ function sendFrame(ws, obj) {
   try { ws.send(JSON.stringify(obj)); } catch (e) { console.error("send err:", e.message); }
 }
 
+// Deep-scan fix-wave 2026-07-10 (Fix 2 + Fix 3): this relay is the ONE component
+// that terminates the real inbound TCP connection before a request is tunneled to
+// the tower. tower-relay-client.cjs::proxyRequest() replays whatever headers we
+// hand it verbatim into a fresh loopback http.request() on the tower — so a
+// client-supplied `x-forwarded-for` reaches Express looking exactly as
+// trustworthy as a value we'd have set ourselves. sanitizeAndStampHeaders()
+// (./ip-sanitize.js) strips any inbound x-forwarded-for + any spoofed copy of
+// our own verified-ip header, and stamps a fresh one from req.socket.remoteAddress
+// (the actual TCP peer — not forgeable via any HTTP header). See
+// src/server/lib/relay-client-ip.ts for the downstream consumer contract.
+
 const server = http.createServer((req, res) => {
   // Health endpoint (does not require tower)
   if (req.url === "/__relay/health") {
@@ -120,7 +132,7 @@ const server = http.createServer((req, res) => {
       type: "request", id,
       method: req.method,
       url: req.url,
-      headers: req.headers,
+      headers: sanitizeAndStampHeaders(req),
       body: chunks.length ? Buffer.concat(chunks).toString("base64") : null,
     });
   });

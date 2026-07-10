@@ -514,6 +514,16 @@ app.use("/api/carter", carterToolsRouter);
 // validates its own HMAC (TRADINGVIEW webhook secret / BROKER_FILL_HMAC_SECRET).
 app.use("/api/tradingview", tradingViewWebhookRoutes);
 app.use("/api/broker/fill-callback", fillCallbackRoutes);
+// W1 CORE: TF Order Gateway — the in-process kill-switch + gate layer before every live order.
+// Pine alert → POST /api/live-order → routeOrder() (full gate stack) → TradersPost/broker.
+// Requires LIVE_ORDER_HMAC_SECRET env var (≥32 chars). Fail-CLOSED 503 when unconfigured.
+// deep-scan fix-wave 2026-07-10 (Fix 1): mounted HERE — was previously AFTER
+// authMiddleware below, which 401'd every Pine-alert-originated live order at the
+// general Bearer gate before it ever reached live-order.ts's own HMAC check.
+// Same pattern as its siblings above: this is an external caller with its own auth,
+// not a Bearer-authenticated internal API consumer. live-order.ts's internal auth
+// logic is unchanged by this move.
+app.use("/api/live-order", liveOrderRoutes);
 
 // Auth gate
 app.use("/api", authMiddleware);
@@ -655,11 +665,6 @@ app.use("/api/composite-health", compositeHealthRoutes);
 
 // W29 Pass D.2: A/B paper sub-account Sharpe comparison — READ-ONLY observability
 app.use("/api/ab-comparison", abComparisonRoutes);
-
-// W1 CORE: TF Order Gateway — the in-process kill-switch + gate layer before every live order.
-// Pine alert → POST /api/live-order → routeOrder() (full gate stack) → TradersPost/broker.
-// Requires LIVE_ORDER_HMAC_SECRET env var (≥32 chars). Fail-CLOSED 503 when unconfigured.
-app.use("/api/live-order", liveOrderRoutes);
 
 // Phase 1 Fill Reconciliation: broker fill callback + admin reconcile-clear.
 // POST /api/broker/fill-callback — HMAC-gated; requires BROKER_FILL_HMAC_SECRET.

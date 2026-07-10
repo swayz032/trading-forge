@@ -37,6 +37,7 @@ import {
 } from "../../lib/slumhouse/admin-session.js";
 import { verifySession, COOKIE_NAME } from "../../lib/slumhouse/session.js";
 import { checkSlumhouseOrigin } from "../../lib/slumhouse/require-session.js";
+import { resolveTrustedClientIp } from "../../lib/relay-client-ip.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 import { logger } from "../../lib/logger.js";
 import { getMode, setMode } from "../../services/pipeline-control-service.js";
@@ -72,12 +73,17 @@ interface Attempt {
 }
 const attempts = new Map<string, Attempt>();
 
+// deep-scan fix-wave 2026-07-10 (Fix 2): was reading raw `x-forwarded-for`
+// directly — spoofable end-to-end (tower-relay-client.cjs replays whatever
+// headers the relay handed it into a fresh loopback request; no `trust proxy`
+// hop count applies to that path). An attacker could rotate the header value
+// per request to mint a fresh brute-force bucket every time, fully bypassing
+// the lockout. Now reads the relay-minted, non-spoofable header — see
+// src/server/lib/relay-client-ip.ts for the full trust chain + documented
+// residual (Railway HTTP-proxy-mode caveat: relay traffic may collapse to a
+// single shared bucket, which is the fail-SAFE direction for a lockout).
 function clientKey(req: Request): string {
-  return (
-    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
-    req.socket?.remoteAddress ||
-    "unknown"
-  );
+  return resolveTrustedClientIp(req);
 }
 
 function isLockedOut(key: string, now: number): boolean {
