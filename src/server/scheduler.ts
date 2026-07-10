@@ -37,6 +37,7 @@ import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
 import { isSundayAtEtHour } from "./lib/weekly-cron-et-guard.js";
+import { isFirstOfMonthAtEtHour } from "./lib/monthly-cron-et-guard.js";
 import { findUnscheduledJobs } from "./lib/scheduler-drift.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
 import { AlertFactory } from "./services/alert-service.js";
@@ -4546,20 +4547,19 @@ except Exception as e:
 
   // Fire at 13:00 and 14:00 UTC on the 1st of every month to cover EDT/EST.
   // ET day-of-month + hour guard inside handler filters to 09:00 ET on the 1st.
+  // deepscan fix (2026-07-10): the prior inline `toLocaleString(...).split(" ")`
+  // guard was DOUBLY broken — ICU renders the ET moment as "1, 09" (", " literal
+  // separator + zero-padded hour), so `split(" ")[0]` was always "1," (never "1")
+  // and `split(" ")[1]` was always "09" (never "9"); the guard's `!==` checks were
+  // both permanently true and this cron never fired since it shipped (W25P2 A-2).
+  // Replaced with the structural formatToParts()-based guard (isFirstOfMonthAtEtHour)
+  // that mirrors the sibling weekly fix and eliminates the locale-separator bug class.
   scheduleUtc("0 13,14 1 * *", async () => {
     if (!_tryAcquireJobLock("n8n-drift-detector-monthly")) return;
     try {
       const now = new Date();
-      const etStr = now.toLocaleString("en-US", {
-        timeZone: "America/New_York",
-        day: "numeric",
-        hour: "numeric",
-        hour12: false,
-      });
-      // etStr is e.g. "1 9" for 1st of month at 09:00 ET
-      const [etDay, etHour] = etStr.split(" ");
-      if (etDay !== "1" || etHour !== "9") {
-        logger.debug({ etStr }, "Scheduler: n8n-drift-detector-monthly — not 1st of month 09:00 ET, skipping");
+      if (!isFirstOfMonthAtEtHour(now, 9)) {
+        logger.debug("Scheduler: n8n-drift-detector-monthly — not 1st of month 09:00 ET, skipping");
         return;
       }
       logger.info({ job: "n8n-drift-detector-monthly" }, "running pipeline-gate-exempt n8n drift check (monthly)");

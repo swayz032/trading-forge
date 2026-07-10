@@ -10,6 +10,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { isSundayAtEtHour } from "../lib/weekly-cron-et-guard.js";
+import { isFirstOfMonthAtEtHour } from "../lib/monthly-cron-et-guard.js";
 
 // ─── Mock child_process execFile ───────────────────────────────────────────────
 
@@ -139,6 +140,54 @@ describe("Wave 25 Pass 2 A-2 — n8n drift detector cron registration", () => {
     // 09:00 ET = 13:00 or 14:00 UTC. Pattern: "0 13,14 1 * *"
     const monthlySchedulePattern = /scheduleUtc\(["']0 13,14 1 \* \*["']/;
     expect(monthlySchedulePattern.test(schedulerSrc)).toBe(true);
+  });
+
+  it("isFirstOfMonthAtEtHour(9) fires on the real EDT and EST 1st-of-month target instants, and only those (deepscan monthly fix)", () => {
+    // Both DST regimes at the 1st-of-month 09:00 ET boundary (the cron double-fires
+    // at 13:00 + 14:00 UTC to cover both offsets; the guard must accept exactly one
+    // of the two per season and reject the other).
+    // EDT: 1st of month 09:00 ET == 13:00 UTC (verified: 2026-08-01 09:00 EDT = UTC-4).
+    expect(isFirstOfMonthAtEtHour(new Date("2026-08-01T13:00:00Z"), 9)).toBe(true);
+    // EST: 1st of month 09:00 ET == 14:00 UTC (verified: 2026-01-01 09:00 EST = UTC-5).
+    expect(isFirstOfMonthAtEtHour(new Date("2026-01-01T14:00:00Z"), 9)).toBe(true);
+
+    // The OTHER UTC fire of the double-fire cron must be rejected each season:
+    // 14:00 UTC in EDT season is 10:00 ET (hour off) — must NOT match.
+    expect(isFirstOfMonthAtEtHour(new Date("2026-08-01T14:00:00Z"), 9)).toBe(false);
+    // 13:00 UTC in EST season is 08:00 ET (hour off) — must NOT match.
+    expect(isFirstOfMonthAtEtHour(new Date("2026-01-01T13:00:00Z"), 9)).toBe(false);
+
+    // 2nd of month at 09:00 ET — right hour, wrong day-of-month — must NOT match.
+    expect(isFirstOfMonthAtEtHour(new Date("2026-08-02T13:00:00Z"), 9)).toBe(false);
+    // 1st of month at 08:00 ET — right day, wrong hour — must NOT match.
+    expect(isFirstOfMonthAtEtHour(new Date("2026-08-01T12:00:00Z"), 9)).toBe(false);
+  });
+
+  it("would have caught the original bug: the old split(\" \") guard never fires on the genuine target instant", () => {
+    // Regression proof — replicate the EXACT shipped-broken guard inline and assert
+    // it FAILS to fire on the same genuine EDT target instant the fixed guard accepts.
+    // This is the concrete instant the string-split version could never have caught:
+    // ICU renders "1, 09", so etDay="1," (never "1") and etHour="09" (never "9").
+    const target = new Date("2026-08-01T13:00:00Z"); // 1st of month, 09:00 ET (EDT)
+
+    const oldGuardFires = (now: Date): boolean => {
+      const etStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        day: "numeric",
+        hour: "numeric",
+        hour12: false,
+      });
+      const [etDay, etHour] = etStr.split(" ");
+      // Old code: `if (etDay !== "1" || etHour !== "9") return;` — i.e. it FIRES
+      // only when NEITHER inequality holds. Model that firing condition directly.
+      return etDay === "1" && etHour === "9";
+    };
+
+    // The old guard is broken: it does NOT fire on the genuine target...
+    expect(oldGuardFires(target)).toBe(false);
+    // ...while the fixed guard DOES. If someone reintroduces the split() logic in
+    // the real helper, the behavioral test above goes RED against this same instant.
+    expect(isFirstOfMonthAtEtHour(target, 9)).toBe(true);
   });
 });
 
