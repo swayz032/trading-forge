@@ -594,13 +594,67 @@ export async function routeOrder(
   // stable idempotency key and DLQ replay / network retry cannot double-submit.
   const _routeOrderRequestTs = Date.now();
 
+  // ── Kill-switch scoping resolution (deep-scan fix-wave 2026-07-10) ──────────
+  // isHaltedForProduction() accepts an OPTIONAL {correlationId, accountKey, firmId}
+  // scope (kill-switch.ts deepscan18 C-C1). Before this fix, the call below passed
+  // ZERO opts, which had two independent consequences:
+  //   (a) the kill-switch minted its own random correlationId for every audit row
+  //       / SSE event tied to this check — unjoinable to the correlationId this
+  //       order actually carries, breaking 90-day trade reconstruction.
+  //   (b) with no accountKey/firmId scope, Layer 2 (daily loss) / Layer 3
+  //       (trailing DD) / Layer 7 (firm suspension) fall back to the documented
+  //       legacy GLOBAL behavior — iterate every active account/session and halt
+  //       on the FIRST breach found ANYWHERE, so a breach on an unrelated account
+  //       could halt THIS order's unrelated account.
+  //
+  // firmId is real, verified scope we can supply: a best-effort, fail-soft
+  // lookup of broker_accounts.firm_id for this accountId, run BEFORE the kill
+  // switch so Layer 7 (firm suspension) narrows to the correct firm. This is a
+  // passive read that can never block the order — on any error (or no matching
+  // row) it silently falls back to firmId=undefined, i.e. byte-identical to the
+  // pre-fix global-scope behavior for Layer 7 — so it does NOT weaken the "kill
+  // switch fires FIRST, no exceptions" contract below: the kill-switch decision
+  // remains the first thing that can actually reject the order.
+  //
+  // accountKey is deliberately OMITTED. The kill-switch's accountKey is
+  // resolveAccountKey() over a `paper_sessions` row (config.account_key, falling
+  // back to firmId) — a different identity space from broker_accounts.account_id
+  // (the UUID this function receives). There is no FK or naming convention tying
+  // one to the other today (see cross-symbol-pnl.ts's "account-key-uniqueness-
+  // sanity" check — the same documented gap). Fabricating an accountKey guess
+  // here that doesn't match any real session's resolved key would filter Layer
+  // 2/3's account list down to EMPTY and silently PASS those layers for this
+  // account — a new, worse fail-open regression. Passing firmId-only is a
+  // strict, honest improvement (Layer 7 correctly scoped) with zero regression
+  // risk; full accountId→accountKey resolution needs a schema-level fix
+  // (broker_accounts FK on paper_sessions or a shared account_key column) —
+  // out of scope for this fix.
+  let killSwitchFirmId: string | undefined;
+  try {
+    const firmIdRows = await db
+      .select({ firmId: brokerAccounts.firmId })
+      .from(brokerAccounts)
+      .where(eq(brokerAccounts.accountId, accountId))
+      .limit(1);
+    killSwitchFirmId = firmIdRows[0]?.firmId;
+  } catch (firmLookupErr) {
+    logger.warn(
+      { err: firmLookupErr, accountId, correlationId },
+      "broker-router: firmId prefetch for kill-switch scoping failed (non-blocking) — Layer 7 falls back to unscoped",
+    );
+    killSwitchFirmId = undefined;
+  }
+
   // ── F-2: Kill switch supremacy — FIRST gate, no exceptions ─────────────────
   // isHaltedForProduction() is fail-CLOSED: DB error → returns true → blocks.
   // This gate fires BEFORE pipeline check, account lookup, or anything else.
   // It is the unconditional production safety interlock for live order routing.
   let halted: boolean;
   try {
-    halted = await killSwitch.isHaltedForProduction();
+    halted = await killSwitch.isHaltedForProduction({
+      correlationId: correlationId ?? undefined,
+      firmId: killSwitchFirmId,
+    });
   } catch (killSwitchErr) {
     // Fail-CLOSED: if the check itself throws, treat as halted.
     // F-5: surface the error so silent halts are visible. Without this, every
