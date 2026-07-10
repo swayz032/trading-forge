@@ -15,6 +15,7 @@ import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } fr
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
 import { resolveCrossAssetContext } from "../lib/cross-asset-context.js";
+import { styleCTp1RiskPoints } from "../lib/style-c-tp1-risk.js";
 import {
   CONTRACT_SPECS,
   CONTRACT_CAP_MIN,
@@ -2988,18 +2989,39 @@ export async function evaluateSignals(
         const entryPrice = Number(openPos.entryPrice);
         const side = openPos.side;
 
-        // Compute the initial risk (R unit) using the same logic as checkStopLoss
-        let initialRiskPoints = 0;
+        // F-1 (re-scan 2026-07-10, HIGH): anchor the TP1 R-unit to the STATIC entry-time
+        // stop (openPos.initialStopPrice) — IDENTICAL to the actual TP1 partial-close
+        // computation in paper-execution-service.ts callExitHandler ("Defect 3 fix",
+        // ~line 3293, `stopPts = |entryPrice - initialStopPrice|`). PREVIOUS BUG: this
+        // BE+1 tracker (the ONLY site that moves the stop to break-even on TP1) recomputed
+        // R from the LIVE current-bar ATR every bar. Framework-overlay sets Style C stops as
+        // {type:"atr"} with no persisted ATR, so this tracker's TP1 target FLOATED with ATR
+        // while the real 33% partial-close fired on the fixed entry-time target. When ATR
+        // drifted UP, price hit the real TP1 (partial booked, contracts reduced) but this
+        // tracker's higher floating target hadn't triggered → the stop stayed at the ORIGINAL
+        // WIDE stop instead of moving to BE+1, silently widening runner risk for an unbounded
+        // duration and contradicting the documented "BE+1 on TP1 fill" invariant. Falling ATR
+        // moved the stop to BE+1 EARLY (non-backtest-matching exit). Both TP1 computations now
+        // read the same static entry-time R so the BE+1 move fires exactly when the real TP1 does.
+        // Legacy ATR fallback (consulted ONLY for pre-0179 null-initialStopPrice rows).
+        let atrFallbackPoints = 0;
         const stopCfg = config.stop_loss;
         if (stopCfg) {
           if (stopCfg.type === "atr") {
             const atrPeriod = stopCfg.atr_period ?? 14;
             const atrVal = indicators[`atr_${atrPeriod}`] ?? indicators["atr_14"] ?? 0;
-            initialRiskPoints = atrVal * (stopCfg.multiplier ?? 1.5);
+            atrFallbackPoints = atrVal * (stopCfg.multiplier ?? 1.5);
           } else {
-            initialRiskPoints = stopCfg.amount ?? 0;
+            atrFallbackPoints = stopCfg.amount ?? 0;
           }
         }
+        // F-1: single source of truth — static entry-time R (matches the real TP1
+        // partial-close), ATR only for the pre-0179 grandfather edge. See style-c-tp1-risk.ts.
+        const initialRiskPoints = styleCTp1RiskPoints({
+          entryPrice,
+          initialStopPrice: openPos.initialStopPrice,
+          atrFallbackPoints,
+        });
 
         if (initialRiskPoints > 0) {
           const tp1Target = side === "long"
