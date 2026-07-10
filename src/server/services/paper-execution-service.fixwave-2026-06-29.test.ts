@@ -382,7 +382,13 @@ describe("F1 — bookPartialClose: realizedPeakEquity and dailyPnlBreakdown upda
     expect(txUpdate).toBeDefined();
   });
 
-  it("F1c: dailyPnlBreakdown update fires after transaction as a separate outer update", async () => {
+  it("F1c: dailyPnlBreakdown update fires INSIDE the close transaction (M1 deepscan-6 fix)", async () => {
+    // F-3 (re-scan 2026-07-10): this test previously asserted the dailyPnlBreakdown write
+    // fired as a SEPARATE OUTER update (capturedOuterUpdates) — stale. The M1 deepscan-6 fix
+    // moved that write INSIDE the atomic close transaction (paper-execution-service.ts ~2663,
+    // `dailyPnlBreakdown: sql\`jsonb_set(...)\`` inside the tx update block, same pattern as
+    // realizedPeakEquity/totalTrades in F1a/F1b) so the daily P&L and the trade can never be
+    // half-committed. Assert the CORRECT behavior — it is part of the tx session update.
     mockRunPythonModuleImpl = () =>
       Promise.resolve({
         decision: "FILL_TP1_50PCT",
@@ -399,14 +405,13 @@ describe("F1 — bookPartialClose: realizedPeakEquity and dailyPnlBreakdown upda
     ];
 
     await updatePositionPrices("sess-fw-001", makePrices(), makeBarCtx());
-    // Flush multiple async layers: bookPartialClose (fire-and-forget) has several awaits
     for (let i = 0; i < 16; i++) await Promise.resolve();
 
-    // A separate db.update(paperSessions).set({dailyPnlBreakdown: ...}) should have fired
-    const dailyUpdate = capturedOuterUpdates.find(
+    // dailyPnlBreakdown is now part of the atomic transaction update (not a separate outer write).
+    const txDailyUpdate = capturedTxSessionUpdates.find(
       (u) => u && typeof u === "object" && "dailyPnlBreakdown" in (u as Record<string, unknown>),
     );
-    expect(dailyUpdate).toBeDefined();
+    expect(txDailyUpdate).toBeDefined();
   });
 });
 

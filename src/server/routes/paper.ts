@@ -9,7 +9,7 @@ import { openPosition, closePosition, updatePositionPrices, getExecutionQuality,
 import { computeAndPersistSessionFeedback } from "../services/paper-session-feedback-service.js";
 import { detectDrift } from "../services/drift-detection-service.js";
 import { calculateCorrelation, portfolioCorrelationMatrix } from "../services/correlation-service.js";
-import { startStream, stopStream, stopAllStreams, getActiveStreams, isStreaming, getBarBuffer } from "../services/paper-trading-stream.js";
+import { startStream, stopStream, stopAllStreams, getActiveStreams, isStreaming, getBarBuffer, runSerializedPerSession } from "../services/paper-trading-stream.js";
 import { logShadowSignal } from "../services/shadow-service.js";
 import { cleanupSession } from "../services/paper-signal-service.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
@@ -557,7 +557,13 @@ router.post("/prices", async (req, res) => {
     // mint a correlationId when the caller doesn't supply one so exit-handler
     // audit rows fired from this route aren't stuck at correlation_id:null.
     const correlationId = req.body.correlationId ?? randomUUID();
-    const result = await updatePositionPrices(sessionId, prices, undefined, { correlationId });
+    // F-2 (re-scan 2026-07-10): serialize against the live WS bar loop on this session so
+    // this external price update can't race the stream's updatePositionPrices (lost-update
+    // on unrealized equity / MAE / MFE that feed the cross-symbol DLL ladder). Chains on the
+    // same per-session lock the stream uses.
+    const result = await runSerializedPerSession(sessionId, () =>
+      updatePositionPrices(sessionId, prices, undefined, { correlationId }),
+    );
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
