@@ -231,7 +231,21 @@ describe("wiring contract — paper-signal-service threads cross-asset into weig
   // ANY content (a `key:` OR a `...spread`) between `...crossAssetCtx` and the closing `}`
   // is forbidden. This is structural, not enumerative — it can't be defeated by a novel
   // override shape because there is no position after the spread for one to occupy.
+  // F-6 (cert pass 7): the guard locates the literal by first-textual-match, so a DECOY
+  // `const weightedCtx` (with a `...crossAssetCtx` comment) placed earlier in this 6200-line
+  // file could hijack the anchor and let the REAL literal carry an override unchecked.
+  // Close it by asserting BOTH anchors are unique in the file — there is exactly one
+  // `const weightedCtx` and exactly one `...crossAssetCtx`, so the guard cannot mis-target.
+  it("has exactly ONE `const weightedCtx` and ONE `...crossAssetCtx` (guard cannot mis-target a decoy — F-6)", () => {
+    const ctxDecls = src.match(/\bconst\s+weightedCtx\b/g) ?? [];
+    expect(ctxDecls.length, `expected exactly 1 \`const weightedCtx\`, found ${ctxDecls.length} — the is-last guard cannot disambiguate`).toBe(1);
+    const spreads = src.match(/\.\.\.crossAssetCtx\b/g) ?? [];
+    expect(spreads.length, `expected exactly 1 \`...crossAssetCtx\`, found ${spreads.length}`).toBe(1);
+  });
+
   it("`...crossAssetCtx` is the FINAL entry in the weightedCtx literal (blocks ANY post-spread override — F-1b + F-5)", () => {
+    const ctxDecls = src.match(/\bconst\s+weightedCtx\b/g) ?? [];
+    expect(ctxDecls.length, "ambiguous weightedCtx decls — see the F-6 uniqueness test").toBe(1);
     const ctxStart = src.indexOf("const weightedCtx");
     expect(ctxStart).toBeGreaterThan(-1);
     // Closing `};` of the literal (the first at the literal's indentation depth).
