@@ -2503,9 +2503,34 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // On transaction rollback we emit a SEPARATE out-of-transaction
   // paper.trade_close_audit_failed row + notifyCritical Discord so the operator
   // can identify and manually reconcile the open position.
-  let trade: typeof paperTrades.$inferSelect;
+  let trade: typeof paperTrades.$inferSelect | null;
   try {
     const [tradeRow] = await dbConn.transaction(async (tx) => {
+      // 0. IDEMPOTENCY CLAIM (deep-scan CRIT-1, operator-ratified 2026-07-09):
+      //    Atomically CLAIM the close, guarded by isNull(closedAt), BEFORE inserting
+      //    the trade. This is LOCK-FLAG-INDEPENDENT (works whether or not
+      //    TF_POSITION_LOCKING is on — db-locks.ts is a no-op by default). If a
+      //    concurrent path already closed this position — the real race being a
+      //    per-symbol stop/trail/time-exit and a cross-symbol 95%-DLL
+      //    forceCloseAllPositions() both calling closePosition(sameId) in the same
+      //    async tick window — the UPDATE matches 0 rows and we abort with NO
+      //    duplicate paper_trades row, NO doubled equity/totalTrades, NO second audit.
+      const claimed = await tx
+        .update(paperPositions)
+        .set({
+          closedAt,
+          currentPrice: String(actualExit),
+          unrealizedPnl: "0",
+        })
+        .where(and(eq(paperPositions.id, positionId), isNull(paperPositions.closedAt)))
+        .returning({ id: paperPositions.id });
+
+      if (claimed.length === 0) {
+        // Lost the close race — another path already closed this position. Abort the
+        // transaction body (nothing inserted yet) and signal a benign idempotent no-op.
+        return [null];
+      }
+
       // 1. Insert closed trade — pnl column holds NET P&L; grossPnl and commission stored for audit/analytics
       const [insertedTrade] = await tx.insert(paperTrades).values({
         sessionId: pos.sessionId,
@@ -2539,12 +2564,9 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
         correlationId,
       }).returning();
 
-      // 2. Mark position as closed — unrealizedPnl resets to 0 (realized P&L lives in paperTrades)
-      await tx.update(paperPositions).set({
-        closedAt,
-        currentPrice: String(actualExit),
-        unrealizedPnl: "0",
-      }).where(eq(paperPositions.id, positionId));
+      // 2. (removed) Position close is now done atomically by the step-0 idempotency
+      //    CLAIM above (guarded by isNull(closedAt)) — re-updating here would be
+      //    redundant and would defeat the claim's 0-row guard.
 
       // 3. Update session equity atomically using NET P&L — prevents read-modify-write race on
       //    concurrent closes. totalTrades is incremented here so it always matches trade rows.
@@ -2601,7 +2623,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
 
       return [insertedTrade];
     });
-    trade = tradeRow;
+    trade = tradeRow ?? null;
   } catch (txErr) {
     // Transaction rolled back — trade close and audit both failed atomically.
     // Emit a SEPARATE observability row (out-of-transaction, best-effort) so the
@@ -2639,6 +2661,27 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       { positionId, correlationId: correlationId ?? null, errorType: "trade_close_tx_rollback" },
     );
     throw txErr;
+  }
+
+  // ─── CRIT-1 idempotent no-op: position was already closed by a concurrent path ──
+  // The step-0 CLAIM matched 0 rows (the double-close race). This is BENIGN — the
+  // real close (trade row, equity, audit) already happened exactly once on the winning
+  // path. Return a zero-effect result (no error, no Discord, no proven-trades increment)
+  // so callers that raced to close see a clean "already closed" outcome, not a duplicate.
+  if (trade === null) {
+    logger.info(
+      { positionId, correlationId },
+      "closePosition: position already closed by a concurrent path — idempotent no-op (no duplicate trade/equity)",
+    );
+    return {
+      trade: null,
+      pnl: 0,
+      grossPnl: 0,
+      commission: 0,
+      slippage: 0,
+      rollSpreadCost: 0,
+      alreadyClosed: true as const,
+    };
   }
 
   // ─── Proven-trades counter (fail-soft, never blocks close) ─────────────────
