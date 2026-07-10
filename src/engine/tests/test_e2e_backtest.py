@@ -175,12 +175,19 @@ class TestE2EBacktest:
             assert pnls[0] == pytest.approx(equity[1]["value"] - equity[0]["value"], abs=0.01)
 
     def test_walk_forward_mode(self):
-        """Walk-forward mode returns OOS metrics."""
+        """Plain walk-forward mode returns OOS metrics + 3 windows.
+
+        Pins wf_mode='plain' explicitly (deep-scan 2026-07-09 test-hygiene): the
+        default WF_MODE flipped to 'cpcv' on 2026-06-22, and cpcv returns
+        windows=[] (it produces combinatorial PATHS, not sequential windows), so
+        this window-count assertion was silently failing on the default path. This
+        test is specifically about plain-mode's sequential window splitting.
+        """
         from src.engine.walk_forward import run_walk_forward
 
         data = _make_trending_data(1000)
         request = self._make_request()
-        result = run_walk_forward(request, data=data, n_splits=3)
+        result = run_walk_forward(request, data=data, n_splits=3, wf_mode="plain")
 
         assert "oos_metrics" in result
         assert "windows" in result
