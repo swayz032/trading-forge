@@ -1258,10 +1258,20 @@ def _render_report() -> str:
     for r in AUDIT_RESULTS.values():
         lines.append(f"| {r['category']:>2} | {r['name']} | **{r['status']}** |")
     lines.append("")
-    if fail_count == 0:
+    if fail_count == 0 and unknown_count == 0:
         lines.append("**Verdict:** All 12 categories PASS. Proceed to W13.")
+    elif fail_count == 0 and unknown_count > 0:
+        # Deep-scan 2026-07-10 fix: a partial/crashed run (categories never called
+        # record()) must NOT print "All 12 PASS" just because nothing explicitly FAILED —
+        # UNKNOWN ≠ PASS. Previously the verdict ignored unknown_count entirely, so a run
+        # where 11/12 categories crashed still stamped "Proceed to W13", masking uncertified
+        # (and, on the last real full run, genuinely FAILING) categories.
+        lines.append(f"**Verdict:** INCONCLUSIVE — {unknown_count} categor{'y' if unknown_count == 1 else 'ies'} "
+                     "did not run (UNKNOWN, not PASS). Re-run the FULL A12 suite before trusting this report; "
+                     "do NOT proceed to W13 on a partial run.")
     else:
-        lines.append(f"**Verdict:** {fail_count} categor{'y' if fail_count == 1 else 'ies'} FAIL. "
+        lines.append(f"**Verdict:** {fail_count} categor{'y' if fail_count == 1 else 'ies'} FAIL"
+                     f"{f' + {unknown_count} UNKNOWN' if unknown_count else ''}. "
                      "Open bug-fix tickets per the per-category sections below before W13.")
     lines.append("")
     lines.append("---")

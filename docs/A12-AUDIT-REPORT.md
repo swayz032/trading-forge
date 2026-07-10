@@ -1,6 +1,6 @@
 # A12 — 12-Category Code Audit Report
 
-**Generated:** 2026-07-02 18:36:33 UTC  
+**Generated:** 2026-07-10 07:11:35 UTC  
 **Auditor:** W12 Team B (trading-forge-architect)  
 **Plan:** PART A §A12 of `C:\Users\tonio\.claude\plans\reflective-dancing-moth.md`  
 **Scope:** Read-only static + numerical audit of existing Trading Forge code.  
@@ -61,7 +61,7 @@
 
 **Evidence:**
 
-- np.roll(entries_np, 1) occurrences: 1
+- np.roll(entries_np, 1) occurrences: 2
   - np.roll(short_entries_np, 1) occurrences: 2
   - next-bar fill convention documented: OK
   - multi-TF lookahead doc: OK
@@ -245,7 +245,7 @@
 **Evidence:**
 
 - critical PnL fields using numeric(): 19/19 OK
-  - schema.ts jsonb() usages: 159
+  - schema.ts jsonb() usages: 160
   - db-locks.ts uses pg_advisory_xact_lock: OK
   - paper-execution-service uses withSessionLock >=2 times: OK
   - migrations using float8/double precision: none
