@@ -13649,6 +13649,35 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-09 Whole-Codebase Band-9 Census (in progress) — lifecycle shadow-gate + obs MED closed; paper-exec BAND 5 + obs CRIT staged
+
+**Mission:** operator /goal escalated from the ds22 six-domain scope to "every subsystem (73) at band 9." Run a real loop: independently measure each domain's honest band (doer≠grader), fix non-instrument defects directly, and stage instrument-touching fixes as ratification packets. Do NOT relabel; do NOT write gate/engine code on operator silence (standing protocol).
+
+**Method + constraint:** dispatched parallel deep-scan agents across domain groups; **server-side rate-limiting killed 3 of the first 6 fan-out agents** (transient "temporarily limiting requests" — also a tower-freeze risk). Pivoted to SEQUENTIAL self-scan + single sequential agents. This is slower but reliable.
+
+**CLOSED to genuine 9 (ratified + independently certified + landed to main):**
+- **`strategy_lifecycle` SHADOW→PAPER 0-signal false-green (HIGH)** — `shadow-to-paper-gate.ts` returned passed:true/legacy_unavailable at 0 shadow signals on the manual/n8n/HMAC path (training-serving-skew HARD gate false-green), while the cron fail-closes (`compareShadowToBacktest([])→insufficient_samples→continue/BLOCK` at lifecycle-service.ts:5128). A masking parity test fabricated a fictional cron. Operator RATIFIED fix-fail-closed+unify. Merged empty/legacy branch + insufficient-samples check into one fail-closed sample-size gate (0/null BLOCK); de-fabricated the parity test (real `compareShadowToBacktest`, added HIGH-1 fail-closed block); flipped T4/T5/T12/T16. RED-proven (revert→8 RED). Independent cert VERIFIED 8→9 after retiring stale legacy_unavailable docstring/type. `81d18ee`+`8d3c4e0`, merged main `5e298cd`.
+
+**FIXED non-instrument (no ratify needed) + landed:**
+- **observability MED — paper-journal-recon audit status** (`42589bf`, merged `62fb3a7`): `paper-journal-recon.ts:1176` was the ONLY writer remapping warning→success/critical→failure → buried WARN recon findings under status="success" (invisible to status='warning' queries; 57 other files write it literally). Now writes verbatim; live Discord alerts unaffected (queryability only). 20/20 test green (T3→critical, warns→warning).
+
+**STAGED — awaiting operator ratification (verified receipts; instrument-touching; recorded in memory `project_codebase_9_census_2026_07_09`):**
+- **paper-execution — BAND 5/9** (most severe): CRIT-1 double-close P&L race (`db-locks.ts:15` TF_POSITION_LOCKING default-off + `paper-execution-service.ts:~2543` closePosition UPDATE lacks `isNull(closedAt)` + no paper_trades unique constraint; pre-documented open in A12-AUDIT-REPORT.md:253); CRIT-2 kill-switch L2/L3/L7 fail-OPEN on 100ms timeout (`kill-switch.ts:120`+runLayerWithTimeout); HIGH-3 L2/L3 discover `status='active'` only (miss paused/stopped exposure); HIGH-4 compliance-freshness self-defeat (blocks all fills ~24h after last rules-doc edit); HIGH-5 TOCTOU (killSwitch checked once at entry, not before fill write); +3 MED parity. Operator AskUserQuestion (CRITICALs-first recommended) sent; away, held.
+- **observability CRIT — composite-health name-key mismatch** (`strategy-health-aggregator.ts:390/534` names vs `score-normalization.ts` weight keys) drops 2 of 13 subsystems from the composite while `n` counts them → corrupts Wave 28 Pass C activation evidence. PURE OBSERVABILITY today (gates nothing) but a measured value → staged.
+- **VIX-margin-expansion DORMANT** (known, `backtester.py:4174 if "vix" in df.columns` never true — no producer) — census-confirmed; instrument-touching + needs VIX feed.
+
+**Verification:** each landed fix RED-proven + (for the HIGH) independent accuracy-validator cert; 3 CI gates EXIT 0 on each land. Pre-existing unrelated failures identified and NOT attributed to my changes: `test_e2e_backtest::test_walk_forward_mode` (default-cpcv windows:[]) and m10-m13 shadow-signal `deltaExceedsThreshold` (both fail identically on base).
+
+**Band map so far:** X1–X6 = 9 (ds22) · lifecycle = fixed-to-9 · paper-exec = **5** (staged) · observability = **6** (CRIT staged / MED fixed) · confluence ≈ 8 (quick-look, no CRIT). **NOT measured yet:** full backtest engine, confluence (full), scout/extraction, quantum/RL, n8n/relay, slumhouse/frontend/pine/voice.
+
+**Carry-forward:**
+1. **Operator rulings needed to raise bands** — paper-exec batch (CRITICALs first), obs composite CRIT, CPCV-WFE-style items. Structural truth: most band-raising fixes are instrument-touching → gated by the standing protocol; the codebase CANNOT reach uniform 9 without operator ratification.
+2. Finish the census (scout, quantum, n8n, slumhouse, full-backtest) sequentially.
+3. Git hygiene: prune ds22/merge worktrees; quarantine diverged local checkout.
+4. LIVE-INFRA unchanged.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
