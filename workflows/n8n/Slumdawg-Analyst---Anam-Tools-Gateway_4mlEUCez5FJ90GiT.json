@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-06-22T23:33:04.036Z",
+  "updatedAt": "2026-07-10T15:28:22.893Z",
   "createdAt": "2026-05-25T19:33:55.358Z",
   "id": "4mlEUCez5FJ90GiT",
-  "name": "Slumdawg Analyst \u2014 Anam Tools Gateway",
+  "name": "Slumdawg Analyst — Anam Tools Gateway",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -20,9 +20,16 @@
         "httpMethod": "POST",
         "path": "slumdawg/ingest-youtube",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {},
+        "authentication": "headerAuth"
       },
-      "webhookId": "ad16e343-7248-4db2-99f4-bbeea2daaaad"
+      "webhookId": "ad16e343-7248-4db2-99f4-bbeea2daaaad",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FOP8I3ngTqwwqZ2",
+          "name": "TF webhook header auth"
+        }
+      }
     },
     {
       "id": "http-ingest",
@@ -47,10 +54,37 @@
         },
         "options": {
           "timeout": 180000
-        }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Idempotency-Key",
+              "value": "={{ 'slumdawg-ingest:' + $json.body.url }}"
+            },
+            {
+              "name": "X-Slumdawg-Signature",
+              "value": "={{ $json._slumdawgAuth.sig }}"
+            },
+            {
+              "name": "X-Slumdawg-Timestamp",
+              "value": "={{ $json._slumdawgAuth.ts }}"
+            }
+          ]
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
       },
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "toPhkc55VihQCGN4",
+          "name": "TF API Bearer (deepscan13)"
+        }
+      },
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "respond-ingest",
@@ -79,9 +113,16 @@
         "httpMethod": "POST",
         "path": "slumdawg/activity-today",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {},
+        "authentication": "headerAuth"
       },
-      "webhookId": "c4055196-4f44-4a20-afbc-2e53aa235400"
+      "webhookId": "c4055196-4f44-4a20-afbc-2e53aa235400",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FOP8I3ngTqwwqZ2",
+          "name": "TF webhook header auth"
+        }
+      }
     },
     {
       "id": "http-activity",
@@ -97,10 +138,33 @@
         "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/activity-today",
         "options": {
           "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Slumdawg-Signature",
+              "value": "={{ $json._slumdawgAuth.sig }}"
+            },
+            {
+              "name": "X-Slumdawg-Timestamp",
+              "value": "={{ $json._slumdawgAuth.ts }}"
+            }
+          ]
         }
       },
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "toPhkc55VihQCGN4",
+          "name": "TF API Bearer (deepscan13)"
+        }
+      },
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "respond-activity",
@@ -129,9 +193,16 @@
         "httpMethod": "POST",
         "path": "slumdawg/journal-today",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {},
+        "authentication": "headerAuth"
       },
-      "webhookId": "1296703f-9fe5-48e6-9e7f-c0789d5962cd"
+      "webhookId": "1296703f-9fe5-48e6-9e7f-c0789d5962cd",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FOP8I3ngTqwwqZ2",
+          "name": "TF webhook header auth"
+        }
+      }
     },
     {
       "id": "http-journal",
@@ -147,10 +218,33 @@
         "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/journal-today",
         "options": {
           "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Slumdawg-Signature",
+              "value": "={{ $json._slumdawgAuth.sig }}"
+            },
+            {
+              "name": "X-Slumdawg-Timestamp",
+              "value": "={{ $json._slumdawgAuth.ts }}"
+            }
+          ]
         }
       },
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "toPhkc55VihQCGN4",
+          "name": "TF API Bearer (deepscan13)"
+        }
+      },
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "respond-journal",
@@ -179,9 +273,16 @@
         "httpMethod": "POST",
         "path": "slumdawg/status-now",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {},
+        "authentication": "headerAuth"
       },
-      "webhookId": "6d7a818a-6985-4603-b0aa-d6dd08e57dc8"
+      "webhookId": "6d7a818a-6985-4603-b0aa-d6dd08e57dc8",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FOP8I3ngTqwwqZ2",
+          "name": "TF webhook header auth"
+        }
+      }
     },
     {
       "id": "http-status",
@@ -197,10 +298,33 @@
         "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/status-now",
         "options": {
           "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Slumdawg-Signature",
+              "value": "={{ $json._slumdawgAuth.sig }}"
+            },
+            {
+              "name": "X-Slumdawg-Timestamp",
+              "value": "={{ $json._slumdawgAuth.ts }}"
+            }
+          ]
         }
       },
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "toPhkc55VihQCGN4",
+          "name": "TF API Bearer (deepscan13)"
+        }
+      },
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "respond-status",
@@ -229,9 +353,16 @@
         "httpMethod": "POST",
         "path": "slumdawg/lifecycle",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {},
+        "authentication": "headerAuth"
       },
-      "webhookId": "4873dc9c-23bf-4da3-8ef2-887861dee2d1"
+      "webhookId": "4873dc9c-23bf-4da3-8ef2-887861dee2d1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2FOP8I3ngTqwwqZ2",
+          "name": "TF webhook header auth"
+        }
+      }
     },
     {
       "id": "http-lifecycle",
@@ -247,10 +378,33 @@
         "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/lifecycle/{{ $json.body.name || '' }}",
         "options": {
           "timeout": 30000
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Slumdawg-Signature",
+              "value": "={{ $json._slumdawgAuth.sig }}"
+            },
+            {
+              "name": "X-Slumdawg-Timestamp",
+              "value": "={{ $json._slumdawgAuth.ts }}"
+            }
+          ]
         }
       },
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "toPhkc55VihQCGN4",
+          "name": "TF API Bearer (deepscan13)"
+        }
+      },
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "respond-lifecycle",
@@ -265,10 +419,91 @@
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify($json) }}"
       }
+    },
+    {
+      "id": "sign-http-ingest",
+      "name": "Sign: ingest-youtube",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        100
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst path = \"/ingest-youtube\";\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+      }
+    },
+    {
+      "id": "sign-http-activity",
+      "name": "Sign: activity-today",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst path = \"/activity-today\";\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+      }
+    },
+    {
+      "id": "sign-http-journal",
+      "name": "Sign: journal-today",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        500
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst path = \"/journal-today\";\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+      }
+    },
+    {
+      "id": "sign-http-status",
+      "name": "Sign: status-now",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        700
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst path = \"/status-now\";\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+      }
+    },
+    {
+      "id": "sign-http-lifecycle",
+      "name": "Sign: lifecycle",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        350,
+        900
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst name = ($json.body && $json.body.name) ? String($json.body.name) : \"\"; const path = name ? ('/lifecycle/' + name) : '/lifecycle/';\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+      }
     }
   ],
   "connections": {
     "Webhook: ingest-youtube": {
+      "main": [
+        [
+          {
+            "node": "Sign: ingest-youtube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign: ingest-youtube": {
       "main": [
         [
           {
@@ -294,6 +529,17 @@
       "main": [
         [
           {
+            "node": "Sign: activity-today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign: activity-today": {
+      "main": [
+        [
+          {
             "node": "TF: activity-today",
             "type": "main",
             "index": 0
@@ -313,6 +559,17 @@
       ]
     },
     "Webhook: journal-today": {
+      "main": [
+        [
+          {
+            "node": "Sign: journal-today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign: journal-today": {
       "main": [
         [
           {
@@ -338,6 +595,17 @@
       "main": [
         [
           {
+            "node": "Sign: status-now",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign: status-now": {
+      "main": [
+        [
+          {
             "node": "TF: status-now",
             "type": "main",
             "index": 0
@@ -357,6 +625,17 @@
       ]
     },
     "Webhook: lifecycle": {
+      "main": [
+        [
+          {
+            "node": "Sign: lifecycle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign: lifecycle": {
       "main": [
         [
           {
@@ -387,11 +666,13 @@
   },
   "staticData": null,
   "meta": null,
+  "nodeGroups": [],
   "pinData": null,
-  "versionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
-  "activeVersionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
-  "versionCounter": 7,
+  "versionId": "ec936396-8d48-4c3d-8b9a-2195e77ea77d",
+  "activeVersionId": "ec936396-8d48-4c3d-8b9a-2195e77ea77d",
+  "versionCounter": 22,
   "triggerCount": 5,
+  "sourceWorkflowId": null,
   "shared": [
     {
       "updatedAt": "2026-05-25T19:33:55.358Z",
@@ -407,15 +688,16 @@
         "type": "personal",
         "icon": null,
         "description": null,
+        "customTelemetryTags": [],
         "creatorId": "9c696557-451d-4406-8914-ed7b33cfeeb0"
       }
     }
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-06-22T23:33:04.044Z",
-    "createdAt": "2026-06-22T23:33:04.044Z",
-    "versionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
+    "updatedAt": "2026-07-10T15:28:22.898Z",
+    "createdAt": "2026-07-10T15:28:22.898Z",
+    "versionId": "ec936396-8d48-4c3d-8b9a-2195e77ea77d",
     "workflowId": "4mlEUCez5FJ90GiT",
     "nodes": [
       {
@@ -431,9 +713,16 @@
           "httpMethod": "POST",
           "path": "slumdawg/ingest-youtube",
           "responseMode": "responseNode",
-          "options": {}
+          "options": {},
+          "authentication": "headerAuth"
         },
-        "webhookId": "ad16e343-7248-4db2-99f4-bbeea2daaaad"
+        "webhookId": "ad16e343-7248-4db2-99f4-bbeea2daaaad",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "2FOP8I3ngTqwwqZ2",
+            "name": "TF webhook header auth"
+          }
+        }
       },
       {
         "id": "http-ingest",
@@ -458,10 +747,37 @@
           },
           "options": {
             "timeout": 180000
-          }
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Idempotency-Key",
+                "value": "={{ 'slumdawg-ingest:' + $json.body.url }}"
+              },
+              {
+                "name": "X-Slumdawg-Signature",
+                "value": "={{ $json._slumdawgAuth.sig }}"
+              },
+              {
+                "name": "X-Slumdawg-Timestamp",
+                "value": "={{ $json._slumdawgAuth.ts }}"
+              }
+            ]
+          },
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth"
         },
         "retryOnFail": true,
-        "maxTries": 2
+        "maxTries": 2,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "toPhkc55VihQCGN4",
+            "name": "TF API Bearer (deepscan13)"
+          }
+        },
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "respond-ingest",
@@ -490,9 +806,16 @@
           "httpMethod": "POST",
           "path": "slumdawg/activity-today",
           "responseMode": "responseNode",
-          "options": {}
+          "options": {},
+          "authentication": "headerAuth"
         },
-        "webhookId": "c4055196-4f44-4a20-afbc-2e53aa235400"
+        "webhookId": "c4055196-4f44-4a20-afbc-2e53aa235400",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "2FOP8I3ngTqwwqZ2",
+            "name": "TF webhook header auth"
+          }
+        }
       },
       {
         "id": "http-activity",
@@ -508,10 +831,33 @@
           "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/activity-today",
           "options": {
             "timeout": 30000
+          },
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Slumdawg-Signature",
+                "value": "={{ $json._slumdawgAuth.sig }}"
+              },
+              {
+                "name": "X-Slumdawg-Timestamp",
+                "value": "={{ $json._slumdawgAuth.ts }}"
+              }
+            ]
           }
         },
         "retryOnFail": true,
-        "maxTries": 2
+        "maxTries": 2,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "toPhkc55VihQCGN4",
+            "name": "TF API Bearer (deepscan13)"
+          }
+        },
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "respond-activity",
@@ -540,9 +886,16 @@
           "httpMethod": "POST",
           "path": "slumdawg/journal-today",
           "responseMode": "responseNode",
-          "options": {}
+          "options": {},
+          "authentication": "headerAuth"
         },
-        "webhookId": "1296703f-9fe5-48e6-9e7f-c0789d5962cd"
+        "webhookId": "1296703f-9fe5-48e6-9e7f-c0789d5962cd",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "2FOP8I3ngTqwwqZ2",
+            "name": "TF webhook header auth"
+          }
+        }
       },
       {
         "id": "http-journal",
@@ -558,10 +911,33 @@
           "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/journal-today",
           "options": {
             "timeout": 30000
+          },
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Slumdawg-Signature",
+                "value": "={{ $json._slumdawgAuth.sig }}"
+              },
+              {
+                "name": "X-Slumdawg-Timestamp",
+                "value": "={{ $json._slumdawgAuth.ts }}"
+              }
+            ]
           }
         },
         "retryOnFail": true,
-        "maxTries": 2
+        "maxTries": 2,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "toPhkc55VihQCGN4",
+            "name": "TF API Bearer (deepscan13)"
+          }
+        },
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "respond-journal",
@@ -590,9 +966,16 @@
           "httpMethod": "POST",
           "path": "slumdawg/status-now",
           "responseMode": "responseNode",
-          "options": {}
+          "options": {},
+          "authentication": "headerAuth"
         },
-        "webhookId": "6d7a818a-6985-4603-b0aa-d6dd08e57dc8"
+        "webhookId": "6d7a818a-6985-4603-b0aa-d6dd08e57dc8",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "2FOP8I3ngTqwwqZ2",
+            "name": "TF webhook header auth"
+          }
+        }
       },
       {
         "id": "http-status",
@@ -608,10 +991,33 @@
           "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/status-now",
           "options": {
             "timeout": 30000
+          },
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Slumdawg-Signature",
+                "value": "={{ $json._slumdawgAuth.sig }}"
+              },
+              {
+                "name": "X-Slumdawg-Timestamp",
+                "value": "={{ $json._slumdawgAuth.ts }}"
+              }
+            ]
           }
         },
         "retryOnFail": true,
-        "maxTries": 2
+        "maxTries": 2,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "toPhkc55VihQCGN4",
+            "name": "TF API Bearer (deepscan13)"
+          }
+        },
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "respond-status",
@@ -640,9 +1046,16 @@
           "httpMethod": "POST",
           "path": "slumdawg/lifecycle",
           "responseMode": "responseNode",
-          "options": {}
+          "options": {},
+          "authentication": "headerAuth"
         },
-        "webhookId": "4873dc9c-23bf-4da3-8ef2-887861dee2d1"
+        "webhookId": "4873dc9c-23bf-4da3-8ef2-887861dee2d1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "2FOP8I3ngTqwwqZ2",
+            "name": "TF webhook header auth"
+          }
+        }
       },
       {
         "id": "http-lifecycle",
@@ -658,10 +1071,33 @@
           "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/lifecycle/{{ $json.body.name || '' }}",
           "options": {
             "timeout": 30000
+          },
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "X-Slumdawg-Signature",
+                "value": "={{ $json._slumdawgAuth.sig }}"
+              },
+              {
+                "name": "X-Slumdawg-Timestamp",
+                "value": "={{ $json._slumdawgAuth.ts }}"
+              }
+            ]
           }
         },
         "retryOnFail": true,
-        "maxTries": 2
+        "maxTries": 2,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "toPhkc55VihQCGN4",
+            "name": "TF API Bearer (deepscan13)"
+          }
+        },
+        "waitBetweenTries": 2000,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "respond-lifecycle",
@@ -676,10 +1112,91 @@
           "respondWith": "json",
           "responseBody": "={{ JSON.stringify($json) }}"
         }
+      },
+      {
+        "id": "sign-http-ingest",
+        "name": "Sign: ingest-youtube",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          350,
+          100
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst path = \"/ingest-youtube\";\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+        }
+      },
+      {
+        "id": "sign-http-activity",
+        "name": "Sign: activity-today",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          350,
+          300
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst path = \"/activity-today\";\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+        }
+      },
+      {
+        "id": "sign-http-journal",
+        "name": "Sign: journal-today",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          350,
+          500
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst path = \"/journal-today\";\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+        }
+      },
+      {
+        "id": "sign-http-status",
+        "name": "Sign: status-now",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          350,
+          700
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst path = \"/status-now\";\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+        }
+      },
+      {
+        "id": "sign-http-lifecycle",
+        "name": "Sign: lifecycle",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          350,
+          900
+        ],
+        "parameters": {
+          "language": "javaScript",
+          "jsCode": "const crypto = require('crypto');\nconst secret = $env.SLUMDAWG_WEBHOOK_SECRET;\nif (!secret) { throw new Error('SLUMDAWG_WEBHOOK_SECRET not set on this n8n environment'); }\nconst name = ($json.body && $json.body.name) ? String($json.body.name) : \"\"; const path = name ? ('/lifecycle/' + name) : '/lifecycle/';\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst sig = crypto.createHmac('sha256', secret).update(`${ts}:${path}`).digest('hex');\nreturn { ...$json, _slumdawgAuth: { ts, sig, path } };"
+        }
       }
     ],
     "connections": {
       "Webhook: ingest-youtube": {
+        "main": [
+          [
+            {
+              "node": "Sign: ingest-youtube",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sign: ingest-youtube": {
         "main": [
           [
             {
@@ -705,6 +1222,17 @@
         "main": [
           [
             {
+              "node": "Sign: activity-today",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sign: activity-today": {
+        "main": [
+          [
+            {
               "node": "TF: activity-today",
               "type": "main",
               "index": 0
@@ -724,6 +1252,17 @@
         ]
       },
       "Webhook: journal-today": {
+        "main": [
+          [
+            {
+              "node": "Sign: journal-today",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sign: journal-today": {
         "main": [
           [
             {
@@ -749,6 +1288,17 @@
         "main": [
           [
             {
+              "node": "Sign: status-now",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sign: status-now": {
+        "main": [
+          [
+            {
               "node": "TF: status-now",
               "type": "main",
               "index": 0
@@ -771,6 +1321,17 @@
         "main": [
           [
             {
+              "node": "Sign: lifecycle",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Sign: lifecycle": {
+        "main": [
+          [
+            {
               "node": "TF: lifecycle",
               "type": "main",
               "index": 0
@@ -790,24 +1351,25 @@
         ]
       }
     },
+    "nodeGroups": [],
     "authors": "Tonio Scott",
     "name": null,
     "description": null,
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-06-22T23:33:04.245Z",
-        "id": 13,
+        "createdAt": "2026-07-10T15:28:22.969Z",
+        "id": 224,
         "workflowId": "4mlEUCez5FJ90GiT",
-        "versionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
+        "versionId": "ec936396-8d48-4c3d-8b9a-2195e77ea77d",
         "event": "deactivated",
         "userId": "9c696557-451d-4406-8914-ed7b33cfeeb0"
       },
       {
-        "createdAt": "2026-06-22T23:33:04.359Z",
-        "id": 14,
+        "createdAt": "2026-07-10T15:28:23.023Z",
+        "id": 225,
         "workflowId": "4mlEUCez5FJ90GiT",
-        "versionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
+        "versionId": "ec936396-8d48-4c3d-8b9a-2195e77ea77d",
         "event": "activated",
         "userId": "9c696557-451d-4406-8914-ed7b33cfeeb0"
       }
