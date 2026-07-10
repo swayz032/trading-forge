@@ -2876,8 +2876,14 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   });
   _scheduledJobs.add("system-map-drift");
 
-  // ─── Compliance rule drift check — weekly Sunday midnight ET ──
-  registerJob("compliance-rule-drift", 7 * 24 * 60 * 60 * 1000, async () => {
+  // ─── Compliance rule drift check + freshness heartbeat — every 12h ──
+  // HIGH-4 (2026-07-09, ratified): cadence tightened from weekly → 12h. The drift check
+  // now ALSO re-stamps complianceRulesets.retrievedAt on a no-drift pass (see
+  // compliance-refresh-service.ts), and that heartbeat MUST fire well within the 24h
+  // freshness window (compliance_gate.py RULESET_MAX_AGE_HOURS) or the gate goes stale and
+  // hard-rejects all fills. 12h gives a 2× safety margin; the check is lightweight
+  // (read one doc, hash, compare, re-stamp). Drift Discord still fires only on a real change.
+  registerJob("compliance-rule-drift", 12 * 60 * 60 * 1000, async () => {
     const { checkComplianceRuleDrift } = await import("./services/compliance-refresh-service.js");
     const result = await checkComplianceRuleDrift();
     if (result.drifted) {
