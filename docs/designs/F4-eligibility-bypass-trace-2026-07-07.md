@@ -863,3 +863,18 @@ Pre-registered zero↔nonzero tripwire fired on 7 specs (traded in G0, zero in G
 - **H3 (data changed): MOOT** (cause confirmed H5 not data). aws cli absent for S3 etags; snapshot identity via engine `dataset_hash` (content hash, better than etag) — G4 hashes captured (`/tmp/g4_hashes.txt`), becomes STANDING validity-block field from today. G0 shipped NO dataset_hash = its own finding (result-claim scoping needs snapshot identity; fixed forward here).
 
 ### ★★ LESSON 7 (pin to launch protocol) — the flag gates the FEATURE, never the FIX. A fix shipped flag-gated (`TF_OR_BRANCHES_ENABLED`), but PARTS applied UNCONDITIONALLY (the 2 direction-correctness bugs), and those unconditional parts carried SIGNAL-MOVING blast radius with NO count receipt — because "it's behind a flag" silently extended to components the flag didn't cover. **PROTOCOL: every ratification packet must DECLARE which parts of a change are flag-gated vs unconditional; unconditional parts that can move trade counts SHIP WITH THEIR MATERIALITY RECEIPT at land time.** 7th confirmation of the invisible-error class — it hides in the gap between what a change CLAIMS to gate and what it ACTUALLY touches. Joins the engagement-evidence / feed-existence law.
+
+---
+
+## MODE A/B LAUNCH TABLE (epoch accounting for the validity block) — all same engine (G4/cfa0cb3, backtester 8501) + same env (TF_ALLOW_FIXED_1=true) → NO epoch boundary, just a schedule history.
+- **ep1** (first agent launch, no TF_ALLOW_FIXED_1): 17 fixed_1 validation errors → invalid, killed. Fix = env flag (launch-level, not engine).
+- **ep2** (double-launch race): kill of ep1 failed while relaunch started → 2 batteries on one manifest → TOWER FREEZE. Both died. Lesson: verify kill before relaunch.
+- **ep3** (PID 363, concurrency 3): reached 24/78, OOM-died ~01:48 on 1m specs (attributed to my-kill, CORRECTED to OOM).
+- **ep-relaunch** (concurrency 3, --resume): reached 34/78, OOM-died ~10:51 — 3 one-minute specs abreast (2.1M-bar windows) exhausted RAM. "no freeze at 3" was premature; it hadn't happened yet.
+- **ep (concurrency 2, --resume)**: minutes-old, killed before it could OOM on the 1m spec it immediately picked.
+- **★ FINAL SPLIT-BY-WEIGHT (the schedule that matches the machine's physics):**
+  - **PHASE 1** (PID 1955, non-1m filtered list = 69 specs [15m/1h/30m/4h/5m], concurrency 2, --resume): 46 pending. Memory-light majority; two 5m abreast ≈ one 1m's footprint; population has never OOM'd. 1m-in-phase1 = 0 (verified).
+  - **PHASE 2** (queued behind, 1m-only filtered list = 9 specs, 4 pending, concurrency 1 SOLO): the killers quarantined to single-slot lane. 2M+-bar 1m windows are provably safe solo.
+- **ROOT DIAGNOSIS:** never the concurrency LEVEL — heterogeneous job weights sharing homogeneous slots. 2 deaths, both 1m-concurrent, ZERO deaths anywhere else. Fix = partition by weight, not throttle globally.
+- **PINNED OPERATIONAL FACT (final):** 1m specs (2M+ bar windows) run SOLO, full stop (supersedes solo-or-duo). Future batteries incl. (b)'s cert track: schedule by timeframe weight from the start — heavy specs get own phase, never shared slots.
+- **PRE-COMMITS ARMED:** phase-1 OOM → global concurrency 1 immediately (no round-trip); manifest hygiene proven (dedupe + drop MemoryError/partial, 28 unique-complete stands).
