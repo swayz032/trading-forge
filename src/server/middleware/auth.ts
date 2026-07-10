@@ -118,7 +118,12 @@ export async function authMiddleware(
   // 3. Discord Slumhouse cookie — read-only surface
   if (req.method === "GET" || req.method === "HEAD") {
     const cookieHeader = req.headers.cookie ?? "";
-    const m = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
+    // Anchor to a cookie boundary (deep-scan 2026-07-09, LOW): without (?:^|;\s*) a
+    // cookie whose name merely ENDS WITH COOKIE_NAME (e.g. `xslumhouse_sid=…`)
+    // substring-matches and gets decoded as the session value. Not privilege-escalation
+    // (still must pass verifySession HMAC) but a defense-in-depth gap — align to the
+    // already-hardened siblings require-session.ts:43 + this file's slumhouse parser.
+    const m = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`));
     if (m) {
       const ver = verifySession(decodeURIComponent(m[1]));
       if (ver.ok) {

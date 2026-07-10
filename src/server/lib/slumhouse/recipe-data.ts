@@ -46,7 +46,13 @@ export interface RecipeData {
     worstYearRaw: number;          // raw $ for chart math
     bestYearRaw: number;
     medianYearRaw: number;
-    distribution: number[];        // up to ~1000 final-year P&Ls; empty if MC didn't expose it (then UI reconstructs a bell from the 3 percentiles)
+    distribution: number[];        // up to ~1000 final-year P&Ls; empty if MC didn't expose a path array
+    // deep-scan 2026-07-09 (MED, no-fabrication contract): TRUE when `distribution` is
+    // empty and the UI would otherwise SYNTHESIZE a bell from the 3 percentiles. The
+    // frontend MUST label or suppress the histogram when this is true — a synthesized
+    // curve must never render as a real 1000-path Monte Carlo outcome (the prior ds22
+    // fake-MC-histogram fabrication class, closed here at the data-contract seam).
+    distributionIsSynthetic: boolean;
     ruinPct: number;               // 0–100, used to size the "blew up" tail visually
   };
   calendar: Array<{ date: string; pnl: number; trades: number }>;
@@ -170,6 +176,8 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
       if (distribution.length > 0) break;
     }
   }
+  // No real MC path array → any histogram the UI draws is synthesized, not observed.
+  const distributionIsSynthetic = distribution.length === 0;
 
   // Slumdawg score — Wave 28 composite normalized to 0-100
   const compositeRaw = Number(health?.composite_score ?? 0);
@@ -376,6 +384,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
       bestYearRaw: bestYear,
       medianYearRaw: medianYear,
       distribution,
+      distributionIsSynthetic,
       ruinPct: Math.round(Math.min(1, Math.max(0, ciHigh)) * 100),
     },
     calendar: dailyList,
