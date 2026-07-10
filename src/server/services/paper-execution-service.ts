@@ -2192,6 +2192,53 @@ export async function openPosition(sessionId: string, params: {
         } as unknown as ExitPlanWithRuntimeState)
       : (exitPlanForInsert ?? undefined);
 
+  // HIGH-5 TOCTOU re-check (deep-scan 2026-07-09, ratified): the kill switch was checked
+  // ONCE at openPosition entry (~line 752), but ~1400 lines of work run before this fill
+  // write — session lock, GAP checks, and the two-stage compliance gate (whose freshness
+  // check alone budgets a 3s Python subprocess). Production mode can flip to HALT, or the
+  // account can cross a DLL/CME-outage/firm-suspension threshold, inside that window, and
+  // the already-in-flight order would fill un-rechecked. Re-check immediately before the
+  // transaction commit — cheap (5s in-memory cache, KillSwitch.CACHE_TTL_MS). Fail-CLOSED
+  // on read error (block the fill) — a broken kill-switch read must not let an order slip.
+  try {
+    if (await killSwitch.isHaltedForProduction({ correlationId, accountKey: context?.accountKey, firmId: context?.firmId })) {
+      logger.warn(
+        { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side, reason: "production_mode_halt_toctou" },
+        "paper-execution.production-halted (TOCTOU): kill switch tripped between entry check and fill write — blocking fill",
+      );
+      db.insert(auditLog).values({
+        action: "paper.entry_blocked",
+        entityType: "paper_session",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        input: { sessionId, symbol: params.symbol, side: params.side } as Record<string, unknown>,
+        result: { reason: "production_halt_toctou", blocked: true, stage: "pre_fill_write" } as Record<string, unknown>,
+        status: "success",
+        correlationId,
+      }).catch((err) => logger.error({ err }, "paper-execution: TOCTOU halt audit_log write failed (non-blocking)"));
+      broadcastSSE("paper:entry-blocked-production-halt", { sessionId, symbol: params.symbol, side: params.side, reason: "production_halt_toctou", correlationId });
+      return {
+        position: null,
+        executionResult: {
+          positionId: "", entryPrice: 0, contracts: params.contracts, slippage: 0,
+          expectedPrice: params.signalPrice, actualPrice: 0, arrivalPrice: params.signalPrice,
+          implementationShortfall: 0, fillRatio: 0, filled: false,
+        } satisfies ExecutionResult,
+      };
+    }
+  } catch (err) {
+    logger.error({ err, fn: "openPosition", sessionId, symbol: params.symbol }, "paper-execution: TOCTOU kill-switch re-check read error — failing CLOSED (blocking fill)");
+    broadcastSSE("paper:entry-blocked-production-halt", { sessionId, symbol: params.symbol, side: params.side, reason: "production_halt_toctou_read_error", correlationId });
+    return {
+      position: null,
+      executionResult: {
+        positionId: "", entryPrice: 0, contracts: params.contracts, slippage: 0,
+        expectedPrice: params.signalPrice, actualPrice: 0, arrivalPrice: params.signalPrice,
+        implementationShortfall: 0, fillRatio: 0, filled: false,
+      } satisfies ExecutionResult,
+    };
+  }
+
   // FIX 3 (Track M): wrap position INSERT + paper.trade_open audit INSERT in a single
   // transaction so they are atomic. Previously a crash between the two writes left an
   // open paper_positions row with no audit trail — the promotion gate has no evidence
