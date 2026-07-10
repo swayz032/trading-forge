@@ -34,7 +34,12 @@
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { systemState, auditLog, weeklyDriftReports, brokerAccounts, paperSessions, type ProductionMode } from "../db/schema.js";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
+// HIGH-3 (deep-scan 2026-07-09, ratified): Layer 2/3 must discover accounts across the
+// SAME session statuses the DLL aggregation treats as live exposure — a paused/stopped
+// session's OPEN positions are still firm exposure. Single source of truth = the constant
+// cross-symbol-pnl.ts already uses, so the two can never drift.
+import { DLL_AGGREGATE_SESSION_STATUSES } from "../services/cross-symbol-pnl.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
@@ -433,7 +438,9 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
         startingCapital: paperSessions.startingCapital,
       })
       .from(paperSessions)
-      .where(eq(paperSessions.status, "active"));
+      // HIGH-3: include paused/stopped sessions — their open positions are live firm
+      // exposure the DLL/trailing-DD force-close must still evaluate (was "active" only).
+      .where(inArray(paperSessions.status, [...DLL_AGGREGATE_SESSION_STATUSES]));
 
     // Group active sessions by RESOLVED account key (not raw firmId) — two
     // sessions on the same account must be evaluated TOGETHER (C-1 fix above).
@@ -656,7 +663,9 @@ async function checkLayer3TrailingDD(scopeAccountKey?: string): Promise<HaltDeci
         realizedPeakEquity: paperSessions.realizedPeakEquity,
       })
       .from(paperSessions)
-      .where(eq(paperSessions.status, "active"));
+      // HIGH-3: include paused/stopped sessions — their open positions are live firm
+      // exposure the DLL/trailing-DD force-close must still evaluate (was "active" only).
+      .where(inArray(paperSessions.status, [...DLL_AGGREGATE_SESSION_STATUSES]));
 
     // deepscan18 C-C1: scope to the caller's own account when supplied — same
     // resolveAccountKey() used by Layer 2/cross-symbol-pnl.ts, so a scoped
