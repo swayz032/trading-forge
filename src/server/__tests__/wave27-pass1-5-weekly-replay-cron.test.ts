@@ -432,7 +432,7 @@ describe("Wave 27 Pass 1.5 A2 — quantum-replay-weekly-service", () => {
     // Verify the job is within the _PIPELINE_GATE_EXEMPT block (either in the static Set
     // initializer or as a .add() call). A simple check: both the Set definition and the
     // job name are present in the same file — the static Set at ~line 335 includes it.
-    const gateExemptIdx = schedulerSrc.indexOf("_PIPELINE_GATE_EXEMPT");
+    const gateExemptIdx = schedulerSrc.indexOf("_PIPELINE_GATE_EXEMPT = new Set");
     const jobIdx = schedulerSrc.indexOf('"quantum-replay-weekly-analysis"');
     expect(gateExemptIdx).toBeGreaterThan(-1);
     expect(jobIdx).toBeGreaterThan(-1);

@@ -171,8 +171,8 @@ describe("Wave 25 Pass 2 Y-1 — weekly-drift cron pipeline-gate-exempt", () => 
     //   Form A: listed in the Set([...]) initializer
     //   Form B: _PIPELINE_GATE_EXEMPT.add("weekly-drift-2sigma-check")
     const exemptSetSection = schedulerSrc.slice(
-      schedulerSrc.indexOf("_PIPELINE_GATE_EXEMPT"),
-      schedulerSrc.indexOf("_PIPELINE_GATE_EXEMPT") + 3000,
+      schedulerSrc.indexOf("_PIPELINE_GATE_EXEMPT = new Set"),
+      schedulerSrc.indexOf("_PIPELINE_GATE_EXEMPT = new Set") + 3000,
     );
 
     const isExempted =

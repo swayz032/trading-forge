@@ -309,15 +309,17 @@ describe("runCompositeHealthDailyDigest", () => {
     // Verify 4 required registrations in scheduler.ts
     expect(src).toContain('"composite-health-daily-digest"');
     // _PIPELINE_GATE_EXEMPT contains the job
-    const exemptIdx = src.indexOf("_PIPELINE_GATE_EXEMPT");
+    const exemptIdx = src.indexOf("_PIPELINE_GATE_EXEMPT = new Set");
     const exemptBlock = src.slice(exemptIdx, src.indexOf("])", exemptIdx) + 2);
     expect(exemptBlock).toContain('"composite-health-daily-digest"');
     // registerJob call
     expect(src).toContain('registerJob("composite-health-daily-digest"');
-    // cron.schedule call
+    // F-2 (obs re-scan 2026-07-10): the digest schedules via the DST-safe `scheduleUtc(...)`
+    // wrapper (double-fire 21,22 UTC + 17:00-ET guard), NOT a bare `cron.schedule` — the old
+    // assertion was stale (the scheduler moved to scheduleUtc). Assert the real call.
     const cronIdx = src.lastIndexOf('registerJob("composite-health-daily-digest"');
     const cronRegion = src.slice(cronIdx, cronIdx + 2000);
-    expect(cronRegion).toContain("cron.schedule");
+    expect(cronRegion).toContain("scheduleUtc");
     // _scheduledJobs.add
     expect(cronRegion).toContain('_scheduledJobs.add("composite-health-daily-digest")');
   });
