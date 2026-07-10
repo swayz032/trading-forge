@@ -4622,7 +4622,11 @@ def run_backtest(
             # degraded. Apply the identical Stage 2 model to the short mask
             # so both directions share the same fill-realism contract.
             short_adjusted_sizes, _short_vol_fill_ratios, _short_partial_fill_audit = (
-                apply_volume_partial_fills(short_entries_np, short_adjusted_sizes, df)
+                # next_bar_fill=True (HIGH bar-align fix 2026-07-09): short_entries_np is
+                # rolled +1 identically to the long side, so shorts also fill on bar N+1
+                # and must degrade against the execution bar. Omitting it (the long-only
+                # asymmetry an independent cert caught) left shorts on legacy same-bar.
+                apply_volume_partial_fills(short_entries_np, short_adjusted_sizes, df, next_bar_fill=True)
             )
             # Merge short-side counts into the long-side audit dict so
             # engine_audit.partial_fill_modeled reflects BOTH directions
