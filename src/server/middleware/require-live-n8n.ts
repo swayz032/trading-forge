@@ -31,7 +31,15 @@ const CACHE_TTL_MS = 60_000;
 
 export async function computeLiveActiveWorkflowHash(): Promise<string | null> {
   const baseUrl = process.env.N8N_BASE_URL ?? "http://localhost:5678";
-  const apiKey = process.env.N8N_API_KEY;
+  // deep-scan 2026-07-09 (MED, non-instrument): canonical prod var is TF_N8N_API_KEY
+  // (CLAUDE.md §15a) — reading only the legacy N8N_API_KEY made this guard silently
+  // inert in production (returns null → soft-mode passthrough → "query live n8n before
+  // scout-ideas" enforcement never fired). Mirror the audit script's fallback chain
+  // (audit-n8n-workflows.mjs): TF_N8N_API_KEY > RAILWAY_N8N_API_KEY > legacy N8N_API_KEY.
+  const apiKey =
+    process.env.TF_N8N_API_KEY ??
+    process.env.RAILWAY_N8N_API_KEY ??
+    process.env.N8N_API_KEY;
   if (!apiKey) return null;
 
   try {
