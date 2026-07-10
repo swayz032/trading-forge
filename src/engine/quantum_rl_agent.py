@@ -2191,6 +2191,18 @@ def compute_rl_kill_switch_state(
 ) -> dict:
     """Compare RL-challenger vs baseline Sharpe over the last N paper sessions.
 
+    ⚠️ DEAD CODE — SUPERSEDED, DO NOT WIRE WITHOUT FIXING THE SQL (deep-scan 2026-07-09).
+    The production composite-health kill-switch path uses the correct TS mirror
+    `src/server/lib/rl-signal-fetcher.ts::_computeKillSwitchState()` (which reads
+    `quantum_rl_runs`). This Python function has NO production callers (only tests).
+    Its SQL below queries columns that DO NOT EXIST on `paper_positions`
+    (`paper_account_routing` + `strategy_id` + `status` live elsewhere;
+    `realized_pnl` is `paper_trades.pnl`) — so against a real schema it throws,
+    the exception is swallowed, and it returns should_dormant=False forever
+    (falsely-green). Before wiring this anywhere, rewrite the query to join
+    paper_positions→paper_sessions (for strategy_id), read P&L from paper_trades.pnl,
+    and read paper_account_routing from `strategies`.
+
     Queries paper_positions grouped by paper_account_routing ('baseline' vs
     'rl-challenger') and computes a rolling Sharpe for each over the last
     lookback_sessions closed sessions.
@@ -2265,8 +2277,11 @@ def compute_rl_kill_switch_state(
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             # Query closed paper positions for this strategy grouped by routing
-            # paper_account_routing is a TEXT column on paper_positions (C.3 will add it)
-            # Fail-soft if column doesn't exist yet (pre-C.3 schema)
+            # ⚠️ BROKEN SQL (dead code — see function docstring): these columns do
+            # NOT exist on paper_positions. paper_account_routing lives on `strategies`
+            # (migration 0159), strategy_id/status are absent (paper_positions has
+            # sessionId + closedAt), realized_pnl is `paper_trades.pnl`. This throws
+            # against a real schema; the except below swallows it. Fix before wiring.
             try:
                 cur.execute(
                     """
@@ -2291,8 +2306,10 @@ def compute_rl_kill_switch_state(
                     elif routing == _RL_ROUTE:
                         rl_pnls.append(pnl)
             except Exception as query_exc:
-                _rl_logger.debug(
-                    "compute_rl_kill_switch_state: paper_positions query failed (%s) — using empty lists",
+                # WARN (was DEBUG): a real schema break here silently disables the
+                # kill switch (empty lists → should_dormant=False). Make it visible.
+                _rl_logger.warning(
+                    "compute_rl_kill_switch_state: paper_positions query failed (%s) — using empty lists (see DEAD-CODE note in docstring)",
                     query_exc,
                 )
     finally:
