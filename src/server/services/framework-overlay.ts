@@ -342,6 +342,16 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
     warnings.push(`stop_loss.type=${stop.type} is non-structural; CLAUDE.md §13 forbids fixed-point stops. Replacing with atr 1.5x.`);
     if (cfg.strategy) cfg.strategy.stop_loss = { type: "atr", multiplier: FRAMEWORK.stopFloorAtrMultiple };
     applied.push("stop_loss <- atr 1.5x (framework override)");
+  } else if (!stop) {
+    // F-3 (scout re-scan 2026-07-10, defense-in-depth): the two branches above both require
+    // an EXISTING stop_loss — if a caller (or a future refactor of one) omits stop_loss
+    // entirely, the overlay silently no-op'd and would ship a strategy with ZERO structural
+    // stop enforcement. All 5 current callers construct an ATR default before calling here,
+    // so this was not live — but the overlay is the AUTHORITATIVE structural-stop enforcer,
+    // so the invariant must hold structurally (by the overlay), not by caller convention.
+    // Inject the framework ATR floor when absent.
+    if (cfg.strategy) cfg.strategy.stop_loss = { type: "atr", multiplier: FRAMEWORK.stopFloorAtrMultiple };
+    applied.push(`stop_loss <- atr ${FRAMEWORK.stopFloorAtrMultiple}x (framework default — none supplied)`);
   }
 
   // Wave 10: position_size type is now "risk_derived_pyramid".
