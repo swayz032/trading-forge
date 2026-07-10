@@ -4538,8 +4538,13 @@ def run_backtest(
         # Stage 2: Volume-based partial fill (HIGH #6).
         # Apply AFTER the RSI gate so we only degrade fills that passed Stage 1.
         # Env var BACKTEST_PARTIAL_FILL_ENABLED controls activation (default: true).
+        # next_bar_fill=True (HIGH bar-alignment fix 2026-07-09): this engine fills
+        # a signal-bar-N order on bar N+1 (np.roll below), so the order consumes bar
+        # N+1's volume — compute the degradation ratio against the execution bar, not
+        # the signal bar. Sizes stay signal-aligned here and are re-aligned to the
+        # rolled entries after the shift below.
         sizes, _vol_fill_ratios, _partial_fill_audit = apply_volume_partial_fills(
-            entries_np, sizes, df,
+            entries_np, sizes, df, next_bar_fill=True,
         )
 
         long_adjusted_sizes = sizes.copy()  # Save before rolling for re-alignment
@@ -6559,6 +6564,16 @@ def run_class_backtest(
     This is the bridge for class-based strategies (ICT strategies in src/engine/strategies/).
     The strategy's compute() method produces entry/exit signals, then we feed those
     into the same vectorbt pipeline as the DSL backtester.
+
+    ⚠️ KNOWN LOWER-FIDELITY GAP (deep-scan 2026-07-09, ratified — documented, not yet
+    closed): this path has NO fill-model wiring. run_backtest() (the DSL path) now applies
+    the Stage-2 volume-based partial-fill model (next-bar-aligned) once fill_model is wired;
+    run_class_backtest does not, so archetype/class strategies backtest systematically MORE
+    OPTIMISTIC than DSL strategies on identical large-size/thin-volume conditions while both
+    feed the same lifecycle promotion gates (B14/WFE/PBO). FOLLOW-UP: thread the same
+    next_bar_fill=True apply_volume_partial_fills call into this function's long/short entry
+    processing, or gate archetype-strategy promotion on a documented lower-fidelity tier.
+    Until then, treat archetype backtests as an optimistic upper bound on fill quality.
 
     Args:
         warmup_data: Optional IS (in-sample) data to prepend before running strategy.compute().
