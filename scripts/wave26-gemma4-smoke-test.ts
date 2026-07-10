@@ -42,9 +42,14 @@ process.env.OLLAMA_HOST = process.env.OLLAMA_HOST ?? "http://localhost:11434";
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "..");
 const AUDIT_FILE = resolve(PROJECT_ROOT, "tmp-factory-audit", "algo-routine-research.json");
 const PARITY_ONLY = process.argv.includes("--parity-only");
-// Track O (deepscan11 2026-07-02): --legacy-parity runs the v12 speaker_concepts
-// fixture check. Default --parity-only now runs the MINIMAL production path check.
-const LEGACY_PARITY = process.argv.includes("--legacy-parity");
+// deepscan23 fix (2026-07-10): --legacy-parity used to be the only way to trigger
+// runStaticParityTests() — the check that prints the "PARITY SPEC VALIDATION"
+// banner CLAUDE.md §13 names as the actual merge gate. Under plain --parity-only
+// it never ran, so the documented gate command validated nothing about the real
+// prompt/schema files, only hand-authored fixtures hardcoded in this test file
+// (runMinimalModeParityTests). runStaticParityTests() is cheap and side-effect-free
+// (reads 4 local JSON fixtures, no network), so it now always runs — the
+// --legacy-parity flag is accepted but has no remaining effect.
 
 // ─── W23H critical fields — must ALL be present and non-null ───────────────────
 const W23H_REQUIRED_FIELDS = [
@@ -1061,15 +1066,17 @@ async function runSmoke(): Promise<void> {
   // --legacy-parity flag. Both can run together when neither flag is provided.
   const minimalParityPass = runMinimalModeParityTests();
 
-  // Legacy v12 check: runs when --legacy-parity is explicit OR when doing a full
-  // smoke run (no --parity-only). The legacy check validates the KB few-shot
-  // fixtures have the correct v12 shape for the escape-hatch legacy path.
-  const paritySpecPass = LEGACY_PARITY ? runStaticParityTests() : (!PARITY_ONLY ? runStaticParityTests() : true);
+  // deepscan23 fix: this is the check CLAUDE.md §13 names as the actual merge
+  // gate ("... --parity-only MUST report PARITY SPEC VALIDATION: PASS" — that
+  // banner is only ever printed by runStaticParityTests()). It validates the
+  // REAL few-shot fixture files on disk against the v10/v11/v12 spec; it must
+  // always run, including under plain --parity-only with no other flags.
+  const paritySpecPass = runStaticParityTests();
 
   if (PARITY_ONLY) {
-    // Emit audit stamp for minimal parity result
+    // Emit audit stamp for combined parity result
     await emitV12ParityAudit(minimalParityPass && paritySpecPass);
-    process.exit(minimalParityPass ? 0 : 1);
+    process.exit(minimalParityPass && paritySpecPass ? 0 : 1);
   }
 
   console.log("\n─────────────────────────────────────────────────────");
