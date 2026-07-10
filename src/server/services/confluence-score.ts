@@ -37,7 +37,7 @@
  */
 
 import { logger } from "../lib/logger.js";
-import { isInAnyKillzone, activeKillzones } from "../lib/killzone.js";
+import { activeKillzones } from "../lib/killzone.js";
 import { getInternalsSnapshot } from "./market-internals-service.js";
 import type { RankedLevel } from "./liquidity-map-service.js";
 import {
@@ -807,8 +807,11 @@ function evalKillzoneActive(
       reason: `active: ${zones.join(", ")}`,
     };
   }
+  // deep-scan 2026-07-09 (MED, dead code): reached only when activeKillzones() is
+  // empty, and isInAnyKillzone() checks the identical 5 zones — so it is provably
+  // always false here. Simplified from `isInAnyKillzone(tsDate)` to the constant.
   return {
-    satisfied: isInAnyKillzone(tsDate),
+    satisfied: false,
     reason: "no_killzone_active",
   };
 }
