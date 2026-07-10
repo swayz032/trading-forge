@@ -1524,6 +1524,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             ),
           },
           status: "success",
+          // F-3 (re-scan 2026-07-10): this audit row dropped correlationId while every
+          // other audit in this file threads it — breaking §2 end-to-end correlation_id
+          // propagation (a blocked backtest could not be traced bar→gate→audit). In scope
+          // here exactly as at the sibling audits (lines 1409/1441/…).
+          correlationId: correlationId ?? null,
         });
 
         if (blockedPct > DISCORD_THRESHOLD) {

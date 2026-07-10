@@ -6605,6 +6605,24 @@ def run_class_backtest(
     identical large-size/thin-volume conditions while both feed the same lifecycle
     promotion gates (B14/WFE/PBO).
 
+    ⚠️ REMAINING CLASS-PATH PARITY GAPS — DORMANT-ON-BOTH-SIDES (re-scan 2026-07-10, MED,
+    documented not-yet-wired because there is NO producing FEED for either today; wiring
+    dead code would be the "built-but-not-wired" anti-pattern):
+      1. Cross-symbol DLL 60% reduce_size band (MED-7): the reduce band was added to
+         context/cross_symbol_dll.py and wired into the DSL path's
+         apply_cross_symbol_dll_to_entries — but run_class_backtest does not invoke the
+         cross-symbol DLL at all, and the DSL path itself feeds a ZERO-P&L proxy on
+         single-symbol runs (backtester.py cross_symbol_dll_degenerate_skip), so the band
+         is inert in BOTH paths today. Close only when real multi-symbol session P&L +
+         per-bar `sizes` are threaded (paper/future multi-symbol path).
+      2. VIX margin-expansion (backtester.py ~4174 `if "vix" in df.columns`): DSL-only,
+         and dormant even there — no VIX column reaches the backtest frame (no producer;
+         see memory reference_vix_margin_dormant_no_feed). run_class has no margin-expansion
+         path or `margin_expansion_audit` key. Close only when a VIX feed reaches the frame.
+    Neither is a live fidelity divergence TODAY (both features are unfed on the DSL side
+    too); they are class-path parity follow-ups gated on their feeds existing, tracked so a
+    future agent wiring the feed also wires the class path.
+
     Args:
         fill_model: Optional[FillProbabilityConfig] — when set, gates the Stage-2
             volume-based partial-fill model (mirrors BacktestRequest.fill_model on the
