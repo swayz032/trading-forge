@@ -198,6 +198,27 @@ const SLUMDAWG_COLOR = {
 };
 
 // Build the rich verdict embed — replaces plain text reply.
+// F-1 (scout re-scan 2026-07-10): ET-localized footer so family members see Eastern time
+// (the trading day boundary) regardless of their Discord client's browser-local timezone.
+function nowEtFooter(): string {
+  try {
+    const et = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short",
+    }).format(new Date());
+    return `Slumdawg • ${et}`;
+  } catch {
+    return "Slumdawg";
+  }
+}
+
+// F-1: consistent "which video" header row across all reject embeds.
+function videoHeaderField(title?: string): { name: string; value: string; inline: boolean } {
+  return title
+    ? { name: "Video", value: `*"${title.slice(0, 200)}"*`, inline: false }
+    : { name: "​", value: "​", inline: false };
+}
+
 function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): EmbedBuilder {
   const e = new EmbedBuilder()
     .setTimestamp()
@@ -277,7 +298,7 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
   if (r.reason && /no_strategy_content|no_rules|too_vague|hype/i.test(r.reason)) {
     return e.setColor(SLUMDAWG_COLOR.hype)
       .setTitle("🚧 Mostly talk, not enough rules")
-      .setDescription("Speaker talked the talk but didn't drop the actual plays. Find me one where dude says **when to enter, when to exit, what timeframe** — step-by-step type beat.")
+      .setDescription("Speaker talked the talk but didn't give the actual plays. Find me one where the trader says **when to enter, when to exit, what timeframe** — step by step.")
       .addFields(
         r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false },
         { name: "Why skipped", value: `\`${r.reason.replace(/_/g, " ")}\``, inline: true },
@@ -303,6 +324,39 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
           ? "Video too short to pull real rules out of — probably a Short or a clip. Find a longer breakdown."
           : "No captions available — private, age-gated, or no transcript. Try a different video."
       );
+  }
+
+  // ─── Mechanic-class rejects (Pass J Phase 2) — rookie-friendly, non-futures markets ──
+  // The strategy's EDGE depends on a market mechanic we don't trade (options Greeks, FX
+  // carry, single-stock events, crypto-only structure). The mechanic-portability classifier
+  // (mechanic-portability.ts) already decided this server-side; here we explain it simply.
+  if (r.reason === "options_derivative") {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("🧩 Not for our accounts — options play")
+      .setDescription("That's options trading — it needs contracts with strike prices and expiration dates. We trade futures (MES, MNQ, MCL), so this one can't cross over. Find a futures or price-action breakdown.")
+      .addFields(videoHeaderField(r.title))
+      .setFooter({ text: nowEtFooter() });
+  }
+  if (r.reason === "forex_specific_mechanics") {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("🧩 Not for our accounts — forex play")
+      .setDescription("That's a currency-trading strategy (forex) — its edge comes from currency-pair behavior we don't have on futures. We trade MES, MNQ, MCL. Find a futures-based breakdown instead.")
+      .addFields(videoHeaderField(r.title))
+      .setFooter({ text: nowEtFooter() });
+  }
+  if (r.reason === "stock_specific_mechanics") {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("🧩 Not for our accounts — single-stock play")
+      .setDescription("That's an individual-stock strategy — its edge leans on things like earnings dates and company news that don't apply to our index futures (MES, MNQ). Find a futures or index breakdown.")
+      .addFields(videoHeaderField(r.title))
+      .setFooter({ text: nowEtFooter() });
+  }
+  if (r.reason === "crypto_specific_mechanics") {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("🧩 Not for our accounts — crypto play")
+      .setDescription("That's a crypto-only strategy — it depends on crypto-market structure that doesn't carry to our futures accounts (MES, MNQ, MCL). Find a futures or price-action breakdown.")
+      .addFields(videoHeaderField(r.title))
+      .setFooter({ text: nowEtFooter() });
   }
 
   // ─── Generic reject ─────────────────────────────────────
