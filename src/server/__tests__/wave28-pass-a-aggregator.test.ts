@@ -172,9 +172,11 @@ function makeUnavailableResult(name: string): SubsystemResult {
 // Full set of 12 available subsystems
 function allTwelveAvailable(scoreOverride = 0.80): SubsystemResult[] {
   const names = [
+    // CRIT fix 2026-07-09: names MUST match EQUAL_WEIGHTS keys — was
+    // "compliance_block_rate"/"deepar_forecast" (silently dropped from the composite).
     "b14_survival_twin", "wfe", "parameter_drift", "b15_robustness",
-    "compliance_block_rate", "trade_critique", "pattern_aggregator",
-    "consistency_tracker", "deepar_forecast", "black_swan", "nemo", "quantum_replay",
+    "compliance", "trade_critique", "pattern_aggregator",
+    "consistency_tracker", "deepar", "black_swan", "nemo", "quantum_replay",
   ];
   return names.map((n) => makeAvailableResult(n, scoreOverride));
 }
