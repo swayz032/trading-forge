@@ -66,6 +66,26 @@ for _pkg in [
     if _pkg not in sys.modules:
         sys.modules[_pkg] = types.ModuleType(_pkg)
 
+
+@pytest.fixture(autouse=True)
+def _restore_db_loader_module():
+    """deep-scan 2026-07-09 (test-hygiene): the training helpers below assign a
+    stub `types.ModuleType` into `sys.modules['src.engine.replay.db_loader']`
+    (5 sites) with no teardown. Unrestored, that stub LEAKS into other test files
+    run in the same process (e.g. `test_wave29_pass_c1_...`'s TestLoadBacktestBarData
+    then fails `_get_db_connection`/`cpcv_purge` against the stub — order-dependent
+    pollution). This autouse fixture snapshots the real module before each test and
+    restores it after, even on raise — so the leak can never escape this file."""
+    _key = "src.engine.replay.db_loader"
+    _original = sys.modules.get(_key)
+    try:
+        yield
+    finally:
+        if _original is not None:
+            sys.modules[_key] = _original
+        else:
+            sys.modules.pop(_key, None)
+
 # ---------------------------------------------------------------------------
 # Import module under test
 # ---------------------------------------------------------------------------
