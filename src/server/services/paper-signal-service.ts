@@ -14,6 +14,7 @@ import { getActiveLockout } from "./strategy-lockout-service.js";
 import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } from "./correlated-position-guard.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
+import { resolveCrossAssetContext } from "../lib/cross-asset-context.js";
 import {
   CONTRACT_SPECS,
   CONTRACT_CAP_MIN,
@@ -3291,6 +3292,19 @@ export async function evaluateSignals(
     // [start_utc, end_utc) boundary semantics — matching W23H.3 entry window convention.
     // Fail-open: if no pre_market_sessions row exists, or query errors → no block.
     let blackoutBlocked = false;
+    // Confluence HIGH-1 (deep-scan 2026-07-09, ratified): thread the cross-asset
+    // direction reading (DXY / 10Y) from today's pre_market_sessions row into the
+    // Path C weightedCtx so `cross_asset_aligned` can actually evaluate. PREVIOUS BUG —
+    // the factor read ctx.dxyDirection / ctx.us10yDirection but paper-signal-service
+    // never populated them, so evalCrossAssetAligned returned
+    // "cross_asset_data_unavailable" (satisfied=false) on EVERY live/paper signal. For
+    // MCL that silently capped the achievable score at 0.90 (cross_asset carries 0.10
+    // weight after the MCL internals→cross_asset redistribution). We read the same
+    // pre_market_sessions row the blackout gate already loads. cross_asset_age_hours
+    // is derived from computed_at so the decay engine can taper a stale AM reading.
+    let crossAssetDxy: "up" | "down" | "flat" | null = null;
+    let crossAssetUs10y: "up" | "down" | "flat" | null = null;
+    let crossAssetAgeHours: number | null = null;
     try {
       const today = toFuturesTradingDayString(new Date(bar.timestamp));
       const [pmSession] = await db
@@ -3299,6 +3313,10 @@ export async function evaluateSignals(
           // Gap 3 (observable): read first_30min_volume_ratio so we can surface
           // the null → tells operator the DAL is not yet wired.
           first30minVolumeRatio: preMarketSessions.first30minVolumeRatio,
+          // Confluence HIGH-1: cross-asset direction + freshness for Path C.
+          dxyDirection: preMarketSessions.dxyDirection,
+          us10yDirection: preMarketSessions.us10yDirection,
+          computedAt: preMarketSessions.computedAt,
         })
         .from(preMarketSessions)
         .where(and(
@@ -3306,6 +3324,17 @@ export async function evaluateSignals(
           eq(preMarketSessions.symbol, symbol),
         ))
         .limit(1);
+
+      // Confluence HIGH-1: resolve the cross-asset SignalContext slice via the pure
+      // helper (domain-validated direction + reading age in hours). Missing row → all
+      // null (factor stays cross_asset_data_unavailable — unchanged conservative path).
+      const resolvedCrossAsset = resolveCrossAssetContext(
+        pmSession ?? null,
+        new Date(bar.timestamp).getTime(),
+      );
+      crossAssetDxy = resolvedCrossAsset.dxyDirection;
+      crossAssetUs10y = resolvedCrossAsset.us10yDirection;
+      crossAssetAgeHours = resolvedCrossAsset.cross_asset_age_hours;
 
       if (pmSession?.blackoutWindows) {
         const windows = pmSession.blackoutWindows as Array<{ event_type: string; start_utc: string; end_utc: string; severity: string }>;
@@ -4472,6 +4501,13 @@ export async function evaluateSignals(
               smt_score:     smtSnapshot?.score     ?? undefined,
               smt_direction: smtSnapshot?.direction ?? undefined,
               smt_age_bars:  smtSnapshot?.age_bars  ?? undefined,
+              // Confluence HIGH-1 (deep-scan 2026-07-09, ratified): cross-asset direction
+              // from today's pre_market_sessions row (loaded above at the blackout gate).
+              // Null when no pre-market row exists yet → evalCrossAssetAligned falls back
+              // to "cross_asset_data_unavailable" (unchanged conservative behavior).
+              dxyDirection:        crossAssetDxy,
+              us10yDirection:      crossAssetUs10y,
+              cross_asset_age_hours: crossAssetAgeHours,
             };
 
             // Build minimal ScoringStrategy shape for evaluator.
