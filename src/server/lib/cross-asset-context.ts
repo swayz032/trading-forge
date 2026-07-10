@@ -30,10 +30,16 @@ export interface CrossAssetPreMarketRow {
 }
 
 export interface ResolvedCrossAssetContext {
-  dxyDirection: CrossAssetDirection;
-  us10yDirection: CrossAssetDirection;
+  // `readonly` so a post-resolution property clobber (`ctx.dxyDirection = null`) is a
+  // COMPILE error — belt-and-suspenders with the runtime Object.freeze below. Together
+  // they close the last silent-wiring-drop variant: the resolved slice cannot be
+  // reverted to nulls after it is computed, by any mechanism (reassign, Object.assign,
+  // or direct field write). This is the exact hardening the independent cert required
+  // to certify the "computed-but-never-consumed" class structurally closed.
+  readonly dxyDirection: CrossAssetDirection;
+  readonly us10yDirection: CrossAssetDirection;
   /** Hours between the pre-market reading and the current signal bar. */
-  cross_asset_age_hours: number | null;
+  readonly cross_asset_age_hours: number | null;
 }
 
 /** Coerce an arbitrary stored value into the "up"|"down"|"flat" domain, else null. */

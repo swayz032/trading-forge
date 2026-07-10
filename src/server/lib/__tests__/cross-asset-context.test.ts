@@ -215,6 +215,16 @@ describe("wiring contract — paper-signal-service threads cross-asset into weig
     expect(src).toMatch(/\bcrossAssetCtx\s*=\s*resolveCrossAssetContext\s*\(/);
   });
 
+  // F-4 (cert pass 5): a direct property clobber `crossAssetCtx.dxyDirection = null` after
+  // the resolver call is the same silent-drop class as (d) but was uncaught by the
+  // reassign regex + tsc (fields weren't readonly). Now: ResolvedCrossAssetContext fields
+  // are `readonly` (tsc TS2540 on any field write) AND frozen at runtime (throws) — this
+  // guard rejects the source shape too, as defense-in-depth.
+  it("never writes a crossAssetCtx property directly (blocks post-resolution field clobber)", () => {
+    expect(src, "crossAssetCtx.<field> = … is a silent frozen-object clobber — forbidden")
+      .not.toMatch(/\bcrossAssetCtx\.\w+\s*=[^=]/);
+  });
+
   // F-1 variant (b): `...crossAssetCtx, dxyDirection: null` inside the literal overrides
   // the spread. Guard: the weightedCtx literal must NOT restate any of the 3 spread keys.
   it("weightedCtx literal does NOT override any spread cross-asset key (blocks post-spread null override)", () => {
