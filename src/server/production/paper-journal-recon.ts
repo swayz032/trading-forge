@@ -1173,13 +1173,15 @@ async function writeAuditRow(params: {
   correlationId: string;
   payload: Record<string, unknown>;
 }): Promise<void> {
-  const statusMapped =
-    params.status === "critical"
-      ? "failure"
-      : params.status === "warning"
-        ? "success"
-        : params.status;
-
+  // deep-scan 2026-07-09 (MED, non-instrument): write the severity VERBATIM.
+  // Previously this remapped "warning"→"success" and "critical"→"failure" — the
+  // ONLY writer in the codebase to do so — which buried genuine WARN recon findings
+  // (paper_recon.shadow_signal_delta_detected, missing_broker_data,
+  // quantum_replay_orphans_detected, ab_routing_orphan_detected) under
+  // status="success", invisible to any dashboard/query keyed on the codebase-wide
+  // status='warning' convention (57 other files write "warning" literally).
+  // audit_log.status is free text(); live Discord alerts fire via notify* independent
+  // of this field, so this changes DB queryability only — no gate/behavior impact.
   await db
     .insert(auditLog)
     .values({
@@ -1189,7 +1191,7 @@ async function writeAuditRow(params: {
       decisionAuthority: "system",
       input: { reconDate: params.payload.reconDate } as Record<string, unknown>,
       result: params.payload,
-      status: statusMapped,
+      status: params.status,
       correlationId: params.correlationId,
     })
     .catch((err) =>
