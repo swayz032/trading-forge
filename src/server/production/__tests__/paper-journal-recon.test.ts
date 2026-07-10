@@ -239,7 +239,7 @@ describe("runPaperJournalRecon — drift detection", () => {
       (r) => r.action === "paper_reconciliation.mismatch_detected"
     );
     expect(mismatchRow).toBeDefined();
-    expect(mismatchRow?.status).toBe("failure");
+    expect(mismatchRow?.status).toBe("critical"); // verbatim severity (MED fix 2026-07-09; was remapped to failure)
 
     expect(state.criticalAlerts).toHaveLength(1);
     expect(state.criticalAlerts[0]!.title).toContain("PAPER RECON");
@@ -322,7 +322,7 @@ describe("runPaperJournalRecon — drift detection", () => {
       (r) => r.action === "paper_reconciliation.missing_broker_data"
     );
     expect(warnRow).toBeDefined();
-    expect(warnRow?.status).toBe("success");
+    expect(warnRow?.status).toBe("warning"); // verbatim severity (MED fix 2026-07-09; was remapped to success)
     expect(state.criticalAlerts).toHaveLength(0);
   });
 
@@ -354,7 +354,7 @@ describe("runPaperJournalRecon — drift detection", () => {
     // Honest, not false-clean: a distinct WARN audit surfaces that P&L was NOT verified.
     const warnRow = state.auditRows.find((r) => r.action === "paper_reconciliation.broker_pnl_unavailable");
     expect(warnRow).toBeDefined();
-    expect(warnRow?.status).toBe("success"); // "warning" maps to success status per writeAuditRow
+    expect(warnRow?.status).toBe("warning"); // verbatim severity (MED fix 2026-07-09; was remapped to success)
   });
 
 });
@@ -459,7 +459,7 @@ describe("runPaperJournalRecon — deepscan14 C1: broker-tape-source-active dete
       (r) => r.action === "paper_reconciliation.inactive_no_broker_tape"
     );
     expect(inactiveRow).toBeDefined();
-    expect(inactiveRow?.status).toBe("success"); // warning maps to "success" per writeAuditRow's statusMapped
+    expect(inactiveRow?.status).toBe("warning"); // verbatim severity (MED fix 2026-07-09; was remapped to success)
     expect((inactiveRow as unknown as { affected_strategy_ids: string[] }).affected_strategy_ids).toContain("strat-c1a");
 
     // The old per-strategy warn must NOT fire in the structural-gap case.
