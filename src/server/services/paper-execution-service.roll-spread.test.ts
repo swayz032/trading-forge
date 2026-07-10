@@ -34,13 +34,23 @@ vi.mock("../db/index.js", () => ({
     limit:   vi.fn().mockResolvedValue([]),
     orderBy: vi.fn().mockReturnThis(),
     transaction: vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => {
+      // CRIT-1 (2026-07-09): closePosition now does a guarded idempotency-CLAIM
+      // `update(paperPositions).set(...).where(isNull(closedAt)).returning({id})`
+      // BEFORE inserting the trade. `.where()` must therefore be BOTH awaitable
+      // (equity/dailyPnl updates await it directly) AND expose `.returning()`
+      // (the claim reads the affected row). A thenable-with-returning satisfies both.
+      const _whereThenable = () => {
+        const p: any = Promise.resolve([{ id: "pos-claimed" }]);
+        p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+        return p;
+      };
       const tx = {
         insert:    vi.fn().mockReturnThis(),
         update:    vi.fn().mockReturnThis(),
         values:    vi.fn().mockReturnThis(),
         set:       vi.fn().mockReturnThis(),
         from:      vi.fn().mockReturnThis(),
-        where:     vi.fn().mockReturnThis(),
+        where:     vi.fn().mockImplementation(_whereThenable),
         returning: vi.fn().mockResolvedValue([{ id: "trade-1", pnl: "0" }]),
         limit:     vi.fn().mockResolvedValue([]),
         orderBy:   vi.fn().mockReturnThis(),
@@ -236,7 +246,17 @@ describe("closePosition — roll spread cost applied", () => {
           };
         }),
         update: vi.fn().mockReturnValue({
-          set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+          // CRIT-1 (2026-07-09): closePosition's guarded idempotency CLAIM does
+          // update(paperPositions).set(...).where(isNull(closedAt)).returning({id})
+          // BEFORE the trade insert. `.where()` must be awaitable AND expose
+          // `.returning()`. Thenable-with-returning satisfies both.
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockImplementation(() => {
+              const p: any = Promise.resolve(undefined);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              return p;
+            }),
+          }),
         }),
       };
       return cb(tx);
@@ -293,7 +313,17 @@ describe("closePosition — no roll in hold window", () => {
           };
         }),
         update: vi.fn().mockReturnValue({
-          set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+          // CRIT-1 (2026-07-09): closePosition's guarded idempotency CLAIM does
+          // update(paperPositions).set(...).where(isNull(closedAt)).returning({id})
+          // BEFORE the trade insert. `.where()` must be awaitable AND expose
+          // `.returning()`. Thenable-with-returning satisfies both.
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockImplementation(() => {
+              const p: any = Promise.resolve(undefined);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              return p;
+            }),
+          }),
         }),
       };
       return cb(tx);
@@ -325,7 +355,17 @@ describe("closePosition — SSE paper:roll-spread-applied", () => {
           }),
         }),
         update: vi.fn().mockReturnValue({
-          set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+          // CRIT-1 (2026-07-09): closePosition's guarded idempotency CLAIM does
+          // update(paperPositions).set(...).where(isNull(closedAt)).returning({id})
+          // BEFORE the trade insert. `.where()` must be awaitable AND expose
+          // `.returning()`. Thenable-with-returning satisfies both.
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockImplementation(() => {
+              const p: any = Promise.resolve(undefined);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              return p;
+            }),
+          }),
         }),
       };
       return cb(tx);
@@ -356,7 +396,17 @@ describe("closePosition — SSE paper:roll-spread-applied", () => {
           }),
         }),
         update: vi.fn().mockReturnValue({
-          set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+          // CRIT-1 (2026-07-09): closePosition's guarded idempotency CLAIM does
+          // update(paperPositions).set(...).where(isNull(closedAt)).returning({id})
+          // BEFORE the trade insert. `.where()` must be awaitable AND expose
+          // `.returning()`. Thenable-with-returning satisfies both.
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockImplementation(() => {
+              const p: any = Promise.resolve(undefined);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              return p;
+            }),
+          }),
         }),
       };
       return cb(tx);
@@ -386,7 +436,17 @@ describe("closePosition — return value rollSpreadCost", () => {
           }),
         }),
         update: vi.fn().mockReturnValue({
-          set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+          // CRIT-1 (2026-07-09): closePosition's guarded idempotency CLAIM does
+          // update(paperPositions).set(...).where(isNull(closedAt)).returning({id})
+          // BEFORE the trade insert. `.where()` must be awaitable AND expose
+          // `.returning()`. Thenable-with-returning satisfies both.
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockImplementation(() => {
+              const p: any = Promise.resolve(undefined);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              return p;
+            }),
+          }),
         }),
       };
       return cb(tx);
