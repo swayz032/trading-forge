@@ -18,6 +18,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockSelectFn = vi.fn();
 const mockInsertFn = vi.fn();
 const mockBroadcastSSE = vi.fn();
+// HIGH-4: terminal of the no-drift re-stamp chain db.update(...).set(...).where(...)
+const mockUpdateWhere = vi.fn().mockResolvedValue(undefined);
 const mockNotifyCritical = vi.fn();
 const mockExistsSync = vi.fn((..._args: unknown[]) => true);
 const mockReadFileSync = vi.fn((..._args: unknown[]) => "prop firm rules v2 — updated content");
@@ -31,6 +33,8 @@ vi.mock("../db/index.js", () => ({
   db: {
     get select() { return mockSelectFn; },
     get insert() { return mockInsertFn; },
+    // HIGH-4: no-drift path now re-stamps retrievedAt via db.update(...).set(...).where(...)
+    get update() { return () => ({ set: () => ({ where: mockUpdateWhere }) }); },
   },
 }));
 
@@ -184,6 +188,10 @@ describe("checkComplianceRuleDrift — compliance:drift_detected SSE emission (d
 
     expect(result.drifted).toBe(false);
     expect(mockBroadcastSSE).not.toHaveBeenCalled();
+    // HIGH-4 RED-proof: the no-drift path MUST re-stamp retrievedAt (freshness heartbeat)
+    // so the 24h compliance-freshness gate never goes stale on a stable rules doc. Before
+    // the fix this branch returned early with NO write — this assertion would fail.
+    expect(mockUpdateWhere).toHaveBeenCalled();
   });
 
   it("fail-safe: broadcasts severity=critical (not silently 0-count) when the affected-count query itself throws", async () => {
