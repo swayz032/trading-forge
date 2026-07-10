@@ -37,7 +37,23 @@ export const RAW_ARCHETYPES_RESPECTED: ReadonlySet<string> = new Set<string>([
   "wyckoff_spring", "wyckoff_upthrust", "wyckoff_accumulation", "wyckoff_distribution",
   // Wave 26 Pass G archetypes
   "bounce_off_level", "ict_bias_aligned_continuation",
-  // Sub-layer indicators frequently emitted by ICT-tuned LLMs
+]);
+
+/**
+ * HIGH-1 fix (deep-scan 2026-07-09, ratified) — SUB-LAYER VOCABULARY, NOT DISPATCHABLE.
+ * These names are frequently emitted by ICT-tuned LLMs but have NO engine handler /
+ * ARCHETYPE_REGISTRY entry. They were previously mixed into RAW_ARCHETYPES_RESPECTED, so the
+ * graduator's early-return fired `archetype:<name>` for them → the DSL compiler emitted the
+ * never-true `high < low` sentinel → the strategy graduated, passed every gate, and NEVER
+ * fired a signal (a silent zombie occupying a slot). Worse, "trendline_bounce" shadowed its
+ * own working alias (`trendline_bounce → archetype:bounce_off_level`, deriveEntryIndicator).
+ * By keeping them OUT of the archetype set, the graduator's early-return no longer matches
+ * them; they fall through to the alias table (trendline_bounce → bounce_off_level) or to the
+ * `uncatalogued:<term>` quarantine (queued in needs_archetype_queue for operator review) —
+ * never a dead archetype. entryIndicatorResolvesToArchetype() also correctly returns false
+ * for them (the compilability gate agrees they are not structural archetypes).
+ */
+export const SUBLAYER_VOCAB_NOT_DISPATCHABLE: ReadonlySet<string> = new Set<string>([
   "liquidity_magnet", "displacement", "htf_bias", "daily_bias",
   "accumulation", "manipulation", "distribution", "asian_range",
   "equal_highs", "equal_lows", "false_breakout", "session_open", "reversal",
