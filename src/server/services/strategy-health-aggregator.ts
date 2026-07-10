@@ -387,7 +387,11 @@ export async function fetchB15Robustness(strategyId: string): Promise<SubsystemR
  * Score = 1 - block_rate (lower block rate = healthier).
  */
 export async function fetchComplianceBlockRate(strategyId: string): Promise<SubsystemResult> {
-  const name = "compliance_block_rate";
+  // CRIT (deep-scan 2026-07-09, ratified): MUST equal the EQUAL_WEIGHTS key
+  // "compliance" in score-normalization.ts. It was "compliance_block_rate", which
+  // computeComposite (keyed by s.name) never matched → this subsystem was SILENTLY
+  // dropped from the weighted composite while still counted in computed_from_n_subsystems.
+  const name = "compliance";
   try {
     // Use audit_log to count enforce_block rows vs total trade rows for the strategy.
     // Keep the query simple to avoid complex joins — count via raw sql is NOT allowed
@@ -531,7 +535,9 @@ export async function fetchConsistencyTracker(strategyId: string): Promise<Subsy
  * Confidence scaled by forecastConfidence from the model.
  */
 export async function fetchDeeparForecast(strategyId: string): Promise<SubsystemResult> {
-  const name = "deepar_forecast";
+  // CRIT (deep-scan 2026-07-09, ratified): MUST equal the EQUAL_WEIGHTS key "deepar".
+  // Was "deepar_forecast" → silently dropped from the composite (same bug as compliance).
+  const name = "deepar";
   try {
     // Resolve the strategy's primary symbol
     const [strat] = await db
