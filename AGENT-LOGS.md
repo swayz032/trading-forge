@@ -13678,6 +13678,34 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-09 Whole-Codebase Band-9 Census COMPLETE — honest band-map 5–9; core execution/backtest at 5 (staged), 7 non-instrument fixes landed
+
+**Mission:** complete the /goal whole-codebase census (all 73 subsystems → 9). Real loop: independently measure each domain from zero (doer≠grader), fix non-instrument defects directly, stage instrument fixes for operator ratification. NO relabeling.
+
+**Method:** rate-limiting killed parallel fan-out → sequential single/synchronous scans. Each domain scanned by an independent agent (backtest-core / paper-parity / trading-forge-architect / critic-optimizer / observability / quantum-challenger / n8n / general), findings verified at source before staging or fixing.
+
+**★ FINAL BAND-MAP (main = 1259909):** ds22 X1-X6 = **9** · lifecycle = **9** (fixed this session) · slumhouse = **8** · confluence ≈ **8** (quicklook) · quantum = **7→~8** (fixes landed) · observability = **6** · scout = **6** · n8n = **6** (code-only/snapshot) · **paper-execution = 5** · **backtest-core = 5**.
+
+**★ BLUNT TRUTH (answers the operator's opening challenge "logs said certified 9, you say different"):** every freshly, independently re-measured production domain landed **5–8 with real CRITICAL/HIGH defects — NOT the "certified 9" older AGENT-LOGS claimed.** The prior 9-claims were overstated (doer-graded, not re-measured from zero). Honest current pre-ratification state of the core = 5–8. Finding that truth — not relabeling — is the goal being served.
+
+**RATIFIED + independently certified to 9 (landed):** X5 CPCV-WFE combined-fold; lifecycle SHADOW→PAPER 0-signal fail-closed.
+
+**NON-INSTRUMENT fixes landed this session (no ratify needed — audit-strings, test-hygiene, dead-code annotation, doc-rot, env-var, security-anchor, no-fabrication flag):** obs-MED recon writes audit status verbatim (`42589bf`); quantum c2 sys.modules leak autofix + dead `compute_rl_kill_switch_state` annotated (`8db0d6b`); backtest compliance-mode doc-rot (`57bd115`); n8n `require-live-n8n` reads canonical TF_N8N_API_KEY (`2687681`); slumhouse `/api` cookie regex anchored + MC `distributionIsSynthetic` flag (`3fb9412`). All FF-landed phase-0→main, 3 CI gates green each.
+
+**★ SYSTEMIC "documented DEFAULT-ON but unfed → vacuously-green" class — engagement census done (5 checked):** DORMANT: VIX-margin-expansion (`backtester.py:4174`), partial-fill-model (`backtest-service.ts` declares `fill_model?` never assigns). WIRED-OK: zero-volume-critical, roll-spread, compliance-enforce. Pattern real but NOT universal — verify per-feature, don't assume.
+
+**★ STAGED — awaiting operator ratification (instrument-touching; the actual band-raisers; full receipts in memory `project_codebase_9_census_2026_07_09`):** paper-exec 2 CRIT (double-close P&L race; kill-switch L2/L3/L7 fail-open-on-timeout) + 3 HIGH; backtest-core CRIT (partial-fill model orphaned) + 2 HIGH (volume-ratio wrong-bar; run_class no fill-model); obs CRIT (composite drops 2/13 subsystems); scout HIGH (18 archetype names → silently-dead graduation); VIX-margin dormant. **These CANNOT reach 9 without explicit operator rulings — that's the standing protocol, not a shortcoming.** Operator AskUserQuestion for paper-exec (CRITICALs-first recommended) sent; unanswered (away).
+
+**Verification:** each landed fix RED-proven where behavioral + green tests; pre-existing unrelated failures identified and NOT attributed (test_e2e_backtest walk_forward_mode; m10-m13 shadow deltaExceedsThreshold; quantum IBM-token order-leak; 2 scout-extract). CI gates EXIT 0 on every land.
+
+**Carry-forward:**
+1. **Operator rulings are the bottleneck to uniform 9** — the staged instrument batch (paper-exec/backtest-core CRITICALs first) raises the most bands. Nothing else unblocks them.
+2. LIVE-INFRA (n8n on Railway, need live verify): HIGH-1 Anam gateway HMAC, HIGH-2 unauth webhooks (may already be patched post-snapshot); `/__ocg` auth; repoint retired models; Kasa before PAPER+.
+3. Git hygiene: prune the many ds22/merge worktrees; quarantine diverged local checkout.
+4. Optional high-value facts-only: full-confluence scan, frontend (absent from checkout) rendering verify, quantum behavioral kill-switch test.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
