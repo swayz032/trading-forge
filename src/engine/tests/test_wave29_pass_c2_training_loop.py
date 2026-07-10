@@ -57,14 +57,26 @@ if "psycopg2" not in sys.modules:
     sys.modules["psycopg2"] = _psycopg2_mock
     sys.modules["psycopg2.extras"] = _psycopg2_extras_mock
 
-# Stub heavy optional packages if not installed
-for _pkg in [
-    "pennylane",
-    "braket",
-    "braket.aws",
-]:
+# Stub heavy optional packages if not installed. MED-1 (quantum re-scan 2026-07-10):
+# snapshot whatever was in sys.modules for these keys FIRST so the autouse fixture below
+# can restore it after each test — otherwise these hollow stubs LEAK across files: when this
+# file imports quantum_rl_agent first, `from pennylane import numpy` raises against the empty
+# stub and latches quantum_rl_agent.PENNYLANE_AVAILABLE=False for the whole pytest process,
+# which then false-fails test_quantum_rl_agent.py's IBM two-gate fallback test
+# (test_missing_ibm_token_falls_back_to_local expected 'default.qubit', got 'unavailable').
+import importlib as _importlib  # noqa: E402
+_OPTIONAL_PKG_STUBS = ["pennylane", "braket", "braket.aws"]
+for _pkg in _OPTIONAL_PKG_STUBS:
     if _pkg not in sys.modules:
-        sys.modules[_pkg] = types.ModuleType(_pkg)
+        try:
+            # Use the REAL package when it is genuinely installed (pennylane IS installed in
+            # this env — test_quantum_rl_agent.py imports it for real). A hollow ModuleType
+            # stub here would make quantum_rl_agent's `from pennylane import numpy` RAISE and
+            # latch PENNYLANE_AVAILABLE=False process-wide, false-failing that file's IBM
+            # two-gate fallback test when it runs after this one. Stub ONLY if truly absent.
+            _importlib.import_module(_pkg)
+        except Exception:
+            sys.modules[_pkg] = types.ModuleType(_pkg)
 
 
 @pytest.fixture(autouse=True)

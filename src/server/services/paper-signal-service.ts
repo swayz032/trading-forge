@@ -16,6 +16,7 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
 import { resolveCrossAssetContext } from "../lib/cross-asset-context.js";
 import { styleCTp1RiskPoints } from "../lib/style-c-tp1-risk.js";
+import { resolveEffectiveRouting } from "../lib/rl-family-routing-guard.js";
 import {
   CONTRACT_SPECS,
   CONTRACT_CAP_MIN,
@@ -6064,7 +6065,9 @@ export async function evaluateSignals(
               .where(eq(accountStrategyAssignments.strategyId, sessionConfig.strategyId))
               .limit(1);
             const isFamilyStrategy = familyAssignment[0]?.releasedToFamily === true;
-            if (isFamilyStrategy) {
+            // MED-2: the override decision is isolated in a pure, unit-tested helper.
+            const familyGuard = resolveEffectiveRouting(routingDecision, isFamilyStrategy);
+            if (familyGuard.overridden) {
               logger.warn(
                 {
                   strategyId: sessionConfig.strategyId,
@@ -6089,7 +6092,7 @@ export async function evaluateSignals(
               }).catch((err: unknown) =>
                 logger.warn({ err }, "audit_log insert failed for quantum_rl.family_routing_override"),
               );
-              effectiveRoutingDecision = "baseline";
+              effectiveRoutingDecision = familyGuard.effectiveRouting;
             }
           }
           // ── End family invariant assertion ────────────────────────────────────────
