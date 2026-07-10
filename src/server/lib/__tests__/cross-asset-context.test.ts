@@ -152,9 +152,11 @@ describe("wiring contract — paper-signal-service threads cross-asset into weig
     "utf-8",
   );
 
-  it("imports and calls resolveCrossAssetContext", () => {
+  it("imports and assigns resolveCrossAssetContext output to the hoisted crossAssetCtx", () => {
     expect(src).toContain('from "../lib/cross-asset-context.js"');
-    expect(src).toMatch(/resolveCrossAssetContext\s*\(/);
+    // The resolver output must be ASSIGNED to the var that weightedCtx spreads —
+    // this catches the cert's injected regression (resolver called but result dropped).
+    expect(src).toMatch(/crossAssetCtx\s*=\s*resolveCrossAssetContext\s*\(/);
   });
 
   it("selects the cross-asset columns from preMarketSessions", () => {
@@ -163,12 +165,43 @@ describe("wiring contract — paper-signal-service threads cross-asset into weig
     expect(src).toContain("preMarketSessions.computedAt");
   });
 
-  it("threads dxyDirection / us10yDirection / cross_asset_age_hours into the weightedCtx literal", () => {
+  it("SPREADS crossAssetCtx into the weightedCtx literal (field names come from the typed resolver output)", () => {
     const ctxStart = src.indexOf("const weightedCtx");
     expect(ctxStart).toBeGreaterThan(-1);
     const ctxBlock = src.slice(ctxStart, ctxStart + 2600);
-    expect(ctxBlock).toContain("dxyDirection:");
-    expect(ctxBlock).toContain("us10yDirection:");
-    expect(ctxBlock).toContain("cross_asset_age_hours:");
+    // Spread (not per-field copy) → a typo'd field name can't compile, and the
+    // exact keys are pinned by ResolvedCrossAssetContext, not repeated by hand.
+    expect(ctxBlock).toContain("...crossAssetCtx");
+  });
+});
+
+// ─── Data-flow: resolver output spreads to the exact ctx keys the factor reads ───
+// Mirrors the codebase's "replicate the wiring expression" pattern
+// (paper-parity-vwap-smt-volume.test.ts T1/T2). Because paper-signal-service spreads
+// the resolver's typed return straight into weightedCtx, proving the resolver emits
+// {dxyDirection, us10yDirection, cross_asset_age_hours} — and ONLY those — proves the
+// spread lands the same keys evalCrossAssetAligned + deriveFactorDecay read.
+describe("resolver output shape == the ctx keys the factor consumes (HIGH-1)", () => {
+  it("returns exactly the 3 SignalContext keys the cross_asset factor + its decay read", () => {
+    const out = resolveCrossAssetContext(
+      { dxyDirection: "down", us10yDirection: "up", computedAt: new Date(BAR_MS - 3_600_000) },
+      BAR_MS,
+    );
+    // Exact key set — a spread of this object can only ever set these 3 ctx fields.
+    expect(Object.keys(out).sort()).toEqual(
+      ["cross_asset_age_hours", "dxyDirection", "us10yDirection"],
+    );
+  });
+
+  it("spreading the resolver output into a ctx object populates the factor inputs", () => {
+    const resolved = resolveCrossAssetContext(
+      { dxyDirection: "down", us10yDirection: "up", computedAt: new Date(BAR_MS) },
+      BAR_MS,
+    );
+    // Simulate the exact weightedCtx spread the service performs.
+    const ctx: Partial<SignalContext> = { ...resolved };
+    expect(ctx.dxyDirection).toBe("down");
+    expect(ctx.us10yDirection).toBe("up");
+    expect(ctx.cross_asset_age_hours).toBe(0);
   });
 });

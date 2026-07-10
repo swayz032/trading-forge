@@ -14,7 +14,7 @@ import { getActiveLockout } from "./strategy-lockout-service.js";
 import { checkCorrelatedPositionGuard, KILL_REASON_CORRELATED_POSITION_OPEN } from "./correlated-position-guard.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { isUsDst } from "../lib/dst-utils.js";
-import { resolveCrossAssetContext } from "../lib/cross-asset-context.js";
+import { resolveCrossAssetContext, type ResolvedCrossAssetContext } from "../lib/cross-asset-context.js";
 import {
   CONTRACT_SPECS,
   CONTRACT_CAP_MIN,
@@ -3302,9 +3302,14 @@ export async function evaluateSignals(
     // weight after the MCL internals→cross_asset redistribution). We read the same
     // pre_market_sessions row the blackout gate already loads. cross_asset_age_hours
     // is derived from computed_at so the decay engine can taper a stale AM reading.
-    let crossAssetDxy: "up" | "down" | "flat" | null = null;
-    let crossAssetUs10y: "up" | "down" | "flat" | null = null;
-    let crossAssetAgeHours: number | null = null;
+    // Single object (not 3 loose vars) so it SPREADS into weightedCtx by exact field
+    // name from the resolver's return type — removes the per-field manual-copy break
+    // points the cert flagged (a typo'd `dxyDirection: wrongVar` can't compile).
+    let crossAssetCtx: ResolvedCrossAssetContext = {
+      dxyDirection: null,
+      us10yDirection: null,
+      cross_asset_age_hours: null,
+    };
     try {
       const today = toFuturesTradingDayString(new Date(bar.timestamp));
       const [pmSession] = await db
@@ -3328,13 +3333,10 @@ export async function evaluateSignals(
       // Confluence HIGH-1: resolve the cross-asset SignalContext slice via the pure
       // helper (domain-validated direction + reading age in hours). Missing row → all
       // null (factor stays cross_asset_data_unavailable — unchanged conservative path).
-      const resolvedCrossAsset = resolveCrossAssetContext(
+      crossAssetCtx = resolveCrossAssetContext(
         pmSession ?? null,
         new Date(bar.timestamp).getTime(),
       );
-      crossAssetDxy = resolvedCrossAsset.dxyDirection;
-      crossAssetUs10y = resolvedCrossAsset.us10yDirection;
-      crossAssetAgeHours = resolvedCrossAsset.cross_asset_age_hours;
 
       if (pmSession?.blackoutWindows) {
         const windows = pmSession.blackoutWindows as Array<{ event_type: string; start_utc: string; end_utc: string; severity: string }>;
@@ -4503,11 +4505,11 @@ export async function evaluateSignals(
               smt_age_bars:  smtSnapshot?.age_bars  ?? undefined,
               // Confluence HIGH-1 (deep-scan 2026-07-09, ratified): cross-asset direction
               // from today's pre_market_sessions row (loaded above at the blackout gate).
-              // Null when no pre-market row exists yet → evalCrossAssetAligned falls back
-              // to "cross_asset_data_unavailable" (unchanged conservative behavior).
-              dxyDirection:        crossAssetDxy,
-              us10yDirection:      crossAssetUs10y,
-              cross_asset_age_hours: crossAssetAgeHours,
+              // SPREAD (not per-field copy) so the field names come straight from the
+              // resolver's ResolvedCrossAssetContext type — {dxyDirection, us10yDirection,
+              // cross_asset_age_hours}. All-null when no pre-market row exists yet →
+              // evalCrossAssetAligned falls back to "cross_asset_data_unavailable".
+              ...crossAssetCtx,
             };
 
             // Build minimal ScoringStrategy shape for evaluator.
