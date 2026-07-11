@@ -1084,12 +1084,17 @@ def submit_surface_code_iae(
     used_backend = backend_name
 
     for try_backend in backends_to_try:
+        # QC-2 (deep-scan 2026-07-11): UNIQUE per-attempt registry key so a real-but-exception'd job on
+        # backend A is never overwritten by the register_job() of the next backend attempt. The prior
+        # shared `temp_job_id = run_id` silently erased the first (possibly-real) job from BOTH the
+        # registry (watchdog can't cancel it) and the budget tracker.
+        temp_job_id = f"{run_id or f'ising_{int(t0)}'}_{try_backend}"
+        submission_attempted = False
         try:
             sampler = get_ibm_sampler(try_backend, token, instance)
             used_backend = try_backend
 
             # Register job with watchdog
-            temp_job_id = run_id or f"ising_{int(t0)}"
             cloud_job_registry.register_job(
                 temp_job_id, "ibm", sampler,
                 _IBM_ISING_ESTIMATED_RUN_SECONDS, enc.n_physical_qubits
@@ -1097,6 +1102,7 @@ def submit_surface_code_iae(
 
             # Submit job (SamplerV2 interface)
             pub = (enc.circuit,)
+            submission_attempted = True  # QC-2: past this point IBM may have accepted the job server-side
             job = sampler.run([pub], shots=1024)
             job_id = job.job_id()
 
@@ -1120,6 +1126,23 @@ def submit_surface_code_iae(
 
         except Exception as exc:
             last_error = str(exc)
+            # QC-2: if the exception happened AT/AFTER sampler.run(), IBM may have accepted the job
+            # server-side (client-side timeout / connection reset) — a real QPU job could be
+            # running/billing against the 600s/month cap. Record the estimated cost as an ambiguous
+            # pending charge (CONSERVATIVE — over-counts rather than under-counts, so can_run_ibm() never
+            # understates true usage) and leave the unique registry entry so a reconciliation pass can
+            # query IBM for the orphaned job. Failures BEFORE submission (sampler creation / registration)
+            # created no job and record nothing.
+            if submission_attempted:
+                try:
+                    tracker.record_ibm_usage(
+                        _IBM_ISING_ESTIMATED_RUN_SECONDS,
+                        temp_job_id,
+                        try_backend,
+                        pending_reconcile=True,
+                    )
+                except Exception:
+                    pass
             logger.warning(
                 "submit_surface_code_iae: backend %s failed: %s — trying next",
                 try_backend, exc,

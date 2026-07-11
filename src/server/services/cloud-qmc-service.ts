@@ -370,15 +370,19 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
     let selectedBackend: IbmBackend = IBM_BACKENDS[0];
     let submittedQpuSeconds: number | null = null;
 
-    for (const backend of IBM_BACKENDS) {
-      selectedBackend = backend;
+    // QC-2 (deep-scan 2026-07-11): call Python ONCE. submit_surface_code_iae() already rotates through
+    // ALL IBM_ISING_BACKENDS internally (cloud_backend.py:1081). The prior outer `for backend of
+    // IBM_BACKENDS` loop multiplied that: 3 (TS) x 3 (Python-internal) = up to 9 real IBM API round-trips
+    // for what should be a single exhaustive 3-backend attempt — tripling real cloud exposure/latency.
+    {
+      selectedBackend = IBM_BACKENDS[0];
       try {
         const configPath = `${tmpdir()}/cloud_qmc_submit_${randomUUID()}.json`;
         writeFileSync(
           configPath,
           JSON.stringify({
             action: "submit_surface_code_iae",
-            backend_name: backend,
+            backend_name: IBM_BACKENDS[0],
             run_id: runId,
             backtest_id: backtestId,
             strategy_id: strategyId,
@@ -393,11 +397,15 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
         unlinkSync(configPath);
 
         if (pyResult.status === "submitted" || pyResult.status === "completed") {
-          // Update row with IBM job ID and submission timestamp
+          // Record the backend Python ACTUALLY rotated to (used_backend), not the seed — the prior
+          // per-TS-loop code stamped the loop's seed backend even when Python internally fell through
+          // to a different one.
+          const actualBackend = (pyResult.backend_name as IbmBackend) || IBM_BACKENDS[0];
+          selectedBackend = actualBackend;
           await db
             .update(cloudQmcRuns)
             .set({
-              backendName: backend,
+              backendName: actualBackend,
               ibmJobId: pyResult.ibm_job_id,
               submittedAt: new Date(),
               status: pyResult.ibm_job_id ? "running" : "failed",
@@ -411,17 +419,15 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
           submittedQpuSeconds = pyResult.qpu_seconds_used ?? null;
           submitSuccess = true;
           logger.info(
-            { runId, backend, ibmJobId: pyResult.ibm_job_id, strategyId },
+            { runId, backend: actualBackend, ibmJobId: pyResult.ibm_job_id, strategyId },
             "cloud-qmc: IBM job submitted",
           );
-          break;
         } else if (pyResult.status === "budget_exhausted") {
           await db
             .update(cloudQmcRuns)
             .set({ status: "budget_exhausted", errorMessage: pyResult.error_message })
             .where(eq(cloudQmcRuns.id, runId));
 
-          // Budget exhausted mid-rotation — mark cost row failed
           await completeCost(cloudQmcCostRowId, {
             wallClockMs: Date.now() - enqueueStartMs,
             status: "failed",
@@ -430,11 +436,11 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
           return;
         } else {
           lastError = pyResult.error_message ?? `status=${pyResult.status}`;
-          logger.warn({ runId, backend, error: lastError }, "cloud-qmc: backend submission failed, trying next");
+          logger.warn({ runId, error: lastError }, "cloud-qmc: submission failed (all IBM backends exhausted internally)");
         }
       } catch (err) {
         lastError = err instanceof Error ? err.message : String(err);
-        logger.warn({ runId, backend, err: lastError }, "cloud-qmc: backend error, trying next");
+        logger.warn({ runId, err: lastError }, "cloud-qmc: submission error");
       }
     }
 
