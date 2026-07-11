@@ -4,6 +4,7 @@ import {
   compareBaseline,
   parsePytestJunit,
   parseVitestJson,
+  validateManifest,
 } from "../compare-baseline.mjs";
 
 const baseline = {
@@ -105,5 +106,25 @@ describe("compareBaseline", () => {
     expect(() => parsePytestJunit("<testsuite tests=\"2\"/>")).toThrow(
       "pytest_report_malformed",
     );
+  });
+});
+
+describe("validateManifest", () => {
+  it("refuses to grade an unfrozen seed manifest", () => {
+    expect(() => validateManifest({ frozen: false })).toThrow(
+      "baseline_manifest_unfrozen",
+    );
+  });
+
+  it("accepts only the pre-registered threshold version", () => {
+    expect(() => validateManifest({
+      frozen: true,
+      thresholdVersion: "rails_thresholds_v0",
+    })).toThrow("baseline_manifest_version_invalid");
+
+    expect(() => validateManifest({
+      frozen: true,
+      thresholdVersion: "rails_thresholds_v1",
+    })).not.toThrow();
   });
 });

@@ -1,5 +1,7 @@
 {
-  "_comment": "rails_thresholds_v1 seed. Freeze failure IDs and collection floors only from the first successful Linux runner bring-up; every later change requires a dated commit and reason.",
+  "_comment": "Seed only. The comparator refuses to grade until the first Linux runner bring-up freezes real failure IDs and collection floors in a dated commit.",
+  "thresholdVersion": "rails_thresholds_v1",
+  "frozen": false,
   "vitest": {
     "knownFailures": [],
     "collectionFloor": 0

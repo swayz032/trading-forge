@@ -6,6 +6,15 @@ function stableStrings(values) {
   return [...new Set(values.map((value) => String(value)))].sort();
 }
 
+export function validateManifest(manifest) {
+  if (!manifest || manifest.frozen !== true) {
+    throw new Error("baseline_manifest_unfrozen");
+  }
+  if (manifest.thresholdVersion !== "rails_thresholds_v1") {
+    throw new Error("baseline_manifest_version_invalid");
+  }
+}
+
 export function compareBaseline({ results, baseline }) {
   const resultsMalformed = !results
     || !Array.isArray(results.failures)
@@ -113,6 +122,7 @@ function runCli() {
   }
 
   const manifest = JSON.parse(readFileSync(baselinePath, "utf8"));
+  validateManifest(manifest);
   const baseline = manifest[suite];
   if (!baseline) {
     throw new Error(`no baseline section for suite ${suite}`);
