@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-11
 **Status:** APPROVED by operator (this date) — "Rails + tiering" posture selected over "rails only" and "mega-scan first".
-**Operator decisions baked in:** (1) CI runs on a **self-hosted WSL2 runner on the tower** ($0; coupling caveat accepted — see Rail 1 §risks); (2) FROZEN tier list adopted **as proposed** (operator is non-technical and delegated the list; every entry is reversible by saying "unfreeze X" — no code consequence, it only redirects hardening attention).
+**Operator decisions baked in:** (1) CI runs on a **self-hosted WSL2 runner on the tower** ($0; coupling caveat accepted — see Rail 1 §risks); (2) FROZEN tier list adopted **as proposed** (operator is non-technical and delegated the list; every entry is reversible by saying "unfreeze X" — no code consequence, it only redirects hardening attention); (3) **every heavy rail job MUST use the soak harness's tower-idle guard pattern** (operator mandate 2026-07-11: "checks to make sure nothing running on the tower first" — the tower has 8 GB VRAM / 32 GB RAM and concurrently hosts agent campaign work like extraction/backtest builds). See §4b.
 **Governance:** every rail is NON-INSTRUMENT (CI, telemetry, read-only reports, test-only additions). Nothing here alters engine behavior, gates, sizing, or measurement outputs. Any future item that would (e.g. wiring a VIX feed) still requires its own ratify packet per the `ratify-packet` skill. The held packets (3/4/5, PC-1) are untouched by this program.
 
 ---
@@ -43,7 +43,7 @@ Hardening time has been consumed by five recurring patterns (receipts in AGENT-L
 3. Full **vitest** run (Linux sidesteps the Windows tinypool OOM) → compared against the baseline manifest.
 4. Fast **pytest** tier (golden fixtures / metric snapshots; vectorbt mocked per the pinned collection-hang trap).
 
-**FULL lane** (`.github/workflows/full.yml`, nightly + manual dispatch): complete pytest including slow/integration tiers, the 2-pass PGlite fresh-bootstrap migration replay, `test:full-fleet` vitest config.
+**FULL lane** (`.github/workflows/full.yml`, nightly + manual dispatch): complete pytest including slow/integration tiers, the 2-pass PGlite fresh-bootstrap migration replay, `test:full-fleet` vitest config. **First step is the tower-idle guard (§4b)** — busy → exit "skipped: tower busy" with a Discord line; scheduled outside the 03:00–09:00 soak quiet window (default 22:00 tower-local, finishing before the 23:30 rig). GPU-dependent tests (pennylane lightning.gpu / qiskit-aer paths) are excluded in CI via the baseline manifest — the WSL2 runner has no GPU passthrough and must never touch the tower's VRAM.
 
 **Baseline-failure manifest** (`ci/baseline-failures.json`, tracked): the list of currently-known failing tests. CI diffs actual failures against it — a NEW failure is RED; a fixed one emits a nag to shrink the manifest. This makes the pinned fact "a raw failure count is meaningless until classified" permanently machine-enforced.
 
@@ -55,7 +55,7 @@ Hardening time has been consumed by five recurring patterns (receipts in AGENT-L
 
 ## 4. Rail 2 — Nightly Certification Rig (tower-side)
 
-A scheduled job in the existing tower pattern (peer of TF-Tower-Soak / nightly-maint): fires **04:00 ET** (after the 03:00 restart), skips with an audit row if backtest concurrency is busy or RTH is near.
+A scheduled job in the existing tower pattern (peer of TF-Tower-Soak / nightly-maint): fires **23:30 tower-local**. NOT 04:00 — the soak harness owns a 03:00–09:00 QUIET window (its measurements require an idle tower; rig backtests inside that window would mark every soak night busy/INVALID and destroy the green-streak evidence). 23:30 also clears the 03:00 nightly-maint restart. Start and every 5 minutes mid-run, the rig consults the tower-idle guard (§4b): busy at start → SKIP (one Discord line, no certificate); busy mid-run → graceful ABORT → certificate marked INVALID (never graded, never diffed — mirrors soak semantics; SKIP/INVALID nights never fabricate a comparison, the next clean night simply diffs across a 2-day commit range).
 
 **Stages (all pinned, all dry-run):** pinned data slice (recorded snapshot hash) + pinned seeds through the real code paths:
 1. *(v2 — not in rig v1)* Extraction probe on the existing 5-fixture parity set (gemma4:e4b-it-qat) — field-level output captured.
@@ -67,6 +67,25 @@ A scheduled job in the existing tower pattern (peer of TF-Tower-Soak / nightly-m
 **Certificate:** one JSON per night in `data/certificates/` (gitignored dir; data lives on tower disk) — every number produced (trade counts, P&L, gate verdicts, extraction fields, snapshot hash, seeds, HEAD SHA). **Diff engine** compares tonight vs the last clean night: any numeric drift without a code-change explanation ⇒ Discord CRITICAL with the exact numbers + the commit range since the last clean certificate. Zero drift ⇒ one green digest line.
 
 **Rules:** dry-run flags throughout (replay-harness convention — no prod-table writes); no `Date.now()`-dependent paths in the rig itself; nondeterminism discovered by the rig is itself a P1 finding (replay-determinism is a claimed institutional property).
+
+## 4b. Shared component — Tower-Idle Guard (adopted from the soak harness)
+
+The soak harness (spec `wt-soak/docs/superpowers/specs/2026-07-11-soak-harness-design.md`, guard `wt-soak/scripts/soak/soak-guard.cjs`) already solved "don't run heavy work when the tower is busy" as a PURE, fail-closed decision function. The rails ADOPT it verbatim as the standard preflight for every heavy job. Decision order (first match wins):
+
+1. **Operator switch** (`system_parameters` rows, soak pattern): mode `off` → SKIP; `skip_until` in the future → SKIP; switch unreadable → SKIP (fail-closed — never run under uncertainty).
+2. **Backend unreachable** → SKIP/ABORT (itself a finding, one Discord line).
+3. **`/api/health` `backtestConcurrency.active > 0`** → busy.
+4. **Python worker processes present** (`Get-Process`) → busy — catches agent campaign work (extraction batteries, backtest builds) even when the API's own counter reads 0.
+5. **GPU util > 25% sustained** (`nvidia-smi`) → busy — catches gemma extraction holding the 8 GB VRAM.
+6. Else → RUN. Phase semantics: busy at START → SKIP; busy MID-RUN (re-check every 5 min) → graceful ABORT, output marked INVALID.
+
+**Vendoring note:** `wt-soak` is an UNLANDED, LOCKED worktree — its files are not on `hardening/phase-0` yet. The rails build vendors the 20-line pure `decide()` into a shared `scripts/lib/tower-idle-guard.cjs` (credited to the soak harness in-file); when wt-soak lands, the two unify into one module in the same commit. The soak harness's own DI-tested guard tests (`soak-guard.test.mjs`) are the template for the rails' guard tests.
+
+**Who consults the guard:** the nightly certification rig (Rail 2, start + mid-run); the CI FULL lane (Rail 1, pre-job step — busy → exit "skipped: tower busy" + Discord line, next nightly attempt covers the gap); the engagement-report and divergence-alarm crons do NOT (they are one-query lightweights). The CI FAST lane does NOT consult the guard — it is small, CPU-only, and hard-capped by `.wslconfig` (≤8 GB / 4 cores), so it cannot contend for VRAM or starve campaign work; if experience shows otherwise, adding the guard step is a one-line change.
+
+**Scheduling dead zone:** no rail job may be scheduled inside **03:00–09:00 tower-local** — that window belongs to the soak harness's quiet measurement. The rails and the soak are complementary instruments (rails measure correctness, soak measures endurance); they must never invalidate each other.
+
+**WSL blind-spot + nightly ordering:** the guard's python-process check runs `Get-Process` on Windows and CANNOT see inside the WSL2 VM (Linux processes appear only as `vmmem`) — so the guard cannot detect a still-running CI FULL lane. Therefore the two heavy nightly jobs are ordered STRUCTURALLY, not by detection: one tower-side nightly sequence triggers **FULL lane (22:00) → wait for completion → certification rig (no earlier than 23:30)**, single-file. The `.wslconfig` cap (≤8 GB / 4 cores) bounds the worst case if ordering ever breaks, but sequence-by-construction is the contract.
 
 ## 5. Rail 3 — Engagement telemetry + contract registry
 
@@ -119,6 +138,7 @@ Total ≈ 6–10 sessions ≈ the cost of ~3 deep-scans, permanent payoff.
 - Registry: an unregistered seam key in a fixture ⇒ check fails.
 - Metamorphic: temporary branch with an injected future-bar read ⇒ test fails.
 - Divergence alarm: synthetic ref N commits back ⇒ alarm fires.
+- Tower-idle guard: DI-fed busy samples (backtests active / python workers / GPU 80% / switch off / unreadable switch) ⇒ SKIP or ABORT in every case, RUN only on the all-quiet fixture (template: `soak-guard.test.mjs`).
 
 ## 10. Non-goals
 
