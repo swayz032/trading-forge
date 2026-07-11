@@ -4,6 +4,39 @@
 
 ---
 
+### Session Log — 2026-07-11 P0 429 self-call-storm forensics + 3 non-instrument hardening fixes LANDED + DEPLOYED; whole-board from-zero re-verification (19-agent workflow)
+
+**Mission:** operator "get all systems correctly wired, institutional-grade, production-hardened, bug-free, fast." Mission-loaded, then triaged the live tower before planning.
+
+**Live P0 found on first health check:** `/api/health` was returning persistent **429** — the API process (`node` PID 15340) was issuing SILENT localhost self-calls to its own `:4000` at ~112 req/s for hours, exhausting the tower's ephemeral TCP port pool (**16.2K TIME_WAIT sockets**, dynamic range 49152-65535). The instrumented limiter log showed `ip:"::1"`/`"::ffff:127.0.0.1"`, `count` climbing to 3800+/window. Two arms, both PRE-dating the 03:00 nightly-maint NSSM restart (a deliberate `nightly-maint.ps1` daily restart, NOT the soak task — soak-watcher.cjs is observability-only, 1 health GET/30s, and it SKIPPED the night `backend_unreachable`). Storm died at my 03:19 forensic self-restart and never re-armed.
+
+**Work completed (3 non-instrument fixes, LANDED `30a391b1`→`4444ee28` on `hardening/phase-0`, FF-only via isolated worktree `wt-fixwave-p0-20260711` pinned to base SHA, pushed + deployed):**
+- **`rate-limit.ts` forensic instrumentation** (committed first, `30a391b1`): rejection log now carries path/method/UA + 500x sampling (was ~13M identical lines/day with zero attribution).
+- **`rate-limit.ts` escape-valve exemptions:** `/api/admin/self-restart` exempt for all callers (own HMAC auth — the recovery path was itself 429'd, observed live), `/api/health` exempt for genuine local callers (no `x-relay-verified-ip`) so dead-man heartbeat / soak / NSSM never go blind; relay-forwarded health stays metered per-caller.
+- **`audit-log-helper.ts` `coerceEntityId()`:** `audit_log.entity_id` is a `uuid` column but ~40 call sites across 17 files pass non-UUID strings (`boot-<ts>`, job names, firm ids, `${symbol}:${date}`, YouTube URLs) → Postgres rejected the INSERT (`invalid input syntax for type uuid`) → row **silently dropped** (incl. kill-switch DLL halt/force-close rows + all bias-engine session rows). Now coerces the raw value into `input.entity_ref` and nulls the uuid column so the row PERSISTS. **Verified live:** the post-fix boot emitted **0** `invalid input syntax for type uuid` errors (was firing every boot on `synthetic_regime_bank.self_heal_skipped_populated`).
+- **`openai-proxy.ts` + `model-router.ts` self-call amplifier:** budget-429 now sends `Retry-After` (secs-to-UTC-midnight, capped 3600); the local-proxy OpenAI client gets `maxRetries:0` so the SDK stops silently re-issuing loopback self-calls on budget-429 (a ranked storm suspect).
+
+**Verification:** worktree `tsc --noEmit` exit 0 (real binary via junctioned node_modules); **8/8** new vitest (`p0-429-storm-hardening.test.ts`) green + existing `deepscan-fixwave-rate-limit-relay-ip.test.ts` 3/3 no regression; all 3 CI gates green (production-isolation CLEAN, 2026-compliance OK, system-map status ok / driftItems=[]); diff-stat tripwire +72/−3 across the 4 reviewed files (no wrong-base-revert signature). Post-deploy `/api/health` = 200, database/ollama/python ok, missing:[], sockets to :4000 back to 7, 0 rate-limit lines, 0 uuid errors. Worktree cleaned up (junction reparse-safe delete, main node_modules intact).
+
+**Whole-board from-zero re-verification (19-agent Workflow, read-only, doer≠grader):** re-verified every open carry-forward. **Most are already CLOSED** by the concurrent ~200-commit waves (the stale 2026-07-10 "8/11 Track B open" memory overstates what remains):
+- CLOSED/superseded: branch-topology (main↔phase-0 back-merge simulates CLEAN via `git merge-tree --write-tree`, 0 conflicts), local-main-orphans (contained in `origin/extraction/100pct-evidence`), ds14/ds18b (0 unlanded commits; Pine reconcile harness present), eligibility-parity-gap (ds21 B2 FIXED `c1735af1`+`379f7f21`), auth-key-state (API_KEY SET, tradingview fail-closed HMAC), ci-gates-fresh (3 gates + tsc all exit 0), n8n-live-drift (20/20 clean, no retired models, proxy tokens present), soak-3am-boot (nightly-maint restart, not a crash).
+- Track B (5 spot-checked): **2 remain OPEN** — daily-trade-cap leg overcounting (3 sites confirmed live) + partial-fill model backtest-only; 3 FIXED (confluence-sizing drift, SHADOW auto-reachable via Gate 1.5, PM-taper wired).
+- breaker/unicorn: valid_from streaming-validity resolution CONFIRMED on tip + both regression tests present (provisional flag can lift on operator confirm).
+- Still OPEN (need packets/decisions): **C1 exchange_outages phantom-block** (80 stale CME rows, dead probe URL, hard-blocks paper entries once trading starts — latent today, 0 live impact), dormant VIX-margin (no VIX feed reaches backtest frame — CLAUDE.md §12 "DEFAULT ON" overstates), dep-wipe boot-guard (none exists), ds19 branch (disk-full + extraction-parity gate absent), worktree debt (~10 genuinely unmerged), MFFU same-device (config-flag/advisory only, KB doc still claims "enforced in code").
+
+**Staged (NOT started):** `docs/ratify-packets-2026-07-11.md` — Packet 1 for the C1 exchange_outages phantom-block (execution-gate; full 5-part packet + phantom-row SQL close-out). HELD for explicit operator ratification; the confluence-sizing packet from 2026-07-10 marked SUPERSEDED.
+
+**Known-facts updates:** new pin (below) — persistent `:4000` 429 from `::1`/loopback = in-process self-call storm exhausting the ephemeral port pool, NOT external abuse; `netstat` client-PID map + the path/method/UA rate-limit attribution are the diagnostics; escape-valve routes (`self-restart`, local `health`) are now exempt.
+
+**Carry-forward for next session:**
+- **C1 exchange_outages** — Packet 1 staged, needs operator ratify before code + phantom-row SQL close-out. Highest-value real fix (blocks paper entries once trading starts).
+- **main→phase-0 back-merge** — 160 commits main has (incl. ratified instrument wave: paper-exec Style C TP1 R-basis, confluence cross_asset wiring, framework-overlay structural stop, DLL parity) that the LIVE NSSM phase-0 line LACKS; `merge-tree` says CLEAN (0 conflicts). Operator-gated (production deploy decision).
+- **Track B** — 2 confirmed-open (daily-cap leg overcount, partial-fill live gap) need their own packets; remaining findings re-verify from zero.
+- **Non-instrument autonomous items** ready when authorized: dep-wipe boot-guard (`nodeDependencies` preflight mirroring `checkPythonDependencies`), CLAUDE.md §12 VIX-margin DORMANT correction, MFFU KB doc "advisory-only" correction, worktree prune list, local-main ref reset.
+- **Untested this session:** full vitest/pytest suites on tip (CI runs ~9 gates; only 3 + tsc verified), frontend build, DB-backup freshness, Pine/family distribution lane, quantum SHADOW runtime.
+
+---
+
 ### Session Log — 2026-07-11 phase-0 → main MERGE + DEPLOY (operator "deploy and merge to main") — incl. tf-relay prod crash caught+fixed
 
 **Mission:** on explicit operator "deploy and merge to main", merge the reconciled `hardening/phase-0` into `main` (Railway `tf-relay` deploy line) and deploy — done in isolation, verified, with a prod incident caught and recovered mid-deploy.
@@ -14016,6 +14049,10 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
+
+Symptom: `/api/health` (and everything under `/api`) returns **429 Too Many Requests** for minutes-to-hours; `netstat`/`Get-NetTCPConnection -RemotePort 4000` shows **tens of thousands of TIME_WAIT** sockets (the dynamic port range is only ~16K wide — 49152-65535 — so it saturates). The rate-limit log shows `ip:"::1"` or `"::ffff:127.0.0.1"` with `count` climbing into the thousands per window. **Do NOT conclude external abuse or a broken client** — the TradingForgeAPI process is calling ITS OWN `:4000` API in a tight loop with a NEW connection per request (no keep-alive), so it burns a socket per call and TIME_WAIT accumulates faster than the OS reclaims. Confirm the source: `Get-NetTCPConnection -RemotePort 4000 -State Established` → map `OwningProcess` (the storm PID == the API's own node PID proves in-process). In-process self-call suspects (all issue `fetch`/OpenAI-SDK calls to localhost): `model-router.ts`→local `openai-proxy` (SDK auto-retries a budget-429 with no backoff = amplifier), `carter-issue-watcher` health poll, `autonomous-scout-runner`/`carter-actions` scout-extract loops, `pre-market-routine` bars fetches. Out-of-process loopback clients on the box: `tower-relay-client.cjs`, the Discord bot, and the **OpenClaw gateway pm2-vs-NSSM duplicate-supervision conflict** (pm2 resurrects `openclaw-gateway` at ~50% CPU while an NSSM twin crash-loops — its cron payloads embed `localhost:4000` URLs). Fixes shipped 2026-07-11: rate-limit rejection log now carries path/method/UA + 500x sampling (was ~13M blind lines/day); `/api/admin/self-restart` (own HMAC auth) + local `/api/health` are now rate-limit EXEMPT so recovery + heartbeat don't starve; local-proxy OpenAI client is `maxRetries:0` + budget-429 sends `Retry-After`. On recurrence: capture the client-side socket owner immediately (`netstat -ano | findstr :4000` → PID), the attribution is already armed. Recovery = HMAC self-restart (NSSM tree-restart clears TIME_WAIT); the storm did NOT re-arm after restart, so the trigger is boot-condition-sensitive — grab the PID before restarting if you can.
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)
 
