@@ -398,8 +398,12 @@ async function _evaluateStrategyDrift(
 ): Promise<DriftDetectorStrategyResult> {
   const { id: strategyId, name: strategyName, symbol, regimeTrainedOn } = strategy;
 
-  // Step 6a: Legacy null regime_trained_on — skip with info audit
-  if (!regimeTrainedOn) {
+  // Step 6a: Legacy null / UNKNOWN-sentinel regime_trained_on — skip with info audit.
+  // FG-2 (deep-scan 2026-07-11): the freeze path stamps regime_trained_on="UNKNOWN" when bias_state
+  // was empty/errored at freeze time. Real regimeLabel values are never literally "UNKNOWN", so the
+  // allDiffer check below (every r !== regimeTrainedOn) would be unconditionally true and falsely
+  // demote a strategy frozen during a bias-data outage — a freeze-time provenance gap, not drift.
+  if (!regimeTrainedOn || regimeTrainedOn === "UNKNOWN") {
     logger.info(
       { correlationId, strategyId, strategyName },
       "regime-drift-detector: legacy strategy (regime_trained_on IS NULL) — skipped",
@@ -424,16 +428,30 @@ async function _evaluateStrategyDrift(
     };
   }
 
-  // Step 4: Read last 5 days of bias_state.regime_label for the strategy's symbol.
-  // Order by session_date DESC, take 5 rows, each row = one trading day's regime.
+  // Step 4: Read the last DRIFT_CONSECUTIVE_DAYS DISTINCT trading days of bias_state.regime_label.
+  // FG-1 (deep-scan 2026-07-11): bias_state carries MULTIPLE rows per (session_date, symbol) —
+  // session-start + intraday refresh / position-lock INSERTs with no unique constraint. A plain
+  // `.orderBy(session_date DESC).limit(5)` returned ~2-3 CALENDAR days of mixed superseded +
+  // authoritative rows, violating the "5 consecutive DAYS" contract. Order by session_date DESC then
+  // computed_at DESC so each day's authoritative (latest computed_at) row sorts first, over-fetch,
+  // then dedup by session_date in JS to yield 5 DISTINCT days. Plain select + JS dedup keeps it
+  // portable (no DB-specific selectDistinctOn) and unit-mockable.
   const recentRows = await db
     .select({ regimeLabel: biasState.regimeLabel, sessionDate: biasState.sessionDate })
     .from(biasState)
     .where(eq(biasState.symbol, symbol))
-    .orderBy(desc(biasState.sessionDate))
-    .limit(DRIFT_CONSECUTIVE_DAYS);
+    .orderBy(desc(biasState.sessionDate), desc(biasState.computedAt))
+    .limit(DRIFT_CONSECUTIVE_DAYS * 10);
 
-  const recentRegimes = recentRows.map((r) => r.regimeLabel);
+  const seenDays = new Set<string>();
+  const recentRegimes: string[] = [];
+  for (const r of recentRows) {
+    const dayKey = String(r.sessionDate);
+    if (seenDays.has(dayKey)) continue;
+    seenDays.add(dayKey);
+    recentRegimes.push(r.regimeLabel);
+    if (recentRegimes.length >= DRIFT_CONSECUTIVE_DAYS) break;
+  }
 
   if (recentRegimes.length < DRIFT_CONSECUTIVE_DAYS) {
     // Insufficient data — cannot establish 5-consecutive-day pattern
