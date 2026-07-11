@@ -35,7 +35,10 @@ const CFG = {
   dataDir: process.env.SOAK_DATA_DIR || path.join(process.cwd(), "data", "soak"),
   buildSha: process.env.SOAK_BUILD_SHA || null,
   dryRun: process.argv.includes("--dry-run"),
+  forceRun: process.argv.includes("--force-run"), // bypass guard to exercise the RUN path
 };
+// Test runs (dry/force) write a SEPARATE action so they never pollute the real ledger or calibration count.
+const AUDIT_ACTION = (CFG.dryRun || CFG.forceRun) ? "soak.night_completed_test" : "soak.night_completed";
 
 if (!process.env.DATABASE_URL) { console.error("soak-watcher: DATABASE_URL not resolved from any .env candidate"); process.exit(2); }
 const sql = postgres(process.env.DATABASE_URL, { max: 1 });
@@ -54,7 +57,9 @@ async function readSwitch() {
 }
 
 async function nightIndex() {
-  try { const [r] = await sql`SELECT count(*)::int AS n FROM audit_log WHERE action='soak.night_completed'`; return r?.n ?? 0; }
+  // Calibration counts ONLY genuinely-measured nights. SKIP/INVALID rows must not advance it,
+  // or 14 nightly SKIPs (e.g. during a campaign) would "complete calibration" having observed nothing.
+  try { const [r] = await sql`SELECT count(*)::int AS n FROM audit_log WHERE action='soak.night_completed' AND result->>'outcome'='RAN'`; return r?.n ?? 0; }
   catch { return 0; }
 }
 
@@ -62,7 +67,7 @@ async function writeAudit(payload) {
   // audit_log: append-only (0058 trigger). status NOT NULL (success|failure|pending);
   // decision_authority='scheduler' so nightly rows NEVER reset the vacation operator-absence detector.
   await sql`INSERT INTO audit_log (action, status, decision_authority, result)
-            VALUES ('soak.night_completed', 'success', 'scheduler', ${sql.json(payload)})`;
+            VALUES (${AUDIT_ACTION}, 'success', 'scheduler', ${sql.json(payload)})`;
 }
 
 async function discord(msg) {
@@ -83,7 +88,7 @@ async function main() {
 
   const first = await sample();
   const sw0 = await readSwitch();
-  const g0 = decide({ sample: first, sw: sw0, gpuBusyPct: CFG.gpuBusyPct, nowMs: Date.now(), phase: "startup" });
+  const g0 = CFG.forceRun ? { action: "RUN", reason: "forced" } : decide({ sample: first, sw: sw0, gpuBusyPct: CFG.gpuBusyPct, nowMs: Date.now(), phase: "startup" });
   if (g0.action !== "RUN") {
     appendJsonl(jsonl, { type: "skip", reason: g0.reason, tMs: startMs, nightIndex: idx });
     await writeAudit({ outcome: "SKIPPED", verdict: "SKIPPED", reason: g0.reason, nightIndex: idx, thresholds: V.THRESHOLDS_V1.version, buildSha: CFG.buildSha });
@@ -94,7 +99,7 @@ async function main() {
 
   const samples = [first];
   const stepMs = (CFG.dryRun ? 2 : CFG.sampleSec) * 1000;
-  const windowMs = CFG.dryRun ? 180000 : CFG.windowMin * 60000; // 3-min dry-run
+  const windowMs = CFG.dryRun ? Number(process.env.SOAK_DRY_WINDOW_MS || 180000) : CFG.windowMin * 60000; // dry default 3-min
   let lastRecheck = startMs, aborted = null;
 
   while (Date.now() - startMs < windowMs) {
@@ -102,7 +107,7 @@ async function main() {
     const s = await sample();
     samples.push(s);
     appendJsonl(jsonl, { type: "sample", tMs: s.tMs, sample: s });
-    if (CFG.dryRun || Date.now() - lastRecheck >= CFG.recheckSec * 1000) {
+    if (!CFG.forceRun && (CFG.dryRun || Date.now() - lastRecheck >= CFG.recheckSec * 1000)) {
       lastRecheck = Date.now();
       const g = decide({ sample: s, sw: await readSwitch(), gpuBusyPct: CFG.gpuBusyPct, nowMs: Date.now(), phase: "midrun" });
       if (g.action === "ABORT") { aborted = g.reason; break; }
