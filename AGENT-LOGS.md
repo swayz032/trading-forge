@@ -4,6 +4,29 @@
 
 ---
 
+### Session Log — 2026-07-11 phase-0 → main MERGE + DEPLOY (operator "deploy and merge to main") — incl. tf-relay prod crash caught+fixed
+
+**Mission:** on explicit operator "deploy and merge to main", merge the reconciled `hardening/phase-0` into `main` (Railway `tf-relay` deploy line) and deploy — done in isolation, verified, with a prod incident caught and recovered mid-deploy.
+
+**Topology found (surfaced to operator first):** `main` was NOT behind `hardening/phase-0` — it had **158 commits of its own** (a ratified re-scan/cert wave incl. instrument code: paper-exec Style C TP1 R-basis, confluence cross_asset wiring, framework-overlay structural-stop, DLL parity) while phase-0 had 107 main lacks. A genuine 265-commit two-way divergence forked at `d0e3408a` — a second reconciliation, not a promote. Operator confirmed proceed.
+
+**Work completed:**
+- Merged `origin/hardening/phase-0` (`b0cd4755`) into `origin/main` (`dce23ced`) in isolated worktree `wt-main-merge-20260711` → merge `8c46a293`. Only 4 conflicts, ALL non-instrument (3 generated docs regenerated via `system-map.ts sync`; 1 test file `wave25-drift-cron-gate-exempt.test.ts` → kept the deepscan23 declaration-anchor fix). `backtester.py`/`index.ts`/`scheduler.ts`/`confluence-score.ts`/`paper-signal-service.ts`/`paper-execution-service.ts` all auto-merged clean.
+- **Verified NO revert of main's ratified instrument work:** `git diff dce23ced..merge` on paper-signal-service.ts / paper-execution-service.ts / confluence-score.ts = **unchanged (0 lines)**; backtester.py = +22/−0 (phase-0 additive). Both parents ancestors of the merge.
+- Verification: tsc 0 errors, all 3 CI gates green, diff-stat +23280/−4360 non-frontend (additive, no wrong-base-revert signature). Pushed to `origin/main` (`8c46a293`).
+- **PROD INCIDENT (caught + fixed same session):** the push deployed tf-relay → it **crash-looped** `MODULE_NOT_FOUND: ./ip-sanitize.js`. Root cause: the /goal deep-scan added `railway-relay/ip-sanitize.js` + a `require('./ip-sanitize.js')` in `server.js`, but never updated `railway-relay/Dockerfile` (which does `COPY server.js ./` only). Dormant on phase-0 (never deploys); the merge put it on main = first deploy = crash. Fixed via `COPY ip-sanitize.js ./` in the Dockerfile (main `60510ce3`, phase-0 `6c15bd4f`). **Key gotcha:** Railway's `ON_FAILURE` retries + `railway redeploy` both REUSE the crashed image (no rebuild), and the GitHub auto-deploy of the hotfix commit didn't build in time — so the crash persisted through 3 deploy IDs. Resolution = `railway up --service tf-relay` from the fixed local relay dir to force a fresh build. New deploy `64c70c38` = **SUCCESS**, runtime log `relay listening on :8080`, public URL now **HTTP 200** (was 000).
+
+**Verification (deploy):** `railway logs` clean (no MODULE_NOT_FOUND); `railway deployment list` newest = SUCCESS; `curl https://tf-relay-production.up.railway.app/` = HTTP 200. `origin/main` = `60510ce3` (merge + Dockerfile hotfix). Tower `TradingForgeAPI` /api/health independently confirmed ok earlier this session (separate service, unaffected).
+
+**Known-facts updates:** pinned incident [[reference_relay_dockerfile_copy_gap_2026_07_11]] — a phase-0→main merge that first-deploys a relay file requiring a NEW sibling module crashes tf-relay if `railway-relay/Dockerfile` doesn't `COPY` it; Railway retries/redeploy reuse the broken image, `railway up` forces a fresh build. Firewall-worthy (new A-row candidate).
+
+**Carry-forward for next session:**
+- `main` (`60510ce3`) and `hardening/phase-0` (`6c15bd4f`) both carry the Dockerfile fix — parity restored, next merge won't re-crash.
+- The `railway up` deploy is from local files (= main's relay content); a future GitHub auto-deploy from main will rebuild the same fixed relay — consistent either way.
+- Concurrent session active this session (a soak-harness memory appeared mid-work) — shared-tree hazard; all phase-0 commits this session used explicit-path `git commit -o`.
+
+---
+
 ### Session Log — 2026-07-11 Tower/origin 3-way divergence reconciliation (`hardening/phase-0`)
 
 **Mission:** discovered mid-push-prep that the merge staged the previous session (`wt-merge-prep-20260710`) was built on a stale base and that tower-local `hardening/phase-0` and `origin/hardening/phase-0` had diverged far beyond "a few unpushed commits" — reconcile the two histories in an isolated worktree, verify, and report before pushing anything.
