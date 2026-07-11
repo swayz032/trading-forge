@@ -9,8 +9,26 @@ interface RateLimitConfig {
 
 const hits = new Map<string, { count: number; resetAt: number }>();
 
+// 2026-07-11 P0 fix (escape-valve starvation): during the ::1 self-call storm the
+// HMAC self-restart endpoint — the designed recovery path for exactly that failure —
+// was itself 429'd (observed live: first restart attempt rejected). Two exemptions:
+//   1. /api/admin/self-restart: exempt for ALL callers. The route carries its own
+//      HMAC-SHA256 + 60s replay-window auth; rate-limiting adds no security and can
+//      starve recovery when the limiter is saturated.
+//   2. /api/health: exempt ONLY for genuine local callers (no x-relay-verified-ip —
+//      the relay stamps that header on every tunneled request, so its absence means
+//      loopback/LAN). Dead-man heartbeat, NSSM checks, and the soak watcher must
+//      never go blind behind a 429; external health traffic stays metered per-caller.
+function isRateLimitExempt(req: Request): boolean {
+  const path = (req.originalUrl ?? "").split("?")[0];
+  if (path === "/api/admin/self-restart") return true;
+  if (path === "/api/health" && req.headers["x-relay-verified-ip"] == null) return true;
+  return false;
+}
+
 export function rateLimit(config: RateLimitConfig = { windowMs: 60_000, maxRequests: 100 }) {
   return (req: Request, res: Response, next: NextFunction) => {
+    if (isRateLimitExempt(req)) return next();
     // deep-scan fix-wave 2026-07-10 (Fix 3): req.ip resolves to the Express-observed
     // socket peer, which for ALL relay-forwarded traffic is loopback (tower-relay-client
     // reissues every request as a fresh local http.request() to localhost:4000) — so

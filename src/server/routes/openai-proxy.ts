@@ -207,6 +207,15 @@ openaiProxyRoutes.post("/v1/chat/completions", async (req, res) => {
       { tokensUsed: dailyUsage.tokensUsed, dailyBudget: DAILY_BUDGET },
       "openai-proxy: daily budget exhausted, returning 429",
     );
+    // 2026-07-11 P0: the OpenAI SDK client in model-router auto-retries 429s and,
+    // absent a Retry-After header, retries near-instantly — a silent localhost
+    // self-call amplifier (storm suspect #2 in the port-exhaustion incident).
+    // The budget resets at midnight UTC; advertise a real backoff.
+    const secsToUtcMidnight = Math.max(
+      60,
+      Math.ceil((Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + 1) - Date.now()) / 1000),
+    );
+    res.setHeader("Retry-After", Math.min(secsToUtcMidnight, 3600));
     res.status(429).json({
       error: {
         message: `Trading Forge daily GPT-5 mini budget exhausted (${dailyUsage.tokensUsed.toLocaleString()} / ${DAILY_BUDGET.toLocaleString()} tokens). Resets at midnight UTC. Falling back to Ollama recommended.`,

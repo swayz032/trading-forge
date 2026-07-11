@@ -1660,7 +1660,17 @@ async function callChatCompletions(
   // Send the proxy Bearer (shared API_KEY for the local proxy), not the raw
   // OpenAI key — the proxy authenticates via authMiddleware then uses its own
   // OPENAI_API_KEY upstream (deep-scan #13). apiKey above stays the cloud gate.
-  const client = new OpenAI({ apiKey: getOpenAIProxyBearer(), baseURL: getOpenAIProxyBase() });
+  // 2026-07-11 P0: maxRetries 0 when talking to the LOCAL proxy. The SDK default
+  // (2 retries) re-issues silent loopback self-calls on every proxy 429/5xx — a
+  // self-call amplifier flagged in the port-exhaustion incident. A local-proxy 429
+  // means the daily budget is gone (a retry cannot succeed today); the designed
+  // response is the caller's Ollama fallback. External proxies keep SDK defaults.
+  const isLocalProxy = !process.env.OPENAI_PROXY_BASE_URL;
+  const client = new OpenAI({
+    apiKey: getOpenAIProxyBearer(),
+    baseURL: getOpenAIProxyBase(),
+    ...(isLocalProxy ? { maxRetries: 0 } : {}),
+  });
 
   const allMessages = systemPrompt
     ? [{ role: "system" as const, content: systemPrompt }, ...messages]

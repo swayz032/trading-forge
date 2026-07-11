@@ -36,6 +36,36 @@ import { logger } from "./logger.js";
 /** Shape accepted by the audit_log table insert. Matches schema.$inferInsert. */
 export type AuditRowValues = typeof auditLog.$inferInsert;
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// 2026-07-11 P0 fix: audit_log.entity_id is a uuid column, but ~40 call sites across
+// 17 files pass non-UUID strings (boot tags like `boot-<ts>`, job names, firm ids,
+// `${symbol}:${date}` concatenations, YouTube URLs). Postgres rejects the INSERT with
+// `invalid input syntax for type uuid` and the row is silently lost — including
+// kill-switch DLL halt/force-close audit rows and all bias-engine session rows.
+// Rather than sweeping every caller, coerce here: preserve the raw value in
+// input.entity_ref and null the uuid column so the row PERSISTS. Callers passing
+// real UUIDs are untouched.
+export function coerceEntityId(values: AuditRowValues): AuditRowValues {
+  const raw = values.entityId;
+  if (raw == null || UUID_RE.test(raw)) return values;
+
+  const input = values.input;
+  const mergedInput =
+    input && typeof input === "object" && !Array.isArray(input)
+      ? { ...(input as Record<string, unknown>), entity_ref: raw }
+      : input == null
+        ? { entity_ref: raw }
+        : { wrapped_input: input, entity_ref: raw };
+
+  logger.debug(
+    { action: values.action, entityRef: raw },
+    "audit_log entityId is not a uuid — moved to input.entity_ref (row preserved)",
+  );
+
+  return { ...values, entityId: null, input: mergedInput };
+}
+
 // Track A F-6: insertAuditRowSafe — drop-in replacement for the raw
 // `db.insert(auditLog).values(...)` pattern used at 130+ call sites.
 //
@@ -49,7 +79,8 @@ export type AuditRowValues = typeof auditLog.$inferInsert;
 //   - Wraps in try/catch and logs on failure instead of rethrowing
 //   - Returns true on success, false on failure (never throws)
 //   - Callers that need throw-on-failure should use insertAuditRow instead
-export async function insertAuditRowSafe(values: AuditRowValues): Promise<boolean> {
+export async function insertAuditRowSafe(rawValues: AuditRowValues): Promise<boolean> {
+  const values = coerceEntityId(rawValues);
   if (values.correlationId == null) {
     logger.warn(
       {
@@ -83,7 +114,8 @@ export async function insertAuditRowSafe(values: AuditRowValues): Promise<boolea
  *
  * Rethrows DB errors so callers that `.catch()` errors continue to function.
  */
-export async function insertAuditRow(values: AuditRowValues): Promise<void> {
+export async function insertAuditRow(rawValues: AuditRowValues): Promise<void> {
+  const values = coerceEntityId(rawValues);
   if (values.correlationId == null) {
     logger.warn(
       {
