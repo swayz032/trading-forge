@@ -4,6 +4,20 @@
 
 ---
 
+### Session Log — 2026-07-11 Codex Rails Plan 1 repository build — PUSHED, host activation HELD on concurrent WSL ownership
+
+**Mission:** answer the operator's request for work that moves Trading Forge toward real institutional-grade operation without touching the locked extraction/engine-truth campaign; implement the approved non-instrument Rails Plan 1 in isolation.
+
+**Work completed:** created `wt-codex-rails-p1` from explicit SHA `f8d5855d`, then rebased cleanly onto authoritative `b7daa1b9`; built the self-hosted WSL fast-lane workflow, reasoned/frozen baseline comparator, dynamic all-`check:*` runner, dedicated rail-test collection config, CPU-only fast pytest requirements, standalone divergence alarm, standalone worktree-TTL reporter, JSONL/audit/Discord persistence helper, and three Task Scheduler registration scripts. Pushed six commits to `origin/hardening/codex-rails-p1-20260711`; zero engine/gate/sizing/classifier/DB/live-campaign files changed. System-map generated evidence was stale on the authoritative base and was refreshed through the mandated generator, restoring the gate.
+
+**Verification:** 30/30 dedicated rail tests GREEN; real `tsc --noEmit` GREEN after an intentional type-error RED proof; all 14 dynamically discovered non-core `check:*` scripts GREEN (including 33 gate fault-injection tests and TS↔Python parity); production-isolation, 2026-compliance, and system-map hard gates GREEN. Negative controls: deliberate Vitest failure RED and named; deliberate TS type error RED at the injected file/line; collection 27 vs frozen floor 28 returned RED with `floorBreached:true`; synthetic divergence 11 commits over threshold returned ALARM. Real read-only reporters found the known local-main fork and 11 >7-day worktrees; no worktree deleted and no Discord notification sent. GitHub-hosted legacy CI failed only at its pre-existing whole-`src/` lint debt (178 errors/673 warnings); the Plan-1 diff has no `src/` changes.
+
+**Known-facts updates:** the repo's root Vitest config collects only `src/**/*.test.ts`; rail tests outside `src/` require the new dedicated `ci/vitest.config.mjs`. Node 24 on Windows cannot directly `spawnSync("npm.cmd", ...)` under this environment; the check runner now uses `cmd.exe /d /s /c` on Windows and direct `npm` on Linux, covered by regression tests. The baseline manifest fails closed while `frozen:false` and cannot be frozen without positive collection floors plus a non-empty reason for every known failure.
+
+**Carry-forward for next session:** do NOT merge yet. GitHub fast-lane run `29170111576` is queued because no `wsl-tower` runner exists. WSL was actively owned by another session with a long-running NodeSource/apt process, so this session correctly did not run `wsl --shutdown`, rewrite the 24GB/12-core `.wslconfig`, or register competing tasks. Once WSL ownership is clear: apply approved 8GB/4-core cap; install/register the GitHub runner; run first Linux bring-up; inspect both raw reporter formats; freeze reasoned baselines at measured floors; execute GitHub RED-proof runs; register divergence/TTL tasks only after the branch lands to the main checkout path; independently verify; then FF-only land.
+
+---
+
 ### Session Log — 2026-07-11 /goal full-codebase deep-scan — 16-charter adversarial scan + 10 non-instrument fixes LANDED (VERIFIED band 7) + 19 instrument findings staged as ratify ledger + ratify-skill operator-amended
 
 **Mission:** `/goal` — deep-scan every wiring/domain/subsystem for High/Med/Low bugs, fix to institutional-grade, using team-mode + agents.
