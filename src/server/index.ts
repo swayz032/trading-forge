@@ -3,6 +3,7 @@ import { appendFamilyGradePostscript } from "./lib/notification-helpers.js";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 import { spawn } from "child_process";
 import pino from "pino";
 import { sql, and, eq, lt } from "drizzle-orm";
@@ -193,6 +194,60 @@ let pythonDependencyHealth: PythonDependencyHealth = {
   checkedAt: null,
   missing: [],
 };
+
+// 2026-07-11: node-dependency boot-guard. The tower's shared node_modules has
+// repeatedly lost packages (drizzle-orm/@types/node) to a still-unpinned
+// partial-wipe pattern (see reference_tower_restart_dep_wipe_trap), which
+// manifested as an opaque tsx crash-loop. This preflight resolves a small
+// critical-module list and surfaces the result in /api/health so a partial
+// wipe (where the process still boots but a lazily-imported dep is gone) is
+// VISIBLE instead of a silent runtime failure. Note: modules index.ts imports
+// statically are already loaded by the time this runs — this catches the
+// lazy-import surface (e.g. `openai`, dynamically imported in model-router).
+type NodeDependencyHealth = {
+  status: "unknown" | "ok" | "error";
+  checkedAt: string | null;
+  missing: string[];
+};
+
+const REQUIRED_NODE_MODULES = [
+  "drizzle-orm",
+  "postgres",
+  "express",
+  "openai",
+  "pino",
+  "zod",
+] as const;
+let nodeDependencyHealth: NodeDependencyHealth = {
+  status: "unknown",
+  checkedAt: null,
+  missing: [],
+};
+
+function checkNodeDependencies(): void {
+  const missing: string[] = [];
+  try {
+    const require = createRequire(import.meta.url);
+    for (const mod of REQUIRED_NODE_MODULES) {
+      try {
+        require.resolve(mod);
+      } catch {
+        missing.push(mod);
+      }
+    }
+    nodeDependencyHealth = {
+      status: missing.length === 0 ? "ok" : "error",
+      checkedAt: new Date().toISOString(),
+      missing,
+    };
+  } catch (err) {
+    nodeDependencyHealth = {
+      status: "error",
+      checkedAt: new Date().toISOString(),
+      missing: [`<preflight-failed: ${err instanceof Error ? err.message : String(err)}>`],
+    };
+  }
+}
 
 async function checkPythonDependencies(): Promise<void> {
   pythonDependencyHealth = {
@@ -482,6 +537,7 @@ app.get("/api/health", async (_req, res) => {
     },
     python: pythonHealth,
     pythonDependencies: pythonDependencyHealth,
+    nodeDependencies: nodeDependencyHealth,
     pythonPool,
     backtestConcurrency,
     massive,
@@ -774,6 +830,17 @@ export const server = app.listen(port, () => {
   }).catch((err) => {
     logger.error({ err }, "Python dependency preflight failed");
   });
+
+  // 2026-07-11: node-dependency preflight (partial-wipe visibility — see above).
+  checkNodeDependencies();
+  if (nodeDependencyHealth.status === "error") {
+    logger.error(
+      { missing: nodeDependencyHealth.missing },
+      "Node dependency preflight found missing modules — a partial node_modules wipe may be in progress",
+    );
+  } else {
+    logger.info({ modules: REQUIRED_NODE_MODULES }, "Node dependency preflight passed");
+  }
 
   // ─── Orphaned backtest cleanup ────────────────────────────────
   // Phase 14 fix: only sweep rows that have been "running" for more than 60

@@ -46,7 +46,7 @@
 - **Automation policy:** ATS via TradersPost / PickMyTrade — fully permissive
 - **2026 MFFU-specific rules (enforced in code):**
   - **Collaborative trading BANNED:** identical or opposite strategies across unconnected accounts triggers compliance flag
-  - **Same-device BANNED:** no shared computer/tablet/phone across multiple operator accounts
+  - **Same-device BANNED:** no shared computer/tablet/phone across multiple operator accounts — ⚠ CONFIG-FLAG / ADVISORY ONLY (firm-config `sameDeviceBanned:true`); there is NO runtime `instance_id`/device-collision check in code yet (single MFFU account today = no collision possible). Must be implemented before a 2nd MFFU account shares device proximity. See `docs/prop-firm-rules-2026-mffu.md` §4.
   - **Hedging same underlying BANNED:** MNQ+NQ, MES+ES, MCL+CL simultaneously is a violation
   - **Tier 1 economic data trading restricted:** FOMC/CPI/NFP ±30 min blackout enforced by default
   - **Simultaneous limits at same price BANNED:** paper engine must not fire duplicate limits at identical prices
