@@ -13535,6 +13535,43 @@ AGENT-LOGS.md had pre-existing uncommitted modifications from another session be
 
 ---
 
+### Session Log — 2026-06-29 Paper Parity Deep Scan (READ ONLY)
+
+**Mission:** Structured paper engine parity and integrity audit of paper-*.ts + order lifecycle + session/calendar; produce CRITICAL/HIGH/MEDIUM ranked findings with file:line evidence and recommended fixes.
+
+**Work completed:**
+- Full READ-ONLY audit of: paper-execution-service.ts, paper-signal-service.ts, paper-trading-stream.ts, paper-risk-gate.ts, fill_model.py, backtester.py, style_c_handler.py, contract-class.ts, pm-size-factor.ts/py, firm_config.py, daily-trade-cap.ts, lifecycle-service.ts (key sections)
+- Previously confirmed items verified still closed: paper-engine authority dual-stream (stopStream awaited), correlationId non-null, forceClose $0 trade, bookPartialClose await, fill_model.py Track B FIX-3, 15:55 ET flatten, BE+1 correctness, daily trade cap CME-day correctness, DLL halt/force-close 67%/95%, 4-write atomic close transaction, orphan recovery at boot
+- Consistency gate CLAUDE.md note verified STALE — FIX A (2026-06-22) wired shouldBlockNewEntry via resolveConsistencyEnforced(); gate IS active
+- SMT live bridge confirmed wired (Wave 26 Group B Task 3); fail-soft null → PAPER_PARITY_DEGRADED SSE
+
+**Findings reported:**
+- **CRITICAL C1:** `src/engine/pm_size_factor.py` exists as a stated "parity mirror" but is NEVER imported by `src/engine/backtester.py` — paper applies 0.5×→0.25× PM size taper (13:30→15:00 ET, blocks after 15:30); backtest does not. Promotion gate metrics are overstated for PM-active strategies.
+- **CRITICAL C2:** `BACKTEST_STATIC_C_PARTIALS_ENABLED` defaults OFF in backtester.py (lines 856–862) — backtest uses legacy single-TP blended exit; paper uses sequential 33/33/34 partial closes with BE+1 after TP1. P&L profile, max-DD, Sharpe, and B14 ruin CI structurally differ between paper and backtest.
+- **HIGH H1:** `paper-execution-service.ts:2251-2252` — closePosition() re-reads position inside withSessionLock but has no `if (pos.closedAt) return;` guard — concurrent force-close + bar-stop race can produce duplicate paper_trades rows + double-incremented session equity.
+- **MEDIUM M1:** `contract-class.ts` topstep.micro=0.62 vs firm_config.py MCL:0.77 — $0.15/side Topstep MCL under-charge; MFFU MCL reversed ($0.95 vs $0.58 = $0.37/side over-charge).
+- **MEDIUM M2:** tp1FilledAt DB write at paper-signal-service.ts ~2895-2898 is fire-and-forget (.catch(logger.warn)) — BE+1 stop lost on crash+restart if write failed.
+- **MEDIUM M3:** SMT null-fallback at paper-signal-service.ts ~4167-4170 documented to contaminate DEPLOY_READY gate inputs — no gate-level blocking, diagnostic-only.
+- **MEDIUM M4:** TP2 fraction in TS (paper-execution-service.ts ~3658-3659) applies 0.33 to REMAINING contracts after TP1; Python style_c_handler.py applies 0.33 to ORIGINAL position fractions (tracked via position_pct_open) — diverges at scaled sizes above base.
+- **LOW L1:** AGENTS.md §4 still shows MNQ stop ceiling 40pt; code and backtester are both 62pt (Wave 1 2026-06-27).
+- **LOW L2:** CLAUDE.md consistency gate note "NOT YET wired" is stale — FIX A 2026-06-22 wired it.
+
+**Verification:** READ-ONLY session — no code changes made.
+
+**Known-facts updates:** None pinned. CLAUDE.md consistency-gate stale note and AGENTS.md MNQ 40pt documented as LOW findings.
+
+**Carry-forward for next session:**
+- **C1 FIX (CRITICAL):** Import pm_size_factor in backtester.py, apply factor at entry sizing in trade-management loop, gate on BACKTEST_PM_SIZE_FACTOR_ENABLED (default ON for parity).
+- **C2 FIX (CRITICAL):** Default BACKTEST_STATIC_C_PARTIALS_ENABLED=true, or add compliance gate that blocks promotion past TESTING for Style C strategies if backtested with partials OFF.
+- **H1 FIX (HIGH):** Add `if (pos.closedAt != null) return null;` guard after re-read inside withSessionLock in closePosition() at paper-execution-service.ts ~2252.
+- **M1 FIX:** Add symbol-level MCL override to COMMISSION_RATES_BY_CLASS in contract-class.ts (topstep.mcl=0.77, mffu.mcl=0.58).
+- **M2 FIX:** Change tp1FilledAt persist to awaited (or at minimum block current bar state mutation on write confirmation).
+- **L1/L2 DOC FIX:** Update AGENTS.md §4 MNQ ceiling to 62pt; remove/update stale CLAUDE.md consistency gate note.
+
+**2026-07-10 recovery note:** this entry sat uncommitted in an abandoned `git stash` for 12 days (never landed — discovered during a tower git-hygiene pass, see [[project_full_goal_deepscan_2026_07_10]]) and is being landed now for the historical record. Re-verified against current code same day: **C2 is CLOSED** — `BACKTEST_STATIC_C_PARTIALS_ENABLED` default flipped to `"1"` (ON) on 2026-07-02 per the Wave 27.5 Pass C log entry above. **C1 is CONFIRMED STILL OPEN** — neither `compute_position_sizes()` call site in `backtester.py` (lines 4275, 6742) passes a `pm_size_factor` argument, so the parameter defaults to `None` in `sizing.py`, which disables the PM-hours taper entirely (`sizing.py:322-328`). H1/M1-M4/L1/L2 were NOT re-verified this session — treat as unconfirmed until checked against current code.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### tf-relay `/__oc/*` + `/__ollama/*` 401 `proxy_token_required` is the OLLAMA_PROXY_TOKEN gate — send `X-Relay-Proxy-Token` (pinned 2026-07-05, Deep-Scan #18 Band F)

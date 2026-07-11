@@ -41,8 +41,19 @@ WORKTREE = REPO_ROOT / ".claude/worktrees/extraction-100"
 V2_SPEC_DIR = WORKTREE / "corpus/specs"
 V3_SPEC_DIR = WORKTREE / "docs/replay-results/v3-shadow-specs"
 FROZEN_REPORT = REPO_ROOT / "docs/replay-results/role-demotion-experiment-run-report.json"
-OUT_RESULTS = REPO_ROOT / "docs/replay-results/corpus-v3-gate3-shadow-results-2026-07-05.json"
-OUT_DELTAS = REPO_ROOT / "docs/replay-results/corpus-v3-role-change-deltas-2026-07-05.json"
+# 2026-07-06 RE-RUN (classifier Gate 3, on the Defect-1/4/5/6-fixed engine): the 2026-07-05
+# filenames are the INVALID pre-fix run and stay sealed/quarantined untouched on disk. This
+# re-run writes to distinct -2026-07-06 filenames so the invalid artifact is never clobbered.
+#
+# ITERATED-CLASSIFIER RE-RUN (2026-07-06, same day, second dispatch): the classifier fix
+# (15abe2d, gate-strength.ts rule-5 widening + TRIGGER_LANG) was applied AFTER the first
+# -2026-07-06 run (7/9 revival, 2 jlShztsY3oA regressions) completed and was analyzed/
+# certified as a FAIL. That pre-iteration run's result+delta files are preserved verbatim
+# on disk (both under their original -2026-07-06 name AND a -PREITERATION copy made before
+# this edit) -- NOT clobbered. This second dispatch writes to distinct -iterated-2026-07-06
+# filenames so both runs remain independently inspectable and diffable.
+OUT_RESULTS = REPO_ROOT / "docs/replay-results/corpus-v3-gate3-shadow-results-iterated-2026-07-06.json"
+OUT_DELTAS = REPO_ROOT / "docs/replay-results/corpus-v3-role-change-deltas-iterated-2026-07-06.json"
 
 # Pinning manifest (verbatim from docs/designs/corpus-v3-IMPLEMENTATION-PLAN-2026-07-05.md)
 CONCEPTS: dict[str, tuple[str, str]] = {
@@ -61,6 +72,17 @@ CONCEPTS: dict[str, tuple[str, str]] = {
     "ktkqq7QsN9Q": ("VWAP", "15m"),
     "oDLt9zh33LE": ("ORB", "5m"),
 }
+
+# RESUME FILTER (post-freeze recovery, 2026-07-06): TF_GATE3_ONLY_VIDEOS=<comma list> restricts the
+# run to the named videos only. Measurement logic UNCHANGED -- this ONLY limits which (video,symbol)
+# pairs execute, so the surviving 38 log-parsed results can be merged with a clean re-run of the tail.
+# The scoped OUT_RESULTS validity block will reference only the filtered videos; full-corpus validity
+# is assembled downstream by the merge step.
+_ONLY_VIDEOS = os.environ.get("TF_GATE3_ONLY_VIDEOS", "").strip()
+if _ONLY_VIDEOS:
+    _keep = {v.strip() for v in _ONLY_VIDEOS.split(",") if v.strip()}
+    CONCEPTS = {k: v for k, v in CONCEPTS.items() if k in _keep}
+    print(f"[RESUME FILTER] restricted to {sorted(CONCEPTS.keys())}", file=sys.stderr)
 
 # Known-revival cross-reference (from the frozen role-demotion report's struct_ctx arm; 9 strategies =
 # 3 families x 3 symbols). Mapped to video by concept-tag/timeframe correspondence -- ORB has TWO candidate
@@ -104,9 +126,28 @@ END_DATE = "2026-07-01"
 # GATE3-DEFECT-1 FIX re-stamp (2026-07-06): the winners/losers + _roll_spread_audit_rows_cls
 # UnboundLocalError hoist in run_class_backtest() (src/engine/backtester.py) is behaviorally
 # byte-identical for any pair that actually trades -- only zero-signal pairs change from
-# crash -> clean total_trades=0. Re-stamped to the fixed HEAD; update this value again if this
-# script is re-run against a later commit.
-ENGINE_SHA_PIN = "5b863aca4662be1c20504a8673952eecb196adc7"
+# crash -> clean total_trades=0.
+#
+# GATE3 SYSTEMATIC SIBLING-PARITY AUDIT re-stamp (2026-07-06, commit 8cd2885): 3 more
+# class-(a) defects fixed in run_class_backtest -- Defect 4 (roll-cost equity-loop
+# omission, verdict-variable-preserving only), Defect 5 (DLL-halt + stop-ceiling/
+# time-stop guards were never called at all -- trade-signal-affecting, applied
+# uniformly to v2 and every v3-shadow spec so the comparison stays apples-to-apples),
+# Defect 6 (eligibility_gate_mode telemetry, computation-preserving). See
+# docs/designs/corpus-v3-gate1-respecification-2026-07-05.md "GATE 3 RE-RUN --
+# SYSTEMATIC SIBLING-PARITY AUDIT" for the full classification table.
+#
+# RE-STAMP 2026-07-06 (classifier Gate 3 re-run, the decisive step): 8cd2885 predates the
+# REAL Defect-6 fix (MCL reconciliation precision, d22ea4b / runtime-verified at 1f90b7d) --
+# that 8cd2885-era "Defect 6" comment above refers to a DIFFERENT, earlier telemetry-only
+# item; the MCL-reconciliation Defect 6 that blocked the reference re-derivation was found
+# and fixed AFTER 8cd2885. Verified by direct source inspection (this commit) that current
+# HEAD's src/engine/backtester.py::run_class_backtest contains ALL of: apply_eligibility_gate
+# guards call-through (Defect 5), RollSpreadCost in the bar-level equity loop (Defect 4), and
+# the full-precision entry/exit reconciliation fix (Defect 6, d22ea4b content, confirmed
+# ancestor of HEAD via `git merge-base --is-ancestor d22ea4b HEAD` = true). Re-stamped to the
+# actual commit this run executes against.
+ENGINE_SHA_PIN = "7c1ec994"  # HEAD at time of the classifier Gate 3 re-run dispatch, 2026-07-06
 
 
 def load_spec_artifact(spec_dir: Path, video: str) -> dict | None:
@@ -426,7 +467,7 @@ def main() -> None:
 
     summary = {
         "validity": validity,
-        "corpus_version": "v3-shadow-2026-07-05",
+        "corpus_version": "v3-shadow-2026-07-06-classifier-gate3-rerun",
         "engine_sha_pin": ENGINE_SHA_PIN,
         "date_window": {"start": START_DATE, "end": END_DATE},
         "n_concepts": len(CONCEPTS),
@@ -444,7 +485,7 @@ def main() -> None:
     OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8")
 
     deltas_out = {
-        "corpus_version": "v3-shadow-2026-07-05",
+        "corpus_version": "v3-shadow-2026-07-06-classifier-gate3-rerun",
         "generated_by": "scripts/corpus-v3-shadow-gate3.py",
         "note": "Every condition whose role assignment differs (v2 role != v3 classifier role) for every "
                 "strategy whose trading behavior CHANGED between v2 and v3-shadow (revival or death). "

@@ -1,6 +1,6 @@
 # Wave 25 Pass 7 — Exit Engine A/B Report
 
-**Run date:** 2026-05-24 13:29 UTC
+**Run date:** 2026-07-06 07:08 UTC
 **Window:** 2025-01-01 → 2025-01-07
 **Strategies tested:** 1
 **Adaptive exit wired:** NO (P7.A1–A4 state; adaptive path stubs to static_styleC)
