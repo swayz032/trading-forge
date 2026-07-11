@@ -12,7 +12,7 @@
 
 -- UP ─────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE account_strategy_assignments (
+CREATE TABLE IF NOT EXISTS account_strategy_assignments (
     id                 BIGSERIAL PRIMARY KEY,
     account_id         UUID NOT NULL REFERENCES broker_accounts(account_id) ON DELETE CASCADE,
     strategy_id        UUID NOT NULL REFERENCES strategies(id) ON DELETE CASCADE,
@@ -26,11 +26,11 @@ CREATE TABLE account_strategy_assignments (
 );
 
 -- Index for family-published strategy queries (Track 6 Pine export)
-CREATE INDEX idx_asa_account_id ON account_strategy_assignments (account_id);
-CREATE INDEX idx_asa_strategy_id ON account_strategy_assignments (strategy_id);
-CREATE INDEX idx_asa_released_family ON account_strategy_assignments (released_to_family)
+CREATE INDEX IF NOT EXISTS idx_asa_account_id ON account_strategy_assignments (account_id);
+CREATE INDEX IF NOT EXISTS idx_asa_strategy_id ON account_strategy_assignments (strategy_id);
+CREATE INDEX IF NOT EXISTS idx_asa_released_family ON account_strategy_assignments (released_to_family)
     WHERE released_to_family = true;
-CREATE INDEX idx_asa_status ON account_strategy_assignments (status);
+CREATE INDEX IF NOT EXISTS idx_asa_status ON account_strategy_assignments (status);
 
 -- DOWN ───────────────────────────────────────────────────────────────────────
 

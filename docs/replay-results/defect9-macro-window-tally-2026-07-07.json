@@ -1,0 +1,64 @@
+{
+  "artifact": "defect9-macro-window-tally",
+  "generated_at": "2026-07-07",
+  "purpose": "DESIGN INPUT for the Defect-9 macro-mask fix. Defect-9 = run_class_backtest (corpus/class path) lacks the separate belt-and-suspenders macro-blackout MASK that run_backtest has. This tally cross-references corpus trade entry timestamps (emit-enabled engine, commit c948bcd per-trade entry_timestamp) against economic_calendar macro windows to (a) answer whether the mask's absence ever flipped a zero/nonzero verdict, and (b) size the mask's real empirical footprint. FACTS ONLY. No engine code changed; not committed.",
+
+  "data_scope": {
+    "market_data_available_headless": true,
+    "note": "S3 futures parquet IS reachable headless (AWS creds in .env, exported for DuckDB). NOT a passthrough/no-data run. Decisive pair reproduced live below.",
+    "engine": "run_class_backtest via `python -m src.engine.backtester --config <cfg> --mode single` (production CLI, compiled_spec dispatch). Emit fields entry_timestamp/entry_idx present on class-path trade records (backtester.py ~L7330).",
+    "arm": "BASELINE (TF_ROLE_DEMOTION_MODE unset), TF_ALLOW_FIXED_1=true — same invocation as scripts/corpus-v3-reference-rederivation.py; measures whether/when the strategy TRADES, not P&L sizing.",
+    "date_window": {"start": "2020-06-01", "end": "2026-07-01"},
+    "engine_sha_context": "backtester.py content == d22ea4b (Defect-6 MCL reconciliation fix), the guard-fixed class path the reference re-derivation is pinned to.",
+    "pair_universe": "The 42-pair corpus-v3 reference set (14 concepts x MES/MNQ/MCL). v2-TRADED = the 26 pairs with baseline_n_trades>0 in docs/replay-results/corpus-v3-reference-rederivation-2026-07-06.json.",
+    "macro_window_definition": {
+      "windows_source_task_specified": "src/engine/economic_calendar.py::STATIC_EVENTS",
+      "windows_source_engine_actual": "economic_calendar._events_for_type() — prefers synced authoritative economic_release_dates.json, falls back to STATIC_EVENTS. This is what a real mask would consume.",
+      "window_minutes": 30,
+      "window_logic": "engine _check_in_window: bar in window iff same ET calendar date AND abs(bar_minutes - event_minutes) <= 30. Entry timestamps are already tz-aware ET; used directly.",
+      "tiers": {
+        "T1_all_products": ["FOMC", "FOMC_MINUTES", "CPI", "NFP"],
+        "T1_energy_only": ["EIA (MCL/CL only per EVENT_PRODUCT_SCOPE)"],
+        "non_T1_reference": ["GDP", "PCE", "ISM", "PPI"]
+      }
+    },
+    "CALENDAR_COVERAGE_GAP_KEY_FINDING": {
+      "static_events_earliest": "2023-02-01 (FOMC). STATIC_EVENTS has ZERO events before 2023.",
+      "engine_used_earliest": "2024-01-02 (auth JSON preferred). The mask the engine would actually build has ZERO events before 2024-01-02.",
+      "consequence": "The macro mask can ONLY suppress trades in the ~2024-01 -> 2026-07 slice of the corpus window. Any corpus trade in 2020-2023 is structurally UN-maskable (no calendar events exist there). This bounds the mask's maximum possible footprint and must be reflected in the mask spec — the mask is inert over ~3.5 of the ~6 corpus years."
+    }
+  },
+
+  "DECISIVE_ANSWER": {
+    "pair": "75DJN5UVQnw_MES",
+    "why_decisive": "The SOLE 1-trade v2-traded pair (baseline_n_trades=1). Only a pair with trade_count small enough for a masked trade to zero it can flip zero/nonzero status. Every other traded pair has 249-3309 trades (mask-immune to a status flip). So Defect-9 materiality reduces to: is THIS one trade inside a macro window?",
+    "reproduced_n_trades": 1,
+    "parity": "Matches reference re-derivation baseline_n_trades=1 exactly (emit is count-parity-clean).",
+    "the_trade": {
+      "entry_timestamp": "2020-06-01T00:05:00-04:00",
+      "entry_idx": 1,
+      "direction": "Long",
+      "size": 1.0,
+      "pnl": 9.02,
+      "entry_et_date": "2020-06-01",
+      "entry_et_time": "00:05"
+    },
+    "falls_inside_macro_window": false,
+    "reasons": [
+      "Date 2020-06-01 precedes the EARLIEST calendar event in BOTH sources (STATIC_EVENTS earliest 2023-02-01; engine-used auth earliest 2024-01-02). No macro window exists on or near this date.",
+      "Independently, entry time-of-day 00:05 ET (overnight Globex) is far from every macro event time-of-day (08:30 / 10:00 / 14:00 ET); even a hypothetical same-date event would not catch a 00:05 entry at +/-30 min.",
+      "Checked all event types (FOMC/FOMC_MINUTES/CPI/NFP/EIA/GDP/PCE/ISM/PPI) at window=30: zero same-date events, zero window hits."
+    ],
+    "verdict": "CLEAN. The flip-risk sibling 75DJN5UVQnw_MES does NOT flip v2 1->0 under the macro mask. Defect-9's macro-mask absence never altered this pair's zero/nonzero (verdict) status. The Gate-3 reference N is NOT disturbed by the mask for this pair. Defect-9 is NOT verdict-variable at the decisive pair — the mask can be added as pure defense-in-depth without re-deriving the reference on its account."
+  },
+
+  "materiality_summary": {
+    "can_any_v2_traded_pair_flip_zero_nonzero_under_mask": "Only 75DJN5UVQnw_MES (1 trade) is structurally capable of a status flip, and it is CLEAN (trade outside all windows). All other 25 traded pairs have >=249 trades, so removing macro-window trades cannot zero them. => NO v2-traded pair flips zero/nonzero under the mask.",
+    "defect9_class": "Confirmed defense-in-depth / non-verdict-variable on this corpus+window, NOT Defect-5-class (verdict-variable) as feared. Consistent with the F4 trace's DECISIVE-CHECK precondition."
+  },
+
+  "per_pair_macro_window_counts": {
+    "status": "PENDING_BATCH",
+    "note": "The broader footprint (per-pair total trades, trades-in-macro-window, event-type/tier breakdown) across all 26 v2-traded pairs is being computed by a separate emit-capture batch and will be appended here on completion. The DECISIVE answer above does not depend on it."
+  }
+}

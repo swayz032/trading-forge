@@ -1,0 +1,218 @@
+[
+  {
+    "item_id": "N01",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "We come to our charts right before 9:30 open",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N02",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "Often, they'll retest again",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N03",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "VWAP plays a better magnet than it does a trading level",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N04",
+    "disposition": "mandatory-gate",
+    "justifying_span": "buy from the demand zone when it is retested",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N05",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "future selling is expected once the market returns to this level",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N06",
+    "disposition": "mandatory-gate",
+    "justifying_span": "looking for a retracement opportunity to then buy",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N07",
+    "disposition": "optional-confluence",
+    "justifying_span": "You also trade EMA retest sometimes",
+    "confidence": "low"
+  },
+  {
+    "item_id": "N08",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "Let's say we begin on the 4hour time frame",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N09",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "you can see this low is 1788",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N10",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "that's because this is a 1hour zone",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N11",
+    "disposition": "optional-confluence",
+    "justifying_span": "voeg selfs iets by tot bevestiging van struktuur",
+    "confidence": "low"
+  },
+  {
+    "item_id": "N12",
+    "disposition": "mandatory-gate",
+    "justifying_span": "we're going to wait for the market to retest that high or low",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N13",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "today I'll share our 4-Hour chart strategy",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N14",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "the two mistakes that I'm about to share with you",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N15",
+    "disposition": "optional-confluence",
+    "justifying_span": "what we can do inside of the top zone is use what I call a standard confirmation",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N16",
+    "disposition": "mandatory-gate",
+    "justifying_span": "before we can look for a short entry",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N17",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "prys waarskynlik sal terugtrek na 'n Fibonacci retracement vlak",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N18",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "we get the retrace right over here",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N19",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "Every course I bought, every video I watched, every guru I follow said the same thing",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N20",
+    "disposition": "mandatory-gate",
+    "justifying_span": "to have four confirmations for the trade",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N21",
+    "disposition": "mandatory-gate",
+    "justifying_span": "enter short as soon as the key level is tapped",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N22",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "hoekom sal jy kort daarin gaan",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N23",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "a lot of confluence as well as large buying participants at this key level",
+    "confidence": "low"
+  },
+  {
+    "item_id": "N24",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "This is just one of many setups that we can keep our eye on",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N25",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "Now, we trade back up to the high",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N26",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "this should be our initial exit just based on support and resistance",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N27",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "I'm just going to point out a few",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N28",
+    "disposition": "mandatory-gate",
+    "justifying_span": "what I was looking for was for price to pull back into this area",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N29",
+    "disposition": "mandatory-gate",
+    "justifying_span": "you want to wait for a retrace back to the 5 SMA",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N30",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "now back to the euro dollar chart here",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N31",
+    "disposition": "mandatory-gate",
+    "justifying_span": "you wait for price action to break out",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N32",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "The stop is going to go beyond the price level",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N33",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "if we go over on the 5-minut time frame and dig into this larger demand zone",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N34",
+    "disposition": "mandatory-gate",
+    "justifying_span": "I'm looking to take puts on a VWOP retest, not a pre-market low retest",
+    "confidence": "medium"
+  },
+  {
+    "item_id": "N35",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "this strategy Works particularly well for euro dollar pound dollar and dollar Yen",
+    "confidence": "high"
+  },
+  {
+    "item_id": "N36",
+    "disposition": "contextual-scene-setting",
+    "justifying_span": "we'll be adding the three standard deviation Binger band",
+    "confidence": "medium"
+  }
+]

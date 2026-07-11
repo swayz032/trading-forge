@@ -86,11 +86,91 @@ import { OllamaClient } from "../services/ollama-client.js";
 import { notifyWarning } from "../services/notification-service.js";
 import { logger } from "../lib/logger.js";
 import { db } from "../db/index.js";
+// Race-fix (2026-07-10): the mocked schema module's table objects, used to make
+// the `db.insert(...)` mock table-aware (systemParameters vs auditLog vs
+// tradeCritique) — see chainable()/makeTableAwareInsertMock() below.
+import { systemParameters, auditLog } from "../db/schema.js";
 
 // Matches the key used in trade-critique-service.ts
 const CONSECUTIVE_FAILURES_KEY_TEST = "trade_critique_consecutive_failures";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// Race-fix (2026-07-10): trade-critique-service.ts now writes the
+// consecutive-failure counter via a single atomic
+// `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` statement instead of a
+// two-step SELECT-then-UPDATE/INSERT. `chainable()` produces the return shape
+// a mocked `.values(...)` call needs to support BOTH call shapes used in
+// production:
+//   - `db.insert(t).values(v).returning()`                    (tradeCritique row)
+//   - `db.insert(t).values(v).onConflictDoUpdate({...})`       (plain upsert,
+//        awaited directly — no `.returning()` call — see upsertSystemParameter)
+//   - `db.insert(t).values(v).onConflictDoUpdate({...}).returning()`
+//        (the atomic increment — see incrementConsecutiveFailures)
+// The `onConflictDoUpdate` result is itself thenable (has `.then`) so a bare
+// `await ...onConflictDoUpdate(...)` resolves without requiring `.returning()`
+// to be called, matching upsertSystemParameter's production code exactly.
+function chainable(returningRows: unknown[] = []) {
+  const onConflictResult = {
+    returning: vi.fn().mockResolvedValue(returningRows),
+    then: (resolve: (v: unknown) => unknown) => Promise.resolve(returningRows).then(resolve),
+    catch: (_reject: (e: unknown) => unknown) => Promise.resolve(returningRows),
+  };
+  return {
+    returning: vi.fn().mockResolvedValue(returningRows),
+    onConflictDoUpdate: vi.fn().mockReturnValue(onConflictResult),
+  };
+}
+
+// Table-aware insert mock for tests that assert specific consecutive-failure
+// counter behavior (increment value reaching the audit row, or the exact
+// reset value written). Distinguishes the target table by reference equality
+// against the mocked schema exports (imported above), so the systemParameters
+// upsert-increment path can return a controlled `currentValue` independent of
+// the tradeCritique / auditLog insert paths sharing the same `db.insert` call.
+function makeTableAwareInsertMock(opts: {
+  /** `returning()` row for the systemParameters atomic increment/upsert. */
+  counterCurrentValue?: string;
+  /** `returning()` row for the tradeCritique row insert. */
+  critiqueReturn?: Record<string, unknown>;
+  /** Captures every auditLog `.values(...)` call argument, in order. */
+  auditCapture?: Record<string, unknown>[];
+  /** Captures every systemParameters `.values(...)` + `.onConflictDoUpdate(...)` call argument pair, in order. */
+  counterUpsertCapture?: { values: Record<string, unknown>; onConflict?: Record<string, unknown> }[];
+}) {
+  return vi.fn().mockImplementation((table: unknown) => {
+    if (table === systemParameters) {
+      return {
+        values: vi.fn().mockImplementation((row: Record<string, unknown>) => {
+          const captured: { values: Record<string, unknown>; onConflict?: Record<string, unknown> } = { values: row };
+          opts.counterUpsertCapture?.push(captured);
+          return {
+            onConflictDoUpdate: vi.fn().mockImplementation((conflictArg: Record<string, unknown>) => {
+              captured.onConflict = conflictArg;
+              return chainable(
+                opts.counterCurrentValue !== undefined ? [{ currentValue: opts.counterCurrentValue }] : [],
+              );
+            }),
+          };
+        }),
+      };
+    }
+    if (table === auditLog) {
+      return {
+        values: vi.fn().mockImplementation((row: Record<string, unknown>) => {
+          opts.auditCapture?.push(row);
+          return Promise.resolve([]);
+        }),
+      };
+    }
+    // tradeCritique (or any other table) — default returning() shape.
+    return {
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([opts.critiqueReturn ?? { id: "critique-uuid-001" }]),
+      }),
+    };
+  });
+}
 
 const VALID_TECHNICAL_DIAGNOSIS = {
   entry_quality_score: 7.5,
@@ -280,16 +360,15 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([fullPosition]).then(resolve); // position
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve); // session
         if (currentCall === 3) return Promise.resolve([fullStrategy]).then(resolve); // strategy
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve); // readConsecutiveFailures
-        if (currentCall === 5) return Promise.resolve([{ paramName: CONSECUTIVE_FAILURES_KEY_TEST }]).then(resolve); // upsertSystemParameter exists check
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
+    // Race-fix (2026-07-10): the consecutive-failure counter no longer selects —
+    // resetConsecutiveFailures() on this success path is a single atomic upsert
+    // via chainable()'s onConflictDoUpdate() support.
     mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue([{ id: "critique-001" }]),
-      }),
+      values: vi.fn().mockReturnValue(chainable([{ id: "critique-001" }])),
     }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -326,13 +405,12 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([posWithPartialW25]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
     mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "critique-002" }]) }),
+      values: vi.fn().mockReturnValue(chainable([{ id: "critique-002" }])),
     }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -363,13 +441,12 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve); // no wave25 fields
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
     mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "critique-003" }]) }),
+      values: vi.fn().mockReturnValue(chainable([{ id: "critique-003" }])),
     }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -398,13 +475,12 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
     mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "critique-004" }]) }),
+      values: vi.fn().mockReturnValue(chainable([{ id: "critique-004" }])),
     }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -436,23 +512,28 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve); // position
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve); // session
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve); // strategy
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "1" }]).then(resolve); // readConsecutiveFailures
-        if (currentCall === 5) return Promise.resolve([{ paramName: CONSECUTIVE_FAILURES_KEY_TEST }]).then(resolve); // upsertSystemParam exists check → returns row → use update
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }),
-    }));
-    mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
+    // Race-fix (2026-07-10): the counter is now a single atomic
+    // INSERT...ON CONFLICT DO UPDATE...RETURNING — no more separate select/update
+    // calls. existing=1 → the atomic increment returns currentValue="2".
+    const auditRows: Record<string, unknown>[] = [];
+    mockDb.insert = makeTableAwareInsertMock({ counterCurrentValue: "2", auditCapture: auditRows });
+    mockDb.update = vi.fn();
 
     const { runTradeCritique } = await import("../services/trade-critique-service.js");
     const result = await runTradeCritique("pos-uuid-001");
 
     expect(result.status).toBe("failed");
-    // update should be called to write the incremented count
-    expect(mockDb.update).toHaveBeenCalled();
+    // The atomic increment's returned post-increment value (2) must reach the
+    // trade_critique.failed audit row's `strikes` field.
+    const failedAudit = auditRows.find((r) => r.action === "trade_critique.failed");
+    expect(failedAudit).toBeDefined();
+    expect((failedAudit as any).result.strikes).toBe(2);
+    // No more db.update calls anywhere in the counter write path.
+    expect(mockDb.update).not.toHaveBeenCalled();
   });
 
   // ── Test 6: 3 consecutive failures → notifyWarning called ────────────────
@@ -471,15 +552,13 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "2" }]).then(resolve); // existing=2, this makes 3
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }),
-    }));
-    mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
+    // existing=2 → the atomic increment returns currentValue="3" (crosses STRIKE_THRESHOLD).
+    mockDb.insert = makeTableAwareInsertMock({ counterCurrentValue: "3" });
+    mockDb.update = vi.fn();
 
     const { runTradeCritique } = await import("../services/trade-critique-service.js");
     await runTradeCritique("pos-uuid-001");
@@ -508,26 +587,27 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         // (4) Data bridge (2026-07-05): resolveAccountIdForCritique's brokerAccounts
         // lookup — no matching row in this fixture, resolves accountId to null.
         if (currentCall === 4) return Promise.resolve([]).then(resolve);
-        // (5) upsertSystemParameter "exists" check for resetConsecutiveFailures() —
-        // must resolve truthy so the UPDATE (not INSERT) branch fires currentValue="0".
-        if (currentCall === 5) return Promise.resolve([{ currentValue: "2" }]).then(resolve); // had 2 failures
+        // Race-fix (2026-07-10): resetConsecutiveFailures() no longer does a
+        // separate select-exists-check — it's now a single atomic upsert (see
+        // makeTableAwareInsertMock() below) — so index 5 is never reached.
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    const updateMock = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
-    mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "critique-007" }]) }),
-    }));
-    mockDb.update = vi.fn().mockImplementation(() => ({ set: updateMock }));
+    // Race-fix (2026-07-10): resetConsecutiveFailures() now writes via a single
+    // atomic upsert (no select-exists-check, no update()) — capture the
+    // systemParameters .values()/.onConflictDoUpdate() call args directly.
+    const counterCalls: { values: Record<string, unknown>; onConflict?: Record<string, unknown> }[] = [];
+    mockDb.insert = makeTableAwareInsertMock({ critiqueReturn: { id: "critique-007" }, counterUpsertCapture: counterCalls });
+    mockDb.update = vi.fn();
 
     const { runTradeCritique } = await import("../services/trade-critique-service.js");
     await runTradeCritique("pos-uuid-001");
 
-    // update called with "0" to reset
-    const updateSetCalls = updateMock.mock.calls;
-    const resetCall = updateSetCalls.find((c: any[]) => c[0]?.currentValue === "0");
+    // The reset upsert must have been written with currentValue="0".
+    const resetCall = counterCalls.find((c) => c.onConflict?.set && (c.onConflict.set as any).currentValue === "0");
     expect(resetCall).toBeDefined();
+    expect(mockDb.update).not.toHaveBeenCalled();
   });
 
   // ── Test 8: Saturation → 4th call returns queued_deferred ─────────────────
@@ -555,7 +635,7 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
       return chain;
     });
     mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "x" }]) }),
+      values: vi.fn().mockReturnValue(chainable([{ id: "x" }])),
     }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -594,7 +674,7 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
       chain.then = (resolve: any) => Promise.resolve([]).then(resolve);
       return chain;
     });
-    const insertMock = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "x" }]) });
+    const insertMock = vi.fn().mockReturnValue(chainable([{ id: "x" }]));
     mockDb.insert = vi.fn().mockImplementation(() => ({ values: insertMock }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -632,12 +712,11 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    const insertMock = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) });
+    const insertMock = vi.fn().mockReturnValue(chainable([]));
     mockDb.insert = vi.fn().mockImplementation(() => ({ values: insertMock }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -670,12 +749,11 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    mockDb.insert = vi.fn().mockImplementation(() => ({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }) }));
+    mockDb.insert = vi.fn().mockImplementation(() => ({ values: vi.fn().mockReturnValue(chainable([])) }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
     const { runTradeCritique } = await import("../services/trade-critique-service.js");
@@ -697,12 +775,11 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    const insertValuesMock = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "critique-012" }]) });
+    const insertValuesMock = vi.fn().mockReturnValue(chainable([{ id: "critique-012" }]));
     mockDb.insert = vi.fn().mockImplementation(() => ({ values: insertValuesMock }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -783,7 +860,6 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
       generate: vi.fn().mockRejectedValue(new Error("down")),
     }) as any);
 
-    const updateSetMock = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
     const mockDb = db as any;
 
     let selectCallCount = 0;
@@ -795,22 +871,24 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "1" }]).then(resolve); // readConsecutiveFailures → 1
-        if (currentCall === 5) return Promise.resolve([{ paramName: CONSECUTIVE_FAILURES_KEY_TEST }]).then(resolve); // upsertSystemParam check → exists → update
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    mockDb.insert = vi.fn().mockImplementation(() => ({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([]) }) }));
-    mockDb.update = vi.fn().mockImplementation(() => ({ set: updateSetMock }));
+    // Race-fix (2026-07-10): existing=1 → the atomic increment returns
+    // currentValue="2" (1 existing + 1 increment), asserted via the audit row's
+    // `strikes` field since there is no separate update() call anymore.
+    const auditRows: Record<string, unknown>[] = [];
+    mockDb.insert = makeTableAwareInsertMock({ counterCurrentValue: "2", auditCapture: auditRows });
+    mockDb.update = vi.fn();
 
     const { runTradeCritique } = await import("../services/trade-critique-service.js");
     await runTradeCritique("pos-uuid-001");
 
-    // The update should be called with currentValue = "2" (1 existing + 1 increment)
-    const calls = updateSetMock.mock.calls;
-    const incrementCall = calls.find((c: any[]) => c[0]?.currentValue === "2");
-    expect(incrementCall).toBeDefined();
+    const failedAudit = auditRows.find((r) => r.action === "trade_critique.failed");
+    expect(failedAudit).toBeDefined();
+    expect((failedAudit as any).result.strikes).toBe(2);
+    expect(mockDb.update).not.toHaveBeenCalled();
   });
 
   // ── Test 16: Ollama provider field in DB ─────────────────────────────────
@@ -830,12 +908,11 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    const insertValuesMock = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "crit-016" }]) });
+    const insertValuesMock = vi.fn().mockReturnValue(chainable([{ id: "crit-016" }]));
     mockDb.insert = vi.fn().mockImplementation(() => ({ values: insertValuesMock }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -862,12 +939,11 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
         if (currentCall === 1) return Promise.resolve([makePosition()]).then(resolve);
         if (currentCall === 2) return Promise.resolve([makeSession()]).then(resolve);
         if (currentCall === 3) return Promise.resolve([makeStrategy()]).then(resolve);
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
-    const insertValuesMock = vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "crit-017" }]) });
+    const insertValuesMock = vi.fn().mockReturnValue(chainable([{ id: "crit-017" }]));
     mockDb.insert = vi.fn().mockImplementation(() => ({ values: insertValuesMock }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
 
@@ -898,8 +974,10 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
 // absent. Select-call order for the SUCCESS path (LLM succeeds, validation passes):
 //   0 = idempotency check, 1 = position, 2 = session, 3 = strategy,
 //   4 = resolveAccountIdForCritique's brokerAccounts lookup (SKIPPED — no DB call —
-//       when session.firmId is null/undefined),
-//   5 = upsertSystemParameter "exists" check inside resetConsecutiveFailures().
+//       when session.firmId is null/undefined).
+// Race-fix (2026-07-10): resetConsecutiveFailures() no longer does a select-
+// exists-check — it's now a single atomic upsert, so there is no index 5 select
+// in the reset path anymore.
 describe("Trade-critique data bridge — accountId + entryContext (2026-07-05)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -931,15 +1009,12 @@ describe("Trade-critique data bridge — accountId + entryContext (2026-07-05)",
           // in that case; harmless either way).
           return Promise.resolve(opts.brokerAccountRow ? [opts.brokerAccountRow] : []).then(resolve);
         }
-        // upsertSystemParameter exists-check (reset path) — truthy so UPDATE fires,
-        // matching the pre-existing convention in the other success-path tests above.
-        if (currentCall === 5) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
     });
     mockDb.insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "critique-bridge" }]) }),
+      values: vi.fn().mockReturnValue(chainable([{ id: "critique-bridge" }])),
     }));
     mockDb.update = vi.fn().mockImplementation(() => ({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }));
     return mockDb;

@@ -36,6 +36,8 @@ import { db } from "./db/index.js";
 import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, agentJobs, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
+import { isSundayAtEtHour } from "./lib/weekly-cron-et-guard.js";
+import { isFirstOfMonthAtEtHour } from "./lib/monthly-cron-et-guard.js";
 import { findUnscheduledJobs } from "./lib/scheduler-drift.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
 import { AlertFactory } from "./services/alert-service.js";
@@ -4286,20 +4288,16 @@ except Exception as e:
     );
   });
 
-  // Sunday 18:00 ET = Monday 22:00 UTC (EDT, UTC-4) or 23:00 UTC (EST, UTC-5)
-  scheduleUtc("0 22,23 * * 1", async () => {
+  // deepscan23 fix (2026-07-10): day-of-week was "1" (Monday) — Sunday 18:00 ET is
+  // Sunday 22:00 UTC (EDT) or Sunday 23:00 UTC (EST), NEVER Monday. Under the
+  // scheduleUtc() UTC-timezone pin this fired Monday 22/23 UTC = Monday 18:00 ET,
+  // which the ET-guard below can never match — the job has never actually run.
+  scheduleUtc("0 22,23 * * 0", async () => {
     if (!_tryAcquireJobLock("weekly-drift-2sigma-check")) return;
     try {
       const now = new Date();
-      const etStr = now.toLocaleString("en-US", {
-        timeZone: "America/New_York",
-        weekday: "short",
-        hour: "numeric",
-        hour12: false,
-      });
-      // Must be Sunday 18:00 ET — cron fires Mon 22/23 UTC which maps to Sun 18:00 ET
-      if (!etStr.includes("Sun") || !etStr.includes("18")) {
-        logger.debug({ etStr }, "Scheduler: weekly-drift-2sigma-check cron fired but not Sunday 18:00 ET — skipping");
+      if (!isSundayAtEtHour(now, 18)) {
+        logger.debug("Scheduler: weekly-drift-2sigma-check cron fired but not Sunday 18:00 ET — skipping");
         return;
       }
       // Wave 25 Pass 2 Y-1: defensive log BEFORE pipelineGate — proves the job
@@ -4510,21 +4508,17 @@ except Exception as e:
     await _runN8nDriftAudit("n8n-drift-detector-weekly");
   });
 
-  // Sun 19:00 ET = Mon 23:00 UTC (EDT, UTC-4) or Mon 00:00 UTC next day (EST, UTC-5).
-  // Fire at Mon 23:00 and Tue 00:00 UTC to cover both offsets; ET day+hour guard
-  // inside the handler filters to Sunday 19:00 only.
-  scheduleUtc("0 23 * * 1", async () => {
+  // Sun 19:00 ET = Sun 23:00 UTC (EDT, UTC-4) or Mon 00:00 UTC (EST, UTC-5) — these
+  // land on DIFFERENT UTC weekdays, so two separate scheduleUtc() calls are needed.
+  // deepscan23 fix (2026-07-10): the prior single "0 23 * * 1" (Monday) pattern
+  // never corresponds to Sunday 19:00 ET under either DST offset — this job has
+  // never actually run since it shipped (Wave 25 Pass 2 A-2).
+  const runN8nDriftDetectorWeeklyTick = async () => {
     if (!_tryAcquireJobLock("n8n-drift-detector-weekly")) return;
     try {
       const now = new Date();
-      const etStr = now.toLocaleString("en-US", {
-        timeZone: "America/New_York",
-        weekday: "short",
-        hour: "numeric",
-        hour12: false,
-      });
-      if (!etStr.includes("Sun") || !etStr.includes("19")) {
-        logger.debug({ etStr }, "Scheduler: n8n-drift-detector-weekly — not Sunday 19:00 ET, skipping");
+      if (!isSundayAtEtHour(now, 19)) {
+        logger.debug("Scheduler: n8n-drift-detector-weekly — not Sunday 19:00 ET, skipping");
         return;
       }
       logger.info({ job: "n8n-drift-detector-weekly" }, "running pipeline-gate-exempt n8n drift check (weekly)");
@@ -4536,7 +4530,9 @@ except Exception as e:
     } finally {
       _releaseJobLock("n8n-drift-detector-weekly");
     }
-  });
+  };
+  scheduleUtc("0 23 * * 0", runN8nDriftDetectorWeeklyTick); // EDT
+  scheduleUtc("0 0 * * 1", runN8nDriftDetectorWeeklyTick); // EST
   _scheduledJobs.add("n8n-drift-detector-weekly");
 
   // ─── Wave 25 Pass 2 A-2: n8n drift detector — monthly (1st of month 09:00 ET) ─
@@ -4551,20 +4547,19 @@ except Exception as e:
 
   // Fire at 13:00 and 14:00 UTC on the 1st of every month to cover EDT/EST.
   // ET day-of-month + hour guard inside handler filters to 09:00 ET on the 1st.
+  // deepscan fix (2026-07-10): the prior inline `toLocaleString(...).split(" ")`
+  // guard was DOUBLY broken — ICU renders the ET moment as "1, 09" (", " literal
+  // separator + zero-padded hour), so `split(" ")[0]` was always "1," (never "1")
+  // and `split(" ")[1]` was always "09" (never "9"); the guard's `!==` checks were
+  // both permanently true and this cron never fired since it shipped (W25P2 A-2).
+  // Replaced with the structural formatToParts()-based guard (isFirstOfMonthAtEtHour)
+  // that mirrors the sibling weekly fix and eliminates the locale-separator bug class.
   scheduleUtc("0 13,14 1 * *", async () => {
     if (!_tryAcquireJobLock("n8n-drift-detector-monthly")) return;
     try {
       const now = new Date();
-      const etStr = now.toLocaleString("en-US", {
-        timeZone: "America/New_York",
-        day: "numeric",
-        hour: "numeric",
-        hour12: false,
-      });
-      // etStr is e.g. "1 9" for 1st of month at 09:00 ET
-      const [etDay, etHour] = etStr.split(" ");
-      if (etDay !== "1" || etHour !== "9") {
-        logger.debug({ etStr }, "Scheduler: n8n-drift-detector-monthly — not 1st of month 09:00 ET, skipping");
+      if (!isFirstOfMonthAtEtHour(now, 9)) {
+        logger.debug("Scheduler: n8n-drift-detector-monthly — not 1st of month 09:00 ET, skipping");
         return;
       }
       logger.info({ job: "n8n-drift-detector-monthly" }, "running pipeline-gate-exempt n8n drift check (monthly)");

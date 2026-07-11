@@ -14,7 +14,7 @@
 -- Threshold: 0.85 cosine similarity → reject (env STRATEGY_DSL_SIMILARITY_THRESHOLD).
 -- Lookback: last 50 strategies per check (ordered by created_at DESC).
 
-CREATE TABLE strategy_dsl_features (
+CREATE TABLE IF NOT EXISTS strategy_dsl_features (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   strategy_id uuid REFERENCES strategies(id) NOT NULL,
   feature_vector_compressed bytea NOT NULL,  -- gzip(float32[])
@@ -25,6 +25,6 @@ CREATE TABLE strategy_dsl_features (
 );
 
 -- Fast gate check: similarity scan over the last N strategies
-CREATE INDEX idx_dsl_features_created ON strategy_dsl_features(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_dsl_features_created ON strategy_dsl_features(created_at DESC);
 -- Fast exact-match skip: if fingerprint already exists → reject immediately
-CREATE INDEX idx_dsl_features_fingerprint ON strategy_dsl_features(dsl_fingerprint);
+CREATE INDEX IF NOT EXISTS idx_dsl_features_fingerprint ON strategy_dsl_features(dsl_fingerprint);

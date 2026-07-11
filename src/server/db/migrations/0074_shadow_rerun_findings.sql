@@ -30,7 +30,7 @@
 -- The UNIQUE index on (strategy_id, backtest_id, new_code_git_sha) prevents
 -- duplicate rows for the same (strategy, backtest, code version) triple.
 
-CREATE TABLE shadow_rerun_findings (
+CREATE TABLE IF NOT EXISTS shadow_rerun_findings (
   id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   run_at              timestamp DEFAULT now() NOT NULL,
   run_reason          text NOT NULL,                -- why this shadow re-run was triggered
@@ -51,19 +51,19 @@ CREATE TABLE shadow_rerun_findings (
 );
 
 -- Recency index for "show latest shadow re-run findings" dashboard queries
-CREATE INDEX idx_shadow_rerun_run_at
+CREATE INDEX IF NOT EXISTS idx_shadow_rerun_run_at
   ON shadow_rerun_findings(run_at DESC);
 
 -- Strategy-level lookup: "which shadow re-runs affected this strategy?"
-CREATE INDEX idx_shadow_rerun_strategy
+CREATE INDEX IF NOT EXISTS idx_shadow_rerun_strategy
   ON shadow_rerun_findings(strategy_id, run_at DESC);
 
 -- Critical-first dashboard view: unresolved critical findings top of list
-CREATE INDEX idx_shadow_rerun_severity
+CREATE INDEX IF NOT EXISTS idx_shadow_rerun_severity
   ON shadow_rerun_findings(severity, status_flipped)
   WHERE severity IN ('warning', 'critical');
 
 -- Idempotency guard: one finding per (strategy, backtest, new code version)
 -- Prevents duplicate rows when shadow re-run is triggered twice on same SHA.
-CREATE UNIQUE INDEX idx_shadow_rerun_unique_finding
+CREATE UNIQUE INDEX IF NOT EXISTS idx_shadow_rerun_unique_finding
   ON shadow_rerun_findings(strategy_id, backtest_id, new_code_git_sha);

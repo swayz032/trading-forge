@@ -17,6 +17,13 @@
  *   to run the same strategy across multiple accounts. The warning does NOT fire for
  *   accounts whose firm_id='topstep'.
  *
+ *   2026-07-10 review: this is warn-only, asymmetric with Topstep's HARD-blocking
+ *   consistency gate (lifecycle-service.ts). Confirmed deliberate, not an oversight —
+ *   MFFU is the operator's opt-in fallback firm with no funded account today (see
+ *   feedback_topstep_only_mffu_not_a_blocker memory), so blocking assignment outright
+ *   would stop family members from even being ASSIGNED a strategy pending the operator's
+ *   own cancel-and-reassign judgment call. Revisit if MFFU becomes primary/funded.
+ *
  * Pipeline-pause guard: all write operations (assign, unassign, releaseToFamily) check
  * isPipelineActive() and reject with a 423-equivalent error when paused.
  *

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../index.js";
+import { resolveTrustedClientIp } from "../lib/relay-client-ip.js";
 
 interface RateLimitConfig {
   windowMs: number;
@@ -10,7 +11,13 @@ const hits = new Map<string, { count: number; resetAt: number }>();
 
 export function rateLimit(config: RateLimitConfig = { windowMs: 60_000, maxRequests: 100 }) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const key = req.ip ?? "unknown";
+    // deep-scan fix-wave 2026-07-10 (Fix 3): req.ip resolves to the Express-observed
+    // socket peer, which for ALL relay-forwarded traffic is loopback (tower-relay-client
+    // reissues every request as a fresh local http.request() to localhost:4000) — so
+    // every external caller collapsed into one shared 127.0.0.1 bucket. Same root cause
+    // as Fix 2; same fix — key on the relay-minted non-spoofable header, real socket for
+    // direct/LAN callers. See src/server/lib/relay-client-ip.ts.
+    const key = resolveTrustedClientIp(req);
     const now = Date.now();
     const record = hits.get(key);
 

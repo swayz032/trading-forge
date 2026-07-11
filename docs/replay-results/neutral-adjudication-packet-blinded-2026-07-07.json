@@ -1,0 +1,200 @@
+{
+ "title": "Corpus v3 — Independent Adjudication Packet (BLINDED)",
+ "frozen": "2026-07-07",
+ "data_path": "anchors = transcript quotes via census quote_en / DRI sliced-span quotes (verbatim educator speech). NO spec-side strings used: entry_conditions[].object compiler residue was never used as an anchor. 0 items excluded as spec-residue (every anchor is a genuine spoken utterance, not a bare compiler label). Items from source jlShztsY3oA are Afrikaans — the `quote` is the genuine Afrikaans transcript utterance and `original_and_translation.translation_aid` is a certified English rendering to assist cross-language judgement.",
+ "rater_instructions": "For each quoted utterance below, decide — using ONLY the quote (and, for Afrikaans items, the translation aid) — whether the educator is stating a REQUIRED ENTRY CONDITION the strategy must WAIT FOR before entering (a gate), or is NARRATING market context / commentary / setup / an example (not a gate). Label each item exactly one of: GATE or NARRATION (add UNSURE only if genuinely undecidable). Judge each item independently; there is no expected proportion and items are in no meaningful order.",
+ "items": [
+  {
+   "item_id": "N01",
+   "video": "oDLt9zh33LE",
+   "quote": "We come to our charts right before 9:30 open in the New York hill zone."
+  },
+  {
+   "item_id": "N02",
+   "video": "ktkqq7QsN9Q",
+   "quote": "Often, they'll retest again just like they did right here."
+  },
+  {
+   "item_id": "N03",
+   "video": "ktkqq7QsN9Q",
+   "quote": "VWAP plays a better magnet than it does a trading level except in a trend."
+  },
+  {
+   "item_id": "N04",
+   "video": "m-G1ag77aVc",
+   "quote": "We look to buy from the demand zone when it is retested because we expect to see more of that institutional buying kicking in."
+  },
+  {
+   "item_id": "N05",
+   "video": "m-G1ag77aVc",
+   "quote": "So future selling is expected once the market returns to this level."
+  },
+  {
+   "item_id": "N06",
+   "video": "m-G1ag77aVc",
+   "quote": "we're basically now looking for a retracement opportunity to then buy from further inside of the first leg of price action"
+  },
+  {
+   "item_id": "N07",
+   "video": "N7uP9V0Iktc",
+   "quote": "You also trade EMA retest sometimes."
+  },
+  {
+   "item_id": "N08",
+   "video": "m-G1ag77aVc",
+   "quote": "Let's say we begin on the 4hour time frame and we are looking at a supply zone."
+  },
+  {
+   "item_id": "N09",
+   "video": "HfZTCZTDfWk",
+   "quote": "you can see this low is 1788"
+  },
+  {
+   "item_id": "N10",
+   "video": "m-G1ag77aVc",
+   "quote": "but that's because this is a 1hour zone."
+  },
+  {
+   "item_id": "N11",
+   "video": "jlShztsY3oA",
+   "quote": "voeg selfs iets by tot bevestiging van struktuur in die reeks",
+   "original_and_translation": {
+    "original": "voeg selfs iets by tot bevestiging van struktuur in die reeks",
+    "translation_aid": "even add something to confirmation of structure within the range"
+   }
+  },
+  {
+   "item_id": "N12",
+   "video": "oDLt9zh33LE",
+   "quote": "step number three, we're going to wait for the market to retest that high or low of this initial candle"
+  },
+  {
+   "item_id": "N13",
+   "video": "HfZTCZTDfWk",
+   "quote": "today I'll share our 4-Hour chart strategy that I use every day"
+  },
+  {
+   "item_id": "N14",
+   "video": "sVkmZklJDHI",
+   "quote": "If I had avoided the two mistakes that I'm about to share with you, I'd be able to be profitable much faster."
+  },
+  {
+   "item_id": "N15",
+   "video": "m-G1ag77aVc",
+   "quote": "what we can do inside of the top zone is use what I call a standard confirmation."
+  },
+  {
+   "item_id": "N16",
+   "video": "c8VLqF0XDR4",
+   "quote": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+  },
+  {
+   "item_id": "N17",
+   "video": "jlShztsY3oA",
+   "quote": "prys waarskynlik sal terugtrek na 'n Fibonacci retracement vlak en ook daarvan verwerp",
+   "original_and_translation": {
+    "original": "prys waarskynlik sal terugtrek na 'n Fibonacci retracement vlak en ook daarvan verwerp",
+    "translation_aid": "using tools like Fibonacci will keep you out of these useless trades, [knowing] that after a big move price will likely retrace to a Fibonacci retracement level"
+   }
+  },
+  {
+   "item_id": "N18",
+   "video": "HfZTCZTDfWk",
+   "quote": "we get the cross down um right over here and we get the retrace right over here and once again very beautiful move lower"
+  },
+  {
+   "item_id": "N19",
+   "video": "ktkqq7QsN9Q",
+   "quote": "Every course I bought, every video I watched, every guru I follow said the same thing. VWAP is support."
+  },
+  {
+   "item_id": "N20",
+   "video": "KXWRtV2LOVc",
+   "quote": "let's hop onto a one day time frame the daily time frame to look for a key level to have four confirmations for the trade"
+  },
+  {
+   "item_id": "N21",
+   "video": "KXWRtV2LOVc",
+   "quote": "this will be our key level your goal is to enter short as soon as the key level is tapped"
+  },
+  {
+   "item_id": "N22",
+   "video": "jlShztsY3oA",
+   "quote": "hoekom sal jy kort daarin gaan as jy die bol-strategie wil gebruik",
+   "original_and_translation": {
+    "original": "hoekom sal jy kort daarin gaan as jy die bol-strategie wil gebruik",
+    "translation_aid": "we're still trading above that downward trend line, why would you go short in it"
+   }
+  },
+  {
+   "item_id": "N23",
+   "video": "c8VLqF0XDR4",
+   "quote": "a lot of confluence as well as large buying participants at this key level"
+  },
+  {
+   "item_id": "N24",
+   "video": "c8VLqF0XDR4",
+   "quote": "this is not going to play out every day. This is just one of many setups that we can keep our eye on"
+  },
+  {
+   "item_id": "N25",
+   "video": "oDLt9zh33LE",
+   "quote": "Now, we trade back up to the high. And do we get our entry reason?"
+  },
+  {
+   "item_id": "N26",
+   "video": "snNkQSyWX4k",
+   "quote": "so this should be our initial exit just based on support and resistance"
+  },
+  {
+   "item_id": "N27",
+   "video": "snNkQSyWX4k",
+   "quote": "I'm just going to point out a few right we closed below we kind of came back up here are the Wicks these are the kind of retests near the zones"
+  },
+  {
+   "item_id": "N28",
+   "video": "c8VLqF0XDR4",
+   "quote": "what I was looking for was for price to pull back into this area because the market was very bullish today"
+  },
+  {
+   "item_id": "N29",
+   "video": "HfZTCZTDfWk",
+   "quote": "you don't just want to take the trade you want to wait for a retrace back to the 5 SMA"
+  },
+  {
+   "item_id": "N30",
+   "video": "HfZTCZTDfWk",
+   "quote": "now back to the euro dollar chart here"
+  },
+  {
+   "item_id": "N31",
+   "video": "oDLt9zh33LE",
+   "quote": "That is your opening range breakout zone that you wait for price action to break out."
+  },
+  {
+   "item_id": "N32",
+   "video": "ktkqq7QsN9Q",
+   "quote": "The stop is going to go beyond the price level or beyond the testing candle wick."
+  },
+  {
+   "item_id": "N33",
+   "video": "m-G1ag77aVc",
+   "quote": "if we go over on the 5-minut time frame and dig into this larger demand zone"
+  },
+  {
+   "item_id": "N34",
+   "video": "N7uP9V0Iktc",
+   "quote": "VWAP is always a big retest spot ... then I'm looking to take puts on a VWOP retest, not a pre-market low retest"
+  },
+  {
+   "item_id": "N35",
+   "video": "HfZTCZTDfWk",
+   "quote": "this strategy Works particularly well for euro dollar pound dollar and dollar Yen"
+  },
+  {
+   "item_id": "N36",
+   "video": "FqxEKDxemtI",
+   "quote": "we'll be adding the three standard deviation Binger band I call this strategy the extreme fate"
+  }
+ ]
+}

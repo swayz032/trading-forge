@@ -3,7 +3,7 @@
 -- Pending-row contract: status="pending" on insert; updated to
 -- "completed" or "failed" on resolve. See a-plus-auditor-service.ts.
 
-CREATE TABLE a_plus_market_scans (
+CREATE TABLE IF NOT EXISTS a_plus_market_scans (
   id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   scan_date             date        NOT NULL,
   winner_market         text,                     -- MES | MNQ | MCL | null (observation mode)
@@ -23,9 +23,9 @@ CREATE TABLE a_plus_market_scans (
   UNIQUE (scan_date)
 );
 
-CREATE INDEX idx_a_plus_market_scans_date
+CREATE INDEX IF NOT EXISTS idx_a_plus_market_scans_date
   ON a_plus_market_scans (scan_date DESC);
 
-CREATE INDEX idx_a_plus_market_scans_status
+CREATE INDEX IF NOT EXISTS idx_a_plus_market_scans_status
   ON a_plus_market_scans (status)
   WHERE status = 'pending';

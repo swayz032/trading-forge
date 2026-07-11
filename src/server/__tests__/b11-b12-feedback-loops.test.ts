@@ -130,10 +130,12 @@ describe("B11 — calendar filter wired before entry signal emission", () => {
     const bypassReadIdx = paperSignalSrc.indexOf("bypassNewsBlackout");
     // holiday check appears before the bypass read affects the economic event path
     expect(holidayCheckIdx).toBeGreaterThan(0);
-    // After holiday block, the economic_event check references bypassNewsBlackout
-    const economicEventIdx = paperSignalSrc.indexOf("calResult.is_economic_event === true");
+    // CORRECTED 2026-07-10: calResult.is_economic_event was deliberately replaced by the
+    // T1-window check (Phase 3, 2026-06-23 — "its dates were unreliable", see the comment
+    // right above getT1ReleaseWindow's call site). Follow the current authoritative path.
+    const economicEventIdx = paperSignalSrc.indexOf("const t1 = await getT1ReleaseWindow(");
     expect(economicEventIdx).toBeGreaterThan(holidayCheckIdx);
-    // bypassNewsBlackout is only applied inside the economic_event branch
+    // bypassNewsBlackout is only applied inside the T1-window branch
     expect(paperSignalSrc.substring(economicEventIdx)).toContain("bypassNewsBlackout");
     // Holiday block sets calendarBlocked=true WITHOUT checking bypassNewsBlackout
     const holidayBlock = paperSignalSrc.substring(holidayCheckIdx, economicEventIdx);
@@ -261,15 +263,21 @@ describe("B12 Loop 2 — critic suggestions feed prompt evolution", () => {
     expect(schedulerSrc).toContain("critic-feedback");
   });
 
-  // NOTE: runPromptEvolution is NOT currently registered in the scheduler.
-  // It is intended to be triggered by the n8n nightly review workflow (canonical
-  // trigger per CLAUDE.md "Tournament Gating (n8n-canonical)"). This is a known
-  // architecture decision, not a bug. The test below documents this gap explicitly.
-  it("runPromptEvolution scheduler gap — documented known gap (n8n is canonical trigger)", () => {
-    // runPromptEvolution is NOT in the scheduler — n8n nightly review calls it.
-    // This test documents the gap so it is visible in CI output.
+  // CORRECTED 2026-07-10: this comment previously claimed the n8n nightly review workflow
+  // is the "canonical trigger" per a CLAUDE.md "Tournament Gating (n8n-canonical)" section —
+  // that section no longer exists in CLAUDE.md, and no n8n workflow or HTTP route was found
+  // referencing runPromptEvolution/prompt-evolution anywhere (checked workflows/, tmp-n8n/,
+  // src/server/routes/). runPromptEvolution() has ZERO callers today: not the scheduler, not
+  // a route, not n8n. The equivalent "create a new A/B candidate from outcomes" functionality
+  // IS live, but via an independent, separately-maintained implementation in
+  // pattern-aggregator-service.ts (scheduled every 4h) that explicitly replicates this logic
+  // rather than importing it (see that file's own comment on the circular-import reason).
+  // resolveAbTests, a DIFFERENT export of this same prompt-evolution-service.ts file, IS wired
+  // into scheduler.ts's weekly cron. Operator decision pending: wire runPromptEvolution() up for
+  // real, or remove it as superseded dead code — see project_full_goal_deepscan_2026_07_10 memory.
+  it("runPromptEvolution has no caller anywhere — documented dead code, not an n8n-triggered gap", () => {
     const schedulerHasRunPromptEvolution = schedulerSrc.includes("runPromptEvolution");
-    // Expected: false (n8n is the canonical trigger, not the in-process scheduler)
+    // Expected: false — confirmed no scheduler, route, or n8n workflow invokes this function.
     expect(schedulerHasRunPromptEvolution).toBe(false);
   });
 });

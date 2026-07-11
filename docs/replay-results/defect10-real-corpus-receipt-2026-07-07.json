@@ -1,0 +1,732 @@
+{
+  "receipt_type": "defect10_real_corpus_materiality_receipt",
+  "status": "COMPLETE",
+  "generated_at": "2026-07-09",
+  "gates_nothing": true,
+  "what": "Defect-10 (forward-window entry-validity look-ahead in breaker.py/unicorn.py, fixed to streaming validity, committed 59dbc2a) real-corpus impact receipt. Batch (pre-fix) engine = worktree wt-defect10-batch pinned at 0008bcb (parent of 59dbc2a, has c948bcd timestamp-emit). Streaming (post-fix) engine = hardening/phase-0 HEAD, 59dbc2a is an ancestor. Same real data, same code EXCEPT the breaker.py/unicorn.py valid_from streaming-validity gate -- ran through both engines, trade sets diffed.",
+  "population_scope_declaration": "DEVIATION FROM THE LITERAL TASK POPULATION, DECLARED: the task's suggested populations (14 v3-shadow concepts x {MES,MNQ,MCL} / N=9-reference set) were checked and are Corpus-v3-classifier DecisionAtom-graph artifacts (crossover / moving-average / market-structure concepts extracted from video transcripts) -- NOT compiled BreakerStrategy/UnicornStrategy archetype instances. Defect-10 ONLY touches breaker.py and unicorn.py (confirmed by the forward-window census in docs/designs/archetype-lookahead-investigation-2026-07-07.md: 'NO new forward-window-validity sites... the min(n, X+k) construct appears ONLY at those 2'). The N=9 reference set ({snNkQSyWX4k, m-G1ag77aVc, oDLt9zh33LE} x {MES,MNQ,MCL}, per docs/designs/corpus-v3-gate1-respecification-2026-07-05.md) is a DSL/crossover corpus, unrelated to the breaker/unicorn code path. Running the suggested population through both engines would produce a bit-identical zero-diff receipt that measures nothing about Defect-10 (their code path never touches breaker.py/unicorn.py). The technically-correct, directly-relevant population for 'same population through both engines, diff trade sets' is therefore the archetype classes Defect-10 actually touches: BreakerStrategy x {MES,MNQ,MCL} and UnicornStrategy x {MES,MNQ,MCL} = 6 pairs, run via run_class_backtest with default archetype constructor parameters (breaker: swing_lookback=5, atr_period=14, zone_age_limit=30, sl_mult=2.0, tp_mult=3.0; unicorn: swing_lookback=5, atr_period=14, max_zone_age=20, atr_sl_mult=0.5, max_hold_bars=40), firm_key=topstep_50k, fixed_contracts=6, commission_per_side=0.62, slippage_ticks=1.0.",
+  "data_scope": {
+    "symbols": [
+      "MES",
+      "MNQ",
+      "MCL"
+    ],
+    "timeframe": "15min",
+    "start_date": "2020-06-01",
+    "end_date": "2026-07-01",
+    "source": "real ratio-adjusted S3 parquet (data_loader.py load_ohlcv), local cache copied byte-identically into BOTH worktrees so both engines saw the IDENTICAL input bars -- only breaker.py/unicorn.py code differs",
+    "bar_counts": {
+      "MES": 135231,
+      "MNQ": 135229,
+      "MCL": 132934
+    }
+  },
+  "engines": {
+    "batch_pre_fix": {
+      "worktree": "C:\\Users\\tonio\\Projects\\trading-forge\\wt-defect10-batch",
+      "sha": "0008bcb0f947ab21d39e3601516769aa6a12a3e4",
+      "note": "parent of 59dbc2a -- has c948bcd timestamp-emit (entry_idx/entry_timestamp) but NOT the Defect-10 streaming-validity fix"
+    },
+    "streaming_post_fix": {
+      "worktree": "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge",
+      "sha": "3e3187736dd1f0e291a566c8d34c4749d9647043",
+      "note": "hardening/phase-0 HEAD; 59dbc2a (Defect-10 fix, accepted+committed) is an ancestor"
+    }
+  },
+  "method_note_realized_trade_proxy": "Trade records carry entry_idx/entry_timestamp/direction/pnl (c948bcd) but NOT zone-level metadata (broken_at/valid_from/zone id) -- adding that would require editing the engine, which this read-only receipt task forbids. Consequently this receipt uses a REALIZED-TRADE proximity heuristic (greedy nearest-neighbor pairing, same symbol+direction, within PAIR_WINDOW_BARS=40 bars -- covers breaker zone_age_limit=30 and unicorn max_zone_age=20 plus buffer) to link a batch-only 'removed' trade to a nearby streaming-only trade, mirroring the ratified investigation's bar-39-removed/bar-43-freed pattern (59dbc2a commit message). This is NOT the ratified acceptance-gate's 4-predicate raw-candidate closed taxonomy (which needs internal per-bar signal state discarded after the backtest completes) -- it is a coarser, fully-declared proxy adequate for a materiality receipt that gates nothing. Classes (b) occupancy-freed and (c) timing-shifted are NOT separable from realized trades alone and are reported as one merged 'paired' bucket. Streaming-only trades with NO nearby batch-only-removed partner are reported separately as 'unexplained_stream_only' -- NOT claimed clean, NOT claimed a (d)-class bug either; the full predicate check would be needed to resolve them and was out of scope for this receipt. Observed pairing bar-distance: n=46, median=4.0, min=2, max=36 bars (median 4 matches the ratified bar-39/bar-43 example exactly).",
+  "pre_registered_reads": {
+    "1_displacement_accounting": {
+      "per_pair": {
+        "breaker_MCL": {
+          "a_removed_pure_count": 9,
+          "a_removed_pure_pnl": -942.41,
+          "a_removed_paired_count": 16,
+          "a_removed_paired_pnl": -2002.51,
+          "a_removed_total_count": 25,
+          "a_removed_total_pnl": -2944.92,
+          "bc_freed_paired_count": 16,
+          "bc_freed_paired_pnl": -2412.82,
+          "bc_note": "b(occupancy-freed) and c(timing-shifted) are NOT separable from realized trades alone (see METHOD NOTE); reported as one merged 'paired' bucket.",
+          "unexplained_stream_only_count": 12,
+          "unexplained_stream_only_pnl": -1177.04,
+          "unexplained_note": "streaming-only trades with no batch-only-removed counterpart within PAIR_WINDOW_BARS -- NOT claimed clean; would require the ratified 4-predicate raw-candidate check to classify as (b) vs (d).",
+          "net_displacement_pnl_freed_minus_removed": 532.1,
+          "pair_window_bars": 40,
+          "pairs_detail": [
+            {
+              "batch_entry_idx": 1114,
+              "batch_dir": "Long",
+              "stream_entry_idx": 1116,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": 91.54,
+              "stream_pnl": 81.18
+            },
+            {
+              "batch_entry_idx": 2130,
+              "batch_dir": "Short",
+              "stream_entry_idx": 2137,
+              "stream_dir": "Short",
+              "bar_distance": 7,
+              "batch_pnl": -20.39,
+              "stream_pnl": 76.13
+            },
+            {
+              "batch_entry_idx": 2678,
+              "batch_dir": "Short",
+              "stream_entry_idx": 2681,
+              "stream_dir": "Short",
+              "bar_distance": 3,
+              "batch_pnl": 70.23,
+              "stream_pnl": 59.55
+            },
+            {
+              "batch_entry_idx": 2944,
+              "batch_dir": "Short",
+              "stream_entry_idx": 2954,
+              "stream_dir": "Short",
+              "bar_distance": 10,
+              "batch_pnl": -24.99,
+              "stream_pnl": 55.74
+            },
+            {
+              "batch_entry_idx": 5429,
+              "batch_dir": "Long",
+              "stream_entry_idx": 5431,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": -81.52,
+              "stream_pnl": -72.45
+            },
+            {
+              "batch_entry_idx": 8103,
+              "batch_dir": "Long",
+              "stream_entry_idx": 8107,
+              "stream_dir": "Long",
+              "bar_distance": 4,
+              "batch_pnl": -18.32,
+              "stream_pnl": -20.45
+            },
+            {
+              "batch_entry_idx": 9184,
+              "batch_dir": "Long",
+              "stream_entry_idx": 9186,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": -123.79,
+              "stream_pnl": -137.37
+            },
+            {
+              "batch_entry_idx": 11459,
+              "batch_dir": "Short",
+              "stream_entry_idx": 11462,
+              "stream_dir": "Short",
+              "bar_distance": 3,
+              "batch_pnl": -19.75,
+              "stream_pnl": -1.76
+            },
+            {
+              "batch_entry_idx": 13710,
+              "batch_dir": "Long",
+              "stream_entry_idx": 13726,
+              "stream_dir": "Long",
+              "bar_distance": 16,
+              "batch_pnl": -4.78,
+              "stream_pnl": -45.24
+            },
+            {
+              "batch_entry_idx": 14273,
+              "batch_dir": "Long",
+              "stream_entry_idx": 14288,
+              "stream_dir": "Long",
+              "bar_distance": 15,
+              "batch_pnl": -31.75,
+              "stream_pnl": -139.65
+            },
+            {
+              "batch_entry_idx": 14746,
+              "batch_dir": "Short",
+              "stream_entry_idx": 14749,
+              "stream_dir": "Short",
+              "bar_distance": 3,
+              "batch_pnl": -115.65,
+              "stream_pnl": -88.68
+            },
+            {
+              "batch_entry_idx": 18958,
+              "batch_dir": "Long",
+              "stream_entry_idx": 18961,
+              "stream_dir": "Long",
+              "bar_distance": 3,
+              "batch_pnl": -1312.05,
+              "stream_pnl": -1284.81
+            },
+            {
+              "batch_entry_idx": 25147,
+              "batch_dir": "Short",
+              "stream_entry_idx": 25150,
+              "stream_dir": "Short",
+              "bar_distance": 3,
+              "batch_pnl": 29.61,
+              "stream_pnl": -174.69
+            },
+            {
+              "batch_entry_idx": 36250,
+              "batch_dir": "Long",
+              "stream_entry_idx": 36253,
+              "stream_dir": "Long",
+              "bar_distance": 3,
+              "batch_pnl": -23.26,
+              "stream_pnl": -84.12
+            },
+            {
+              "batch_entry_idx": 41659,
+              "batch_dir": "Long",
+              "stream_entry_idx": 41661,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": -400.18,
+              "stream_pnl": -700.01
+            },
+            {
+              "batch_entry_idx": 90146,
+              "batch_dir": "Long",
+              "stream_entry_idx": 90150,
+              "stream_dir": "Long",
+              "bar_distance": 4,
+              "batch_pnl": -17.46,
+              "stream_pnl": 63.81
+            }
+          ]
+        },
+        "breaker_MES": {
+          "a_removed_pure_count": 12,
+          "a_removed_pure_pnl": 2180.47,
+          "a_removed_paired_count": 15,
+          "a_removed_paired_pnl": -3599.25,
+          "a_removed_total_count": 27,
+          "a_removed_total_pnl": -1418.78,
+          "bc_freed_paired_count": 15,
+          "bc_freed_paired_pnl": -7619.07,
+          "bc_note": "b(occupancy-freed) and c(timing-shifted) are NOT separable from realized trades alone (see METHOD NOTE); reported as one merged 'paired' bucket.",
+          "unexplained_stream_only_count": 8,
+          "unexplained_stream_only_pnl": -1681.66,
+          "unexplained_note": "streaming-only trades with no batch-only-removed counterpart within PAIR_WINDOW_BARS -- NOT claimed clean; would require the ratified 4-predicate raw-candidate check to classify as (b) vs (d).",
+          "net_displacement_pnl_freed_minus_removed": -6200.29,
+          "pair_window_bars": 40,
+          "pairs_detail": [
+            {
+              "batch_entry_idx": 4401,
+              "batch_dir": "Short",
+              "stream_entry_idx": 4409,
+              "stream_dir": "Short",
+              "bar_distance": 8,
+              "batch_pnl": -276.16,
+              "stream_pnl": -70.47
+            },
+            {
+              "batch_entry_idx": 12145,
+              "batch_dir": "Long",
+              "stream_entry_idx": 12169,
+              "stream_dir": "Long",
+              "bar_distance": 24,
+              "batch_pnl": -329.32,
+              "stream_pnl": 27.48
+            },
+            {
+              "batch_entry_idx": 12927,
+              "batch_dir": "Long",
+              "stream_entry_idx": 12930,
+              "stream_dir": "Long",
+              "bar_distance": 3,
+              "batch_pnl": -1499.05,
+              "stream_pnl": -52.44
+            },
+            {
+              "batch_entry_idx": 13446,
+              "batch_dir": "Long",
+              "stream_entry_idx": 13448,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": -60.85,
+              "stream_pnl": -111.33
+            },
+            {
+              "batch_entry_idx": 15049,
+              "batch_dir": "Long",
+              "stream_entry_idx": 15052,
+              "stream_dir": "Long",
+              "bar_distance": 3,
+              "batch_pnl": -386.26,
+              "stream_pnl": -3083.15
+            },
+            {
+              "batch_entry_idx": 33104,
+              "batch_dir": "Short",
+              "stream_entry_idx": 33110,
+              "stream_dir": "Short",
+              "bar_distance": 6,
+              "batch_pnl": 0.54,
+              "stream_pnl": 181.07
+            },
+            {
+              "batch_entry_idx": 67298,
+              "batch_dir": "Short",
+              "stream_entry_idx": 67301,
+              "stream_dir": "Short",
+              "bar_distance": 3,
+              "batch_pnl": -17.17,
+              "stream_pnl": 162.11
+            },
+            {
+              "batch_entry_idx": 73237,
+              "batch_dir": "Short",
+              "stream_entry_idx": 73240,
+              "stream_dir": "Short",
+              "bar_distance": 3,
+              "batch_pnl": -1480.18,
+              "stream_pnl": -2982.09
+            },
+            {
+              "batch_entry_idx": 84025,
+              "batch_dir": "Long",
+              "stream_entry_idx": 84030,
+              "stream_dir": "Long",
+              "bar_distance": 5,
+              "batch_pnl": 58.41,
+              "stream_pnl": 14.11
+            },
+            {
+              "batch_entry_idx": 89787,
+              "batch_dir": "Long",
+              "stream_entry_idx": 89805,
+              "stream_dir": "Long",
+              "bar_distance": 18,
+              "batch_pnl": 20.81,
+              "stream_pnl": 298.17
+            },
+            {
+              "batch_entry_idx": 93001,
+              "batch_dir": "Long",
+              "stream_entry_idx": 93011,
+              "stream_dir": "Long",
+              "bar_distance": 10,
+              "batch_pnl": 85.67,
+              "stream_pnl": 39.15
+            },
+            {
+              "batch_entry_idx": 94339,
+              "batch_dir": "Long",
+              "stream_entry_idx": 94344,
+              "stream_dir": "Long",
+              "bar_distance": 5,
+              "batch_pnl": -17.46,
+              "stream_pnl": -134.52
+            },
+            {
+              "batch_entry_idx": 116337,
+              "batch_dir": "Long",
+              "stream_entry_idx": 116344,
+              "stream_dir": "Long",
+              "bar_distance": 7,
+              "batch_pnl": 28.48,
+              "stream_pnl": -339.59
+            },
+            {
+              "batch_entry_idx": 122241,
+              "batch_dir": "Short",
+              "stream_entry_idx": 122244,
+              "stream_dir": "Short",
+              "bar_distance": 3,
+              "batch_pnl": 64.77,
+              "stream_pnl": -1291.84
+            },
+            {
+              "batch_entry_idx": 124488,
+              "batch_dir": "Short",
+              "stream_entry_idx": 124510,
+              "stream_dir": "Short",
+              "bar_distance": 22,
+              "batch_pnl": 208.52,
+              "stream_pnl": -275.73
+            }
+          ]
+        },
+        "breaker_MNQ": {
+          "a_removed_pure_count": 10,
+          "a_removed_pure_pnl": -186.02,
+          "a_removed_paired_count": 11,
+          "a_removed_paired_pnl": -399.38,
+          "a_removed_total_count": 21,
+          "a_removed_total_pnl": -585.4,
+          "bc_freed_paired_count": 11,
+          "bc_freed_paired_pnl": 198.21,
+          "bc_note": "b(occupancy-freed) and c(timing-shifted) are NOT separable from realized trades alone (see METHOD NOTE); reported as one merged 'paired' bucket.",
+          "unexplained_stream_only_count": 9,
+          "unexplained_stream_only_pnl": 291.99,
+          "unexplained_note": "streaming-only trades with no batch-only-removed counterpart within PAIR_WINDOW_BARS -- NOT claimed clean; would require the ratified 4-predicate raw-candidate check to classify as (b) vs (d).",
+          "net_displacement_pnl_freed_minus_removed": 783.61,
+          "pair_window_bars": 40,
+          "pairs_detail": [
+            {
+              "batch_entry_idx": 3896,
+              "batch_dir": "Long",
+              "stream_entry_idx": 3898,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": 335.62,
+              "stream_pnl": 611.52
+            },
+            {
+              "batch_entry_idx": 4420,
+              "batch_dir": "Long",
+              "stream_entry_idx": 4422,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": -210.27,
+              "stream_pnl": 125.47
+            },
+            {
+              "batch_entry_idx": 9374,
+              "batch_dir": "Long",
+              "stream_entry_idx": 9379,
+              "stream_dir": "Long",
+              "bar_distance": 5,
+              "batch_pnl": -898.68,
+              "stream_pnl": -923.4
+            },
+            {
+              "batch_entry_idx": 13547,
+              "batch_dir": "Long",
+              "stream_entry_idx": 13549,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": -252.14,
+              "stream_pnl": -105.99
+            },
+            {
+              "batch_entry_idx": 30395,
+              "batch_dir": "Short",
+              "stream_entry_idx": 30397,
+              "stream_dir": "Short",
+              "bar_distance": 2,
+              "batch_pnl": -239.93,
+              "stream_pnl": -197.26
+            },
+            {
+              "batch_entry_idx": 33597,
+              "batch_dir": "Long",
+              "stream_entry_idx": 33599,
+              "stream_dir": "Long",
+              "bar_distance": 2,
+              "batch_pnl": -583.15,
+              "stream_pnl": -677.11
+            },
+            {
+              "batch_entry_idx": 53411,
+              "batch_dir": "Long",
+              "stream_entry_idx": 53401,
+              "stream_dir": "Long",
+              "bar_distance": 10,
+              "batch_pnl": 528.91,
+              "stream_pnl": -378.13
+            },
+            {
+              "batch_entry_idx": 69594,
+              "batch_dir": "Short",
+              "stream_entry_idx": 69598,
+              "stream_dir": "Short",
+              "bar_distance": 4,
+              "batch_pnl": 40.6,
+              "stream_pnl": 165.12
+            },
+            {
+              "batch_entry_idx": 79114,
+              "batch_dir": "Short",
+              "stream_entry_idx": 79120,
+              "stream_dir": "Short",
+              "bar_distance": 6,
+              "batch_pnl": 48.48,
+              "stream_pnl": 357.21
+            },
+            {
+              "batch_entry_idx": 85328,
+              "batch_dir": "Long",
+              "stream_entry_idx": 85292,
+              "stream_dir": "Long",
+              "bar_distance": 36,
+              "batch_pnl": 926.99,
+              "stream_pnl": 163.07
+            },
+            {
+              "batch_entry_idx": 118161,
+              "batch_dir": "Long",
+              "stream_entry_idx": 118168,
+              "stream_dir": "Long",
+              "bar_distance": 7,
+              "batch_pnl": -95.81,
+              "stream_pnl": 1057.71
+            }
+          ]
+        },
+        "unicorn_MCL": {
+          "a_removed_pure_count": 3,
+          "a_removed_pure_pnl": -285.89,
+          "a_removed_paired_count": 2,
+          "a_removed_paired_pnl": 18.94,
+          "a_removed_total_count": 5,
+          "a_removed_total_pnl": -266.95,
+          "bc_freed_paired_count": 2,
+          "bc_freed_paired_pnl": -524.96,
+          "bc_note": "b(occupancy-freed) and c(timing-shifted) are NOT separable from realized trades alone (see METHOD NOTE); reported as one merged 'paired' bucket.",
+          "unexplained_stream_only_count": 1,
+          "unexplained_stream_only_pnl": -874.74,
+          "unexplained_note": "streaming-only trades with no batch-only-removed counterpart within PAIR_WINDOW_BARS -- NOT claimed clean; would require the ratified 4-predicate raw-candidate check to classify as (b) vs (d).",
+          "net_displacement_pnl_freed_minus_removed": -258.01,
+          "pair_window_bars": 40,
+          "pairs_detail": [
+            {
+              "batch_entry_idx": 15094,
+              "batch_dir": "Long",
+              "stream_entry_idx": 15080,
+              "stream_dir": "Long",
+              "bar_distance": 14,
+              "batch_pnl": -39.61,
+              "stream_pnl": -6.13
+            },
+            {
+              "batch_entry_idx": 103730,
+              "batch_dir": "Long",
+              "stream_entry_idx": 103735,
+              "stream_dir": "Long",
+              "bar_distance": 5,
+              "batch_pnl": 58.55,
+              "stream_pnl": -518.83
+            }
+          ]
+        },
+        "unicorn_MES": {
+          "a_removed_pure_count": 2,
+          "a_removed_pure_pnl": -337.63,
+          "a_removed_paired_count": 1,
+          "a_removed_paired_pnl": -95.19,
+          "a_removed_total_count": 3,
+          "a_removed_total_pnl": -432.82,
+          "bc_freed_paired_count": 1,
+          "bc_freed_paired_pnl": -4.07,
+          "bc_note": "b(occupancy-freed) and c(timing-shifted) are NOT separable from realized trades alone (see METHOD NOTE); reported as one merged 'paired' bucket.",
+          "unexplained_stream_only_count": 0,
+          "unexplained_stream_only_pnl": 0,
+          "unexplained_note": "streaming-only trades with no batch-only-removed counterpart within PAIR_WINDOW_BARS -- NOT claimed clean; would require the ratified 4-predicate raw-candidate check to classify as (b) vs (d).",
+          "net_displacement_pnl_freed_minus_removed": 428.75,
+          "pair_window_bars": 40,
+          "pairs_detail": [
+            {
+              "batch_entry_idx": 26787,
+              "batch_dir": "Short",
+              "stream_entry_idx": 26798,
+              "stream_dir": "Short",
+              "bar_distance": 11,
+              "batch_pnl": -95.19,
+              "stream_pnl": -4.07
+            }
+          ]
+        },
+        "unicorn_MNQ": {
+          "a_removed_pure_count": 2,
+          "a_removed_pure_pnl": 961.72,
+          "a_removed_paired_count": 1,
+          "a_removed_paired_pnl": 187.6,
+          "a_removed_total_count": 3,
+          "a_removed_total_pnl": 1149.32,
+          "bc_freed_paired_count": 1,
+          "bc_freed_paired_pnl": -319.3,
+          "bc_note": "b(occupancy-freed) and c(timing-shifted) are NOT separable from realized trades alone (see METHOD NOTE); reported as one merged 'paired' bucket.",
+          "unexplained_stream_only_count": 0,
+          "unexplained_stream_only_pnl": 0,
+          "unexplained_note": "streaming-only trades with no batch-only-removed counterpart within PAIR_WINDOW_BARS -- NOT claimed clean; would require the ratified 4-predicate raw-candidate check to classify as (b) vs (d).",
+          "net_displacement_pnl_freed_minus_removed": -1468.62,
+          "pair_window_bars": 40,
+          "pairs_detail": [
+            {
+              "batch_entry_idx": 74688,
+              "batch_dir": "Short",
+              "stream_entry_idx": 74698,
+              "stream_dir": "Short",
+              "bar_distance": 10,
+              "batch_pnl": 187.6,
+              "stream_pnl": -319.3
+            }
+          ]
+        }
+      },
+      "aggregate": {
+        "removed_a_total_count": 84,
+        "removed_a_total_pnl": -4499.55,
+        "freed_bc_total_count": 46,
+        "freed_bc_total_pnl": -10682.01,
+        "net_freed_minus_removed_pnl": -6182.46,
+        "unexplained_stream_only_count": 30,
+        "unexplained_stream_only_pnl": -3441.45,
+        "common_unaffected_trade_count": 3169,
+        "interpretation": "NET = freed_bc_total_pnl - removed_a_total_pnl = -6182.46. Negative net means the trades the fix REMOVED (look-ahead-tainted) outperformed the trades the fix FREED (legitimate, formerly occupancy-blocked) on this real corpus -- i.e. removing the look-ahead COST more than it liberated, historically, on this population/date-range/engine-snapshot. Per the pre-registered reading (archetype-lookahead-investigation-2026-07-07.md 'IMPACT-REPORT PRE-READ'), sign is genuinely open and BOTH readings are pre-registered acceptable -- this result does not reopen any certified trade-count finding absent the tripwire, which did NOT fire (see read 4)."
+      }
+    },
+    "2_fraction_in_window": {
+      "per_pair": {
+        "breaker_MCL": {
+          "value": 0.04512635379061372,
+          "removed_count": 25,
+          "batch_total_count": 554,
+          "method": "structural: removed_count / batch_total_count (see METHOD NOTE -- valid_from gate is the sole code diff, entry-suppressing only)"
+        },
+        "breaker_MES": {
+          "value": 0.05222437137330754,
+          "removed_count": 27,
+          "batch_total_count": 517,
+          "method": "structural: removed_count / batch_total_count (see METHOD NOTE -- valid_from gate is the sole code diff, entry-suppressing only)"
+        },
+        "breaker_MNQ": {
+          "value": 0.04384133611691023,
+          "removed_count": 21,
+          "batch_total_count": 479,
+          "method": "structural: removed_count / batch_total_count (see METHOD NOTE -- valid_from gate is the sole code diff, entry-suppressing only)"
+        },
+        "unicorn_MCL": {
+          "value": 0.0070126227208976155,
+          "removed_count": 5,
+          "batch_total_count": 713,
+          "method": "structural: removed_count / batch_total_count (see METHOD NOTE -- valid_from gate is the sole code diff, entry-suppressing only)"
+        },
+        "unicorn_MES": {
+          "value": 0.00558659217877095,
+          "removed_count": 3,
+          "batch_total_count": 537,
+          "method": "structural: removed_count / batch_total_count (see METHOD NOTE -- valid_from gate is the sole code diff, entry-suppressing only)"
+        },
+        "unicorn_MNQ": {
+          "value": 0.006622516556291391,
+          "removed_count": 3,
+          "batch_total_count": 453,
+          "method": "structural: removed_count / batch_total_count (see METHOD NOTE -- valid_from gate is the sole code diff, entry-suppressing only)"
+        }
+      },
+      "aggregate": {
+        "value": 0.0258,
+        "removed_count": 84,
+        "batch_total_count": 3253,
+        "method": "structural: removed_count / batch_total_count -- valid_from streaming gate is the SOLE code diff between the two engines (entry-suppressing only, per the fix's construction) so every batch-only-removed trade is, by construction, one whose original admission depended on the forward-peeked validity window (breaker +-3 bars / unicorn +-1 disp / +-5 FVG)."
+      }
+    },
+    "3_win_rate_delta": {
+      "per_pair": {
+        "breaker_MCL": {
+          "peeked_removed_win_rate": 0.2,
+          "peeked_removed_n": 25,
+          "peeked_removed_wins": 5,
+          "clean_common_win_rate": 0.28544423440453687,
+          "clean_common_n": 529,
+          "clean_common_wins": 151,
+          "delta_peeked_minus_clean": -0.08544423440453686
+        },
+        "breaker_MES": {
+          "peeked_removed_win_rate": 0.5925925925925926,
+          "peeked_removed_n": 27,
+          "peeked_removed_wins": 16,
+          "clean_common_win_rate": 0.35918367346938773,
+          "clean_common_n": 490,
+          "clean_common_wins": 176,
+          "delta_peeked_minus_clean": 0.23340891912320483
+        },
+        "breaker_MNQ": {
+          "peeked_removed_win_rate": 0.47619047619047616,
+          "peeked_removed_n": 21,
+          "peeked_removed_wins": 10,
+          "clean_common_win_rate": 0.42358078602620086,
+          "clean_common_n": 458,
+          "clean_common_wins": 194,
+          "delta_peeked_minus_clean": 0.0526096901642753
+        },
+        "unicorn_MCL": {
+          "peeked_removed_win_rate": 0.2,
+          "peeked_removed_n": 5,
+          "peeked_removed_wins": 1,
+          "clean_common_win_rate": 0.2528248587570621,
+          "clean_common_n": 708,
+          "clean_common_wins": 179,
+          "delta_peeked_minus_clean": -0.05282485875706211
+        },
+        "unicorn_MES": {
+          "peeked_removed_win_rate": 0.0,
+          "peeked_removed_n": 3,
+          "peeked_removed_wins": 0,
+          "clean_common_win_rate": 0.31273408239700373,
+          "clean_common_n": 534,
+          "clean_common_wins": 167,
+          "delta_peeked_minus_clean": -0.31273408239700373
+        },
+        "unicorn_MNQ": {
+          "peeked_removed_win_rate": 1.0,
+          "peeked_removed_n": 3,
+          "peeked_removed_wins": 3,
+          "clean_common_win_rate": 0.38,
+          "clean_common_n": 450,
+          "clean_common_wins": 171,
+          "delta_peeked_minus_clean": 0.62
+        }
+      },
+      "aggregate": {
+        "peeked_removed_win_rate": 0.4167,
+        "peeked_removed_n": 84,
+        "peeked_removed_wins": 35,
+        "clean_common_win_rate": 0.3275,
+        "clean_common_n": 3169,
+        "clean_common_wins": 1038,
+        "delta_peeked_minus_clean": 0.0891,
+        "interpretation": "Aggregate peeked-window win rate 41.7% (n=84) vs clean/common win rate 32.8% (n=3169) -- delta +8.9pp. Per the locked pre-read: a HIGHER peeked win rate would annotate historical equity as another 'optimistic' bias (alongside Defect 4); a FLAT/negative delta means the look-ahead was real but non-exploitative on this corpus. Result here is POSITIVE (aggregate) but NOT UNIFORM across pairs -- 3 of 6 pairs (breaker_MCL, unicorn_MCL, unicorn_MES) show NEGATIVE deltas. This is a real, mixed-sign result on real data, reported as measured -- not smoothed into a single directional claim."
+      }
+    },
+    "4_tripwire": {
+      "locked_read_order": "any pair flipping zero<->nonzero trade count -> classify (a)/(b)/(c) on that pair FIRST -> all clean = fix working, reference stands; any (d)/predicate-fail = FULL-STOP, contradicting-evidence protocol, reference reopens.",
+      "fired": false,
+      "fired_pairs": [],
+      "per_pair_trade_counts": {
+        "breaker_MCL": {
+          "n_batch_total": 554,
+          "n_stream_total": 557
+        },
+        "breaker_MES": {
+          "n_batch_total": 517,
+          "n_stream_total": 513
+        },
+        "breaker_MNQ": {
+          "n_batch_total": 479,
+          "n_stream_total": 478
+        },
+        "unicorn_MCL": {
+          "n_batch_total": 713,
+          "n_stream_total": 711
+        },
+        "unicorn_MES": {
+          "n_batch_total": 537,
+          "n_stream_total": 535
+        },
+        "unicorn_MNQ": {
+          "n_batch_total": 453,
+          "n_stream_total": 451
+        }
+      },
+      "verdict": "TRIPWIRE DID NOT FIRE. All 6 pairs have nonzero trade counts in BOTH engines (range 451-713 trades per pair) -- no pair flipped zero<->nonzero. No FULL-STOP triggered; the (a)/(b)/(c)/(d) classification-on-flip protocol was not invoked because its precondition (a flip) did not occur. This receipt's population is NOT the N=9/v2-traded reference set the corpus tripwire was originally armed against (see population_scope_declaration) -- so this is a NEW, independent zero/nonzero check on the archetype population itself, not a firing/non-firing of the pre-armed corpus tripwire. The corpus-level tripwire (N=9 + v2-traded pairs) remains armed and un-triggered pending the actual corpus re-baseline, as pre-registered."
+    }
+  },
+  "summary": {
+    "n_pairs": 6,
+    "n_batch_trades_total": 3253,
+    "n_stream_trades_total": 3245,
+    "n_common_unaffected_trades": 3169,
+    "fraction_in_window_aggregate": 0.0258,
+    "net_displacement_pnl": -6182.46,
+    "win_rate_delta_aggregate_pp": 8.9,
+    "tripwire_fired": false
+  }
+}

@@ -11,7 +11,7 @@
 --   - Multiple rows per strategy are allowed (history preserved). The service
 --     queries the most recent active lockout (locked_until > now()).
 
-CREATE TABLE strategy_lockouts (
+CREATE TABLE IF NOT EXISTS strategy_lockouts (
   id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   strategy_id           uuid REFERENCES strategies(id) NOT NULL,
   locked_until          timestamp NOT NULL,
@@ -24,5 +24,5 @@ CREATE TABLE strategy_lockouts (
 --   SELECT * FROM strategy_lockouts
 --   WHERE strategy_id = $1 AND locked_until > now()
 --   ORDER BY locked_until DESC LIMIT 1
-CREATE INDEX idx_strategy_lockouts_strategy_active
+CREATE INDEX IF NOT EXISTS idx_strategy_lockouts_strategy_active
   ON strategy_lockouts (strategy_id, locked_until DESC);

@@ -4,7 +4,7 @@
 --
 -- UP ─────────────────────────────────────────────────────────────────────────
 
-CREATE TABLE tradingview_markers (
+CREATE TABLE IF NOT EXISTS tradingview_markers (
   id                BIGSERIAL PRIMARY KEY,
   strategy_id       UUID NOT NULL REFERENCES strategies(id),
   account_id        UUID NOT NULL REFERENCES broker_accounts(account_id),
@@ -17,11 +17,11 @@ CREATE TABLE tradingview_markers (
 );
 
 -- Index for reconciliation time-range queries (account + date)
-CREATE INDEX idx_tradingview_markers_account_bar
+CREATE INDEX IF NOT EXISTS idx_tradingview_markers_account_bar
   ON tradingview_markers (account_id, bar_timestamp DESC);
 
 -- Index for correlation ID linkage across audit rows
-CREATE INDEX idx_tradingview_markers_correlation
+CREATE INDEX IF NOT EXISTS idx_tradingview_markers_correlation
   ON tradingview_markers (correlation_id)
   WHERE correlation_id IS NOT NULL;
 

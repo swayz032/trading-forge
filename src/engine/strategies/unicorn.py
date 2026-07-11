@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import polars as pl
 
-from src.engine.strategy_base import BaseStrategy
 from src.engine.indicators.core import compute_atr
 from src.engine.indicators.market_structure import detect_swings
-from src.engine.indicators.price_delivery import detect_fvg, detect_displacement
-from src.engine.indicators.order_flow import detect_bullish_ob, detect_bearish_ob, detect_breaker
+from src.engine.indicators.order_flow import detect_bearish_ob, detect_breaker, detect_bullish_ob
+from src.engine.indicators.price_delivery import detect_displacement, detect_fvg
+from src.engine.strategy_base import BaseStrategy
 
 
 class UnicornStrategy(BaseStrategy):
@@ -84,32 +84,44 @@ class UnicornStrategy(BaseStrategy):
 
         unicorn_zones = []
 
+        # Defect-10 fix (streaming validity, no look-ahead): the OLD code
+        # computed two batch booleans ("any matching displacement in
+        # [b_broken_at-1, b_broken_at+1]" and "first FVG within ±5 bars of
+        # b_broken_at") and then admitted retests starting at `formed_at+1`
+        # (=b_broken_at+1) regardless of whether the displacement/FVG evidence
+        # that VALIDATES the zone actually existed yet at that bar — an entry
+        # at b_broken_at+1 could be justified by an FVG that only forms at
+        # b_broken_at+5 (its own future). The fix instead records, per zone,
+        # `valid_from` = the LATER of (a) the earliest matching displacement
+        # bar and (b) the confirming FVG's own bar — the zone is only
+        # genuinely "known" once BOTH pieces of evidence exist. Entries are
+        # then gated on `t >= valid_from` in addition to the existing
+        # `formed >= i` check. Direct bar-indexing — no half_window/lag
+        # offset (L=0 axis; see test_l0_axis_truncated_replay_contract in
+        # test_audit_a12.py). Strictly entry-SUPPRESSING relative to the old
+        # behavior (streaming_trades ⊆ batch_trades).
         for b_idx in range(len(breakers)):
-            b_bar = int(breakers["index"][b_idx])
             b_type = str(breakers["type"][b_idx])
             b_top = float(breakers["top"][b_idx])
             b_bottom = float(breakers["bottom"][b_idx])
             b_broken_at = int(breakers["broken_at"][b_idx])
 
-            # Validate displacement at the break point
-            # Check a small window around the break for displacement. The forward
-            # bound is capped at b_broken_at + 1 (EXCLUSIVE) because the Unicorn Zone
-            # built from this breaker gates entries starting at b_broken_at + 1 (see
-            # "formed >= i: continue" below) — reading displacement at or beyond that
-            # bar would decide zone existence using the zone's own future.
-            has_displacement = False
-            for d in range(max(0, b_broken_at - 1), min(n, b_broken_at + 1)):
+            # Validate displacement at the break point — earliest matching
+            # bar in the window (ascending scan => first hit IS earliest;
+            # never-valid sentinel = None when no match exists).
+            disp_valid_from = None
+            for d in range(max(0, b_broken_at - 1), min(n, b_broken_at + 2)):
                 d_val = disp_list[d]
                 if d_val is not None:
                     # Displacement direction must match breaker direction
                     if b_type == "bullish_breaker" and d_val == "bullish":
-                        has_displacement = True
+                        disp_valid_from = d
                         break
                     elif b_type == "bearish_breaker" and d_val == "bearish":
-                        has_displacement = True
+                        disp_valid_from = d
                         break
 
-            if not has_displacement:
+            if disp_valid_from is None:
                 continue
 
             # Find FVGs that overlap with this breaker
@@ -141,6 +153,11 @@ class UnicornStrategy(BaseStrategy):
                 if overlap_top <= overlap_bottom:
                     continue
 
+                # Zone is only knowable once BOTH the displacement AND this
+                # specific overlapping FVG are confirmed — valid_from is the
+                # LATER of the two confirming bars (streaming validity).
+                zone_valid_from = max(disp_valid_from, f_bar)
+
                 # Valid Unicorn Zone found
                 unicorn_zones.append({
                     "type": b_type,
@@ -149,6 +166,7 @@ class UnicornStrategy(BaseStrategy):
                     "breaker_top": b_top,
                     "breaker_bottom": b_bottom,
                     "formed_at": b_broken_at,
+                    "valid_from": zone_valid_from,
                 })
                 break  # one FVG match per breaker is sufficient
 
@@ -202,6 +220,12 @@ class UnicornStrategy(BaseStrategy):
                 if formed >= i:
                     continue
                 if i - formed > self.max_zone_age:
+                    continue
+
+                # Streaming validity gate (Defect-10 fix): the zone is not
+                # tradeable until its confirming evidence bar (displacement +
+                # FVG), which may be strictly later than `formed`.
+                if i < zone["valid_from"]:
                     continue
 
                 # Zone invalidation: check if price already closed past

@@ -308,3 +308,597 @@ The prior classifier Gate 3 run (`corpus-v3-gate3-shadow-results-2026-07-05.json
 (crash-masked / MCL-broken — it's the run that surfaced Defects 1/4/5/6). It is INVALID and stays sealed/quarantined.
 The verdict = re-run v2-baseline vs v3-shadow (classifier roles, fixed-atom) on the Defect-4/5/6-fixed engine,
 validity-first, then classifier revival count over the N=9 set vs ≥8/9, + regression enumeration for Gate 1′.
+
+## CLASSIFIER GATE 3 VERDICT — CERTIFIED FAIL (independently re-verified 2026-07-06, fixed engine)
+Classifier Gate 3 re-run on the Defect-1/4/5/6-fixed engine (`corpus-v3-gate3-shadow-results-2026-07-06.json`,
+engine_sha 7c1ec994). Read-order followed: reference (N=9, certified) → validity (PASSED) → verdict.
+- **VALIDITY PASSED:** 0 crashes / 0 exceptions / 0 timeouts; all_9_revival_pairs_measurable=true;
+  all_v2_traded_pairs_measurable=true; 42/42 per-pair "ok" (independently confirmed).
+- **VERDICT (independently recomputed = agent's report):** classifier revival **7 / 9** (rule ≥8/9). The classifier
+  reproduces demotion's revival on 7 of the 9 reference strategies: m-G1ag77aVc×3, oDLt9zh33LE×3, snNkQSyWX4k_MES.
+  **MISSES: snNkQSyWX4k_MNQ + snNkQSyWX4k_MCL** (the crossover strategy revives under the classifier on MES but not
+  MNQ/MCL). **2 misses > the 1-miss allowance → FAILS the revival criterion.**
+- **REGRESSIONS: 2** — jlShztsY3oA_MNQ (v2 2424→v3 0) + jlShztsY3oA_MCL (v2 3021→v3 0). (jlShztsY3oA = the
+  unrelated already-profitable ORB; the classifier's roles zero it on MNQ/MCL.)
+- **5m_support_level (B1) spine non-empty = TRUE** — the bidirectional fix DID cure B1 (under-assignment); the
+  classifier gives it a real spine.
+- **CERTIFIED VERDICT: Gate 3 FAILS the frozen rule (≥8/9 revival + zero unexplained regressions).** 7/9 revival is
+  below the bar. **Per the LOCKED no-relief pre-commitment, this stands — 7/9 < 8/9, no ceiling-relief argument in
+  reserve.** The classifier's extraction-time roles reproduce MOST (7/9) but not all of runtime demotion's effect,
+  and introduce 2 regressions.
+- **CONTRAST (positive, already certified):** runtime demotion itself is **9/9** on the same fixed engine (the
+  certified reference). So the WORKING mechanism is runtime demotion (DRI labels applied at runtime); the
+  extraction-level classifier is close-but-not-equivalent.
+
+## GATE 3 FAIL — MILESTONE FREEZE + 3 framing corrections (Fable-5, 2026-07-06)
+The Gate 3 FAIL (7/9 vs ≥8/9, no relief) is CERTIFIED and STANDS. Three corrections to my write-up framing, locked:
+
+**Correction 1 — "demotion certified 9/9 as the working mechanism" OVERSTATED (retracted).** The reference
+re-derivation was a YARDSTICK (it established N so the classifier had an honest denominator) — NOT a certification
+of demotion-as-a-production-mechanism. A single run can't be both the yardstick and a certified result (the
+yardstick can't certify itself). **What is TRUE + freezable:** runtime demotion revives **9/9 on the corrected
+engine**, confirming + extending `1ab7321` (7/9 last cycle → 9/9 now with the MCL pairs resolved). That is the
+mechanism-level answer to the corpus collapse — real, bankable. **What is NOT yet true:** "corpus revival is
+achievable today via demotion" is a PRODUCTION claim it hasn't earned — runtime demotion applies first-pass
+single-rater DRI labels (57.7% inter-rater), covers only the 14 audited concepts, and **has never been through
+Gate 1′** (nobody has adjudicated whether DEMOTION's own role changes are transcript-faithful — it escaped that
+exam by being the reference, not the candidate). If promoted from yardstick to shipping path, it inherits the
+IDENTICAL certification stack the classifier just faced. Otherwise we'd certify the classifier's competitor by
+exempting it from the exam the classifier failed.
+
+**Correction 2 — the 2 regressions are PENDING adjudication, NOT characterized.** `jlShztsY3oA` was written as
+BOTH "the unrelated already-profitable ORB" AND "likely correctly re-roled" — those can't both stand. The frozen
+regression clause: a new death is acceptable ONLY with a specific promoted-spine condition + transcript-anchored
+justification. **Gate 1′ adjudicates this — it is not pre-judged here.** If upheld → fidelity corrections (demotion
+was keeping a mis-roled strategy alive), regression clause satisfied, score reads differently. If overturned →
+real classifier errors. **Structural irony (logged):** if Gate 1′ upholds the jlShztsY3oA re-roling, then on that
+strategy it is DEMOTION that is unfaithful to the transcript — the reference beat the classifier on a pair where
+the reference was WRONG.
+
+**Correction 3 — the miss pattern is a FINGERPRINT.** `snNkQSyWX4k` revives on MES but not MNQ/MCL — yet the
+classifier assigns roles from transcript semantics, which are SYMBOL-INVARIANT. Same spec, same roles, three
+symbols, split behavior → the divergence is almost certainly NOT "classifier misread the transcript on MNQ"; it's
+that the classifier's role set differs from demotion's by a condition whose behavioral consequence only binds on
+MNQ/MCL (tick size / vol regime / session microstructure × a guard). Checkable in MINUTES (tower-free): diff the
+role assignments (classifier vs demotion) on snNkQSyWX4k + jlShztsY3oA, isolate the differing condition(s) → know
+whether it's one condition's semantics (Gate 1′ adjudicates) or a genuine symbol-conditional structure the
+extraction layer can't express (architecture-boundary finding, kin to B2).
+
+**SEQUENCING (next session's openers):** (1) freeze THIS milestone [done]. (2) role-diff analysis (classifier vs
+demotion roles on snNkQSyWX4k + jlShztsY3oA — cheap, tower-free). (3) **Gate 1′ on all FOUR deltas** (2 misses +
+2 regressions) — it was always the 2nd leg of the AND; a Gate 3 FAIL does NOT cancel it (its output is the
+diagnosis the path-forward needs). (4) Path-forward (iterate classifier / productionize demotion-through-full-cert
+/ hybrid) is OPEN but MALFORMED until Gate 1′ reports — every branch's cost-benefit turns on whether the 4 deltas
+are classifier errors or classifier corrections.
+
+**Integrity note for the record:** this chain survived six instrument defects (run_class_backtest sibling-parity),
+a rate-limited agent death, a power outage + git-ref corruption, and a near-miss verdict — with zero laundered
+numbers. The no-relief line held on a 7/9 near-miss. The system reported against itself at every fork.
+
+## ROLE-DIFF ANALYSIS (Fable-5 Correction 3 resolved — condition-semantics, NOT symbol-structure) 2026-07-06
+Diffed classifier (v3-shadow) vs demotion-effective (v2 role, DRI-CONTEXTUAL→context) roles on the 4-delta concepts.
+**Both deltas: the classifier assigned ZERO spine** (over-contextualized); demotion retained the v2 spine minus CONTEXTUAL.
+- **`snNkQSyWX4k` (2 MISSES):** classifier moved 7 v2-spine conditions to `context`, INCLUDING **4 the DRI gold marks
+  `JUSTIFIED_MANDATORY`** (candles-retest, us-session, price-retest, consolidation) + 3 UNRESOLVED. Demotion kept them
+  spine. → Divergence = classifier mis-demoting GOLD GATES → looks like CLASSIFIER ERRORS (consistent with Gate 1's
+  ~67% margin accuracy). Gate 1′ adjudicates: if the transcript-mandatory reading is upheld, the misses are classifier mistakes.
+- **`jlShztsY3oA` (2 REGRESSIONS):** classifier moved 3 v2-spine conditions to `context` — 2 `OPTIONAL` + 1 UNRESOLVED
+  (NOT mandatory). Demotion kept them spine. → The classifier's demotion is DEFENSIBLE (optional ≠ gate); the kill is
+  either a fidelity correction (demotion over-kept a soft-gated strategy) OR over-demotion. Genuine coin-in-air for Gate 1′.
+- **NOT the architecture-boundary case:** roles are symbol-invariant; the divergence is WHICH conditions are gates
+  (semantics, adjudicable) — not a symbol-conditional structure the extraction layer can't express. Gate 1′ is the
+  right + sufficient next instrument. The MES-vs-MNQ/MCL symbol split is a secondary execution effect of the shared
+  0-spine role set, downstream of the role divergence.
+**→ Gate 1′ target sharpened:** adjudicate whether the DIFFERING conditions are transcript-mandatory gates —
+snNkQSyWX4k's 4 JUSTIFIED_MANDATORY (upheld → classifier erred) + jlShztsY3oA's OPTIONAL/UNRESOLVED (if genuinely
+optional → classifier's kill is a fidelity correction, demotion the unfaithful one — the structural irony realized).
+
+## GATE 1′ ADJUDICATION — DIAGNOSED (2026-07-06, load-bearing anchors independently re-verified)
+Gate 1′ multi-pass transcript adjudication of the 10 differing conditions (+ parent independent anchor re-verify).
+**INDEPENDENCE CAVEAT:** the adjudication was a two-pass SELF adjudication (single session, 2nd pass adversarial),
+NOT a fully-independent second rater — a CLAIM, not certification. BUT the parent independently re-verified the
+load-bearing transcript anchors (below), and the top-level dispositions are robust to the 4 self-disagreements.
+- **MISSES (snNkQSyWX4k_MNQ + MCL) = CLASSIFIER ERROR (verified).** The classifier moved the LITERAL ENTRY TRIGGER
+  to context: transcript "candles retest one or both of the averages... **that is our signal to sell**" +
+  "price came back down right here to retest the average **so that is our entry**"; plus consolidation avoid-rule
+  "we're **not doing anything during consolidation**." 3 of 7 conditions confirm mandatory-gate → classifier
+  under-assigned real gates (most seriously the entry trigger). (Side: even DRI gold's "us session"
+  JUSTIFIED_MANDATORY was OVERTURNED — "I only trade us session... you want to practice at different sessions" =
+  personal habit, not requirement — gold is not immune to doer≠grader either.)
+- **REGRESSIONS (jlShztsY3oA_MNQ + MCL) = FIDELITY CORRECTION (verified).** 0 of 3 conditions mandatory (all
+  OPTIONAL/UNRESOLVED); the transcript calls the naive ORB "'n vals strategie ... die meeste handelaars verloor
+  geld daarmee" (a false strategy most traders lose money with) and frames fibonacci/structure as improvement
+  SUGGESTIONS. Classifier's context assignment is FAITHFUL → the death is a correct fidelity kill → **regression
+  clause SATISFIED (zero unexplained regressions).** STRUCTURAL IRONY REALIZED: demotion (the N=9 reference) is the
+  transcript-UNFAITHFUL arm on these pairs (kept soft conditions as hard gates).
+
+## FINAL GATE 3 DISPOSITION (fully diagnosed)
+- **Revival 7/9 < 8/9 → Gate 3 FAILS** (stands, no relief). The 2 misses are REAL classifier errors (verified),
+  not adjudicable away.
+- **Regression clause SATISFIED** (2 regressions = fidelity corrections, upheld).
+- **Root cause DIAGNOSED:** the classifier OVER-CONTEXTUALIZES — it moves genuine gates (incl. the literal entry
+  trigger) to context. Specific + FIXABLE, consistent with Gate 1's ~67% margin accuracy. The classifier is close
+  (7/9) and MORE transcript-faithful than demotion on jlShztsY3oA. Demotion is NOT clearly better (over-keeps; never
+  went through Gate 1′; single-rater labels).
+
+## PATH-FORWARD (now well-formed)
+Recommended: **ITERATE THE CLASSIFIER** — the fix is diagnosed: stop over-contextualizing entry-trigger/gate
+conditions (keep WAIT_CONFIRMATION "retest→signal" type as spine). On snNkQSyWX4k, restoring the entry trigger to
+spine would likely revive MNQ/MCL → 8-9/9. Alternatives (productionize demotion / hybrid) are weaker given demotion
+is the less-faithful arm where they differ. OPEN for operator/advisor ruling.
+
+## ⚠ b4812c5 RE-MARKED PROVISIONAL — Gate 1′ ran ≠ Gate 1′ locked (Fable-5, 2026-07-06)
+The Gate 1′ that ran was a TWO-PASS SELF adjudication (passes disagreed 4/10) + parent anchor spot-check. The
+LOCKED Gate 1′ specified MULTI-RATER independent adjudication — the whole reason it exists is that single-rater
+labels at 57.7% were what made Gate 1 uncertifiable. **Disclosure does not downgrade a requirement.** Also: the
+parent's anchor re-verify made the parent the second rater — doer≠grader strained (the certifier supplied the
+independence). **The Gate 1′ dispositions in this doc are PROVISIONAL until one genuinely INDEPENDENT rater
+(fresh context; NO classifier output, NO demotion labels, NO DRI gold, NO prior-pass verdicts) blind-adjudicates
+the ~10 conditions from transcript quotes alone.** The chain that refused to certify against single-rater gold
+does not close on a self-adjudication.
+- **Two-sided risk (live both ways):** REGRESSIONS lean on translated Afrikaans speaker-intent — if the framing is
+  "naive ORB is false BUT with these additions it works," the fib/structure conditions are mandatory-to-the-FIXED
+  strategy and the disposition FLIPS. MISSES feed the iteration design; the fix is a rule from N=2 misses and the
+  deterministic rules already overfit 2.00× — a rule that only moves the 2 known misses is memorization.
+- **CORRECTION to the record:** STRIKE "demotion is the less-faithful arm" as a GENERAL claim — established on ONE
+  strategy (jlShztsY3oA), and only IF the independent rater upholds it. What is certified about demotion:
+  mechanism-level revival 9/9 on the corrected engine; transcript-fidelity UNEXAMINED (it never went through
+  Gate 1′), except where it lost to the classifier once (pending confirmation). The comparison table has ONE row.
+
+## ITERATION PROTOCOL (LOCKED before any classifier code — Fable-5)
+1. **INDEPENDENT RATER FIRST.** If misses hold as errors + regressions as corrections → proceed. If either FLIPS →
+   the design input changes; know before writing the fix.
+2. **Fix designed against the RULES-DESIGN set (143), NOT against snNkQSyWX4k.** Implement the
+   "wait-for/retest/trigger → gate" pattern; measure on the HELD-OUT 70 BEFORE any Gate 3 re-run: (a) held-out
+   margin agreement improves-or-holds, (b) rule-coverage overfit ratio stays sane. A fix that only moves the 2
+   known misses = memorization wearing a rule's clothes → rejected.
+3. **Gate 3 re-run = SINGLE-SHOT** vs certified N=9, frozen ≥8/9 + zero unexplained regressions (jlShztsY3oA deaths
+   count explained ONLY if the independent rater upheld them). Same validity-before-verdict read order.
+   **PRE-COMMIT: if the iterated classifier returns 7/9 with a DIFFERENT miss pattern → NOT "one more iteration" →
+   evidence the ~67% margin ceiling binds at the strategy level → the decision REOPENS honestly.**
+4. **ITERATION BUDGET: this is pass TWO of TWO.** A third pass requires NEW EVIDENCE about why the margin is hard,
+   NOT another targeted rule. Locked now, while the temptation is invisible.
+
+## GATE 1′ CERTIFIED (independent blind rater ran — PROVISIONAL LIFTED) 2026-07-06
+Independent blind rater (fresh context; NO classifier/demotion/gold/prior-verdict access; transcripts only) adjudicated
+the 10 conditions. Parent independently verified the load-bearing Afrikaans anchor (line 33). The multi-rater
+requirement is now MET → the PROVISIONAL mark on the Gate 1′ dispositions is LIFTED, with ONE correction:
+
+- **MISSES (snNkQSyWX4k) = CLASSIFIER ERROR — CONFIRMED (both raters agree).** Independent rater: #1 candle-close,
+  #2 candles-retest, #5 price-retest, #7 consolidation = MANDATORY_GATE (the entry trigger + avoid-rule). Classifier
+  put all in context. (#4 us-session independently = CONTEXTUAL, confirming even DRI gold's JUSTIFIED_MANDATORY there
+  was wrong.)
+- **REGRESSIONS (jlShztsY3oA) = FLIPPED: CLASSIFIER ERROR, not fidelity correction.** The independent rater read the
+  Afrikaans framing correctly — "dit benodig net meer konteks hier is hoe om dit reg te stel" ("it just needs more
+  context, here's how to FIX it") = false-in-naive-form-BUT-viable-WITH-additions, NOT a disavowal. So Fibonacci (#9)
+  sits in the flat "how to fix it" list → **MANDATORY_GATE**. The classifier moved it to context = ERROR. (#8
+  structure = OPTIONAL via "selfs/even add"; #10 tendency-line = CONTEXTUAL narrated example.)
+  **The self-adjudication's "fidelity correction" + "structural irony (demotion unfaithful)" claims are RETRACTED.**
+  On jlShztsY3oA, demotion keeping Fibonacci as spine was CORRECT; the classifier dropping it was the error — demotion
+  was the MORE faithful arm here (still ONE strategy; demotion's general fidelity remains unexamined).
+
+## CORRECTED FINAL DIAGNOSIS (certified)
+- **Gate 3 FAILS** on BOTH clauses now: revival 7/9 < 8/9 AND the 2 jlShztsY3oA regressions are UNEXPLAINED (classifier
+  dropped a mandatory gate, not a justified promotion). Certified, no relief.
+- **UNIFORM failure mode (all 4 deltas):** the classifier OVER-CONTEXTUALIZES real gates — the entry trigger +
+  consolidation avoid-rule (snNkQSyWX4k) and the Fibonacci fix-gate (jlShztsY3oA). Diagnosis is CLEANER and STRONGER
+  (one mechanism, 4 examples) than the pre-flip split.
+- **Fix direction CONFIRMED + strengthened** (iterate the classifier to stop over-contextualizing gates). The flip
+  changed the framing (both deltas are the same error; demotion faithful on the one pair they differ), NOT the fix.
+- **Iteration protocol point 1 satisfied:** misses HOLD as errors → proceed. The regression flip strengthens rather
+  than blocks (still a classifier error to fix), but the design must generalize from the 143 — Fibonacci is a
+  confirming example, NOT a design input.
+
+## ITERATED CLASSIFIER GATE 3 — CERTIFIED (2026-07-06, single-shot, recovered from 2 infra deaths)
+Single-shot iterated Gate 3 (classifier fix `15abe2d`) survived a rate-limit agent death (specs re-emitted OK) +
+a tower freeze at 39/42 (Option-A resume of 3 concepts, harness crashed on the filter's KeyError but ALL pairs
+backtested — verdict hand-assembled from both logs, deterministic per-pair backtester stdout; parent-recomputed).
+- **VALIDITY (read first): 42/42 pairs measurable, 0 None, all 9 reference pairs clean.** The pre-fix
+  `sVkmZklJDHI_MES` `None` was a TRANSIENT (fresh run: v2=3309) — not an engine fault. Resolved.
+- **REVIVAL: 9/9** (rule ≥8/9). ALL reference pairs revive under the iterated classifier: snNkQSyWX4k (0→2809/2396/2977),
+  m-G1ag77aVc (0→1230/1036/2314), oDLt9zh33LE (0→2856/2455/2926). **The 2 snNkQSyWX4k target misses are FIXED
+  (7/9→9/9)** — the entry-trigger escalation worked exactly as designed + validated (held-out margin improved, not memorized).
+- **REGRESSIONS: 2, STILL UNEXPLAINED — `jlShztsY3oA` MNQ/MCL (2424→0, 3021→0).** Verified: iterated jlShztsY3oA
+  spine count PRE=0 → ITERATED=0; **Fibonacci retracement level is STILL `context`** (the fix's wait-for/retest/trigger
+  pattern does NOT match retracement-level language). Per the certified Gate 1′ (independent rater), Fibonacci is a
+  MANDATORY gate the classifier wrongly demoted → these deaths remain CLASSIFIER ERRORS = UNEXPLAINED regressions.
+- **CERTIFIED VERDICT: Gate 3 FAILS.** Frozen rule = ≥8/9 revival AND zero unexplained regressions (AND, no relief).
+  9/9 revival PASSES; 2 unexplained regressions FAIL → the AND fails. 9/9 does NOT rescue it — no relief for a passing
+  revival when the regression clause fails.
+- **REFINED DIAGNOSIS (the genuinely new evidence):** the classifier over-contextualizes ≥2 DISTINCT gate sub-classes.
+  Pass-2 cured sub-class 1 (entry-trigger/retest → snNkQSyWX4k 9/9). Sub-class 2 (retracement-level gates → jlShztsY3oA
+  Fibonacci) is UNTOUCHED. Fixing one gate-class does not fix the other — a scope finding, not a margin-ceiling finding.
+- **ITERATION BUDGET / path-forward (operator+advisor decision):** pass 2 of 2 spent. The pre-commit forbade a 3rd
+  targeted rule "without new evidence about why the margin is hard." The 2nd gate-class discovery is arguably that new
+  evidence (a scope-refinement, distinct from the pre-committed 7/9-margin-ceiling-reopen which did NOT occur — revival
+  is 9/9). Open branches: (a) scoped pass-3 extending the pattern to retracement/level gates [needs advisor ruling on
+  whether that's "new evidence" or budget-violation]; (b) accept Gate 3 FAIL, productionize the revival win separately;
+  (c) reopen on gold-quality/architecture. Malformed to pick until the advisor rules on the budget question.
+
+## ★★ INTEGRITY FINDING (FROZEN) — the independent rater INVERTED the verdict, not refined it (2026-07-06)
+The most consequential integrity event of the chain, surfaced from where it was buried ("per the certified Gate 1′"):
+- **Provisional self-adjudication** ruled the jlShztsY3oA regressions FIDELITY CORRECTIONS. Under THAT disposition,
+  the iterated run = 9/9 revival + EXPLAINED regressions → **Gate 3 PASSES.**
+- **Certified independent rater** ruled Fibonacci MANDATORY → the regressions are classifier errors → **Gate 3 FAILS.**
+- The cheap (hours-not-days) blind rater did not refine the answer — **it INVERTED it.** Without it, this program
+  would have announced a FALSE CERTIFICATION of a classifier that demotes mandatory gates. **Independence was not
+  procedural hygiene; it was the difference between a true FAIL and a false PASS.** Freeze as a standalone
+  methodological finding.
+- **Verbatim rater rationale (the reading the verdict turned on), recorded because a verdict-deciding adjudication
+  owes the record its why:** framing is "false in naive/retail form BUT viable WITH specific additions," NOT a
+  disavowal. Decisive lines — "die kleinhandel is die meeste van die tyd 'n vals strategie" (the retail version is a
+  false strategy most of the time — indicts the naive application, not the concept); **"dit beteken nie dat die bol
+  nutteloos is nie, dit benodig net meer konteks"** (this doesn't mean the ORB is useless, it just needs more context
+  — the PIVOT that rejects "disavowed, period"); **"hier is hoe om dit reg te stel"** (here's how to fix it — frames
+  what follows as the required fix). Fibonacci sits in that fix-list: "gereedskap soos Fibonacci te gebruik, gaan jou
+  uit hierdie nuttelose ambagte hou" (using tools like Fibonacci will keep you out of these useless trades) → MANDATORY.
+- **COROLLARY (permanent inversion):** "the classifier was the more faithful arm" (struck provisionally earlier) is
+  now PERMANENTLY INVERTED — where the arms disagreed and adjudication is certified, the CLASSIFIER was wrong.
+
+## PASS-3 LICENSED — escape clause fires (Fable-5 ruling, counterargument faced)
+The sub-class finding ALONE would NOT license pass-3 (every miss can be christened a sub-class → infinite taxonomy,
+one-rule-per-funeral = the whack-a-mole the budget forbids). What carries the license is the CONJUNCTION:
+1. Pass-2's held-out margin IMPROVED — direct counter-evidence to the 2.00× memorization fear that motivated the
+   budget; pattern-class rules generalize.
+2. The pre-registered ceiling-binding trigger (7/9 with a SHIFTED miss pattern) did NOT fire — the miss set did not
+   shift, it SHRANK, and the residue PREDATES pass-2.
+3. The residue is certified-diagnosed with transcript anchors — the highest-grade gold this program owns.
+Together = genuine evidence the margin is COVERAGE-structured (enumerable idiom families), not noise-structured.
+**Honest dependency:** the license leans on the held-out improvement + the certified diagnosis, NOT the 9/9 — same
+ruling at 8/9; OPPOSITE ruling had held-out degraded. **Branch (c) NOT indicated** (coverage gap with clean anchors,
+not gold-noise; Gate 1′ is the gold-quality instrument and it is working).
+
+## PASS-3 PRE-REGISTRATION (LOCKED before any code — Fable-5)
+1. **Verify the held-out-improvement claim INDEPENDENTLY** — the ruling is CONDITIONAL on it; currently self-reported.
+2. **Design-input quarantine.** FIRST enumerate retracement/level idioms in the 143-condition DESIGN set; design the
+   rule from THOSE. **jlShztsY3oA's 3 conditions are EXCLUDED from design inputs — they are the TEST.** If the design
+   set contains ZERO instances → STOP + ESCALATE (quarantine impossible; restate epistemics before writing anything).
+3. **Pass-2's rule is FROZEN.** Additive coverage only; NO joint re-tuning.
+4. **Same tripwire:** held-out margin improves-or-holds, checked BEFORE any Gate 3 dispatch.
+5. **Single-shot Gate 3, frozen rule, validity-before-verdict.** The regression's cure is BEHAVIORAL not explanatory —
+   certified adjudication says Fibonacci is mandatory, so a CORRECT classifier REVIVES jlShztsY3oA; its death cannot
+   be explained, only fixed.
+6. **The escape is SPENT.** If pass-3 fails Gate 3 for ANY reason → the classifier-iteration track CLOSES →
+   pre-committed landing = (b) productionize DEMOTION on its own cert track (which it still owes: it has NEVER passed a
+   fidelity adjudication and covers only 14 concepts). NO pass-4 argument entertained. Written now, while pass-3 looks
+   promising and the temptation is invisible.
+7. **Reuse named honestly:** this is the 3rd adaptive evaluation against the SAME 9 pairs; Gate 3's independence DECAYS
+   each pass. The genuinely fresh data is the post-flip corpus re-baseline (null-cal → Mode A/B); any anomaly there
+   REOPENS certification.
+
+## PASS-3 ENUMERATION (pre-reg point 2) — quarantine POSSIBLE, launch clean (2026-07-06)
+Retracement/level idioms in the 143-condition DESIGN set (jlShztsY3oA's 3 conditions EXCLUDED = the test):
+- **Focused (fib/retracement/premium-discount): 4 (2 JUSTIFIED_MANDATORY, 2 CONTEXTUAL).**
+- **Broad (+level/support/resistance/zone/retest): 36 (14 JUSTIFIED_MANDATORY, 14 CONTEXTUAL, 4 UNRESOLVED, 3 OPTIONAL, 1 ALTERNATIVE).**
+- **NON-ZERO → the pre-registered STOP+ESCALATE trigger does NOT fire → pass-3 launches CLEAN.** The rule can be
+  designed from design-set retracement/level-gate instances (incl. mandatory ones), jlShztsY3oA held as the test.
+- **INTEGRITY (self-caught near-miss):** the first 2 enumeration passes returned 0 — a JOIN BUG (split key format is
+  `video||condition_id`, matched on bare `condition_id`). Caught by an implausibility check (a trading corpus cannot
+  have 0 level/retest idioms), not trusted. Same discipline as the rater flip: verify decision-gating numbers; a
+  false-0 here would have triggered a false escalate. Fixed join → 143/143 rows matched → real count above.
+- **REMAINING pre-reg gate before rule code:** point-1 independent verification of the pass-2 held-out-improvement
+  (67.24%→67.92% margin, 2.00×→1.70× overfit) — currently parent-recomputed from the pass-2 agent's heldout-result.json
+  artifact; a fully-fresh re-measurement (live gemma) is the stronger independence and is the next gate. Design-instance
+  vetting (confirm the 4 focused matches are genuine retracement-level GATES, not loose quote-matches) happens during
+  rule design.
+
+## PASS-3 DETERMINISM ENVELOPE (pre-reg point 1 comparison rule — PINNED tonight, before the fresh run lands)
+The independent held-out re-measurement uses LIVE GEMMA on the margin stratum; the frozen nondeterminism finding
+(gemma is NOT run-to-run deterministic at temp 0.1) means the comparison rule MUST be pinned now, not improvised
+when the number lands. **CONFIRM iff ALL three hold:**
+1. **Deterministic rule-covered stratum: EXACT (bit-identical) reproduction** vs pass-2. The rules are deterministic —
+   ANY diff means a broken instrument → STOP-AND-DIAGNOSE, not a pass/fail on the number.
+2. **Gemma margin point estimate within ±3.0 pp of pass-2's 67.92%** (band = [64.92%, 70.92%]).
+3. **Directional verdicts BOTH hold:** (a) margin improved-or-held = fresh margin point ≥ 66.24% (pass-1 67.24% − 1pp
+   noise floor); (b) overfit ratio ≤ 1.85× (pass-2 1.70× + 0.15 tolerance).
+**Outside ANY of the three = STOP-AND-DIAGNOSE.** Record BOTH numbers; do NOT pick-the-better-run. An out-of-band
+gemma margin is NOT automatically a pass-2 indictment — it may be the nondeterminism finding getting its number —
+but it is a stop, never a shop. Rule-covered EXACT-diff is always a broken-instrument stop.
+**Enumeration frozen as data:** `docs/replay-results/corpus-v3-pass3-enumeration-frozen-2026-07-06.json` (focused 4 /
+broad 36, matched conditions, vetting-PENDING on the 4). Pass-3's rule design provably draws only from this
+pre-enumerated set — the quarantine is only as good as the timestamp on the fence.
+**Standing order (fatigue = instrument-validity problem, not a virtue test):** anything the pre-reg does not cover
+gets WRITTEN DOWN AND PARKED, never resolved on the spot. Point 1 is the load-bearing gate for the whole pass-3
+license; a claim conditionally accepted because everyone's tired defeats the purpose of making the ruling conditional.
+
+## PASS-3 VETTING FINDING — PARKED for fresh eyes (standing order applied, 2026-07-07 ~00:xx)
+Vetted the frozen design-set retracement/level instances (transcript anchors, design-side, quarantine-safe):
+- **The 4 FOCUSED:** 2 JUSTIFIED_MANDATORY (HfZTCZTDfWk "wait for a retrace back to the 5 SMA" ×2) are genuine gates
+  but **IMPERATIVE** ("wait for a retrace") — pass-2's rule ALREADY fires on this language. 2 CONTEXTUAL ("cross down
+  and retrace" = narration; "retracement opportunity" = soft "looking for") correctly contextual.
+- **BROAD-set mandatory (14):** predominantly IMPERATIVE retest/tap gates — "waiting for price to... retest it as
+  resistance before we can", "as soon as the key level is tapped", "wait for the market to retest that high or low",
+  "wait for that retest into that fair value gap". Pass-2 covers this "wait-for/retest/as-soon-as" family.
+- **jlShztsY3oA's Fibonacci is DESCRIPTIVE/PREDICTIVE** — "price WILL LIKELY retrace to a Fibonacci retracement level"
+  in a "here's how to fix it" list, NO imperative marker. That is WHY pass-2 (imperative-anchored) does not fire on it.
+- **THE CRUX (parked, needs fresh eyes):** pass-3's rule must escalate a retracement/level gate stated DESCRIPTIVELY,
+  a distinct linguistic sub-pattern from the imperative gates pass-2 covers. **Open question the pre-reg did not
+  anticipate:** does the design set contain a CLEAN descriptive-retracement-gate instance to derive that rule from? If
+  the design instances are all imperative (covered), a rule drawn "from those instances" would re-cover pass-2 without
+  touching jlShztsY3oA — and designing the descriptive-pattern rule would risk drawing from the test (quarantine breach)
+  or from thin air. This is a SUBSTANTIVE design call, NOT mechanical → PARKED per the standing order (fatigue corrupts
+  improvised judgment; this is improvised judgment). Resolve NEXT session with fresh eyes: re-vet the full broad-36 for
+  any descriptive-retracement-gate design instance; if none exists, the quarantine may be effectively empty for THIS
+  sub-pattern and the epistemics need restating (a softer sibling of the pre-reg-2 escalate trigger).
+- **NOT resolved tonight. NOT drafted tonight.** The held-out re-measurement (pre-reg point 1) continues to grind
+  independently; its pinned-rule comparison is mechanical and tired-safe. Rule design waits for morning.
+
+## PASS-3 PRE-REG POINT 1 — CONFIRMED (independent held-out re-measurement, 2026-07-07)
+Fresh live-gemma re-measurement (66 real gemma calls, NOT cached) via `tmp/gate-iter/heldout-measure.mts`, compared
+against the PASS-2 backup + the PINNED determinism envelope, applied MECHANICALLY:
+- (1) rule-covered stratum EXACT: fresh (45,12,54,17) == pass2 (45,12,54,17) — deterministic instrument sound. PASS.
+- (2) gemma margin point 67.9245% within ±3pp of 67.92%: delta +0.0000pp. PASS.
+- (3a) margin improved-or-held: 67.92% ≥ 66.24%. PASS. (3b) overfit ratio 1.70× ≤ 1.85×. PASS.
+- **VERDICT: CONFIRM → pre-reg point 1 CLEARS → the pass-3 license is UNCONDITIONAL.**
+- **Transparency (recorded, not hidden):** the fresh run reproduced pass-2 to four decimals (67.9245% both), so the
+  ±3pp band was NOT stressed; N=2 gemma runs cannot distinguish "gemma stable on this set" from "band generous." The
+  frozen nondeterminism finding stands in general; on THIS 66-call margin set it did not flip aggregate agreement. The
+  CONFIRM holds on the pinned rule as written; a 3rd run would stress the band but is not required by the pre-reg.
+**STATUS after tonight:** pass-3 pre-reg MECHANICAL gates are complete — point 1 CONFIRMED (license unconditional),
+point 2 enumeration done (non-zero, launch clean). The REMAINING pass-3 work is the rule design, which is GATED by the
+PARKED imperative-vs-descriptive vetting blocker (fresh-eyes work). No mechanical pass-3 work remains tonight.
+
+## PASS-3 POINT-1 — N=3 BAND STRESS RESULT (2026-07-07)
+RUN3 (fresh live-gemma) = margin 67.9245% / overfit 1.70× — IDENTICAL to RUN1(pass-2) and RUN2. Three fresh runs,
+zero variance on the gemma-adjudicated margin. Point-1 CONFIRM is now N=3-robust. Honest read: the ±3pp band was
+never stressed (delta 0.0000 across 3 runs) — on THIS 66-call margin set gemma did not flip aggregate agreement, so
+either gemma is stable-in-practice at temp 0.1 here or responses are cached (gemma_calls count recorded in the run
+JSON distinguishes; fresh-call counts observed argue stability, not caching). The frozen general nondeterminism
+finding stands; it simply did not manifest on this stratum. CONFIRM holds; independence is genuine.
+
+## PASS-3 IMPERATIVE-VS-DESCRIPTIVE — EVIDENCE PACKET FROZEN (census, NOT verdict — 2026-07-07)
+`docs/replay-results/corpus-v3-pass3-idiom-census-2026-07-07.json` — all 40 design-set retracement/level idioms
+(4 focused + 36 broad) + jlShztsY3oA's 3 CERTIFIED-ENGLISH target-class exemplars, verbatim anchors, tagged by
+SURFACE LEXICAL MARKERS ONLY (imperative: wait-for/must/only-when/as-soon-as/before-we-can; descriptive: will-retrace/
+likely/retraces-to). NO dispositions — those are the morning ruling.
+- **Design census (surface markers): IMPERATIVE 9, DESCRIPTIVE 0, NEUTRAL 25.** Target Fibonacci (cert EN) = DESCRIPTIVE.
+- **FACTUAL WRINKLE for the ruling:** jlShztsY3oA (target) quotes are AFRIKAANS in the DRI; certified English
+  translations are used for the exemplars; English markers do NOT apply to raw target quotes → the ruling is inherently
+  cross-language.
+- **What the census does NOT settle (the morning ruling):** the 25 NEUTRAL rows are unclassifiable by surface markers —
+  whether ANY of them (or any imperative one re-read) is a CLEAN descriptive-retracement-GATE design instance the pass-3
+  rule can derive from is the ruling. If none → design set empty for the target sub-class → quarantine impossible →
+  the pre-registered escalate/epistemics-restate branch (possibly the (b) landing) fires. This decision can KILL the
+  pass-3 track; it is reserved for fresh eyes against this packet, per the licensor's own standing order.
+
+## DEFECT-4 COMPANION — CLOSED with a REAL catch (log-grep, 2026-07-07)
+The registered companion ("check the historical record for any run that DID raise this reconciliation error and was
+waved off as flaky") is CLOSED — and it caught one:
+- **`mode-ab-corpus-v2-2026-07-04-report.json` / .jsonl: spec `ae7a2560` MES 15m, class execution_path, Mode A →
+  `ValueError: RECONCILIATION FAILED: equity=-18888.09, trades=-18940.76, diff=52.67` → verdict INDETERMINATE.**
+  Root cause was NOT diagnosed at the time (recorded as "a mode run errored"). **$52.67 is Defect-4's signature:**
+  roll cost omitted from the class-path equity loop, accumulated over 2015-2026 (~44 MES quarterly rolls × ~$1/roll).
+- **This REVISES the Defect-4 frozen finding:** its "equity overstatement BOUNDED by the $1 tolerance for all
+  historically COMPLETED runs" is technically true (completed = ≤$1) but INCOMPLETE — for LONG-HISTORY class runs the
+  roll-cost omission EXCEEDS $1 and ERRORS the run (INDETERMINATE), rather than completing with a bounded overstatement.
+  So Defect-4 doesn't just "slightly overstate equity"; it can make long-history class specs UN-COMPLETABLE.
+- **Scope (fact):** affects the corpus RE-BASELINE equity metrics (Mode A/B: Sharpe/DSR/WFE/B14) for long-history
+  specs — NOT the trade-count Gate-3 revival/regression verdict (which the frozen finding correctly isolates as
+  trade-count-based, unaffected). The MCL $2.38 (defect6 diag) + $4.03 (Gate-3 pre-fix) hits were the INVESTIGATED
+  Defect-6 (precision), not waved off.
+- **STOP-AND-PARK (charter):** this touches pass-3's downstream corpus re-baseline → recorded, NOT fixed tonight. The
+  Defect-4 fix (deduct RollSpreadCost in the class-path bar-level equity loop, mirroring net_pnl) is a scoped
+  backtest-core change for the post-cert track — and it is a THIRD instrument-integrity site joining the F-4 ceiling
+  divergence + the duplicate-enforcement class. Reconciliation GATE itself is SOUND (it caught + refused $52.67).
+
+## ★★ RULING 1 — PROVISIONAL (inverted protocol: verdict → counter-case → Tonio-attack → freeze) 2026-07-07
+**VERDICT (Fable-5):** escalate trigger fires; pass-3 cannot launch as designed; landing → (b) productionize DEMOTION
+on its own cert track. The 9/9 revival MECHANISM pass-2 validated lives on as (b)'s foundation.
+**Adversarial attack (Tonio) — verdict SURVIVES, 2 scope corrections applied:**
+- Attack 1 (self-undermining evidence): the ruling can't use surface census `DESCRIPTIVE 0` to establish "zero
+  descriptive-mandatory exist" while arguing surface language is blind to that sub-class. The 25 NEUTRALs are
+  unresolved by the blind instrument → "contains zero" is OVERSTATED.
+- Attack 2 (N=1 finding frozen untested): "descriptive-mandatory = architecture boundary" rests on 1 exemplar
+  (Fibonacci) + the blind census; the NEUTRAL adjudication is its falsification test; freezing it established is premature.
+- **Attacks land on the reasoning, NOT the verdict:** at a SPENT single-shot escape the burden is on the LAUNCH to
+  demonstrate a viable design set before firing; viability is undemonstrated; the spent escape breaks the tie toward
+  don't-fire. Counter-case PREMISE survives (zero unestablished); CONCLUSION (therefore launch) does not. NO flip.
+**FREEZE: PROVISIONAL, with corrections —**
+1. Verdict basis = **"not DEMONSTRABLY viable at a spent escape (burden-on-launch)"**, NOT "contains zero" (positive
+   claim the blind census can't support). Unassailable as corrected.
+2. Architecture-boundary = **PROVISIONAL HYPOTHESIS** (descriptive-mandatory is the sub-class where surface language
+   does not carry gate-strength — same wall as Gate-1 57.7% inter-rater, localized to its linguistic mechanism). The
+   insulated NEUTRAL adjudication is its FALSIFICATION TEST. SEPARATE the pre-commitments: the classifier TRACK stays
+   closed regardless (spent escape); the FINDING is falsifiable and RETRACTED if the adjudication surfaces design-side
+   descriptive-mandatory instances. Track-closure follows from "spent"; finding-immutability does not.
+**PROVISIONAL licenses tonight:** escalate-documentation, (b)-landing scaffold on paper, descriptive-mandatory finding
+frozen (as hypothesis). **NOT licensed:** any classifier code, any Gate-3 (moot by the ruling). Single shot never fires.
+**Insulated NEUTRAL-adjudication track (pre-registered):** gold-improvement, independent rater on the 25 NEUTRALs,
+CANNOT reopen the classifier track; IS the falsification test of the boundary hypothesis. PROVISIONAL awaits fresh-eyes
+confirmation (unrepeatable-read rule, frozen since Defect 5).
+
+## RULING 2 (macro-mask) + RULING 3 (F-4) — accepted, mechanical
+- **R2:** reference N=9 ROBUST (counts 1036-2977, no pair flips on a mask) → NO third re-derivation. Macro-mask = **Defect 9**
+  (entry-suppressing, backtest≠live parity: live has `calendarBlocked`, class-path lacks its twin). Gate-3 mooted by R1 →
+  urgency drops pre-Gate-3-blocker → pre-re-baseline, same tier as Defects 7/8. (b)'s cert track runs AFTER the 7/8/9 batch
+  lands — the re-baseline always needed them; now nothing ships before them. Fire-and-forget v2-traded tally launched.
+- **R3:** F-4 closes **LOW, latent, parity-guarded.** (i)+(ii) pass clean (Catch-1 false alarm); (iii) partial-fail bounded
+  (values identical, SKIP-vs-clamp action divergence, 0/120 exposure). SKIP-vs-clamp = 3rd confirmed site on the
+  post-cert duplicate-enforcement refactor register.
+
+## RULING 2 tally — CORRECTION + the flip-risk sibling FOUND (2026-07-07, integrity fix)
+The Ruling-1 commit said "fire-and-forget v2-traded tally launched." **CORRECTION: it was NOT launched, and can't be
+as a fire-and-forget** — the Gate-3 harness persisted counts only; no trades-dump path exists in the backtester CLI or
+shadow-gate3 → extracting a trade's timestamp needs a per-trade emit ADDITION (a code change), which is careful setup,
+declined at this hour per the standing order.
+**But the mechanical scan RESOLVED the decisive input:** of 26 v2-traded pairs, 25 are high-count (216-3309 trades,
+can't flip on a mask); **exactly ONE is the flip-risk sibling — `75DJN5UVQnw_MES` = 1 trade** (Fable-5 predicted a
+"1-trade sibling"; it's MES not MCL). It is NON-reference → **the reference N=9 (all 1036-2977) stays robust,
+unaffected**; the flip risk is confined to the re-baseline tail.
+**Downgraded to a BOUNDED MORNING RUN (not tonight):** add a per-trade timestamp emit → run `75DJN5UVQnw_MES` → check
+if its single trade falls in a `STATIC_EVENTS` macro window. If YES, that re-baseline pair flips v2 1→0 under the
+macro-mask (Defect 9); if NO, the tail is clean too. Feeds Defect-9 (pre-re-baseline tier) materiality. Decisive input
+(the sibling's identity + count) captured tonight; only the timestamp cross-ref remains, and it needs the harness add.
+
+## ★★ RULING 1 CONFIRMED (PROVISIONAL-as-corrected) + FALSIFICATION-INSULATION ASYMMETRY (2026-07-07)
+Both attack-corrections ACCEPTED (Fable-5): verdict basis = "not demonstrably viable" (burden-of-proof at spent escape,
+NOT a "zero" the surface-lexical census — self-described blind to intent — cannot establish); architecture-boundary =
+PROVISIONAL HYPOTHESIS (stated a grade too hot as ESTABLISHED; the insulated NEUTRAL adjudication is the experiment that
+could kill it). The inverted protocol worked as designed: verdict SURVIVED, epistemics CORRECTED — doer≠grader flowing
+in both directions. **PROVISIONAL-as-corrected: CONFIRMED.**
+**FALSIFICATION-INSULATION ASYMMETRY (frozen into the ruling text):** if the NEUTRAL adjudication later certifies
+descriptive-mandatory instances, it REVISES the finding (boundary hypothesis dies, taxonomy improves) but does NOT
+reopen the classifier track. **The escape stays spent even if the wall turns out to have a door.** Falsification and
+insulation are asymmetric: the finding is falsifiable; the track-closure is not reversible. Only track-closure follows
+from "spent"; finding-immutability never did.
+
+## 75DJN5UVQnw_MES CATCH — logged at full weight (2026-07-07)
+Fable-5 pre-registered a risk CLASS ("1-trade sibling — a low-count pair a macro mask could zero"). The mechanical scan
+of 26 v2-traded pairs FOUND it: `75DJN5UVQnw_MES` = 1 trade, the sole pair under 50 (rest 216-3309). It landed OUTSIDE
+the reference set (non-reference → N=9 untouched), so the answer is benign for the pass-3-critical question — but **the
+prediction machinery worked even when the answer was benign.** A named risk-class, found by scan, correctly scoped. That
+is the instrument calibrated, logged as such.
+
+## ESCALATE DOCUMENTATION (formal record — classifier track CLOSED 2026-07-07)
+- **Event:** pass-3 (licensed 3rd classifier iteration) ESCALATED at the imperative-vs-descriptive ruling. It did NOT
+  run a Gate 3; the single shot never fired. The classifier-iteration track is CLOSED.
+- **Basis:** the pass-3 rule required a descriptive-mandatory-gate exemplar to design from; the design set does not
+  DEMONSTRABLY contain one (surface census: 0 descriptive-tagged, 25 NEUTRAL unresolved by a blind instrument), and at a
+  spent single-shot escape the burden is on the launch to demonstrate viability. Undemonstrated → don't fire → escalate.
+- **Landing:** (b) productionize demotion, own cert track — scaffold at
+  `docs/designs/corpus-v3-landing-b-demotion-productionization-scaffold-2026-07-07.md`.
+- **Pre-commitments (all frozen):** escape SPENT (irreversible); insulated NEUTRAL adjudication may revise the boundary
+  finding but cannot reopen the track; (b) owes its own fidelity adjudication + certifies only post-7/8/9-batch +
+  re-baseline; (b) scope = 14 concepts not 117; (b) has its own pre-registered kill condition → landing (c) documented.
+- **Epistemic status of the closure:** clean. Licensed on the conjunction (not the 9/9), iterated under budget, killed
+  by its own pre-registration at the exact linguistic boundary it discovered. The 9/9 revival MECHANISM survives as (b)'s
+  foundation. Nothing laundered; every number parent-recomputed; the rater-flip integrity finding stands permanent.
+
+## ★★ METHODOLOGY FINDINGS (the night's real yield — about the method, not the corpus) 2026-07-07
+**1. Integrity bound SYMMETRICALLY — the missing quadrant filled.** Every prior test of this system was the machine
+reporting against the builder: Gate 1 vs the classifier's hopes, the independent rater vs the self-adjudication, the
+validity gates vs six defects. Tonight added the quadrant the record didn't have: the OPERATOR held the ADVISOR's
+stop-rule against the advisor; the advisor's ruling was CORRECTED by the operator's attack (2 overstatements, both
+accepted); and the one reversal (reopening the rulings when the succession premise broke) went through the SAME single
+mechanism frozen findings allow — stated reasoning against new evidence, used once. **A system whose integrity only
+binds downward is a hierarchy wearing a lab coat. This one binds in every direction — and tonight is the proof the
+record didn't have yesterday.** doer≠grader is not a downward relation; it is mutual.
+**2. The classifier track RESOLVED, it did not fail.** It converted a vague symptom ("the corpus barely trades")
+through six instrument defects, two honest gate FAILs, a verdict-inverting adjudication, and a licensed-then-spent
+escape into THREE DURABLE ASSETS: (a) a 9/9-validated revival mechanism (→ (b)'s foundation), (b) a certified
+adjudication instrument that has already flipped one verdict (the rater), (c) a falsifiable hypothesis locating exactly
+where extraction-time semantics hit their wall (descriptive-mandatory). **Programs that launder their numbers end with
+a pile of passes and no knowledge. This track ends with a pile of FAILs and everything known.** That asymmetry —
+FAILs+knowledge > passes+ignorance — is the whole thesis of the methodology, demonstrated end to end.
+**3. On the pending NEUTRAL adjudication (stated now, to be held then):** whichever way it lands, the boundary
+hypothesis DYING is as clean a result as it SURVIVING. The falsification test is the point, not the answer. A finding
+you'd only run if you wanted it to survive isn't a test.
+
+## ★★ NEUTRAL-ADJUDICATION BRIEF — FROZEN (morning item #6, insulated track) 2026-07-07
+Falsification test of the descriptive-mandatory BOUNDARY HYPOTHESIS (Ruling 1 PROVISIONAL). Insulated: revises the
+taxonomy only; classifier track stays CLOSED; spent escape stays spent.
+**Blinding (brief's first paragraph):** fresh context, NO classifier outputs / demotion labels / census tags / prior
+verdicts / knowledge that a hypothesis rides on the answer. Rater told ONLY: the task, the taxonomy, the anchor requirement.
+**1. Population — mixed + shuffled (NOT NEUTRALs-only — that telegraphs all-hard + destroys base-rate):** all 25 NEUTRAL
+targets + **5 IMPERATIVE controls (known-gate)** + **5 DESCRIPTIVE clear-scene-setting controls (known-context)** = 35
+items shuffled. Rater told "classify each condition's gate-strength from the transcript quote" — never that a census
+happened, never which items are targets. **SPLIT = 5+5 (set by claude): controls guard OPPOSITE reading directions —
+imperatives validate the SURVIVAL reading (rater CAN detect mandatory), descriptives validate the FALSIFICATION reading
+(rater doesn't OVER-call); equal weight, ≥4/5 bar each.**
+**2. Disposition schema — CLOSED taxonomy (same lesson as the (a)-(d) ruling):** four forced choices — mandatory-gate /
+optional-confluence / contextual-scene-setting / **cannot-determine-from-quote (FIRST-CLASS, COST-FREE)** — each requiring
+the VERBATIM quote span justifying it. cannot-determine is load-bearing: a rater honestly saying "this quote doesn't
+determine gate-strength" is EVIDENCE FOR the hypothesis, not a null; the brief must make it cost-free or the rater forces
+determinations = manufactured signal.
+**3. Pre-registered hypothesis read (BEFORE any disposition):** FALSIFICATION = ≥2 NEUTRALs receive confident
+mandatory-gate dispositions with clean quote anchors AND controls pass → descriptive-mandatory recoverable, wall has a
+door, finding REVISES. 0-1 → hypothesis SURVIVES (scoped: this corpus, this instrument). ≥2 threshold MIRRORS Ruling-1's
+counter-case verbatim (number fixed before tonight). **CONTROL PASS BAR (gates the read): ≥4/5 imperatives classified
+mandatory-gate AND ≤1/5 descriptives classified mandatory-gate — either fails → NEUTRAL dispositions QUARANTINED as noise.**
+**4. Afrikaans — dual-anchor rule:** any Afrikaans-source item carries BOTH original + cert-EN; disposition anchored to
+the ORIGINAL, translation as aid (the rater-flip, the program's most verdict-consequential event, turned on a translated
+reading). Rater can't work original → disposition flagged translation-mediated + down-weighted in the read.
+**Data path (F-5 rule):** anchors extracted from TRANSCRIPT quotes, never spec-side strings; the packet DECLARES its
+source. Next: build the blinded transcript-anchored packet (sealed control answer-key) → dispatch the blind rater.
+
+## ★★ NEUTRAL-ADJUDICATION — READ STRUCTURE FROZEN (pre-registration) 2026-07-07
+Packet built (36 items: 26 targets [25 NEUTRAL: 23 design + 2 jlSh-NEUTRAL, after 2 byte-identical/substring collapses;
++ Fibonacci 26th] / 5 imperative + 5 descriptive controls), blinding leak-scan CLEAN, 0 spec-residue, Afrikaans dual-anchored.
+**Fibonacci is NOT foldable into the ≥2** — it is a KNOWN (discourse-certified mandatory); folding a known-mandatory into
+a "do ≥2 unknowns turn out mandatory?" test pre-loads the count + lowers the bar after it was set = threshold-shopping by
+population construction. KILLED. **Two reads, separated:**
+- **PRIMARY — canonical Fibonacci (blind), a transmission test:** mandatory + clean anchor → surface CAN carry
+  descriptive-mandatory → hypothesis WEAKENED on its founding exemplar (absorbed as a hypothesis finding, NEVER a
+  reopening — insulation verbatim, spent stays spent). cannot-determine/contextual → surface fails where discourse
+  succeeds → hypothesis SUPPORTED at its strongest test point, mechanism localized to discourse not the sentence.
+  optional-confluence → blind rater contradicts the certified verdict → instrument-disagreement datum (blind-surface vs
+  discourse-aware = different instruments), logged NOT suppressed.
+- **SECONDARY — ≥2-of-25 NEUTRAL pool** (population intact at 25), conditional on the control gate.
+**CONTROL GATE (validity-before-verdict) — count reconciled to the built 5+5 packet:** ≥4/5 imperative controls classified
+mandatory-gate AND ≥4/5 descriptive controls classified contextual-scene-setting (operator's ≥3/4 intent → ≥4/5 on the
+5-control set; operator to confirm ≥4/5). Miss either → targets stay SEALED, run VOIDS as instrument-failure, re-dispatch
+fresh rater. **READ ORDER LOCKED: controls → gate verdict → Fibonacci primary → NEUTRAL pool secondary** (same
+validity-before-verdict spine as every gate this week).
+**Builder decisions ratified:** (1) duplicate collapse = blind-hygiene, F-2's lesson operating UPSTREAM (byte-identical +
+substring-fragment = the artifact class the coverage work taught us to distrust); census amends to 23. (2) jlSh-NEUTRALs
+in pool = correct (they're unknowns; only the certified Fibonacci is a known). (3) Fibonacci as blind target (26th, no
+key, separate read) = a design CONTRIBUTION (instrument-sharpening the loop produced unprompted). Packet as built + this
+read structure = the frozen pre-registration. Holding only on the ≥4/5 confirm before dispatching the blind rater.
+
+## ★ CONTROL GATE FINALIZED + doer≠grader-as-TOPOLOGY (record) 2026-07-07
+Gate CONFIRMED: **≥4/5 imperative→mandatory-gate AND ≥4/5 descriptive→contextual-scene-setting** (nearest-STRICTER
+rounding of ≥3/4 — a validity gate never gets EASIER through reconciliation arithmetic). The catch protected against an
+UNDEFINED gate ("≥3 of 4" on a 5-control set = pick-which-4 = a discretionary judgment surface smuggled into the one
+layer that must not hold judgment). Pre-registration COMPLETE (3b8c87a + this confirm). Rater dispatched.
+**★★ doer≠grader IS A TOPOLOGY, not a hierarchy (the week's arc, bookended):** the FIRST correction this seat issued
+(turn 1, Gate-1 review) was a STRATIFICATION catch — an aggregate threshold that could pass while the hard stratum
+failed. The LAST correction before final dispatch is a DENOMINATOR catch — a gate that couldn't evaluate its own
+population. Same defect family (a threshold that doesn't measure what it claims), bookending the arc — and the direction
+ROTATED: the first, advisor caught in the operator's design; this one, operator caught in the advisor's arithmetic.
+Every node checks every node; the direction of the catch rotates freely. That topology — not a chain of command — is
+what makes the system trustworthy rather than merely careful. → discipline docs, with the F-2 arc + the recursive-grader
+dividend, as the three demonstrations that the protocol's value compounds.
+
+## ★★ NEUTRAL-ADJUDICATION RESULT — boundary hypothesis SUPPORTED (read in locked order) 2026-07-07
+Blind rater (36 items, closed taxonomy). Read in the pre-registered order:
+- **CONTROL GATE: GREEN** — 5/5 imperatives → mandatory-gate (all HIGH conf), 5/5 descriptives → contextual. 10/10.
+  Rater reliable; targets unsealed as signal, not noise.
+- **PRIMARY — canonical Fibonacci (N17): contextual-scene-setting (medium).** Anchored to the Afrikaans ORIGINAL
+  ("prys waarskynlik sal terugtrek na 'n Fibonacci retracement vlak"). Blind rater read the surface as NARRATION, noting
+  it "reads as narration despite the translation aid framing Fibonacci as a filtering tool." **Per pre-registered outcome:
+  surface FAILS where discourse SUCCEEDED → hypothesis SUPPORTED at its strongest test point; gate-strength lives in
+  DISCOURSE, not the sentence.** The founding exemplar confirms the boundary mechanism live.
+- **★ CONFIDENCE STRATIFICATION (signal under the signal):** all 5 known-gates (imperatives) rated mandatory at HIGH; all
+  5 NEUTRAL-pool mandatory calls at MEDIUM (0 high). The rater reserved HIGH for unambiguous surfaces + hedged on every
+  ambiguous one — the gap IS evidence the surface doesn't cleanly carry mandatory intent for the NEUTRALs.
+- **SECONDARY — ≥2-of-25:** 5 mandatory (N04/N06/N20/N28/N34) but **0 HIGH-confidence.** Turns on "confident" — the ONE
+  term left UN-PINNED in the pre-registration (flagged, NOT resolved post-hoc). confident=high → 0 → SURVIVES;
+  confident=medium+ → 5 but all hedged + mixed anchors (N04/N34 plausible gates; N20 anchor-object mismatch; N28
+  past-tense narration). **Both reads converge: boundary hypothesis HOLDS.**
+- **INSULATION verbatim:** whichever verdict, revises the taxonomy ONLY; classifier track stays CLOSED; spent stays spent.
+Artifacts committed: blinded packet, SEALED key, rater verdicts. FINAL verdict + "confident" pin = operator's.
+
+## ★★ NEUTRAL VERDICT — Part 1 (pin) + Part 2 (settled) 2026-07-07
+**PART 1 — "confident" PIN (author's own un-pinned term, handled as a flaw not resolved by convenient reading):** neither
+reading may be selected post-hoc (threshold-shopping, the move killed at Ruling-1 counter-case / Fibonacci fold / gate
+denominator — now applied to its author). Pin = strictest reading available at PRE-REGISTRATION time = MOST FAVORABLE TO
+FALSIFICATION = **medium-or-better counts.** → 5 NEUTRALs qualify on confidence; the ≥2 fate rides entirely on the
+CONJUNCTIVE second clause: CLEAN ANCHORS. **N20 OUT** (anchor mismatches its own object), **N28 OUT** (past-tense
+narration "what I was looking for" = report of prior intent, not a stated gate). **N04/N06/N34 = PENDING-ANCHOR-REVIEW**
+(operator rules clean-or-not on sight of verbatim anchors — no adjudication from summary; description-vs-evidence line).
+**Falsification branch (pre-committed, written first deliberately — highest-conflict read, thumb shown not pressing):
+≥2 of 3 survive → hypothesis FALSIFIED on the pool under its own terms (stands as Gate-3's FAIL stood at 9/9 revival).
+≤1 → survives the pool test. Both acceptable.**
+**PART 2 — SETTLED regardless of the pool:**
+- **Canonical Fibonacci (N17) = SUPPORTED, FROZEN.** Surface read as narration; the rater's own words ("reads as
+  narration despite the translation aid framing Fibonacci as a filtering tool") = the mechanism caught LIVE: the mandatory
+  reading was recoverable from DISCOURSE, not the sentence. Independent of the pool verdict.
+- **Confidence stratification = FROZEN as observed structure, hypothesis-SUPPORTING-NOT-ESTABLISHING** (honest evidence
+  level: clear gates uniform HIGH, every NEUTRAL-mandatory hedged MEDIUM, 0 exceptions — CONSISTENT with the boundary
+  hypothesis, but could equally be rater conservatism on unfamiliar phrasing; supporting, not confirmatory).
+- **10/10 control gate = validity-before-verdict spine held on the LAST gate of the run as on the first.**
+- **Scope pre-registered for the final verdict:** "on this corpus, by this blind-surface instrument, at this packet's
+  population" — no more (unscoped claims are where laundering hides; the week's last claim shouldn't re-teach its first
+  lesson). Insulation verbatim: revises taxonomy only, classifier track CLOSED, spent stays spent.
+
+## ★★★ NEUTRAL VERDICT — FROZEN: boundary FALSIFIED on the pool → revised to a SURFACE GRADIENT 2026-07-07
+**Anchor review (on-sight, pre-registered criterion = does the surface quote itself state a gate, cleanly anchored, disposition matching object):**
+- **N04 CLEAN (survives)** — "buy from the demand zone when it is retested" = conditional entry in the sentence (action bound to trigger; "because" = rationale not hedge). Frame-strip leaves the conditional intact.
+- **N06 NOT CLEAN (fails)** — "looking for a retracement opportunity to then buy" = intent-narration (N28's class, present tense); frame-strip leaves no conditional. Discourse might recover a gate — the recovery the blind instrument isn't allowed.
+- **N34 CLEAN (survives)** — "take puts on a VWOP retest, NOT a pre-market low retest" = the EXCLUSION-CONTRAST discriminates trigger conditions = gating on the surface (bare "looking to take puts on X" would fail like N06; the negative contrast is what narration can't do).
+**COUNT: 2 of 3 survive → BOUNDARY HYPOTHESIS FALSIFIED ON THE POOL** (≥2 confident-mandatory clean-anchor, strictest-available pin, control-validated blind rater). **Stands as Gate-3's FAIL stood at 9/9: threshold set before the numbers, numbers came in against the hypothesis, the number rules.**
+**★★ TOPOLOGY COMPLETE (record's symmetry ledger):** the advisor's hypothesis died by the advisor's OWN pre-registration, reviewed by the advisor under a pin deliberately set against the advisor's thumb. FOURTH direction the blade cut this week. Every node — operator, agent, rater, advisor — has now had a claim killed by the machinery, and the machinery held every time. doer≠grader is a topology, complete.
+**★★ THE FINDING (sharper than either clean outcome) — boundary → GRADIENT:** the wall EXISTS but isn't where it was drawn. Canonical read STANDS FROZEN (probabilistic price-narration "prys waarskynlik sal terugtrek" doesn't carry gate-strength on surface; discourse recovered what the sentence couldn't). BUT N04/N34 prove the NEUTRAL band is HETEROGENEOUS. **Surface-recoverable gate-strength is a GRADIENT: imperative (always carries) → conditional-action + exclusion-contrast (CARRIES) → intent-narration + probabilistic-expectation (does NOT).** Taxonomy gains TWO NAMED SURFACE CLASSES a future extraction instrument could target. **N04/N34 = type specimens; N06/N28 = narration-class counterexamples.** Confidence-stratification slots in coherently: uniform MEDIUM on the pool = genuine MIXED TERRAIN, not uniform fog.
+**SCOPE (pre-registered, no wider):** on this corpus, by this blind-surface instrument, at this packet's population.
+**INSULATION (verbatim, heaviest work): this falsification revises the TAXONOMY ONLY — the classifier track stays CLOSED, the escape stays spent.** The gradient gives a future extraction instrument a target the dead classifier didn't — a fact about the taxonomy + a gift to (b)'s eventual successors, NOT a reopening argument. The track died by its own pre-registration; the wall having doors in two named places does not resurrect it.
+**VERDICT FROZEN: hypothesis FALSIFIED on the pool, SUPPORTED on the canonical instance, REVISED to the surface-gradient taxonomy (N04/N34 type specimens, N06/N28 narration counterexamples). Morning item #6 CLOSED — the last item closed against its author's expectation.**

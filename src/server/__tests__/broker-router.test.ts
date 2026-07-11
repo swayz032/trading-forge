@@ -13,6 +13,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 
 // ─── vi.mock factories: MUST be fully self-contained (no outer-var refs) ──────
 // Vitest hoists vi.mock() above all imports; any outer variable ref is a TDZ
@@ -484,5 +486,118 @@ describe("broker-router", () => {
     // request flows through to the TopstepX stub, NOT firm_broker_mismatch.
     expect(result.reason).not.toBe("firm_broker_mismatch");
     expect(result.reason).toBe("topstepx_not_configured");
+  });
+
+  // ─── Test 17 (deep-scan fix-wave 2026-07-10): kill-switch correlationId/firmId scoping ─
+  // CONFIRMED HIGH finding: routeOrder() received `correlationId` as a parameter
+  // but called killSwitch.isHaltedForProduction() with ZERO opts, so (a) every
+  // kill-switch audit row/SSE event for the check got a disconnected random UUID
+  // (unjoinable to this order's correlationId — breaking 90-day trade
+  // reconstruction) and (b) Layer 2/3/7 fell back to the legacy GLOBAL scope
+  // (iterate every account/firm, halt on the first breach found ANYWHERE).
+  // These tests assert the fix: real correlationId + real firmId are threaded
+  // through, and accountKey is never fabricated from the accountId UUID.
+
+  it("F-2-scoping: isHaltedForProduction is called with the real correlationId, not a bare call", async () => {
+    mockSelectReturning([TRADERSPOST_ACCOUNT]); // firmId="mffu"
+
+    await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-scoping-mffu");
+
+    expect(killSwitch.isHaltedForProduction).toHaveBeenCalledOnce();
+    const optsArg = vi.mocked(killSwitch.isHaltedForProduction).mock.calls[0][0] as
+      | Record<string, unknown>
+      | undefined;
+    // Must be a non-empty opts object (regression guard: the original bug was
+    // `isHaltedForProduction()` called with ZERO arguments).
+    expect(optsArg).toBeDefined();
+    expect(optsArg).not.toEqual({});
+    expect(optsArg?.correlationId).toBe("corr-scoping-mffu");
+  });
+
+  it("F-2-scoping: firmId is resolved from the real broker_accounts row (mffu), not hardcoded", async () => {
+    mockSelectReturning([TRADERSPOST_ACCOUNT]); // firmId="mffu"
+
+    await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-firmid-mffu");
+
+    const optsArg = vi.mocked(killSwitch.isHaltedForProduction).mock.calls[0][0] as
+      | Record<string, unknown>
+      | undefined;
+    expect(optsArg?.firmId).toBe("mffu");
+  });
+
+  it("F-2-scoping: firmId is resolved per-account — topstep account yields firmId='topstep'", async () => {
+    mockSelectReturning([TOPSTEPX_ACCOUNT]); // firmId="topstep"
+
+    await routeOrder("test-account-uuid-5678", TEST_SIGNAL, "corr-firmid-topstep");
+
+    const optsArg = vi.mocked(killSwitch.isHaltedForProduction).mock.calls[0][0] as
+      | Record<string, unknown>
+      | undefined;
+    expect(optsArg?.firmId).toBe("topstep");
+  });
+
+  it("F-2-scoping: accountKey is NEVER fabricated from the broker_accounts.account_id UUID", async () => {
+    // kill-switch's accountKey lives in a DIFFERENT identity space
+    // (resolveAccountKey() over a paper_sessions row) than broker_accounts.
+    // account_id. Passing the raw accountId UUID as accountKey would make
+    // Layer 2/3's account-scoped filter match NOTHING and silently PASS those
+    // layers for this account (a worse fail-open than the pre-fix global
+    // scope) — so accountKey must stay absent until a genuine schema-level
+    // accountId→accountKey mapping exists.
+    mockSelectReturning([TRADERSPOST_ACCOUNT]);
+
+    await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-no-fabricated-key");
+
+    const optsArg = vi.mocked(killSwitch.isHaltedForProduction).mock.calls[0][0] as
+      | Record<string, unknown>
+      | undefined;
+    expect(optsArg?.accountKey).toBeUndefined();
+    expect(optsArg?.accountKey).not.toBe("test-account-uuid-1234");
+  });
+
+  it("F-2-scoping: firmId prefetch DB error degrades gracefully — kill switch still runs, order still processes", async () => {
+    // The firmId lookup is a passive, fail-soft, best-effort read that must
+    // NEVER block the order or bypass the kill-switch gate. Simulate a DB
+    // error on exactly the first db.select() call (the new firmId prefetch,
+    // which runs before the pre-existing account lookup) and verify the
+    // kill-switch check still fires (with firmId undefined, i.e. the
+    // byte-identical pre-fix unscoped Layer 7 behavior) and the order still
+    // completes normally via the unaffected second (existing) account lookup.
+    const dbErr = new Error("db connection reset");
+    vi.mocked(db.select).mockImplementationOnce(() => {
+      throw dbErr;
+    });
+    // Subsequent db.select() calls (the pre-existing account lookup, etc.)
+    // fall back to this normal mock once the one-shot throw is consumed.
+    mockSelectReturning([TRADERSPOST_ACCOUNT]);
+
+    const result = await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-firmid-db-error");
+
+    expect(killSwitch.isHaltedForProduction).toHaveBeenCalledOnce();
+    const optsArg = vi.mocked(killSwitch.isHaltedForProduction).mock.calls[0][0] as
+      | Record<string, unknown>
+      | undefined;
+    expect(optsArg?.correlationId).toBe("corr-firmid-db-error");
+    expect(optsArg?.firmId).toBeUndefined();
+    // The firmId-prefetch failure must NOT propagate into a route failure.
+    expect(result.success).toBe(true);
+  });
+
+  it("F-2-scoping (regression): source no longer contains a bare isHaltedForProduction() call", () => {
+    // Static source guard mirroring the M12 pattern in
+    // m2-m12-shadow-divergence-and-correlation-plumbing.test.ts — ensures a
+    // future edit can't silently reintroduce the zero-opts call this fix
+    // removed.
+    const src = readFileSync(
+      resolve(import.meta.dirname, "../services/broker-router.ts"),
+      "utf8",
+    );
+    const bareCall = src.match(/await killSwitch\.isHaltedForProduction\(\)/);
+    expect(bareCall).toBeNull();
+    // And confirm the real call site does carry correlationId (brace-bounded,
+    // matching the multi-line `{ correlationId, firmId }` object literal).
+    const scopedCalls = [...src.matchAll(/killSwitch\.isHaltedForProduction\(\{([^}]*)\}/g)];
+    expect(scopedCalls.length).toBeGreaterThan(0);
+    for (const c of scopedCalls) expect(c[1]).toMatch(/\bcorrelationId\b/);
   });
 });
