@@ -654,6 +654,18 @@ liveOrderRoutes.post(
         return;
       }
 
+      // WIRE-1 (deep-scan 2026-07-11) — KNOWN INCOMPLETE, operator/architecture decision required.
+      // The archetype evaluator (src/engine/archetype_evaluator.py) evaluates STRUCTURAL archetypes
+      // from a full bar-context payload it reads on STDIN: { bar: {OHLC…}, position: {…},
+      // bias_state: {…} }. This live-order path can only supply a single `price` (the webhook schema
+      // has no high/low/open/close/volume) and sends NO stdin, so the evaluator fails on "Empty stdin"
+      // and returns "hold" at best even if stdin were wired. runPythonModule also injects a `--config`
+      // temp-file flag (from the correlationId metadata) that the evaluator's argparse rejects. So
+      // archetype_signal live orders CANNOT currently succeed — they fail LOUDLY below (503 + audit +
+      // Discord + SSE), which is acceptable because server-mediated execution is BUILT-NOT-LIVE.
+      // COMPLETING this needs a design decision: where does the live path source full OHLC bar context
+      // (fetch from S3/Databento/Massive for ticker+bar_timestamp, or extend the webhook to carry the
+      // bar)? Until then this is a documented feature-completion carry-forward, not a wiring patch.
       // Invoke Python archetype evaluator
       let evaluatorResult: { action: string; reason: string };
       try {
