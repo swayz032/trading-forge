@@ -127,9 +127,62 @@ export interface ExchangeStatusResult {
 }
 
 /**
- * Probe the CME status endpoint.
- * Returns operational=true when the exchange is open for business.
- * Fails CLOSED on fetch error (returns operational=false).
+ * C1 fix 2026-07-11 (ratify packet 1): the CME venue-status page
+ * (`cmegroup.com/CmeWS/...`) is bot-blocked (403/000/timeout — verified), so the
+ * OLD behavior (any venue-probe transport failure → treat as CME outage) opened a
+ * phantom outage on EVERY 60s poll → 80 stale rows → C1 hard-blocked every paper
+ * entry on boot. A bot-blocked marketing page is NOT evidence CME Globex is halted.
+ *
+ * New contract: a venue-probe TRANSPORT failure (non-200 / connection error /
+ * timeout) no longer opens an outage by itself — it corroborates against the
+ * BROKER-reachability probe (Tradovate, the path orders actually route through):
+ *   • broker reachable  → operational=true  (no outage — fixes the phantom)
+ *   • broker UNREACHABLE → operational=false (fail-CLOSED on the signal that
+ *     actually blocks trading for a Tradovate day-trader)
+ * An affirmative venue "degraded/halted" (200 + status body) STILL opens an outage
+ * (belt-and-suspenders if the status page ever becomes reachable).
+ *
+ * OPERATOR NOTE (flagged for veto): this shifts the C1 primary signal from
+ * "CME venue-status page" to "broker reachability". A genuine CME venue halt while
+ * Tradovate's API stays up would NOT open a C1 outage — that residual is covered by
+ * broker order-rejection handling + C2 firm-suspension + the 15:55 flatten. Point
+ * `CME_STATUS_URL` at a working venue-status source to restore affirmative venue
+ * detection.
+ */
+async function corroborateVenueProbeFailureWithBroker(venueReason: string): Promise<ExchangeStatusResult> {
+  try {
+    const broker = await checkBrokerConnectivity();
+    if (broker.overallReachable) {
+      // Venue status-page unreachable, but the broker (order path) IS reachable →
+      // NOT an outage. This is the phantom-block fix.
+      logger.debug(
+        { venueReason },
+        "exchange-status: CME venue probe unreachable but broker reachable — treating as operational (no phantom outage)",
+      );
+      return { exchange: "CME", operational: true };
+    }
+    // Broker unreachable too → real routing failure → fail-CLOSED (open outage).
+    return {
+      exchange: "CME",
+      operational: false,
+      reason: `Broker (Tradovate) unreachable + CME venue probe failed (${venueReason})`,
+    };
+  } catch (brokerErr) {
+    // Broker probe itself threw → fail-CLOSED (conservative).
+    const msg = brokerErr instanceof Error ? brokerErr.message : String(brokerErr);
+    return {
+      exchange: "CME",
+      operational: false,
+      reason: `Broker corroboration probe errored (${msg}); CME venue probe failed (${venueReason})`,
+    };
+  }
+}
+
+/**
+ * Probe the CME status endpoint, corroborating a venue-probe transport failure with
+ * broker reachability (see corroborateVenueProbeFailureWithBroker). An affirmative
+ * venue "degraded/halted" opens an outage directly; a transport failure defers to
+ * the broker probe. Fails CLOSED only when the BROKER is unreachable.
  */
 export async function checkCmeStatus(): Promise<ExchangeStatusResult> {
   const controller = new AbortController();
@@ -163,22 +216,16 @@ export async function checkCmeStatus(): Promise<ExchangeStatusResult> {
       };
     }
 
-    // Non-200 HTTP response — treat as outage.
-    return {
-      exchange: "CME",
-      operational: false,
-      reason: `CME status HTTP ${resp.status}`,
-    };
+    // Non-200 HTTP response — venue status page unreachable (bot-block etc.).
+    // C1 fix: corroborate with broker reachability instead of assuming outage.
+    return await corroborateVenueProbeFailureWithBroker(`CME status HTTP ${resp.status}`);
   } catch (err) {
     clearTimeout(timeout);
     const isAbort = err instanceof Error && err.name === "AbortError";
     const fetchError = isAbort ? "Request timed out" : (err instanceof Error ? err.message : String(err));
-    return {
-      exchange: "CME",
-      operational: false,
-      fetchError,
-      reason: `CME status fetch failed: ${fetchError}`,
-    };
+    // C1 fix: venue-probe transport failure corroborates with the broker probe
+    // rather than opening a phantom outage.
+    return await corroborateVenueProbeFailureWithBroker(fetchError);
   }
 }
 
@@ -197,7 +244,35 @@ export async function checkCmeStatus(): Promise<ExchangeStatusResult> {
 export async function pollCmeStatus(): Promise<void> {
   const cronCorrelationId = randomUUID();
   const result = await checkCmeStatus();
-  const isOutageActive = activeOutageIds.has("CME");
+  let isOutageActive = activeOutageIds.has("CME");
+
+  // C1 fix 2026-07-11 (ratify packet 1): DB-aware dedup. The old dedup checked ONLY
+  // the in-memory `activeOutageIds` map, so the boot-race (reconcileMissedRuns
+  // catchup-runs this poll before reconcileOutageState() hydrates the map) inserted
+  // a fresh row every boot — the 80-row accumulation. If we would open a NEW outage
+  // but an open CME row already exists in the DB, adopt it into the map instead of
+  // inserting a duplicate. (A partial unique index — migration 0199 — is the
+  // belt-and-suspenders backstop at the DB level.)
+  if (!result.operational && !isOutageActive) {
+    try {
+      const [existing] = await db
+        .select({ id: exchangeOutages.id })
+        .from(exchangeOutages)
+        .where(and(eq(exchangeOutages.exchange, "CME"), isNull(exchangeOutages.endedAt)))
+        .limit(1);
+      if (existing?.id) {
+        activeOutageIds.set("CME", existing.id);
+        isOutageActive = true;
+        logger.debug(
+          { outageId: existing.id },
+          "exchange-status: adopted existing open CME outage row (DB-aware dedup) — no duplicate inserted",
+        );
+      }
+    } catch (dedupErr) {
+      // Non-fatal: fall through to the unique-index-guarded insert below.
+      logger.warn({ err: dedupErr }, "exchange-status: DB dedup check failed (non-fatal)");
+    }
+  }
 
   if (!result.operational && !isOutageActive) {
     // ── New outage detected ──────────────────────────────────────────────────
