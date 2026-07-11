@@ -2101,6 +2101,16 @@ def run_monte_carlo(
                     )
                     _firm_ruin_ci["ruin_basis"] = "firm_breach"
                     _firm_ruin_ci["ruin_firm"] = _fk
+                    # deep-scan payout-denial-gate fix (2026-07-06):
+                    # b14-ci-gate.ts reads per_firm[firm].consistency_fail_rate to fire the
+                    # Topstep 40%-consistency payout-denial BLOCK, but consistency_fail_rate
+                    # was only ever written at firm_survival[firm] top-level (this loop built
+                    # per_firm entries fresh from compute_mc_confidence_intervals, which does
+                    # not carry it) — so the payout-denial gate could NEVER fire. Merge the
+                    # key from the source firm_survival dict so the TS gate has real data.
+                    _cfr = _fsurv.get("consistency_fail_rate")
+                    if _cfr is not None:
+                        _firm_ruin_ci["consistency_fail_rate"] = _cfr
                     per_firm_ruin_cis[_fk] = _firm_ruin_ci
                     # FIX 3 (deep-scan #9 2026-07-02): Select worst firm by ci_high, not
                     # point_estimate. B14 gates on ci_high; using point_estimate misaligns

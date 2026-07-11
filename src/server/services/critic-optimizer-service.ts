@@ -2139,7 +2139,11 @@ async function replayCandidatesAsync(
   // Y2 fix: Compare forge scores on the same 0-100 scale.
   // Parent Python composite objective uses a different scale than forge score.
   // can be negative or >1). strat.forgeScore is always 0-100, matching replayForgeScore.
-  const parentForgeScore = Number(strat.forgeScore ?? 0);
+  // deep-scan services HIGH (2026-07-06): a null forgeScore (parent never scored) must NOT default to 0 — the
+  // child would then trivially "beat" a fabricated 0 baseline (compositeScore > 0) and spawn a whole generation
+  // on nothing. Fail CLOSED: an unscored parent is UNBEATABLE (Infinity), so no child promotes until the parent
+  // has a real forge score. (parentForgeScore is used ONLY in the `compositeScore > parentForgeScore` compare.)
+  const parentForgeScore = strat.forgeScore != null ? Number(strat.forgeScore) : Number.POSITIVE_INFINITY;
 
   // B2 fix: hoisted so it's in scope at all 2 runBacktest call sites below.
   // Populated inside the C-3 try block; defaults to 1 (no deflation) on any error.
@@ -2793,7 +2797,11 @@ export async function manualReplayCandidates(
   // Y2 fix: Use strat.forgeScore (0-100) as the parent baseline.
   // parentCompositeScore from the run is the Python composite objective (different scale,
   // can be negative or >1) and cannot be compared against replayForgeScore directly.
-  const parentForgeScore = Number(strat.forgeScore ?? 0);
+  // deep-scan services HIGH (2026-07-06): a null forgeScore (parent never scored) must NOT default to 0 — the
+  // child would then trivially "beat" a fabricated 0 baseline (compositeScore > 0) and spawn a whole generation
+  // on nothing. Fail CLOSED: an unscored parent is UNBEATABLE (Infinity), so no child promotes until the parent
+  // has a real forge score. (parentForgeScore is used ONLY in the `compositeScore > parentForgeScore` compare.)
+  const parentForgeScore = strat.forgeScore != null ? Number(strat.forgeScore) : Number.POSITIVE_INFINITY;
 
   // B2 fix: fetch trial_n_total from persisted evidence packet so DSR deflation
   // receives the correct cumulative mutation count during manual replay.

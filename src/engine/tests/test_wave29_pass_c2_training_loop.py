@@ -66,6 +66,26 @@ for _pkg in [
     if _pkg not in sys.modules:
         sys.modules[_pkg] = types.ModuleType(_pkg)
 
+
+@pytest.fixture(autouse=True)
+def _restore_db_loader_module():
+    """deep-scan 2026-07-09 (test-hygiene): the training helpers below assign a
+    stub `types.ModuleType` into `sys.modules['src.engine.replay.db_loader']`
+    (5 sites) with no teardown. Unrestored, that stub LEAKS into other test files
+    run in the same process (e.g. `test_wave29_pass_c1_...`'s TestLoadBacktestBarData
+    then fails `_get_db_connection`/`cpcv_purge` against the stub — order-dependent
+    pollution). This autouse fixture snapshots the real module before each test and
+    restores it after, even on raise — so the leak can never escape this file."""
+    _key = "src.engine.replay.db_loader"
+    _original = sys.modules.get(_key)
+    try:
+        yield
+    finally:
+        if _original is not None:
+            sys.modules[_key] = _original
+        else:
+            sys.modules.pop(_key, None)
+
 # ---------------------------------------------------------------------------
 # Import module under test
 # ---------------------------------------------------------------------------
@@ -883,3 +903,76 @@ def test_governance_labels_carries_sr_is_sr_oos_n_training_iterations():
         assert "n_training_iterations" in governance_labels
         assert governance_labels["training_mode"] is True
         assert governance_labels["decision_role"] == "challenger_only"
+
+
+# ===========================================================================
+# Test 22: governance_labels carries a truthful dsr_passed (quantum-rl-bridge
+# Gap 1 fix, 2026-07-06)
+#
+# Before the fix, _dsr_passed was computed ONCE, after the whole per-regime
+# batch loop, from the fully-accumulated all_episode_rewards — and was never
+# written into governance_payload at all. Every persisted quantum_rl_runs row
+# therefore had a governance_labels dict with NO dsr_passed key, even though
+# rl-signal-fetcher.ts:228 reads `gl["dsr_passed"] === true`. This was masked
+# in production (rl-signal-fetcher.ts:277 takes the TS-probit-authoritative
+# branch whenever sr_is/sr_oos/n_training_iterations are present, so the
+# missing dsr_passed was never actually consulted) but the DB column itself
+# was untruthful — a future consumer reading dsr_passed directly would always
+# see `False` regardless of the real value.
+# ===========================================================================
+
+def test_governance_labels_carries_truthful_dsr_passed():
+    """Every persisted quantum_rl_runs row's governance_labels must carry a
+    real boolean dsr_passed (+ the dsr_value/dsr_floor it was compared
+    against), computed via the same _sharpe_of formula as the post-loop
+    final_sharpe — not omitted, not always-False."""
+    captured: list = []
+    bars = _make_regime_bars(150, "TRENDING")
+
+    result = _call_train_with_bars(
+        bars, strategy_id=8, training_epochs=25, seed=5, captured_inserts=captured,
+    )
+
+    assert "TRENDING" in result
+    assert len(captured) >= 2, (
+        "Expected multiple batch INSERTs (training_epochs=25 spans 2 batches "
+        "of 20) so the per-batch proxy vs final-value equivalence is actually "
+        "exercised across more than one row"
+    )
+
+    dsr_floor_env = float(os.environ.get("QUANTUM_RL_DSR_FLOOR", "0.5"))
+
+    for insert in captured:
+        gl_index = insert["columns"].index("governance_labels")
+        governance_labels = json.loads(insert["params"][gl_index])
+        assert "dsr_passed" in governance_labels, (
+            "governance_labels is missing 'dsr_passed' — the persisted DB "
+            "column is untruthful for any consumer reading it directly"
+        )
+        assert isinstance(governance_labels["dsr_passed"], bool), (
+            f"dsr_passed must be a real boolean, got "
+            f"{type(governance_labels['dsr_passed'])}"
+        )
+        assert "dsr_value" in governance_labels
+        assert "dsr_floor" in governance_labels
+        assert governance_labels["dsr_floor"] == pytest.approx(dsr_floor_env)
+        # dsr_passed must be internally consistent with dsr_value/dsr_floor —
+        # proves it wasn't hardcoded or copy-pasted from a stale computation.
+        expected_passed = governance_labels["dsr_value"] >= governance_labels["dsr_floor"]
+        assert governance_labels["dsr_passed"] == expected_passed
+
+    # The LAST batch's persisted proxy must be mathematically IDENTICAL to the
+    # post-loop final_sharpe/dsr_passed this same training run reports in its
+    # result dict — this is the "verify the reorder doesn't change any
+    # computed value" requirement: both sites now call the same _sharpe_of
+    # helper over the same final all_episode_rewards contents.
+    last_gl_index = captured[-1]["columns"].index("governance_labels")
+    last_governance_labels = json.loads(captured[-1]["params"][last_gl_index])
+    assert last_governance_labels["dsr_value"] == pytest.approx(result["TRENDING"]["final_sharpe"]), (
+        "Last batch's persisted dsr_value must equal the regime's final_sharpe "
+        "— any drift here means the reorder changed a computed value"
+    )
+    assert last_governance_labels["dsr_passed"] == result["TRENDING"]["dsr_passed"], (
+        "Last batch's persisted dsr_passed must equal the regime's final "
+        "dsr_passed — any drift here means the reorder changed a computed value"
+    )

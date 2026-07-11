@@ -86,7 +86,10 @@
         0 0 70px rgba(163, 255, 18, 0.12);
     }
 
-    /* Empty state — chart still animates, just dimmer + with overlay label */
+    /* Empty state — placeholder only (baseline shelf, no bars). The overlay label
+       sits on top. The .mc-bar-* dim rule below is a defensive no-op: the empty
+       render path (buildMCEmptyPlaceholder) draws NO bars, so nothing fabricated
+       is ever shown behind the overlay (DS22 Track B A2 fix). */
     .r-mc-chart-3d.empty .mc-bar-front,
     .r-mc-chart-3d.empty .mc-bar-side,
     .r-mc-chart-3d.empty .mc-bar-top { opacity: 0.4; }
@@ -727,27 +730,46 @@
     function renderMC(r) {
       const { el } = SH;
       const mc = r.monteCarlo || {};
+      // deep-scan slumhouse-frontend F-1 (CRITICAL 2026-07-06) + DS22 Track B B1 (2026-07-07):
+      // The 3D histogram is a REAL distribution ONLY when the server shipped a per-path
+      // distribution (>=30 samples). In the common case the MC engine emits only percentiles
+      // (P5/P50/P95). We must NOT fabricate a bell shape between them (the prior code called
+      // synthesizeBell() — an unseeded Box-Muller draw that re-randomized every reload, presenting
+      // a made-up shape a family member would trust to judge safety). Three honest render states:
+      //   "real"   → >=30 recorded samples → true histogram (the ONLY state that shows a shape)
+      //   "bounds" → percentiles only      → three discrete P5/P50/P95 markers, NO curve between
+      //   "empty"  → no MC yet             → placeholder, no bars, nothing fabricated
+      // No Math.random()-driven shape can reach the rendered view (synthesizeBell removed).
+      const mcState = mcRenderState(mc);
       const panel = el("div", { class: "r-panel r-panel-mc" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Monte Carlo", el("span", { class: "src whatif" }, "🧪 What-if")),
         ),
-        el("div", { class: "r-cap" },
-          "We made the bot play the same year ",
-          el("b", {}, "1,000 different times"),
-          ". Here's where the money landed:",
-        ),
+        mcState === "real"
+          ? el("div", { class: "r-cap" },
+              "We made the bot play the same year ",
+              el("b", {}, "1,000 different times"),
+              ". Here's where the money landed:",
+            )
+          : mcState === "bounds"
+          ? el("div", { class: "r-cap" },
+              "We only have the ",
+              el("b", {}, "worst, typical, and best year"),
+              " recorded for this play — shown below as three points. The full shape between them isn't available, so we don't draw one.",
+            )
+          : el("div", { class: "r-cap" },
+              "Not tested enough times yet — the spread of outcomes shows up here after the first backtest.",
+            ),
       );
 
-      // Empty state: no real MC data — chart still animates with synthesized
-      // demo bars + a "WAITING FOR FIRST BACKTEST" overlay.
-      const hasMCData = (Array.isArray(mc.distribution) && mc.distribution.length > 0)
-        || mc.worstYearRaw || mc.medianYearRaw || mc.bestYearRaw;
+      // "empty" = nothing real to show → placeholder only (no fabricated bars/bell).
+      const hasMCData = mcState !== "empty";
 
       // 3D chart stage
       const chart3d = el("div", { class: "r-mc-chart-3d" + (hasMCData ? "" : " empty") },
         el("div", { class: "r-mc-chart-stage" }),
       );
-      chart3d.querySelector(".r-mc-chart-stage").innerHTML = buildMCHistogram(mc);
+      chart3d.querySelector(".r-mc-chart-stage").innerHTML = buildMCHistogram(mc, mcState);
       panel.appendChild(chart3d);
 
       panel.appendChild(el("div", { class: "r-mc-legend" },
@@ -802,21 +824,33 @@
       return panel;
     }
 
+    // ─── MC render-state decision (single source of truth: caption + chart) ──
+    // "real"   → >=30 recorded per-path samples (ONLY state that draws a distribution shape)
+    // "bounds" → percentiles only → discrete P5/P50/P95 markers, NO curve between them
+    // "empty"  → no MC data yet → placeholder, nothing fabricated
+    function mcRenderState(mc) {
+      const samples = Array.isArray(mc.distribution) ? mc.distribution : [];
+      if (samples.length >= 30) return "real";
+      const hasPct = [mc.worstYearRaw, mc.medianYearRaw, mc.bestYearRaw]
+        .some(function (v) { return Number.isFinite(v) && v !== 0; }) || samples.length > 0;
+      return hasPct ? "bounds" : "empty";
+    }
+
     // ─── MC histogram (SVG, plain-English labels, 3D bars) ───────────────
-    function buildMCHistogram(mc) {
+    // Renders a TRUE distribution ONLY when the server shipped >=30 real per-path
+    // samples. Otherwise shows honest percentile bounds or an empty placeholder —
+    // never a synthesized/random bell (F-1 + DS22 Track B B1 fix; synthesizeBell removed).
+    function buildMCHistogram(mc, mcState) {
       const W = 540, H = 200, padL = 8, padR = 8, padT = 10, padB = 30;
       const innerW = W - padL - padR;
       const innerH = H - padT - padB;
+      const state = mcState || mcRenderState(mc);
 
-      // 1) Get a sample of final-year P&Ls — real if we have it, synthesized otherwise
-      let samples = Array.isArray(mc.distribution) ? mc.distribution.slice() : [];
-      if (samples.length < 30) {
-        // Synthesize ~1000 from worst/median/best — asymmetric "bell-ish"
-        samples = synthesizeBell(mc.worstYearRaw, mc.medianYearRaw, mc.bestYearRaw, 1000);
-      }
-      if (samples.length === 0) {
-        return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#666" font-size="12" font-family="inherit">no fake years yet</text></svg>`;
-      }
+      if (state === "empty") return buildMCEmptyPlaceholder(W, H, padL, padT, innerW, innerH);
+      if (state === "bounds") return buildMCPercentileBounds(mc, W, H, padL, padT, innerW, innerH);
+
+      // state === "real": >=30 recorded samples — genuine histogram from real data.
+      const samples = mc.distribution.slice();
 
       // 2) Build buckets
       const minV = Math.min(...samples);
@@ -910,24 +944,55 @@
       `;
     }
 
-    // Synthesize ~N samples from worst/median/best to approximate a bell when
-    // the MC engine didn't ship the full distribution. Skewed normal-ish.
-    function synthesizeBell(worst, median, best, n) {
-      const out = [];
-      const w = Number(worst) || -5000;
-      const m = Number(median) || 0;
-      const b = Number(best) || 5000;
-      const sigmaL = Math.max(1, (m - w) / 1.645);
-      const sigmaR = Math.max(1, (b - m) / 1.645);
-      for (let i = 0; i < n; i++) {
-        // Box-Muller normal
-        const u1 = Math.max(1e-9, Math.random());
-        const u2 = Math.random();
-        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-        const v = m + z * (z < 0 ? sigmaL : sigmaR);
-        out.push(v);
+    // Honest "percentile bounds only" view — three discrete P5/P50/P95 markers on a
+    // $0 break-even axis. Draws NO distribution shape between the points, because the
+    // server gave us three numbers, not a recorded distribution. Deterministic — no
+    // Math.random(), so nothing changes on reload.
+    function buildMCPercentileBounds(mc, W, H, padL, padT, innerW, innerH) {
+      const pts = [
+        { v: Number(mc.worstYearRaw),  color: "#ff7878", label: "BAD",    sub: "worst (P5)" },
+        { v: Number(mc.medianYearRaw), color: "#a3ff12", label: "NORMAL", sub: "typical (P50)" },
+        { v: Number(mc.bestYearRaw),   color: "#c5ff5f", label: "GOOD",   sub: "best (P95)" },
+      ].filter(function (p) { return Number.isFinite(p.v); });
+      if (pts.length === 0) return buildMCEmptyPlaceholder(W, H, padL, padT, innerW, innerH);
+
+      const vals = pts.map(function (p) { return p.v; }).concat([0]);
+      const minV = Math.min.apply(null, vals);
+      const maxV = Math.max.apply(null, vals);
+      const range = Math.max(1, maxV - minV);
+      const xOf = function (v) { return padL + Math.max(0, Math.min(innerW, ((v - minV) / range) * innerW)); };
+      const cy = padT + innerH * 0.5;
+
+      const zeroX = xOf(0);
+      const zeroLine = `<line x1="${zeroX.toFixed(1)}" x2="${zeroX.toFixed(1)}" y1="${padT}" y2="${padT + innerH}" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"/>
+        <text x="${zeroX.toFixed(1)}" y="${(padT + innerH + 26).toFixed(1)}" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9" font-family="inherit" font-weight="800" letter-spacing="0.06em">BROKE EVEN</text>`;
+      const shelf = `<rect x="${padL - 2}" y="${padT + innerH}" width="${innerW + 4}" height="3" fill="rgba(255,255,255,0.06)"/>`;
+
+      let marks = "";
+      for (const p of pts) {
+        const x = xOf(p.v);
+        marks += `<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${padT}" y2="${padT + innerH}" stroke="${p.color}" stroke-width="1.3" stroke-dasharray="3 3" opacity="0.6"/>`;
+        marks += `<circle cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" r="11" fill="none" stroke="${p.color}" stroke-width="1" opacity="0.4"/>`;
+        marks += `<circle cx="${x.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.5" fill="${p.color}" opacity="0.95"/>`;
+        marks += `<text x="${x.toFixed(1)}" y="12" text-anchor="middle" fill="${p.color}" font-size="9" font-family="inherit" font-weight="800" letter-spacing="0.06em">${p.label}</text>`;
+        marks += `<text x="${x.toFixed(1)}" y="${(padT + innerH + 16).toFixed(1)}" text-anchor="middle" fill="${p.color}" font-size="8" font-family="inherit" font-weight="700" opacity="0.85">${p.sub}</text>`;
       }
-      return out;
+
+      return `
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+          ${shelf}
+          ${zeroLine}
+          ${marks}
+        </svg>
+      `;
+    }
+
+    // Genuinely empty state — a baseline shelf only. No bars, no bell, nothing
+    // fabricated. The "WAITING FOR FIRST BACKTEST" overlay (.r-mc-chart-3d.empty::after)
+    // sits on top via CSS.
+    function buildMCEmptyPlaceholder(W, H, padL, padT, innerW, innerH) {
+      const shelf = `<rect x="${padL - 2}" y="${padT + innerH}" width="${innerW + 4}" height="3" fill="rgba(255,255,255,0.06)"/>`;
+      return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${shelf}</svg>`;
     }
 
     // ─── 3D Slumdawg Calendar — monthly grid with weekly + monthly totals ─

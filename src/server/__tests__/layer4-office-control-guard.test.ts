@@ -8,10 +8,21 @@
  *
  * Covers:
  *   - PASS: valid Office admin session cookie
- *   - PASS: direct loopback (127.0.0.1 / ::1 / ::ffff:127.0.0.1) with NO
- *     x-forwarded-for (operator curl on the tower)
- *   - BLOCK: loopback WITH x-forwarded-for (relay-forwarded public traffic)
- *     → 401 office_only + blocked-attempt audit row under the caller's action
+ *   - PASS: direct loopback (127.0.0.1 / ::1 / ::ffff:127.0.0.1) with no
+ *     relay-verified-ip header (operator curl on the tower)
+ *   - BLOCK: loopback WITH x-relay-verified-ip set (real relay-tunneled
+ *     traffic, in the exact header shape ip-sanitize.js actually produces:
+ *     relay header present, x-forwarded-for stripped) — 401 office_only +
+ *     blocked-attempt audit row under the caller's action. This is the
+ *     regression case: deep-scan fix-wave 2026-07-10 introduced (same day,
+ *     same wave) an unconditional x-forwarded-for strip in
+ *     railway-relay/ip-sanitize.js for a different, legitimate fix, which
+ *     broke this guard's old `!x-forwarded-for` heuristic — every relay
+ *     caller then also satisfied "loopback with no forwarded header" and
+ *     got Office authority with no cookie. Found + fixed same day; this
+ *     test constructs headers the way the real relay pipeline now does
+ *     (not a hand-picked x-forwarded-for value) so it actually exercises
+ *     the interaction instead of just the guard in isolation.
  *   - BLOCK: non-loopback remote without cookie
  *   - source contract: all 5 gated routes actually invoke the guard
  */
@@ -31,16 +42,19 @@ vi.mock("../lib/audit-log-helper.js", () => ({
 import { adminSessionFromCookie } from "../lib/slumhouse/admin-session.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
+import { RELAY_VERIFIED_IP_HEADER } from "../lib/relay-client-ip.js";
 
 function makeReq(opts: {
   cookie?: string;
   remote?: string;
   forwarded?: string;
+  relayVerifiedIp?: string;
   path?: string;
   id?: string;
 } = {}): any {
   const headers: Record<string, string> = { cookie: opts.cookie ?? "" };
   if (opts.forwarded) headers["x-forwarded-for"] = opts.forwarded;
+  if (opts.relayVerifiedIp) headers[RELAY_VERIFIED_IP_HEADER] = opts.relayVerifiedIp;
   return {
     headers,
     socket: { remoteAddress: opts.remote ?? "203.0.113.7" },
@@ -90,7 +104,7 @@ describe("requireOfficeControlAuthority", () => {
     },
   );
 
-  it("BLOCKS loopback WITH x-forwarded-for (relay-forwarded traffic) — 401 office_only + audit", () => {
+  it("BLOCKS loopback WITH x-forwarded-for (legacy-shape relay-forwarded traffic) — 401 office_only + audit", () => {
     const res = makeRes();
     const ok = requireOfficeControlAuthority(
       makeReq({ remote: "127.0.0.1", forwarded: "198.51.100.9", path: "/pipeline/start", id: "corr-7" }),
@@ -109,7 +123,36 @@ describe("requireOfficeControlAuthority", () => {
         input: expect.objectContaining({
           path: "/pipeline/start",
           remote: "127.0.0.1",
+          cameThroughRelay: false,
           forwarded: "198.51.100.9",
+        }),
+      }),
+    );
+  });
+
+  it("BLOCKS loopback WITH x-relay-verified-ip (the real header shape ip-sanitize.js produces — the regression this test guards) — 401 office_only + audit", () => {
+    // This is the actual production shape post deep-scan fix-wave 2026-07-10:
+    // railway-relay/ip-sanitize.js deletes x-forwarded-for and stamps
+    // x-relay-verified-ip instead, on EVERY relay-tunneled request. A guard
+    // that only checked `!forwarded` (the pre-fix logic) would incorrectly
+    // PASS this exact shape — that was the CRITICAL regression.
+    const res = makeRes();
+    const ok = requireOfficeControlAuthority(
+      makeReq({ remote: "127.0.0.1", relayVerifiedIp: "198.51.100.9", path: "/pipeline/start", id: "corr-8" }),
+      res as any,
+      "admin.pipeline_mutation_blocked",
+    );
+    expect(ok).toBe(false);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.getBody().error).toBe("office_only");
+    expect(insertAuditRowSafe).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "admin.pipeline_mutation_blocked",
+        correlationId: "corr-8",
+        input: expect.objectContaining({
+          remote: "127.0.0.1",
+          cameThroughRelay: true,
+          forwarded: null,
         }),
       }),
     );

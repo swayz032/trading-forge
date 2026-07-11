@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { timingSafeEqual } from "node:crypto";
 import { verifySession, COOKIE_NAME } from "../lib/slumhouse/session.js";
 import { adminSessionFromCookie } from "../lib/slumhouse/admin-session.js";
 
@@ -92,7 +93,15 @@ export async function authMiddleware(
   // 1. Bearer API key
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith("Bearer ")) {
-    if (process.env.API_KEY && authHeader.slice(7) === process.env.API_KEY) {
+    // deep-scan libs/discord F-2 (2026-07-06): constant-time compare (was plain ===), matching the codebase's
+    // timingSafeEqual bar (slumhouse/session, admin-session, carter-auth) — no timing oracle on the primary key.
+    const provided = authHeader.slice(7);
+    const expected = process.env.API_KEY;
+    if (
+      expected &&
+      provided.length === expected.length &&
+      timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
+    ) {
       next();
       return;
     }
@@ -109,7 +118,12 @@ export async function authMiddleware(
   // 3. Discord Slumhouse cookie — read-only surface
   if (req.method === "GET" || req.method === "HEAD") {
     const cookieHeader = req.headers.cookie ?? "";
-    const m = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
+    // Anchor to a cookie boundary (deep-scan 2026-07-09, LOW): without (?:^|;\s*) a
+    // cookie whose name merely ENDS WITH COOKIE_NAME (e.g. `xslumhouse_sid=…`)
+    // substring-matches and gets decoded as the session value. Not privilege-escalation
+    // (still must pass verifySession HMAC) but a defense-in-depth gap — align to the
+    // already-hardened siblings require-session.ts:43 + this file's slumhouse parser.
+    const m = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`));
     if (m) {
       const ver = verifySession(decodeURIComponent(m[1]));
       if (ver.ok) {

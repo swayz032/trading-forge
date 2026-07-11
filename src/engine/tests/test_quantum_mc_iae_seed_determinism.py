@@ -82,27 +82,35 @@ def test_iae_estimate_bit_exact_across_seeded_calls():
     not AER_SAMPLER_AVAILABLE,
     reason="requires qiskit-aer (Sampler primitive unavailable in this env)",
 )
-def test_iae_estimate_differs_across_different_seeds():
-    """Different seeds → estimated_value should differ (seed is actually wired).
+def test_iae_estimates_the_true_breach_probability():
+    """IAE must ESTIMATE the true breach amplitude (proves it actually runs, not stuck at a default).
 
-    This test proves the seed parameter is not a no-op. If both seeds produce
-    the same result the seed plumbing is broken (silently ignored by the sampler).
-
-    Note: there is a very small probability that both seeds produce the same IAE
-    estimate by coincidence. If this test is flaky, increase n_qubits or use a
-    threshold that splits the distribution more unevenly.
+    CORRECTED 2026-07-06: the previous version of this test asserted `estimate(seed=42) != estimate(seed=43)`
+    to "prove the seed is wired". That premise is WRONG for amplitude estimation — Iterative Amplitude
+    Estimation CONVERGES to the true amplitude to within epsilon regardless of seed (seed-invariance of a
+    converged estimate is the correct, desired behavior, not broken plumbing). Installing qiskit-aer
+    un-skipped the old test and it (correctly) found identical 0.5 across seeds — because the model's true
+    breach prob at threshold=0.5 IS exactly 0.35+0.15=0.5. The right invariants are (a) the estimate matches
+    the true amplitude per input, and (b) same seed is reproducible. Verified directly: thresholds 0.5/1.5/-0.5
+    → 0.50/0.15/0.80, matching the bin masses above each threshold.
     """
     model = _make_model()
+    # bins=[-2,-0.5,0.5,1.5,3.0], probs=[0.2,0.3,0.35,0.15]. Breach = mass strictly above threshold.
+    for threshold, true_prob in [(0.5, 0.50), (1.5, 0.15), (-0.5, 0.80)]:
+        result = run_quantum_breach_estimation(
+            model, threshold=threshold, epsilon=0.05, alpha=0.05, seed=42
+        )
+        assert abs(result.estimated_value - true_prob) <= 0.05, (
+            f"IAE estimate {result.estimated_value:.4f} at threshold={threshold} is not within epsilon "
+            f"of the true breach prob {true_prob} — the amplitude estimator is not tracking the input."
+        )
 
-    result_42 = run_quantum_breach_estimation(
-        model, threshold=0.5, epsilon=0.05, alpha=0.05, seed=42
-    )
-    result_43 = run_quantum_breach_estimation(
-        model, threshold=0.5, epsilon=0.05, alpha=0.05, seed=43
-    )
 
-    assert result_42.estimated_value != result_43.estimated_value, (
-        "IAE estimates are identical for seed=42 and seed=43 — seed may not be "
-        "plumbed through to the AerSampler. If this is a rare collision, re-run; "
-        "persistent failure indicates broken seed wiring."
+def test_iae_is_reproducible_for_the_same_seed():
+    """Same seed → identical estimate (the actual determinism/reproducibility guarantee the seed provides)."""
+    model = _make_model()
+    a = run_quantum_breach_estimation(model, threshold=0.5, epsilon=0.05, alpha=0.05, seed=42)
+    b = run_quantum_breach_estimation(model, threshold=0.5, epsilon=0.05, alpha=0.05, seed=42)
+    assert a.estimated_value == b.estimated_value, (
+        "IAE is not reproducible for a fixed seed — the seed is NOT deterministically plumbed to the sampler."
     )

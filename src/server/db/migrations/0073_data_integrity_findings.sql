@@ -18,7 +18,7 @@
 -- affected_entity_id is nullable — some checks affect the whole system, not a single entity.
 -- resolved starts false; operator flips to true after investigating.
 
-CREATE TABLE data_integrity_findings (
+CREATE TABLE IF NOT EXISTS data_integrity_findings (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   run_at               timestamp DEFAULT now() NOT NULL,
   check_type           text NOT NULL,        -- reconciliation | drift_detection
@@ -31,15 +31,15 @@ CREATE TABLE data_integrity_findings (
 );
 
 -- Primary operational query: unresolved findings needing attention
-CREATE INDEX idx_data_integrity_unresolved
+CREATE INDEX IF NOT EXISTS idx_data_integrity_unresolved
   ON data_integrity_findings(check_type, severity)
   WHERE resolved = false;
 
 -- Recency index for "latest run" queries
-CREATE INDEX idx_data_integrity_run_at
+CREATE INDEX IF NOT EXISTS idx_data_integrity_run_at
   ON data_integrity_findings(run_at DESC);
 
 -- Entity lookup: "all findings for this backtest/strategy"
-CREATE INDEX idx_data_integrity_entity
+CREATE INDEX IF NOT EXISTS idx_data_integrity_entity
   ON data_integrity_findings(affected_entity_type, affected_entity_id)
   WHERE affected_entity_id IS NOT NULL;

@@ -5,10 +5,28 @@ Python-side parity tests for the CPCV purge logic in the RL training data loader
 
 Scope:
   - Verifies load_backtest_bar_data(cpcv_purge=True) from db_loader.py rejects
-    bars with IS/OOS overlap (mirrors the TS gate in rl-training-cpcv-gate.ts).
+    bars with IS/OOS overlap — this IS the real enforcement site (called from
+    quantum_rl_agent.py::train_regime_conditioned_policies via
+    src.engine.replay.db_loader.load_backtest_bar_data). Deep-Scan #22
+    fix-wave-2 (2026-07-07, FIX C1) removed the orphan TS re-check
+    (rl-training-cpcv-gate.ts::validateRlTrainingCpcvPurge) that used to be
+    described as mirroring this logic: it had zero production callers and was
+    structurally a permanent no-op (quantum_rl_agent.py always persists
+    cpcv_fold_id=None on the quantum_rl_runs INSERT — "bar-level fold join not
+    wired here" — so a gate keyed on that column could never see a non-null
+    fold id to check). The purge that actually matters happens earlier, at bar
+    LOAD time, in load_backtest_bar_data below.
   - Tests the CPCV purge contract from WalkForwardFold validation in db_loader.py
     (oos_start > is_end invariant per Lopez de Prado).
   - Uses only stdlib + mocking — no real DB connection.
+  - Deep-Scan #22 FIX C1 also removed this file's own `cpcv_purge_training_rows`
+    helper + `TestCpcvTrainingRowPurge` class: that helper existed ONLY to mirror
+    the deleted TS gate's row-level (cpcv_fold_id-keyed) purge concept, which had
+    no production counterpart on either side of the codebase (db_loader.py purges
+    at bar-load time, not by filtering already-persisted quantum_rl_runs rows).
+    Keeping a python-side duplicate of a dead concept after deleting its TS
+    twin would have been the same false-confidence pattern this fix-wave exists
+    to close, just moved to the other language.
 
 Note on WDAC / Cython DLLs (feedback_windows_wdac_python.md):
   WDAC blocks numpy.random Cython DLLs on the Skytech tower. These tests are
@@ -21,8 +39,11 @@ from datetime import date
 from typing import Optional
 
 # ─── CPCV purge logic under test ─────────────────────────────────────────────
-# We test the CPCV purge contract as implemented in db_loader.py's fold validation.
-# The TS gate (rl-training-cpcv-gate.ts) mirrors this logic for the TS side.
+# We test the CPCV purge contract as implemented in db_loader.py's fold validation
+# and in load_backtest_bar_data's bar-level purge — the real enforcement path.
+# (The TS re-check this comment used to reference, rl-training-cpcv-gate.ts, was
+# removed Deep-Scan #22 fix-wave-2 2026-07-07 FIX C1 as dead/no-op orphan code —
+# see the module docstring above.)
 
 # Minimal re-implementation of the purge contract for pure-Python testing.
 # This mirrors the EXACT rule enforced in db_loader.py:
@@ -65,58 +86,6 @@ def cpcv_purge_validate_folds(folds: list[dict]) -> tuple[list[dict], list[dict]
             leaked.append(fold)
 
     return clean, leaked
-
-
-def cpcv_purge_training_rows(
-    training_rows: list[dict],
-    oos_folds: list[dict],
-) -> tuple[list[dict], list[dict]]:
-    """
-    Filter training rows: remove any IS-phase row whose bar_date falls within
-    any OOS fold's [oos_start, oos_end] range.
-
-    Returns:
-        (clean_rows, purged_rows)
-
-    Mirrors rl-training-cpcv-gate.ts::validateRlTrainingCpcvPurge.
-    """
-    # Build OOS date ranges
-    oos_ranges: list[tuple[date, date]] = []
-    for fold in oos_folds:
-        oos_start = _parse_date(fold.get("oos_start"))
-        oos_end = _parse_date(fold.get("oos_end"))
-        if oos_start and oos_end:
-            oos_ranges.append((oos_start, oos_end))
-
-    clean: list[dict] = []
-    purged: list[dict] = []
-
-    for row in training_rows:
-        # Only check IS-phase rows with a bar_date and cpcv_fold_id
-        if row.get("fold_phase") != "is":
-            clean.append(row)
-            continue
-        if row.get("cpcv_fold_id") is None:
-            clean.append(row)
-            continue
-        bar_date_str = row.get("bar_date")
-        if not bar_date_str:
-            clean.append(row)
-            continue
-
-        bar_date = _parse_date(bar_date_str)
-        if bar_date is None:
-            clean.append(row)
-            continue
-
-        # Check if bar_date falls within any OOS range
-        leaked = any(oos_start <= bar_date <= oos_end for oos_start, oos_end in oos_ranges)
-        if leaked:
-            purged.append(row)
-        else:
-            clean.append(row)
-
-    return clean, purged
 
 
 # ─── Tests ───────────────────────────────────────────────────────────────────
@@ -173,83 +142,6 @@ class TestCpcvFoldValidation(unittest.TestCase):
         self.assertEqual(len(clean), 2)
         self.assertEqual(len(leaked), 1)
         self.assertEqual(leaked[0]["window_id"], "w2")
-
-
-class TestCpcvTrainingRowPurge(unittest.TestCase):
-    """Tests for CPCV purge at the training row level (RL training data path)."""
-
-    def setUp(self):
-        """Standard OOS fold for tests."""
-        self.oos_folds = [
-            {"fold_id": 1, "oos_start": "2024-04-01", "oos_end": "2024-04-30"},
-            {"fold_id": 2, "oos_start": "2024-07-01", "oos_end": "2024-07-31"},
-        ]
-
-    def test_clean_is_rows_are_preserved(self):
-        """IS rows with bar_dates outside OOS ranges are not purged."""
-        rows = [
-            {"row_id": 1, "cpcv_fold_id": 1, "fold_phase": "is", "bar_date": "2024-03-15"},
-            {"row_id": 2, "cpcv_fold_id": 1, "fold_phase": "is", "bar_date": "2024-02-20"},
-        ]
-        clean, purged = cpcv_purge_training_rows(rows, self.oos_folds)
-        self.assertEqual(len(clean), 2)
-        self.assertEqual(len(purged), 0)
-
-    def test_leaked_is_row_detected_inside_oos_range(self):
-        """IS row with bar_date within OOS range is flagged as leakage."""
-        rows = [
-            {"row_id": 1, "cpcv_fold_id": 1, "fold_phase": "is", "bar_date": "2024-04-15"},
-        ]
-        clean, purged = cpcv_purge_training_rows(rows, self.oos_folds)
-        self.assertEqual(len(clean), 0)
-        self.assertEqual(len(purged), 1)
-
-    def test_oos_rows_skipped_by_purge(self):
-        """OOS-phase rows are never purged (they are not training rows)."""
-        rows = [
-            {"row_id": 1, "cpcv_fold_id": 1, "fold_phase": "oos", "bar_date": "2024-04-15"},
-        ]
-        clean, purged = cpcv_purge_training_rows(rows, self.oos_folds)
-        self.assertEqual(len(clean), 1)
-        self.assertEqual(len(purged), 0)
-
-    def test_live_paper_rows_without_fold_id_skipped(self):
-        """Live-paper rows (cpcv_fold_id=None) are never purged."""
-        rows = [
-            {"row_id": 1, "cpcv_fold_id": None, "fold_phase": "is", "bar_date": "2024-04-15"},
-        ]
-        clean, purged = cpcv_purge_training_rows(rows, self.oos_folds)
-        self.assertEqual(len(clean), 1)
-        self.assertEqual(len(purged), 0)
-
-    def test_empty_oos_folds_passes_all_rows(self):
-        """No OOS folds → no purge possible → all rows pass."""
-        rows = [
-            {"row_id": 1, "cpcv_fold_id": 1, "fold_phase": "is", "bar_date": "2024-04-15"},
-        ]
-        clean, purged = cpcv_purge_training_rows(rows, [])
-        self.assertEqual(len(clean), 1)
-        self.assertEqual(len(purged), 0)
-
-    def test_boundary_dates_inclusive(self):
-        """OOS boundary dates are inclusive: oos_start and oos_end are both leaked."""
-        rows = [
-            {"row_id": 1, "cpcv_fold_id": 1, "fold_phase": "is", "bar_date": "2024-04-01"},  # boundary start
-            {"row_id": 2, "cpcv_fold_id": 1, "fold_phase": "is", "bar_date": "2024-04-30"},  # boundary end
-            {"row_id": 3, "cpcv_fold_id": 1, "fold_phase": "is", "bar_date": "2024-03-31"},  # 1 day before — clean
-        ]
-        clean, purged = cpcv_purge_training_rows(rows, self.oos_folds)
-        self.assertEqual(len(purged), 2)
-        self.assertEqual(len(clean), 1)
-        self.assertEqual(clean[0]["row_id"], 3)
-
-    def test_multiple_oos_folds_checked(self):
-        """Rows overlapping the second OOS fold are also detected."""
-        rows = [
-            {"row_id": 1, "cpcv_fold_id": 2, "fold_phase": "is", "bar_date": "2024-07-15"},
-        ]
-        clean, purged = cpcv_purge_training_rows(rows, self.oos_folds)
-        self.assertEqual(len(purged), 1)
 
 
 if __name__ == "__main__":

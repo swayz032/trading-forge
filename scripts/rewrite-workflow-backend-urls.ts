@@ -9,7 +9,8 @@
  * Cloudflare Tunnel, ngrok, etc.).
  *
  * Usage:
- *   TF_BACKEND_PUBLIC_URL=https://tf.tail123.ts.net npx tsx scripts/rewrite-workflow-backend-urls.ts
+ *   TF_BACKEND_PUBLIC_URL=https://tf.tail123.ts.net npx tsx scripts/rewrite-workflow-backend-urls.ts            # DRY-RUN (default)
+ *   TF_BACKEND_PUBLIC_URL=https://tf.tail123.ts.net npx tsx scripts/rewrite-workflow-backend-urls.ts --apply    # actually rewrite files
  *
  * Replaces every:   http://host.docker.internal:4000  →  $TF_BACKEND_PUBLIC_URL
  *                   https://host.docker.internal:4000 →  $TF_BACKEND_PUBLIC_URL
@@ -19,11 +20,23 @@
  * to be re-imported via scripts/import-workflows-to-railway-n8n.ts to push the
  * updated URLs to Railway.
  *
+ * F-4 (deep-scan): like the importer, this OVERWRITES the local workflow JSON in
+ * place with no diff and no confirmation. It now DEFAULTS to a dry-run that prints
+ * which files WOULD change (and the replacement count) without writing; pass
+ * `--apply` to actually rewrite the files. Mirrors the safe default in
+ * scripts/wipe-strategy-bucket-fresh-start.ts and the importer above.
+ *
  * Idempotent — running twice with the same target URL is a no-op.
  */
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
+
+// F-4: dry-run by DEFAULT — an unguarded in-place rewrite silently mutates the
+// workflow source of truth. Only `--apply` writes files.
+const ARGS = new Set(process.argv.slice(2));
+const IS_APPLY = ARGS.has("--apply");
+const IS_DRY_RUN = !IS_APPLY;
 
 const TARGET = process.env.TF_BACKEND_PUBLIC_URL;
 if (!TARGET) {
@@ -33,6 +46,12 @@ if (!TARGET) {
 if (!/^https?:\/\//.test(TARGET)) {
   console.error("ERROR: TF_BACKEND_PUBLIC_URL must include http:// or https://");
   process.exit(1);
+}
+
+if (IS_DRY_RUN) {
+  console.log("=== DRY-RUN (default) — no files will be modified. Re-run with --apply to rewrite. ===\n");
+} else {
+  console.log("=== --apply — writing rewritten workflow JSON in place. ===\n");
 }
 
 const WORKFLOWS_DIR = path.resolve("workflows/n8n");
@@ -96,16 +115,22 @@ for (const file of fs.readdirSync(WORKFLOWS_DIR).filter((f) => f.endsWith(".json
     }
   }
   if (fileReplacements > 0) {
-    fs.writeFileSync(filePath, updated, "utf-8");
+    if (!IS_DRY_RUN) {
+      fs.writeFileSync(filePath, updated, "utf-8");
+    }
     touchedFiles++;
     totalReplacements += fileReplacements;
-    console.log(`  ${file}  — ${fileReplacements} replacements`);
+    console.log(`  ${IS_DRY_RUN ? "~ WOULD REWRITE " : "  "}${file}  — ${fileReplacements} replacements`);
   }
 }
 
-console.log(`\n=== Summary ===`);
+console.log(`\n=== Summary (${IS_DRY_RUN ? "DRY-RUN — no files modified" : "APPLIED"}) ===`);
 console.log(`  Files scanned:    ${totalFiles}`);
-console.log(`  Files updated:    ${touchedFiles}`);
+console.log(`  Files ${IS_DRY_RUN ? "that would change" : "updated"}:    ${touchedFiles}`);
 console.log(`  Total replacements: ${totalReplacements}`);
 console.log(`  Target URL:       ${TARGET}`);
-console.log(`\nNext step: re-run scripts/import-workflows-to-railway-n8n.ts to push updates to Railway.`);
+if (IS_DRY_RUN) {
+  console.log(`\nDry-run complete — no files were written. Re-run with --apply to rewrite, then re-run scripts/import-workflows-to-railway-n8n.ts --apply to push updates to Railway.`);
+} else {
+  console.log(`\nNext step: re-run scripts/import-workflows-to-railway-n8n.ts --apply to push updates to Railway.`);
+}

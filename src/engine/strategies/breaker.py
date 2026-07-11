@@ -12,13 +12,20 @@ was broken through with a confirmed Break of Structure, not just any price cross
 """
 
 from __future__ import annotations
+
 import numpy as np
 import polars as pl
 from numba import njit
-from src.engine.strategy_base import BaseStrategy
+
 from src.engine.indicators.core import compute_atr
-from src.engine.indicators.market_structure import detect_swings, detect_bos
-from src.engine.indicators.order_flow import detect_bullish_ob, detect_bearish_ob, detect_breaker, compute_breaker_signals
+from src.engine.indicators.market_structure import detect_bos, detect_swings
+from src.engine.indicators.order_flow import (
+    compute_breaker_signals,
+    detect_bearish_ob,
+    detect_breaker,
+    detect_bullish_ob,
+)
+from src.engine.strategy_base import BaseStrategy
 
 
 @njit(cache=True)

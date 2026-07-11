@@ -219,6 +219,40 @@ def compute_htf_narrative(
         current_bar_idx: Index of the current bar in the exec-TF DataFrame.
                         Written to HtfNarrative.computed_at_bar_idx for traceability.
 
+    CAUSAL SAFETY — CALLER CONTRACT (deep-scan #22 LOW item, verified
+    2026-07-06, confirmed as documentation hardening — NOT a functional
+    fix): this function does NOT slice `intraday_bars` by `current_bar_idx`.
+    `current_bar_idx` indexes a DIFFERENT frame (the exec-TF DataFrame,
+    which may have a different bar count/granularity than `intraday_bars`)
+    and is stored purely for replay traceability
+    (`HtfNarrative.computed_at_bar_idx`) — see the existing test suite
+    (`test_computed_at_bar_idx_preserved` etc.) which passes
+    `current_bar_idx` values (42, 77, ...) that exceed the length of the
+    4-row `intraday_bars` fixture, proving it was never meant to be a
+    positional index into this frame. Attempting to slice
+    `intraday_bars[:current_bar_idx+1]` here would therefore be WRONG, not
+    a fix — it would misalign against whatever frame `current_bar_idx`
+    actually indexes.
+
+    The REAL causal-safety contract is upstream: `intraday_bars` MUST
+    already end at "now" (no bars at or after the current bar) when the
+    caller passes it in. `_compute_daily_dealing()` reads
+    `intraday_bars["close"][-1]` as "current price", and
+    `_compute_asian_range`/`_compute_london_bias`/`_compute_ny_bias` filter
+    the WHOLE frame by session time-of-day — none of these are bounded by
+    `current_bar_idx`. A caller that passes a full trading day (or full
+    session) instead of "bars up to now" will leak future price action —
+    the same class of look-ahead bug FIX 1 (deep-scan #22) closed for
+    `compute_htf_context()`'s `four_h_df`/`one_h_df`.
+
+    This is currently a LATENT risk only: as of this note, `compute_bias()`
+    (the sole production caller of this function, in
+    `src/engine/context/bias_engine.py`) is itself never called with
+    `intraday_bars` set by any shipped engine path (`context_runner.py`,
+    `backtester.py`) — this function is pure-functional and fully tested
+    but DORMANT in production. Any future caller MUST pre-truncate
+    `intraday_bars` to the current bar before calling.
+
     Returns:
         HtfNarrative with all four sub-dataclasses populated. Individual fields
         may be None when insufficient data is available (fail-open: never raises).

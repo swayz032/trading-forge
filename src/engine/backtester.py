@@ -579,7 +579,9 @@ def _build_eligibility_gate_mode_disclosure(
 # Production defaults (P0-3 hardening):
 #   TF_BACKTEST_SKIP_MODE       ∈ {off, shadow, enforce}  default: enforce
 #   TF_BACKTEST_ANTI_SETUP_MODE ∈ {off, shadow, enforce}  default: enforce
-#   TF_BACKTEST_COMPLIANCE_MODE ∈ {off, shadow, enforce}  default: shadow
+#   BACKTEST_COMPLIANCE_MODE (canonical) / TF_BACKTEST_COMPLIANCE_MODE (legacy alias)
+#     ∈ {off, shadow, enforce}  default: enforce  (W27.5 C.2 — corrected 2026-07-09;
+#     this comment previously said "shadow", contradicting the resolver below at line ~678)
 #
 # In "shadow" mode, decisions are computed and counted but signals pass through
 # unchanged — for parity-delta logging.
@@ -4536,8 +4538,13 @@ def run_backtest(
         # Stage 2: Volume-based partial fill (HIGH #6).
         # Apply AFTER the RSI gate so we only degrade fills that passed Stage 1.
         # Env var BACKTEST_PARTIAL_FILL_ENABLED controls activation (default: true).
+        # next_bar_fill=True (HIGH bar-alignment fix 2026-07-09): this engine fills
+        # a signal-bar-N order on bar N+1 (np.roll below), so the order consumes bar
+        # N+1's volume — compute the degradation ratio against the execution bar, not
+        # the signal bar. Sizes stay signal-aligned here and are re-aligned to the
+        # rolled entries after the shift below.
         sizes, _vol_fill_ratios, _partial_fill_audit = apply_volume_partial_fills(
-            entries_np, sizes, df,
+            entries_np, sizes, df, next_bar_fill=True,
         )
 
         long_adjusted_sizes = sizes.copy()  # Save before rolling for re-alignment
@@ -4615,7 +4622,11 @@ def run_backtest(
             # degraded. Apply the identical Stage 2 model to the short mask
             # so both directions share the same fill-realism contract.
             short_adjusted_sizes, _short_vol_fill_ratios, _short_partial_fill_audit = (
-                apply_volume_partial_fills(short_entries_np, short_adjusted_sizes, df)
+                # next_bar_fill=True (HIGH bar-align fix 2026-07-09): short_entries_np is
+                # rolled +1 identically to the long side, so shorts also fill on bar N+1
+                # and must degrade against the execution bar. Omitting it (the long-only
+                # asymmetry an independent cert caught) left shorts on legacy same-bar.
+                apply_volume_partial_fills(short_entries_np, short_adjusted_sizes, df, next_bar_fill=True)
             )
             # Merge short-side counts into the long-side audit dict so
             # engine_audit.partial_fill_modeled reflects BOTH directions
@@ -5099,6 +5110,12 @@ def run_backtest(
             df["ts_event"].to_list() if "ts_event" in df.columns else []
         )
         _roll_spread_audit_rows: list[dict] = []
+        # deep-scan backtest-engine F-2 (HIGH, 2026-07-06): capture FULL-PRECISION (entry, exit) prices per
+        # trade so the bar-level equity loop below reconciles against the same values `gross`/`net_pnl` used,
+        # NOT the 4-decimal ROUNDED trade-dict fields. The rounded fields (round(exit_p, 4) at ~line 5225)
+        # accumulate representation error that trips the $1 reconciliation guard at MCL's $100/point scale —
+        # the SAME "Defect-6" bug fixed only in run_class_backtest via _raw_price_pairs_cls (~line 7187).
+        _raw_price_pairs: list[tuple[float, float]] = []
 
         for trade_i, (_, row) in enumerate(trades_records.iterrows()):
             entry_p = float(row["Avg Entry Price"])
@@ -5295,6 +5312,8 @@ def run_backtest(
                 trade["mfe"] = None
 
             trades_list.append(trade)
+            # deep-scan backtest-engine F-2: parallel full-precision price capture (same order as trades_list).
+            _raw_price_pairs.append((entry_p, exit_p))
 
         trade_pnls_arr = np.array(trade_pnls_list)
         winners = trade_pnls_arr[trade_pnls_arr > 0]
@@ -5318,11 +5337,18 @@ def run_backtest(
     bar_dollar_pnls = np.zeros(n_bars)
 
     if trades_list:
-        for trade in trades_list:
+        for _bar_pnl_i, trade in enumerate(trades_list):
             t_entry_idx = int(trade.get("Entry Idx", 0))
             t_exit_idx = int(trade.get("Exit Idx", t_entry_idx + 1))
-            t_entry_p = float(trade.get("Avg Entry Price", 0))
-            t_exit_p = float(trade.get("Avg Exit Price", 0))
+            # deep-scan backtest-engine F-2: read the FULL-PRECISION captured prices (index-aligned with
+            # trades_list) so the equity curve reconciles against the same values gross/net_pnl used — NOT the
+            # 4-decimal ROUNDED trade-dict fields (which drift the recon guard at MCL's $100/point scale).
+            if _bar_pnl_i < len(_raw_price_pairs):
+                t_entry_p, t_exit_p = _raw_price_pairs[_bar_pnl_i]
+            else:
+                # Defensive fallback (should never trigger — the two lists append in lockstep).
+                t_entry_p = float(trade.get("Avg Entry Price", 0))
+                t_exit_p = float(trade.get("Avg Exit Price", 0))
             # F-6 FIX: Use int() to match the integer contract count used in P&L
             # computation. float(Size) was correct today (sizes are integer-valued
             # floats) but would silently misreconcile if fractional-Kelly sizing is
@@ -5360,13 +5386,21 @@ def run_backtest(
             entry_slip = float(trade.get("EntrySlipCost", slip_cost / 2.0))
             exit_slip = float(trade.get("ExitSlipCost", slip_cost / 2.0))
             half_comm = comm_cost / 2.0
+            # deep-scan backtest-engine F-1 (CRITICAL, 2026-07-06): the DSL path's bar-level equity loop never
+            # deducted RollSpreadCost even though net_pnl (trade-level) subtracts it — the SAME "Defect-4" bug
+            # that was fixed ONLY in run_class_backtest (~line 7450). On a backtest holding a position across a
+            # real CME roll day at canonical size (9 MES × $3.75 = ~$33.75 > the $1 recon tolerance) the equity
+            # curve diverged from summed-trade P&L → run_backtest's own reconciliation guard HARD-CRASHED with
+            # "RECONCILIATION FAILED" (or drifted at tiny sizes). Deduct the combined entry+exit roll charge at
+            # the EXIT bar, exactly like the class path. Equity-curve-only change; trade signals/counts unchanged.
+            roll_cost = float(trade.get("RollSpreadCost", 0.0))
             if t_entry_idx < n_bars:
                 bar_dollar_pnls[t_entry_idx] -= (entry_slip + half_comm)
             if t_exit_idx < n_bars:
-                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm)
-            assert abs((entry_slip + half_comm) + (exit_slip + half_comm) - (slip_cost + comm_cost)) < 0.01, (
+                bar_dollar_pnls[t_exit_idx] -= (exit_slip + half_comm + roll_cost)
+            assert abs((entry_slip + half_comm) + (exit_slip + half_comm + roll_cost) - (slip_cost + comm_cost + roll_cost)) < 0.01, (
                 f"Friction split invariant: entry_slip={entry_slip:.4f}, exit_slip={exit_slip:.4f}, "
-                f"comm={comm_cost:.4f}, expected_total={slip_cost + comm_cost:.4f}"
+                f"comm={comm_cost:.4f}, roll={roll_cost:.4f}, expected_total={slip_cost + comm_cost + roll_cost:.4f}"
             )
 
     equity = STARTING_CAPITAL + np.cumsum(bar_dollar_pnls)
@@ -6545,6 +6579,16 @@ def run_class_backtest(
     This is the bridge for class-based strategies (ICT strategies in src/engine/strategies/).
     The strategy's compute() method produces entry/exit signals, then we feed those
     into the same vectorbt pipeline as the DSL backtester.
+
+    ⚠️ KNOWN LOWER-FIDELITY GAP (deep-scan 2026-07-09, ratified — documented, not yet
+    closed): this path has NO fill-model wiring. run_backtest() (the DSL path) now applies
+    the Stage-2 volume-based partial-fill model (next-bar-aligned) once fill_model is wired;
+    run_class_backtest does not, so archetype/class strategies backtest systematically MORE
+    OPTIMISTIC than DSL strategies on identical large-size/thin-volume conditions while both
+    feed the same lifecycle promotion gates (B14/WFE/PBO). FOLLOW-UP: thread the same
+    next_bar_fill=True apply_volume_partial_fills call into this function's long/short entry
+    processing, or gate archetype-strategy promotion on a documented lower-fidelity tier.
+    Until then, treat archetype backtests as an optimistic upper bound on fill quality.
 
     Args:
         warmup_data: Optional IS (in-sample) data to prepend before running strategy.compute().

@@ -29,7 +29,7 @@
  *   P1  30 matching signals (zero divergence) — expects pass
  *   P2  25 signals with 8% divergence — expects blocked
  *   P3  19 signals (below MIN_SAMPLE_SIZE) — expects insufficient_samples
- *   P4  0 signals (empty) — expects legacy_unavailable (grandfather)
+ *   P4  0 signals (empty) — expects insufficient_samples BLOCK (fail-closed, parity with cron; HIGH-1 fix)
  *   P5  20 signals exactly 5% divergence — expects blocked (boundary inclusive)
  *   P6  21 signals with 0% divergence — expects pass
  *   P7  Mixed: 22 signals, 1 direction + 1 size violation (2/22 ≈ 9.1%) — expects blocked
@@ -55,41 +55,33 @@ interface CronGateResult {
 }
 
 /**
- * Simulate the Gate 2.5 cron-sweep inline logic from lifecycle-service.ts.
- * This is the EXACT decision tree the cron uses — extracted inline here so
- * that the parity test is self-documenting and not a live-DB call.
+ * Faithful model of the REAL Gate 2.5 cron-sweep decision tree from
+ * lifecycle-service.ts (~5054-5128).
  *
- * The cron logic (from lifecycle-service.ts ~2349-2495):
- *
- *   if shadowSignals is empty:
- *     → "lifecycle.shadow_divergence_check_unavailable_legacy" + PROCEED
+ * CORRECTED 2026-07-09 (deep-scan HIGH-2, operator-ratified): the prior
+ * `simulateCronGate2_5` FABRICATED a `shadowSignals.length === 0 → ok:true
+ * (legacy_unavailable)` short-circuit that the production cron DOES NOT HAVE.
+ * The real cron calls `compareShadowToBacktest(sSignals, backtestExpected)`
+ * directly (lifecycle-service.ts:5054) and `continue`s (BLOCKS) on `!ok`
+ * (line 5128) — including `insufficient_samples` at 0 signals. The fabricated
+ * oracle made the parity suite structurally unable to detect the manual path's
+ * false-green at 0 signals (HIGH-1). This model has NO such short-circuit.
  *
  *   const divergenceResult = compareShadowToBacktest(sSignals, backtestExpected)
  *   if (!divergenceResult.ok):
- *     const isInsufficientSamples = divergenceResult.reason === "insufficient_samples"
+ *     isInsufficientSamples = reason === "insufficient_samples"
  *     auditAction = isInsufficientSamples
  *       ? "lifecycle.shadow_divergence_insufficient_samples"
  *       : "lifecycle.shadow_divergence_blocked"
- *     → BLOCK (continue)
+ *     → BLOCK (continue)     // 0 signals lands HERE (0 < MIN_SAMPLE_SIZE)
  *   else:
- *     auditAction = "lifecycle.shadow_promotion_passed"
- *     → PROMOTE
+ *     auditAction = "lifecycle.shadow_promotion_passed" → PROMOTE
  */
-function simulateCronGate2_5(
+function cronGate2_5Verdict(
   shadowSignals: ShadowSignal[],
   backtestExpected: ExpectedSignal[],
 ): CronGateResult {
-  // Cron catches exceptions and routes to legacy_unavailable.
-  // For empty arrays it also proceeds (Wave 29 Pass A.3 grandfather).
-  if (!shadowSignals || shadowSignals.length === 0) {
-    return {
-      ok: true,
-      auditAction: "lifecycle.shadow_divergence_check_unavailable_legacy",
-      label: "legacy_unavailable",
-    };
-  }
-
-  const divergenceResult = compareShadowToBacktest(shadowSignals, backtestExpected);
+  const divergenceResult = compareShadowToBacktest(shadowSignals ?? [], backtestExpected ?? []);
 
   if (!divergenceResult.ok) {
     const isInsufficientSamples = divergenceResult.reason === "insufficient_samples";
@@ -172,9 +164,10 @@ const FIXTURES: ParityFixture[] = [
     backtestExpected: makeExpected(19),
   },
 
-  // P4: 0 signals → legacy_unavailable
+  // P4: 0 signals → insufficient_samples BLOCK (fail-closed, parity with cron)
+  // (HIGH-1 fix 2026-07-09: was legacy_unavailable→PASS on the manual path only)
   {
-    name: "P4: empty shadow signals → legacy_unavailable",
+    name: "P4: empty shadow signals → insufficient_samples BLOCK (fail-closed)",
     shadowSignals: [],
     backtestExpected: [],
   },
@@ -213,8 +206,8 @@ const FIXTURES: ParityFixture[] = [
 describe("evaluateShadowToPaperGate — parity with Gate 2.5 cron-sweep", () => {
   for (const fixture of FIXTURES) {
     it(fixture.name, () => {
-      // Step 1: Get the cron-sweep Gate 2.5 verdict (inline simulation)
-      const cronResult = simulateCronGate2_5(fixture.shadowSignals, fixture.backtestExpected);
+      // Step 1: Get the cron-sweep Gate 2.5 verdict (faithful model of the real cron)
+      const cronResult = cronGate2_5Verdict(fixture.shadowSignals, fixture.backtestExpected);
 
       // Step 2: Get the pure evaluator verdict
       const evaluatorInput: ShadowToPaperGateInput = {
@@ -241,5 +234,48 @@ describe("evaluateShadowToPaperGate — parity with Gate 2.5 cron-sweep", () => 
     const names = FIXTURES.map((f) => f.name);
     const unique = new Set(names);
     expect(unique.size).toBe(names.length);
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// HIGH-1 fail-closed lock (deep-scan 2026-07-09, operator-ratified)
+// Explicit, non-parametrized proof that the manual evaluator BLOCKS at 0/null
+// shadow signals — the training-serving-skew false-green that HIGH-1 closed.
+// This RED-fails against the pre-fix code (which returned passed:true /
+// legacy_unavailable at 0 signals) and GREENs after.
+// ──────────────────────────────────────────────────────────────────────────────
+describe("evaluateShadowToPaperGate — 0/null signals FAIL-CLOSED (HIGH-1)", () => {
+  const baseInput = {
+    backtestExpected: [] as ExpectedSignal[],
+    backtestExpectedCount: 0,
+    strategyId: STRATEGY_ID,
+    correlationId: "high1-fail-closed",
+  };
+
+  it("0 shadow signals → BLOCK (insufficient_samples), NOT legacy_unavailable pass", () => {
+    const r = evaluateShadowToPaperGate({ ...baseInput, shadowSignals: [] });
+    expect(r.passed).toBe(false);
+    expect(r.status).toBe("insufficient_samples");
+    expect(r.auditAction).toBe("lifecycle.shadow_divergence_insufficient_samples");
+    // Regression guard: the removed false-green path must never return again.
+    expect(r.status).not.toBe("legacy_unavailable");
+    expect(r.passed).not.toBe(true);
+  });
+
+  it("null shadow signals → BLOCK (no throw, fail-closed)", () => {
+    const r = evaluateShadowToPaperGate({
+      ...baseInput,
+      shadowSignals: null as unknown as ShadowSignal[],
+    });
+    expect(r.passed).toBe(false);
+    expect(r.status).toBe("insufficient_samples");
+  });
+
+  it("manual evaluator and cron model agree at 0 signals (both BLOCK)", () => {
+    const evalR = evaluateShadowToPaperGate({ ...baseInput, shadowSignals: [] });
+    const cronR = cronGate2_5Verdict([], []);
+    expect(evalR.passed).toBe(cronR.ok);           // both false
+    expect(evalR.auditAction).toBe(cronR.auditAction);
+    expect(evalR.status).toBe(cronR.label);        // both "insufficient_samples"
   });
 });

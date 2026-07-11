@@ -107,15 +107,19 @@ export interface ShadowToPaperGateInput {
  *
  *   "pass"                  — gate cleared; promotion allowed
  *   "blocked"               — divergence_pct >= threshold (hard block)
- *   "insufficient_samples"  — below the minimum sample floor (block until more signals)
- *   "legacy_unavailable"    — shadow_signals table/data absent (grandfather proceed)
+ *   "insufficient_samples"  — below the minimum sample floor, INCLUDING 0/null
+ *                             (fail-CLOSED block; parity with the cron path)
+ *   "legacy_unavailable"    — RETIRED 2026-07-09 (deep-scan HIGH-1): never emitted.
+ *                             0/null signals now fail-CLOSED to insufficient_samples.
+ *                             Member retained only for backward-compat with serialized
+ *                             audit_log rows written before the fix. Do NOT return it.
  *   "warning"               — reserved; not currently emitted
  */
 export type ShadowToPaperGateStatus =
   | "pass"
   | "blocked"
   | "insufficient_samples"
-  | "legacy_unavailable"
+  | "legacy_unavailable" // RETIRED — see note above; no live producer
   | "warning";
 
 /**
@@ -141,12 +145,11 @@ export interface ShadowToPaperGateResult {
   auditAction:
     | "lifecycle.shadow_divergence_blocked"
     | "lifecycle.shadow_divergence_insufficient_samples"
-    | "lifecycle.shadow_divergence_check_unavailable_legacy"
+    | "lifecycle.shadow_divergence_check_unavailable_legacy" // RETIRED 2026-07-09 (HIGH-1) — no live producer; kept for serialized-row compat
     | "lifecycle.shadow_promotion_passed"
     | null;
   /**
-   * Structured payload for the audit_log.result column.
-   * Always present (empty object on legacy_unavailable).
+   * Structured payload for the audit_log.result column. Always present.
    */
   auditPayload: Record<string, unknown>;
   /** Human-readable reason string. */
@@ -164,12 +167,13 @@ export interface ShadowToPaperGateResult {
  * Identical inputs always produce identical outputs.
  *
  * Decision tree (in order):
- *   1. shadowSignals null/empty → legacy_unavailable (proceed; grandfather window)
- *   2. shadowSignals.length < getMinSampleSize() → insufficient_samples (block)
- *   3. compareShadowToBacktest(shadowSignals, backtestExpected).ok === false
+ *   1. shadowSignals null/empty/< getMinSampleSize() → insufficient_samples (BLOCK,
+ *      fail-CLOSED; parity with the cron path — 0/null is NOT a grandfather pass,
+ *      deep-scan HIGH-1 fix 2026-07-09)
+ *   2. compareShadowToBacktest(shadowSignals, backtestExpected).ok === false
  *      a. reason==="insufficient_samples" (re-check from comparator) → insufficient_samples
  *      b. otherwise → blocked (divergence_pct >= threshold)
- *   4. otherwise → pass
+ *   3. otherwise → pass
  *
  * @param input  Pre-loaded signal arrays + context.
  * @param thresholdPct  Optional override for SHADOW_DIVERGENCE_THRESHOLD_PCT (for tests).
@@ -185,42 +189,35 @@ export function evaluateShadowToPaperGate(
   const effectiveThreshold = thresholdPct ?? getDivergenceThreshold();
   const effectiveMinSample = minSample ?? getMinSampleSize();
 
-  // ── Legacy unavailable: null or empty shadow signals ─────────────────────
-  // Grandfather window: pre-Wave-29 strategies that never ran in SHADOW mode.
-  // The lifecycle-service.ts cron catches exceptions and routes them to this
-  // audit action too; here we handle the data-absent case explicitly.
-  if (!shadowSignals || shadowSignals.length === 0) {
-    return {
-      passed: true,
-      status: "legacy_unavailable",
-      auditAction: "lifecycle.shadow_divergence_check_unavailable_legacy",
-      auditPayload: {
-        note: "No shadow signals found — legacy grandfather window, promotion proceeds",
-        strategyId,
-        correlationId: correlationId ?? null,
-        backtestExpectedCount,
-      },
-      reason: "legacy_unavailable: no shadow signals found (grandfather window)",
-    };
-  }
-
-  // ── Insufficient samples gate ─────────────────────────────────────────────
-  // Must accumulate at least effectiveMinSample shadow signals before a
-  // divergence verdict is statistically meaningful.
-  if (shadowSignals.length < effectiveMinSample) {
+  // ── Sample-size gate — FAIL-CLOSED at 0/null (deep-scan HIGH-1, operator-ratified 2026-07-09) ──
+  // Must accumulate at least effectiveMinSample shadow signals before a divergence
+  // verdict is statistically meaningful. 0 or null signals BLOCKS — matching the
+  // canonical autonomous-cron path (lifecycle-service.ts → compareShadowToBacktest([])
+  // → insufficient_samples → block; shadow-signal-divergence-checker.ts:175-183).
+  //
+  // PREVIOUSLY: null/empty returned passed:true ("legacy_unavailable") — a false-green
+  // on this HARD training-serving-skew gate (CLAUDE.md §12/§13, institutional failure
+  // mode #1) at the worst input, diverging from the cron which correctly fail-closes.
+  // A new graduate with un-wired shadow logging, or a transient DB error swallowed to []
+  // by the loader, would promote SHADOW→PAPER on the manual/n8n/HMAC path with the gate
+  // validating nothing. There is NO undated grandfather here: a genuine pre-Wave-29
+  // strategy carries no shadow signals AND would not be in SHADOW state to promote FROM;
+  // the cron never grandfathered 0-signal promotions and this path must not either.
+  const signalCount = shadowSignals?.length ?? 0;
+  if (signalCount < effectiveMinSample) {
     return {
       passed: false,
       status: "insufficient_samples",
       auditAction: "lifecycle.shadow_divergence_insufficient_samples",
       auditPayload: {
-        sample_size: shadowSignals.length,
+        sample_size: signalCount,
         min_required: effectiveMinSample,
         strategyId,
         correlationId: correlationId ?? null,
         backtestExpectedCount,
-        note: `Insufficient shadow samples (${shadowSignals.length} < ${effectiveMinSample}) — SHADOW → PAPER blocked until minimum accumulates`,
+        note: `Insufficient shadow samples (${signalCount} < ${effectiveMinSample}) — SHADOW → PAPER blocked until minimum accumulates (0/null fail-CLOSED, parity with cron)`,
       },
-      reason: `insufficient_samples: ${shadowSignals.length} < ${effectiveMinSample} required`,
+      reason: `insufficient_samples: ${signalCount} < ${effectiveMinSample} required`,
     };
   }
 

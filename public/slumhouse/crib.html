@@ -523,12 +523,12 @@
       const v = (typeof displayValue === "number")
         ? displayValue
         : parseFloat(String(displayValue).replace(/[^\d.\-−]/g, "")) || 0;
+      // deep-scan slumhouse-frontend F-2 (2026-07-06): render a FLAT baseline (every point = the current value)
+      // instead of a Math.sin()+Math.random() wave. The old wavy series visually read as a real up/down TREND to
+      // a family member glancing at the tile — fabricating movement that never happened + re-randomizing each load.
+      // A flat line honestly signals "no historical trend data yet" without inventing a shape.
       const out = [];
-      const drift = Math.abs(v) * 0.04 + 1;
-      for (let i = 0; i < N - 1; i++) {
-        out.push(v * 0.6 + Math.sin(i * 0.7) * drift + (Math.random() - 0.5) * drift * 0.4);
-      }
-      out.push(v); // last point lands on the current value
+      for (let i = 0; i < N; i++) out.push(v);
       return out;
     }
 

@@ -521,6 +521,15 @@ export function computeCoverageVerdict(
   // nothing (UBvf: rich CRT extraction, enum flaked to 0). A thin/generic extraction with 0
   // items is a real miss (N7uP: generic name, 2 steps) — fail it.
   if (countable.length === 0) {
+    // deep-scan extraction F-1 (HIGH): FIX 13's richSelfEvident gate below is for the "enumeration call
+    // returned NOTHING" case (speaker_items empty → enum flaked). It must NOT fire when speaker items
+    // EXIST but are all 'mention'-level (peripheral) — the documented contract is that a missing 'mention'
+    // never causes coverage_failed (there are no required primary/secondary items to miss → pass). b7934d9
+    // conflated "0 speaker items" with "0 countable items", flipping the fail-OPEN contract to fail-CLOSED
+    // for all-mention extractions.
+    if (speakerItems.length > 0) {
+      return { covered, shallow, missing, coverage_pct: 1.0, verdict: "pass" };
+    }
     const snap = extraction as Record<string, unknown>;
     const cn = typeof snap.concept_name === "string" ? snap.concept_name.trim() : "";
     const nm = typeof snap.name === "string" ? snap.name.trim() : "";

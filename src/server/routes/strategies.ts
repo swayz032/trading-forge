@@ -1,8 +1,9 @@
 import { Router } from "express";
+import { z } from "zod";
 import { eq, sql, desc, asc, and, ilike } from "drizzle-orm";
 import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
-import { strategies, backtests, backtestTrades, monteCarloRuns, stressTestRuns, backtestMatrix, systemJournal, complianceReviews, paperSessions, skipDecisions, strategyGraveyard, auditLog, strategyExports, strategyExportArtifacts, strategyPendingBuckets, strategyPendingMentions } from "../db/schema.js";
+import { strategies, backtests, backtestTrades, monteCarloRuns, stressTestRuns, backtestMatrix, systemJournal, complianceReviews, paperSessions, skipDecisions, strategyGraveyard, auditLog, strategyExports, strategyExportArtifacts, strategyPendingBuckets, strategyPendingMentions, adversarialStressRuns, cloudQmcRuns, backtestProvenance, frankensteinTestRuns, strategySignalVectors, shadowRerunFindings, strategyLockouts, strategyFirmEligibility, strategyDslFeatures, tradingviewMarkers } from "../db/schema.js";
 import { inArray } from "drizzle-orm";
 import { logger } from "../index.js";
 import { broadcastSSE } from "./sse.js";
@@ -10,6 +11,7 @@ import { LifecycleService } from "../services/lifecycle-service.js";
 import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 import { assertCrossValidatedSource } from "../services/agent-service.js";
 import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
+import { buildDeployEvidence } from "./slumhouse/deploy-approvals.js";
 
 export const strategyRoutes = Router();
 const lifecycleService = new LifecycleService();
@@ -24,6 +26,41 @@ export interface DeployStrategyResponse {
   id: string;
   newState: "DEPLOYED";
   message: string;
+}
+
+/**
+ * FIX 2 (deep-scan fix wave, 2026-07-10): strategies.symbol (legacy scalar,
+ * NOT NULL) and strategies.symbols (W23F.A per-symbol routing array) must
+ * stay in sync. POST previously never set `symbols` at all — it silently
+ * fell through to the DB default ARRAY['MES'] regardless of the caller's
+ * real `symbol`. PATCH updated only `symbol` and didn't even destructure
+ * `symbols` from the request body. Real consumers read `symbols[]`
+ * (src/server/lib/slumhouse/premium-names.ts:52, src/server/routes/
+ * agent.ts:1658-1659) and would silently see a stale or wrong array.
+ *
+ * Bidirectional, backward-compat-first derivation:
+ *  - both provided                    → trust caller's values as given
+ *  - only `symbol` provided            → symbols = [symbol]
+ *  - only `symbols` provided (non-empty) → symbol = symbols[0]
+ *  - neither provided                  → {} (caller didn't touch routing)
+ */
+function deriveSymbolSync(
+  symbol: unknown,
+  symbols: unknown,
+): { symbol?: string; symbols?: string[] } {
+  const hasSymbol = typeof symbol === "string" && symbol.length > 0;
+  const hasSymbols = Array.isArray(symbols) && symbols.length > 0;
+
+  if (hasSymbol && hasSymbols) {
+    return { symbol: symbol as string, symbols: symbols as string[] };
+  }
+  if (hasSymbol) {
+    return { symbol: symbol as string, symbols: [symbol as string] };
+  }
+  if (hasSymbols) {
+    return { symbol: (symbols as string[])[0], symbols: symbols as string[] };
+  }
+  return {};
 }
 
 function asNumericOrNull(value: unknown): number | null {
@@ -505,11 +542,47 @@ if __name__ == "__main__":
   res.type("text/plain").send(py);
 });
 
+// deep-scan routes F-1 (HIGH, 2026-07-06): validate the SHAPE of strategy writes before they hit the DB.
+// req.body.config (arbitrary client JSON) flows into strategies.config JSONB, which later drives sizing
+// (risk-sizing.ts), the backtester, paper-signal-service, and lifecycle promotion. It was written with ZERO
+// type enforcement — a leaked API key or compromised n8n workflow could inject a malformed config (wrong
+// types, config-as-array/string/null) that silently corrupts downstream logic. Enforce the top-level shape
+// (types + config-must-be-an-object); intentionally NOT constraining the JSONB internals (too varied — the
+// per-field verifiers + gates own semantic validation), just the structural contract.
+const strategyWriteSchema = z.object({
+  // All four are NOT NULL columns on `strategies` — required for CREATE, enforced-when-present for PATCH (partial).
+  name: z.string().min(1).max(200),
+  description: z.string().max(8000).nullish(),
+  // deep-scan fix wave (2026-07-10) FIX 2: `symbol` is optional here (was
+  // required pre-fix) because deriveSymbolSync() below can derive it from
+  // `symbols[0]` when the caller supplies only the routing array. This is
+  // NOT a validation relaxation — a request with neither `symbol` nor
+  // `symbols` still fails at the DB layer (NOT NULL constraint), same
+  // "unchanged contract" as pre-fix raw-destructure behavior (deep-scan
+  // routes F-1 commit f0faadec, 2026-07-06); Zod's job here stays purely
+  // structural shape enforcement, not this field's business-required-ness.
+  symbol: z.string().min(1).max(24).optional(),
+  timeframe: z.string().min(1).max(24),
+  config: z.record(z.string(), z.unknown()), // plain object — rejects array/string/null
+  tags: z.array(z.string().max(120)).max(64).optional(),
+  // deep-scan fix wave (2026-07-10) FIX 2: W23F.A per-symbol routing array —
+  // optional on input; deriveSymbolSync() below derives it from `symbol` when
+  // the caller omits it (backward-compat), or derives `symbol` from this when
+  // only `symbols` is provided.
+  symbols: z.array(z.string().min(1)).optional(),
+});
+const strategyUpdateSchema = strategyWriteSchema.partial(); // PATCH: every field optional (partial update)
+
 // Create strategy
 // P2D (Wave 9, 2026-05-17): operator_manual / backfill sources are trusted but
 // still require an audit row. All other sources must pass assertCrossValidatedSource.
 strategyRoutes.post("/", async (req, res) => {
-  const { name, description, symbol, timeframe, config, tags } = req.body;
+  const parsed = strategyWriteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "invalid_strategy_body", details: parsed.error.flatten() });
+    return;
+  }
+  const { name, description, symbol, timeframe, config, tags, symbols } = parsed.data;
   const source: string = (config as any)?.source ?? (config as any)?.metadata?.source ?? "unknown";
   const OPERATOR_EXEMPT_SOURCES = new Set(["operator_manual", "backfill"]);
 
@@ -533,9 +606,13 @@ strategyRoutes.post("/", async (req, res) => {
     assertCrossValidatedSource(source, insertTags);
   }
 
+  // `symbol` is NOT NULL at the DB level with no default — deriveSymbolSync
+  // only omits it when the caller supplied neither `symbol` nor `symbols`,
+  // which was already a runtime insert failure pre-fix (unchanged contract).
+  const symbolSync = deriveSymbolSync(symbol, symbols);
   const [row] = await db
     .insert(strategies)
-    .values({ name, description, symbol, timeframe, config, tags })
+    .values({ name, description, timeframe, config, tags, symbol: symbolSync.symbol as string, ...(symbolSync.symbols ? { symbols: symbolSync.symbols } : {}) })
     .returning();
   broadcastSSE("strategy:created", { strategyId: row.id, name: row.name });
   res.status(201).json(row);
@@ -554,13 +631,19 @@ strategyRoutes.patch("/:id", async (req, res) => {
     return;
   }
 
-  const { name, description, symbol, timeframe, config, tags } = req.body;
+  // deep-scan routes F-1 (HIGH): validate the update shape (partial — every field optional) before the DB write.
+  const parsedPatch = strategyUpdateSchema.safeParse(req.body);
+  if (!parsedPatch.success) {
+    res.status(400).json({ error: "invalid_strategy_body", details: parsedPatch.error.flatten() });
+    return;
+  }
+  const { name, description, symbol, timeframe, config, tags, symbols } = parsedPatch.data;
   const [row] = await db
     .update(strategies)
     .set({
       ...(name && { name }),
       ...(description && { description }),
-      ...(symbol && { symbol }),
+      ...deriveSymbolSync(symbol, symbols),
       ...(timeframe && { timeframe }),
       ...(config && { config }),
       ...(tags && { tags }),
@@ -657,6 +740,32 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
   if (!requireOfficeControlAuthority(req, res, "strategy.deploy_mutation_blocked")) return;
   const strategyId = req.params.id;
 
+  // deep-scan Slumhouse F-1 (CRITICAL): this legacy route performs the SAME DEPLOY_READY→DEPLOYED live-
+  // capital transition as the Office deploy-approvals card, but previously SKIPPED the server-side
+  // evidence gate — a stale/failing strategy could reach live via curl at the same auth tier, bypassing
+  // WFE/PBO/B14/staleness. Re-derive evidence + fail CLOSED, matching deploy-approvals.ts exactly.
+  const correlationId = randomUUID();
+  try {
+    const ev = await buildDeployEvidence(strategyId);
+    if (!ev.approvable) {
+      res.status(409).json({
+        error: "evidence_not_approvable",
+        evidenceState: ev.evidenceState,
+        blockers: ev.blockers,
+        correlationId,
+      });
+      return;
+    }
+  } catch (evErr) {
+    logger.warn({ strategyId, err: evErr, correlationId }, "deploy: evidence build failed — fail-CLOSED (refusing deploy)");
+    res.status(409).json({
+      error: "evidence_unavailable",
+      message: "Could not read deploy evidence — refusing to deploy until it loads clean.",
+      correlationId,
+    });
+    return;
+  }
+
   // Capture pre-deploy metrics snapshot for the audit record before the transition
   let metricsSnapshot: Record<string, unknown> = {};
   try {
@@ -717,6 +826,7 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
     {
       actor: "human_release",
       reason: "manual_tradingview_deployment_approval",
+      correlationId, // deep-scan Slumhouse F-2: §2 chain — was null on this legacy path
     },
   );
   if (!result.success) {
@@ -740,6 +850,7 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
       result: metricsSnapshot,
       status: "success",
       decisionAuthority: "human",
+      correlationId, // deep-scan Slumhouse F-2: link to the transition + evidence check
     });
   } catch (auditErr) {
     // Audit failure must not roll back an approved deploy — log it for investigation
@@ -983,28 +1094,72 @@ strategyRoutes.delete("/:id", async (req, res) => {
     decisionAuthority: "human",
   });
 
-  // 5) Cascade. Mirrors the original ordering (children before parents).
-  const btRows = await db.select({ id: backtests.id }).from(backtests).where(eq(backtests.strategyId, strategyId));
-  const btIds = btRows.map((r) => r.id);
+  // 5) Cascade. Mirrors the original ordering (children before parents), now
+  //    wrapped in db.transaction() so a mid-cascade FK violation rolls back
+  //    the ENTIRE cascade instead of leaving earlier deletes (e.g.
+  //    backtestTrades, monteCarloRuns) committed while the parent row stays
+  //    stuck (deep-scan fix wave, 2026-07-10).
+  //
+  //    Also adds the 11 tables that carry an implicit-RESTRICT FK to
+  //    strategies(id)/backtests(id) with no ON DELETE clause in the live
+  //    DDL and were NOT covered by the original cascade list:
+  //    adversarial_stress_runs, cloud_qmc_runs, backtest_provenance,
+  //    frankenstein_test_runs, strategy_signal_vectors, shadow_rerun_findings
+  //    (all backtest-scoped — deleted via btIds before the backtests row),
+  //    strategy_lockouts, strategy_firm_eligibility, strategy_dsl_features,
+  //    tradingview_markers (strategy-scoped), and strategy_pending_buckets
+  //    .graduated_strategy_id (a nullable pointer FROM an independently-
+  //    lifecycled bucket TO a strategy — SET NULL rather than delete, since
+  //    deleting the bucket row would also ON DELETE CASCADE its unrelated
+  //    strategy_pending_mentions provenance history).
+  let row: typeof strategies.$inferSelect | undefined;
+  await db.transaction(async (tx) => {
+    const btRows = await tx.select({ id: backtests.id }).from(backtests).where(eq(backtests.strategyId, strategyId));
+    const btIds = btRows.map((r) => r.id);
 
-  // Delete backtest-dependent records
-  if (btIds.length > 0) {
-    await db.delete(backtestTrades).where(inArray(backtestTrades.backtestId, btIds));
-    await db.delete(monteCarloRuns).where(inArray(monteCarloRuns.backtestId, btIds));
-    await db.delete(stressTestRuns).where(inArray(stressTestRuns.backtestId, btIds));
-  }
+    // Delete backtest-dependent records. The dual-key (backtest_id +
+    // strategy_id) tables MUST be cleared before the backtests row delete
+    // below, since each carries a RESTRICT FK on backtest_id.
+    if (btIds.length > 0) {
+      await tx.delete(adversarialStressRuns).where(inArray(adversarialStressRuns.backtestId, btIds));
+      await tx.delete(cloudQmcRuns).where(inArray(cloudQmcRuns.backtestId, btIds));
+      await tx.delete(backtestProvenance).where(inArray(backtestProvenance.backtestId, btIds));
+      await tx.delete(frankensteinTestRuns).where(inArray(frankensteinTestRuns.backtestId, btIds));
+      await tx.delete(strategySignalVectors).where(inArray(strategySignalVectors.backtestId, btIds));
+      await tx.delete(shadowRerunFindings).where(inArray(shadowRerunFindings.backtestId, btIds));
 
-  // Delete strategy-dependent records
-  await db.delete(backtests).where(eq(backtests.strategyId, strategyId));
-  await db.delete(backtestMatrix).where(eq(backtestMatrix.strategyId, strategyId));
-  await db.delete(systemJournal).where(eq(systemJournal.strategyId, strategyId));
-  await db.delete(complianceReviews).where(eq(complianceReviews.strategyId, strategyId));
-  await db.delete(paperSessions).where(eq(paperSessions.strategyId, strategyId));
-  await db.delete(skipDecisions).where(eq(skipDecisions.strategyId, strategyId));
-  await db.delete(strategyGraveyard).where(eq(strategyGraveyard.strategyId, strategyId));
+      await tx.delete(backtestTrades).where(inArray(backtestTrades.backtestId, btIds));
+      await tx.delete(monteCarloRuns).where(inArray(monteCarloRuns.backtestId, btIds));
+      await tx.delete(stressTestRuns).where(inArray(stressTestRuns.backtestId, btIds));
+    }
 
-  // Delete the strategy itself
-  const [row] = await db.delete(strategies).where(eq(strategies.id, strategyId)).returning();
+    // Delete strategy-dependent records
+    await tx.delete(backtests).where(eq(backtests.strategyId, strategyId));
+    await tx.delete(backtestMatrix).where(eq(backtestMatrix.strategyId, strategyId));
+    await tx.delete(systemJournal).where(eq(systemJournal.strategyId, strategyId));
+    await tx.delete(complianceReviews).where(eq(complianceReviews.strategyId, strategyId));
+    await tx.delete(paperSessions).where(eq(paperSessions.strategyId, strategyId));
+    await tx.delete(skipDecisions).where(eq(skipDecisions.strategyId, strategyId));
+    await tx.delete(strategyGraveyard).where(eq(strategyGraveyard.strategyId, strategyId));
+
+    // Strategy-scoped tables added in the deep-scan fix wave (2026-07-10)
+    await tx.delete(strategyLockouts).where(eq(strategyLockouts.strategyId, strategyId));
+    await tx.delete(strategyFirmEligibility).where(eq(strategyFirmEligibility.strategyId, strategyId));
+    await tx.delete(strategyDslFeatures).where(eq(strategyDslFeatures.strategyId, strategyId));
+    await tx.delete(tradingviewMarkers).where(eq(tradingviewMarkers.strategyId, strategyId));
+
+    // strategy_pending_buckets does NOT belong to this strategy — it's an
+    // independent-lifecycle scout artifact that merely points AT a strategy
+    // once graduated. SET NULL (mirrors ON DELETE SET NULL) instead of
+    // deleting the bucket row.
+    await tx.update(strategyPendingBuckets)
+      .set({ graduatedStrategyId: null })
+      .where(eq(strategyPendingBuckets.graduatedStrategyId, strategyId));
+
+    // Delete the strategy itself
+    [row] = await tx.delete(strategies).where(eq(strategies.id, strategyId)).returning();
+  });
+
   if (!row) {
     // Race: another caller deleted between our load and cascade. Audit row
     // already records the snapshot; treat as 404 for the caller.

@@ -7,19 +7,19 @@
  *   T1  20+ matching shadow signals → passes
  *   T2  20+ shadow signals with >5% divergence → blocked + lifecycle.shadow_divergence_blocked
  *   T3  19 shadow signals (below min) → insufficient_samples block
- *   T4  0 shadow signals → legacy_unavailable proceed
- *   T5  null shadowSignals → legacy_unavailable proceed
+ *   T4  0 shadow signals → insufficient_samples BLOCK (fail-closed, HIGH-1 fix 2026-07-09)
+ *   T5  null shadowSignals → insufficient_samples BLOCK (fail-closed, no throw)
  *   T6  Boundary: exactly 5% divergence with exactly 20 samples → blocks (>= threshold)
  *   T7  Boundary: exactly 20 samples, divergence < 5% → passes
  *   T8  Boundary: exactly 19 samples, no divergence → still insufficient_samples (min not met)
  *   T9  audit payload contains strategyId and correlationId
  *   T10 auditAction "lifecycle.shadow_divergence_blocked" on divergence block
  *   T11 auditAction "lifecycle.shadow_divergence_insufficient_samples" on sample floor
- *   T12 auditAction "lifecycle.shadow_divergence_check_unavailable_legacy" on empty array
+ *   T12 auditAction "lifecycle.shadow_divergence_insufficient_samples" on empty array (fail-closed)
  *   T13 auditAction "lifecycle.shadow_promotion_passed" on pass
  *   T14 passed=false on insufficient_samples
  *   T15 passed=false on blocked
- *   T16 passed=true on legacy_unavailable
+ *   T16 passed=false at 0 signals (fail-closed, HIGH-1 fix)
  *   T17 passed=true on pass
  *   T18 caller-supplied tighter threshold (0.03) blocks at 4% divergence
  *   T19 caller-supplied looser threshold does not override blocked result
@@ -127,28 +127,31 @@ describe("evaluateShadowToPaperGate", () => {
     expect(result.status).toBe("insufficient_samples");
   });
 
-  // ── T4: 0 shadow signals → legacy_unavailable proceed ──────────────────────
-  it("T4: 0 shadow signals → passed=true, status=legacy_unavailable", () => {
+  // ── T4: 0 shadow signals → FAIL-CLOSED block (HIGH-1 fix, ratified 2026-07-09) ──
+  // Was legacy_unavailable→pass (false-green on the training-serving-skew HARD gate);
+  // now blocks with insufficient_samples, matching the canonical cron path.
+  it("T4: 0 shadow signals → passed=false, status=insufficient_samples (fail-closed)", () => {
     const input = baseInput({
       shadowSignals: [],
       backtestExpected: [],
       backtestExpectedCount: 0,
     });
     const result = evaluateShadowToPaperGate(input);
-    expect(result.passed).toBe(true);
-    expect(result.status).toBe("legacy_unavailable");
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("insufficient_samples");
+    expect(result.status).not.toBe("legacy_unavailable");
   });
 
-  // ── T5: null shadowSignals → legacy_unavailable proceed ────────────────────
-  it("T5: null shadowSignals → passed=true, status=legacy_unavailable", () => {
+  // ── T5: null shadowSignals → FAIL-CLOSED block (HIGH-1 fix) ────────────────
+  it("T5: null shadowSignals → passed=false, status=insufficient_samples (no throw)", () => {
     const input = baseInput({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       shadowSignals: null as any,
       backtestExpected: [],
     });
     const result = evaluateShadowToPaperGate(input);
-    expect(result.passed).toBe(true);
-    expect(result.status).toBe("legacy_unavailable");
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("insufficient_samples");
   });
 
   // ── T6: Exactly 5% divergence with 20 samples → BLOCK (>= threshold) ───────
@@ -213,13 +216,13 @@ describe("evaluateShadowToPaperGate", () => {
     expect(result.auditAction).toBe("lifecycle.shadow_divergence_insufficient_samples");
   });
 
-  // ── T12: auditAction on legacy_unavailable ──────────────────────────────────
-  it("T12: auditAction = lifecycle.shadow_divergence_check_unavailable_legacy on empty", () => {
+  // ── T12: auditAction on empty → insufficient_samples (HIGH-1 fix) ───────────
+  it("T12: auditAction = lifecycle.shadow_divergence_insufficient_samples on empty", () => {
     const result = evaluateShadowToPaperGate(baseInput({
       shadowSignals: [],
       backtestExpected: [],
     }));
-    expect(result.auditAction).toBe("lifecycle.shadow_divergence_check_unavailable_legacy");
+    expect(result.auditAction).toBe("lifecycle.shadow_divergence_insufficient_samples");
   });
 
   // ── T13: auditAction on pass ────────────────────────────────────────────────
@@ -243,10 +246,10 @@ describe("evaluateShadowToPaperGate", () => {
     expect(evaluateShadowToPaperGate(input).passed).toBe(false);
   });
 
-  // ── T16: passed=true on legacy_unavailable ──────────────────────────────────
-  it("T16: passed=true on legacy_unavailable", () => {
+  // ── T16: passed=false at 0 signals (HIGH-1 fail-closed) ─────────────────────
+  it("T16: passed=false at 0 signals (fail-closed, was legacy_unavailable pass)", () => {
     const result = evaluateShadowToPaperGate(baseInput({ shadowSignals: [] }));
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
   });
 
   // ── T17: passed=true on pass ────────────────────────────────────────────────

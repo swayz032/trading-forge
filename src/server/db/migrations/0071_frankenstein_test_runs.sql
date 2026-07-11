@@ -18,7 +18,7 @@
 --   calendar_preserving     — shuffle within day-of-week buckets (calendar-effect strategies)
 --   synthetic_gbm           — replace data with GBM random walk at matched mean/vol (50 iterations)
 
-CREATE TABLE frankenstein_test_runs (
+CREATE TABLE IF NOT EXISTS frankenstein_test_runs (
   id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   backtest_id          uuid REFERENCES backtests(id) NOT NULL,
   strategy_id          uuid REFERENCES strategies(id) NOT NULL,
@@ -37,14 +37,14 @@ CREATE TABLE frankenstein_test_runs (
 );
 
 -- Efficient lookup by backtest (most common: "did this backtest pass Frankenstein?")
-CREATE INDEX idx_frankenstein_backtest
+CREATE INDEX IF NOT EXISTS idx_frankenstein_backtest
   ON frankenstein_test_runs(backtest_id, created_at DESC);
 
 -- Lookup by strategy (all historical Frankenstein runs for a strategy)
-CREATE INDEX idx_frankenstein_strategy
+CREATE INDEX IF NOT EXISTS idx_frankenstein_strategy
   ON frankenstein_test_runs(strategy_id, created_at DESC);
 
 -- Partial index for fast gate check: find the latest completed pass/fail for a backtest
-CREATE INDEX idx_frankenstein_passed_status
+CREATE INDEX IF NOT EXISTS idx_frankenstein_passed_status
   ON frankenstein_test_runs(passed, status)
   WHERE status = 'completed';

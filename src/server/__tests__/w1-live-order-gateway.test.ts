@@ -54,6 +54,9 @@ const mocks = vi.hoisted(() => ({
   routeOrder: vi.fn(),
   submitWebhookOrder: vi.fn(),
   dbInsert: vi.fn(),
+  // deep-scan execution F-1: rows the F-1 lifecycle gate's select returns. Default DEPLOYED (live-eligible);
+  // override to e.g. [{ lifecycleState: "CANDIDATE" }] or [] to exercise the 409 non_live_state path.
+  dbSelectRows: [{ lifecycleState: "DEPLOYED" }] as Array<{ lifecycleState: string }>,
   // lookupHmacSecret returns the stored per-(account,strategy) secret for token mode.
   lookupHmacSecret: vi.fn(),
   // dbExecute handles the dedup INSERT ON CONFLICT DO NOTHING.
@@ -78,11 +81,20 @@ vi.mock("../db/index.js", () => ({
   db: {
     insert: () => ({ values: mocks.dbInsert }),
     execute: mocks.dbExecute,
+    // deep-scan execution F-1 (2026-07-06): the live-order F-1 lifecycle gate (live-order.ts:552-560) does
+    // db.select({...}).from(strategies).where(...).limit(1). The old mock stubbed only insert/execute, so this
+    // select threw → the gate's own fail-closed catch returned 409 for EVERY static-token test (strategy_id
+    // required in that mode) — silently masking the actual Pine→broker forward path AND the HALT→423 path.
+    // Default to DEPLOYED so tests exercise the REAL path; per-test override via mocks.dbSelectRows.
+    select: () => ({
+      from: () => ({ where: () => ({ limit: () => Promise.resolve(mocks.dbSelectRows) }) }),
+    }),
   },
 }));
 
 vi.mock("../db/schema.js", () => ({
   auditLog: Symbol("auditLog_mock"),
+  strategies: { id: Symbol("strategies_id"), lifecycleState: Symbol("strategies_lifecycleState") },
 }));
 
 vi.mock("../lib/logger.js", () => ({

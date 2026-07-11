@@ -152,6 +152,66 @@ describe("checkCorrelatedPositionGuard — allowed cases", () => {
   });
 });
 
+// deep-scan long-tail F-4 re-verify (2026-07-06): the Topstep multi-account exception (guard.ts:231) had
+// ZERO test coverage — none of the pre-existing cases passed proposedFirmId/proposedUserId/proposedStrategyId,
+// so a future refactor of sameUser/sameStrategy would silently regress. These 4 cases pin the exception's
+// exact contract (matches the grader's tsx repro): allow ONLY same-firm(topstep) + same-operator + same-strategy.
+describe("checkCorrelatedPositionGuard — F-4 Topstep multi-account exception", () => {
+  it("ALLOWS a correlated Topstep entry when same operator runs the SAME strategy across own Topstep accounts", () => {
+    // MES vs open MNQ (corr 0.95 > 0.70 → normally BLOCKED), but both Topstep, userId absent on both
+    // (single-operator deployment), same strategyId → exception fires.
+    const result = checkCorrelatedPositionGuard(
+      "MES",
+      [{ symbol: "MNQ", firmId: "topstep", userId: null, strategyId: "strat-A" }],
+      STANDARD_MATRIX,
+      "topstep", // proposedFirmId
+      null, // proposedUserId (single operator)
+      "strat-A", // proposedStrategyId — matches the open position
+    );
+    expect(result.allowed).toBe(true);
+    expect(result.blockingSymbol).toBeNull();
+  });
+
+  it("BLOCKS a correlated Topstep entry when the strategy DIFFERS (exception needs same strategy)", () => {
+    const result = checkCorrelatedPositionGuard(
+      "MES",
+      [{ symbol: "MNQ", firmId: "topstep", userId: null, strategyId: "strat-A" }],
+      STANDARD_MATRIX,
+      "topstep",
+      null,
+      "strat-B", // different strategy → no exception
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.blockingSymbol).toBe("MNQ");
+  });
+
+  it("BLOCKS a cross-firm correlated entry (MFFU proposed vs open Topstep) even with same strategy", () => {
+    // MFFU collaborative-trading ban always applies; the exception is Topstep-only on the PROPOSED side.
+    const result = checkCorrelatedPositionGuard(
+      "MES",
+      [{ symbol: "MNQ", firmId: "topstep", userId: null, strategyId: "strat-A" }],
+      STANDARD_MATRIX,
+      "mffu", // proposedFirmId — not Topstep
+      null,
+      "strat-A",
+    );
+    expect(result.allowed).toBe(false);
+    expect(result.blockingSymbol).toBe("MNQ");
+  });
+
+  it("BLOCKS when proposedStrategyId is absent (sameStrategy requires a non-null match on both sides)", () => {
+    const result = checkCorrelatedPositionGuard(
+      "MES",
+      [{ symbol: "MNQ", firmId: "topstep", userId: null, strategyId: "strat-A" }],
+      STANDARD_MATRIX,
+      "topstep",
+      null,
+      undefined, // no proposed strategy → cannot be "same strategy"
+    );
+    expect(result.allowed).toBe(false);
+  });
+});
+
 describe("Sequential entry (close → re-enter)", () => {
   it("ALLOWS MES entry after MNQ is closed (empty open positions)", () => {
     // After closing MNQ, open_positions is empty → allowed

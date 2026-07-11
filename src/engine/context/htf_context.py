@@ -56,6 +56,25 @@ def _premium_discount(price: float, high: float, low: float) -> str:
     return "equilibrium"
 
 
+def _filter_htf_bars_before(
+    htf_df: Optional[pl.DataFrame],
+    bar_date: object,
+) -> Optional[pl.DataFrame]:
+    """Causal cutoff for a 4H/1H frame — deep-scan #22 FIX 1.
+
+    Returns only bars strictly before `bar_date` (mirrors the daily_df
+    `ts_event < bar_date` filter in `compute_htf_context`). If `bar_date` is
+    None or the frame has no `ts_event` column, returns the frame unchanged
+    (matches the daily_df fallback behavior — no filtering possible without
+    the anchor).
+    """
+    if htf_df is None:
+        return None
+    if bar_date is None or "ts_event" not in htf_df.columns:
+        return htf_df
+    return htf_df.filter(pl.col("ts_event") < bar_date)
+
+
 def compute_htf_context(
     daily_df: pl.DataFrame,
     four_h_df: Optional[pl.DataFrame],
@@ -77,6 +96,39 @@ def compute_htf_context(
     d = daily_df
     if bar_date is not None and "ts_event" in d.columns:
         d = d.filter(pl.col("ts_event") < bar_date)
+
+    # ------------------------------------------------------------------
+    # deep-scan #22 FIX 1 (CRITICAL): 4H/1H look-ahead leak.
+    #
+    # PREVIOUS BEHAVIOR: only `daily_df` was filtered by `bar_date` above.
+    # `four_h_df`/`one_h_df` were used AS-IS with no causal cutoff. Callers
+    # such as `run_class_backtest()` / `run_walk_forward_class()`
+    # (backtester.py ~6613-6661, walk_forward.py ~2554-2569) load the 4H/1H
+    # data ONCE for the entire backtest range and pass the SAME full-range
+    # frame into `compute_htf_context()` on every iteration of the daily
+    # cache-build loop. Without filtering here, `four_h_trend` (and any
+    # future one_h-based field) could read 4H/1H bars from AFTER the
+    # current trading day — a real look-ahead leak feeding directly into
+    # the bias/eligibility gate, producing optimistic backtest results.
+    #
+    # NEW BEHAVIOR: apply the exact same `ts_event < bar_date` cutoff used
+    # for daily_df to four_h_df/one_h_df, so this function is causally safe
+    # regardless of what range the caller happens to pass in. This mirrors
+    # the "last FULLY CLOSED HTF bar, never a forming one" discipline the
+    # 5-TF MTF join (`mtf_join.py`) already enforces.
+    #
+    # NOTE ON GRANULARITY (deliberately conservative, not an off-by-one):
+    # callers build ONE HTF context per calendar day and reuse it for every
+    # intraday bar in that day (see the day_idx cache-build loops above).
+    # `bar_date` is that day's own daily timestamp, so `< bar_date` excludes
+    # every 4H/1H bar that opens on-or-after the current trading day —
+    # including 4H bars that would have technically closed earlier the SAME
+    # day. This is intentionally the conservative side of the boundary (it
+    # can never look ahead) rather than attempting per-bar intraday HTF
+    # freshness, which would require a larger per-bar cache refactor at the
+    # call sites (documented as a residual/open item, not fixed here).
+    four_h_df = _filter_htf_bars_before(four_h_df, bar_date)
+    one_h_df = _filter_htf_bars_before(one_h_df, bar_date)
 
     if len(d) < 200:
         # Not enough data for full analysis — return neutral defaults

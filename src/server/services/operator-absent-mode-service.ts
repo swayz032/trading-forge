@@ -256,6 +256,9 @@ export async function runOperatorAbsentAutoPromote(correlationId?: string): Prom
       // SSE
       broadcastSSE("lifecycle:operator_absent_autopromoted", {
         strategyId: strategy.id,
+        // deep-scan Obs re-verify #3: vacation-mode Tier-1 autopromote is the unattended path where
+        // SSE→audit_log correlation reconstruction matters MOST; carry the same correlationId the audit row does.
+        correlationId: correlationId ?? null,
         name: strategy.name,
         from: "DEPLOY_READY",
         to: "PILOT",

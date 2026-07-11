@@ -1475,7 +1475,18 @@ qty_final = math.min(contracts_atr, {shell_firm_cap})
         for line in indicator_lines:
             strategy_shell += line + "\n"
 
-        # P0-2/3/4 in legacy shell — minimal inline versions
+        # P0-2/4 in legacy shell — minimal inline versions.
+        # P0-3 (event blackout) is NOT reimplemented inline here. deep-scan #22
+        # Track Y4 (2026-07-09): this shell previously declared its OWN NFP-only
+        # blackout ("nfp_blackout" checked alone) and never called the shared
+        # _build_event_blackout_block() helper that compile_dual_artifacts() uses
+        # via _build_shared_preamble() — so every strategy_shell artifact emitted
+        # by compile_strategy() (the DEFAULT live path: monte-carlo-service.ts,
+        # quantum-mc-service.ts, scheduler.ts, strategies.ts, pine-export.ts default
+        # branch) shipped to families with NO FOMC/CPI blackout at all, silently
+        # violating the CLAUDE.md §13 "Don't trade through FOMC/CPI/NFP" mandate.
+        # Fix: call the SAME shared helper compile_dual_artifacts() uses, so this
+        # shell carries the identical full FOMC+CPI+NFP macro blackout chain.
         strategy_shell += f"""
 {session_line}
 long_signal = in_session and ({long_cond})
@@ -1485,11 +1496,12 @@ short_signal = in_session and ({short_cond})
 [adx_plus_di, adx_minus_di, adx_val] = ta.dmi(14, 14)
 regime_label = adx_val > 25 ? "TRENDING" : adx_val < 20 ? "RANGING" : "MIXED"
 regime_match = true  // No preferred_regime in legacy shell — gate disabled
-
-// P0-3: NFP blackout only (simplified for legacy shell)
-nfp_blackout = (dayofmonth <= 7 and dayofweek == dayofweek.friday and hour == 8 and minute < 60)
-event_blackout = nfp_blackout
-
+"""
+        # P0-3: full FOMC+CPI+NFP event blackout — SAME shared helper as
+        # compile_dual_artifacts()'s strategy artifact (deep-scan #22 Y4 fix).
+        # Declares fomc_blackout / cpi_blackout / nfp_blackout / event_blackout.
+        strategy_shell += _build_event_blackout_block()
+        strategy_shell += f"""
 // P0-4: Generic first-15min anti-setup
 anti_setup_blocked = (hour == 9 and minute < 45)
 

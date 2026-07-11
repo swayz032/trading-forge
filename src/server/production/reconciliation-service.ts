@@ -68,7 +68,7 @@ export interface ReconciliationResult {
   traderspostLogCount: number;
   tradovateFillsCount: number;
   mffuDashboardPnl: number | null;
-  expectedPnl: number;
+  expectedPnl: number | null;
   // 5th source (Track 8): TradingView marker count for the day.
   // null when the tradingview_markers table does not exist yet (pre-Track-8 installs).
   tradingviewMarkerCount: number | null;
@@ -122,12 +122,20 @@ async function fetchProductionTradesCount(date: Date): Promise<number> {
 /**
  * Sum expected_pnl from production_trades for the given trading date.
  */
-async function fetchExpectedPnl(date: Date): Promise<number> {
+async function fetchExpectedPnl(date: Date): Promise<number | null> {
   const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
 
   const rows = await db
-    .select({ total: sum(productionTrades.expectedPnl) })
+    .select({
+      total: sum(productionTrades.expectedPnl),
+      // deep-scan Accuracy HIGH: count() ignores NULLs. expectedPnl is written null by design
+      // (broker-router — no server-mediated fill ingest populates it yet). Returning 0 for an
+      // unpopulated column makes |mffu_pnl - 0| = mffu_pnl → a false RED once the degraded-source
+      // clamp is lifted (RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true). Return null instead so the
+      // P&L checks SKIP rather than compare MFFU P&L against a fabricated $0.
+      populated: sql<string>`count(expected_pnl)`,
+    })
     .from(productionTrades)
     .where(
       and(
@@ -136,6 +144,8 @@ async function fetchExpectedPnl(date: Date): Promise<number> {
       )
     );
 
+  const populated = Number(rows[0]?.populated ?? 0);
+  if (populated === 0) return null; // unpopulated by design — NOT a real $0
   return Number(rows[0]?.total ?? 0);
 }
 
@@ -375,7 +385,7 @@ export async function runDailyReconciliation(
     let traderspostLogCount: number;
     let tradovateFillsCount: number;
     let mffuDashboardPnl: number | null;
-    let expectedPnl: number;
+    let expectedPnl: number | null;
     let tradingviewMarkerCount: number | null;
 
     try {
@@ -425,7 +435,7 @@ export async function runDailyReconciliation(
         traderspostLogCount: 0,
         tradovateFillsCount: 0,
         mffuDashboardPnl: null,
-        expectedPnl: 0,
+        expectedPnl: null, // deep-scan Accuracy re-verify F-2: genuine null (contract), not placeholder 0
         tradingviewMarkerCount: null,
         mismatchCount: 1,
         mismatchDetails: [
@@ -502,8 +512,10 @@ export async function runDailyReconciliation(
     }
 
     // Check 3: tradovate_fills.pnl ≈ mffu_dashboard_pnl (within tolerance)
-    // Skip if mffu_dashboard_pnl is null (not yet wired or snapshot failed)
-    if (mffuDashboardPnl !== null) {
+    // Skip if mffu_dashboard_pnl is null (not yet wired or snapshot failed) OR expectedPnl is null
+    // (deep-scan Accuracy HIGH: production_trades.expected_pnl unpopulated → cannot compare; comparing
+    // against a fabricated $0 would false-alert. Skip honestly — the degraded-source clamp reflects it).
+    if (mffuDashboardPnl !== null && expectedPnl !== null) {
       const pnlDelta = Math.abs(mffuDashboardPnl - expectedPnl);
       if (pnlDelta > RECON_CONFIG.PNL_TOLERANCE_DOLLARS) {
         mismatches.push({
@@ -608,6 +620,7 @@ export async function runDailyReconciliation(
     // the disagreement still degrades a clean green to yellow, but never fabricates a red.
     if (
       mffuDashboardPnl !== null &&
+      expectedPnl !== null &&
       Math.abs(mffuDashboardPnl - expectedPnl) > RECON_CONFIG.PNL_TOLERANCE_DOLLARS
     ) {
       if (effectiveIndependentSources >= MIN_INDEPENDENT_SOURCES_FOR_RED) {
@@ -686,7 +699,7 @@ interface WriteReconRowParams {
   traderspostLogCount: number;
   tradovateFillsCount: number;
   mffuDashboardPnl: number | null;
-  expectedPnl: number;
+  expectedPnl: number | null;
   // 5th source: may be null when tradingview_markers table is not yet present.
   tradingviewMarkerCount: number | null;
   mismatchCount: number;
@@ -711,7 +724,7 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
       traderspostLogCount: params.traderspostLogCount,
       tradovateFillsCount: params.tradovateFillsCount,
       mffuDashboardPnl: params.mffuDashboardPnl !== null ? String(params.mffuDashboardPnl) : null,
-      expectedPnl: String(params.expectedPnl),
+      expectedPnl: params.expectedPnl !== null ? String(params.expectedPnl) : null, // deep-scan Accuracy re-verify: persist genuine NULL when unpopulated (col nullable via mig 0198) so buildPnlToday null-guards it
       mismatchCount: params.mismatchCount,
       mismatchDetails: params.mismatchDetails as unknown as Record<string, unknown>[],
       alertFired: params.alertFired,
@@ -727,7 +740,7 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
         traderspostLogCount: params.traderspostLogCount,
         tradovateFillsCount: params.tradovateFillsCount,
         mffuDashboardPnl: params.mffuDashboardPnl !== null ? String(params.mffuDashboardPnl) : null,
-        expectedPnl: String(params.expectedPnl),
+        expectedPnl: params.expectedPnl !== null ? String(params.expectedPnl) : null, // deep-scan Accuracy re-verify: persist genuine NULL when unpopulated (col nullable via mig 0198) so buildPnlToday null-guards it
         mismatchCount: params.mismatchCount,
         mismatchDetails: params.mismatchDetails as unknown as Record<string, unknown>[],
         alertFired: params.alertFired,

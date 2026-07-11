@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-06T08:37:43.719Z",
+  "generatedAt": "2026-07-11T00:00:25.073Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 79,
-    "schedulerJobs": 108,
+    "schedulerJobs": 109,
     "workflowFiles": 20,
     "canonicalWorkflows": 20,
     "engineSubsystems": 29,
@@ -163,6 +163,7 @@
     "meta-parameter-review",
     "metrics-collector",
     "metrics-heartbeat",
+    "n8n-data-backup-daily",
     "n8n-drift-detector-monthly",
     "n8n-drift-detector-weekly",
     "n8n-execution-scrape",
@@ -399,7 +400,7 @@
         ],
         "preferredName": "Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-01T07:00:07.398Z",
         "lastFailureAt": null,
@@ -407,7 +408,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 233h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -814,7 +815,7 @@
     ],
     "coveredCounts": {
       "routes": 79,
-      "schedulerJobs": 108,
+      "schedulerJobs": 109,
       "engineSubsystems": 29,
       "databaseTables": 110
     },
@@ -952,7 +953,9 @@
       "failingWorkflowBlockers": [],
       "sourceMissingWorkflowBlockers": [],
       "redeployWorkflowBlockers": [],
-      "staleWorkflowBlockers": [],
+      "staleWorkflowBlockers": [
+        "Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
+      ],
       "runtimeControlBlockers": [],
       "blockers": [
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
@@ -974,7 +977,8 @@
         "slumhouse_users_table:manual_gate:operator",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
-        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT"
+        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
       ]
     },
     "readiness": {
@@ -1004,7 +1008,8 @@
         "synthetic_black_swan_survival:experimental_governance",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
-        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT"
+        "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y"
       ],
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
@@ -7778,6 +7783,7 @@
           "/api/n8n"
         ],
         "schedulerJobs": [
+          "n8n-data-backup-daily",
           "n8n-drift-detector-monthly",
           "n8n-drift-detector-weekly",
           "n8n-execution-scrape",
@@ -14891,6 +14897,7 @@
         "/api/n8n"
       ],
       "schedulerJobs": [
+        "n8n-data-backup-daily",
         "n8n-drift-detector-monthly",
         "n8n-drift-detector-weekly",
         "n8n-execution-scrape",

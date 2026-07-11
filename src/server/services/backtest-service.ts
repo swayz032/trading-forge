@@ -133,6 +133,14 @@ function buildResultExtras(result: BacktestResult): Record<string, unknown> | nu
     // transaction below, which reads it back out of `result` directly (not
     // resultExtras) so it fires in the SAME completion pass that persists it.
     "dsl_guards",
+    // deep-scan cross-system (2026-07-06): backtester.py emits result["margin_expansion_audit"] (VIX-tier
+    // max_contracts halving/quartering, Wave 27.5 Pass D DEFAULT ON) and result["roll_spread_costs"] (itemized
+    // per-roll-day P&L deduction) — both documented as producing backtest.margin_expansion_applied /
+    // backtest.roll_spread_itemized audit rows. They had no dedicated column AND weren't in this allowlist, so the
+    // Python-computed audit payloads were silently dropped on every backtest (no queryable record of when VIX
+    // margin expansion or a roll-day cost was applied). Add them so the audit trail survives to result_extras.
+    "margin_expansion_audit",
+    "roll_spread_costs",
   ] as const;
   let hasAny = false;
   for (const key of extraKeys) {
@@ -774,7 +782,23 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         // Wave hardening 2026-06-22 (G1a): use buildBacktestArgs so --b15-battery
         // is conditionally appended based on B15_BATTERY_ENABLED env flag.
         args: buildBacktestArgs({ backtestId, mode, strategyClass }),
-        config: config as unknown as Record<string, unknown>,
+        // CRIT (deep-scan 2026-07-09, operator-ratified): WIRE the fill model into the
+        // production request. Previously `fill_model` was declared on this interface but
+        // NEVER assigned, so BacktestRequest.fill_model was always None and the entire
+        // `if request.fill_model:` block (partial-fill volume model, CLAUDE.md §12
+        // "DEFAULT ON") never executed — every backtest assumed 100% idealized fills.
+        // order_type="market" makes Stage-1 (RSI fill-probability) a no-op (market orders
+        // return all-1.0 fill prob), so this enables ONLY the Stage-2 volume-based partial
+        // fill — the institutional realism the CRIT is about — with the next-bar-alignment
+        // fix (fill_model.py next_bar_fill). BACKTEST_PARTIAL_FILL_ENABLED (default true,
+        // checked inside fill_model.py) still gates the actual degradation. Escape hatch:
+        // BACKTEST_FILL_MODEL_WIRED=false reverts to the old dormant behavior without a
+        // code change. RE-BASELINE NOTE: turning this on shifts Sharpe/PF/DSR for any
+        // large-size-on-thin-volume strategy — historical pre-wiring backtests are
+        // NON-comparable (acceptable: 0 completed backtests today, hardening-first).
+        config: (process.env.BACKTEST_FILL_MODEL_WIRED ?? "true").toLowerCase() === "false"
+          ? (config as unknown as Record<string, unknown>)
+          : { ...(config as unknown as Record<string, unknown>), fill_model: { order_type: "market" } },
         timeoutMs: BACKTEST_TIMEOUT_MS,
         componentName: "backtest-engine",
         correlationId,

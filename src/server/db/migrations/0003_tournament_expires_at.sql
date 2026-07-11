@@ -1,3 +1,14 @@
 -- Add expiresAt TTL column to tournament_results
 -- L3 remediation: tournament results without this column never auto-expire
-ALTER TABLE "tournament_results" ADD COLUMN IF NOT EXISTS "expires_at" timestamp;
+--
+-- deep-scan fresh-bootstrap fix: tournament_results is not CREATE TABLE'd until
+-- 0015_schema_sync.sql (journal idx 15), which runs AFTER this migration (idx 3).
+-- On the live prod ledger the table already existed by the time this first ran
+-- (pre-migrations-system schema push), so the bare ALTER never failed there — but
+-- a genuinely fresh bootstrap replay (idx 0..N in journal order against an empty
+-- DB) hits "relation tournament_results does not exist" here. `ALTER TABLE IF
+-- EXISTS` makes this a no-op when the table doesn't exist yet; 0015's own
+-- CREATE TABLE IF NOT EXISTS already declares "expires_at" timestamp (see its
+-- own comment: "0003 tried to ALTER it before CREATE"), so the column still
+-- lands correctly once 0015 runs. Idempotent either way; safe to re-apply.
+ALTER TABLE IF EXISTS "tournament_results" ADD COLUMN IF NOT EXISTS "expires_at" timestamp;

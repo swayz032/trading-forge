@@ -2298,6 +2298,10 @@ function buildDriftItems(snapshot: SystemTopologySnapshot, existingSection: stri
  *   2. Event in inventory but NOT in union → dead doc / removed event still documented.
  */
 function extractSseUnionTypes(rootDir: string): Set<string> {
+  // 2026-07-06: the old amber-vision-main React SPA (and its typed sse-events.ts union) was DELETED —
+  // Slumhouse is the only frontend and consumes SSE as untyped JS. The catch below now always fires (file
+  // absent) → empty set, which disables the union-vs-inventory SSE drift arm of the topology check (the
+  // inventory-side documentation checks still run). Repoint this path if a typed Slumhouse catalog is added.
   const ssePath = path.join(rootDir, "Trading_forge_frontend", "amber-vision-main", "src", "types", "sse-events.ts");
   let source: string;
   try {

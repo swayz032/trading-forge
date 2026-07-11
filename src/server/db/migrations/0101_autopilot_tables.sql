@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS system_health_heartbeat (
   source    TEXT NOT NULL DEFAULT 'backend'
 );
 
-CREATE INDEX idx_heartbeat_ts_desc
+CREATE INDEX IF NOT EXISTS idx_heartbeat_ts_desc
   ON system_health_heartbeat (ts DESC);
 
 -- operator_absent_periods: records each absence window so the promotion
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS operator_absent_periods (
 );
 
 -- Partial index: fast lookup of the active (open) absence period
-CREATE INDEX idx_operator_absent_active
+CREATE INDEX IF NOT EXISTS idx_operator_absent_active
   ON operator_absent_periods (started_at DESC)
   WHERE ended_at IS NULL;
 

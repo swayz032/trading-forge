@@ -98,6 +98,7 @@ import {
   unassignStrategy,
   releaseStrategyToFamily,
   __resetEnabledFirmsCache,
+  CollaborativeTradingBlockedError,
 } from "../services/strategy-assignment-service.js";
 import { routeOrder } from "../services/broker-router.js";
 import { generateRecipientExport } from "../services/pine-export-recipient-service.js";
@@ -438,9 +439,11 @@ describe("strategy-assignment-service (real-service)", () => {
 
   // ─── Test 10: MFFU collaborative-trading warning ──────────────────────────
 
-  it("10. MFFU collaborative-trading warning SSE fires when 2+ family members on same strategy", async () => {
+  it("10. MFFU collaborative-trading risk BLOCKS assignment (fail-closed) + fires blocked SSE", async () => {
+    // Deep-scan fix D (2026-07-06): MFFU collaborative-trading is a HARD ban
+    // boundary (§6). The service now REFUSES the assignment (throws) instead of
+    // insert-and-warn, and broadcasts compliance:collaborative_trading_blocked.
     const aliceRow = makeAssignmentRow("acct-mffu-alice", "strat-deployed-1", { familyMemberLabel: "Alice" });
-    // existingOnMffu returns Alice's row so Bob's assignment triggers warning
     const existingOnMffu = [
       { accountId: "acct-mffu-alice", familyMemberLabel: "Alice", firmId: "mffu" },
     ];
@@ -460,11 +463,17 @@ describe("strategy-assignment-service (real-service)", () => {
 
     vi.mocked(broadcastSSE as ReturnType<typeof vi.fn>).mockClear();
 
-    await assignStrategyToAccount("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" });
+    // The assignment must be REFUSED, not silently inserted.
+    await expect(
+      assignStrategyToAccount("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" })
+    ).rejects.toBeInstanceOf(CollaborativeTradingBlockedError);
 
-    const warningSSE = (vi.mocked(broadcastSSE as ReturnType<typeof vi.fn>).mock.calls as Array<[string, unknown]>)
-      .filter(([event]) => event === "compliance:collaborative_trading_warning");
-    expect(warningSSE.length).toBeGreaterThan(0);
+    const blockedSSE = (vi.mocked(broadcastSSE as ReturnType<typeof vi.fn>).mock.calls as Array<[string, unknown]>)
+      .filter(([event]) => event === "compliance:collaborative_trading_blocked");
+    expect(blockedSSE.length).toBeGreaterThan(0);
+    // No assignment row was inserted — only the blocked audit row (has `action`).
+    const assignmentInserts = (allInserts as Record<string, unknown>[]).filter((v) => !v.action);
+    expect(assignmentInserts.length).toBe(0);
   });
 
   // ─── Test 11: Topstep multi-account exception ─────────────────────────────
@@ -810,8 +819,8 @@ describe("cross-cutting real-service tests (4 tests)", () => {
     vi.mocked(isPipelineActive).mockResolvedValue(true);
   });
 
-  // Test 25: Discord alert fires on MFFU collaborative warning
-  it("25. Discord alert (notifyCritical) fires when MFFU collaborative warning triggers", async () => {
+  // Test 25: Discord alert fires when the MFFU collaborative-trading BLOCK trips
+  it("25. Discord alert (notifyCritical) fires when MFFU collaborative-trading assignment is BLOCKED", async () => {
     const newRow = makeAssignmentRow("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" });
     const existingOnMffu = [
       { accountId: "acct-mffu-alice", familyMemberLabel: "Alice", firmId: "mffu" },
@@ -824,11 +833,13 @@ describe("cross-cutting real-service tests (4 tests)", () => {
       }),
     } as unknown as ReturnType<typeof db.insert>));
 
-    await assignStrategyToAccount("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" });
+    await expect(
+      assignStrategyToAccount("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" })
+    ).rejects.toBeInstanceOf(CollaborativeTradingBlockedError);
 
     expect(vi.mocked(notifyCritical as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
     const callArgs = (vi.mocked(notifyCritical as ReturnType<typeof vi.fn>)).mock.calls[0] as [string, ...unknown[]];
-    expect(callArgs[0]).toContain("Collaborative-Trading");
+    expect(callArgs[0]).toContain("BLOCKED");
   });
 
   // Test 26: Per-firm independence — mffu-only rejects topstep, accepts mffu
@@ -865,8 +876,8 @@ describe("cross-cutting real-service tests (4 tests)", () => {
     ).rejects.toThrow("Pipeline is paused");
   });
 
-  // Test 28: Collaborative warning audit row has correct shape
-  it("28. collaborative-trading warning writes audit row with correct action and severity", async () => {
+  // Test 28: Collaborative-trading BLOCK audit row has correct shape
+  it("28. collaborative-trading BLOCK writes audit row with correct action, severity, and failure status", async () => {
     const newRow = makeAssignmentRow("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" });
     const existingOnMffu = [
       { accountId: "acct-mffu-alice", familyMemberLabel: "Alice", firmId: "mffu" },
@@ -881,14 +892,17 @@ describe("cross-cutting real-service tests (4 tests)", () => {
       }),
     } as unknown as ReturnType<typeof db.insert>));
 
-    await assignStrategyToAccount("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" });
+    await expect(
+      assignStrategyToAccount("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" })
+    ).rejects.toBeInstanceOf(CollaborativeTradingBlockedError);
 
-    const warningAudit = (auditRows as Record<string, unknown>[]).find(
-      (a) => a.action === "strategy_assignment.collaborative_trading_warning"
+    const blockedAudit = (auditRows as Record<string, unknown>[]).find(
+      (a) => a.action === "strategy_assignment.collaborative_trading_blocked"
     );
-    expect(warningAudit).toBeDefined();
-    expect((warningAudit?.result as Record<string, unknown>)?.severity).toBe("warning");
-    expect((warningAudit?.result as Record<string, unknown>)?.rule).toBe("mffu_no_collaborative_trading");
+    expect(blockedAudit).toBeDefined();
+    expect(blockedAudit?.status).toBe("failure");
+    expect((blockedAudit?.result as Record<string, unknown>)?.severity).toBe("blocked");
+    expect((blockedAudit?.result as Record<string, unknown>)?.rule).toBe("mffu_no_collaborative_trading");
   });
 
   // Test 29: broker-router pipeline_paused when pipeline is paused

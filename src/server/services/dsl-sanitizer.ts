@@ -51,6 +51,10 @@ export const ENTRY_PATTERN_ALLOWLIST: Record<string, PatternSpec> = {
   session_open_breakout:{ required: ["range_minutes"], optional: ["buffer_ticks"], ranges: R.session_open_breakout },
   macd_crossover:       { required: ["fast_period", "slow_period", "signal_period"], optional: [], ranges: R.macd_crossover },
   vwap_fade:            { required: ["atr_extension_threshold"], optional: ["confirmation_bars", "vwap_touch_exit"], ranges: R.vwap_fade },
+  // deep-scan cross-system F-2 (2026-07-06): Wave 25 Pass 5 archetypes — mirror pattern_library.py so the sanitizer
+  // cleans LLM output instead of passing it through to a Python hard-reject (the exact bug Pass 19 Track D closed).
+  vwap_band_reject:     { required: ["band_sigma"], optional: ["confirmation_bars", "require_close_inside"], ranges: R.vwap_band_reject },
+  anchored_vwap_retest: { required: ["anchor_lookback_bars"], optional: ["confirmation_bars", "tolerance_ticks"], ranges: R.anchored_vwap_retest },
   event_driven_fade:    { required: ["atr_move_threshold", "event_window_minutes"], optional: ["confirmation_bars"], ranges: R.event_driven_fade },
   overnight_drift:      { required: ["drift_atr_threshold", "asia_lookback_bars"], optional: ["min_drift_bars"], ranges: R.overnight_drift },
 };

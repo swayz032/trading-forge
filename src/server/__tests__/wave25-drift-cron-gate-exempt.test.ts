@@ -170,10 +170,19 @@ describe("Wave 25 Pass 2 Y-1 — weekly-drift cron pipeline-gate-exempt", () => 
     // near _PIPELINE_GATE_EXEMPT. We check both forms:
     //   Form A: listed in the Set([...]) initializer
     //   Form B: _PIPELINE_GATE_EXEMPT.add("weekly-drift-2sigma-check")
-    const exemptSetSection = schedulerSrc.slice(
-      schedulerSrc.indexOf("_PIPELINE_GATE_EXEMPT"),
-      schedulerSrc.indexOf("_PIPELINE_GATE_EXEMPT") + 3000,
-    );
+    //
+    // deepscan23 fix: this used to slice a 3000-char window from the FIRST bare
+    // occurrence of "_PIPELINE_GATE_EXEMPT" in the whole file — which is an
+    // earlier unrelated comment (~line 175), landing ~21,000 chars short of the
+    // real Set literal (~line 629-700+). The window silently never covered the
+    // actual member list, so this assertion was already broken before deep-scan
+    // #23 touched anything; anchor on the concrete declaration text instead.
+    const declAnchor = "const _PIPELINE_GATE_EXEMPT = new Set<string>([";
+    const declStart = schedulerSrc.indexOf(declAnchor);
+    expect(declStart).toBeGreaterThan(-1);
+    const declEnd = schedulerSrc.indexOf("]);", declStart);
+    expect(declEnd).toBeGreaterThan(declStart);
+    const exemptSetSection = schedulerSrc.slice(declStart, declEnd);
 
     const isExempted =
       exemptSetSection.includes('"weekly-drift-2sigma-check"') ||

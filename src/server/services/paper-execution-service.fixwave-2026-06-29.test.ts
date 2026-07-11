@@ -86,13 +86,18 @@ vi.mock("../db/index.js", () => {
     })),
     transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn({
       select: vi.fn(makeChain),
+      // CRIT-1 (2026-07-09): closePosition runs a guarded idempotency CLAIM
+      // (update...where(isNull(closedAt)).returning({id})) before the trade insert.
+      // insert.values + update.set.where must both expose .returning().
       insert: vi.fn(() => ({
-        values: vi.fn(() => ({ catch: vi.fn() })),
+        values: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: "trade-1", pnl: "0" }]), catch: vi.fn() })),
       })),
       update: vi.fn(() => ({
         set: vi.fn((vals: Record<string, unknown>) => {
           capturedTxSessionUpdates.push({ ...vals });
-          return { where: vi.fn().mockResolvedValue(undefined) };
+          const p: any = Promise.resolve(undefined);
+          p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+          return { where: vi.fn().mockReturnValue(p) };
         }),
       })),
     })),

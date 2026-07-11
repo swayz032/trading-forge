@@ -155,6 +155,13 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
   let todayKey: string;
 
   beforeEach(async () => {
+    // deep-scan long-tail re-verify (2026-07-06): freeze wall-clock to mid-RTH so the DOWNSTREAM
+    // overnight-position gate (paper-risk-gate gate (e) — blocks outside 13:30–20:00 UTC when
+    // firmConfig.overnightOk=false, true for Topstep) can't mask the DLL-gate assertions. The
+    // "$800 ALLOWED" case false-RED'd whenever CI ran outside RTH (it reaches gate (e); the other
+    // cases return early at the DLL gate). Fake ONLY Date (not setTimeout) to avoid async interference.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-07-06T15:00:00Z")); // Monday 11:00 ET — mid-RTH
     todayKey = await makeTodayKey();
     __resetDailyLossCacheForTests();
     vi.clearAllMocks();
@@ -162,24 +169,28 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
 
   afterEach(() => {
     __resetDailyLossCacheForTests();
+    vi.useRealTimers();
   });
 
-  it("Topstep: todayLoss=$800 BLOCKED (>= $1000 * 0.67 = $670)", async () => {
-    // $800 loss > $670 halt threshold — must be blocked
-    // firmId="topstep" → getFirmAccount("topstep") → dailyLossLimit=1000
-    const session = makeSessionRow({ firmId: "topstep", lossToday: 800, todayKey });
+  // deep-scan long-tail F-1 (operator-approved 2026-07-06): Topstep DLL base UNIFIED to the trailing-DD
+  // ($2,000 for 50k via resolvePersonalDllDollars) → halt = 0.67 × $2,000 = $1,340, matching kill-switch
+  // Layer 2 + cross-symbol-pnl. Was $670 (0.67 × $1,000 daily-loss-limit) — a 2× contradiction. These
+  // Topstep thresholds now assert $1,340; startingCapital=50_000 → TOPSTEP_TRAILING_DD_BY_SIZE[50000]=2000.
+  it("Topstep: todayLoss=$1400 BLOCKED (>= $2000 * 0.67 = $1,340 trailing-DD base)", async () => {
+    const session = makeSessionRow({ firmId: "topstep", lossToday: 1400, todayKey });
     wireDbMock(session, [session]);
 
     const result = await checkRiskGate("test-session-id", "MES", 6);
 
     expect(result.allowed).toBe(false);
     expect(result.check).toBe("daily_loss_limit");
-    expect(result.reason).toMatch(/670|67%|halt/i);
+    expect(result.reason).toMatch(/1340|67%|halt/i);
   });
 
-  it("Topstep: todayLoss=$600 ALLOWED (< $670 halt threshold)", async () => {
-    // $600 < $670 — must be allowed (passes DLL gate)
-    const session = makeSessionRow({ firmId: "topstep", lossToday: 600, todayKey });
+  it("Topstep: todayLoss=$800 ALLOWED (< $1,340 — was BLOCKED under the stale $670 basis)", async () => {
+    // Regression guard for F-1: $800 is now allowed (below the unified $1,340 halt), where the old
+    // $670 basis would have blocked it. Proves the unification took effect + is non-tautological.
+    const session = makeSessionRow({ firmId: "topstep", lossToday: 800, todayKey });
     wireDbMock(session, [session]);
 
     const result = await checkRiskGate("test-session-id", "MES", 6);
@@ -187,8 +198,8 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
     expect(result.allowed).toBe(true);
   });
 
-  it("Topstep: todayLoss=$670 exactly BLOCKED (>= threshold, boundary)", async () => {
-    const session = makeSessionRow({ firmId: "topstep", lossToday: 670, todayKey });
+  it("Topstep: todayLoss=$1340 exactly BLOCKED (>= threshold, boundary)", async () => {
+    const session = makeSessionRow({ firmId: "topstep", lossToday: 1340, todayKey });
     wireDbMock(session, [session]);
 
     const result = await checkRiskGate("test-session-id", "MES", 6);
@@ -210,9 +221,10 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
     expect(result.check).toBe("daily_loss_limit");
   });
 
-  it("Topstep: todayLoss=$999 (old 100% threshold) BLOCKED by 67% gate", async () => {
-    // Old code would allow $999 < $1000; new code must block at $670
-    const session = makeSessionRow({ firmId: "topstep", lossToday: 999, todayKey });
+  it("Topstep: todayLoss=$1500 BLOCKED by 67% gate (halt is 67% of the $2,000 base, not 100%)", async () => {
+    // The 67%-not-100% invariant, on the unified trailing-DD base: $1,500 is below the full $2,000
+    // trailing-DD but above the $1,340 halt → blocked. (Old test used $999 against the stale $670 basis.)
+    const session = makeSessionRow({ firmId: "topstep", lossToday: 1500, todayKey });
     wireDbMock(session, [session]);
 
     const result = await checkRiskGate("test-session-id", "MES", 6);

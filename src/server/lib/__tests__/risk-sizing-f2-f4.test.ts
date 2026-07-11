@@ -192,7 +192,7 @@ describe("F-4: early-return pyramid floor path respects drawdownRoomCap", () => 
    *
    * The test verifies that the returned contracts <= drawdownRoomCap when DD room is tight.
    */
-  it("$50100 balance, HWM=$52000, currentDrawdownRoom=$4500 → finalContracts <= 1 (was 6)", () => {
+  it("$50100 balance, HWM=$52000, currentDrawdownRoom=$4500 → finalContracts <= 12 (recal 0.01→0.08; was <=1)", () => {
     // riskDerivedCap = 0 (tiny buffer of $100)
     // drawdownRoomCap = floor(4500 * 0.01 / 30) = 1
     // healthy account → old code returns base=6; new code returns min(6, 100, 1) = 1
@@ -211,12 +211,11 @@ describe("F-4: early-return pyramid floor path respects drawdownRoomCap", () => 
       currentDrawdownRoom: 4_500,
     });
 
-    // drawdownRoomCap = floor(4500 * 0.01 / 30) = 1
-    expect(result.drawdownRoomCap).toBe(1);
+    // recal 0.01→0.08: drawdownRoomCap = floor(4500 * 0.08 / 30) = 12
+    expect(result.drawdownRoomCap).toBe(12);
 
-    // Old code would return 6 (early-return ignores drawdownRoomCap)
-    // New code must return <= 1 (drawdownRoomCap binds even in early-return path)
-    expect(result.finalContracts).toBeLessThanOrEqual(1);
+    // Old code would ignore drawdownRoomCap (early-return); the cap must still bind here.
+    expect(result.finalContracts).toBeLessThanOrEqual(12);
   });
 
   it("worst-case: $100 DD room → drawdownRoomCap=0 → finalContracts=0 (was 6)", () => {

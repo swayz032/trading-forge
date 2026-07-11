@@ -769,6 +769,7 @@ export async function openPosition(sessionId: string, params: {
         symbol: params.symbol,
         side: params.side,
         reason: "production_halt",
+        correlationId,
       });
       return {
         position: null,
@@ -797,6 +798,7 @@ export async function openPosition(sessionId: string, params: {
       symbol: params.symbol,
       side: params.side,
       reason: "production_halt_check_error",
+      correlationId,
     });
     return {
       position: null,
@@ -909,6 +911,7 @@ export async function openPosition(sessionId: string, params: {
       side: params.side,
       exchange: "CME",
       reason: "exchange_halted",
+      correlationId,
     });
     return {
       position: null,
@@ -985,6 +988,7 @@ export async function openPosition(sessionId: string, params: {
         symbol: params.symbol,
         side: params.side,
         reason: "firm_suspended",
+        correlationId,
       });
       return {
         position: null,
@@ -1349,6 +1353,7 @@ export async function openPosition(sessionId: string, params: {
                 halt_pct: killResult.halt_pct_used ?? _effectiveHaltPct,
                 daily_pnl_pct: killResult.daily_pnl_pct,
                 message: `New entries blocked: daily loss reached ${((killResult.halt_pct_used ?? _effectiveHaltPct) * 100).toFixed(0)}% of firm DLL. Existing positions held. Force-close triggers at ${((_effectiveForceClosePct) * 100).toFixed(0)}%.`,
+                correlationId: correlationId ?? null,
               });
             }
 
@@ -1531,6 +1536,7 @@ export async function openPosition(sessionId: string, params: {
           sessionId,
           symbol: params.symbol,
           error: killErr instanceof Error ? killErr.message : String(killErr),
+          correlationId,
         });
         AlertFactory.systemError("kill-switch-down", killErr instanceof Error ? killErr : String(killErr));
         const killDownAuditInsert = db.insert(auditLog).values({
@@ -1682,6 +1688,7 @@ export async function openPosition(sessionId: string, params: {
         stage: "freshness",
         status: cached.freshnessStatus,
         message: cached.freshnessMessage,
+        correlationId,
       });
       db.insert(auditLog).values({
         action: "compliance.gate_blocked",
@@ -1826,6 +1833,7 @@ export async function openPosition(sessionId: string, params: {
           status: violationResult.status,
           message: violationResult.message,
           violations: violationResult.violations,
+          correlationId,
         });
         db.insert(auditLog).values({
           action: "compliance.gate_blocked",
@@ -1869,6 +1877,7 @@ export async function openPosition(sessionId: string, params: {
       symbol: params.symbol,
       firm: firmKey,
       error: complianceErr instanceof Error ? complianceErr.message : String(complianceErr),
+      correlationId,
     });
   }
 
@@ -1890,7 +1899,7 @@ export async function openPosition(sessionId: string, params: {
     capturedFillProbability = fillProb;
     if (Math.random() > fillProb) {
       logger.info({ sessionId, symbol: params.symbol, fillProb, orderType }, "Fill probability miss — order not filled");
-      broadcastSSE("paper:fill-miss", { sessionId, symbol: params.symbol, fillProb, orderType });
+      broadcastSSE("paper:fill-miss", { sessionId, symbol: params.symbol, fillProb, orderType, correlationId });
       fillSpan.setAttribute("filled", false);
       fillSpan.end();
       return {
@@ -2182,6 +2191,53 @@ export async function openPosition(sessionId: string, params: {
           ...(params.entryContext != null ? { entryContext: params.entryContext } : {}),
         } as unknown as ExitPlanWithRuntimeState)
       : (exitPlanForInsert ?? undefined);
+
+  // HIGH-5 TOCTOU re-check (deep-scan 2026-07-09, ratified): the kill switch was checked
+  // ONCE at openPosition entry (~line 752), but ~1400 lines of work run before this fill
+  // write — session lock, GAP checks, and the two-stage compliance gate (whose freshness
+  // check alone budgets a 3s Python subprocess). Production mode can flip to HALT, or the
+  // account can cross a DLL/CME-outage/firm-suspension threshold, inside that window, and
+  // the already-in-flight order would fill un-rechecked. Re-check immediately before the
+  // transaction commit — cheap (5s in-memory cache, KillSwitch.CACHE_TTL_MS). Fail-CLOSED
+  // on read error (block the fill) — a broken kill-switch read must not let an order slip.
+  try {
+    if (await killSwitch.isHaltedForProduction({ correlationId, accountKey: context?.accountKey, firmId: context?.firmId })) {
+      logger.warn(
+        { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side, reason: "production_mode_halt_toctou" },
+        "paper-execution.production-halted (TOCTOU): kill switch tripped between entry check and fill write — blocking fill",
+      );
+      db.insert(auditLog).values({
+        action: "paper.entry_blocked",
+        entityType: "paper_session",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        input: { sessionId, symbol: params.symbol, side: params.side } as Record<string, unknown>,
+        result: { reason: "production_halt_toctou", blocked: true, stage: "pre_fill_write" } as Record<string, unknown>,
+        status: "success",
+        correlationId,
+      }).catch((err) => logger.error({ err }, "paper-execution: TOCTOU halt audit_log write failed (non-blocking)"));
+      broadcastSSE("paper:entry-blocked-production-halt", { sessionId, symbol: params.symbol, side: params.side, reason: "production_halt_toctou", correlationId });
+      return {
+        position: null,
+        executionResult: {
+          positionId: "", entryPrice: 0, contracts: params.contracts, slippage: 0,
+          expectedPrice: params.signalPrice, actualPrice: 0, arrivalPrice: params.signalPrice,
+          implementationShortfall: 0, fillRatio: 0, filled: false,
+        } satisfies ExecutionResult,
+      };
+    }
+  } catch (err) {
+    logger.error({ err, fn: "openPosition", sessionId, symbol: params.symbol }, "paper-execution: TOCTOU kill-switch re-check read error — failing CLOSED (blocking fill)");
+    broadcastSSE("paper:entry-blocked-production-halt", { sessionId, symbol: params.symbol, side: params.side, reason: "production_halt_toctou_read_error", correlationId });
+    return {
+      position: null,
+      executionResult: {
+        positionId: "", entryPrice: 0, contracts: params.contracts, slippage: 0,
+        expectedPrice: params.signalPrice, actualPrice: 0, arrivalPrice: params.signalPrice,
+        implementationShortfall: 0, fillRatio: 0, filled: false,
+      } satisfies ExecutionResult,
+    };
+  }
 
   // FIX 3 (Track M): wrap position INSERT + paper.trade_open audit INSERT in a single
   // transaction so they are atomic. Previously a crash between the two writes left an
@@ -2494,9 +2550,34 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // On transaction rollback we emit a SEPARATE out-of-transaction
   // paper.trade_close_audit_failed row + notifyCritical Discord so the operator
   // can identify and manually reconcile the open position.
-  let trade: typeof paperTrades.$inferSelect;
+  let trade: typeof paperTrades.$inferSelect | null;
   try {
     const [tradeRow] = await dbConn.transaction(async (tx) => {
+      // 0. IDEMPOTENCY CLAIM (deep-scan CRIT-1, operator-ratified 2026-07-09):
+      //    Atomically CLAIM the close, guarded by isNull(closedAt), BEFORE inserting
+      //    the trade. This is LOCK-FLAG-INDEPENDENT (works whether or not
+      //    TF_POSITION_LOCKING is on — db-locks.ts is a no-op by default). If a
+      //    concurrent path already closed this position — the real race being a
+      //    per-symbol stop/trail/time-exit and a cross-symbol 95%-DLL
+      //    forceCloseAllPositions() both calling closePosition(sameId) in the same
+      //    async tick window — the UPDATE matches 0 rows and we abort with NO
+      //    duplicate paper_trades row, NO doubled equity/totalTrades, NO second audit.
+      const claimed = await tx
+        .update(paperPositions)
+        .set({
+          closedAt,
+          currentPrice: String(actualExit),
+          unrealizedPnl: "0",
+        })
+        .where(and(eq(paperPositions.id, positionId), isNull(paperPositions.closedAt)))
+        .returning({ id: paperPositions.id });
+
+      if (claimed.length === 0) {
+        // Lost the close race — another path already closed this position. Abort the
+        // transaction body (nothing inserted yet) and signal a benign idempotent no-op.
+        return [null];
+      }
+
       // 1. Insert closed trade — pnl column holds NET P&L; grossPnl and commission stored for audit/analytics
       const [insertedTrade] = await tx.insert(paperTrades).values({
         sessionId: pos.sessionId,
@@ -2530,12 +2611,9 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
         correlationId,
       }).returning();
 
-      // 2. Mark position as closed — unrealizedPnl resets to 0 (realized P&L lives in paperTrades)
-      await tx.update(paperPositions).set({
-        closedAt,
-        currentPrice: String(actualExit),
-        unrealizedPnl: "0",
-      }).where(eq(paperPositions.id, positionId));
+      // 2. (removed) Position close is now done atomically by the step-0 idempotency
+      //    CLAIM above (guarded by isNull(closedAt)) — re-updating here would be
+      //    redundant and would defeat the claim's 0-row guard.
 
       // 3. Update session equity atomically using NET P&L — prevents read-modify-write race on
       //    concurrent closes. totalTrades is incremented here so it always matches trade rows.
@@ -2592,7 +2670,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
 
       return [insertedTrade];
     });
-    trade = tradeRow;
+    trade = tradeRow ?? null;
   } catch (txErr) {
     // Transaction rolled back — trade close and audit both failed atomically.
     // Emit a SEPARATE observability row (out-of-transaction, best-effort) so the
@@ -2630,6 +2708,27 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       { positionId, correlationId: correlationId ?? null, errorType: "trade_close_tx_rollback" },
     );
     throw txErr;
+  }
+
+  // ─── CRIT-1 idempotent no-op: position was already closed by a concurrent path ──
+  // The step-0 CLAIM matched 0 rows (the double-close race). This is BENIGN — the
+  // real close (trade row, equity, audit) already happened exactly once on the winning
+  // path. Return a zero-effect result (no error, no Discord, no proven-trades increment)
+  // so callers that raced to close see a clean "already closed" outcome, not a duplicate.
+  if (trade === null) {
+    logger.info(
+      { positionId, correlationId },
+      "closePosition: position already closed by a concurrent path — idempotent no-op (no duplicate trade/equity)",
+    );
+    return {
+      trade: null,
+      pnl: 0,
+      grossPnl: 0,
+      commission: 0,
+      slippage: 0,
+      rollSpreadCost: 0,
+      alreadyClosed: true as const,
+    };
   }
 
   // ─── Proven-trades counter (fail-soft, never blocks close) ─────────────────
@@ -2724,6 +2823,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       contracts: pos.contracts,
       rollDates: rollCost.rollDates,
       costUsd: rollCost.estimatedSpreadCost,
+      correlationId: correlationId ?? null,
     });
   }
 
@@ -2753,6 +2853,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       ...metrics,          // includes sessionId from computeMetrics
       strategyId: session?.strategyId ?? null,
       tradeId: trade.id,
+      correlationId: correlationId ?? null,
     });
   } catch (metricsRecordErr) {
     logger.warn({ err: metricsRecordErr, sessionId: pos.sessionId }, "MetricsAggregator.recordTrade failed (non-blocking)");
@@ -4272,6 +4373,7 @@ export async function updatePositionPrices(
             broadcastSSE("paper:position-stop-breached", {
               positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
               stopLevel, adversePrice, currentPrice,
+              correlationId: correlationId ?? null,
             });
           } catch (stopCloseErr) {
             logger.error(
@@ -4830,8 +4932,12 @@ export async function checkRollAndFlatten(
           );
           notifyCritical(
             "Roll-day flatten failed",
-            `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
-            `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+            appendFamilyGradePostscript(
+              `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
+              `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+              "The trading bot hit an error trying to close a position before its futures contract rolls to the next month.",
+              "This position may stay open longer than intended. Tell Tony right away.",
+            ),
             { sessionId, positionId: pos.id, symbol: pos.symbol, rollDate: info.roll_date, correlationId },
           );
           await insertAuditRowSafe({
@@ -4893,6 +4999,7 @@ export async function checkRollAndFlatten(
           sessionId, positionId: pos.id, symbol: pos.symbol,
           rollDate: info.roll_date, flattenDate: info.flatten_date,
           pnlAtClose, activeContract: info.active_contract,
+          correlationId,
         });
 
         logger.info(
@@ -4911,6 +5018,7 @@ export async function checkRollAndFlatten(
           sessionId, positionId: pos.id, symbol: pos.symbol,
           daysToRoll: info.days_to_roll, rollDate: info.roll_date,
           flattenDate: info.flatten_date, activeContract: info.active_contract,
+          correlationId,
         });
 
         // Persist warn event (once per day per position is acceptable — duplicate
@@ -5244,7 +5352,7 @@ export async function forceCloseAllPositions(
     correlationId: batchCorrelationId,
   }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: audit_log write failed (non-blocking)"));
 
-  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length, scope: scope ?? null });
+  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length, scope: scope ?? null, correlationId: batchCorrelationId });
 
   return { count, closed: closedCount, stuck: stuckCount };
 }

@@ -24,6 +24,7 @@ import {
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
+import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 
 // ─── Gate Analysis Types ────────────────────────────────────────────
 
@@ -236,6 +237,29 @@ async function applyAutoTunableChanges(
   recommendations: ParameterRecommendation[],
 ): Promise<Array<{ param: string; oldValue: number; newValue: number }>> {
   const applied: Array<{ param: string; oldValue: number; newValue: number }> = [];
+
+  // Kill-switch gate — this is an AUTONOMOUS mutation loop (it writes
+  // system_parameters.current_value). It must run ONLY at AUTOPILOT (mode >= 2
+  // → autonomousOn); OFF (0) and OBSERVE (1) both HALT and emit
+  // `auto_patch.loop_halted_skip`, mirroring pattern-aggregator +
+  // quantum-replay-weekly. readLearningLoopMode() is fail-CLOSED (absent row /
+  // non-numeric / DB error → mode 0 → halt). Without this gate the operator's
+  // phone-tappable kill switch did NOT stop meta-optimizer auto-tuning.
+  const { autonomousOn, mode } = await readLearningLoopMode();
+  if (!autonomousOn) {
+    logger.info({ mode, recommendationCount: recommendations.length }, "meta-optimizer: kill switch engaged (mode<2) — skipping auto-tunable changes");
+    await db
+      .insert(auditLog)
+      .values({
+        action: "auto_patch.loop_halted_skip",
+        entityType: "system_parameters",
+        status: "success",
+        result: { service: "meta-optimizer", loop: "applyAutoTunableChanges", mode, reason: "kill_switch" } as Record<string, unknown>,
+        decisionAuthority: "scheduler",
+      })
+      .catch((err) => logger.warn({ err }, "meta-optimizer: loop_halted_skip audit write failed (non-blocking)"));
+    return applied;
+  }
 
   for (const rec of recommendations) {
     if (!rec.autoApplicable) continue;

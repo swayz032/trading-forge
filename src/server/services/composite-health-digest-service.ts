@@ -111,12 +111,25 @@ function _buildDigestBody(
   verdicts: DigestVerdictCounts,
   strategiesChecked: number,
   correlationId: string,
+  coverage?: { minSubsystemsLive: number; atOrNearFloor: number; floor: number },
 ): string {
   const total = verdicts.HEALTHY + verdicts.MARGINAL + verdicts.UNHEALTHY + verdicts.CRITICAL + verdicts.SKIPPED;
   const lines: string[] = [
     `[W28 DAILY DIGEST] Composite Strategy Health — ${strategiesChecked} active strategies`,
     `HEALTHY: ${verdicts.HEALTHY}  |  MARGINAL: ${verdicts.MARGINAL}  |  UNHEALTHY: ${verdicts.UNHEALTHY}  |  CRITICAL: ${verdicts.CRITICAL}`,
   ];
+
+  // deep-scan observability F-2 (2026-07-06): surface the subsystem-coverage floor so a HEALTHY verdict is not
+  // mistaken for "all subsystems agree" — the composite renormalizes over AVAILABLE subsystems, so a strategy at
+  // the minimum floor can score HEALTHY on a materially reduced evidence set.
+  if (coverage && Number.isFinite(coverage.minSubsystemsLive)) {
+    lines.push(
+      `Subsystem coverage: lowest ${coverage.minSubsystemsLive} live` +
+        (coverage.atOrNearFloor > 0
+          ? `  |  ⚠ ${coverage.atOrNearFloor} strateg${coverage.atOrNearFloor === 1 ? "y" : "ies"} at the min-${coverage.floor} floor (HEALTHY here runs on a reduced evidence set)`
+          : ""),
+    );
+  }
 
   if (verdicts.SKIPPED > 0) {
     lines.push(`SKIPPED (below min subsystem threshold): ${verdicts.SKIPPED}`);
@@ -254,6 +267,13 @@ export async function runCompositeHealthDailyDigest(
       SKIPPED: 0,
     };
 
+    // deep-scan observability F-2 (HIGH 2026-07-06): the composite renormalizes over AVAILABLE subsystems, so a
+    // strategy with only the 8-subsystem floor live (5 of 13 dark) can still score a full HEALTHY. Track the
+    // subsystem-coverage floor so the digest can surface "green while ~40% dark" — the operator's daily glance
+    // must not read HEALTHY as "all 13 subsystems agree".
+    let minSubsystemsLive = Number.POSITIVE_INFINITY;
+    let strategiesAtOrNearFloor = 0;
+    const _minFloor = Number(process.env.MIN_COMPOSITE_SUBSYSTEMS) || 8;
     for (const strat of activeStrategies) {
       try {
         const result = await aggregateStrategyHealth(strat.id);
@@ -262,6 +282,10 @@ export async function runCompositeHealthDailyDigest(
         } else {
           const v = result.verdict as HealthVerdict;
           verdicts[v]++;
+          if (typeof result.n === "number") {
+            minSubsystemsLive = Math.min(minSubsystemsLive, result.n);
+            if (result.n <= _minFloor) strategiesAtOrNearFloor++;
+          }
         }
       } catch (err) {
         // Aggregator re-throws on uncaught error; per strategy isolation we count SKIPPED
@@ -274,7 +298,11 @@ export async function runCompositeHealthDailyDigest(
     }
 
     // ── 5. Build Discord message ──────────────────────────────────────────────
-    const operatorBody = _buildDigestBody(verdicts, activeStrategies.length, correlationId);
+    const operatorBody = _buildDigestBody(verdicts, activeStrategies.length, correlationId, {
+      minSubsystemsLive,
+      atOrNearFloor: strategiesAtOrNearFloor,
+      floor: _minFloor,
+    });
 
     const hasCritical = verdicts.CRITICAL > 0;
     const hasUnhealthy = verdicts.UNHEALTHY > 0;

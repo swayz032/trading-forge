@@ -97,22 +97,27 @@ function classifyFactorSources(
 
 describe("Wave 26 Pass H2 — inferFactorsFromArchetype()", () => {
 
-  it("returns 5 factors for ict_bias_aligned_continuation (bare name)", () => {
+  // FIX A2 (deep-scan #22 fix-wave-2, 2026-07-07): ARCHETYPE_IMPLIED_FACTORS was
+  // rewritten to use ONLY the canonical 11-factor vocabulary (was injecting
+  // non-canonical concept-labels like htf_bias_aligned / fvg_present_or_ob that
+  // Path B's if/else chain fail-closes as unknown_factor_fail_closed). The
+  // literal factor sets below were updated to the new canonical mappings —
+  // see archetype-implied-factors.ts's FIX A2 header comment for the full
+  // mapping rationale, and archetype-implied-factors-canonical.test.ts for the
+  // blanket "every value is canonical" enforcement test.
+
+  it("returns 3 canonical factors for ict_bias_aligned_continuation (bare name)", () => {
     const factors = inferFactorsFromArchetype("ict_bias_aligned_continuation");
-    expect(factors).toHaveLength(5);
+    expect(factors).toHaveLength(3);
     expect(factors).toContain("market_structure_aligned");
-    expect(factors).toContain("htf_bias_aligned");
-    expect(factors).toContain("fvg_present_or_ob");
     expect(factors).toContain("liquidity_target_clear");
     expect(factors).toContain("killzone_active");
   });
 
-  it("returns 5 factors for ict_bias_aligned_continuation (archetype: prefix)", () => {
+  it("returns 3 canonical factors for ict_bias_aligned_continuation (archetype: prefix)", () => {
     const factors = inferFactorsFromArchetype("archetype:ict_bias_aligned_continuation");
-    expect(factors).toHaveLength(5);
+    expect(factors).toHaveLength(3);
     expect(factors).toContain("market_structure_aligned");
-    expect(factors).toContain("htf_bias_aligned");
-    expect(factors).toContain("fvg_present_or_ob");
     expect(factors).toContain("liquidity_target_clear");
     expect(factors).toContain("killzone_active");
   });
@@ -131,17 +136,17 @@ describe("Wave 26 Pass H2 — inferFactorsFromArchetype()", () => {
     expect(inferFactorsFromArchetype("")).toEqual([]);
   });
 
-  it("returns 4 factors for ict_silver_bullet_ny_am, killzone_active first", () => {
+  it("returns 2 factors for ict_silver_bullet_ny_am, killzone_active first", () => {
     const factors = inferFactorsFromArchetype("ict_silver_bullet_ny_am");
-    expect(factors).toHaveLength(4);
+    expect(factors).toHaveLength(2);
     expect(factors[0]).toBe("killzone_active");
   });
 
-  it("returns 2 factors for fvg_retrace", () => {
+  it("returns 2 canonical factors for fvg_retrace", () => {
     const factors = inferFactorsFromArchetype("fvg_retrace");
     expect(factors).toHaveLength(2);
-    expect(factors).toContain("fvg_present_or_ob");
     expect(factors).toContain("market_structure_aligned");
+    expect(factors).toContain("vp_level_proximity");
   });
 
   it("all archetypes in the map have ≤5 implied factors (no over-stuffing guard)", () => {
@@ -155,36 +160,37 @@ describe("Wave 26 Pass H2 — inferFactorsFromArchetype()", () => {
 
   // ─── Wave 26 Pass H Phase 1 (2026-05-26) — KB depth + parametric coverage ───
 
-  it("break_of_structure returns 3 factors (Phase 1 extended depth)", () => {
+  it("break_of_structure returns market_structure_aligned only (canonical collapse)", () => {
+    // FIX A2: displacement_confirmed + htf_bias_aligned both mapped onto
+    // market_structure_aligned (both are StructureState components) and
+    // collapse to a single canonical entry — the "extended depth" concept is
+    // preserved (BOS implies HTF-bias + displacement), just expressed through
+    // the one canonical factor those concepts already feed at signal time.
     const factors = inferFactorsFromArchetype("break_of_structure");
-    expect(factors).toHaveLength(3);
-    expect(factors).toContain("market_structure_aligned");
-    expect(factors).toContain("displacement_confirmed");
-    expect(factors).toContain("htf_bias_aligned");
+    expect(factors).toEqual(["market_structure_aligned"]);
   });
 
-  it("session_open_breakout returns its 3 parametric factors", () => {
+  it("session_open_breakout returns its 2 canonical factors", () => {
     const factors = inferFactorsFromArchetype("session_open_breakout");
     expect(factors).toEqual(
       expect.arrayContaining([
         "killzone_active",
-        "opening_range_breakout",
-        "first_30min_volume_above_avg",
+        "delta_or_volume_signature",
       ]),
     );
-    expect(factors).toHaveLength(3);
+    expect(factors).toHaveLength(2);
   });
 
-  it("ema_crossover returns regime_match + htf_bias_aligned", () => {
+  it("ema_crossover returns regime_match + market_structure_aligned", () => {
     const factors = inferFactorsFromArchetype("ema_crossover");
-    expect(factors).toEqual(["regime_match", "htf_bias_aligned"]);
+    expect(factors).toEqual(["regime_match", "market_structure_aligned"]);
   });
 
-  it("opening_range_breakout returns killzone_active + first_30min_volume_above_avg", () => {
+  it("opening_range_breakout returns killzone_active + delta_or_volume_signature", () => {
     const factors = inferFactorsFromArchetype("opening_range_breakout");
     expect(factors).toEqual([
       "killzone_active",
-      "first_30min_volume_above_avg",
+      "delta_or_volume_signature",
     ]);
   });
 
@@ -193,16 +199,16 @@ describe("Wave 26 Pass H2 — inferFactorsFromArchetype()", () => {
     expect(factors).toEqual(["vwap_alignment", "regime_match"]);
   });
 
-  it("moving_average bare (no prefix) returns regime_match + ma_as_support_resistance", () => {
+  it("moving_average bare (no prefix) returns regime_match + vp_level_proximity", () => {
     const factors = inferFactorsFromArchetype("moving_average");
-    expect(factors).toEqual(["regime_match", "ma_as_support_resistance"]);
+    expect(factors).toEqual(["regime_match", "vp_level_proximity"]);
   });
 
-  it("archetype:break_of_structure prefixed form returns same 3 factors (regression)", () => {
+  it("archetype:break_of_structure prefixed form returns same factor (regression)", () => {
     const bare = inferFactorsFromArchetype("break_of_structure");
     const prefixed = inferFactorsFromArchetype("archetype:break_of_structure");
     expect(prefixed).toEqual(bare);
-    expect(prefixed).toHaveLength(3);
+    expect(prefixed).toHaveLength(1);
   });
 
 });
@@ -218,6 +224,11 @@ describe("Wave 26 Pass H2 — classifyFactorSources() archetype kb_inferred path
     // Gemma emits ict_bias_aligned_continuation, LLM gives 0 confluence factors,
     // floor guard injects ["regime_match", "structural_setup"].
     // Result before H2: fallback_only.  After H2: rich.
+    //
+    // FIX A2 (deep-scan #22 fix-wave-2, 2026-07-07): ict_bias_aligned_continuation's
+    // implied set is now the 3 canonical factors (market_structure_aligned,
+    // liquidity_target_clear, killzone_active) — was 5 non-canonical-inclusive
+    // factors pre-fix. realCount (3 kb_inferred) still clears the >=2 rich floor.
     const rawLlm:     string[] = [];
     const afterFloor            = ["regime_match", "structural_setup"];
     const entryIndicator        = "archetype:ict_bias_aligned_continuation";
@@ -230,10 +241,8 @@ describe("Wave 26 Pass H2 — classifyFactorSources() archetype kb_inferred path
 
     expect(factor_quality).toBe("rich");
 
-    // All 5 archetype-implied factors must be present and tagged kb_inferred
+    // All 3 archetype-implied (canonical) factors must be present and tagged kb_inferred
     expect(factor_sources["market_structure_aligned"]).toBe("kb_inferred");
-    expect(factor_sources["htf_bias_aligned"]).toBe("kb_inferred");
-    expect(factor_sources["fvg_present_or_ob"]).toBe("kb_inferred");
     expect(factor_sources["liquidity_target_clear"]).toBe("kb_inferred");
     expect(factor_sources["killzone_active"]).toBe("kb_inferred");
 
@@ -244,8 +253,8 @@ describe("Wave 26 Pass H2 — classifyFactorSources() archetype kb_inferred path
     // mergedFactors includes both floor + implied
     expect(mergedFactors).toContain("market_structure_aligned");
     expect(mergedFactors).toContain("regime_match");
-    // Total: 2 auto_floor + 5 kb_inferred = 7
-    expect(mergedFactors).toHaveLength(7);
+    // Total: 2 auto_floor + 3 kb_inferred = 5
+    expect(mergedFactors).toHaveLength(5);
   });
 
   it("archetype with 1 extracted factor → rich (extracted + kb_inferred ≥ 2)", () => {
@@ -264,15 +273,13 @@ describe("Wave 26 Pass H2 — classifyFactorSources() archetype kb_inferred path
     expect(factor_sources["killzone_active"]).toBe("extracted");
     // Implied ones not already present are kb_inferred
     expect(factor_sources["market_structure_aligned"]).toBe("kb_inferred");
-    expect(factor_sources["htf_bias_aligned"]).toBe("kb_inferred");
-    expect(factor_sources["fvg_present_or_ob"]).toBe("kb_inferred");
     expect(factor_sources["liquidity_target_clear"]).toBe("kb_inferred");
     // regime_match was in afterFloor, NOT in the archetype's implied set that wasn't already there
     expect(factor_sources["regime_match"]).toBe("auto_floor");
   });
 
-  it("archetype with 3 extracted factors → rich, remaining implied still kb_inferred", () => {
-    const rawLlm     = ["market_structure_aligned", "killzone_active", "fvg_present_or_ob"];
+  it("archetype with 2 extracted factors → rich, remaining implied still kb_inferred", () => {
+    const rawLlm     = ["market_structure_aligned", "killzone_active"];
     const afterFloor = [...rawLlm]; // no floor additions needed
     const entryIndicator = "archetype:ict_bias_aligned_continuation";
 
@@ -285,9 +292,7 @@ describe("Wave 26 Pass H2 — classifyFactorSources() archetype kb_inferred path
     expect(factor_quality).toBe("rich");
     expect(factor_sources["market_structure_aligned"]).toBe("extracted");
     expect(factor_sources["killzone_active"]).toBe("extracted");
-    expect(factor_sources["fvg_present_or_ob"]).toBe("extracted");
-    // 2 remaining implied
-    expect(factor_sources["htf_bias_aligned"]).toBe("kb_inferred");
+    // 1 remaining implied
     expect(factor_sources["liquidity_target_clear"]).toBe("kb_inferred");
   });
 

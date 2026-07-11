@@ -325,6 +325,23 @@ export function notify(opts: NotifyOptions): void {
       { err, severity: opts.severity, title: opts.title },
       "NotificationService: failed to send notification — dropped",
     );
+    // deep-scan services HIGH (2026-07-06): a DROPPED CRITICAL (kill-switch trip, DLL breach, halt) that only
+    // logged a warn was invisible beyond a server log line — no persisted, queryable record. Write an audit row
+    // so a failed critical delivery is reconstructable from audit_log (the one channel that survives a Discord
+    // outage), turning "silent drop" into "surfaced gap the operator can find".
+    if (opts.severity === "CRITICAL") {
+      insertAuditRow({
+        action: "notification.critical_delivery_failed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { title: opts.title, severity: opts.severity } as Record<string, unknown>,
+        result: { dropped: true, error: (err as Error)?.message ?? String(err) } as Record<string, unknown>,
+        status: "error",
+      }).catch((auditErr: unknown) =>
+        logger.error({ auditErr, title: opts.title }, "NotificationService: critical_delivery_failed audit row ALSO failed"),
+      );
+    }
   });
 }
 

@@ -20,7 +20,12 @@ from unittest.mock import patch
 
 import pytest
 
-from src.engine.quantum_device_selector import select_quantum_device
+from src.engine.quantum_device_selector import select_quantum_device, _best_cpu_device
+
+# institutional-grade (2026-07-06): CPU cases now return the FASTEST available CPU device
+# (lightning.qubit when pennylane-lightning is installed, else default.qubit) — assert the real
+# contract via _best_cpu_device() rather than the old hardcoded 'default.qubit'.
+_CPU = _best_cpu_device()
 
 
 # ─── 1. Default behavior: env flag false ─────────────────────────────────────
@@ -35,26 +40,26 @@ class TestDefaultQubit:
             import os
             os.environ.pop("QUANTUM_CUQUANTUM_GPU_ENABLED", None)
             result = select_quantum_device(8)
-        assert result == "default.qubit"
+        assert result == _CPU
 
     def test_env_flag_explicitly_false_returns_default_qubit(self):
         """Explicit QUANTUM_CUQUANTUM_GPU_ENABLED=false → default.qubit."""
         with patch.dict("os.environ", {"QUANTUM_CUQUANTUM_GPU_ENABLED": "false"}):
             result = select_quantum_device(8)
-        assert result == "default.qubit"
+        assert result == _CPU
 
     def test_env_flag_false_any_qubit_count(self):
         """Flag false regardless of qubit count → default.qubit."""
         with patch.dict("os.environ", {"QUANTUM_CUQUANTUM_GPU_ENABLED": "false"}):
             for n in [1, 8, 12, 20, 24, 25, 26, 30]:
-                assert select_quantum_device(n) == "default.qubit"
+                assert select_quantum_device(n) == _CPU
 
     def test_env_flag_mixed_case_false(self):
         """Flag value is case-insensitive — FALSE, False, false all treated as false."""
         for val in ("FALSE", "False", "0", "no"):
             with patch.dict("os.environ", {"QUANTUM_CUQUANTUM_GPU_ENABLED": val}):
                 result = select_quantum_device(8)
-            assert result == "default.qubit", f"Expected default.qubit for flag={val!r}"
+            assert result == _CPU, f"Expected default.qubit for flag={val!r}"
 
 
 # ─── 2. GPU path: env flag true + VRAM available ─────────────────────────────
@@ -131,7 +136,7 @@ class TestQubitCap:
                 return_value=True,
             ):
                 result = select_quantum_device(26)
-        assert result == "default.qubit"
+        assert result == _CPU
 
     def test_30_qubits_returns_default_qubit(self):
         """n_qubits=30 → default.qubit."""
@@ -141,7 +146,7 @@ class TestQubitCap:
                 return_value=True,
             ):
                 result = select_quantum_device(30)
-        assert result == "default.qubit"
+        assert result == _CPU
 
     def test_over_cap_emits_warning(self, caplog):
         """n_qubits > 25 → warning logged with qubit count."""
@@ -179,7 +184,7 @@ class TestPreferGpuFalse:
         with patch.dict("os.environ", {"QUANTUM_CUQUANTUM_GPU_ENABLED": "true"}):
             with patch("src.engine.quantum_device_selector.probe_vram", return_value=True):
                 result = select_quantum_device(8, prefer_gpu=False)
-        assert result == "default.qubit"
+        assert result == _CPU
 
     def test_prefer_gpu_false_skips_vram_probe(self):
         """prefer_gpu=False → probe_vram never called."""
@@ -212,7 +217,7 @@ class TestVramInsufficient:
                 return_value=False,
             ):
                 result = select_quantum_device(8)
-        assert result == "default.qubit"
+        assert result == _CPU
 
     def test_insufficient_vram_returns_default_qubit_large_circuit(self):
         """probe_vram=False for a larger circuit → still default.qubit."""
@@ -222,7 +227,7 @@ class TestVramInsufficient:
                 return_value=False,
             ):
                 result = select_quantum_device(20)
-        assert result == "default.qubit"
+        assert result == _CPU
 
 
 # ─── 6. Schema stability ─────────────────────────────────────────────────────
@@ -231,13 +236,13 @@ class TestSchemaStability:
     """Return value is always a plain str — never None, never raises."""
 
     @pytest.mark.parametrize("n_qubits,prefer_gpu,flag,probe_val,expected", [
-        (8,  True,  "false", None,  "default.qubit"),
+        (8,  True,  "false", None,  _CPU),
         (8,  True,  "true",  True,  "lightning.gpu"),
-        (8,  True,  "true",  False, "default.qubit"),
-        (8,  False, "true",  True,  "default.qubit"),
-        (30, True,  "true",  True,  "default.qubit"),
+        (8,  True,  "true",  False, _CPU),
+        (8,  False, "true",  True,  _CPU),
+        (30, True,  "true",  True,  _CPU),
         (25, True,  "true",  True,  "lightning.gpu"),
-        (26, True,  "true",  True,  "default.qubit"),
+        (26, True,  "true",  True,  _CPU),
     ])
     def test_always_returns_str(self, n_qubits, prefer_gpu, flag, probe_val, expected):
         """Output is always str, never None, never raises."""
@@ -262,7 +267,7 @@ class TestSchemaStability:
             with patch("src.engine.quantum_device_selector.probe_vram", side_effect=raising_probe):
                 # Must not raise — must return a safe fallback
                 result = select_quantum_device(8)
-        assert result == "default.qubit"
+        assert result == _CPU
 
 
 # ─── 7. Isolation / authority boundary ───────────────────────────────────────

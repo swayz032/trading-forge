@@ -21,7 +21,7 @@
  *   trade_critique.consecutive_failure_alert
  */
 
-import { eq, and, gte, desc } from "drizzle-orm";
+import { eq, and, gte, desc, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import {
   paperPositions,
@@ -115,7 +115,37 @@ export function _resetActiveCount(): void {
 }
 
 // ─── Consecutive-failure tracking ───────────────────────────────────────────
+//
+// Race fix (deep-scan fix wave, 2026-07-10): the previous implementation
+// tracked the counter via a non-atomic SELECT-then-UPDATE/INSERT with no
+// transaction or row lock. closePosition() in paper-execution-service.ts
+// dispatches runTradeCritique() fire-and-forget per closed position, so a
+// sequential position-close loop (e.g. several accounts' positions closing
+// at the shared 15:55 ET hard-flatten boundary) produces multiple
+// OVERLAPPING, unawaited critique promises racing on this row for the full
+// duration of each LLM call (hundreds of ms to seconds) — not just one
+// event-loop tick. Two concurrent callers could both read the same
+// pre-increment value and each write current+1, silently under-counting real
+// consecutive failures (lost update) and delaying/suppressing the
+// STRIKE_THRESHOLD=3 Discord WARN alert.
+//
+// Wrapping the old two-step SELECT-then-write shape in a transaction does
+// NOT close this race under Postgres's default READ COMMITTED isolation —
+// two concurrent transactions can both SELECT the pre-increment value before
+// either commits. The fix is a single atomic SQL statement per write:
+// INSERT ... ON CONFLICT DO UPDATE ... RETURNING for the increment (the
+// server computes current_value + 1 against the row it already holds for
+// the upsert, so there is no window for a second writer to observe a stale
+// value), and a plain upsert for the reset (safe without a read because
+// every caller writes the same fixed value "0").
 
+/**
+ * Read-only diagnostic accessor for the current consecutive-failure count.
+ * NOT part of the increment/reset write path (those are atomic single
+ * statements below and never read-then-write) — retained for callers that
+ * only need to observe the counter (e.g. a future health-check surface)
+ * without racing anything.
+ */
 async function readConsecutiveFailures(): Promise<number> {
   try {
     const [row] = await db
@@ -123,18 +153,58 @@ async function readConsecutiveFailures(): Promise<number> {
       .from(systemParameters)
       .where(eq(systemParameters.paramName, CONSECUTIVE_FAILURES_KEY));
     return row ? parseInt(row.currentValue ?? "0", 10) : 0;
-  } catch {
+  } catch (err) {
+    logger.error(
+      { err, key: CONSECUTIVE_FAILURES_KEY },
+      "trade_critique: readConsecutiveFailures DB read failed — failing open (returning 0)",
+    );
     return 0; // fail-open on read
   }
 }
 
-async function incrementConsecutiveFailures(): Promise<number> {
+/**
+ * Atomically increments the consecutive-failure counter and returns the
+ * POST-increment value via a single INSERT ... ON CONFLICT DO UPDATE ...
+ * RETURNING statement. This is race-proof by construction: the
+ * `current_value + 1` expression is evaluated by Postgres against the row it
+ * already has locked for the upsert, so two concurrent callers can never
+ * both observe and write the same pre-increment value (the lost-update race
+ * the old read-then-write shape had). Do NOT reintroduce a read-then-write
+ * here, even inside a transaction — see the section comment above.
+ *
+ * Exported so the atomic-increment fix can be exercised directly by a real
+ * concurrency regression test (fires N concurrent calls against a real/pglite
+ * backing store and asserts the final value is genuinely N) — a test that can
+ * only reach this logic through the full runTradeCritique() call graph cannot
+ * prove the race is closed, since it would need to fabricate N simultaneous
+ * LLM-failure runs. Safe to call from other production code too; this is the
+ * same atomic logic _runCritiqueInternal() already relies on.
+ */
+export async function incrementConsecutiveFailures(): Promise<number> {
   try {
-    const current = await readConsecutiveFailures();
-    const next = current + 1;
-    await upsertSystemParameter(CONSECUTIVE_FAILURES_KEY, String(next));
-    return next;
-  } catch {
+    const [row] = await db
+      .insert(systemParameters)
+      .values({
+        paramName: CONSECUTIVE_FAILURES_KEY,
+        currentValue: "1",
+        description: "Trade critique consecutive failure counter (auto-resets on success)",
+        domain: "paper",
+      })
+      .onConflictDoUpdate({
+        target: systemParameters.paramName,
+        set: {
+          currentValue: sql`${systemParameters.currentValue} + 1`,
+          updatedAt: new Date(),
+        },
+      })
+      .returning({ currentValue: systemParameters.currentValue });
+    return row ? parseInt(row.currentValue ?? "0", 10) : 0;
+  } catch (err) {
+    logger.error(
+      { err, key: CONSECUTIVE_FAILURES_KEY },
+      "trade_critique: incrementConsecutiveFailures atomic upsert failed — returning 0 " +
+        "(fail-open; may under-count strikes and delay/suppress the 3-strike Discord alert)",
+    );
     return 0;
   }
 }
@@ -142,30 +212,38 @@ async function incrementConsecutiveFailures(): Promise<number> {
 async function resetConsecutiveFailures(): Promise<void> {
   try {
     await upsertSystemParameter(CONSECUTIVE_FAILURES_KEY, "0");
-  } catch {
-    // best-effort; failure to reset counter is non-fatal
+  } catch (err) {
+    // best-effort; failure to reset counter is non-fatal (a strategy that
+    // just succeeded isn't blocked by this), but must be visible — a silent
+    // failure here would leave a stale strike count that no caller can see.
+    logger.warn(
+      { err, key: CONSECUTIVE_FAILURES_KEY },
+      "trade_critique: resetConsecutiveFailures failed — counter may over-report on next failure (non-fatal)",
+    );
   }
 }
 
+/**
+ * Atomic upsert for a fixed value — single INSERT ... ON CONFLICT DO UPDATE
+ * statement, no read-modify-write. Safe for concurrent callers because every
+ * current caller writes the SAME fixed value ("0" on reset), so there is no
+ * dependency on the row's prior value and therefore no lost-update window.
+ * Do NOT repurpose this for increment semantics — use
+ * incrementConsecutiveFailures()'s dedicated atomic RETURNING statement.
+ */
 async function upsertSystemParameter(key: string, value: string): Promise<void> {
-  const [existing] = await db
-    .select({ paramName: systemParameters.paramName })
-    .from(systemParameters)
-    .where(eq(systemParameters.paramName, key));
-
-  if (existing) {
-    await db
-      .update(systemParameters)
-      .set({ currentValue: value, updatedAt: new Date() })
-      .where(eq(systemParameters.paramName, key));
-  } else {
-    await db.insert(systemParameters).values({
+  await db
+    .insert(systemParameters)
+    .values({
       paramName: key,
       currentValue: value,
       description: "Trade critique consecutive failure counter (auto-resets on success)",
       domain: "paper",
+    })
+    .onConflictDoUpdate({
+      target: systemParameters.paramName,
+      set: { currentValue: value, updatedAt: new Date() },
     });
-  }
 }
 
 // ─── Wave 25 field completeness check ───────────────────────────────────────

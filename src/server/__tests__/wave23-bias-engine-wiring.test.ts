@@ -18,7 +18,7 @@
  *  Gap A.1 new tests (Wave 23.C fix):
  *  11. vp_shape factor: score >= 50 (e.g. 75) → satisfied
  *  12. vp_shape factor: score < 50 (e.g. 30) → NOT satisfied
- *  13. vp_shape factor: unavailable (no VP data) → satisfied (fail-open) + warning logged
+ *  13. vp_shape factor: unavailable (no VP data) → NOT satisfied (fail-CLOSED, F-1) + warning logged
  *  14. getSessionShapeScore: D shape → score 0
  *  15. getSessionShapeScore: b shape at 100% confidence → score 50
  *  16. getSessionShapeScore: Thin shape at 60% confidence → score 60
@@ -164,7 +164,7 @@ type SignalContext = {
   barVolume: number;
   barBuffer: { volume: number }[];
   calendarBlocked: boolean;
-  // Gap A.1: VP shape data (undefined = not tested = old fail-open path)
+  // Gap A.1 → deep-scan signal-gen F-1: VP shape data unavailable now fails CLOSED (was fail-open)
   vpShapeData?: VpShapeData;
 };
 
@@ -185,7 +185,7 @@ function evaluateConfluenceFactor(
       const satisfied = ctx.barVolume > rollingMean * 1.2;
       return { satisfied, reason: satisfied ? "volume_above_threshold" : "volume_insufficient" };
     }
-    return { satisfied: true, reason: "insufficient_history_fail_open" };
+    return { satisfied: false, reason: "insufficient_history_fail_closed" };
   }
   if (factor === "macro_alignment") {
     const satisfied = !ctx.calendarBlocked;
@@ -194,7 +194,7 @@ function evaluateConfluenceFactor(
   if (factor === "vp_shape") {
     // Gap A.1 fix: use real VP shape score when available
     if (ctx.vpShapeData === undefined || !ctx.vpShapeData.available) {
-      return { satisfied: true, reason: "vp_not_available_fail_open" };
+      return { satisfied: false, reason: "vp_not_available_fail_closed" };
     }
     const satisfied = ctx.vpShapeData.score >= VP_SHAPE_SCORE_THRESHOLD;
     return {
@@ -204,7 +204,7 @@ function evaluateConfluenceFactor(
         : `vp_shape_insufficient_${ctx.vpShapeData.score}_lt_${VP_SHAPE_SCORE_THRESHOLD}`,
     };
   }
-  return { satisfied: true, reason: "unknown_factor_fail_open" };
+  return { satisfied: false, reason: "unknown_factor_fail_closed" };
 }
 
 function runAPlusGate(
@@ -326,7 +326,7 @@ describe("A+ gate factor evaluation", () => {
     expect(result.satisfied).toBe(true);
   });
 
-  it("vp_shape with no VP data → satisfied (fail-open)", () => {
+  it("vp_shape with no VP data → NOT satisfied (fail-CLOSED — deep-scan signal-gen F-1)", () => {
     const ctx: SignalContext = {
       regimeActiveStrategyId: null,
       strategyId: REGIME_STRATEGY_ID,
@@ -336,11 +336,11 @@ describe("A+ gate factor evaluation", () => {
       vpShapeData: { available: false },
     };
     const result = evaluateConfluenceFactor("vp_shape", ctx);
-    expect(result.satisfied).toBe(true);
-    expect(result.reason).toBe("vp_not_available_fail_open");
+    expect(result.satisfied).toBe(false);
+    expect(result.reason).toBe("vp_not_available_fail_closed");
   });
 
-  it("vp_shape with undefined vpShapeData → satisfied (fail-open, backward compat)", () => {
+  it("vp_shape with undefined vpShapeData → NOT satisfied (fail-CLOSED — deep-scan signal-gen F-1)", () => {
     const ctx: SignalContext = {
       regimeActiveStrategyId: null,
       strategyId: REGIME_STRATEGY_ID,
@@ -350,8 +350,8 @@ describe("A+ gate factor evaluation", () => {
       // vpShapeData not set
     };
     const result = evaluateConfluenceFactor("vp_shape", ctx);
-    expect(result.satisfied).toBe(true);
-    expect(result.reason).toBe("vp_not_available_fail_open");
+    expect(result.satisfied).toBe(false);
+    expect(result.reason).toBe("vp_not_available_fail_closed");
   });
 
   it("vp_shape score=75 (Thin@75% conf) → satisfied", () => {

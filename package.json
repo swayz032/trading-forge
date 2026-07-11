@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "tsx watch src/server/index.ts",
     "build": "tsc",
-    "build:frontend": "cd Trading_forge_frontend/amber-vision-main && npm run build",
     "build:all": "npm run build:frontend && npm run build",
     "start": "node dist/server/index.js",
     "db:generate": "drizzle-kit generate",
@@ -30,7 +29,10 @@
     "check:ts-python-pm-factor-parity": "npx tsx scripts/check-ts-python-pm-factor-parity.ts",
     "check:ts-python-firm-rules-version": "npx tsx scripts/check-ts-python-firm-rules-version.ts",
     "check:archetype-lockstep": "npx tsx scripts/check-archetype-lockstep.ts",
+    "check:migration-immutability": "vitest run src/server/__tests__/migration-immutability-guard.test.ts",
+    "check:gate-fault-injection": "node node_modules/vitest/vitest.mjs run src/server/__tests__/ds22-x1-gate-contract-keys-strict.test.ts src/server/__tests__/ds22-x1-family-grade-postscript-strict.test.ts src/server/__tests__/ds22-x1-other-gates-fault-injection.test.ts",
     "audit:n8n": "node scripts/audit-n8n-workflows.mjs",
+    "check:quantum-backends": "python -m src.engine.quantum_backend_status",
     "preflight:vacation": "tsx scripts/pre-vacation-preflight.ts",
     "forge": "tsx scripts/cli.ts",
     "discord": "tsx src/discord/bot.ts",

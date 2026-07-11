@@ -30,7 +30,7 @@
 | Consistency rule | `0.50` (50% best-day cap at Combine pass-request; XFA Consistency Path uses 40% cap) |
 | Overnight allowed | `false` |
 | Weekend allowed | `false` |
-| Commission per side per contract | `$0.37` |
+| Commission per side per contract | `$0.62` |
 | Payout split | `0.90` (90% to trader) |
 
 ## Canonical Values
@@ -56,7 +56,7 @@ consistency_rule_pct: 0.50  # 50% best-day cap enforced at Combine pass-request 
 daily_loss_limit: 1000
 overnight_ok: false
 weekend_ok: false
-commission_per_side: 0.37
+commission_per_side: 0.62
 platform_lockdown_date: "2026-01-12"
 required_platform: topstepx
 allows_vps: false

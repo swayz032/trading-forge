@@ -147,6 +147,20 @@ export async function runNightlyCritique(): Promise<void> {
   let critique: CritiqueResult;
   try {
     critique = JSON.parse(critiqueJson);
+    // deep-scan services HIGH (2026-07-06): JSON.parse succeeds on ANY valid JSON — validate the SHAPE before
+    // this is persisted as next-generation feedback (system_parameters.nightly_critique_latest). A malformed
+    // critique (missing/wrong-typed fields, or a prompt-injected object) would otherwise flow unvalidated into
+    // the next generation cycle. On shape mismatch, throw → the catch below stores the safe structured fallback.
+    const c = critique as Partial<CritiqueResult>;
+    if (
+      c === null || typeof c !== "object" ||
+      typeof c.pass_rate !== "number" ||
+      !Array.isArray(c.recommendations) ||
+      !Array.isArray(c.pattern_insights) ||
+      !Array.isArray(c.parameter_insights)
+    ) {
+      throw new Error("critique JSON parsed but failed shape validation (missing/wrong-typed required fields)");
+    }
   } catch (err) {
     logger.error({ err, rawLength: critiqueJson.length }, "Nightly critique: failed to parse LLM response as JSON");
     // Store the raw text as-is so nothing is lost

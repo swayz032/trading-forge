@@ -196,7 +196,7 @@ describe("runPaperJournalRecon — clean runs", () => {
       [{ id: "trade-1", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],
       [{ cnt: "1" }],
-      [{ total: "100" }],
+      [{ total: "100" , populated: "1" }],
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-23"));
@@ -227,7 +227,7 @@ describe("runPaperJournalRecon — drift detection", () => {
       ],
       [{ cnt: "1" }],
       [{ cnt: "2" }],
-      [{ total: "125" }],
+      [{ total: "125" , populated: "1" }],
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-23"));
@@ -239,7 +239,7 @@ describe("runPaperJournalRecon — drift detection", () => {
       (r) => r.action === "paper_reconciliation.mismatch_detected"
     );
     expect(mismatchRow).toBeDefined();
-    expect(mismatchRow?.status).toBe("failure");
+    expect(mismatchRow?.status).toBe("critical"); // verbatim severity (MED fix 2026-07-09; was remapped to failure)
 
     expect(state.criticalAlerts).toHaveLength(1);
     expect(state.criticalAlerts[0]!.title).toContain("PAPER RECON");
@@ -256,7 +256,7 @@ describe("runPaperJournalRecon — drift detection", () => {
       [{ id: "trade-x", pnl: "200", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],
       [{ cnt: "1" }],
-      [{ total: "150" }],
+      [{ total: "150" , populated: "1" }],
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-23"));
@@ -283,7 +283,7 @@ describe("runPaperJournalRecon — drift detection", () => {
       [{ id: "trade-y", pnl: "100.00", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],
       [{ cnt: "1" }],
-      [{ total: "99.75" }],
+      [{ total: "99.75" , populated: "1" }],
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-23"));
@@ -322,8 +322,39 @@ describe("runPaperJournalRecon — drift detection", () => {
       (r) => r.action === "paper_reconciliation.missing_broker_data"
     );
     expect(warnRow).toBeDefined();
-    expect(warnRow?.status).toBe("success");
+    expect(warnRow?.status).toBe("warning"); // verbatim severity (MED fix 2026-07-09; was remapped to success)
     expect(state.criticalAlerts).toHaveLength(0);
+  });
+
+  it("7. deep-scan Accuracy CRITICAL — production_trades rows exist but expected_pnl ALL NULL → NO false CRITICAL (failure-injection of the real broker-router condition)", async () => {
+    // broker-router.ts writes expected_pnl=null unconditionally (no server-mediated fill ingest yet).
+    // The bug: coalesce(sum(expected_pnl),0)=0 → |paperPnl - 0| = paperPnl > tolerance → false CRITICAL.
+    // This test injects the REAL production condition (rows EXIST, every expected_pnl NULL) that the
+    // other tests' mocks hid by fabricating a nonzero `total`. count(expected_pnl)=0 is the tell.
+    const strategy = { id: "strat-null-pnl", name: "null_expected_pnl", symbol: "MES" };
+    const tradeDate = new Date("2026-06-23T13:00:00Z");
+
+    setResponses(
+      [strategy],
+      [{ cnt: "1" }],                                                                            // tape-source-active probe
+      [{ id: "trade-real", pnl: "300", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }], // real paper P&L $300
+      [{ cnt: "1" }],                                                                            // broker trade count = 1 (rows EXIST)
+      [{ cnt: "1" }],                                                                            // tradingview markers
+      [{ total: "0", populated: "0" }],                                                          // rows exist, expected_pnl ALL NULL
+    );
+
+    const result = await runPaperJournalRecon(new Date("2026-06-23"));
+
+    const stratResult = result.results[0]!;
+    expect(stratResult.brokerPnlUnavailable).toBe(true);          // detected the unpopulated column
+    expect(stratResult.pnlDriftExceedsTolerance).toBe(false);     // NOT a false drift
+    expect(stratResult.pnlDriftDollars).toBeNull();               // drift not computed at all
+    expect(result.hasDrift).toBe(false);
+    expect(state.criticalAlerts).toHaveLength(0);                 // NO false CRITICAL Discord (the bug's symptom)
+    // Honest, not false-clean: a distinct WARN audit surfaces that P&L was NOT verified.
+    const warnRow = state.auditRows.find((r) => r.action === "paper_reconciliation.broker_pnl_unavailable");
+    expect(warnRow).toBeDefined();
+    expect(warnRow?.status).toBe("warning"); // verbatim severity (MED fix 2026-07-09; was remapped to success)
   });
 
 });
@@ -361,7 +392,7 @@ describe("runPaperJournalRecon — multi-strategy", () => {
       [{ id: "t1", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],
       [{ cnt: "1" }],
-      [{ total: "100" }],
+      [{ total: "100" , populated: "1" }],
       // s2 (2 paper, 1 broker => mismatch)
       [
         { id: "t2a", pnl: "50", contracts: 1, exitTime: tradeDate, entryTime: tradeDate },
@@ -369,7 +400,7 @@ describe("runPaperJournalRecon — multi-strategy", () => {
       ],
       [{ cnt: "1" }],
       [{ cnt: "2" }],
-      [{ total: "100" }],
+      [{ total: "100" , populated: "1" }],
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-23"));
@@ -428,7 +459,7 @@ describe("runPaperJournalRecon — deepscan14 C1: broker-tape-source-active dete
       (r) => r.action === "paper_reconciliation.inactive_no_broker_tape"
     );
     expect(inactiveRow).toBeDefined();
-    expect(inactiveRow?.status).toBe("success"); // warning maps to "success" per writeAuditRow's statusMapped
+    expect(inactiveRow?.status).toBe("warning"); // verbatim severity (MED fix 2026-07-09; was remapped to success)
     expect((inactiveRow as unknown as { affected_strategy_ids: string[] }).affected_strategy_ids).toContain("strat-c1a");
 
     // The old per-strategy warn must NOT fire in the structural-gap case.
@@ -571,12 +602,12 @@ describe("Finding 3 — broker P&L SUM must be per-strategy, not combined", () =
       [{ id: "ta-1", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],  // broker count A
       [{ cnt: "1" }],  // tv count A
-      [{ total: "100" }],  // broker SUM A — matches paper ($100 each = no drift)
+      [{ total: "100" , populated: "1" }],  // broker SUM A — matches paper ($100 each = no drift)
       // strategy B
       [{ id: "tb-1", pnl: "400", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],  // broker count B
       [{ cnt: "1" }],  // tv count B
-      [{ total: "400" }],  // broker SUM B — matches paper ($400 each = no drift)
+      [{ total: "400" , populated: "1" }],  // broker SUM B — matches paper ($400 each = no drift)
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-28"));
@@ -606,11 +637,11 @@ describe("Finding 3 — broker P&L SUM must be per-strategy, not combined", () =
       // A
       [{ id: "ta-2", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }], [{ cnt: "1" }],
-      [{ total: "100" }],
+      [{ total: "100" , populated: "1" }],
       // B
       [{ id: "tb-2", pnl: "200", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }], [{ cnt: "1" }],
-      [{ total: "50" }],   // $150 drift — CRITICAL for MNQ (tolerance=1.00)
+      [{ total: "50" , populated: "1" }],   // $150 drift — CRITICAL for MNQ (tolerance=1.00)
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-28"));

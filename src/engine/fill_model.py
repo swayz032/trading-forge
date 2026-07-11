@@ -275,6 +275,7 @@ def compute_volume_based_fill_ratios(
     df: pl.DataFrame,
     order_quantities: np.ndarray,
     volume_threshold: float | None = None,
+    next_bar_fill: bool = False,
 ) -> np.ndarray:
     """Compute per-bar fill ratio based on order size relative to bar volume.
 
@@ -335,6 +336,17 @@ def compute_volume_based_fill_ratios(
         return fill_ratios
 
     volume = df["volume"].to_numpy().astype(np.float64)
+    # HIGH bar-alignment fix (deep-scan 2026-07-09, ratified): the backtest engine
+    # fills a signal on bar N at bar N+1 (np.roll(entries, 1)). The order therefore
+    # consumes bar N+1's volume, NOT the signal bar's. When next_bar_fill=True, shift
+    # the volume so order_quantities[N] is divided by volume[N+1] (the execution bar).
+    # Previously the ratio used the signal bar's volume — a signal fired on a
+    # high-volume bar whose fill landed on a thin next bar was scored as full-fill,
+    # under-degrading large orders and silently inflating Sharpe/PF/DSR. The last
+    # bar has no next bar; its order rolls off (never fills), so inf is correct there.
+    if next_bar_fill:
+        volume = np.roll(volume, -1)
+        volume[-1] = np.inf
     # Guard: zero or NaN volume → treat as unlimited (return 1.0)
     safe_volume = np.where((volume > 0) & np.isfinite(volume), volume, np.inf)
 
@@ -375,6 +387,7 @@ def apply_volume_partial_fills(
     sizes: np.ndarray,
     df: pl.DataFrame,
     volume_threshold: float | None = None,
+    next_bar_fill: bool = False,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Apply volume-based fill ratio to sizes at entry bars.
 
@@ -416,7 +429,9 @@ def apply_volume_partial_fills(
         }
 
     adjusted_sizes = sizes.copy()
-    fill_ratios = compute_volume_based_fill_ratios(df, sizes, volume_threshold=volume_threshold)
+    fill_ratios = compute_volume_based_fill_ratios(
+        df, sizes, volume_threshold=volume_threshold, next_bar_fill=next_bar_fill,
+    )
 
     entry_mask = entries.astype(bool)
     entry_indices = np.where(entry_mask)[0]

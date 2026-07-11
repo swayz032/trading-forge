@@ -65,6 +65,40 @@ export interface FrankensteinRunOutput {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
+/**
+ * Assert the Python Frankenstein result has the shape we trust to gate a
+ * TESTING→PAPER promotion. Throws (→ fail-CLOSED at the caller) on any of:
+ *   - `passed` is not a strict boolean (a truthy string / 1 / null would
+ *     otherwise silently promote a curve-fit-lucky strategy)
+ *   - required numeric fields (`n_shuffles`, `wall_clock_ms`) absent / non-finite
+ *   - `p95_sharpe` / `median_pf` present but not `number | null`
+ */
+export function validateFrankensteinResult(
+  result: unknown,
+): asserts result is FrankensteinPythonResult {
+  if (result === null || typeof result !== "object") {
+    throw new Error("frankenstein_test: result is not an object");
+  }
+  const r = result as Record<string, unknown>;
+  if (typeof r.passed !== "boolean") {
+    throw new Error(
+      `frankenstein_test: 'passed' must be a strict boolean, got ${typeof r.passed} (${JSON.stringify(r.passed)}) — refusing to trust promotion gate`,
+    );
+  }
+  if (typeof r.n_shuffles !== "number" || !Number.isFinite(r.n_shuffles)) {
+    throw new Error(`frankenstein_test: 'n_shuffles' must be a finite number, got ${JSON.stringify(r.n_shuffles)}`);
+  }
+  if (typeof r.wall_clock_ms !== "number" || !Number.isFinite(r.wall_clock_ms)) {
+    throw new Error(`frankenstein_test: 'wall_clock_ms' must be a finite number, got ${JSON.stringify(r.wall_clock_ms)}`);
+  }
+  for (const key of ["p95_sharpe", "median_pf"] as const) {
+    const v = r[key];
+    if (v !== null && (typeof v !== "number" || !Number.isFinite(v))) {
+      throw new Error(`frankenstein_test: '${key}' must be a finite number or null, got ${JSON.stringify(v)}`);
+    }
+  }
+}
+
 function runPythonFrankenstein(
   configPath: string,
   timeoutMs: number = FRANKENSTEIN_TIMEOUT_MS,
@@ -108,6 +142,11 @@ function runPythonFrankenstein(
       }
       try {
         const result = parsePythonJson<FrankensteinPythonResult>(stdout);
+        // Runtime shape validation — `passed` gates a real TESTING→PAPER
+        // promotion, so a serialization bug that makes it non-boolean (or drops
+        // required numeric fields) must NOT be trusted. Throwing here routes to
+        // the caller's catch which fails CLOSED (passed=false + loud audit).
+        validateFrankensteinResult(result);
         resolve(result);
       } catch (parseErr) {
         reject(

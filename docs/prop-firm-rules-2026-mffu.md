@@ -98,15 +98,23 @@ MFFU bans identical or opposite strategies across multiple unconnected accounts.
 - **Enforcement layer:** B14 priors (advisory in Phase 0; hard tiebreaker in
   Phase 1).
 
-### 3. Same-Device — Banned
+### 3. Same-Device — Banned (⚠ RULE ONLY — no enforcement code exists yet)
 
 Trading from a shared computer/tablet/phone is banned. Each MFFU account
 must originate from a unique `instance_id`.
 
-- **Surface:** compliance gate emits a warning in `check_violation()` when
-  the runtime `instance_id` matches another active MFFU session.
-- **Block path:** if `instance_id` collision is detected at `openPosition`,
-  emit `compliance.same_device_violation` and block the order.
+- **Current state (verified 2026-07-10, deep-scan #23):** there is no
+  `instance_id` collision check anywhere in the codebase — `compliance_gate.py`'s
+  `check_violation()` (the function this section used to claim owns the check)
+  implements `vps_prohibited` (a real, separate rule — see §check below) but has
+  no device/instance logic at all, and no route emits `compliance.same_device_violation`.
+  This rule is currently enforced by operator process only (one MFFU account per
+  physical device, by convention) — not by code.
+- **Low exposure today:** the operator runs a single MFFU account, so no
+  collision is possible yet. This becomes a real, unenforced risk the moment
+  a second MFFU account (e.g. a family member's) is added on a shared or
+  nearby device — implement the `instance_id` collision check before that
+  rollout, don't rely on this doc's prior (inaccurate) claim.
 
 ### 4. Hedging Same Underlying — Banned
 
@@ -211,7 +219,7 @@ model realistic execution and don't exploit the sim fill engine).
 | **§2 No slippage-absence / tight-bracket exploit** | We compute P&L manually with modeled slippage + symmetric exit slippage (never the sim's zero-slippage); structural stops, not tight brackets. ✅ by-design |
 | **§2 T1 economic data** (firm-wide Fair Play) | **OVERRIDDEN on Builder** — the Builder Plan doc makes news FULLY UNRESTRICTED (see note below). Our T−5/+2 window + `macro_alignment` hard-block + news-policy `reduce_size` are kept as a **prudent risk default of ours**, not an MFFU requirement. ✅ |
 | **§2 / §4 Collaborative trading ban** | `correlation_matrix.yaml` + collaborative-trading compliance; family runs DIFFERENT strategies per firm; per-account strategy assignment unique. ✅ |
-| **§4 Own device / no copy-trading** | `compliance_gate` `vps_prohibited` + same-device ban (host must be local/personal-device); family onboarding = own device each. ✅ operational |
+| **§4 Own device / no copy-trading** | `compliance_gate` `vps_prohibited` ✅ operational. Same-device ban: ⚠ operator-process only today (single MFFU account, no collision possible yet) — no `instance_id` collision check exists in code; see §3 above. Must be implemented before a 2nd MFFU account (e.g. family) shares proximity to this one. |
 | **§5 Hedging ban (same underlying, opposite side, same time — incl. MNQ+NQ)** | **NOW ENFORCED both ways:** cross-account (`checkCrossAccountHedge`) + **intra-account** (`checkIntraAccountHedge`, NEW 2026-06-23 — `hedgingSameUnderlyingBanned` flag now has teeth) via `symbolToUnderlying` collision at the entry gate (`paper-signal-service.ts` Tier 5.3.2 / 5.3.2b). Audit `compliance.intra_account_hedge_blocked`. ✅ |
 | **§3 Termination / profit confiscation** | Consequence policy (informational) — our job is to never trigger §1-§5. |
 

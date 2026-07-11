@@ -102,12 +102,21 @@ function extractV11Fields(extractedIdea: Record<string, unknown>) {
 }
 
 // Inline factor_quality promotion rule
+//
+// FIX A3 (deep-scan #22 fix-wave-2, 2026-07-07): the pre-fix version promoted
+// to "rich" whenever entrySequenceLen>=3 OR targetsLen>=3 REGARDLESS of
+// realFactorCount — a 3-step entry_sequence with ZERO real (extracted OR
+// kb_inferred) confluence factors still got stamped "rich", suppressing Gate
+// 3's thin_confluence_warning and corrupting tf_graduation_factor_quality_total.
+// classifyFactorSources()'s OWN contract is realCount>=2 -> rich; the v11
+// promotion must never manufacture "rich" out of fewer than 2 real factors.
 function applyV11FactorQualityPromotion(
   rawQuality: "rich" | "thin" | "fallback_only",
   entrySequenceLen: number,
   targetsLen: number,
+  realFactorCount: number,
 ): "rich" | "thin" | "fallback_only" {
-  const v11Rich = entrySequenceLen >= 3 || targetsLen >= 3;
+  const v11Rich = (entrySequenceLen >= 3 || targetsLen >= 3) && realFactorCount >= 2;
   return v11Rich ? "rich" : rawQuality;
 }
 
@@ -306,33 +315,46 @@ describe("Wave 26 Pass I — graduator v11 field extraction", () => {
 });
 
 describe("Wave 26 Pass I — factor_quality promotion", () => {
-  it("promotes fallback_only → rich when entry_sequence.length >= 3", () => {
-    const promoted = applyV11FactorQualityPromotion("fallback_only", 3, 0);
+  it("promotes thin → rich when entry_sequence.length >= 3 AND realFactorCount >= 2", () => {
+    const promoted = applyV11FactorQualityPromotion("thin", 3, 0, 2);
     expect(promoted).toBe("rich");
   });
 
-  it("promotes fallback_only → rich when targets.length >= 3", () => {
-    const promoted = applyV11FactorQualityPromotion("fallback_only", 0, 3);
+  it("promotes thin → rich when targets.length >= 3 AND realFactorCount >= 2", () => {
+    const promoted = applyV11FactorQualityPromotion("thin", 0, 3, 2);
     expect(promoted).toBe("rich");
   });
 
-  it("promotes thin → rich when entry_sequence.length >= 3", () => {
-    const promoted = applyV11FactorQualityPromotion("thin", 3, 1);
+  it("promotes thin → rich when entry_sequence.length >= 3 with 2 real factors", () => {
+    const promoted = applyV11FactorQualityPromotion("thin", 3, 1, 2);
     expect(promoted).toBe("rich");
   });
 
-  it("does NOT promote when both entry_sequence < 3 AND targets < 3", () => {
-    expect(applyV11FactorQualityPromotion("fallback_only", 2, 2)).toBe("fallback_only");
-    expect(applyV11FactorQualityPromotion("thin", 1, 2)).toBe("thin");
-    expect(applyV11FactorQualityPromotion("rich", 0, 0)).toBe("rich");
+  it("does NOT promote when both entry_sequence < 3 AND targets < 3 (regardless of realFactorCount)", () => {
+    expect(applyV11FactorQualityPromotion("fallback_only", 2, 2, 3)).toBe("fallback_only");
+    expect(applyV11FactorQualityPromotion("thin", 1, 2, 3)).toBe("thin");
+    expect(applyV11FactorQualityPromotion("rich", 0, 0, 0)).toBe("rich");
   });
 
-  it("promotes when entry_sequence == 3 exactly (boundary case)", () => {
-    expect(applyV11FactorQualityPromotion("fallback_only", 3, 0)).toBe("rich");
+  it("promotes when entry_sequence == 3 exactly (boundary case) with sufficient real factors", () => {
+    expect(applyV11FactorQualityPromotion("thin", 3, 0, 2)).toBe("rich");
   });
 
   it("does NOT promote when entry_sequence == 2 (boundary below threshold)", () => {
-    expect(applyV11FactorQualityPromotion("fallback_only", 2, 0)).toBe("fallback_only");
+    expect(applyV11FactorQualityPromotion("fallback_only", 2, 0, 5)).toBe("fallback_only");
+  });
+
+  // ─── FIX A3 (deep-scan #22 fix-wave-2, 2026-07-07) — the actual bug fix ────
+  it("FIX A3: does NOT promote fallback_only → rich when realFactorCount === 0, even with a 3-step entry_sequence", () => {
+    // This is the exact bug scenario: a richly-STRUCTURED extraction (3-step
+    // entry_sequence) with ZERO real confluence evidence must stay fallback_only
+    // so Gate 3's thin_confluence_warning still fires and the telemetry stays honest.
+    expect(applyV11FactorQualityPromotion("fallback_only", 3, 0, 0)).toBe("fallback_only");
+    expect(applyV11FactorQualityPromotion("fallback_only", 0, 3, 0)).toBe("fallback_only");
+  });
+
+  it("FIX A3: does NOT promote fallback_only → rich when realFactorCount === 1 (thin territory, not rich)", () => {
+    expect(applyV11FactorQualityPromotion("thin", 3, 0, 1)).toBe("thin");
   });
 });
 
@@ -558,6 +580,26 @@ describe("Wave 26 Pass I — source contract verification", () => {
     expect(GRADUATOR_SRC).toContain("v11RichExtraction");
     expect(GRADUATOR_SRC).toContain("v11EntrySequence.length >= 3");
     expect(GRADUATOR_SRC).toContain("v11Targets.length >= 3");
+  });
+
+  // ─── FIX A3 (deep-scan #22 fix-wave-2, 2026-07-07) ─────────────────────────
+  it("graduator gates v11RichExtraction on realFactorCount >= 2 (does not manufacture rich from zero real evidence)", () => {
+    expect(GRADUATOR_SRC).toContain("realFactorCount >= 2");
+    // The promotion expression must AND the sequence/targets check with the
+    // realFactorCount floor — not OR, and not compute factor_quality without it.
+    const richExtractionIdx = GRADUATOR_SRC.indexOf("const v11RichExtraction =");
+    expect(richExtractionIdx).toBeGreaterThan(0);
+    const block = GRADUATOR_SRC.slice(richExtractionIdx, richExtractionIdx + 200);
+    expect(block).toContain("realFactorCount >= 2");
+  });
+
+  it("graduator computes realFactorCount from factor_sources (extracted OR kb_inferred), mirroring classifyFactorSources' own contract", () => {
+    const realCountIdx = GRADUATOR_SRC.indexOf("const realFactorCount =");
+    expect(realCountIdx).toBeGreaterThan(0);
+    const block = GRADUATOR_SRC.slice(realCountIdx, realCountIdx + 200);
+    expect(block).toContain("factor_sources");
+    expect(block).toContain('"extracted"');
+    expect(block).toContain('"kb_inferred"');
   });
 
   it("graduator builds v11MergedConfirmingIndicators", () => {

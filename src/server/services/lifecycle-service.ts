@@ -749,7 +749,7 @@ export class LifecycleService {
             broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
               strategyId: id,
               drift_firms: driftFirms,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             return { success: false, error: "compliance ruleset drift_detected — promotion held until human revalidation" };
           }
@@ -774,9 +774,10 @@ export class LifecycleService {
           const dslGuardsResultP2D = evaluateDslGuardsGate(dslGuardsInputP2D);
           _incDslGuardsGateCounter("PAPER_TO_DEPLOY_READY", dslGuardsResultP2D);
 
-          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
             strategyId: id,
             ...dslGuardsResultP2D.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
             passed: dslGuardsResultP2D.passed,
             reason: dslGuardsResultP2D.reason,
           });
@@ -1083,10 +1084,17 @@ export class LifecycleService {
           // silently counted as outcome="clean". Map that distinct reason to its own label.
           const bifReliableForCounter =
             ((wfResults?.wf_metadata as Record<string, unknown> | null)?.bif_reliable) === false;
+          // deep-scan promotion L-2: thread the computation-error sentinel so this outcome-counter reflects the
+          // true fail-closed verdict (a real compute_bif failure counts as blocked, not clean).
+          const bifCompErrorCounter =
+            (wfResults as Record<string, unknown> | null)?.bif_computation_error === true;
           const bifResult = evaluateBifGate(
             latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
             latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
-            bifReliableForCounter ? { bifReliable: false } : undefined,
+            {
+              bifReliable: bifReliableForCounter ? false : undefined,
+              computationError: bifCompErrorCounter,
+            },
           );
           const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
             ? "cpcv_unmeasured"
@@ -1229,7 +1237,7 @@ export class LifecycleService {
               incomplete_count: incompleteCount,
               total_gates: evidenceStatuses.length,
               gate_evidence_statuses: evidenceStatuses,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             return {
               success: false,
@@ -1313,9 +1321,10 @@ export class LifecycleService {
         const dslGuardsResult = evaluateDslGuardsGate(dslGuardsInput);
         _incDslGuardsGateCounter(dslGuardsTransition, dslGuardsResult);
 
-        broadcastSSE("lifecycle:dsl_guards_evaluated", {
+        broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
           strategyId: id,
           ...dslGuardsResult.auditPayload,
+          correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #3 F-6: match paired audit row (manual-promotion block)
           passed: dslGuardsResult.passed,
           reason: dslGuardsResult.reason,
         });
@@ -1636,7 +1645,7 @@ export class LifecycleService {
               strategyId: id,
               age_days: parseFloat(ageDays.toFixed(1)),
               limit_days: stalenessDays,
-              correlation_id: options.correlationId ?? null,
+              correlationId: options.correlationId ?? null,
             });
             return { success: false, error };
           }
@@ -1874,8 +1883,14 @@ export class LifecycleService {
     // Two separate thresholds:
     //   PBO_OVERFIT_THRESHOLD     (0.5)  — W27.5 warn threshold (walk_forward.py)
     //   PBO_OVERFIT_THRESHOLD_PCT (0.15) — this gate (Wave 29 lifecycle hard gate)
+    // deep-scan promotion L-1 (CRITICAL, 2026-07-06): the PBO<15% overfitting gate must fire on EVERY path
+    // into a capital-adjacent stage (SHADOW/PAPER), not just from TESTING. VALID_TRANSITIONS still permits the
+    // legacy CANDIDATE→SHADOW edge (reachable via the HMAC PATCH /:id/lifecycle route, whose secret is shared
+    // with n8n/Carter automation, not human-only) — and it previously skipped PBO entirely because this guard
+    // only matched fromState==="TESTING". Adding CANDIDATE closes the bypass so an overfit strategy can never
+    // reach paper capital un-PBO-checked. (SHADOW→PAPER already gets the separate divergence gate.)
     if (
-      fromState === "TESTING" &&
+      (fromState === "TESTING" || fromState === "CANDIDATE") &&
       (toState === "SHADOW" || toState === "PAPER") &&
       promotionEvidence.backtestId
     ) {
@@ -1945,6 +1960,7 @@ export class LifecycleService {
             }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_overfit_block audit row write failed"));
             // Emit SSE event lifecycle:pbo_evaluated
             broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+              correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE (manual path) carries correlationId
               strategyId: id,
               fromState,
               toState,
@@ -2008,6 +2024,7 @@ export class LifecycleService {
 
           // Emit SSE event lifecycle:pbo_evaluated on every evaluation
           broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE (manual path) carries correlationId
             strategyId: id,
             fromState,
             toState,
@@ -2049,6 +2066,7 @@ export class LifecycleService {
         }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_gate_error_fail_closed audit row write failed"));
         try {
           broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            correlationId: options.correlationId ?? null, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE (manual path) carries correlationId
             strategyId: id,
             fromState,
             toState,
@@ -3278,7 +3296,7 @@ export class LifecycleService {
               strategyId: s.id,
               age_days: parseFloat(ageDays.toFixed(1)),
               limit_days: stalenessDays,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             continue;
           }
@@ -3361,7 +3379,7 @@ export class LifecycleService {
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                 strategyId: s.id,
                 drift_firms: driftFirms,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;
             }
@@ -3433,6 +3451,7 @@ export class LifecycleService {
                   toState: "PAPER",
                   firmsFailing,
                   details,
+                  correlationId,
                 });
                 continue;
               }
@@ -3468,6 +3487,7 @@ export class LifecycleService {
                 fromState: "TESTING",
                 toState: "PAPER",
                 error: gateErr instanceof Error ? gateErr.message : String(gateErr),
+                correlationId,
               });
               continue;
             }
@@ -3595,6 +3615,7 @@ export class LifecycleService {
               score: exportCheck.score,
               band: exportCheck.band,
               reasons: (exportCheck as Record<string, unknown>).reasons ?? null,
+              correlationId,
             });
 
             exportabilityBlocked = true;
@@ -3916,6 +3937,7 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "PBO gate (TESTING→PAPER cron) block audit insert failed (non-blocking)");
             });
             broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+              correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
               strategyId: s.id,
               fromState: "TESTING",
               toState: "PAPER",
@@ -3961,6 +3983,7 @@ export class LifecycleService {
             });
           }
           broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
             strategyId: s.id,
             fromState: "TESTING",
             toState: "PAPER",
@@ -3990,6 +4013,7 @@ export class LifecycleService {
             logger.warn({ strategyId: s.id, err: auditErr }, "PBO fail-closed audit insert (TESTING→PAPER cron) failed (non-blocking)");
           });
           broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
+            correlationId: tickCorrelationId, // deep-scan Obs re-verify #7 F-8: canonical correlationId KEY (value=tick), matching the file's 41-site convention
             strategyId: s.id,
             fromState: "TESTING",
             toState: "PAPER",
@@ -4138,9 +4162,10 @@ export class LifecycleService {
           const dslGuardsResultTp = evaluateDslGuardsGate(dslGuardsTp);
           _incDslGuardsGateCounter("TESTING_TO_PAPER", dslGuardsResultTp);
 
-          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
             strategyId: s.id,
             ...dslGuardsResultTp.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
             passed: dslGuardsResultTp.passed,
             reason: dslGuardsResultTp.reason,
           });
@@ -4381,7 +4406,7 @@ export class LifecycleService {
                 strategyId: s.id,
                 age_days: parseFloat(ageDaysSh.toFixed(1)),
                 limit_days: stalenessDaysSh,
-                correlation_id: tickCorrelationId,
+                correlationId: tickCorrelationId,
               });
               continue;
             }
@@ -4453,7 +4478,7 @@ export class LifecycleService {
                 broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                   strategyId: s.id,
                   drift_firms: driftFirmsSh,
-                  correlation_id: tickCorrelationId,
+                  correlationId: tickCorrelationId,
                 });
                 continue;
               }
@@ -4574,6 +4599,7 @@ export class LifecycleService {
                 score: exportCheckSh.score,
                 band: exportCheckSh.band,
                 reasons: (exportCheckSh as Record<string, unknown>).reasons ?? null,
+                correlationId: tickCorrelationId,
               });
 
               exportabilityBlockedSh = true;
@@ -4917,9 +4943,10 @@ export class LifecycleService {
             const dslGuardsResultSh = evaluateDslGuardsGate(dslGuardsSh);
             _incDslGuardsGateCounter("SHADOW_TO_PAPER", dslGuardsResultSh);
 
-            broadcastSSE("lifecycle:dsl_guards_evaluated", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
               strategyId: s.id,
               ...dslGuardsResultSh.auditPayload,
+              correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
               passed: dslGuardsResultSh.passed,
               reason: dslGuardsResultSh.reason,
             });
@@ -5066,6 +5093,7 @@ export class LifecycleService {
             });
 
             broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, {
+              correlationId, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE must carry correlationId (audit row does)
               strategyId: s.id,
               ok: false,
               divergence_pct: divergenceResult.divergence_pct,
@@ -5131,6 +5159,7 @@ export class LifecycleService {
           });
 
           broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, {
+            correlationId, // deep-scan Obs re-verify #6 F-7: WAVE29 HARD-gate SSE must carry correlationId (audit row does)
             strategyId: s.id,
             ok: true,
             divergence_pct: divergenceResult.divergence_pct,
@@ -5272,7 +5301,7 @@ export class LifecycleService {
                 strategyId: s.id,
                 age_days: parseFloat(ageDays.toFixed(1)),
                 limit_days: stalenessDays,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;  // skip to next strategy — inside the outer try
             }
@@ -5307,7 +5336,7 @@ export class LifecycleService {
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                 strategyId: s.id,
                 drift_firms: driftFirms,
-                correlation_id: correlationId,
+                correlationId: correlationId,
               });
               continue;
             }
@@ -6025,9 +6054,10 @@ export class LifecycleService {
           const dslGuardsResult = evaluateDslGuardsGate(dslGuards);
           _incDslGuardsGateCounter("PAPER_TO_DEPLOY_READY", dslGuardsResult);
 
-          broadcastSSE("lifecycle:dsl_guards_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED, {
             strategyId: s.id,
             ...dslGuardsResult.auditPayload,
+            correlationId, // deep-scan Obs re-verify #3 F-6: DSL-guards HARD gate SSE carries correlationId
             passed: dslGuardsResult.passed,
             reason: dslGuardsResult.reason,
           });
@@ -6223,10 +6253,16 @@ export class LifecycleService {
           const bifNum = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
           const kEffNum = latestBtForBif?.kEff != null ? Number(latestBtForBif.kEff) : null;
 
+          // deep-scan promotion L-2: read the computation-error sentinel (top-level of walkForwardResults)
+          // so a REAL compute_bif() failure fails the gate CLOSED instead of grandfathering as legacy-null.
+          const bifCompError =
+            (latestBtForBif?.walkForwardResults as Record<string, unknown> | null)?.bif_computation_error === true;
           const bifResult = evaluateBifGate(
             bifNum,
             kEffNum,
-            bifReliableFalse ? { bifReliable: false, proxyBasis: bifProxyBasis } : { proxyBasis: bifProxyBasis },
+            bifReliableFalse
+              ? { bifReliable: false, proxyBasis: bifProxyBasis, computationError: bifCompError }
+              : { proxyBasis: bifProxyBasis, computationError: bifCompError },
           );
 
           const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
@@ -6797,7 +6833,7 @@ export class LifecycleService {
               strategyId: s.id,
               current_hash: driftResult.currentHash,
               frozen_hash: driftResult.frozenHash ?? null,
-              correlation_id: correlationId,
+              correlationId: correlationId,
             });
             continue; // skip this strategy in the current pass
           }
@@ -6934,7 +6970,7 @@ export class LifecycleService {
               incomplete_count: incompleteCount,
               total_gates: gateEvidenceStatuses.length,
               gate_evidence_statuses: gateEvidenceStatuses,
-              correlation_id: correlationId ?? null,
+              correlationId: correlationId ?? null,
             });
 
             // ─── FIX 3 (DEBT-3) 2026-06-24: auto-backtest enqueue on evidence-incomplete ────
@@ -7054,6 +7090,7 @@ export class LifecycleService {
             rollingSharpe,
             tradingDays,
             message: `Strategy "${s.name}" qualified for deployment — review in library`,
+            correlationId: correlationId ?? null,
           });
 
           AlertFactory.deployReady(

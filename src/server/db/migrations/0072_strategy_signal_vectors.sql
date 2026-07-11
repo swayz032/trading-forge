@@ -23,7 +23,7 @@
 -- UNIQUE(strategy_id, backtest_id): one vector per (strategy, backtest) pair.
 -- Multiple backtests for the same strategy are fine — gate uses the LATEST completed one.
 
-CREATE TABLE strategy_signal_vectors (
+CREATE TABLE IF NOT EXISTS strategy_signal_vectors (
   id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   strategy_id             uuid REFERENCES strategies(id) NOT NULL,
   backtest_id             uuid REFERENCES backtests(id) NOT NULL,
@@ -34,9 +34,9 @@ CREATE TABLE strategy_signal_vectors (
 );
 
 -- Fast lookup by strategy (gate check: "does this strategy have a signal vector?")
-CREATE INDEX idx_signal_vectors_strategy
+CREATE INDEX IF NOT EXISTS idx_signal_vectors_strategy
   ON strategy_signal_vectors(strategy_id, created_at DESC);
 
 -- Fast lookup by backtest (for joining to the latest completed backtest)
-CREATE INDEX idx_signal_vectors_backtest
+CREATE INDEX IF NOT EXISTS idx_signal_vectors_backtest
   ON strategy_signal_vectors(backtest_id);

@@ -53,7 +53,7 @@ BEGIN
     SELECT 1 FROM pg_indexes
     WHERE indexname = 'idx_buckets_status_lastseen'
   ) THEN
-    CREATE INDEX idx_buckets_status_lastseen
+    CREATE INDEX IF NOT EXISTS idx_buckets_status_lastseen
       ON strategy_pending_buckets(status, last_seen_at DESC);
   END IF;
 END;
@@ -80,7 +80,7 @@ BEGIN
     SELECT 1 FROM pg_indexes
     WHERE indexname = 'idx_mentions_bucket'
   ) THEN
-    CREATE INDEX idx_mentions_bucket ON strategy_pending_mentions(bucket_id);
+    CREATE INDEX IF NOT EXISTS idx_mentions_bucket ON strategy_pending_mentions(bucket_id);
   END IF;
 END;
 $$;
@@ -91,7 +91,7 @@ BEGIN
     SELECT 1 FROM pg_indexes
     WHERE indexname = 'idx_mentions_recent'
   ) THEN
-    CREATE INDEX idx_mentions_recent ON strategy_pending_mentions(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_mentions_recent ON strategy_pending_mentions(created_at DESC);
   END IF;
 END;
 $$;

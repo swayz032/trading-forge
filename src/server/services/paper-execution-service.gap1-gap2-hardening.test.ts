@@ -96,7 +96,7 @@ vi.mock("../db/index.js", () => {
             }),
             returning: vi.fn(() => Promise.resolve([{ id: "t-1", pnl: "-250" }])),
           })),
-          update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => Promise.resolve(undefined)) })) })),
+          update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => { const p: any = Promise.resolve(undefined); p.returning = vi.fn(() => Promise.resolve([{ id: "pos-claimed" }])); return p; }) })) })),
           delete: vi.fn(() => ({ where: vi.fn(() => Promise.resolve(undefined)) })),
         });
       }),
@@ -150,6 +150,11 @@ vi.mock("../lib/audit-log-helper.js", () => ({
 }));
 vi.mock("../lib/metrics-registry.js", () => ({
   paperTrades: { inc: vi.fn() },
+  // dllHaltTotal.labels({reason}).inc() is called on the GAP-1 sticky-halt path
+  // (paper-execution-service.ts:1374) — missing this export throws a TypeError that
+  // was previously swallowed by the outer kill-switch catch(killErr) block, silently
+  // diverting the sticky-halt write into the "kill_switch.down" fail-closed path.
+  dllHaltTotal: { labels: vi.fn(() => ({ inc: vi.fn() })) },
 }));
 vi.mock("./exchange-status-service.js", () => ({
   isExchangeHalted: vi.fn(() => false),

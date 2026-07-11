@@ -9,7 +9,7 @@
 -- production_mode:  'HALT' | 'PAPER' | 'LIVE'
 -- Starts HALT. Only KillSwitch.setMode() may mutate this row.
 -- Every mutation writes an audit_log row + broadcasts SSE.
-CREATE TABLE system_state (
+CREATE TABLE IF NOT EXISTS system_state (
   id               INT PRIMARY KEY DEFAULT 1,
   production_mode  TEXT NOT NULL DEFAULT 'HALT',
   kill_reason      TEXT,
@@ -26,7 +26,7 @@ ON CONFLICT DO NOTHING;
 -- One row per production trade signal with full provenance.
 -- Links strategy version, bias decision, compliance check, broker IDs,
 -- slippage / PnL actuals vs expected, and a correlation_id for end-to-end trace.
-CREATE TABLE production_trades (
+CREATE TABLE IF NOT EXISTS production_trades (
   id                         BIGSERIAL PRIMARY KEY,
   strategy_id                UUID NOT NULL,
   strategy_version_hash      TEXT NOT NULL,
@@ -44,15 +44,15 @@ CREATE TABLE production_trades (
   created_at                 TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_prod_trades_strategy    ON production_trades(strategy_id, created_at DESC);
-CREATE INDEX idx_prod_trades_bar_ts      ON production_trades(bar_timestamp);
-CREATE INDEX idx_prod_trades_correlation ON production_trades(correlation_id);
+CREATE INDEX IF NOT EXISTS idx_prod_trades_strategy    ON production_trades(strategy_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_prod_trades_bar_ts      ON production_trades(bar_timestamp);
+CREATE INDEX IF NOT EXISTS idx_prod_trades_correlation ON production_trades(correlation_id);
 
 -- ─── daily_reconciliation ────────────────────────────────────────────────────
 -- One row per trading day. Reconciles production_trades count vs TradersPost
 -- log count vs Tradovate fills count vs MFFU dashboard P&L.
 -- mismatch_count > 0 fires an alert_fired flag. Phase 4B wires the cron.
-CREATE TABLE daily_reconciliation (
+CREATE TABLE IF NOT EXISTS daily_reconciliation (
   id                       BIGSERIAL PRIMARY KEY,
   recon_date               DATE NOT NULL UNIQUE,
   production_trades_count  INT NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE daily_reconciliation (
 -- severity: 'green' | 'yellow' | 'red'
 -- auto_halt_triggered: true when severity='red' caused a HALT mode transition.
 -- Phase 4B wires the drift-detector cron (Sunday).
-CREATE TABLE weekly_drift_reports (
+CREATE TABLE IF NOT EXISTS weekly_drift_reports (
   id                        BIGSERIAL PRIMARY KEY,
   report_week               DATE NOT NULL UNIQUE,
   live_sharpe_30d           NUMERIC(8,4),

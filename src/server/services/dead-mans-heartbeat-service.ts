@@ -421,11 +421,15 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
     logger.warn("dead-mans-heartbeat: no heartbeat rows in table during RTH — treating as stale (WARNING)");
     notifyWarning(
       "[dead-mans-heartbeat] No heartbeat rows written during RTH",
-      "The system_health_heartbeat table has no rows during trading hours. " +
-      "This may indicate: (1) the backend just started and has not yet written its first heartbeat " +
-      "(expected within 15 min of RTH open), (2) the heartbeat-write cron is not registered, " +
-      "or (3) the migration was not applied. " +
-      "If this persists beyond 30 min during RTH, investigate immediately.",
+      appendFamilyGradePostscript(
+        "The system_health_heartbeat table has no rows during trading hours. " +
+          "This may indicate: (1) the backend just started and has not yet written its first heartbeat " +
+          "(expected within 15 min of RTH open), (2) the heartbeat-write cron is not registered, " +
+          "or (3) the migration was not applied. " +
+          "If this persists beyond 30 min during RTH, investigate immediately.",
+        "The trading computer has not checked in during market hours, so we cannot confirm it is running.",
+        "If the dashboard is still red 30 minutes from now, wake the tower (or call Tony) and confirm the backend is up.",
+      ),
     );
     return;
   }

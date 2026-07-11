@@ -66,7 +66,19 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
   const oldHash = latestRuleset?.contentHash ?? null;
 
   if (oldHash === newHash) {
-    logger.debug("Compliance rules unchanged — no drift");
+    // HIGH-4 (deep-scan 2026-07-09, ratified): re-stamp retrievedAt on a "verified
+    // fresh, no drift" pass. PREVIOUS BUG — this branch returned early WITHOUT touching
+    // any row, so `retrievedAt` never advanced while the rules doc was stable (the normal
+    // case for weeks). The compliance freshness gate (compliance_gate.py, 24h
+    // RULESET_MAX_AGE_HOURS) then failed ~24h after the last doc edit and HARD-REJECTED
+    // every new fill (paper-execution-service.ts openPosition Stage 1) indefinitely, until
+    // the doc text next changed. Freshness ("is this still verified accurate") and drift
+    // ("has anything changed") are different questions — this heartbeat answers the first.
+    await db
+      .update(complianceRulesets)
+      .set({ retrievedAt: new Date() })
+      .where(eq(complianceRulesets.contentHash, newHash));
+    logger.debug("Compliance rules unchanged — retrievedAt re-stamped (verified fresh, no drift)");
     return { drifted: false, details: [] };
   }
 

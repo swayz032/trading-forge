@@ -612,9 +612,15 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     expect(successCalls[0][0].input.migration_name).toBe("0128_pending");
   });
 
-  // ─── F1 backfill: a verified out-of-band sibling records its ledger row WITHOUT re-running SQL ──
-  it("backfill path: a known out-of-band sibling (hash matches KNOWN set) is backfilled, NOT re-run", async () => {
-    // Feed the runner the REAL 0052 content so its computed hash matches KNOWN_OUT_OF_BAND_APPLIED_HASHES.
+  // ─── deep-scan fresh-bootstrap fix (2026-07-10): formerly-backfilled sibling is now APPLIED ──
+  // KNOWN_OUT_OF_BAND_APPLIED_HASHES was emptied (see migration-journal-utils.ts doc comment) —
+  // all 10 formerly-backfilled migrations were re-verified idempotent-safe to just re-apply, and
+  // backfilling them unconditionally silently skipped their SQL on a genuinely fresh bootstrap
+  // (the tables/columns/indexes they create never got created). This test used to assert the OLD
+  // backfill behavior for 0052; it now asserts the FIXED behavior — 0052 is actually applied.
+  it("formerly-backfilled sibling (empty out-of-band map): APPLIED, not backfilled — closes the fresh-bootstrap schema gap", async () => {
+    // Feed the runner the REAL 0052 content — with the map now empty, its hash is not a "known
+    // sibling" under any map, so it must route through normal apply.
     const realFs = (await vi.importActual<typeof import("node:fs")>("node:fs"));
     const real0052 = realFs.readFileSync(
       path.join(process.cwd(), "src/server/db/migrations/0052_fk_cascade_hardening.sql"),
@@ -623,7 +629,10 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     const KNOWN_WHEN = 1776200000000;
     const entries = [{ idx: 0, when: KNOWN_WHEN, tag: "0052_fk_cascade_hardening" }];
     // The collision `when` is recorded in the ledger (by its partner 0044a), but 0052's HASH is not
-    // (nohash placeholder) — so the plan must BACKFILL 0052 by identity, not re-run it.
+    // — with the out-of-band map empty, this is no longer treated as a "known sibling" at all, so
+    // the hash-keyed plan applies it (0052 is idempotent — drop-then-add constraints — so this is
+    // safe to re-run against a real prod DB where the schema already exists, and correctly creates
+    // the schema on a genuinely fresh bootstrap).
     _appliedWhens = new Set([String(KNOWN_WHEN)]);
 
     const journalPath = getJournalPath();
@@ -636,14 +645,18 @@ describe("Wave 24 Pass 2 Item #7 — boot-migration-runner", () => {
     const { runPendingMigrations } = await import("../lib/boot-migration-runner.js");
     await runPendingMigrations();
 
-    // Ledger row backfilled (INSERT executed) + audited — but NO migration transaction (no re-run).
-    expect(_backfillInserts.length).toBe(1);
-    expect(mockTransaction).not.toHaveBeenCalled();
+    // Applied via a real migration transaction — NOT backfilled (no ledger-only INSERT via db.execute).
+    expect(_backfillInserts.length).toBe(0);
+    expect(mockTransaction).toHaveBeenCalledOnce();
     const backfillAudits = mockInsertAuditRowSafe.mock.calls.filter(
       (c) => c[0]?.action === "boot_migration.ledger_backfilled",
     );
-    expect(backfillAudits).toHaveLength(1);
-    expect(backfillAudits[0][0].entityId).toBe("0052_fk_cascade_hardening");
+    expect(backfillAudits).toHaveLength(0);
+    const appliedAudits = mockInsertAuditRowSafe.mock.calls.filter(
+      (c) => c[0]?.action === "migration.auto_applied",
+    );
+    expect(appliedAudits).toHaveLength(1);
+    expect(appliedAudits[0][0].input.migration_name).toBe("0052_fk_cascade_hardening");
   });
 
   // ─── SQL file missing → skips entry without throwing ─────────────────────────

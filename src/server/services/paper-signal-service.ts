@@ -31,10 +31,12 @@ import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateFo
 import type { EntryDecisionContext } from "../db/jsonb-shapes.js";
 import { getSessionShapeScore } from "./volume-profile-service.js";
 // Wave 23H.D: per-strategy confirming_indicators evaluator
-import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confirming-indicator-evaluator.js";
+import { evaluateConfirmingIndicators } from "./confirming-indicator-evaluator.js";
+// Deep-scan #22 Z6: Path-C/A/B dispatch decision — pure, importable leaf (was inline)
+import { resolveConfluenceDispatch } from "../lib/confluence-path-resolver.js";
 // W23H.4: confluence-weighted sizing — replaces legacy dynamic_atr block
 import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-sizing.js";
-import { evidenceBackedFactorCount } from "../lib/confluence-provenance.js";
+import { deriveEvidenceBackedConfluenceCount, type FactorSource } from "../lib/confluence-provenance.js";
 // W23H.4: audit row writer for sizing.confluence_multiplier_applied
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 // W23H.3: per-strategy allowed_entry_windows time gates
@@ -127,6 +129,19 @@ function getFirmContractCap(firmKey: string | null | undefined, _symbol: string)
   const limit = getFirmLimit(normalized);
   if (!limit) return CONTRACT_CAP_MAX;
   return Math.max(CONTRACT_CAP_MIN, Math.min(limit.maxContracts, CONTRACT_CAP_MAX));
+}
+
+// ─── deep-scan #22 fix #8: fail-open `parseFloat(x) || default` sizing bug ──
+// `parseFloat("0") || 50_000` evaluates to 50_000 because 0 is falsy — a legitimately
+// zeroed-out account balance/starting-capital column (e.g. a session drained to $0, or
+// a not-yet-funded test session) was silently replaced with a phantom $50K, which then
+// flowed into computeRiskDerivedContracts() and sized live-shaped orders off a balance
+// the account does not actually have. Only NaN/undefined/null (a genuinely missing or
+// malformed numeric column) should fall back to the default — a real 0 must survive.
+export function parseAccountNumericOrDefault(raw: unknown, fallback: number): number {
+  if (raw == null) return fallback;
+  const n = typeof raw === "number" ? raw : parseFloat(raw as string);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 // ─── Calendar Filter Cache (Fix 3) ──────────────────────────────
@@ -2659,7 +2674,7 @@ export async function evaluateSignals(
           const sessionDate = toFuturesTradingDayString(fillTs);
           const cumPnL = await getAccountSessionCumulativePnL(accountKey, sessionDate);
           const trailingDdOverride = (sessionRow.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
-          const accountStartingFloor = parseFloat(sessionRow.startingCapital as string) || 50_000;
+          const accountStartingFloor = parseAccountNumericOrDefault(sessionRow.startingCapital, 50_000);
           const personalDllDollars = resolvePersonalDllDollars({
             firmId: sessionRow.firmId,
             trailingDdOverride,
@@ -3387,7 +3402,7 @@ export async function evaluateSignals(
         const sessionDate = toFuturesTradingDayString(new Date(bar.timestamp));
         const cumPnL = await getAccountSessionCumulativePnL(accountKey, sessionDate);
         const trailingDdOverride = (sessionRow.config as { trailing_dd_amount?: number } | null)?.trailing_dd_amount ?? null;
-        const accountStartingFloorForDll = parseFloat(sessionRow.startingCapital as string) || 50_000;
+        const accountStartingFloorForDll = parseAccountNumericOrDefault(sessionRow.startingCapital, 50_000);
         const personalDllDollars = resolvePersonalDllDollars({
           firmId: sessionRow.firmId,
           trailingDdOverride,
@@ -3871,13 +3886,30 @@ export async function evaluateSignals(
     let correlatedBlocked = lockoutBlocked; // short-circuit if already blocked
     if (!lockoutBlocked) {
       try {
-        // Query ALL open positions across sessions for cross-symbol guard
+        // Query ALL open positions across sessions for cross-symbol guard.
+        // deep-scan long-tail F-4: also fetch firmId + strategyId per open position (via the session join)
+        // and pass the proposed entry's firmId/strategyId, so the Topstep same-operator multi-account
+        // exception (correlated-position-guard §F-3) can actually fire — previously the call passed only
+        // (symbol, positions) with no firm/strategy context, making the exception unreachable dead code and
+        // wrongly blocking the operator's own Topstep multi-account copy (allowed per CLAUDE.md §6/§9).
         const allOpenPositions = await db
-          .select({ symbol: paperPositions.symbol })
+          .select({
+            symbol: paperPositions.symbol,
+            firmId: paperSessions.firmId,
+            strategyId: paperSessions.strategyId,
+          })
           .from(paperPositions)
+          .innerJoin(paperSessions, eq(paperPositions.sessionId, paperSessions.id))
           .where(isNull(paperPositions.closedAt));
 
-        const correlGuard = checkCorrelatedPositionGuard(symbol, allOpenPositions);
+        const correlGuard = checkCorrelatedPositionGuard(
+          symbol,
+          allOpenPositions,
+          null,                     // matrixOverride — use the loaded correlation matrix
+          sessionFirmId,            // proposedFirmId
+          undefined,                // proposedUserId — single-operator deployment (§9: family = separate deployments); not tracked
+          sessionConfig.strategyId, // proposedStrategyId
+        );
         if (!correlGuard.allowed) {
           correlatedBlocked = true;
           span.setAttribute("correlated_position_blocked", true);
@@ -4129,26 +4161,17 @@ export async function evaluateSignals(
       // Fail-open: if biasState is null (engine failed earlier) → no block.
       // Audit: signal.not_active_strategy_for_regime on block.
       const rawConfig = config as unknown as Record<string, unknown>;
-      const entryQuality = (
-        rawConfig.entry_quality ??
-        (rawConfig.strategy as Record<string, unknown> | undefined)?.entry_quality
-      ) as {
-        confluence_factors?: string[];
-        min_factors_satisfied?: number;
-        extraction_provenance?: string;
-        /** W23G.11 per-strategy confirming indicators (W23H.D: evaluated at signal time) */
-        confirming_indicators?: ConfirmingIndicator[];
-        /**
-         * Wave 25 W25.1: opt-in to weighted probabilistic scoring (Path C).
-         * When true, Stage 2 uses evaluateWeightedConfluence() instead of boolean counting.
-         * Default false — existing strategies continue on Path A or B unchanged.
-         */
-        use_weighted_scoring?: boolean;
-      } | undefined;
-
-      const isLegacyStrategy =
-        !entryQuality ||
-        entryQuality.extraction_provenance === "legacy_no_confluence";
+      // Deep-scan #22 Z6 (2026-07-09): entryQuality/isLegacyStrategy/useWeightedScoring/
+      // usePerStrategy/customIndicators are all computed once here via the extracted pure
+      // resolveConfluenceDispatch() leaf (src/server/lib/confluence-path-resolver.ts) —
+      // BEHAVIOR-PRESERVING extraction of what was previously three separate inline
+      // computations (entryQuality read + isLegacyStrategy here; useWeightedScoring at the
+      // former :4363; customIndicators/usePerStrategy at the former :4767-4768). Nothing
+      // mutates rawConfig/entryQuality between here and those original call sites, so
+      // hoisting the computation is byte-identical — the values are read, not recomputed,
+      // at their original use sites below.
+      const { entryQuality, isLegacyStrategy, useWeightedScoring, usePerStrategy, customIndicators } =
+        resolveConfluenceDispatch(rawConfig);
 
       let stage1Blocked = false;
       if (!isLegacyStrategy && biasState && biasState.activeStrategyId !== null) {
@@ -4329,8 +4352,10 @@ export async function evaluateSignals(
           //
           //   Path B (Wave 23.C): confirming_indicators is absent/empty
           //     → canonical-5 factor boolean: satisfiedCount >= minRequired
-
-          const useWeightedScoring = entryQuality.use_weighted_scoring === true && !isLegacyStrategy;
+          //
+          // useWeightedScoring already resolved above via resolveConfluenceDispatch()
+          // (deep-scan #22 Z6) — same value as entryQuality.use_weighted_scoring === true
+          // && !isLegacyStrategy, computed once instead of recomputed here.
 
           // A-1 (Wave 25 Pass 2): pathCFailed flag — set in catch block when Path C
           // (evaluateWeightedConfluence) throws. When true, execution falls through to
@@ -4734,8 +4759,9 @@ export async function evaluateSignals(
           // ── W23H.D dispatcher: per-strategy vs canonical 5 (Path B fallback) ──
           // Runs when: (a) strategy does not opt into Path C, OR
           //            (b) Path C threw an error (A-1 fallback — pathCFailed=true)
-          const customIndicators = entryQuality.confirming_indicators ?? [];
-          const usePerStrategy = customIndicators.length > 0;
+          // customIndicators/usePerStrategy already resolved above via
+          // resolveConfluenceDispatch() (deep-scan #22 Z6) — same values as
+          // entryQuality.confirming_indicators ?? [] / customIndicators.length > 0.
 
           // Determine signal direction from config.side for directional evaluation
           const signalDir = (config.side === "short" ? "short" : "long") as "long" | "short";
@@ -4852,8 +4878,12 @@ export async function evaluateSignals(
 
             for (const factor of factors) {
               try {
-                let satisfied = true;
-                let reason = "unknown_factor_fail_open";
+                // deep-scan signal-gen F-1 (CRITICAL): Path B factors now fail CLOSED (satisfied=false)
+                // on missing/unknown/error data — matching Path A (confirming-indicator-evaluator) + Path C
+                // (confluence-score). Failing OPEN to satisfied=true dishonestly INFLATED the confluence count
+                // (e.g. first ~20 bars after any session reset / process restart, volume_confirmation auto-passed).
+                let satisfied = false;
+                let reason = "unknown_factor_fail_closed";
 
                 if (factor === "regime_match") {
                   satisfied = biasState === null || biasState.activeStrategyId === null || biasState.activeStrategyId === sessionConfig.strategyId;
@@ -4868,8 +4898,8 @@ export async function evaluateSignals(
                     satisfied = bar.volume !== undefined && bar.volume > rollingMean * 1.2;
                     reason = satisfied ? "volume_above_threshold" : "volume_insufficient";
                   } else {
-                    satisfied = true; // fail-open when insufficient history
-                    reason = "insufficient_history_fail_open";
+                    satisfied = false; // fail-CLOSED when insufficient history (cannot verify volume → not confirmed)
+                    reason = "insufficient_history_fail_closed";
                   }
                 } else if (factor === "macro_alignment") {
                   // Reuse calendarBlocked result (already computed above)
@@ -4881,11 +4911,11 @@ export async function evaluateSignals(
                     const sessionDateStr = barTimestampToTradingDay(bar.timestamp);
                     const vpData = await getSessionShapeScore(symbol, sessionDateStr);
                     if (!vpData.available) {
-                      satisfied = true; // fail-open when VP data unavailable
-                      reason = "vp_not_available_fail_open";
+                      satisfied = false; // fail-CLOSED when VP data unavailable (cannot verify shape → not confirmed)
+                      reason = "vp_not_available_fail_closed";
                       logger.warn(
                         { sessionId, symbol, sessionDate: sessionDateStr },
-                        "Wave 23.C vp_shape: VP shape data unavailable — fail-open (satisfied=true)",
+                        "Wave 23.C vp_shape: VP shape data unavailable — fail-CLOSED (satisfied=false)",
                       );
                     } else {
                       satisfied = vpData.score >= VP_SHAPE_SCORE_THRESHOLD;
@@ -4898,8 +4928,8 @@ export async function evaluateSignals(
                       );
                     }
                   } catch {
-                    satisfied = true; // fail-open on any VP error
-                    reason = "vp_shape_error_fail_open";
+                    satisfied = false; // fail-CLOSED on any VP error
+                    reason = "vp_shape_error_fail_closed";
                   }
                 }
 
@@ -4923,8 +4953,8 @@ export async function evaluateSignals(
                   reason: `signal.a_plus_factor_evaluated: factor=${factor} satisfied=${satisfied} source=${factorSource} reason=${reason}`,
                 }).catch((err: unknown) => logger.warn({ err, sessionId }, "Failed to persist canonical factor audit log"));
               } catch {
-                // Per-factor fail-open: any evaluation error marks it satisfied
-                factorResults.push({ factor, satisfied: true, reason: "factor_eval_error_fail_open" });
+                // Per-factor fail-CLOSED: any evaluation error marks it NOT satisfied (cannot verify → not confirmed)
+                factorResults.push({ factor, satisfied: false, reason: "factor_eval_error_fail_closed" });
               }
             }
 
@@ -5196,14 +5226,20 @@ export async function evaluateSignals(
       const rawPositionSize = (config as unknown as Record<string, unknown>).position_size as Record<string, unknown> | undefined;
 
       // Parse account state from session row (numeric columns arrive as strings from Postgres/Drizzle)
-      const accountBalance = parseFloat(sessionRow.currentEquity as string) || 50_000;
-      const accountStartingFloor = parseFloat(sessionRow.startingCapital as string) || 50_000;
+      const accountBalance = parseAccountNumericOrDefault(sessionRow.currentEquity, 50_000);
+      const accountStartingFloor = parseAccountNumericOrDefault(sessionRow.startingCapital, 50_000);
       // Pass 5 Track C F-2: prefer realizedPeakEquity (atomic close-time HWM)
       // over highWaterBalance (MTM-oscillating). Fall back to legacy column then to balance.
-      const highWaterBalance =
-        parseFloat(sessionRow.realizedPeakEquity as string) ||
-        parseFloat(sessionRow.highWaterBalance as string) ||
-        accountBalance;
+      // FIX A4 (deep-scan #22 fix-wave-2, 2026-07-07): `parseFloat(x) || parseFloat(y) || z`
+      // has the same falsy-zero bug wave-1 fixed at the other 4 call sites (deepscan22-fix8)
+      // — a legitimately-zeroed realizedPeakEquity (e.g. a session that gave back its entire
+      // HWM) or highWaterBalance would be silently discarded because `0` is falsy, replacing
+      // a real "you have zero cushion left" HWM with a phantom nonzero one. Use the existing
+      // parseAccountNumericOrDefault() helper (only NaN/null/undefined trigger the fallback).
+      const highWaterBalance = parseAccountNumericOrDefault(
+        sessionRow.realizedPeakEquity,
+        parseAccountNumericOrDefault(sessionRow.highWaterBalance, accountBalance),
+      );
       // Pass 5 Track C F-4: cumulativeProfit must be REALIZED-only for pyramid tier math.
       // Using currentEquity (MTM) inflates tier mid-trade when winners are open.
       // Backtester uses realized P&L (sizing.py:846); paper must match.
@@ -5247,21 +5283,48 @@ export async function evaluateSignals(
       // Firm contract cap from firm_config lookup (same as prior P1-6(a))
       const firmCap = getFirmContractCap(sessionRow.firmId, symbol);
 
-      // W23H.4: confluence_count = confirming_indicators.length + 1 (primary always counts).
+      // W23H.4: confluence_count = evidence-backed confluence_factors + 1 (primary always counts).
       // Re-read entry_quality from config here because entryQuality is scoped inside the
       // antiSetupBlocked else-block and not visible at this level. Same derivation as Stage 2.
       const rawConfigForSizing = config as unknown as Record<string, unknown>;
       const entryQualityForSizing = (
         rawConfigForSizing.entry_quality ??
         (rawConfigForSizing.strategy as Record<string, unknown> | undefined)?.entry_quality
-      ) as { confirming_indicators?: string[] } | undefined;
-      // HARDENING 2026-06-30 (confluence→sizing): size only on EVIDENCE-BACKED confirmations. Auto-floor
-      // confluences (graduator-injected regime_match / structural_setup — AUTO_FLOOR_FACTORS) are Trading
-      // Forge overlay, NOT the YouTube-extracted edge, and must NEVER justify the 1.5×/2× size upsize.
-      // Excluding them only ever REDUCES size (fail-safe). NOTE: this gates on PROVENANCE (evidence-backed);
-      // gating additionally on per-bar SATISFACTION is a tracked follow-up (needs Stage-2 result threading).
-      const confirmingForSizing = entryQualityForSizing?.confirming_indicators ?? [];
-      const confluenceCount = evidenceBackedFactorCount(confirmingForSizing) + 1;
+      ) as { confluence_factors?: string[]; factor_sources?: Record<string, FactorSource> } | undefined;
+      // HARDENING 2026-06-30 (confluence→sizing), FIXED deep-scan #22 FIX F-1 (2026-07-09): size
+      // only on EVIDENCE-BACKED confluence_factors. Auto-floor confluences (graduator-injected
+      // regime_match / structural_setup — AUTO_FLOOR_FACTORS, or anything tagged "auto_floor" in
+      // the per-factor factor_sources provenance map) are Trading Forge overlay, NOT the
+      // YouTube-extracted edge, and must NEVER justify the 1.5×/2× size upsize.
+      //
+      // FIX F-1: the prior derivation read `entry_quality.confirming_indicators` — an array of
+      // `{indicator, params, direction}` OBJECTS (deep-scan #22 FIX A1) — into a function typed
+      // for `string[]`. AUTO_FLOOR_FACTORS.has(object) is always false, so the exclusion never
+      // fired and every confluence strategy was credited fully evidence-backed. The CORRECT field
+      // is `entry_quality.confluence_factors` (the string[] Stage 2 already reads at :4880) +
+      // `entry_quality.factor_sources` (the graduation-time provenance map) — see
+      // `deriveEvidenceBackedConfluenceCount()` in confluence-provenance.ts.
+      //
+      // Excluding auto_floor factors only ever REDUCES the COUNT relative to the immediate
+      // pre-fix (buggy) value (fail-safe on the count derivation itself). NOTE: this gates on
+      // PROVENANCE (evidence-backed); gating additionally on per-bar SATISFACTION is a tracked
+      // follow-up (needs Stage-2 result threading).
+      //
+      // Deep-scan #22 loop-3 (2026-07-09) — honest behavior statement: this F-1 fix, landed
+      // alone, would have a SIDE EFFECT of silently ACTIVATING the confluence-weighted upsize
+      // for most strategies (confluence_factors is near-universally populated by the graduator,
+      // unlike the old buggy confirming_indicators read which was usually empty). To avoid a
+      // silent size-INCREASE shipping by accident, resolveConfluenceMultiplier() in
+      // risk-sizing.ts now gates the ACTUAL multiplier application behind
+      // CONFLUENCE_SIZE_UPSIZE_ENABLED (env, default false):
+      //   - flag OFF (default): multiplier is pinned to 1.0 — size is UNCHANGED from historical
+      //     (pre-ds22) behavior, a size no-op, regardless of confluenceCount computed below.
+      //   - flag ON: the evidence-backed, auto_floor-excluded confluenceCount drives the
+      //     1.0x/1.5x/2.0x upsize as W23H.4 originally intended.
+      // confluenceCount itself is still computed and threaded into sizingInputs/confluenceAudit
+      // below regardless of the flag — it stays correct and observable either way; the flag only
+      // gates whether it is ALLOWED to move finalContracts.
+      const confluenceCount = deriveEvidenceBackedConfluenceCount(entryQualityForSizing);
 
       // Per-strategy confluence_size_multiplier_map from config (set by framework-overlay W23H.4)
       const confluenceSizeMultiplierMap = (rawPositionSize?.confluence_size_multiplier as Record<number, number> | undefined) ?? undefined;

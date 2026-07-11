@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import polars as pl
 
-from src.engine.strategy_base import BaseStrategy
 from src.engine.indicators.core import compute_atr
 from src.engine.indicators.market_structure import detect_swings
-from src.engine.indicators.price_delivery import detect_fvg, detect_displacement
-from src.engine.indicators.order_flow import detect_bullish_ob, detect_bearish_ob, detect_breaker
+from src.engine.indicators.order_flow import detect_bearish_ob, detect_breaker, detect_bullish_ob
+from src.engine.indicators.price_delivery import detect_displacement, detect_fvg
+from src.engine.strategy_base import BaseStrategy
 
 
 class UnicornStrategy(BaseStrategy):
@@ -101,7 +101,6 @@ class UnicornStrategy(BaseStrategy):
         # test_audit_a12.py). Strictly entry-SUPPRESSING relative to the old
         # behavior (streaming_trades ⊆ batch_trades).
         for b_idx in range(len(breakers)):
-            b_bar = int(breakers["index"][b_idx])
             b_type = str(breakers["type"][b_idx])
             b_top = float(breakers["top"][b_idx])
             b_bottom = float(breakers["bottom"][b_idx])
@@ -139,8 +138,13 @@ class UnicornStrategy(BaseStrategy):
                 f_top = float(fvgs["top"][f_idx])
                 f_bottom = float(fvgs["bottom"][f_idx])
 
-                # FVG should form near the break point (within a few bars)
-                if abs(f_bar - b_broken_at) > 5:
+                # FVG should form near the break point, but never AFTER the earliest
+                # bar this zone can be entered on (b_broken_at + 1). The displacement
+                # that breaks the OB precedes/coincides with the break, so allow up to
+                # 5 bars BEFORE b_broken_at but zero bars after — a symmetric +/-5
+                # window would let zone existence read FVG data from the zone's own
+                # future (up to b_broken_at + 5), which is the look-ahead bug.
+                if f_bar > b_broken_at or f_bar < b_broken_at - 5:
                     continue
 
                 # Check overlap: min(tops) > max(bottoms)

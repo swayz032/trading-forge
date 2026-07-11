@@ -23,6 +23,7 @@ import { sandboxCheckCode } from "./llm-sandbox-service.js";
 import { checkDslDiversity, persistDslFeatureVector, auditDslDiversityRejection } from "./dsl-diversity-service.js";
 // FIX 6 (2026-07-02): Discord WARN for dsl_critic fail-open invocation visibility
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 // Pass 4 — Scout substance validation (Tier-1 regex + Tier-2 LLM auditor + premium format)
 import {
   tier1RegexFilter,
@@ -222,7 +223,11 @@ async function _emitCriticFailOpenAudit(journalId: string, reason: string): Prom
   if (_shouldSendCriticFailOpenDiscord()) {
     notifyWarning(
       "DSL Critic Fail-Open",
-      `DSL quality critic invocation failed (fail-open) — strategies passing WITHOUT critic review. Reason: ${reason}. Check audit_log action=dsl_critic.invocation_failed_fail_open for full event list.`,
+      appendFamilyGradePostscript(
+        `DSL quality critic invocation failed (fail-open) — strategies passing WITHOUT critic review. Reason: ${reason}. Check audit_log action=dsl_critic.invocation_failed_fail_open for full event list.`,
+        "The quality reviewer that normally checks new strategies is offline, so strategies are being approved without that safety check.",
+        "No action needed right now, but tell Tony so he can restart the reviewer before more strategies are approved.",
+      ),
       { journal_id: journalId, reason },
     );
   }
@@ -971,9 +976,39 @@ export class AgentService {
           };
         }
       } catch (auditErr) {
-        // Auditor failure should NOT block the backtest path — log loudly so
-        // we know the gate is broken, but continue.
-        logger.error({ err: auditErr }, "Layer 2 auditor threw — gate disabled for this call; INVESTIGATE");
+        // FAIL-CLOSED: the Layer-2 auditor is a gate; if the gate itself throws
+        // we CANNOT know whether the graduated config is safe, so we must REFUSE
+        // the promotion rather than silently wave it through (which is what the
+        // old log-and-continue did — a fail-OPEN that contradicted this block's
+        // own "FAIL-CLOSED" header). Reject + audit row + Discord WARN.
+        logger.error(
+          { err: auditErr, dsl_name: (sanitizedDsl as any)?.name, correlationId },
+          "Layer 2 auditor THREW — failing CLOSED: refusing graduated_bucket promotion (gate cannot certify safety)",
+        );
+        await db.insert(auditLog).values({
+          action: "backtest.auditor_error_fail_closed",
+          entityType: "strategy",
+          input: { dsl_name: (sanitizedDsl as any)?.name, source: options.source },
+          result: { error: auditErr instanceof Error ? auditErr.message : String(auditErr) },
+          status: "failure",
+          decisionAuthority: "gate",
+          correlationId: correlationId ?? null,
+        }).catch((writeErr) => logger.warn({ err: writeErr }, "audit_log write failed for auditor-error fail-closed"));
+        notifyWarning(
+          "Layer-2 Auditor Error — Promotion BLOCKED (fail-closed)",
+          appendFamilyGradePostscript(
+            `graduated-strategy-auditor threw while auditing "${String((sanitizedDsl as any)?.name ?? "unknown")}". The Layer-2 audit gate failed CLOSED and REFUSED the promotion. Investigate the auditor — no audit certification means no promotion.`,
+            "A safety check errored out while reviewing a new strategy, so the system refused to promote it (the safe choice).",
+            "Nothing is at risk. Let Tony know so he can fix the checker and let the strategy try again.",
+          ),
+          { dsl_name: (sanitizedDsl as any)?.name, correlationId },
+        );
+        return {
+          strategyId: null, backtestId: null, status: "audit_rejected",
+          tier: null, forgeScore: null,
+          skipped: true,
+          reason: "auditor_threw_fail_closed",
+        };
       }
     }
 

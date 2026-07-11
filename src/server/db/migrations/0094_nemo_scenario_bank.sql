@@ -10,7 +10,7 @@
 
 -- ─── UP ───────────────────────────────────────────────────────────────────────
 
-CREATE TABLE nemo_scenario_bank (
+CREATE TABLE IF NOT EXISTS nemo_scenario_bank (
     id                BIGSERIAL PRIMARY KEY,
     scenario_label    TEXT NOT NULL,
     scenario_json     JSONB NOT NULL,                          -- Full NeMoScenario dataclass
@@ -24,11 +24,11 @@ CREATE TABLE nemo_scenario_bank (
     created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_nemo_scenario_label ON nemo_scenario_bank(scenario_label);
-CREATE INDEX idx_nemo_severity        ON nemo_scenario_bank(severity);
-CREATE INDEX idx_nemo_created         ON nemo_scenario_bank(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_nemo_scenario_label ON nemo_scenario_bank(scenario_label);
+CREATE INDEX IF NOT EXISTS idx_nemo_severity        ON nemo_scenario_bank(severity);
+CREATE INDEX IF NOT EXISTS idx_nemo_created         ON nemo_scenario_bank(created_at DESC);
 -- Partial index for batch lookups — all rows from a given generator version
-CREATE INDEX idx_nemo_generator_ver   ON nemo_scenario_bank(generator_version);
+CREATE INDEX IF NOT EXISTS idx_nemo_generator_ver   ON nemo_scenario_bank(generator_version);
 
 COMMENT ON TABLE nemo_scenario_bank IS
     'NeMo Data Designer macro-narrative scenarios (Track 1, challenger_only Phase 0). '

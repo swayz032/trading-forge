@@ -22,6 +22,8 @@
 
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { randomUUID } from "node:crypto";
 import path from "path";
 import fs from "fs";
 
@@ -119,6 +121,21 @@ async function captureOneFirm(config: FirmDashboardConfig): Promise<SnapshotResu
 
     await page.goto(config.dashboardUrl, { waitUntil: "networkidle" });
 
+    // deep-scan broker/cookie F-1 (HIGH): an EXPIRED cookie redirects the dashboard URL to a LOGIN page,
+    // but this used to screenshot it unconditionally + return status:"captured" — storing a login screen
+    // as payout-dispute evidence (a false success the F-4 audit would then faithfully record). Detect the
+    // login page (password field OR login-path URL) and return an error so the stale cookie surfaces via
+    // the dashboard_snapshot.capture_failed audit row instead of a fake "captured".
+    try {
+      const passwordField = await page.$("input[type='password']");
+      const currentUrl: string = typeof page.url === "function" ? String(page.url()) : "";
+      if (passwordField || /\/(login|signin|sign-in|auth)\b/i.test(currentUrl)) {
+        return { firmId: config.firmId, status: "error", errorMessage: "stale_cookie_redirected_to_login" };
+      }
+    } catch {
+      // Detection is best-effort — if it throws, fall through and capture (a snapshot beats a crash).
+    }
+
     // Ensure the snapshot directory exists for this firm
     const firmDir = path.join(SNAPSHOT_BASE_DIR, config.firmId);
     fs.mkdirSync(firmDir, { recursive: true });
@@ -165,6 +182,11 @@ async function captureOneFirm(config: FirmDashboardConfig): Promise<SnapshotResu
 
 export async function runDashboardSnapshots(): Promise<SnapshotResult[]> {
   const results: SnapshotResult[] = [];
+  // deep-scan broker/cookie F-4 (CRITICAL): prop-firm dashboard snapshots ARE the payout-dispute evidence
+  // trail, yet this service wrote ZERO audit_log rows and its SSE carried no correlationId — so there was
+  // no reconstructable record of when/whether evidence was captured or why it failed. Add a per-run
+  // correlationId + an audit row per firm (captured/failed), and thread it through the SSE (§2 chain).
+  const correlationId = randomUUID();
 
   for (const config of FIRM_DASHBOARDS) {
     const result = await captureOneFirm(config);
@@ -172,19 +194,38 @@ export async function runDashboardSnapshots(): Promise<SnapshotResult[]> {
 
     if (result.status === "captured") {
       logger.info(
-        { firmId: result.firmId, paths: result.screenshotPaths?.length, capturedAt: result.capturedAt },
+        { firmId: result.firmId, paths: result.screenshotPaths?.length, capturedAt: result.capturedAt, correlationId },
         "dashboard-snapshot: captured firm dashboard evidence",
       );
+      await insertAuditRowSafe({
+        action: "dashboard_snapshot.captured",
+        entityType: "prop_firm_evidence",
+        entityId: result.firmId,
+        status: "success",
+        decisionAuthority: "system",
+        correlationId,
+        result: { firmId: result.firmId, screenshotCount: result.screenshotPaths?.length ?? 0, capturedAt: result.capturedAt },
+      });
       broadcastSSE("prop-firm:snapshot-captured", {
         firmId: result.firmId,
+        correlationId,
         screenshotCount: result.screenshotPaths?.length ?? 0,
         capturedAt: result.capturedAt,
       });
     } else if (result.status === "error") {
       logger.warn(
-        { firmId: result.firmId, error: result.errorMessage },
+        { firmId: result.firmId, error: result.errorMessage, correlationId },
         "dashboard-snapshot: capture failed (non-critical)",
       );
+      await insertAuditRowSafe({
+        action: "dashboard_snapshot.capture_failed",
+        entityType: "prop_firm_evidence",
+        entityId: result.firmId,
+        status: "warning",
+        decisionAuthority: "system",
+        correlationId,
+        result: { firmId: result.firmId, error: result.errorMessage ?? "unknown", impact: "no payout-dispute evidence captured for this firm this cycle" },
+      });
     }
   }
 

@@ -17,7 +17,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { and, eq, gte, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, paperTrades, paperSessions, backtests } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -138,7 +138,11 @@ async function checkStrategyDrift(
           eq(backtests.status, "completed"),
         ),
       )
-      .orderBy(backtests.createdAt)
+      // deep-scan services CRITICAL: was .orderBy(backtests.createdAt) ASCENDING → fetched the OLDEST completed
+      // backtest as the drift baseline (the var is named lastBacktest — a typo). This feeds the GLOBAL
+      // killSwitch HALT decision, so comparing the weekly z-score against a strategy first-ever backtest could
+      // mask real drift or false-positive-halt ALL trading. Must be the LATEST completed backtest.
+      .orderBy(desc(backtests.createdAt))
       .limit(1);
 
     if (lastBacktest?.resultExtras) {

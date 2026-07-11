@@ -54,7 +54,11 @@ pytest-snapshot>=0.9.0
 ruff>=0.4.0
 
 # Quantum (optional — graceful fallback to classical when unavailable)
-# pip install qiskit qiskit-aer qiskit-algorithms dwave-samplers dwave-neal quimb pennylane
+# INSTITUTIONAL NOTE (2026-07-06): these were DECLARED but NOT installed on the tower for a long time, so
+# "quantum" silently ran classical fallback (qiskit-aer/pennylane/dwave-neal all absent). Verify the real
+# runtime state any time with `npm run check:quantum-backends` (src/engine/quantum_backend_status.py) — the
+# declaration below is necessary but NOT sufficient; the tower Python must actually have them installed.
+# pip install qiskit qiskit-aer qiskit-algorithms dwave-samplers dwave-neal quimb pennylane pennylane-lightning
 qiskit>=2.3.0
 qiskit-aer>=0.15.0
 qiskit-algorithms>=0.3.0
@@ -62,6 +66,9 @@ dwave-samplers>=1.7.0
 dwave-neal>=0.6.0
 quimb>=1.13.0
 pennylane>=0.42.0
+# pennylane-lightning: fast C++ CPU backend. quantum_device_selector.py prefers `lightning.qubit` over the
+# ~100x-slower pure-Python `default.qubit` (kept entropy-filter QCNN inference under the 500ms signal budget).
+pennylane-lightning>=0.42.0
 
 # Cloud QPU (optional)
 qiskit-ibm-runtime>=0.46.0

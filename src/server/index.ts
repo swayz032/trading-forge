@@ -1,4 +1,5 @@
 import "./load-env.js";
+import { appendFamilyGradePostscript } from "./lib/notification-helpers.js";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -513,6 +514,16 @@ app.use("/api/carter", carterToolsRouter);
 // validates its own HMAC (TRADINGVIEW webhook secret / BROKER_FILL_HMAC_SECRET).
 app.use("/api/tradingview", tradingViewWebhookRoutes);
 app.use("/api/broker/fill-callback", fillCallbackRoutes);
+// W1 CORE: TF Order Gateway — the in-process kill-switch + gate layer before every live order.
+// Pine alert → POST /api/live-order → routeOrder() (full gate stack) → TradersPost/broker.
+// Requires LIVE_ORDER_HMAC_SECRET env var (≥32 chars). Fail-CLOSED 503 when unconfigured.
+// deep-scan fix-wave 2026-07-10 (Fix 1): mounted HERE — was previously AFTER
+// authMiddleware below, which 401'd every Pine-alert-originated live order at the
+// general Bearer gate before it ever reached live-order.ts's own HMAC check.
+// Same pattern as its siblings above: this is an external caller with its own auth,
+// not a Bearer-authenticated internal API consumer. live-order.ts's internal auth
+// logic is unchanged by this move.
+app.use("/api/live-order", liveOrderRoutes);
 
 // Auth gate
 app.use("/api", authMiddleware);
@@ -655,11 +666,6 @@ app.use("/api/composite-health", compositeHealthRoutes);
 // W29 Pass D.2: A/B paper sub-account Sharpe comparison — READ-ONLY observability
 app.use("/api/ab-comparison", abComparisonRoutes);
 
-// W1 CORE: TF Order Gateway — the in-process kill-switch + gate layer before every live order.
-// Pine alert → POST /api/live-order → routeOrder() (full gate stack) → TradersPost/broker.
-// Requires LIVE_ORDER_HMAC_SECRET env var (≥32 chars). Fail-CLOSED 503 when unconfigured.
-app.use("/api/live-order", liveOrderRoutes);
-
 // Phase 1 Fill Reconciliation: broker fill callback + admin reconcile-clear.
 // POST /api/broker/fill-callback — HMAC-gated; requires BROKER_FILL_HMAC_SECRET.
 // deep-scan #13: mounted ABOVE the auth gate (see near authMiddleware) so external
@@ -681,17 +687,16 @@ app.use("/api", (err: Error, _req: express.Request, res: express.Response, _next
   res.status(500).json({ error: "Internal server error" });
 });
 
-// ─── Serve Frontend (production) ──────────────────────────────
-// Vite builds to Trading_forge_frontend/amber-vision-main/dist/
-// In prod (Railway), serve the built SPA from Express directly.
+// ─── Frontend ──────────────────────────────────────────────────
+// 2026-07-06: the old amber-vision-main React SPA was DELETED — Slumhouse (the PWA served by
+// slumhouseRouter from public/slumhouse/*, mounted above) is the ONLY frontend now. Bare/unknown
+// non-API routes redirect to the Slumhouse entry (the router handles all /slumhouse/* + /slumhouse/api/*).
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const frontendDist = path.resolve(__dirname, "../../Trading_forge_frontend/amber-vision-main/dist");
+void __dirname; // retained for other path.resolve uses / future static roots
 
-app.use(express.static(frontendDist));
-
-// SPA catch-all: any non-API route serves index.html (Express 5 syntax)
-app.get("/{*splat}", (_req, res) => {
-  res.sendFile(path.join(frontendDist, "index.html"));
+app.get("/{*splat}", (req, res) => {
+  if (req.path.startsWith("/api")) { res.status(404).json({ error: "not_found" }); return; }
+  res.redirect(302, "/slumhouse/");
 });
 
 process.on("unhandledRejection", (reason, _promise) => {
@@ -832,7 +837,11 @@ export const server = app.listen(port, () => {
         import("./services/notification-service.js").then(({ notifyCritical }) => {
           notifyCritical(
             `[CRITICAL] ${orphansFound} orphaned paper position(s) detected at startup`,
-            `What happened: ${orphansFound} position(s) were open in the database with no active session when the server restarted.\nAuto-remediation attempted: yes — stuckSessionIds populated; blocked sessions prevent duplicate opens.\nWhy it failed: sessions were not active at restart; positions require manual review.\nYour action: Review audit_log for paper.orphaned_position_detected entries and close positions via the dashboard or call clearStuckSessionId() after confirming each is closed.`,
+            appendFamilyGradePostscript(
+              `What happened: ${orphansFound} position(s) were open in the database with no active session when the server restarted.\nAuto-remediation attempted: yes — stuckSessionIds populated; blocked sessions prevent duplicate opens.\nWhy it failed: sessions were not active at restart; positions require manual review.\nYour action: Review audit_log for paper.orphaned_position_detected entries and close positions via the dashboard or call clearStuckSessionId() after confirming each is closed.`,
+              "After a restart, the bot found open practice trades that were left without an owner and needs a human to look at them.",
+              "Tell Tony to review these positions on the dashboard and close any that should not be open.",
+            ),
           );
         }).catch((notifyErr: unknown) => {
           logger.error({ err: notifyErr }, "Startup: notification-service import failed during orphan CRITICAL alert (non-blocking)");

@@ -62,6 +62,18 @@ except ImportError:
     PENNYLANE_AVAILABLE = False
     BRAKET_PENNYLANE_AVAILABLE = False
 
+# institutional-grade observability (2026-07-06): shout ONCE at import if PennyLane is missing, so a future
+# silent lib-removal can never quietly degrade the RL agent to classical/random coin-flip without anyone
+# noticing (the exact "quantum silently ran classical for months" gap that prompted this). Advisory-only —
+# quantum is challenger-only and this never blocks; the honest state is always queryable via
+# `npm run check:quantum-backends`.
+if not PENNYLANE_AVAILABLE:
+    _rl_logger.warning(
+        "QUANTUM RL: PennyLane NOT installed — VQC policy training runs CLASSICAL fallback (near-random "
+        "action selection). `pip install pennylane pennylane-lightning` to restore real circuits. "
+        "Challenger-only: does NOT affect trading."
+    )
+
 
 # ─── Governance ──────────────────────────────────────────────────
 GOVERNANCE = {
@@ -1571,6 +1583,61 @@ def _emit_audit_row(
         _rl_logger.warning("_emit_audit_row: failed to insert audit row for %s: %s", action, exc)
 
 
+# ─── quantum_rl_runs persistence seam (deep-scan #22 Track X2) ───────────────
+#
+# Extracted from the inline INSERT block inside train_regime_conditioned_policies
+# so the namespace-separation invariant ("RL output never lands in
+# quantum_mc_runs") can be BEHAVIORALLY tested — not just source-regex-scanned.
+# The training loop still opens its own real psycopg2 connection in production
+# (see call site below); this function only takes an already-open, DB-API-
+# compatible connection and issues the INSERT. Byte-identical SQL/params to the
+# pre-refactor inline block; the only change is the injectable seam.
+def persist_rl_run(conn, row: dict) -> None:
+    """Insert a single quantum_rl_runs row using an already-open DB connection.
+
+    Args:
+        conn: DB-API-compatible connection — must support `.cursor()` returning
+            a context-manager cursor with positional-parameter `.execute()`,
+            plus `.commit()`. In production this is a real psycopg2 connection
+            opened by the caller; in tests it may be a fake/pglite-style double
+            that records the executed SQL + params without touching a live DB.
+        row: dict with keys strategy_id, regime, state_vector, action,
+            confidence_score, effective_confidence, reward, ci_high,
+            drawdown_penalty, governance_labels, cpcv_fold_id, seed.
+
+    Raises:
+        Whatever `conn.cursor()` / `cur.execute()` raises — the caller (the
+        training loop) is responsible for catching and recording
+        write_failures, exactly as it did around the pre-refactor inline block.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO quantum_rl_runs
+                (strategy_id, regime, state_vector, action,
+                 confidence_score, effective_confidence, reward,
+                 ci_high_at_evaluation, drawdown_penalty,
+                 governance_labels, cpcv_fold_id, seed)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                row["strategy_id"],
+                row["regime"],
+                json.dumps(row["state_vector"]),
+                row["action"],
+                row["confidence_score"],
+                row["effective_confidence"],
+                row["reward"],
+                row["ci_high"],
+                row["drawdown_penalty"],
+                json.dumps(row["governance_labels"]),
+                row["cpcv_fold_id"],
+                row["seed"],
+            ),
+        )
+    conn.commit()
+
+
 # ─── Regime-conditioned training loop ────────────────────────────────────────
 
 def train_regime_conditioned_policies(
@@ -1803,6 +1870,28 @@ def train_regime_conditioned_policies(
         all_episode_rewards: list[float] = []
         regime_seed = int(rng.integers(0, 2**31))
 
+        # Gap 1 fix (quantum-rl-bridge, 2026-07-06): _dsr_floor + the Sharpe
+        # helper are hoisted here — BEFORE the batch loop — so the per-batch
+        # quantum_rl_runs INSERT below can persist a truthful dsr_passed value
+        # (previously _dsr_passed was computed ONCE, after this whole loop,
+        # from the fully-accumulated all_episode_rewards, and was never written
+        # into governance_payload at all — the persisted DB column had no
+        # dsr_passed key). rl-signal-fetcher.ts:228 reads
+        # governance_labels.dsr_passed but only consumes it on the fail-soft
+        # fallback branch (legacy rows lacking sr_is/sr_oos/n_training_iterations)
+        # — every current row takes the TS-probit-authoritative branch instead,
+        # so this was a latent (masked) disconnect, not a live break.
+        # _sharpe_of is the SAME formula final_sharpe uses post-loop (mean/std
+        # of the reward series, 0.0 when insufficient data) — defining it once
+        # here and calling it from both sites guarantees the per-batch proxy
+        # and the final per-regime value can never mathematically drift apart.
+        _dsr_floor: float = float(os.environ.get("QUANTUM_RL_DSR_FLOOR", "0.5"))
+
+        def _sharpe_of(vals: list[float]) -> float:
+            if len(vals) > 1 and np.std(vals) > 0:
+                return float(np.mean(vals) / np.std(vals))
+            return 0.0
+
         for epoch_batch_start in range(0, training_epochs, 20):
             batch_end = min(epoch_batch_start + 20, training_epochs)
             batch_rewards: list[float] = []
@@ -1919,17 +2008,22 @@ def train_regime_conditioned_policies(
                 _is_rewards = all_episode_rewards[:_half] if _half > 1 else all_episode_rewards
                 _oos_rewards = all_episode_rewards[_half:] if _half > 1 else all_episode_rewards
 
-                def _proxy_sharpe(vals: list[float]) -> float:
-                    if len(vals) > 1 and np.std(vals) > 0:
-                        return float(np.mean(vals) / np.std(vals))
-                    return 0.0
-
-                sr_is = _proxy_sharpe(_is_rewards)
-                sr_oos = _proxy_sharpe(_oos_rewards)
+                sr_is = _sharpe_of(_is_rewards)
+                sr_oos = _sharpe_of(_oos_rewards)
 
                 # ci_high snapshot: mean of the regime's ci_high series (best
                 # available proxy for "at decision time" at batch granularity).
                 batch_ci_high = float(np.mean(ci_highs)) if ci_highs else None
+
+                # Gap 1 fix: dsr_passed/dsr_value computed from the SAME
+                # all_episode_rewards-so-far series used for sr_is/sr_oos above
+                # (identical WITHIN-RUN cumulative-proxy pattern), via the
+                # shared _sharpe_of helper — so on the regime's LAST batch this
+                # is mathematically identical to the post-loop final_sharpe /
+                # _dsr_passed computed further down (same formula, same final
+                # all_episode_rewards contents, same _dsr_floor).
+                _batch_dsr_value = _sharpe_of(all_episode_rewards)
+                _batch_dsr_passed = _batch_dsr_value >= _dsr_floor
 
                 governance_payload = {
                     **RL_RUNS_GOVERNANCE,
@@ -1943,38 +2037,36 @@ def train_regime_conditioned_policies(
                     "sr_oos": sr_oos,
                     "n_training_iterations": batch_end,
                     "sr_proxy_method": "in_batch_cumulative_reward_half_split",
+                    "dsr_passed": _batch_dsr_passed,
+                    "dsr_value": _batch_dsr_value,
+                    "dsr_floor": _dsr_floor,
+                    "dsr_proxy_method": "in_batch_cumulative_reward_sharpe",
                 }
 
                 try:
                     import psycopg2
                     conn = psycopg2.connect(db_url)
                     try:
-                        with conn.cursor() as cur:
-                            cur.execute(
-                                """
-                                INSERT INTO quantum_rl_runs
-                                    (strategy_id, regime, state_vector, action,
-                                     confidence_score, effective_confidence, reward,
-                                     ci_high_at_evaluation, drawdown_penalty,
-                                     governance_labels, cpcv_fold_id, seed)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                                """,
-                                (
-                                    strategy_id,
-                                    regime,
-                                    json.dumps(batch_state_vector),
-                                    batch_action,
-                                    batch_confidence_score,
-                                    batch_effective_confidence,
-                                    float(np.mean(batch_rewards)) if batch_rewards else 0.0,
-                                    batch_ci_high,
-                                    None,  # drawdown_penalty — not tracked at batch granularity
-                                    json.dumps(governance_payload),
-                                    None,  # cpcv_fold_id — bar-level fold join not wired here
-                                    regime_seed,  # Fix 8: persist seed for replay reproducibility
-                                ),
-                            )
-                        conn.commit()
+                        # deep-scan #22 Track X2: INSERT extracted to
+                        # persist_rl_run() (injectable seam) — same SQL/params
+                        # as before, now behaviorally testable without a live DB.
+                        persist_rl_run(
+                            conn,
+                            {
+                                "strategy_id": strategy_id,
+                                "regime": regime,
+                                "state_vector": batch_state_vector,
+                                "action": batch_action,
+                                "confidence_score": batch_confidence_score,
+                                "effective_confidence": batch_effective_confidence,
+                                "reward": float(np.mean(batch_rewards)) if batch_rewards else 0.0,
+                                "ci_high": batch_ci_high,
+                                "drawdown_penalty": None,  # not tracked at batch granularity
+                                "governance_labels": governance_payload,
+                                "cpcv_fold_id": None,  # bar-level fold join not wired here
+                                "seed": regime_seed,  # Fix 8: persist seed for replay reproducibility
+                            },
+                        )
                     finally:
                         conn.close()
                 except Exception as db_exc:
@@ -1994,10 +2086,12 @@ def train_regime_conditioned_policies(
                     })
 
         # Final Sharpe + result summary
+        # Gap 1 fix: reuse the SAME _sharpe_of helper the per-batch proxy above
+        # calls (formula unchanged: mean/std of the reward series, 0.0 when
+        # insufficient data) — guarantees final_sharpe can never drift from the
+        # per-batch cumulative proxy already persisted to governance_payload.
         final_reward = float(np.mean(all_episode_rewards)) if all_episode_rewards else 0.0
-        final_sharpe = 0.0
-        if len(all_episode_rewards) > 1 and np.std(all_episode_rewards) > 0:
-            final_sharpe = float(np.mean(all_episode_rewards) / np.std(all_episode_rewards))
+        final_sharpe = _sharpe_of(all_episode_rewards)
 
         weights_hash = hashlib.sha256(params.tobytes()).hexdigest()[:16] if n_params > 0 else "no_params"
 
@@ -2008,7 +2102,11 @@ def train_regime_conditioned_policies(
         # The TS-side rl-dsr-gate.ts re-reads the governance_labels from
         # quantum_rl_runs; we stamp the value here so the TS gate has an authoritative
         # per-regime signal to consume.
-        _dsr_floor: float = float(os.environ.get("QUANTUM_RL_DSR_FLOOR", "0.5"))
+        # Gap 1 fix: _dsr_floor is now read ONCE, hoisted above the batch loop
+        # (same os.environ.get call, same default "0.5", same value — env vars
+        # don't change mid-process) — re-used here rather than re-read, so the
+        # per-batch persisted dsr_floor and this final comparison are guaranteed
+        # to use the identical floor value.
         _dsr_passed: bool = final_sharpe >= _dsr_floor
 
         _dsr_audit_action = "quantum_rl.dsr_passed" if _dsr_passed else "quantum_rl.dsr_floor_block"
@@ -2093,6 +2191,18 @@ def compute_rl_kill_switch_state(
 ) -> dict:
     """Compare RL-challenger vs baseline Sharpe over the last N paper sessions.
 
+    ⚠️ DEAD CODE — SUPERSEDED, DO NOT WIRE WITHOUT FIXING THE SQL (deep-scan 2026-07-09).
+    The production composite-health kill-switch path uses the correct TS mirror
+    `src/server/lib/rl-signal-fetcher.ts::_computeKillSwitchState()` (which reads
+    `quantum_rl_runs`). This Python function has NO production callers (only tests).
+    Its SQL below queries columns that DO NOT EXIST on `paper_positions`
+    (`paper_account_routing` + `strategy_id` + `status` live elsewhere;
+    `realized_pnl` is `paper_trades.pnl`) — so against a real schema it throws,
+    the exception is swallowed, and it returns should_dormant=False forever
+    (falsely-green). Before wiring this anywhere, rewrite the query to join
+    paper_positions→paper_sessions (for strategy_id), read P&L from paper_trades.pnl,
+    and read paper_account_routing from `strategies`.
+
     Queries paper_positions grouped by paper_account_routing ('baseline' vs
     'rl-challenger') and computes a rolling Sharpe for each over the last
     lookback_sessions closed sessions.
@@ -2167,8 +2277,11 @@ def compute_rl_kill_switch_state(
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             # Query closed paper positions for this strategy grouped by routing
-            # paper_account_routing is a TEXT column on paper_positions (C.3 will add it)
-            # Fail-soft if column doesn't exist yet (pre-C.3 schema)
+            # ⚠️ BROKEN SQL (dead code — see function docstring): these columns do
+            # NOT exist on paper_positions. paper_account_routing lives on `strategies`
+            # (migration 0159), strategy_id/status are absent (paper_positions has
+            # sessionId + closedAt), realized_pnl is `paper_trades.pnl`. This throws
+            # against a real schema; the except below swallows it. Fix before wiring.
             try:
                 cur.execute(
                     """
@@ -2193,8 +2306,10 @@ def compute_rl_kill_switch_state(
                     elif routing == _RL_ROUTE:
                         rl_pnls.append(pnl)
             except Exception as query_exc:
-                _rl_logger.debug(
-                    "compute_rl_kill_switch_state: paper_positions query failed (%s) — using empty lists",
+                # WARN (was DEBUG): a real schema break here silently disables the
+                # kill switch (empty lists → should_dormant=False). Make it visible.
+                _rl_logger.warning(
+                    "compute_rl_kill_switch_state: paper_positions query failed (%s) — using empty lists (see DEAD-CODE note in docstring)",
                     query_exc,
                 )
     finally:

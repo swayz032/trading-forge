@@ -43,21 +43,9 @@ describe("Wave 13 CF-3 — backtest:scored observability", () => {
     expect(scoredBlockIdx).toBeLessThan(tierGateIdx);
   });
 
-  it("backtest:scored SSE event is in the frontend type union", async () => {
-    const { readFileSync } = await import("fs");
-    const { resolve } = await import("path");
-
-    const sseTypes = readFileSync(
-      resolve(process.cwd(), "Trading_forge_frontend/amber-vision-main/src/types/sse-events.ts"),
-      "utf-8",
-    );
-
-    // Type union entry
-    expect(sseTypes).toMatch(/type: "backtest:scored"/);
-    // Interface definition
-    expect(sseTypes).toMatch(/BacktestScoredData/);
-    expect(sseTypes).toMatch(/gateRejected: boolean/);
-  });
+  // 2026-07-06: dropped the "backtest:scored is in the frontend type union" assertion — the
+  // amber-vision-main SPA (and its typed sse-events.ts union) was DELETED; Slumhouse is the only
+  // frontend and consumes SSE as untyped JS. The server-side broadcast tests below remain the contract.
 
   it("backtest:scored is in the System Map SSE inventory", async () => {
     const { readFileSync } = await import("fs");

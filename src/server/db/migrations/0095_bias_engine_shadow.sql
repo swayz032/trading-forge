@@ -6,7 +6,7 @@
 -- ─── bias_decisions ─────────────────────────────────────────────────────────
 -- One row per route_playbook() call (when BIAS_ENGINE_MODE != 'OFF').
 -- Captures full feature snapshot, raw HMM probs, router decision, and mode.
-CREATE TABLE bias_decisions (
+CREATE TABLE IF NOT EXISTS bias_decisions (
   id                    BIGSERIAL PRIMARY KEY,
   symbol                TEXT NOT NULL,
   decision_timestamp    TIMESTAMPTZ NOT NULL,
@@ -26,14 +26,14 @@ CREATE TABLE bias_decisions (
   UNIQUE(symbol, decision_timestamp, router_version)
 );
 
-CREATE INDEX idx_bias_decisions_symbol_ts   ON bias_decisions(symbol, decision_timestamp DESC);
-CREATE INDEX idx_bias_decisions_playbook    ON bias_decisions(playbook);
-CREATE INDEX idx_bias_decisions_engine_mode ON bias_decisions(engine_mode);
+CREATE INDEX IF NOT EXISTS idx_bias_decisions_symbol_ts   ON bias_decisions(symbol, decision_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_bias_decisions_playbook    ON bias_decisions(playbook);
+CREATE INDEX IF NOT EXISTS idx_bias_decisions_engine_mode ON bias_decisions(engine_mode);
 
 -- ─── bias_calibration_curves ────────────────────────────────────────────────
 -- One row per calibration fit run. Stores Platt / isotonic curve parameters
 -- and the reliability score so the evaluator can cite calibration quality.
-CREATE TABLE bias_calibration_curves (
+CREATE TABLE IF NOT EXISTS bias_calibration_curves (
   id                BIGSERIAL PRIMARY KEY,
   fit_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   window_days       INT NOT NULL,
@@ -43,12 +43,12 @@ CREATE TABLE bias_calibration_curves (
   version           TEXT NOT NULL
 );
 
-CREATE INDEX idx_bias_calibration_fit_at ON bias_calibration_curves(fit_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bias_calibration_fit_at ON bias_calibration_curves(fit_at DESC);
 
 -- ─── bias_ablation_results ──────────────────────────────────────────────────
 -- One row per ablation run comparing mode=OFF vs mode=SHADOW vs mode=SIZING_ONLY.
 -- gpt5_verdict is null until the bias_engine_evaluator role runs.
-CREATE TABLE bias_ablation_results (
+CREATE TABLE IF NOT EXISTS bias_ablation_results (
   id                    BIGSERIAL PRIMARY KEY,
   run_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   period_start          DATE NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE bias_ablation_results (
   accepted_by_operator  BOOLEAN
 );
 
-CREATE INDEX idx_bias_ablation_run_at ON bias_ablation_results(run_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bias_ablation_run_at ON bias_ablation_results(run_at DESC);
 
 -- ─── DOWN migration ──────────────────────────────────────────────────────────
 -- To reverse: DROP TABLE bias_ablation_results; DROP TABLE bias_calibration_curves; DROP TABLE bias_decisions;
