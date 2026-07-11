@@ -1,4 +1,4 @@
-CREATE TABLE "alerts" (
+CREATE TABLE IF NOT EXISTS "alerts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"type" text NOT NULL,
 	"severity" text DEFAULT 'info' NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE "alerts" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "audit_log" (
+CREATE TABLE IF NOT EXISTS "audit_log" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"action" text NOT NULL,
 	"entity_type" text,
@@ -21,7 +21,7 @@ CREATE TABLE "audit_log" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "backtest_trades" (
+CREATE TABLE IF NOT EXISTS "backtest_trades" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"backtest_id" uuid NOT NULL,
 	"entry_time" timestamp NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE "backtest_trades" (
 	"hold_duration_ms" integer
 );
 --> statement-breakpoint
-CREATE TABLE "backtests" (
+CREATE TABLE IF NOT EXISTS "backtests" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"strategy_id" uuid NOT NULL,
 	"symbol" text NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE "backtests" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "data_sync_jobs" (
+CREATE TABLE IF NOT EXISTS "data_sync_jobs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"symbol" text NOT NULL,
 	"source" text DEFAULT 'databento' NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE "data_sync_jobs" (
 	"completed_at" timestamp
 );
 --> statement-breakpoint
-CREATE TABLE "market_data_meta" (
+CREATE TABLE IF NOT EXISTS "market_data_meta" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"symbol" text NOT NULL,
 	"timeframe" text NOT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE "market_data_meta" (
 	"last_sync_at" timestamp
 );
 --> statement-breakpoint
-CREATE TABLE "monte_carlo_runs" (
+CREATE TABLE IF NOT EXISTS "monte_carlo_runs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"backtest_id" uuid NOT NULL,
 	"num_simulations" integer NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE "monte_carlo_runs" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "strategies" (
+CREATE TABLE IF NOT EXISTS "strategies" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
 	"description" text,
@@ -120,7 +120,7 @@ CREATE TABLE "strategies" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "system_journal" (
+CREATE TABLE IF NOT EXISTS "system_journal" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"strategy_id" uuid,
 	"backtest_id" uuid,
@@ -140,7 +140,7 @@ CREATE TABLE "system_journal" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "watchlist" (
+CREATE TABLE IF NOT EXISTS "watchlist" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"symbol" text NOT NULL,
 	"name" text,
@@ -156,14 +156,14 @@ ALTER TABLE "backtests" ADD CONSTRAINT "backtests_strategy_id_strategies_id_fk" 
 ALTER TABLE "monte_carlo_runs" ADD CONSTRAINT "monte_carlo_runs_backtest_id_backtests_id_fk" FOREIGN KEY ("backtest_id") REFERENCES "public"."backtests"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "system_journal" ADD CONSTRAINT "system_journal_strategy_id_strategies_id_fk" FOREIGN KEY ("strategy_id") REFERENCES "public"."strategies"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "system_journal" ADD CONSTRAINT "system_journal_backtest_id_backtests_id_fk" FOREIGN KEY ("backtest_id") REFERENCES "public"."backtests"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "audit_action_idx" ON "audit_log" USING btree ("action");--> statement-breakpoint
-CREATE INDEX "audit_entity_idx" ON "audit_log" USING btree ("entity_type","entity_id");--> statement-breakpoint
-CREATE INDEX "trades_backtest_idx" ON "backtest_trades" USING btree ("backtest_id");--> statement-breakpoint
-CREATE INDEX "backtests_strategy_idx" ON "backtests" USING btree ("strategy_id");--> statement-breakpoint
-CREATE INDEX "sync_jobs_symbol_idx" ON "data_sync_jobs" USING btree ("symbol");--> statement-breakpoint
-CREATE INDEX "sync_jobs_status_idx" ON "data_sync_jobs" USING btree ("status");--> statement-breakpoint
-CREATE UNIQUE INDEX "market_data_symbol_tf_idx" ON "market_data_meta" USING btree ("symbol","timeframe");--> statement-breakpoint
-CREATE INDEX "journal_strategy_idx" ON "system_journal" USING btree ("strategy_id");--> statement-breakpoint
-CREATE INDEX "journal_status_idx" ON "system_journal" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "journal_tier_idx" ON "system_journal" USING btree ("tier");--> statement-breakpoint
-CREATE INDEX "journal_source_idx" ON "system_journal" USING btree ("source");
+CREATE INDEX IF NOT EXISTS "audit_action_idx" ON "audit_log" USING btree ("action");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_entity_idx" ON "audit_log" USING btree ("entity_type","entity_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "trades_backtest_idx" ON "backtest_trades" USING btree ("backtest_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "backtests_strategy_idx" ON "backtests" USING btree ("strategy_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "sync_jobs_symbol_idx" ON "data_sync_jobs" USING btree ("symbol");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "sync_jobs_status_idx" ON "data_sync_jobs" USING btree ("status");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "market_data_symbol_tf_idx" ON "market_data_meta" USING btree ("symbol","timeframe");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "journal_strategy_idx" ON "system_journal" USING btree ("strategy_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "journal_status_idx" ON "system_journal" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "journal_tier_idx" ON "system_journal" USING btree ("tier");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "journal_source_idx" ON "system_journal" USING btree ("source");

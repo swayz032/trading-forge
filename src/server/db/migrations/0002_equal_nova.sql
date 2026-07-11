@@ -1,4 +1,4 @@
-CREATE TABLE "stress_test_runs" (
+CREATE TABLE IF NOT EXISTS "stress_test_runs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"backtest_id" uuid NOT NULL,
 	"passed" boolean NOT NULL,

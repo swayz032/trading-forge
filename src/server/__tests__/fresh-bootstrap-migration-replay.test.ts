@@ -113,15 +113,14 @@ function splitStatements(sqlText: string): string[] {
 // nothing else. A new tag appearing here is a real regression; a pinned tag disappearing means
 // it was fixed and should be removed from this list in the same commit as the fix.
 const PASS2_KNOWN_NONIDEMPOTENT = new Set([
+  // MIG-3 (deep-scan 2026-07-11): 0001/0007/0008/0009/0016 hardened to IF NOT EXISTS (CREATE
+  // TABLE/INDEX + ADD COLUMN) so they are now re-apply-safe, and 0017 is idempotent under the
+  // resulting DB state — removed from the pinned non-idempotent set. 0000/0002/0006 remain: their
+  // CREATE TABLE/INDEX are now IF-NOT-EXISTS too, but they still carry OTHER bare non-idempotent
+  // statements (constraints / types / sequences) that this pass did not harden — remaining carry-forward.
   "0000_previous_nuke",
-  "0001_flashy_hercules",
   "0002_equal_nova",
   "0006_deep_analysis_pipeline",
-  "0007_matrix_correlations",
-  "0008_decay_analysis_column",
-  "0009_strategy_evolution",
-  "0016_sanity_cross_validation",
-  "0017_add_indexes",
 ]);
 
 describe("fresh-bootstrap migration replay (deep-scan land 2026-07-10)", () => {
