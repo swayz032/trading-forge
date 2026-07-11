@@ -4246,6 +4246,28 @@ export async function updatePositionPrices(
     if (rawUpdate === undefined) continue;
     const { close: currentPrice, high, low } = normalizePriceUpdate(rawUpdate);
 
+    // SDL-1 (deep-scan 2026-07-11): a non-finite bar price (NaN/Infinity from a malformed feed) would
+    // poison unrealizedPnl below -> corrupt currentEquity to NaN. The cross-symbol DLL / trailing-DD
+    // capital-safety gates test `balance <= floor`, and NaN comparisons are ALWAYS false, so a NaN
+    // equity silently fails those gates OPEN. Skip this position for this bar (never persist a NaN
+    // P&L) and emit a visible audit row so the data-integrity gap is not silent.
+    if (!Number.isFinite(currentPrice) || !Number.isFinite(high) || !Number.isFinite(low)) {
+      logger.error(
+        { sessionId, positionId: pos.id, symbol: pos.symbol, currentPrice, high, low },
+        "paper-execution: non-finite bar price — skipping position for this bar (SDL-1 capital-safety guard)",
+      );
+      void insertAuditRowSafe({
+        action: "paper.non_finite_bar_price_skipped",
+        entityType: "paper_position",
+        entityId: pos.id,
+        decisionAuthority: "system",
+        input: { session_id: sessionId, symbol: pos.symbol, currentPrice, high, low } as Record<string, unknown>,
+        result: { skipped: true, reason: "non_finite_bar_price" } as Record<string, unknown>,
+        status: "warning",
+      });
+      continue;
+    }
+
     const spec = CONTRACT_SPECS[pos.symbol];
     if (!spec) {
       logger.warn({ symbol: pos.symbol, positionId: pos.id }, "Missing CONTRACT_SPECS — skipping unrealized P&L update");
@@ -4430,7 +4452,12 @@ export async function updatePositionPrices(
             // trailing reference, just not truly volume-weighted.
             const rawBarVol = exitBarContext.barVol?.[pos.symbol];
             const barVol = rawBarVol != null && rawBarVol > 0 ? rawBarVol : 1;
-            const barMid = currentPrice;
+            // F2 (deep-scan 2026-07-11): AVWAP must use the TYPICAL price (high+low+close)/3 to match
+            // the backtester oracle (backtester.py:2083 `typical_price = (bar_high+bar_low+close)/3`).
+            // Paper previously used close alone, so the anchored VWAP (and its trail stop / exit
+            // price) diverged from backtest on any bar whose close skews to one end of the range —
+            // violating the TS<->Python Exit Engine Parity contract.
+            const barMid = (high + low + currentPrice) / 3;
             const newSumPv = prevSumPv + barMid * barVol;
             const newSumV  = prevSumV  + barVol;
             const avwap = newSumV > 0 ? newSumPv / newSumV : currentPrice;
@@ -4517,10 +4544,23 @@ export async function updatePositionPrices(
         // Tighten trailHwm if computedTrail is tighter than current (ratchet-only).
         if (computedTrail != null) {
           const currentTrailHwm = pos.trailHwm != null ? Number(pos.trailHwm) : null;
-          const isTighter = currentTrailHwm == null || (
+          // F1 (deep-scan 2026-07-11): mirror the backtester's runner-trail parity —
+          // (1) advance the trail ONLY after TP2 fills (backtester.py:2088 `if tp2_filled:`);
+          //     before TP2 the stop holds at the structural initial stop. The AVWAP accumulator
+          //     (updatedRuntimeState) still persists every bar via the else-if below, matching
+          //     backtester.py:2078-2085 ("accumulate every bar from entry so TP2 has AVWAP ready").
+          // (2) floor the ratchet at initialStopPrice: treat a null trailHwm as the structural stop
+          //     so the FIRST write can never be LOOSER than the stop the trade was sized against
+          //     (prior `currentTrailHwm == null` unconditionally accepted the first computedTrail,
+          //     which for chandelier/near-entry AVWAP could sit at ~break-even, forcing premature
+          //     exits, or wider than the structural stop, over-risking beyond the sized amount).
+          const tp2Ready = (pos.tp1Filled ?? false) && (pos.tp2Filled ?? false);
+          const initialStop = pos.initialStopPrice != null ? Number(pos.initialStopPrice) : null;
+          const ratchetFloor = currentTrailHwm ?? initialStop;
+          const isTighter = tp2Ready && ratchetFloor != null && (
             pos.side === "long"
-              ? computedTrail > currentTrailHwm  // long: higher stop = tighter
-              : computedTrail < currentTrailHwm  // short: lower stop = tighter
+              ? computedTrail > ratchetFloor  // long: higher stop = tighter
+              : computedTrail < ratchetFloor  // short: lower stop = tighter
           );
 
           if (isTighter) {
