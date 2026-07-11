@@ -1,0 +1,12 @@
+{
+  "_comment": "rails_thresholds_v1 seed. Freeze failure IDs and collection floors only from the first successful Linux runner bring-up; every later change requires a dated commit and reason.",
+  "vitest": {
+    "knownFailures": [],
+    "collectionFloor": 0
+  },
+  "pytest": {
+    "knownFailures": [],
+    "collectionFloor": 0
+  },
+  "checksSkipped": []
+}
