@@ -1,1 +1,1 @@
-ALTER TABLE "backtests" ADD COLUMN IF NOT EXISTS "decay_analysis" jsonb;
+ALTER TABLE "backtests" ADD COLUMN "decay_analysis" jsonb;
