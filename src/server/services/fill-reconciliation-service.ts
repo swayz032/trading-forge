@@ -58,6 +58,7 @@ import { isServerMediatedExecutionEnabled } from "./server-mediated-executor.js"
 import { notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { CONTRACT_SPECS } from "../../shared/firm-config.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 import type { BrokerResult } from "./broker-router.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -193,12 +194,41 @@ export class TradersPostFillSource implements BrokerFillSource {
     else if (status === "rejected") normalizedStatus = "rejected";
     else if (status === "cancelled") normalizedStatus = "cancelled";
 
+    const filledQty = Number(p["filledQty"] ?? p["filled_qty"] ?? 0);
+    const filledAvgPrice = Number(p["avgFillPrice"] ?? p["avg_fill_price"] ?? 0);
+    // SDL-2 (deep-scan 2026-07-11): a FILL-status payload with a non-finite qty/price is malformed —
+    // Number("abc")=NaN would flow into position-drift reconciliation where NaN comparisons are always
+    // false, silently passing the drift check (a false green). Reject it AND emit a VISIBLE audit row
+    // (fill_reconciliation.malformed_payload) so it is never indistinguishable from a benign non-fill ping.
+    if (
+      (normalizedStatus === "filled" || normalizedStatus === "partially_filled") &&
+      (!Number.isFinite(filledQty) || !Number.isFinite(filledAvgPrice))
+    ) {
+      insertAuditRow({
+        action: "fill_reconciliation.malformed_payload",
+        entityType: "system",
+        entityId: p["orderId"] != null ? String(p["orderId"]) : null,
+        decisionAuthority: "system",
+        input: {
+          raw_filled_qty: (p["filledQty"] ?? p["filled_qty"] ?? null) as unknown,
+          raw_avg_price: (p["avgFillPrice"] ?? p["avg_fill_price"] ?? null) as unknown,
+          status,
+          source: "traderspost",
+        } as Record<string, unknown>,
+        result: { rejected: true, reason: "non_finite_qty_or_price" } as Record<string, unknown>,
+        status: "warning",
+        correlationId: p["correlation_id"] != null ? String(p["correlation_id"]) : undefined,
+      }).catch((auditErr) =>
+        logger.error({ err: auditErr }, "fill-reconciliation: malformed_payload audit write failed (non-blocking)"),
+      );
+      return null;
+    }
     return {
       broker_order_ref: p["orderId"] != null ? String(p["orderId"]) : null,
       idempotency_key: p["idempotency_key"] != null ? String(p["idempotency_key"]) : null,
       symbol: String(p["symbol"] ?? ""),
-      filled_qty: Number(p["filledQty"] ?? p["filled_qty"] ?? 0),
-      filled_avg_price: Number(p["avgFillPrice"] ?? p["avg_fill_price"] ?? 0),
+      filled_qty: filledQty,
+      filled_avg_price: filledAvgPrice,
       status: normalizedStatus,
       broker_fill_id: p["fillId"] != null ? String(p["fillId"]) : null,
       source: "traderspost",
