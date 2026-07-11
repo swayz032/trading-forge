@@ -28,7 +28,25 @@ export function rateLimit(config: RateLimitConfig = { windowMs: 60_000, maxReque
 
     record.count++;
     if (record.count > config.maxRequests) {
-      logger.warn({ ip: key, count: record.count, maxRequests: config.maxRequests }, "Rate limit exceeded");
+      // 2026-07-11 P0 storm forensics: a silent in-process client hit 429 at ~150 req/s,
+      // flooding this log (~13M lines/day) and exhausting the ephemeral port pool with
+      // zero path attribution. Log the FIRST rejection per window + every 500th, and
+      // carry path/method/UA so the offending caller is identifiable from the log alone.
+      const overage = record.count - config.maxRequests;
+      if (overage === 1 || overage % 500 === 0) {
+        logger.warn(
+          {
+            ip: key,
+            count: record.count,
+            maxRequests: config.maxRequests,
+            method: req.method,
+            path: req.originalUrl?.slice(0, 200),
+            userAgent: req.headers["user-agent"]?.slice(0, 120),
+            correlationId: req.headers["x-correlation-id"],
+          },
+          "Rate limit exceeded",
+        );
+      }
       // Retry-After: seconds until the window resets — required by RFC 6585 §4
       // and consumed by automated callers (n8n, agent loops) to back off correctly.
       const retryAfterSec = Math.ceil((record.resetAt - now) / 1000);
