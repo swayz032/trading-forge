@@ -166,6 +166,14 @@ vi.mock("../../shared/firm-config.js", () => ({
   getFirmAccount: vi.fn().mockReturnValue({ dailyLossLimit: 1000, maxDrawdown: 2000 }),
 }));
 
+// CAP-1 (deep-scan 2026-07-11): Layer 3 trailing-DD breach now force-closes (mirrors Layer 2), so
+// the L3 breach path imports paper-execution-service. Mock forceCloseAllPositions to a no-op — this
+// suite tests LAYER decision logic, not the force-close itself (that lives in deepscan17/m1-a5). Without
+// this, the L3 breach test pulls the real heavy module and cascades failures into later layer tests.
+vi.mock("../services/paper-execution-service.js", () => ({
+  forceCloseAllPositions: vi.fn().mockResolvedValue({ closedCount: 0 }),
+}));
+
 // ─── Imports after mocks ──────────────────────────────────────────────────────
 
 import { killSwitch, ALL_LAYERS_ENFORCED_ON_SIGNAL_PATH } from "../production/kill-switch.js";
@@ -368,6 +376,12 @@ describe("KillSwitch — H6 Fix: Layers 2-9 enforced on signal path", () => {
     expect(decision.halted).toBe(true);
     expect(decision.layer).toBe(3);
     expect(decision.reason).toMatch(/trailing_dd/i);
+    // CAP-1 (deep-scan 2026-07-11): the L3 trailing-DD breach must ACTUALLY force-close the bleeding
+    // position, not just halt new entries — mirroring Layer 2. Assert forceCloseAllPositions was
+    // invoked with the trailing-DD reason (pins the fix so a future revert to halt-only is caught).
+    const { forceCloseAllPositions } = await import("../services/paper-execution-service.js");
+    expect(forceCloseAllPositions).toHaveBeenCalled();
+    expect(vi.mocked(forceCloseAllPositions).mock.calls[0]?.[0]).toContain("trailing_dd_force_close_at_95pct");
   });
 
   // ── Test 4: L6 CME outage ────────────────────────────────────────────────

@@ -691,6 +691,54 @@ async function checkLayer3TrailingDD(scopeAccountKey?: string): Promise<HaltDeci
       const drawdown      = peakEquity - currentEquity;
 
       if (drawdown >= maxDrawdown - TRAILING_DD_BUFFER_DOLLARS) {
+        // CAP-1 fix (deep-scan 2026-07-11): Layer 3 previously only set halted:true (blocking NEW
+        // entries) and NEVER flattened the OPEN position causing the trailing-DD breach — so the
+        // position kept bleeding through the firm trailing-max-DD line and the account could still be
+        // closed, despite the reason string "trailing_dd_force_close_at_95pct". Mirror Layer 2's
+        // account-scoped force-close so the breach actually force-closes. _safeForceClose dedupes
+        // concurrent calls via _forceCloseInFlight and scopes the flatten to ONLY this account.
+        const l3AccountKey = resolveAccountKey(session);
+        const l3CorrelationId = randomUUID();
+        insertAuditRow({
+          action: "sizing.trailing_dd_force_close",
+          entityType: "system",
+          entityId: l3AccountKey,
+          decisionAuthority: "system",
+          input: { account_key: l3AccountKey, firm_id: firmId, drawdown, max_dd: maxDrawdown, buffer_dollars: TRAILING_DD_BUFFER_DOLLARS } as Record<string, unknown>,
+          result: { action: "force_close", outcome: "triggered" } as Record<string, unknown>,
+          status: "pending",
+          correlationId: l3CorrelationId,
+        }).catch((auditErr) =>
+          logger.error({ err: auditErr }, "kill-switch L3: trailing-DD force-close trigger audit failed (non-blocking)")
+        );
+        broadcastSSE("kill_switch:trailing_dd_force_close", {
+          account_key: l3AccountKey,
+          firm_id: firmId,
+          drawdown,
+          max_dd: maxDrawdown,
+          buffer_remaining: maxDrawdown - drawdown,
+          correlationId: l3CorrelationId,
+          forced_at: new Date().toISOString(),
+        });
+        const _l3FcOk = await _safeForceClose(
+          `trailing_dd_force_close_at_95pct:${l3AccountKey}`,
+          l3CorrelationId,
+          { accountKey: l3AccountKey },
+        );
+        if (_l3FcOk) {
+          insertAuditRow({
+            action: "sizing.trailing_dd_force_close_completed",
+            entityType: "system",
+            entityId: l3AccountKey,
+            decisionAuthority: "system",
+            input: { account_key: l3AccountKey, firm_id: firmId } as Record<string, unknown>,
+            result: { action: "force_close", outcome: "completed" } as Record<string, unknown>,
+            status: "success",
+            correlationId: l3CorrelationId,
+          }).catch((auditErr) =>
+            logger.error({ err: auditErr }, "kill-switch L3: trailing-DD force-close completed-audit failed (non-blocking)")
+          );
+        }
         decision = {
           halted: true,
           layer: 3,
