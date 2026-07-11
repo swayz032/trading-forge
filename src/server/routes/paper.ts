@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { z } from "zod";
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, paperSignalLogs, paperSessionFeedback, strategies, backtests, monteCarloRuns, auditLog } from "../db/schema.js";
@@ -106,39 +106,55 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
       return;
     }
 
-    const [session] = await db
-      .insert(paperSessions)
-      .values({ strategyId, startingCapital, currentEquity: startingCapital, config: config as import("../db/jsonb-shapes.js").PaperSessionConfigShape, mode, firmId: firmId ?? null })
-      .returning();
+    // API-2 (deep-scan 2026-07-11): the prior Track-C.2 advisory lock was keyed on the JUST-inserted
+    // session UUID — globally unique, so it could NEVER collide, and two concurrent /start requests each
+    // inserted their own session + Massive-WS stream (double-counted signals/metrics). Also
+    // pg_try_advisory_lock is SESSION-level and leaks on the pooled connection. Correct pool-safe guard:
+    // a TRANSACTION-level advisory lock (pg_advisory_xact_lock — globally exclusive, auto-released at
+    // txn end on the SAME connection) keyed on the STABLE identity two concurrent requests SHARE —
+    // (strategy_id, mode) — acquired BEFORE an existence check + insert, all in one transaction. At most
+    // one active session per (strategy, mode) can be created; the loser gets a 409.
+    const startLockKey = BigInt(
+      "0x" + createHash("sha256").update(`paper_start:${strategyId}:${mode}`).digest("hex").slice(0, 15),
+    );
+    const session = await db.transaction(async (tx) => {
+      await tx.execute(drizzleSql`SELECT pg_advisory_xact_lock(${startLockKey}::bigint)`);
+      const [existing] = await tx
+        .select({ id: paperSessions.id })
+        .from(paperSessions)
+        .where(
+          and(
+            eq(paperSessions.strategyId, strategyId),
+            eq(paperSessions.mode, mode),
+            eq(paperSessions.status, "active"),
+          ),
+        );
+      if (existing) return null; // an active session already exists for this strategy+mode
+      const [row] = await tx
+        .insert(paperSessions)
+        .values({ strategyId, startingCapital, currentEquity: startingCapital, config: config as import("../db/jsonb-shapes.js").PaperSessionConfigShape, mode, firmId: firmId ?? null })
+        .returning();
+      return row;
+    });
 
-    // Track C.2: advisory lock — guard against concurrent stream startups for the
-    // same session (e.g. double-tap or retry race). Uses PostgreSQL session-level
-    // advisory lock with a hash of the session UUID. Fail-closed: return 409.
-    {
-      const lockKey = BigInt("0x" + session.id.replace(/-/g, "").slice(0, 16));
-      const [lockResult] = await db.execute(
-        drizzleSql`SELECT pg_try_advisory_lock(${lockKey}::bigint) AS acquired`,
-      );
-
-      if (!(lockResult as any)?.acquired) {
-        req.log.warn({ sessionId: session.id }, "Track C.2: advisory lock collision — concurrent session start detected");
-        await db.insert(auditLog).values({
-          action: "paper.session_advisory_lock_collision",
-          entityType: "paper_session",
-          entityId: session.id,
-          input: { strategyId, sessionId: session.id },
-          result: { note: "concurrent session start rejected via pg_advisory_lock" },
-          status: "warning",
-          decisionAuthority: "system",
-          correlationId: req.id ?? null,
-        }).catch((auditErr) => req.log.warn({ auditErr, sessionId: session.id }, "paper.session_advisory_lock_collision audit write failed (deepscan17)"));
-        res.status(409).json({
-          error: "paper_session_start_collision",
-          message: "A concurrent session start was detected for this session. Retry in a moment.",
-          sessionId: session.id,
-        });
-        return;
-      }
+    if (!session) {
+      req.log.warn({ strategyId, mode }, "paper /start: active session already exists for strategy+mode — concurrent/duplicate start rejected (API-2)");
+      await db.insert(auditLog).values({
+        action: "paper.session_advisory_lock_collision",
+        entityType: "paper_session",
+        entityId: null,
+        input: { strategyId, mode },
+        result: { note: "active session already exists for strategy+mode — rejected via pg_advisory_xact_lock + existence check" },
+        status: "warning",
+        decisionAuthority: "system",
+        correlationId: req.id ?? null,
+      }).catch((auditErr) => req.log.warn({ auditErr, strategyId }, "paper.session_advisory_lock_collision audit write failed"));
+      res.status(409).json({
+        error: "paper_session_start_collision",
+        message: "An active paper session already exists for this strategy. Stop it before starting a new one.",
+        strategyId,
+      });
+      return;
     }
 
     // Look up strategy symbol(s) and start the Massive WS stream
