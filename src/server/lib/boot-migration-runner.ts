@@ -1057,6 +1057,17 @@ export async function runPendingMigrations(
     const statements = migrationSql
       .split("--> statement-breakpoint")
       .map((s) => s.trim())
+      // MIG-2 (deep-scan 2026-07-11): strip standalone transaction-control statements (BEGIN;/COMMIT;).
+      // The runner already wraps every migration in db.transaction() below; a migration that embeds its
+      // own BEGIN;...COMMIT; (9 pre-0126 files do) would COMMIT the OUTER transaction early, so the
+      // ledger INSERT + post-apply verification would run OUTSIDE the transaction — voiding the
+      // atomic-apply/rollback contract (a crash between the embedded COMMIT and the ledger write leaves
+      // the DDL applied but unrecorded -> re-run next boot). Applied to EXECUTION statements ONLY: the
+      // `hash` above is computed on the ORIGINAL migrationSql so it stays byte-stable vs drizzle's
+      // applied-hash + the immutability manifest (stripping before hashing would force a spurious
+      // re-run). The regex matches only a line that is exactly BEGIN;/BEGIN TRANSACTION;/COMMIT; — a
+      // PL/pgSQL DO-block `BEGIN` (no trailing semicolon on its own line) is NOT matched.
+      .map((s) => s.replace(/^[ \t]*(?:BEGIN(?:[ \t]+TRANSACTION)?|COMMIT)[ \t]*;[ \t]*$/gim, "").trim())
       .filter((s) => s.length > 0);
 
     const startTs = Date.now();
