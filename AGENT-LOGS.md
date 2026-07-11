@@ -4,6 +4,19 @@
 
 ---
 
+### Session Log — 2026-07-11 /goal CONTINUATION — CAP-1 + 10 more instrument findings LANDED via agent-loop (21 of 34 total); binding integration-verify caught 2 advisory-grade-missed regressions
+
+**Mission:** continue /goal after operator amended ratify-skill to autonomous-under-independent-grade (operator is a non-coder — don't ask him to ratify code).
+
+**Work completed:**
+- CAP-1 (CRIT kill-switch L3 force-close) LANDED `b7daa1b9` — core VERIFIED band 7 by independent accuracy-validator (2-path regression proof) + F-1(correlationId)/F-2(in-flight pre-check) hardening the grade flagged; 75/75 kill-switch tests. Mid-wave a concurrent Codex session's `npm ci` wiped @types/node+@vitest from the shared node_modules (junction target); recovered via `npm install` (memory reference_tower_restart_dep_wipe_trap).
+- Instrument wave via Workflow agent-loop (`wf_fa9168b1-005`): 13 file-group scope-locked implementers (isolated worktrees) → independent accuracy-validator grade. 10 groups CONFIRMED, 3 caught REJECTED/PARTIAL.
+- **BINDING integration-verify (real toolchain) landed 8 groups / 10 findings `3d187cd1`:** VI-1/2/3, CAP-2, BC-1, PINE-1, CMP-2, CAP-3, FG-3, WIRE-2. Gates: tsc0 + py_compile + production-isolation + 2026-compliance + gate-parity + 3 ts-python parity checks; 74 walk_forward + 33 sizing/exportability + 41 fill-recon + consistency + governor tests all pass.
+
+**Verification / KEY LESSON:** isolated implementer worktrees lack node_modules → their in-worktree test self-verify is UNRELIABLE (troll-stub). Workflow grades are ADVISORY; the binding gate is integration-verify in a healthy worktree. It caught 2 regressions the band-6/7 advisory grades MISSED — FG-1/2 regime-drift (selectDistinctOn broke 12 tests) + CMP-1 mc (broke MFFU parity) — both EXCLUDED. JSON-serialized diffs = "corrupt patch"; integrate by copying files from implementer worktrees.
+
+**Carry-forward:** REWORK QUEUE (8 instrument, first attempt regressed/rejected): FG-1/FG-2, CMP-1 (make EOD-lock Topstep-only), F1/F2/SDL-1 (F1 broke AVWAP accumulator start-from-open), WIRE-1, SDL-2 (needs malformed_payload audit row). DEFERRED (5 non-instrument): API-2, QC-2, N8N-2 (needs credential id), MIG-2, MIG-3. Also earlier carry: A-1/PINE-2 need regression tests; HT-4 dup-when journal; system-map:check pre-existing drift. Full: memory project_goal_deepscan_2026_07_11.
+
 ### Session Log — 2026-07-11 /goal full-codebase deep-scan — 16-charter adversarial scan + 10 non-instrument fixes LANDED (VERIFIED band 7) + 19 instrument findings staged as ratify ledger + ratify-skill operator-amended
 
 **Mission:** `/goal` — deep-scan every wiring/domain/subsystem for High/Med/Low bugs, fix to institutional-grade, using team-mode + agents.
