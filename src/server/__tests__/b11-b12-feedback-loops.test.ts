@@ -130,10 +130,12 @@ describe("B11 — calendar filter wired before entry signal emission", () => {
     const bypassReadIdx = paperSignalSrc.indexOf("bypassNewsBlackout");
     // holiday check appears before the bypass read affects the economic event path
     expect(holidayCheckIdx).toBeGreaterThan(0);
-    // After holiday block, the economic_event check references bypassNewsBlackout
-    const economicEventIdx = paperSignalSrc.indexOf("calResult.is_economic_event === true");
+    // CORRECTED 2026-07-10: calResult.is_economic_event was deliberately replaced by the
+    // T1-window check (Phase 3, 2026-06-23 — "its dates were unreliable", see the comment
+    // right above getT1ReleaseWindow's call site). Follow the current authoritative path.
+    const economicEventIdx = paperSignalSrc.indexOf("const t1 = await getT1ReleaseWindow(");
     expect(economicEventIdx).toBeGreaterThan(holidayCheckIdx);
-    // bypassNewsBlackout is only applied inside the economic_event branch
+    // bypassNewsBlackout is only applied inside the T1-window branch
     expect(paperSignalSrc.substring(economicEventIdx)).toContain("bypassNewsBlackout");
     // Holiday block sets calendarBlocked=true WITHOUT checking bypassNewsBlackout
     const holidayBlock = paperSignalSrc.substring(holidayCheckIdx, economicEventIdx);
