@@ -121,7 +121,7 @@
       "id": "compute-sharpe",
       "name": "Compute Rolling Sharpe",
       "parameters": {
-        "jsCode": "const strategy = $input.first().json;\n\nconst rollingSharpe = Number(strategy.rollingSharpe30d ?? strategy.backtest?.sharpe ?? 0);\nconst strategyId = strategy.id;\nconst strategyName = strategy.name || strategy.strategy_name || 'Unknown';\n\nreturn [{\n  json: {\n    strategyId,\n    strategyName,\n    rolling_sharpe_30d: rollingSharpe,\n    drifting: rollingSharpe < 1.0,\n    lifecycle_state: strategy.lifecycle_state || 'DEPLOYED'\n  }\n}];"
+        "jsCode": "const strategy = $input.first().json;\n\nconst rawSharpe = strategy.rollingSharpe30d;\nconst rollingSharpe = (rawSharpe === null || rawSharpe === undefined) ? null : Number(rawSharpe);\nconst strategyId = strategy.id;\nconst strategyName = strategy.name || strategy.strategy_name || 'Unknown';\n\nreturn [{\n  json: {\n    strategyId,\n    strategyName,\n    rolling_sharpe_30d: rollingSharpe,\n    drifting: rollingSharpe !== null && rollingSharpe < 1.0,\n    lifecycle_state: strategy.lifecycle_state || 'DEPLOYED'\n  }\n}];"
       },
       "position": [
         896,
@@ -589,7 +589,7 @@
         "id": "compute-sharpe",
         "name": "Compute Rolling Sharpe",
         "parameters": {
-          "jsCode": "const strategy = $input.first().json;\n\nconst rollingSharpe = Number(strategy.rollingSharpe30d ?? strategy.backtest?.sharpe ?? 0);\nconst strategyId = strategy.id;\nconst strategyName = strategy.name || strategy.strategy_name || 'Unknown';\n\nreturn [{\n  json: {\n    strategyId,\n    strategyName,\n    rolling_sharpe_30d: rollingSharpe,\n    drifting: rollingSharpe < 1.0,\n    lifecycle_state: strategy.lifecycle_state || 'DEPLOYED'\n  }\n}];"
+          "jsCode": "const strategy = $input.first().json;\n\nconst rawSharpe = strategy.rollingSharpe30d;\nconst rollingSharpe = (rawSharpe === null || rawSharpe === undefined) ? null : Number(rawSharpe);\nconst strategyId = strategy.id;\nconst strategyName = strategy.name || strategy.strategy_name || 'Unknown';\n\nreturn [{\n  json: {\n    strategyId,\n    strategyName,\n    rolling_sharpe_30d: rollingSharpe,\n    drifting: rollingSharpe !== null && rollingSharpe < 1.0,\n    lifecycle_state: strategy.lifecycle_state || 'DEPLOYED'\n  }\n}];"
         },
         "position": [
           896,
