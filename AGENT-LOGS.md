@@ -4,7 +4,38 @@
 
 ---
 
-### Session Log — 2026-07-06 Corpus v3 Gate 3 — instrument saga (5 run_class_backtest defects) + reference re-derivation IN FLIGHT
+### Session Log — 2026-07-10 Full-codebase `/goal` deep-scan #24 + execute phase (Track B re-verify, ratify packets, merge prep, worktree audit)
+
+**Mission:** Full-codebase deep-scan across the whole repo, land findings, then (on explicit operator authorization — "do what you think is best" / "execute") re-verify all 11 prior Track B findings from zero, stage ratify packets for the confirmed instrument-touching ones, prepare (not push) the `hardening/phase-0` → `main` merge, and safety-audit the ~50 abandoned worktrees.
+
+**Work completed:**
+- Landed 9 deep-scan fixes + 1 self-caught CRITICAL (office-control-guard) earlier in session; verified never live in prod (main branch clean).
+- Tower git-hygiene wave: recovered a 12-day-stranded 2026-06-29 session-log entry from an abandoned autostash into `AGENT-LOGS.md`; resolved a stash-pop conflict in `src/engine/tests/test_walk_forward.py` (kept HEAD's 2 leakage-regression guard tests); reverted 13 files that had staged reverts of real fixes back to broken states (`7329d163`); fixed a stale `runPromptEvolution` dead-code comment (`6e383cb3`); documented the MFFU warn-only collaborative-trading gate as reviewed/intentional (`daa739ed`); fixed a stale news-blackout test assertion that didn't reproduce as a real bug (`a395389e`).
+- Re-verified all 11 Track B findings via 9 parallel independent read-only agents (grading-integrity: doer ≠ grader) — 8 confirmed open with root causes, 3 dropped as non-reproducing, 2 findings revealed to share one root cause (`confirming_indicators` schema drift between `direct-bucket-graduator.ts` write site and `paper-signal-service.ts` read sites, affecting both confluence-sizing AND the faithful-flag).
+- Staged 2 full 5-part ratify packets in `docs/ratify-packets-2026-07-10.md` (`898805c6`) — daily-trade-cap leg-overcounting (1 missed site at `paper-execution-service.ts:1206-1220`) and confluence-sizing schema drift (Option A root-cause vs Option B narrower patch, recommend B). **Staged only — zero code written, no packet ratified.**
+- Prepared (did NOT push) the `hardening/phase-0` → `main` merge in isolated worktree `wt-merge-prep-20260710` (tip `c5f8f52e`): resolved conflicts in System Map v2.md + 2 generated JSON docs (regenerated via `system-map.ts sync`) and `wave25-drift-cron-gate-exempt.test.ts` (kept the concrete declaration-anchor fix, discarded stale origin approach).
+- Safety-audited ~50 abandoned worktrees: removed 24 provably-merged/superseded, force-removed 7 after content-verification against current HEAD, left the remainder (locked or genuinely unmerged) untouched for a dedicated future pass.
+- Cleaned up 1 leftover empty temp directory (`wt-premerge-check-20260710`, already git-worktree-pruned).
+
+**Verification:**
+- `wt-merge-prep-20260710`: `node node_modules/typescript/bin/tsc --noEmit` exit 0; 3 CI gates green; `strategy-assignment-service.test.ts` 4 failures confirmed PRE-EXISTING on `hardening/phase-0` itself via a clean isolated comparison worktree pinned to the true pre-merge tip `4c9ad267` (same 4 failures reproduced in isolation) — merge introduces zero regressions.
+- Full vitest suite crashes on Windows (`ERR_IPC_CHANNEL_CLOSED` / OOM via tinypool) reproduced twice, independent of pool size (4 forks and 2 forks both crash) — environment-specific, not content-related; worked around via the isolated pre-existing-failure comparison above rather than needing a clean full-suite exit code.
+- `b11-b12-feedback-loops.test.ts` 34/34 pass after the 2 comment/assertion fixes.
+- Confirmed tower `hardening/phase-0` local HEAD (`898805c6`) is 5 commits ahead of `origin/hardening/phase-0` (`4c9ad267`) — **NOT an ancestor, fully unpushed** (`git merge-base --is-ancestor` check). Advisor review confirmed: hold the `main` push (production Railway redeploy trigger, general "finish all tasks" delegation ≠ the specific named go this action requires) but flagged this unpushed-local-work state as itself the exact orphaned-work pattern that bit this session 3 times already.
+
+**Known-facts updates:**
+- `git merge-base --is-ancestor <sha> <branch>` re-confirmed as the correct ancestry check (vs misleading forward-commit-count `git log A..B`) — reused correctly throughout.
+- Windows vitest full-suite run is unreliable (`ERR_IPC_CHANNEL_CLOSED`/OOM) regardless of `maxForks` — don't chase this as a content bug; isolate the specific failing file instead.
+
+**Carry-forward for next session:**
+- **Tower `hardening/phase-0` is 5 commits ahead of `origin/hardening/phase-0`, fully unpushed** (`898805c6` vs `4c9ad267`). This includes the ratify-packets doc, the tower git-hygiene commit, and the 3 comment/test fixes from this session. Reconciling tower-local → origin is itself a non-fast-forward divergence (not a clean push) — needs deliberate handling, not a blind force-push.
+- `wt-merge-prep-20260710` (`hardening/phase-0`+`main` merged, tip `c5f8f52e`, branch `merge-phase0-to-main-20260710`) is verified-ready and held pending an explicit operator "push it" — one command away, not yet authorized.
+- Neither ratify packet in `docs/ratify-packets-2026-07-10.md` has been ratified by name — both remain staged-not-started per the `ratify-packet` skill.
+- 2 branches (`hardening/n8n-relay-fix-2026-07-06` @ `4517a06a`, `hardening/verify-fix-cluster-b7dac14` @ `71ff61d0`) had their worktrees accidentally deleted as a side effect of force-removing a parent worktree (`tf-verify-fix`) that contained them as nested `.claude/worktrees/*` subdirectories — commits are safe/re-checkoutable, but any uncommitted work in them is presumed lost. Lesson pinned: always check for nested worktree subdirectories before removing a parent. Re-checking these out to confirm/restore content is the recommended next repair step.
+- Remaining 5 (of 8 confirmed-open) Track B findings not yet packeted: SHADOW-ladder dead-end, PM-taper never wired, partial-fill-model never wired, consistency-tracker accountId-scoping bug, fingerprint truncation.
+- The mechanically-audited worktree set (~26 remaining) still has locked/genuinely-unmerged entries that need a dedicated pass, not a blanket resolution.
+
+ — instrument saga (5 run_class_backtest defects) + reference re-derivation IN FLIGHT
 
 **Mission:** Certify Corpus v3 Gate 3 (do the classifier's extraction-time roles reproduce the runtime-demotion
 revival?) under the frozen rule (≥8/9 revival + zero unexplained regressions, no relief). Continuation of the
