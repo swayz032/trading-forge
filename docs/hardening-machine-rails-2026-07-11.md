@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-11
 **Status:** APPROVED by operator (this date) — "Rails + tiering" posture selected over "rails only" and "mega-scan first".
-**Operator decisions baked in:** (1) CI runs on a **self-hosted WSL2 runner on the tower** ($0; coupling caveat accepted — see Rail 1 §risks); (2) FROZEN tier list adopted **as proposed** (operator is non-technical and delegated the list; every entry is reversible by saying "unfreeze X" — no code consequence, it only redirects hardening attention); (3) **every heavy rail job MUST use the soak harness's tower-idle guard pattern** (operator mandate 2026-07-11: "checks to make sure nothing running on the tower first" — the tower has 8 GB VRAM / 32 GB RAM and concurrently hosts agent campaign work like extraction/backtest builds). See §4b.
+**Operator decisions baked in:** (1) CI runs on a **self-hosted WSL2 runner on the tower** ($0; coupling caveat accepted — see Rail 1 §risks); (2) FROZEN tier list adopted **as proposed** (operator is non-technical and delegated the list; every entry is reversible by saying "unfreeze X" — no code consequence, it only redirects hardening attention); (3) **the rails are built IN THE SOAK-HARNESS MOLD end-to-end** (operator mandate 2026-07-11, clarified: not just the busy-check — the whole soak build recipe): tower-idle guard on every heavy job (§4b), soak-mold build standard (§4c), and **reports surface in the Slumhouse Office Reporting Room** alongside the soak card (§4c). The tower has 8 GB VRAM / 32 GB RAM and concurrently hosts agent campaign work (extraction/backtest builds) — rail jobs always yield to it.
 **Governance:** every rail is NON-INSTRUMENT (CI, telemetry, read-only reports, test-only additions). Nothing here alters engine behavior, gates, sizing, or measurement outputs. Any future item that would (e.g. wiring a VIX feed) still requires its own ratify packet per the `ratify-packet` skill. The held packets (3/4/5, PC-1) are untouched by this program.
 
 ---
@@ -87,6 +87,21 @@ The soak harness (spec `wt-soak/docs/superpowers/specs/2026-07-11-soak-harness-d
 
 **WSL blind-spot + nightly ordering:** the guard's python-process check runs `Get-Process` on Windows and CANNOT see inside the WSL2 VM (Linux processes appear only as `vmmem`) — so the guard cannot detect a still-running CI FULL lane. Therefore the two heavy nightly jobs are ordered STRUCTURALLY, not by detection: one tower-side nightly sequence triggers **FULL lane (22:00) → wait for completion → certification rig (no earlier than 23:30)**, single-file. The `.wslconfig` cap (≤8 GB / 4 cores) bounds the worst case if ordering ever breaks, but sequence-by-construction is the contract.
 
+## 4c. Soak-mold build standard + Office/Slumhouse reporting surface
+
+**Build standard (every rail deliverable follows the soak spec's recipe — `wt-soak/docs/superpowers/specs/2026-07-11-soak-harness-design.md`):**
+1. **Doer ≠ grader, structurally** — the measurer is external to the thing measured (soak §3): CI verdicts come from the runner, not the code's self-report; the rig's certificate diff is a standalone script, not backend code grading itself.
+2. **Pure decision/verdict functions** with dependency-injected tests (soak §13 pattern) — no LLM/AI in any measurement loop; deterministic in → deterministic out.
+3. **Pre-registered, versioned thresholds** frozen before first graded run (`rails_thresholds_v1`, soak §7 anti-goalpost rule) — any later change is a dated, logged, versioned event, never a silent nudge.
+4. **Fail-closed error matrix** per job (soak §11): unreachable backend = a finding not a crash; missing sensor = metric `unavailable` not a false RED; mid-run contention = ABORT + INVALID; a failed report write retries then fires Discord CRITICAL — never silently drops a night.
+5. **Persistence** — JSONL raw ledger (gitignored data dir, 90-day prune) + one `audit_log` row per run (`rails.night_completed` namespace); first-class DB table only at v2 with a `migration-author`-governed migration.
+6. **Plain-English morning report** — one Discord line on quiet-green nights, full detail only when something is red/invalid.
+
+**Office / Slumhouse surface (v2 — mirrors soak §10; Slumhouse is the REAL frontend, the Office is the ONLY control room):**
+- **"Tower Rails" report card in the Reporting Room** — same magic-ball stage as the GPT-5 trade reports and the Soak Report card (`office.html` `RR_STATE`, same glassy 3D thin-premium treatment, emerald-on-near-black). Picker chip shows a night pill (🟢 all rails clean / 🔴 something drifted / 🟠 didn't count). Card body: 4 plain-English lines — CI verdict (new failures vs baseline), certificate diff verdict (numbers same as last night?), divergence/worktree status, zero-engagement findings — plus a 14-night sparkline and "read the full story". **Only meaningful nights post a card** (ran / invalid / red); skipped-because-busy nights live on the switch strip only, keeping the stage premium.
+- **"Rails Switch" control card on the Office main surface** — same rails as the Soak Switch (soak §10a): primary action **Skip Tonight** (self-rearming), two-tap OFF with persistent amber dormant badge, 7-dot engagement strip, admin-session-cookie route → `system_parameters` rows (`rails_mode` / `rails_skip_until`). The tower-idle guard (§4b) reads these rows — the operator can silence every heavy rail job for a night from their phone.
+- **Publish pattern** mirrors `nightly-critique-service`: SSE event + `system_parameters` latest-summary; v1 ships Discord + JSONL/audit only (restart-free, campaign untouched); Office cards + route + SSE land at the next natural backend deploy, exactly like the soak's own v1/v2 split.
+
 ## 5. Rail 3 — Engagement telemetry + contract registry
 
 - **Feature ledger** (`docs/feature-ledger.json`, tracked): machine-readable list of every default-ON feature/gate — name, expected audit action(s), tier, liveness expectation. This is CLAUDE.md §12 as checkable data; doc-drift becomes testable.
@@ -128,8 +143,9 @@ FROZEN ≠ deleted and ≠ disabled: existing tests keep running in CI (cheap); 
 | 4 | Rail 3 feature ledger + engagement cron + registry extension | 1–2 |
 | 5 | Rail 4 metamorphic tests | 1–2 |
 | 6 | Tiering file + deep-scan skill scope change + CLAUDE.md pointer | 0.5 |
+| 7 | Office v2: "Tower Rails" Reporting Room card + "Rails Switch" control card (+ SSE + route, lands at next natural deploy) | 1 |
 
-Total ≈ 6–10 sessions ≈ the cost of ~3 deep-scans, permanent payoff.
+Total ≈ 7–11 sessions ≈ the cost of ~3 deep-scans, permanent payoff.
 
 **Every rail ships with a RED-proof** (house convention — a detector without a proven-red path is a false green):
 - CI: a deliberate type error + a new failing test + a skipped test file must each go RED (type check, manifest diff, collection floor).
