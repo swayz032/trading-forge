@@ -4,6 +4,23 @@
 
 ---
 
+### Session Log — 2026-07-11 /goal full-codebase deep-scan — 16-charter adversarial scan + 10 non-instrument fixes LANDED (VERIFIED band 7) + 19 instrument findings staged as ratify ledger + ratify-skill operator-amended
+
+**Mission:** `/goal` — deep-scan every wiring/domain/subsystem for High/Med/Low bugs, fix to institutional-grade, using team-mode + agents.
+
+**Work completed:**
+- Phase 0 pin/scope: base `f8d5855d` (hardening/phase-0). Hard-tool 2nd-path baseline: tsc 0, production-isolation/2026-compliance CLEAN, 9 parity gates + gate-fault-injection 33/33 green.
+- Phase 1-2 (Workflow `wf_edc08fba-e80`, ~49 agents/7.1M tokens): 16 adversarial finder charters (subsystem × dimension), each finding independently refuted by accuracy-validator. 37 raw → **31 CONFIRMED** (3 CRIT / 10 HIGH / 17 MED / 1 LOW), 19 instrument-touching. Plus 3 hard-tool findings (HT-1 pglite-checker FP; HT-2 CRLF-blinded immutability guard — proved via 0033 CRLF-hash==manifest; HT-3 .env.bak secrets not gitignored).
+- Phase 3 fix wave (isolated worktree, junctioned node_modules, real tsc): **10 non-instrument fixes** — A-1 (CRIT, compliance-drift cron Sunday→12h), SEC-INFRA-01, PINE-2 (4 entry barstate.isconfirmed guards), API-1 (getMode), N8N-1/N8N-3, MIG-1 (new migration 0200 BEFORE TRUNCATE trigger), HT-1/HT-2 (CRLF-normalize + regen manifest)/HT-3.
+- Phase 4 certify: independent accuracy-validator (doer≠grader), from-zero, 2+ paths/item, real-engine full-203-journal PGlite replay → **VERIFIED band 7, zero regressions**. Caught N8N-3 dead-fallback (band 6) → refined (removed dead backtest?.sharpe, NULL=not-drifting); noted A-1/PINE-2 lack regression tests; HT-2 true blind-spot 201 files not 119.
+- Phase 5 land: FF-only through a **live push-race** vs concurrent codex-rails-p1 session (3 racing commits all CI-only lockfile/Node — zero file overlap). fetch+rebase (never blind-push), landed origin/hardening/phase-0 at **`b18507eb`**.
+- 19 instrument findings STAGED as ratify ledger `docs/ratify-packets/goal-deepscan-2026-07-11-instrument-ledger.md` (HELD, zero code) — 2 CRIT (CAP-1 kill-switch L3 no force-close; F1 adaptive-trail), 8 HIGH, 9 MED.
+- **Operator amendment:** operator (non-coder) directed "stop asking permission, use best judgment." Amended skill `ratify-packet` + memory: instrument fixes now proceed AUTONOMOUSLY under mandatory independent grading (doer≠grader is THE gate, since it — not permission — caught all 3 historical defects); explicit go reserved only for irreversible/live-capital class, surfaced plain-English.
+
+**Verification:** tsc 0; production-isolation + 2026-compliance CLEAN; migration-immutability 3/3; pglite-ddl-parity CLEAN; deepscan18-compliance-drift-sse 5/5; pine static-equivalence 7/7 + gateway-mode 49/49; fresh-bootstrap-migration-replay 3/3 (full 203-journal incl. 0200 on real PGlite). Independent grade VERIFIED band 7.
+
+**Carry-forward:** (1) CAP-1 + 18 other instrument findings — now operator-authorized to proceed autonomously under independent grade (CAP-1 fully designed: mirror Layer-2 _safeForceClose in kill-switch.ts:693). (2) Deferred non-instrument: API-2, QC-2, N8N-2 (needs live credential id), MIG-2, MIG-3. (3) HT-4: 5 pre-existing dup-`when` journal entries (boot-runner detects). (4) A-1 + PINE-2 need regression tests. (5) system-map:check DRIFT pre-existing at f8d5855d (phase-0-wide; my changes add no topology) — needs sync by phase-0 coordinator. Full record: memory `project_goal_deepscan_2026_07_11`.
+
 ### Session Log — 2026-07-11 (CONTINUATION, same session) — config + main→phase-0 back-merge DEPLOYED + C1 phantom-outage fix SHIPPED&VERIFIED + storm root cause CONFIRMED + 3 packets authored
 
 **Mission (cont.):** after the P0 + cleanup lane below, operator answered the ratify question "do rest of tasks" (excluding the PC-1 power-cal packet they authored) + "set CLAUDE_CODE_USE_POWERSHELL_TOOL=1". Executed the ratified set.
