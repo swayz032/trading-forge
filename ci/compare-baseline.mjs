@@ -6,12 +6,41 @@ function stableStrings(values) {
   return [...new Set(values.map((value) => String(value)))].sort();
 }
 
+function knownFailureIds(entries) {
+  return entries.map((entry) => typeof entry === "string" ? entry : entry?.id);
+}
+
 export function validateManifest(manifest) {
   if (!manifest || manifest.frozen !== true) {
     throw new Error("baseline_manifest_unfrozen");
   }
   if (manifest.thresholdVersion !== "rails_thresholds_v1") {
     throw new Error("baseline_manifest_version_invalid");
+  }
+  for (const suite of ["vitest", "pytest"]) {
+    const section = manifest[suite];
+    if (!section
+      || !Number.isInteger(section.collectionFloor)
+      || section.collectionFloor < 1) {
+      throw new Error(`baseline_collection_floor_invalid:${suite}`);
+    }
+    if (!Array.isArray(section.knownFailures)) {
+      throw new Error(`baseline_known_failures_invalid:${suite}`);
+    }
+    const ids = new Set();
+    for (const failure of section.knownFailures) {
+      if (!failure
+        || typeof failure.id !== "string"
+        || failure.id.trim().length === 0
+        || typeof failure.reason !== "string"
+        || failure.reason.trim().length === 0) {
+        throw new Error(`baseline_failure_reason_missing:${suite}`);
+      }
+      if (ids.has(failure.id)) {
+        throw new Error(`baseline_failure_duplicate:${suite}:${failure.id}`);
+      }
+      ids.add(failure.id);
+    }
   }
 }
 
@@ -37,7 +66,7 @@ export function compareBaseline({ results, baseline }) {
     };
   }
 
-  const known = new Set(stableStrings(baseline.knownFailures));
+  const known = new Set(stableStrings(knownFailureIds(baseline.knownFailures)));
   const actual = new Set(stableStrings(results.failures));
   const newFailures = [...actual].filter((failure) => !known.has(failure)).sort();
   const fixedFailures = [...known].filter((failure) => !actual.has(failure)).sort();

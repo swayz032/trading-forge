@@ -1,6 +1,7 @@
 node_modules/
 dist/
 /data/
+/ci/out/
 !src/data/
 .env
 # All .env variants (backups, secret-rotation dumps, per-env files) must never be committed —

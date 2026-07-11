@@ -125,6 +125,29 @@ describe("validateManifest", () => {
     expect(() => validateManifest({
       frozen: true,
       thresholdVersion: "rails_thresholds_v1",
+      vitest: { knownFailures: [], collectionFloor: 1 },
+      pytest: { knownFailures: [], collectionFloor: 1 },
     })).not.toThrow();
+  });
+
+  it("requires positive collection floors before freezing", () => {
+    expect(() => validateManifest({
+      frozen: true,
+      thresholdVersion: "rails_thresholds_v1",
+      vitest: { knownFailures: [], collectionFloor: 0 },
+      pytest: { knownFailures: [], collectionFloor: 1 },
+    })).toThrow("baseline_collection_floor_invalid");
+  });
+
+  it("requires a reason for every frozen known failure", () => {
+    expect(() => validateManifest({
+      frozen: true,
+      thresholdVersion: "rails_thresholds_v1",
+      vitest: {
+        knownFailures: [{ id: "a.test.ts > old bug", reason: "" }],
+        collectionFloor: 1,
+      },
+      pytest: { knownFailures: [], collectionFloor: 1 },
+    })).toThrow("baseline_failure_reason_missing");
   });
 });
