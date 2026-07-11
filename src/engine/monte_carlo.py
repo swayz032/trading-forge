@@ -1042,7 +1042,13 @@ def simulate_firm_survival(
                 if is_eod_trailing:
                     # peak_equity holds the prev-EOD value; don't update yet.
                     if locks_at_start:
-                        floor = max(peak_equity - max_dd, account_size - max_dd)
+                        # CMP-1 (deep-scan 2026-07-11): lock-at-starting-balance. The prior
+                        # max(peak-max_dd, account_size-max_dd) was a no-op (peak>=account_size
+                        # monotonic) so Topstep's floor trailed HWM forever and never locked at
+                        # the starting balance the real EOD rule caps it at. min(peak-max_dd,
+                        # account_size) locks the floor at account_size once HWM climbs. Gated by
+                        # locks_at_start (Topstep-only); MFFU (locks_at_start=False) is unchanged.
+                        floor = min(peak_equity - max_dd, account_size)
                     else:
                         floor = peak_equity - max_dd
                     dd_from_peak = peak_equity - balance
@@ -1061,7 +1067,13 @@ def simulate_firm_survival(
 
                     # Trailing drawdown floor
                     if locks_at_start:
-                        floor = max(peak_equity - max_dd, account_size - max_dd)
+                        # CMP-1 (deep-scan 2026-07-11): lock-at-starting-balance. The prior
+                        # max(peak-max_dd, account_size-max_dd) was a no-op (peak>=account_size
+                        # monotonic) so Topstep's floor trailed HWM forever and never locked at
+                        # the starting balance the real EOD rule caps it at. min(peak-max_dd,
+                        # account_size) locks the floor at account_size once HWM climbs. Gated by
+                        # locks_at_start (Topstep-only); MFFU (locks_at_start=False) is unchanged.
+                        floor = min(peak_equity - max_dd, account_size)
                     else:
                         floor = peak_equity - max_dd
 
