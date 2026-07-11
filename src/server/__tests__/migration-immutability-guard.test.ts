@@ -25,10 +25,16 @@ const MANIFEST_PATH = join(__dirname, "..", "db", "migrations-hash-manifest.json
 
 function hashMigration(file: string): string {
   const buf = readFileSync(join(MIG_DIR, file));
-  // Strip a UTF-8 BOM to match the boot-runner's readUtf8StripBom, then hash the content.
-  const content =
+  // Mirror the boot-runner's readUtf8StripBom EXACTLY: strip a UTF-8 BOM, then normalize
+  // CRLF -> LF before hashing. The runner (boot-migration-runner.ts:102) does
+  // `noBom.replace(/\r\n/g, "\n")` so its content hash is line-ending-agnostic; this guard
+  // previously stripped BOM only, so on an autocrlf tower (CRLF on disk) the manifest froze
+  // CRLF hashes and every pristine migration mis-fired as "edited" — 119 false positives that
+  // blinded the tripwire (deep-scan HT-2 2026-07-11). Now byte-for-byte aligned with the runner.
+  const noBom =
     buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf ? buf.subarray(3) : buf;
-  return createHash("sha256").update(content).digest("hex");
+  const content = noBom.toString("utf8").replace(/\r\n/g, "\n");
+  return createHash("sha256").update(content, "utf8").digest("hex");
 }
 
 describe("migration immutability guard (deep-scan F1)", () => {

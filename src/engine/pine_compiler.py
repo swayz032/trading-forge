@@ -1783,9 +1783,9 @@ def _build_strategy_webhook_alerts(
 account_id_input = input.string("", title="Account ID (UUID from operator)", confirm=true)
 live_order_token_input = input.string("", title="Live Order Token (from operator)", confirm=true)
 
-alertcondition(strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TFG Long Entry",
+alertcondition(barstate.isconfirmed and strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TFG Long Entry",
     message='{{"account_id":"' + account_id_input + '","strategy_id":"{strategy_id}","live_order_token":"' + live_order_token_input + '","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"enter_long","ticker":"{tv_symbol}"}}')
-alertcondition(strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TFG Short Entry",
+alertcondition(barstate.isconfirmed and strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TFG Short Entry",
     message='{{"account_id":"' + account_id_input + '","strategy_id":"{strategy_id}","live_order_token":"' + live_order_token_input + '","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"enter_short","ticker":"{tv_symbol}"}}')
 // PARITY NOTE: Exit alertconditions guarded with barstate.isconfirmed so they fire at
 // bar close — matching INDICATOR artifact state-machine exit timing.
@@ -1835,9 +1835,9 @@ alertcondition(time_to_close and strategy.position_size != 0, title="TFG Time St
 // declared as var int above (F-2), so str.tostring(qty_final) is always valid Pine v5.
 // If TradersPost ignores the quantity field, set contract size in TradersPost account config
 // as a fallback — but the preferred path is quantity in the webhook payload.
-{hmac_note}alertcondition(strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Long Entry",
+{hmac_note}alertcondition(barstate.isconfirmed and strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Long Entry",
     message='{{"action":"buy","symbol":"{tv_symbol}","quantity":' + str.tostring(qty_final) + ',"stopLoss":' + str.tostring(close - stop_distance) + ',"takeProfit":' + str.tostring(use_target ? close + target_distance : na) + ',"strategyId":"{strategy_id}"{hmac_suffix_entry}}}')
-alertcondition(strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Short Entry",
+alertcondition(barstate.isconfirmed and strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TP Short Entry",
     message='{{"action":"sell","symbol":"{tv_symbol}","quantity":' + str.tostring(qty_final) + ',"stopLoss":' + str.tostring(close + stop_distance) + ',"takeProfit":' + str.tostring(use_target ? close - target_distance : na) + ',"strategyId":"{strategy_id}"{hmac_suffix_entry}}}')
 // PARITY NOTE: Exit alertconditions guarded with barstate.isconfirmed so they fire at
 // bar close — matching INDICATOR artifact state-machine exit timing.  Without this guard,

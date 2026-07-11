@@ -19,9 +19,14 @@ const OUT = join(__dirname, "..", "src", "server", "db", "migrations-hash-manife
 const manifest = {};
 for (const f of readdirSync(MIG_DIR).filter((x) => x.endsWith(".sql")).sort()) {
   const buf = readFileSync(join(MIG_DIR, f));
-  const content =
+  // Mirror boot-migration-runner.ts::readUtf8StripBom EXACTLY: strip BOM, then CRLF->LF.
+  // Without the line-ending normalization the manifest froze CRLF hashes on an autocrlf tower
+  // while the runner + guard hash LF-normalized content, so the guard mis-fired on every
+  // pristine migration (deep-scan HT-2 2026-07-11). Keep all three in lockstep.
+  const noBom =
     buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf ? buf.subarray(3) : buf;
-  manifest[f] = createHash("sha256").update(content).digest("hex");
+  const content = noBom.toString("utf8").replace(/\r\n/g, "\n");
+  manifest[f] = createHash("sha256").update(content, "utf8").digest("hex");
 }
 writeFileSync(OUT, JSON.stringify(manifest, null, 2) + "\n");
 console.log(`migrations-hash-manifest.json regenerated: ${Object.keys(manifest).length} migrations frozen`);

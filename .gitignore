@@ -3,6 +3,11 @@ dist/
 /data/
 !src/data/
 .env
+# All .env variants (backups, secret-rotation dumps, per-env files) must never be committed —
+# a plaintext secret backup one `git add -A` away from the public remote (deep-scan HT-3 2026-07-11).
+# `.env` alone did NOT match `.env.bak-*` / `.env.local` etc. Keep `.env.example` tracked.
+.env.*
+!.env.example
 *.log
 .DS_Store
 __pycache__/

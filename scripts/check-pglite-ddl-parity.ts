@@ -86,7 +86,12 @@ function parseCreateTables(src: string): Array<{ table: string; cols: Set<string
       const line = raw.trim();
       if (!line || CONSTRAINT_KW.test(line)) continue;
       const name = line.split(/\s+/)[0].replace(/"/g, "");
-      if (name) cols.add(name);
+      // Only accept valid SQL identifiers as columns. Guards against DDL that appears
+      // inside JS string literals (e.g. boot-migration-runner-crlf-hash.test.ts holds
+      // 'CREATE TABLE "alerts" (\n "id" ...)' as a hash fixture) where the escaped `\n`
+      // is read as text and parsed into a phantom column named "\n" → false DRIFT
+      // (deep-scan HT-1 2026-07-11). A real column name is always /^\w+$/.
+      if (name && /^\w+$/.test(name)) cols.add(name);
     }
     out.push({ table, cols, file: "" });
   }

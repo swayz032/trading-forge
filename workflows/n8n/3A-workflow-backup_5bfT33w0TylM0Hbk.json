@@ -82,7 +82,7 @@
         "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ event: \"backup:complete\", data: { workflowCount: .workflowCount, timestamp: .timestamp } }) }}",
+        "jsonBody": "={{ JSON.stringify({ event: \"backup:complete\", data: { workflowCount: $json.workflowCount, timestamp: $json.timestamp } }) }}",
         "options": {
           "timeout": 15000
         }
@@ -103,7 +103,7 @@
       ],
       "continueOnFail": true,
       "parameters": {
-        "url": "=https://n8n-production-84ff.up.railway.app/api/v1/workflows/{{ .id }}",
+        "url": "=https://n8n-production-84ff.up.railway.app/api/v1/workflows/{{ $json.id }}",
         "method": "GET",
         "options": {
           "timeout": 15000
@@ -347,7 +347,7 @@
           "url": "https://tf-relay-production.up.railway.app/api/sse/broadcast",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ event: \"backup:complete\", data: { workflowCount: .workflowCount, timestamp: .timestamp } }) }}",
+          "jsonBody": "={{ JSON.stringify({ event: \"backup:complete\", data: { workflowCount: $json.workflowCount, timestamp: $json.timestamp } }) }}",
           "options": {
             "timeout": 15000
           }
@@ -368,7 +368,7 @@
         ],
         "continueOnFail": true,
         "parameters": {
-          "url": "=https://n8n-production-84ff.up.railway.app/api/v1/workflows/{{ .id }}",
+          "url": "=https://n8n-production-84ff.up.railway.app/api/v1/workflows/{{ $json.id }}",
           "method": "GET",
           "options": {
             "timeout": 15000

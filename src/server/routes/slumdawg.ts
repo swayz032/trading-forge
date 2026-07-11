@@ -28,6 +28,7 @@ import {
   verifySlumdawgHmac,
 } from "../slumdawg-hmac.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
+import { getMode } from "../services/pipeline-control-service.js";
 
 export const slumdawgRoutes = Router();
 
@@ -280,9 +281,12 @@ slumdawgRoutes.get("/status-now", async (_req, res) => {
     const regime = (regimeRow as any[])[0]?.institutional_regime ?? (regimeRow as any[])[0]?.regime ?? null;
     const narrative = (regimeRow as any[])[0]?.narrative_state ?? null;
 
-    // Kill switch / pipeline mode
-    const modeRow = await db.execute(sql`SELECT value FROM system_parameters WHERE key = 'pipeline_mode' LIMIT 1`).catch(() => [] as any[]);
-    const mode = (modeRow as any[])[0]?.value ?? "UNKNOWN";
+    // Pipeline mode — read the AUTHORITATIVE source (getMode reads systemParameters.current_value
+    // via NUMERIC_TO_MODE). The prior `SELECT value ... WHERE key='pipeline_mode'` referenced columns
+    // (key/value) that don't exist on system_parameters (real cols: param_name/current_value, numeric),
+    // so the query always threw and .catch fell back to "UNKNOWN" on every call — the voice/status
+    // surface never reflected a real PAUSE/VACATION (deep-scan API-1 2026-07-11).
+    const mode = await getMode().catch(() => "UNKNOWN" as const);
 
     // Time-to-flatten (15:55 ET = 19:55 UTC during EST / 20:55 UTC during EDT — approx)
     const nowMinUTC = new Date().getUTCHours() * 60 + new Date().getUTCMinutes();
