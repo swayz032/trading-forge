@@ -303,14 +303,25 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
     if exit_type in ("fixed_target", "atr_multiple"):
         pass  # Directly supported in Pine — no deduction
     elif exit_type == "trailing_stop":
-        # Pine strategy.exit(trail_offset=...) is only available in strategy() context.
-        # The INDICATOR artifact cannot faithfully implement trailing stop — it degrades to
-        # a fixed ATR stop. This changes exit timing materially for intrabar moves.
+        # NEITHER exported Pine artifact implements a real trailing stop today.
+        # pine_compiler.py's _build_exit_condition() (both the legacy strategy_shell
+        # default-live path and the dual STRATEGY artifact) always emits a single
+        # strategy.exit(..., stop=close - stop_distance, ...) call with a static
+        # ATR-derived distance computed once at entry — there is no trail_offset/
+        # trail_points anywhere in the compiler. The internal backtester genuinely
+        # trails the stop (distinct trailing_stop vs stop_loss exit-reason branches),
+        # so this is a real behavioral divergence, not a cosmetic one. The -20 here
+        # is informational; the section-6 semantic-fidelity check below is what
+        # actually forces faithful=False / exportable=False for this exit_type — see
+        # PINE-1 (2026-07-11 instrument ledger).
         score -= 20
         deductions.append(
-            "exit_type='trailing_stop': INDICATOR artifact degrades to fixed ATR stop "
-            "(strategy.exit trail_offset not available in indicator() context). "
-            "Use STRATEGY artifact for trailing stop export."
+            "exit_type='trailing_stop': NEITHER the INDICATOR nor the STRATEGY artifact "
+            "implements a real Pine trailing stop today — both degrade to a fixed ATR "
+            "stop computed once at entry (pine_compiler.py's strategy.exit() call never "
+            "uses trail_offset/trail_points). This is a genuine behavioral divergence "
+            "from the internal engine's real trailing-stop management, not just an "
+            "INDICATOR-context limitation. See the section 6 semantic-fidelity check below."
         )
     elif exit_type == "time_exit":
         # Bar-count exit semantics are silently lost in the indicator artifact path:
@@ -454,6 +465,29 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
             f"fields ({tf_list}) that require top-down timeframe AND-gating — "
             "Pine renders on the single chart timeframe and cannot reproduce multi-TF "
             "bias alignment (daily_tf / htf_tf / itf_tf). "
+            "This strategy executes server-side via broker-router (server-mediated "
+            "execution); Pine export is a visual-only aid for DEPLOYED strategies."
+        )
+
+    # 6d. Trailing-stop exit — neither Pine artifact implements a real trailing stop.
+    #
+    # pine_compiler.py's _build_exit_condition() always emits a single strategy.exit()
+    # call with a static ATR-derived stop distance computed once at entry — there is no
+    # trail_offset/trail_points anywhere in the compiler, in EITHER the default-live
+    # strategy_shell path or the dual STRATEGY artifact. The internal backtester genuinely
+    # trails the stop (distinct trailing_stop vs stop_loss exit-reason branches), so an
+    # operator deploying either exported artifact for a trailing_stop strategy would hold
+    # a fixed stop through a trending move where the internal engine locks in profit —
+    # a silent, material behavioral divergence. PINE-1 (2026-07-11 instrument ledger).
+    if exit_type == "trailing_stop":
+        _faithful = False
+        score = 0.0  # force to 0 — not faithfully expressible in either artifact today
+        deductions.append(
+            "Trailing-stop exit not expressible in Pine: neither the INDICATOR nor the "
+            "STRATEGY artifact implements a real trailing stop — pine_compiler.py emits "
+            "a single strategy.exit() with a static ATR distance computed once at entry "
+            "(no trail_offset/trail_points). This diverges materially from the internal "
+            "engine's genuine trailing-stop management on trending moves. "
             "This strategy executes server-side via broker-router (server-mediated "
             "execution); Pine export is a visual-only aid for DEPLOYED strategies."
         )

@@ -37,7 +37,7 @@
  */
 
 import { randomUUID } from "crypto";
-import { eq, and, gte, isNull, isNotNull, sql, inArray } from "drizzle-orm";
+import { eq, and, gte, isNull, isNotNull, sql, inArray, type SQL } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { paperPositions, paperSessions, paperTrades, brokerAccounts } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -135,6 +135,59 @@ function _toDateString(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+// ─── Account/firm scope resolution (CAP-3 fix) ─────────────────────────────────
+
+const _UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const _PAPER_CLOSE_PREFIX = "paper-close:";
+
+/**
+ * CAP-3 fix — build the account/firm scope predicate for the concentration queries.
+ *
+ * The `accountId` parameter is POLYMORPHIC across the callers:
+ *   - paper-signal-service.ts (the live entry gate) passes a `paper_sessions.id` (UUID)
+ *   - runConsistencyDailyDigest passes a `broker_accounts.account_id` (UUID)
+ *   - paper-execution-service.ts (close path) passes "paper-close:<firmId>"
+ *   - the GET /consistency/:accountId route passes an operator-supplied id
+ *
+ * Previously BOTH concentration queries ignored `accountId` entirely and filtered
+ * only on `ps.firm_id IN (CONSISTENCY_RULE_FIRMS)` — i.e. they summed profit days
+ * across BOTH firms AND every session. That netted two independent funded accounts'
+ * P&L into one `cycleCumulativeProfit` / `highestDayProfit`, so a Topstep account
+ * whose own best day is >50% of its own cycle could be diluted below 50% by unrelated
+ * MFFU / sibling-account profit (or vice-versa) — a prop-firm single-day-rule
+ * miscalculation on a capital-safety surface.
+ *
+ * Scoping strategy (finest scope the schema allows — `paper_sessions` has no
+ * account_id column, so a session is the finest per-account grain):
+ *   - "paper-close:<firm>" → that firm only.
+ *   - a UUID → in ONE predicate (no extra DB round-trip) either the single session
+ *     (`ps.id = <uuid>`, the live-gate path — that session ONLY, excluding siblings)
+ *     OR that broker account's own firm (subquery; the digest path). The
+ *     broker-account subquery returns NULL for a session id, so `ps.firm_id = NULL`
+ *     never widens a session-scoped query back to firm-wide.
+ *   - anything else (never a real funded account) → conservative legacy firm-union
+ *     fallback. This is a fail-OPEN payout-eligibility gate, never account-fatal.
+ *
+ * Returns a SQL boolean fragment referencing alias `ps` (paper_sessions).
+ */
+function _buildScopeClause(accountId: string): SQL {
+  if (accountId.startsWith(_PAPER_CLOSE_PREFIX)) {
+    const firmId = accountId.slice(_PAPER_CLOSE_PREFIX.length);
+    return sql`ps.firm_id = ${firmId}`;
+  }
+  if (_UUID_RE.test(accountId)) {
+    return sql`(
+      ps.id = ${accountId}::uuid
+      OR ps.firm_id = (
+        SELECT ba.firm_id FROM broker_accounts ba WHERE ba.account_id = ${accountId}::uuid
+      )
+    )`;
+  }
+  const firmList = CONSISTENCY_RULE_FIRMS.map((f) => `'${f}'`).join(", ");
+  return sql`ps.firm_id IN (${sql.raw(firmList)})`;
+}
+
 // ─── Core computation ─────────────────────────────────────────────────────────
 
 /**
@@ -187,10 +240,16 @@ export async function getConsistencyState(
   //
   // FIX A (2026-06-22): Cover all CONSISTENCY_RULE_FIRMS, not just 'topstep'.
   // Both Topstep and MFFU enforce the 50% single-day concentration rule.
+  //
+  // CAP-3 (2026-07-11): scope BOTH queries to the passed accountId's own
+  // session/firm instead of the firm UNION of both firms + every session. See
+  // _buildScopeClause — the same fragment is reused for the realized daily query
+  // and the open-MTM query so the concentration number is computed per funded
+  // account, not netted across firms/accounts.
 
   type DailyRow = { day: string; pnl: number };
 
-  const firmList = CONSISTENCY_RULE_FIRMS.map((f) => `'${f}'`).join(", ");
+  const scopeClause = _buildScopeClause(accountId);
   const dailyRows = await db.execute<DailyRow>(
     sql`
       SELECT
@@ -199,7 +258,7 @@ export async function getConsistencyState(
       FROM paper_trades pt
       JOIN paper_sessions ps ON ps.id = pt.session_id
       WHERE
-        ps.firm_id IN (${sql.raw(firmList)})
+        ${scopeClause}
         AND pt.exit_time >= ${cycleStart.toISOString()}::timestamptz
       GROUP BY 1
       ORDER BY 1
@@ -216,7 +275,7 @@ export async function getConsistencyState(
       FROM paper_positions pp
       JOIN paper_sessions ps ON ps.id = pp.session_id
       WHERE
-        ps.firm_id IN (${sql.raw(firmList)})
+        ${scopeClause}
         AND pp.closed_at IS NULL
         AND ps.status = 'active'
     `,

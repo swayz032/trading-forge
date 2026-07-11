@@ -499,17 +499,27 @@ def compute_risk_derived_contracts(
         if account_is_healthy and base_contracts > 0:
             # F-7: Pyramid floor applies on healthy account, but clamp by firm cap + liquidity cap.
             # base_contracts alone is unbounded — firm compliance limits must still bind.
-            floored_contracts = base_contracts
-            if (
-                effective_firm_cap is not None
-                and effective_firm_cap < floored_contracts
-            ):
-                floored_contracts = effective_firm_cap
-            if liquidity_cap < floored_contracts:
-                floored_contracts = liquidity_cap
-            floored_contracts = max(0, floored_contracts)
+            # CAP-2 / F-4 fix (mirrors risk-sizing.ts:794-802): also include drawdown_room_cap
+            # in this floor min(). The main path below already applies drawdown_room_cap in its
+            # min(); this early-return path previously omitted it, allowing base_contracts to be
+            # returned even when DD room is too tight to support that many contracts.
+            # drawdown_room_cap OVERRIDES the pyramid floor when it is the binding constraint.
+            floored_candidates = [base_contracts, liquidity_cap]
+            if effective_firm_cap is not None:
+                floored_candidates.append(effective_firm_cap)
+            if drawdown_room_cap is not None and drawdown_room_cap >= 0:
+                floored_candidates.append(drawdown_room_cap)
+            floored_contracts = max(0, min(floored_candidates))
             floor_firm_cap_applied = (
-                effective_firm_cap is not None and effective_firm_cap < base_contracts
+                effective_firm_cap is not None
+                and effective_firm_cap == floored_contracts
+                and effective_firm_cap < base_contracts
+            )
+            # drawdown_room_cap binding when it was the actual constraining element
+            early_return_drawdown_room_cap_binding = (
+                drawdown_room_cap is not None
+                and drawdown_room_cap >= 0
+                and drawdown_room_cap == floored_contracts
             )
             ev_floor: dict = {
                 "account_balance": account_balance,
@@ -522,13 +532,18 @@ def compute_risk_derived_contracts(
                 "risk_derived_cap": risk_derived_cap,
                 "firm_cap": effective_firm_cap,  # F-7: expose the cap that was applied
                 "liquidity_cap": liquidity_cap,
+                "drawdown_room_cap": drawdown_room_cap,
                 "final_contracts": floored_contracts,
                 "rejection_reason": None,
                 "firm": firm,
                 "account_health_ratio": account_health_ratio,
-                "pyramid_floor_applied": True,
+                "pyramid_floor_applied": not early_return_drawdown_room_cap_binding,
                 "firm_cap_applied": floor_firm_cap_applied,  # F-7: audit whether firm cap bound
-                "binding_cap": "pyramid_floor_override",
+                "binding_cap": (
+                    "drawdown_room"
+                    if early_return_drawdown_room_cap_binding
+                    else "pyramid_floor_override"
+                ),
                 "base_contracts": base_contracts,
                 "risk_cap_method": risk_cap_method,
             }
@@ -548,14 +563,16 @@ def compute_risk_derived_contracts(
                 risk_derived_cap=risk_derived_cap,
                 firm_cap=effective_firm_cap,  # F-7: expose effective firm cap
                 liquidity_cap=liquidity_cap,
-                rejection_reason=None,  # not a rejection — floor overrides
+                rejection_reason=None,  # not a rejection — floor overrides (or DD room cap)
                 firm=firm,
                 risk_cap_method=risk_cap_method,
                 firm_cap_applied=floor_firm_cap_applied,  # F-7: true if firm cap constrained floor
-                pyramid_floor_applied=True,
+                pyramid_floor_applied=not early_return_drawdown_room_cap_binding,
                 account_health_ratio=account_health_ratio,
                 scaling_mode=scaling_mode,
                 scaling_tier=tiers,
+                drawdown_room_cap=drawdown_room_cap,
+                drawdown_room_cap_binding=early_return_drawdown_room_cap_binding,
                 evidence=ev_floor,
             )
 

@@ -30,6 +30,18 @@ class TestExportabilityFaithfulAdversarial:
         # HTF alignment fields require top-down timeframe AND-gating Pine cannot express.
         assert score_exportability({"daily_tf": "1D", "htf_tf": "4h"}).faithful is False
 
+    def test_trailing_stop_exit_is_not_faithful(self):
+        # PINE-1 (2026-07-11 instrument ledger): exit_type='trailing_stop' degrades to a
+        # static ATR stop in BOTH exported Pine artifacts (pine_compiler.py never emits
+        # trail_offset/trail_points). Previously this only cost -20 score, leaving
+        # faithful=True and exportable=True (score~80, 'reducible' band) — silently
+        # passing the TESTING->PAPER faithful gate despite a real behavioral divergence
+        # from the internal engine's genuine trailing-stop management.
+        r = score_exportability({"exit_type": "trailing_stop"})
+        assert r.faithful is False
+        assert r.exportable is False  # faithful=False implies exportable=False on the main path
+        assert r.score == 0.0
+
     def test_plain_single_signal_strategy_is_faithful(self):
         # A plain indicator strategy with no Style C / confluence / multi-TF is faithfully exportable.
         r = score_exportability(

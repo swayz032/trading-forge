@@ -4475,6 +4475,11 @@ def run_backtest(
             direction="long", symbol=config.symbol,
             firm_key=request.firm_key,
             htf_cache=_dsl_htf_cache,
+            spec=spec,  # FIX BC-1 (deep-scan 2026-07-11): thread real per-symbol spec
+            # through so point_value/tick_size don't fall through to MES defaults
+            # (spec.point_value if spec else 5.0 / spec.tick_size if spec else 0.25
+            # at apply_eligibility_gate's internals) for MCL/MNQ. The class path
+            # (run_class_backtest) already passes spec=spec; this DSL path did not.
             strategy_name=_dsl_strategy_name,
             passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
         )
@@ -4493,6 +4498,8 @@ def run_backtest(
                 direction="short", symbol=config.symbol,
                 firm_key=request.firm_key,
                 htf_cache=_dsl_htf_cache,
+                spec=spec,  # FIX BC-1 (deep-scan 2026-07-11): see long-side sibling
+                # call above for full rationale.
                 strategy_name=_dsl_strategy_name,
                 passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
             )

@@ -11,9 +11,19 @@
  * (not 503/404 — the caller should not retry).
  *
  * ─── Authentication ──────────────────────────────────────────────────────────
- * HMAC-SHA256 over canonical message:
- *   `${broker_source}|${timestamp_ms}|${broker_fill_id ?? ""}|${symbol}`
+ * HMAC-SHA256 over canonical message (fill-ingest path):
+ *   `${broker_source}|${timestamp_ms}|${broker_fill_id ?? ""}|${symbol}|${filled_qty}|${filled_avg_price}|${status}`
  * Signed with BROKER_FILL_HMAC_SECRET env var (≥32 chars).
+ *
+ * WIRE-2 (deep-scan 2026-07-11): the economic fields filled_qty / filled_avg_price /
+ * status are now part of the signed bytes. They drive realized P&L in
+ * fill-reconciliation-service.ts, so a signed-but-numerically-corrupted fill must NOT
+ * authenticate. Signers MUST canonicalize the numerics as their parsed JS-number string
+ * form (e.g. 5000.10 → "5000.1"), matching how timestamp_ms is already canonicalized —
+ * the verifier re-stringifies the zod-parsed body values.
+ * NOTE: the reconcile-clear admin path below signs its OWN 4-field message
+ *   `reconcile-clear|${timestamp_ms}|${account_id}|${rationale.slice(0,64)}`
+ * and does NOT include the economic fields (there are none for a clear action).
  *
  * Replay guard: 60-second timestamp_ms drift window.
  * All HMAC comparisons use crypto.timingSafeEqual (no timing oracle).
@@ -76,7 +86,10 @@ function getFillHmacSecret(): string | null {
 }
 
 // ─── HMAC verification ────────────────────────────────────────────────────────
-// Canonical message: `${broker_source}|${timestamp_ms}|${broker_fill_id ?? ""}|${symbol}`
+// Canonical message (fill-ingest path):
+//   `${broker_source}|${timestamp_ms}|${broker_fill_id ?? ""}|${symbol}|${filled_qty}|${filled_avg_price}|${status}`
+// The economic triplet (WIRE-2) is appended only when supplied. The reconcile-clear
+// admin path passes none of the three, keeping its own 4-field message byte-identical.
 
 function verifyFillCallbackHmac(params: {
   brokerSource: string;
@@ -85,10 +98,30 @@ function verifyFillCallbackHmac(params: {
   symbol: string;
   providedHmac: string;
   secret: string;
+  // WIRE-2: P&L-determining economics bound into the signature on the fill path.
+  // Omitted (undefined) for the reconcile-clear path, which signs a 4-field message.
+  filledQty?: number;
+  filledAvgPrice?: number;
+  status?: string;
 }): boolean {
   try {
-    const { brokerSource, timestampMs, brokerFillId, symbol, providedHmac, secret } = params;
-    const message = `${brokerSource}|${timestampMs}|${brokerFillId}|${symbol}`;
+    const {
+      brokerSource,
+      timestampMs,
+      brokerFillId,
+      symbol,
+      providedHmac,
+      secret,
+      filledQty,
+      filledAvgPrice,
+      status,
+    } = params;
+    let message = `${brokerSource}|${timestampMs}|${brokerFillId}|${symbol}`;
+    // WIRE-2: extend the signed bytes to cover the numbers reconciliation trusts.
+    // The fill path always supplies all three together; reconcile-clear supplies none.
+    if (filledQty !== undefined || filledAvgPrice !== undefined || status !== undefined) {
+      message += `|${filledQty}|${filledAvgPrice}|${status}`;
+    }
     const expected = createHmac("sha256", secret)
       .update(message, "utf8")
       .digest("hex");
@@ -224,6 +257,11 @@ fillCallbackRoutes.post("/", async (req: Request, res: Response) => {
     symbol: body.symbol,
     providedHmac: body.hmac,
     secret,
+    // WIRE-2: bind the economic fields into the signature so a signed-but-corrupted
+    // filled_qty / filled_avg_price / status cannot authenticate and mis-drive P&L.
+    filledQty: body.filled_qty,
+    filledAvgPrice: body.filled_avg_price,
+    status: body.status,
   });
 
   if (!hmacValid) {

@@ -14,6 +14,7 @@ Transitions based on:
 
 from __future__ import annotations
 
+import os
 from enum import Enum
 from typing import Any
 
@@ -25,6 +26,52 @@ class GovernorState(str, Enum):
     DEFENSIVE = "defensive"
     LOCKOUT = "lockout"
     RECOVERY = "recovery"
+
+
+# CMP-2: loss-driven escalation ladder. Severity ranks the loss-escalation states
+# so a single trade can jump directly to the worst state its loss magnitude
+# warrants (see _escalation_target + on_trade). LOCKOUT/RECOVERY are terminal /
+# session-managed and are NOT part of the trade-time escalation comparison.
+_ESCALATABLE_STATES = (
+    GovernorState.NORMAL,
+    GovernorState.ALERT,
+    GovernorState.CAUTIOUS,
+    GovernorState.DEFENSIVE,
+)
+
+_STATE_SEVERITY = {
+    GovernorState.NORMAL: 0,
+    GovernorState.ALERT: 1,
+    GovernorState.CAUTIOUS: 2,
+    GovernorState.DEFENSIVE: 3,
+    GovernorState.LOCKOUT: 4,
+    GovernorState.RECOVERY: 0,  # session-managed; never used for escalation compare
+}
+
+
+def _multi_step_escalation_enabled() -> bool:
+    """CMP-2 fix gate (default OFF — operator opt-in).
+
+    When enabled, `on_trade` escalates directly to the worst state the loss
+    magnitude warrants in a single call, instead of advancing only one enum step
+    per trade. This closes the gap the /goal deep-scan (2026-07-11, CMP-2) found:
+    a single catastrophic loss that already breaches the 0.80-of-budget LOCKOUT
+    threshold only reached ALERT (SIZE_MULTIPLIER 1.0, can_trade=True), so the
+    account kept trading at FULL size and took four more trades to walk the ladder
+    to LOCKOUT — defeating the `or_session_loss_pct` fast-path.
+
+    Default OFF: flipping it ON changes a LIVE governor default and re-baselines
+    `governor_backtest` trades_blocked / dd_reduction metrics (consumed by the
+    backtester), so old vs new numbers stop being apples-to-apples. This mirrors
+    the `BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED` operator-opt-in pattern — the
+    fix is correct and shipped but stays inert until the operator opts in after
+    reviewing the real A/B magnitude. Set
+    `GOVERNOR_MULTI_STEP_ESCALATION_ENABLED=true` to activate (and re-run affected
+    governor backtests before comparing metrics or trusting them for promotion).
+    """
+    return os.environ.get(
+        "GOVERNOR_MULTI_STEP_ESCALATION_ENABLED", "false"
+    ).lower() in ("1", "true", "yes")
 
 
 # State transition rules
@@ -158,6 +205,22 @@ class Governor:
                 reason = "loss_in_recovery"
                 self.profitable_sessions = 0
 
+        # CMP-2 (2026-07-11) multi-step escalation (opt-in, default OFF):
+        # jump directly to the worst state this trade's loss magnitude warrants
+        # instead of advancing only one enum step. The legacy branches above move
+        # at most one step; here, when enabled and a loss-driven escalation was
+        # already warranted (target severity > current), we override to the true
+        # target so a single 0.80-of-budget loss reaches LOCKOUT immediately.
+        # This fires on the SAME trigger the legacy escalation detects (target
+        # severity > current), so it never touches win-based de-escalation or the
+        # LOCKOUT/RECOVERY branches — it only widens how far a single escalation
+        # can travel.
+        if _multi_step_escalation_enabled() and self.state in _ESCALATABLE_STATES:
+            target = self._escalation_target(session_loss_pct)
+            if _STATE_SEVERITY[target] > _STATE_SEVERITY[self.state]:
+                new_state = target
+                reason = self._transition_reason(target.value, session_loss_pct)
+
         changed = new_state != self.state
         self.state = new_state
 
@@ -243,6 +306,28 @@ class Governor:
         if self.daily_loss_budget <= 0 or self.session_pnl >= 0:
             return 0.0
         return abs(self.session_pnl) / self.daily_loss_budget
+
+    def _escalation_target(self, session_loss_pct: float) -> GovernorState:
+        """Most severe loss-escalation state warranted by the current metrics.
+
+        CMP-2: `session_loss_pct`/`consecutive_losses` can already breach a far
+        threshold (e.g. the 0.80 LOCKOUT threshold) on a SINGLE trade, yet the
+        one-step-per-call branches only test the next adjacent state. This maps
+        the worst breached threshold to its state so escalation can jump there
+        directly. Thresholds mirror the per-state branch conditions in on_trade
+        (and the `_transition_reason` thresholds table) exactly:
+        alert 2/0.30, cautious 3/0.50, defensive 4/0.65, lockout 5/0.80.
+        """
+        target = GovernorState.NORMAL
+        if self.consecutive_losses >= 2 or session_loss_pct >= 0.30:
+            target = GovernorState.ALERT
+        if self.consecutive_losses >= 3 or session_loss_pct >= 0.50:
+            target = GovernorState.CAUTIOUS
+        if self.consecutive_losses >= 4 or session_loss_pct >= 0.65:
+            target = GovernorState.DEFENSIVE
+        if self.consecutive_losses >= 5 or session_loss_pct >= 0.80:
+            target = GovernorState.LOCKOUT
+        return target
 
     def _transition_reason(self, target: str, session_loss_pct: float) -> str:
         parts = []

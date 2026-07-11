@@ -1,7 +1,10 @@
 """Targeted tests for the Pine Script compiler (pine_compiler.py).
 
 Coverage areas:
-  1. test_trailing_stop_deduction_in_score       — xfail: audit W3 (scorer misses trailing_stop deduction)
+  1. test_trailing_stop_deduction_in_score       — deduction present + faithful=False/score=0
+     (PINE-1, 2026-07-11 instrument ledger: trailing_stop is now a section-6 semantic-fidelity
+     hard-block, not just a -20 score deduction — see test_exportability_faithful_adversarial.py
+     for the dedicated faithful-flag regression coverage)
   2. test_strategy_alertcondition_includes_gates — FIX 2: all 3 gates in webhook alertcondition
   3. test_risk_lockout_updates_session_pnl_in_strategy_artifact  — FIX 1 Option A
   4. test_content_hash_is_sha256_of_artifact     — content_hash is SHA-256 of concatenated Pine
@@ -40,14 +43,20 @@ def _base_strategy(**overrides) -> dict:
     return base
 
 
-# ─── Test 1 — xfail: trailing_stop deduction ────────────────────────────────
+# ─── Test 1 — trailing_stop deduction + hard-block (PINE-1) ─────────────────
 
 def test_trailing_stop_deduction_in_score():
-    """Scorer deducts 20 for exit_type=trailing_stop (W3 fix applied to exportability.py).
+    """Scorer both deducts score AND hard-blocks exit_type=trailing_stop (W3 deduction +
+    PINE-1 2026-07-11 section-6 semantic-fidelity fix applied to exportability.py).
 
-    trailing_stop degrades in the INDICATOR artifact (strategy.exit trail_offset is not
-    available in indicator() context).  Score must be lower than a fixed_stop strategy of
-    identical configuration.
+    NEITHER exported Pine artifact implements a real trailing stop today —
+    pine_compiler.py's _build_exit_condition() always emits a static ATR-derived stop
+    distance computed once at entry (no trail_offset/trail_points), which materially
+    diverges from the internal engine's genuine trailing-stop management. This is a
+    real behavioral divergence, not a cosmetic INDICATOR-only limitation, so the
+    section-6 check forces faithful=False / exportable=False / score=0 — it must NOT
+    be possible for a trailing_stop strategy to silently pass the TESTING->PAPER
+    faithful gate at a 'reducible' score band.
     """
     strategy_trailing = _base_strategy(exit_type="trailing_stop")
     strategy_fixed = _base_strategy(exit_type="fixed_target")
@@ -62,11 +71,16 @@ def test_trailing_stop_deduction_in_score():
         "W3 fix not applied to exportability.py"
     )
 
-    # Score must be 20 lower than equivalent fixed_target strategy
-    assert result_fixed.score - result_trailing.score == 20, (
-        f"Expected trailing_stop to score exactly 20 below fixed_target, "
-        f"got fixed={result_fixed.score}, trailing={result_trailing.score}"
-    )
+    # PINE-1: trailing_stop is a section-6 semantic-fidelity hard-block — score forced
+    # to 0, faithful/exportable forced False, regardless of how clean the rest of the
+    # strategy config is. Compare against a byte-identical fixed_target sibling to prove
+    # the hard-block is trailing_stop-specific, not a config artifact.
+    assert result_trailing.score == 0.0
+    assert result_trailing.faithful is False
+    assert result_trailing.exportable is False
+    assert result_fixed.score > 0.0
+    assert result_fixed.faithful is True
+    assert result_fixed.exportable is True
 
 
 # ─── Test 2 — FIX 2: strategy alertcondition includes all gates ─────────────

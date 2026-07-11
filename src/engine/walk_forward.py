@@ -527,6 +527,30 @@ def _run_walk_forward_cpcv(
             )
             continue
 
+        # VI-3 fix (ratify ledger 2026-07-11, subsystem walkforward-mc-validation):
+        # run the per-path IS backtest BEFORE committing this path's OOS results to
+        # ANY aggregate, and drop the WHOLE path (OOS included) if the IS backtest
+        # raises. Previously the IS backtest ran AFTER the OOS appends, and on
+        # failure only per_path_is_sharpes was left short — so a SINGLE transient
+        # IS-backtest exception (OOM, data hiccup, subprocess error) among the 15
+        # CPCV paths flipped `_has_full_is` False for the WHOLE run, which routes
+        # the PBO overfit hard gate to the "cpcv_is_sharpe_unavailable" cpcv_exempt
+        # PROCEED path (see below) — silently disabling a documented HARD gate on a
+        # transient failure, not a genuine by-design IS-unavailability. Requiring
+        # BOTH OOS and IS to succeed before either is appended guarantees
+        # per_path_is_sharpes and path_sharpes stay length-aligned by construction,
+        # so `_has_full_is` no longer depends on all 15 paths surviving cleanly.
+        try:
+            _is_bt_result = run_backtest(_shared_req, data=is_data)
+        except Exception as _is_bt_exc:
+            print(
+                f"  CPCV: IS backtest for path {n_paths} failed ({_is_bt_exc!r}). "
+                f"Dropping ENTIRE path (OOS+IS) to keep per_path_is_sharpes/"
+                f"path_sharpes aligned — not counting in n_paths (VI-3 fix).",
+                file=sys.stderr,
+            )
+            continue
+
         path_sharpes.append(float(path_result.get("sharpe_ratio", 0.0)))
         path_returns.append(float(path_result.get("total_return", 0.0)))
         all_oos_trades.extend(path_result.get("trades", []))
@@ -535,23 +559,14 @@ def _run_walk_forward_cpcv(
         # Track per-path series for multi-model WRC/SPA (White 2000 / Hansen 2005)
         per_path_oos_pnls.append(_path_daily_pnls)
 
-        # E1: lightweight IS backtest to capture true per-path IS Sharpe.
-        # Runs on IS data (warmup_data=None — no preceding warmup for pure IS eval).
-        # Appended only when the IS backtest succeeds so per_path_is_sharpes stays
-        # aligned: if length < len(path_sharpes) after the loop, the IS basis is
-        # partially available and we fall back to the OOS proxy for BIF/PBO.
-        try:
-            _is_bt_result = run_backtest(_shared_req, data=is_data)
-            per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
-            # X5 ratified 2026-07-09: pool this path's IS daily P&L for the
-            # combined-fold WFE IS basis (same series agg_sharpe uses on OOS).
-            all_is_pnls.extend(list(_is_bt_result.get("daily_pnls", [])))
-        except Exception as _is_bt_exc:
-            print(
-                f"  CPCV: IS backtest for path {n_paths} failed ({_is_bt_exc!r}). "
-                f"Per-path IS Sharpe unavailable for this path.",
-                file=sys.stderr,
-            )
+        # E1: lightweight IS backtest to capture true per-path IS Sharpe. Runs on
+        # IS data (warmup_data=None — no preceding warmup for pure IS eval). Both
+        # this path's OOS AND IS results are now committed together (see VI-3 fix
+        # above) so this append can never desync from path_sharpes.
+        per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
+        # X5 ratified 2026-07-09: pool this path's IS daily P&L for the
+        # combined-fold WFE IS basis (same series agg_sharpe uses on OOS).
+        all_is_pnls.extend(list(_is_bt_result.get("daily_pnls", [])))
         all_oos_pnl_records.extend(path_result.get("daily_pnl_records", []))
         # equity_bars is raw float[] equity per bar; equity_curve is list[dict] (daily agg).
         # Use equity_bars for drawdown math to avoid dict → float cast error.
@@ -595,8 +610,42 @@ def _run_walk_forward_cpcv(
         }
 
     # ── Aggregate from all paths ─────────────────────────────────────────────
+    # total_trades/total_return here are the RAW pooled values, kept exactly as
+    # before because agg_win_rate below (and gross_wins/gross_losses) divide an
+    # EQUALLY-inflated numerator (summed straight from all_oos_trades) by this
+    # SAME total_trades denominator — the shared inflation cancels and the ratio
+    # stays correct. Do not "fix" this variable in place; see _distinct_total_*
+    # below for the de-inflated values used in reported headline metrics.
     total_trades = len(all_oos_trades)
     total_return = sum(path_returns)
+
+    # VI-1 + VI-2 fix (ratify ledger 2026-07-11, subsystem walkforward-mc-validation):
+    # every one of the n_splits data folds serves as an OOS test fold in multiple
+    # CPCV paths (C(n_splits-1, k_test_groups-1) of them when all combinatorial
+    # paths complete — 5 of 15 for the default 6/2 config), so all_oos_pnls /
+    # all_oos_trades / path_returns all pool each fold's real observations that
+    # many times over. Left uncorrected this (a) inflates the DSR n_observations
+    # fed to compute_deflated_sharpe_ratio by ~5x, collapsing its p-value and
+    # producing a false-green overfit pass (VI-1); and (b) inflates the reported
+    # oos_metrics.total_trades/total_return headline by the same ~5x, defeating
+    # the MIN_OOS_TRADES thin-sample confidence gate and misleading the
+    # operator/picker with an overstated return (VI-2).
+    #
+    # Correct by dividing by the EMPIRICAL multiplicity derived from the paths
+    # that actually completed (n_paths * k_test_groups / n_splits) rather than
+    # assuming the full theoretical C(n_splits, k_test_groups) combinatorial
+    # count — this stays accurate even when some CPCV paths fail and are
+    # skipped (n_paths < the full combinatorial count). agg_sharpe itself is
+    # intentionally left computed on the full (still-duplicated) all_oos_pnls
+    # series below: mean/std are ~invariant to exact duplication, so only the
+    # multiple-testing/short-track deflation (DSR n_observations) and the raw
+    # headline counts need correcting, not the Sharpe point estimate.
+    _oos_fold_multiplicity = (
+        (n_paths * k_test_groups) / float(n_splits) if n_splits > 0 else 1.0
+    )
+    _oos_fold_multiplicity = max(_oos_fold_multiplicity, 1.0)
+    _distinct_total_trades = int(round(total_trades / _oos_fold_multiplicity))
+    _distinct_total_return = total_return / _oos_fold_multiplicity
 
     if all_oos_pnls:
         pnl_arr = np.array(all_oos_pnls)
@@ -633,7 +682,13 @@ def _run_walk_forward_cpcv(
     try:
         from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _cpcv_dsr
 
-        _n_obs = len(all_oos_pnls)
+        # VI-1 fix (ratify ledger 2026-07-11): use the de-inflated observation
+        # count (see "Aggregate from all paths" comment above), not the pooled/
+        # duplicated all_oos_pnls length, so DSR's n_observations isn't ~5x
+        # inflated — that inflation collapses the DSR p-value ~sqrt(5)x and
+        # produces a false-green overfit pass. agg_sharpe itself stays computed
+        # on the full pooled series (mean/std are ~invariant to duplication).
+        _n_obs = round(len(all_oos_pnls) / _oos_fold_multiplicity)
         _dsr_result = _cpcv_dsr(
             observed_sharpe=agg_sharpe,
             n_trials=_effective_n_trials,
@@ -1043,16 +1098,21 @@ def _run_walk_forward_cpcv(
         )
 
     return {
-        "confidence": "OK" if total_trades >= MIN_OOS_TRADES else "LOW",
+        # VI-2 fix (ratify ledger 2026-07-11): confidence gate + reported headline
+        # total_trades/total_return use the de-inflated _distinct_total_* values
+        # (see the "Aggregate from all paths" comment above), not the pooled/
+        # duplicated raw sums, which defeated the MIN_OOS_TRADES thin-sample guard
+        # and misrepresented the true combined OOS return to the operator/picker.
+        "confidence": "OK" if _distinct_total_trades >= MIN_OOS_TRADES else "LOW",
         "low_confidence_windows": 0,
         "oos_metrics": {
-            "total_return": round(total_return, 2),
+            "total_return": round(_distinct_total_return, 2),
             "sharpe_ratio": round(agg_sharpe, 4),
             "max_drawdown": round(max_dd, 2),
             "win_rate": round(agg_win_rate, 4),
             "profit_factor": round(agg_pf, 4),
-            "total_trades": total_trades,
-            "avg_trade_pnl": round(total_return / max(total_trades, 1), 2),
+            "total_trades": _distinct_total_trades,
+            "avg_trade_pnl": round(_distinct_total_return / max(_distinct_total_trades, 1), 2),
             "avg_daily_pnl": round(avg_daily, 2),
         },
         "trades": all_oos_trades,
@@ -2697,15 +2757,23 @@ def _run_walk_forward_cpcv_class(
             print(f"CPCV (class) path failed: {_path_exc!r}. Skipping (not counted in n_paths).", file=sys.stderr)
             continue
 
-        path_sharpes.append(float(path_result.get("sharpe_ratio", 0.0)))
-        path_returns.append(float(path_result.get("total_return", 0.0)))
-        all_oos_trades.extend(path_result.get("trades", []))
-        _path_daily_pnls = list(path_result.get("daily_pnls", []))
-        all_oos_pnls.extend(_path_daily_pnls)
-
-        # E1-equivalent: lightweight IS-only backtest to capture true per-path
-        # IS Sharpe for BIF/PBO (mirrors the DSL CPCV path's own E1 fix).
+        # VI-3 fix (ratify ledger 2026-07-11, mirrors the DSL CPCV path's VI-3 fix
+        # for parity): attempt the per-path IS backtest BEFORE committing this
+        # path's OOS results to any aggregate. Two distinct cases:
+        #   (a) IS data insufficient (no timestamp column / <=50 bars) — this is
+        #       a legitimate BY-DESIGN unavailability, unchanged from before: OOS
+        #       is still committed and per_path_is_sharpes simply has no matching
+        #       entry for this path.
+        #   (b) IS data sufficient but run_class_backtest() RAISES — a genuine
+        #       transient failure (OOM, data hiccup, subprocess error). Previously
+        #       this only left per_path_is_sharpes short while OOS was already
+        #       committed, so a SINGLE such failure among the CPCV paths flipped
+        #       `_has_full_is_cls` False for the WHOLE run, silently routing the
+        #       PBO overfit hard gate to a cpcv_exempt PROCEED. Now the ENTIRE
+        #       path (OOS+IS) is dropped instead, keeping per_path_is_sharpes and
+        #       path_sharpes aligned by construction whenever a path completes.
         _is_tc = _ts_col_cpcv_cls(is_data)
+        _is_bt_result = None
         if _is_tc and len(is_data) > 50:
             is_start_dt = str(is_data[_is_tc][0])[:10]
             is_end_dt = str(is_data[_is_tc][-1])[:10]
@@ -2723,16 +2791,30 @@ def _run_walk_forward_cpcv_class(
                     skip_eligibility_gate=skip_eligibility_gate,
                     fill_model=fill_model,
                 )
-                per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
-                # X5 ratified 2026-07-09: pool this path's IS daily P&L for the
-                # combined-fold WFE IS basis (parity with the main CPCV path).
-                all_is_pnls.extend(list(_is_bt_result.get("daily_pnls", [])))
             except Exception as _is_bt_exc:
                 print(
                     f"  CPCV (class): IS backtest for path {n_paths} failed ({_is_bt_exc!r}). "
-                    f"Per-path IS Sharpe unavailable for this path.",
+                    f"Dropping ENTIRE path (OOS+IS) to keep per_path_is_sharpes/"
+                    f"path_sharpes aligned — not counting in n_paths (VI-3 fix).",
                     file=sys.stderr,
                 )
+                continue
+
+        path_sharpes.append(float(path_result.get("sharpe_ratio", 0.0)))
+        path_returns.append(float(path_result.get("total_return", 0.0)))
+        all_oos_trades.extend(path_result.get("trades", []))
+        _path_daily_pnls = list(path_result.get("daily_pnls", []))
+        all_oos_pnls.extend(_path_daily_pnls)
+
+        if _is_bt_result is not None:
+            per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
+            # X5 ratified 2026-07-09: pool this path's IS daily P&L for the
+            # combined-fold WFE IS basis (parity with the main CPCV path).
+            all_is_pnls.extend(list(_is_bt_result.get("daily_pnls", [])))
+        # else: IS genuinely unavailable for this path (insufficient IS data) —
+        # per_path_is_sharpes intentionally stays short for this path, exactly as
+        # before (legitimate partial coverage — distinct from the VI-3 failure
+        # case above, which now drops the whole path instead of desyncing).
 
         all_oos_pnl_records.extend(path_result.get("daily_pnl_records", []))
         _raw_eq = path_result.get("equity_bars", [])
@@ -2776,8 +2858,20 @@ def _run_walk_forward_cpcv_class(
         }
 
     # ── Aggregate from all paths (same math as the DSL CPCV path) ────────────
+    # See the DSL CPCV path's identical comment block for the full VI-1/VI-2
+    # rationale — total_trades/total_return stay RAW here (agg_win_rate below
+    # divides an equally-inflated numerator by this same denominator, so the
+    # ratio is correct); _distinct_total_trades/_distinct_total_return are the
+    # de-inflated values used for the reported headline + confidence gate.
     total_trades = len(all_oos_trades)
     total_return = sum(path_returns)
+
+    _oos_fold_multiplicity = (
+        (n_paths * k_test_groups) / float(n_splits) if n_splits > 0 else 1.0
+    )
+    _oos_fold_multiplicity = max(_oos_fold_multiplicity, 1.0)
+    _distinct_total_trades = int(round(total_trades / _oos_fold_multiplicity))
+    _distinct_total_return = total_return / _oos_fold_multiplicity
 
     if all_oos_pnls:
         pnl_arr = np.array(all_oos_pnls)
@@ -2802,7 +2896,11 @@ def _run_walk_forward_cpcv_class(
     _class_cpcv_dsr_result: dict = {}
     try:
         from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _cpcv_dsr_cls
-        _n_obs = len(all_oos_pnls)
+        # VI-1 fix (ratify ledger 2026-07-11, mirrors the DSL CPCV path): use the
+        # de-inflated observation count, not the pooled/duplicated all_oos_pnls
+        # length, so DSR's n_observations isn't ~5x inflated (false-green overfit
+        # pass). agg_sharpe itself is left on the full pooled series above.
+        _n_obs = round(len(all_oos_pnls) / _oos_fold_multiplicity)
         _class_cpcv_dsr_result = _cpcv_dsr_cls(
             observed_sharpe=agg_sharpe,
             n_trials=max(n_paths, 1),
@@ -2914,16 +3012,21 @@ def _run_walk_forward_cpcv_class(
     elapsed_ms = int((time.time() - start_time) * 1000)
 
     return {
-        "confidence": "OK" if total_trades >= MIN_OOS_TRADES else "LOW",
+        # VI-2 fix (ratify ledger 2026-07-11, mirrors the DSL CPCV path): the
+        # MIN_OOS_TRADES confidence gate and the reported headline total_trades/
+        # total_return use the de-inflated _distinct_total_* values, not the
+        # pooled/duplicated raw sums (which defeated the thin-sample guard and
+        # misrepresented the true combined OOS return to the operator/picker).
+        "confidence": "OK" if _distinct_total_trades >= MIN_OOS_TRADES else "LOW",
         "low_confidence_windows": 0,
         "oos_metrics": {
-            "total_return": round(total_return, 2),
+            "total_return": round(_distinct_total_return, 2),
             "sharpe_ratio": round(agg_sharpe, 4),
             "max_drawdown": round(max_dd, 2),
             "win_rate": round(agg_win_rate, 4),
             "profit_factor": round(agg_pf, 4),
-            "total_trades": total_trades,
-            "avg_trade_pnl": round(total_return / max(total_trades, 1), 2),
+            "total_trades": _distinct_total_trades,
+            "avg_trade_pnl": round(_distinct_total_return / max(_distinct_total_trades, 1), 2),
             "avg_daily_pnl": round(avg_daily, 2),
         },
         "trades": all_oos_trades,

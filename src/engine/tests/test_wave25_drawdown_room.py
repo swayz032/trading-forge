@@ -250,3 +250,94 @@ class TestParityWithTypescript:
             f"Parity mismatch — TypeScript and Python must agree. "
             f"Default DRAWDOWN_ROOM_RISK_PCT={_DRAWDOWN_ROOM_RISK_PCT} (expected 0.08)."
         )
+
+
+# ── CAP-2 / F-4 fix: drawdown_room_cap must be included in the healthy-account ─
+# ── risk_cap<=0 early-return floor (mirrors risk-sizing.ts:794-802) ───────────
+
+
+class TestCap2HealthyAccountEarlyReturnDrawdownRoomFix:
+    def test_drawdown_room_cap_binds_in_healthy_account_early_return(self):
+        """Healthy account + risk_derived_cap<=0 + tight drawdown room → DD room cap must
+        still bind the floor, not just base_contracts/firm_cap/liquidity_cap.
+
+        Before the CAP-2 fix this branch ignored drawdown_room_cap entirely and returned
+        base_contracts=6 even though DD room only supports 1 contract — a firm-compliance
+        gap identical to the TS F-4 bug (risk-sizing.ts:794-802).
+
+        Setup forces risk_derived_cap<=0 via a wide ATR (stop_dollars_per_contract=45 >
+        risk_dollars=40), while the account stays healthy (balance/starting_floor=1.02)
+        and DD room is tight enough (drawdown_room_cap=1) to be the binding constraint
+        below base_contracts=6.
+        """
+        atr_wide = 6.0
+        stop_dollars = STOP_MULT * atr_wide * PV  # 1.5 * 6 * 5 = 45
+        result = compute_risk_derived_contracts(
+            base_contracts=BASE_CONTRACTS,  # 6
+            tier_increment=TIER_INC,
+            tier_threshold_dollars=TIER_THRESH,
+            max_risk_pct_per_trade=MAX_RISK,
+            liquidity_comfort_cap=LIQ_CAP,  # 100
+            account_balance=51_000.0,
+            cumulative_profit=0.0,
+            atr_points=atr_wide,
+            stop_multiplier=STOP_MULT,
+            point_dollar_value=PV,
+            firm_contract_cap=200,  # not binding
+            firm="topstep",
+            trailing_dd=2_000.0,
+            high_water_balance=51_000.0,
+            account_starting_floor=50_000.0,
+            current_drawdown_room=1_000.0,
+        )
+
+        # buffer = 51000 - min(51000-2000, 50000) = 51000 - 49000 = 2000
+        # risk_dollars = 2000 * 0.02 = 40; risk_derived_cap = floor(40/45) = 0 → early-return branch
+        assert result.risk_derived_cap == 0
+        assert result.account_health_ratio == pytest.approx(1.02)
+        # drawdown_room_cap = floor(1000 * 0.08 / 45) = floor(1.777...) = 1
+        expected_dd_cap = math.floor(1_000.0 * _DRAWDOWN_ROOM_RISK_PCT / stop_dollars)
+        assert expected_dd_cap == 1
+        assert result.drawdown_room_cap == expected_dd_cap
+
+        # CAP-2 fix: final_contracts must be clamped to drawdown_room_cap (1), NOT
+        # base_contracts (6) — the pre-fix bug returned 6.
+        assert result.final_contracts == 1
+        assert result.rejection_reason is None  # floor override, not a rejection
+        assert result.drawdown_room_cap_binding is True
+        # drawdown_room_cap overrides the pyramid floor when it's the binding constraint
+        assert result.pyramid_floor_applied is False
+        assert result.evidence["binding_cap"] == "drawdown_room"
+        assert result.evidence["drawdown_room_cap"] == 1
+
+    def test_pyramid_floor_still_applies_when_drawdown_room_cap_not_binding(self):
+        """Same early-return branch, but DD room is generous (cap > base_contracts) —
+        pyramid floor (base_contracts) should still win, matching pre-fix behavior.
+        Guards against an over-correction that always prefers drawdown_room_cap.
+        """
+        atr_wide = 6.0
+        result = compute_risk_derived_contracts(
+            base_contracts=BASE_CONTRACTS,  # 6
+            tier_increment=TIER_INC,
+            tier_threshold_dollars=TIER_THRESH,
+            max_risk_pct_per_trade=MAX_RISK,
+            liquidity_comfort_cap=LIQ_CAP,  # 100
+            account_balance=51_000.0,
+            cumulative_profit=0.0,
+            atr_points=atr_wide,
+            stop_multiplier=STOP_MULT,
+            point_dollar_value=PV,
+            firm_contract_cap=200,
+            firm="topstep",
+            trailing_dd=2_000.0,
+            high_water_balance=51_000.0,
+            account_starting_floor=50_000.0,
+            current_drawdown_room=100_000.0,  # generous DD room → cap >> base_contracts
+        )
+
+        assert result.risk_derived_cap == 0
+        assert result.drawdown_room_cap > BASE_CONTRACTS
+        assert result.drawdown_room_cap_binding is False
+        assert result.final_contracts == BASE_CONTRACTS
+        assert result.pyramid_floor_applied is True
+        assert result.evidence["binding_cap"] == "pyramid_floor_override"

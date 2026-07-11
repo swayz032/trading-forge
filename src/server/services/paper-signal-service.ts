@@ -4150,7 +4150,13 @@ export async function evaluateSignals(
           atr: indicators["atr_14"],
           volume: bar.volume,
           regime: indicators["regime"] as unknown as string | undefined,
-          day_of_week: new Date(bar.timestamp).getDay(),
+          // FG-3: anti-setup day_of_week rules are mined under Python's
+          // datetime.weekday() convention (Mon=0..Sun=6, see
+          // src/engine/anti_setups/miner.py:_get_day_of_week). JS Date.getDay()
+          // is Sun=0..Sat=6, which shifted every day-of-week rule by one weekday.
+          // Convert to the Python weekday convention (matching the sibling skip
+          // path at ~line 286 which already uses getUTCDay()).
+          day_of_week: (new Date(bar.timestamp).getUTCDay() + 6) % 7,
         },
       );
       if (antiSetupResult.blocked) {
