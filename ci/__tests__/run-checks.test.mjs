@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { selectChecks } from "../run-checks.mjs";
+import { npmInvocation, selectChecks } from "../run-checks.mjs";
 
 const scripts = {
   "check:production-isolation": "node hard-one.mjs",
@@ -43,5 +43,21 @@ describe("selectChecks", () => {
       scripts,
       checksSkipped: [{ name: "check:missing", reason: "typo" }],
     })).toThrow("check_quarantine_unknown");
+  });
+});
+
+describe("npmInvocation", () => {
+  it("uses cmd.exe for npm scripts on Windows", () => {
+    expect(npmInvocation("win32", "check:alpha", "C:/Windows/System32/cmd.exe")).toEqual({
+      command: "C:/Windows/System32/cmd.exe",
+      args: ["/d", "/s", "/c", "npm run check:alpha"],
+    });
+  });
+
+  it("executes npm directly on Linux", () => {
+    expect(npmInvocation("linux", "check:alpha")).toEqual({
+      command: "npm",
+      args: ["run", "check:alpha"],
+    });
   });
 });

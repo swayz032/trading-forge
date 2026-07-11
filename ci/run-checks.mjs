@@ -41,6 +41,16 @@ export function selectChecks({ scripts, checksSkipped }) {
   };
 }
 
+export function npmInvocation(platform, scriptName, comspec = process.env.ComSpec) {
+  if (platform === "win32") {
+    return {
+      command: comspec || "cmd.exe",
+      args: ["/d", "/s", "/c", `npm run ${scriptName}`],
+    };
+  }
+  return { command: "npm", args: ["run", scriptName] };
+}
+
 function runCli() {
   const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
   const manifest = JSON.parse(readFileSync("ci/baseline-failures.json", "utf8"));
@@ -53,11 +63,11 @@ function runCli() {
     console.log(`CHECK_SKIPPED ${entry.name}: ${entry.reason}`);
   }
 
-  const npm = process.platform === "win32" ? "npm.cmd" : "npm";
   const failures = [];
   for (const name of selected.run) {
     console.log(`CHECK_START ${name}`);
-    const result = spawnSync(npm, ["run", name], {
+    const invocation = npmInvocation(process.platform, name);
+    const result = spawnSync(invocation.command, invocation.args, {
       cwd: process.cwd(),
       env: process.env,
       stdio: "inherit",
