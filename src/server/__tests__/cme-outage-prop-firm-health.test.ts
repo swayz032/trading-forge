@@ -16,7 +16,7 @@
  *   - State isolation: outage and suspension are independent
  */
 
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 
 // ─── All vi.mock factories must be self-contained (no external variable refs) ─
 // Vitest hoists vi.mock() calls above all imports, so any external variable
