@@ -643,7 +643,7 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
  * every active session system-wide and halting on the first breach found
  * ANYWHERE. Omitting it preserves the legacy global behavior byte-for-byte.
  */
-async function checkLayer3TrailingDD(scopeAccountKey?: string): Promise<HaltDecision> {
+async function checkLayer3TrailingDD(correlationId?: string, scopeAccountKey?: string): Promise<HaltDecision> {
   const cached = getCachedLayer(3, scopeAccountKey);
   if (cached) return cached;
 
@@ -698,7 +698,24 @@ async function checkLayer3TrailingDD(scopeAccountKey?: string): Promise<HaltDeci
         // account-scoped force-close so the breach actually force-closes. _safeForceClose dedupes
         // concurrent calls via _forceCloseInFlight and scopes the flatten to ONLY this account.
         const l3AccountKey = resolveAccountKey(session);
-        const l3CorrelationId = randomUUID();
+        // F-2 (CAP-1 grade 2026-07-11): mirror Layer 2's in-flight pre-check — if a force-close for
+        // this account is already running, short-circuit BEFORE writing the pending audit row/SSE so
+        // overlapping evaluators (signal path + dashboard status poll, which have distinct cache keys)
+        // don't leave a dangling pending row with no matching _completed row (false "stuck close"
+        // alarm). _safeForceClose still dedups the actual flatten; this keeps the audit trail honest.
+        if (_isForceCloseInFlight(l3AccountKey)) {
+          decision = {
+            halted: true,
+            layer: 3,
+            reason: "force_close_in_progress",
+            detail: { session_id: session.id, firm_id: firmId, account_key: l3AccountKey },
+          };
+          break;
+        }
+        // F-1 (CAP-1 grade 2026-07-11): thread the signal-path root correlationId (fallback to a fresh
+        // UUID only when absent) so the trailing_dd force-close audit/SSE rows join to the triggering
+        // bar/signal, matching Layer 2 (CLAUDE.md §2 correlation_id reconstruction requirement).
+        const l3CorrelationId = correlationId ?? randomUUID();
         insertAuditRow({
           action: "sizing.trailing_dd_force_close",
           entityType: "system",
@@ -1173,7 +1190,7 @@ class KillSwitch {
 
     // ── Layer 3: Trailing drawdown ──
     // CRIT-2: L3 (trailing-DD) fails CLOSED on timeout — force-close-triggering.
-    const l3 = await runLayerWithTimeout(3, () => checkLayer3TrailingDD(accountKey), correlationId, accountKey, true);
+    const l3 = await runLayerWithTimeout(3, () => checkLayer3TrailingDD(correlationId, accountKey), correlationId, accountKey, true);
     if (l3.halted) {
       await this._emitLayerHaltedSignals(l3, correlationId);
       return l3;
@@ -1484,7 +1501,7 @@ class KillSwitch {
     });
 
     // ── Layer 3: Trailing drawdown ──
-    const l3Result = await checkLayer3TrailingDD();
+    const l3Result = await checkLayer3TrailingDD(evalCorrelationId);
     layers.push({
       layer: 3,
       name: "trailing_drawdown",
