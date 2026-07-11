@@ -9,9 +9,25 @@
  *
  *   - a valid Slumhouse Office admin session cookie (slumhouse_admin_sid), OR
  *   - a direct loopback connection (operator curl on the tower / runbooks)
- *     with NO x-forwarded-for header. Relay-forwarded public traffic arrives
- *     on loopback but carries forwarding headers — it must show the Office
- *     cookie instead.
+ *     that did NOT arrive through the public relay tunnel.
+ *
+ * INCIDENT (deep-scan fix-wave 2026-07-10, found + fixed same day): this
+ * guard used to key "not relay traffic" on the ABSENCE of `x-forwarded-for`.
+ * That broke the moment `railway-relay/ip-sanitize.js` started unconditionally
+ * stripping `x-forwarded-for` on every relay-tunneled request (a different,
+ * legitimate fix in the same wave, for admin.ts/rate-limit.ts spoofing) —
+ * every relay caller then also arrived on loopback with no forwarded header,
+ * satisfying this guard's old condition and getting Office authority without
+ * ever presenting the cookie. Fixed by keying on the PRESENCE of the relay's
+ * own `x-relay-verified-ip` header instead (see relay-client-ip.ts) — the
+ * relay stamps this on every request it tunnels and tower-relay-client.cjs
+ * forwards it verbatim, so its presence is a reliable "this came through the
+ * relay" signal that survived the ip-sanitize.js change instead of being
+ * broken by it. The old `!x-forwarded-for` check is KEPT alongside the new
+ * one (not removed) as residual defense against a caller who bypasses the
+ * public relay entirely and connects straight to the tower's LAN port with
+ * a self-forged `x-forwarded-for` — that direct path has no relay in front
+ * of it to strip anything, so the header surviving is itself the tell.
  *
  * On block: 401 { error: "office_only" } + an audit row (action supplied by
  * the caller so each surface stays queryable: admin.pipeline_mutation_blocked,
@@ -25,6 +41,7 @@
 import type { Request, Response } from "express";
 import { adminSessionFromCookie } from "./slumhouse/admin-session.js";
 import { insertAuditRowSafe } from "./audit-log-helper.js";
+import { RELAY_VERIFIED_IP_HEADER } from "./relay-client-ip.js";
 
 /**
  * Returns true when the request carries Office/operator control authority.
@@ -38,18 +55,28 @@ export function requireOfficeControlAuthority(
 ): boolean {
   if (adminSessionFromCookie(req.headers.cookie)) return true;
 
+  const relayVerifiedIp = req.headers[RELAY_VERIFIED_IP_HEADER];
+  const cameThroughRelay =
+    typeof relayVerifiedIp === "string" && relayVerifiedIp.trim().length > 0;
   const forwarded = req.headers["x-forwarded-for"];
   const remote = req.socket?.remoteAddress ?? "";
   const isLoopback =
     remote === "127.0.0.1" || remote === "::1" || remote === "::ffff:127.0.0.1";
-  if (isLoopback && !forwarded) return true;
+  // Both conditions load-bearing, not redundant: cameThroughRelay is the
+  // primary signal (catches every relay-tunneled request, which now always
+  // arrives on loopback with x-forwarded-for stripped by ip-sanitize.js).
+  // !forwarded is the residual defense for a caller who bypasses the public
+  // relay entirely and connects directly to the tower's LAN port with a
+  // self-forged x-forwarded-for header — that path has no relay in front of
+  // it to strip anything, so the header surviving is itself the tell.
+  if (isLoopback && !cameThroughRelay && !forwarded) return true;
 
   void insertAuditRowSafe({
     action: blockedAction,
     entityType: "system",
     entityId: null,
     decisionAuthority: "gate",
-    input: { path: req.path, remote, forwarded: forwarded ?? null } as Record<string, unknown>,
+    input: { path: req.path, remote, cameThroughRelay, forwarded: forwarded ?? null } as Record<string, unknown>,
     result: {} as Record<string, unknown>,
     status: "warning",
     correlationId: req.id ?? null,
