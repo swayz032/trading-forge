@@ -37,7 +37,9 @@ on:
 
 env:
   PYTHON_VERSION: "3.12"
-  NODE_VERSION: "22"
+  # Node 24 matches the tower/production runtime (npm 11); Node 22's npm 10 rejects
+  # the npm-11-generated lockfile with "Invalid Version" on npm ci. (2026-07-11)
+  NODE_VERSION: "24"
 
 jobs:
   # ─── Job 1: Golden fixture metric snapshots (A5 subset + all 5) ─────────────

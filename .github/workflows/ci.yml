@@ -11,7 +11,11 @@ on:
     branches: [main, develop, "hardening/**"]
 
 env:
-  NODE_VERSION: "22"
+  # Node 24 matches the tower/production runtime (v24.13.0 / npm 11). CI previously
+  # pinned Node 22 (npm 10), whose semver parser rejected the npm-11-generated
+  # package-lock.json with "Invalid Version" — npm ci died on step 1 and every
+  # downstream job (needs: lint) silently skipped, so CI tested nothing. (2026-07-11)
+  NODE_VERSION: "24"
   PYTHON_VERSION: "3.12"
   TF_RUNTIME_STAGE: preprod
   DATABASE_URL: postgresql://forge:forge_ci@localhost:5432/trading_forge_ci
