@@ -44,6 +44,7 @@ from src.engine.config import (
     CONTRACT_SPECS,
     AdaptiveExitContext,
     BacktestRequest,
+    FillProbabilityConfig,
     IndicatorConfig,
     LiquidityLevelSnapshot,
     StrategyConfig,
@@ -787,14 +788,35 @@ def _apply_backtest_parity_gates(
                     file=sys.stderr,
                 )
         except Exception as _ce:
-            # Import or check failure: log and continue (gate should never crash the backtest)
             if compliance_mode == "enforce":
+                # MED-6 (deep-scan 2026-07-09, ratified) — FAIL-CLOSED, not fail-open.
+                # PREVIOUS BUG: an exception in the compliance check (import error, rule-eval
+                # crash, malformed snapshot) in ENFORCE mode only printed a WARNING to stderr
+                # and fell through — the backtest then ran with UNFILTERED signals, i.e. enforce
+                # silently degraded to no-compliance-check. That makes the backtest MORE
+                # optimistic than live (which would block) while both feed the same B14/WFE/PBO
+                # promotion gates — the identical fidelity-inflation class as the fill-model gap.
+                # Enforce means "compliance MUST be verifiable"; if the gate cannot run, we
+                # cannot certify compliance → block all signals (mirrors the detected-violation
+                # path at ~line 767) rather than trade as if compliant. Consistent with the
+                # kill-switch fail-CLOSED-on-error philosophy. Shadow mode still continues.
+                parity_stats["compliance_gate_error_enforce_blocked"] = True
+                parity_stats["compliance_gate_error"] = str(_ce)
+                parity_stats["compliance_blocked"] = int(len(signal_indices))
                 print(
-                    f"[parity-gate] WARNING compliance gate error in enforce mode "
-                    f"strategy={strategy_name or '?'} error={_ce}",
+                    f"[compliance.enforce_block] strategy={strategy_name or '?'} "
+                    f"dir={direction} violation_type=gate_error rule=compliance_gate_unavailable "
+                    f"attempted_qty={len(signal_indices)} compliance_mode=enforce error={_ce}",
                     file=sys.stderr,
                 )
+                print(
+                    f"[parity-gate] COMPLIANCE ENFORCE gate-error FAIL-CLOSED "
+                    f"strategy={strategy_name or '?'} blocked={len(signal_indices)} signals error={_ce}",
+                    file=sys.stderr,
+                )
+                return np.zeros_like(out), parity_stats
             else:
+                # Shadow mode: gate errors are non-blocking (observability only).
                 print(
                     f"[parity-gate] DEBUG compliance gate error (shadow) "
                     f"strategy={strategy_name or '?'} error={_ce}",
@@ -6573,6 +6595,7 @@ def run_class_backtest(
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext] — Wave 25 Gap B
     exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
+    fill_model: Optional[FillProbabilityConfig] = None,
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -6580,17 +6603,46 @@ def run_class_backtest(
     The strategy's compute() method produces entry/exit signals, then we feed those
     into the same vectorbt pipeline as the DSL backtester.
 
-    ⚠️ KNOWN LOWER-FIDELITY GAP (deep-scan 2026-07-09, ratified — documented, not yet
-    closed): this path has NO fill-model wiring. run_backtest() (the DSL path) now applies
-    the Stage-2 volume-based partial-fill model (next-bar-aligned) once fill_model is wired;
-    run_class_backtest does not, so archetype/class strategies backtest systematically MORE
-    OPTIMISTIC than DSL strategies on identical large-size/thin-volume conditions while both
-    feed the same lifecycle promotion gates (B14/WFE/PBO). FOLLOW-UP: thread the same
-    next_bar_fill=True apply_volume_partial_fills call into this function's long/short entry
-    processing, or gate archetype-strategy promotion on a documented lower-fidelity tier.
-    Until then, treat archetype backtests as an optimistic upper bound on fill quality.
+    LOWER-FIDELITY GAP CLOSED (deep-scan 2026-07-09, ratified — was previously documented
+    here as an open gap; closed same-day). run_backtest() (the DSL path) applies the Stage-2
+    volume-based partial-fill model (next-bar-aligned) whenever request.fill_model is set;
+    this function now applies the IDENTICAL model via
+    src.engine.fill_model.apply_class_path_fill_model() whenever `fill_model` is passed —
+    see the "Fill model (Stage 2, volume-based partial fill)" block below, applied
+    immediately after the next-bar entry roll. Default is None (disabled) — backward-compat:
+    omitting `fill_model` (every pre-existing caller) is byte-identical to pre-fix behavior.
+    When callers start passing fill_model, archetype/class strategies get the same fill
+    realism DSL strategies get instead of backtesting systematically MORE OPTIMISTIC on
+    identical large-size/thin-volume conditions while both feed the same lifecycle
+    promotion gates (B14/WFE/PBO).
+
+    ⚠️ REMAINING CLASS-PATH PARITY GAPS — DORMANT-ON-BOTH-SIDES (re-scan 2026-07-10, MED,
+    documented not-yet-wired because there is NO producing FEED for either today; wiring
+    dead code would be the "built-but-not-wired" anti-pattern):
+      1. Cross-symbol DLL 60% reduce_size band (MED-7): the reduce band was added to
+         context/cross_symbol_dll.py and wired into the DSL path's
+         apply_cross_symbol_dll_to_entries — but run_class_backtest does not invoke the
+         cross-symbol DLL at all, and the DSL path itself feeds a ZERO-P&L proxy on
+         single-symbol runs (backtester.py cross_symbol_dll_degenerate_skip), so the band
+         is inert in BOTH paths today. Close only when real multi-symbol session P&L +
+         per-bar `sizes` are threaded (paper/future multi-symbol path).
+      2. VIX margin-expansion (backtester.py ~4174 `if "vix" in df.columns`): DSL-only,
+         and dormant even there — no VIX column reaches the backtest frame (no producer;
+         see memory reference_vix_margin_dormant_no_feed). run_class has no margin-expansion
+         path or `margin_expansion_audit` key. Close only when a VIX feed reaches the frame.
+    Neither is a live fidelity divergence TODAY (both features are unfed on the DSL side
+    too); they are class-path parity follow-ups gated on their feeds existing, tracked so a
+    future agent wiring the feed also wires the class path.
 
     Args:
+        fill_model: Optional[FillProbabilityConfig] — when set, gates the Stage-2
+            volume-based partial-fill model (mirrors BacktestRequest.fill_model on the
+            DSL path). Only Stage 2 (volume-based size degradation) is threaded here —
+            NOT Stage 1 (RSI-based fill-probability entry rejection), matching the scope
+            of the documented gap this closes. None (default) → no-op, byte-identical to
+            pre-fix behavior. The BACKTEST_PARTIAL_FILL_ENABLED env var still gates the
+            underlying apply_volume_partial_fills() call even when fill_model is set
+            (same env-composability as the DSL path).
         warmup_data: Optional IS (in-sample) data to prepend before running strategy.compute().
             This ensures rolling indicators (e.g., ATR, EMAs) are correctly initialized at
             the OOS boundary — mirrors the run_backtest() warmup_data parameter (E7.2).
@@ -6909,12 +6961,40 @@ def run_class_backtest(
     diag_post_gate_long = int(np.sum(long_entries_np))
     diag_post_gate_short = int(np.sum(short_entries_np))
 
+    # ─── Fill model (Stage 2, volume-based partial fill) — capture PRE-roll ────
+    # deep-scan 2026-07-09 fix: entries/sizes are still signal-bar indexed here
+    # (post-gates, pre next-bar-roll). Save copies now so the fill-model block
+    # below (which runs AFTER the roll, mirroring run_backtest's own ordering)
+    # can compute the Stage-2 volume ratio from the correct (pre-roll) index.
+    _cls_partial_fill_audit: dict = {}
+    _pre_roll_long_entries_np = long_entries_np.copy()
+    _pre_roll_short_entries_np = short_entries_np.copy()
+
     # ─── Shift entry signals by 1 bar (next-bar fill) ──────────
     # Signal on bar N → fill on bar N+1. Eliminates lookahead bias.
     long_entries_np = np.roll(long_entries_np, 1)
     long_entries_np[0] = False
     short_entries_np = np.roll(short_entries_np, 1)
     short_entries_np[0] = False
+
+    # ─── Fill model (Stage 2, volume-based partial fill) — apply + remap ───────
+    # HIGH lower-fidelity-gap fix (deep-scan 2026-07-09, ratified): mirrors
+    # run_backtest()'s Stage-2 apply_volume_partial_fills() wiring exactly.
+    # apply_class_path_fill_model() computes the degradation ratio against the
+    # EXECUTION bar's volume (next_bar_fill=True, using the pre-roll entries
+    # captured above) then remaps the degraded size onto the POST-roll
+    # (execution-bar) index using the just-rolled long_entries_np/
+    # short_entries_np above. See src/engine/fill_model.py docstring for the
+    # full alignment contract + why the ordering matters.
+    if fill_model is not None:
+        from src.engine.fill_model import apply_class_path_fill_model
+        sizes, _cls_partial_fill_audit = apply_class_path_fill_model(
+            sizes, df,
+            long_entries_pre_roll=_pre_roll_long_entries_np,
+            short_entries_pre_roll=_pre_roll_short_entries_np,
+            long_entries_post_roll=long_entries_np,
+            short_entries_post_roll=short_entries_np,
+        )
 
     # ─── Max trades per day filter ──────────────────────────────
     # run_class_backtest doesn't have a BacktestRequest, so we accept max_trades_per_day
@@ -7890,6 +7970,18 @@ def run_class_backtest(
         # GATE3-DEFECT-6 fix (2026-07-06) — mirrors run_backtest's
         # "eligibility_gate_mode" key (deep-scan #18c C-3 fix); see note above.
         "eligibility_gate_mode": _cls_eligibility_gate_mode,
+        # Fill-model gap closure (deep-scan 2026-07-09, ratified) — same schema
+        # key/shape as run_backtest's result["engine_audit"]["partial_fill_modeled"]
+        # (run_class_backtest has no "engine_audit" wrapper key, so this is
+        # top-level here). B-18 convention preserved: avg_slippage_delta_per_partial
+        # is honestly None (not computed at this layer), never a fabricated 0.0.
+        "partial_fill_modeled": _cls_partial_fill_audit if _cls_partial_fill_audit else {
+            "enabled": False,
+            "total_orders": 0,
+            "partial_fills": 0,
+            "avg_fill_ratio": 1.0,
+            "avg_slippage_delta_per_partial": None,
+        },
     }
 
 
@@ -7974,6 +8066,25 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
 
     print(f"[exit_engine] mode={exit_engine}", file=sys.stderr)
 
+    # Fill-model gap closure (deep-scan 2026-07-09, ratified): parse the same
+    # fill_model config the DSL path gets via BacktestRequest.fill_model
+    # (pydantic auto-validates that from config["fill_model"] at
+    # BacktestRequest.model_validate(config) below), for the two raw-dict
+    # class-based dispatch paths (Band B archetype + Band C compiled-spec)
+    # handled in this branch. None when absent — every pre-existing JSON
+    # config (no "fill_model" key) resolves to None, byte-identical to
+    # pre-fix behavior on both dispatch paths.
+    _cls_fill_model_cfg: Optional[FillProbabilityConfig] = None
+    if isinstance(config, dict) and config.get("fill_model"):
+        try:
+            _cls_fill_model_cfg = FillProbabilityConfig.model_validate(config["fill_model"])
+        except Exception as _fm_err:
+            print(
+                f"WARNING: invalid fill_model config ({_fm_err}); disabling fill model for this run",
+                file=sys.stderr,
+            )
+            _cls_fill_model_cfg = None
+
     if strategy_class:
         # Class-based strategy path
         try:
@@ -8001,6 +8112,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 # a raw-dict default of 0 OVERRODE run_walk_forward_class's safe =20 on the
                 # archetype (Band B) + compiled-spec (Band C) dispatch paths (no caller sets
                 # the key), so those production walk-forwards ran with ZERO CPCV purge (leakage).
+                fill_model=_cls_fill_model_cfg,
             )
             # Compute tier from OOS metrics (walk-forward doesn't do this itself)
             oos = result.get("oos_metrics", {})
@@ -8077,6 +8189,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 skip_eligibility_gate=False,
                 exit_engine=exit_engine,
                 adaptive_ctx=_adaptive_ctx,
+                fill_model=_cls_fill_model_cfg,
             )
             # F-1 (point-in-time integrity telemetry): propagate tp2 liquidity flags
             # from the adaptive_exit_context config to the result dict so downstream
@@ -8136,6 +8249,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 # a raw-dict default of 0 OVERRODE run_walk_forward_class's safe =20 on the
                 # archetype (Band B) + compiled-spec (Band C) dispatch paths (no caller sets
                 # the key), so those production walk-forwards ran with ZERO CPCV purge (leakage).
+                fill_model=_cls_fill_model_cfg,
             )
         else:
             result = run_class_backtest(
@@ -8153,6 +8267,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 skip_eligibility_gate=False,
                 exit_engine=exit_engine,
                 adaptive_ctx=None,
+                fill_model=_cls_fill_model_cfg,
             )
         # Governance propagation (C1 mandate): honest approximation flag on
         # every result produced by an approximation=True evaluator binding.

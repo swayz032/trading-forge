@@ -98,7 +98,7 @@ describe("computeCoverageVerdict — depth-aware (E-FOUNDATION)", () => {
     ];
     const extraction: ExtractionSnapshot = {
       entry_sequence: [
-        { step: 1, action: "mention the gann box for bias", rationale: null }, // gann = shallow (name only)
+        { step: 1, action: "use the gann box", rationale: null }, // gann = shallow (name only, no mechanic)
         {
           step: 2,
           action: "wait for retracement into the optimum zone between 25 and 50 percent",
@@ -115,15 +115,82 @@ describe("computeCoverageVerdict — depth-aware (E-FOUNDATION)", () => {
   });
 
   it("'mention' emphasis items never cause coverage_failed", () => {
-    const mention: SpeakerItem = {
-      name: "Elliott wave",
-      verbatim_quote: "some people use elliott wave but we do not",
-      emphasis_level: "mention",
+    const items: SpeakerItem[] = [
+      { name: "VWAP", verbatim_quote: "price above the vwap with momentum", emphasis_level: "primary" },
+      { name: "Elliott wave", verbatim_quote: "some people use elliott wave but we do not", emphasis_level: "mention" },
+    ];
+    const extraction: ExtractionSnapshot = {
+      entry_sequence: [{ step: 1, action: "enter when price holds above the vwap with momentum", rationale: null }],
+      confluences: [],
     };
-    const extraction: ExtractionSnapshot = { entry_sequence: [], confluences: [] };
-    const v = computeCoverageVerdict([mention], extraction);
+    const v = computeCoverageVerdict(items, extraction);
+    expect(v.covered).toContain("VWAP"); // the only countable item is covered
     expect(v.missing).toContain("Elliott wave");
     expect(v.verdict).toBe("pass"); // mention missing is fine
-    expect(v.coverage_pct).toBe(1); // no countable items
+  });
+});
+
+describe("5-URL audit fixes (2026-06-22)", () => {
+  it("FIX 1: numeric Fib levels (25/50/75) count as mechanic tokens → COVERED not SHALLOW", () => {
+    const item: SpeakerItem = {
+      name: "Fibonacci levels",
+      verbatim_quote: "draw the 25 50 and 75 levels on the box",
+      emphasis_level: "primary",
+    };
+    const extraction: ExtractionSnapshot = {
+      entry_sequence: [
+        { step: 1, action: "draw the Fibonacci levels at 25 50 75 percent of the box", rationale: null },
+      ],
+      confluences: [],
+    };
+    const v = computeCoverageVerdict([item], extraction);
+    expect(v.covered).toContain("Fibonacci levels"); // 25/50/75 numeric tokens now satisfy depth
+    expect(v.verdict).toBe("pass");
+  });
+
+  it("FIX 4: threshold pass — 6/7 covered (one mention mis-labeled primary) → pass at >=85%", () => {
+    const items: SpeakerItem[] = [];
+    // 6 covered primaries
+    for (let i = 0; i < 6; i++) {
+      items.push({ name: `tool${i}`, verbatim_quote: `the tool${i} mechanic alpha bravo`, emphasis_level: "primary" });
+    }
+    // 1 mis-labeled mention that's absent
+    items.push({ name: "fair value gaps", verbatim_quote: "price also seeks fair value gaps", emphasis_level: "primary" });
+    const corpus = items.slice(0, 6).map((it, i) => `step: use tool${i} mechanic alpha bravo`).join(" ");
+    const extraction: ExtractionSnapshot = {
+      entry_sequence: corpus.split("step:").filter(Boolean).map((a, i) => ({ step: i + 1, action: a, rationale: null })),
+      confluences: [{ name: "c", description: "x" }],
+    };
+    const v = computeCoverageVerdict(items, extraction);
+    expect(v.coverage_pct).toBeGreaterThanOrEqual(0.85);
+    expect(v.missing).toContain("fair value gaps");
+    expect(v.verdict).toBe("pass"); // threshold path tolerates the 1 mis-labeled mention
+  });
+
+  it("FIX 5: vacuous-pass floor — 0 items + THIN extraction → coverage_failed (not free pass)", () => {
+    const thin: ExtractionSnapshot = {
+      entry_sequence: [{ step: 1, action: "buy", rationale: null }, { step: 2, action: "sell", rationale: null }],
+      confluences: [],
+    };
+    const v = computeCoverageVerdict([], thin);
+    expect(v.verdict).toBe("coverage_failed");
+    expect(v.coverage_pct).toBe(0);
+  });
+
+  it("FIX 13: 0 items + UNNAMED/thin extraction → coverage_failed (no self-evidence)", () => {
+    const rich: ExtractionSnapshot = {
+      entry_sequence: [1, 2, 3, 4].map((s) => ({ step: s, action: `step ${s} action`, rationale: null })),
+      confluences: [{ name: "a", description: "x" }, { name: "b", description: "y" }],
+    }; // no concept_name/name → not self-evidently named
+    expect(computeCoverageVerdict([], rich).verdict).toBe("coverage_failed");
+  });
+
+  it("FIX 13: 0 items + NAMED + rich extraction → pass (enum flaked; per-field quotes ground it)", () => {
+    const named: ExtractionSnapshot = {
+      concept_name: "candle_range_theory_1h_1m",
+      entry_sequence: [1, 2, 3].map((s) => ({ step: s, action: `step ${s} of the CRT setup`, rationale: null })),
+      confluences: [{ name: "time_window", description: "trade the killzone" }],
+    } as ExtractionSnapshot;
+    expect(computeCoverageVerdict([], named).verdict).toBe("pass");
   });
 });

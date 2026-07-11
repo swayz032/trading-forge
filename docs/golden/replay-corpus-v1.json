@@ -1,0 +1,44 @@
+{
+  "corpus_version": "1.0-seed",
+  "videos": [
+    {
+      "video_id": "psH--oXkD8M",
+      "transcript_sha": "fc3080c9b7986c342e752e0e4a4c82c85e92cf8466c41cbbb317ac9d781f8583",
+      "market": "unspecified",
+      "instrument": "index_generic",
+      "timeframe": "15m",
+      "educator_family": "opening_range_breakout"
+    },
+    {
+      "video_id": "l-2iKbcm5UI",
+      "transcript_sha": "d617e578082563498421aaa65690cb13eb7ade89e8b4001adf7ad7a755968932",
+      "market": "forex",
+      "instrument": "forex_generic",
+      "timeframe": "50m",
+      "educator_family": "ict_confluence"
+    },
+    {
+      "video_id": "h6TnE7QClJg",
+      "transcript_sha": "0488f725b67f0826df377432419447f3db14f19e8df450bd03b211905dc98219",
+      "market": "forex",
+      "instrument": "forex_generic",
+      "timeframe": "1h",
+      "educator_family": "indicator_crossover"
+    },
+    {
+      "video_id": "MKsjbL0WNjg",
+      "transcript_sha": "e9da630b5b9578f19a9cbad42309e8359f40a989271a6723c72c71d2e564f8a3",
+      "market": "forex",
+      "instrument": "forex_majors",
+      "timeframe": "15m",
+      "educator_family": "time_based_reversal"
+    }
+  ],
+  "corpus_hash": "c21f179b77a2ca33a714c1ba28bb7a95a247e1a8ff71057c5a36c6c64ec30475",
+  "diversity": {
+    "educators": 4,
+    "families": 4,
+    "instruments": 3
+  },
+  "meets_minimum": false
+}

@@ -39,7 +39,13 @@ that tells you there's real momentum behind the move.
 `.trim();
 
 /** WEAK extraction — gemma flattened "Gann box" to a generic "box" and dropped zone construction */
+// WEAK relative to the Gann benchmark (misses Gann box / Fib / FVG) but RICH + NAMED in its own
+// right (3 entry steps + 1 confluence + a non-generic concept_name). Per the FIX 13 contract, the
+// 0-enumerated-items fail-safe passes ONLY for a rich+named extraction — so this fixture carries a
+// concept_name to exercise that path. (An unnamed/generic 0-item extraction correctly coverage_fails;
+// see the N7uP real-world case.)
 const WEAK_EXTRACTION: ExtractionSnapshot = {
+  concept_name: "candle_box_retracement",
   entry_sequence: [
     { step: 1, action: "Wait for the 6am 4H candle to form a big bodied candle.", rationale: null },
     { step: 2, action: "Draw a box over the candle and wait for price to re-enter.", rationale: null },
@@ -158,6 +164,18 @@ describe("computeCoverageVerdict — pure-functional", () => {
     const verdict = computeCoverageVerdict(mentionOnlyItems, WEAK_EXTRACTION);
     // "some_obscure_mention" is not in the weak extraction but it's only a mention
     expect(verdict.verdict).toBe("pass");
+  });
+
+  it("FIX 13 contract: 0 countable items + UNNAMED extraction → coverage_failed (N7uP class)", () => {
+    // The 0-item fail-safe is NOT a blanket pass — an unnamed/generic extraction with no
+    // enumerated items is a real miss, not a benevolent gap. Locks the rich+named requirement.
+    const unnamed: ExtractionSnapshot = {
+      entry_sequence: [{ step: 1, action: "do a thing", rationale: null }],
+      confluences: [],
+    };
+    const verdict = computeCoverageVerdict([], unnamed);
+    expect(verdict.verdict).toBe("coverage_failed");
+    expect(verdict.coverage_pct).toBe(0);
   });
 
   it("coverage uses recall annotation _recall_primary_tool_note as additional corpus", () => {

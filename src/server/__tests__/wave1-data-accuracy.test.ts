@@ -222,23 +222,32 @@ describe("Wave 1 Task 1: correlation_id in agent.ts route handlers", () => {
     "src/server/routes/agent.ts"
   );
 
-  it("agent.robustness audit insert passes req.id as correlationId", () => {
+  it("agent.robustness audit insert passes a correlationId (req.id-derived)", () => {
+    // F-2 (scout re-scan 2026-07-10): the code threads correlationId via ES6 shorthand
+    // (`correlationId,`) from a `const correlationId = req.id ?? …` earlier in the handler —
+    // the old literal `toContain("correlationId:")` + inline `req.id` assumptions were stale
+    // (false RED). Accept the shorthand OR keyed form, and verify the handler derives the
+    // correlationId from req.id somewhere (not necessarily inline at the audit call).
     const src = readFileSync(AGENT_ROUTES_PATH, "utf8");
-    // Find the robustness route's audit insert
     const idx = src.indexOf("agent.robustness");
     expect(idx).toBeGreaterThan(-1);
     const snippet = src.slice(idx, idx + 500);
-    expect(snippet).toContain("correlationId:");
-    expect(snippet).toContain("req.id");
+    expect(snippet).toMatch(/correlationId\s*[,:]/); // shorthand `correlationId,` or `correlationId:`
+    // The robustness route derives correlationId from req.id at the top of the handler.
+    const handlerStart = src.lastIndexOf("req.id", idx);
+    expect(handlerStart, "no req.id-derived correlationId in the robustness handler").toBeGreaterThan(-1);
   });
 
-  it("agent.find-strategies audit insert passes req.id as correlationId", () => {
+  it("agent.find-strategies audit insert passes a correlationId (req.id-derived)", () => {
+    // F-2: find-strategies computes `const findStrategiesCorrelationId = req.id ?? null` once
+    // and reuses that derived variable at every audit call — the old inline-`req.id` assertion
+    // was stale (false RED). Verify the derived variable exists and is used at the audit insert.
     const src = readFileSync(AGENT_ROUTES_PATH, "utf8");
+    expect(src).toMatch(/const\s+findStrategiesCorrelationId\s*=\s*req\.id\s*\?\?/);
     const idx = src.indexOf("agent.find-strategies");
     expect(idx).toBeGreaterThan(-1);
     const snippet = src.slice(idx, idx + 500);
-    expect(snippet).toContain("correlationId:");
-    expect(snippet).toContain("req.id");
+    expect(snippet).toMatch(/correlationId:\s*findStrategiesCorrelationId/);
   });
 
   it("runGraduation passes correlationId to graduateBucketDirectly", () => {
@@ -297,17 +306,33 @@ describe("Wave 1 Task 2: commission deduction contract", () => {
     expect(callBlock).not.toMatch(/\btp_stop\s*=/);
   });
 
-  it("Topstep MES commission rate is $0.37/side in firm_config.py", () => {
-    const FIRM_CONFIG_PATH = resolve(process.cwd(), "src/engine/firm_config.py");
-    const src = readFileSync(FIRM_CONFIG_PATH, "utf8");
-    expect(src).toMatch(/topstep_50k/);
-    expect(src).toMatch(/"MES":\s*0\.37/);
+  // F-2 (scout re-scan 2026-07-10): these two tests were STALE + one masked a bug.
+  //  - Topstep asserted $0.37 — the KNOWN-WRONG pre-2026-06-23 value; firm_config.py was
+  //    corrected to $0.62 (all-in per-side, TopstepX RT $1.24 ÷ 2) + canonical doc confirms.
+  //    The stale test was a false RED.
+  //  - MFFU asserted $0.62 with a WHOLE-FILE regex that actually matched Topstep's `"MES": 0.62`
+  //    line — a false GREEN masking MFFU's real value ($0.95, RT $1.90 ÷ 2). Both are now
+  //    scoped to the correct firm block AND assert the canonical corrected values.
+  // Parse the FIRST `"MES": <n>` that appears after a firm's key inside FIRM_COMMISSIONS —
+  // i.e. that firm's OWN MES commission, robust to comment length between the key and the value.
+  function firmMesCommission(src: string, firmKey: string): number | null {
+    const start = src.indexOf(firmKey);
+    if (start < 0) return null;
+    const mesIdx = src.indexOf('"MES":', start);
+    if (mesIdx < 0) return null;
+    const m = src.slice(mesIdx, mesIdx + 30).match(/"MES":\s*([0-9.]+)/);
+    return m ? parseFloat(m[1]) : null;
+  }
+
+  it("Topstep MES commission rate is $0.62/side in firm_config.py (corrected 2026-06-23, matches canonical doc)", () => {
+    const src = readFileSync(resolve(process.cwd(), "src/engine/firm_config.py"), "utf8");
+    // $0.62 = TopstepX RT $1.24 ÷ 2 (all-in per side). Was the under-costed $0.37 pre-correction.
+    expect(firmMesCommission(src, "topstep_50k")).toBe(0.62);
   });
 
-  it("MFFU MES commission rate is $0.62/side in firm_config.py", () => {
-    const FIRM_CONFIG_PATH = resolve(process.cwd(), "src/engine/firm_config.py");
-    const src = readFileSync(FIRM_CONFIG_PATH, "utf8");
-    expect(src).toMatch(/mffu_50k/);
-    expect(src).toMatch(/"MES":\s*0\.62/);
+  it("MFFU MES commission rate is $0.95/side in its OWN block (not Topstep's 0.62 — old test matched the wrong firm)", () => {
+    const src = readFileSync(resolve(process.cwd(), "src/engine/firm_config.py"), "utf8");
+    // $0.95 = MFFU RT $1.90 ÷ 2. The prior whole-file regex matched Topstep's 0.62 (false green).
+    expect(firmMesCommission(src, "mffu_50k")).toBe(0.95);
   });
 });

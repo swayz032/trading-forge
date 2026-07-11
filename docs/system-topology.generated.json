@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-11T00:00:25.073Z",
+  "generatedAt": "2026-07-11T06:39:13.483Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 79,
-    "schedulerJobs": 109,
+    "schedulerJobs": 110,
     "workflowFiles": 20,
     "canonicalWorkflows": 20,
     "engineSubsystems": 29,
@@ -172,6 +172,7 @@
     "naked-poc-sync-daily",
     "narrative-state-tracker",
     "nightly-critique",
+    "ollama-keepwarm-watchdog",
     "paper-journal-recon-daily",
     "paper-vs-backtest",
     "pattern-aggregator",
@@ -408,7 +409,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 233h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 239h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -815,7 +816,7 @@
     ],
     "coveredCounts": {
       "routes": 79,
-      "schedulerJobs": 109,
+      "schedulerJobs": 110,
       "engineSubsystems": 29,
       "databaseTables": 110
     },
@@ -4124,6 +4125,7 @@
           "heartbeat-ooh-check",
           "heartbeat-stale-check",
           "heartbeat-write",
+          "ollama-keepwarm-watchdog",
           "prop-firm-cookie-refresh"
         ],
         "healthCheck": "/api/health/dashboard",
@@ -11238,6 +11240,7 @@
         "heartbeat-ooh-check",
         "heartbeat-stale-check",
         "heartbeat-write",
+        "ollama-keepwarm-watchdog",
         "prop-firm-cookie-refresh"
       ],
       "healthCheck": "/api/health/dashboard",

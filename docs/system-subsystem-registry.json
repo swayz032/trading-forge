@@ -2208,6 +2208,7 @@
       "heartbeat-ooh-check",
       "heartbeat-stale-check",
       "heartbeat-write",
+      "ollama-keepwarm-watchdog",
       "prop-firm-cookie-refresh"
     ],
     "routes": [

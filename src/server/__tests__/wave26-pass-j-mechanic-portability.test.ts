@@ -249,6 +249,18 @@ describe("classifyMechanicPortability — swing_multi_day rejects (self-attribut
     const r = classifyMechanicPortability("Position traders look at the weekly chart for trend, daily for entry.");
     expect(r.portable).toBe(true);
   });
+
+  // 2026-06-23 W7nln false-positive regression: incidental channel-plug mention of "my swing
+  // trades" must NOT reject an otherwise-intraday strategy. (Bare possessive removed from the
+  // hard pattern.) The SAME overnight-range-break-retest mechanic passed for D1Ipi8.
+  it("does NOT reject intraday strategy with an incidental 'my swing trades' channel plug", () => {
+    const r = classifyMechanicPortability(
+      "We trade the New York session 9:30 to 4:00 off the overnight range. I have a free telegram " +
+      "where I post my watch list setups, my swing trades and so much more. Break above the overnight " +
+      "high with strength, wait for the retest, enter on the 5-minute candle close.",
+    );
+    expect(r.portable).toBe(true);
+  });
 });
 
 describe("classifyMechanicPortability — forex_specific_mechanics rejects", () => {

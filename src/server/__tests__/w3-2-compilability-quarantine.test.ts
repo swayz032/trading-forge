@@ -241,7 +241,10 @@ describe("checkCompilabilityGate — null entry signal", () => {
     expect(result.missing).toContain("missing_entry_indicator_or_archetype");
   });
 
-  it("empty entry_params → quarantined", () => {
+  // 2026-06-24 Layer 1: a PARAMETRIC indicator (ema_crossover ∉ archetype registry) with no
+  // params and no condition carries no deterministic trigger → null_entry_trigger. (Replaces the
+  // pre-FIX-7 "empty_entry_params" code — same condition, unified code.)
+  it("parametric indicator + empty entry_params (no condition) → quarantined (params_required)", () => {
     const input: CompilabilityInput = {
       entry_indicator: "ema_crossover",
       archetype: null,
@@ -254,10 +257,10 @@ describe("checkCompilabilityGate — null entry signal", () => {
     const result = checkCompilabilityGate(input, "ema_concept");
 
     expect(result.compilable).toBe(false);
-    expect(result.missing).toContain("empty_entry_params");
+    expect(result.missing).toContain("params_required"); // parametric indicator, no params
   });
 
-  it("null entry_params → quarantined", () => {
+  it("parametric indicator + null entry_params (no condition) → quarantined (params_required)", () => {
     const input: CompilabilityInput = {
       entry_indicator: "ema_crossover",
       archetype: null,
@@ -270,7 +273,84 @@ describe("checkCompilabilityGate — null entry signal", () => {
     const result = checkCompilabilityGate(input, "ema_concept");
 
     expect(result.compilable).toBe(false);
-    expect(result.missing).toContain("empty_entry_params");
+    expect(result.missing).toContain("params_required");
+  });
+
+  // ─── 2026-06-24 Layer 1/2 — the blind-reconstruction finding, locked as tests ───────
+  // The exact production hole: a concept-name ECHO entry_indicator that resolves to NO engine
+  // archetype, shipping with null entry_condition/type + empty params, was passing compilable=true.
+  // In production the caller passes resolved_entry_indicator = "uncatalogued:<echo>" → the gate
+  // emits the precise reason `uncatalogued_indicator` (Layer 2 reason enum for Layer 3 histograms).
+  it("CONCEPT-ECHO resolving to uncatalogued + null trigger fields → uncatalogued_indicator (the SY2/iU8/gdd/W7nln hole)", () => {
+    for (const echo of [
+      "impulse_range_sweep_4h_5m",
+      "overnight_high_low_retest_5m",
+      "4h_candle_box_continuation",
+      "moving_average_trend_following_20_200",
+    ]) {
+      const input: CompilabilityInput = {
+        entry_indicator: echo,
+        archetype: null,
+        entry_params: {},
+        entry_condition: null,
+        entry_type: null,
+        resolved_entry_indicator: `uncatalogued:${echo}`,
+        direction: "both",
+        timeframe: "5m",
+        confluence_factors: ["market_structure_aligned"],
+        coverage_verdict: { verdict: "pass" },
+      };
+      const result = checkCompilabilityGate(input, echo);
+      expect(result.compilable, `${echo} must NOT be compilable`).toBe(false);
+      expect(result.missing, `${echo} must report uncatalogued_indicator`).toContain("uncatalogued_indicator");
+    }
+  });
+
+  it("REAL registered archetype + empty params → compilable (FIX 7's legit case preserved)", () => {
+    const input: CompilabilityInput = {
+      entry_indicator: "order_block",
+      archetype: null,
+      entry_params: {},
+      entry_condition: null,
+      direction: "both",
+      timeframe: "5m",
+      confluence_factors: ["fvg_present"],
+      coverage_verdict: { verdict: "pass" },
+    };
+    const result = checkCompilabilityGate(input, "order_block_retest");
+    expect(result.compilable).toBe(true);
+    expect(result.missing).not.toContain("params_required");
+    expect(result.missing).not.toContain("uncatalogued_indicator");
+    expect(result.missing).not.toContain("no_trigger");
+  });
+
+  it("archetype:-prefixed registered archetype + empty params → compilable", () => {
+    const input: CompilabilityInput = {
+      entry_indicator: "archetype:gann_box_4h_continuation",
+      archetype: null,
+      entry_params: {},
+      direction: "both",
+      timeframe: "4h",
+      confluence_factors: ["fib_zone"],
+      coverage_verdict: { verdict: "pass" },
+    };
+    const result = checkCompilabilityGate(input, "gann_box_4h_continuation");
+    expect(result.compilable).toBe(true);
+  });
+
+  it("concept-echo + explicit entry_condition (no archetype/params) → compilable", () => {
+    const input: CompilabilityInput = {
+      entry_indicator: "overnight_high_low_retest_5m",
+      archetype: null,
+      entry_params: {},
+      entry_condition: "close > overnight_high AND retest_holds",
+      direction: "long",
+      timeframe: "5m",
+      confluence_factors: ["volume_spike"],
+      coverage_verdict: { verdict: "pass" },
+    };
+    const result = checkCompilabilityGate(input, "overnight_retest");
+    expect(result.compilable).toBe(true);
   });
 
   it("missing direction → quarantined", () => {
@@ -381,7 +461,7 @@ describe("checkCompilabilityGate — placeholder concept_name sentinel", () => {
     expect(result.compilable).toBe(false);
     expect(result.missing).toContain("placeholder_concept_name");
     expect(result.missing).toContain("missing_entry_indicator_or_archetype");
-    expect(result.missing).toContain("empty_entry_params");
+    expect(result.missing).toContain("no_trigger"); // nothing resolves: no indicator/archetype/params/condition
     expect(result.missing).toContain("missing_direction");
     expect(result.missing).toContain("missing_timeframe");
     expect(result.missing).toContain("no_real_confluence_factors");

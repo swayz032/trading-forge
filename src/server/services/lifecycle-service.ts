@@ -6674,6 +6674,17 @@ export class LifecycleService {
           // The type is widened to string so the agreement branches compile cleanly
           // (TypeScript would otherwise flag the "blocked" branches as dead code
           // because the const literal type narrows to "allowed").
+          //
+          // ⚠️ F-1 (obs re-scan 2026-07-10, HIGH — DISCLOSED, not silent): this call site
+          // ONLY runs on the ALLOW path, so the composite.shadow_evaluation rows it emits can
+          // only ever be agree_allow / disagree_shadow_blocks / shadow_no_opinion — NEVER
+          // agree_block / disagree_shadow_allows. The evidence is therefore ONE-SIDED (allow
+          // direction only). shadow-evidence-analyzer.ts now FAIL-SAFES on this: it refuses
+          // ACTIVATE_PASS_C while block-direction evidence is absent (NO_BLOCK_DIRECTION_EVIDENCE
+          // flag). To collect the missing block-direction evidence, evaluateCompositeShadow must
+          // ALSO be invoked at each hard-gate BLOCK `continue` above (with hardGateOutcome=
+          // "blocked") — a STAGED instrument follow-up (touches the promotion path; requires
+          // operator ratification) tracked as the Pass-C activation prerequisite.
           const hardGateOutcome: string = "allowed";
 
           try {

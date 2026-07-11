@@ -40,7 +40,7 @@ from src.engine.backtester import (
     run_backtest,
     run_class_backtest,
 )
-from src.engine.config import BacktestRequest
+from src.engine.config import BacktestRequest, FillProbabilityConfig
 from src.engine.cross_validation import (
     compute_wfe,
     get_wfe_hard_floor,
@@ -2533,6 +2533,7 @@ def _run_walk_forward_cpcv_class(
     n_splits: int = 6,
     k_test_groups: int = 2,
     embargo_bars: int = 20,
+    fill_model: Optional[FillProbabilityConfig] = None,
 ) -> dict:
     """CPCV walk-forward for class-based (BaseStrategy) strategies.
 
@@ -2690,6 +2691,7 @@ def _run_walk_forward_cpcv_class(
                 daily_data=daily_data,
                 skip_eligibility_gate=skip_eligibility_gate,
                 warmup_data=warmup_data_for_oos,
+                fill_model=fill_model,
             )
         except Exception as _path_exc:
             print(f"CPCV (class) path failed: {_path_exc!r}. Skipping (not counted in n_paths).", file=sys.stderr)
@@ -2719,6 +2721,7 @@ def _run_walk_forward_cpcv_class(
                     htf_cache=htf_cache,
                     daily_data=daily_data,
                     skip_eligibility_gate=skip_eligibility_gate,
+                    fill_model=fill_model,
                 )
                 per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
                 # X5 ratified 2026-07-09: pool this path's IS daily P&L for the
@@ -2981,6 +2984,7 @@ def run_walk_forward_class(
     optimize: bool = False,
     skip_eligibility_gate: Optional[bool] = None,
     wf_mode: Optional[str] = None,
+    fill_model: Optional[FillProbabilityConfig] = None,
 ) -> dict:
     """Walk-forward validation for class-based (BaseStrategy) strategies.
 
@@ -3136,6 +3140,7 @@ def run_walk_forward_class(
             n_splits=_CPCV_N_SPLITS_CLASS,
             k_test_groups=_CPCV_K_TEST_GROUPS_CLASS,
             embargo_bars=embargo_bars,
+            fill_model=fill_model,
         )
 
     # F-2 FIX: Auto-reduce splits using timeframe-aware bar count (class path).
@@ -3239,6 +3244,7 @@ def run_walk_forward_class(
                     htf_cache=htf_cache,
                     daily_data=daily_data,
                     skip_eligibility_gate=skip_eligibility_gate,
+                    fill_model=fill_model,
                 )
                 _is_daily_pnls_cls = list(_is_result_cls.get("daily_pnls", []))
             except Exception as _is_exc_cls:
@@ -3261,6 +3267,7 @@ def run_walk_forward_class(
             daily_data=daily_data,
             skip_eligibility_gate=skip_eligibility_gate,
             warmup_data=is_data,
+            fill_model=fill_model,
         )
 
         oos_trade_count = oos_result.get("total_trades", 0)

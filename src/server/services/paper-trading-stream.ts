@@ -58,6 +58,24 @@ const barBuffer = new Map<string, Bar[]>();
 /** Per-session lock to prevent concurrent evaluateSignals calls */
 const sessionLocks = new Map<string, Promise<void>>();
 
+/**
+ * F-2 (deep-scan re-scan 2026-07-10, MED): run `fn` serialized against all other
+ * per-session work on THIS sessionId, chaining on the same `sessionLocks` map the WS
+ * bar loop uses. PREVIOUS GAP: `POST /api/paper/prices` called `updatePositionPrices`
+ * directly with no lock — concurrent with the live WS stream (or another POST) on the
+ * same session it was a read-then-blind-write lost-update race on unrealized equity /
+ * MAE / MFE (which feed the cross-symbol DLL 60/67/95% ladder + dashboard equity).
+ * Routing that call through here makes it queue behind the WS handler instead of racing.
+ * Result/errors propagate to THIS caller; the next queued caller only waits for
+ * completion (value/error is not leaked into the shared lock).
+ */
+export function runSerializedPerSession<T>(sessionId: string, fn: () => Promise<T>): Promise<T> {
+  const prev = sessionLocks.get(sessionId) ?? Promise.resolve();
+  const result = prev.then(fn, fn); // run after prev settles, regardless of its outcome
+  sessionLocks.set(sessionId, result.then(() => undefined, () => undefined));
+  return result;
+}
+
 // ── F3: Median ATR helper (exported for tests) ────────────────────────────────
 
 /**

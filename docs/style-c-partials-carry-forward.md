@@ -1,6 +1,14 @@
 # Style C 33/33/33 Partial Fill Implementation — Carry-Forward Plan
 
-**Status:** TP1 BE-move wired (C-3 fix, Pass 7 / Track C). TP2 + runner partial-close are carry-forward.
+**Status (CORRECTED 2026-07-10 deep-scan F-3 — this doc predated Wave 25.5 and was never
+reconciled):** FULLY WIRED. TP1 BE-move (C-3, Pass 7 / Track C) AND the 33% partial contract
+reductions at TP1/TP2 + runner are LIVE via `bookPartialClose()` in
+`paper-execution-service.ts` (Wave 25.5, `FILL_TP1_50PCT` / TP2 / runner exit decisions from
+`style_c_handler.py`). The "What is NOT implemented" section below was the pre-Wave-25.5 state
+and is retained STRIKETHROUGH for history — it no longer describes the system. NOTE (deep-scan
+F-1, 2026-07-10): the BE+1 stop move and the real TP1 partial-close now share ONE static R basis
+(`styleCTp1RiskPoints`, entry-time `initialStopPrice`) so they fire on the same bar; a prior bug
+had the BE-move tracker floating with live ATR.
 
 ---
 
@@ -16,14 +24,16 @@
 - Cleanup: `tp1BeStopMap.delete(openPos.id)` on all close paths (stop, trail, time, signal, 15:55 ET time-stop).
 - Restart recovery: if `tp1FilledAt != null` in DB but `tp1BeStopMap` has been cleared (server restart), the map is reconstructed from `entry_price + 1 tick` on the next bar evaluation.
 
-**What is NOT implemented (partial contract reduction):**
+**~~What is NOT implemented (partial contract reduction):~~ — SUPERSEDED (Wave 25.5), retained for history:**
 
-The 33% contract reduction at TP1 is not yet implemented. Paper executes the full position count until the trailing stop, time-stop, or exit signal fires. This means:
+~~The 33% contract reduction at TP1 is not yet implemented. Paper executes the full position count until the trailing stop, time-stop, or exit signal fires. This means:~~
 
-- Paper P&L at TP1 crossing is NOT locked in for 33% of contracts.
-- The effective stop is moved to BE+1 tick (risk guarantee honored).
-- A winning run to TP2 earns more P&L in paper than in the real Style C model (no 33% reduction captured at TP1).
-- This creates a systematic paper > backtest P&L bias for positions that cross TP1 then stop out between TP1 and TP2.
+- ~~Paper P&L at TP1 crossing is NOT locked in for 33% of contracts.~~
+- ~~The effective stop is moved to BE+1 tick (risk guarantee honored).~~
+- ~~A winning run to TP2 earns more P&L in paper than in the real Style C model (no 33% reduction captured at TP1).~~
+- ~~This creates a systematic paper > backtest P&L bias for positions that cross TP1 then stop out between TP1 and TP2.~~
+
+**Actual current state:** `bookPartialClose()` closes 33% at TP1 and 33% at TP2 (contracts reduced, partial P&L booked into `paper_trades` + `dailyPnlBreakdown` inside the close transaction), the runner trails per the adaptive/Style-C exit engine, and the stop moves to BE+1 on TP1 fill. The paper > backtest TP1-TP2 P&L bias described below NO LONGER applies.
 
 ---
 

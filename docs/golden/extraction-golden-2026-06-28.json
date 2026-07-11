@@ -1,0 +1,41 @@
+{
+  "captured_from": "verified branch extraction/100pct-evidence @ :4099 frozen run",
+  "videos": {
+    "psH--oXkD8M": {
+      "transcript_sha12": "fc3080c9b798",
+      "speaker_items": 7,
+      "coverage_verdict": "pass",
+      "ideas": 1,
+      "confirmation_compound": false,
+      "confirmation_quarantine": "confirmation_no_level",
+      "confirmation_span_bound": false
+    },
+    "l-2iKbcm5UI": {
+      "transcript_sha12": "d617e5780825",
+      "speaker_items": 7,
+      "coverage_verdict": "coverage_failed",
+      "ideas": 1,
+      "confirmation_compound": true,
+      "confirmation_quarantine": null,
+      "confirmation_span_bound": true
+    },
+    "h6TnE7QClJg": {
+      "transcript_sha12": "0488f725b67f",
+      "speaker_items": 10,
+      "coverage_verdict": "pass",
+      "ideas": 1,
+      "confirmation_compound": false,
+      "confirmation_quarantine": "confirmation_would_overfire",
+      "confirmation_span_bound": false
+    },
+    "MKsjbL0WNjg": {
+      "transcript_sha12": "e9da630b5b95",
+      "speaker_items": 22,
+      "coverage_verdict": "pass",
+      "ideas": 1,
+      "confirmation_compound": true,
+      "confirmation_quarantine": null,
+      "confirmation_span_bound": true
+    }
+  }
+}

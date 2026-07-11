@@ -110,14 +110,18 @@ describe("analyzeShadowEvidence — core verdict logic", () => {
     expect(result.agreementRate).toBeCloseTo(1.0, 2);
   });
 
-  it("50 rows, 45 agree → agreement_rate = 0.90 → ACTIVATE_PASS_C", () => {
-    const agreeRows = makeRows(45, { hardGateOutcome: "allow", shadowDecision: "would_promote", agreement: true });
+  it("50 rows, 45 agree (WITH block-direction evidence) → agreement_rate = 0.90 → ACTIVATE_PASS_C", () => {
+    // F-1 (obs re-scan 2026-07-10): a real activation now requires TWO-SIDED evidence —
+    // this case includes agree_block rows (hard gate BLOCKED and the composite would also
+    // block), so the fail-safe block-direction guard is satisfied and Pass C can activate.
+    const agreeAllow = makeRows(40, { hardGateOutcome: "allow", shadowDecision: "would_promote", agreement: true });
+    const agreeBlock = makeRows(5, { hardGateOutcome: "block", shadowDecision: "would_block", agreement: true });
     const disagreeRows = makeRows(5, {
       hardGateOutcome: "allow",
       shadowDecision: "would_block",
       agreement: false,
     });
-    const rows = [...agreeRows, ...disagreeRows];
+    const rows = [...agreeAllow, ...agreeBlock, ...disagreeRows];
 
     const result = analyzeShadowEvidence(rows, DEFAULT_OPTS);
 
@@ -125,6 +129,22 @@ describe("analyzeShadowEvidence — core verdict logic", () => {
     expect(result.totalAttempts).toBe(50);
     expect(result.sampleSufficient).toBe(true);
     expect(result.agreementRate).toBeCloseTo(0.9, 3);
+    expect(result.verdictFlags).not.toContain("NO_BLOCK_DIRECTION_EVIDENCE");
+  });
+
+  it("F-1 FAIL-SAFE: 50 allow-only rows at 0.90 agreement → NOT ACTIVATE_PASS_C (no block-direction evidence)", () => {
+    // The exact one-sided evidence the lifecycle call site structurally produces (it only
+    // runs post-allow → every row is allow-direction). High agreement on ALLOW decisions
+    // alone must NOT activate a gate that has never been tested against a real hard-gate BLOCK.
+    const agreeAllow = makeRows(45, { hardGateOutcome: "allow", shadowDecision: "would_promote", agreement: true });
+    const disagree = makeRows(5, { hardGateOutcome: "allow", shadowDecision: "would_block", agreement: false });
+    const rows = [...agreeAllow, ...disagree];
+
+    const result = analyzeShadowEvidence(rows, DEFAULT_OPTS);
+
+    expect(result.agreementRate).toBeCloseTo(0.9, 3); // would have crossed the 0.85 threshold
+    expect(result.verdict).toBe("INCONCLUSIVE");       // but the guard downgrades it
+    expect(result.verdictFlags).toContain("NO_BLOCK_DIRECTION_EVIDENCE");
   });
 
   it("50 rows, 40 agree → agreement_rate = 0.80 → INCONCLUSIVE", () => {
@@ -190,7 +210,9 @@ describe("analyzeShadowEvidence — shadow_no_opinion excluded from denominator"
   });
 
   it("no_opinion excluded: 60 total, 10 no_opinion, 45 agree out of 50 opinionated → 0.90 → ACTIVATE", () => {
-    const agreeRows = makeRows(45, { hardGateOutcome: "allow", shadowDecision: "would_promote", agreement: true });
+    // F-1: split the 45 agrees across allow + block direction so the two-sided fail-safe is met.
+    const agreeAllow = makeRows(40, { hardGateOutcome: "allow", shadowDecision: "would_promote", agreement: true });
+    const agreeBlock = makeRows(5, { hardGateOutcome: "block", shadowDecision: "would_block", agreement: true });
     const disagreeRows = makeRows(5, {
       hardGateOutcome: "allow",
       shadowDecision: "would_block",
@@ -202,7 +224,7 @@ describe("analyzeShadowEvidence — shadow_no_opinion excluded from denominator"
       agreement: null,
     });
 
-    const rows = [...agreeRows, ...disagreeRows, ...noOpinionRows];
+    const rows = [...agreeAllow, ...agreeBlock, ...disagreeRows, ...noOpinionRows];
     const result = analyzeShadowEvidence(rows, DEFAULT_OPTS);
 
     expect(result.totalAttempts).toBe(60);
@@ -332,10 +354,12 @@ describe("buildMarkdownReport", () => {
 
 describe("threshold boundary conditions", () => {
   it("exactly at ACTIVATE threshold (85%) → ACTIVATE_PASS_C", () => {
-    // 50 rows: 42.5 is not integer — use 43/50 = 0.86 ≥ 0.85
-    const agreeRows = makeRows(43, { hardGateOutcome: "allow", shadowDecision: "would_promote", agreement: true });
+    // 50 rows: 43/50 = 0.86 ≥ 0.85. F-1: include block-direction agrees so the two-sided
+    // fail-safe is satisfied and the threshold-boundary logic is what's actually under test.
+    const agreeAllow = makeRows(40, { hardGateOutcome: "allow", shadowDecision: "would_promote", agreement: true });
+    const agreeBlock = makeRows(3, { hardGateOutcome: "block", shadowDecision: "would_block", agreement: true });
     const disagreeRows = makeRows(7, { hardGateOutcome: "allow", shadowDecision: "would_block", agreement: false });
-    const result = analyzeShadowEvidence([...agreeRows, ...disagreeRows], DEFAULT_OPTS);
+    const result = analyzeShadowEvidence([...agreeAllow, ...agreeBlock, ...disagreeRows], DEFAULT_OPTS);
 
     expect(result.verdict).toBe("ACTIVATE_PASS_C");
     expect(result.agreementRate).toBeGreaterThanOrEqual(AGREEMENT_ACTIVATE_THRESHOLD);

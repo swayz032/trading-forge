@@ -1510,8 +1510,25 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             blocked_pct: blockedPct,
             violation_types: (parityLong?.compliance_violations as unknown[] | undefined ?? [])
               .concat(parityShort?.compliance_violations as unknown[] | undefined ?? []),
+            // MED-6 follow-up: surface the FAIL-CLOSED-on-gate-error case so the operator can
+            // distinguish "compliance gate crashed → blocked defensively" from "gate found a
+            // real violation → blocked". On the gate-error path compliance_violations is empty,
+            // so without this the audit/Discord message looked like a clean no-op block.
+            gate_error:
+              (parityLong?.compliance_gate_error as string | undefined)
+              ?? (parityShort?.compliance_gate_error as string | undefined)
+              ?? null,
+            gate_error_fail_closed: Boolean(
+              parityLong?.compliance_gate_error_enforce_blocked
+              || parityShort?.compliance_gate_error_enforce_blocked,
+            ),
           },
           status: "success",
+          // F-3 (re-scan 2026-07-10): this audit row dropped correlationId while every
+          // other audit in this file threads it — breaking §2 end-to-end correlation_id
+          // propagation (a blocked backtest could not be traced bar→gate→audit). In scope
+          // here exactly as at the sibling audits (lines 1409/1441/…).
+          correlationId: correlationId ?? null,
         });
 
         if (blockedPct > DISCORD_THRESHOLD) {

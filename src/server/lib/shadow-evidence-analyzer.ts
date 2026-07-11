@@ -319,10 +319,29 @@ export function analyzeShadowEvidence(
 
   let verdict: ShadowVerdict;
 
+  // F-1 (obs re-scan 2026-07-10, HIGH): the composite shadow gate is invoked in
+  // lifecycle-service.ts ONLY after all Wave 27.5 hard gates ALLOWED (it sits after every
+  // hard-gate `continue`), so `hard_gate_outcome` is structurally always "allowed" — the
+  // agree_block / disagree_shadow_allows cells can NEVER populate from that call site.
+  // Consequence: agreementRate measures only "when hard gates ALLOW, does the composite
+  // also allow?" and NEVER "when hard gates BLOCK, does the composite also block?" — the
+  // safety-relevant direction for a would-be gate. Activating Pass C (making the composite
+  // an authoritative gate) on that one-sided evidence would ship a gate never tested against
+  // a real hard-gate BLOCK. FAIL-SAFE: refuse ACTIVATE_PASS_C until block-direction evidence
+  // exists; downgrade to INCONCLUSIVE with an explicit flag. (Collecting block-direction
+  // evidence requires wiring evaluateCompositeShadow into the hard-gate BLOCK paths — a
+  // staged instrument follow-up; until then this guard prevents a wrongful activation.)
+  const blockDirectionSamples = agreements.agree_block + agreements.disagree_shadow_allows;
+
   if (!sampleSufficient) {
     verdict = "PRELIMINARY";
   } else if (agreementRate >= AGREEMENT_ACTIVATE_THRESHOLD) {
-    verdict = "ACTIVATE_PASS_C";
+    if (blockDirectionSamples === 0) {
+      verdict = "INCONCLUSIVE";
+      verdictFlags.push("NO_BLOCK_DIRECTION_EVIDENCE");
+    } else {
+      verdict = "ACTIVATE_PASS_C";
+    }
   } else if (agreementRate >= AGREEMENT_INCONCLUSIVE_THRESHOLD) {
     verdict = "INCONCLUSIVE";
   } else {

@@ -4,7 +4,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createRequire } from "module";
-import { spawn } from "child_process";
+import { spawn, execSync } from "child_process";
 import pino from "pino";
 import { sql, and, eq, lt } from "drizzle-orm";
 import { db, client as dbClient } from "./db/index.js";
@@ -14,6 +14,18 @@ import { strictRateLimit } from "./middleware/strict-rate-limit.js";
 import { gracefullyShutdownPythonSubprocesses, getPythonSubprocessStats } from "./lib/python-runner.js";
 import { getBacktestConcurrencyStats } from "./routes/backtests.js";
 import { correlationMiddleware } from "./middleware/correlation.js";
+
+// RUNNING-CODE IDENTITY (freeze-enabler): the exact git commit + dirty state of the code THIS process is
+// executing — read once at boot. Lets a hard-freeze evaluation harness verify the backend wasn't stale or
+// silently changed mid-run (the W4.2 single-supervisor confound). env GIT_COMMIT overrides (CI/deploy builds).
+const RUNNING_COMMIT: { commit: string; dirty: boolean } = (() => {
+  if (process.env.GIT_COMMIT) return { commit: process.env.GIT_COMMIT, dirty: false };
+  try {
+    const commit = execSync("git rev-parse HEAD", { encoding: "utf8", timeout: 4000 }).trim();
+    const dirty = execSync("git status --porcelain", { encoding: "utf8", timeout: 4000 }).trim().length > 0;
+    return { commit, dirty };
+  } catch { return { commit: "unknown", dirty: false }; }
+})();
 import { strategyRoutes } from "./routes/strategies.js";
 import { journalRoutes } from "./routes/journal.js";
 import { riskRoutes } from "./routes/risk.js";
@@ -528,6 +540,8 @@ app.get("/api/health", async (_req, res) => {
     timestamp: new Date().toISOString(),
     uptime: Math.round(process.uptime()),
     version: process.env.npm_package_version ?? "dev",
+    commit: RUNNING_COMMIT.commit,       // running-code identity (freeze-lock); was unobservable before
+    code_dirty: RUNNING_COMMIT.dirty,    // true = uncommitted changes in the running checkout (freeze-invalid)
     database: {
       status: dbStatus,
       latencyMs: dbLatencyMs,

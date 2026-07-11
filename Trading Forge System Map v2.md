@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-11T00:00:25.073Z`.
+Updated automatically from the repo on `2026-07-11T06:39:13.483Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-07-11T00:00:25.073Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `79`
-- Scheduler jobs tracked: `109`
+- Scheduler jobs tracked: `110`
 - Current live Trading Forge n8n workflows tracked: `20`
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
@@ -55,7 +55,7 @@ Updated automatically from the repo on `2026-07-11T00:00:25.073Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `73`
 - Route coverage: `79/79`
-- Scheduler coverage: `109/109`
+- Scheduler coverage: `110/110`
 - Engine coverage: `29/29`
 - Database coverage: `110/110`
 - Autonomous subsystems with audit coverage: `64/64`
@@ -379,6 +379,7 @@ Updated automatically from the repo on `2026-07-11T00:00:25.073Z`.
 - `naked-poc-sync-daily`
 - `narrative-state-tracker`
 - `nightly-critique`
+- `ollama-keepwarm-watchdog`
 - `paper-journal-recon-daily`
 - `paper-vs-backtest`
 - `pattern-aggregator`
