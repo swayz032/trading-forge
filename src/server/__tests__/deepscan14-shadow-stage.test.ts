@@ -158,43 +158,43 @@ describe("deepscan14 H1 — Gate 2.5 (SHADOW → PAPER) reuses the SAME pure eva
   });
 
   it("the H1 fix marker is present inside the Gate 2.5 section", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 34000);
+    const region = src.slice(gate25Idx, gate25Idx + 44000);
     expect(region).toContain("deepscan14 H1: full pre-paper gate stack (SHADOW → PAPER)");
   });
 
   it("calls evaluateB14CiGate (same function Gate 2 calls — no gate math re-implemented)", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 34000);
+    const region = src.slice(gate25Idx, gate25Idx + 44000);
     expect(region).toContain("evaluateB14CiGate(");
     expect(region).toContain('input: { fromState: "SHADOW", toState: "PAPER" }');
   });
 
   it("calls evaluateWfeGate with the same signature Gate 2 uses", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 34000);
+    const region = src.slice(gate25Idx, gate25Idx + 44000);
     expect(region).toContain("evaluateWfeGate(");
   });
 
   it("calls evaluateParameterDriftGate", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 34000);
+    const region = src.slice(gate25Idx, gate25Idx + 44000);
     expect(region).toContain("evaluateParameterDriftGate(");
   });
 
   it("calls evaluateDsrWalkForwardGate (walk-forward DSR — distinct from the H2 honest-DSR gate)", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 34000);
+    const region = src.slice(gate25Idx, gate25Idx + 44000);
     expect(region).toContain("evaluateDsrWalkForwardGate(");
   });
 
   it("checks MC survival rate > 0.70 (same 0.70 floor as Gate 2)", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 34000);
+    const region = src.slice(gate25Idx, gate25Idx + 44000);
     expect(region).toContain("survivalRateSh <= 0.70");
   });
 
   it("runs the Pine exportability pre-check via checkExportability", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 34000);
+    const region = src.slice(gate25Idx, gate25Idx + 44000);
     expect(region).toContain("checkExportability(s.id)");
   });
 
   it("stamps the frozen-policy baseline via freezePolicyForStrategy on the SHADOW→PAPER cron path", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 34000);
+    const region = src.slice(gate25Idx, gate25Idx + 44000);
     expect(region).toContain("freezePolicyForStrategy(s.id, currentRegimeShCron)");
   });
 
@@ -299,7 +299,7 @@ describe("deepscan14 H1 behavior — DSR walk-forward gate blocks at SHADOW→PA
 
 describe("deepscan14 H3 — 3-strike auto-graveyard counters engage on the SHADOW path", () => {
   const gate25Idx = src.indexOf("Gate 2.5 — Wave 29 Pass A.3: SHADOW → PAPER");
-  const region = src.slice(gate25Idx, gate25Idx + 34000);
+  const region = src.slice(gate25Idx, gate25Idx + 44000);
 
   // _maybeAutoGraveyard / _resetHardGateCounter are keyed ONLY by (strategyId, gate)
   // (see lifecycle-service.ts private _maybeAutoGraveyard — failAction/resetAction
@@ -333,7 +333,7 @@ describe("deepscan14 H3 — 3-strike auto-graveyard counters engage on the SHADO
   it("the gate-name strings are IDENTICAL to the ones Gate 2 (legacy TESTING→PAPER) uses — same counter key", () => {
     const gate2Idx = src.indexOf("Gate 2: TESTING → PAPER  (LEGACY path");
     expect(gate2Idx).toBeGreaterThan(-1);
-    const gate2Region = src.slice(gate2Idx, gate2Idx + 45000);
+    const gate2Region = src.slice(gate2Idx, gate2Idx + 47000);
     for (const gateName of gateNames) {
       expect(gate2Region).toContain(`"${gateName}"`);
       expect(region).toContain(`"${gateName}"`);
