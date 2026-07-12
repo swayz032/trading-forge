@@ -87,13 +87,17 @@ vi.mock("../db/index.js", () => {
       update: vi.fn(() => ({
         set: vi.fn((vals: Record<string, unknown>) => {
           capturedPositionUpdates.push({ ...vals });
-          return { where: vi.fn().mockResolvedValue(undefined) };
+          // HIGH#1 (fresh-scan-3): guarded MTM UPDATE calls .where(...).returning({id});
+          // non-empty array = row matched = delta applies (preserves pre-guard behavior).
+          const p: any = Promise.resolve(undefined);
+          p.returning = vi.fn().mockResolvedValue([{ id: "pos-mtm" }]);
+          return { where: vi.fn().mockReturnValue(p) };
         }),
       })),
       transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn({
         select: vi.fn(makeChain),
         insert: vi.fn(() => ({ values: vi.fn(() => ({ catch: vi.fn() })) })),
-        update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn().mockResolvedValue(undefined) })) })),
+        update: vi.fn(() => ({ set: vi.fn(() => { const p: any = Promise.resolve(undefined); p.returning = vi.fn().mockResolvedValue([{ id: "pos-mtm" }]); return { where: vi.fn().mockReturnValue(p) }; }) })),
       })),
     },
   };

@@ -1611,8 +1611,18 @@ export class LifecycleService {
     // demotion (DEPLOYED→DECLINING on underperformance, or the regime-drift DEPLOYED→TESTING/DECLINING)
     // was being BLOCKED by staleness — the exact opposite of the intent (the point is to REMOVE the
     // stale/underperforming strategy from live). Skip staleness for any demotion/exit target so the
-    // safety off-ramp always fires. Upward promotions (incl. a DECLINING→TESTING retry) stay gated.
-    const _isDemotionOrExitTransition = ["DECLINING", "NEEDS_REVISION", "RETIRED", "GRAVEYARD"].includes(toState);
+    // safety off-ramp always fires.
+    // HIGH#2 grader follow-up (fresh-scan-3 independent grade, 2026-07-12): the production demotion
+    // services (regime-drift-detector, portfolio-drift-demotion, strategy-revalidation) all perform a
+    // TWO-STEP demotion DEPLOYED→DECLINING→TESTING. Step 2 (DECLINING→TESTING) reads the SAME stale
+    // backtestId, so omitting "TESTING" from the exempt set left the strategy DEADLOCKED in a zombie
+    // DECLINING state — the exact failure the code's own notifyCritical handler anticipates. Adding
+    // "TESTING" is hole-free: the only edges INTO testing are (a) this demotion step, (b) CANDIDATE→TESTING
+    // (pre-backtest — promotionEvidence.backtestId is null, gate never fires), or (c) a DECLINING→TESTING
+    // revalidation retry. In cases (b)/(c) the strategy is NOT live-capital-bound in TESTING and gets a
+    // FRESH backtest before the next gate (TESTING→PAPER, where staleness IS enforced) — so live-capital
+    // staleness protection is fully preserved. Only forward edges into PAPER/DEPLOY_READY (live-bound) stay gated.
+    const _isDemotionOrExitTransition = ["TESTING", "DECLINING", "NEEDS_REVISION", "RETIRED", "GRAVEYARD"].includes(toState);
     if (promotionEvidence.backtestId && !_isDemotionOrExitTransition) {
       const stalenessDays = parseInt(process.env.BACKTEST_STALENESS_DAYS ?? "30", 10);
       // latestBtEvidence.createdAt is available via the extended select above.

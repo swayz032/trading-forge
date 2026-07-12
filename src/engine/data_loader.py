@@ -327,6 +327,23 @@ def _legacy_s3_glob(symbol: str, timeframe: str, adjusted: bool = True) -> str:
     return f"s3://{bucket}/futures/{symbol}/{prefix}/{timeframe}/*/*/*.parquet"
 
 
+def _primary_s3_source(symbol: str, timeframe: str, adjusted: bool = True) -> str:
+    """Resolve the PRIMARY S3 source for a symbol/timeframe read.
+
+    MED#7 grader follow-up (fresh-scan-3 independent grade, 2026-07-12): `_consolidated_s3_path`
+    now fails LOUD on adjusted=False (correct — there is no raw consolidated variant), but the
+    load_ohlcv cache-miss/stale/sidecar branches called it OUTSIDE the try/except that catches an
+    S3-404 and falls back to `_legacy_s3_glob`. So a raw (adjusted=False) request crashed uncaught
+    instead of taking the raw glob. This router restores the intended design: adjusted=True → the
+    fast consolidated single-file (with the existing 404→legacy fallback still active downstream);
+    adjusted=False → route DIRECTLY to the legacy RAW glob (the only place raw data lives). The
+    fail-loud guard in `_consolidated_s3_path` remains as defense-in-depth for any direct caller.
+    """
+    if not adjusted:
+        return _legacy_s3_glob(symbol, timeframe, adjusted=False)
+    return _consolidated_s3_path(symbol, timeframe, adjusted=True)
+
+
 def build_s3_glob(
     symbol: str,
     timeframe: str,
@@ -834,7 +851,7 @@ def load_ohlcv(
                 print(f"Loading {data_symbol} {timeframe} from local cache ({cache_file})", file=sys.stderr)
             else:
                 # Sidecar indicates cache is poisoned — fall through to S3
-                source = _consolidated_s3_path(data_symbol, timeframe, adjusted=adjusted)
+                source = _primary_s3_source(data_symbol, timeframe, adjusted=adjusted)
                 print(
                     f"Loading {data_symbol} {timeframe} from S3 (cache sidecar mismatch)",
                     file=sys.stderr,
@@ -845,11 +862,11 @@ def load_ohlcv(
                 f"Loading {data_symbol} {timeframe} — cache stale (>24h), refreshing from S3",
                 file=sys.stderr,
             )
-            source = _consolidated_s3_path(data_symbol, timeframe, adjusted=adjusted)
+            source = _primary_s3_source(data_symbol, timeframe, adjusted=adjusted)
         else:
-            # Cache miss — read directly from S3 consolidated file (single HTTP request)
-            source = _consolidated_s3_path(data_symbol, timeframe, adjusted=adjusted)
-            print(f"Loading {data_symbol} {timeframe} from S3 consolidated (cache miss)", file=sys.stderr)
+            # Cache miss — read directly from S3 (consolidated for adjusted, raw glob for adjusted=False)
+            source = _primary_s3_source(data_symbol, timeframe, adjusted=adjusted)
+            print(f"Loading {data_symbol} {timeframe} from S3 primary source (cache miss)", file=sys.stderr)
 
     # F-2 fix: verify adjusted-ratio on EVERY code path (was local_path only).
     # Cache paths contain ratio-adjusted data by construction (CLAUDE.md §13 + cache write guard).

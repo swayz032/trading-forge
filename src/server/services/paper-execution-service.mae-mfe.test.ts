@@ -105,7 +105,11 @@ function setupMocks(positions: ReturnType<typeof buildPosition>[]) {
         // Extract position ID from the drizzle eq() call structure
         // We store the setValues keyed by the order they were called
         updateCaptures.push({ setValues, positionId: String(updateCaptures.length) });
-        return Promise.resolve(undefined);
+        // HIGH#1 (fresh-scan-3): guarded MTM UPDATE calls .where(...).returning({id});
+        // non-empty array = row matched = delta applies (MAE/MFE setValues already captured above).
+        const p: any = Promise.resolve(undefined);
+        p.returning = vi.fn().mockResolvedValue([{ id: "pos-mtm" }]);
+        return p;
       }),
     })),
   }));

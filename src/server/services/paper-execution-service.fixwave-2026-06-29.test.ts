@@ -92,7 +92,12 @@ vi.mock("../db/index.js", () => {
     update: vi.fn(() => ({
       set: vi.fn((vals: Record<string, unknown>) => {
         capturedOuterUpdates.push({ ...vals });
-        return { where: vi.fn().mockResolvedValue(undefined) };
+        // HIGH#1 (fresh-scan-3): updatePositionPrices' MTM UPDATE is now guarded with
+        // .where(and(id, isNull(closedAt))).returning({id}) — expose .returning() (non-empty
+        // = row matched = delta applies, preserving pre-guard test behavior).
+        const p: any = Promise.resolve(undefined);
+        p.returning = vi.fn().mockResolvedValue([{ id: "pos-mtm" }]);
+        return { where: vi.fn().mockReturnValue(p) };
       }),
     })),
     transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn({
