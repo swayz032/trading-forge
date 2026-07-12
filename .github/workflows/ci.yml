@@ -285,13 +285,25 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
-      # The TS<->Python exit-parity gate spawns a Python subprocess that imports
-      # src/engine/exits/adaptive_exits.py. That module is stdlib-only at import
-      # time (no numpy/pandas), so a bare interpreter is sufficient — no engine
-      # requirements install needed here.
+      # The TS<->Python parity gates spawn Python that imports engine modules, so a
+      # bare interpreter is NOT sufficient (the earlier "adaptive_exits is stdlib-only"
+      # comment was WRONG — verified in CI run 29182957605: ModuleNotFoundError: No
+      # module named 'pydantic'). Traced imports across all four gates:
+      #   exit-parity       → src/engine/exits/__init__.py → style_d_handler.py → pydantic
+      #   tier1-parity      → economic_calendar.py → numpy + polars
+      #   pm-factor-parity  → pm_size_factor.py → numpy (lazy)
+      #   firm-rules-version→ firm_config.py + prop_compliance.py → stdlib-only
+      # All covered by the CI-light set ci/requirements-fast.txt (pydantic + numpy +
+      # polars + …). NONE need the heavy ML/quantum stack (torch/qiskit/pennylane/
+      # gluonts), so we do NOT pull the full src/engine/requirements.txt here — keeps
+      # Build Check fast. Root-cause follow-up (engine-side, not here): exits/__init__.py
+      # eagerly importing style_d_handler despite "Style D is DEAD" — a lazy import
+      # there would drop even the pydantic requirement.
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Python dependencies (CI-light — parity gates import the engine)
+        run: pip install -r ci/requirements-fast.txt
 
       - run: npm ci
       - name: System map drift gate
