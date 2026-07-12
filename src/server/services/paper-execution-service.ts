@@ -627,11 +627,15 @@ export interface PriceBarUpdate {
   high?: number;
   low?: number;
   volume?: number;
+  // deep-scan 2026-07-11 MED fix (#11): optional bar OPEN. When a caller supplies it, updatePositionPrices
+  // models gap-through-stop fills — a bar that OPENS beyond the stop fills at the gapped open (matching
+  // backtester.py, which counts gap_through_stop). Absent → falls back to filling at the exact stop.
+  open?: number;
 }
 
 export type PositionPriceUpdate = number | PriceBarUpdate;
 
-function normalizePriceUpdate(update: PositionPriceUpdate): Required<PriceBarUpdate> {
+function normalizePriceUpdate(update: PositionPriceUpdate): { close: number; high: number; low: number; volume: number } {
   if (typeof update === "number") {
     return { close: update, high: update, low: update, volume: 0 };
   }
@@ -4246,6 +4250,8 @@ export async function updatePositionPrices(
     const rawUpdate = prices[pos.symbol];
     if (rawUpdate === undefined) continue;
     const { close: currentPrice, high, low } = normalizePriceUpdate(rawUpdate);
+    // #11 gap-through-stop: the bar OPEN, only when a caller explicitly provides it (undefined otherwise).
+    const barOpen = typeof rawUpdate === "object" && Number.isFinite(rawUpdate.open) ? (rawUpdate.open as number) : undefined;
 
     // SDL-1 (deep-scan 2026-07-11): a non-finite bar price (NaN/Infinity from a malformed feed) would
     // poison unrealizedPnl below -> corrupt currentEquity to NaN. The cross-symbol DLL / trailing-DD
@@ -4372,7 +4378,16 @@ export async function updatePositionPrices(
             // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="stop_loss" is
             // now passed INTO closePosition() instead of incrementing paperTradesCounter a
             // second time here — this call site was double-counting every intrabar stop.
-            await closePosition(pos.id, stopLevel, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: "stop_loss" });
+            // deep-scan 2026-07-11 MED fix (#11): model gap-through-stop parity with the backtester.
+            // backtester.py fills a bar that OPENS beyond the stop at the gapped OPEN (a worse price)
+            // and counts gap_through_stop; paper previously filled at `stopLevel` UNCONDITIONALLY,
+            // understating losses on gap bars → inflated internal-sim Sharpe/PF vs the backtest the
+            // promotion gates trust. When the caller provides the bar open, fill at the WORSE of
+            // open/stop; absent an open, fall back to the stop (best available — the legacy behavior).
+            const stopFillPrice = barOpen != null
+              ? (pos.side === "long" ? Math.min(barOpen, stopLevel) : Math.max(barOpen, stopLevel))
+              : stopLevel;
+            await closePosition(pos.id, stopFillPrice, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: "stop_loss" });
             closedByExitHandler.add(pos.id);
             totalUnrealizedDelta -= unrealizedDelta;
             totalUnrealizedPnl   -= unrealizedPnl;
