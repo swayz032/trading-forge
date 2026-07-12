@@ -32,7 +32,7 @@ import {
 import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateForSignal } from "./bias-state-service.js";
 // Trade-critique data bridge (2026-07-05): entry-time decision context carried
 // through pendingEntryQueue to openPosition() -> paper_positions.exit_plan JSONB.
-import type { EntryDecisionContext } from "../db/jsonb-shapes.js";
+import type { EntryDecisionContext, ExitPlanConfig } from "../db/jsonb-shapes.js";
 import { getSessionShapeScore } from "./volume-profile-service.js";
 // Wave 23H.D: per-strategy confirming_indicators evaluator
 import { evaluateConfirmingIndicators } from "./confirming-indicator-evaluator.js";
@@ -574,6 +574,12 @@ interface CachedSession {
   // openPosition() — logged to lifecycle_shadow_signals but TradersPost webhook NOT called.
   // Pine alerts still fire on TradingView (operator sees signal on chart).
   shadowModeEnabled: boolean;
+  // #2 (2026-07-11): the strategy's exit_plan_config (separate `strategies.exit_plan_config` column,
+  // NOT inside strategy.config JSONB). Forwarded to openPosition's adaptiveExitInput so an opted-in
+  // `exit_style="adaptive"` strategy actually runs the adaptive exit plan on paper (was dormant — the
+  // deferred-fill path never carried it, so every strategy silently fell back to static_styleC). null
+  // for the vast majority (default static_styleC) → byte-identical legacy behavior.
+  exitPlanConfig: ExitPlanConfig | null;
 }
 
 // ─── B4.3: In-memory Governor State (per session) ──────────────
@@ -962,6 +968,9 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
     // Wave 29 Pass A.1: capture shadow_mode_enabled at cache-load time.
     // Fail-soft: if column is absent (legacy DB / schema drift), default to false.
     shadowModeEnabled: (strategy as unknown as Record<string, unknown>).shadowModeEnabled === true,
+    // #2 (2026-07-11): separate strategies.exit_plan_config column. Fail-soft to null if absent
+    // (legacy DB / schema drift) → openPosition treats it as static_styleC (no behavior change).
+    exitPlanConfig: (strategy.exitPlanConfig as ExitPlanConfig | null | undefined) ?? null,
   };
 
   sessionCache.set(sessionId, entry);
@@ -2832,6 +2841,27 @@ export async function evaluateSignals(
       // Trade-critique data bridge (2026-07-05): entry-time decision context captured
       // at signal time (bar N) — see PendingEntry.entryContext.
       entryContext: pendingEntry.entryContext,
+      // #2 (2026-07-11): wire the adaptive exit plan into the paper deferred-fill path. It was
+      // DORMANT — openPosition only computes the adaptive plan when adaptiveExitInput is passed, and
+      // this (the sole paper entry path) never passed it, so every `exit_style="adaptive"` strategy
+      // silently ran static_styleC on paper while the backtester ran adaptive (a paper/backtest parity
+      // gap). Gated to adaptive-opted strategies only (default static_styleC → this is undefined →
+      // byte-identical legacy behavior). entry.stop is OMITTED: openPosition derives it from the fill
+      // price ∓ atr×2.0 (== the position's own managed stop) with zero drift. narrativePhase=null is
+      // parity-faithful — the backtester's compute_exit_plan_python passes no narrative_phase either,
+      // and check:ts-python-exit-parity locks the TS null-narrative behavior to that Python oracle.
+      // Fail-soft throughout: any computeExitPlan error inside openPosition → static_styleC fallback.
+      adaptiveExitInput:
+        sessionConfig.exitPlanConfig?.exit_style === "adaptive"
+          ? {
+              strategy: { id: sessionConfig.strategyId, exit_plan_config: sessionConfig.exitPlanConfig },
+              bar: { close: bar.close, high: bar.high, low: bar.low, volume: bar.volume },
+              marketState: {
+                regime: pendingEntry.entryContext?.regimeAtEntry ?? "UNKNOWN",
+                narrativePhase: null,
+              },
+            }
+          : undefined,
     }, {
       correlationId: pendingEntry.correlationId,
       // deepscan18 C-C1: forward this session's account/firm scope into
