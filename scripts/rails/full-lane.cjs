@@ -18,14 +18,26 @@ async function runFullLane({ guardFn, runPytestFn, runReplayFn, nowMs }) {
   return { action: "RUN", reason: g.reason, pytest, replay, verdict, tMs: nowMs };
 }
 
+// ── Timeout budget (INVARIANT: PYTEST + REPLAY runner timeouts must stay < SCHTASK_LIMIT_MS
+// so each runner's OWN spawnSync timeout fires first — which returns control and lets us WRITE
+// the audit/JSONL trail — before Task Scheduler's ExecutionTimeLimit force-kills the whole node
+// process (which would leave the night with NO trail). register-full-lane-task.ps1 sets its
+// -ExecutionTimeLimit to SCHTASK_LIMIT_MS. The invariant is machine-checked in full-lane.test.mjs.
+// 22:00 start + 180min cap = 1:00AM latest, well clear of the 03:00 soak. ──
+const PYTEST_TIMEOUT_MS = 90 * 60 * 1000;   // 90 min — 304 engine test files
+const REPLAY_TIMEOUT_MS = 30 * 60 * 1000;   // 30 min — 2-pass PGlite fresh-bootstrap replay
+const SCHTASK_LIMIT_MS = 180 * 60 * 1000;   // 180 min — backstop ABOVE the 120min runner sum
+
 // ── I/O layer (pure command shapes are unit-tested; the spawns are RED-proofed via the core) ──
-function pytestCmd() { return { cmd: process.platform === "win32" ? "python" : "python3", args: ["-m", "pytest", "src/engine", "-q", "-m", "not gpu"] }; }
-function replayCmd() { return { cmd: "npx", args: ["vitest", "run", "src/server/__tests__/fresh-bootstrap-migration-replay.test.ts"] }; }
+function pytestCmd() { return { cmd: process.platform === "win32" ? "python" : "python3", args: ["-m", "pytest", "src/engine", "-q", "-m", "not gpu"], timeoutMs: PYTEST_TIMEOUT_MS }; }
+function replayCmd() { return { cmd: "npx", args: ["vitest", "run", "src/server/__tests__/fresh-bootstrap-migration-replay.test.ts"], timeoutMs: REPLAY_TIMEOUT_MS }; }
 function exitToResult(code, durationMs) { return { ok: code === 0, exitCode: code, durationMs }; }
 
-function runCmd({ cmd, args }) {
+function runCmd({ cmd, args, timeoutMs }) {
   const t0 = Date.now();
-  const r = spawnSync(cmd, args, { encoding: "utf-8", timeout: 60 * 60 * 1000, windowsHide: true });
+  const r = spawnSync(cmd, args, { encoding: "utf-8", timeout: timeoutMs, windowsHide: true });
+  // spawnSync timeout kills the child → r.status===null; map to a non-zero (ok:false) so the
+  // lane records a "red" verdict WITH an audit trail rather than hanging past the schtask cap.
   return exitToResult(r.status ?? 1, Date.now() - t0);
 }
 
@@ -71,4 +83,4 @@ async function main() {
 }
 
 if (require.main === module) main();
-module.exports = { runFullLane, pytestCmd, replayCmd, exitToResult };
+module.exports = { runFullLane, pytestCmd, replayCmd, exitToResult, PYTEST_TIMEOUT_MS, REPLAY_TIMEOUT_MS, SCHTASK_LIMIT_MS };

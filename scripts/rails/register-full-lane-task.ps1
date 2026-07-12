@@ -13,8 +13,12 @@ if (-not (Test-Path $ScriptPath)) { throw "full-lane not found: $ScriptPath" }
 if (-not (Test-Path $WorkingDir)) { throw "working dir not found: $WorkingDir" }
 $Action   = New-ScheduledTaskAction -Execute $Node -Argument "`"$ScriptPath`"" -WorkingDirectory $WorkingDir
 $Trigger  = New-ScheduledTaskTrigger -Daily -At $At
-# 22:00 is well clear of the soak's 03:00-09:00 window. 90-min cap kills a hung lane before soak.
-$Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 90) -MultipleInstances IgnoreNew
+# 22:00 + 180-min cap = 1:00AM latest, well clear of the soak's 03:00 start. The 180-min cap is a
+# BACKSTOP above full-lane.cjs's summed runner timeouts (PYTEST 90 + REPLAY 30 = 120min): each
+# runner's own spawnSync timeout fires first and lets the lane WRITE its audit/JSONL trail, so the
+# scheduler force-kill (which would leave no trail) only triggers if node itself wedges. Invariant
+# (runner sum < this cap) is machine-checked in scripts/rails/__tests__/full-lane.test.mjs.
+$Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Minutes 180) -MultipleInstances IgnoreNew
 Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -Settings $Settings -Force | Out-Null
 $info = Get-ScheduledTask -TaskName $TaskName | Get-ScheduledTaskInfo
 Write-Host "Registered '$TaskName' @ $At tower-local. Next run: $($info.NextRunTime)"

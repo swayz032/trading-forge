@@ -1,7 +1,7 @@
 // scripts/rails/__tests__/full-lane.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runFullLane, pytestCmd, replayCmd, exitToResult } from "../full-lane.cjs";
+import { runFullLane, pytestCmd, replayCmd, exitToResult, PYTEST_TIMEOUT_MS, REPLAY_TIMEOUT_MS, SCHTASK_LIMIT_MS } from "../full-lane.cjs";
 
 const ok = async () => ({ ok: true, exitCode: 0, durationMs: 10 });
 const bad = async () => ({ ok: false, exitCode: 1, durationMs: 10 });
@@ -41,4 +41,12 @@ test("replay command targets the fresh-bootstrap replay test", () => {
 test("exitToResult maps 0→ok, nonzero→not ok", () => {
   assert.equal(exitToResult(0, 5).ok, true);
   assert.equal(exitToResult(1, 5).ok, false);
+});
+test("INVARIANT: runner timeouts sum stays under the schtask cap (audit-before-force-kill)", () => {
+  // If this fails, Task Scheduler could kill the process before the audit/JSONL write. Keep a
+  // margin so the guard + persistence overhead also fits under the cap.
+  assert.ok(PYTEST_TIMEOUT_MS + REPLAY_TIMEOUT_MS < SCHTASK_LIMIT_MS,
+    `runner sum ${PYTEST_TIMEOUT_MS + REPLAY_TIMEOUT_MS}ms must be < schtask cap ${SCHTASK_LIMIT_MS}ms`);
+  assert.equal(pytestCmd().timeoutMs, PYTEST_TIMEOUT_MS);
+  assert.equal(replayCmd().timeoutMs, REPLAY_TIMEOUT_MS);
 });
