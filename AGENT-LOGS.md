@@ -4,6 +4,24 @@
 
 ---
 
+### Session Log — 2026-07-12 H1 Wave-4 — certificate assembler + 5 compile-integrity lints LANDED (band-6 independent grade); pilot gated on F-1
+
+**Mission:** resume H1 extraction work per the frozen handoff — re-dispatch the aborted Wave-4 builder (assembler + lints), grade, land, tee up the pilot on the sealed 16.
+
+**Work completed:**
+- Mission-loaded the campaign (extraction-campaign skill + frozen docs + memory). Verified BOTH sealed sets PRISTINE (sealed 16 `8e39ffe1`, 77 tier-2 sealed-eval `701c3edb`) and the frozen pilot bar untouched BEFORE moving anything.
+- Diagnosed the prior Wave-4 abort (0 tool-uses) as an UNBUILDABLE brief, not a builder failure: the 5 compile-lint semantics were a deferred `§6 WAVE1-FEED` item (tier-1 spec) — now unblocked by the landed Wave-1 shakedown. Re-dispatched with a self-contained brief pointing at authoritative existing checks to MIRROR (anti-pattern-catalog §3, dsl-quality-critic, dsl-compiler) + "flag, don't invent" (Law 4).
+- Injected an anti-duplication constraint mid-build (operator directive): per lint REUSE the authority by import, or PARITY-FIXTURE against it — never a silent copy (duplicate-enforcement is a named repo liability).
+- Built (backtest-core) `src/engine/extraction/{cert_assembler,compile_lints}.py` + `fixtures/compile_lint_birth_fixtures.json` + `tests/test_{compile_lints,cert_assembler}.py`. Cert schema tier-2 field RETIRED (classifying_tier {1,3}); tier-1+tier-3 provenance.
+- Independent ablation grade (accuracy-validator, doer≠grader, from zero): **VERIFIED band 6, LAND-WITH-CARRY-FORWARDS.** Re-ran 52/52 itself; proved birth gate genuine via OUT-OF-FIXTURE adversarial inputs (every lint flips on its real semantic, not fixture-rigging); confirmed isolation (no sealed-set, no vectorbt); reuse/parity real (or_alternatives REUSES `spec_family_bindings.or_branches_enabled`; causality byte-ports `anti-pattern-catalog.md:92` regex + drift-trip test).
+- Corrected F-3 (docstring overclaimed causality "fully active" — now states regex-leg-only until same_bar_fill/signal_lag wired). Landed FF-only on `corpus-v3-gate3-cert-2026-07-06` (`e951ca92`, verified 7f3e55c3 ancestor); progress-doc update `ae122c29`.
+
+**Verification:** 52/52 pytest (grader's own re-run + mine post-docstring-edit), py_compile clean, birth gate GREEN, isolation confirmed, FF land verified (pure fast-forward, no wrong-base revert). Built entirely in an isolated worktree pinned to campaign SHA `7f3e55c3` (deliberately NOT Agent `isolation:"worktree"` — that forks phase-0, which lacks every H1 artifact).
+
+**Carry-forward (PILOT GATED):**
+- **F-1 (CRITICAL — gates the pilot READ, not the land):** cert schema §4 names 5 lints, but 3 structural lints (direction-conflation/unsat-SAT/OR-alternatives) check compiled-DSL topology that no stage produces at the certificate layer → they VACUOUSLY PASS in the topology-less pilot conveyor (+ causality same-bar leg unreachable). Pilot can't honestly assert "all 5 pass." OPERATOR PICKS, pre-registered before unsealing: **(A)** build compile-stage topology producer (faithful §4; ratify-packet) OR **(B)** written acceptance scoping cert-grade to the live subset. Sealed sets stay sealed until chosen.
+- F-2: TS `extraction-coverage-gate.ts:483` `.includes()` substring bug (pre-existing defect-candidate, out of scope). F-4: assert→raise the tier-2-retired guard (fold into F-1 wiring).
+
 ### Session Log — 2026-07-06 Corpus v3 Gate 3 — instrument saga (5 run_class_backtest defects) + reference re-derivation IN FLIGHT
 
 **Mission:** Certify Corpus v3 Gate 3 (do the classifier's extraction-time roles reproduce the runtime-demotion
