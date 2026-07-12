@@ -1,0 +1,19 @@
+================================================================================
+MAPPING SENSITIVITY — is the '25% contestable' a fidelity gap or a 5->3 mapping artifact?
+(inter-rater A~B agreement is mapping-INVARIANT — that number cannot move)
+================================================================================
+demotion 5-class distribution on targets: {'ALTERNATIVE': 7, 'OPTIONAL': 17, 'CONTEXTUAL': 84, 'UNRESOLVED': 19, 'JUSTIFIED_MANDATORY': 79}
+
+[MAPPING 1: aggressive (OPTIONAL+ALTERNATIVE -> gate) — packet-builder default]  N=206
+  A~demo 72% | B~demo 68% | A~B 92% (mapping-invariant)
+  fidelity CONFIRMED (both agree + match demo): 137/206 = 67%
+  demotion role CONTESTABLE (both agree, differ): 52/206 = 25%
+
+[MAPPING 2: strict-spine (only MANDATORY -> gate)]  N=206
+  A~demo 74% | B~demo 69% | A~B 92% (mapping-invariant)
+  fidelity CONFIRMED (both agree + match demo): 139/206 = 67%
+  demotion role CONTESTABLE (both agree, differ): 50/206 = 24%
+
+>>> contestable moves 25% -> 24% across the two defensible mappings.
+>>> The band [24%, 25%] is the honest fidelity-gap range; the mapping choice is a Wave-1-FEED decision, NOT settled tonight.
+================================================================================
