@@ -358,16 +358,27 @@ async function getCachedSignalCalendarStatus(
     //   bypass_news_blackout is NOT passed here; it is handled at the call site
     //   (evaluateSignals calendar gate block) where per-strategy config is available.
     const inProcessCheck = _checkInProcessTier1EventWindow(barTimestamp);
+    // LOW#17 (fresh-scan 2026-07-12): this inner catch handles the Python calendar_filter subprocess
+    // failure WITHOUT rethrowing, so calResult.is_holiday flows out as false and the OUTER catch's
+    // checkCmeHolidayFallback (evaluateSignals) — the documented guard for "is_holiday never consulted"
+    // — NEVER runs. Consult the static CME-closure table HERE too so a full market-closure day during a
+    // Python outage still reports is_holiday=true (holidays always fail-CLOSED / block, even for
+    // event-driven strategies).
+    const cmeHoliday = checkCmeHolidayFallback(barTimestamp);
     const entryToCache: SignalCalendarCacheEntry = inProcessCheck.blocked
       ? {
-          is_holiday: false,
+          is_holiday: cmeHoliday.isHoliday,
           is_triple_witching: false,
-          holiday_proximity: 999,
+          holiday_proximity: cmeHoliday.isHoliday ? 0 : 999,
           is_economic_event: true,
           economic_event_name: inProcessCheck.eventName,
           event_window_minutes: inProcessCheck.windowMinutes,
         }
-      : CALENDAR_SAFE_DEFAULT;
+      : {
+          ...CALENDAR_SAFE_DEFAULT,
+          is_holiday: cmeHoliday.isHoliday,
+          holiday_proximity: cmeHoliday.isHoliday ? 0 : CALENDAR_SAFE_DEFAULT.holiday_proximity,
+        };
 
     logger.error(
       { err, barTimestamp, key, inProcessBlocked: inProcessCheck.blocked, eventType: inProcessCheck.eventType },

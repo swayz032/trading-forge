@@ -133,6 +133,16 @@ function _toDateString(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+// LOW#15 (fresh-scan 2026-07-12): the daily P&L buckets are keyed by
+// DATE(exit_time AT TIME ZONE 'America/New_York'), so "today" for bucket lookup MUST be the
+// New-York calendar date. Using the UTC date made the 20:00–23:59 ET window resolve to the NEXT
+// day → dailyProfits.get(today) missed the real current-day bucket → todayProfit /
+// todayProfitProjected / projectedConcentrationPct (the SSE + Discord surfaces) read 0 for the
+// operator's live evening. en-CA yields YYYY-MM-DD.
+function _toNyDateString(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(d);
+}
+
 // ─── Account/firm scope resolution (CAP-3 fix) ─────────────────────────────────
 
 // ─── Core computation ─────────────────────────────────────────────────────────
@@ -169,7 +179,8 @@ export async function getConsistencyState(
   const correlationId = randomUUID();
   const cycleStart = _getCycleStart(asOf);
   const cycleStartDate = _toDateString(cycleStart);
-  const today = _toDateString(asOf);
+  // LOW#15: NY-calendar "today" to match the NY-keyed daily P&L buckets (see _toNyDateString).
+  const today = _toNyDateString(asOf);
 
   // Cycle day = number of calendar days from cycle start to today (1-based)
   const cycleDay = Math.floor((asOf.getTime() - cycleStart.getTime()) / 86_400_000) + 1;
