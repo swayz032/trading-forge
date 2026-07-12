@@ -20,7 +20,7 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "0 9,10 * * 0"
+              "expression": "0 5 * * 0"
             }
           ]
         }
@@ -171,7 +171,8 @@
     "executionOrder": "v1",
     "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": "DGEk1D478xWJClKD"
+    "errorWorkflow": "DGEk1D478xWJClKD",
+    "timezone": "America/New_York"
   },
   "staticData": {
     "node:Sunday 5AM ET Weekly Trigger": {

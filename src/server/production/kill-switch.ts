@@ -215,9 +215,12 @@ function _forceCloseReattemptDue(key: string, nowMs: number): boolean {
  *
  * - `accountKey` omitted (legacy/global callers, e.g. dashboard reads or any
  *   caller not yet account-aware): conservative — true if ANY force-close
- *   (global or any specific account) is in flight anywhere. This is BYTE-
- *   IDENTICAL to the old single-shared-boolean semantics for callers that
- *   don't pass a scope.
+ *   force-close is in flight. MED (freshscan5 2026-07-12): this is a DEDUP gate — a GLOBAL/operator
+ *   force-close (the superset that flattens EVERY account) must dedup ONLY against another GLOBAL close
+ *   in flight, NOT against an account-scoped (subset) close. Previously "any account in flight" made an
+ *   in-flight account-A scoped 95%-DLL close SUPPRESS the operator's master HALT flatten, leaving sibling
+ *   accounts B/C… un-flattened through the HALT (capital-safety, multi-account). closePosition is
+ *   idempotent via its closedAt-IS-NULL claim, so a global re-flattening account A is a safe no-op.
  * - `accountKey` supplied: true only if THIS account's own force-close is in
  *   flight, OR a genuine system-wide (GLOBAL_SCOPE_KEY) force-close is in
  *   flight (which is about to/already touched every account, including this
@@ -225,10 +228,9 @@ function _forceCloseReattemptDue(key: string, nowMs: number): boolean {
  */
 function _isForceCloseInFlight(accountKey?: string): boolean {
   if (accountKey === undefined) {
-    for (const v of _forceCloseInFlightByAccount.values()) {
-      if (v) return true;
-    }
-    return false;
+    // Global/operator flatten: dedup ONLY against another global close (superset must not be
+    // suppressed by a subset account-scoped close — see the MED note above).
+    return _forceCloseInFlightByAccount.get(GLOBAL_SCOPE_KEY) === true;
   }
   if (_forceCloseInFlightByAccount.get(accountKey)) return true;
   if (_forceCloseInFlightByAccount.get(GLOBAL_SCOPE_KEY)) return true;

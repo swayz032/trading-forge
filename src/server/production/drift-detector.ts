@@ -38,6 +38,7 @@ import { logger } from "../lib/logger.js";
 import { AlertFactory } from "../services/alert-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { killSwitch } from "./kill-switch.js";
+import { randomUUID } from "node:crypto";
 
 // ─── Config (all thresholds here — no magic numbers in logic) ────────────────
 
@@ -400,6 +401,11 @@ interface WriteDriftRowParams {
 async function writeDriftRow(params: WriteDriftRowParams): Promise<DriftReport> {
   const ranAt = new Date();
   const durationMs = Date.now() - params.startedAt;
+  // LOW#4 (freshscan5 2026-07-12): correlate the audit_log row + the SSE event for this drift run
+  // (parity with reconciliation-service, which was explicitly fixed to carry correlation_id). The
+  // audit row previously wrote correlationId:null and the SSE carried none, so a >2σ auto-HALT drift
+  // event could not be traced end-to-end (audit ↔ SSE ↔ downstream) the way §2's bug-tracing mandate requires.
+  const correlationId = randomUUID();
 
   // Upsert (idempotent — UNIQUE on report_week)
   await db
@@ -452,10 +458,10 @@ async function writeDriftRow(params: WriteDriftRowParams): Promise<DriftReport> 
       } as Record<string, unknown>,
       status: params.severity === "red" ? "failure" : "success",
       durationMs,
-      correlationId: null,
+      correlationId,
     })
     .catch((err) =>
-      logger.error({ err }, "drift-detector: audit_log write failed (non-blocking)")
+      logger.error({ err, correlationId }, "drift-detector: audit_log write failed (non-blocking)")
     );
 
   // SSE event
@@ -465,6 +471,7 @@ async function writeDriftRow(params: WriteDriftRowParams): Promise<DriftReport> 
     sharpeDeltaSigma: params.sharpeDeltaSigma,
     autoHaltTriggered: params.autoHaltTriggered,
     ranAt: ranAt.toISOString(),
+    correlationId,
   });
 
   return {
