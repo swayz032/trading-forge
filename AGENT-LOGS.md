@@ -14461,6 +14461,24 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-12 Tower Soak Harness v1 landed + backend P0 recovery (node_modules wipe) + openclaw dupe
+
+**Mission:** Build/land the tower soak-test harness (answers operator's "do we need a soaking test"), then recover the ~14h backend outage the harness surfaced on its first nights.
+
+**Work completed:**
+- **Soak harness v1** — standalone nightly memory/VRAM/disk/heartbeat leak watcher. brainstorm→plan→TDD; 7 commits LANDED on `hardening/phase-0` (rebased `8a89f47c`→`f2165dae`, FF-only, diff-stat tripwire held +1561/−0, tip `45c329ce`). `scripts/soak/{soak-verdict,soak-sensors,soak-guard,soak-watcher,soak-skip}.cjs` + `register-soak-task.ps1` + `__tests__/*.mjs` (31 node:test GREEN). Windows task `TF-Tower-Soak` @3AM tower-local, ARMED, re-pointed to the MAIN checkout (durable). Observability-only (no ratify-packet); switch = `system_parameters` numeric `soak_mode`/`soak_skip_until`; ledger = `audit_log action='soak.night_completed'` (decision_authority='scheduler'). HONEST SCOPE = fast-leak smoke test, NOT slow-leak certifier (provisional noise floor 8 MB/h; calibration = 14 RAN nights). Full detail: memory `project_soak_harness_v1_shipped_2026_07_11`.
+- **Backend P0 recovery** — the soak's nightly `backend_unreachable` SKIPs were the ONLY signal that `TradingForgeAPI` had crash-looped into NSSM-Paused for ~14h. Firewall A2 (boot-migration) REFUTED (no fresh `migration.auto_apply_failed`); real cause = firewall A3 partial `node_modules` wipe — `tsx`/`typescript`/`vitest` (+~100 pkgs, 224 vs ~325 dirs) deleted → `tower-boot` aborts on missing tsx. Healed per [[reference_ci_resurrection_npm_version_2026_07_11]]: cleared stale `.package-lock.json` marker → `npm install` → `git checkout -- package-lock.json` (NOT `npm ci` — blocked by the `encoding` sync landmine). NSSM throttle-retry booted clean; all 3 services Running, `/api/health` HTTP 200 (DB/ollama/python ok). NOT caused by the soak land (new files only; tsx was present when read on 07-11).
+- **openclaw PM2 dupe** — `OpenclawGateway` NSSM (pid 7996, ws:18789) is canonical + working; PM2's `openclaw-gateway` was a failing dupe (port-conflict crash-loop, 2488 restarts). `pm2 delete` + `pm2 save --force` (dump verified clean → won't resurrect on reboot). No TF-service PM2 dupes.
+- **Worktree cleanup** — junction-safe removed `wt-soak` (`[System.IO.Directory]::Delete` on the link FIRST, main `node_modules` tsx verified present before+after — NEVER `rm -rf` the junction), branch deleted.
+
+**Verification:** 31 node:test GREEN post-rebase; `/api/health` 200 + fresh uptime; 3 NSSM services Running (`Get-Service`); `node_modules` 224→325 dirs with tsx/`.bin/tsx` present; pm2 dump grep-clean; main `node_modules` integrity asserted before+after junction delete; diff-stat tripwire +1561/−0 at land.
+
+**Known-facts updates:** **Systemic landmine — ~12 worktrees junction `node_modules`→ shared main (`tf-ds19-fix`, `extraction-100`, `deepscan6-fixwave`, `inst-10of10`, `wt-d78`, `wt-parta`, auto-spawned `agent-*`/`wf_*`, etc.).** Any one torn down with `rm -rf` follows the junction and guts main's `node_modules` → backend crash-loop — this is what caused today's P0. Worktree teardown (incl. Agent/Workflow-tool auto-cleanup) MUST use `git worktree remove` after a link-only junction delete, never `rm -rf`. See [[reference_rm_rf_junction_deletes_target_2026_07_09]]. Also: the soak's health check conflates HTTP-000 (down) with a slow/auth non-200 (up) → one false-positive `backend_unreachable` on 07-11; refine in v2.
+
+**Carry-forward for next session:** (1) soak v2 = `soak_runs` migration + slumhouse admin route + Office Switch + Reporting-Room Soak Report cards + SSE (designed, not built); (2) first real 6h calibration night (gated on a quiet 3AM — campaign must finish + backend stay up); (3) soak health-check HTTP-000-vs-non-200 refinement; (4) reconcile the CI-correct `package-lock.json` (encoding/iconv-lite via WSL2/npm-11.16 per the ci-resurrection memory) — the tower npm 11.6.2 keeps stripping those entries.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
