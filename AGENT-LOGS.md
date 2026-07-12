@@ -4,7 +4,25 @@
 
 ---
 
-### Session Log — 2026-07-12 HARDENING-RAILS Wave 2 SHIPPED — tower-idle guard + FULL nightly lane (soak mold), VERIFIED BAND 7, landed `edfa7edf..5e12ab63`
+### Session Log — 2026-07-12 HARDENING-RAILS Wave 3 SHIPPED (v1 rig core) — nightly certification rig + append-only history table, landed `f8c72114`, ARMED @01:30; independent grade in-flight + 2-night live cert pending
+
+**Mission:** Rail 3 of the hardening-machine — a nightly certification rig that runs the system's canonical invariants on a schedule and flags any drift night-over-night, plus a browsable history table (Rail 5 Office reads it).
+
+**Scope (honest, no silent caps):** v1 = the rig HARNESS certifying a first battery of **deterministic system invariants** (the 8 parity/hash CI checks: firm-rules-version, ts↔python exit/tier1/pm-factor parity, gate-contract-keys, pglite-ddl-parity, 2026-compliance, system-map). The **full pinned *backtest* battery** (canonical strategies through the real engine — master-plan Track A) is explicitly DEFERRED to Rail 3 Phase 2 (its own multi-hour build; not crammed).
+
+**Work landed on `hardening/phase-0` (SHA-pinned worktree `wt-rail3` @ base `98575bab`, rebase-once past a concurrent push, FF; additive +300, ZERO src/engine drift):**
+- **migration `0202_rails_nightly_reports`** (migration-author skill) — append-only immutable history (report_date + build_sha + verdict + certificate JSONB), idempotent, no BOM, no INSERT/UPDATE. Journal idx 205, `when 1783392618900` UNIQUE + > tip (applies clean, NOT silently skipped by the when-keyed pending filter). ★ Confirmed the 5 pre-existing dup-`when` pairs (0044a/0052 …) are the KNOWN, documented-in-`boot-migration-runner.ts`-lines-815-828, non-fatal set — my entry adds no 6th collision.
+- **cert-schema.cjs** (frozen 8-check battery + fail-CLOSED cert build) + **cert-diff.cjs** (pure night-over-night: green iff all pass, drift iff any fail, flips surfaced both directions) + **cert-rig.cjs** (guarded runner: battery → cert → diff vs last-night-from-DB → JSONL-first + append-only-DB fail-soft dual-write + scheduler audit; REUSES the landed soak idle-guard, same as the band-7 full-lane) + **register-cert-rig-task.ps1** (@01:30 — sequences after the 22:00 full-lane's 180-min cap and before the 03:00 soak).
+
+**Verification:** 10/10 pure-logic + assembleNightly tests green; all 8 invariant npm-script names confirmed present; 3 CI hard gates green (production-isolation, 2026-compliance, system-map:check); zero src/engine drift. **ARMED: schtask `TF-Rails-Cert-Rig` @01:30 Ready, next run 07/13 01:30** (main checkout FF-pulled to origin).
+
+**Carry-forward for next session:**
+- **Independent accuracy-validator grade is IN-FLIGHT (background) — Rail 3 is NOT yet certified; band pending its report.** Landed-before-grade is safe because the rig is INERT until (a) the 01:30 schtask fires and (b) migration 0202 applies on the next API boot (until then DB writes fail-soft to JSONL) — a fix-forward window before any live run.
+- **2-night live certification pending** (calendar-gated): after 2 clean nights, re-run with same pins → certificate should be byte-identical; perturb one invariant → diff must fire "drift". THAT is the pre-live→live evidence.
+- **Migration 0202 applies on next API restart** (not forced — the rig fail-softs to JSONL until then; DB history begins post-boot).
+- **Rail 3 Phase 2** (real-engine pinned backtest battery) + **Rails 4-5** (telemetry/metamorphic/tiering; Office "Tower Rails" card + history browser + "Rails Switch" reading the rails_mode/rails_skip_until rows) NOT started. Non-defects to keep documented: v1 battery is binary pass/fail (output-fingerprint enrichment = v2); the `report_date` a 01:30 run stamps is the next calendar day (minor, accepted).
+
+
 
 **Mission:** Build Rail 2 of the hardening-machine program — a nightly FULL test lane that runs ON THE TOWER and yields to live trading/backtests, reusing the now-landed soak idle-guard.
 
