@@ -6,6 +6,22 @@ Implements the 5 lints named FROZEN by `docs/designs/phase-1-h1-preregistration-
   direction_conflation_lint, unsat_sat_check, or_alternatives_honored,
   f2_coverage_gate, causality_lint.
 
+STATUS (F-1 repair, addendum §A, 2026-07-12): every lint returns a 3-state
+`status` -- `PASS` / `FAIL` / `NOT_EVALUATED` -- never a plain bool. The three
+structural lints (direction_conflation_lint, unsat_sat_check,
+or_alternatives_honored) return `NOT_EVALUATED` (`reason="no_compiled_topology"`)
+when `CompiledSpine.topology_present` is False -- i.e. no compile-stage
+`ConditionTopology`/`or_branches` overlay was supplied. `causality_lint`'s
+impossible-ref regex leg is ALWAYS live (its inputs -- anchor/comparator text
+-- are always present); its same-bar-opt-out leg returns
+`NOT_EVALUATED` (`reason="no_same_bar_fill_signal_lag"`, surfaced on
+`same_bar_leg_status`/`same_bar_leg_reason`) when `CompiledSpine.
+same_bar_params_present` is False. `NOT_EVALUATED` NEVER counts as `PASS`
+toward any grade (see cert_assembler.py's pilot_grade/full_grade). This
+replaces the PRE-F-1 behavior where the 3 structural lints + the same-bar leg
+vacuously PASSed when their input was absent -- a false declaration on a check
+that structurally could not fire.
+
 Each lint is a pure function `(CompiledSpine, full_transcript) -> LintResult`.
 No I/O, no randomness, no vectorbt import (this module and everything it
 imports is safe under pytest collection per CLAUDE.md's JIT-hang caveat --
@@ -122,25 +138,60 @@ class CompiledSpine:
     direction: Optional[str] = None
     same_bar_fill: bool = False
     signal_lag: Optional[int] = None
+    # §A: True iff a real compile-stage ConditionTopology/or_branches overlay
+    # was supplied by the caller -- gates the 3 structural lints. False (the
+    # default) is the honest pilot-conveyor state: no compile stage produces
+    # this yet (cert_assembler.py's WAVE1-FEED-UNRESOLVED note).
+    topology_present: bool = False
+    # §A: True iff same_bar_fill/signal_lag were actually supplied by an
+    # upstream stage -- gates causality_lint's same-bar-opt-out leg. False
+    # (the default) is the honest pilot-conveyor state: assemble_certificate
+    # exposes no such params (out of scope for this repair, addendum §C).
+    same_bar_params_present: bool = False
+
+
+# 3-state lint status (§A). Plain module constants, matching this file's
+# existing no-enum-class style (SpineCondition.direction etc use string
+# literals, not an Enum).
+STATUS_PASS = "PASS"
+STATUS_FAIL = "FAIL"
+STATUS_NOT_EVALUATED = "NOT_EVALUATED"
+
+REASON_NO_COMPILED_TOPOLOGY = "no_compiled_topology"
+REASON_NO_SAME_BAR_PARAMS = "no_same_bar_fill_signal_lag"
 
 
 @dataclass
 class LintResult:
-    passed: bool
+    status: str  # STATUS_PASS | STATUS_FAIL | STATUS_NOT_EVALUATED
+    reason: Optional[str] = None  # machine-readable, set on NOT_EVALUATED
     offending_anchor: Optional[str] = None
     offending_char_span: Optional[Tuple[int, int]] = None
+    # causality_lint only: the two legs surfaced separately so the certificate
+    # never claims the same-bar leg ran when it didn't, and so cert_assembler
+    # can gate pilot_grade on the regex leg specifically (addendum §B).
+    regex_leg_status: Optional[str] = None
+    same_bar_leg_status: Optional[str] = None
+    same_bar_leg_reason: Optional[str] = None
 
     def as_cert_fields(self) -> dict:
-        return {
-            "passed": self.passed,
+        fields = {
+            "status": self.status,
+            "reason": self.reason,
             "offending_anchor": self.offending_anchor,
             "offending_char_span": (
                 list(self.offending_char_span) if self.offending_char_span is not None else None
             ),
         }
+        if self.same_bar_leg_status is not None:
+            fields["regex_leg_status"] = self.regex_leg_status
+            fields["same_bar_leg_status"] = self.same_bar_leg_status
+            fields["same_bar_leg_reason"] = self.same_bar_leg_reason
+        return fields
 
 
-_PASS = LintResult(True)
+_PASS = LintResult(STATUS_PASS)
+_NOT_EVALUATED_NO_TOPOLOGY = LintResult(STATUS_NOT_EVALUATED, reason=REASON_NO_COMPILED_TOPOLOGY)
 
 
 # --------------------------------------------------------------------------- #
@@ -156,7 +207,14 @@ def direction_conflation_lint(spine: CompiledSpine, full_transcript: str) -> Lin
     directional OR-branches" (mode-ab-G4-validity-block-2026-07-11.md:77).
     A disabled sentinel (anti-pattern-catalog.md §3b) never counts as a real
     conflicting direction -- it is a deliberate never-true marker, not a live
-    gate."""
+    gate.
+
+    §A: returns NOT_EVALUATED when `spine.topology_present` is False -- no
+    compile-stage overlay means this check structurally cannot fire, and a
+    PASS in that state would be a false declaration (the vacuous-pass F-1
+    bug)."""
+    if not spine.topology_present:
+        return _NOT_EVALUATED_NO_TOPOLOGY
     or_members = {cid for group in spine.or_branches for cid in group}
     groups: Dict[int, List[SpineCondition]] = {}
     for c in spine.conditions:
@@ -170,7 +228,7 @@ def direction_conflation_lint(spine: CompiledSpine, full_transcript: str) -> Lin
                 (m for m in members if m.direction in ("long", "short")),
                 key=lambda m: m.char_span[0],
             )
-            return LintResult(False, offender.quote_anchor, offender.char_span)
+            return LintResult(STATUS_FAIL, offending_anchor=offender.quote_anchor, offending_char_span=offender.char_span)
     return _PASS
 
 
@@ -202,7 +260,12 @@ def unsat_sat_check(spine: CompiledSpine, full_transcript: str) -> LintResult:
     marker, anti-pattern-catalog.md:110-116) is EXCLUDED from the check
     entirely -- a standalone sentinel is valid by construction, and a
     sentinel paired with a real opposite condition is still the deliberate
-    disabled-direction pattern, not a fidelity defect."""
+    disabled-direction pattern, not a fidelity defect.
+
+    §A: returns NOT_EVALUATED when `spine.topology_present` is False (see
+    direction_conflation_lint's docstring for the rationale)."""
+    if not spine.topology_present:
+        return _NOT_EVALUATED_NO_TOPOLOGY
     groups: Dict[int, List[SpineCondition]] = {}
     for c in spine.conditions:
         if c.and_group is None or c.is_disabled_sentinel:
@@ -216,7 +279,7 @@ def unsat_sat_check(spine: CompiledSpine, full_transcript: str) -> LintResult:
             for j in range(i + 1, len(parsed)):
                 _m2, (lhs2, op2, rhs2) = parsed[j]
                 if (lhs1, rhs1) == (lhs2, rhs2) and _OPPOSITE_OP.get(op1) == op2:
-                    return LintResult(False, m1.quote_anchor, m1.char_span)
+                    return LintResult(STATUS_FAIL, offending_anchor=m1.quote_anchor, offending_char_span=m1.char_span)
     return _PASS
 
 
@@ -237,7 +300,14 @@ def or_alternatives_honored(spine: CompiledSpine, full_transcript: str) -> LintR
     `scripts/or-branches-ccr.py`'s own "does not count toward the executed
     numerator in either mode" carve-out) and does not fail. No or_branches
     declared at all -> nothing to honor, PASS (plain AND-only spines are
-    byte-identical regardless of the flag)."""
+    byte-identical regardless of the flag).
+
+    §A: returns NOT_EVALUATED when `spine.topology_present` is False -- this
+    guard runs BEFORE the "no or_branches declared" check, because an absent
+    compile-stage overlay means we don't actually know there ARE no
+    alternatives (as opposed to a real compile stage confirming none exist)."""
+    if not spine.topology_present:
+        return _NOT_EVALUATED_NO_TOPOLOGY
     if not spine.or_branches:
         return _PASS
     by_id = {c.condition_id: c for c in spine.conditions}
@@ -247,7 +317,7 @@ def or_alternatives_honored(spine: CompiledSpine, full_transcript: str) -> LintR
             continue
         if not or_branches_enabled():
             offender = min(spine_members, key=lambda c: c.char_span[0])
-            return LintResult(False, offender.quote_anchor, offender.char_span)
+            return LintResult(STATUS_FAIL, offending_anchor=offender.quote_anchor, offending_char_span=offender.char_span)
     return _PASS
 
 
@@ -274,13 +344,13 @@ def f2_coverage_gate(spine: CompiledSpine, full_transcript: str) -> LintResult:
     for c in spine.conditions:
         s, e = c.char_span
         if not (0 <= s <= e <= len(full_transcript)):
-            return LintResult(False, c.quote_anchor, c.char_span)
+            return LintResult(STATUS_FAIL, offending_anchor=c.quote_anchor, offending_char_span=c.char_span)
         if full_transcript[s:e] != c.quote_anchor:
-            return LintResult(False, c.quote_anchor, c.char_span)
+            return LintResult(STATUS_FAIL, offending_anchor=c.quote_anchor, offending_char_span=c.char_span)
         before_ok = s == 0 or not _WORD_CHAR.match(full_transcript[s - 1])
         after_ok = e == len(full_transcript) or not _WORD_CHAR.match(full_transcript[e])
         if not (before_ok and after_ok):
-            return LintResult(False, c.quote_anchor, c.char_span)
+            return LintResult(STATUS_FAIL, offending_anchor=c.quote_anchor, offending_char_span=c.char_span)
     return _PASS
 
 
@@ -299,25 +369,72 @@ _IMPOSSIBLE_REF = re.compile(
 
 
 def causality_lint(spine: CompiledSpine, full_transcript: str) -> LintResult:
-    """FAIL when a condition's text contains an IMPOSSIBLE reference the
-    engine's +1-bar shift cannot rescue (anti-pattern-catalog.md:78,
-    "no amount of next-bar shifting fixes a forward-looking indicator"), or
-    when the spine explicitly opts out of the auto-shift
-    (`same_bar_fill`/`signal_lag==0`, mirroring `sameBarOptOut` in the same
-    KB doc). Bare `close`/`high`/`low` comparator text is SAFE and must NOT
-    fire -- the pinned engine contract this lint must never re-violate."""
-    if spine.same_bar_fill or spine.signal_lag == 0:
-        offender = min(spine.conditions, key=lambda c: c.char_span[0]) if spine.conditions else None
-        return LintResult(
-            False,
-            offender.quote_anchor if offender else None,
-            offender.char_span if offender else None,
-        )
+    """Two independent legs, surfaced honestly (§A) rather than folded into
+    one silent verdict:
+
+    - REGEX LEG (always live -- anchor/comparator text is always present on
+      every certificate entry): FAIL when a condition's text contains an
+      IMPOSSIBLE reference the engine's +1-bar shift cannot rescue
+      (anti-pattern-catalog.md:78, "no amount of next-bar shifting fixes a
+      forward-looking indicator"). Bare `close`/`high`/`low` comparator text
+      is SAFE and must NOT fire -- the pinned engine contract this lint must
+      never re-violate.
+    - SAME-BAR-OPT-OUT LEG (`same_bar_fill`/`signal_lag==0`, mirroring
+      `sameBarOptOut` in the same KB doc): only evaluated when
+      `spine.same_bar_params_present` is True (an upstream stage actually
+      supplied these params); otherwise NOT_EVALUATED
+      (`reason="no_same_bar_fill_signal_lag"`) -- surfaced on
+      `same_bar_leg_status`/`same_bar_leg_reason` so the certificate never
+      claims this leg ran when it didn't.
+
+    The FIELD's overall `status` is FAIL if EITHER leg fails (regex leg
+    checked first), else PASS -- the same-bar leg being NOT_EVALUATED does
+    NOT collapse the overall field to NOT_EVALUATED (addendum §B: the
+    causality field must still be able to report PASS off the regex leg
+    alone, so it can gate pilot_grade)."""
+    regex_offender = None
     for c in spine.conditions:
         haystack = f"{c.quote_anchor} {c.comparator or ''}"
         if _IMPOSSIBLE_REF.search(haystack):
-            return LintResult(False, c.quote_anchor, c.char_span)
-    return _PASS
+            regex_offender = c
+            break
+    regex_leg_status = STATUS_FAIL if regex_offender is not None else STATUS_PASS
+
+    same_bar_leg_status = STATUS_NOT_EVALUATED
+    same_bar_leg_reason = REASON_NO_SAME_BAR_PARAMS
+    same_bar_offender = None
+    if spine.same_bar_params_present:
+        same_bar_leg_reason = None
+        if spine.same_bar_fill or spine.signal_lag == 0:
+            same_bar_leg_status = STATUS_FAIL
+            same_bar_offender = min(spine.conditions, key=lambda c: c.char_span[0]) if spine.conditions else None
+        else:
+            same_bar_leg_status = STATUS_PASS
+
+    if regex_leg_status == STATUS_FAIL:
+        return LintResult(
+            STATUS_FAIL,
+            offending_anchor=regex_offender.quote_anchor,
+            offending_char_span=regex_offender.char_span,
+            regex_leg_status=regex_leg_status,
+            same_bar_leg_status=same_bar_leg_status,
+            same_bar_leg_reason=same_bar_leg_reason,
+        )
+    if same_bar_leg_status == STATUS_FAIL:
+        return LintResult(
+            STATUS_FAIL,
+            offending_anchor=same_bar_offender.quote_anchor if same_bar_offender else None,
+            offending_char_span=same_bar_offender.char_span if same_bar_offender else None,
+            regex_leg_status=regex_leg_status,
+            same_bar_leg_status=same_bar_leg_status,
+            same_bar_leg_reason=same_bar_leg_reason,
+        )
+    return LintResult(
+        STATUS_PASS,
+        regex_leg_status=regex_leg_status,
+        same_bar_leg_status=same_bar_leg_status,
+        same_bar_leg_reason=same_bar_leg_reason,
+    )
 
 
 COMPILE_LINTS = {

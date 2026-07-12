@@ -59,6 +59,13 @@ def _spine(case: dict) -> CompiledSpine:
         or_branches=case.get("or_branches", []),
         same_bar_fill=bool(case.get("same_bar_fill", False)),
         signal_lag=case.get("signal_lag"),
+        # §A 3-state fixtures: fixture cases explicitly declare whether a
+        # real compile-stage overlay is present, rather than this being
+        # inferred from field values -- see the birth-gate NOT_EVALUATED
+        # cases below, which reuse a POSITIVE case's exact conditions with
+        # topology_present flipped to False to prove no vacuous PASS/FAIL.
+        topology_present=bool(case.get("topology_present", False)),
+        same_bar_params_present=bool(case.get("same_bar_params_present", False)),
     )
 
 
@@ -72,19 +79,26 @@ def _run(monkeypatch, lint_name: str, case: dict):
 
 
 # --------------------------------------------------------------------------- #
-# Birth gate: FIRES-ON-POSITIVES (passed=False) ∧ SILENT-ON-NEGATIVES
-# (passed=True), zero exceptions.
+# Birth gate: FIRES-ON-POSITIVES (status=FAIL) ∧ SILENT-ON-NEGATIVES
+# (status=PASS), zero exceptions. §A extends this to a THIRD proof per
+# structural lint: NOT_EVALUATED (reason=no_compiled_topology) when the
+# compiled-topology input is absent -- so a positive/negative pair proving
+# the check WORKS can never be mistaken for proof it runs unconditionally.
 # --------------------------------------------------------------------------- #
 
 _FX = _load_fixtures()
 _POS = [(entry["lint"], p) for entry in _FX["lints"] for p in entry["positives"]]
 _NEG = [(entry["lint"], n) for entry in _FX["lints"] for n in entry["negatives"]]
+_STRUCTURAL_LINTS = {"direction_conflation_lint", "unsat_sat_check", "or_alternatives_honored"}
+_NOT_EVAL = [(entry["lint"], ne) for entry in _FX["lints"] for ne in entry.get("not_evaluated", [])]
+_CAUSALITY_ENTRY = next(e for e in _FX["lints"] if e["lint"] == "causality_lint")
+_CAUSALITY_SAME_BAR_NE = _CAUSALITY_ENTRY["same_bar_leg_not_evaluated"]
 
 
 @pytest.mark.parametrize("lint_name,pos", _POS, ids=[f"{l}:{p['id']}" for l, p in _POS])
 def test_birth_positive_fires(monkeypatch, lint_name, pos):
     result = _run(monkeypatch, lint_name, pos)
-    assert result.passed is False, f"{lint_name} positive {pos['id']} did NOT fire (dormant lint)"
+    assert result.status == cl.STATUS_FAIL, f"{lint_name} positive {pos['id']} did NOT fire (dormant lint)"
     exp = pos["expect"]
     if "offending_condition_id" in exp:
         expected_cd = next(c for c in pos["conditions"] if c["condition_id"] == exp["offending_condition_id"])
@@ -97,10 +111,42 @@ def test_birth_positive_fires(monkeypatch, lint_name, pos):
 @pytest.mark.parametrize("lint_name,neg", _NEG, ids=[f"{l}:{n['id']}" for l, n in _NEG])
 def test_birth_negative_silent(monkeypatch, lint_name, neg):
     result = _run(monkeypatch, lint_name, neg)
-    assert result.passed is True, (
+    assert result.status == cl.STATUS_PASS, (
         f"{lint_name} negative {neg['id']} FIRED (false positive -- would reject a clean "
         f"certificate): offending_anchor={result.offending_anchor!r}"
     )
+
+
+@pytest.mark.parametrize("lint_name,ne", _NOT_EVAL, ids=[f"{l}:{n['id']}" for l, n in _NOT_EVAL])
+def test_birth_not_evaluated_when_topology_absent(monkeypatch, lint_name, ne):
+    """§A THIRD birth-gate proof (structural lints only): with the exact same
+    (structurally-violating) conditions as the lint's own positive fixture but
+    `topology_present=False`, the lint must return NOT_EVALUATED -- NEITHER a
+    silent PASS (the F-1 bug) NOR a FAIL (that would be fabricating a verdict
+    from data that was never supplied)."""
+    assert lint_name in _STRUCTURAL_LINTS
+    result = _run(monkeypatch, lint_name, ne)
+    assert result.status == cl.STATUS_NOT_EVALUATED, (
+        f"{lint_name} not_evaluated case {ne['id']} returned {result.status} "
+        f"(expected NOT_EVALUATED -- topology_present was False)"
+    )
+    assert result.reason == ne["expect"]["reason"] == cl.REASON_NO_COMPILED_TOPOLOGY
+
+
+@pytest.mark.parametrize("case", _CAUSALITY_SAME_BAR_NE, ids=lambda c: c["id"])
+def test_birth_causality_same_bar_leg_not_evaluated_when_params_absent(case):
+    """causality_lint's THIRD proof: the same-bar-opt-out leg reports
+    NOT_EVALUATED when `same_bar_params_present` is False -- even if
+    `same_bar_fill=True` happens to be set in the input (proves the gate is
+    on `same_bar_params_present`, not on `same_bar_fill`'s truthiness). The
+    overall FIELD status must still be able to report PASS (regex leg clean)
+    -- it must NOT collapse to NOT_EVALUATED just because this one leg didn't
+    run (addendum §B)."""
+    spine = _spine(case)
+    result = cl.causality_lint(spine, case["transcript"])
+    assert result.status == case["expect_overall_status"]
+    assert result.same_bar_leg_status == case["expect_same_bar_leg_status"]
+    assert result.same_bar_leg_reason == case["expect_same_bar_leg_reason"]
 
 
 def test_birth_gate_all_pass(monkeypatch):
@@ -108,21 +154,30 @@ def test_birth_gate_all_pass(monkeypatch):
     test_birth_gate_all_pass)."""
     failures = []
     for lint_name, pos in _POS:
-        if _run(monkeypatch, lint_name, pos).passed is not False:
+        if _run(monkeypatch, lint_name, pos).status != cl.STATUS_FAIL:
             failures.append(("positive-did-not-fire", lint_name, pos["id"]))
     for lint_name, neg in _NEG:
-        if _run(monkeypatch, lint_name, neg).passed is not True:
+        if _run(monkeypatch, lint_name, neg).status != cl.STATUS_PASS:
             failures.append(("negative-fired", lint_name, neg["id"]))
+    for lint_name, ne in _NOT_EVAL:
+        if _run(monkeypatch, lint_name, ne).status != cl.STATUS_NOT_EVALUATED:
+            failures.append(("not-evaluated-case-did-not-report-not-evaluated", lint_name, ne["id"]))
     assert not failures, failures
 
 
 def test_every_lint_has_at_least_one_positive_and_negative():
     """Engagement/dormancy guard: a lint with an empty positives or negatives
-    list would trivially pass its own birth gate without proving anything."""
+    list would trivially pass its own birth gate without proving anything.
+    Extended (§A): every STRUCTURAL lint must also have >=1 not_evaluated
+    fixture, or the NOT_EVALUATED path itself could silently regress to a
+    vacuous PASS/FAIL with nothing to catch it."""
     for entry in _FX["lints"]:
         assert entry["positives"], f"{entry['lint']} has no positive fixture (dormant)"
         assert entry["negatives"], f"{entry['lint']} has no negative fixture (dormant)"
+        if entry["lint"] in _STRUCTURAL_LINTS:
+            assert entry.get("not_evaluated"), f"{entry['lint']} has no not_evaluated fixture (dormant §A path)"
     assert {e["lint"] for e in _FX["lints"]} == set(COMPILE_LINTS.keys())
+    assert _CAUSALITY_SAME_BAR_NE, "causality_lint has no same_bar_leg_not_evaluated fixture (dormant §A path)"
 
 
 # --------------------------------------------------------------------------- #
@@ -137,8 +192,8 @@ def test_lint_result_deterministic_repeat_call():
     spine = _spine(case)
     r1 = cl.direction_conflation_lint(spine, case["transcript"])
     r2 = cl.direction_conflation_lint(spine, case["transcript"])
-    assert (r1.passed, r1.offending_anchor, r1.offending_char_span) == (
-        r2.passed,
+    assert (r1.status, r1.offending_anchor, r1.offending_char_span) == (
+        r2.status,
         r2.offending_anchor,
         r2.offending_char_span,
     )
@@ -151,11 +206,25 @@ def test_no_lint_imports_vectorbt_or_backtester():
     assert "src.engine.backtester" not in sys.modules
 
 
-def test_empty_spine_passes_every_lint_vacuously():
+def test_empty_spine_no_conditions_to_check():
+    """§A: an empty, topology-less spine is the honest pilot-conveyor default
+    (`CompiledSpine()` with no args). The 3 structural lints must report
+    NOT_EVALUATED (topology absent), NOT a vacuous PASS -- that distinction
+    is the entire point of the F-1 repair. f2_coverage_gate and
+    causality_lint's regex leg stay live and trivially PASS (there is
+    nothing to check, and that IS a genuine answer since their inputs are
+    always present); causality's same-bar leg is NOT_EVALUATED too (params
+    absent)."""
     empty = CompiledSpine(conditions=[])
     for name, fn in COMPILE_LINTS.items():
         r = fn(empty, "")
-        assert r.passed is True, f"{name} should pass vacuously on an empty spine"
+        if name in _STRUCTURAL_LINTS:
+            assert r.status == cl.STATUS_NOT_EVALUATED, f"{name} should be NOT_EVALUATED on a topology-less empty spine"
+            assert r.reason == cl.REASON_NO_COMPILED_TOPOLOGY
+        else:
+            assert r.status == cl.STATUS_PASS, f"{name} should PASS on an empty spine (nothing to check)"
+    causality_result = cl.causality_lint(empty, "")
+    assert causality_result.same_bar_leg_status == cl.STATUS_NOT_EVALUATED
 
 
 # --------------------------------------------------------------------------- #
@@ -174,11 +243,11 @@ def test_or_alternatives_honored_reuse_tracks_the_real_flag(monkeypatch):
 
     monkeypatch.delenv("TF_OR_BRANCHES_ENABLED", raising=False)
     assert or_branches_enabled() is False
-    assert cl.or_alternatives_honored(spine, case["transcript"]).passed is False
+    assert cl.or_alternatives_honored(spine, case["transcript"]).status == cl.STATUS_FAIL
 
     monkeypatch.setenv("TF_OR_BRANCHES_ENABLED", "true")
     assert or_branches_enabled() is True
-    assert cl.or_alternatives_honored(spine, case["transcript"]).passed is True
+    assert cl.or_alternatives_honored(spine, case["transcript"]).status == cl.STATUS_PASS
 
 
 def test_direction_conflation_parity_and_group0_type_specimen():
@@ -207,10 +276,11 @@ def test_direction_conflation_parity_and_group0_type_specimen():
                 direction="short",
                 and_group=0,
             ),
-        ]
+        ],
+        topology_present=True,
     )
     result = cl.direction_conflation_lint(spine, transcript)
-    assert result.passed is False, "the named and_group0 defect must be caught, not silently passed"
+    assert result.status == cl.STATUS_FAIL, "the named and_group0 defect must be caught, not silently passed"
 
 
 def test_unsat_sat_check_parity_5sma_type_specimen():
@@ -240,9 +310,10 @@ def test_unsat_sat_check_parity_5sma_type_specimen():
                 and_group=0,
                 comparator="5-SMA<50-SMA",
             ),
-        ]
+        ],
+        topology_present=True,
     )
-    assert cl.unsat_sat_check(spine, transcript).passed is False
+    assert cl.unsat_sat_check(spine, transcript).status == cl.STATUS_FAIL
 
 
 @pytest.mark.parametrize(
@@ -265,9 +336,10 @@ def test_f2_coverage_gate_parity_adversarial_word_set(case):
         cond["span_len"] = case["span_len"]
     spine = CompiledSpine(conditions=[_condition(transcript, cond)])
     result = cl.f2_coverage_gate(spine, transcript)
-    assert result.passed is case["expect_word_boundary_clean"], (
+    expected_status = cl.STATUS_PASS if case["expect_word_boundary_clean"] else cl.STATUS_FAIL
+    assert result.status == expected_status, (
         f"{case['id']}: expected word_boundary_clean={case['expect_word_boundary_clean']} "
-        f"got passed={result.passed}"
+        f"got status={result.status}"
     )
 
 
@@ -294,4 +366,4 @@ def test_causality_lint_never_flags_bare_engine_shifted_refs():
                 SpineCondition(condition_id="A", quote_anchor=text, char_span=(0, len(text)), comparator=text)
             ]
         )
-        assert cl.causality_lint(spine, text).passed is True, text
+        assert cl.causality_lint(spine, text).status == cl.STATUS_PASS, text

@@ -26,19 +26,34 @@ topology, the assembler accepts it as an OPTIONAL per-condition overlay
 (`ConditionTopology`, keyed by char_span -- the one join key common to both
 tier-1 and tier-3 output) plus an optional `or_branches` grouping of the
 assembler's own synthetic condition_ids (`t1-<i>` / `t3-<j>`, assignment
-order). When absent, the 3 structural lints (direction_conflation_lint /
-unsat_sat_check / or_alternatives_honored) degrade to a vacuous PASS (nothing
-to check against). f2_coverage_gate stays fully active (anchor/span/text are
-on every certificate entry). causality_lint is PARTIALLY active: its
-impossible-ref regex leg is fully live (operates on anchor/comparator text),
-but its same-bar-opt-out leg is UNREACHABLE in the current wiring --
-`assemble_certificate` exposes no `same_bar_fill`/`signal_lag` params, so both
-default off and that branch never fires until an upstream stage supplies them.
-So of the 5 named compile-integrity lints, only ~1.5 contribute discriminating
-power on a topology-less certificate; a faithful all-5 §4 test requires a
-compile-stage topology producer (F-1, independent grade 2026-07-12). This is
-the most defensible reading available without inventing data no upstream stage
-produces; flagged here per Law 4 rather than silently assumed.
+order).
+
+F-1 REPAIR (addendum §A, 2026-07-12; supersedes the vacuous-PASS note this
+docstring used to carry): NO lint ever vacuously passes. When `topology` and
+`or_branches` are both absent (the pilot conveyor's actual state today), the
+3 structural lints (direction_conflation_lint / unsat_sat_check /
+or_alternatives_honored) report `NOT_EVALUATED` (`reason="no_compiled_
+topology"`), not PASS. `f2_coverage_gate` stays fully active (anchor/span/text
+are on every certificate entry). `causality_lint`'s impossible-ref regex leg
+is fully live; its same-bar-opt-out leg reports `NOT_EVALUATED`
+(`reason="no_same_bar_fill_signal_lag"`, surfaced on `same_bar_leg_status`)
+because `assemble_certificate` exposes no `same_bar_fill`/`signal_lag` params
+(still out of scope here -- the option-A topology producer, addendum §C,
+wires those through later). Every `compile_integrity` field on the emitted
+certificate carries its 3-state status honestly, on the artifact (Law 7).
+
+TWO-GRADE CERTIFICATE (addendum §B/§C): `pilot_grade` reads the pilot's
+actual question -- every spine condition classifies (tier 1/3) with a
+resolvable verbatim anchor AND the LIVE lints (`f2_coverage_gate` +
+`causality_lint`'s regex leg) PASS. The 3 structural lints + causality's
+same-bar leg being NOT_EVALUATED does NOT block pilot_grade. `full_grade` is
+strictly stronger: pilot_grade AND all 5 lints PASS on REAL compiled
+topology (zero NOT_EVALUATED anywhere). In this topology-less pilot conveyor
+full_grade is NEVER reachable -- that is correct and expected (addendum §C:
+the compile-stage topology producer is a pre-registered PRECONDITION of the
+H2 battery read, not built here). `certificate_grade` is kept as a bool alias
+of `full_grade` (the strictest §4 reading, the only grade H2 consumes) so no
+caller can mistake a lesser pilot-grade certificate for the full standard.
 """
 
 from __future__ import annotations
@@ -46,6 +61,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+from . import compile_lints as cl
 from .compile_lints import CompiledSpine, SpineCondition, run_all_lints
 from .tier1_detectors import Tier1Detection, Tier1FallThrough
 
@@ -192,7 +208,19 @@ def assemble_certificate(
         )
         spine_conditions.append(_spine_condition(f"t3-{j}", verdict.quote_anchor, verdict.char_span, topo_by_span))
 
-    spine = CompiledSpine(conditions=spine_conditions, or_branches=or_branches or [])
+    # §A: topology_present is True iff the caller actually supplied a real
+    # compile-stage overlay (ConditionTopology rows and/or or_branches
+    # groups) -- NOT inferred from per-condition field values, so an absent
+    # overlay never masquerades as "nothing to check" (that would be the
+    # vacuous-PASS bug this repair removes). same_bar_params_present stays
+    # False here unconditionally: this function exposes no same_bar_fill/
+    # signal_lag params (out of scope, addendum §C wires those later).
+    spine = CompiledSpine(
+        conditions=spine_conditions,
+        or_branches=or_branches or [],
+        topology_present=bool(topology) or bool(or_branches),
+        same_bar_params_present=False,
+    )
     lint_results = run_all_lints(spine, full_transcript)
     compile_integrity = {name: r.as_cert_fields() for name, r in lint_results.items()}
 
@@ -202,9 +230,46 @@ def assemble_certificate(
         for c in condition_entries
         if c["classifying_tier"] is not None
     )
-    every_lint_passes = all(r.passed for r in lint_results.values())
 
-    certificate_grade = bool(condition_entries) and every_condition_classified and every_anchor_resolves and every_lint_passes
+    f2_result = lint_results["f2_coverage_gate"]
+    causality_result = lint_results["causality_lint"]
+
+    # §B: pilot_grade gates ONLY on the live subset -- f2_coverage_gate PASS
+    # and causality_lint's impossible-ref REGEX LEG specifically PASS (not
+    # its overall field status, and NOT the same-bar leg, and NOT the 3
+    # structural lints). This is deliberate: a structural lint that happens
+    # to FAIL on a rare topology-bearing certificate is a real compile-time
+    # defect the pilot's own question does not ask about -- that gap is
+    # exactly what full_grade (and the §C H2 precondition) exists to close.
+    live_lints_pass = (
+        f2_result.status == cl.STATUS_PASS
+        and causality_result.regex_leg_status == cl.STATUS_PASS
+    )
+
+    pilot_grade = (
+        bool(condition_entries)
+        and every_condition_classified
+        and every_anchor_resolves
+        and live_lints_pass
+    )
+
+    # §C: full_grade requires ALL FIVE lints PASS on real topology -- zero
+    # NOT_EVALUATED anywhere in compile_integrity, including causality's
+    # same_bar_leg_status sub-field (a lint whose top-level status happens to
+    # be PASS can still carry a NOT_EVALUATED sub-leg; that must still block
+    # full_grade -- "on EVERY certificate field", addendum §A).
+    def _statuses(r: cl.LintResult) -> List[str]:
+        statuses = [r.status]
+        if r.same_bar_leg_status is not None:
+            statuses.append(r.same_bar_leg_status)
+        return statuses
+
+    zero_not_evaluated = all(
+        s != cl.STATUS_NOT_EVALUATED for r in lint_results.values() for s in _statuses(r)
+    )
+    all_five_pass = all(r.status == cl.STATUS_PASS for r in lint_results.values())
+
+    full_grade = pilot_grade and all_five_pass and zero_not_evaluated
 
     return {
         "conditions": condition_entries,
@@ -216,5 +281,10 @@ def assemble_certificate(
             taxonomy_version=taxonomy_version,
         ).as_dict(),
         "scope_line": scope_line,
-        "certificate_grade": certificate_grade,
+        "pilot_grade": pilot_grade,
+        "full_grade": full_grade,
+        # bool alias of full_grade (§D: the strictest §4 reading is the only
+        # grade H2 consumes) -- kept so any future caller reading a plain
+        # bool never mistakes a lesser pilot-grade certificate for full §4.
+        "certificate_grade": full_grade,
     }

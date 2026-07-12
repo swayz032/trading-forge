@@ -1,7 +1,8 @@
 {
   "title": "H1 compile-integrity lint engagement-birthright fixtures (pre-reg §4 / §7 Law 1)",
   "frozen": "2026-07-12",
-  "note": "Birth gate: FIRES-ON-POSITIVES (passed=false, violation present) AND SILENT-ON-NEGATIVES (passed=true, clean) with ZERO exceptions -- mirrors tier1_birth_fixtures.json's discipline for the compile-integrity layer. Each condition resolves its char_span from `anchor_find`/`span_relative_to`+`span_len` (test-computed) rather than hand-counted offsets; `char_span` is only given literally for a deliberately non-resolving (fabricated) anchor.",
+  "amended": "2026-07-12 F-1 repair (addendum §A): added `topology_present`/`same_bar_params_present` flags on existing cases (all set true -- they test the REAL topology-bearing evaluation), plus `not_evaluated` case lists for the 3 structural lints and a `same_bar_leg_not_evaluated` list for causality_lint, proving NOT_EVALUATED replaces the old vacuous PASS when the compiled-topology input is absent.",
+  "note": "Birth gate: FIRES-ON-POSITIVES (status=FAIL, violation present) AND SILENT-ON-NEGATIVES (status=PASS, clean) with ZERO exceptions -- mirrors tier1_birth_fixtures.json's discipline for the compile-integrity layer. Each condition resolves its char_span from `anchor_find`/`span_relative_to`+`span_len` (test-computed) rather than hand-counted offsets; `char_span` is only given literally for a deliberately non-resolving (fabricated) anchor. `not_evaluated` cases assert status=NOT_EVALUATED with the reason machine-readable per addendum §A.",
   "reuse_ledger": {
     "direction_conflation_lint": "PARITY-FIXTURED -- docs/designs/mode-ab-G4-validity-block-2026-07-11.md:76-77,223,386 (and_group0 type-specimen)",
     "unsat_sat_check": "PARITY-FIXTURED -- same doc line 386 + anti-pattern-catalog.md:110-116 (sentinel exemption)",
@@ -20,6 +21,7 @@
             { "condition_id": "A", "quote_anchor": "5-SMA cross above 50", "direction": "long", "and_group": 0 },
             { "condition_id": "B", "quote_anchor": "5-SMA cross below 50", "direction": "short", "and_group": 0 }
           ],
+          "topology_present": true,
           "expect": { "passed": false, "offending_condition_id": "A" }
         }
       ],
@@ -32,6 +34,7 @@
             { "condition_id": "B", "quote_anchor": "5-SMA cross below 50", "direction": "short", "and_group": 0 }
           ],
           "or_branches": [["A", "B"]],
+          "topology_present": true,
           "expect": { "passed": true }
         },
         {
@@ -41,6 +44,7 @@
             { "condition_id": "A", "quote_anchor": "go long on breakout above the range high", "direction": "long", "and_group": 0 },
             { "condition_id": "B", "quote_anchor": "high < low", "direction": "short", "and_group": 0, "is_disabled_sentinel": true }
           ],
+          "topology_present": true,
           "expect": { "passed": true }
         },
         {
@@ -50,7 +54,20 @@
             { "condition_id": "A", "quote_anchor": "go long on breakout above resistance", "direction": "long", "and_group": 0 },
             { "condition_id": "B", "quote_anchor": "retest of support", "direction": "long", "and_group": 0 }
           ],
+          "topology_present": true,
           "expect": { "passed": true }
+        }
+      ],
+      "not_evaluated": [
+        {
+          "id": "DC_NE_no_topology",
+          "transcript": "on the 5-SMA cross above 50 go long, on the 5-SMA cross below 50 go short",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "5-SMA cross above 50", "direction": "long", "and_group": 0 },
+            { "condition_id": "B", "quote_anchor": "5-SMA cross below 50", "direction": "short", "and_group": 0 }
+          ],
+          "topology_present": false,
+          "expect": { "reason": "no_compiled_topology" }
         }
       ]
     },
@@ -64,6 +81,7 @@
             { "condition_id": "A", "quote_anchor": "5-SMA > 50-SMA", "and_group": 0, "comparator": "5-SMA>50-SMA" },
             { "condition_id": "B", "quote_anchor": "5-SMA < 50-SMA", "and_group": 0, "comparator": "5-SMA<50-SMA" }
           ],
+          "topology_present": true,
           "expect": { "passed": false, "offending_condition_id": "A" }
         }
       ],
@@ -74,6 +92,7 @@
           "conditions": [
             { "condition_id": "A", "quote_anchor": "high < low", "and_group": 0, "comparator": "high<low", "is_disabled_sentinel": true }
           ],
+          "topology_present": true,
           "expect": { "passed": true }
         },
         {
@@ -83,6 +102,7 @@
             { "condition_id": "A", "quote_anchor": "close > orh_15m", "and_group": 0, "comparator": "close>orh_15m" },
             { "condition_id": "B", "quote_anchor": "close < orh_15m", "and_group": 1, "comparator": "close<orh_15m" }
           ],
+          "topology_present": true,
           "expect": { "passed": true }
         },
         {
@@ -92,7 +112,20 @@
             { "condition_id": "A", "quote_anchor": "close > orh_15m", "and_group": 0, "comparator": "close>orh_15m" },
             { "condition_id": "B", "quote_anchor": "volume > avg_volume", "and_group": 0, "comparator": "volume>avg_volume" }
           ],
+          "topology_present": true,
           "expect": { "passed": true }
+        }
+      ],
+      "not_evaluated": [
+        {
+          "id": "US_NE_no_topology",
+          "transcript": "the strategy requires 5-SMA > 50-SMA and 5-SMA < 50-SMA at the same time",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "5-SMA > 50-SMA", "and_group": 0, "comparator": "5-SMA>50-SMA" },
+            { "condition_id": "B", "quote_anchor": "5-SMA < 50-SMA", "and_group": 0, "comparator": "5-SMA<50-SMA" }
+          ],
+          "topology_present": false,
+          "expect": { "reason": "no_compiled_topology" }
         }
       ]
     },
@@ -107,6 +140,7 @@
             { "condition_id": "B", "quote_anchor": "pre-market low retest", "role": "spine" }
           ],
           "or_branches": [["A", "B"]],
+          "topology_present": true,
           "expect": { "passed": false, "offending_condition_id": "A" }
         }
       ],
@@ -119,6 +153,7 @@
             { "condition_id": "B", "quote_anchor": "pre-market low retest", "role": "spine" }
           ],
           "or_branches": [["A", "B"]],
+          "topology_present": true,
           "env": { "TF_OR_BRANCHES_ENABLED": "true" },
           "expect": { "passed": true }
         },
@@ -128,6 +163,7 @@
           "conditions": [
             { "condition_id": "A", "quote_anchor": "buy from the demand zone when it is retested", "role": "spine" }
           ],
+          "topology_present": true,
           "expect": { "passed": true }
         },
         {
@@ -138,7 +174,21 @@
             { "condition_id": "B", "quote_anchor": "a rare footnote", "role": "confluence" }
           ],
           "or_branches": [["A", "B"]],
+          "topology_present": true,
           "expect": { "passed": true }
+        }
+      ],
+      "not_evaluated": [
+        {
+          "id": "OR_NE_no_topology",
+          "transcript": "take puts on a VWOP retest or take puts on a pre-market low retest",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "take puts on a VWOP retest", "role": "spine" },
+            { "condition_id": "B", "quote_anchor": "pre-market low retest", "role": "spine" }
+          ],
+          "or_branches": [["A", "B"]],
+          "topology_present": false,
+          "expect": { "reason": "no_compiled_topology" }
         }
       ]
     },
@@ -207,6 +257,7 @@
             { "condition_id": "A", "quote_anchor": "close > orh_15m", "comparator": "close>orh_15m" }
           ],
           "same_bar_fill": true,
+          "same_bar_params_present": true,
           "expect": { "passed": false, "offending_condition_id": "A" }
         },
         {
@@ -234,6 +285,29 @@
             { "condition_id": "A", "quote_anchor": "previous swing high" }
           ],
           "expect": { "passed": true }
+        }
+      ],
+      "same_bar_leg_not_evaluated": [
+        {
+          "id": "CL_NE_same_bar_params_absent",
+          "transcript": "close > orh_15m",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "close > orh_15m", "comparator": "close>orh_15m" }
+          ],
+          "expect_overall_status": "PASS",
+          "expect_same_bar_leg_status": "NOT_EVALUATED",
+          "expect_same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+        },
+        {
+          "id": "CL_NE_same_bar_params_absent_even_with_same_bar_fill_set",
+          "transcript": "close > orh_15m",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "close > orh_15m", "comparator": "close>orh_15m" }
+          ],
+          "same_bar_fill": true,
+          "expect_overall_status": "PASS",
+          "expect_same_bar_leg_status": "NOT_EVALUATED",
+          "expect_same_bar_leg_reason": "no_same_bar_fill_signal_lag"
         }
       ]
     }

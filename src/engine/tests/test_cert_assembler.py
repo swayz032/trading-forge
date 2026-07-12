@@ -1,9 +1,14 @@
-"""H1 certificate assembler contract tests (Wave-4 deliverable 5).
+"""H1 certificate assembler contract tests (Wave-4 deliverable 5; F-1 repair
+addendum §A/§B/§C, 2026-07-12).
 
 Covers: (a) every emitted char_span resolves to quote_anchor verbatim; (b)
-certificate_grade logic (a failing lint OR an unanchored/unclassified
-condition => grade FALSE); (c) classifying_tier==2 is NEVER emitted; (d)
-adjudication_verdict present iff tier==3; (e) provenance complete.
+pilot_grade/full_grade/certificate_grade logic -- pilot_grade gates on
+classification+anchoring+the LIVE lints only (f2_coverage_gate +
+causality_lint's regex leg); full_grade additionally requires ALL FIVE lints
+PASS with ZERO NOT_EVALUATED anywhere (unreachable in the topology-less
+pilot conveyor by design, addendum §C); certificate_grade is a bool alias of
+full_grade; (c) classifying_tier==2 is NEVER emitted; (d) adjudication_verdict
+present iff tier==3; (e) provenance complete.
 
 Imports ONLY the pure-stdlib extraction package (no vectorbt / no
 backtester), matching test_tier1_detectors.py / test_compile_lints.py.
@@ -75,11 +80,22 @@ def test_every_char_span_resolves_verbatim_mixed_tier1_tier3():
 
 
 # --------------------------------------------------------------------------- #
-# (b) certificate_grade logic
+# (b) pilot_grade / full_grade / certificate_grade logic (F-1 repair, addendum
+# §A/§B/§C, 2026-07-12). certificate_grade is a bool alias of full_grade (the
+# strictest §4 reading -- the only grade H2 consumes, addendum §D).
 # --------------------------------------------------------------------------- #
 
 
-def test_certificate_grade_true_when_fully_classified_and_anchored_and_lints_clean():
+def test_pilot_grade_true_but_full_grade_false_on_topology_less_certificate():
+    """The honest pilot-conveyor default (no topology, no or_branches
+    supplied): every condition classifies+anchors and the two LIVE lints
+    (f2_coverage_gate, causality_lint's regex leg) are clean, so pilot_grade
+    is True -- this is the pilot's actual question, answered. full_grade
+    (and its certificate_grade alias) must be False: the 3 structural lints
+    + causality's same-bar leg are NOT_EVALUATED (topology/params absent),
+    and §C is explicit that full_grade is NEVER reachable in this topology-
+    less path -- that gap is the pre-registered H2 precondition, not a bug
+    here."""
     transcript = "buy from the demand zone when it is retested"
     res = run_tier1(transcript)
     cert = assemble_certificate(
@@ -91,12 +107,20 @@ def test_certificate_grade_true_when_fully_classified_and_anchored_and_lints_cle
         tier1_detections=res.detections,
         tier1_fallthroughs=[],
     )
-    assert cert["certificate_grade"] is True
+    assert cert["pilot_grade"] is True
+    assert cert["full_grade"] is False
+    assert cert["certificate_grade"] is False
+    for name in ("direction_conflation_lint", "unsat_sat_check", "or_alternatives_honored"):
+        assert cert["compile_integrity"][name]["status"] == "NOT_EVALUATED"
+        assert cert["compile_integrity"][name]["reason"] == "no_compiled_topology"
+    assert cert["compile_integrity"]["causality_lint"]["same_bar_leg_status"] == "NOT_EVALUATED"
+    assert cert["compile_integrity"]["f2_coverage_gate"]["status"] == "PASS"
+    assert cert["compile_integrity"]["causality_lint"]["status"] == "PASS"
 
 
-def test_certificate_grade_false_when_a_span_is_unclassified():
+def test_pilot_grade_false_when_a_span_is_unclassified():
     """A fall-through span with NO control-gate-passing tier-3 verdict stays
-    classifying_tier=None -- certificate_grade must go FALSE."""
+    classifying_tier=None -- pilot_grade (and full_grade) must go FALSE."""
     transcript = "buy from the demand zone when it is retested. now back to the euro dollar chart here."
     res = run_tier1(transcript[:44], char_span=(0, 44))
     unresolved_span = (46, 87)
@@ -112,14 +136,42 @@ def test_certificate_grade_false_when_a_span_is_unclassified():
         tier3_verdicts=[],  # no adjudication reached this span
     )
     assert any(c["classifying_tier"] is None for c in cert["conditions"])
+    assert cert["pilot_grade"] is False
+    assert cert["full_grade"] is False
     assert cert["certificate_grade"] is False
 
 
-def test_certificate_grade_false_when_a_lint_fails():
+def test_pilot_grade_false_when_a_live_lint_fails():
+    """A LIVE lint (f2_coverage_gate) FAIL must block pilot_grade -- this is
+    the addendum §B disjunction's live half: the pilot's own question
+    (classification + anchoring + the two live checks) is genuinely unmet."""
+    transcript = "buy from the demand zone when it is retested"
+    fabricated_span = (0, 5)
+    det = Tier1Detection(surface_class="imperative", quote_anchor="totally fabricated text", char_span=fabricated_span)
+    cert = assemble_certificate(
+        full_transcript=transcript,
+        full_transcript_sha256="sha1",
+        source_video_id="v1",
+        extractor_version="e1",
+        taxonomy_version="t1",
+        tier1_detections=[det],
+        tier1_fallthroughs=[],
+    )
+    assert cert["compile_integrity"]["f2_coverage_gate"]["status"] == "FAIL"
+    assert cert["pilot_grade"] is False
+    assert cert["full_grade"] is False
+    assert cert["certificate_grade"] is False
+
+
+def test_structural_lint_fail_does_not_block_pilot_grade_but_blocks_full_grade():
     """Feed the direction-conflation type-specimen through the assembler via
-    the topology overlay + or_branches param and confirm a single failing
-    compile-integrity lint alone flips certificate_grade to FALSE even though
-    every condition is fully classified and anchored."""
+    the topology overlay + or_branches param. Per addendum §B, pilot_grade
+    gates ONLY on the live subset (f2_coverage_gate + causality's regex leg)
+    -- a structural lint FAIL on a rare topology-bearing certificate does
+    NOT block pilot_grade (the pilot's own question does not ask about
+    compile-time AND/OR topology; that is exactly what full_grade + the §C
+    H2 precondition exist to gate). full_grade (and certificate_grade) MUST
+    be False -- §4's all-five standard is preserved there, undiluted."""
     transcript = "5-SMA-cross-above-50 confirms long; 5-SMA-cross-below-50 confirms short"
     span_a = (0, len("5-SMA-cross-above-50"))
     idx_b = transcript.index("5-SMA-cross-below-50")
@@ -140,12 +192,47 @@ def test_certificate_grade_false_when_a_lint_fails():
         tier1_fallthroughs=[],
         topology=topology,
     )
-    assert cert["compile_integrity"]["direction_conflation_lint"]["passed"] is False
+    assert cert["compile_integrity"]["direction_conflation_lint"]["status"] == "FAIL"
+    assert cert["pilot_grade"] is True, "a non-live structural lint FAIL must not block pilot_grade (§B)"
+    assert cert["full_grade"] is False, "full_grade requires ALL FIVE lints PASS (§C)"
     assert cert["certificate_grade"] is False
-    # every OTHER precondition for grade=True still holds -- isolates the lint
-    # as the sole cause, per the brief's "a failing lint OR an unanchored/
-    # unclassified condition" disjunction.
+    # every OTHER precondition for pilot_grade=True still holds -- isolates
+    # classification/anchoring as clean, per the brief's disjunction.
     assert all(c["classifying_tier"] in (1, 3) for c in cert["conditions"])
+
+
+def test_not_evaluated_never_counts_as_pass_toward_full_grade():
+    """Direct proof of the addendum's headline invariant: even when every
+    LIVE lint is clean and topology happens to be supplied for the two
+    structural lints under test (both silently PASS on real topology), if
+    ANY compile_integrity field -- including a sub-leg like causality's
+    same_bar_leg_status -- is still NOT_EVALUATED, full_grade must be False.
+    This certificate supplies topology (so direction_conflation_lint and
+    unsat_sat_check evaluate to real PASS, not NOT_EVALUATED) but declares no
+    or_branches, so or_alternatives_honored ALSO PASSes on real topology --
+    yet causality_lint's same-bar leg is STILL NOT_EVALUATED (assemble_
+    certificate never wires same_bar_fill/signal_lag), which alone must keep
+    full_grade False."""
+    transcript = "buy from the demand zone when it is retested"
+    res = run_tier1(transcript)
+    span = res.detections[0].char_span
+    topology = [ConditionTopology(char_span=span, and_group=None)]  # real overlay, no conflicts
+    cert = assemble_certificate(
+        full_transcript=transcript,
+        full_transcript_sha256="sha1",
+        source_video_id="v1",
+        extractor_version="e1",
+        taxonomy_version="t1",
+        tier1_detections=res.detections,
+        tier1_fallthroughs=[],
+        topology=topology,
+    )
+    for name in ("direction_conflation_lint", "unsat_sat_check", "or_alternatives_honored"):
+        assert cert["compile_integrity"][name]["status"] == "PASS"
+    assert cert["compile_integrity"]["causality_lint"]["same_bar_leg_status"] == "NOT_EVALUATED"
+    assert cert["pilot_grade"] is True
+    assert cert["full_grade"] is False, "a NOT_EVALUATED sub-leg alone must block full_grade"
+    assert cert["certificate_grade"] is False
 
 
 def test_certificate_grade_false_when_no_conditions_at_all():
@@ -159,6 +246,8 @@ def test_certificate_grade_false_when_no_conditions_at_all():
         tier1_fallthroughs=[],
     )
     assert cert["conditions"] == []
+    assert cert["pilot_grade"] is False
+    assert cert["full_grade"] is False
     assert cert["certificate_grade"] is False
 
 
@@ -347,5 +436,10 @@ def test_or_alternatives_honored_flows_through_assembler(monkeypatch):
         topology=topology,
         or_branches=[["t1-0", "t1-1"]],
     )
-    assert cert["compile_integrity"]["or_alternatives_honored"]["passed"] is False
+    assert cert["compile_integrity"]["or_alternatives_honored"]["status"] == "FAIL"
+    # or_alternatives_honored is a structural lint (§B) -- a FAIL there does
+    # not block pilot_grade (classification/anchoring + the live lints are
+    # still clean), but it MUST block full_grade (§C's all-five standard).
+    assert cert["pilot_grade"] is True
+    assert cert["full_grade"] is False
     assert cert["certificate_grade"] is False
