@@ -2329,6 +2329,14 @@ export async function evaluateSignals(
   // multiplicatively alongside the PM size factor at computeRiskDerivedContracts.
   let newsReduceSizeFactor = 1;
   let newsReduceEvent = "";
+  // deep-scan 2026-07-11 LOW fix (#22): C11 FOMC ±1-day advisory size-halving was computed
+  // into a local `fomcReducedContracts` that was ONLY logged/span-tagged and NEVER applied to
+  // the real contract count — so the FOMC taper was inert. Carry it as a factor and fold it
+  // into the size chain via min() with newsReduceSizeFactor (NOT product) so a Topstep signal
+  // inside the tight FOMC T1 window — which already reduces via newsReduceSizeFactor — is not
+  // double-tapered. 1 = no reduction. The ±1-day-but-outside-the-tight-T1-window case (where
+  // newsReduceSizeFactor stays 1) is exactly the gap this now covers.
+  let fomcSizeFactor = 1;
   try {
     const calResult = await getCachedSignalCalendarStatus(bar.timestamp);
 
@@ -5240,19 +5248,18 @@ export async function evaluateSignals(
             }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist macro gate block log"));
           }
         }
-        // C11: FOMC proximity → halve contracts (advisory, not a block)
-        // The halved contract count is stored in fomcReducedContracts and applied
-        // at position open time below.
+        // C11: FOMC proximity → halve size (advisory, not a block). #22 (deep-scan 2026-07-11):
+        // carry the halving as `fomcSizeFactor = 0.5` folded into the size chain via min() at the
+        // computeRiskDerivedContracts call below — previously this only computed a local
+        // `fomcReducedContracts` that was logged but never applied, so the taper was inert.
         if (macroGate.fomcSizeReduction && !macroGateBlocked) {
-          const fomcReducedContracts = Math.max(1, Math.floor((config.contracts ?? 1) / 2));
+          fomcSizeFactor = 0.5;
           span.setAttribute("fomc_size_reduction", true);
-          span.setAttribute("fomc_reduced_contracts", fomcReducedContracts);
+          span.setAttribute("fomc_size_factor", fomcSizeFactor);
           logger.info(
-            { sessionId, symbol, originalContracts: config.contracts, fomcReducedContracts },
-            "C11 FOMC ±1 day: contract size advisory halved (applied at entry)",
+            { sessionId, symbol, originalContracts: config.contracts, fomcSizeFactor },
+            "C11 FOMC ±1 day: size advisory ×0.5 (folded into size chain via min with news factor)",
           );
-          // Store in span attributes for downstream position open (best-effort signal)
-          span.setAttribute("c11_fomc_contracts", fomcReducedContracts);
         }
       } catch (macroGateErr) {
         // C11 fail-CLOSED: any infrastructure failure (DB down, import error, parse error)
@@ -5485,8 +5492,12 @@ export async function evaluateSignals(
           // Phase 2 (2026-06-22): PM session factor × firm-aware news-caution factor.
           // newsReduceSizeFactor is < 1 only when a Topstep account fires a signal inside a
           // T1 news window (caution = cut size; MFFU would have hard-blocked above instead).
+          // #22 (2026-07-11): × the STRONGER of {news-caution, C11 FOMC ±1-day} taper via
+          // min() — never the product — so a signal inside the tight FOMC window (both < 1)
+          // is not double-halved, while the ±1-day-outside-window case still gets the FOMC cut.
           pmSizeFactor:
-            computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor * newsReduceSizeFactor,
+            computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor *
+            Math.min(newsReduceSizeFactor, fomcSizeFactor),
           // Balanced scaling plan: pass proven-trades count so live sizing can apply
           // the proven-trades ramp gate. Backtests do not pass this field and keep
           // the dollar-profit fallback inside computeRiskDerivedContracts.

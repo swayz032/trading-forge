@@ -109,9 +109,14 @@ describe("CF4 — pending-entry fill: Topstep reduce_size contracts applied at f
     expect(h3Block).toContain("// action === \"allow\": fill proceeds unchanged — no modification.");
   });
 
-  it("news gate falls back to Fail-OPEN on calendar/news service hiccup", () => {
+  it("news gate fails CLOSED on calendar/news service hiccup at fill time", () => {
+    // Updated 2026-07-11 (deep-scan): the fill-time Gate 4 news re-check was hardened from
+    // fail-OPEN to fail-CLOSED — a calendar/news service failure at fill time cannot confirm
+    // the T1 window is clear, so the fill is BLOCKED (safer for a prop-firm system), consistent
+    // with the signal-time C11 macro gate. The stale grep still asserted the old fail-OPEN text.
     const h3Block = PSS.slice(h3Start, h3End);
-    expect(h3Block).toContain("Fail-OPEN: calendar/news failure is non-blocking");
+    expect(h3Block).toContain("Fail-CLOSED: calendar/news check failure");
+    expect(h3Block).toContain("paper.fill_blocked_news_check_error");
   });
 
   it("Gate 4 uses FILL timestamp (bar.timestamp) not signal timestamp", () => {
@@ -267,15 +272,21 @@ describe("CF5 — check-family-grade-postscript lint script", () => {
     expect(exitCode, `check-family-grade-postscript exited ${exitCode}: ${output}`).toBe(0);
   });
 
-  it("lint scope is at least 48 files (5 CF5 files added beyond M11+F1 baseline)", () => {
-    // Source analysis: count OWNED_FILES_RELATIVE entries
+  it("lint scans the full server tree dynamically (not a stale hardcoded file list)", () => {
+    // Updated 2026-07-11 (deep-scan): the lint was refactored from a hardcoded
+    // OWNED_FILES_RELATIVE array (which the old grep counted for ≥48 entries) to a dynamic
+    // `walkTsFiles` directory walk over the whole server tree — a strictly broader scope that
+    // needs no manual list upkeep. Assert the dynamic-walk contract + its exclusions instead of
+    // counting a now-absent array (which is why this test had been silently red).
     const lintSrc = readFileSync(
       resolve(__dirname, "../../../scripts/check-family-grade-postscript.ts"),
       "utf8",
     );
-    const ownedFilesMatch = lintSrc.match(/const OWNED_FILES_RELATIVE[^=]*=\s*\[([^\]]*)\]/s);
-    expect(ownedFilesMatch).not.toBeNull();
-    const fileEntries = (ownedFilesMatch![1].match(/"[^"]+"/g) ?? []);
-    expect(fileEntries.length).toBeGreaterThanOrEqual(48);
+    expect(lintSrc).toMatch(/function walkTsFiles/);
+    // must still exclude tests, node_modules, .d.ts, and .test.ts from the scanned surface
+    expect(lintSrc).toContain('e.name === "__tests__"');
+    expect(lintSrc).toContain('e.name === "node_modules"');
+    expect(lintSrc).toContain('.endsWith(".test.ts")');
+    expect(lintSrc).toContain('.endsWith(".d.ts")');
   });
 });
