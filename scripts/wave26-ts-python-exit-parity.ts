@@ -104,14 +104,15 @@ const { getNearestLiquidity, computeSweepProbability } = await import(
 // ─── Python executable resolution ──────────────────────────────────────────
 function resolvePythonExe(): string | null {
   const candidates = [
+    process.env.PYTHON,
+    "python",
+    "python3",
     "C:\\Program Files\\Python313\\python.exe",
     "C:\\Program Files\\Python312\\python.exe",
     "C:\\Program Files\\Python311\\python.exe",
     "/usr/bin/python3",
     "/usr/local/bin/python3",
-    "python3",
-    "python",
-  ];
+  ].filter((candidate): candidate is string => Boolean(candidate));
   for (const cmd of candidates) {
     try {
       const r = spawnSync(cmd, ["--version"], { encoding: "utf-8", timeout: 2_000 });
