@@ -63,7 +63,17 @@ vi.mock("../db/index.js", () => {
     chain.limit = chainFn;
     chain.orderBy = chainFn;
     chain.returning = chainFn;
-    chain.for = chainFn; // fresh-scan HIGH#4: bookPartialClose claims the position FOR UPDATE
+    // fresh-scan HIGH#4: bookPartialClose claims the position FOR UPDATE. `.for("update")` is used ONLY
+    // by that claim — return a DEDICATED open-position resolver ({ closedAt: null }) that does NOT consume
+    // the shared selectQueue, so the existing select slots stay unshifted and the guard passes (position
+    // is open → booking proceeds).
+    chain.for = () => {
+      const openRow = [{ closedAt: null }];
+      const openChain: Record<string, unknown> = {};
+      openChain.limit = () => Promise.resolve(openRow);
+      openChain.then = (onF: unknown) => Promise.resolve(openRow).then(onF as (v: unknown) => unknown);
+      return openChain;
+    };
     chain.values = (vals: unknown) => {
       capturedAuditInserts.push(vals);
       return { catch: vi.fn() };
