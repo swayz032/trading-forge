@@ -19,7 +19,7 @@ describe("_buildScopeClause (CAP-3 consistency-tracker account scoping)", () => 
     expect(q.params).toEqual(["topstep"]);
   });
 
-  it("a UUID account scopes to that session OR its broker-account firm (both bound)", () => {
+  it("a UUID account scopes to that session OR (its broker-account firm AND its assigned strategy)", () => {
     const uuid = "1b4e28ba-2fa1-4d3b-8f2e-0a1b2c3d4e5f";
     const q = render(uuid);
     const flat = q.sql.replace(/\s+/g, " ").trim();
@@ -27,8 +27,14 @@ describe("_buildScopeClause (CAP-3 consistency-tracker account scoping)", () => 
     expect(flat).toContain("ps.firm_id = (");
     expect(flat).toContain("broker_accounts ba");
     expect(flat).toContain("ba.account_id = $2::uuid");
-    // The uuid is bound TWICE (session id + broker-account lookup) — never string-interpolated.
-    expect(q.params).toEqual([uuid, uuid]);
+    // deep-scan #27 (2026-07-11): the broker-account branch now ALSO narrows to the account's
+    // assigned strategy (account_strategy_assignments) so two different-strategy same-firm accounts
+    // no longer net into one concentration %. That adds a THIRD bind of the same uuid.
+    expect(flat).toContain("account_strategy_assignments asa");
+    expect(flat).toContain("asa.account_id = $3::uuid");
+    // The uuid is bound THREE times (session id + broker-account firm lookup + assigned-strategy
+    // lookup) — never string-interpolated.
+    expect(q.params).toEqual([uuid, uuid, uuid]);
   });
 
   it("a legacy firm-name scopes to the full CONSISTENCY_RULE_FIRMS set (Topstep + MFFU, not just Topstep)", () => {
