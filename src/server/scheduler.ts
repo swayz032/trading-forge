@@ -6312,7 +6312,7 @@ except Exception as e:
             "FIX-2: auto-recompiling Pine artifact for DEPLOYED strategy",
           );
 
-          await compilePineExport(strat.strategyId, undefined, "pine_indicator", null, correlationId);
+          await compilePineExport(strat.strategyId, undefined, "pine_indicator", null, correlationId, undefined, "system"); // freshscan10: deployed-pine-artifact-check cron auto-recompile → 'system' authority
 
           await db.insert(auditLog).values({
             action: "pine.artifact_auto_recompiled",

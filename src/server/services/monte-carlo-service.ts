@@ -467,7 +467,7 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
           // band. No re-compile is needed — the Pine content itself is the same; only the stored
           // export type and downstream consumer semantics change. Scores < 50 are blocked by the
           // compiler (status: failed) so no further action is required in that case.
-          compilePineExport(bt.strategyId, resolvedFirmKey, "pine_indicator", autoRiskIntelligence).then(async (pineResult) => {
+          compilePineExport(bt.strategyId, resolvedFirmKey, "pine_indicator", autoRiskIntelligence, undefined, undefined, "system").then(async (pineResult) => { // freshscan10: auto-fired post-MC Pine compile → 'system' authority
             const score = pineResult.exportabilityScore ?? 0;
             if (pineResult.status === "completed") {
               let effectiveExportType = "pine_indicator";

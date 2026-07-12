@@ -367,7 +367,7 @@ export async function runQuantumMC(
               "Auto Pine quantum-enriched re-compile triggered",
             );
 
-            compilePineExport(bt.strategyId, reFirmKey, "pine_indicator", quantumRiskIntelligence).then((pineResult) => {
+            compilePineExport(bt.strategyId, reFirmKey, "pine_indicator", quantumRiskIntelligence, undefined, undefined, "system").then((pineResult) => { // freshscan10: challenger auto-fired Pine compile → 'system' authority
               logger.info(
                 {
                   strategyId: bt.strategyId,

@@ -2410,6 +2410,7 @@ export class LifecycleService {
             undefined,          // hmacSecret
             undefined,          // accountId
             { mode: "tf_gateway" },
+            "system",           // authority — autonomous promotion-validation compile (persist=false, no audit, but semantically system)
           )) as Record<string, unknown>;
 
           // Inspect combined Pine artifact content for canonical TF-gateway markers.
@@ -7594,7 +7595,7 @@ export class LifecycleService {
     const gatewayOptionsForCompile = (stratPaperRouting != null && stratPaperRouting !== "")
       ? ({ mode: "tf_gateway" } as const)
       : undefined;
-    const result = await compileDualPineExport(strategyId, firmKey, riskIntelligence, true, undefined, undefined, undefined, undefined, undefined, gatewayOptionsForCompile);
+    const result = await compileDualPineExport(strategyId, firmKey, riskIntelligence, true, undefined, undefined, undefined, undefined, undefined, gatewayOptionsForCompile, "system"); // freshscan10: autonomous DEPLOY_READY Pine compile → 'system' authority (not operator activity)
     logger.info(
       {
         strategyId,
@@ -7911,7 +7912,7 @@ export class LifecycleService {
                   const sGatewayOpts = (sPaperRouting != null && sPaperRouting !== "")
                     ? ({ mode: "tf_gateway" } as const)
                     : undefined;
-                  await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined, undefined, undefined, undefined, undefined, sGatewayOpts);
+                  await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined, undefined, undefined, undefined, undefined, sGatewayOpts, "system"); // freshscan10: PILOT→DEPLOYED auto-promote Pine compile → 'system' authority
                   pineSuccess = true;
                   break;
                 } catch (pineErr) {

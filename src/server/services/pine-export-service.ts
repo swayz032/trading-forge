@@ -414,6 +414,15 @@ export async function compileDualPineExport(
   hmacSecret?: string,
   accountId?: string,
   gatewayOptions?: GatewayOptions,
+  // freshscan10 grade-followup (2026-07-12): the audit row's decision_authority.
+  // getLastOperatorActivityAt() (dead-mans-heartbeat-service.ts) treats ANY
+  // decision_authority='human' row as operator activity and resets the vacation
+  // operator-absence silence clock. This compile is called BOTH from human routes
+  // AND autonomously (lifecycle PILOT->DEPLOYED auto-promotion, recipient gen).
+  // Default 'human' preserves route callers; autonomous callers MUST pass 'system'
+  // so an unattended Pine recompile never fakes operator presence and defeats
+  // Tier-1 vacation autopilot. Sibling of the admin.ts self-restart + #28 setMode fix.
+  authority: "human" | "system" = "human",
 ) {
   // C2/C3 (Pass 3 Track C): SHADOW guard — must be first gate.
   // Prevents Pine artifacts from leaking out of SHADOW strategies, which would
@@ -1123,7 +1132,7 @@ export async function compileDualPineExport(
           status: "success",
         },
         status: "success",
-        decisionAuthority: "human",
+        decisionAuthority: authority,
       });
 
       // 8. SSE broadcast — pine:export-completed (hyphen, frontend discriminated union)
@@ -1192,7 +1201,7 @@ export async function compileDualPineExport(
         input: { strategyId, firmKey, exportType: "pine_dual", correlationId },
         result: { error: errorMsg, durationMs, status: "failure" },
         status: "failure",
-        decisionAuthority: "human",
+        decisionAuthority: authority,
         errorMessage: errorMsg,
       });
     }
@@ -1216,6 +1225,10 @@ export async function compilePineExport(
   injectedRiskIntelligence?: Record<string, number | string | null> | null,
   correlationId?: string,
   gatewayOptions?: GatewayOptions,
+  // freshscan10 grade-followup (2026-07-12): audit decision_authority — see the
+  // compileDualPineExport twin. Autonomous callers (deployed-pine-artifact-check
+  // cron, MC/quantum auto-fire) MUST pass 'system'; human routes keep the default.
+  authority: "human" | "system" = "human",
 ) {
   // C2/C3 (Pass 3 Track C): SHADOW guard — must be first gate.
   try {
@@ -1610,7 +1623,7 @@ export async function compilePineExport(
         status: "success",
       },
       status: "success",
-      decisionAuthority: "human",
+      decisionAuthority: authority,
     });
 
     // 8. Broadcast export completion SSE — pine:export-completed (hyphen, frontend discriminated union)
@@ -1665,7 +1678,7 @@ export async function compilePineExport(
       input: { strategyId, firmKey, exportType, correlationId },
       result: { error: errorMsg, durationMs, status: "failure" },
       status: "failure",
-      decisionAuthority: "human",
+      decisionAuthority: authority,
       errorMessage: errorMsg,
     });
 
