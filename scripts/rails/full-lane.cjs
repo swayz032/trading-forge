@@ -49,7 +49,7 @@ function writeJsonl(result) {
 
 async function writeAudit(sql, action, payload) {
   try {
-    await sql`INSERT INTO audit_log (action, status, decision_authority, metadata)
+    await sql`INSERT INTO audit_log (action, status, decision_authority, result)
               VALUES (${action}, ${payload.verdict === "red" ? "warning" : "success"}, 'scheduler', ${sql.json(payload)})`;
   } catch (e) { console.error("audit write failed (non-fatal):", e.message); }
 }
