@@ -5011,12 +5011,33 @@ export async function updatePositionPrices(
         if (!positionClosed && handlerResult.decision === "FILL_TP1_50PCT") {
           try {
             const tp1ExitStyle   = (pos.currentExitStyle ?? "C") as "D" | "C";
-            const tp1Fraction    = tp1ExitStyle === "C" ? 0.33 : 0.50;
-            const tp1ClosedCount = Math.max(1, Math.floor(pos.contracts * tp1Fraction));
+            // CAPITAL-SAFETY FIX (freshscan11 2026-07-12, CONFIRMED CRITICAL — contracts-column
+            // corruption): tp1ClosedCount must be derived from the SAME authoritative source
+            // applyExitDecision's own FILL_TP1 branch (~line 4171-4174, a few lines above) used to
+            // compute the contractsToClose that bookPartialClose ACTUALLY booked to the DB a moment
+            // ago — NOT an independently-recomputed naive fraction of pos.contracts. The two diverge
+            // for every N where Math.floor(N*0.33) != styleCScaleOut(N).tp1 (N=5,6,8,9,11,12,14,15,
+            // 17,18,20,... — including the operator's canonical pyramid sizes 9/12/15/18/21, CLAUDE.md
+            // §4). A stale/wrong tp1ClosedCount here corrupts `updatedPos.contracts` below, which then
+            // flows verbatim into bookPartialClose's `positionStateUpdate.contracts` write on the F4-
+            // reinvoked TP2 partial (bookPartialClose's own correctly-computed remaining count is used
+            // ONLY for `previousUnrealizedPnl` rebasing, never to correct `.contracts`) — permanently
+            // corrupting `paperPositions.contracts` for the runner leg, which then overstates every
+            // later bar's MTM unrealizedPnl + currentEquity + realizedPeakEquity (the Topstep/Apex
+            // trailing-DD HWM). Worked example N=9 (styleCScaleOut(9)={tp1:3,tp2:3,runner:3}): the old
+            // naive tp1ClosedCount=Math.floor(9*0.33)=2 produced updatedPos.contracts=7 (should be 6),
+            // so the TP2 partial's persisted contracts read 7-3=4 instead of the true runner 9-3-3=3 —
+            // a phantom contract written PERMANENTLY. Style D (dead, CLAUDE.md §2b) keeps its legacy
+            // 50%-of-remainder behavior — its own contractsToClose calc (~line 4174) is unaffected by
+            // the Style-C styleCScaleOut fix and matches what this fallback reproduces.
+            const originalContractsTp1 = (pos as { entryContracts?: number | null }).entryContracts ?? pos.contracts;
+            const tp1ClosedCount = tp1ExitStyle === "C"
+              ? Math.max(1, styleCScaleOut(originalContractsTp1).tp1)
+              : Math.max(1, Math.floor(pos.contracts * 0.50));
             // Guard: tp1ClosedCount < pos.contracts is always true here (full close returns
             // positionClosed=true which prevents entering this block). Kept as a safety fence.
             if (tp1ClosedCount < pos.contracts) {
-              // CAPITAL-SAFETY FIX (freshscan11 2026-07-12): if this F4 re-invocation's handler
+              // EQUITY-BASIS FIX (freshscan6/11 2026-07-12): if this F4 re-invocation's handler
               // decision turns out to be a FULL close (FILL_TP2 on the remainder — e.g. a 2-contract
               // position where styleCScaleOut leaves a 0-contract runner), applyExitDecision's
               // full-close branch calls closePosition(..., { precedingUnrealizedPnl:
@@ -5027,18 +5048,21 @@ export async function updatePositionPrices(
               // assumption that the deferred end-of-loop aggregate credit (totalUnrealizedDelta,
               // queued on the full pre-TP1 N-contract basis) will land — but a same-bar full close
               // cancels that ENTIRE aggregate delta at the `positionClosed` branch a few lines below
-              // (`totalUnrealizedDelta -= unrealizedDelta`), so it never lands. Worked-example proof
-              // (MES $5/pt, 2 contracts, entry 5000, styleCScaleOut(2)={tp1:1,tp2:1,runner:0}):
-              // P0=80 (bar1), Pm=200 (bar2 fresh N=2 basis), tp1ClosedCount=1, N=2. bookPartialClose
-              // applies equityDelta=50-100=-50 (currentEquity: start+80-50=start+30). The stale-P0
-              // full-close would apply equityDelta=200-80=120 (currentEquity: start+150) — WRONG;
-              // true realized total is 50+200=start+250. The residual basis below —
-              // P0 - Pm*(tp1ClosedCount/N) = 80-100=-20 — makes closePosition's equityDelta =
-              // 200-(-20)=220, landing currentEquity at start+30+220=start+250 exactly (matches
-              // truth) once the cancelled aggregate (0, not the assumed +120) is accounted for.
-              // NOT the same as the DB row's own rebased value (which bookPartialClose set to the
-              // REMAINING portion's share, Pm*(N-tp1ClosedCount)/N — correct for a position that
-              // STAYS open, wrong for one that closes same-bar). See memory
+              // (`totalUnrealizedDelta -= unrealizedDelta`), so it never lands.
+              //
+              // The residual basis below, f4ResidualPrecedingUnrealizedPnl = P0 - Pm*(c1/N), is NOT
+              // an approximation — it makes the two legs' equityDelta sum to EXACTLY the correct
+              // capital-safety invariant, independent of the actual netPnl magnitudes:
+              //   equityDelta_tp1 = netPnl_tp1 - Pm*(c1/N)                          [bookPartialClose]
+              //   equityDelta_tp2 = netPnl_tp2 - (P0 - Pm*(c1/N))                   [closePosition]
+              //   sum            = netPnl_tp1 + netPnl_tp2 - P0
+              // i.e. currentEquity moves by (netPnl_tp1 + netPnl_tp2) - P0 — Pm is a PURE ACCOUNTING
+              // INTERMEDIATE that cancels exactly across the two legs; it never appears in the net
+              // result. This cancellation is only exact when `c1` (tp1ClosedCount) here is the SAME
+              // value bookPartialClose's TP1 leg actually used to compute Pm*(c1/N) above — which is
+              // why this fix (deriving tp1ClosedCount from the same styleCScaleOut source
+              // applyExitDecision used) is required for the equity invariant to hold for N != 2, not
+              // only for the contracts-column corruption. See memory
               // project_closepos_equity_double_count_2026_07_12 (closePosition fix 84490aa5) +
               // project_bookpartialclose_equity_double_count_2026_07_12 (bookPartialClose fix
               // 8db9ff19) — this reconciles the interaction between those two independently-correct
