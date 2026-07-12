@@ -266,6 +266,32 @@ describe("evaluatePaperToDeployReadyGates", () => {
       expect(result.status).toBe("infra_error");
     });
 
+    it("freshscan7 MED: BIF gate fail-CLOSES when bifInput.computationError=true (manual-path cron parity)", () => {
+      // A compute_bif() THROW leaves bif=null + walkForwardResults.bif_computation_error=true. Previously
+      // the manual PATCH path's bifInput had no computationError field, so a computation-FAILURE null was
+      // indistinguishable from a pre-Wave-3 legacy null → the BIF gate grandfather-PASSED → bypassed on the
+      // path that promotes toward live capital. The autonomous cron path already fail-closed. Now both do.
+      setAllGatesPass();
+      const input = buildPassInput();
+      input.bifInput = { bif: null, kEff: 20, computationError: true };
+
+      const result = evaluatePaperToDeployReadyGates(input);
+
+      expect(result.passed).toBe(false);
+      expect(JSON.stringify(result)).toContain("bif.computation_error_fail_closed");
+    });
+
+    it("freshscan7 MED control: bif=null WITHOUT computationError still grandfather-passes (legacy Wave-3 null)", () => {
+      // The fix must NOT block a genuine pre-Wave-3 legacy null (computationError absent/false).
+      setAllGatesPass();
+      const input = buildPassInput();
+      input.bifInput = { bif: null, kEff: 20 };
+
+      const result = evaluatePaperToDeployReadyGates(input);
+
+      expect(result.passed).toBe(true);
+    });
+
     it("does not block when b14HardGateEnabled=false even if survival_twin.passed===false", () => {
       setAllGatesPass();
       const input = buildPassInput();

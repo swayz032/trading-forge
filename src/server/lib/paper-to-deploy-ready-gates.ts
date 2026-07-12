@@ -258,7 +258,11 @@ export interface PaperToDeployReadyGateInput {
    * Both stamped on backtests table by backtest-service.ts at completion.
    * Pass null / omit for pre-Wave-3 backtests (gate grandfather-passes on missing data).
    */
-  bifInput?: { bif?: number | null; kEff?: number | null } | null;
+  // MED (freshscan7 2026-07-12): computationError threads the walk_forward.py compute_bif() THROW
+  // sentinel (backtests.walkForwardResults.bif_computation_error) so the manual PATCH path fail-CLOSES
+  // the BIF gate exactly like the autonomous cron path. Without it, a bif=null caused by a computation
+  // FAILURE was indistinguishable from a pre-Wave-3 legacy-null and grandfather-PASSED → BIF gate bypassed.
+  bifInput?: { bif?: number | null; kEff?: number | null; computationError?: boolean } | null;
 
   /**
    * Pre-fetched composite-shadow result (observability only — never blocks).
@@ -788,6 +792,8 @@ export function evaluatePaperToDeployReadyGates(
     const bifIn = input.bifInput ?? null;
     const bifNum = bifIn?.bif != null && Number.isFinite(Number(bifIn.bif)) ? Number(bifIn.bif) : null;
     const kEffNum = bifIn?.kEff != null && Number.isFinite(Number(bifIn.kEff)) ? Number(bifIn.kEff) : null;
+    // MED (freshscan7 2026-07-12): compute_bif() THROW sentinel — fail-CLOSED, matching the cron path.
+    const bifCompError = bifIn?.computationError === true;
 
     // FINDING-2 fix: extract bif_proxy_basis from wf_metadata so the BIF gate
     // can route to advisory-only when CPCV mode is active.
@@ -801,7 +807,7 @@ export function evaluatePaperToDeployReadyGates(
     // This is non-blocking: the gate passes but the audit payload makes the structural
     // unavailability explicit instead of misleadingly showing a clean BIF value.
     // Wave 30 carry-forward: true per-path IS fold Sharpe will make BIF meaningful in CPCV.
-    if (bifProxyBasis === "oos_mean_not_is") {
+    if (bifProxyBasis === "oos_mean_not_is" && !bifCompError) {
       logger.info(
         { strategyId, bif: bifNum, k_eff: kEffNum, proxyBasis: bifProxyBasis },
         "evaluatePaperToDeployReadyGates: BIF gate: CPCV proxy-basis — advisory-only " +
@@ -814,7 +820,7 @@ export function evaluatePaperToDeployReadyGates(
       // legacy gap (cron's push resolves to "complete" for cpcv_unmeasured — legacyNull=false).
       gateEvidenceStatuses.push("complete");
     } else {
-      const bifResult = evaluateBifGate(bifNum, kEffNum, { proxyBasis: bifProxyBasis });
+      const bifResult = evaluateBifGate(bifNum, kEffNum, { proxyBasis: bifProxyBasis, computationError: bifCompError });
 
       if (!bifResult.passed) {
         logger.warn(

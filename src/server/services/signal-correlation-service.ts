@@ -411,9 +411,15 @@ export async function buildCorrelationMatrix(): Promise<MatrixEntry[]> {
       and(
         inArray(strategies.lifecycleState, ["PAPER", "DEPLOYED"]),
       ),
-    );
+    )
+    // LOW (freshscan7 2026-07-12): order newest-first so the first-seen row per strategy in the dedup
+    // loop below is genuinely the LATEST vector. The query previously had NO ordering, so the "keep only
+    // the latest vector per strategy" comment was a lie — the first-encountered (arbitrary DB order) row
+    // won, and the dashboard signal-correlation matrix could be computed from a STALE backtest's vector.
+    // Uses the existing (strategy_id, created_at DESC) index.
+    .orderBy(desc(strategySignalVectors.createdAt));
 
-  // Deduplicate: keep only the latest vector per strategy
+  // Deduplicate: keep only the latest vector per strategy (first-seen == latest, given the DESC order above)
   const latestByStrategy = new Map<
     string,
     { compressed: Buffer; nBars: number }

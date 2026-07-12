@@ -973,9 +973,14 @@ export class LifecycleService {
             spaConsistentP: (spaResult?.spa_consistent_p as number | null | undefined) ?? null,
           },
           // H1 fix 2026-06-28: wire BIF gate inputs from backtests row.
+          // MED (freshscan7 2026-07-12): thread the bif_computation_error sentinel (top-level of
+          // walkForwardResults, read into wfResults above) so the manual PATCH path fail-CLOSES the BIF
+          // gate on a compute_bif() THROW exactly like the cron path (lifecycle-service.ts:~6360). Without
+          // it, a computation-failure bif=null grandfather-passed as a pre-Wave-3 legacy null → gate bypassed.
           bifInput: {
             bif: latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
             kEff: latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
+            computationError: (wfResults as Record<string, unknown> | null | undefined)?.bif_computation_error === true,
           },
           compositeShadow: null,  // _promoteStrategyInner does not pre-fetch composite shadow; observability only
           frozenPolicy: {
