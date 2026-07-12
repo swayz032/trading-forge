@@ -776,10 +776,12 @@ export async function runPendingMigrations(
   const allowNoBackup =
     (process.env.BOOT_MIGRATION_ALLOW_NO_BACKUP ?? "false").toLowerCase() === "true";
   const backupDir = process.env.BOOT_MIGRATION_BACKUP_DIR || os.tmpdir();
-  const timeoutMs = Math.max(
-    1000,
-    Number(process.env.BOOT_MIGRATION_TIMEOUT_MS ?? "300000"),
-  );
+  // deep-scan 2026-07-11 MED fix: guard against a malformed BOOT_MIGRATION_TIMEOUT_MS (e.g. "5m",
+  // "300_000") → Number()=NaN → Math.max(1000, NaN)=NaN → setTimeout(…, NaN)=0ms → every pending
+  // migration instantly "times out" → boot crash-loop. Fall back to the 300s default on a non-finite
+  // parse instead of propagating NaN.
+  const _parsedTimeoutMs = Number(process.env.BOOT_MIGRATION_TIMEOUT_MS ?? "300000");
+  const timeoutMs = Math.max(1000, Number.isFinite(_parsedTimeoutMs) ? _parsedTimeoutMs : 300000);
 
   // ─── Journal ────────────────────────────────────────────────────────────────
   const journalPath = resolveJournalPath();
@@ -888,13 +890,28 @@ export async function runPendingMigrations(
 
   // ─── Query applied (hash + when) ─────────────────────────────────────────────
   type AppliedRow = { created_at: string; hash: string };
-  const appliedResult = await db.execute<AppliedRow>(
-    sql`SELECT created_at::text AS created_at, hash FROM drizzle.__drizzle_migrations`,
-  );
-  // drizzle-orm returns { rows: [...] } for raw execute; normalise either shape
-  const appliedRows: AppliedRow[] =
-    (appliedResult as { rows?: AppliedRow[] }).rows ??
-    (appliedResult as unknown as AppliedRow[]);
+  let appliedRows: AppliedRow[];
+  try {
+    const appliedResult = await db.execute<AppliedRow>(
+      sql`SELECT created_at::text AS created_at, hash FROM drizzle.__drizzle_migrations`,
+    );
+    // drizzle-orm returns { rows: [...] } for raw execute; normalise either shape
+    appliedRows =
+      (appliedResult as { rows?: AppliedRow[] }).rows ??
+      (appliedResult as unknown as AppliedRow[]);
+  } catch (appliedErr) {
+    // deep-scan 2026-07-11 MED fix: the __drizzle_migrations bootstrap above TOLERATES a
+    // non-"already exists" failure (warn + continue) — e.g. the drizzle role lacks CREATE on schema
+    // drizzle after a restore. This SELECT then throws with NO Discord/audit signal: a SILENT boot
+    // crash-loop, violating this module's loud-fail contract. Fire the CRITICAL, then re-throw
+    // (fail-closed — a readable ledger is mandatory before computing the migration plan).
+    const emsg = appliedErr instanceof Error ? appliedErr.message : String(appliedErr);
+    await fireDiscordCritical(
+      "boot-migration: cannot read applied-migrations ledger",
+      `SELECT from drizzle.__drizzle_migrations failed (${emsg}). The tracking table is missing or unreadable — the drizzle schema bootstrap likely failed (permissions after a DB restore?). Boot is BLOCKED fail-closed until the drizzle schema + __drizzle_migrations table exist and are readable.`,
+    );
+    throw appliedErr;
+  }
   const appliedWhens = new Set(appliedRows.map((r) => String(r.created_at)));
   const appliedHashes = new Set(appliedRows.map((r) => r.hash));
 

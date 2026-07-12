@@ -5887,11 +5887,33 @@ export class LifecycleService {
             );
           }
         } catch (b15Err) {
-          // Fail-open: B15 gate read failure is non-blocking (pre-B15 strategies may not have data).
+          // deep-scan 2026-07-11 MED fix: a THROWN read error is a DB fault — NOT the pre-B15 "no
+          // battery data" case (that returns a null b15Battery, handled above and legitimately
+          // proceeds). When the gate is HARD (B15_BATTERY_ENABLED=true, default), fail CLOSED: skip
+          // this promotion so a transient DB error cannot let an un-robustness-validated strategy
+          // through, matching the sibling b14/wfe/pbo hard gates on this same transition. Advisory
+          // mode (disabled) stays fail-open.
           logger.warn(
-            { strategyId: s.id, err: b15Err },
-            "B15 Parameter Robustness Battery gate: read failed (non-blocking — promotion continues)",
+            { strategyId: s.id, err: b15Err, b15HardGateEnabled },
+            b15HardGateEnabled
+              ? "B15 Parameter Robustness Battery gate: read FAILED — blocking PAPER→DEPLOY_READY (fail-closed, hard gate)"
+              : "B15 Parameter Robustness Battery gate: read failed (advisory — promotion continues)",
           );
+          if (b15HardGateEnabled) {
+            await db.insert(auditLog).values({
+              action: "lifecycle.b15_gate_read_failed_fail_closed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: { error: b15Err instanceof Error ? b15Err.message : String(b15Err), fail_closed: true },
+              correlationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "B15 fail-closed audit insert failed (non-blocking)");
+            });
+            continue;
+          }
         }
 
         // F-5 Hardening 2026-06-23: REMOVED redundant standalone WFE gate (floor 0.70, evaluateWfeGate).

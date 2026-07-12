@@ -41,7 +41,11 @@ consistencyRoutes.get("/:accountId", async (req: Request, res: Response) => {
   }
 
   try {
-    const state = await getConsistencyState(accountId, asOf);
+    // deep-scan 2026-07-11 MED fix: dryRun=true — a GET status endpoint MUST be read-only. Without it,
+    // dryRun defaulted false, so querying an account at >=40%/>=50% fired a real Discord CRITICAL and
+    // wrote consistency.50pct_blocked/40pct_warned audit rows — falsifying the audit trail and spamming
+    // alerts on every dashboard poll. The computed state is identical either way.
+    const state = await getConsistencyState(accountId, asOf, true);
     res.json(state);
   } catch (err) {
     logger.error(
