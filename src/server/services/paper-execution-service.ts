@@ -3861,8 +3861,26 @@ async function bookPartialClose(
       // ALREADY-closed position → double-counted equity. FOR UPDATE serializes the two; a non-null
       // closedAt means the full-close won the race → throw the superseded sentinel to roll the tx back
       // (no trade row, no equity credit, no state advance) and treat it as a benign no-op below.
+      // CRIT (grader-reclassified freshscan6 follow-up, 2026-07-12): also row-lock previousUnrealizedPnl
+      // + contracts in the SAME claim — these are the exact "as of the moment of this partial close"
+      // values the equity-double-count fix below needs. bookPartialClose is ALWAYS an IN-LOOP caller
+      // (only reached via applyExitDecision, only reached from updatePositionPrices' per-position loop)
+      // — the unconditional per-position MTM UPDATE (~line 4488) has ALREADY committed THIS bar's fresh
+      // unrealizedPnl/previousUnrealizedPnl to the row (on the OLD, pre-reduction contract count) by the
+      // time this SELECT...FOR UPDATE runs, so the row-locked read here IS the correct fresh N-basis
+      // value — unlike closePosition's in-loop fix, which needs the caller's PRE-bar value instead (see
+      // the derivation in the "MED (freshscan6 2026-07-12)" comment on bookPartialClose's equity math
+      // below for why the two cases differ: a full close removes the position from the aggregate
+      // end-of-loop delta write entirely, but a partial close's REMAINING contracts still flow through
+      // that aggregate write unchanged — bookPartialClose is only responsible for the CLOSED portion's
+      // proportional share of what's already been written to the row this bar).
       const [claimedPos] = await tx
-        .select({ id: paperPositions.id, closedAt: paperPositions.closedAt })
+        .select({
+          id: paperPositions.id,
+          closedAt: paperPositions.closedAt,
+          contracts: paperPositions.contracts,
+          previousUnrealizedPnl: paperPositions.previousUnrealizedPnl,
+        })
         .from(paperPositions)
         .where(eq(paperPositions.id, pos.id))
         .for("update")
@@ -3870,6 +3888,79 @@ async function bookPartialClose(
       if (!claimedPos || claimedPos.closedAt != null) {
         throw Object.assign(new Error("partial_close_superseded_by_full_close"), { _partialSuperseded: true });
       }
+
+      // CRIT (grader-reclassified freshscan6 follow-up, 2026-07-12): bookPartialClose credited
+      // `currentEquity += netPnl` (bare) with no backing-out of the CLOSED portion's already-baked-in
+      // unrealized — the exact double-count class fixed in closePosition (84490aa5), but the
+      // proportional-split shape is different because a partial leaves the position OPEN.
+      //
+      // Worked example (MES $5/pt, 3 contracts, entry 5000) that surfaced this:
+      //   Bar1 price→5008: unrealizedPnl=120, previousUnrealizedPnl 0→120, currentEquity += 120.
+      //   Bar2 TP1 closes 1 of 3 at 5012: updatePositionPrices' per-position MTM UPDATE runs FIRST on
+      //     N=3 (unconditional, before applyExitDecision/bookPartialClose) → unrealizedPnl(3,5012)=180,
+      //     delta 60 queued into totalUnrealizedDelta for the END-of-loop aggregate write, row
+      //     previousUnrealizedPnl written to 180 (N=3 basis) — this is `claimedPos.previousUnrealizedPnl`
+      //     above. THEN bookPartialClose ran and credited netPnl=60 BARE. Because this was only a
+      //     PARTIAL close, applyExitDecision returns false → updatePositionPrices does NOT subtract this
+      //     position's delta out of totalUnrealizedDelta (that back-out is a FULL-close-only step) — so
+      //     the aggregate write STILL applies the full +60 (N=3-basis) delta at end-of-loop, on top of
+      //     bookPartialClose's own +60. currentEquity after bar2 = 120(bar1) + 60(partial) + 60(aggregate)
+      //     = start+240. TRUE value = realized(60, the 1 closed contract) + unrealized(120, the 2
+      //     remaining contracts at 5012) = start+180. Overstated by 60 — exactly the CLOSED contract's
+      //     share of the N=3-basis previousUnrealizedPnl (180 × 1/3 = 60).
+      //
+      // FIX part 1 — back out the closed portion's PROPORTIONAL share of the row-locked
+      // previousUnrealizedPnl (linear in contracts: unrealized = direction×(price-entry)×pointValue×
+      // contracts, so contracts-proportional splitting is EXACT, not an approximation):
+      //   equityDelta = netPnl − previousUnrealizedPnl × (contractsToClose / totalContractsBeforeClose)
+      //   Sanity-check against the worked example: 60 − 180×(1/3) = 60−60 = 0 → currentEquity after
+      //   bar2 = 120(bar1) + 0(partial) + 60(aggregate, unaffected by this fix — the aggregate write is
+      //   a separate end-of-loop step) = start+180. Correct.
+      // Applied to currentEquity AND the realizedPeakEquity/peakEquity GREATEST() ratchets below — this
+      // is the capital-safety-critical half: realizedPeakEquity is the authoritative Topstep/Apex
+      // trailing-DD high-water-mark (paper-risk-gate.ts / kill-switch.ts), and GREATEST() only ever
+      // ratchets UP — an inflated value here is PERMANENT (never self-corrects), unlike currentEquity
+      // which the grader's worked example showed DOES self-correct one bar later purely by chance (the
+      // next bar's fresh N-2-basis unrealizedPnl vs the still-stale N-3-basis previousUnrealizedPnl
+      // produces a compensating negative delta) — but that "self-correction" never reaches
+      // realizedPeakEquity because GREATEST() has already locked in the high value.
+      //
+      // FIX part 2 — REBASE previousUnrealizedPnl for the reduced contract count in this SAME
+      // transaction, so the NEXT updatePositionPrices bar's delta is computed on the correct basis:
+      //   previousUnrealizedPnl_new = previousUnrealizedPnl × (remainingContracts / totalContractsBeforeClose)
+      //   = 180 × (2/3) = 120 — which exactly equals a fresh unrealizedPnl(2 contracts, price 5012)
+      //   computation ((5012−5000)×5×2=120), confirming the rebase is exact at the price the partial
+      //   fired, not an approximation.
+      // Interaction with part 1 (no double-correction): part 1 fixes CURRENT equity math for THIS bar;
+      // part 2 fixes the BASIS the row carries into future bars. Without part 2, the next bar would
+      // still see previousUnrealizedPnl=180 (stale N=3 basis) and compute delta = freshUnrealized(2
+      // contracts) − 180, which at an unchanged price (120−180=−60) would UNDER-count currentEquity by
+      // 60 on TOP of the now-already-correct bar2 total — a NEW bug part 1 alone would introduce. With
+      // part 2, the next bar sees previousUnrealizedPnl=120 (correct N=2 basis) and computes delta =
+      // freshUnrealized(2 contracts) − 120, which is 0 at an unchanged price — no double-correction,
+      // no residual drift.
+      const totalContractsBeforeClose = claimedPos.contracts;
+      if (totalContractsBeforeClose !== pos.contracts) {
+        // Defensive telemetry only (non-blocking) — the row-locked count should always match the
+        // caller's pre-bar in-memory pos.contracts (no concurrent contract-count mutator runs between
+        // the top-of-updatePositionPrices SELECT and this claim within one synchronous per-position
+        // iteration). A mismatch would mean something raced the position's contract count — surfaces it
+        // rather than silently trusting either source.
+        logger.warn(
+          { positionId: pos.id, callerContracts: pos.contracts, rowLockedContracts: totalContractsBeforeClose },
+          "bookPartialClose: row-locked contracts differ from caller's pre-bar pos.contracts — using row-locked value (defensive telemetry)",
+        );
+      }
+      const previousUnrealizedPnlRow = Number(claimedPos.previousUnrealizedPnl ?? 0);
+      const remainingContracts = totalContractsBeforeClose - contractsToClose;
+      const bakedInUnrealizedForClosedPortion = totalContractsBeforeClose > 0
+        ? previousUnrealizedPnlRow * (contractsToClose / totalContractsBeforeClose)
+        : 0;
+      const equityDelta = netPnl - bakedInUnrealizedForClosedPortion;
+      const rebasedPreviousUnrealizedPnl = totalContractsBeforeClose > 0
+        ? previousUnrealizedPnlRow * (remainingContracts / totalContractsBeforeClose)
+        : 0;
+
       await tx.insert(paperTrades).values({
         sessionId: pos.sessionId,
         symbol: pos.symbol,
@@ -3896,12 +3987,16 @@ async function bookPartialClose(
       // column reference ("current_equity") which bypassed Drizzle's schema binding and
       // omitted realizedPeakEquity / totalTrades entirely — causing kill-switch and
       // promotion-gate reads to ignore partial-close equity on the same session.
+      // CRIT (grader-reclassified freshscan6 follow-up, 2026-07-12): equityDelta (not bare netPnl) —
+      // see the derivation above the claim SELECT. This is the capital-safety-critical line: the
+      // realizedPeakEquity GREATEST() ratchet only ever moves UP, so an inflated value here is
+      // PERMANENT and directly masks Topstep/Apex trailing-DD room on every profitable TP1/TP2 partial.
       await tx
         .update(paperSessions)
         .set({
-          currentEquity:      sql`${paperSessions.currentEquity}::numeric + ${netPnl}`,
-          peakEquity:         sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
-          realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+          currentEquity:      sql`${paperSessions.currentEquity}::numeric + ${equityDelta}`,
+          peakEquity:         sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${equityDelta})`,
+          realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${equityDelta})`,
           totalTrades:        sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
         })
         .where(eq(paperSessions.id, pos.sessionId));
@@ -3909,10 +4004,18 @@ async function bookPartialClose(
       // Deep-scan #5 MED (2026-06-29): advance the position state in the SAME transaction
       // as the trade row + equity credit — atomic, so a crash can never leave a booked
       // partial with tp1Filled/tp2Filled=false (the duplicate-re-fire window).
+      //
+      // CRIT (grader-reclassified freshscan6 follow-up, 2026-07-12) FIX part 2: rebase
+      // previousUnrealizedPnl onto the reduced (remaining) contract count in this SAME atomic
+      // update — see the derivation above. Only meaningful when remainingContracts > 0 (bookPartialClose
+      // is only ever called when contractsToClose < pos.contracts, so remainingContracts should always
+      // be > 0 in practice; the guard is defensive).
       if (positionStateUpdate) {
         await tx
           .update(paperPositions)
-          .set(positionStateUpdate)
+          .set(remainingContracts > 0
+            ? { ...positionStateUpdate, previousUnrealizedPnl: String(rebasedPreviousUnrealizedPnl) }
+            : positionStateUpdate)
           .where(eq(paperPositions.id, pos.id));
       }
 
@@ -3939,7 +4042,15 @@ async function bookPartialClose(
         entityId: pos.id,
         decisionAuthority: "system",
         input: { positionId: pos.id, contractsToClose, exitPrice, atr, correlationId } as Record<string, unknown>,
-        result: { grossPnl, exitCommission, netPnl, actualExit, slippage } as Record<string, unknown>,
+        // CRIT (grader-reclassified freshscan6 follow-up, 2026-07-12): journal the equity-accounting
+        // inputs so a future parity/promotion-gate audit can reconstruct exactly how currentEquity moved
+        // on this partial — mirrors closePosition's paper.trade_close audit fields.
+        result: {
+          grossPnl, exitCommission, netPnl, actualExit, slippage,
+          totalContractsBeforeClose, remainingContracts,
+          previousUnrealizedPnlRow, bakedInUnrealizedForClosedPortion,
+          equityDelta, rebasedPreviousUnrealizedPnl,
+        } as Record<string, unknown>,
         status: "success",
         correlationId: correlationId ?? null,
       });

@@ -86,8 +86,15 @@ describe("O7 — bookPartialClose: success-path audit inside transaction (fail-c
     // The action template and status must both exist in the function
     expect(body).toContain("paper.partial_close.${exitReason.toLowerCase()}");
     // Find the success audit block (not the booking_failed block)
+    // Window widened 400 -> 1000 (freshscan6 CRIT follow-up 2026-07-12): the equity-double-count fix
+    // added ~480 chars of `result: {...}` fields (totalContractsBeforeClose, remainingContracts,
+    // previousUnrealizedPnlRow, bakedInUnrealizedForClosedPortion, equityDelta,
+    // rebasedPreviousUnrealizedPnl) between the action template and `status: "success"` — same
+    // source-region-window-shift brittleness class as the prior deepscan14 fix (see AGENT-LOGS
+    // "freshscan6 followup: widen 2 deepscan14 source-region windows"). Behavior unchanged: the
+    // success audit is still inside the tx callback, still before the outside-tx logger.info below.
     const actionIdx = body.indexOf("paper.partial_close.${exitReason.toLowerCase()}");
-    const auditBlock = body.slice(actionIdx, actionIdx + 400);
+    const auditBlock = body.slice(actionIdx, actionIdx + 1000);
     expect(auditBlock).toContain('status: "success"');
     // Confirm it appears BEFORE logger.info outside the tx (the logger.info fires after tx commits)
     const outsideTxAnchor = body.indexOf('"paper.partial_close: P&L booked and equity credited"');
