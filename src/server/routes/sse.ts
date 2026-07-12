@@ -88,7 +88,13 @@ router.get("/events", (req: Request, res: Response) => {
     // the client's last-seen position. In either case we cannot guarantee continuity.
     const bufferEmpty = ringBuffer.length === 0;
     const oldestSeq   = bufferEmpty ? -1 : ringBuffer[0].seq;
-    const hasGap      = bufferEmpty || oldestSeq > lastSeenSeq + 1;
+    // deep-scan 2026-07-11 MED fix: `|| lastSeenSeq > eventSeq` detects a SERVER-RESTART seq reset.
+    // eventSeq + ringBuffer are in-memory and reset to 0/[] on every NSSM respawn/crash. A client that
+    // reconnects with Last-Event-ID higher than the post-restart eventSeq (e.g. 5000 vs a fresh 12)
+    // would otherwise NEVER trip the oldestSeq>lastSeenSeq+1 check (its last-seen is above every new
+    // seq), silently dropping the entire post-restart backlog. A last-seen ABOVE the current counter
+    // can only mean the counter reset — signal the gap so the client refetches authoritative state.
+    const hasGap      = bufferEmpty || oldestSeq > lastSeenSeq + 1 || lastSeenSeq > eventSeq;
 
     if (hasGap) {
       // H-6: Signal replay gap so the frontend can refetch authoritative state

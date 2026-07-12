@@ -156,9 +156,15 @@ export async function getConsistencyState(
   asOf: Date = new Date(),
   dryRun: boolean = false,
 ): Promise<ConsistencyState> {
-  // Cache check first
-  const cached = _getCached(accountId);
-  if (cached) return cached;
+  // Cache check first — LIVE (now-query) path ONLY. deep-scan 2026-07-11 MED fix: the 5s cache is
+  // keyed on accountId alone (ignores asOf), so a replay/time-travel caller looping over dates within
+  // 5s would get the FIRST date's state for every date (corrupting concentrationPct → payoutDenied in
+  // the replay confusion matrix). Skip the cache entirely on the dryRun (replay/simulation) path so
+  // each asOf is computed fresh; the live now-query path (dryRun=false, asOf≈now) keeps the 5s cache.
+  if (!dryRun) {
+    const cached = _getCached(accountId);
+    if (cached) return cached;
+  }
 
   const correlationId = randomUUID();
   const cycleStart = _getCycleStart(asOf);
@@ -340,7 +346,9 @@ export async function getConsistencyState(
     }
   }
 
-  _setCache(accountId, state);
+  // deep-scan 2026-07-11 MED fix: never populate the live 5s cache from a dryRun (replay/time-travel)
+  // computation — it would serve a past date's state to a subsequent live now-query.
+  if (!dryRun) _setCache(accountId, state);
   return state;
 }
 
