@@ -1,0 +1,3758 @@
+{
+  "artifact": "h1-wave1-shakedown-packets",
+  "version": "2026-07-12",
+  "purpose": "Wave-1 (b)-cert shakedown: BLIND fidelity adjudication of the demotion lane's runtime role assignments on the 14 audited concepts. Proving run for the tier-3 certificate machinery (H1 pre-reg §6). Raters are a SEPARATE fresh-context dispatch (doer != grader: packet-builder != rater != verifier).",
+  "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+  "closed_taxonomy": {
+    "gate-strength": "The clause carries decision weight the trader acts on before entry — a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+    "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+    "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+  },
+  "instructions": {
+    "read_order_LOCKED": [
+      "Set A (controls)",
+      "control-gate",
+      "Set B1..B14 (targets)"
+    ],
+    "procedure": [
+      "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+      "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+      "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+      "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+      "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+    ],
+    "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+    "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+    "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) — they are inputs to judge, not answers to trust."
+  },
+  "counts": {
+    "concepts": 14,
+    "total_items": 221,
+    "set_A_items": 10,
+    "target_items": 211,
+    "sections": 15,
+    "afrikaans_concepts_flagged": [
+      "jlShztsY3oA"
+    ]
+  },
+  "sections": [
+    {
+      "section_id": "SET-A",
+      "concept_id": null,
+      "label": "Set A — general adjudication set (complete FIRST, in listed order)",
+      "item_count": 10,
+      "items": [
+        {
+          "item_id": "W1-0001",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0002",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "4 hour chart",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0003",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "5 sma",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "wait for a retrace back to the 5 SMA"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0004",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "eur usd",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "now back to the euro dollar chart here"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0005",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "us session trading",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0006",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "go back up",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0007",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "event occurrence",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0008",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "exit",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "now you want to go ahead and exit"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0009",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price tried to break below area",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0010",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "ballinger bands bases",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B01",
+      "concept_id": "75DJN5UVQnw",
+      "family": "Support/Resistance",
+      "timeframe": "5m",
+      "label": "Set B1 — concept 75DJN5UVQnw (Support/Resistance, 5m)",
+      "needs_dual_anchor": false,
+      "item_count": 1,
+      "items": [
+        {
+          "item_id": "W1-0011",
+          "concept_id": "75DJN5UVQnw",
+          "family": "Support/Resistance",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "timeframe selection",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "scale down to a lower time frame like the 5 minute, 1 minute, or even the 15-second to refine my entry"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B02",
+      "concept_id": "jlShztsY3oA",
+      "family": "Range Breakout (ORB-style)",
+      "timeframe": "5m",
+      "label": "Set B2 — concept jlShztsY3oA (Range Breakout (ORB-style), 5m)",
+      "needs_dual_anchor": true,
+      "item_count": 5,
+      "items": [
+        {
+          "item_id": "W1-0012",
+          "concept_id": "jlShztsY3oA",
+          "family": "Range Breakout (ORB-style)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "trading asset",
+          "quote_anchor": {
+            "language": "af",
+            "verbatim": "now sê hulle om dit te verhandel op bates met hoë volatiliteit soos die NAS 100 die S&P 500 selfs goud",
+            "needs_dual_anchor": true,
+            "english_gloss": null,
+            "translation_status": "CERTIFIED_TRANSLATION_REQUIRED_DO_NOT_FABRICATE",
+            "dual_anchor_rule": "Afrikaans source. Rate ONLY after a certified English gloss is attached to english_gloss by a separate translator dispatch; do not adjudicate on the Afrikaans alone."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0013",
+          "concept_id": "jlShztsY3oA",
+          "family": "Range Breakout (ORB-style)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "fibonacci retracement level",
+          "quote_anchor": {
+            "language": "af",
+            "verbatim": "prys waarskynlik sal terugtrek na 'n Fibonacci retracement vlak en ook daarvan verwerp",
+            "needs_dual_anchor": true,
+            "english_gloss": null,
+            "translation_status": "CERTIFIED_TRANSLATION_REQUIRED_DO_NOT_FABRICATE",
+            "dual_anchor_rule": "Afrikaans source. Rate ONLY after a certified English gloss is attached to english_gloss by a separate translator dispatch; do not adjudicate on the Afrikaans alone."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0014",
+          "concept_id": "jlShztsY3oA",
+          "family": "Range Breakout (ORB-style)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "candle range range break",
+          "quote_anchor": {
+            "language": "af",
+            "verbatim": "die eerste keer weet hulle 'n vals strategie",
+            "needs_dual_anchor": true,
+            "english_gloss": null,
+            "translation_status": "CERTIFIED_TRANSLATION_REQUIRED_DO_NOT_FABRICATE",
+            "dual_anchor_rule": "Afrikaans source. Rate ONLY after a certified English gloss is attached to english_gloss by a separate translator dispatch; do not adjudicate on the Afrikaans alone."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0015",
+          "concept_id": "jlShztsY3oA",
+          "family": "Range Breakout (ORB-style)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "structure confirmation within range box",
+          "quote_anchor": {
+            "language": "af",
+            "verbatim": "voeg selfs iets by tot bevestiging van struktuur in die reeks",
+            "needs_dual_anchor": true,
+            "english_gloss": null,
+            "translation_status": "CERTIFIED_TRANSLATION_REQUIRED_DO_NOT_FABRICATE",
+            "dual_anchor_rule": "Afrikaans source. Rate ONLY after a certified English gloss is attached to english_gloss by a separate translator dispatch; do not adjudicate on the Afrikaans alone."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0016",
+          "concept_id": "jlShztsY3oA",
+          "family": "Range Breakout (ORB-style)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "downward tendency line",
+          "quote_anchor": {
+            "language": "af",
+            "verbatim": "hoekom sal jy kort daarin gaan as jy die bol-strategie wil gebruik",
+            "needs_dual_anchor": true,
+            "english_gloss": null,
+            "translation_status": "CERTIFIED_TRANSLATION_REQUIRED_DO_NOT_FABRICATE",
+            "dual_anchor_rule": "Afrikaans source. Rate ONLY after a certified English gloss is attached to english_gloss by a separate translator dispatch; do not adjudicate on the Afrikaans alone."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B03",
+      "concept_id": "c8VLqF0XDR4",
+      "family": "General Entry (long/short)",
+      "timeframe": "15m",
+      "label": "Set B3 — concept c8VLqF0XDR4 (General Entry (long/short), 15m)",
+      "needs_dual_anchor": false,
+      "item_count": 8,
+      "items": [
+        {
+          "item_id": "W1-0017",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price holds pre market high and 30min orb high",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "what I like to see is for price to pull back and retest that orb high or low"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0018",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "upside movement",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "this is going to start to pop to the upside right there on that candle up. We took out all these sellers"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0019",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "30 minute high pre market high fvg",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "a lot of confluence as well as large buying participants at this key level"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0020",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "first 30 minutes high",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "for me personally, I like to use the 30 minute orb more just because it's a little larger of a time frame"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0021",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "level above low first 30 minutes",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "if you didn't get an entry over here, you had another opportunity to go long"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0022",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "level",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "this is not going to play out every day. This is just one of many setups that we can keep our eye on"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0023",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "retest into area",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "what I was looking for was for price to pull back into this area because the market was very bullish today"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0024",
+          "concept_id": "c8VLqF0XDR4",
+          "family": "General Entry (long/short)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "price break below and retest as resistance",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We are waiting for price to break below, come back and retest it as resistance before we can"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B04",
+      "concept_id": "HfZTCZTDfWk",
+      "family": "Bias/Trend",
+      "timeframe": "4h",
+      "label": "Set B4 — concept HfZTCZTDfWk (Bias/Trend, 4h)",
+      "needs_dual_anchor": false,
+      "item_count": 6,
+      "items": [
+        {
+          "item_id": "W1-0025",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "cross down and retrace",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we get the cross down um right over here and we get the retrace right over here and once again very beautiful move lower"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0026",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "cross",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "here is when we get the cross and we don't actually enter the trade till over here"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0027",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "low price level",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "you can see this low is 1788"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0028",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "currency pair",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "this strategy Works particularly well for euro dollar pound dollar and dollar Yen"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0029",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "move stop to break even",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "swing Traders on the other hand can use the same initial pr[ice]... with the twist"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0030",
+          "concept_id": "HfZTCZTDfWk",
+          "family": "Bias/Trend",
+          "timeframe": "4h",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "5 sma crossing below 20 sma 4h chart",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "you don't just want to take the trade you want to wait for a retrace back to the 5 SMA"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B05",
+      "concept_id": "FqxEKDxemtI",
+      "family": "Indicator (Bollinger Bands)",
+      "timeframe": "5m",
+      "label": "Set B5 — concept FqxEKDxemtI (Indicator (Bollinger Bands), 5m)",
+      "needs_dual_anchor": false,
+      "item_count": 9,
+      "items": [
+        {
+          "item_id": "W1-0031",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "currency pair close",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the rules for the trade goes as follows if the currency pair... we want to first thing we want to do is see the currency pair close at or above the third standard deviation Binger band"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0032",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "accuracy don t trade h forhead big news releases should be one cardinal rules anew york regardless what it is",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "that should be one of your Cardinal rules for any setup regardless of what it is"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0033",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "close above third standard deviation here here and here",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "closes above the third standard deviation Bing band you wait you sell at this candle here"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0034",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "touch basis 20 sma",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the second way to exit is when it touches the basis the 20 SMA... or when it touches the Bing[er] band on the other side"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0035",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "ballinger bands second set",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "that's where adding the second set of Ballinger bands comes into play"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0036",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "binger band inside line",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "you want to wait for it to close on a downside back above the second standard deviation Binger band the inside line... that's when you go long"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0037",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "trading time",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "when that happens it's not time to trade we need to look for confirmation"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0038",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "binger band standard deviation",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we'll be adding the three standard deviation Binger band I call this strategy the extreme fate"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0039",
+          "concept_id": "FqxEKDxemtI",
+          "family": "Indicator (Bollinger Bands)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "close at or above third standard deviation binger band",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the only other time it does it is over here where it closes at or above the third standard devation Binger band"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B06",
+      "concept_id": "snNkQSyWX4k",
+      "family": "MA Crossover",
+      "timeframe": "5m",
+      "label": "Set B6 — concept snNkQSyWX4k (MA Crossover, 5m)",
+      "needs_dual_anchor": false,
+      "item_count": 10,
+      "items": [
+        {
+          "item_id": "W1-0040",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "price retest average",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we had price close this candle above both of the averages so it met our Rule now price came back down right here to retest the average so that is our entry"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0041",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "candle close below both moving averages",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "this was the first step in this scenario we had a candle on the one hour or in this case a 30 minute chart"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0042",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "consolidation period",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we take a cell back down right we're not doing anything during consolidation"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0043",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "price",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we had the same opportunity here okay where price came above both moving averages right in this candle right here okay"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0044",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "moving averages",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "so the first thing that we need to do is add these two moving averages"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0045",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "crude oil trading context",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "so you can see that with crude oil because of how quickly it moves we only need"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0046",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "timeframe",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "but we're sitting on the 30 minute chart today and like anything else this is going to require you to practice practice and practice"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0047",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "wicks retest zones",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I'm just going to point out a few right we closed below we kind of came back up here are the Wicks these are the kind of retests near the zones"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0048",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "zone sitting right in here",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "so this should be our initial exit just based on support and resistance"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0049",
+          "concept_id": "snNkQSyWX4k",
+          "family": "MA Crossover",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "candles retest one or both averages",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "now what we're looking for is that candles retest one or both of the averages"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B07",
+      "concept_id": "sVkmZklJDHI",
+      "family": "Risk-Mistake-Avoidance",
+      "timeframe": "1m",
+      "label": "Set B7 — concept sVkmZklJDHI (Risk-Mistake-Avoidance, 1m)",
+      "needs_dual_anchor": false,
+      "item_count": 10,
+      "items": [
+        {
+          "item_id": "W1-0050",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "time frame",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we're just going to switch over to the one minute time frame and see what's going on"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0051",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "range boundaries",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we've got the top of the 5m minute range and we've got the bottom of the 5minut range"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0052",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "fvg sequence",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "What we are looking for is a fair value gap sequence that is printing outside of the range."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0053",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "price movement direction",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Either the price is going to trade up into the range like this or it may trade low into the range like this."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0054",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "new york session start",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the 9:30 candle is when New York opens. And the New York session is the most volatile session"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0055",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "avoiding two mistakes",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "If I had avoided the two mistakes that I'm about to share with you, I'd be able to be profitable much faster."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0056",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "break",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "let's just play and see if we get a break. Great. So we have our break to the upside."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0057",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "fvg formation",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "in order for this fair value gap to be a valid fair value gap, the fair value gap has to actually be formed"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0058",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "gap being printed outside range",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "As soon as we see this gap being printed outside of the range and confirming, then we can enter the trade."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0059",
+          "concept_id": "sVkmZklJDHI",
+          "family": "Risk-Mistake-Avoidance",
+          "timeframe": "1m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "930 candle",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I have come to the 930 candle right here and I'm going to take my trend tool"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B08",
+      "concept_id": "N7uP9V0Iktc",
+      "family": "Indicator (EMA)",
+      "timeframe": "5m",
+      "label": "Set B8 — concept N7uP9V0Iktc (Indicator (EMA), 5m)",
+      "needs_dual_anchor": false,
+      "item_count": 16,
+      "items": [
+        {
+          "item_id": "W1-0060",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "vwap retest vs pre market low retest",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Because if it gets above VWAP, you can't take puts. That's our rule."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0061",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "vwop retest number one",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "but we got a VWOP retest number one, and then dump."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0062",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "vwap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we come and retest VWAP. So, what does that mean? This means we're taking calls here."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0063",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "CONFIRM_DIRECTION",
+          "extracted_object": "ema",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "VWAP we use for retest and to know if we can buy calls or puts or not. EMA we use to know if to sell or not."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0064",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "apple retest pre market high",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "As you can see here, Apple retests pre-market high. So, we take calls. It's over VWAP, so we're good."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0065",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "ema level",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "it doesn't break under the EMA until right here. So, we don't sell any of our position until right here."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0066",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "apple pre market high retest",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we got a Apple pre-market high, 5m minute close above, a little retest, and then another retest"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0067",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "ema period",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I've said both in videos. I honestly I've been using the eight... Really no big difference at all."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0068",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "vwop retest",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "really, really, really nice trade here on this VWOP retest"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0069",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "position out",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "on this one, you would have taken most your position out over here once it got above"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0070",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "vwop retest",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "VWAP is always a big retest spot ... then I'm looking to take puts on a VWOP retest, not a pre-market low retest"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0071",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "ema trend confirmation",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "You can take a VWAP retest and a pre-market high retest. You hold against the EMA and let your runners run."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0072",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "ema retest",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So, this is an EMA retest. As you can see here, Apple retests pre-market high."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0073",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "ema",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "You also trade EMA retest sometimes."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0074",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "pre market high",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "It's a VWOP retest, above pre-market high, one of the strongest stocks of the day."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0075",
+          "concept_id": "N7uP9V0Iktc",
+          "family": "Indicator (EMA)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "vwap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I never take calls under VWAP and I never take puts over VWAP."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B09",
+      "concept_id": "KXWRtV2LOVc",
+      "family": "ICT (Order Block)",
+      "timeframe": "5m",
+      "label": "Set B9 — concept KXWRtV2LOVc (ICT (Order Block), 5m)",
+      "needs_dual_anchor": false,
+      "item_count": 16,
+      "items": [
+        {
+          "item_id": "W1-0076",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "key level tap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "as soon as the key level is tapped and you notice that 15 minute CRT"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0077",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "range high and low",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "first candle 6 a.m. creating the range high and low second candle Turtle souping the Range High"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0078",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "4hour time frame",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I'm doing this so you guys understand I am not cherry picking anything this is all random"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0079",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "one day time frame",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "let's hop onto a one day time frame the daily time frame to look for a key level to have four confirmations for the trade"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0080",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "daily fvg 4h hour candle",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "this will be our key level your goal is to enter short as soon as the key level is tapped"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0081",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "focus scope",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we will be focusing solely on the three candle CRTs for example"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0082",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "price close above order block candle",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "as soon as price closed above this candle you would confirm the order block and enter with the tap right here"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0083",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "candle low and closing back within range",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "you now want to locate a 15minute CRT at the lows of the 4our CRT in order to confirm"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0084",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "crt selection criteria",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the reason why I choose this CRT and not anyone any other CRT simply because we respected the low swept it and we respected the high and swept it... one to be chosen"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0085",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "2",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "however this is 2 a.m. let's push this over 6 a.m. candle not going to use this one"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0086",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "6 m candle 9 00",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the next candle broke through through the low and continued crashing down there would have been no trade here"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0087",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "timed purge crt forms at 10 m and was purged",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we do also have a third confirmation which is the timed Purge the CRT forms at 10: a.m. and was purged at 10:45"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0088",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "4hour candle turtle",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the 10 a.m. 4our candle Turtle souping the 6 a.m. candle low and closing back within the range"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0089",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "sweep type",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the last sweep of course was a turtle soup of the highs that means we are now bearish"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0090",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "15minute crt range",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we have a 15minute CRT right over here now why was this not the 15 minutes here to it very well could have been"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0091",
+          "concept_id": "KXWRtV2LOVc",
+          "family": "ICT (Order Block)",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "15 minute crt range",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "knowing that the purge must happen between 10 and 12 a.m."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B10",
+      "concept_id": "m-G1ag77aVc",
+      "family": "ICT (Discount/Premium)",
+      "timeframe": "30m",
+      "label": "Set B10 — concept m-G1ag77aVc (ICT (Discount/Premium), 30m)",
+      "needs_dual_anchor": false,
+      "item_count": 17,
+      "items": [
+        {
+          "item_id": "W1-0092",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "lower time frame structure changes in agreement with larger trend direction",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "what we can do inside of the top zone is use what I call a standard confirmation."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0093",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price movement",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "if we go over on the 5-minut time frame and dig into this larger demand zone"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0094",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "demand zone market low structure",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "One area of demand here, which is the last candle before this impulse away, and another here, this larger one at the bottom, which is the very low of this market."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0095",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "supply zones",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I used the rule of using the last candle before the impulse to mark my supply zones."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0096",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "supply zones",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "once the market returns to this level."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0097",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "time frame",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Let's say we begin on the 4hour time frame and we are looking at a supply zone."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0098",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "last candle before impulse away",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "And my rule is to use the last candle before the impulse away."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0099",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "future selling",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So future selling is expected once the market returns to this level."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0100",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "market reaches level",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "what we can do inside of the top zone is use what I call a standard confirmation."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0101",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "fvg into",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "There's still some imbalance into this. So, maybe we could place our entry here"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0102",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "immediate market action from current position",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "If we saw this, let's say it happened immediately from where the market is right now."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0103",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "retest",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We look to buy from the demand zone when it is retested because we expect to see more of that institutional buying kicking in."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0104",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "trend direction shift",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We're looking at a market which has just shifted in trend direction."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0105",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "retracement opportunity",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we're basically now looking for a retracement opportunity to then buy from further inside of the first leg of price action"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0106",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "1hour zone context",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "but that's because this is a 1hour zone."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0107",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "market return into area demand",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we would basically want to see the market return into this area of demand and then create a new high."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0108",
+          "concept_id": "m-G1ag77aVc",
+          "family": "ICT (Discount/Premium)",
+          "timeframe": "30m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "lowest possible zone",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So the lowest possible zone in a buying scenario."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B11",
+      "concept_id": "UBvfsImdI2U",
+      "family": "ICT (CRT / general entry)",
+      "timeframe": "1h",
+      "label": "Set B11 — concept UBvfsImdI2U (ICT (CRT / general entry), 1h)",
+      "needs_dual_anchor": false,
+      "item_count": 20,
+      "items": [
+        {
+          "item_id": "W1-0109",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price formation",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So, price forms that CRT."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0110",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "third candle reversal",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "if it doesn't reverse, the strategy is not going to work. It must reverse right after breaking a high or a low."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0111",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "mnq market trend",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "forget shorts. I am not in shorts at all. I don't even care to look for shorts at this moment."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0112",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "first crt day",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Price continues. Boom. Straight to TP. First CRT of the day."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0113",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "hourly candle close",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Let's see. Hourly candle just closed and this is a wonderful CRT right here."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0114",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "price movement bias",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Okay, since we took out the low, it wants to move to the opposite end."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0115",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "price reversal",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "It must reverse right after breaking a high or a low."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0116",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "it s just ripping higher highs higher lows every single time",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So, forget shorts. I am not in shorts at all. I don't even care to look for shorts at this moment."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0117",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "trade execution",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "that's the only time I'm taking that trade. If it doesn't break the middle candle, absolutely nothing will be done."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0118",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "bearish crt or long crt",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "How do I know to play a bearish CRT or a long CRT?"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0119",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "mnq",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "it's an uptrend. I am not going against that. It's like trying to run against the speeding train at that point."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0120",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "price break and reversal",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Price came and broke that low and immediately reversed back up."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0121",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price movement",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The last thing we understand now is that price will try to make a full U-shaped reversal to this high of day level right over here."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0122",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "move to opposite end candle",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "now wants to make a move to the opposite end of the candle."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0123",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "trading range",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The market literally is trading from orders to orders, right? Liquidity, as some people call it"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0124",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "process repetition",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "all I'm really going to do is that exact same process over and over and over again."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0125",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price break high or low",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "what you will do is you will wait for price to come break either that high or the low."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0126",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "trading session termination",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "honestly, just close the screens and just log off."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0127",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "market activity",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I'm waiting. I'm waiting. I'm watching to see if any CRTs form at all."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0128",
+          "concept_id": "UBvfsImdI2U",
+          "family": "ICT (CRT / general entry)",
+          "timeframe": "1h",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "timeframe",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Honestly, it doesn't matter... if you really want to wait for the hourly ones, go ahead."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B12",
+      "concept_id": "NMUd0oX_7Pg",
+      "family": "Candlestick Pattern",
+      "timeframe": "5m",
+      "label": "Set B12 — concept NMUd0oX_7Pg (Candlestick Pattern, 5m)",
+      "needs_dual_anchor": false,
+      "item_count": 25,
+      "items": [
+        {
+          "item_id": "W1-0129",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "stop goes below low",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Stop goes below the low. And the target profit? The top of the range we drew in step one."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0130",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "volume indicator",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "here's the bonus tip I promised you at the beginning... there is one additional layer that can considerably improve your win rate"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0131",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "directional push",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "You need the reversal to form outside the box after a clear directional push."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0132",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "institutional money readiness",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "institutional money has done what it needed to do and is now ready to push price in the opposite direction."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0133",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "market readiness reversal",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "the market is not ready to reverse yet."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0134",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "low opening candle and high",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The low of the opening candle and the high."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0135",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "time window location",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "And they must appear outside the box within 60 to 90 minutes of the market open."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0136",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "manipulation likelihood",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Manipulation is likely, but the market is not ready to reverse yet."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0137",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "these manipulation candles are often even more prominent",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "These manipulation candles are often even more prominent on individual stocks than on the big indexes."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0138",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "opening 15 minute candle close",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "When that opening 15-minute candle closes, before you do anything else, glance down at the volume."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0139",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "bullish reversal",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The manipulation candle was negative, so we're hunting for a bullish reversal below the range on the 5-minute chart."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0140",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "reversal candles",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "This is the most critical moment in the whole setup because if neither of these candles appears, the move could just continue... You don't chase it. You wait."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0141",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "manipulation candle characteristics",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "A manipulation candle is a fast, aggressive move either up or down."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0142",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "5 minute chart",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We drop to the 5-minute chart and we watch."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0143",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "next candle to break above hammer high",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Wait for the next candle to break above the hammer high, enter at the open of the candle after that, and set your stop at the low of the hammer."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0144",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "scenario three large candle volume below average",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Scenario three, large candle, volume below average."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0145",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "first 15 minutes candle formed today",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Now, locate the first 15-minutes candle that formed on today's date."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0146",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "wait reversal candle signal in step three before doing anything",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Do not force the entry. Wait for the reversal candle signal in step three before doing anything."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0147",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "sharp red move downward",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "This needs to appear after a clear sharp red move downward."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0148",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "volume comparison",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Is the volume of this candle above or below that moving average line?"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0149",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "opening candle qualification",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "To confirm whether your opening candle actually qualifies as a manipulation candle, here's what you do."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0150",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "reversal formation",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Those don't count. You need the reversal to form outside the box after a clear directional push."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0151",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "reversal pattern",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "right away, we know we are looking for a bullish reversal below the range, specifically a hammer or bullish engulfing candle."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0152",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "15 minutes candle closure",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "make sure that first 15-minutes candle has fully closed before marking your range. If the candle is still forming, you need to wait for it to completely close first."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0153",
+          "concept_id": "NMUd0oX_7Pg",
+          "family": "Candlestick Pattern",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "wait cleaner opportunity following day",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Treat this setup with extra caution or skip it entirely and wait for a cleaner opportunity the following day."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B13",
+      "concept_id": "ktkqq7QsN9Q",
+      "family": "Indicator (VWAP)",
+      "timeframe": "15m",
+      "label": "Set B13 — concept ktkqq7QsN9Q (Indicator (VWAP), 15m)",
+      "needs_dual_anchor": false,
+      "item_count": 30,
+      "items": [
+        {
+          "item_id": "W1-0154",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "pierce band",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Sometimes they pierce the band and then they reject hard and immediately."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0155",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "vwap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "VWAP is a magnet first, and it is a level second."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0156",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "vwap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "It can be a price magnet where price gravitates toward it."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0157",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "retest",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "If we wanted to take a long, we wait for a pullback."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0158",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "price location",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "First, price has obviously been spending a lot of time within the VWAP value area. It must show price acceptance."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0159",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "stop placement rule",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The stop is going to go beyond the price level or beyond the testing candle wick."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0160",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "moving out value",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "This happens when we're moving out of value, and price is now in search of a new value area."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0161",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "area",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "When we come back to that same area a second time, the trade has fundamentally changed."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0162",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "continuation trend day",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "This trade plays out over and over again on a continuation trend day."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0163",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "breakout",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Had a little trouble getting through, but once we broke through, the next target was the other side of value."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0164",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "price near vwap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "And when price is near it, you should expect a lot of noise, not always clean moves."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0165",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price holding or reentering vwap value area",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "When price holds or reenters the VWAP value area, it gravitates to the VWAP."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0166",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "range continuation bias",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "If the market is ranging, you need to expect it to continue ranging. ... We do not fade the top, and we do not buy the bottom."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0167",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "vwap resistance",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The VWAP is support. Price bounces off of it. VWAP is resistance. Price rejects from it."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0168",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "vwap test",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "It's going to be the first test of VWAP after traveling through price discovery."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0169",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "market condition",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "This is on trend days only."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0170",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "rejection",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "You can also get in on the break into value. But again, be prepared for rejection rather than waiting for acceptance."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0171",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "price break into value trending day",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Entry is on the first test of VWAP after price breaks into value on a trending day."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0172",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "retest",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Often, they'll retest again just like they did right here."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0173",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "vwap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Every course I bought, every video I watched, every guru I follow said the same thing. VWAP is support."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0174",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "contextual opportunity quality",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So, wait for a new contextual shift and ask yourself, \"What's the next setup that's new?\""
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0175",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "setups taking place",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "If the setups aren't taking place, if they're not playing out, we need to take a step back."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0176",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "volume profile",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "If you're familiar with the volume profile, you know about the point of control."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0177",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "previous few sessions",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We want to be mindful of the previous few sessions."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0178",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "trend",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "VWAP plays a better magnet than it does a trading level except in a trend."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0179",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "price rejection from it",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "VWAP is resistance. Price rejects from it. And sometimes that works."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0180",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "price acceptance and rejection towards vwap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Price is accepting inside value, touching the bands, looking for rejections, and fading back towards the VWAP."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0181",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "value area break back into",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Setup number three is the return to value. And this is where we've been in price discovery and then we break back into the value area."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0182",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "vwap trading level",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Only in specific conditions does it become a trading level."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0183",
+          "concept_id": "ktkqq7QsN9Q",
+          "family": "Indicator (VWAP)",
+          "timeframe": "15m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "trading session",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I trade every single morning from the New York market open to around noon New York time."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    },
+    {
+      "section_id": "SET-B14",
+      "concept_id": "oDLt9zh33LE",
+      "family": "Opening Range Breakout",
+      "timeframe": "5m",
+      "label": "Set B14 — concept oDLt9zh33LE (Opening Range Breakout, 5m)",
+      "needs_dual_anchor": false,
+      "item_count": 38,
+      "items": [
+        {
+          "item_id": "W1-0184",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "market direction",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I'm looking for the market to trade down where lower."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0185",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "candle interaction",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The low of the third candle and the high of the first candle do not touch each other."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0186",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "trade into high",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We see that we do trade into the high."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0187",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "nq trading",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "starting here on the daily time frame on NQ, what do we see?"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0188",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "fvg breaks out range",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "That fair value gap has to be the same candle that breaks out of the range."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0189",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "breaking close below forms fvg",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I want to see a breaking close below that forms a fair value gap."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0190",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "new york open time zone",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We come to our charts right before 9:30 open in the New York hill zone."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0191",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "breakout",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Step number one, we are going to wait for a breakout on the fiveminut chart."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0192",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "fvg overlapping with range",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "It is even better if the fair value gap overlaps with the actual range high."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0193",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "order block",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So I want to see a candle closure above it. What does this form? This forms my order block."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0194",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "5minut time frame",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Dropping to the 5minut time frame here on the 5 minute we have our high we have our low marked out."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0195",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "market activity",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Now we wait for the market to trade back into that range and then give us an engulfing candle"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0196",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "sweep",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We sweep. Look at this. We manipulate and we distribute lower."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0197",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "daily fvg",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "And if I go out here, we have that daily fair value gap."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0198",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "overlapping fvg crosses higher low",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Step number two, we're going to wait for an overlapping fair value gap that crosses the higher low."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0199",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "fvg",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we do have a displacement through that level. We have a fair value gap."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0200",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "fvg inversion",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We do. We then inverse that fair value gap."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0201",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "higher time frame",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We go to a higher time frame and we leave a very small runner running."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0202",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "fvg",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we are going to wait for again wait for that retest into that fair value gap."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0203",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "first 15minute candle range high",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "people go ahead and mark out the high and they mark out the low but they do not look at what the higher time frame is doing"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0204",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "candle close above order block",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The very next candle tries to close above it and form an order block, but that fails. So, we're still not in our trade yet."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0205",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "daily fvg",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The market traded all the way to that daily fair value gap and we're out of this position for a 6.11R."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0206",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "close above box to form fvg",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We do close above the box we form a fair value gap."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0207",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "high rejection",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "I want to see that high being rejected."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0208",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "sells",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "gives me every excuse in the book to look for sells with this position."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0209",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "opening range breakout zone",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "That is your opening range breakout zone that you wait for price action to break out."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0210",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "candle breakout",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "they wait for the very first 5m minute candle to close above or below the range."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0211",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "opening range breakout orb",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "The opening range breakout. Everybody talks about it. Everybody tries it. But almost nobody trades it profitably."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0212",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "high or low initial candle with overlapping fvg",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "step number three, we're going to wait for the market to retest that high or low of this initial candle"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0213",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_RETEST",
+          "extracted_object": "high price level",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Now, we trade back up to the high. And do we get our entry reason?"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0214",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "so rules stay same",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "Now, I'm going to show you with the method that I just taught you how we could have avoided this loss. So, the rules stay the same."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0215",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "FILTER",
+          "extracted_object": "traps",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "You're filtering out the traps and only trading when the market provides its hand."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0216",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "time window",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "You mark out the high and the low of the first 15minute candle range. That is your orb box."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0217",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_CONFIRMATION",
+          "extracted_object": "bearish candle trading into gap",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "We're going to get a bearish candle that trades into that gap."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0218",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_BIAS",
+          "extracted_object": "delivery closing through up close candles",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "we do have a nice change in the state of delivery closing through up close candles."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0219",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "EXIT_HINT",
+          "extracted_object": "position exit",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "and then eventually we are taken out of our position for a 2."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0220",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_SESSION",
+          "extracted_object": "daily time frame",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "So looking at this daily time frame, what do we see?"
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        },
+        {
+          "item_id": "W1-0221",
+          "concept_id": "oDLt9zh33LE",
+          "family": "Opening Range Breakout",
+          "timeframe": "5m",
+          "extracted_condition_type": "WAIT_STRUCTURE",
+          "extracted_object": "order block formation",
+          "quote_anchor": {
+            "language": "en",
+            "verbatim": "they receive a change in the state of delivery with downlosed candles closing below this up close candle forming an order block."
+          },
+          "rater_response": {
+            "role": null,
+            "notes": null
+          }
+        }
+      ]
+    }
+  ]
+}
