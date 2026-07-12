@@ -1,0 +1,252 @@
+{
+  "title": "H1 compile-integrity lint engagement-birthright fixtures (pre-reg §4 / §7 Law 1)",
+  "frozen": "2026-07-12",
+  "note": "Birth gate: FIRES-ON-POSITIVES (passed=false, violation present) AND SILENT-ON-NEGATIVES (passed=true, clean) with ZERO exceptions -- mirrors tier1_birth_fixtures.json's discipline for the compile-integrity layer. Each condition resolves its char_span from `anchor_find`/`span_relative_to`+`span_len` (test-computed) rather than hand-counted offsets; `char_span` is only given literally for a deliberately non-resolving (fabricated) anchor.",
+  "reuse_ledger": {
+    "direction_conflation_lint": "PARITY-FIXTURED -- docs/designs/mode-ab-G4-validity-block-2026-07-11.md:76-77,223,386 (and_group0 type-specimen)",
+    "unsat_sat_check": "PARITY-FIXTURED -- same doc line 386 + anti-pattern-catalog.md:110-116 (sentinel exemption)",
+    "or_alternatives_honored": "REUSED -- src.engine.spec_family_bindings.or_branches_enabled() (spec_family_bindings.py:146)",
+    "f2_coverage_gate": "PARITY-FIXTURED -- extraction-coverage-gate.ts::classify()/nameInUnit + F4-eligibility-bypass-trace-2026-07-07.md:296-298 adversarial word set",
+    "causality_lint": "PARITY-FIXTURED (verbatim regex port) -- anti-pattern-catalog.md:88-96 detectLookAheadBias"
+  },
+  "lints": [
+    {
+      "lint": "direction_conflation_lint",
+      "positives": [
+        {
+          "id": "DC_POS_and_group0",
+          "transcript": "on the 5-SMA cross above 50 go long, on the 5-SMA cross below 50 go short",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "5-SMA cross above 50", "direction": "long", "and_group": 0 },
+            { "condition_id": "B", "quote_anchor": "5-SMA cross below 50", "direction": "short", "and_group": 0 }
+          ],
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        }
+      ],
+      "negatives": [
+        {
+          "id": "DC_NEG_or_branch_declared",
+          "transcript": "on the 5-SMA cross above 50 go long, on the 5-SMA cross below 50 go short",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "5-SMA cross above 50", "direction": "long", "and_group": 0 },
+            { "condition_id": "B", "quote_anchor": "5-SMA cross below 50", "direction": "short", "and_group": 0 }
+          ],
+          "or_branches": [["A", "B"]],
+          "expect": { "passed": true }
+        },
+        {
+          "id": "DC_NEG_sentinel_exempt",
+          "transcript": "go long on breakout above the range high. entry_short is set to high < low as a disabled marker.",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "go long on breakout above the range high", "direction": "long", "and_group": 0 },
+            { "condition_id": "B", "quote_anchor": "high < low", "direction": "short", "and_group": 0, "is_disabled_sentinel": true }
+          ],
+          "expect": { "passed": true }
+        },
+        {
+          "id": "DC_NEG_same_direction",
+          "transcript": "go long on breakout above resistance and go long again on retest of support",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "go long on breakout above resistance", "direction": "long", "and_group": 0 },
+            { "condition_id": "B", "quote_anchor": "retest of support", "direction": "long", "and_group": 0 }
+          ],
+          "expect": { "passed": true }
+        }
+      ]
+    },
+    {
+      "lint": "unsat_sat_check",
+      "positives": [
+        {
+          "id": "US_POS_and_group0",
+          "transcript": "the strategy requires 5-SMA > 50-SMA and 5-SMA < 50-SMA at the same time",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "5-SMA > 50-SMA", "and_group": 0, "comparator": "5-SMA>50-SMA" },
+            { "condition_id": "B", "quote_anchor": "5-SMA < 50-SMA", "and_group": 0, "comparator": "5-SMA<50-SMA" }
+          ],
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        }
+      ],
+      "negatives": [
+        {
+          "id": "US_NEG_sentinel_standalone",
+          "transcript": "entry_short is high < low as a disabled marker",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "high < low", "and_group": 0, "comparator": "high<low", "is_disabled_sentinel": true }
+          ],
+          "expect": { "passed": true }
+        },
+        {
+          "id": "US_NEG_different_and_groups",
+          "transcript": "close > orh_15m for the long path, close < orh_15m for the short path",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "close > orh_15m", "and_group": 0, "comparator": "close>orh_15m" },
+            { "condition_id": "B", "quote_anchor": "close < orh_15m", "and_group": 1, "comparator": "close<orh_15m" }
+          ],
+          "expect": { "passed": true }
+        },
+        {
+          "id": "US_NEG_non_opposite_comparators",
+          "transcript": "close > orh_15m and volume > avg_volume confirm the entry",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "close > orh_15m", "and_group": 0, "comparator": "close>orh_15m" },
+            { "condition_id": "B", "quote_anchor": "volume > avg_volume", "and_group": 0, "comparator": "volume>avg_volume" }
+          ],
+          "expect": { "passed": true }
+        }
+      ]
+    },
+    {
+      "lint": "or_alternatives_honored",
+      "positives": [
+        {
+          "id": "OR_POS_collapsed_flag_off",
+          "transcript": "take puts on a VWOP retest or take puts on a pre-market low retest",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "take puts on a VWOP retest", "role": "spine" },
+            { "condition_id": "B", "quote_anchor": "pre-market low retest", "role": "spine" }
+          ],
+          "or_branches": [["A", "B"]],
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        }
+      ],
+      "negatives": [
+        {
+          "id": "OR_NEG_flag_on",
+          "transcript": "take puts on a VWOP retest or take puts on a pre-market low retest",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "take puts on a VWOP retest", "role": "spine" },
+            { "condition_id": "B", "quote_anchor": "pre-market low retest", "role": "spine" }
+          ],
+          "or_branches": [["A", "B"]],
+          "env": { "TF_OR_BRANCHES_ENABLED": "true" },
+          "expect": { "passed": true }
+        },
+        {
+          "id": "OR_NEG_no_or_branches_declared",
+          "transcript": "buy from the demand zone when it is retested",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "buy from the demand zone when it is retested", "role": "spine" }
+          ],
+          "expect": { "passed": true }
+        },
+        {
+          "id": "OR_NEG_single_spine_member",
+          "transcript": "take puts on a VWOP retest or a rare footnote",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "take puts on a VWOP retest", "role": "spine" },
+            { "condition_id": "B", "quote_anchor": "a rare footnote", "role": "confluence" }
+          ],
+          "or_branches": [["A", "B"]],
+          "expect": { "passed": true }
+        }
+      ]
+    },
+    {
+      "lint": "f2_coverage_gate",
+      "positives": [
+        {
+          "id": "F2_POS_prefix_collision_zone_zones",
+          "transcript": "we look for retracement zones near the demand area",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "zone", "span_relative_to": "zones", "span_len": 4 }
+          ],
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        },
+        {
+          "id": "F2_POS_prefix_collision_trend_trending",
+          "transcript": "watch the trending topic on twitter for sentiment",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "trend", "span_relative_to": "trending", "span_len": 5 }
+          ],
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        },
+        {
+          "id": "F2_POS_fabricated_anchor",
+          "transcript": "buy on retest of demand zone",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "totally fabricated text", "char_span": [0, 5] }
+          ],
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        }
+      ],
+      "negatives": [
+        {
+          "id": "F2_NEG_clean_word_boundary",
+          "transcript": "we look for retracement zones near the demand area",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "retracement zones" }
+          ],
+          "expect": { "passed": true }
+        },
+        {
+          "id": "F2_NEG_full_word_trend",
+          "transcript": "the trend is your friend on higher timeframes",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "trend" }
+          ],
+          "expect": { "passed": true }
+        }
+      ]
+    },
+    {
+      "lint": "causality_lint",
+      "positives": [
+        {
+          "id": "CL_POS_tomorrow_ref",
+          "transcript": "buy when tomorrow's high breaks today's high",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "tomorrow's high breaks today's high" }
+          ],
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        },
+        {
+          "id": "CL_POS_same_bar_fill_optout",
+          "transcript": "close > orh_15m",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "close > orh_15m", "comparator": "close>orh_15m" }
+          ],
+          "same_bar_fill": true,
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        },
+        {
+          "id": "CL_POS_centered_window",
+          "transcript": "gate on the centered_window average of price",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "centered_window average of price" }
+          ],
+          "expect": { "passed": false, "offending_condition_id": "A" }
+        }
+      ],
+      "negatives": [
+        {
+          "id": "CL_NEG_bare_close_safe",
+          "transcript": "buy on close above orh_15m",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "close above orh_15m", "comparator": "close>orh_15m" }
+          ],
+          "expect": { "passed": true }
+        },
+        {
+          "id": "CL_NEG_prev_swing_high_safe",
+          "transcript": "enter short when price breaks below the previous swing high",
+          "conditions": [
+            { "condition_id": "A", "quote_anchor": "previous swing high" }
+          ],
+          "expect": { "passed": true }
+        }
+      ]
+    }
+  ],
+  "f2_adversarial_word_set_parity": {
+    "source": "F4-eligibility-bypass-trace-2026-07-07.md:296-298 (independent accuracy-validator, 8/10 adversarial FALSE POSITIVE on the OLD substring/prefix logic)",
+    "cases": [
+      { "id": "range_arranged", "transcript": "the meeting was arranged for noon", "quote_anchor": "range", "span_relative_to": "arranged", "span_len": 5, "expect_word_boundary_clean": false },
+      { "id": "trend_trending", "transcript": "the trending topic went viral", "quote_anchor": "trend", "span_relative_to": "trending", "span_len": 5, "expect_word_boundary_clean": false },
+      { "id": "band_bandana", "transcript": "she wore a red bandana", "quote_anchor": "band", "span_relative_to": "bandana", "span_len": 4, "expect_word_boundary_clean": false },
+      { "id": "cross_across", "transcript": "walk across the street", "quote_anchor": "cross", "span_relative_to": "across", "span_len": 5, "expect_word_boundary_clean": false },
+      { "id": "order_disorder", "transcript": "the room fell into disorder", "quote_anchor": "order", "span_relative_to": "disorder", "span_len": 5, "expect_word_boundary_clean": false },
+      { "id": "level_levels_genuine_plural", "transcript": "watch the key levels on the chart", "quote_anchor": "levels", "expect_word_boundary_clean": true }
+    ]
+  }
+}
