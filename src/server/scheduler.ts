@@ -812,16 +812,19 @@ export const _testOnly = {
 // Boot catch-up calls meta.run() directly, bypassing that guard → the job fired at the process's start
 // hour on partial-day data. They fire correctly at their scheduled hour via the cron, so they must NOT
 // boot-catch-up. Interval-anchored jobs (heartbeat, decay-monitor, reconciliation) still catch up.
-// LOW#6 added the two lifecycle-DEMOTING sweeps: their registerJob body calls runRegimeDriftDetector() /
-// runPortfolioDriftDemotion() with NO internal ET guard (the etHour===18 / ===17 guard lives ONLY in
-// their scheduleUtc cron), so a boot catch-up ran a DEMOTION at the boot hour on incomplete-day data —
-// worse than a ≤24h delay (regime-drift needs 5 consecutive drift days; portfolio-drift is a daily floor).
+// LOW#6 added the two lifecycle-DEMOTING sweeps. portfolio-drift-demotion GENUINELY needed it: its
+// registerJob body calls runPortfolioDriftDemotion() with NO internal ET guard (the etHour===17 guard
+// lives ONLY in its scheduleUtc cron), so a boot catch-up ran a DEMOTION at the boot hour on
+// incomplete-day data — worse than a ≤24h delay (it's a daily rolling-Sharpe floor). regime-drift-detector
+// ALREADY has its own internal etHour===18 guard in runRegimeDriftDetector() (regime-drift-detector-service.ts),
+// so a catch-up would self-skip anyway — it's included here as defense-in-depth + to avoid a pointless
+// boot-hour no-op run (it needs 5 consecutive drift days, so no delay concern).
 const _ET_HOUR_ANCHORED_NO_CATCHUP: ReadonlySet<string> = new Set([
   "consistency-tracker-daily-digest",
   "composite-health-daily-digest",
   "wave26-cohort-daily-audit-report",
-  "regime-drift-detector",       // LOW#6: 18:00-ET DEPLOYED→DECLINING→TESTING drift demotion (cron-only guard)
-  "portfolio-drift-demotion",    // LOW#6: 17:00-ET rolling-Sharpe-floor demotion (cron-only guard)
+  "portfolio-drift-demotion",    // LOW#6: 17:00-ET rolling-Sharpe-floor demotion — NO internal guard (needed the fix)
+  "regime-drift-detector",       // LOW#6: 18:00-ET drift demotion — HAS internal guard; included as defense-in-depth
 ]);
 
 export async function reconcileMissedRuns() {

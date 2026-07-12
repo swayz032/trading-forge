@@ -288,6 +288,58 @@ describe("closePosition — roll spread cost applied", () => {
   });
 });
 
+// ─── HIGH#1 (freshscan4): concurrent-partial TOCTOU — recompute P&L on the row-locked count ──
+
+describe("closePosition — HIGH#1 contract-count TOCTOU", () => {
+  it("recomputes grossPnl/commission/contracts on the LOCKED count when a partial reduced it before the claim", async () => {
+    // Pre-tx read sees a 3-contract position; a concurrent bookPartialClose commits first (decrements
+    // 3→1, sets tp1Filled but NOT closedAt), so the closedAt-guarded claim still matches and returns the
+    // ACTUAL row-locked count of 1. Without the fix, closePosition would book a full-close on the STALE
+    // 3 → triple-counting 2 phantom contracts into currentEquity + realizedPeakEquity (a false trailing-DD
+    // breach). With the fix, the trade + equity use the locked count of 1.
+    const pos = makePosition({ contracts: 3, entryTime: new Date("2026-12-15T14:00:00Z") }); // no roll → clean netPnl
+    wireDbMocks(pos);
+
+    let capturedTradeValues: Record<string, unknown> | null = null;
+    (db as any).transaction = vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        insert: vi.fn(function () {
+          return {
+            values: vi.fn(function (vals: Record<string, unknown>) {
+              if (capturedTradeValues === null) capturedTradeValues = vals;
+              return { returning: vi.fn().mockResolvedValue([{ id: "trade-toctou", pnl: "0" }]) };
+            }),
+          };
+        }),
+        update: vi.fn().mockReturnValue({
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockImplementation(() => {
+              const p: any = Promise.resolve(undefined);
+              // The claim returns the row-locked count = 1 (the partial already reduced it), NOT 3.
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]);
+              return p;
+            }),
+          }),
+        }),
+      };
+      return cb(tx);
+    });
+
+    // exit 5010 vs entry 5000, MES pointValue 5, commission mocked to 0, no roll.
+    // 1-contract grossPnl ≈ (actualExit - 5000) × 5 × 1; the STALE 3-contract value would be 3× larger.
+    await closePosition("pos-roll-1", 5010);
+
+    expect(capturedTradeValues).not.toBeNull();
+    // The booked contract count must be the LOCKED 1, not the stale pre-tx 3.
+    expect(capturedTradeValues!["contracts"]).toBe(1);
+    // grossPnl must be the 1-contract magnitude. Upper-bound it well below the 3-contract value:
+    // 1-contract gross ≈ (5010 - slip - 5000)×5 ≈ ~48–50; 3-contract would be ~144–150.
+    const gross = Number(capturedTradeValues!["grossPnl"]);
+    expect(gross).toBeGreaterThan(0);
+    expect(gross).toBeLessThan(90); // decisively excludes the 3-contract (~144) stale value
+  });
+});
+
 // ─── Test 2: no roll in window → rollSpreadCost = "0" ────────────────────────
 
 describe("closePosition — no roll in hold window", () => {

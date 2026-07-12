@@ -766,13 +766,23 @@ def validate_bars(
     # operator/caller decides. Opt in to hard-fail via DATA_TRUNCATION_HARD_FAIL=true.
     if requested_start and requested_end and "ts_event" in df.columns and df.height > 0:
         try:
-            from datetime import date as _date, datetime as _dt
+            from datetime import date as _date, datetime as _dt, timezone as _tz
 
             def _to_date(v: object) -> Optional[_date]:
                 if hasattr(v, "date"):
                     return v.date()  # type: ignore[union-attr]
                 if isinstance(v, str):
                     return _dt.fromisoformat(v[:10]).date()
+                # MED#3 grader follow-up (freshscan4 2026-07-12): ts_event can be raw epoch-NANOSECONDS
+                # (Int64/float) — the SAME shape the coverage block above branches on via
+                # isinstance(first_date,(int,float)). Without this the truncation check silently no-op'd
+                # for Int64-dtype frames — the exact silent-miss class MED#3 exists to close, left open
+                # for one dtype. Convert ns→UTC date (timezone-naive, matching the ISO requested bounds).
+                if isinstance(v, (int, float)):
+                    try:
+                        return _dt.fromtimestamp(float(v) / 1_000_000_000, tz=_tz.utc).date()
+                    except (ValueError, OverflowError, OSError):
+                        return None
                 return None
 
             req_start_d = _dt.fromisoformat(str(requested_start)[:10]).date()

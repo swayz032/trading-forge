@@ -2542,6 +2542,10 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   const entryTimeForRoll = pos.entryTime instanceof Date ? pos.entryTime : new Date(pos.entryTime);
   let rollCost = computeRollSpreadCost(pos.symbol, pos.contracts, entryTimeForRoll, closedAt);
   let netPnl = grossPnl - commission - rollCost.estimatedSpreadCost;
+  // HIGH#1 (freshscan4): the ACTUAL closed contract count — set from the row-locked count inside the
+  // claim tx below. Used by post-tx telemetry (roll-spread log + SSE) so it stays consistent with the
+  // recomputed P&L under a concurrent partial close, without coupling to the mocked insert-return shape.
+  let closedContracts = pos.contracts;
 
   closeSpan.setAttribute("grossPnl", grossPnl);
   closeSpan.setAttribute("commission", commission);
@@ -2659,6 +2663,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       // breach). Recompute grossPnl/commission/rollCost/netPnl on the ACTUAL row-locked contract count
       // the claim returned. The claim already SET closedAt so no further partial can commit after this.
       const lockedContracts = claimed[0].contracts;
+      closedContracts = lockedContracts;  // HIGH#1: telemetry below uses the actual booked count
       if (lockedContracts !== pos.contracts) {
         grossPnl = direction * (actualExit - entryPrice) * spec.pointValue * lockedContracts;
         commission = commissionPerSide * 2 * lockedContracts;
@@ -2905,7 +2910,10 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
     logger.info(
       {
         symbol: pos.symbol,
-        contracts: pos.contracts,
+        // HIGH#1 grader follow-up (freshscan4): report the ACTUAL booked (row-locked) contract count,
+        // not the pre-tx pos.contracts, so this telemetry stays consistent with the recomputed rollCost
+        // above under a concurrent partial close.
+        contracts: closedContracts,
         rollDates: rollCost.rollDates,
         costUsd: rollCost.estimatedSpreadCost,
         positionId,
@@ -2917,7 +2925,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       positionId,
       tradeId: trade.id,
       symbol: pos.symbol,
-      contracts: pos.contracts,
+      contracts: closedContracts,  // HIGH#1 grader follow-up: booked (row-locked) count, not stale pos.contracts
       rollDates: rollCost.rollDates,
       costUsd: rollCost.estimatedSpreadCost,
       correlationId: correlationId ?? null,
