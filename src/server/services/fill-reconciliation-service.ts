@@ -602,6 +602,25 @@ export async function ingestFillEvent(
     } catch (err) {
       logger.error({ err }, "fill-reconciliation: dedup check failed — proceeding conservatively");
     }
+  } else {
+    // deep-scan 2026-07-11 MED fix (#17): a fill WITHOUT a broker_fill_id CANNOT be deduplicated — a
+    // redelivered partial fill (broker webhook retry / DLQ replay) would re-accumulate filled_qty and
+    // inflate the server position. Emit a LOUD warn + audit so the gap is visible at go-live (when
+    // server-mediated execution is enabled and real TradersPost fills flow). A content-derived dedup
+    // key is deliberately NOT synthesized: the exact TradersPost fill-callback schema is unknown until
+    // a live feed (see the "requires live broker feed" caveat above), and one order legitimately
+    // produces multiple partial fills, so guessing a key risks dropping real fills. Revisit at go-live.
+    logger.warn(
+      { broker_order_ref: fillEvent.broker_order_ref, idempotency_key: fillEvent.idempotency_key, filled_qty: fillEvent.filled_qty },
+      "fill-reconciliation: fill has NO broker_fill_id — cannot dedup; a re-delivery would re-accumulate filled_qty (go-live schema gap)",
+    );
+    await writeAudit(
+      "fill_reconciliation.no_broker_fill_id_undeduped",
+      { broker_order_ref: fillEvent.broker_order_ref ?? null, idempotency_key: fillEvent.idempotency_key ?? null, filled_qty: fillEvent.filled_qty, filled_avg_price: fillEvent.filled_avg_price },
+      { dedup: "impossible_without_broker_fill_id", revisit: "before_go_live" },
+      "warning",
+      effectiveCorrelationId,
+    );
   }
 
   // ── Match fill to order row ───────────────────────────────────────────────
