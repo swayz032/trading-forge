@@ -4,6 +4,41 @@
 
 ---
 
+### Session Log — 2026-07-12 /goal CONTINUATION 8 — 3RD follow-up fresh scan (freshscan3) @ 38c616d6 found 13 bugs (3 HIGH + 5 MED + 5 LOW); ALL fixed + independently graded (band 6, safe-to-land) + LANDED origin/phase-0 `180065cd`
+
+**Mission:** Continue the standing /goal band-9 convergence — a 3rd fresh whole-system adversarial re-scan, fix-don't-skip, doer≠grader, land FF-only, honest band. (The "fix-breeds-a-finding" convergence: CONT-6 found 17, CONT-7 found 11, CONT-8/freshscan3 found 13 → severity trending down; band 9 still requires a fresh scan returning ZERO open HIGHs.)
+
+**Work completed (12 of 13 findings fixed in code; 6 commits `54a6f88d`→`180065cd`):**
+- **HIGH#1** `paper-execution-service.ts` — `updatePositionPrices` MTM UPDATE now guarded `.where(and(id, isNull(closedAt))).returning({id})`; 0 rows → `continue` (skip delta). Was double-counting a concurrently-closed position's unrealized P&L into `currentEquity` → the Layer-3 trailing-DD gate input (fail-OPEN on a capital-safety gate). Reachable from kill-switch L2/L3 force-close, dashboard status poll, `/api/paper/execute/close`, roll-sweep cron (none join the WS per-session serialization).
+- **HIGH#2** `lifecycle-service.ts` — backtest-staleness gate now exempts demotion/exit `toState` incl. **TESTING**. A DEPLOYED strategy's backtest naturally ages >30d, so the two-step safety demotion DEPLOYED→DECLINING→**TESTING** (regime-drift/portfolio-drift/revalidation services) deadlocked in zombie DECLINING on step 2. Hole-free: TESTING isn't live-capital-bound; the outbound TESTING→PAPER edge re-fetches the current backtestId fresh and re-enforces.
+- **HIGH#3** `pine_compiler.py` — recipient qty override str.replace-injected AFTER the ATR `qty_final` reassignment (was appended after `strategy.entry` → inert; family recipients traded ATR size, not assigned qty).
+- **MED#4** `kill-switch.ts` — L3 force-close day-dedup (`l3:${key}`+ET-day) replaced the self-defeating delete-on-success of the reattempt-backoff timer (was re-close storm).
+- **MED#5** deleted stale duplicate n8n workflow `5P-nemo-scenario-generator.json` (dead sink; canonical `_0ooxmt74fCtHiTo6.json` retained).
+- **MED#6** `direct-bucket-graduator.ts` — regime-agnostic archetypes default to all 3 regimes (was single→bidirectional archetype excluded from regime-matched picks). Grader-hardened: hoisted `REGIME_AGNOSTIC_ARCHETYPES` to module scope (single source of truth) + narrowed from blanket `startsWith("archetype:")` to set-membership so a future directional archetype isn't over-widened.
+- **MED#7** `data_loader.py` — `_consolidated_s3_path` fails loud on `adjusted=False` (was silently returning ratio-adjusted data for a raw request + inverted provenance). Grader-fixed regression: the raise sat OUTSIDE the S3-404→legacy-raw try/except and crashed raw callers → added `_primary_s3_source` router (adjusted=False → legacy raw glob) while keeping the fail-loud guard as defense-in-depth.
+- **MED#8** `prop_sim.py` — Topstep EOD trailing-DD floor `min(peak-dd, starting_balance)` (was `max(…)` → never locked → false breach verdicts). Parity with `monte_carlo.py`.
+- **LOW#9** `sizing.py` — scalar sizing floor gets `pyramid_tier>=base` guard + `floor(base×pm_factor)` (TS↔Py parity with the vectorized path + `risk-sizing.ts`).
+- **LOW#10** `scheduler.ts` — boot catch-up skips ET-hour-anchored daily digests (`_ET_HOUR_ANCHORED_NO_CATCHUP` Set) so a 17:00-ET digest doesn't fire at an arbitrary boot hour; interval jobs (decay-monitor) still catch up.
+- **LOW#12** `fill_model.py` — zero/neg-volume entry bar degrades to 0.5 (3-zone contract), was backwards full-fill.
+- **LOW#13** `data_loader.py` `validate_bars` — crude (MCL/CL) accepts negative-settle prices (Apr-2020 legitimate), non-crude keeps `<=0` reject. Was refusing all crude backtests.
+- **LOW#11** (n8n NeMo cron DST double-fire) — the ONE deferred item: requires a live-n8n-instance change (ET-hour guard node + operator Active OFF/ON toggle per §2b). Operator-gated live-ops, not a code carry-forward.
+
+**Bonus stale-test fixes surfaced during verification (both RED in the frozen baseline, both aligned to prior deliberate code corrections, both verified against authoritative source):**
+- `commission.test.ts` Topstep `0.37`→`0.62`/side (canonical `docs/prop-firm-rules-2026-topstep.md` ★CORRECTION 2026-06-23; old value under-costed every Topstep backtest).
+- `pass7-remote-power-cycle.test.ts` regime-drift cron `23 21,22`→`23 22,23` (deep-scan 2026-07-11 DST HIGH fix; 18:00-ET pair is 22,23 UTC).
+
+**New CI coverage added (grader flagged both fixes had zero CI coverage of their actual new behavior):**
+- `paper-execution-service.high1-concurrent-close.test.ts` — RED-proof CONTROL (guard matches 1 row → positionsUpdated=1, equity update fires) vs SKIP (0 rows → positionsUpdated=0, NO currentEquity delta).
+- `lifecycle-service.test.ts` HIGH#2 block — two-step DEPLOYED→DECLINING→TESTING both hops pass with a 31-day-stale backtest (step-2 is a real RED-proof of the TESTING-exempt fix).
+
+**Verification:** tsc 0; 4 CI gates green (production-isolation, 2026-compliance, system-map, TS↔Py PM-factor parity 14/14); paper-exec **198/198**, lifecycle 29→25(+HIGH#2)/25, data_loader 79, the 4 previously-broken mock files 50/50, commission 13/13, pass7 10/10, new HIGH#1 file 2/2. **Base-verified regression-free:** all 7 remaining engine `sizing`/kelly failures are byte-identical base-vs-head with `sizing.py` swapped out → pre-existing frozen-baseline (Topstep sizing-math assertions, likely stale vs the 2026-06-23 DRAWDOWN_ROOM/base-9 recal — instrument-surface ratify-packet work, justified carry-forward, NOT introduced by this wave).
+
+**Independent grade (accuracy-validator, doer≠grader, from-zero):** first pass caught 3 residual defects in my fixes (HIGH#2 incomplete — missing TESTING; HIGH#1 broke 24 test mocks; MED#7 raise crashed raw callers) → all fixed → re-grade CONFIRMED all 3 closed, **VERIFIED band 6** (legitimate 2-band gain from-zero, not self-report), **safe to land**. The grade's 3 "why-not-7-8" items (MED#6 fragility + zero coverage on HIGH#1/HIGH#2) were then all closed this session.
+
+**Known-facts updates:** none new (reinforced: base-verify before EXCLUDING a failure as pre-existing, not just before blaming a fix; the "fix-breeds-a-finding" convergence means band 9 = fresh-scan-clean, never one-pass self-report).
+
+**Carry-forward for next session:** (1) **freshscan4** — the actual band-9 certifier (a fresh whole-system scan returning zero open HIGHs); band 9 NOT yet claimed. (2) LOW#11 n8n NeMo DST double-fire — operator-gated live-n8n change. (3) 7 pre-existing Topstep sizing-math test failures — instrument-surface ratify-packet (stale-vs-recal hypothesis), base-verified not-this-wave.
+
 ### Session Log — 2026-07-12 /goal CONTINUATION 7 — 2ND follow-up fresh scan @ 6a2c7a5c (concurrency + inbound-recon + fixes-hold) found 11 REAL bugs (1 CRIT + 5 HIGH + 2 MED + 1 LOW → +2 grader CRIT/HIGH); all fixed + LANDED origin/phase-0 `70309e54`
 
 **Mission:** The band-9 demand requires a fresh re-scan showing ZERO open HIGHs. CONTINUATION-6's completeness critic flagged 2 UNDER-covered surfaces (inbound fill-recon/journal-recon; runtime concurrency/TOCTOU). Ran the follow-up scan targeting exactly those + a fixes-hold re-audit of the 16 CONTINUATION-6 fixes + a failure-injection lens (Workflow wf_d9ca920b-211, 8 charters, each finding independently RED-proofed). It CONFIRMED 9 (band 9 STILL not true) — **again several IN my own CONTINUATION-6 fixes** — and the independent grader then found 2 MORE, incl. a CRITICAL my own fix silently inherited. The fix-breeds-HIGH pattern is real.
