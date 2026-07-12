@@ -49,3 +49,31 @@ The frozen Wave-0 §4 schema stands EXCEPT `classifying_tier` ∈ {1 determinist
 **Direction-check (operator, for the record):** B-repaired keeps the pilot's live path to failure fully intact (the ≥60% bar on the live subset is the real fidelity question, untouched), REMOVES fields that would have flattered certificates (vacuous PASS → NOT_EVALUATED), and converts the deferred work into a HARD GATE on the read it actually protects (the H2 survivor attribution). That is the opposite signature of an escape (Law 6).
 
 *Addendum frozen 2026-07-12, operator-authored, BEFORE the sealed 16 is unsealed. Execution order: NOT_EVALUATED repair (§A) → this addendum frozen → unseal 16 → run tier-1+tier-3 conveyor → read the §1 bar ONCE (blind adjudicators, independent re-verify). A (§C) builds between pilot and H2.*
+
+---
+
+## ADDENDUM 2 — SEGMENTATION RULING: the extractor's condition IS the unit (OPERATOR-AUTHORED 2026-07-12, BEFORE the seal breaks)
+
+> Authored after the pilot-conveyor-runner independent grade proved `_segment_transcript` (naive sentence-punctuation split) is an UNREGISTERED INSTRUMENT DECISION that materially moves cert-grade composition + the §1 tier-3-adjudications/video economics number AND silently drops conditions. This is NOT a preference call — it is **F-5's class caught one level up**: mechanical text-slices are a PROXY POPULATION wearing the extractor's clothes. A certificate that asserts fidelity about clause-slices while H2's battery runs on EXTRACTOR OUTPUT would sever the attribution chain the certificate exists to guarantee — the same reasoning that killed the vacuous lints in the F-1 addendum: **the artifact must describe the production thing, not a stand-in.** Option B (a deterministic mechanical clause-rule) is DISQUALIFIED by law. The extractor's condition is the unit; it always was.
+
+**THE UNIT (ruling).** The pilot conveyor is `transcript → production gemma transcript_extractor → extracted strategy + verbatim-anchored spine conditions → tier-1/tier-3 classify each condition's surface + fidelity → compile-lints → certificate`. Tier-1 returns to its GRADED CONTRACT (one condition per call — the 143 design conditions were pre-segmented; it classifies a condition, it does not derive conditions from raw text). The conveyor under test now INCLUDES the thing the campaign exists to test — the LLM entering the conveyor is not a compromise, it is the subject taking its own exam. The frozen §1 bar is unchanged and is what it always described: "a fresh video set reaches certificate-grade extraction."
+
+**Five clauses A needs to be honest (all FROZEN):**
+
+1. **Extractor version-pinned + FROZEN for the pilot.** The production gemma `transcript_extractor` at its current landed SHA is stamped into every certificate's `provenance.extractor_version`. NO extractor changes during the pilot — the pilot measures the CURRENT extractor; improving it is post-read iteration under the extractor's own parity-gated budget (the 5-fixture parity test, CLAUDE.md §2b). Without this clause the pilot silently becomes a tuning loop against the sealed set.
+
+2. **One extraction pass per video, read-once, outputs vaulted immediately.** Non-determinism is a KNOWN, pre-registered property: seed/params pinned; incremental caching so a crash never forces re-extraction ambiguity; if a video's pass must re-run (crash mid-video), the re-run REPLACES that whole video's pass — no cherry-picking between passes (the determinism-envelope precedent). The pilot reads ONE extraction pass per video.
+
+3. **The non-drop invariant lives at BOTH levels (both already built) — no stage where a condition silently disappears.** (a) EXTRACTOR-level coverage = the F-2-fixed `f2_coverage_gate` (transcript-enumerated speaker items vs extraction; the Python lint is parity-fixtured to the exact-token corrected semantic, LIVE in pilot-grade). (b) CLASSIFICATION-level = the runner invariant: every extracted spine condition gets a tier-1 detection OR an explicit `Tier1FallThrough` (→ tier-3) — nothing vanishes. State the pairing explicitly: extraction-covers-the-transcript AND every-extracted-condition-is-classified-or-fell-through.
+
+4. **Unanchored conditions count AGAINST cert-grade, honestly.** The schema demands a verbatim `quote_anchor` + `char_span`; the extraction machinery carries evidence spans, so the runner threads them through. Any condition the extractor emits WITHOUT a locatable verbatim anchor is a FIDELITY FAILURE IN THE MEASUREMENT — not a bug to patch mid-pilot. That is the anchor floor doing its job (claim-scoping baked in, §4).
+
+5. **Failure attribution recorded per-condition (ANNOTATION-TIER; the §1 bar is unchanged).** When a video misses cert-grade, the record says WHERE: coverage-miss / unanchored-condition / classification-fallthrough-unresolved / tier-3-fail / lint-fail. The ≥60% read then arrives WITH its own diagnosis distribution — actionable in either direction — at zero cost, since the assembler already tracks per-condition status. This annotates the verdict; it does not change the aggregate bar.
+
+**Dry-run bonus (noted):** exercising the REAL extractor on a NON-SEALED transcript smoke-tests transcript-fetch AND gemma health in the same rehearsal — two of the three unseal greens (#2 dry-run + #3-transcript-fetch/gemma) checked by one throwaway run.
+
+**Execution sequence (unchanged in spirit):** freeze this addendum → rework the runner to it (extractor-as-unit + the 5 clauses) → independent re-grade → dry-run re-proof WITH the real extractor → three greens (runner graded · dry-run proven · tower/transcript/gemma verified) + fresh capacity → unseal.
+
+**Meta-record (count it):** this is the SECOND time the pre-unseal check has caught an instrument decision hiding inside an "obvious next step" (first: F-1 vacuous lints; now: segmentation-as-proxy-population). The seal is doing exactly what seals are for — making us finish the instrument before the instrument gets to speak.
+
+*Addendum 2 frozen 2026-07-12, operator-authored, BEFORE the sealed 16 is unsealed and BEFORE the runner is reworked. Vaulted FF to `corpus-v3-gate3-cert-2026-07-06`.*
