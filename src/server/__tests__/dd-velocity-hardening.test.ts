@@ -279,10 +279,14 @@ describe("F-3: vacation auto-recovery — checkVacationAutoRecovery", () => {
     const autopausedAtMs = nowMs() - 20 * 60 * 60_000;
     await checkVacationAutoRecovery({ sessionId: SESSION, autopausedAtMs });
 
-    // Must have called setMode("ACTIVE")
+    // Must have called setMode("ACTIVE") with system authority (#28 deep-scan 2026-07-11:
+    // autonomous recovery passes correlationId=null + authority="system" so the audit row
+    // is decision_authority='system', not 'human' — this is an unattended recovery).
     expect(vi.mocked(setMode)).toHaveBeenCalledWith(
       "ACTIVE",
       expect.stringContaining("dd_velocity_vacation_auto_recovery"),
+      null,
+      "system",
     );
   });
 

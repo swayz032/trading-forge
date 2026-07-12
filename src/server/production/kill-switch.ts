@@ -1613,6 +1613,12 @@ class KillSwitch {
   _invalidateCacheForTests(): void {
     this.cache = null;
     layerCache.clear();
+    // #8 (deep-scan 2026-07-11): also clear the force-closed-today dedup map. It is a
+    // module-singleton that otherwise persists across it() cases — once one test drives an
+    // account through a 95% force-close, the dedup silently HALTs every later test's
+    // force-close on the same accountKey (no audit/SSE/re-flatten), flipping assertions.
+    // Every suite that exercises the L2 force-close path already calls this in beforeEach.
+    _forceClosedTodayByAccount.clear();
   }
 
   /**
@@ -1673,6 +1679,23 @@ export function _setForceCloseInFlightForTests(value: boolean, accountKey?: stri
  */
 export function _getForceCloseInFlightForTests(accountKey?: string): boolean {
   return _isForceCloseInFlight(accountKey);
+}
+
+/**
+ * Reset the #8 force-closed-today dedup map for test isolation. Without this the
+ * module-singleton `_forceClosedTodayByAccount` persists across `it()` cases: once one
+ * test drives an account through a 95% force-close, the dedup silently HALTs every later
+ * test's force-close on the same accountKey (no audit/SSE/re-flatten), flipping their
+ * assertions. Omit `accountKey` to clear the whole map (default beforeEach reset); pass
+ * one to seed/clear a single account's last-force-closed trading-day for targeted tests.
+ */
+export function _resetForceClosedTodayForTests(accountKey?: string, tradingDay?: string): void {
+  if (accountKey) {
+    if (tradingDay) _forceClosedTodayByAccount.set(accountKey, tradingDay);
+    else _forceClosedTodayByAccount.delete(accountKey);
+    return;
+  }
+  _forceClosedTodayByAccount.clear();
 }
 
 // CRIT-2 (2026-07-09) test seam: direct access to runLayerWithTimeout so tests can
