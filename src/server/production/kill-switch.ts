@@ -480,6 +480,21 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
       const dllResult = evaluateCrossSymbolDll(cumPnL, personalDllDollars);
       const dayPnl = dllResult.combinedPnL;
 
+      // deep-scan 2026-07-11 HIGH fix: a DEGRADED cross-symbol P&L (a DB fault swallowed inside
+      // getAccountSessionCumulativePnL) means the drawdown figure is untrustworthy — fail CLOSED by
+      // BLOCKING new entries, honoring the L2 documented contract (header line 13: "a crashed DB
+      // cannot bypass the DLL gate"). Previously the swallowed error returned a clean zero → drawdown=0
+      // → action="none" → L2 approved an entry on an account potentially already at its DLL. We HALT
+      // (block new risk) rather than force_close, since acting on unknown P&L would be over-aggressive.
+      if (dllResult.degraded) {
+        logger.warn(
+          { account_key: accountKey, firm_id: rep.firmId },
+          "kill-switch L2: cross-symbol P&L DEGRADED (DB fault) — halting new entries (fail-closed)",
+        );
+        decision = { halted: true, reason: "dll_pnl_degraded_fail_closed", layer: 2 };
+        break;
+      }
+
       // ── M-1 FIX: 95% DLL force-close (highest band — check first) ───────────
       // Python compliance_gate.py:562 force-closes at 95% DLL. Without this
       // check, paper holds tail exposure that backtests would have closed —

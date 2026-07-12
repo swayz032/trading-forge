@@ -2685,7 +2685,11 @@ export async function evaluateSignals(
             accountStartingFloor,
           });
           const dllResult = evaluateCrossSymbolDll(cumPnL, personalDllDollars);
-          if (dllResult.action === "halt" || dllResult.action === "force_close") {
+          // deep-scan 2026-07-11 HIGH fix: `|| dllResult.degraded` — a DB fault inside
+          // getAccountSessionCumulativePnL is SWALLOWED (returns a degraded zero, does not throw), so
+          // the catch below never fires and action="none" let the fill through. Block fail-closed on
+          // the degraded signal, matching the documented fail-CLOSED DLL policy.
+          if (dllResult.action === "halt" || dllResult.action === "force_close" || dllResult.degraded) {
             pendingDropReason = "dll_halt";
           }
         } catch (_dllErr) {

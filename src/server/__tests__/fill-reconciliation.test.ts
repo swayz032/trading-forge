@@ -597,6 +597,46 @@ describe("fill-reconciliation-service — drift detection", () => {
     expect(result.serverQty).toBe(2);
     expect(result.brokerQty).toBe(2);
   });
+
+  // deep-scan 2026-07-11 HIGH regression: SHORT positions. The broker snapshot is SIGNED
+  // (positive=long, negative=short). Before the fix, enter_short ADDED to serverNetQty (long sign),
+  // so a correctly-short account computed +5 vs the broker's -5 → false drift → account marked
+  // needs_reconcile and ALL new entries blocked.
+  it("Test 11b: correctly SHORT (server -5 vs broker -5) → NO drift", async () => {
+    mockState.flagEnabled = true;
+    mockState.dedupRows = [
+      makeOrderRow({ intendedAction: "enter_short", filledQty: 5, status: "filled" }),
+    ];
+
+    const result = await checkPositionDrift({
+      accountId: "account-short-clean",
+      symbol: "MES",
+      brokerPositionQty: -5, // broker reports a signed short
+      brokerAvgPrice: null,
+    });
+
+    expect(result.driftDetected).toBe(false);
+    expect(result.serverQty).toBe(-5); // signed: short = negative
+    expect(result.brokerQty).toBe(-5);
+  });
+
+  it("Test 11c: genuinely drifted SHORT (server -5 vs broker -2) → drift detected", async () => {
+    mockState.flagEnabled = true;
+    mockState.dedupRows = [
+      makeOrderRow({ intendedAction: "enter_short", filledQty: 5, status: "filled" }),
+    ];
+
+    const result = await checkPositionDrift({
+      accountId: "account-short-drift",
+      symbol: "MES",
+      brokerPositionQty: -2, // |-5 - (-2)| = 3 > tolerance
+      brokerAvgPrice: null,
+    });
+
+    expect(result.driftDetected).toBe(true);
+    expect(result.serverQty).toBe(-5);
+    expect(result.brokerQty).toBe(-2);
+  });
 });
 
 describe("fill-reconciliation-service — fail-CLOSED gate", () => {

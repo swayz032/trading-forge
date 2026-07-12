@@ -796,7 +796,12 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       // this early-return path previously omitted it, allowing base_contracts to
       // be returned even when DD room is too tight to support that many contracts.
       // drawdownRoomCap OVERRIDES the pyramid floor — consistent with line ~730 note.
-      const flooredCandidates: number[] = [cfg.base_contracts, liquidityCap];
+      // deep-scan 2026-07-11 HIGH fix: taper the floor's base by pmFactor so a DELIBERATE PM-session /
+      // news-caution size reduction is never silently re-inflated to full base_contracts. The floor
+      // protects Style-C partials from a fresh-combine narrow RISK-CAP, not from the EOD-DD PM taper.
+      // pmFactor=1 → floor = base_contracts (protection intact); pmFactor<1 → floor(base*pmFactor).
+      const flooredBase = Math.floor(cfg.base_contracts * pmFactor);
+      const flooredCandidates: number[] = [flooredBase, liquidityCap];
       if (effectiveFirmCapForFloor !== null) flooredCandidates.push(effectiveFirmCapForFloor);
       if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
       const flooredContracts = Math.min(...flooredCandidates);
@@ -962,7 +967,13 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
     // where drawdownRoomCap sits between the pre-floor finalContracts and base_contracts —
     // guard against that edge case too by including it when present, mirroring the
     // early-return floor's [base_contracts, liquidityCap, firmCap?, drawdownRoomCap?] set.
-    const flooredCandidates: number[] = [cfg.base_contracts, liquidityCap];
+    // deep-scan 2026-07-11 HIGH fix: taper the floor's base by pmFactor so a DELIBERATE PM-session /
+    // news-caution size reduction is never silently re-inflated to full base_contracts. The floor
+    // protects Style-C partials from a fresh-combine narrow RISK-CAP, not from the EOD-DD PM taper.
+    // pmFactor=1 → floor = base_contracts (protection intact); pmFactor<1 → floor(base*pmFactor),
+    // matching the PM/news-tapered pyramidTier (line ~574).
+    const flooredBase = Math.floor(cfg.base_contracts * pmFactor);
+    const flooredCandidates: number[] = [flooredBase, liquidityCap];
     if (effectiveFirmCap !== null) flooredCandidates.push(effectiveFirmCap);
     if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
     finalContracts = Math.min(...flooredCandidates);

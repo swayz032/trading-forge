@@ -53,6 +53,12 @@ export interface AccountSessionPnL {
   openPnLMtm: number;
   totalPnL: number;       // realized + open MTM
   pnLBySymbol: Record<string, number>;
+  /**
+   * deep-scan 2026-07-11 HIGH: true when a DB fault prevented computing the real P&L (the returned
+   * zeros are NOT trustworthy). Fail-CLOSED callers (kill-switch L2, fill-time DLL gate) MUST treat a
+   * degraded result as "unknown P&L → block new entries". Absent/false = trustworthy figures.
+   */
+  degraded?: boolean;
 }
 
 /**
@@ -257,11 +263,17 @@ export async function getAccountSessionCumulativePnL(
       pnLBySymbol: bySymbol,
     };
   } catch (err) {
+    // deep-scan 2026-07-11 HIGH fix: mark the result DEGRADED so fail-CLOSED callers (kill-switch L2,
+    // fill-time DLL gate) can honor their documented fail-closed contract. Previously this returned a
+    // clean zero on ANY error — including a partial fault where the realized-loss scan SUCCEEDED
+    // (e.g. -$1,900) but the subsequent MTM join timed out — silently discarding the loss so L2 saw
+    // drawdown=0 and APPROVED a new entry on an account already at its DLL. Signal-time (fail-open)
+    // callers may still ignore `degraded` and treat totalPnL=0 as non-blocking.
     logger.warn(
       { err, accountKey, sessionDate },
-      "cross-symbol-pnl: DB query failed — returning zero (fail-open, trading not blocked)",
+      "cross-symbol-pnl: DB query failed — returning DEGRADED zero (fail-closed callers must block; signal-time fail-open)",
     );
-    return zero;
+    return { ...zero, degraded: true };
   }
 }
 
@@ -334,6 +346,8 @@ export interface CrossSymbolDllResult {
   haltThreshold: number;
   forceCloseThreshold: number;
   pnLBySymbol: Record<string, number>;
+  /** deep-scan 2026-07-11 HIGH: propagated from AccountSessionPnL.degraded — fail-closed callers halt. */
+  degraded?: boolean;
 }
 
 /**
@@ -372,6 +386,9 @@ export function evaluateCrossSymbolDll(
     haltThreshold,
     forceCloseThreshold,
     pnLBySymbol: pnl.pnLBySymbol,
+    // Propagate the degraded signal so fail-CLOSED callers can block on unknown P&L (action stays
+    // computed from totalPnL so fail-OPEN callers are unaffected — the decision is theirs to make).
+    degraded: pnl.degraded ?? false,
   };
 }
 

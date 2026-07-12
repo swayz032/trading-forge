@@ -900,14 +900,24 @@ export async function checkPositionDrift(params: {
     const qty = row.filledQty;
     const price = Number(row.filledAvgPrice ?? 0);
 
-    if (action === "enter_long" || action === "enter_short") {
+    // Signed net position: LONG = positive, SHORT = negative — MUST match the broker snapshot
+    // contract (getBrokerPositionSnapshot: "Positive = long, 0 = flat, negative = short", ~line 1139).
+    // deep-scan 2026-07-11 HIGH fix: enter_short/exit_short previously used the long sign, so every
+    // open SHORT computed +qty vs the broker's -qty → qtyDrift = 2×qty → false drift → the account was
+    // marked needs_reconcile and ALL new entries blocked.
+    if (action === "enter_long") {
       serverNetQty += qty;
-      if (qty > 0) {
-        serverWeightedPrice = ((serverWeightedPrice * serverQtyForPrice) + (price * qty)) / (serverQtyForPrice + qty);
-        serverQtyForPrice += qty;
-      }
-    } else if (action === "exit_long" || action === "exit_short") {
+    } else if (action === "enter_short") {
       serverNetQty -= qty;
+    } else if (action === "exit_long") {
+      serverNetQty -= qty;
+    } else if (action === "exit_short") {
+      serverNetQty += qty;
+    }
+    // Average cost basis over ENTRY fills, weighted by contract count (direction-agnostic magnitude).
+    if ((action === "enter_long" || action === "enter_short") && qty > 0) {
+      serverWeightedPrice = ((serverWeightedPrice * serverQtyForPrice) + (price * qty)) / (serverQtyForPrice + qty);
+      serverQtyForPrice += qty;
     }
   }
 
