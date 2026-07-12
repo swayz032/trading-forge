@@ -11,7 +11,7 @@
  *  6.  Severity correctly assigned (critical vs warning based on mismatch count)
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Hoisted mock state ───────────────────────────────────────────────────────
 
@@ -205,6 +205,15 @@ describe("reconciliation-service: 5-source extension (Track 8)", () => {
   beforeEach(() => {
     resetState();
     vi.resetModules();
+    // freshscan6 MED fix: check-5 (Pine markers vs traderspost log) only runs when the traderspost
+    // leg is a REAL independent count (RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true) — otherwise it's the
+    // production_trades proxy (structurally 0) and comparing against it fired a false daily CRITICAL.
+    // These tests inject a real non-zero traderspostCount, i.e. the independent case, so enable the flag.
+    process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT = "true";
+  });
+
+  afterEach(() => {
+    delete process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT;
   });
 
   // ── Test 1: Result includes tradingviewMarkerCount ─────────────────────────
@@ -245,6 +254,25 @@ describe("reconciliation-service: 5-source extension (Track 8)", () => {
     // Alert should have fired (mismatchCount > 0)
     expect(result.alertFired).toBe(true);
     expect(result.mismatchCount).toBeGreaterThanOrEqual(1);
+  });
+
+  // ── freshscan6 MED: false-alert SUPPRESSION when the traderspost leg is the structurally-0 proxy ──
+  it("2b. NO check-5 mismatch when RECON_TRADERSPOST_CONFIRM_INDEPENDENT is off (proxy leg, no cry-wolf)", async () => {
+    // Flag OFF → traderspostLogCount is the production_trades proxy (structurally 0). Pine markers flow
+    // (markerCount=8) but check-5 must NOT fire — it would otherwise be a false daily CRITICAL every day
+    // markers flow. This is the freshscan6 fix: gate check-5 behind the same flag as checks 1/2.
+    delete process.env.RECON_TRADERSPOST_CONFIRM_INDEPENDENT;
+    resetState({ markerCount: 8, traderspostCount: 0 });
+
+    const { runDailyReconciliation } = await import(
+      "../production/reconciliation-service.js"
+    );
+    const result = await runDailyReconciliation(new Date("2026-05-10T00:00:00Z"));
+
+    const markerMismatch = result.mismatchDetails.find(
+      (m) => m.source === "tradingview_marker_vs_traderspost_log"
+    );
+    expect(markerMismatch).toBeUndefined(); // check-5 skipped → no false alert
   });
 
   // ── Test 3: markerCount < traderspostCount → alert fires ──────────────────

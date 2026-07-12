@@ -539,7 +539,14 @@ export async function runDailyReconciliation(
     //   markerCount < traderspostCount → manual override or duplicate delivery
     //
     // Skip when tradingviewMarkerCount is null (table not yet migrated).
-    if (tradingviewMarkerCount !== null) {
+    // MED (freshscan6 2026-07-12): ALSO skip unless the traderspost leg is a REAL independent count
+    // (RECON_TRADERSPOST_CONFIRM_INDEPENDENT=true) or proxy-legs are explicitly enabled — the SAME gate
+    // checks 1/2 use. traderspostLogCount is otherwise the production_trades proxy (structurally 0 — no
+    // writer wired, Phase 4C), so comparing the genuinely-independent Pine markerCount against it fired a
+    // false daily CRITICAL on EVERY day markers flowed (markerCount≥1 vs 0) — the cry-wolf pattern that
+    // desensitizes the operator to the §3 ProductionStatusPanel/Discord RED signal. Green again once
+    // production_trades writers or a real TradersPost confirm-webhook produce rows.
+    if ((traderspostConfirmIndependent || PROXY_COUNT_LEGS_INDEPENDENT) && tradingviewMarkerCount !== null) {
       if (tradingviewMarkerCount !== traderspostLogCount) {
         const delta = tradingviewMarkerCount - traderspostLogCount;
         const absDelta = Math.abs(delta);

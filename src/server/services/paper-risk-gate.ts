@@ -1,6 +1,6 @@
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions } from "../db/schema.js";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, inArray } from "drizzle-orm";
 import { logger } from "../index.js";
 import { getFirmAccount, getTightestDrawdown, type FirmAccountConfig } from "../../shared/firm-config.js";
 import { tracer } from "../lib/tracing.js";
@@ -12,7 +12,7 @@ import { isUsDst } from "../lib/dst-utils.js";
 // SAME account-resolution helper kill-switch.ts Layer 2 / cross-symbol-pnl.ts
 // use, so this gate and the kill-switch DLL gate can never disagree about
 // which sessions belong to the same account.
-import { resolveAccountKey, resolvePersonalDllDollars } from "./cross-symbol-pnl.js";
+import { resolveAccountKey, resolvePersonalDllDollars, DLL_AGGREGATE_SESSION_STATUSES } from "./cross-symbol-pnl.js";
 
 // ── F-1 Fix: halt new entries at DLL_HALT_PCT × firmDLL (matching kill-switch Layer 2) ──
 // CLAUDE.md §4: "HALT new entries at 67% (env: DLL_HALT_PCT)"
@@ -355,18 +355,24 @@ export async function checkRiskGate(
   // 30-second TTL is a safety net only.
   let totalTodayLoss = getCachedGlobalDailyLoss(today, lossScopeKey);
   if (totalTodayLoss === null) {
-    const activeSessions = await db
+    // MED (freshscan6 2026-07-12): aggregate the account's daily loss across active + stopped + paused
+    // sessions (the canonical DLL_AGGREGATE_SESSION_STATUSES the sibling aggregators — cross-symbol-pnl,
+    // kill-switch L2/L3 — already use per the deepscan7 fix). Filtering to status="active" ALONE dropped
+    // a session that realized losses today then got stopped (by the operator or a halt path) from the
+    // account backstop total → the $5,000 account ceiling could be silently exceeded (a stopped session's
+    // realized loss is still today's firm exposure).
+    const aggregateSessions = await db
       .select({
         firmId: paperSessions.firmId,
         config: paperSessions.config,
         dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
       })
       .from(paperSessions)
-      .where(eq(paperSessions.status, "active"));
+      .where(inArray(paperSessions.status, [...DLL_AGGREGATE_SESSION_STATUSES]));
 
     const scopedSessions = RISK_GATE_HOUSEHOLD_LOSS_SCOPE
-      ? activeSessions
-      : activeSessions.filter((s) => resolveAccountKey(s) === accountKey);
+      ? aggregateSessions
+      : aggregateSessions.filter((s) => resolveAccountKey(s) === accountKey);
 
     totalTodayLoss = scopedSessions.reduce((sum, s) => {
       const breakdown = (s.dailyPnlBreakdown as Record<string, number> | null) ?? {};

@@ -54,6 +54,33 @@ function makePairsN(
   return { shadowSignals, backtestExpected };
 }
 
+describe("freshscan6 HIGH: opts.threshold + opts.minSampleSize honor operator-tightened env (cron parity)", () => {
+  // The autonomous checkAutoPromotions cron now passes SHADOW_DIVERGENCE_THRESHOLD_PCT /
+  // SHADOW_DIVERGENCE_MIN_SAMPLE (via getDivergenceThreshold()/getMinSampleSize()) into these opts, so a
+  // tightened operator control is no longer silently no-op'd on the PRIMARY autonomous SHADOW→PAPER path.
+  it("a 4%-divergence set passes at default 0.05 but BLOCKS at a tightened 0.03; raised min-sample blocks", () => {
+    const baseTs = Math.floor(new Date("2026-01-02T10:00:00Z").getTime() / 1000);
+    const shadowSignals: ShadowSignal[] = [];
+    const backtestExpected: ExpectedSignal[] = [];
+    for (let i = 0; i < 25; i++) {
+      const ts = baseTs + i * 5 * 60;
+      // 1 of 25 direction-divergent → divergence_pct = 1/25 = 0.04 (4%).
+      shadowSignals.push(makeSignal(ts, i === 0 ? "short" : "long", 2));
+      backtestExpected.push(makeExpected(ts, "long", 2));
+    }
+    // Default threshold 0.05: 4% < 5% → passes (the buggy old cron behavior).
+    expect(compareShadowToBacktest(shadowSignals, backtestExpected).ok).toBe(true);
+    // Operator-tightened 0.03: 4% ≥ 3% → BLOCK (the manual path already did this; the cron now does too).
+    const tightened = compareShadowToBacktest(shadowSignals, backtestExpected, undefined, { threshold: 0.03 });
+    expect(tightened.ok).toBe(false);
+    expect(tightened.reason).toContain("divergence_exceeds_threshold");
+    // Raised min-sample 40: 25 < 40 → insufficient_samples (env SHADOW_DIVERGENCE_MIN_SAMPLE honored).
+    const raised = compareShadowToBacktest(shadowSignals, backtestExpected, undefined, { minSampleSize: 40 });
+    expect(raised.ok).toBe(false);
+    expect(raised.reason).toBe("insufficient_samples");
+  });
+});
+
 describe("Fix 9: shadow-signal-divergence-checker compound fault detection", () => {
   it("clean signal: no violations at all", () => {
     const { shadowSignals, backtestExpected } = makePairsN(MIN_SAMPLE_SIZE, "long", "long", 2, 2);

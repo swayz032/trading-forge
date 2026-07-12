@@ -510,8 +510,11 @@ async function _evaluateStrategyDrift(
   });
   // Wave 29 prod hardening: Prom counter #7 at this site only (scope: line 375 original)
   try {
-    // Use most recent observed regime as to_regime; trained regime as from_regime
-    const mostRecentRegime = recentRegimes.length > 0 ? recentRegimes[recentRegimes.length - 1] : "UNKNOWN";
+    // Use most recent observed regime as to_regime; trained regime as from_regime.
+    // LOW (freshscan6 2026-07-12): recentRegimes is built from rows ordered desc(sessionDate),
+    // desc(computedAt) — so index 0 is the NEWEST day and [length-1] is the OLDEST. The old
+    // [length-1] mislabeled the Prometheus to_regime with the 5-days-ago regime instead of today's.
+    const mostRecentRegime = recentRegimes.length > 0 ? recentRegimes[0] : "UNKNOWN";
     regimeDriftDetectionsTotal.labels({
       from_regime: regimeTrainedOn,
       to_regime: mostRecentRegime,

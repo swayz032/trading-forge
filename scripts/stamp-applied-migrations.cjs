@@ -51,15 +51,25 @@ function hashOfMigrationFile(tag) {
 
 (async () => {
   console.log('=== Step 1: Apply 0163 (broker_accounts CHECK relax + Wave 29 Pass C seed) ===');
-  const sql163 = fs.readFileSync(path.join(MIG_DIR, '0163_broker_accounts_allow_paper_firm.sql'), 'utf-8');
-  const stmts = sql163.split(/-->\s*statement-breakpoint/).map(s => s.trim()).filter(Boolean);
-  try {
-    await sql.begin(async (tx) => {
-      for (const stmt of stmts) await tx.unsafe(stmt);
-    });
-    console.log('  ✓ 0163 applied');
-  } catch (e) {
-    console.error('  ✗ 0163 FAILED:', e.message?.slice(0, 300));
+  // LOW (freshscan6 2026-07-12): the 0163 read was OUTSIDE the try/catch — if the file has been
+  // deleted/consolidated (it has), readFileSync THREW here and crashed the whole IIFE BEFORE Steps 2-3
+  // (the actual journal-stamping — this tool's real purpose after a DB restore), making the recovery
+  // tool DOA. Step 1 is a one-time historical migration application; skip it gracefully when the file
+  // is absent and proceed to the stamping that matters.
+  const _p163 = path.join(MIG_DIR, '0163_broker_accounts_allow_paper_firm.sql');
+  if (!fs.existsSync(_p163)) {
+    console.log('  ⊘ 0163 file absent (deleted/consolidated) — skipping Step 1; proceeding to stamp.');
+  } else {
+    const sql163 = fs.readFileSync(_p163, 'utf-8');
+    const stmts = sql163.split(/-->\s*statement-breakpoint/).map(s => s.trim()).filter(Boolean);
+    try {
+      await sql.begin(async (tx) => {
+        for (const stmt of stmts) await tx.unsafe(stmt);
+      });
+      console.log('  ✓ 0163 applied');
+    } catch (e) {
+      console.error('  ✗ 0163 FAILED:', e.message?.slice(0, 300));
+    }
   }
 
   console.log('\n=== Step 2: Bootstrap drizzle.__drizzle_migrations if absent ===');

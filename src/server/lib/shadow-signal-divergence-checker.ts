@@ -168,11 +168,20 @@ export function compareShadowToBacktest(
   shadowSignals: ShadowSignal[],
   backtestExpected: ExpectedSignal[],
   barSeconds = DEFAULT_BAR_SECONDS,
+  opts?: { threshold?: number; minSampleSize?: number },
 ): DivergenceResult {
+  // HIGH (freshscan6 2026-07-12): honor operator-tightened SHADOW_DIVERGENCE_THRESHOLD_PCT /
+  // SHADOW_DIVERGENCE_MIN_SAMPLE. The autonomous checkAutoPromotions cron path called this with NO
+  // override, silently using the hardcoded 0.05 / 20 while the manual PATCH path (evaluateShadowToPaperGate)
+  // honored the env — a parity break that no-op'd a documented operator safety control on the PRIMARY
+  // (autonomous) SHADOW→PAPER promotion path. The cron now passes env-derived values; default = the
+  // module constants (backward-compat for any caller that doesn't pass opts).
+  const _threshold = opts?.threshold ?? DIVERGENCE_THRESHOLD;
+  const _minSampleSize = opts?.minSampleSize ?? MIN_SAMPLE_SIZE;
   const sampleSize = shadowSignals.length;
 
   // ── Sample-size gate ───────────────────────────────────────────────────────
-  if (sampleSize < MIN_SAMPLE_SIZE) {
+  if (sampleSize < _minSampleSize) {
     return {
       ok: false,
       divergence_pct: 0,
@@ -270,14 +279,14 @@ export function compareShadowToBacktest(
   const divergingCount = new Set(violations.map((v) => v.shadow_idx)).size;
   const divergencePct = divergingCount / sampleSize;
 
-  // ── Threshold gate: ≥ 5% divergence (boundary inclusive) → BLOCK ─────────
-  if (divergencePct >= DIVERGENCE_THRESHOLD) {
+  // ── Threshold gate: ≥ threshold divergence (boundary inclusive) → BLOCK ─────────
+  if (divergencePct >= _threshold) {
     return {
       ok: false,
       divergence_pct: divergencePct,
       sample_size: sampleSize,
       per_signal_violations: violations,
-      reason: `divergence_exceeds_threshold: ${(divergencePct * 100).toFixed(1)}% >= ${(DIVERGENCE_THRESHOLD * 100).toFixed(0)}%`,
+      reason: `divergence_exceeds_threshold: ${(divergencePct * 100).toFixed(1)}% >= ${(_threshold * 100).toFixed(0)}%`,
     };
   }
 

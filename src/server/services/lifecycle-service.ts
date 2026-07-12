@@ -5089,9 +5089,21 @@ export class LifecycleService {
           }
           // ── end deepscan14 H1 full pre-paper gate stack ─────────────────────────
 
-          const { shadowSignals: sSignals, backtestExpected } = await loadDivergenceInputs(s.id, 20);
+          // HIGH (freshscan6 2026-07-12): the autonomous cron is the PRIMARY SHADOW→PAPER path and MUST
+          // honor the operator's SHADOW_DIVERGENCE_THRESHOLD_PCT / SHADOW_DIVERGENCE_MIN_SAMPLE (CLAUDE.md
+          // §12/§15) — parity with the manual PATCH path's evaluateShadowToPaperGate. Previously it used
+          // the hardcoded 0.05 / 20, so a tightened threshold (e.g. 0.03 for a high-risk cohort) or a
+          // raised min-sample silently no-op'd on the exact path that auto-promotes toward paper capital.
+          const { getDivergenceThreshold: _getDivThr, getMinSampleSize: _getMinSample } =
+            await import("../lib/shadow-to-paper-gate.js");
+          const _shadowDivThreshold = _getDivThr();
+          const _shadowMinSample = _getMinSample();
+          const { shadowSignals: sSignals, backtestExpected } = await loadDivergenceInputs(s.id, _shadowMinSample);
 
-          const divergenceResult = compareShadowToBacktest(sSignals, backtestExpected);
+          const divergenceResult = compareShadowToBacktest(sSignals, backtestExpected, undefined, {
+            threshold: _shadowDivThreshold,
+            minSampleSize: _shadowMinSample,
+          });
 
           if (!divergenceResult.ok) {
             const isInsufficientSamples = divergenceResult.reason === "insufficient_samples";
