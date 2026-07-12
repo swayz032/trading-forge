@@ -190,6 +190,26 @@ const _forceCloseInFlightByAccount: Map<string, boolean> = new Map();
 // dashboard. This lets the repeat evals stay HALTED silently. Re-arms each new trading day.
 const _forceClosedTodayByAccount: Map<string, string> = new Map();
 
+// MED#7+#8 (fresh-scan 2026-07-12): throttle force-close RE-ATTEMPTS. A persistently-INCOMPLETE L2
+// force-close (a `stuck` no-price position → closed:0, so the CRIT fix correctly does NOT arm the
+// day-dedup and re-attempts) OR a persistently-BREACHED L3 trailing-DD (equity doesn't recover) leaves
+// the account at/over threshold, so every ~1s cache-TTL eval would re-fire the pending audit + SSE +
+// Discord + a re-attempt — a trust-spine/dashboard STORM. We STILL re-attempt (must not permanently
+// disarm — that was the CRIT), but at most once per backoff window; between attempts we stay HALTED
+// silently. Keyed by accountKey (L2) / sessionId (L3). Cleared on a completed close + on test reset.
+const _forceCloseLastAttemptByAccount: Map<string, number> = new Map();
+const FORCE_CLOSE_REATTEMPT_BACKOFF_MS = Number.isFinite(Number(process.env.FORCE_CLOSE_REATTEMPT_BACKOFF_MS))
+  ? Number(process.env.FORCE_CLOSE_REATTEMPT_BACKOFF_MS)
+  : 60_000;
+/** True (and records the attempt time) when a force-close re-attempt for `key` is due per the backoff;
+ *  false to skip the re-fire this eval (stay HALTED silently). */
+function _forceCloseReattemptDue(key: string, nowMs: number): boolean {
+  const last = _forceCloseLastAttemptByAccount.get(key);
+  if (last != null && nowMs - last < FORCE_CLOSE_REATTEMPT_BACKOFF_MS) return false;
+  _forceCloseLastAttemptByAccount.set(key, nowMs);
+  return true;
+}
+
 /**
  * True when a force-close is currently in flight for the given scope.
  *
@@ -583,6 +603,14 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
           decision = { halted: true, reason: "force_close_in_progress", layer: 2 };
           break;
         }
+        // MED#7 (fresh-scan 2026-07-12): back off the RE-ATTEMPT of a persistently-incomplete force-close
+        // (e.g. a stuck no-price position → closed:0 → the CRIT fix correctly re-attempts). Without this,
+        // every ~1s cache-TTL eval re-fires the pending audit + SSE + Discord + a fresh attempt — a storm.
+        // Stay HALTED silently between attempts; re-attempt at most once per backoff window.
+        if (!_forceCloseReattemptDue(accountKey, Date.now())) {
+          decision = { halted: true, reason: "dll_force_close_reattempt_backoff", layer: 2 };
+          break;
+        }
         logger.warn(
           { account_key: accountKey, firm_id: rep.firmId, day_pnl: dayPnl, dll: personalDllDollars, threshold_pct: DLL_FORCE_CLOSE_PCT },
           "kill-switch L2: DLL at 95% — force-closing all positions for this account (C-1 fix: account-scoped)"
@@ -630,6 +658,7 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
           // deep-scan 2026-07-11 MED fix (#8): mark this account force-closed for today so subsequent
           // cache-TTL evals short-circuit to a silent HALT instead of re-firing audit/SSE/re-flatten.
           _forceClosedTodayByAccount.set(accountKey, today);
+          _forceCloseLastAttemptByAccount.delete(accountKey); // MED#7: completed → clear re-attempt backoff
           insertAuditRow({
             action: "sizing.dll_force_close_completed",
             entityType: "system",
@@ -796,6 +825,20 @@ async function checkLayer3TrailingDD(correlationId?: string, scopeAccountKey?: s
           };
           break;
         }
+        // MED#8 (fresh-scan 2026-07-12): L3 had NO re-fire guard (unlike L2's day-dedup). After a
+        // trailing-DD breach the positions flatten but equity does NOT recover, so `drawdown >=
+        // maxDrawdown - buffer` stays true and every ~1s eval re-wrote the pending audit + SSE +
+        // re-attempt — a storm. Back off the re-attempt (still re-attempts, at most once per window;
+        // stay HALTED silently between). Keyed distinctly (`l3:` prefix) so it doesn't share L2's key.
+        if (!_forceCloseReattemptDue(`l3:${l3AccountKey}`, Date.now())) {
+          decision = {
+            halted: true,
+            layer: 3,
+            reason: "trailing_dd_force_close_reattempt_backoff",
+            detail: { session_id: session.id, firm_id: firmId, account_key: l3AccountKey },
+          };
+          break;
+        }
         // F-1 (CAP-1 grade 2026-07-11): thread the signal-path root correlationId (fallback to a fresh
         // UUID only when absent) so the trailing_dd force-close audit/SSE rows join to the triggering
         // bar/signal, matching Layer 2 (CLAUDE.md §2 correlation_id reconstruction requirement).
@@ -827,6 +870,7 @@ async function checkLayer3TrailingDD(correlationId?: string, scopeAccountKey?: s
           { accountKey: l3AccountKey },
         );
         if (_l3FcOk) {
+          _forceCloseLastAttemptByAccount.delete(`l3:${l3AccountKey}`); // MED#8: completed → clear backoff
           insertAuditRow({
             action: "sizing.trailing_dd_force_close_completed",
             entityType: "system",
@@ -1189,7 +1233,10 @@ async function runLayerWithTimeout(
       }).catch((auditErr) =>
         logger.error({ err: auditErr }, `kill-switch L${layer}: timeout audit_log write failed`),
       );
-      resolve(halted ? { halted: true, reason: reason ?? "layer_timeout_fail_closed" } : { halted: false });
+      // LOW#9 (fresh-scan 2026-07-12): include the real `layer` so the halted-signal emitter's
+      // `decision.layer ?? 0` no longer misattributes a fail-closed L2/L3/L7 timeout as the nonexistent
+      // "layer 0" in the trust-spine row + SSE.
+      resolve(halted ? { halted: true, reason: reason ?? "layer_timeout_fail_closed", layer } : { halted: false, layer });
     }, LAYER_CHECK_TIMEOUT_MS);
     // Prevent the timeout timer from keeping Node alive if the check resolves first
     if (typeof timer.unref === "function") timer.unref();
@@ -1483,9 +1530,13 @@ class KillSwitch {
     // FINDING #3 FIX: Generate a correlationId for the mode-change audit row.
     const modeChangeCorrelationId = randomUUID();
 
-    // Audit log — non-blocking
-    db.insert(auditLog)
-      .values({
+    // HIGH#6 (fresh-scan 2026-07-12): AWAIT the mode-change audit and ESCALATE on failure. This is the
+    // single highest-value capital-authority trace — operator HALT/RESUME enables/disables ALL live
+    // deployment. A fire-and-forget `.catch(log)` swallowed a transient DB fault, so the immutable
+    // audit_log's last mode_changed row could read HALT while the account is actually TRADING — §2's
+    // "every capital decision has a reconstructable audit row" broken exactly where it matters most.
+    try {
+      await db.insert(auditLog).values({
         action: "production.mode_changed",
         entityType: "system",
         entityId: null,
@@ -1494,10 +1545,20 @@ class KillSwitch {
         result: { mode, setBy, reason } as Record<string, unknown>,
         status: "success",
         correlationId: modeChangeCorrelationId,
-      })
-      .catch((err) =>
-        logger.error({ err }, "kill-switch: audit_log write failed (non-blocking)")
+      });
+    } catch (auditErr) {
+      logger.error(
+        { err: auditErr, previousMode, newMode: mode, setBy, correlationId: modeChangeCorrelationId },
+        "kill-switch: production.mode_changed audit write FAILED — capital-authority trace gap",
       );
+      AlertFactory.systemError(
+        "kill-switch-mode-change-audit-failed",
+        new Error(
+          `production.mode_changed audit write FAILED after mode set to ${mode} (setBy=${setBy}, reason=${reason}). ` +
+          `audit_log may not reflect the CURRENT mode — reconcile immediately. CorrelationId: ${modeChangeCorrelationId}.`,
+        ),
+      );
+    }
 
     // SSE broadcast
     // ds21 (deep-scan #21 Band D): thread the same correlationId used on the audit row
@@ -1671,6 +1732,8 @@ class KillSwitch {
     // force-close on the same accountKey (no audit/SSE/re-flatten), flipping assertions.
     // Every suite that exercises the L2 force-close path already calls this in beforeEach.
     _forceClosedTodayByAccount.clear();
+    // MED#7+#8: the re-attempt backoff map is also a module singleton — clear it for test isolation.
+    _forceCloseLastAttemptByAccount.clear();
   }
 
   /**
