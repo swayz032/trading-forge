@@ -82,7 +82,7 @@ jobs:
       - name: Collect full Vitest report
         id: vitest_report
         continue-on-error: true
-        run: node node_modules/vitest/vitest.mjs run --reporter=json --outputFile=ci/out/vitest.json
+        run: node node_modules/vitest/vitest.mjs run --maxWorkers=2 --minWorkers=1 --reporter=json --outputFile=ci/out/vitest.json
 
       - name: Collect fast pytest report
         id: pytest_report
