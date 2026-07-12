@@ -4,6 +4,23 @@
 
 ---
 
+### Session Log — 2026-07-11 /goal CONTINUATION 2 — 4 open-HIGH coverage gaps CLOSED (F1/F2, FG-3, CAP-3, MIG-2) via testable helper extraction; 10 pre-existing stale-test failures triaged
+
+**Mission:** Close the 4 open-HIGH coverage gaps that were the "zero open HIGHs" band-9 blocker from the re-cert, without introducing behavior change.
+
+**Work completed (LANDED origin/hardening/phase-0 `a11d9782`, clean FF from `f2165dae`, 0 concurrent commits):**
+- Each open-HIGH was a COVERAGE gap on already-landed+verified-correct code. Closed by behavior-preserving extraction of the fix into a pure, unit-tested helper — proven byte-for-byte behavior-identical by the pre-existing runtime harnesses staying green.
+- **FG-3** → new `src/server/lib/python-weekday.ts::toPythonWeekday()` ((getUTCDay()+6)%7), wired into paper-signal-service.ts anti-setup day_of_week. 9 tests.
+- **F1/F2** → new `src/server/lib/runner-trail-ratchet.ts::{avwapTypicalPrice, shouldAdvanceRunnerTrail}`, wired into paper-execution-service.ts updatePositionPrices (barMid typical-price + TP2-gated/initialStop-floored ratchet). 7 tests. deepscan14-paper-hardening (the harness that drives updatePositionPrices) stays 8/8.
+- **CAP-3** → `_buildScopeClause` + constants moved to new DB-free `src/server/services/consistency-scope.ts` (re-exported from consistency-tracker-service.ts for paper-execution-service's import). 4 tests render each of the 3 account-shape branches' SQL via PgDialect + assert bound params. wave26-consistency-tracker stays green.
+- **MIG-2** → new exported `src/server/lib/boot-migration-runner.ts::prepareMigrationExecution()` (hash-on-ORIGINAL + strip standalone BEGIN;/COMMIT; sparing DO-block BEGIN). 5 tests. crlf-hash (the MIG-3 hash-keyed guard) + discord-alert stay green.
+
+**Verification:** 25 new tests all green; tsc 0 non-@aws-sdk errors; touched-module regression sweep 356 passed. @aws-sdk tsc gaps are pre-existing (partially-wiped shared node_modules), not code. Diff-stat tripwire passed (86 production deletions all accounted for by extraction-to-new-file, not a wrong-base revert).
+
+**★ 10 pre-existing failures surfaced + triaged — ALL STALE TESTS w/ verified-correct behavior, ZERO real bugs.** Base-verified IDENTICAL at `f2165dae` in a throwaway worktree (junctioned to healthy node_modules; canonical was missing @vitest/utils) → NOT introduced by this work — same base-verify discipline that caught the CMP-1/regime-drift mis-attribution earlier this campaign. (1) deepscan10 weekend-cron: regex hardcodes old `cron.schedule(...0,6...)`; code uses `scheduleUtc("0 * * * 0,6")` (scheduler.ts:1611). (2) wave27 PA-2: expects `no_change`; aggregator correctly fail-closes `halted` (mode≠AUTOPILOT, §13 contract). (3) live-order-archetype (8): predate the F-1 lifecycle capital-safety gate (live-order.ts:544-598 — archetype_signal w/ strategy_id must be DEPLOYED/PILOT else 409). NOT fixed this wave (out of scope, other subsystems, correct behavior); flagged to operator as a clean follow-up (each is a silent-regression-trap risk).
+
+**Carry-forward for next session:** the 3 stale-test files above (fixes noted in memory `project_goal_deepscan_2026_07_11`). Honest band unchanged: institutional-core 7 (band 9 needs sustained LIVE evidence — structurally impossible pre-live). WIRE-1 OHLC-sourcing still an operator architecture decision.
+
 ### Session Log — 2026-07-11 /goal CONTINUATION — CAP-1 + 10 more instrument findings LANDED via agent-loop (21 of 34 total); binding integration-verify caught 2 advisory-grade-missed regressions
 
 **Mission:** continue /goal after operator amended ratify-skill to autonomous-under-independent-grade (operator is a non-coder — don't ask him to ratify code).
