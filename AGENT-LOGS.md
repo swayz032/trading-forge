@@ -4,6 +4,26 @@
 
 ---
 
+### Session Log — 2026-07-12 HARDENING-RAILS Wave 2 SHIPPED — tower-idle guard + FULL nightly lane (soak mold), VERIFIED BAND 7, landed `edfa7edf..5e12ab63`
+
+**Mission:** Build Rail 2 of the hardening-machine program — a nightly FULL test lane that runs ON THE TOWER and yields to live trading/backtests, reusing the now-landed soak idle-guard.
+
+**Topology decision (operator-confirmed):** FULL lane = **tower-side Node orchestrator in the soak mold (Windows Task Scheduler @22:00), NOT a GitHub Actions `full.yml`.** The master plan's literal ".github/workflows/full.yml" wording conflicted with (a) the operator's chosen soak mold, (b) the "22:00→23:30 schtask chain" phrasing, (c) the idle-guard needing tower-local signals (nvidia-smi / :4000 backend / python-process counts) a GitHub runner can't see, and (d) the self-hosted `wsl-tower` runner being OFFLINE. Surfaced the fork to the operator (two derivation paths disagreed = the alarm); operator chose the tower mold.
+
+**Work completed (landed on `hardening/phase-0` via SHA-pinned worktree `wt-rail2` @ base `edfa7edf`, FF-only, 9 files +918/-0, ZERO src/engine drift):**
+- `scripts/lib/rails-switch.cjs` — rails pause/skip switch (`system_parameters.rails_mode`/`rails_skip_until`, NUMERIC 0=off/absent=armed/query-fail=null-fail-closed), separate namespace from soak's so rails can pause independently.
+- `scripts/lib/tower-idle-guard.cjs` — guard CLI that **REUSES** the landed soak `decide()` (`scripts/soak/soak-guard.cjs`) + `takeSample()` (`scripts/soak/soak-sensors.cjs`) via `require` — no re-implementation — + `exitCodeFor` (RUN→0/SKIP→10/ABORT→20) + `--force-run`.
+- `scripts/rails/full-lane.cjs` — nightly orchestrator: guard-gated pytest (`-m "not gpu"`) + the real 2-pass PGlite `fresh-bootstrap-migration-replay.test.ts`, JSONL (`data/rails/`) + audit (`decision_authority='scheduler'`, `rails.full_lane_completed` / `rails.full_lane_dryrun` separate action).
+- `scripts/rails/register-full-lane-task.ps1` — idempotent schtask `TF-Rails-Full-Lane` @22:00 (clear of soak's 03:00), mirrors `register-soak-task.ps1`.
+- Plan doc `docs/superpowers/plans/2026-07-12-hardening-rails-plan2-idle-guard-full-lane.md`.
+
+**Verification:** 22/22 DI/RED-proof tests green (`node --test`); RED-proofs drive the REAL soak `decide()` (not a mock) → every busy signal (backtests/python-workers/gpu/switch-off/unreadable) SKIPs with the runners throwing-if-called, force-run overrides. 3 CI hard gates green (production-isolation CLEAN, 2026-compliance OK, system-map:check exit 0). Zero src/engine drift. **Independent accuracy-validator (doer≠grader, grading-integrity): VERIFIED BAND 7** — reproduced all 7 claims from zero; found + I FIXED one CONFIRMED reliability bug (two 60min runners summing to 120min under a 90min schtask cap → force-kill before audit-write; fixed with named PYTEST(90)/REPLAY(30)/SCHTASK(180) budgets + machine-checked invariant runner-sum<cap). Band 7 not 8/9 = pre-live ceiling (no live-tower execution history yet).
+
+**Carry-forward for next session:**
+- **Operator host-step (one-time, on tower):** run `scripts/rails/register-full-lane-task.ps1` to arm the 22:00 lane. `rails_mode`/`rails_skip_until` default armed (no seeding needed). Rail 5 (Office) will add the phone-tappable "Rails Switch" for these rows.
+- **Documented non-defects (validator findings 2-3, NOT fixed by design):** `-m "not gpu"` filter is inert today (no test carries `@pytest.mark.gpu`) — forward-looking, don't cite as active control; `--dry-run` relabels the audit action but still runs the real subprocesses (per plan).
+- **Rails 3-5 not started:** Rail 3 = 23:30 certification rig + `rails_nightly_reports` table (land EARLY for history); Rail 4 = engagement telemetry + metamorphic engine tests + tiering; Rail 5 = Office "Tower Rails" card + history browser + "Rails Switch". Worktree `wt-rail2` + `wt-buildcheck` left for the worktree-TTL rail (node_modules junction removed from wt-rail2).
+
 ### Session Log — 2026-07-12 /goal CONTINUATION 15 — 10TH fresh scan (freshscan10, 12-charter Workflow) @ f1e76006 — **BAND 9 NOT ACHIEVED; independent grade CORRECTED me on two counts → VERIFIED BAND 7.** Scan's own finders returned zero CRIT/HIGH (2 MED), but the independent accuracy-validator found an OPEN HIGH the scan MISSED (a decision_authority pattern-CLASS) → freshscan10 was NOT a clean scan → the 2-consecutive-clean streak is BROKEN (fs9 clean, fs10 not, exactly like fs8 broke fs7). HIGH per-scan: 8→5→3→2→2→1→0→1→0→**(scan said 0, grader found 1 class)**. ALL fixed + re-graded CLOSED + LANDED origin/phase-0 `4072093c`.
 
 **Two corrections I accepted from the independent grade (doer≠grader working exactly as designed):**
