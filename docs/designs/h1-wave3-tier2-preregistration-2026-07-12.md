@@ -1,0 +1,42 @@
+# H1 Wave 3 — Tier-2 Discourse Pass — PRE-REGISTRATION (FROZEN 2026-07-12)
+
+> **Law 4.** Frozen BEFORE the tier-2 machine exists — the bar before the score. This is the pivotal wave: H1's economics live or die here. Either answer — a discourse pass that absorbs the hard classes at local-model cost, OR clean arithmetic proving fidelity needs human eyes — is a LEGITIMATE H1 outcome pre-written in the campaign plan, not a failure to route around. Operator-briefed 2026-07-12.
+
+## §1 — ARCHITECTURE: the frame is the unit, not the sentence
+Both Wave-1 hard classes are discourse-dependent BY CONSTRUCTION, so tier-2 is a TWO-STEP classifier:
+1. **SEGMENT** the transcript into discourse frames: `rule-statement | worked-example-walkthrough | warning-exclusion | fix-list | prediction-narration | tangent`.
+2. **CLASSIFY each margin item WITH its frame + cross-reference binding** — the two Wave-1 discriminators encoded directly:
+   - **narrated action = gate IFF it instantiates a rule stated elsewhere** (a walkthrough clause echoing a rule-statement frame); context otherwise. (Kills the walkthrough-narration-restates-a-gate class.)
+   - **directional statement = gate IFF it binds to an action or exclusion somewhere in the discourse**; movement-expectation (context) otherwise. (Kills the bias-vs-movement class.)
+Output taxonomy = `gate-strength | context | cannot-determine`, with **cost-free `cannot-determine` NON-NEGOTIABLE** (the NEUTRAL lesson): a tier-2 that FORCE-DETERMINES manufactures false certificates. `cannot-determine` routes to tier-3; its RATE is the economics number.
+
+## §2 — DATA DISCIPLINE: three pools, NO leakage
+- **DESIGN exemplars** = the pre-committed shakedown DESIGN-carve (112 items, `h1-tier2-quarantine-split-2026-07-12.json`) + the 143-set's margin items. Tier-2 designs/tunes ONLY on these.
+- **INTERIM EVAL** = the SEALED shakedown EVAL-carve (77 items, `sealed_eval_sha256 701c3edb…`), **READ ONCE** as Wave-3's gate. Not before the design budget is spent.
+- **CERTIFIED validation** = Wave 5's PRISTINE sealed fresh set ONLY (16 videos, `8e39ffe1`, never observed).
+- **The 78-held-out stays SPENT** — tier-2 NEVER touches it either; its labels are session-exposed and the record already carries one tuning violation (Wave-2), which is one more than this instrument gets.
+
+## §3 — CONTROLS: the control-gate applied to tier-2 ITSELF
+Seed known-gate + known-context items into the interim eval (**≥4/5 each direction**, same bar as the adjudication protocol). **Controls fail → tier-2's verdicts QUARANTINE as instrument noise** — exactly as a rater's would. This IS the force-determination detector: a classifier that calls controls confidently WRONG is doing theater, and its numbers do not count.
+
+## §4 — PROMPT DISCIPLINE: own frozen fixtures from birth
+Tier-2 is a NEW prompt surface → it gets its **OWN frozen fixture set from birth**: labeled design exemplars, BOTH classes, BOTH polarities (gate-that-should-fire + context-that-should-not, per class). Any prompt iteration MUST hold them — the parity-gate pattern applied AT CREATION, not retrofitted. Gemma-local (`gemma4:e4b-it-qat`). **Determinism envelope pinned NOW (not when a number wobbles):** deterministic segmentation must be EXACT on re-measure; LLM-margin calls within a PRE-STATED agreement band (state the band before measuring).
+
+## §5 — ECONOMICS INSTRUMENTATION from birth (Law 1 extended)
+Instrument from the first run: per-item tokens, routing rates, and **PER-CLASS absorption counts**. **The ≥85% target is on the TWO NAMED CLASSES SPECIFICALLY — NOT a blended aggregate** that lets one class hide behind the other. Engagement evidence means tier-2 proves not just that it fires but WHAT IT ABSORBED and WHAT IT DECLINED (routed to tier-3).
+
+## §6 — DESIGN RULING (frozen now): tier-3's budget serves DOUBLE DUTY
+Tier-2 verdicts stand as certificate-grade WITHOUT per-item adjudication (that is what the ≤1/video rider buys). Their ongoing trust comes from a STANDING AUDIT: **each video's ≤1 tier-3 budget resolves `cannot-determine`s FIRST; if none exist, it audits ONE RANDOM tier-2 verdict BLIND.** Continuous calibration living INSIDE the economics envelope instead of on top of it — the rider stops being just a cost cap and becomes the QA loop.
+
+## §7 — ITERATION + FAILURE PRE-COMMITMENTS (frozen before any number)
+- **Two design passes MAXIMUM** against the exemplars (the tier-1/classifier budget discipline, inherited). Then the interim eval, ONCE.
+- **PASS → Wave 4:** interim per-class absorption **≥85% on BOTH named classes** AND controls green.
+- **SHORT of 85% after the budget → the arithmetic speaks:** tier-3 load stays >1/video → **the human-in-loop fork fires on ARITHMETIC, not argument** (smaller-library / higher-per-strategy-investment, per the campaign plan). A LEGITIMATE H1 answer, pre-written — not a failure to route around.
+
+## §8 — VERIFICATION STRUCTURE (standing laws)
+- **builder ≠ grader.** The interim read's tabulation is derived TWO-PATH (a standalone tally vs the pipeline's).
+- **The grader's job description NOW INCLUDES THE WAVE-2 LESSON VERBATIM:** *ablate every guard/special-case whose motivation is CLAIMED, and measure each partition (design vs interim-eval) SEPARATELY* — a component with design-zero / eval-nonzero effect is eval-tuned regardless of its docstring. (See `feedback_ablation_proves_motivation_not_docstring_2026_07_12`.)
+- Determinism envelope (§4) is a grader check, not an afterthought.
+
+---
+*Frozen 2026-07-12 at the doer seat, BEFORE the tier-2 builder runs. Vaulted FF to `corpus-v3-gate3-cert-2026-07-06`. Wave 3 converts H1's open economics question into a number nobody can argue with — a discourse pass that works at local-model cost, or clean arithmetic proving fidelity needs human eyes.*
