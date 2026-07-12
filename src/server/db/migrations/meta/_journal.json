@@ -1430,6 +1430,13 @@
       "when": 1783392618800,
       "tag": "0201_paper_positions_entry_contracts",
       "breakpoints": true
+    },
+    {
+      "idx": 205,
+      "version": "7",
+      "when": 1783392618900,
+      "tag": "0202_rails_nightly_reports",
+      "breakpoints": true
     }
   ]
 }
