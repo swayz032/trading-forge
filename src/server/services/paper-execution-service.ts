@@ -725,7 +725,12 @@ export async function openPosition(sessionId: string, params: {
   /** Strategy metadata needed for computeExitPlan(). Requires id + exit_plan_config. */
   adaptiveExitInput?: {
     strategy: { id: string; exit_plan_config?: import("../db/jsonb-shapes.js").ExitPlanConfig | null };
-    entry: { stop: number };  // stop price at entry (structural stop derived before calling openPosition)
+    // #2 (2026-07-11): entry.stop is now OPTIONAL. When omitted (the paper deferred-fill caller),
+    // openPosition derives the exit-plan R-basis from actualEntry ∓ atr×2.0 — the SAME value the
+    // position's own initialStopPrice precedence-2 uses — so the adaptive TP1/TP2 R-multiples (and
+    // the static_styleC flat-2R TP2) are computed off the exact stop the position is managed
+    // against, with zero drift. A caller that already computed a structural stop may still supply it.
+    entry?: { stop: number };
     bar: { close: number; high: number; low: number; volume: number };
     marketState: { regime: string; narrativePhase: string | null };
     weightedScore?: import("./confluence-score.js").WeightedScoreResult;
@@ -2027,7 +2032,18 @@ export async function openPosition(sessionId: string, params: {
   const adaptiveInput = params.adaptiveExitInput;
   const exitStyle = adaptiveInput?.strategy?.exit_plan_config?.exit_style ?? "static_styleC";
 
-  if (exitStyle === "adaptive" && adaptiveInput != null) {
+  // #2 (2026-07-11): resolve the exit-plan R-basis stop. Prefer an explicit caller stop; else derive
+  // actualEntry ∓ atr×2.0 — IDENTICAL to the position's own initialStopPrice precedence-2 below — so
+  // the adaptive TP1/TP2 and the static_styleC flat-2R TP2 are always computed off the exact stop the
+  // position is managed against (zero drift). null only when neither an explicit stop nor ATR exists,
+  // in which case both exit-plan branches fall through to the Python/static fallback (fail-soft).
+  const resolvedExitBasisStop: number | null =
+    adaptiveInput?.entry?.stop
+    ?? (params.atr != null && params.atr > 0
+      ? (params.side === "long" ? actualEntry - params.atr * 2.0 : actualEntry + params.atr * 2.0)
+      : null);
+
+  if (exitStyle === "adaptive" && adaptiveInput != null && resolvedExitBasisStop != null) {
     try {
       const exitPlanRaw: ExitPlan = await computeExitPlan({
         strategy: {
@@ -2037,7 +2053,7 @@ export async function openPosition(sessionId: string, params: {
         },
         entry: {
           price: actualEntry,
-          stop: adaptiveInput.entry.stop,
+          stop: resolvedExitBasisStop,
           direction: params.side,
           timestamp: params.barTimestamp ?? new Date(),
         },
@@ -2096,7 +2112,7 @@ export async function openPosition(sessionId: string, params: {
       }).catch((err) => logger.warn({ err }, "signal.exit_plan_fallback_static audit write failed (non-blocking)"));
       exitPlanForInsert = null;
     }
-  } else if (exitStyle === "static_styleC" && adaptiveInput != null) {
+  } else if (exitStyle === "static_styleC" && adaptiveInput != null && resolvedExitBasisStop != null) {
     // ── F-b parity fix: static_styleC TP2 = flat +2.0R ─────────────────────────
     // CLAUDE.md §4 canonical: static Style C TP2 ALWAYS = +2.0R flat.
     // Liquidity-mapped TPs belong exclusively to exit_style="adaptive".
@@ -2107,7 +2123,7 @@ export async function openPosition(sessionId: string, params: {
     // Storing the flat +2.0R price enables the C2 intrabar TP2 touch-detection
     // path in updatePositionPrices without spawning a Python subprocess.
     try {
-      const stopDistance = Math.abs(actualEntry - adaptiveInput.entry.stop);
+      const stopDistance = Math.abs(actualEntry - resolvedExitBasisStop);
 
       if (stopDistance > 0) {
         const tp2Price = params.side === "long"
@@ -2156,7 +2172,11 @@ export async function openPosition(sessionId: string, params: {
   // BL-1 / FINDING #7 FIX: compute initial stop price at entry for intrabar stop-breach detection.
   //
   // Precedence:
-  //   (1) adaptiveExitInput.entry.stop — structural stop derived by the strategy before calling openPosition
+  //   (1) resolvedExitBasisStop — the exact stop the exit plan was computed off (an explicit
+  //       caller stop, else actualEntry ∓ atr×2.0). #2 (2026-07-11): using the SAME resolved value
+  //       here guarantees the managed stop equals the exit-plan R-basis with zero drift (it already
+  //       folds in the legacy precedence-2 atr×2.0 derivation, so this is behavior-identical when
+  //       no explicit stop is supplied).
   //   (2) params.atr × 2.0             — ATR-based structural stop (standard BreakerStrategy sl_mult=2.0)
   //   (3) CONTRACT_SPECS[symbol].tickSize × 16 — last-resort structural floor so live positions NEVER
   //       have null initialStopPrice, which would cause updatePositionPrices to skip stop-breach detection
@@ -2167,8 +2187,8 @@ export async function openPosition(sessionId: string, params: {
   //
   // INVARIANT: initialStopPriceForInsert must NEVER be null for a live position.
   const initialStopPriceForInsert: number = (() => {
-    if (params.adaptiveExitInput?.entry.stop != null) {
-      return params.adaptiveExitInput.entry.stop;
+    if (resolvedExitBasisStop != null) {
+      return resolvedExitBasisStop;
     }
     if (params.atr != null && params.atr > 0) {
       const stopPts = params.atr * 2.0;
