@@ -301,6 +301,19 @@ function buildDbConn(opts: {
     }),
   });
 
+  // dbConn.transaction — openPosition() now wraps the position + paper.trade_open audit inserts in
+  // an atomic transaction (paper-execution-service.ts:2248). This mock post-dated that refactor and
+  // lacked .transaction, so the PASS-path tests (which proceed to openPosition after compliance
+  // clears) threw "dbConn.transaction is not a function". Run the callback with a tx that reuses the
+  // existing insert/update/select mocks (lazy-delegated so definition order is irrelevant).
+  mockDbConn.transaction = vi.fn(async (fn: (tx: unknown) => unknown) =>
+    fn({
+      insert: (...a: unknown[]) => (mockDbConn.insert as (...x: unknown[]) => unknown)(...a),
+      update: (...a: unknown[]) => (mockDbConn.update as (...x: unknown[]) => unknown)(...a),
+      select: (...a: unknown[]) => (mockDbConn.select as (...x: unknown[]) => unknown)(...a),
+    }),
+  );
+
   mockDbConn.select = vi.fn(() => {
     const idx = callIdx++;
     const returnRows: unknown[] = (
