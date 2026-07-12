@@ -22,7 +22,22 @@ diagnosis distribution (clause 5) plus the unanchored reason breakdown;
 SYNTHETIC DRY-RUN full-loop proof (network-free via a stubbed
 `propose_fn`); (k) extractor_version_pin is deterministic and
 content-keyed; (l) fetch_transcript is an unimplemented documented seam;
-(m) no sealed-set / real-transcript access anywhere in the module.
+(m) no sealed-set / real-transcript access anywhere in the module;
+(n) ADDENDUM 4 FIX 1 — the dual-read agreement gate: agreement classifies,
+disagreement (a mis-grounded-but-literal anchor) falls through, exercised
+via the grader's own three constructed "flatter" cases (a literal-but-wrong
+located quote whose surface diverges from the condition's own surface);
+(o) ADDENDUM 4 FIX 2 — the two-stage tier-3 packet: Stage-1 blinding stays
+intact (leak-scan proves the condition string is absent from the blind
+view, with a positive-fire proof so the guard is not vacuous) and Stage 2
+carries a revealed condition text + an empty support slot per fall-through
+item; (p) the Stage-2 support certificate field:
+`adjudication_verdict.support`/`.support_justification`, confirmed leaves a
+condition grounded, denied/partial downgrades it (treated like an
+unresolved fall-through) and forces pilot_grade/full_grade/certificate_grade
+False; (q) dual-read costs zero extra model calls (the existing
+non-adjudicator source scan already proves this structurally — dual-read
+only adds more calls to the same pure-regex `run_tier1`).
 
 Every `prepare_strategy`/`prepare_video`/`locate_condition_anchors` call in
 this file passes an explicit stub `propose_fn` (`_stub_propose_fn` below)
@@ -201,8 +216,13 @@ def test_prepare_strategy_fires_all_three_tier1_classes_and_two_fallthroughs():
     assert len(prep["unanchored_conditions"]) == 1
     set_b = prep["tier3_packet"]["sections"][-1]
     assert set_b["section_id"] == "SET-B"
-    assert set_b["item_count"] == 2
-    assert len(prep["item_span_map"]) == 2
+    # ADDENDUM 5 AXIS 3: this strategy has classified fires + idle budget
+    # (2 fallthroughs < the default 15 ceiling), so a deterministic
+    # sampling-audit item is appended -- 2 genuine fallthroughs + exactly
+    # ONE audit item (never more).
+    expected_count = 2 + (1 if prep["axis3_audit"]["char_span"] is not None else 0)
+    assert set_b["item_count"] == expected_count
+    assert len(prep["item_span_map"]) == expected_count
     assert prep["leak_scan"].clean is True
 
 
@@ -217,7 +237,15 @@ def test_prepare_strategy_item_ids_namespace_by_strategy_index():
     propose_fn=_stub_propose_fn,
     )
     set_b_items = prep["tier3_packet"]["sections"][-1]["items"]
-    assert all(it["item_id"].startswith("v-multi-S2-B") for it in set_b_items)
+    # ADDENDUM 5 AXIS 3: a fallthrough item is namespaced "...-S2-B###"; the
+    # (at most one) sampling-audit item is namespaced "...-S2-AUDIT" and is
+    # explicitly tagged -- both share the strategy-index prefix.
+    for it in set_b_items:
+        assert it["item_id"].startswith("v-multi-S2-")
+        if it.get("audit"):
+            assert it["item_id"] == "v-multi-S2-AUDIT"
+        else:
+            assert it["item_id"].startswith("v-multi-S2-B")
 
 
 def test_prepare_strategy_reuses_wave1_set_a_verbatim():
@@ -395,8 +423,15 @@ def test_leak_scan_fires_on_prefilled_rater_response():
 def test_prepare_strategy_refuses_to_emit_on_leak_scan_failure(monkeypatch):
     original_builder = pc._build_tier3_packet
 
-    def _poisoned_builder(full_transcript, video_id, fallthroughs, strategy_index=0):
-        packet, span_map = original_builder(full_transcript, video_id, fallthroughs, strategy_index)
+    def _poisoned_builder(
+        full_transcript, video_id, fallthroughs, strategy_index=0,
+        condition_text_by_span=None, audit_target=None,
+    ):
+        packet, span_map = original_builder(
+            full_transcript, video_id, fallthroughs, strategy_index,
+            condition_text_by_span=condition_text_by_span,
+            audit_target=audit_target,
+        )
         if packet["sections"][-1]["items"]:
             packet["sections"][-1]["items"][0]["dri"] = "JUSTIFIED_MANDATORY"
         return packet, span_map
@@ -689,3 +724,531 @@ def test_module_never_references_sealed_set_artifacts():
 def test_dry_run_transcript_is_not_sealed_content():
     assert "DRY-RUN" in pc.DRY_RUN_VIDEO_ID
     assert pc.DRY_RUN_TRANSCRIPT  # non-empty, hand-authored, see module docstring
+
+
+# --------------------------------------------------------------------------- #
+# (n) ADDENDUM 4 FIX 1 -- dual-read agreement gate
+# --------------------------------------------------------------------------- #
+
+# Three literal spans in DRY_RUN_TRANSCRIPT with three DIFFERENT tier-1
+# surface classes (conditional-action / imperative / exclusion-contrast) plus
+# one tier-1-SILENT narration span -- reused verbatim from
+# DRY_RUN_EXTRACTED_STRATEGY's own fixture set (pc.DRY_RUN_TRANSCRIPT), so no
+# new transcript is invented for this test.
+_CA_SPAN_TEXT = "Buy from the demand zone when it is retested."
+_IMP_SPAN_TEXT = "Set your stop at the low of the hammer."
+_EC_SPAN_TEXT = "Take puts on a VWOP retest, NOT a pre-market low retest."
+_SILENT_SPAN_TEXT = "We do have a fair value gap here where price tapped the level before."
+
+# The grader's three constructed "flatter" cases: a condition whose OWN
+# surface (run_tier1(cond.text)) is one class (or silent), mis-grounded by
+# the locator onto a DIFFERENT, real, literal transcript span carrying a
+# DIFFERENT class. Every proposed quote below IS a literal substring of
+# DRY_RUN_TRANSCRIPT (so anchor_locator resolves it LOCATED, not
+# unanchored) -- exactly the F-2026-07-12-A defect shape: a real, literal,
+# but MIS-GROUNDED anchor.
+_FLATTER_MISGROUNDING = {
+    # condition's own surface = imperative; mis-grounded onto a
+    # conditional-action span -> both fire, DIFFERENT fired classes.
+    _IMP_SPAN_TEXT: _CA_SPAN_TEXT,
+    # condition's own surface = SILENT (narration); mis-grounded onto an
+    # imperative span -> the quote fires, the condition is silent. This is
+    # the exact pre-fix defect: the mis-grounded quote would have fired
+    # uncaught.
+    _SILENT_SPAN_TEXT: _IMP_SPAN_TEXT,
+    # condition's own surface = exclusion-contrast; mis-grounded onto the
+    # (real, literal, but tier-1-SILENT) narration span -> the condition
+    # fires, the quote is silent -- the mirror-image disagreement shape.
+    # (Each of the three mis-grounding TARGETS above is a distinct span --
+    # CA/IMP/SILENT -- so no two conditions share a char_span key.)
+    _EC_SPAN_TEXT: _SILENT_SPAN_TEXT,
+}
+
+
+def _flatter_propose_fn(transcript: str, condition_text: str) -> Optional[str]:
+    return _FLATTER_MISGROUNDING.get(condition_text, condition_text)
+
+
+def _flatter_strategy() -> dict:
+    return {
+        "entry_sequence": [{"step": 1, "action": _IMP_SPAN_TEXT, "rationale": None}],
+        "targets": [{"priority": 1, "type": "structural", "rationale": _SILENT_SPAN_TEXT}],
+        "confluences": [{"name": "exclusion", "description": _EC_SPAN_TEXT}],
+    }
+
+
+def test_dual_read_agreement_classifies_when_surfaces_match():
+    """A condition whose located quote IS its own text -- surfaces agree
+    (both fire the SAME class) -- classifies at tier-1, no fall-through."""
+    strategy = {"entry_sequence": [{"step": 1, "action": _CA_SPAN_TEXT, "rationale": None}]}
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-agree", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    assert prep["unanchored_conditions"] == []
+    assert len(prep["tier1_detections"]) == 1
+    assert prep["tier1_detections"][0].surface_class == "conditional-action"
+    assert prep["tier1_fallthroughs"] == []
+    assert prep["condition_outcomes"][0]["outcome"] == "classified_tier1"
+
+
+def test_dual_read_three_flatter_cases_all_fall_through_on_disagreement():
+    """The grader's three constructed flatter cases: each condition's own
+    surface diverges from its (real, literal) but mis-grounded located
+    quote's surface -- ALL THREE must fall through to tier-3, and NONE may
+    contribute a tier1_detection (the pre-fix defect: a mis-grounded-but-
+    literal anchor firing uncaught)."""
+    prep = pc.prepare_strategy(
+        _flatter_strategy(), pc.DRY_RUN_TRANSCRIPT, "v-flatter", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_flatter_propose_fn,
+    )
+    assert prep["unanchored_conditions"] == [], (
+        "every mis-grounded quote here IS a literal transcript substring -- "
+        "the locator must resolve all three LOCATED, never unanchored"
+    )
+    assert prep["tier1_detections"] == [], "no mis-grounded quote may fire uncaught"
+    assert len(prep["tier1_fallthroughs"]) == 3
+    outcomes = {o["outcome"] for o in prep["condition_outcomes"]}
+    assert outcomes == {"fallthrough_dual_read_disagreement"}
+
+    set_b = prep["tier3_packet"]["sections"][-1]
+    assert set_b["item_count"] == 3
+    stage2_items = prep["tier3_packet"]["stage2"]["items"]
+    assert len(stage2_items) == 3
+    # each Stage-2 item carries the EXTRACTOR'S OWN condition text (not the
+    # mis-grounded quote it was located against).
+    stage2_condition_texts = {it["extracted_condition_text"] for it in stage2_items}
+    assert stage2_condition_texts == {_IMP_SPAN_TEXT, _SILENT_SPAN_TEXT, _EC_SPAN_TEXT}
+    for it in stage2_items:
+        assert it["adjudication_response"] == {"support": None, "support_justification": None}
+
+    # Stage-1 blinding intact + a Stage-2 support slot present.
+    scan = pc.blinding_leak_scan(prep["tier3_packet"])
+    assert scan.clean is True, scan.violations
+
+
+def test_dual_read_disagreement_span_is_the_located_quote_not_condition_text():
+    """Even under disagreement, the certificate-facing span/quote must be
+    the LOCATED quote (the real transcript span), never the condition's own
+    (possibly non-resolving) text -- Addendum 4's own wording."""
+    prep = pc.prepare_strategy(
+        _flatter_strategy(), pc.DRY_RUN_TRANSCRIPT, "v-flatter-span", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_flatter_propose_fn,
+    )
+    misgrounded_targets = set(_FLATTER_MISGROUNDING.values())
+    for ft in prep["tier1_fallthroughs"]:
+        s, e = ft.char_span
+        quote = pc.DRY_RUN_TRANSCRIPT[s:e]
+        assert quote in misgrounded_targets, "fall-through span must be the LOCATED (mis-grounded) quote"
+
+
+def test_module_never_calls_an_llm_dual_read_included():
+    """Dual-read adds a SECOND run_tier1 call per anchored condition, still
+    zero model calls -- reuses the module's own non-adjudicator source scan
+    (tier1_detectors.run_tier1 is pure regex/stdlib; no new import was
+    added for FIX 1)."""
+    src = inspect.getsource(pc)
+    forbidden_calls = ("ollama", "anthropic", "openai", "requests.post", "httpx.post", ".chat(")
+    lowered = src.lower()
+    for tok in forbidden_calls:
+        assert tok not in lowered, f"found forbidden adjudicator-dispatch token: {tok}"
+
+
+# --------------------------------------------------------------------------- #
+# (o)/(p) ADDENDUM 4 FIX 2 -- two-stage tier-3 packet + support certificate
+# field
+# --------------------------------------------------------------------------- #
+
+
+def test_two_stage_packet_stage1_free_of_condition_string_positive_proof():
+    """Positive-fire proof that the Stage-2-leak guard is not vacuous: poison
+    a copy of a clean packet by duplicating a Stage-2 condition text into a
+    DIFFERENT Stage-1 field (not that item's own quote_anchor) and confirm
+    the scan fires."""
+    prep = pc.prepare_strategy(
+        _flatter_strategy(), pc.DRY_RUN_TRANSCRIPT, "v-stage2-poison", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_flatter_propose_fn,
+    )
+    assert prep["leak_scan"].clean is True
+    poisoned = json.loads(json.dumps(prep["tier3_packet"]))
+    stage2_items = poisoned["stage2"]["items"]
+    leaked_text = stage2_items[0]["extracted_condition_text"]
+    assert leaked_text
+    # inject it as a NEW allowlist-violating field on a Set-B item (a
+    # structural leak, distinct from that item's own legitimate quote).
+    poisoned["sections"][-1]["items"][0]["leaked_condition_hint"] = leaked_text
+    scan = pc.blinding_leak_scan(poisoned)
+    assert scan.clean is False
+    assert any(v.startswith("stage2_leak:") for v in scan.violations)
+
+
+def test_two_stage_packet_does_not_self_trip_when_quote_equals_condition():
+    """A well-grounded anchor's quote is frequently byte-for-byte identical
+    to the condition it grounds -- that identity must NOT self-trip the
+    Stage-2-leak check (it is the anchor doing its job, not a leak)."""
+    strategy = {"entry_sequence": [{"step": 1, "action": _SILENT_SPAN_TEXT, "rationale": None}]}
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-stage2-honest", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    assert prep["tier3_packet"]["stage2"]["items"][0]["extracted_condition_text"] == _SILENT_SPAN_TEXT
+    scan = pc.blinding_leak_scan(prep["tier3_packet"])
+    assert scan.clean is True, scan.violations
+
+
+def test_two_stage_packet_fires_on_prefilled_stage2_response():
+    prep = pc.prepare_strategy(
+        _flatter_strategy(), pc.DRY_RUN_TRANSCRIPT, "v-stage2-prefill", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_flatter_propose_fn,
+    )
+    poisoned = json.loads(json.dumps(prep["tier3_packet"]))
+    poisoned["stage2"]["items"][0]["adjudication_response"]["support"] = "confirmed"
+    scan = pc.blinding_leak_scan(poisoned)
+    assert scan.clean is False
+    assert any(v.startswith("prefilled_stage2_response:") for v in scan.violations)
+
+
+def test_support_verdict_from_stage2_response_requires_justification_and_closed_taxonomy():
+    with pytest.raises(ValueError):
+        pc.support_verdict_from_stage2_response((0, 1), "confirmed", "")
+    with pytest.raises(ValueError):
+        pc.support_verdict_from_stage2_response((0, 1), "maybe", "some justification")
+    sv = pc.support_verdict_from_stage2_response((0, 1), "denied", "the quote is about something else")
+    assert sv.support == "denied"
+    assert sv.support_justification == "the quote is about something else"
+
+
+def test_finalize_certificate_confirmed_support_leaves_condition_grounded():
+    strategy = {"entry_sequence": [{"step": 1, "action": _SILENT_SPAN_TEXT, "rationale": None}]}
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-support-confirmed", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    ft = prep["tier1_fallthroughs"][0]
+    verdict = pc.verdict_from_rater_response(
+        char_span=ft.char_span,
+        quote_anchor=pc.DRY_RUN_TRANSCRIPT[ft.char_span[0]:ft.char_span[1]],
+        role="context",
+        control_gate_passed=True,
+    )
+    support = pc.support_verdict_from_stage2_response(ft.char_span, "confirmed", "matches the condition")
+    cert = pc.finalize_certificate(prep, [verdict], tier3_support=[support])
+    tier3_entries = [c for c in cert["conditions"] if c.get("adjudication_verdict") and c["adjudication_verdict"].get("support")]
+    assert len(tier3_entries) == 1
+    assert tier3_entries[0]["classifying_tier"] == 3
+    assert tier3_entries[0]["adjudication_verdict"]["support"] == "confirmed"
+    assert tier3_entries[0]["adjudication_verdict"]["support_justification"] == "matches the condition"
+    assert cert["pilot_grade"] is True
+
+
+@pytest.mark.parametrize("support_value", ["denied", "partial"])
+def test_finalize_certificate_denied_or_partial_support_downgrades_condition(support_value):
+    strategy = {"entry_sequence": [{"step": 1, "action": _SILENT_SPAN_TEXT, "rationale": None}]}
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, f"v-support-{support_value}", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    ft = prep["tier1_fallthroughs"][0]
+    verdict = pc.verdict_from_rater_response(
+        char_span=ft.char_span,
+        quote_anchor=pc.DRY_RUN_TRANSCRIPT[ft.char_span[0]:ft.char_span[1]],
+        role="context",
+        control_gate_passed=True,
+    )
+    support = pc.support_verdict_from_stage2_response(ft.char_span, support_value, "does not match")
+    cert = pc.finalize_certificate(prep, [verdict], tier3_support=[support])
+    downgraded = [c for c in cert["conditions"] if tuple(c["char_span"]) == tuple(ft.char_span)]
+    assert len(downgraded) == 1
+    assert downgraded[0]["classifying_tier"] is None, "denied/partial support treats the condition as an unresolved fall-through"
+    assert downgraded[0]["adjudication_verdict"]["support"] == support_value
+    assert cert["pilot_grade"] is False
+    assert cert["full_grade"] is False
+    assert cert["certificate_grade"] is False
+    assert cert["diagnosis"][pc.DIAGNOSIS_FALLTHROUGH_UNRESOLVED] == 1
+    assert cert["diagnosis"][pc.DIAGNOSIS_OK] == 0
+
+
+# --------------------------------------------------------------------------- #
+# (r) ADDENDUM 5 -- AXIS 2 content-word overlap floor + AXIS 3 tier-3
+# idle-budget sampling audit (catch #5: the dual-read gate compares
+# surface_class ONLY, so a SAME-surface DIFFERENT-content mis-grounding
+# passed as "agreement" and classified uncaught).
+# --------------------------------------------------------------------------- #
+
+# --- axis-2 fixtures ---------------------------------------------------- #
+
+# Decisive target (a): SAME surface class (both fire "imperative"), ZERO
+# shared content tokens -- the catch-#5 reproduction. Content tokens:
+# stop text -> {"stop", "hammer."}; entry text -> {"enter", "aggressively",
+# "above", "pivot", "high."} (see test_axis2_content_tokens_parity_with_ts_f2
+# for the tokenizer trace). _ZERO_OVERLAP_STOP_TEXT reuses the module's own
+# _IMP_SPAN_TEXT string verbatim (same fixture, named for this section).
+_ZERO_OVERLAP_STOP_TEXT = _IMP_SPAN_TEXT  # "Set your stop at the low of the hammer."
+_ZERO_OVERLAP_ENTRY_TEXT = "Enter aggressively above the pivot high."
+
+
+def _zero_overlap_propose_fn(transcript: str, condition_text: str) -> Optional[str]:
+    if condition_text == _ZERO_OVERLAP_STOP_TEXT:
+        return _ZERO_OVERLAP_ENTRY_TEXT
+    return condition_text
+
+
+def test_axis2_zero_content_overlap_falls_through_to_tier3():
+    """Decisive target (a): a mis-grounded-but-literal anchor sharing the
+    condition's surface class but ZERO content tokens must fall through --
+    the pre-Addendum-5 defect (dual-read alone would have classified this
+    uncaught, since axis 1 only compares surface_class)."""
+    transcript = _ZERO_OVERLAP_ENTRY_TEXT + " " + _ZERO_OVERLAP_STOP_TEXT
+    strategy = {"stop": {"anchor": "swing_low", "rationale": _ZERO_OVERLAP_STOP_TEXT}}
+    prep = pc.prepare_strategy(
+        strategy, transcript, "v-axis2-zero-overlap", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_zero_overlap_propose_fn,
+    )
+    assert prep["unanchored_conditions"] == []
+    assert prep["tier1_detections"] == [], "a same-surface, zero-content-overlap fire must never classify"
+    assert len(prep["tier1_fallthroughs"]) == 1
+    assert prep["condition_outcomes"][0]["outcome"] == "fallthrough_axis2_zero_content_overlap"
+
+    set_b = prep["tier3_packet"]["sections"][-1]
+    assert set_b["item_count"] == 1
+    assert set_b["items"][0]["quote_anchor"]["verbatim"] == _ZERO_OVERLAP_ENTRY_TEXT
+    stage2_items = prep["tier3_packet"]["stage2"]["items"]
+    assert stage2_items[0]["extracted_condition_text"] == _ZERO_OVERLAP_STOP_TEXT
+
+    scan = pc.blinding_leak_scan(prep["tier3_packet"])
+    assert scan.clean is True, scan.violations
+
+
+# Decisive target (b): the NAMED RESIDUAL -- SAME surface class
+# (conditional-action) AND >=1 shared content token ("price"/"crosses"/
+# "50") but a DIFFERENT rule (a stop-rule condition mis-grounded onto an
+# entry-rule quote). Neither mechanical axis can catch this by design
+# (Addendum 5); axis 3 makes it statistically visible.
+_RESIDUAL_STOP_TEXT = "Exit when price crosses below the 50 SMA level."
+_RESIDUAL_ENTRY_TEXT = "Enter when price crosses above the 50 SMA line."
+
+
+def _residual_propose_fn(transcript: str, condition_text: str) -> Optional[str]:
+    if condition_text == _RESIDUAL_STOP_TEXT:
+        return _RESIDUAL_ENTRY_TEXT
+    return condition_text
+
+
+def test_axis2_named_residual_still_classifies_and_is_covered_by_axis3_sampling():
+    """Decisive target (b): a same-surface, shared-vocabulary,
+    different-rule mis-grounding still CLASSIFIES (both mechanical axes
+    correctly cannot close it -- see the module docstring's ADDENDUM 5
+    section) AND is shown COVERED by axis 3: the sampling audit can select
+    this exact classified fire and route it through the two-stage support
+    packet, making the residual statistically visible without mechanically
+    gating it."""
+    transcript = _RESIDUAL_ENTRY_TEXT + " " + _RESIDUAL_STOP_TEXT
+    strategy = {"stop": {"anchor": "swing_low", "rationale": _RESIDUAL_STOP_TEXT}}
+    prep = pc.prepare_strategy(
+        strategy, transcript, "v-axis2-residual", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_residual_propose_fn,
+    )
+    assert prep["unanchored_conditions"] == []
+    assert len(prep["tier1_detections"]) == 1
+    assert prep["tier1_detections"][0].surface_class == "conditional-action"
+    assert prep["condition_outcomes"][0]["outcome"] == "classified_tier1"
+    assert prep["tier1_fallthroughs"] == []
+
+    # axis 3: a single classified candidate + idle budget -> deterministically
+    # audited.
+    audit = prep["axis3_audit"]
+    assert audit["char_span"] == list(prep["tier1_detections"][0].char_span)
+    assert audit["condition_text"] == _RESIDUAL_STOP_TEXT
+
+    stage2_audit_items = [it for it in prep["tier3_packet"]["stage2"]["items"] if it.get("audit")]
+    assert len(stage2_audit_items) == 1
+    assert stage2_audit_items[0]["extracted_condition_text"] == _RESIDUAL_STOP_TEXT
+    set_b_audit_items = [it for it in prep["tier3_packet"]["sections"][-1]["items"] if it.get("audit")]
+    assert len(set_b_audit_items) == 1
+    # the audited item's quote is the FIRED DETECTION's own (narrower)
+    # anchor -- the same span the certificate's classified condition entry
+    # itself carries, not necessarily the full located-anchor sentence.
+    assert set_b_audit_items[0]["quote_anchor"]["verbatim"] == prep["tier1_detections"][0].quote_anchor
+    assert set_b_audit_items[0]["quote_anchor"]["verbatim"] in _RESIDUAL_ENTRY_TEXT
+
+    scan = pc.blinding_leak_scan(prep["tier3_packet"])
+    assert scan.clean is True, scan.violations
+
+    # route the audited fire through the SAME two-stage support mechanism;
+    # a denied support is recorded as a MONITORING signal on the
+    # certificate, WITHOUT mechanically downgrading the classification
+    # (axis 3 is a sampling audit, not a gate).
+    span = tuple(audit["char_span"])
+    support = pc.support_verdict_from_stage2_response(
+        span, "denied", "quote is the entry rule, not the stop rule this condition names"
+    )
+    cert = pc.finalize_certificate(prep, tier3_verdicts=[], tier3_support=[support])
+    assert cert["axis3_audit"]["support"] == "denied"
+    assert cert["axis3_audit"]["char_span"] == list(span)
+    audited_entries = [c for c in cert["conditions"] if tuple(c["char_span"]) == span]
+    assert len(audited_entries) == 1
+    assert audited_entries[0]["classifying_tier"] == 1, (
+        "axis 3 is a sampling MONITOR, not a mechanical gate -- the named "
+        "residual stays classified; visibility, not closure"
+    )
+
+
+def test_axis2_genuine_grounding_still_classifies_not_a_fallthrough_machine():
+    """Decisive target (c): a genuinely-grounded condition (quote IS the
+    condition's own text, full content overlap) must still classify --
+    axis 2 must not become a fallthrough machine."""
+    strategy = {"entry_sequence": [{"step": 1, "action": _CA_SPAN_TEXT, "rationale": None}]}
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis2-genuine", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    assert prep["tier1_fallthroughs"] == []
+    assert len(prep["tier1_detections"]) == 1
+    assert prep["condition_outcomes"][0]["outcome"] == "classified_tier1"
+
+
+def test_axis2_content_tokens_parity_with_ts_f2():
+    """PARITY-FIXTURED proof, same precedent as `compile_lints.
+    f2_coverage_gate`'s own TS-authority-with-no-Python-import-target
+    ledger entry: each case below is hand-traced against extraction-
+    coverage-gate.ts's own `normalize()` (lines 120-130) + `contentTokens()`
+    (lines 142-149) + `STOPWORDS` (lines 56-64) and confirmed against this
+    module's own `content_tokens()`. A silent drift in either side's
+    tokenizer trips this test."""
+    # plain content words; "buy"/"the"/"from"/"when"/"it"/"is" all excluded
+    # (stopword OR len<4); trailing period stays glued to the last word
+    # (the TS authority does not strip punctuation -- this mirror does not
+    # "improve" on it).
+    assert pc.content_tokens("Buy from the demand zone when it is retested.") == frozenset(
+        {"demand", "zone", "retested."}
+    )
+    # numeric tokens (digit-bearing, len>=2) are content-bearing even though
+    # short; "sma" (non-numeric, len 3) is EXCLUDED by the SAME rule in the
+    # TS authority itself (contentTokens requires len>=4 for non-numeric
+    # tokens) -- honesty note, not a divergence (Addendum 5 forbids
+    # inventing a new content-word carve-out).
+    assert pc.content_tokens("cross above the 50 SMA level") == frozenset(
+        {"cross", "above", "50", "level"}
+    )
+    # digit-letter boundary split ("4hour" -> "4 hour", TS FIX 8) + dash/
+    # underscore -> space normalization.
+    assert pc.content_tokens("the 4hour candle-close_setup") == frozenset(
+        {"hour", "candle", "close", "setup"}
+    )
+    # all-stopword/too-short text -> empty set, never an error.
+    assert pc.content_tokens("it is the and or") == frozenset()
+
+
+# --- axis-3 fixtures ------------------------------------------------------ #
+
+
+def test_axis3_selection_is_deterministic_for_same_video_and_pool():
+    """Clause 2 (non-negotiable): same (video_id, strategy_index, candidate
+    pool) -> same audited fire on every replay."""
+    strategy = {
+        "entry_sequence": [
+            {"step": 1, "action": _CA_SPAN_TEXT, "rationale": None},
+            {"step": 2, "action": _IMP_SPAN_TEXT, "rationale": None},
+        ]
+    }
+    prep1 = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis3-det", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    prep2 = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis3-det", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    assert prep1["axis3_audit"]["char_span"] is not None
+    assert prep1["axis3_audit"]["char_span"] == prep2["axis3_audit"]["char_span"]
+
+
+def test_axis3_different_video_id_can_select_a_different_fire():
+    """Sanity companion to the determinism test: the seed is video-scoped,
+    not a global constant -- it is at least POSSIBLE for two different
+    video_ids to disagree (not asserted as a requirement, just proves the
+    seed is not accidentally ignoring video_id). Both selections must
+    individually still be valid members of the candidate pool."""
+    strategy = {
+        "entry_sequence": [
+            {"step": 1, "action": _CA_SPAN_TEXT, "rationale": None},
+            {"step": 2, "action": _IMP_SPAN_TEXT, "rationale": None},
+        ]
+    }
+    prep_a = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis3-seed-a", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    prep_b = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis3-seed-b", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    valid_spans = {tuple(d.char_span) for d in prep_a["tier1_detections"]}
+    assert tuple(prep_a["axis3_audit"]["char_span"]) in valid_spans
+    assert tuple(prep_b["axis3_audit"]["char_span"]) in valid_spans
+
+
+def test_axis3_no_audit_when_ceiling_already_exhausted_by_fallthroughs():
+    """Budget accounting: fallthroughs/cannot-determines consume the
+    ceiling FIRST -- an exhausted budget means no audit item rides along,
+    ever (it never pushes a video over the ceiling)."""
+    strategy = {
+        "entry_sequence": [
+            {"step": 1, "action": _CA_SPAN_TEXT, "rationale": None},  # classifies
+            {"step": 2, "action": _SILENT_SPAN_TEXT, "rationale": None},  # falls through
+        ]
+    }
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis3-ceiling", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn, axis3_ceiling=1,
+    )
+    assert len(prep["tier1_fallthroughs"]) == 1
+    assert prep["axis3_audit"]["char_span"] is None
+    set_b = prep["tier3_packet"]["sections"][-1]
+    assert set_b["item_count"] == 1  # the genuine fallthrough only, no audit
+
+
+def test_axis3_no_audit_when_nothing_classified():
+    """Nothing classified -> nothing to sample -> no audit item, not an
+    error (the three flatter cases all fall through by construction)."""
+    prep = pc.prepare_strategy(
+        _flatter_strategy(), pc.DRY_RUN_TRANSCRIPT, "v-axis3-none", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_flatter_propose_fn,
+    )
+    assert prep["tier1_detections"] == []
+    assert prep["axis3_audit"]["char_span"] is None
+
+
+def test_axis3_ceiling_env_override(monkeypatch):
+    monkeypatch.setenv("H1_PILOT_AXIS3_CEILING", "0")
+    strategy = {"entry_sequence": [{"step": 1, "action": _CA_SPAN_TEXT, "rationale": None}]}
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis3-env", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    assert prep["axis3_audit"]["ceiling"] == 0
+    assert prep["axis3_audit"]["char_span"] is None  # 0 fallthroughs >= ceiling(0)
+
+
+def test_axis3_arg_ceiling_overrides_env(monkeypatch):
+    monkeypatch.setenv("H1_PILOT_AXIS3_CEILING", "0")
+    strategy = {"entry_sequence": [{"step": 1, "action": _CA_SPAN_TEXT, "rationale": None}]}
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis3-arg-override", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn, axis3_ceiling=15,
+    )
+    assert prep["axis3_audit"]["ceiling"] == 15
+    assert prep["axis3_audit"]["char_span"] is not None
+
+
+def test_axis3_audit_item_leak_scan_still_clean():
+    """The audit item is subject to the SAME blind-packet discipline as a
+    genuine fallthrough -- an audited fire never leaks its role/condition
+    into the Stage-1 blind view."""
+    strategy = {"entry_sequence": [{"step": 1, "action": _CA_SPAN_TEXT, "rationale": None}]}
+    prep = pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, "v-axis3-leak", extractor_version="e1", taxonomy_version="t1",
+        propose_fn=_stub_propose_fn,
+    )
+    assert prep["axis3_audit"]["char_span"] is not None
+    assert prep["leak_scan"].clean is True
