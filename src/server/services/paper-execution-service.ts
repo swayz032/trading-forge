@@ -2445,7 +2445,7 @@ export async function openPosition(sessionId: string, params: {
  *                         Omit for manual/force-close — falls back to base-tick
  *                         slippage (prior behaviour).
  */
-export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number; forceClosePriceUnconfirmed?: boolean; outcomeOverride?: string }) {
+export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number; forceClosePriceUnconfirmed?: boolean; outcomeOverride?: string; precedingUnrealizedPnl?: number }) {
   // BL-9: declared as let so it can be resolved from the position row after the DB read.
   // Callers that do supply context.correlationId (inline signal processing) use that value;
   // external callers (force-close, time-stop) fall back to pos.correlationId persisted at open.
@@ -2463,6 +2463,33 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // intrabar stop breach, force-close) pass outcomeOverride instead of incrementing
   // paperTradesCounter a SECOND time themselves — see the single increment site below.
   const outcomeOverride = context?.outcomeOverride;
+  // MED (freshscan6 2026-07-12, capital-safety equity-accounting fix): closePosition adds the
+  // full realized netPnl to currentEquity, but currentEquity may ALREADY contain this position's
+  // accumulated mark-to-market unrealized from prior updatePositionPrices bars (credited via
+  // `currentEquity += totalUnrealizedDelta`, see the "Delta-only SQL-atomic equity update" comment
+  // near updatePositionPrices' aggregate write). Without backing that amount out here, every close
+  // strands its pre-close unrealized in currentEquity permanently — inflating currentEquity AND
+  // realizedPeakEquity (the Topstep/Apex trailing-DD HWM), which masks real drawdown room and
+  // overstates session P&L / promotion-gate finalPnl.
+  //
+  // The two call shapes need DIFFERENT sources for "how much of this position's unrealized is
+  // baked into currentEquity right now":
+  //   - IN-LOOP callers (updatePositionPrices' own stop-breach block + applyExitDecision, both
+  //     invoked from WITHIN the same per-position bar iteration): the row's `previousUnrealizedPnl`
+  //     has ALREADY been advanced to THIS bar's fresh value by the per-position MTM UPDATE that
+  //     unconditionally runs before these call sites (~line 4488) — but the aggregate currentEquity
+  //     write for that fresh delta is DEFERRED to the end of the whole updatePositionPrices call (it
+  //     is batched across all positions), so at the moment closePosition runs, currentEquity still
+  //     only reflects the PRE-this-bar baked-in amount. A fresh re-read of the row here would return
+  //     the WRONG (already-advanced) value. These callers MUST pass `precedingUnrealizedPnl` — the
+  //     in-memory pre-bar value they already hold — explicitly.
+  //   - DIRECT callers (forceCloseAllPositions / checkRollAndFlatten roll-sweep / manual close route
+  //     / feed-silence auto-close / paper-signal-service management exits): none of these advance
+  //     previousUnrealizedPnl before calling closePosition, so the row's CURRENT previousUnrealizedPnl
+  //     (read atomically inside the closedAt claim below, same pattern as the HIGH#1 contracts guard)
+  //     correctly reflects what's baked into currentEquity. These callers omit
+  //     `precedingUnrealizedPnl` and this self-derived value is used.
+  const precedingUnrealizedPnlOverride = context?.precedingUnrealizedPnl;
   const closeSpan = tracer.startSpan("paper.position_close");
   try {
   // Read position outside the lock to get the sessionId for the lock key
@@ -2647,13 +2674,22 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
           unrealizedPnl: "0",
         })
         .where(and(eq(paperPositions.id, positionId), isNull(paperPositions.closedAt)))
-        .returning({ id: paperPositions.id, contracts: paperPositions.contracts });
+        .returning({ id: paperPositions.id, contracts: paperPositions.contracts, previousUnrealizedPnl: paperPositions.previousUnrealizedPnl });
 
       if (claimed.length === 0) {
         // Lost the close race — another path already closed this position. Abort the
         // transaction body (nothing inserted yet) and signal a benign idempotent no-op.
         return [null];
       }
+
+      // MED (freshscan6 2026-07-12): resolve the unrealized amount already baked into
+      // currentEquity for this position — see the doc comment on precedingUnrealizedPnlOverride
+      // above. DIRECT callers get the row-locked value (read atomically in the same claim as
+      // the HIGH#1 contracts guard, so it can't be stale-raced by a concurrent MTM write that
+      // hasn't yet cleared this position's `isNull(closedAt)` guard); IN-LOOP callers override
+      // with their pre-bar in-memory value because the row was already advanced by this bar's
+      // MTM UPDATE before closePosition was invoked.
+      const bakedInUnrealizedPnl = precedingUnrealizedPnlOverride ?? Number(claimed[0].previousUnrealizedPnl ?? 0);
 
       // HIGH#1 (freshscan4 2026-07-12): the claim above guards closedAt IS NULL but NOT the contract
       // count. A concurrent partial close (bookPartialClose, which decrements contracts + sets
@@ -2724,10 +2760,22 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       // Topstep/Apex EOD spec — updated from CLOSED equity only (never from MTM).
       // peakEquity is retained as a UI display column (MTM HWM for the dashboard).
       // Trailing-DD compliance reads realizedPeakEquity, not peakEquity.
+      //
+      // MED (freshscan6 2026-07-12): apply `netPnl - bakedInUnrealizedPnl`, NOT bare `netPnl`.
+      // currentEquity may already contain this position's accumulated MTM unrealized (credited
+      // bar-by-bar by updatePositionPrices' aggregate delta write) — adding the full realized
+      // netPnl on top of that would double-count it (see bakedInUnrealizedPnl derivation above).
+      // Backing it out here first, then adding the real realized netPnl, keeps currentEquity/
+      // realizedPeakEquity/peakEquity equal to what they'd be under a from-scratch recompute,
+      // while preserving the SQL-atomic additive pattern (no race with a concurrent MTM write —
+      // see the 4889 "Delta-only SQL-atomic equity update" design comment).
+      const equityDelta = netPnl - bakedInUnrealizedPnl;
+      closeSpan.setAttribute("bakedInUnrealizedPnl", bakedInUnrealizedPnl);
+      closeSpan.setAttribute("equityDelta", equityDelta);
       await tx.update(paperSessions).set({
-        currentEquity: sql`${paperSessions.currentEquity}::numeric + ${netPnl}`,
-        peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
-        realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+        currentEquity: sql`${paperSessions.currentEquity}::numeric + ${equityDelta}`,
+        peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${equityDelta})`,
+        realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${equityDelta})`,
         totalTrades: sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
       }).where(eq(paperSessions.id, pos.sessionId));
 
@@ -2745,6 +2793,12 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
           commission,
           rollSpreadCost: rollCost.estimatedSpreadCost,
           rollDates: rollCost.rollDates,
+          // MED (freshscan6 2026-07-12): journal the equity-accounting inputs so any future
+          // parity/promotion-gate audit can reconstruct exactly how currentEquity moved on this
+          // close — bakedInUnrealizedPnl is the amount backed out (already-credited MTM),
+          // equityDelta is what was actually applied to currentEquity (netPnl - bakedInUnrealizedPnl).
+          bakedInUnrealizedPnl,
+          equityDelta,
           // M-4: contamination marker — true when exitPrice is an unconfirmed proxy
           // (emergency force-flatten entryPrice fallback → zero-PnL row). Promotion
           // gate consumers query this to flag/exclude affected sessions' finalPnl.
@@ -4082,7 +4136,11 @@ async function applyExitDecision(
         );
       } else {
         // Fully closes (e.g. 1-contract position — close whole thing)
-        await closePosition(pos.id, currentPrice, atr, { medianAtr });
+        // MED (freshscan6 2026-07-12): pass the pre-bar baked-in unrealized explicitly — pos
+        // is the loop-iteration object captured BEFORE this bar's MTM row UPDATE advanced
+        // previousUnrealizedPnl, so pos.previousUnrealizedPnl is exactly what's still reflected
+        // in currentEquity right now (see closePosition's precedingUnrealizedPnlOverride doc).
+        await closePosition(pos.id, currentPrice, atr, { medianAtr, precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0) });
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice, tp1Price,
@@ -4188,7 +4246,11 @@ async function applyExitDecision(
           logger.error({ err, positionId: pos.id }, "SME: TP2 exit routing failed (paper sim unaffected)")
         );
       } else {
-        await closePosition(pos.id, currentPrice, atr, { medianAtr });
+        // MED (freshscan6 2026-07-12): pass the pre-bar baked-in unrealized explicitly — pos
+        // is the loop-iteration object captured BEFORE this bar's MTM row UPDATE advanced
+        // previousUnrealizedPnl, so pos.previousUnrealizedPnl is exactly what's still reflected
+        // in currentEquity right now (see closePosition's precedingUnrealizedPnlOverride doc).
+        await closePosition(pos.id, currentPrice, atr, { medianAtr, precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0) });
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice,
@@ -4309,7 +4371,9 @@ async function applyExitDecision(
       // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="time_stop" is
       // now passed INTO closePosition() instead of incrementing paperTradesCounter a
       // second time here — this call site was double-counting every time-stop close.
-      await closePosition(pos.id, currentPrice, atr, { medianAtr, outcomeOverride: "time_stop" });
+      // MED (freshscan6 2026-07-12): see doc comment above — pos.previousUnrealizedPnl is the
+      // pre-bar value still reflected in currentEquity at this point in the loop.
+      await closePosition(pos.id, currentPrice, atr, { medianAtr, outcomeOverride: "time_stop", precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0) });
       logger.info(
         {
           positionId: pos.id, strategyId, exitStyle, currentPrice, pnlAtFlatten,
@@ -4554,7 +4618,10 @@ export async function updatePositionPrices(
                 ? (pos.side === "long" ? Math.min(barOpen, stopLevel) : Math.max(barOpen, stopLevel))
                 : stopLevel;
             const stopExitOutcome: "time_stop" | "stop_loss" = isFlattenBar ? "time_stop" : "stop_loss";
-            await closePosition(pos.id, stopFillPrice, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: stopExitOutcome });
+            // MED (freshscan6 2026-07-12): prevUnrealized (captured above, before this bar's MTM
+            // row UPDATE) is exactly what's still baked into currentEquity at this point in the
+            // loop — see closePosition's precedingUnrealizedPnlOverride doc comment.
+            await closePosition(pos.id, stopFillPrice, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: stopExitOutcome, precedingUnrealizedPnl: prevUnrealized });
             closedByExitHandler.add(pos.id);
             totalUnrealizedDelta -= unrealizedDelta;
             totalUnrealizedPnl   -= unrealizedPnl;
