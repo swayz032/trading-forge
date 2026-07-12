@@ -145,6 +145,36 @@ vi.mock("../db/index.js", () => ({
         };
       }),
     })),
+    // fresh-scan HIGH#2+#3: ingestFillEvent now does the dedup+accumulate inside a FOR-UPDATE
+    // transaction. Mock tx mirrors db: tx.select().from().where().for("update").limit() → the locked
+    // order row; tx.update().set().where() applies the write.
+    transaction: vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => {
+      const txRows = mockState.orderRows;
+      const tx = {
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              for: vi.fn(() => ({ limit: vi.fn().mockResolvedValue(txRows) })),
+              limit: vi.fn().mockResolvedValue(txRows),
+            })),
+          })),
+        })),
+        update: vi.fn((table: { tableName?: string }) => ({
+          set: vi.fn((vals: Record<string, unknown>) => {
+            if (table?.tableName === "production_trades") {
+              mockState.productionTradesSetCalls.push(vals);
+            }
+            return {
+              where: vi.fn().mockImplementation(async () => {
+                if (mockState.updateShouldThrow) throw new Error("db_update_fail");
+                return undefined;
+              }),
+            };
+          }),
+        })),
+      };
+      return cb(tx);
+    }),
   },
 }));
 
@@ -403,6 +433,30 @@ describe("fill-reconciliation-service — fill ingestion", () => {
       expect(result.orderId).toBe("order-uuid-1");
       expect(result.newStatus).toBe("filled");
     }
+  });
+
+  it("fresh-scan HIGH#2: a redelivered fill already in the fillEvents HISTORY is deduped even after the brokerFillId column was overwritten", async () => {
+    mockState.flagEnabled = true;
+    mockState.dedupRows = []; // column no longer holds "A" (a later fill "B" overwrote it) → fast-path misses
+    mockState.orderRows = [makeOrderRow({
+      brokerOrderRef: "tp-ref-hist",
+      filledQty: 5,
+      intendedQty: 5,
+      brokerFillId: "B",
+      // history still records fill "A" — the authoritative dedup reads THIS, not the single column
+      fillEvents: [{ broker_fill_id: "A", filled_qty: 3 }, { broker_fill_id: "B", filled_qty: 2 }],
+    })];
+
+    const result = await ingestFillEvent({
+      broker_order_ref: "tp-ref-hist",
+      symbol: "MES",
+      filled_qty: 3,
+      filled_avg_price: 5050,
+      status: "partially_filled",
+      broker_fill_id: "A", // redelivery of the earlier partial — must NOT re-accumulate to 8
+    }, "corr-hist");
+
+    expect(result.outcome).toBe("duplicate_skipped");
   });
 
   it("Test 4: fill match by idempotency_key when broker_order_ref absent", async () => {

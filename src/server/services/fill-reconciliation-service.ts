@@ -611,7 +611,11 @@ export async function ingestFillEvent(
         return { outcome: "duplicate_skipped", orderId: existing[0].id };
       }
     } catch (err) {
-      logger.error({ err }, "fill-reconciliation: dedup check failed — proceeding conservatively");
+      // This early column-dedup is only a FAST-PATH. Proceeding on its error is SAFE now (HIGH#3):
+      // the authoritative dedup is the fillEvents-HISTORY check inside the FOR-UPDATE transaction below,
+      // which fails CLOSED (a tx fault returns fill_error, never accumulates) and a redelivered fill
+      // already in history is a no-op — so a fast-path miss cannot cause a double-count.
+      logger.error({ err }, "fill-reconciliation: fast-path dedup check failed — authoritative history dedup runs in the tx below");
     }
   } else {
     // deep-scan 2026-07-11 MED fix (#17): a fill WITHOUT a broker_fill_id CANNOT be deduplicated — a
@@ -715,61 +719,96 @@ export async function ingestFillEvent(
     return { outcome: "unmatched_fill", fillEvent };
   }
 
-  // ── Compute new state ──────────────────────────────────────────────────────
-  const newFilledQty = orderRow.filledQty + fillEvent.filled_qty;
-  const isPartial = fillEvent.status === "partially_filled" || newFilledQty < orderRow.intendedQty;
-  const isFull = fillEvent.status === "filled" && newFilledQty >= orderRow.intendedQty;
-  const isRejected = fillEvent.status === "rejected" || fillEvent.status === "cancelled";
-
+  // ── HIGH#2+#3 (fresh-scan 2026-07-12): ATOMIC + HISTORY-aware dedup-and-accumulate ──────────
+  // The old path deduped ONLY on the single brokerFillId COLUMN — overwritten on every fill, so a
+  // REDELIVERED EARLIER partial re-accumulated filledQty (HIGH#2, dedup-defeat) — and was a NON-atomic
+  // check-then-act that fails OPEN on a dedup error (HIGH#3), so a CONCURRENT redelivery double-counted.
+  // Now: re-read the order FOR UPDATE (row lock), dedup against the fillEvents HISTORY (every
+  // broker_fill_id ever recorded, not just the current column), and write — all in ONE transaction so
+  // concurrent deliveries of the same fill SERIALIZE and a fill already in history is a no-op. The
+  // early column-dedup above stays a fast-path; THIS transaction is the authoritative, fail-CLOSED guard.
   let newStatus: OrderStatus;
-  if (isRejected) {
-    newStatus = "rejected";
-  } else if (isFull) {
-    newStatus = "filled";
-  } else {
-    newStatus = "partially_filled";
-  }
-
-  // Compute weighted avg price across fill events
   let newAvgPrice: number;
-  if (orderRow.filledQty === 0) {
-    newAvgPrice = fillEvent.filled_avg_price;
-  } else {
-    const prevPrice = Number(orderRow.filledAvgPrice ?? 0);
-    const prevQty = orderRow.filledQty;
-    newAvgPrice = ((prevPrice * prevQty) + (fillEvent.filled_avg_price * fillEvent.filled_qty)) / newFilledQty;
-  }
-
-  // Append raw fill event to fill_events JSONB array
-  const currentFillEvents = Array.isArray(orderRow.fillEvents) ? orderRow.fillEvents : [];
-  const updatedFillEvents = [
-    ...currentFillEvents,
-    {
-      ...fillEvent,
-      received_at: new Date().toISOString(),
-      correlation_id: effectiveCorrelationId,
-    },
-  ];
-
-  // ── Update order row ───────────────────────────────────────────────────────
+  let newFilledQty: number;
+  let isPartial: boolean;
   try {
-    await db
-      .update(serverMediatedOrders)
-      .set({
-        status: newStatus,
-        filledQty: newFilledQty,
-        filledAvgPrice: String(newAvgPrice),
-        brokerFillId: fillEvent.broker_fill_id ?? orderRow.brokerFillId ?? undefined,
-        fillEvents: updatedFillEvents as Record<string, unknown>[],
-        filledAt: newStatus === "filled" ? new Date() : orderRow.filledAt,
-        updatedAt: new Date(),
-      })
-      .where(eq(serverMediatedOrders.id, orderRow.id));
+    const txResult = await db.transaction(async (tx) => {
+      const lockedRows = await tx
+        .select()
+        .from(serverMediatedOrders)
+        .where(eq(serverMediatedOrders.id, orderRow!.id))
+        .for("update")
+        .limit(1);
+      const locked = lockedRows[0];
+      if (!locked) return { kind: "missing" as const };
+
+      const histEvents = Array.isArray(locked.fillEvents) ? locked.fillEvents : [];
+      if (
+        fillEvent.broker_fill_id &&
+        histEvents.some(
+          (e) => (e as { broker_fill_id?: string } | null)?.broker_fill_id === fillEvent.broker_fill_id,
+        )
+      ) {
+        return { kind: "dedup" as const, orderId: locked.id, status: locked.status };
+      }
+
+      // recompute from the LOCKED row (authoritative), NOT the stale pre-lock orderRow
+      const nfq = locked.filledQty + fillEvent.filled_qty;
+      const nrejected = fillEvent.status === "rejected" || fillEvent.status === "cancelled";
+      const nfull = fillEvent.status === "filled" && nfq >= locked.intendedQty;
+      const ns: OrderStatus = nrejected ? "rejected" : nfull ? "filled" : "partially_filled";
+      const nap =
+        locked.filledQty === 0
+          ? fillEvent.filled_avg_price
+          : ((Number(locked.filledAvgPrice ?? 0) * locked.filledQty) +
+              (fillEvent.filled_avg_price * fillEvent.filled_qty)) / nfq;
+      const updated = [
+        ...histEvents,
+        { ...fillEvent, received_at: new Date().toISOString(), correlation_id: effectiveCorrelationId },
+      ];
+      await tx
+        .update(serverMediatedOrders)
+        .set({
+          status: ns,
+          filledQty: nfq,
+          filledAvgPrice: String(nap),
+          brokerFillId: fillEvent.broker_fill_id ?? locked.brokerFillId ?? undefined,
+          fillEvents: updated as Record<string, unknown>[],
+          filledAt: ns === "filled" ? new Date() : locked.filledAt,
+          updatedAt: new Date(),
+        })
+        .where(eq(serverMediatedOrders.id, locked.id));
+      return {
+        kind: "applied" as const,
+        ns,
+        nap,
+        nfq,
+        isPartial: fillEvent.status === "partially_filled" || nfq < locked.intendedQty,
+      };
+    });
+
+    if (txResult.kind === "dedup") {
+      await writeAudit(
+        "fill_reconciliation.duplicate_skipped",
+        { broker_fill_id: fillEvent.broker_fill_id },
+        { orderId: txResult.orderId, currentStatus: txResult.status, via: "fill_events_history" },
+        "success",
+        effectiveCorrelationId,
+      );
+      return { outcome: "duplicate_skipped", orderId: txResult.orderId };
+    }
+    if (txResult.kind === "missing") {
+      logger.error({ orderId: orderRow.id }, "fill-reconciliation: order row vanished under lock");
+      return { outcome: "fill_error", error: "order row not found under lock" };
+    }
+    newStatus = txResult.ns;
+    newAvgPrice = txResult.nap;
+    newFilledQty = txResult.nfq;
+    isPartial = txResult.isPartial;
   } catch (err) {
-    logger.error(
-      { err, orderId: orderRow.id },
-      "fill-reconciliation: order row update failed",
-    );
+    // fail-CLOSED: on any transaction fault we do NOT accumulate — the broker's at-least-once
+    // delivery will redeliver, and the history dedup keeps the retry a no-op once the row is readable.
+    logger.error({ err, orderId: orderRow.id }, "fill-reconciliation: atomic dedup+accumulate failed");
     return { outcome: "fill_error", error: err instanceof Error ? err.message : String(err) };
   }
 
