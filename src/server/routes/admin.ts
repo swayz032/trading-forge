@@ -1311,6 +1311,12 @@ adminRoutes.get("/harsh-regime-phase", async (req, res) => {
 //
 // Security: this route is admin-authenticated (same auth as all /api/admin/*).
 adminRoutes.post("/harsh-regime-phase", async (req, res) => {
+  // MED (freshscan8 2026-07-12): office-control authority guard. Flipping the harsh-regime gate
+  // hard↔advisory loosens the TESTING→PAPER regime-survival HARD gate — a pipeline-mutating control-plane
+  // action. Without this, a relay-tunneled caller holding only the shared Bearer API_KEY (distributed to
+  // n8n/crons/scripts — the exact actor office-control-guard excludes) could loosen the gate with no
+  // operator cookie. Parity with the sibling pipeline/scheduler-disable routes (freshscan5 HIGH#2).
+  if (!requirePipelineControlAuthority(req, res)) return;
   const correlationId = randomUUID();
   const body = req.body as { phase?: string; reason?: string };
 

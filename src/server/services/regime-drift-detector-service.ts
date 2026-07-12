@@ -30,7 +30,7 @@
 import { randomUUID } from "crypto";
 import { eq, and, isNotNull, desc, lt } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, biasState } from "../db/schema.js";
+import { strategies, biasState, lifecycleTransitions } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { regimeDriftDetectionsTotal } from "../lib/metrics-registry.js";
@@ -198,6 +198,29 @@ export async function runRegimeDriftDetector(opts?: {
         for (const zombie of zombieCandidates) {
           const zombieCorrelationId = randomUUID();
           try {
+            // MED (freshscan8 2026-07-12): only sweep GENUINE two-step-demotion zombies (DEPLOYED→DECLINING→
+            // TESTING where step 2 got stuck), NOT strategies legitimately RESTING in DECLINING from a
+            // ONE-STEP demotion (decay-monitor / drift-detection PAPER→DECLINING etc., which intentionally
+            // stop at DECLINING). The old query swept EVERY aged DECLINING strategy and force-promoted it to
+            // TESTING, silently REVERSING every legitimate one-step safety demotion. Scope to candidates
+            // whose latest transition INTO DECLINING came from DEPLOYED via a two-step drift-demotion service
+            // (regime_drift / portfolio_drift reasons) — the precise signature of a stuck step-2.
+            const [latestDeclineTransition] = await db
+              .select({ fromState: lifecycleTransitions.fromState, reason: lifecycleTransitions.reason })
+              .from(lifecycleTransitions)
+              .where(and(eq(lifecycleTransitions.strategyId, zombie.id), eq(lifecycleTransitions.toState, "DECLINING")))
+              .orderBy(desc(lifecycleTransitions.createdAt))
+              .limit(1);
+            const _isTwoStepZombie =
+              latestDeclineTransition?.fromState === "DEPLOYED" &&
+              /regime_drift|portfolio_drift/.test(latestDeclineTransition?.reason ?? "");
+            if (!_isTwoStepZombie) {
+              logger.info(
+                { correlationId: zombieCorrelationId, strategyId: zombie.id, strategyName: zombie.name, fromState: latestDeclineTransition?.fromState },
+                "regime-drift-detector: aged DECLINING strategy is a LEGITIMATE one-step resting demotion (not a two-step zombie) — NOT sweeping",
+              );
+              continue;
+            }
             const recovery = await zombieLifecycle.promoteStrategy(
               zombie.id,
               "DECLINING",

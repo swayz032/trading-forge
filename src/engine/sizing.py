@@ -676,8 +676,21 @@ def compute_risk_derived_contracts(
             floor_value = effective_firm_cap
         if liquidity_cap < floor_value:
             floor_value = liquidity_cap
+        # MED (freshscan8 2026-07-12): clamp the pyramid floor by drawdown_room_cap too — the TS mirror
+        # (risk-sizing.ts:990-994 flooredCandidates incl. drawdownRoomCap) AND Python's own risk_cap<=0
+        # early-return floor (line ~518) both include it, but THIS main-path floor omitted it. On the
+        # canonical fresh-Topstep-$2K combine (drawdown_room_cap=5, base=9) the floor returned 9 vs the TS
+        # 5 — an 80% over-size (9×$30=$270=13.5% of DD room vs the intended 8% cap). Restores TS↔Python parity.
+        _floor_dd_room_bound = (
+            drawdown_room_cap is not None and drawdown_room_cap >= 0 and drawdown_room_cap < floor_value
+        )
+        if _floor_dd_room_bound:
+            floor_value = drawdown_room_cap
         final_contracts = max(0, floor_value)
         pyramid_floor_applied = final_contracts > 0
+        # audit accuracy: if drawdown_room_cap constrained the floor, flag it as the binding cap
+        if _floor_dd_room_bound and final_contracts == drawdown_room_cap:
+            drawdown_room_cap_binding = True
         # F-7: firmCapApplied = true when effectiveFirmCap constrained the floor
         if effective_firm_cap is not None and effective_firm_cap < base_contracts:
             firm_cap_applied = True

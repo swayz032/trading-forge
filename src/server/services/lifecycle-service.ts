@@ -3892,7 +3892,11 @@ export class LifecycleService {
           });
 
           if (wfeResultTp.auditAction) {
-            const isBlockTp = wfeResultTp.status === "blocked";
+            // MED (freshscan8 2026-07-12): match the pure-evaluator contract (paper-to-deploy-ready-gates.ts:670)
+            // — a degenerate-IS WFE (wfe_overall=0.0, status "degenerate_is_block") is the WORST signal and
+            // MUST block, but the cron only checked === "blocked" → it fell through to _resetHardGateCounter and
+            // advanced a degenerate strategy to PAPER (real broker) with a "warning" audit. Cron/pure-eval parity.
+            const isBlockTp = wfeResultTp.status === "blocked" || wfeResultTp.status === "degenerate_is_block";
             // hardening/phase-0: cpcv_exempt is a known, intentional pass — emit "success"
             // rather than "warning" so the audit trail is unambiguous.  All other non-block
             // statuses (legacy_null, degenerate_is_block is never reached here) keep "warning".
@@ -4088,7 +4092,13 @@ export class LifecycleService {
           });
 
           if (driftResultTp.auditAction) {
-            const isBlockDriftTp = driftResultTp.status === "blocked";
+            // HIGH (freshscan8 2026-07-12): a crashed parameter-drift classifier emits status
+            // "blocked_classifier_error" (walk_forward.py:1850 "TS gate will BLOCK"; the G2b institutional
+            // fail-CLOSED case), but the cron only checked === "blocked" → the gate was treated as PASSED and a
+            // strategy whose overfit-drift check crashed promoted toward live capital. Parity with
+            // paper-to-deploy-ready-gates.ts:716 (which correctly checks both). This gate is the SOLE authority
+            // for classifier_error — no numeric fallback re-catches it.
+            const isBlockDriftTp = driftResultTp.status === "blocked" || driftResultTp.status === "blocked_classifier_error";
             await db.insert(auditLog).values({
               action: driftResultTp.auditAction,
               entityId: s.id,
@@ -4832,7 +4842,8 @@ export class LifecycleService {
             });
 
             if (wfeResultSh.auditAction) {
-              const isBlockSh = wfeResultSh.status === "blocked";
+              // MED (freshscan8 2026-07-12): degenerate-IS WFE must block (parity with paper-to-deploy-ready-gates.ts:670).
+              const isBlockSh = wfeResultSh.status === "blocked" || wfeResultSh.status === "degenerate_is_block";
               const wfeAuditStatusSh: "failure" | "warning" | "success" =
                 isBlockSh ? "failure"
                 : wfeResultSh.status === "cpcv_exempt" ? "success"
@@ -4894,7 +4905,8 @@ export class LifecycleService {
             });
 
             if (driftResultSh.auditAction) {
-              const isBlockDriftSh = driftResultSh.status === "blocked";
+              // HIGH (freshscan8 2026-07-12): classifier_error must fail-CLOSED (parity with paper-to-deploy-ready-gates.ts:716).
+              const isBlockDriftSh = driftResultSh.status === "blocked" || driftResultSh.status === "blocked_classifier_error";
               await db.insert(auditLog).values({
                 action: driftResultSh.auditAction,
                 entityId: s.id,
@@ -6064,7 +6076,9 @@ export class LifecycleService {
           });
 
           if (driftResult.auditAction) {
-            const isBlock = driftResult.status === "blocked";
+            // HIGH (freshscan8 2026-07-12): classifier_error must fail-CLOSED at the FINAL live-capital gate
+            // (PAPER→DEPLOY_READY) too — parity with paper-to-deploy-ready-gates.ts:716.
+            const isBlock = driftResult.status === "blocked" || driftResult.status === "blocked_classifier_error";
             logger[isBlock ? "warn" : "info"](
               {
                 strategyId: s.id,

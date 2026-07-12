@@ -5467,6 +5467,10 @@ export async function evaluateSignals(
       const confluenceSizeMultiplierMap = (rawPositionSize?.confluence_size_multiplier as Record<number, number> | undefined) ?? undefined;
 
       let baseContracts: number = 1; // initialized; each branch below overwrites this
+      // LOW (freshscan8 2026-07-12): tracks whether the Tier-1 news/FOMC reduce factor was already
+      // folded into the size (true only on the pyramid path, via pmSizeFactor). The non-pyramid
+      // (dynamic_atr / fixed) branches apply it after the dispatch, gated on this flag.
+      let _newsReduceAppliedInSizing = false;
 
       if (rawPositionSize?.type === "risk_derived_pyramid") {
         // Full risk-derived path: build positionSizeConfig from the compiled strategy config.
@@ -5583,6 +5587,10 @@ export async function evaluateSignals(
         } else {
           baseContracts = sizingResult.finalContracts;
         }
+        // LOW (freshscan8 2026-07-12): the pyramid path already applied the Tier-1 news / FOMC reduce
+        // factor via pmSizeFactor inside computeRiskDerivedContracts — flag it so the non-pyramid block
+        // below does NOT double-reduce.
+        _newsReduceAppliedInSizing = true;
 
         // W23H.4: emit confluence multiplier audit row (best-effort, non-blocking)
         if (sizingResult.confluenceAudit) {
@@ -5646,6 +5654,24 @@ export async function evaluateSignals(
       } else {
         // Fixed contracts or unknown position_size type — clamp to firm cap
         baseContracts = Math.min(config.contracts, firmCap);
+      }
+
+      // LOW (freshscan8 2026-07-12): apply the Tier-1 news / FOMC reduce factor to the NON-pyramid
+      // (dynamic_atr / fixed) paths — the pyramid path folds it into pmSizeFactor inside
+      // computeRiskDerivedContracts, but these legacy branches dropped it entirely, so a signal firing
+      // inside a T1 news window on a dynamic_atr/fixed strategy traded FULL size while newsReducedAtSignalTime
+      // was set true (and fill-time Gate 4 then skipped its own reduce, trusting the flag). Same min(news,fomc)
+      // taper as the pyramid path; floored ≥1 (caution reduces, never zeroes — the T1 hard-block is separate).
+      if (!_newsReduceAppliedInSizing) {
+        const _nonPyramidNewsFactor = Math.min(newsReduceSizeFactor, fomcSizeFactor);
+        if (_nonPyramidNewsFactor < 1) {
+          const _preNews = baseContracts;
+          baseContracts = Math.max(1, Math.floor(baseContracts * _nonPyramidNewsFactor));
+          if (baseContracts < _preNews) {
+            span.setAttribute("news_caution_size_applied", _nonPyramidNewsFactor);
+            span.setAttribute("news_caution_event", newsReduceEvent);
+          }
+        }
       }
 
       // 60%-DLL reduce-size band (soft throttle BELOW the 67% halt): when the cross-symbol DLL

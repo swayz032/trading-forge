@@ -1511,11 +1511,18 @@ export async function graduateBucketDirectly(opts: {
     }
   }
 
+  // MED (freshscan8 2026-07-12): fingerprint on the RESOLVED direction (what the strategy is actually
+  // persisted with, config.direction=resolvedDirection ~2296), NOT the raw extracted `direction` (default
+  // "long", line ~1435). resolvedDirection (~2128) upgrades long/absent/both → "both" (only explicit
+  // "short" stays one-sided), and it's computed AFTER this fingerprint, so replicate its rule here.
+  // Otherwise a concept that persists as "both" was fingerprinted under "long" → same-concept
+  // re-graduations escaped dedup as duplicate "both" strategies. Mirrors the 2128-2146 resolution exactly.
+  const fingerprintDirection: "long" | "short" | "both" = direction === "short" ? "short" : "both";
   const wideFingerprint = computeWideConceptFingerprintHash({
     market,
     concept_name: conceptName,
     timeframe,
-    direction,
+    direction: fingerprintDirection,
     entry_params: effectiveEntryParams,
   });
 
