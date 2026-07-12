@@ -13907,3 +13907,25 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 **Verification:**
 - `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts src/server/__tests__/slumhouse/crib-route.test.ts src/server/__tests__/slumhouse/index-route.test.ts` — 14/14 passed.
 - Live probe: anonymous `/slumhouse/does-not-exist` → `302 /slumhouse/login.html`; signed-in `/slumhouse/does-not-exist` and `/slumhouse/launch` → `302 /slumhouse/crib.html` on both `localhost:4000` and `tf-relay-production.up.railway.app`.
+
+### Session Log — 2026-07-12 — The night the baseline confessed (0.5 re-baseline exam CLOSED)
+
+**Mission:** Take the frozen 0.5 re-baseline Mode A/B directional read (overlay OFF vs ON, full 78-spec battery on the corrected G4 engine), once, under read-once discipline, and close the exam.
+
+**What happened (historic):** The exam did not end where it was pointed. A tripwire on the G0 (corpus-v2, 2026-07-04) baseline led to a confession: G0-era `run_class_backtest` (SHA `48d3cc06`) never injected exit signals — the compiler emits all-False exits universally (`spec_condition_compiler.py:722`), so vectorbt `from_signals` held ONE buy-and-hold position per walk-forward window. That is why 44 of 47 clean G0 specs showed exactly 8 trades (= n_splits). The entire old baseline was a missing-exits artifact across ALL timeframes, not the strategies' real behavior. A real, receipted engine fix (`34fabc6d`, 2026-07-06, Defect 5) had already corrected it. Independently verified SOUND ("nothing fabricated"). All 47 clean G0 specs carried `execution_path="class"`.
+
+**Ruling (advisor, executed):** item 0.5 decomposed — Component 1 engine-re-validation MET (every G0↔G4 difference traces to named receipted fixes; mesh empty); Component 2 directional-equity-vs-G0 VOID-for-no-reference (no clean historical baseline ever existed). G4 designated the new reference baseline; corpus-v2 "overlay HURTS" retro-scoped as artifact. This freed a cleaner, bigger read: the overlay's value measured entirely within the corrected engine — the first valid overlay measurement ever taken.
+
+**The read (once, N=25 informative pairs, independently re-verified — zero arithmetic discrepancy):**
+- Overlay is LOSS-REDUCING: Mode B beats A on 25/25 P&L (−$5.69M → −$1.13M) and 25/25 Sharpe (−6.74 → −2.15). Classifiable, monotone, no FULL STOP.
+- OVERTURNS the certified-false "overlay HURTS" conclusion.
+- NEAR-MECHANICAL: Pearson +0.83 (loss-avoided vs trade-count-reduction); overlay cuts ~80% of trades. Per-trade decomposition (§ANNOT): portfolio $/trade flat (−$298.64 → −$297.45, +$1.19); 15/24 pairs WORSE per trade → the overlay is a near-pure THROTTLE, not a selector on this corpus. Selection skill is untestable on a corpus of losers (nothing to select for).
+- Grader caught 3 doer narrative over-claims (all fixed): "both arms negative" refuted (`7ea22e05` flips +$2908/20 trades); "~85% cut" → ~80%; 2 byte-identical duplicate specs → ~23 distinct outcomes.
+
+**Consumption ruling (operator-ratified):** overlay stays OPT-IN, default OFF — reframed: NOT "harmful" (dead verdict) but "UNPROVEN ON WINNERS." Pre-registered the post-H1 overlay bake-off (A+ gate vs 11-factor weighted Path C vs ablated variants), metric locked = per-trade expectancy improvement on positive-edge strategies, NEVER loss reduction, on this exam's harness.
+
+**Verification:** deliverable `docs/designs/mode-ab-G4-validity-block-2026-07-11.md` (§RULING→§VERIFY→§NREAD→§READ→§ANNOT→§CONSUMPTION); vaulted FF to `corpus-v3-gate3-cert-2026-07-06` @ `6dac50eb`; two independent fresh-context verifications (confession SOUND; read numbers clean).
+
+**Known-facts updates:** Phase 0 CLOSED — judge certified, baseline honest, first true overlay measurement in the vault. corpus-v2 "overlay HURTS" is certified-false everywhere it was pinned.
+
+**Carry-forward:** roadmap resumes at (b) demotion-productionization cert track + Phase-1 H1 extractor build (teach the extractor to hear what traders actually say — the surface gradient); overlay bake-off + intake-provenance packet queue BEHIND H1.
