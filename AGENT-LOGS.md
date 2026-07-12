@@ -4,6 +4,21 @@
 
 ---
 
+### Session Log — 2026-07-11 /goal CONTINUATION 4 — FRESH 14-agent adversarial deep-scan found 28 REAL bugs; 24 FIXED+LANDED (6 HIGH + 14 MED + 4 LOW)
+
+**Mission:** Pivot from the stale-test loop to the operator's actual ask — a fresh full-system bug hunt (last full adversarial scan was ~200 commits prior) — then fix.
+
+**Scan:** Workflow `wf_abd028f7-daf` @ pin `33e7d513` — 14 adversarial finder charters (subsystem × dimension incl. failure-injection) → 32 raw → 28 CONFIRMED by independent refutation (7 HIGH, 14 MED, 7 LOW). Real capital-safety/parity/boot bugs the test-fixing loop would never find.
+
+**Work completed (24 FIXED + LANDED origin/hardening/phase-0 thru `a64d52d8`, per-finding commits, each tsc 0 + relevant tests green):**
+- **6 HIGH:** DLL fail-open→degraded fail-closed (cross-symbol-pnl+kill-switch+paper-signal); sizing PM/news-taper re-inflation (both floors); migration hash-drift crash-loop (recovery-tool CRLF-normalize); checkPositionDrift long/short sign; regime-drift cron dormant-in-EST DST fix; reboot auto-resume RebootPending re-check.
+- **14 MED:** B15 fail-open, 2 boot-crash-loop classes, GET-consistency read-only, MC all-firms-error fail-closed, SSE restart replay-gap, consistency replay-cache, sizing.py per-bar floor clamp, kill-switch force-close audit re-fire dedup, news double-taper guard, backtester stray short-size write, broker idempotency stable key, fill no-broker-id loud-warn, paper gap-through-stop parity.
+- **4 LOW:** MC synthetic-stress cap (min→max), fill-exit direction match, setMode authority (autonomous→"system", un-poisons operator-absence detector), firm_rules_version promotion-time re-check.
+
+**Verification:** independent accuracy-validator RE-GRADE of the 5 core HIGH → 4/5 VERIFIED clean via RED-proof revert-and-reproduce, none introduce a new fail-open in production; it caught 1 real CI regression (a fail-closed fix exposed an incomplete test-double `and` mock) + coverage gaps — all fixed + landed. Pre-existing failures throughout base-verified (stash-verify) as unrelated.
+
+**Carry-forward for next session (4 documented, analyzed — the risky/architectural class):** #2 HIGH adaptive-exit dormant (full wiring design in memory `project_goal_deepscan_2026_07_11`; opt-in-only, current state runs valid static_styleC), #22 FOMC dead-variable (needs sizing-factor stacking analysis), #24 15:55 flatten-order (rare, reorder-risk), #27 consistency-digest same-firm netting (CAP-3 schema limitation — needs account_id migration). Plus a final independent whole-wave re-grade is warranted (doer≠grader) before certifying a band.
+
 ### Session Log — 2026-07-11 /goal CONTINUATION 3 — 23 pre-existing stale tests FIXED across 7 files; full tsc 0; ZERO real code bugs found
 
 **Mission:** After closing the 4 open-HIGH coverage gaps, drive the "every inch / zero open items" further by fixing the pre-existing red tests the sweeps surfaced (band-9 needs zero-open-HIGHs; I'd earlier conflated band 9 with band 10 — band 10 needs live evidence, band 9 needs re-scan + failure-injection + zero-open-HIGHs).
