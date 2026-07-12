@@ -190,6 +190,29 @@ const ARCHETYPE_REGISTRY: Record<string, { engineSpec: string; strategyClass: st
 // Keep in lockstep with src/engine/compiler/pattern_library.py.
 const PARAM_RANGES = CANONICAL_PARAM_RANGES;
 
+// Regime-agnostic archetypes (ICT/SMC, Wyckoff, volume profile) — these keys correspond to
+// ARCHETYPE_REGISTRY entries whose edge is direction/structure-based, not regime-conditional, so
+// their regime_gate is disabled and they are eligible across ALL regimes.
+// MED#6 hardening (grader follow-up 2026-07-12): hoisted to MODULE scope so the preferredRegimes
+// all-regime default (below) references this canonical set directly instead of a blanket
+// `startsWith("archetype:")` — a FUTURE directional archetype not in this set now falls through to
+// the conservative single/LLM regime fallback rather than being silently over-widened to all-3.
+// SINGLE SOURCE OF TRUTH — the derivedRegime classifier reuses this same set (do not duplicate).
+const REGIME_AGNOSTIC_ARCHETYPES = new Set<string>([
+  "ict_silver_bullet_ny_am", "ict_silver_bullet_london", "ict_silver_bullet_ny_pm",
+  "ict_judas_swing", "ict_ny_lunch_reversal", "ict_midnight_open",
+  "ict_london_raid", "ict_turtle_soup", "ict_ote", "ict_power_of_3",
+  "ict_unicorn", "ict_breaker", "ict_mitigation", "ict_iofed",
+  "smt_reversal", "ict_quarterly_swing", "ict_propulsion", "ict_eqhl_raid",
+  "ict_scalp", "ict_swing", "ict_2022",
+  "break_of_structure", "change_of_character", "market_structure_shift",
+  "cisd", "fvg_retrace", "order_block", "liquidity_sweep",
+  "wyckoff_accumulation", "wyckoff_distribution", "wyckoff_spring", "wyckoff_upthrust",
+  "volume_profile", "cumulative_delta", "vwap_order_flow",
+  // W3.4 (2026-06-22)
+  "gann_box_4h_continuation",
+]);
+
 /** Returns [] if all params in range, else array of error messages. */
 function validateParamRanges(indicator: string, params: Record<string, unknown>): string[] {
   const ranges = PARAM_RANGES[indicator];
@@ -2011,22 +2034,9 @@ export async function graduateBucketDirectly(opts: {
   const VOLATILITY_INDICATORS = new Set([
     "atr_breakout", "volatility_expansion",
   ]);
-  // Regime-agnostic archetypes (ICT/SMC, Wyckoff, volume profile)
-  // These keys correspond to ARCHETYPE_REGISTRY entries.
-  const UNSPECIFIED_ARCHETYPES = new Set([
-    "ict_silver_bullet_ny_am", "ict_silver_bullet_london", "ict_silver_bullet_ny_pm",
-    "ict_judas_swing", "ict_ny_lunch_reversal", "ict_midnight_open",
-    "ict_london_raid", "ict_turtle_soup", "ict_ote", "ict_power_of_3",
-    "ict_unicorn", "ict_breaker", "ict_mitigation", "ict_iofed",
-    "smt_reversal", "ict_quarterly_swing", "ict_propulsion", "ict_eqhl_raid",
-    "ict_scalp", "ict_swing", "ict_2022",
-    "break_of_structure", "change_of_character", "market_structure_shift",
-    "cisd", "fvg_retrace", "order_block", "liquidity_sweep",
-    "wyckoff_accumulation", "wyckoff_distribution", "wyckoff_spring", "wyckoff_upthrust",
-    "volume_profile", "cumulative_delta", "vwap_order_flow",
-    // W3.4 (2026-06-22)
-    "gann_box_4h_continuation",
-  ]);
+  // Regime-agnostic archetypes — MED#6 hardening (2026-07-12): now the MODULE-level
+  // REGIME_AGNOSTIC_ARCHETYPES canonical set (single source of truth; see definition near the top).
+  const UNSPECIFIED_ARCHETYPES = REGIME_AGNOSTIC_ARCHETYPES;
 
   // Determine regime from indicator/archetype mapping
   const cleanIndicator = isArchetype ? (archetypeName ?? "") : entryIndicator;
@@ -2906,13 +2916,17 @@ export async function graduateBucketDirectly(opts: {
         if (BREAKOUT_RX.test(ind)) return ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"];
         if (MEAN_REV_RX.test(ind)) return ["RANGE_BOUND"];
         if (TREND_RX.test(ind)) return ["TRENDING_UP", "TRENDING_DOWN"];
-        // MED#6 (fresh-scan 2026-07-12): a regime-agnostic ARCHETYPE (archetype:*, e.g.
-        // gann_box_4h_continuation) that none of the specific heuristics above matched must default to
-        // ALL regimes — such archetypes are in UNSPECIFIED_ARCHETYPES (regime_gate disabled), so
-        // falling to the single-[preferredRegime] fallback below silently EXCLUDED the bidirectional
-        // archetype from regime-matched strategy picks. Bidirectional-by-design → all three regimes.
-        if (ind.startsWith("archetype:")) return ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"];
-        // Unknown → preserve LLM emit (or single fallback)
+        // MED#6 (fresh-scan 2026-07-12) + grader hardening (2026-07-12): a regime-agnostic ARCHETYPE
+        // (e.g. gann_box_4h_continuation, break_of_structure) that none of the specific heuristics above
+        // matched must default to ALL regimes — otherwise the single-[preferredRegime] fallback silently
+        // EXCLUDED the bidirectional archetype from regime-matched strategy picks. Narrowed from a blanket
+        // `startsWith("archetype:")` to actual membership in the canonical REGIME_AGNOSTIC_ARCHETYPES set:
+        // a future DIRECTIONAL archetype (not in the set) now falls through to the conservative single/LLM
+        // fallback instead of being over-widened to all-3 (the latent fragility the grader flagged).
+        if (ind.startsWith("archetype:") && REGIME_AGNOSTIC_ARCHETYPES.has(ind.slice("archetype:".length))) {
+          return ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"];
+        }
+        // Unknown / directional-archetype-not-in-set → preserve LLM emit (or single fallback)
         return llmRegimes && llmRegimes.length > 0 ? llmRegimes : [preferredRegime];
       })(),
       tags: strategyTags,

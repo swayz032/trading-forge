@@ -1617,11 +1617,15 @@ export class LifecycleService {
     // TWO-STEP demotion DEPLOYED→DECLINING→TESTING. Step 2 (DECLINING→TESTING) reads the SAME stale
     // backtestId, so omitting "TESTING" from the exempt set left the strategy DEADLOCKED in a zombie
     // DECLINING state — the exact failure the code's own notifyCritical handler anticipates. Adding
-    // "TESTING" is hole-free: the only edges INTO testing are (a) this demotion step, (b) CANDIDATE→TESTING
-    // (pre-backtest — promotionEvidence.backtestId is null, gate never fires), or (c) a DECLINING→TESTING
-    // revalidation retry. In cases (b)/(c) the strategy is NOT live-capital-bound in TESTING and gets a
-    // FRESH backtest before the next gate (TESTING→PAPER, where staleness IS enforced) — so live-capital
-    // staleness protection is fully preserved. Only forward edges into PAPER/DEPLOY_READY (live-bound) stay gated.
+    // "TESTING" is hole-free: per VALID_TRANSITIONS the ONLY inbound edges to TESTING are (a) this
+    // demotion step DECLINING→TESTING and (b) CANDIDATE→TESTING. Note (grader correction 2026-07-12):
+    // CANDIDATE→TESTING is NOT pre-backtest — checkAutoPromotions requires a completed backtest with
+    // walkForwardResults before it fires, so promotionEvidence.backtestId IS non-null there. Exempting it
+    // is still safe because TESTING never touches a broker (SHADOW logs Pine alerts only; TradersPost
+    // webhook OFF), i.e. TESTING is not a live-capital state. The live-capital trust boundary is the
+    // OUTBOUND edge TESTING→PAPER (and SHADOW→PAPER), which is NOT exempt and re-fetches the CURRENT
+    // latest backtestId FRESH on each call (no staleness leakage across hops) — so staleness is enforced
+    // at exactly the right place, one hop later. Only forward edges into PAPER/DEPLOY_READY stay gated.
     const _isDemotionOrExitTransition = ["TESTING", "DECLINING", "NEEDS_REVISION", "RETIRED", "GRAVEYARD"].includes(toState);
     if (promotionEvidence.backtestId && !_isDemotionOrExitTransition) {
       const stalenessDays = parseInt(process.env.BACKTEST_STALENESS_DAYS ?? "30", 10);

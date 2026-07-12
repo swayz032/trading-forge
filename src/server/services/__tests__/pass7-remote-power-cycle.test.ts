@@ -286,14 +286,19 @@ describe("Pass 7 Track B — cron jitter: distinct minute offsets", () => {
     expect(source).toContain('"13 21,22 * * *"');
   });
 
-  it("scheduler.ts contains '23 21,22 * * *' for regime-drift-detector", () => {
+  it("scheduler.ts contains '23 22,23 * * *' for regime-drift-detector (18:00 ET DST-safe pair)", () => {
+    // fresh-scan-3 (2026-07-12): this assertion had been RED since the deep-scan 2026-07-11 HIGH fix
+    // that moved regime-drift-detector from "23 21,22" → "23 22,23". regime-drift fires at 18:00 ET
+    // (= 22 UTC EDT / 23 UTC EST) — the old 21,22 pair was the 17:00-ET pair, so the etHour===18 guard
+    // NEVER matched in winter and the safety cron silently never fired ~Nov–mid-Mar. Code was corrected;
+    // this test was never propagated (the 17:00-ET digests at :07/:13 correctly stayed on 21,22). Test stale.
     const schedulerPath = pathResolve(
       import.meta.dirname ?? ".",
       "../../scheduler.ts",
     );
     const source = readFileSync(schedulerPath, "utf-8");
 
-    expect(source).toContain('"23 21,22 * * *"');
+    expect(source).toContain('"23 22,23 * * *"');
   });
 
   it("the three jitter offsets (7, 13, 23) are all distinct", () => {

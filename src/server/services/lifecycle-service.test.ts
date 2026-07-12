@@ -661,3 +661,85 @@ describe("LifecycleService.promoteStrategy — FIX 3: OTel span", () => {
     expect(span.end).toHaveBeenCalled();
   });
 });
+
+// ── HIGH#2 (fresh-scan-3, 2026-07-12): backtest-staleness gate must EXEMPT demotion/exit edges ──
+// The production demotion services (regime-drift-detector, portfolio-drift-demotion,
+// strategy-revalidation) perform a TWO-STEP demotion DEPLOYED→DECLINING→TESTING. A DEPLOYED
+// strategy's last backtest naturally ages past BACKTEST_STALENESS_DAYS (deployed strategies are
+// not re-backtested), so step 2 (DECLINING→TESTING) reading that stale backtestId was BLOCKED by
+// the staleness gate → the strategy deadlocked in a zombie DECLINING state. The fix adds "TESTING"
+// to the demotion-exempt set. These tests lock BOTH sides: the exempt edge no longer blocks, and a
+// live-capital-bound edge (→DEPLOY_READY) still enforces staleness on the identical stale backtest.
+describe("LifecycleService.promoteStrategy — HIGH#2 staleness demotion-exempt", () => {
+  let svc: LifecycleService;
+  let mockDb: MockDb;
+
+  // A backtest row 31 days old (> default BACKTEST_STALENESS_DAYS=30). Carries id (so the evidence
+  // lookup sets promotionEvidence.backtestId → the gate is reachable) AND createdAt (so the gate's
+  // btAge re-fetch reads a stale age). Returned for every post-strategy select, so the test does not
+  // over-fit the exact select-call ordering.
+  const STALE_BT = {
+    id: "bt-stale-31d",
+    forgeScore: "78",
+    createdAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000),
+  };
+
+  beforeEach(() => {
+    svc = new LifecycleService();
+    mockDb = db as unknown as MockDb;
+    vi.clearAllMocks();
+
+    mockDb.transaction.mockImplementation(
+      async (cb: (tx: TxInner) => Promise<void>) => { await cb(mockDb._txInner); },
+    );
+    const updateChainDefault = {
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: "strat-uuid-1", codename: "FORGE-001" }]),
+        }),
+        returning: vi.fn().mockResolvedValue([{ id: "strat-uuid-1", codename: "FORGE-001" }]),
+      }),
+    };
+    mockDb.update.mockReturnValue(updateChainDefault);
+    mockDb._txInner.update.mockReturnValue(updateChainDefault);
+    mockDb.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
+    mockDb._txInner.insert.mockReturnValue({ values: vi.fn().mockResolvedValue([]) });
+    mockDb._txInner.select.mockReturnValue(mockDb._txInner._selectChain);
+    mockDb._txInner._selectChain._setValue([]);
+  });
+
+  // select #1 → strategy in `fromState`; every later select → the 31-day-stale backtest row.
+  function wireStaleBacktest(fromState: string) {
+    let selectCallCount = 0;
+    mockDb.select.mockImplementation(() => {
+      selectCallCount++;
+      mockDb._selectChain._setValue(selectCallCount === 1 ? [makeStrategy(fromState)] : [STALE_BT]);
+      return mockDb._selectChain;
+    });
+  }
+
+  it("EXEMPT: DECLINING→TESTING (demotion step 2) is NOT blocked by a 31-day-stale backtest", async () => {
+    wireStaleBacktest("DECLINING");
+    const result = await svc.promoteStrategy("strat-uuid-1", "DECLINING", "TESTING");
+    // Fix working: the staleness gate is skipped for the exempt toState, so the safety off-ramp fires.
+    expect(result.success).toBe(true);
+    expect(result.error ?? "").not.toContain("backtest_stale");
+  });
+
+  it("EXEMPT: DEPLOYED→DECLINING (demotion step 1) is NOT blocked by a 31-day-stale backtest", async () => {
+    // Step 1 of the two-step safety demotion. Together with the step-2 test above this proves the
+    // FULL DEPLOYED→DECLINING→TESTING off-ramp completes despite the stale backtest — i.e. the
+    // zombie-DECLINING deadlock the fix resolves cannot recur at either hop.
+    wireStaleBacktest("DEPLOYED");
+    const result = await svc.promoteStrategy("strat-uuid-1", "DEPLOYED", "DECLINING");
+    expect(result.success).toBe(true);
+    expect(result.error ?? "").not.toContain("backtest_stale");
+  });
+
+  // NOTE on the enforcement side (no-hole): a non-exempt live-capital-bound edge (TESTING→PAPER,
+  // PAPER→DEPLOY_READY, SHADOW→PAPER) cannot be exercised to the staleness gate in this minimal mock
+  // because each is fronted by its OWN fail-closed pre-gate (dsl_guards / promotion-gate-orchestrator)
+  // that engages before staleness and independently blocks a strategy lacking full gate evidence.
+  // That defense-in-depth — plus the grader's from-zero verification that TESTING→PAPER re-fetches the
+  // CURRENT backtestId fresh on each call — is why exempting toState=TESTING opens no live-capital hole.
+});
