@@ -1423,6 +1423,13 @@
       "when": 1783392618700,
       "tag": "0200_audit_log_no_truncate",
       "breakpoints": true
+    },
+    {
+      "idx": 204,
+      "version": "7",
+      "when": 1783392618800,
+      "tag": "0201_paper_positions_entry_contracts",
+      "breakpoints": true
     }
   ]
 }

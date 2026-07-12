@@ -43,6 +43,8 @@ import { getActiveAssignment } from "./strategy-assignment-service.js";
 import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
 // #24 (deep-scan 2026-07-11): pure 15:55 ET flatten-bar predicate (DB-free — see lib module).
 import { _isTimeStopFlattenBar } from "../lib/time-stop-flatten.js";
+// fresh-scan HIGH#5 (2026-07-12): Style C 33/33/34 scale-out split off the ORIGINAL entry size.
+import { styleCScaleOut } from "../lib/style-c-scaleout.js";
 import type { ExitPlanWithRuntimeState, EntryDecisionContext } from "../db/jsonb-shapes.js";
 // Pass 6 Track D: per-call exit-handler Discord visibility
 import { notifyWarning, notifyCritical } from "./notification-service.js";
@@ -2023,15 +2025,26 @@ export async function openPosition(sessionId: string, params: {
   const adaptiveInput = params.adaptiveExitInput;
   const exitStyle = adaptiveInput?.strategy?.exit_plan_config?.exit_style ?? "static_styleC";
 
-  // #2 (2026-07-11): resolve the exit-plan R-basis stop. Prefer an explicit caller stop; else derive
-  // actualEntry ∓ atr×2.0 — IDENTICAL to the position's own initialStopPrice precedence-2 below — so
-  // the adaptive TP1/TP2 and the static_styleC flat-2R TP2 are always computed off the exact stop the
-  // position is managed against (zero drift). null only when neither an explicit stop nor ATR exists,
-  // in which case both exit-plan branches fall through to the Python/static fallback (fail-soft).
+  // #2 (2026-07-11) + HIGH#2 (2026-07-12): resolve the exit-plan R-basis stop = the position's OWN
+  // managed stop (initialStopPriceForInsert precedence-1 below) so the TP R-multiples correspond to
+  // the real stop with zero drift. For ADAPTIVE strategies the distance MUST mirror the backtester's
+  // _apply_adaptive_management (backtester.py:1943-1955): min(per-symbol ceiling, atr×1.5) — the exact
+  // stop it feeds compute_exit_plan_python (atr_stop_multiplier=1.5; ceilings 14 MES / 62 MNQ / 1.0
+  // MCL via getStopCeilingPts, the TS mirror of _get_stop_ceiling_for_symbol). Using atr×2.0 (uncapped)
+  // made paper adaptive stop+TP1+TP2 fire at DIFFERENT prices than the backtest the strategy was
+  // validated on (33% wider R on MES; far wider, uncapped, on MNQ) — the exact parity gap #2 set out
+  // to close. static_styleC strategies keep the legacy atr×2.0 managed stop (unchanged). null only when
+  // neither an explicit stop nor ATR exists → both exit-plan branches fall through to fail-soft.
+  const _stopDistancePts: number | null =
+    params.atr != null && params.atr > 0
+      ? (exitStyle === "adaptive"
+          ? Math.min(getStopCeilingPts(params.symbol), params.atr * 1.5)
+          : params.atr * 2.0)
+      : null;
   const resolvedExitBasisStop: number | null =
     adaptiveInput?.entry?.stop
-    ?? (params.atr != null && params.atr > 0
-      ? (params.side === "long" ? actualEntry - params.atr * 2.0 : actualEntry + params.atr * 2.0)
+    ?? (_stopDistancePts != null
+      ? (params.side === "long" ? actualEntry - _stopDistancePts : actualEntry + _stopDistancePts)
       : null);
 
   if (exitStyle === "adaptive" && adaptiveInput != null && resolvedExitBasisStop != null) {
@@ -2284,6 +2297,9 @@ export async function openPosition(sessionId: string, params: {
     entryPrice: String(actualEntry),
     currentPrice: String(actualEntry),
     contracts: params.contracts,
+    // fresh-scan HIGH#5 (2026-07-12): record the ORIGINAL entry size so the Style C scale-out splits
+    // 33/33/34 of it, not of a shrinking remainder (`contracts` is decremented on each partial).
+    entryContracts: params.contracts,
     unrealizedPnl: "0",
     arrivalPrice: String(arrivalPrice),
     implementationShortfall: String(implementationShortfall),
@@ -3897,9 +3913,14 @@ async function applyExitDecision(
         logger.debug({ positionId: pos.id }, "style_exit: TP1 already filled — idempotent HOLD");
         return false;
       }
-      // Partial close: Style D=50%, Style C=33% of position contracts
-      const tp1Fraction = exitStyle === "C" ? 0.33 : 0.50;
-      const contractsToClose = Math.max(1, Math.floor(pos.contracts * tp1Fraction));
+      // fresh-scan HIGH#5 (2026-07-12): Style C legs split 33/33/34 of the ORIGINAL entry size
+      // (pos.entryContracts, migration 0201), NOT of the shrinking `contracts` remainder. At TP1
+      // `contracts` still equals the original, so the null-fallback is exact here; the divergence
+      // only bit at TP2 (remainder). Non-Style-C keeps the legacy 50%-of-remainder behavior.
+      const originalContractsTp1 = (pos as { entryContracts?: number | null }).entryContracts ?? pos.contracts;
+      const contractsToClose = exitStyle === "C"
+        ? Math.max(1, styleCScaleOut(originalContractsTp1).tp1)
+        : Math.max(1, Math.floor(pos.contracts * 0.50));
       const evidenceTyped = evidence as Record<string, unknown>;
       const tp1Price = evidenceTyped.tp1_price as number | undefined;
       const rMultiple = tp1Price != null && pos.entryPrice != null
@@ -4009,8 +4030,13 @@ async function applyExitDecision(
         logger.debug({ positionId: pos.id }, "style_exit: TP2 already filled — idempotent HOLD");
         return false;
       }
-      const tp2Fraction = 0.33;
-      const contractsToClose = Math.max(1, Math.floor(pos.contracts * tp2Fraction));
+      // fresh-scan HIGH#5 (2026-07-12): close the ORIGINAL-size TP2 leg (33% of entry size), leaving
+      // ~34% for the runner — NOT 33% of the already-decremented remainder (which left ~56% runner).
+      // Legacy rows with a null entryContracts fall back to the pre-fix remainder behavior.
+      const originalContractsTp2 = (pos as { entryContracts?: number | null }).entryContracts ?? null;
+      const contractsToClose = originalContractsTp2 != null
+        ? Math.max(1, styleCScaleOut(originalContractsTp2).tp2)
+        : Math.max(1, Math.floor(pos.contracts * 0.33));
       const tp2Evidence = evidence as Record<string, unknown>;
       if (contractsToClose < pos.contracts) {
         // 2026-06-29 Fix 1 (CRITICAL): await bookPartialClose BEFORE advancing state (same
