@@ -35,12 +35,17 @@ function hashOfMigrationFile(tag) {
   const filePath = path.join(MIG_DIR, `${tag}.sql`);
   if (!fs.existsSync(filePath)) return null;
   let sqlText = fs.readFileSync(filePath, 'utf-8');
-  // deep-scan re-cert hardening: match boot-migration-runner's readUtf8StripBom — strip a leading
-  // BOM so the stamped ledger hash EQUALS the runtime hashOf. Without this, a BOM-prefixed .sql
-  // (recurring PowerShell-authored corruption per CLAUDE.md) would be stamped with a hash the runtime
-  // never matches → the applied migration is misclassified as pending on the next boot (and, for a
-  // pre-idempotency-lesson migration, re-applied → "already exists" → crash-loop).
+  // Must EXACTLY mirror boot-migration-runner's readUtf8StripBom (BOM strip + CRLF→LF normalize) so
+  // the stamped ledger hash EQUALS the runtime hashOf. Without a byte-identical match, the applied
+  // migration is misclassified as pending on the next boot and re-applied → for a pre-idempotency
+  // baseline (bare ADD COLUMN) that raises "column already exists" → tx rollback → boot crash-loop.
+  // - BOM strip: guards recurring PowerShell-authored BOM corruption (per CLAUDE.md).
+  // - CRLF→LF: deep-scan 2026-07-11 HIGH fix. This tool previously stripped BOM ONLY. On this tower
+  //   (core.autocrlf=true → CRLF working-tree files) the runtime normalizes CRLF→LF but the stamp did
+  //   not, so a post-DB-restore stamp (this tool's documented purpose) seeded CRLF-content hashes the
+  //   runtime could NEVER match → every stamped baseline re-executed on the next boot → crash-loop.
   if (sqlText.charCodeAt(0) === 0xFEFF) sqlText = sqlText.slice(1);
+  sqlText = sqlText.replace(/\r\n/g, '\n');
   return crypto.createHash('sha256').update(sqlText).digest('hex');
 }
 
