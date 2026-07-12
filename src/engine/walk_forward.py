@@ -823,9 +823,15 @@ def _run_walk_forward_cpcv(
             file=sys.stderr,
         )
     except Exception as _cpcv_bif_exc:
+        # MED grade-followup (freshscan7 2026-07-12): emit the bif_computation_error sentinel on the
+        # DEFAULT DSL WF_MODE ("cpcv") path, matching the plain-DSL (2203), CPCV-class (2954) and
+        # plain-class (3614) paths. Without it, a compute_bif() THROW here was indistinguishable from a
+        # pre-Wave-3 legacy null → the BIF gate grandfather-PASSED on BOTH the cron AND the (now-fixed)
+        # manual promotion path for the most common backtest path — the TS fail-closed fix was inert here.
+        _cpcv_bif_result = {"bif_computation_error": True}
         print(
-            f"  BIF (CPCV): computation failed ({_cpcv_bif_exc!r}) — "
-            f"skipping (non-blocking, bif=None in output).",
+            f"  BIF (CPCV): computation FAILED ({_cpcv_bif_exc!r}) — emitting bif_computation_error=true "
+            f"(fail-closed at the BIF promotion gate).",
             file=sys.stderr,
         )
 
@@ -1178,6 +1184,9 @@ def _run_walk_forward_cpcv(
         # TS gate contract: reads "bif" and "k_eff" from this dict.
         "bif": _cpcv_bif_result.get("bif"),
         "k_eff": _cpcv_bif_result.get("k_eff"),
+        # MED grade-followup (freshscan7): top-level sentinel the TS BIF gate reads (walkForwardResults.
+        # bif_computation_error) to fail-CLOSE on a compute_bif() THROW — matches the other 3 WF paths.
+        "bif_computation_error": _cpcv_bif_result.get("bif_computation_error"),
         "bif_detail": _cpcv_bif_result,
         # WRC / SPA — data-snooping guard on concatenated CPCV OOS P&L series.
         # TS gate contract: reads wrc_result.p_value / spa_result.spa_consistent_p.
