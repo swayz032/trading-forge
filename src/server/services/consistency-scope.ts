@@ -53,10 +53,28 @@ export function _buildScopeClause(accountId: string): SQL {
     return sql`ps.firm_id = ${firmId}`;
   }
   if (_UUID_RE.test(accountId)) {
+    // deep-scan #27 (2026-07-11): the broker-account (digest) branch previously scoped ONLY to
+    // ps.firm_id — so two DIFFERENT-strategy accounts on the same firm (two family members on
+    // MFFU, or the operator's two Topstep accounts running different strategies) were netted into
+    // one concentration %, corrupting each one's single-day payout-rule number on a capital-safety
+    // surface. paper_sessions has no account_id, but account_strategy_assignments maps
+    // account_id → strategy_id (UNIQUE; §9 mandates a different strategy per account on one firm),
+    // so refine the broker-account branch to firm AND the account's assigned strategy — the finest
+    // per-account grain the schema allows without a migration. (The operator's own same-strategy
+    // Topstep copies still net, but the concentration RATIO highestDay/cumulative is scale-invariant,
+    // so that residual netting never changes the gate decision.) The session-id (live-gate) branch
+    // is unchanged: `ps.id = <uuid>` scopes to that one session, and for a session id BOTH subqueries
+    // below return empty, so the broker-account sub-branch contributes no rows (never re-widens it).
     return sql`(
       ps.id = ${accountId}::uuid
-      OR ps.firm_id = (
-        SELECT ba.firm_id FROM broker_accounts ba WHERE ba.account_id = ${accountId}::uuid
+      OR (
+        ps.firm_id = (
+          SELECT ba.firm_id FROM broker_accounts ba WHERE ba.account_id = ${accountId}::uuid
+        )
+        AND ps.strategy_id IN (
+          SELECT asa.strategy_id FROM account_strategy_assignments asa
+          WHERE asa.account_id = ${accountId}::uuid
+        )
       )
     )`;
   }
