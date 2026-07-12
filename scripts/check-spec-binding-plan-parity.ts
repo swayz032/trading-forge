@@ -25,7 +25,7 @@
  * Usage:
  *   npx tsx scripts/check-spec-binding-plan-parity.ts
  */
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -33,8 +33,9 @@ import { compileBindingPlan } from "../src/server/lib/spec-family-bindings.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const SAMPLES_DIR =
-  "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge\\.claude\\worktrees\\extraction-100\\tmp\\generalization";
+const SAMPLES_DIR = process.env.TF_SPEC_BINDING_SAMPLES_DIR
+  ? join(process.env.TF_SPEC_BINDING_SAMPLES_DIR)
+  : join(__dirname, "..", "ci", "fixtures", "spec-binding-parity");
 
 const PY_DRIVER = `
 import json, sys
@@ -83,7 +84,13 @@ function tsBindingPlanAsPyShape(spec: { entry_conditions?: unknown[]; invalidati
 }
 
 function main() {
+  if (!existsSync(SAMPLES_DIR)) {
+    throw new Error(`Binding-plan parity corpus does not exist: ${SAMPLES_DIR}`);
+  }
   const files = readdirSync(SAMPLES_DIR).filter((f) => f.endsWith(".spec.json"));
+  if (files.length === 0) {
+    throw new Error(`Binding-plan parity corpus has no .spec.json files: ${SAMPLES_DIR}`);
+  }
   let drift = 0;
   let checked = 0;
 
