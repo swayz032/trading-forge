@@ -41,6 +41,8 @@ import { isConnectivityDegraded } from "../lib/network-failover.js";
 import { getActiveAssignment } from "./strategy-assignment-service.js";
 // Wave 25.5 Track 1: adaptive exit plan wiring
 import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
+// #24 (deep-scan 2026-07-11): pure 15:55 ET flatten-bar predicate (DB-free — see lib module).
+import { _isTimeStopFlattenBar } from "../lib/time-stop-flatten.js";
 import type { ExitPlanWithRuntimeState, EntryDecisionContext } from "../db/jsonb-shapes.js";
 // Pass 6 Track D: per-call exit-handler Discord visibility
 import { notifyWarning, notifyCritical } from "./notification-service.js";
@@ -649,21 +651,10 @@ function normalizePriceUpdate(update: PositionPriceUpdate): { close: number; hig
   };
 }
 
-/**
- * #24 (deep-scan 2026-07-11): true when a bar's ET time is at/after the 15:55 ET hard-flatten
- * threshold — mirrors the Python style_c_handler `_is_time_stop` (current_time_et >= 15:55). Lets the
- * TS intrabar stop-breach (BL-1) defer to TIME-STOP semantics on the flatten bar: the backtester checks
- * the 15:55 time-stop FIRST and exits at the bar CLOSE with reason time_stop even when the bar also
- * crossed the stop. Robust to zero-padded or not "H:MM"/"HH:MM"; empty/unparseable → false.
- */
-function _isTimeStopFlattenBar(currentTimeEt: string | undefined | null): boolean {
-  if (!currentTimeEt) return false;
-  const m = /^(\d{1,2}):(\d{2})/.exec(currentTimeEt);
-  if (!m) return false;
-  const h = parseInt(m[1], 10);
-  const min = parseInt(m[2], 10);
-  return h > 15 || (h === 15 && min >= 55); // >= 15:55 ET hard-flatten invariant
-}
+// #24 (deep-scan 2026-07-11): _isTimeStopFlattenBar was moved to ../lib/time-stop-flatten.ts (a
+// DB-free module, imported at the top of this file) so it is unit-testable without importing this
+// service — which throws at import when DATABASE_URL is unset (same split rationale as
+// consistency-scope.ts). The BL-1 flatten-bar stop-breach block below calls the imported helper.
 
 // ─── Session Classification ───────────────────────────────────
 // getEtOffsetMinutes is imported from src/server/lib/dst-utils.ts (shared utility).
