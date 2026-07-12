@@ -120,8 +120,27 @@ jobs:
       - name: Verify system map freshness
         run: npm run system-map:check
 
-      - name: Run vitest with coverage
-        run: npx vitest run --coverage
+      # hardening-rails 2026-07-12 (Wave 1 Track A): baseline-and-enforce for the Node suite.
+      # Uses Codex's tested comparator (ci/compare-baseline.mjs). CAPTURE PHASE: vitest runs
+      # advisory + emits a JSON report; the comparator runs advisory and PRINTS today's failing
+      # test IDs (newFailures[]) to the log. Those get frozen — each with a reason — into
+      # ci/baseline-failures.json, then the gate step flips to BLOCKING (remove continue-on-error)
+      # so only NEW failures (or a collection-floor drop) fail CI. Known failures are quarantined.
+      - name: Run vitest with coverage (baseline-gated)
+        continue-on-error: true
+        run: npx vitest run --coverage --reporter=default --reporter=json --outputFile.json=ci/vitest-results.json
+
+      - name: Upload vitest results (baseline capture/diff)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: node-vitest-results
+          path: ci/vitest-results.json
+          retention-days: 14
+
+      - name: Baseline gate — vitest known-failures (CAPTURE PHASE — advisory; flip to blocking after freezing baseline)
+        continue-on-error: true
+        run: node ci/compare-baseline.mjs --suite vitest --results ci/vitest-results.json
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4

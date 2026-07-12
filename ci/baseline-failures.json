@@ -1,0 +1,13 @@
+{
+  "frozen": true,
+  "thresholdVersion": "rails_thresholds_v1",
+  "note": "PLACEHOLDER — capture phase. The vitest.knownFailures list is frozen from the first CI capture run (advisory), then this file is rewritten with reasoned entries and the gate flips to blocking. See docs/hardening-machine-rails plan Wave 1 Track A.",
+  "vitest": {
+    "collectionFloor": 1,
+    "knownFailures": []
+  },
+  "pytest": {
+    "collectionFloor": 1,
+    "knownFailures": []
+  }
+}
