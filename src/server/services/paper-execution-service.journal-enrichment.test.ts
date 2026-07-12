@@ -115,7 +115,7 @@ vi.mock("../db/index.js", () => {
     set: vi.fn().mockReturnValue({
       where: vi.fn().mockImplementation(() => {
         const p: any = Promise.resolve(undefined);
-        p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+        p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]);
         return p;
       }),
     }),
@@ -130,7 +130,7 @@ vi.mock("../db/index.js", () => {
       update: vi.fn().mockReturnValue({
         // CRIT-1 (2026-07-09): guarded idempotency CLAIM does .set().where().returning({id})
         // before the trade insert; .where() must be awaitable AND expose .returning().
-        set: vi.fn().mockReturnValue({ where: vi.fn().mockImplementation(() => { const p: any = Promise.resolve(undefined); p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]); return p; }) }),
+        set: vi.fn().mockReturnValue({ where: vi.fn().mockImplementation(() => { const p: any = Promise.resolve(undefined); p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]); return p; }) }),
       }),
       transaction: vi.fn().mockImplementation(
         async (fn: (tx: { insert: typeof txInsertMock; update: typeof txUpdateMock }) => Promise<unknown>) =>

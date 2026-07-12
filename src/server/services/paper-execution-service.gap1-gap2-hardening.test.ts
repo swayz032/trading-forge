@@ -96,7 +96,7 @@ vi.mock("../db/index.js", () => {
             }),
             returning: vi.fn(() => Promise.resolve([{ id: "t-1", pnl: "-250" }])),
           })),
-          update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => { const p: any = Promise.resolve(undefined); p.returning = vi.fn(() => Promise.resolve([{ id: "pos-claimed" }])); return p; }) })) })),
+          update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => { const p: any = Promise.resolve(undefined); p.returning = vi.fn(() => Promise.resolve([{ id: "pos-claimed", contracts: 1 }])); return p; }) })) })),
           delete: vi.fn(() => ({ where: vi.fn(() => Promise.resolve(undefined)) })),
         });
       }),

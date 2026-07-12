@@ -3203,6 +3203,16 @@ export async function graduateBucketDirectly(opts: {
             if (BREAKOUT_RX.test(ind))   return ["TRENDING_UP","TRENDING_DOWN","RANGE_BOUND"];
             if (MEAN_REV_RX.test(ind))   return ["RANGE_BOUND"];
             if (TREND_RX.test(ind))      return ["TRENDING_UP","TRENDING_DOWN"];
+            // MED#5 (freshscan4 2026-07-12): leader/variant PARITY. The leader IIFE (~2926) has this
+            // REGIME_AGNOSTIC_ARCHETYPES all-regime branch (MED#6); the per-market variant rows
+            // (MNQ/MCL) lacked it, so a regime-agnostic archetype not matched by the RXs above
+            // (gann_box/smt_reversal/break_of_structure/market_structure_shift → derivedRegime
+            // UNSPECIFIED → preferredRegime sentinel "TRENDING_UP") stored the variants with
+            // preferred_regimes=["TRENDING_UP"] only → the W23H.C picker silently EXCLUDED the MNQ/MCL
+            // variants in RANGE_BOUND / TRENDING_DOWN regimes while keeping the MES leader. Same fix.
+            if (ind.startsWith("archetype:") && REGIME_AGNOSTIC_ARCHETYPES.has(ind.slice("archetype:".length))) {
+              return ["TRENDING_UP","TRENDING_DOWN","RANGE_BOUND"];
+            }
             return llmRegimes && llmRegimes.length > 0 ? llmRegimes : [preferredRegime];
           })(),
           tags: strategyTags,

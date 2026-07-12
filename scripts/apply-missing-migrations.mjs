@@ -49,7 +49,19 @@ try {
     }
 
     const content = fs.readFileSync(file, "utf8");
-    const hash = crypto.createHash("sha256").update(content).digest("hex");
+    // HIGH#2 (freshscan4 2026-07-12): the stamped ledger hash MUST EXACTLY mirror
+    // boot-migration-runner's readUtf8StripBom (BOM strip + CRLF→LF normalize) — the sibling
+    // stamp-applied-migrations.cjs was patched for this exact crash-loop class (deep-scan 2026-07-11)
+    // but this tool was left hashing raw CRLF bytes. On this CRLF tower (core.autocrlf=true) a
+    // post-DB-restore run of this recovery tool seeded CRLF-content hashes the runtime could NEVER
+    // match → every stamped baseline is misclassified pending and re-executed on the next boot → a
+    // non-idempotent baseline (bare CREATE TABLE / ADD CONSTRAINT in 0000/0002/0006) raises "already
+    // exists" → tx rollback → fail-closed boot block → NSSM crash-loop. Normalize ONLY the hash input;
+    // the executed SQL below stays byte-identical (Postgres accepts CRLF regardless).
+    let hashContent = content;
+    if (hashContent.charCodeAt(0) === 0xFEFF) hashContent = hashContent.slice(1);
+    hashContent = hashContent.replace(/\r\n/g, "\n");
+    const hash = crypto.createHash("sha256").update(hashContent).digest("hex");
 
     // Drizzle splits on --> statement-breakpoint markers
     const stmts = content

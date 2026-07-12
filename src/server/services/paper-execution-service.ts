@@ -2514,7 +2514,12 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   if (!spec) throw new Error(`Unknown contract symbol: ${pos.symbol} — not in CONTRACT_SPECS`);
   const entryPrice = Number(pos.entryPrice);
   const direction = pos.side === "long" ? 1 : -1;
-  const grossPnl = direction * (actualExit - entryPrice) * spec.pointValue * pos.contracts;
+  // HIGH#1 (freshscan4 2026-07-12): grossPnl/commission/rollCost/netPnl are computed here on
+  // pos.contracts read pre-tx (line ~2475). A concurrent partial close (bookPartialClose) can commit
+  // FIRST — decrementing contracts + setting tp1Filled but NOT closedAt — so the closedAt-guarded
+  // claim below still matches and would book a full-close on the STALE count. They are `let` so the
+  // claim can recompute them on the ACTUAL locked contract count (see the recompute block after the claim).
+  let grossPnl = direction * (actualExit - entryPrice) * spec.pointValue * pos.contracts;
 
   // Commission: round-trip (entry + exit sides) × contracts
   // Wave 27.5 Pass D.2: symbol-aware lookup via contract-class.ts.
@@ -2522,7 +2527,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // Falls back to $0.62/side when symbol class or firmId is unknown (conservative —
   // avoids overstating net P&L; same fallback as the legacy helper).
   const commissionPerSide = getCommissionPerSideBySymbol(pos.symbol, sessionForFirm?.firmId ?? null);
-  const commission = commissionPerSide * 2 * pos.contracts;
+  let commission = commissionPerSide * 2 * pos.contracts;
 
   // closedAt is declared here (before roll cost and enrichment) so it serves as the
   // authoritative close timestamp for both the roll window check and the DB writes.
@@ -2535,8 +2540,8 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // computeRollSpreadCost is a pure in-process function (no subprocess) using
   // the TypeScript mirror of roll_calendar.py in roll-calendar-data.ts.
   const entryTimeForRoll = pos.entryTime instanceof Date ? pos.entryTime : new Date(pos.entryTime);
-  const rollCost = computeRollSpreadCost(pos.symbol, pos.contracts, entryTimeForRoll, closedAt);
-  const netPnl = grossPnl - commission - rollCost.estimatedSpreadCost;
+  let rollCost = computeRollSpreadCost(pos.symbol, pos.contracts, entryTimeForRoll, closedAt);
+  let netPnl = grossPnl - commission - rollCost.estimatedSpreadCost;
 
   closeSpan.setAttribute("grossPnl", grossPnl);
   closeSpan.setAttribute("commission", commission);
@@ -2638,12 +2643,36 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
           unrealizedPnl: "0",
         })
         .where(and(eq(paperPositions.id, positionId), isNull(paperPositions.closedAt)))
-        .returning({ id: paperPositions.id });
+        .returning({ id: paperPositions.id, contracts: paperPositions.contracts });
 
       if (claimed.length === 0) {
         // Lost the close race — another path already closed this position. Abort the
         // transaction body (nothing inserted yet) and signal a benign idempotent no-op.
         return [null];
+      }
+
+      // HIGH#1 (freshscan4 2026-07-12): the claim above guards closedAt IS NULL but NOT the contract
+      // count. A concurrent partial close (bookPartialClose, which decrements contracts + sets
+      // tp1Filled but leaves closedAt NULL) can commit BETWEEN the pre-tx read (~2475) and this claim,
+      // so the P&L computed above on pos.contracts would over-book the partial's contracts into
+      // currentEquity + realizedPeakEquity (the Topstep/Apex trailing-DD HWM → a false trailing-DD
+      // breach). Recompute grossPnl/commission/rollCost/netPnl on the ACTUAL row-locked contract count
+      // the claim returned. The claim already SET closedAt so no further partial can commit after this.
+      const lockedContracts = claimed[0].contracts;
+      if (lockedContracts !== pos.contracts) {
+        grossPnl = direction * (actualExit - entryPrice) * spec.pointValue * lockedContracts;
+        commission = commissionPerSide * 2 * lockedContracts;
+        rollCost = computeRollSpreadCost(pos.symbol, lockedContracts, entryTimeForRoll, closedAt);
+        netPnl = grossPnl - commission - rollCost.estimatedSpreadCost;
+        closeSpan.setAttribute("grossPnl", grossPnl);
+        closeSpan.setAttribute("commission", commission);
+        closeSpan.setAttribute("rollSpreadCost", rollCost.estimatedSpreadCost);
+        closeSpan.setAttribute("netPnl", netPnl);
+        closeSpan.setAttribute("contractsRecomputedFromClaim", true);
+        logger.warn(
+          { positionId, staleContracts: pos.contracts, lockedContracts, correlationId },
+          "closePosition: contract count changed between pre-tx read and the closedAt-claim (concurrent partial close) — recomputed P&L on the row-locked count (HIGH#1 guard)",
+        );
       }
 
       // 1. Insert closed trade — pnl column holds NET P&L; grossPnl and commission stored for audit/analytics
@@ -2656,7 +2685,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
         pnl: String(netPnl),
         grossPnl: String(grossPnl),
         commission: String(commission),
-        contracts: pos.contracts,
+        contracts: lockedContracts,
         entryTime: pos.entryTime,
         exitTime: closedAt,
         slippage: String(slippage),

@@ -112,7 +112,7 @@ vi.mock("../db/index.js", () => {
         set: vi.fn((vals: Record<string, unknown>) => {
           capturedTxSessionUpdates.push({ ...vals });
           const p: any = Promise.resolve(undefined);
-          p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+          p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 3 }]);
           return { where: vi.fn().mockReturnValue(p) };
         }),
       })),

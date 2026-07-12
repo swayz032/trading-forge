@@ -40,8 +40,8 @@ vi.mock("../db/index.js", () => ({
       // (equity/dailyPnl updates await it directly) AND expose `.returning()`
       // (the claim reads the affected row). A thenable-with-returning satisfies both.
       const _whereThenable = () => {
-        const p: any = Promise.resolve([{ id: "pos-claimed" }]);
-        p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+        const p: any = Promise.resolve([{ id: "pos-claimed", contracts: 1 }]);
+        p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]);
         return p;
       };
       const tx = {
@@ -253,7 +253,7 @@ describe("closePosition — roll spread cost applied", () => {
           set: vi.fn().mockReturnValue({
             where: vi.fn().mockImplementation(() => {
               const p: any = Promise.resolve(undefined);
-              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]);
               return p;
             }),
           }),
@@ -320,7 +320,7 @@ describe("closePosition — no roll in hold window", () => {
           set: vi.fn().mockReturnValue({
             where: vi.fn().mockImplementation(() => {
               const p: any = Promise.resolve(undefined);
-              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]);
               return p;
             }),
           }),
@@ -362,7 +362,7 @@ describe("closePosition — SSE paper:roll-spread-applied", () => {
           set: vi.fn().mockReturnValue({
             where: vi.fn().mockImplementation(() => {
               const p: any = Promise.resolve(undefined);
-              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]);
               return p;
             }),
           }),
@@ -403,7 +403,7 @@ describe("closePosition — SSE paper:roll-spread-applied", () => {
           set: vi.fn().mockReturnValue({
             where: vi.fn().mockImplementation(() => {
               const p: any = Promise.resolve(undefined);
-              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]);
               return p;
             }),
           }),
@@ -443,7 +443,7 @@ describe("closePosition — return value rollSpreadCost", () => {
           set: vi.fn().mockReturnValue({
             where: vi.fn().mockImplementation(() => {
               const p: any = Promise.resolve(undefined);
-              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]);
+              p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed", contracts: 1 }]);
               return p;
             }),
           }),
