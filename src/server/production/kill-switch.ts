@@ -183,6 +183,12 @@ const FORCE_CLOSE_TIMEOUT_MS = parseInt(process.env.FORCE_CLOSE_TIMEOUT_MS ?? "1
 // positions). Now a Map keyed by resolved accountKey (or GLOBAL_SCOPE_KEY for
 // the system-wide operator-HALT path), so accounts are independently guarded.
 const _forceCloseInFlightByAccount: Map<string, boolean> = new Map();
+// deep-scan 2026-07-11 MED fix (#8): accountKey → CME-ET trading-day of the last COMPLETED 95%
+// force-close. Once an account force-closes for the day it stays at 95% (P&L doesn't recover), so
+// every subsequent cache-TTL L2 eval would otherwise re-fire the pending+completed audit rows + SSE +
+// a no-op re-flatten for the rest of RTH — polluting the append-only §2 trust spine + spamming the
+// dashboard. This lets the repeat evals stay HALTED silently. Re-arms each new trading day.
+const _forceClosedTodayByAccount: Map<string, string> = new Map();
 
 /**
  * True when a force-close is currently in flight for the given scope.
@@ -502,6 +508,14 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
       // axis), so this sub-check does NOT double-fire with Layer 3.
       // Ordering: force_close (95%) > halt (67%) > reduce_size (60%) > none.
       if (dllResult.action === "force_close") {
+        // deep-scan 2026-07-11 MED fix (#8): if this account ALREADY completed a 95% force-close this
+        // CME trading day, stay HALTED but do NOT re-fire the audit/SSE/re-flatten. Positions are flat
+        // and the account remains at 95% until session reset, so repeating every TTL only pollutes the
+        // trust spine + dashboard with no-op rows. Re-arms on a new trading day (map keyed on `today`).
+        if (_forceClosedTodayByAccount.get(accountKey) === today) {
+          decision = { halted: true, reason: "dll_force_close_already_done_today", layer: 2 };
+          break;
+        }
         // F3 FIX: concurrent L2 evaluations (caused by the 100ms runLayerWithTimeout
         // returning fail-OPEN before the 10s _confirmedForceClose finishes) must NOT
         // all call _confirmedForceClose. The first call sets the in-flight flag;
@@ -561,6 +575,9 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
         // so we must NOT also emit a "completed" row (would falsely mark success while
         // positions may still be open).
         if (_fcOk) {
+          // deep-scan 2026-07-11 MED fix (#8): mark this account force-closed for today so subsequent
+          // cache-TTL evals short-circuit to a silent HALT instead of re-firing audit/SSE/re-flatten.
+          _forceClosedTodayByAccount.set(accountKey, today);
           insertAuditRow({
             action: "sizing.dll_force_close_completed",
             entityType: "system",
