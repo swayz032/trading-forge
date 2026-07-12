@@ -138,6 +138,31 @@ The (a)/(b) fork was false — both are right, answering the two questions the p
 
 **REMAINING SEQUENCE (executing):** (1) INDEPENDENT verification of the confession (fresh-eyes re-derive head-to-head + confirm `34fabc6d` fixing-commit + execution_path=class on 47) — IN FLIGHT, gates everything; (2) record this ruling — DONE (§RULING); (3) the READ — within-G4 direction on the 23 informative pairs, ONCE, under the new scope line → independent re-verification → certify; (4) post-cert: consumption decision (overlay frozen-status), a separate call with operator.
 
+### §VERIFY — independent confession verification (fresh-context agent, grading-integrity doer≠grader, 2026-07-12)
+
+Fresh-eyes agent (no tally/outcome exposure) re-derived the mechanism from code + artifact. **VERDICT: the confession's naming is SOUND. 'Nothing was fabricated.'**
+- **Mechanism CONFIRMED** — `git show 48d3cc06:src/engine/backtester.py`: `run_class_backtest` (line 6331) body 6331–7050 has **0 hits** for `_apply_dsl_stop_loss_and_time_stop` / `_apply_dll_halt_to_entries` (defined 3102, called only at 4742 inside `run_backtest`, never the class path). `from_signals` was fed `df['exit_long']`/`df['exit_short']`, which `spec_condition_compiler.py:722` sets **universally all-False** ('framework-owned — NEVER set here'). All-False exits + `n_splits=8` → tc=8. **44/47** clean specs at exactly tc=8 across 1m/15m/4h & MES/MNQ = structural 1-trade/window.
+- **Fix commit CONFIRMED** — `34fabc6d` real landed ancestor (Jul 6 03:12), message names **Defect 5** ('run_class_backtest never called `_apply_dsl_stop_loss_and_time_stop()` … Fixed by mirroring run_backtest's exact call pattern'). Current engine injects at 7092, feeds guarded exits to `from_signals` at 7174.
+- **execution_path CONFIRMED (exact)** — 47/47 clean specs (all 78 results) `='class'`; report `generated_at` 2026-07-05T02:46Z = unambiguously pre-fix (fix landed 07-06). Named tc verified: `b2deddcb`=485, `331fe15a`=93, `5e5803d1`=82, `ca5564d8`=8.
+- **Precision refinements the verifier banked (both already pre-registered in this block):** the 3 high-tc G0 specs (82/93/485) are `direction:both` churning via long↔short *entry reversals* under all-False exits — a different count driver on the SAME missing-exits path, not real exits (§C-notes already state this); and `_apply_trade_management` re-prices the single held trade's exit so it is not literally held-to-window-end in P&L, but never ADDS a trade — count stays 1/window.
+
+**Two gaps the verifier flagged — recorded, and adjudicated as NON-GATING for the within-G4 read (reasoning on the record, relayed for veto):**
+1. **G4≈211/window is doer-attested** (recorded only in this analyst's own run doc, not independently re-run — the verifier declined the ~71-min re-run per the reasonable-effort allowance). **NOT load-bearing:** it was illustrative of 'G4 ≫ G0's degenerate 8'; the read never consumes it. The code direction (exits now injected) guarantees a large increase regardless.
+2. **The OR-fix entry-generation chain (non-1m directional) was not re-verified in this pass.** The verifier correctly scopes this as gating *'every G0↔G4 difference is a named receipted fix'* — a claim **Component 2 (VOID-for-no-reference) abandons.** Decisively: the within-G4 read compares Mode A vs Mode B on the **same G4 engine, same entries** (arms differ ONLY in `overlay_disabled`); whatever the entry engine does, BOTH arms see it identically and the read measures the overlay delta on top. **Gap #2 cannot touch this read by construction** — it is an axis the read does not stand on. (If a future G0↔G4 attribution claim is made, that chain earns the same rigor first.)
+
+**FULL STOP lift condition (mechanism named with run-level evidence + INDEPENDENT verification) is now fully MET.** Re-entry condition (§WS) satisfied: mechanism named + per-pair classification updated under existing standards + independent verification SOUND.
+
+### §NREAD — effective-N for the read fixed at 25 (operator-confirmed 2026-07-12, mechanical)
+
+N follows the frozen criterion (G4-traded, both-arms-clean), not a running count. The advisor's earlier 'N=23' was a stale pre-straggler tally; §C8 FINAL already read '25 traded'. Confirmed **N = 25** with the standing §C7 engagement criterion applied identically to the two appended straggler rows:
+- `ca5564d8` (MNQ/1m): Mode A tc=**1214** → Mode B tc=**192** (overlay engaged A≠B ✓, flags A=off/B=on ✓)
+- `589ec512` (MES/1m): Mode A tc=**1538** → Mode B tc=**182** (overlay engaged A≠B ✓, flags A=off/B=on ✓)
+Both pass → **all 25 engage; N = 25.** Excluding the four 1m gain-flips would be *selection-on-investigation* (holding them out because they were scrutinized — a bias, not a caution); their exclusions live entirely on the flip/G0 axis ((e) via `34fabc6d`), which the within-G4 read never touches. Solo-clean, epoch-accounted, same engine → IN.
+
+**Two scope-line additions (so the number cannot be misread later):**
+- The read carries its **timeframe composition: 15m:6, 1h:2, 4h:1, 5m:12, 1m:4** — and **crude (MCL) absent entirely** (all 26 MCL specs INDETERMINATE at the data gate; no crude in the informative set).
+- **Any per-timeframe slicing of the direction is ANNOTATION-TIER ONLY.** The verdict is the pre-registered aggregate read across all 25; no 4am subgroup story — favorable or unfavorable — carries verdict weight.
+
 ## §V — 331fe15a verification spec (mechanical; hypothesis, NOT concluded)
 
 **Runs TWICE, per-pair** — 331fe15a(→0) AND its byte-identical sibling 5e5803d1(→2); each answer lands on its own (§C2c). (1) Parse the compiled structure; show the long-cross + short-cross conflation in ONE AND-group (`and_group0`: `[5-SMA-cross-above-50 → long]` AND `[5-SMA-cross-below-50 → short]`). **Type-specimen REVISED (pre-number, from the 0-vs-2 evidence): rare-condition-satisfiable, NOT strictly unsatisfiable** — identical structure firing 0 on MNQ/4h and 2 on MES/4h proves the conflated group is data-dependently satisfiable, not impossible. (2) Show G0's fires were bug-dependent (forced-bullish path or counter artifact — whichever the evidence says); account for each sibling's residual G4 fires (0 and 2) on its own data.
