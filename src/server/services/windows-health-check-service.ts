@@ -418,7 +418,14 @@ export type AutoResumeOutcome =
  * this function is never reached, and the pipeline stays paused.
  */
 export async function maybeAutoResumeAfterReboot(
-  opts: { healthAlreadyVerified?: boolean } = {},
+  opts: {
+    healthAlreadyVerified?: boolean;
+    // Test seam: inject a health-check that resolves to an exit code (0=healthy). Production omits it
+    // and the real runHealthCheckScript() spawns the PowerShell probe. Exists because
+    // runHealthCheckScript is a same-module export (not mockable via vi.mock without mocking the
+    // function under test), and the reboot-still-pending DECLINE branch must be deterministically tested.
+    _runHealthCheckForTest?: () => Promise<number>;
+  } = {},
 ): Promise<{ resumed: boolean; outcome: AutoResumeOutcome }> {
   const { db } = await import("../db/index.js");
   const { systemParameters, auditLog } = await import("../db/schema.js");
@@ -472,11 +479,13 @@ export async function maybeAutoResumeAfterReboot(
   // re-check they would resume trading with a reboot still pending (C8 gate bypass). Skip the re-run
   // only when the caller already ran a healthy check this invocation.
   if (!opts.healthAlreadyVerified) {
-    const scriptResult = await runHealthCheckScript();
-    const status = classifyExitCode(scriptResult.exitCode);
+    const exitCode = opts._runHealthCheckForTest
+      ? await opts._runHealthCheckForTest()
+      : (await runHealthCheckScript()).exitCode;
+    const status = classifyExitCode(exitCode);
     if (status !== "healthy") {
       logger.warn(
-        { status, exitCode: scriptResult.exitCode },
+        { status, exitCode },
         "windows-health-check: auto-resume DECLINED — host not healthy (reboot still pending / degraded); pipeline stays PAUSED",
       );
       return { resumed: false, outcome: "reboot_still_pending" };

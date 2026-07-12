@@ -257,3 +257,33 @@ describe("Wave 10 Task 3A: computeRiskDerivedContracts", () => {
     });
   });
 });
+
+// deep-scan 2026-07-11 HIGH regression: the PM-session / news-caution size taper (pmSizeFactor < 1)
+// must NOT be silently re-inflated back to full base_contracts by either pyramid-floor site on a
+// healthy account. Pre-fix both floors reset a tapered size to base_contracts; the fix tapers the
+// floor base by pmFactor. base_contracts=4, healthy MFFU ($50K == starting floor).
+describe("PM/news taper is respected by both pyramid floors", () => {
+  it("pmSizeFactor=1 (no taper) → floor stays at full base_contracts (original behavior)", () => {
+    const r = computeRiskDerivedContracts(makeInput({ pmSizeFactor: 1, accountStartingFloor: 50_000 }));
+    expect(r.finalContracts).toBe(4);
+  });
+
+  it("healthy-account floor: pmSizeFactor=0.5 → floor(4*0.5)=2, NOT re-inflated to base 4", () => {
+    // pyramidTier tapers to floor(4*0.5)=2 < base(4) → healthy floor fires; must yield 2, not 4.
+    const r = computeRiskDerivedContracts(makeInput({ pmSizeFactor: 0.5, accountStartingFloor: 50_000 }));
+    expect(r.pyramidTier).toBe(2);
+    expect(r.finalContracts).toBe(2);
+  });
+
+  it("early-return floor (riskCap≤0): pmSizeFactor=0.5 → floor(4*0.5)=2, NOT re-inflated to base 4", () => {
+    // atrPoints=200 → stop_dollars=1.5*200*5=1500 > risk_dollars($1000) → riskDerivedCap=0 →
+    // healthy early-return floor path. Tapered floor must yield 2, not the un-tapered base 4.
+    const r = computeRiskDerivedContracts(makeInput({
+      pmSizeFactor: 0.5,
+      accountStartingFloor: 50_000,
+      atrPoints: 200,
+    }));
+    expect(r.riskDerivedCap).toBe(0);
+    expect(r.finalContracts).toBe(2);
+  });
+});
