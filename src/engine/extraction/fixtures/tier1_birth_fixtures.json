@@ -1,0 +1,76 @@
+{
+  "title": "H1 tier-1 detector engagement-birthright fixtures (spec §3.1)",
+  "frozen": "2026-07-12",
+  "provenance": {
+    "specimens": "docs/designs/corpus-v3-gate1-respecification-2026-07-05.md lines 896-898, 876-877 (N04/N34/N06/N28)",
+    "imperative_positives": "real bare-imperative directives from the 143 rules-design set (docs/replay-results/corpus-v3-heldout-split-2026-07-05.json)",
+    "imperative_negatives": "descriptive-control set (5/5 contextual), neutral-adjudication-packet-blinded-2026-07-07.json N13/N30/N35"
+  },
+  "note": "Birth gate (spec §3.2): FIRES-ON-POSITIVES ∧ SILENT-ON-NEGATIVES with ZERO exceptions. The specimen POSITIVES are the frame-stripped surface forms the gate-1 respec certified as gates; the full-context sentences appear as negatives to prove the detector keys on the SURFACE PATTERN, not on keywords (the full N04 sentence is DRI-CONTEXTUAL and must stay SILENT).",
+  "detectors": [
+    {
+      "detector": "conditional-action",
+      "positives": [
+        { "id": "N04", "text": "buy from the demand zone when it is retested",
+          "expect": { "fires": true, "surface_class": "conditional-action", "anchor_substring": "when it is retested" } }
+      ],
+      "negatives": [
+        { "id": "N06", "text": "looking for a retracement opportunity to then buy", "expect": { "fires": false } },
+        { "id": "N06_full", "text": "we're basically now looking for a retracement opportunity to then buy from further inside of the first leg of price action", "expect": { "fires": false } },
+        { "id": "N28", "text": "what I was looking for", "expect": { "fires": false } },
+        { "id": "N28_full", "text": "what I was looking for was for price to pull back into this area because the market was very bullish today", "expect": { "fires": false } },
+        { "id": "N04_full_intent", "text": "We look to buy from the demand zone when it is retested because we expect to see more of that institutional buying kicking in.", "expect": { "fires": false } },
+        { "id": "forecast_trigger", "text": "when price probably pulls back to the level", "expect": { "fires": false } }
+      ]
+    },
+    {
+      "detector": "exclusion-contrast",
+      "positives": [
+        { "id": "N34", "text": "take puts on a VWOP retest, NOT a pre-market low retest",
+          "expect": { "fires": true, "surface_class": "exclusion-contrast", "anchor_substring": "pre-market low retest" } },
+        { "id": "N34_full", "text": "VWAP is always a big retest spot then I'm looking to take puts on a VWOP retest, not a pre-market low retest",
+          "expect": { "fires": true, "surface_class": "exclusion-contrast", "anchor_substring": "pre-market low retest" } }
+      ],
+      "negatives": [
+        { "id": "N06", "text": "looking for a retracement opportunity to then buy", "expect": { "fires": false } },
+        { "id": "N34_stripped", "text": "looking to take puts on a VWOP retest", "expect": { "fires": false } },
+        { "id": "noise_hedge", "text": "when price is near it, you should expect a lot of noise, not always clean moves", "expect": { "fires": false } },
+        { "id": "negated_state", "text": "I'm not sure the setup is there", "expect": { "fires": false } }
+      ]
+    },
+    {
+      "detector": "imperative",
+      "positives": [
+        { "id": "IMP_design_1", "text": "set your stop at the low of the hammer",
+          "expect": { "fires": true, "surface_class": "imperative", "anchor_substring": "set your stop" } },
+        { "id": "IMP_design_2", "text": "Do not force the entry. Wait for the reversal candle signal in step three before doing anything.",
+          "expect": { "fires": true, "surface_class": "imperative" } },
+        { "id": "IMP_design_3", "text": "wait for a retrace back to the 5 SMA",
+          "expect": { "fires": true, "surface_class": "imperative" } }
+      ],
+      "negatives": [
+        { "id": "DESC_N13", "text": "today I'll share our 4-Hour chart strategy that I use every day", "expect": { "fires": false } },
+        { "id": "DESC_N30", "text": "now back to the euro dollar chart here", "expect": { "fires": false } },
+        { "id": "DESC_N35", "text": "this strategy Works particularly well for euro dollar pound dollar and dollar Yen", "expect": { "fires": false } },
+        { "id": "narration_past", "text": "I bought there when it retested the demand zone", "expect": { "fires": false } }
+      ]
+    }
+  ],
+  "layer_reliability_controls": {
+    "note": "The 10 neutral-adjudication controls (5 gate / 5 descriptive) are an ADDITIONAL whole-layer engagement report, NOT a per-detector birth gate. The load-bearing assertion is that the tier-1 LAYER stays SILENT on all 5 descriptive controls (precision). Several gate controls are narration-wrapped ('we're going to wait for', 'you want to wait for') and CORRECTLY route to tier-2 by the high-precision/low-recall contract — tier-1 catch-rate on the gate controls is REPORTED, not forced (forcing it would re-import the ~67% margin ceiling into the certain layer).",
+    "gate_controls": [
+      { "id": "N12", "text": "step number three, we're going to wait for the market to retest that high or low of this initial candle", "ground_truth": "mandatory-gate" },
+      { "id": "N16", "text": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry", "ground_truth": "mandatory-gate" },
+      { "id": "N21", "text": "this will be our key level your goal is to enter short as soon as the key level is tapped", "ground_truth": "mandatory-gate" },
+      { "id": "N29", "text": "you don't just want to take the trade you want to wait for a retrace back to the 5 SMA", "ground_truth": "mandatory-gate" },
+      { "id": "N31", "text": "That is your opening range breakout zone that you wait for price action to break out.", "ground_truth": "mandatory-gate" }
+    ],
+    "descriptive_controls_must_be_silent": [
+      { "id": "N13", "text": "today I'll share our 4-Hour chart strategy that I use every day" },
+      { "id": "N14", "text": "If I had avoided the two mistakes that I'm about to share with you, I'd be able to be profitable much faster." },
+      { "id": "N30", "text": "now back to the euro dollar chart here" },
+      { "id": "N35", "text": "this strategy Works particularly well for euro dollar pound dollar and dollar Yen" },
+      { "id": "N36", "text": "we'll be adding the three standard deviation Binger band I call this strategy the extreme fate" }
+    ]
+  }
+}

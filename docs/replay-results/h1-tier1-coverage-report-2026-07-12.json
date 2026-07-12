@@ -1,0 +1,160 @@
+{
+  "materialization": {
+    "design_n": 143,
+    "heldout_n": 78,
+    "heldout_scorable_n": 70,
+    "split_source": "docs/replay-results/corpus-v3-heldout-split-2026-07-05.json",
+    "split_method": "sha256(condition_id) low-byte mod 10 < 3 -> held-out"
+  },
+  "birth_gate": {
+    "detectors": [
+      {
+        "detector": "conditional-action",
+        "positives": 1,
+        "negatives": 6,
+        "passed": true,
+        "failures": []
+      },
+      {
+        "detector": "exclusion-contrast",
+        "positives": 2,
+        "negatives": 4,
+        "passed": true,
+        "failures": []
+      },
+      {
+        "detector": "imperative",
+        "positives": 3,
+        "negatives": 4,
+        "passed": true,
+        "failures": []
+      }
+    ],
+    "all_pass": true
+  },
+  "layer_reliability": {
+    "gate_control_catch_rate": "1/5",
+    "gate_controls": [
+      {
+        "id": "N12",
+        "fired": false,
+        "surface_class": null
+      },
+      {
+        "id": "N16",
+        "fired": false,
+        "surface_class": null
+      },
+      {
+        "id": "N21",
+        "fired": true,
+        "surface_class": "conditional-action"
+      },
+      {
+        "id": "N29",
+        "fired": false,
+        "surface_class": null
+      },
+      {
+        "id": "N31",
+        "fired": false,
+        "surface_class": null
+      }
+    ],
+    "descriptive_controls_silent": true,
+    "descriptive_false_fires": []
+  },
+  "coverage_design_143": {
+    "imperative": {
+      "fires": 3,
+      "n": 143,
+      "coverage": 0.021
+    },
+    "conditional-action": {
+      "fires": 6,
+      "n": 143,
+      "coverage": 0.042
+    },
+    "exclusion-contrast": {
+      "fires": 1,
+      "n": 143,
+      "coverage": 0.007
+    },
+    "any": {
+      "fires": 9,
+      "n": 143,
+      "coverage": 0.0629
+    }
+  },
+  "coverage_heldout_78": {
+    "imperative": {
+      "fires": 0,
+      "n": 78,
+      "coverage": 0.0
+    },
+    "conditional-action": {
+      "fires": 5,
+      "n": 78,
+      "coverage": 0.0641
+    },
+    "exclusion-contrast": {
+      "fires": 0,
+      "n": 78,
+      "coverage": 0.0
+    },
+    "any": {
+      "fires": 5,
+      "n": 78,
+      "coverage": 0.0641
+    }
+  },
+  "coverage_heldout_70_scorable": {
+    "imperative": {
+      "fires": 0,
+      "n": 70,
+      "coverage": 0.0
+    },
+    "conditional-action": {
+      "fires": 5,
+      "n": 70,
+      "coverage": 0.0714
+    },
+    "exclusion-contrast": {
+      "fires": 0,
+      "n": 70,
+      "coverage": 0.0
+    },
+    "any": {
+      "fires": 5,
+      "n": 70,
+      "coverage": 0.0714
+    }
+  },
+  "overfit": {
+    "layer_coverage_design": 0.0629,
+    "layer_coverage_heldout": 0.0641,
+    "overfit_ratio": 0.981,
+    "tripwire": 1.85,
+    "verdict": "PASS",
+    "per_family_ratio": {
+      "imperative": "inf",
+      "conditional-action": 0.655,
+      "exclusion-contrast": "inf"
+    }
+  },
+  "precision_spotcheck": {
+    "heldout_contextual_n": 33,
+    "heldout_contextual_false_fires": 2,
+    "heldout_false_fire_rate": 0.0606,
+    "examples": [
+      {
+        "quote": "here is when we get the cross and we don't actually enter the trade till over here",
+        "surface_class": "conditional-action"
+      },
+      {
+        "quote": "VWAP we use for retest and to know if we can buy calls or puts or not. EMA we use to know if to sell or not.",
+        "surface_class": "conditional-action"
+      }
+    ]
+  }
+}
