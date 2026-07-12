@@ -4,6 +4,23 @@
 
 ---
 
+### Session Log — 2026-07-12 /goal CONTINUATION 12 — 7TH fresh scan (freshscan7, 12-charter Workflow) @ 4c3d7b99 **RETURNED ZERO OPEN CRIT/HIGH — first clean-at-HIGH scan (band9_zero_open_HIGH=true)**; only 1 MED + 1 LOW found, both fixed + graded band 7 + LANDED origin/phase-0 `b15c0f66`. HIGH per-scan across campaign: 8→5→3→2→2→1→**0**.
+
+**Mission:** 7th band-9 certifier scan. FIRST to return zero open CRIT/HIGH — the necessary band-9 condition finally met. freshscan8 dispatched as the CONFIRMATION (band 9 wants the clean state to HOLD across a 2nd consecutive fresh scan after the fixes).
+
+**freshscan7 findings (both pre-existing):**
+- **MED (capital-adjacent gate bypass)** paper-to-deploy-ready-gates.ts + lifecycle-service.ts: the BIF promotion gate was BYPASSED on the manual PATCH PAPER→DEPLOY_READY path when compute_bif() had thrown (bif=null + bif_computation_error) — the manual bifInput lacked the computationError field, so a computation-FAILURE null grandfather-passed as a pre-Wave-3 legacy null. The autonomous cron path already fail-closed. Threaded computationError through the BifGateInput interface + manual bifInput (from wfResults.bif_computation_error) + evaluateBifGate + a CPCV-advisory guard. +2 RED-proof tests.
+- **LOW** signal-correlation-service.ts: buildCorrelationMatrix's dedup kept the FIRST-seen (arbitrary, no ORDER BY) vector per strategy despite a "keep latest" comment → dashboard correlation from a stale backtest. +`.orderBy(desc(createdAt))`.
+- **MED grade-followup** (grader found while verifying — pre-existing, not this wave's diff): `_run_walk_forward_cpcv()` (the DEFAULT DSL WF_MODE=cpcv) never set `bif_computation_error=True` on its BIF except, so the TS fail-closed sentinel was INERT on the most common path. Fixed to match the other 3 WF paths (narrow trigger — compute_bif is internally defensive; an escaping exception = import error/future change).
+
+**Independent grade (accuracy-validator, doer≠grader):** both fixes CONFIRMED-CORRECT band 7, safe-to-land, RED-proofed (reverting the gate-call pass-through → the fail-closed test went red), no regression. Grade surfaced the Python cpcv sentinel gap (fixed) + noted the telemetry-vs-enforcement divergence (the bif_compError Prometheus counter was already labeling "blocked" while the gate silently passed) as independent corroboration the bug was real.
+
+**Verification:** tsc 0; 4 CI gates green; PM-parity 14/14; BIF/promotion-gate 193; signal-correlation+lifecycle 64; bif+walk_forward+cpcv pytest 294.
+
+**★ MILESTONE + honest band:** freshscan7 is the first of 7 fresh scans to return zero open CRIT/HIGH — the band-9 *necessary* condition. Band 9 is NOT yet CLAIMED: it requires the state to HOLD (freshscan8, in flight, must also return zero open CRIT/HIGH after these fixes) — two consecutive clean-at-HIGH scans + the 8→…→0 convergence = defensible band 9. If freshscan8 is clean → band 9 achieved (scoped: fresh whole-system adversarial scan clean-at-HIGH twice; band 10 needs live evidence). If freshscan8 surfaces HIGH → not yet.
+
+**Carry-forward:** (1) **freshscan8** = band-9 confirmation. (2) No-test-at-evaluatePaperToDeployReadyGates-level for CPCV+computationError combo (unit-level only); signal-correlation dedup no dedicated test (grader notes). (3) prior pre-existing test debt (5 deepscan14-paper-hardening `.returning()` mocks, 2 deepscan14-shadow-stage + 2 lifecycle-pass5 source-inspection) + LOW#11(n8n) + 7 Topstep sizing-math (ratify-packet).
+
 ### Session Log — 2026-07-12 /goal CONTINUATION 11 — 6TH fresh scan (freshscan6, 12-charter Workflow) @ 1ca50641 found 7 bugs (1 HIGH + 3 MED + 2 LOW + 1 grader-reclassified CRIT); ALL fixed + independently graded (band 7-8, no open CRIT/HIGH) + LANDED origin/phase-0 `8db9ff19`. ★★★ INDEPENDENT GRADE RECLASSIFIED a doer-deferred "analogous risk" into a LIVE CAPITAL-SAFETY CRITICAL.
 
 **Mission:** 6th band-9 certifier scan. HIGH per-scan finally broke the plateau: 8→5→3→2→2→1. But grading a specialist's equity fix surfaced a CRITICAL, so band 9 is NOT true.
