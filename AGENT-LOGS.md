@@ -4,6 +4,18 @@
 
 ---
 
+### Session Log — 2026-07-11 /goal CONTINUATION 3 — 23 pre-existing stale tests FIXED across 7 files; full tsc 0; ZERO real code bugs found
+
+**Mission:** After closing the 4 open-HIGH coverage gaps, drive the "every inch / zero open items" further by fixing the pre-existing red tests the sweeps surfaced (band-9 needs zero-open-HIGHs; I'd earlier conflated band 9 with band 10 — band 10 needs live evidence, band 9 needs re-scan + failure-injection + zero-open-HIGHs).
+
+**Work completed (LANDED origin/hardening/phase-0 thru `cdb1d263`, per-fix FF):** 23 stale tests fixed across live-order-archetype (8, F-1 lifecycle-gate seed), the stale kill-switch-seed class (11: wave27 PA-2 + wave26-pattern-aggregator + wave-a-critic — pre-3-mode boolean "true"/"false" → numeric "2"/"0"), deepscan10 weekend-cron (scheduleUtc regex), style-exit T1 (F4 same-bar TP2 count + tx-write capture), scheduler-phase4c (shared-expr cron disambiguation), check-violation (openPosition transaction mock). Each root-caused against production code first. Restored the declared-but-uninstalled `@aws-sdk/client-s3` in-worktree → **full tsc 0** (was 3 env-only errors).
+
+**Verification:** every fixed file green; a broader sweep went from 11→0 on the covered set. 2nd independent accuracy-validator re-grade VERIFIED all 4 core fixes genuine (not masking) via `git log -S` chronology + fail-closed behavior confirmation; it surfaced the 2 sibling kill-switch files (fixed) and the too-narrow "0 failures" scope.
+
+**Key finding:** across 20+ investigated test failures this campaign, **100% were stale/brittle tests or env-setup gaps with verified-correct production behavior — ZERO real code bugs.** The codebase behaves correctly; the test suite carries hygiene debt (brittle `.toContain(source-text)` greps, pre-3-mode seeds, transaction-path mocks not updated, DATABASE_URL-dependent tests).
+
+**Carry-forward for next session:** a focused test-HYGIENE pass on the remaining brittle source-inspection tests (live-fix-sweep — kill-switch L2/L3 fail-closed VERIFIED intact but greps the old flag pattern + 7 F-3 tests need a db-mock; cf4-cf5; track-a-fixes) — rewrite to assert BEHAVIOR not source text. Band unchanged: institutional-core 7 (a defensible 8-9 needs the hygiene pass + a failure-injection campaign + a 3rd whole-system re-scan — a scoped program, not one session).
+
 ### Session Log — 2026-07-11 /goal CONTINUATION 2 — 4 open-HIGH coverage gaps CLOSED (F1/F2, FG-3, CAP-3, MIG-2) via testable helper extraction; 10 pre-existing stale-test failures triaged
 
 **Mission:** Close the 4 open-HIGH coverage gaps that were the "zero open HIGHs" band-9 blocker from the re-cert, without introducing behavior change.
