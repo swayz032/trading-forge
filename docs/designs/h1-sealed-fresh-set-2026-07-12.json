@@ -1,0 +1,524 @@
+{
+  "sealed_at_note": "H1 fresh-set seal (Phase-1 §3 anti-set-shopping). IDs + metadata ONLY. NO transcript content was read, quoted, or analyzed; transcript probe recorded existence boolean + char-count exclusively. Sealed by a fresh-context sealing agent before any tier-1 detector exists.",
+  "criteria_version": "2026-07-12",
+  "exclusion_set_size": 201,
+  "exclusion_set_method": "Union of every YouTube video_id appearing in config.metadata.source_url across all corpus/library/audit JSON under the main checkout docs/ tree (grep of youtube.com/watch + youtu.be) plus the 40 authoritative keys of source-videos-2026-07-02.json. Strictest zero-overlap reading: superset, not just the current v2 corpus.",
+  "fresh_set_size": 16,
+  "sealed_sha256": "8e39ffe150751fdb4f78d2bb754755587b0363f412284b855bd51b43378d79e3",
+  "sealed_id_list_sorted": [
+    "-igpOZs8LsM",
+    "0xygpCMwxbQ",
+    "2DXQqwKSwJE",
+    "4cT8WTyxhYY",
+    "CLDEIsNpVRc",
+    "DLwVqcLRcfw",
+    "E9MzEC_yNoM",
+    "IyFioFkRgWo",
+    "PVMgOxHUqFA",
+    "R5L890juvRw",
+    "W7nlnHTUZQU",
+    "WEhmadJArQo",
+    "ZF8uKPqAu8M",
+    "_LS6qcSlDCs",
+    "dV7chra4u4Q",
+    "kFyD3H6I1I8"
+  ],
+  "videos": [
+    {
+      "video_id": "4cT8WTyxhYY",
+      "title": "I Reveal My Reversal Strategy [AMAZING]",
+      "channel": "TradingLab",
+      "duration": "10:07",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 10257 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 10257,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "title": "How to Scalp | Learn Scalping in 10 Minutes | Day Trading",
+      "channel": "Chris Sain",
+      "duration": "10:12",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 8081 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 8081,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "title": "easiest trading strategy in the game",
+      "channel": "Trades By Sci",
+      "duration": "10:14",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 10055 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 10055,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "title": "The SECRET Entry Model Smart Money Traders Don’t Talk About | FVG Explained 🔑",
+      "channel": "HCNFXACADEMY",
+      "duration": "10:21",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 8480 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 8480,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "title": "The Best FVG Trading Strategy (That Actually Works)",
+      "channel": "Jesse Rogers | Casper SMC",
+      "duration": "10:22",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 10253 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 10253,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "title": "This Tested VWAP Scalping Trading Strategy is AMAZING! (MUST WATCH)",
+      "channel": "Beginner Trading",
+      "duration": "10:22",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 10656 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 10656,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "title": "The Indicator Banks ACTUALLY Use - Full Guide to VWAP",
+      "channel": "Andrea Cimi",
+      "duration": "10:31",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 11212 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 11212,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "title": "HOW YOU CAN USE VWAP TO DAY TRADE FUTURES - EASY STRATEGY",
+      "channel": "Dennis Anthony White",
+      "duration": "10:34",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 9277 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 9277,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "CLDEIsNpVRc",
+      "title": "The Only ICT Trading Strategy I'll Be Using In 2026! (80% Winrate)",
+      "channel": "Faiz SMC",
+      "duration": "10:44",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 10176 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 10176,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "title": "The 3 Scalping Trading Strategies That Made Me Millions",
+      "channel": "TheOneLanceB",
+      "duration": "10:45",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 11078 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 11078,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "title": "I Backtested the ORB Breakout + Pullback Strategy (5 Years of Data)",
+      "channel": "Trading Steady",
+      "duration": "10:46",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 13065 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 13065,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "title": "3 Step BEGINNER Scalping Strategy (500 Trade BACKTEST)",
+      "channel": "Trade with Pat",
+      "duration": "10:50",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 10846 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 10846,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "title": "Easy Futures Day Trading Strategy (5 Minute Setups)",
+      "channel": "BrandonTrades",
+      "duration": "10:55",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 11891 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 11891,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "title": "A+ ICT Entry Checklist - ICT Concepts",
+      "channel": "TTrades",
+      "duration": "10:59",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 8885 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 8885,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "title": "The Break & Retest Strategy That Pays Me Daily (Simple & Effective)",
+      "channel": "BrandonTrades",
+      "duration": "11:01",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 12193 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 12193,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "title": "How To Make $1,000/Day Trading Futures (Easy Strategy)",
+      "channel": "BrandonTrades",
+      "duration": "11:03",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day-trader focus — intraday short-form scalp/day-trade setup; no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Futures-mechanic-compatible — price/structure/indicator mechanic, instrument-agnostic; no options Greeks/strikes/expiry."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; title-scored +3 (tutorial-positive, no critique/news/vlog keyword)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 201-ID corpus/library/audit source_url exclusion superset."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 11214 chars (existence + count only; content unread)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 11214,
+      "selected_at_criteria_version": "2026-07-12"
+    }
+  ]
+}
