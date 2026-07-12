@@ -8,8 +8,9 @@ function decide({ sample, sw, gpuBusyPct, nowMs, phase }) {
   if (!sw || sw.mode === null || sw.mode === undefined) return { action: "SKIP", reason: "switch_unreadable" };
   if (sw.mode === "off") return { action: "SKIP", reason: "switch_off" };
   if (sw.skipUntilMs && sw.skipUntilMs > nowMs) return { action: "SKIP", reason: "skip_requested" };
-  // Machine-detected load.
-  if (!sample.health || sample.health.ok === false) return { action: busyAction, reason: "backend_unreachable" };
+  // Machine-detected load. "unreachable" = truly no connection (HTTP 000). A reachable-but-non-200
+  // backend (auth-gated/slow) is UP — don't skip for that; fall through to the load checks.
+  if (!sample.health || sample.health.reachable === false) return { action: busyAction, reason: "backend_unreachable" };
   if ((sample.health.backtestsActive ?? 0) > 0) return { action: busyAction, reason: "backtests_active" };
   // pythonCount catches the campaign's backtest workers even when backtestConcurrency reads 0.
   if ((sample.pythonCount ?? 0) > 0) return { action: busyAction, reason: "python_workers_active" };

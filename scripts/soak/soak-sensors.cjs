@@ -51,11 +51,15 @@ async function readHealth(healthUrl) {
   try {
     const res = await fetch(healthUrl, { signal: AbortSignal.timeout(8000) });
     const latencyMs = Date.now() - started;
-    if (!res.ok) return { ok: false, latencyMs, backtestsActive: null };
+    // reachable = the backend answered at ALL (any HTTP status). A non-200 (auth-gated 401/503, or
+    // slow) means the backend is UP, just not returning health JSON — NOT "unreachable". Only a thrown
+    // fetch (connection refused / HTTP 000) is truly down. This distinction stops the false-positive
+    // backend_unreachable the soak logged on 2026-07-11 (backend was actually alive that day).
+    if (!res.ok) return { reachable: true, ok: false, status: res.status, latencyMs, backtestsActive: null };
     const body = await res.json();
     const active = body?.backtestConcurrency?.active;
-    return { ok: true, latencyMs, backtestsActive: Number.isFinite(active) ? active : null };
-  } catch { return { ok: false, latencyMs: null, backtestsActive: null }; }
+    return { reachable: true, ok: true, status: res.status, latencyMs, backtestsActive: Number.isFinite(active) ? active : null };
+  } catch { return { reachable: false, ok: false, status: null, latencyMs: null, backtestsActive: null }; }
 }
 
 async function takeSample({ healthUrl, port = 4000, nowMs }) {
