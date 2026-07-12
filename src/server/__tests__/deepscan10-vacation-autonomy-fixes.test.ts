@@ -225,10 +225,13 @@ describe("FIX 3 — weekend auto-resume cron registered in scheduler.ts", () => 
     "scheduler.ts",
   );
 
-  it("scheduler.ts registers a weekend cron ('* * 0,6') for maybeAutoResumeAfterReboot", () => {
+  it("scheduler.ts registers a weekend cron ('0,6' day field) for maybeAutoResumeAfterReboot", () => {
     const src = fs.readFileSync(schedulerSrc, "utf8");
-    // The weekend cron must target Sat(0)/Sun(6) and call maybeAutoResumeAfterReboot
-    expect(src).toMatch(/cron\.schedule\([^)]*0,6[^)]*\)/);
+    // The weekend cron must target Sun(0)/Sat(6) and call maybeAutoResumeAfterReboot.
+    // Accept BOTH the raw `cron.schedule(...)` and the UTC-pinned `scheduleUtc(...)` wrapper —
+    // scheduler.ts migrated all crons to scheduleUtc() (a thin cron.schedule wrapper); the
+    // weekend job now reads `scheduleUtc("0 * * * 0,6", ...)` (scheduler.ts:1611).
+    expect(src).toMatch(/(?:cron\.schedule|scheduleUtc)\([^)]*0,6[^)]*\)/);
     expect(src).toMatch(/maybeAutoResumeAfterReboot/);
   });
 

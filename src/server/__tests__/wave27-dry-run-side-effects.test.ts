@@ -397,11 +397,13 @@ describe("wave27 dryRun — pattern-aggregator-service", () => {
     buildUpdateMock();
 
     // Call sequence for NO_CHANGE path with dryRun=false:
-    //   0 = kill switch
+    //   0 = kill switch — must be AUTOPILOT (numeric "2") per learning-loop-mode.ts 3-mode contract.
+    //       (Stale seed was the pre-3-mode boolean "true", which parses to mode 0 → fail-closed HALT,
+    //        so the aggregator returned "halted" not "no_change". Aligned to PA-4's correct "2" seed.)
     //   1 = trade critiques
     // Then _audit calls db.insert (audit_log)
     buildSelectSequenceMock([
-      [{ currentValue: "true" }],
+      [{ currentValue: "2" }],
       MOCK_CRITIQUES,
     ]);
 
