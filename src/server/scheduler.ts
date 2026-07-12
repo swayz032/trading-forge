@@ -807,6 +807,17 @@ export const _testOnly = {
   },
 };
 
+// LOW#10 (fresh-scan 2026-07-12): daily family-facing DIGEST/REPORT jobs whose actual firing is gated
+// to a specific ET HOUR by their scheduleUtc cron trigger (NOT by their meta.run() body). Boot
+// catch-up calls meta.run() directly, bypassing that guard → the 17:00-ET digest fired at the process's
+// start hour on partial-day data. They fire correctly at their scheduled hour via the cron, so they must
+// NOT boot-catch-up. Interval-anchored jobs (heartbeat, decay-monitor, reconciliation) still catch up.
+const _ET_HOUR_ANCHORED_NO_CATCHUP: ReadonlySet<string> = new Set([
+  "consistency-tracker-daily-digest",
+  "composite-health-daily-digest",
+  "wave26-cohort-daily-audit-report",
+]);
+
 export async function reconcileMissedRuns() {
   const now = Date.now();
   for (const [name, meta] of Object.entries(SCHEDULER_JOBS)) {
@@ -824,9 +835,18 @@ export async function reconcileMissedRuns() {
         continue;
       }
     }
+    // LOW#10 (fresh-scan 2026-07-12): skip boot-catch-up for jobs anchored to a specific ET HOUR. Their
+    // ET-hour guard lives ONLY in the cron trigger, not in meta.run(), so a catch-up (which calls
+    // meta.run() directly) fired the 17:00-ET digest at whatever hour the process happened to boot —
+    // family-facing Discord digest at the wrong time / on partial-day data. These fire correctly at
+    // their scheduled hour via the cron. Interval-anchored jobs (heartbeat, decay-monitor) still catch up.
+    if (!meta.lastRunAt && _ET_HOUR_ANCHORED_NO_CATCHUP.has(name)) {
+      logger.info({ job: name }, "reconcileMissedRuns: skipping boot catch-up for ET-hour-anchored job (fires at its scheduled hour)");
+      continue;
+    }
     if (!meta.lastRunAt) {
-      // Never ran in this process lifetime — if interval < 24h, run immediately
-      // to catch up after a restart
+      // Never ran in this process lifetime — if interval <= 24h, run immediately to catch up after a
+      // restart (interval-anchored jobs only — ET-hour-anchored ones handled above).
       if (meta.intervalMs <= 24 * 60 * 60 * 1000) {
         logger.info({ job: name }, "Scheduler: job never ran this session — running catchup");
         try {

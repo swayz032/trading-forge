@@ -307,6 +307,16 @@ def _maybe_bust_cache() -> None:
 
 def _consolidated_s3_path(symbol: str, timeframe: str, adjusted: bool = True) -> str:
     bucket = os.environ.get("S3_BUCKET", "trading-forge-data")
+    # MED#7 (fresh-scan 2026-07-12): the consolidated/ variant is ALWAYS ratio-adjusted (sync_from_s3
+    # writes adjusted=True by construction — there is no raw consolidated file). The `adjusted` param was
+    # DECLARED but IGNORED, so an adjusted=False (raw roll-analysis) request silently got ratio-ADJUSTED
+    # data back — and any provenance derived from it would be inverted. Fail LOUD instead of returning
+    # mislabeled data; a genuine raw request must use the legacy raw glob (_legacy_s3_glob / build_s3_glob).
+    if not adjusted:
+        raise ValueError(
+            f"_consolidated_s3_path: no RAW consolidated variant exists for {symbol}/{timeframe} — "
+            f"consolidated data is ratio-adjusted by construction. Use the legacy raw glob for adjusted=False."
+        )
     # Consolidated files live directly under consolidated/ (no ratio_adj subfolder)
     return f"s3://{bucket}/futures/{symbol}/consolidated/{timeframe}.parquet"
 

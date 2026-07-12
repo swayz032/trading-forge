@@ -2906,6 +2906,12 @@ export async function graduateBucketDirectly(opts: {
         if (BREAKOUT_RX.test(ind)) return ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"];
         if (MEAN_REV_RX.test(ind)) return ["RANGE_BOUND"];
         if (TREND_RX.test(ind)) return ["TRENDING_UP", "TRENDING_DOWN"];
+        // MED#6 (fresh-scan 2026-07-12): a regime-agnostic ARCHETYPE (archetype:*, e.g.
+        // gann_box_4h_continuation) that none of the specific heuristics above matched must default to
+        // ALL regimes — such archetypes are in UNSPECIFIED_ARCHETYPES (regime_gate disabled), so
+        // falling to the single-[preferredRegime] fallback below silently EXCLUDED the bidirectional
+        // archetype from regime-matched strategy picks. Bidirectional-by-design → all three regimes.
+        if (ind.startsWith("archetype:")) return ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"];
         // Unknown → preserve LLM emit (or single fallback)
         return llmRegimes && llmRegimes.length > 0 ? llmRegimes : [preferredRegime];
       })(),
