@@ -4,6 +4,28 @@
 
 ---
 
+### Session Log — 2026-07-12 /goal CONTINUATION 7 — 2ND follow-up fresh scan @ 6a2c7a5c (concurrency + inbound-recon + fixes-hold) found 11 REAL bugs (1 CRIT + 5 HIGH + 2 MED + 1 LOW → +2 grader CRIT/HIGH); all fixed + LANDED origin/phase-0 `70309e54`
+
+**Mission:** The band-9 demand requires a fresh re-scan showing ZERO open HIGHs. CONTINUATION-6's completeness critic flagged 2 UNDER-covered surfaces (inbound fill-recon/journal-recon; runtime concurrency/TOCTOU). Ran the follow-up scan targeting exactly those + a fixes-hold re-audit of the 16 CONTINUATION-6 fixes + a failure-injection lens (Workflow wf_d9ca920b-211, 8 charters, each finding independently RED-proofed). It CONFIRMED 9 (band 9 STILL not true) — **again several IN my own CONTINUATION-6 fixes** — and the independent grader then found 2 MORE, incl. a CRITICAL my own fix silently inherited. The fix-breeds-HIGH pattern is real.
+
+**FIXED + LANDED origin/phase-0 `70309e54`:**
+- **CRIT (sizing parity, 2 parts):** (a) CONTINUATION-6 HIGH#3's PM-taper floor fix landed in TS but NOT the Python mirror → backtest over-sized PM trades (fixed: apply `np.floor(base×pm_factors)` at sizing.py). (b) **grader F-1, CRITICAL:** that Python fix was INERT — a pre-existing Polars **Int8 overflow** (`.dt.hour()*60` overflows for ET hour≥3, SILENTLY, no exception) corrupted `pm_factors` so the ENTIRE per-bar PM taper never fired in backtests (630/630 PM minutes → factor 1.0). Fixed with the documented `.cast(pl.Int32)` pattern (AGENT-LOGS 5227/5241/9349/9378; same as economic_calendar.py/liquidity.py) + a regression test (the path had ZERO coverage).
+- **HIGH#2+#3 (inbound fill-recon):** dedup was single-column (overwritten each fill → redelivered EARLIER partial re-accumulated) + non-atomic check-then-act that fails-OPEN → concurrent redelivery double-counts. Now an atomic `db.transaction` + `.for("update")` row lock, dedups against the fillEvents HISTORY, fail-CLOSED. +history-dedup test.
+- **HIGH#4 (concurrency):** bookPartialClose lacked the `closedAt IS NULL` atomic guard closePosition has → a partial racing a concurrent full-close double-credited equity. Now claims FOR UPDATE + superseded-sentinel benign no-op. (grader F-2: `.for("update")` broke 2 test mocks not updated → fixed with a dedicated open-position resolver.)
+- **HIGH#5:** CONTINUATION-6 HIGH#6's idempotency fix STILL collided for equal-qty MARKET exit legs (TP1/TP2/15:55-flatten all `...|exit_long|3|||market`) → EOD flatten deduped at broker. Added a per-leg `idempotencyTag` (exitType/flattenReason/modifyType) to the content hash.
+- **HIGH#6:** production.mode_changed audit (the highest-value capital-authority trace) was fire-and-forget → a swallowed write lost it. Now awaited + AlertFactory.systemError on failure.
+- **MED#7+#8:** the CONTINUATION-6 CRIT force-close fix (correctly re-attempts on incomplete) + L3 trailing-DD (no dedup) re-fired the pending audit/SSE/Discord every ~1s = storm. Added a shared re-attempt BACKOFF (still re-attempts, throttled; HALTED silently between; cleared on completed close).
+- **LOW#9:** fail-closed layer-timeout decision omitted `layer` → emitter misattributed it as the nonexistent layer 0. Now carries the real layer.
+- **CLEAN charters:** migration-0201-race + lifecycle-promotion-gate-bypass (no findings).
+
+**Verification:** Independent accuracy-validator (doer≠grader) RED-proofed all 9 via 2-path derivation + a base-vs-head isolated-worktree diff; ZERO capital-safety regression, fixes fail CONSERVATIVE. It caught F-1 (CRITICAL, via a from-scratch Polars-overflow sweep — the CRIT fix was correct-but-inert) + F-2 (5-test mock regression) — both fixed same session. Final: tsc 0 (self-contained `npm ci` — the peer-junction node_modules got wiped a THIRD time this session; npm ci is the durable escape), all 4 CI gates green (production-isolation, 2026-compliance, system-map, ts-python-pm-factor-parity 14/14), py_compile OK, touched-file suites green (the only batch-run failures are the pre-existing cross-suite leaked-timer teardown in kill-switch.ts:1233, base-identical, now in the frozen CI baseline of 189 known). FF-rebased over 17 concurrent hardening-rails CI commits, zero overlap.
+
+**Known-facts updates:** none new pinned — F-1 is a re-hit of the DOCUMENTED Polars-i8 hazard ([[reference_worktree_verification_traps_2026_07_05]] neighbours it; the i8→i32 rule is in AGENT-LOGS). The peer-junction node_modules fragility is covered by [[reference_rm_rf_junction_deletes_target_2026_07_09]].
+
+**Carry-forward:** ZERO fixed-code carry-forwards from the 11. ★ HONEST BAND: still NOT 9. Two successive fresh scans (CONTINUATION-6: 17 bugs, CONTINUATION-7: 11) both found real HIGH/CRIT, and BOTH found defects the PRIOR wave's own fixes introduced or inherited (the concurrency HIGHs share one root: check-then-act without row locks; the parity CRITs share one root: TS-fixed-but-Python-not + silent Polars-i8). Band 9 ("zero open HIGHs sustained") requires a NEXT fresh scan to come back CLEAN — the convergent-hardening trajectory suggests several more iterations. This is real hardening (28 total bugs fixed across the 2 follow-up scans incl. 3 CRITs), not busywork, but band 9 is a sustained-clean bar, not one-fix-away.
+
+---
+
 ### Session Log — 2026-07-12 Codex Rails Plan 1 reconciled and landed
 
 **Mission:** finish the deferred Codex Wave-1 Rails landing without interfering with the active extraction lane or replacing the existing 03:00 soak system.
