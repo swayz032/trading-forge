@@ -28,6 +28,11 @@ const mockState = vi.hoisted(() => ({
   sseBroadcasts: [] as Array<{ event: string; data: unknown }>,
   logWarns: [] as Array<unknown[]>,
   logErrors: [] as Array<unknown[]>,
+  auditRows: [] as Array<{ action: string; [k: string]: unknown }>,
+  // freshscan11 MED: promoteStrategy can return {success:false} WITHOUT throwing (optimistic-lock
+  // trip). Default happy-path is success:true; test 6 flips it to prove the consumer suppresses the
+  // false demotion signal.
+  promoteResult: { success: true } as { success: boolean; error?: string },
 }));
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -78,8 +83,16 @@ vi.mock("../services/lifecycle-service.js", () => ({
   LifecycleService: vi.fn().mockImplementation(() => ({
     promoteStrategy: vi.fn(async (strategyId: string, from: string, to: string) => {
       mockState.demoteCalls.push({ strategyId, from, to });
+      return mockState.promoteResult;
     }),
   })),
+}));
+
+// freshscan11 MED: capture the drift.auto_demotion_refused audit written when promoteStrategy refuses.
+vi.mock("../lib/audit-log-helper.js", () => ({
+  insertAuditRowSafe: vi.fn(async (row: { action: string; [k: string]: unknown }) => {
+    mockState.auditRows.push(row);
+  }),
 }));
 
 // ─── Import after mocks ───────────────────────────────────────────────────────
@@ -222,6 +235,8 @@ beforeEach(() => {
   mockState.sseBroadcasts = [];
   mockState.logWarns = [];
   mockState.logErrors = [];
+  mockState.auditRows = [];
+  mockState.promoteResult = { success: true };
   vi.clearAllMocks();
 });
 
@@ -390,5 +405,29 @@ describe("drift-detection-service — winRate mandate fix", () => {
     if (trigger) {
       expect(trigger).not.toContain("winRate");
     }
+  });
+
+  it("6. promoteStrategy refuses ({success:false}) → NO false drift-demotion SSE, refusal is audited (freshscan11 MED)", async () => {
+    // Expectancy drift that WOULD demote — but the strategy has concurrently left PAPER, so
+    // promoteStrategy returns {success:false} WITHOUT throwing. The consumer must NOT emit the
+    // (false) strategy:drift-demotion SSE, and must audit the refusal so it isn't silent.
+    // RED-proof: revert the drift-detection-service `if (demoteResult.success)` guard and this fails
+    // (the SSE fires unconditionally again).
+    mockState.promoteResult = { success: false, error: "optimistic_lock: not in PAPER" };
+    const backtest = makeBacktest({ winRate: 0.60, avgTradePnl: 100, maxDrawdown: 500 });
+    const trades = makeExpectancyDriftTrades();
+    setupDbForDetect(backtest, trades);
+
+    await detectDrift("strat-refused-demote", "sess-1");
+
+    // promoteStrategy WAS attempted...
+    expect(mockState.demoteCalls.length).toBeGreaterThan(0);
+    // ...but the demotion did NOT happen, so NO strategy:drift-demotion SSE may fire.
+    const demotionBroadcast = mockState.sseBroadcasts.find(b => b.event === "strategy:drift-demotion");
+    expect(demotionBroadcast).toBeUndefined();
+    // The refusal MUST be audited (not silent).
+    const refusalAudit = mockState.auditRows.find(r => r.action === "drift.auto_demotion_refused");
+    expect(refusalAudit).toBeDefined();
+    expect((refusalAudit as Record<string, unknown>).entityId).toBe("strat-refused-demote");
   });
 });

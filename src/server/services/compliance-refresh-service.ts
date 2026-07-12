@@ -18,6 +18,7 @@ import { logger } from "../lib/logger.js";
 import { notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { broadcastSSE } from "../routes/sse.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
 // F-5: Use lowercase firm IDs matching paper-execution-service queries.
 // Legacy firms (Apex, FFN, Alpha, Tradeify, Earn2Trade, TPT) were removed via
@@ -139,6 +140,13 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
 
   if (driftDetails.length > 0) {
     const firmList = driftDetails.map((d) => d.firm).join(", ");
+    // freshscan11 LOW: this compliance-rule-drift emitter ("the bot may be using outdated trading
+    // rules" — a capital-safety signal) previously fired notifyCritical + broadcastSSE with
+    // correlationId:null and wrote NO audit_log row (only domain rows), so a dashboard/Discord alert
+    // could not be joined to any reconstruction chain. Mint one correlationId and thread it through
+    // ALL three hops (Discord + SSE + audit), mirroring every other cron-reachable safety emitter
+    // (reconciliation reconRunId, kill-switch, dead-mans-heartbeat cronCorrelationId).
+    const correlationId = crypto.randomUUID();
     notifyCritical(
       "Compliance Rule Drift Detected",
       appendFamilyGradePostscript(
@@ -150,7 +158,7 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
         "The bot's trading compliance rules failed to refresh — a prop firm's rules document changed unexpectedly.",
         "Call Tony — the bot may be using outdated trading rules.",
       ),
-      { oldHash, newHash, affectedFirms: driftDetails.map((d) => d.firm) },
+      { oldHash, newHash, affectedFirms: driftDetails.map((d) => d.firm), correlationId },
     );
 
     // deepscan18 (E-E1): `compliance:drift_detected` has been a typed, subscribed
@@ -191,8 +199,19 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
       newHash,
       affectedStrategyCount,
       severity,
-      correlationId: null,
+      correlationId,
       timestamp: new Date().toISOString(),
+    });
+
+    // Durable audit row so the drift alert is reconstructable (SSE + Discord are ephemeral).
+    await insertAuditRowSafe({
+      action: "compliance.rule_drift_detected",
+      entityType: "system",
+      entityId: null,
+      status: severity === "critical" ? "critical" : "warning",
+      input: { affectedFirms, oldHash, newHash },
+      result: { affectedStrategyCount, severity },
+      correlationId,
     });
   }
 

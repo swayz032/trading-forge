@@ -158,9 +158,30 @@ export async function detectDrift(strategyId: string, sessionId: string): Promis
       try {
         const { LifecycleService } = await import("./lifecycle-service.js");
         const lifecycle = new LifecycleService();
-        await lifecycle.promoteStrategy(strategyId, "PAPER", "DECLINING");
-        broadcastSSE("strategy:drift-demotion", { strategyId, driftSeverity: maxDrift, correlationId, trigger: alerts.map(a => a.metric) });
-        logger.warn({ strategyId, driftSeverity: maxDrift, correlationId, trigger: alerts.map(a => a.metric) }, "Strategy auto-demoted due to drift > 2σ in expectancy/drawdown metrics");
+        // freshscan11 MED: promoteStrategy returns {success:false} WITHOUT throwing when its
+        // optimistic-lock guard trips (strategy.lifecycleState !== "PAPER") — e.g. a concurrent
+        // SHADOW→PAPER promotion, manual PATCH, or another drift cycle moved the strategy out of
+        // PAPER between detectDrift's read and here. Capturing the return is mandatory: the SSE +
+        // "auto-demoted" log must fire ONLY on a real demotion, else we emit a FALSE
+        // strategy:drift-demotion the dashboard/family digest trusts.
+        const demoteResult = await lifecycle.promoteStrategy(strategyId, "PAPER", "DECLINING");
+        if (demoteResult.success) {
+          broadcastSSE("strategy:drift-demotion", { strategyId, driftSeverity: maxDrift, correlationId, trigger: alerts.map(a => a.metric) });
+          logger.warn({ strategyId, driftSeverity: maxDrift, correlationId, trigger: alerts.map(a => a.metric) }, "Strategy auto-demoted due to drift > 2σ in expectancy/drawdown metrics");
+        } else {
+          // Demotion did NOT happen — do NOT emit the false signal; audit the refusal so the
+          // drift trigger's coverage gap is visible (promoteStrategy writes no audit on this path).
+          logger.warn({ strategyId, driftSeverity: maxDrift, correlationId, reason: demoteResult.error }, "Drift auto-demotion REFUSED (strategy no longer in PAPER) — no demotion signal emitted");
+          await insertAuditRowSafe({
+            action: "drift.auto_demotion_refused",
+            entityType: "strategy",
+            entityId: strategyId,
+            status: "warning",
+            input: { fromState: "PAPER", toState: "DECLINING", driftSeverity: maxDrift },
+            result: { reason: demoteResult.error ?? "promote_returned_success_false" },
+            correlationId,
+          });
+        }
       } catch (demoteErr) {
         logger.error({ strategyId, err: demoteErr, correlationId }, "Auto-demotion from drift failed");
       }
@@ -263,9 +284,26 @@ export async function cascadeRevalidation(firm: string): Promise<{
     const lifecycle = new LifecycleService();
     for (const strat of deployedStrats) {
       try {
-        await lifecycle.promoteStrategy(strat.id, "DEPLOYED", "DECLINING");
-        pausedStrategies.push(strat.id);
-        logger.warn({ strategyId: strat.id, firm }, "Strategy demoted to DECLINING due to compliance cascade");
+        // freshscan11 MED (class sibling of the PAPER→DECLINING drift site above): promoteStrategy
+        // returns {success:false} WITHOUT throwing when the strategy already left DEPLOYED (concurrent
+        // transition). Reporting it as paused would be FALSE — a compliance-cascade coverage gap that
+        // reads as "handled". Capture the return; only count + log a demotion that actually happened.
+        const cascadeResult = await lifecycle.promoteStrategy(strat.id, "DEPLOYED", "DECLINING");
+        if (cascadeResult.success) {
+          pausedStrategies.push(strat.id);
+          logger.warn({ strategyId: strat.id, firm }, "Strategy demoted to DECLINING due to compliance cascade");
+        } else {
+          logger.warn({ strategyId: strat.id, firm, reason: cascadeResult.error }, "Compliance-cascade demotion REFUSED (strategy no longer DEPLOYED) — NOT counted as paused");
+          await insertAuditRowSafe({
+            action: "compliance_cascade.demotion_refused",
+            entityType: "strategy",
+            entityId: strat.id,
+            status: "warning",
+            input: { fromState: "DEPLOYED", toState: "DECLINING", firm },
+            result: { reason: cascadeResult.error ?? "promote_returned_success_false" },
+            correlationId: null,
+          });
+        }
       } catch (err) {
         logger.error({ strategyId: strat.id, err }, "Failed to demote strategy during compliance cascade");
       }
