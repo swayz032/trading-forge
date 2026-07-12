@@ -1,0 +1,33 @@
+# H1 Human-in-Loop Pilot — PRE-REGISTRATION (FROZEN 2026-07-12)
+
+> **Law 4.** Frozen BEFORE the pilot reads anything — the bar before the score, same discipline as Wave 0. This pre-reg executes the human-in-loop fork (H1's pre-registered economics outcome, `h1-wave3-TERMINAL-fork-2026-07-12.md`) AS the road to H2. Outranks memory. Un-pinned terms resolve to the strictest reading.
+
+## §0 — What the pilot IS (and why it exists)
+H1's terminal result: the cheap fully-automatic tier-2 discourse pass cannot be conformantly instrumented at local-model scale (proven by execution, twice). H1 therefore NARROWED to its pre-written economics fork: **fidelity achievable at human-in-loop cost.** The pilot runs the Wave-4-assembled conveyor end-to-end on the SEALED 16-video set at the new economics, produces fidelity certificates, and hands them to H2's frozen two-read rule. The conveyor is now **tier-1 (deterministic detection) + tier-3 (blind adjudication)**; the ~30% margin the retired tier-2 would have handled routes to tier-3.
+**The adjudicators are FRESH-CONTEXT AGENTS, not literal humans** — control-gated, blind, per the Wave-1 shakedown protocol (proven 92% inter-rater consistency @ ~1.1K tok/item). 'Human-in-loop cost' = agent-hours per video, NOT dollars/hiring. It kills SCALE ('mine a thousand educators cheaply'), not the MISSION (H2's survivor read fires at ANY N).
+
+## §1 — THE BAR (FROZEN)
+Read at the pilot sitting, ONCE, against the SEALED 16-video set (`h1-sealed-fresh-set-2026-07-12.json`, sha `8e39ffe1`, selected before any instrument existed → selection-clean).
+- **QUALITY bar [calibration estimate, unchanged from Wave-0 §1]:** **≥ 60%** of the 16 reach **certificate-grade** (every spine condition classifies tier-1 or tier-3 with a quote anchor AND all 5 compile-integrity lints pass). N=16 ≥ 10, so a verdict (not LOW_POWER) is read.
+- **ECONOMICS — REFRAMED from a gate to a MEASUREMENT + affordability ceiling:** the Wave-3 `≤1 tier-3/video` rider is **RETIRED** (it gated the cheap tier, which is dead). Instead: MEASURE mean tier-3 (agent) adjudications per video. **Pre-registered EXPECTED range ~5-9/video** (from the shakedown baseline). **Affordability CEILING (frozen): ≤ ~15 adjudications/video** — beyond that even the human-in-loop fork is uneconomic → escalate (a deeper finding, §2). Within the ceiling = the fork is affordable (an evening of agent work per handful of videos); the exact number is a receipt, not a pass/fail.
+- **Scope line (Law 7):** sealed-16 · taxonomy version · extractor version (tier-1 + tier-3, tier-2 retired) · engine/snapshot. Per-video slicing = annotation-tier; verdict is the aggregate.
+
+## §2 — FAILURE MEANINGS (pre-written)
+- **Miss on QUALITY** (<60% cert-grade even with agent-adjudication): iterate under a 2-pass budget; two passes short → the FIDELITY INSTRUMENT itself falls short at human-in-loop cost too (a deeper finding than the economics fork — it would question whether the surface is certifiable at all at this model scale, routing toward the H1 'not-yet' verdict / source-agnostic reconsideration).
+- **Miss on ECONOMICS** (mean adjudications/video > the ~15 affordability ceiling): the human-in-loop fork ITSELF is uneconomic → escalate; the parked stronger-model tier-2 option (§5) becomes the next pre-registered economics experiment rather than a future one.
+- **Neither miss is an H2 falsification** — H2 asks whether a certified strategy survives the battery; the pilot only asks whether the conveyor produces certificates at bounded cost.
+
+## §3 — READ-ONCE + INDEPENDENT VERIFICATION (inherited)
+Unseal the 16 → run the tier-1+tier-3 conveyor end-to-end → read the §1 bar ONCE → independent fresh-context re-verification (grading-integrity, doer≠grader) → pilot verdict. Tier-3 adjudication uses the shakedown's control-gated blind protocol (controls ≥4/5 each direction, closed taxonomy, cost-free cannot-determine, quote-anchored, answer key never seen by raters). The blinding leak-scan runs on every rater packet BEFORE dispatch (house standard).
+
+## §4 — HANDOFF to H2 (already frozen: `h2-source-thesis-preregistration-2026-07-07.md`)
+Certificate-grade strategies → the full anti-overfit battery (PBO/DSR/WFE/B14/B15) on the re-certified G4 engine. **H2's rule is UNCHANGED and reachable at fork economics:** SURVIVOR read at ANY N (≥1 robust survivor = the mission HAS its scaleable strategy → survivor-forensics protocol → small-real-capital graduation); RATE read only at N≥30 (≥5% scale-scout / 1-5% marginal / 0-survivors falsify-source-and-pivot). The pilot's cert count (≤16 videos × strategies-each) feeds the survivor read immediately; the rate read waits for N≥30 accumulated across pilots.
+
+## §5 — PARKED OPTION (registered, NOT reopened): stronger-model tier-2
+A cloud reasoning model on ONLY the ~30% margin (the items tier-1 falls through) is a FUTURE pre-registered economics OPTIMIZATION — legitimate precisely because it does NOT touch the closed gemma budget (it's a new tier, not a gemma edit). Measured against ADJUDICATION AGREEMENT (does the cloud tier-2 match the blind tier-3 adjudicators?). It WAITS until the fork's baseline economics are measured in practice (this pilot). Registered here so it's a known option, not a 3am idea.
+
+## §6 — CERTIFICATE SCHEMA amendment (tier-2 retired)
+The frozen Wave-0 §4 schema stands EXCEPT `classifying_tier` ∈ {1 deterministic, 3 adjudicated} — the tier-2 (discourse) value is RETIRED with cause (the terminal fork). The `compile_integrity` block (5 lints: direction-conflation, unsat-SAT, OR-alternatives, F-2 coverage, causality) and provenance (video_id, transcript_sha256, extractor_version, taxonomy_version) are unchanged. Wave-4's assembler emits this amended schema.
+
+---
+*Frozen 2026-07-12 at the doer seat, BEFORE the pilot runs and BEFORE the sealed 16 is unsealed. Vaulted FF to `corpus-v3-gate3-cert-2026-07-06`. The fork executes as the road to H2; the bar exists before anyone falls in love with the score.*
