@@ -163,11 +163,22 @@ adminRoutes.post("/self-restart", async (req, res) => {
   );
 
   // ── Audit row ─────────────────────────────────────────────────────────────
+  // freshscan10 MED (2026-07-12): missed sibling of the deep-scan #28 setMode
+  // authority fix. `getLastOperatorActivityAt()` (dead-mans-heartbeat-service.ts)
+  // treats ANY decision_authority='human' row as operator activity and resets the
+  // vacation operator-absence silence clock. The dead-man's heartbeat auto-restart
+  // is the single most-likely AUTONOMOUS action during unattended operation — if it
+  // audits as 'human' it silently keeps operator_absent_since from ever latching, so
+  // Tier-1 vacation autopilot never engages. `parentId` is non-null ONLY on the
+  // autonomous heartbeat path (it plumbs parentCorrelationId); a manual operator curl
+  // omits it. So: autonomous restart → 'system' (not operator activity); manual
+  // operator-triggered restart → 'human' (genuine operator activity). Mirrors
+  // pipeline-control-service.ts:136 authority param.
   await insertAuditRow({
     action: "system.self_restart_requested",
     entityType: "system",
     entityId: null,
-    decisionAuthority: "human",
+    decisionAuthority: parentId ? "system" : "human",
     input: { reason, timestamp: body.timestamp } as Record<string, unknown>,
     // Preserve the handler's own UUID in metadata for debugging even when
     // we're using the parent's UUID as the correlation_id.

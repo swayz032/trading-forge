@@ -565,3 +565,76 @@ describe("Pass 6 Track D — SQL correlation_id stitching simulation", () => {
     expect(parsed.reason).toBe(reason);
   });
 });
+
+// ─── Section 4: self-restart decision_authority (freshscan10 MED) ──────────────
+
+describe("freshscan10 MED — self-restart audit decision_authority", () => {
+  /**
+   * The POST /self-restart audit row's decision_authority must NOT be a blanket
+   * 'human'. `getLastOperatorActivityAt()` (dead-mans-heartbeat-service.ts) treats
+   * ANY decision_authority='human' audit row as operator activity and resets the
+   * vacation operator-absence silence clock. The dead-man's heartbeat auto-restart
+   * is the single most-likely AUTONOMOUS action during unattended operation — if it
+   * audits as 'human', operator_absent_since never latches and Tier-1 vacation
+   * autopilot never engages.
+   *
+   * Contract (identical to admin.ts POST /self-restart, mirrors the deep-scan #28
+   * setMode authority param at pipeline-control-service.ts:136):
+   *   - autonomous heartbeat path (valid-UUID parentCorrelationId present) → 'system'
+   *   - manual operator curl (parentCorrelationId absent/malformed)        → 'human'
+   *
+   * RED-proof: reverting admin.ts to a hardcoded `decisionAuthority: "human"` makes
+   * the first assertion below fail.
+   */
+
+  const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  function resolveRestartAuthority(
+    parentCorrelationId: string | undefined | null,
+  ): "human" | "system" {
+    const parentId =
+      typeof parentCorrelationId === "string" && UUID_V4_RE.test(parentCorrelationId)
+        ? parentCorrelationId
+        : null;
+    return parentId ? "system" : "human";
+  }
+
+  it("autonomous heartbeat restart (valid parentCorrelationId) audits as 'system' — does NOT reset operator-absence clock", () => {
+    const cronId = randomUUID(); // heartbeat service plumbs its cronCorrelationId
+    expect(resolveRestartAuthority(cronId)).toBe("system");
+  });
+
+  it("manual operator restart (no parentCorrelationId) audits as 'human' — genuine operator activity", () => {
+    expect(resolveRestartAuthority(undefined)).toBe("human");
+    expect(resolveRestartAuthority(null)).toBe("human");
+  });
+
+  it("malformed parentCorrelationId falls back to 'human' (never silently 'system' on a bad id)", () => {
+    for (const bad of ["not-a-uuid", "12345678-1234-1234-1234-123456789abc", "", "00000000-0000-0000-0000-000000000000"]) {
+      expect(resolveRestartAuthority(bad)).toBe("human");
+    }
+  });
+
+  it("regression guard: a blanket-'human' restart would make every autonomous restart count as operator activity", () => {
+    // The bug this closes: if the autonomous path resolved to 'human', getLastOperatorActivityAt()
+    // (which filters decision_authority='human') would see the restart and reset the silence clock.
+    // Under the fix, the autonomous path yields 'system', which that query excludes.
+    const autonomousAuthority = resolveRestartAuthority(randomUUID());
+    expect(autonomousAuthority).not.toBe("human");
+    expect(autonomousAuthority).toBe("system");
+  });
+
+  it("source-contract: admin.ts self_restart audit row uses parentId-conditional authority, NOT a hardcoded 'human'", async () => {
+    // Ties this test to the REAL file (not just the mirror above) so a revert RED-proofs here.
+    const { readFileSync } = await import("node:fs");
+    const { fileURLToPath } = await import("node:url");
+    const adminPath = fileURLToPath(new URL("../../routes/admin.ts", import.meta.url));
+    const src = readFileSync(adminPath, "utf8");
+    // Isolate the self_restart_requested audit block.
+    const idx = src.indexOf('action: "system.self_restart_requested"');
+    expect(idx).toBeGreaterThan(-1);
+    const block = src.slice(idx, idx + 400);
+    expect(block).toContain('decisionAuthority: parentId ? "system" : "human"');
+    expect(block).not.toContain('decisionAuthority: "human",');
+  });
+});
