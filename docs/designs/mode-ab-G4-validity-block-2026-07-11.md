@@ -163,6 +163,30 @@ Both pass → **all 25 engage; N = 25.** Excluding the four 1m gain-flips would 
 - The read carries its **timeframe composition: 15m:6, 1h:2, 4h:1, 5m:12, 1m:4** — and **crude (MCL) absent entirely** (all 26 MCL specs INDETERMINATE at the data gate; no crude in the informative set).
 - **Any per-timeframe slicing of the direction is ANNOTATION-TIER ONLY.** The verdict is the pre-registered aggregate read across all 25; no 4am subgroup story — favorable or unfavorable — carries verdict weight.
 
+### §READ — the within-G4 overlay direction, READ ONCE (2026-07-12)
+
+**Scope line (Law 7):** within-G4, corrected engine (`34fabc6d`), N=25 informative pairs (15m:6, 1h:2, 4h:1, 5m:12, 1m:4; crude absent), both arms `TF_ALLOW_FIXED_1` / MAX_CONCURRENT per §epoch, no valid prior measurement exists. Every metric reported; none pre-selected. Usable axes: net P&L (Σdaily_pnls), Sharpe, DSR, DSR-pass (wfe/pbo/b14_ci None corpus-wide, no discriminating power).
+
+**DIRECTION — Mode B (overlay ON) vs Mode A (overlay OFF), all 25:**
+
+| Axis | B>A (overlay helps) | B<A | equal | Aggregate |
+|---|---|---|---|---|
+| **Net P&L** | **25** | 0 | 0 | portfolio Σ **−$5,694,309 → −$1,133,281** (loss cut ~80%) |
+| **Sharpe** | **25** | 0 | 0 | mean **−6.74 → −2.15** |
+| **DSR** | 2 | 0 | 23 | mean 0.0 → 0.06 (23 floored at 0) |
+| **DSR-pass** | +1 | — | — | Mode A **0/25** → Mode B **1/25** (`7ea22e05` MNQ/1h only) |
+
+**CLASSIFIABILITY: PASS — no FULL STOP.** The direction is MONOTONE — zero pairs where the overlay worsens any axis. Every pair classifies identically (overlay reduces loss + improves Sharpe). The 23 DSR-flat pairs are consistent (DSR floored near 0 for deeply-negative strategies — nothing to improve). No anomaly, no unexplained/contradictory pair. Directional + classifiable criterion MET.
+
+**VERDICT (scoped, Law 7):**
+- **The overlay is LOSS-REDUCING on this corpus** — monotone across 25/25 on P&L and Sharpe. The FIRST valid measurement of the overlay's directional value.
+- **It OVERTURNS the corpus-v2 'overlay HURTS, keep FROZEN' conclusion** (Consequence 2, §RULING) — that finding was the missing-exits G0 artifact (G0's Mode A/B only measured which first-entry opened each window's buy-and-hold). The clean measurement shows the overlay does NOT hurt; it helps.
+- **CRITICAL SCOPE CAVEAT (travels with every citation):** all 25 strategies are **deeply NEGATIVE-EDGE in both arms** (known-low-fidelity specbridge corpus, all ≤0.54 fidelity; every net P&L a large loss, every Sharpe negative, 1/25 DSR-pass). On negative-edge strategies a trade-throttling risk overlay reduces losses **NEAR-MECHANICALLY** — it cuts ~85% of trades, and less exposure to a losing edge is less loss. This read establishes the overlay is loss-reducing HERE; it does **NOT** establish the overlay is edge-ACCRETIVE on PROFITABLE strategies (cutting trades helps a loser, hurts a winner). That question requires a positive-edge corpus (the H1 fidelity track) and is OUT OF SCOPE for this read.
+
+**What this read does and does not license:** it removes the 'overlay HURTS' evidentiary basis for keeping the overlay frozen (that basis was an artifact). It does NOT by itself license flipping the overlay default-ON — that is the **consumption decision**, a separate operator call, because 'loss-reducing on negative-edge specs' is not 'profit-preserving on positive-edge specs'. The overlay's value on real (positive-edge) strategies is UNMEASURED and stays so until a fidelity-passing corpus exists. Raw read artifact: `docs/replay-results/mode-ab-G4-scripts/within_g4_overlay_read.txt`.
+
+**Remaining: independent re-verification of this read (fresh-context agent, grading-integrity, re-derive from manifest) → certify if confirmed / quarantine if disagreed → then the consumption decision with the operator present.**
+
 ## §V — 331fe15a verification spec (mechanical; hypothesis, NOT concluded)
 
 **Runs TWICE, per-pair** — 331fe15a(→0) AND its byte-identical sibling 5e5803d1(→2); each answer lands on its own (§C2c). (1) Parse the compiled structure; show the long-cross + short-cross conflation in ONE AND-group (`and_group0`: `[5-SMA-cross-above-50 → long]` AND `[5-SMA-cross-below-50 → short]`). **Type-specimen REVISED (pre-number, from the 0-vs-2 evidence): rare-condition-satisfiable, NOT strictly unsatisfiable** — identical structure firing 0 on MNQ/4h and 2 on MES/4h proves the conflated group is data-dependently satisfiable, not impossible. (2) Show G0's fires were bug-dependent (forced-bullish path or counter artifact — whichever the evidence says); account for each sibling's residual G4 fires (0 and 2) on its own data.
