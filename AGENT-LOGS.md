@@ -4,6 +4,27 @@
 
 ---
 
+### Session Log — 2026-07-12 /goal CONTINUATION 10 — 5TH fresh scan (freshscan5, 12-charter Workflow) @ ba28683c found 7 bugs (2 HIGH + 1 MED + 4 LOW, ALL pre-existing); ALL fixed + independently graded (band 7, no open HIGH) + LANDED origin/phase-0 `15bae7ce`. ★ INDEPENDENT GRADE CAUGHT A REGRESSION + 2 ZERO-BYTE FIXES BEFORE LANDING.
+
+**Mission:** 5th band-9 certifier scan. Found 7 confirmed (HIGH per-scan now 8→5→3→2→2 — plateau). Band 9 STILL NOT TRUE.
+
+**freshscan5 findings (all CONFIRMED, all pre-existing):**
+- **HIGH#1 (5 sites)** `lifecycle-service.ts`: frozen-policy freeze stamped `strategies.regime_trained_on` from an UNFILTERED/UNORDERED `.from(biasState).limit(1)` — an arbitrary symbol/session regime. The daily regime-drift-detector reads bias_state symbol-filtered + ordered (desc sessionDate, desc computedAt) → the write/read parity break caused FALSE auto-demotion of healthy DEPLOYED strategies (or masked real drift). All 5 freeze sites now filter by the strategy's own symbol + order to the authoritative latest row (scan found 3; base-verify found 5). Grader CONFIRMED-CORRECT.
+- **HIGH#2** `admin.ts` scheduler-disable route: set health.disabled=true with NO NEVER_DISABLE_JOBS check + NO office-control guard → relay-Bearer caller could silence db-backup + dead-man's-heartbeat crons. Added requirePipelineControlAuthority guard + fail-CLOSED isNeverDisableJob() rejection. Grader CONFIRMED-CORRECT.
+- **MED** `kill-switch.ts`: operator master-HALT global force-close was deduped by ANY account-scoped close in flight → sibling accounts unflattened through the HALT (multi-account). Fixed the dedup asymmetry (global dedups only vs another global).
+- **LOW#1** sizing.py early-return floor PM-taper parity; **LOW#2** data_loader.py sidecar-before-atomic-replace (partial-visible-unmarked fail-open); **LOW#3** NeMo n8n cron DST double-fire (source fix, operator re-import); **LOW#4** drift-detector correlationId on audit+SSE.
+
+**★★★ INDEPENDENT GRADE (accuracy-validator, doer≠grader, from-zero) — THE SYSTEM WORKING: caught 3 real problems I shipped, BEFORE landing:**
+1. **MED was a REGRESSION** — I changed a SHARED predicate (`_isForceCloseInFlight`) that 3 OTHER unscoped callers (isHalted fast-path + advisory-timeout fallback) depend on for the conservative "any account in flight → halted" contract → broke `deepscan18-c1-multi-account-halt-scope.test.ts` 2/17. My "125/125" claim MISSED that file. FIXED: reverted the shared predicate; moved the dedup asymmetry into `_safeForceClose` ONLY. deepscan18-c1 back to 17/17; full kill-switch 145→183/183.
+2. **LOW#1 + LOW#2 shipped as ZERO-BYTE diffs** — my own base-verification `git checkout HEAD -- <file>` REVERTED the uncommitted edits before the commit. Both bugs were STILL LIVE. RE-APPLIED + re-graded CONFIRMED-CORRECT (grader ran the exact scenarios: Python now sizes 4 not 9 for PM=0.5/base=9; sidecar genuinely before replace).
+3. **LOW#2 comment OVERCLAIMED** — "never serving-partial-as-complete" is false in one rare os.replace()-failure path; also a pre-existing sidecar-write-swallow gap. FIXED: `_write_cache_sidecar` now returns bool + caller gates the commit on it (closes the swallow gap); comment corrected to scope the narrow os.replace()-failure edge as a documented KNOWN RESIDUAL.
+
+**★★★ ROOT-CAUSE LESSON (new, load-bearing): NEVER `git checkout HEAD -- <file>` when there are UNCOMMITTED edits to that file — it silently reverts them.** Two fixes were verified-working in the session then reverted by a base-verify checkout, and shipped as no-ops. Doer≠grader caught it (the doer's own "py OK / tests green" ran BEFORE the revert). Protocol: COMMIT before base-verifying, OR base-verify against a `git show base:file > /tmp/copy` temp copy — never a working-tree checkout that touches files with pending edits.
+
+**Verification:** tsc 0; 4 CI gates green; PM-parity 14/14; kill-switch+deepscan18 183/183; lifecycle 31/31; admin+scheduler 26/26; data_loader/cache/sidecar/truncation 125/125; drift 12/12. wave22 sizing 5-failed base-verified pre-existing (LOW#1 inert for those).
+
+**Carry-forward:** (1) **freshscan6** — band 9 still requires a fresh scan returning zero open HIGHs; freshscan5 found 2 HIGH. (2) LOW#2 narrow os.replace()-failure residual (documented; full close needs read-time hash re-validation). (3) LOW#11(n8n)+7 Topstep sizing-math stale tests (ratify-packet) still open from prior scans.
+
 ### Session Log — 2026-07-12 /goal CONTINUATION 9 — 4TH fresh scan (freshscan4, 12-charter Workflow) @ a62af172 found 8 bugs (2 HIGH + 3 MED + 3 LOW, ALL pre-existing); ALL fixed + independently graded (band 7, no open HIGH) + LANDED origin/phase-0 `01b99449`
 
 **Mission:** The band-9 certifier run — a fresh whole-system adversarial scan (12 finder charters → adversarial-verify pipeline) to test "does a fresh scan return ZERO open HIGHs?" It did NOT: 8 confirmed bugs incl 2 HIGH. So **band 9 is still NOT true.** All 8 fixed (fix-don't-skip); convergence continues.
