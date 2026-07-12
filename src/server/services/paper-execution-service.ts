@@ -2047,6 +2047,26 @@ export async function openPosition(sessionId: string, params: {
       ? (params.side === "long" ? actualEntry - _stopDistancePts : actualEntry + _stopDistancePts)
       : null);
 
+  // LOW#13 (fresh-scan 2026-07-12): an adaptive strategy with NO exit-plan R-basis (cold ATR at a
+  // session-start entry + no explicit stop) skips both exit-plan branches → position opens on the
+  // tickSize×16 fallback stop with NO stored TP1/TP2, silently managed as static via the Python
+  // handler despite exit_style=adaptive. Emit an audit row so this rare skip is queryable instead of
+  // leaving only a generic tickSize×16 warn log (the backtester still builds a plan via its atr=1.0
+  // NaN-fallback — a documented paper/backtest divergence on cold-ATR entries; we do NOT mirror the
+  // atr=1.0 degenerate here because it yields an absurd ~1.5pt live stop).
+  if (exitStyle === "adaptive" && adaptiveInput != null && resolvedExitBasisStop == null) {
+    db.insert(auditLog).values({
+      action: "signal.exit_plan_skipped_cold_atr",
+      entityType: "paper_position",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { sessionId, symbol: params.symbol, exitStyle, atr: params.atr ?? null } as Record<string, unknown>,
+      result: { reason: "adaptive_exit_plan_skipped_atr_unavailable", fallback: "tickSize_x16_stop_no_stored_tp" } as Record<string, unknown>,
+      status: "warning",
+      correlationId,
+    }).catch((err) => logger.warn({ err }, "signal.exit_plan_skipped_cold_atr audit write failed (non-blocking)"));
+  }
+
   if (exitStyle === "adaptive" && adaptiveInput != null && resolvedExitBasisStop != null) {
     try {
       const exitPlanRaw: ExitPlan = await computeExitPlan({
@@ -4456,23 +4476,28 @@ export async function updatePositionPrices(
             logger.info(
               {
                 positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
-                stopLevel, adversePrice, high, low, currentPrice, correlationId,
+                stopLevel, stopFillPrice, stopExitOutcome, adversePrice, high, low, currentPrice, correlationId,
               },
-              "paper.stop_breach: position closed at stop level (intrabar adverse extreme crossed stop)",
+              "paper.stop_breach: position closed (intrabar adverse extreme crossed stop)",
             );
+            // LOW#14 (fresh-scan 2026-07-12): the observability trail MUST report the ACTUAL fill
+            // (stopFillPrice) not the stop LEVEL — on a gap-through bar the position fills at the gapped
+            // open (worse than stopLevel) and on the 15:55 flatten bar at the close, so a hardcoded
+            // exitPrice=stopLevel diverges from the booked paper_trades row + realized P&L that
+            // reconciliation/parity tooling checks.
             db.insert(auditLog).values({
               action: "paper.stop_breach",
               entityType: "paper_position",
               entityId: pos.id,
               decisionAuthority: "system",
-              input: { stopLevel, adversePrice, high, low, currentPrice, trailHwm: pos.trailHwm, initialStopPrice: pos.initialStopPrice } as Record<string, unknown>,
-              result: { closed: true, exitPrice: stopLevel } as Record<string, unknown>,
+              input: { stopLevel, adversePrice, high, low, currentPrice, barOpen, trailHwm: pos.trailHwm, initialStopPrice: pos.initialStopPrice } as Record<string, unknown>,
+              result: { closed: true, exitPrice: stopFillPrice, stopLevel, outcome: stopExitOutcome } as Record<string, unknown>,
               status: "success",
               correlationId: correlationId ?? null,
             }).catch((err) => logger.warn({ err }, "stop_breach audit write failed (non-blocking)"));
             broadcastSSE("paper:position-stop-breached", {
               positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
-              stopLevel, adversePrice, currentPrice,
+              stopLevel, exitPrice: stopFillPrice, outcome: stopExitOutcome, adversePrice, currentPrice,
               correlationId: correlationId ?? null,
             });
           } catch (stopCloseErr) {
