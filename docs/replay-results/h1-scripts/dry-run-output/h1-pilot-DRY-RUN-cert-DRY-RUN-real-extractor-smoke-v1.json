@@ -136,16 +136,6 @@
       "certificate": {
         "conditions": [
           {
-            "surface_class": "conditional-action",
-            "classifying_tier": 1,
-            "quote_anchor": "Once that range is set, I wait for a full candle close",
-            "char_span": [
-              196,
-              250
-            ],
-            "adjudication_verdict": null
-          },
-          {
             "surface_class": "context",
             "classifying_tier": 3,
             "quote_anchor": "I use the first fifteen minutes of the New York session on the five minute chart to build the opening range.",
@@ -161,10 +151,10 @@
           {
             "surface_class": "gate-strength",
             "classifying_tier": 3,
-            "quote_anchor": "I only take this setup between nine thirty and eleven in the morning Eastern time,",
+            "quote_anchor": "Once that range is set, I wait for a full candle close above the range high before I go long. If instead price closes below the range low, I go short.",
             "char_span": [
-              347,
-              429
+              196,
+              346
             ],
             "adjudication_verdict": {
               "verdict": "gate-strength",
@@ -174,10 +164,10 @@
           {
             "surface_class": "context",
             "classifying_tier": 3,
-            "quote_anchor": "I skip the trade entirely on FOMC days because the volatility gets unpredictable.",
+            "quote_anchor": "I only take this setup between nine thirty and eleven in the morning Eastern time,",
             "char_span": [
-              434,
-              515
+              347,
+              429
             ],
             "adjudication_verdict": {
               "verdict": "context",
@@ -187,10 +177,10 @@
           {
             "surface_class": "gate-strength",
             "classifying_tier": 3,
-            "quote_anchor": "My stop sits just below the opening range low for longs, above the range high for shorts.",
+            "quote_anchor": "I skip the trade entirely on FOMC days because the volatility gets unpredictable.",
             "char_span": [
-              516,
-              605
+              434,
+              515
             ],
             "adjudication_verdict": {
               "verdict": "gate-strength",
@@ -200,13 +190,26 @@
           {
             "surface_class": "context",
             "classifying_tier": 3,
+            "quote_anchor": "My stop sits just below the opening range low for longs, above the range high for shorts.",
+            "char_span": [
+              516,
+              605
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
             "quote_anchor": "I'm looking for at least two times my risk before I take profit, usually targeting the prior day's high or low.",
             "char_span": [
               606,
               717
             ],
             "adjudication_verdict": {
-              "verdict": "context",
+              "verdict": "gate-strength",
               "control_gate_passed": true
             }
           }
@@ -257,6 +260,7 @@
         "pilot_grade": true,
         "full_grade": false,
         "certificate_grade": false,
+        "axis3_audit": null,
         "strategy_index": 0,
         "unanchored_condition_count": 0,
         "unanchored_reason_breakdown": {},

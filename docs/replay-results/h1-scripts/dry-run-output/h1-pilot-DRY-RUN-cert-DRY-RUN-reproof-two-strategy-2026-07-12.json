@@ -1,0 +1,2098 @@
+{
+  "artifact": "h1-pilot-conveyor-DRY-RUN-REPROOF-two-strategy",
+  "dry_run": true,
+  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "full_transcript_sha256": "8d972a52339fd030b8e9a8cf92ecf6b8f6cb89914228ec80353f4634f290501b",
+  "strategies_extracted": 2,
+  "strategies_certified": 2,
+  "video_cert_grade_addendum6": true,
+  "per_strategy_pilot_grade": [
+    {
+      "strategy_index": 0,
+      "name": "opening_range_breakout_5m_ny_session",
+      "pilot_grade": true,
+      "full_grade": false
+    },
+    {
+      "strategy_index": 1,
+      "name": "vwap_mean_reversion_fade_es",
+      "pilot_grade": false,
+      "full_grade": false
+    }
+  ],
+  "total_tier3_adjudications_video_aggregate": 21,
+  "affordability_ceiling": 15,
+  "fallthrough_breakdown": {
+    "fallthrough_pending_tier3": 16,
+    "fallthrough_dual_read_disagreement": 4,
+    "classified_tier1": 2
+  },
+  "unanchored_reason_breakdown": {
+    "proposed_quote_not_literal_substring": 1
+  },
+  "results": [
+    {
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_5m_ny_session",
+      "prep": {
+        "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+        "strategy_index": 0,
+        "full_transcript": "Hey traders, welcome back to the channel. Today I want to walk through two setups I actually trade during the New York session. The first one is my opening range breakout on the MNQ. I use the first fifteen minutes of the New York session on the five minute chart to build the opening range. Once that range is set, I wait for a full candle close above the range high before I go long. If instead price closes below the range low, I go short. I only take this setup between nine thirty and eleven in the morning Eastern time, and I skip the trade entirely on FOMC days because the volatility gets unpredictable. My stop sits just below the opening range low for longs, above the range high for shorts. I'm looking for at least two times my risk before I take profit, usually targeting the prior day's high or low. The second setup is completely different, it's a VWAP mean reversion fade on the ES. When price stretches more than two standard deviations away from the volume weighted average price, I start watching for a fade back toward VWAP. I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band, and a bullish engulfing candle before I buy an overextended move below the lower band. I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting. My stop goes just beyond the recent swing extreme, and my target is a full retrace back to VWAP itself. I avoid this setup completely during the first thirty minutes of the session because the volume weighted average price hasn't stabilized yet.",
+        "spine_condition_count": 10,
+        "unanchored_conditions": [],
+        "condition_outcomes": [
+          {
+            "condition_ref": "entry_sequence[0].action",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              183,
+              291
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[0].rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              183,
+              291
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[1].action",
+            "outcome": "fallthrough_dual_read_disagreement",
+            "char_span": [
+              292,
+              442
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[1].rationale",
+            "outcome": "fallthrough_dual_read_disagreement",
+            "char_span": [
+              292,
+              442
+            ]
+          },
+          {
+            "condition_ref": "confluences[0].description",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              443,
+              525
+            ]
+          },
+          {
+            "condition_ref": "confluences[1].description",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              530,
+              611
+            ]
+          },
+          {
+            "condition_ref": "stop.rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              612,
+              701
+            ]
+          },
+          {
+            "condition_ref": "targets[0].rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              702,
+              813
+            ]
+          },
+          {
+            "condition_ref": "targets[1].rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              767,
+              813
+            ]
+          },
+          {
+            "condition_ref": "targets[2].rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              767,
+              813
+            ]
+          }
+        ],
+        "tier1_detections": [],
+        "tier1_fallthroughs": [
+          "Tier1FallThrough(char_span=(183, 291), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(183, 291), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(292, 442), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(292, 442), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(443, 525), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(530, 611), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(612, 701), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(702, 813), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(767, 813), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(767, 813), surface_class='cannot-determine-at-tier-1', classifying_tier=None)"
+        ],
+        "tier3_packet": {
+          "artifact": "h1-pilot-tier3-packet",
+          "version": "2026-07-12",
+          "purpose": "Pilot tier-3 blind adjudication packet, video=DRY-RUN-reproof-two-strategy-2026-07-12, strategy=0.",
+          "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+          "closed_taxonomy": {
+            "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+            "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+            "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+          },
+          "instructions": {
+            "read_order_LOCKED": [
+              "Set A (controls)",
+              "control-gate",
+              "Set B1..B14 (targets)"
+            ],
+            "procedure": [
+              "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+              "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+              "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+              "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+              "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+            ],
+            "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+            "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+            "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+          },
+          "counts": {
+            "control_items": 10,
+            "target_items": 10
+          },
+          "sections": [
+            {
+              "section_id": "SET-A",
+              "concept_id": null,
+              "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+              "item_count": 10,
+              "items": [
+                {
+                  "item_id": "W1-0001",
+                  "concept_id": "FqxEKDxemtI",
+                  "family": "Indicator (Bollinger Bands)",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "WAIT_CONFIRMATION",
+                  "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0002",
+                  "concept_id": "HfZTCZTDfWk",
+                  "family": "Bias/Trend",
+                  "timeframe": "4h",
+                  "extracted_condition_type": "WAIT_SESSION",
+                  "extracted_object": "4 hour chart",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0003",
+                  "concept_id": "HfZTCZTDfWk",
+                  "family": "Bias/Trend",
+                  "timeframe": "4h",
+                  "extracted_condition_type": "WAIT_RETEST",
+                  "extracted_object": "5 sma",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "wait for a retrace back to the 5 SMA"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0004",
+                  "concept_id": "HfZTCZTDfWk",
+                  "family": "Bias/Trend",
+                  "timeframe": "4h",
+                  "extracted_condition_type": "WAIT_SESSION",
+                  "extracted_object": "eur usd",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "now back to the euro dollar chart here"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0005",
+                  "concept_id": "snNkQSyWX4k",
+                  "family": "MA Crossover",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "WAIT_SESSION",
+                  "extracted_object": "us session trading",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0006",
+                  "concept_id": "snNkQSyWX4k",
+                  "family": "MA Crossover",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "WAIT_BIAS",
+                  "extracted_object": "go back up",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0007",
+                  "concept_id": "FqxEKDxemtI",
+                  "family": "Indicator (Bollinger Bands)",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "WAIT_SESSION",
+                  "extracted_object": "event occurrence",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0008",
+                  "concept_id": "snNkQSyWX4k",
+                  "family": "MA Crossover",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "EXIT_HINT",
+                  "extracted_object": "exit",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "now you want to go ahead and exit"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0009",
+                  "concept_id": "c8VLqF0XDR4",
+                  "family": "General Entry (long/short)",
+                  "timeframe": "15m",
+                  "extracted_condition_type": "WAIT_STRUCTURE",
+                  "extracted_object": "price tried to break below area",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0010",
+                  "concept_id": "FqxEKDxemtI",
+                  "family": "Indicator (Bollinger Bands)",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "FILTER",
+                  "extracted_object": "ballinger bands bases",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                }
+              ]
+            },
+            {
+              "section_id": "SET-B",
+              "concept_id": null,
+              "label": "Set B -- video DRY-RUN-reproof-two-strategy-2026-07-12 strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+              "item_count": 10,
+              "items": [
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B000",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I use the first fifteen minutes of the New York session on the five minute chart to build the opening range."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B001",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I use the first fifteen minutes of the New York session on the five minute chart to build the opening range."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B002",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "Once that range is set, I wait for a full candle close above the range high before I go long. If instead price closes below the range low, I go short."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B003",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "Once that range is set, I wait for a full candle close above the range high before I go long. If instead price closes below the range low, I go short."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B004",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I only take this setup between nine thirty and eleven in the morning Eastern time,"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B005",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I skip the trade entirely on FOMC days because the volatility gets unpredictable."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B006",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "My stop sits just below the opening range low for longs, above the range high for shorts."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B007",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I'm looking for at least two times my risk before I take profit, usually targeting the prior day's high or low."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B008",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "usually targeting the prior day's high or low."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B009",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "usually targeting the prior day's high or low."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                }
+              ]
+            }
+          ],
+          "stage2": {
+            "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+            "task": "Does this quote express THIS condition?",
+            "support_taxonomy": {
+              "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+              "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+              "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+            },
+            "items": [
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B000",
+                "extracted_condition_text": "The opening range is established during the first 15 minutes of the NY session.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B001",
+                "extracted_condition_text": "The opening range is established during the first 15 minutes of the NY session.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B002",
+                "extracted_condition_text": "A full candle close above the range high triggers a long entry, and a full candle close below the range low triggers a short entry.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B003",
+                "extracted_condition_text": "A full candle close above the range high triggers a long entry, and a full candle close below the range low triggers a short entry.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B004",
+                "extracted_condition_text": "I only take this setup between nine thirty and eleven in the morning Eastern time.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B005",
+                "extracted_condition_text": "I skip the trade entirely on FOMC days because the volatility gets unpredictable.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B006",
+                "extracted_condition_text": "My stop sits just below the opening range low for longs, above the range high for shorts.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B007",
+                "extracted_condition_text": "I'm looking for at least two times my risk before I take profit.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B008",
+                "extracted_condition_text": "Usually targeting the prior day's high or low.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B009",
+                "extracted_condition_text": "Usually targeting the prior day's high or low.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              }
+            ]
+          }
+        },
+        "item_span_map": {
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B000": [
+            183,
+            291
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B001": [
+            183,
+            291
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B002": [
+            292,
+            442
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B003": [
+            292,
+            442
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B004": [
+            443,
+            525
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B005": [
+            530,
+            611
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B006": [
+            612,
+            701
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B007": [
+            702,
+            813
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B008": [
+            767,
+            813
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S0-B009": [
+            767,
+            813
+          ]
+        },
+        "leak_scan": "LeakScanResult(clean=True, violations=[])",
+        "anchor_report": {
+          "total_spine_conditions": 10,
+          "anchored_count": 10,
+          "unanchored_count": 0,
+          "anchored_fraction": 1.0,
+          "by_field": {
+            "entry_sequence[].action": {
+              "anchored": 2,
+              "unanchored": 0
+            },
+            "entry_sequence[].rationale": {
+              "anchored": 2,
+              "unanchored": 0
+            },
+            "confluences[].description": {
+              "anchored": 2,
+              "unanchored": 0
+            },
+            "stop.rationale": {
+              "anchored": 1,
+              "unanchored": 0
+            },
+            "targets[].rationale": {
+              "anchored": 3,
+              "unanchored": 0
+            }
+          },
+          "unanchored_reason_breakdown": {}
+        },
+        "axis3_audit": {
+          "char_span": null,
+          "condition_text": null,
+          "item_id": null,
+          "ceiling": 15,
+          "fallthrough_count_at_selection": 10
+        },
+        "provenance": {
+          "source_video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+          "full_transcript_sha256": "8d972a52339fd030b8e9a8cf92ecf6b8f6cb89914228ec80353f4634f290501b",
+          "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+          "taxonomy_version": "h1-pilot-2026-07-12"
+        }
+      },
+      "certificate": {
+        "conditions": [
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "I use the first fifteen minutes of the New York session on the five minute chart to build the opening range.",
+            "char_span": [
+              183,
+              291
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "I use the first fifteen minutes of the New York session on the five minute chart to build the opening range.",
+            "char_span": [
+              183,
+              291
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "Once that range is set, I wait for a full candle close above the range high before I go long. If instead price closes below the range low, I go short.",
+            "char_span": [
+              292,
+              442
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "Once that range is set, I wait for a full candle close above the range high before I go long. If instead price closes below the range low, I go short.",
+            "char_span": [
+              292,
+              442
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "I only take this setup between nine thirty and eleven in the morning Eastern time,",
+            "char_span": [
+              443,
+              525
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "I skip the trade entirely on FOMC days because the volatility gets unpredictable.",
+            "char_span": [
+              530,
+              611
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "My stop sits just below the opening range low for longs, above the range high for shorts.",
+            "char_span": [
+              612,
+              701
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "I'm looking for at least two times my risk before I take profit, usually targeting the prior day's high or low.",
+            "char_span": [
+              702,
+              813
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "usually targeting the prior day's high or low.",
+            "char_span": [
+              767,
+              813
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "usually targeting the prior day's high or low.",
+            "char_span": [
+              767,
+              813
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          }
+        ],
+        "compile_integrity": {
+          "direction_conflation_lint": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "unsat_sat_check": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "or_alternatives_honored": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "f2_coverage_gate": {
+            "status": "PASS",
+            "reason": null,
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "causality_lint": {
+            "status": "PASS",
+            "reason": null,
+            "offending_anchor": null,
+            "offending_char_span": null,
+            "regex_leg_status": "PASS",
+            "same_bar_leg_status": "NOT_EVALUATED",
+            "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+          }
+        },
+        "provenance": {
+          "source_video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+          "full_transcript_sha256": "8d972a52339fd030b8e9a8cf92ecf6b8f6cb89914228ec80353f4634f290501b",
+          "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+          "taxonomy_version": "h1-pilot-2026-07-12",
+          "dry_run": true
+        },
+        "scope_line": null,
+        "pilot_grade": true,
+        "full_grade": false,
+        "certificate_grade": false,
+        "axis3_audit": null,
+        "strategy_index": 0,
+        "unanchored_condition_count": 0,
+        "unanchored_reason_breakdown": {},
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 0,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 10
+        },
+        "dry_run": true
+      },
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 0,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 10
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            183,
+            291
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            183,
+            291
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            292,
+            442
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            292,
+            442
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            443,
+            525
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            530,
+            611
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            612,
+            701
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            702,
+            813
+          ]
+        },
+        {
+          "condition_ref": "targets[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            767,
+            813
+          ]
+        },
+        {
+          "condition_ref": "targets[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            767,
+            813
+          ]
+        }
+      ],
+      "anchor_report": {
+        "total_spine_conditions": 10,
+        "anchored_count": 10,
+        "unanchored_count": 0,
+        "anchored_fraction": 1.0,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 3,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {}
+      },
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 10
+      }
+    },
+    {
+      "strategy_index": 1,
+      "strategy_name": "vwap_mean_reversion_fade_es",
+      "prep": {
+        "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+        "strategy_index": 1,
+        "full_transcript": "Hey traders, welcome back to the channel. Today I want to walk through two setups I actually trade during the New York session. The first one is my opening range breakout on the MNQ. I use the first fifteen minutes of the New York session on the five minute chart to build the opening range. Once that range is set, I wait for a full candle close above the range high before I go long. If instead price closes below the range low, I go short. I only take this setup between nine thirty and eleven in the morning Eastern time, and I skip the trade entirely on FOMC days because the volatility gets unpredictable. My stop sits just below the opening range low for longs, above the range high for shorts. I'm looking for at least two times my risk before I take profit, usually targeting the prior day's high or low. The second setup is completely different, it's a VWAP mean reversion fade on the ES. When price stretches more than two standard deviations away from the volume weighted average price, I start watching for a fade back toward VWAP. I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band, and a bullish engulfing candle before I buy an overextended move below the lower band. I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting. My stop goes just beyond the recent swing extreme, and my target is a full retrace back to VWAP itself. I avoid this setup completely during the first thirty minutes of the session because the volume weighted average price hasn't stabilized yet.",
+        "spine_condition_count": 13,
+        "unanchored_conditions": [
+          "UnanchoredCondition(condition_ref='entry_sequence[3].rationale', text='I want to see a bullish engulfing candle before I buy an overextended move below the lower band.', strategy_index=1, reason='proposed_quote_not_literal_substring')"
+        ],
+        "condition_outcomes": [
+          {
+            "condition_ref": "entry_sequence[0].action",
+            "outcome": "fallthrough_dual_read_disagreement",
+            "char_span": [
+              1255,
+              1400
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[0].rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              1255,
+              1400
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[1].action",
+            "outcome": "fallthrough_dual_read_disagreement",
+            "char_span": [
+              899,
+              1044
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[1].rationale",
+            "outcome": "classified_tier1",
+            "char_span": [
+              899,
+              1044
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[2].action",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              1045,
+              1167
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[2].rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              1045,
+              1166
+            ]
+          },
+          {
+            "condition_ref": "entry_sequence[3].action",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              1045,
+              1254
+            ]
+          },
+          {
+            "condition_ref": "confluences[0].description",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              1255,
+              1400
+            ]
+          },
+          {
+            "condition_ref": "confluences[1].description",
+            "outcome": "classified_tier1",
+            "char_span": [
+              899,
+              1044
+            ]
+          },
+          {
+            "condition_ref": "confluences[2].description",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              1505,
+              1646
+            ]
+          },
+          {
+            "condition_ref": "stop.rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              1401,
+              1451
+            ]
+          },
+          {
+            "condition_ref": "targets[0].rationale",
+            "outcome": "fallthrough_pending_tier3",
+            "char_span": [
+              1401,
+              1504
+            ]
+          }
+        ],
+        "tier1_detections": [
+          "Tier1Detection(surface_class='conditional-action', quote_anchor='When price stretches more than two standard deviations away from', char_span=(899, 963), classifying_tier=1, confidence=1.0)",
+          "Tier1Detection(surface_class='conditional-action', quote_anchor='When price stretches more than two standard deviations away from', char_span=(899, 963), classifying_tier=1, confidence=1.0)"
+        ],
+        "tier1_fallthroughs": [
+          "Tier1FallThrough(char_span=(1255, 1400), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(1255, 1400), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(899, 1044), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(1045, 1167), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(1045, 1166), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(1045, 1254), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(1255, 1400), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(1505, 1646), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(1401, 1451), surface_class='cannot-determine-at-tier-1', classifying_tier=None)",
+          "Tier1FallThrough(char_span=(1401, 1504), surface_class='cannot-determine-at-tier-1', classifying_tier=None)"
+        ],
+        "tier3_packet": {
+          "artifact": "h1-pilot-tier3-packet",
+          "version": "2026-07-12",
+          "purpose": "Pilot tier-3 blind adjudication packet, video=DRY-RUN-reproof-two-strategy-2026-07-12, strategy=1.",
+          "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+          "closed_taxonomy": {
+            "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+            "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+            "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+          },
+          "instructions": {
+            "read_order_LOCKED": [
+              "Set A (controls)",
+              "control-gate",
+              "Set B1..B14 (targets)"
+            ],
+            "procedure": [
+              "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+              "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+              "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+              "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+              "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+            ],
+            "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+            "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+            "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+          },
+          "counts": {
+            "control_items": 10,
+            "target_items": 11
+          },
+          "sections": [
+            {
+              "section_id": "SET-A",
+              "concept_id": null,
+              "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+              "item_count": 10,
+              "items": [
+                {
+                  "item_id": "W1-0001",
+                  "concept_id": "FqxEKDxemtI",
+                  "family": "Indicator (Bollinger Bands)",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "WAIT_CONFIRMATION",
+                  "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0002",
+                  "concept_id": "HfZTCZTDfWk",
+                  "family": "Bias/Trend",
+                  "timeframe": "4h",
+                  "extracted_condition_type": "WAIT_SESSION",
+                  "extracted_object": "4 hour chart",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0003",
+                  "concept_id": "HfZTCZTDfWk",
+                  "family": "Bias/Trend",
+                  "timeframe": "4h",
+                  "extracted_condition_type": "WAIT_RETEST",
+                  "extracted_object": "5 sma",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "wait for a retrace back to the 5 SMA"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0004",
+                  "concept_id": "HfZTCZTDfWk",
+                  "family": "Bias/Trend",
+                  "timeframe": "4h",
+                  "extracted_condition_type": "WAIT_SESSION",
+                  "extracted_object": "eur usd",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "now back to the euro dollar chart here"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0005",
+                  "concept_id": "snNkQSyWX4k",
+                  "family": "MA Crossover",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "WAIT_SESSION",
+                  "extracted_object": "us session trading",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0006",
+                  "concept_id": "snNkQSyWX4k",
+                  "family": "MA Crossover",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "WAIT_BIAS",
+                  "extracted_object": "go back up",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0007",
+                  "concept_id": "FqxEKDxemtI",
+                  "family": "Indicator (Bollinger Bands)",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "WAIT_SESSION",
+                  "extracted_object": "event occurrence",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0008",
+                  "concept_id": "snNkQSyWX4k",
+                  "family": "MA Crossover",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "EXIT_HINT",
+                  "extracted_object": "exit",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "now you want to go ahead and exit"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0009",
+                  "concept_id": "c8VLqF0XDR4",
+                  "family": "General Entry (long/short)",
+                  "timeframe": "15m",
+                  "extracted_condition_type": "WAIT_STRUCTURE",
+                  "extracted_object": "price tried to break below area",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "W1-0010",
+                  "concept_id": "FqxEKDxemtI",
+                  "family": "Indicator (Bollinger Bands)",
+                  "timeframe": "5m",
+                  "extracted_condition_type": "FILTER",
+                  "extracted_object": "ballinger bands bases",
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                }
+              ]
+            },
+            {
+              "section_id": "SET-B",
+              "concept_id": null,
+              "label": "Set B -- video DRY-RUN-reproof-two-strategy-2026-07-12 strategy 1 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+              "item_count": 11,
+              "items": [
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B000",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B001",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B002",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "When price stretches more than two standard deviations away from the volume weighted average price, I start watching for a fade back toward VWAP."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B003",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band,"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B004",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B005",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band, and a bullish engulfing candle before I buy an overextended move below the lower band."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B006",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B007",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "I avoid this setup completely during the first thirty minutes of the session because the volume weighted average price hasn't stabilized yet."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B008",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "My stop goes just beyond the recent swing extreme,"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B009",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "My stop goes just beyond the recent swing extreme, and my target is a full retrace back to VWAP itself."
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  }
+                },
+                {
+                  "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-AUDIT",
+                  "video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+                  "family": null,
+                  "timeframe": null,
+                  "extracted_condition_type": null,
+                  "extracted_object": null,
+                  "quote_anchor": {
+                    "language": "en",
+                    "verbatim": "When price stretches more than two standard deviations away from"
+                  },
+                  "rater_response": {
+                    "role": null,
+                    "notes": null
+                  },
+                  "audit": true
+                }
+              ]
+            }
+          ],
+          "stage2": {
+            "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+            "task": "Does this quote express THIS condition?",
+            "support_taxonomy": {
+              "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+              "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+              "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+            },
+            "items": [
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B000",
+                "extracted_condition_text": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B001",
+                "extracted_condition_text": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B002",
+                "extracted_condition_text": "Wait for price to stretch more than two standard deviations away from the volume weighted average price.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B003",
+                "extracted_condition_text": "Short an overextended move above the upper band after a bearish engulfing candle on the one minute chart.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B004",
+                "extracted_condition_text": "I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B005",
+                "extracted_condition_text": "Buy an overextended move below the lower band after a bullish engulfing candle on the one minute chart.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B006",
+                "extracted_condition_text": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B007",
+                "extracted_condition_text": "I avoid this setup completely during the first thirty minutes of the session because the volume weighted average price hasn't stabilized yet.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B008",
+                "extracted_condition_text": "My stop goes just beyond the recent swing extreme.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B009",
+                "extracted_condition_text": "My target is a full retrace back to VWAP itself.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                }
+              },
+              {
+                "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-AUDIT",
+                "extracted_condition_text": "When price stretches more than two standard deviations away from the volume weighted average price, I start watching for a fade back toward VWAP.",
+                "adjudication_response": {
+                  "support": null,
+                  "support_justification": null
+                },
+                "audit": true
+              }
+            ]
+          }
+        },
+        "item_span_map": {
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B000": [
+            1255,
+            1400
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B001": [
+            1255,
+            1400
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B002": [
+            899,
+            1044
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B003": [
+            1045,
+            1167
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B004": [
+            1045,
+            1166
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B005": [
+            1045,
+            1254
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B006": [
+            1255,
+            1400
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B007": [
+            1505,
+            1646
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B008": [
+            1401,
+            1451
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-B009": [
+            1401,
+            1504
+          ],
+          "DRY-RUN-reproof-two-strategy-2026-07-12-S1-AUDIT": [
+            899,
+            963
+          ]
+        },
+        "leak_scan": "LeakScanResult(clean=True, violations=[])",
+        "anchor_report": {
+          "total_spine_conditions": 13,
+          "anchored_count": 12,
+          "unanchored_count": 1,
+          "anchored_fraction": 0.9231,
+          "by_field": {
+            "entry_sequence[].action": {
+              "anchored": 4,
+              "unanchored": 0
+            },
+            "entry_sequence[].rationale": {
+              "anchored": 3,
+              "unanchored": 1
+            },
+            "confluences[].description": {
+              "anchored": 3,
+              "unanchored": 0
+            },
+            "stop.rationale": {
+              "anchored": 1,
+              "unanchored": 0
+            },
+            "targets[].rationale": {
+              "anchored": 1,
+              "unanchored": 0
+            }
+          },
+          "unanchored_reason_breakdown": {
+            "proposed_quote_not_literal_substring": 1
+          }
+        },
+        "axis3_audit": {
+          "char_span": [
+            899,
+            963
+          ],
+          "condition_text": "When price stretches more than two standard deviations away from the volume weighted average price, I start watching for a fade back toward VWAP.",
+          "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-AUDIT",
+          "ceiling": 15,
+          "fallthrough_count_at_selection": 10
+        },
+        "provenance": {
+          "source_video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+          "full_transcript_sha256": "8d972a52339fd030b8e9a8cf92ecf6b8f6cb89914228ec80353f4634f290501b",
+          "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+          "taxonomy_version": "h1-pilot-2026-07-12"
+        }
+      },
+      "certificate": {
+        "conditions": [
+          {
+            "surface_class": "conditional-action",
+            "classifying_tier": 1,
+            "quote_anchor": "When price stretches more than two standard deviations away from",
+            "char_span": [
+              899,
+              963
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "conditional-action",
+            "classifying_tier": 1,
+            "quote_anchor": "When price stretches more than two standard deviations away from",
+            "char_span": [
+              899,
+              963
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting.",
+            "char_span": [
+              1255,
+              1400
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting.",
+            "char_span": [
+              1255,
+              1400
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "When price stretches more than two standard deviations away from the volume weighted average price, I start watching for a fade back toward VWAP.",
+            "char_span": [
+              899,
+              1044
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band,",
+            "char_span": [
+              1045,
+              1167
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band",
+            "char_span": [
+              1045,
+              1166
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "I want to see a bearish engulfing candle on the one minute chart before I short an overextended move above the upper band, and a bullish engulfing candle before I buy an overextended move below the lower band.",
+            "char_span": [
+              1045,
+              1254
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "I only take this trade when the overall daily range is already wide, because a narrow range day tends to just keep grinding instead of reverting.",
+            "char_span": [
+              1255,
+              1400
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "I avoid this setup completely during the first thirty minutes of the session because the volume weighted average price hasn't stabilized yet.",
+            "char_span": [
+              1505,
+              1646
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "My stop goes just beyond the recent swing extreme,",
+            "char_span": [
+              1401,
+              1451
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "My stop goes just beyond the recent swing extreme, and my target is a full retrace back to VWAP itself.",
+            "char_span": [
+              1401,
+              1504
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "unanchored",
+            "classifying_tier": null,
+            "quote_anchor": "I want to see a bullish engulfing candle before I buy an overextended move below the lower band.",
+            "char_span": [
+              -1,
+              -1
+            ],
+            "adjudication_verdict": null,
+            "condition_ref": "entry_sequence[3].rationale",
+            "anchor_reason": "proposed_quote_not_literal_substring"
+          }
+        ],
+        "compile_integrity": {
+          "direction_conflation_lint": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "unsat_sat_check": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "or_alternatives_honored": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "f2_coverage_gate": {
+            "status": "PASS",
+            "reason": null,
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "causality_lint": {
+            "status": "PASS",
+            "reason": null,
+            "offending_anchor": null,
+            "offending_char_span": null,
+            "regex_leg_status": "PASS",
+            "same_bar_leg_status": "NOT_EVALUATED",
+            "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+          }
+        },
+        "provenance": {
+          "source_video_id": "DRY-RUN-reproof-two-strategy-2026-07-12",
+          "full_transcript_sha256": "8d972a52339fd030b8e9a8cf92ecf6b8f6cb89914228ec80353f4634f290501b",
+          "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+          "taxonomy_version": "h1-pilot-2026-07-12",
+          "dry_run": true
+        },
+        "scope_line": null,
+        "pilot_grade": false,
+        "full_grade": false,
+        "certificate_grade": false,
+        "axis3_audit": {
+          "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-AUDIT",
+          "char_span": [
+            899,
+            963
+          ],
+          "condition_text": "When price stretches more than two standard deviations away from the volume weighted average price, I start watching for a fade back toward VWAP.",
+          "support": null,
+          "support_justification": null
+        },
+        "strategy_index": 1,
+        "unanchored_condition_count": 1,
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 1
+        },
+        "diagnosis": {
+          "unanchored": 1,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 0,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 12
+        },
+        "dry_run": true
+      },
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 0,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 12
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            1255,
+            1400
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1255,
+            1400
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            899,
+            1044
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "classified_tier1",
+          "char_span": [
+            899,
+            1044
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1045,
+            1167
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1045,
+            1166
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1045,
+            1254
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1255,
+            1400
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "classified_tier1",
+          "char_span": [
+            899,
+            1044
+          ]
+        },
+        {
+          "condition_ref": "confluences[2].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1505,
+            1646
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1401,
+            1451
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1401,
+            1504
+          ]
+        }
+      ],
+      "anchor_report": {
+        "total_spine_conditions": 13,
+        "anchored_count": 12,
+        "unanchored_count": 1,
+        "anchored_fraction": 0.9231,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 4,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 3,
+            "unanchored": 1
+          },
+          "confluences[].description": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 1
+        }
+      },
+      "axis3_audit": {
+        "char_span": [
+          899,
+          963
+        ],
+        "condition_text": "When price stretches more than two standard deviations away from the volume weighted average price, I start watching for a fade back toward VWAP.",
+        "item_id": "DRY-RUN-reproof-two-strategy-2026-07-12-S1-AUDIT",
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 10
+      }
+    }
+  ]
+}
