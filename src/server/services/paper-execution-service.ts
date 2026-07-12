@@ -3762,6 +3762,23 @@ async function bookPartialClose(
 
     // Insert partial trade row + atomic equity credit in one transaction
     await db.transaction(async (tx) => {
+      // HIGH#4 (fresh-scan 2026-07-12): claim the position under a row lock and verify it is still
+      // OPEN before booking anything. closePosition atomically claims via `WHERE id AND closedAt IS
+      // NULL` (~line 2640); bookPartialClose had NO such guard, so a partial close racing a concurrent
+      // FULL close (manual POST /api/paper/execute/close — not serialized per session — or a
+      // cross-account forceCloseAllPositions) would credit its partial equity + advance state on an
+      // ALREADY-closed position → double-counted equity. FOR UPDATE serializes the two; a non-null
+      // closedAt means the full-close won the race → throw the superseded sentinel to roll the tx back
+      // (no trade row, no equity credit, no state advance) and treat it as a benign no-op below.
+      const [claimedPos] = await tx
+        .select({ id: paperPositions.id, closedAt: paperPositions.closedAt })
+        .from(paperPositions)
+        .where(eq(paperPositions.id, pos.id))
+        .for("update")
+        .limit(1);
+      if (!claimedPos || claimedPos.closedAt != null) {
+        throw Object.assign(new Error("partial_close_superseded_by_full_close"), { _partialSuperseded: true });
+      }
       await tx.insert(paperTrades).values({
         sessionId: pos.sessionId,
         symbol: pos.symbol,
@@ -3859,6 +3876,18 @@ async function bookPartialClose(
     );
 
   } catch (err) {
+    // HIGH#4 (fresh-scan 2026-07-12): a superseded partial (a concurrent FULL close already claimed
+    // the position under the row lock) is a BENIGN no-op, NOT a booking failure — the tx rolled back
+    // cleanly (nothing double-credited) and the position is already handled by the full close. Log
+    // info + return WITHOUT re-throwing or writing a booking_failed error audit (the caller must NOT
+    // re-evaluate next bar — the position is gone).
+    if ((err as { _partialSuperseded?: boolean } | null)?._partialSuperseded) {
+      logger.info(
+        { positionId: pos.id, exitReason, contractsToClose, correlationId },
+        "bookPartialClose: superseded by a concurrent full close — partial skipped (no double-credit)",
+      );
+      return;
+    }
     // Deep-scan #5 MED (2026-06-29): RE-THROW on transaction failure. The transaction now
     // covers the trade row + equity credit + position-state advance atomically, so a failed
     // tx means NOTHING committed — re-throwing lets the caller's existing try/catch (the
