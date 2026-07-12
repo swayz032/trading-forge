@@ -1,0 +1,37 @@
+====================================================================================================
+ANNOTATION-TIER (does NOT touch certified §READ) — PER-TRADE EXPECTANCY, Mode A vs Mode B, N=25
+selection test: B_$/trade > A_$/trade (less loss per trade) => overlay SELECTS; flat => pure THROTTLE
+====================================================================================================
+spec        sym/tf |  A_tc  B_tc |    A_$/trd    B_$/trd |   impr/trd | verdict
+----------------------------------------------------------------------------------------------------
+338f7e39   MES/15m |   595   134 |    -455.09    -495.88 |     -40.78 | B WORSE/trade (throttle costs)
+88626172   MES/15m |   585   129 |    -482.48    -546.27 |     -63.79 | B WORSE/trade (throttle costs)
+ae7a2560   MES/15m |   705   176 |    -308.45    -356.44 |     -47.99 | B WORSE/trade (throttle costs)
+aaaad0f7   MNQ/15m |   609   141 |    -108.34    -148.46 |     -40.12 | B WORSE/trade (throttle costs)
+b2deddcb   MNQ/15m |   716   177 |     -73.58    -140.41 |     -66.83 | B WORSE/trade (throttle costs)
+29a5a070   MNQ/15m |   613   128 |     -82.93     -76.84 |       6.09 | SELECTS (B less loss/trade)
+8148f3b5    MES/1h |   182    27 |    -322.55    -246.74 |      75.81 | SELECTS (B less loss/trade)
+7ea22e05    MNQ/1h |   145    20 |     -80.47     145.42 |     225.89 | SELECTS (B less loss/trade)
+f3babbdd    MES/1m |  1551   182 |    -511.18    -494.39 |      16.79 | SELECTS (B less loss/trade)
+589ec512    MES/1m |  1538   182 |    -522.23    -472.28 |      49.95 | SELECTS (B less loss/trade)
+67d67ba0    MNQ/1m |  1230   196 |    -216.44    -215.32 |       1.12 | SELECTS (B less loss/trade)
+ca5564d8    MNQ/1m |  1214   192 |    -216.82    -239.46 |     -22.64 | B WORSE/trade (throttle costs)
+5e5803d1    MES/4h |     2     0 |     -67.72        n/a |        n/a | B_tc=0 no-trade artifact (excl)
+d916b245    MES/5m |   860   184 |    -378.68    -415.57 |     -36.89 | B WORSE/trade (throttle costs)
+cce3d9f0    MES/5m |   791   178 |    -431.47    -442.38 |     -10.91 | B WORSE/trade (throttle costs)
+594186e5    MES/5m |   868   185 |    -400.02    -427.00 |     -26.98 | B WORSE/trade (throttle costs)
+3f63d906    MES/5m |   848   181 |    -388.44    -460.14 |     -71.70 | B WORSE/trade (throttle costs)
+3c6d439a    MES/5m |   848   181 |    -388.44    -460.14 |     -71.70 | B WORSE/trade (throttle costs)
+942f83cc    MES/5m |   810   173 |    -439.52    -365.97 |      73.55 | SELECTS (B less loss/trade)
+e28f6ea8    MNQ/5m |   739   175 |    -118.99    -124.73 |      -5.75 | B WORSE/trade (throttle costs)
+b18952c0    MNQ/5m |   737   176 |     -92.38    -131.53 |     -39.14 | B WORSE/trade (throttle costs)
+9d133b69    MNQ/5m |   697   172 |    -110.75     -93.54 |      17.21 | SELECTS (B less loss/trade)
+6a03c714    MNQ/5m |   743   175 |    -129.28    -187.83 |     -58.54 | B WORSE/trade (throttle costs)
+a71fb739    MNQ/5m |   743   175 |    -129.28    -187.83 |     -58.54 | B WORSE/trade (throttle costs)
+232d9540    MNQ/5m |   700   171 |    -148.59    -112.57 |      36.02 | SELECTS (B less loss/trade)
+====================================================================================================
+PER-PAIR: SELECTS 9/25 | B worse/trade 15/25 | ~flat throttle 0 | no-trade excl 1
+PORTFOLIO $/trade (24 valid): Mode A -298.64 -> Mode B -297.45 (impr +1.19/trade)
+median per-trade improvement (24): -22.64 | all-24-positive=False
+INTERPRETATION: many SELECTS => genuine selection skill even on losers; mostly flat => pure throttle.
+====================================================================================================
