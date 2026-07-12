@@ -133,6 +133,16 @@ vi.mock("../db/index.js", () => ({
     })),
     transaction: vi.fn(async (fn: (tx: unknown) => unknown) => {
       const tx = {
+        // fresh-scan HIGH#4: bookPartialClose claims the position FOR UPDATE and checks closedAt IS NULL
+        // at the tx start. Return an OPEN position (closedAt: null) so the guard passes and booking runs.
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              for: vi.fn(() => ({ limit: vi.fn().mockResolvedValue([{ id: "pos-open", closedAt: null }]) })),
+              limit: vi.fn().mockResolvedValue([{ id: "pos-open", closedAt: null }]),
+            })),
+          })),
+        })),
         insert: vi.fn(() => ({
           values: vi.fn((row: Record<string, unknown>) => {
             auditRows.push(row);

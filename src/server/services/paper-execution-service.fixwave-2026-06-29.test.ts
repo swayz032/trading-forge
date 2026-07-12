@@ -63,6 +63,7 @@ vi.mock("../db/index.js", () => {
     chain.limit = chainFn;
     chain.orderBy = chainFn;
     chain.returning = chainFn;
+    chain.for = chainFn; // fresh-scan HIGH#4: bookPartialClose claims the position FOR UPDATE
     chain.values = (vals: unknown) => {
       capturedAuditInserts.push(vals);
       return { catch: vi.fn() };

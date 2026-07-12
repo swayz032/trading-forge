@@ -1236,15 +1236,22 @@ def compute_position_sizes(
                 from src.engine.pm_size_factor import compute_pm_size_factor_vec
                 if "ts_event" in df.columns:
                     # Convert UTC ts_event → ET minute-of-day vector (DST-correct via Polars)
+                    # CRITICAL (fresh-scan 2026-07-12): Polars `.dt.hour()`/`.dt.minute()` return Int8;
+                    # `hour * 60` OVERFLOWS Int8 (max 127) for every ET hour >= 3 → SILENT garbage (no
+                    # exception, so the fail-soft `except` never engages). That defeated the ENTIRE
+                    # per-bar PM taper — every 13:30-15:30 ET (pm_factor should be ~0.5) minute silently
+                    # re-inflated to pm_factor=1.0, so backtests over-sized PM trades vs live paper. This
+                    # is the documented Polars-i8 hazard (AGENT-LOGS.md:5227/5241/9349/9378, fixed the same
+                    # way in economic_calendar.py/liquidity.py): CAST to Int32 BEFORE the arithmetic.
                     et_minutes = (
                         df.select(
                             (
                                 pl.col("ts_event")
                                 .dt.convert_time_zone("America/New_York")
-                                .dt.hour() * 60
+                                .dt.hour().cast(pl.Int32) * 60
                                 + pl.col("ts_event")
                                 .dt.convert_time_zone("America/New_York")
-                                .dt.minute()
+                                .dt.minute().cast(pl.Int32)
                             ).alias("et_min")
                         )["et_min"].to_numpy()
                     )
