@@ -218,7 +218,6 @@ class TestMFFUConsistencyStageScoping:
 
     def test_mffu_daily_loss_limit_is_1000_not_none(self):
         """MFFU daily_loss_limit must be 1000 (firm_config.py:148), not None."""
-        from src.engine.prop_compliance import FIRM_CONFIGS
         mffu = FIRM_CONFIGS["mffu_50k"]
         assert mffu["daily_loss_limit"] == 1000, (
             f"MFFU daily_loss_limit must be 1000 (per firm_config.py:148), "
