@@ -504,7 +504,15 @@ def compute_risk_derived_contracts(
             # min(); this early-return path previously omitted it, allowing base_contracts to be
             # returned even when DD room is too tight to support that many contracts.
             # drawdown_room_cap OVERRIDES the pyramid floor when it is the binding constraint.
-            floored_candidates = [base_contracts, liquidity_cap]
+            # LOW#1 (freshscan5 2026-07-12): apply the PM-taper to base_contracts here too — the
+            # main-path floor (line ~666 `floor(base_contracts * _pm_factor)`) and the TS mirror
+            # (risk-sizing.ts:785,804 `flooredBase = Math.floor(base_contracts * pmFactor)`) both taper
+            # the floor, but this risk_cap<=0 early-return path returned the UN-tapered base_contracts →
+            # a PM (13:30-15:30 ET) entry on a fresh-combine / tight-buffer account floored to full AM
+            # base instead of the ~0.5 PM size, over-sizing PM trades >2x vs both the live/paper PM taper
+            # and the vectorized backtest path.
+            _pm_floored_base = int(math.floor(base_contracts * _pm_factor))
+            floored_candidates = [_pm_floored_base, liquidity_cap]
             if effective_firm_cap is not None:
                 floored_candidates.append(effective_firm_cap)
             if drawdown_room_cap is not None and drawdown_room_cap >= 0:

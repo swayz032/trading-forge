@@ -215,12 +215,14 @@ function _forceCloseReattemptDue(key: string, nowMs: number): boolean {
  *
  * - `accountKey` omitted (legacy/global callers, e.g. dashboard reads or any
  *   caller not yet account-aware): conservative — true if ANY force-close
- *   force-close is in flight. MED (freshscan5 2026-07-12): this is a DEDUP gate — a GLOBAL/operator
- *   force-close (the superset that flattens EVERY account) must dedup ONLY against another GLOBAL close
- *   in flight, NOT against an account-scoped (subset) close. Previously "any account in flight" made an
- *   in-flight account-A scoped 95%-DLL close SUPPRESS the operator's master HALT flatten, leaving sibling
- *   accounts B/C… un-flattened through the HALT (capital-safety, multi-account). closePosition is
- *   idempotent via its closedAt-IS-NULL claim, so a global re-flattening account A is a safe no-op.
+ *   (global or any specific account) is in flight anywhere. This is BYTE-
+ *   IDENTICAL to the old single-shared-boolean semantics for callers that
+ *   don't pass a scope — used by the unscoped isHalted fast-path
+ *   (evaluateAllKillSwitchLayers) + advisory-layer timeout fallback, which want
+ *   the conservative "anything in flight → treat as halted" default. Do NOT
+ *   narrow this branch — the DEDUP-specific global-vs-global logic lives in
+ *   _safeForceClose (MED freshscan5), NOT here, so those other callers keep the
+ *   legacy conservative contract (deepscan18-c1 test enforces this).
  * - `accountKey` supplied: true only if THIS account's own force-close is in
  *   flight, OR a genuine system-wide (GLOBAL_SCOPE_KEY) force-close is in
  *   flight (which is about to/already touched every account, including this
@@ -228,9 +230,10 @@ function _forceCloseReattemptDue(key: string, nowMs: number): boolean {
  */
 function _isForceCloseInFlight(accountKey?: string): boolean {
   if (accountKey === undefined) {
-    // Global/operator flatten: dedup ONLY against another global close (superset must not be
-    // suppressed by a subset account-scoped close — see the MED note above).
-    return _forceCloseInFlightByAccount.get(GLOBAL_SCOPE_KEY) === true;
+    for (const v of _forceCloseInFlightByAccount.values()) {
+      if (v) return true;
+    }
+    return false;
   }
   if (_forceCloseInFlightByAccount.get(accountKey)) return true;
   if (_forceCloseInFlightByAccount.get(GLOBAL_SCOPE_KEY)) return true;
@@ -353,7 +356,20 @@ async function _safeForceClose(
   // force-close in flight for account A never dedupes a concurrent scoped
   // force-close for account B.
   const scopeKey = scope?.accountKey ?? GLOBAL_SCOPE_KEY;
-  if (_isForceCloseInFlight(scope?.accountKey)) {
+  // MED (freshscan5 2026-07-12): the DEDUP decision is scope-asymmetric and lives HERE (not in the
+  // shared _isForceCloseInFlight, whose unscoped "any account in flight" semantics the isHalted
+  // fast-path + advisory-timeout fallback depend on). A GLOBAL/operator flatten (the superset that
+  // touches EVERY account) must dedup ONLY against another GLOBAL close in flight — NOT against a
+  // subset account-scoped close. Previously the global path reused _isForceCloseInFlight(undefined)
+  // ("any account in flight"), so an in-flight account-A scoped 95%-DLL close SUPPRESSED the operator's
+  // master HALT flatten, leaving sibling accounts B/C… un-flattened through the HALT (multi-account
+  // capital safety). closePosition is idempotent via its closedAt-IS-NULL claim, so a global
+  // re-flatten of an already-closing account A is a safe no-op. A scoped close still dedups against its
+  // own account OR a global-in-flight (unchanged).
+  const _alreadyInFlight = scope?.accountKey === undefined
+    ? _forceCloseInFlightByAccount.get(GLOBAL_SCOPE_KEY) === true
+    : _isForceCloseInFlight(scope.accountKey);
+  if (_alreadyInFlight) {
     logger.warn(
       { trigger, correlationId, accountKey: scope?.accountKey },
       "kill-switch: force-close already in-flight — skip concurrent invocation (_safeForceClose dedup, FIX 2)",

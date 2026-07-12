@@ -1060,18 +1060,16 @@ def load_ohlcv(
                     df.write_parquet(str(tmp_cache), compression="zstd")
                     _written_df = df
                     _cache_write_is_partial = True
-                # Atomic replace — other readers see either old or new, never partial write
-                _os_m4.replace(str(tmp_cache), str(cache_file))
-                size_kb = cache_file.stat().st_size / 1024
-                _write_kind = "PARTIAL slice" if _cache_write_is_partial else "full history"
-                print(
-                    f"Cache atomic-write ({_write_kind}): {data_symbol} {timeframe} → "
-                    f"{cache_file} ({size_kb:.0f} KB)",
-                    file=sys.stderr,
-                )
-                # FIX 7 (deep-scan #10) + E-4: write provenance sidecar alongside the
-                # cache file, describing the dataframe that was ACTUALLY written
-                # (_written_df), not the filtered `df` from this request's own query.
+                # LOW#2 (freshscan5 2026-07-12): write the provenance sidecar (esp. is_partial=True)
+                # BEFORE the atomic parquet replace. Previously the parquet was made visible FIRST and the
+                # sidecar written after, leaving a window where a concurrent reader's _check_cache_sidecar
+                # found NO sidecar → fail-OPEN (allow) → served the truncated PARTIAL slice as complete
+                # history under the full-history cache key. Writing the sidecar first means a partial
+                # parquet is never visible on disk without its is_partial marker (in the reordered window a
+                # reader sees new-sidecar + OLD parquet → is_partial→re-fetch, or old-complete-served — both
+                # safe; if the replace then fails, worst case is an unnecessary re-fetch, never
+                # serving-partial-as-complete). FIX 7 (deep-scan #10) + E-4: the sidecar describes the
+                # dataframe ACTUALLY written (_written_df), i.e. the exact bytes about to become visible.
                 _range_start_val = None
                 _range_end_val = None
                 try:
@@ -1088,6 +1086,16 @@ def load_ohlcv(
                     is_partial=_cache_write_is_partial,
                     range_start=_range_start_val,
                     range_end=_range_end_val,
+                )
+                # Atomic replace — other readers see either old or new, never a partial write. The sidecar
+                # (above) is already in place, so a partial parquet is never visible unmarked.
+                _os_m4.replace(str(tmp_cache), str(cache_file))
+                size_kb = cache_file.stat().st_size / 1024
+                _write_kind = "PARTIAL slice" if _cache_write_is_partial else "full history"
+                print(
+                    f"Cache atomic-write ({_write_kind}): {data_symbol} {timeframe} → "
+                    f"{cache_file} ({size_kb:.0f} KB)",
+                    file=sys.stderr,
                 )
             except Exception as e:
                 # Clean up temp file if atomic replace failed
