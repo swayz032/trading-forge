@@ -589,6 +589,8 @@ def validate_bars(
     symbol: str = "",
     timeframe: str = "",
     source_duplicate_timestamps: int = 0,
+    requested_start: Optional[str] = None,
+    requested_end: Optional[str] = None,
 ) -> DataQualityReport:
     """Run comprehensive data quality checks on OHLCV bars.
 
@@ -751,6 +753,69 @@ def validate_bars(
     if coverage_pct < 0:
         coverage_pct = 100.0  # No coverage check applicable
 
+    # ── MED#3 (freshscan4 2026-07-12): requested-window TRUNCATION check ──
+    # The coverage_pct above derives its denominator (calendar_days) from the RETURNED data's own
+    # first/last bar — so START/END truncation is INVISIBLE to it: if the caller requests
+    # 2008-01-01→2020-12-31 but S3/cache only holds 2015+, the SQL WHERE returns the 2015→2020 slice,
+    # calendar_days spans only 2015→2020, coverage_pct ≈ 100%, passed=True, and the backtest silently
+    # runs on ~7 fewer years (missing the GFC) with a green data-quality report — corrupting every
+    # downstream metric (Sharpe/PF/DD/MC ruin/WFE/PBO). This block compares the returned window against
+    # the REQUESTED [start, end] and emits a LOUD warning quantifying any gap. Warn-only by design: a
+    # request that legitimately predates the instrument's inception (or extends past the last sync)
+    # would otherwise hard-fail on correct data — surfacing it (no longer silent) is the fix; the
+    # operator/caller decides. Opt in to hard-fail via DATA_TRUNCATION_HARD_FAIL=true.
+    if requested_start and requested_end and "ts_event" in df.columns and df.height > 0:
+        try:
+            from datetime import date as _date, datetime as _dt
+
+            def _to_date(v: object) -> Optional[_date]:
+                if hasattr(v, "date"):
+                    return v.date()  # type: ignore[union-attr]
+                if isinstance(v, str):
+                    return _dt.fromisoformat(v[:10]).date()
+                return None
+
+            req_start_d = _dt.fromisoformat(str(requested_start)[:10]).date()
+            req_end_d = _dt.fromisoformat(str(requested_end)[:10]).date()
+            data_first_d = _to_date(df["ts_event"][0])
+            data_last_d = _to_date(df["ts_event"][-1])
+            # Tolerance: leading/trailing weekend+holiday clusters can legitimately shift the first/last
+            # bar a few days from the requested bound. 7 calendar days absorbs that without masking a
+            # real multi-month/year truncation.
+            _TOL_DAYS = int(os.environ.get("DATA_TRUNCATION_TOLERANCE_DAYS", "7"))
+            trunc_msgs = []
+            if data_first_d is not None:
+                start_gap = (data_first_d - req_start_d).days
+                if start_gap > _TOL_DAYS:
+                    trunc_msgs.append(
+                        f"requested start {req_start_d} but data begins {data_first_d} "
+                        f"(START truncated by {start_gap} days)"
+                    )
+            if data_last_d is not None:
+                end_gap = (req_end_d - data_last_d).days
+                if end_gap > _TOL_DAYS:
+                    trunc_msgs.append(
+                        f"requested end {req_end_d} but data ends {data_last_d} "
+                        f"(END truncated by {end_gap} days)"
+                    )
+            if trunc_msgs:
+                warn_list.append(
+                    "Requested-window truncation — backtest runs on a SHORTER span than requested "
+                    "(coverage_pct is computed on the returned window and does NOT catch this): "
+                    + "; ".join(trunc_msgs)
+                )
+                if os.environ.get("DATA_TRUNCATION_HARD_FAIL", "false").lower() == "true":
+                    _requested_window_truncated = True
+                else:
+                    _requested_window_truncated = False
+            else:
+                _requested_window_truncated = False
+        except Exception as exc:
+            print(f"WARNING: Truncation check failed: {exc}", file=sys.stderr)
+            _requested_window_truncated = False
+    else:
+        _requested_window_truncated = False
+
     # ── Determine pass/fail ──
     # Hard floor is the absolute minimum coverage we accept before refusing to
     # backtest. Below this, the data is almost certainly broken (failed S3 sync,
@@ -762,6 +827,7 @@ def validate_bars(
         and ohlc_violations == 0
         and zero_neg == 0
         and coverage_pct >= coverage_hard_floor
+        and not _requested_window_truncated  # MED#3: only blocks when DATA_TRUNCATION_HARD_FAIL=true
     )
 
     return DataQualityReport(
@@ -1064,7 +1130,12 @@ def load_ohlcv(
     # Wave hardening 2026-06-22, data-layer institutional-grade (MED fix):
     # Pass the pre-dedup SOURCE duplicate count so the report reflects what the
     # source data actually contained, not the already-deduped DataFrame.
-    quality_report = validate_bars(df, symbol, timeframe, source_duplicate_timestamps=deduped)
+    # MED#3 (freshscan4): thread the REQUESTED window so validate_bars can detect start/end truncation
+    # (coverage_pct alone cannot — its denominator adapts to whatever data actually returned).
+    quality_report = validate_bars(
+        df, symbol, timeframe, source_duplicate_timestamps=deduped,
+        requested_start=start, requested_end=end,
+    )
     # FIX 6 (deep-scan #10): populate dataset_hash — compute_dataset_hash() was implemented
     # but never wired into the quality report; field was always "".
     quality_report.dataset_hash = compute_dataset_hash(df)

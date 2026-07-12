@@ -170,8 +170,15 @@ async function computeLiveMetrics(lookbackDays: number): Promise<LiveMetrics> {
 async function fetchBacktestExpectedSharpe(): Promise<number | null> {
   // Use paper_trades as proxy for deployed-strategy performance expectation.
   // In Phase 4C, this will pull from strategies.config.expected_sharpe once wired.
-  // For now, derive from recent paper_trades rolling Sharpe as the "expected" baseline.
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // For now, derive from the PRIOR 30-day window (days 30–60 ago) as the "expected" baseline,
+  // against which runWeeklyDriftDetection compares the live (recent) Sharpe.
+  // MED#4 (freshscan4 2026-07-12): the lower bound was ALSO now-30d, so the range
+  // [now-30d, now-30d) was EMPTY → this always returned 0 rows → null → computeSharpeDeltaSigma
+  // returned null → severity forced 'green' → the documented ">2σ auto-HALT on Sharpe drift" safety
+  // monitor (CLAUDE.md §3) was PERMANENTLY DARK (only the fail-closed DB-error path could ever halt).
+  // The baseline window must END 30 days ago and START 60 days ago — a non-empty prior-month reference
+  // that does not overlap the live comparison window.
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
 
   const dailyRows = await db.execute<{ trade_date: string; daily_pnl: string }>(
     sql`
@@ -179,7 +186,7 @@ async function fetchBacktestExpectedSharpe(): Promise<number | null> {
         DATE(exit_time) AS trade_date,
         SUM(pnl) AS daily_pnl
       FROM paper_trades
-      WHERE exit_time >= ${thirtyDaysAgo.toISOString()}
+      WHERE exit_time >= ${sixtyDaysAgo.toISOString()}
         AND exit_time < NOW() - INTERVAL '30 days'
       GROUP BY DATE(exit_time)
       ORDER BY trade_date

@@ -71,6 +71,12 @@ const _heartbeatInterval = setInterval(() => {
       clients.delete(client);
     }
   }
+  // LOW#8 (freshscan4 2026-07-12): the heartbeat is the ONLY place dead/half-open clients are pruned
+  // (writableEnded/destroyed or a failed :ping write) — but unlike the connect/disconnect/broadcast
+  // paths it did NOT resync the gauge, so tf_sse_clients_connected kept counting silently-dropped
+  // clients → over-reporting that MASKS the "0 SSE clients while paper engine active" alert. Resync
+  // unconditionally every tick (a set() to clients.size is cheap and self-heals any drift).
+  _syncSseClientGauge();
 }, HEARTBEAT_INTERVAL_MS);
 if (typeof _heartbeatInterval.unref === "function") {
   _heartbeatInterval.unref();

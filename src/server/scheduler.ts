@@ -807,15 +807,21 @@ export const _testOnly = {
   },
 };
 
-// LOW#10 (fresh-scan 2026-07-12): daily family-facing DIGEST/REPORT jobs whose actual firing is gated
-// to a specific ET HOUR by their scheduleUtc cron trigger (NOT by their meta.run() body). Boot
-// catch-up calls meta.run() directly, bypassing that guard → the 17:00-ET digest fired at the process's
-// start hour on partial-day data. They fire correctly at their scheduled hour via the cron, so they must
-// NOT boot-catch-up. Interval-anchored jobs (heartbeat, decay-monitor, reconciliation) still catch up.
+// LOW#10 (fresh-scan 2026-07-12) + LOW#6 (freshscan4 2026-07-12): jobs whose actual firing is gated to
+// a specific ET HOUR by their scheduleUtc cron trigger (etHour===N guard), NOT by their meta.run() body.
+// Boot catch-up calls meta.run() directly, bypassing that guard → the job fired at the process's start
+// hour on partial-day data. They fire correctly at their scheduled hour via the cron, so they must NOT
+// boot-catch-up. Interval-anchored jobs (heartbeat, decay-monitor, reconciliation) still catch up.
+// LOW#6 added the two lifecycle-DEMOTING sweeps: their registerJob body calls runRegimeDriftDetector() /
+// runPortfolioDriftDemotion() with NO internal ET guard (the etHour===18 / ===17 guard lives ONLY in
+// their scheduleUtc cron), so a boot catch-up ran a DEMOTION at the boot hour on incomplete-day data —
+// worse than a ≤24h delay (regime-drift needs 5 consecutive drift days; portfolio-drift is a daily floor).
 const _ET_HOUR_ANCHORED_NO_CATCHUP: ReadonlySet<string> = new Set([
   "consistency-tracker-daily-digest",
   "composite-health-daily-digest",
   "wave26-cohort-daily-audit-report",
+  "regime-drift-detector",       // LOW#6: 18:00-ET DEPLOYED→DECLINING→TESTING drift demotion (cron-only guard)
+  "portfolio-drift-demotion",    // LOW#6: 17:00-ET rolling-Sharpe-floor demotion (cron-only guard)
 ]);
 
 export async function reconcileMissedRuns() {
@@ -3326,6 +3332,17 @@ except Exception as e:
       now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
     );
     if (etHour !== 1) return;
+    // LOW#7 (freshscan4 2026-07-12): on the November DST fall-back Sunday the 01:00-ET hour occurs
+    // TWICE — once at 05:00 UTC (EDT, UTC-4) and again at 06:00 UTC (EST, UTC-5) — so BOTH scheduled
+    // fires pass etHour===1, and the per-tick job lock is released in the hour between them, producing a
+    // once-a-year DOUBLE run. (The sibling weekly crons dodge this only by scheduling at 18:00/19:00 ET,
+    // hours the fall-back does not repeat.) Dedup on lastRunAt: this job's real cadence is 7 days, so a
+    // second fire within 12h of the last run is unambiguously the DST duplicate — skip it.
+    const _cfLastRun = SCHEDULER_JOBS["critic-feedback"].lastRunAt;
+    if (_cfLastRun && Date.now() - _cfLastRun.getTime() < 12 * 60 * 60 * 1000) {
+      logger.info("Scheduler: critic-feedback skipping DST fall-back duplicate (already ran <12h ago)");
+      return;
+    }
     if (!(await pipelineGate("critic-feedback"))) return;
     logger.info("Scheduler: Critic feedback evaluation (Sunday 1 AM ET)");
     const t0cf = Date.now();
