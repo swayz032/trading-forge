@@ -4435,7 +4435,17 @@ export async function updatePositionPrices(
       exitBarContext.barLow[pos.symbol]  = low;
     }
 
-    await db.update(paperPositions).set({
+    // HIGH#1 (fresh-scan 2026-07-12): guard the MTM UPDATE with `closedAt IS NULL` (matching
+    // closePosition's atomic claim). updatePositionPrices is serialized per-session for WS bars, but
+    // closePosition reached from forceCloseAllPositions (kill-switch L2/L3 / dashboard status poll),
+    // POST /api/paper/execute/close, or the roll-sweep cron does NOT join that chain (withSessionLock
+    // is a default no-op and is never called here). Without the guard, a position CLOSED concurrently
+    // between our open-positions SELECT and this UPDATE would (a) get a stale non-zero unrealizedPnl
+    // resurrected on the closed row and (b) have its MTM delta added to currentEquity ON TOP of the
+    // realized netPnl the racing close already booked — double-counting P&L into the Layer-3 trailing-DD
+    // gate input (fail-open on a capital-safety gate). If the guard matches 0 rows the position was
+    // closed concurrently → skip: don't touch the row, don't apply its delta.
+    const _mtmUpdated = await db.update(paperPositions).set({
       currentPrice: String(currentPrice),
       unrealizedPnl: String(unrealizedPnl),
       previousUnrealizedPnl: String(unrealizedPnl),  // advance the stored baseline
@@ -4443,7 +4453,16 @@ export async function updatePositionPrices(
       mfe: String(nextMfe),
       highSinceEntryPrice: String(newHighSinceEntry),
       lowSinceEntryPrice: String(newLowSinceEntry),
-    }).where(eq(paperPositions.id, pos.id));
+    }).where(and(eq(paperPositions.id, pos.id), isNull(paperPositions.closedAt)))
+      .returning({ id: paperPositions.id });
+
+    if (_mtmUpdated.length === 0) {
+      logger.debug(
+        { positionId: pos.id, sessionId },
+        "updatePositionPrices: position closed concurrently (closedAt set) — skipping MTM update + delta (HIGH#1 guard)",
+      );
+      continue;
+    }
 
     totalUnrealizedPnl += unrealizedPnl;
     totalUnrealizedDelta += unrealizedDelta;

@@ -811,6 +811,21 @@ async function checkLayer3TrailingDD(correlationId?: string, scopeAccountKey?: s
         // account-scoped force-close so the breach actually force-closes. _safeForceClose dedupes
         // concurrent calls via _forceCloseInFlight and scopes the flatten to ONLY this account.
         const l3AccountKey = resolveAccountKey(session);
+        // MED#4 (fresh-scan 2026-07-12): a SUCCESSFUL L3 force-close leaves the account flat but STILL
+        // breached (realizing losses doesn't recover equity), so the breach persists all RTH. The CONT-7
+        // MED#8 backoff was DEFEATED by its own delete-on-success (which reopened the storm on the next
+        // eval). Mirror L2's day-dedup: once L3 has COMPLETED a force-close for this account today, stay
+        // HALTED silently for the rest of the day. Keyed `l3:` so it never collides with the L2 dedup.
+        const _l3Today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date(Date.now() + 7 * 3_600_000));
+        if (_forceClosedTodayByAccount.get(`l3:${l3AccountKey}`) === _l3Today) {
+          decision = {
+            halted: true,
+            layer: 3,
+            reason: "trailing_dd_force_close_already_done_today",
+            detail: { session_id: session.id, firm_id: firmId, account_key: l3AccountKey },
+          };
+          break;
+        }
         // F-2 (CAP-1 grade 2026-07-11): mirror Layer 2's in-flight pre-check — if a force-close for
         // this account is already running, short-circuit BEFORE writing the pending audit row/SSE so
         // overlapping evaluators (signal path + dashboard status poll, which have distinct cache keys)
@@ -870,7 +885,8 @@ async function checkLayer3TrailingDD(correlationId?: string, scopeAccountKey?: s
           { accountKey: l3AccountKey },
         );
         if (_l3FcOk) {
-          _forceCloseLastAttemptByAccount.delete(`l3:${l3AccountKey}`); // MED#8: completed → clear backoff
+          _forceCloseLastAttemptByAccount.delete(`l3:${l3AccountKey}`); // clear the incomplete-retry backoff
+          _forceClosedTodayByAccount.set(`l3:${l3AccountKey}`, _l3Today); // MED#4: silent for the rest of the day (was delete → storm)
           insertAuditRow({
             action: "sizing.trailing_dd_force_close_completed",
             entityType: "system",

@@ -2705,7 +2705,22 @@ qty_final := {recipient_qty}
             f'strategy("{strategy_name}"', _recip_comments + f'strategy("{strategy_name}"', 1
         )
     if _recip_qty_block:
-        strategy_code += _recip_qty_block
+        # HIGH#3 (fresh-scan 2026-07-12): the per-recipient qty override MUST land immediately AFTER the
+        # ATR block's `qty_final := math.min(...)` reassignment (which runs every bar), NOT appended at
+        # the END of strategy_code — which is AFTER `strategy.entry(qty=qty_final)` has already fired with
+        # the ATR-derived size, leaving the override INERT (family TradersPost webhooks + strategy.entry
+        # traded at ATR size, ignoring the profit-tier qty). Inject it right after the reassignment so the
+        # recipient qty wins before any entry consumes qty_final.
+        _atr_reassign = "qty_final := math.min(contracts_atr, firm_max_contracts)"
+        if _atr_reassign in strategy_code:
+            strategy_code = strategy_code.replace(
+                _atr_reassign,
+                _atr_reassign + "\n" + _recip_qty_block.strip() + "\n",
+                1,
+            )
+        else:
+            # Fallback to legacy append if the ATR block shape changed (fail-soft, not silently dropped).
+            strategy_code += _recip_qty_block
 
     # F-4: HMAC secret handling — use input.string() so secret is NEVER embedded in .pine file.
     # The input.string() declaration is injected ONCE into the strategy artifact header.

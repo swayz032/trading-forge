@@ -1606,7 +1606,14 @@ export class LifecycleService {
     // Promotion on a months-old backtest that doesn't reflect current market regime
     // is a trust violation. Default BACKTEST_STALENESS_DAYS=30; env-configurable.
     // Applied to all paths that consume a backtest (i.e., when promotionEvidence.backtestId exists).
-    if (promotionEvidence.backtestId) {
+    // HIGH#2 (fresh-scan 2026-07-12): this gate must NOT ride DEMOTION/EXIT edges. A DEPLOYED strategy's
+    // last backtest naturally ages past 30d (deployed strategies are not re-backtested), so a SAFETY
+    // demotion (DEPLOYED→DECLINING on underperformance, or the regime-drift DEPLOYED→TESTING/DECLINING)
+    // was being BLOCKED by staleness — the exact opposite of the intent (the point is to REMOVE the
+    // stale/underperforming strategy from live). Skip staleness for any demotion/exit target so the
+    // safety off-ramp always fires. Upward promotions (incl. a DECLINING→TESTING retry) stay gated.
+    const _isDemotionOrExitTransition = ["DECLINING", "NEEDS_REVISION", "RETIRED", "GRAVEYARD"].includes(toState);
+    if (promotionEvidence.backtestId && !_isDemotionOrExitTransition) {
       const stalenessDays = parseInt(process.env.BACKTEST_STALENESS_DAYS ?? "30", 10);
       // latestBtEvidence.createdAt is available via the extended select above.
       // We re-fetch from promotionEvidence which doesn't store createdAt — we need to
