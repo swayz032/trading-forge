@@ -642,6 +642,11 @@ interface PendingEntry {
   // openPosition() call. Absent/undefined when nothing was known at signal time —
   // never fabricated. See EntryDecisionContext in jsonb-shapes.ts.
   entryContext: EntryDecisionContext | undefined;
+  // deep-scan 2026-07-11 MED fix (#9): true when the signal-time sizing ALREADY applied the Tier-1
+  // news reduce_size factor (signal fired inside the T1 window). The fill-time Gate 4 must NOT reduce
+  // again (double ×0.5 → 0.25×, or a silent drop to 0 for small base sizes). Absent/false = the signal
+  // was queued OUTSIDE the window, so Gate 4 legitimately applies the reduction when the fill crosses in.
+  newsReducedAtSignalTime?: boolean;
 }
 
 const pendingEntryQueue = new Map<string, PendingEntry>();
@@ -2592,8 +2597,13 @@ export async function evaluateSignals(
               const { action: newsAction, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, false);
               if (newsAction === "block") {
                 pendingDropReason = "macro_blackout";
-              } else if (newsAction === "reduce_size") {
-                // CF4: Apply NEWS_REDUCE_SIZE_FACTOR at fill time (signal queued outside window).
+              } else if (newsAction === "reduce_size" && !pendingEntry.newsReducedAtSignalTime) {
+                // CF4: Apply NEWS_REDUCE_SIZE_FACTOR at fill time ONLY when the signal was queued
+                // OUTSIDE the T1 window (signal-time sizing did NOT already reduce). deep-scan
+                // 2026-07-11 MED fix (#9): the `&& !pendingEntry.newsReducedAtSignalTime` guard prevents
+                // the double ×0.5 (→ 0.25× base, or a silent drop to 0 for small base sizes) when BOTH
+                // the signal and the fill fall inside the same window. If already reduced at signal
+                // time, the entry proceeds with its already-reduced contracts (no fill-time change).
                 const originalContracts = pendingEntry.contracts;
                 const reducedContracts = Math.floor(originalContracts * sizeFactor);
                 if (reducedContracts <= 0) {
@@ -5965,6 +5975,10 @@ export async function evaluateSignals(
           medianBarVolume,
           signalBarTimestamp: bar.timestamp,
           correlationId,
+          // deep-scan 2026-07-11 MED fix (#9): record whether signal-time sizing already applied the
+          // Tier-1 news reduce factor (newsReduceSizeFactor < 1 ⟺ signal fired inside the T1 window) so
+          // fill-time Gate 4 does not double-reduce.
+          newsReducedAtSignalTime: newsReduceSizeFactor < 1,
           // Trade-critique data bridge (2026-07-05): whatever this signal actually knew
           // at bar N, carried to bar N+1's openPosition() call. `biasState` may be null
           // (legacy bypass strategy) — every field below degrades to null gracefully,
