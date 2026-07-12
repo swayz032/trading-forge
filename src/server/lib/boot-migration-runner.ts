@@ -555,6 +555,32 @@ export async function readJournalOrAlert(
   }
 }
 
+// ─── MIG-2 (deep-scan 2026-07-11): execution-statement preparation ─────────────
+/**
+ * Split a migration's SQL into executable statements and compute its idempotency hash.
+ *
+ * Two invariants this helper enforces (both regression-tested in
+ * boot-migration-runner-mig2.test.ts):
+ *  1. `hash` is `sha256(ORIGINAL migrationSql)` — computed BEFORE any stripping — so it stays
+ *     byte-stable against drizzle's applied-hash + the immutability manifest. Hashing the stripped
+ *     text would spuriously re-run every migration that embeds BEGIN/COMMIT.
+ *  2. Standalone transaction-control lines (`BEGIN;`, `BEGIN TRANSACTION;`, `COMMIT;`) are removed
+ *     from the EXECUTION statements only. The runner wraps every migration in its own
+ *     db.transaction(); an embedded COMMIT would commit the OUTER transaction early and run the
+ *     ledger INSERT + post-apply verification OUTSIDE the atomic boundary. The regex matches a line
+ *     that is EXACTLY one of those keywords + `;` — a PL/pgSQL DO-block `BEGIN` (no trailing
+ *     semicolon on its own line) is deliberately NOT matched.
+ */
+export function prepareMigrationExecution(migrationSql: string): { hash: string; statements: string[] } {
+  const hash = crypto.createHash("sha256").update(migrationSql).digest("hex");
+  const statements = migrationSql
+    .split("--> statement-breakpoint")
+    .map((s) => s.trim())
+    .map((s) => s.replace(/^[ \t]*(?:BEGIN(?:[ \t]+TRANSACTION)?|COMMIT)[ \t]*;[ \t]*$/gim, "").trim())
+    .filter((s) => s.length > 0);
+  return { hash, statements };
+}
+
 // ─── Post-apply object verification (deepscan6 O6) ──────────────────────────────
 // The runner keys idempotency on drizzle.__drizzle_migrations (when/hash) — it does NOT
 // verify that a migration actually produced its schema objects. The pinned "phantom-apply"
@@ -1051,24 +1077,9 @@ export async function runPendingMigrations(
       await bumpBootFailureCrashLoopAlert(`${entry.tag} (file read) — ${errMsg}`);
       throw new Error(`boot-migration: failed to read SQL file for ${entry.tag}: ${errMsg}`);
     }
-    const hash = crypto.createHash("sha256").update(migrationSql).digest("hex");
-
-    // Split on Drizzle statement-breakpoint markers (matches apply-missing-migrations.mjs)
-    const statements = migrationSql
-      .split("--> statement-breakpoint")
-      .map((s) => s.trim())
-      // MIG-2 (deep-scan 2026-07-11): strip standalone transaction-control statements (BEGIN;/COMMIT;).
-      // The runner already wraps every migration in db.transaction() below; a migration that embeds its
-      // own BEGIN;...COMMIT; (9 pre-0126 files do) would COMMIT the OUTER transaction early, so the
-      // ledger INSERT + post-apply verification would run OUTSIDE the transaction — voiding the
-      // atomic-apply/rollback contract (a crash between the embedded COMMIT and the ledger write leaves
-      // the DDL applied but unrecorded -> re-run next boot). Applied to EXECUTION statements ONLY: the
-      // `hash` above is computed on the ORIGINAL migrationSql so it stays byte-stable vs drizzle's
-      // applied-hash + the immutability manifest (stripping before hashing would force a spurious
-      // re-run). The regex matches only a line that is exactly BEGIN;/BEGIN TRANSACTION;/COMMIT; — a
-      // PL/pgSQL DO-block `BEGIN` (no trailing semicolon on its own line) is NOT matched.
-      .map((s) => s.replace(/^[ \t]*(?:BEGIN(?:[ \t]+TRANSACTION)?|COMMIT)[ \t]*;[ \t]*$/gim, "").trim())
-      .filter((s) => s.length > 0);
+    // MIG-2 (deep-scan 2026-07-11): hash-on-original + strip embedded BEGIN;/COMMIT; from execution
+    // statements. See prepareMigrationExecution() above for the two invariants + regression test.
+    const { hash, statements } = prepareMigrationExecution(migrationSql);
 
     const startTs = Date.now();
     let backupPath: string | null = null;

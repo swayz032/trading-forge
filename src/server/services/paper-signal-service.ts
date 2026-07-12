@@ -7,6 +7,7 @@ import { evaluateContextGate } from "./context-gate-service.js";
 import { checkAntiSetupGate, type AntiSetupGateResult } from "./anti-setup-gate-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
+import { toPythonWeekday } from "../lib/python-weekday.js";
 import { eq, and, isNull, ne, gte, lte, desc, sql } from "drizzle-orm";
 import { tracer } from "../lib/tracing.js";
 import { isDSLStrategy, translateDSLToPaperConfig } from "./dsl-translator.js";
@@ -4156,7 +4157,7 @@ export async function evaluateSignals(
           // is Sun=0..Sat=6, which shifted every day-of-week rule by one weekday.
           // Convert to the Python weekday convention (matching the sibling skip
           // path at ~line 286 which already uses getUTCDay()).
-          day_of_week: (new Date(bar.timestamp).getUTCDay() + 6) % 7,
+          day_of_week: toPythonWeekday(bar.timestamp),
         },
       );
       if (antiSetupResult.blocked) {

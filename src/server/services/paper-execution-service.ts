@@ -18,6 +18,7 @@ import { CONSISTENCY_RULE_FIRMS, getConsistencyState } from "./consistency-track
 // Wave 27.5 Pass D.2: symbol-aware commission — replaces the legacy symbol-agnostic
 // getCommissionPerSide(firmId) for position-close P&L calculations.
 import { getCommissionPerSide as getCommissionPerSideBySymbol, getStopCeilingPts } from "../lib/contract-class.js";
+import { avwapTypicalPrice, shouldAdvanceRunnerTrail } from "../lib/runner-trail-ratchet.js";
 import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCache } from "./paper-risk-gate.js";
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 import { tracer } from "../lib/tracing.js";
@@ -4457,7 +4458,7 @@ export async function updatePositionPrices(
             // Paper previously used close alone, so the anchored VWAP (and its trail stop / exit
             // price) diverged from backtest on any bar whose close skews to one end of the range —
             // violating the TS<->Python Exit Engine Parity contract.
-            const barMid = (high + low + currentPrice) / 3;
+            const barMid = avwapTypicalPrice(high, low, currentPrice);
             const newSumPv = prevSumPv + barMid * barVol;
             const newSumV  = prevSumV  + barVol;
             const avwap = newSumV > 0 ? newSumPv / newSumV : currentPrice;
@@ -4554,14 +4555,14 @@ export async function updatePositionPrices(
           //     (prior `currentTrailHwm == null` unconditionally accepted the first computedTrail,
           //     which for chandelier/near-entry AVWAP could sit at ~break-even, forcing premature
           //     exits, or wider than the structural stop, over-risking beyond the sized amount).
-          const tp2Ready = (pos.tp1Filled ?? false) && (pos.tp2Filled ?? false);
-          const initialStop = pos.initialStopPrice != null ? Number(pos.initialStopPrice) : null;
-          const ratchetFloor = currentTrailHwm ?? initialStop;
-          const isTighter = tp2Ready && ratchetFloor != null && (
-            pos.side === "long"
-              ? computedTrail > ratchetFloor  // long: higher stop = tighter
-              : computedTrail < ratchetFloor  // short: lower stop = tighter
-          );
+          const isTighter = shouldAdvanceRunnerTrail({
+            side: pos.side,
+            computedTrail,
+            currentTrailHwm,
+            initialStop: pos.initialStopPrice != null ? Number(pos.initialStopPrice) : null,
+            tp1Filled: pos.tp1Filled ?? false,
+            tp2Filled: pos.tp2Filled ?? false,
+          });
 
           if (isTighter) {
             // Build updated exit_plan with new runtime_state
