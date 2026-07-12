@@ -12,6 +12,7 @@ Imports validate_bars directly (does not pull the vectorbt JIT backtester → sa
 from datetime import datetime, timezone
 
 import polars as pl
+import pytest
 
 from src.engine.data_loader import validate_bars
 
@@ -77,6 +78,37 @@ def test_no_requested_window_is_backward_compatible():
     # No requested_start/end (legacy callers) → the truncation block is skipped entirely.
     r = validate_bars(df, "ES", "daily")
     assert not _has_trunc(r), "omitting the requested window must not emit a truncation warning"
+
+
+def test_load_ohlcv_consumer_REFUSES_on_truncation_hard_fail(tmp_path, monkeypatch):
+    # freshscan9 grade-followup: exercise the CONSUMER (load_ohlcv), not just validate_bars — the original
+    # bug was that load_ohlcv re-derived "critical" WITHOUT the truncation flag and PROCEEDED. This test
+    # RED-proofs the consumer append: revert the critical.append(requested_window_truncated) block and this
+    # test goes green→red. Uses a ratio_adj-pathed local parquet so the adjusted-source check passes.
+    from src.engine.data_loader import load_ohlcv
+
+    ratio_dir = tmp_path / "ratio_adj"
+    ratio_dir.mkdir()
+    pq = ratio_dir / "ES_daily.parquet"
+    # data only 2015-2018, but we request 2008-2020 → START truncated ~7 years.
+    ts = [datetime(2015, 1, 2), datetime(2016, 6, 1), datetime(2018, 12, 31)]
+    pl.DataFrame({
+        "ts_event": ts,
+        "open": [1.0] * 3, "high": [2.0] * 3, "low": [0.5] * 3, "close": [1.5] * 3, "volume": [10] * 3,
+    }).write_parquet(str(pq))
+
+    # Neutralize the coverage hard floor so this test isolates the TRUNCATION critical (the sparse 3-bar
+    # fixture would otherwise fail coverage regardless — a different critical, not what we're locking here).
+    monkeypatch.setenv("DATA_COVERAGE_HARD_FAIL_PCT", "0")
+
+    monkeypatch.setenv("DATA_TRUNCATION_HARD_FAIL", "true")
+    with pytest.raises(ValueError, match="truncation"):
+        load_ohlcv("ES", "daily", "2008-01-01", "2020-12-31", local_path=str(pq))
+
+    # Control: warn-only default → load_ohlcv proceeds (returns the truncated frame, no raise).
+    monkeypatch.delenv("DATA_TRUNCATION_HARD_FAIL", raising=False)
+    df = load_ohlcv("ES", "daily", "2008-01-01", "2020-12-31", local_path=str(pq))
+    assert df.height == 3  # proceeded, no refuse
 
 
 def test_hard_fail_surfaces_requested_window_truncated_on_report(monkeypatch):

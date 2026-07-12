@@ -468,13 +468,13 @@
           "url": "https://tf-relay-production.up.railway.app/api/admin/self-restart",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ (() => { const ts = Math.floor(Date.now()/1000); const reason = 'watchdog_3_consecutive_fails'; const crypto = require('crypto'); const sig = crypto.createHmac('sha256', $env.ADMIN_RESTART_HMAC_SECRET || 'unset').update(`${ts}:${reason}`).digest('hex'); return JSON.stringify({timestamp: ts, reason, _sig_for_header_below: sig}); })() }}",
+          "jsonBody": "={{ JSON.stringify({ timestamp: $json.timestamp, reason: $json.reason }) }}",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
               {
                 "name": "X-Restart-Signature",
-                "value": "={{ require('crypto').createHmac('sha256', $env.ADMIN_RESTART_HMAC_SECRET || 'unset').update(`${Math.floor(Date.now()/1000)}:watchdog_3_consecutive_fails`).digest('hex') }}"
+                "value": "={{ $json.signature }}"
               }
             ]
           },
