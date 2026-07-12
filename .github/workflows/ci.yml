@@ -129,9 +129,9 @@ jobs:
       - name: Run vitest → JSON report for baseline (advisory)
         continue-on-error: true
         run: |
-          npx vitest run --reporter=json > ci/vitest-results.json || true
+          npx vitest run --reporter=json --outputFile=ci/vitest-results.json || true
           echo "--- vitest-results.json bytes: $(wc -c < ci/vitest-results.json 2>/dev/null || echo MISSING) ---"
-          head -c 400 ci/vitest-results.json 2>/dev/null || true
+          head -c 120 ci/vitest-results.json 2>/dev/null || true
 
       - name: Upload vitest results (baseline capture/diff)
         uses: actions/upload-artifact@v4
