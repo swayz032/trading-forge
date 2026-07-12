@@ -1,0 +1,281 @@
+{
+  "artifact": "h1-pilot-conveyor-DRY-RUN-real-extractor",
+  "dry_run": true,
+  "video_id": "DRY-RUN-real-extractor-smoke-v1",
+  "raw_extraction": {
+    "video_id": "DRY-RUN-real-extractor-smoke-v1",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "opening_range_breakout_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Use the first fifteen minutes of the New York session on the five minute chart to build the opening range.",
+            "rationale": null
+          },
+          {
+            "step": 2,
+            "action": "Wait for a full candle close above the range high to go long, or a full candle close below the range low to go short.",
+            "rationale": null
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "My stop sits just below the opening range low for longs, above the range high for shorts."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "I'm looking for at least two times my risk before I take profit, usually targeting the prior day's high or low."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "killzone_active",
+            "description": "I only take this setup between nine thirty and eleven in the morning Eastern time",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "name": "macro_alignment",
+            "description": "I skip the trade entirely on FOMC days because the volatility gets unpredictable.",
+            "canonical_match": "macro_alignment"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Opening Range Breakout Strategy",
+            "role": "model",
+            "verbatim_description": "I use the first fifteen minutes of the New York session on the five minute chart to build the opening range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Opening Range High",
+            "role": "zone",
+            "verbatim_description": "Once that range is set, I wait for a full candle close above the range high before I go long.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Opening Range Low",
+            "role": "zone",
+            "verbatim_description": "If instead price closes below the range low, I go short.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "FOMC days",
+            "role": "filter",
+            "verbatim_description": "I skip the trade entirely on FOMC days because the volatility gets unpredictable.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Prior day's high or low",
+            "role": "target",
+            "verbatim_description": "usually targeting the prior day's high or low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 6\u00c3\u2014 in transcript)",
+            "transcript_quote": "'m walking through my opening range breakout strategy on the MNQ. I use the first fifteen minutes of the New York session on t",
+            "occurrences": 6,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "News Avoid (FOMC/CPI/NFP)",
+            "role": "filter",
+            "verbatim_description": "News Avoid (FOMC/CPI/NFP) (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "I skip the trade entirely on FOMC days because the volatility gets unpredictable. My stop sits just below the opening range",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies_extracted": 1,
+  "results": [
+    {
+      "strategy_index": 0,
+      "anchor_report": {
+        "total_spine_conditions": 6,
+        "anchored_count": 6,
+        "unanchored_count": 0,
+        "anchored_fraction": 1.0,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {}
+      },
+      "certificate": {
+        "conditions": [
+          {
+            "surface_class": "conditional-action",
+            "classifying_tier": 1,
+            "quote_anchor": "Once that range is set, I wait for a full candle close",
+            "char_span": [
+              196,
+              250
+            ],
+            "adjudication_verdict": null
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "I use the first fifteen minutes of the New York session on the five minute chart to build the opening range.",
+            "char_span": [
+              87,
+              195
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "I only take this setup between nine thirty and eleven in the morning Eastern time,",
+            "char_span": [
+              347,
+              429
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "I skip the trade entirely on FOMC days because the volatility gets unpredictable.",
+            "char_span": [
+              434,
+              515
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "gate-strength",
+            "classifying_tier": 3,
+            "quote_anchor": "My stop sits just below the opening range low for longs, above the range high for shorts.",
+            "char_span": [
+              516,
+              605
+            ],
+            "adjudication_verdict": {
+              "verdict": "gate-strength",
+              "control_gate_passed": true
+            }
+          },
+          {
+            "surface_class": "context",
+            "classifying_tier": 3,
+            "quote_anchor": "I'm looking for at least two times my risk before I take profit, usually targeting the prior day's high or low.",
+            "char_span": [
+              606,
+              717
+            ],
+            "adjudication_verdict": {
+              "verdict": "context",
+              "control_gate_passed": true
+            }
+          }
+        ],
+        "compile_integrity": {
+          "direction_conflation_lint": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "unsat_sat_check": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "or_alternatives_honored": {
+            "status": "NOT_EVALUATED",
+            "reason": "no_compiled_topology",
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "f2_coverage_gate": {
+            "status": "PASS",
+            "reason": null,
+            "offending_anchor": null,
+            "offending_char_span": null
+          },
+          "causality_lint": {
+            "status": "PASS",
+            "reason": null,
+            "offending_anchor": null,
+            "offending_char_span": null,
+            "regex_leg_status": "PASS",
+            "same_bar_leg_status": "NOT_EVALUATED",
+            "same_bar_leg_reason": "no_same_bar_fill_signal_lag"
+          }
+        },
+        "provenance": {
+          "source_video_id": "DRY-RUN-real-extractor-smoke-v1",
+          "full_transcript_sha256": "a101a8fdbe89ceecf33ce1a34361d0ce9ae6e2bc70a285a238775d1f72c8c12a",
+          "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+          "taxonomy_version": "h1-pilot-2026-07-12",
+          "dry_run": true
+        },
+        "scope_line": null,
+        "pilot_grade": true,
+        "full_grade": false,
+        "certificate_grade": false,
+        "strategy_index": 0,
+        "unanchored_condition_count": 0,
+        "unanchored_reason_breakdown": {},
+        "diagnosis": {
+          "unanchored": 0,
+          "coverage_miss": 0,
+          "classification_fallthrough_unresolved": 0,
+          "tier3_fail": 0,
+          "lint_fail": 0,
+          "ok": 6
+        },
+        "dry_run": true
+      }
+    }
+  ],
+  "anchor_summary": {
+    "total_spine_conditions": 6,
+    "located_count": 6,
+    "unanchored_count": 0,
+    "unanchored_reason_breakdown": {}
+  }
+}
