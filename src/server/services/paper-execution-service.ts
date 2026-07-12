@@ -649,6 +649,22 @@ function normalizePriceUpdate(update: PositionPriceUpdate): { close: number; hig
   };
 }
 
+/**
+ * #24 (deep-scan 2026-07-11): true when a bar's ET time is at/after the 15:55 ET hard-flatten
+ * threshold — mirrors the Python style_c_handler `_is_time_stop` (current_time_et >= 15:55). Lets the
+ * TS intrabar stop-breach (BL-1) defer to TIME-STOP semantics on the flatten bar: the backtester checks
+ * the 15:55 time-stop FIRST and exits at the bar CLOSE with reason time_stop even when the bar also
+ * crossed the stop. Robust to zero-padded or not "H:MM"/"HH:MM"; empty/unparseable → false.
+ */
+function _isTimeStopFlattenBar(currentTimeEt: string | undefined | null): boolean {
+  if (!currentTimeEt) return false;
+  const m = /^(\d{1,2}):(\d{2})/.exec(currentTimeEt);
+  if (!m) return false;
+  const h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  return h > 15 || (h === 15 && min >= 55); // >= 15:55 ET hard-flatten invariant
+}
+
 // ─── Session Classification ───────────────────────────────────
 // getEtOffsetMinutes is imported from src/server/lib/dst-utils.ts (shared utility).
 // The previous inline implementation had a DST-end bug: when Nov 1 is a Sunday
@@ -4384,10 +4400,19 @@ export async function updatePositionPrices(
             // understating losses on gap bars → inflated internal-sim Sharpe/PF vs the backtest the
             // promotion gates trust. When the caller provides the bar open, fill at the WORSE of
             // open/stop; absent an open, fall back to the stop (best available — the legacy behavior).
-            const stopFillPrice = barOpen != null
-              ? (pos.side === "long" ? Math.min(barOpen, stopLevel) : Math.max(barOpen, stopLevel))
-              : stopLevel;
-            await closePosition(pos.id, stopFillPrice, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: "stop_loss" });
+            // deep-scan 2026-07-11 LOW fix (#24): on the 15:55 flatten bar the backtester checks the
+            // TIME-STOP first — it exits at the bar CLOSE with reason time_stop even when the bar also
+            // crossed the stop. BL-1 `continue`s below (skipping callExitHandler's TIME_STOP_FLATTEN), so
+            // without this the stop-breach would preempt the flatten with a divergent price+reason. On
+            // the flatten bar exit at close/time_stop; otherwise the #11 gap-through stop fill.
+            const isFlattenBar = _isTimeStopFlattenBar(exitBarContext?.currentTimeEt);
+            const stopFillPrice = isFlattenBar
+              ? currentPrice
+              : barOpen != null
+                ? (pos.side === "long" ? Math.min(barOpen, stopLevel) : Math.max(barOpen, stopLevel))
+                : stopLevel;
+            const stopExitOutcome: "time_stop" | "stop_loss" = isFlattenBar ? "time_stop" : "stop_loss";
+            await closePosition(pos.id, stopFillPrice, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: stopExitOutcome });
             closedByExitHandler.add(pos.id);
             totalUnrealizedDelta -= unrealizedDelta;
             totalUnrealizedPnl   -= unrealizedPnl;
