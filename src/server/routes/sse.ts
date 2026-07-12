@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
+import { randomUUID } from "node:crypto";
 import { logger } from "../lib/logger.js";
 import { sseClientsConnected } from "../lib/metrics-registry.js";
+import { computeReplayGap } from "../lib/sse-replay-gap.js";
 
 const router = Router();
 
@@ -19,6 +21,17 @@ function _syncSseClientGauge(): void {
 // Clients that reconnect with `Last-Event-ID` will receive any buffered
 // events with seq > lastEventId before resuming live delivery.
 let eventSeq = 0;
+
+// fresh-scan HIGH#8 (2026-07-12): a per-BOOT nonce, stamped into every event id as `<bootId>.<seq>`.
+// eventSeq + ringBuffer are in-memory and reset to 0/[] on every NSSM respawn/crash. The prior
+// seq-only gap detection was ONE-DIRECTIONAL: it caught a client whose Last-Event-ID was ABOVE the
+// fresh counter (5000 vs 12), but MISSED the common case — a client that connected shortly before the
+// restart (small lastSeenSeq, e.g. 5), where the fresh process climbs the counter back past it (to 10)
+// before the ~1-3s EventSource reconnect. Then oldestSeq>lastSeenSeq+1 and lastSeenSeq>eventSeq are
+// both false → NO replay_gap → the real post-restart seq 1..5 (which can include production HALT /
+// force-flatten / lifecycle demotions) are silently dropped as if contiguous. Comparing the client's
+// echoed bootId against the current one detects EVERY restart regardless of seq values.
+const SSE_BOOT_ID = randomUUID().slice(0, 8);
 
 // ─── In-memory ring buffer (last 100 events) ─────────────────
 // Pass 5 Track A F-10: stores SERIALIZED strings so replay on reconnect
@@ -79,22 +92,22 @@ router.get("/events", (req: Request, res: Response) => {
   });
 
   // ── Replay missed events on reconnect ──
-  // EventSource sets `Last-Event-ID` header to the last `id:` it received.
+  // EventSource sets `Last-Event-ID` header to the last `id:` it received. Format is `<bootId>.<seq>`
+  // (HIGH#8); a legacy plain-int id (pre-deploy client) or an id whose bootId differs from ours means
+  // this process is not the one that issued it → a restart happened → force a gap so the client
+  // refetches authoritative state rather than trusting a reset seq counter.
   const lastEventIdHeader = req.headers["last-event-id"];
-  const lastSeenSeq = lastEventIdHeader ? parseInt(String(lastEventIdHeader), 10) : NaN;
+  const lastEventIdRaw = lastEventIdHeader ? String(lastEventIdHeader) : "";
+  const bufferEmpty = ringBuffer.length === 0;
+  const oldestSeq   = bufferEmpty ? -1 : ringBuffer[0].seq;
+  // HIGH#8 (2026-07-12): pure decision — bootMismatch catches EVERY restart (incl. the common
+  // small-lastSeenSeq case the seq-only checks miss). See lib/sse-replay-gap.ts.
+  const _gap = computeReplayGap({ lastEventIdRaw, currentBootId: SSE_BOOT_ID, ringEmpty: bufferEmpty, oldestSeq, eventSeq });
+  const lastSeenSeq = _gap.lastSeenSeq;
+  const bootMismatch = _gap.bootMismatch;
 
-  if (!isNaN(lastSeenSeq) && lastSeenSeq > 0) {
-    // Detect replay gap: buffer is empty OR the oldest buffered seq does not cover
-    // the client's last-seen position. In either case we cannot guarantee continuity.
-    const bufferEmpty = ringBuffer.length === 0;
-    const oldestSeq   = bufferEmpty ? -1 : ringBuffer[0].seq;
-    // deep-scan 2026-07-11 MED fix: `|| lastSeenSeq > eventSeq` detects a SERVER-RESTART seq reset.
-    // eventSeq + ringBuffer are in-memory and reset to 0/[] on every NSSM respawn/crash. A client that
-    // reconnects with Last-Event-ID higher than the post-restart eventSeq (e.g. 5000 vs a fresh 12)
-    // would otherwise NEVER trip the oldestSeq>lastSeenSeq+1 check (its last-seen is above every new
-    // seq), silently dropping the entire post-restart backlog. A last-seen ABOVE the current counter
-    // can only mean the counter reset — signal the gap so the client refetches authoritative state.
-    const hasGap      = bufferEmpty || oldestSeq > lastSeenSeq + 1 || lastSeenSeq > eventSeq;
+  if (_gap.shouldEvaluate) {
+    const hasGap = _gap.hasGap;
 
     if (hasGap) {
       // H-6: Signal replay gap so the frontend can refetch authoritative state
@@ -104,7 +117,7 @@ router.get("/events", (req: Request, res: Response) => {
         currentSeq: eventSeq,
         message: "replay_buffer_does_not_cover_gap",
       });
-      res.write(`id: 0\nevent: sse:replay_gap\ndata: ${gapPayload}\n\n`);
+      res.write(`id: ${SSE_BOOT_ID}.0\nevent: sse:replay_gap\ndata: ${gapPayload}\n\n`);
       logger.warn(
         { lastSeenSeq, currentSeq: eventSeq, oldestBufferedSeq: oldestSeq, bufferEmpty },
         "SSE replay: gap detected — client must refetch state",
@@ -114,7 +127,7 @@ router.get("/events", (req: Request, res: Response) => {
       const missed = ringBuffer.filter((e) => e.seq > lastSeenSeq);
       for (const entry of missed) {
         // F-10: serialized form already in buffer — no JSON.stringify on replay.
-        res.write(`id: ${entry.seq}\nevent: ${entry.event}\ndata: ${entry.serialized}\n\n`);
+        res.write(`id: ${SSE_BOOT_ID}.${entry.seq}\nevent: ${entry.event}\ndata: ${entry.serialized}\n\n`);
       }
       if (missed.length > 0) {
         logger.info(
@@ -207,7 +220,7 @@ export function broadcastSSE(event: string, data: unknown): void {
       caller: event,
     });
     pushToRingBuffer({ seq, event: "sse_serialize_error", serialized: errorPayload });
-    const errorMessage = `id: ${seq}\nevent: sse_serialize_error\ndata: ${errorPayload}\n\n`;
+    const errorMessage = `id: ${SSE_BOOT_ID}.${seq}\nevent: sse_serialize_error\ndata: ${errorPayload}\n\n`;
     for (const client of clients) {
       if (client.writableEnded || client.destroyed) continue;
       try { client.write(errorMessage); } catch { /* dead client — ignore */ }
@@ -217,7 +230,7 @@ export function broadcastSSE(event: string, data: unknown): void {
 
   pushToRingBuffer({ seq, event, serialized });
 
-  const message = `id: ${seq}\nevent: ${event}\ndata: ${serialized}\n\n`;
+  const message = `id: ${SSE_BOOT_ID}.${seq}\nevent: ${event}\ndata: ${serialized}\n\n`;
   const deadClients = new Set<Response>();
 
   for (const client of clients) {
