@@ -1,0 +1,17 @@
+{
+  "rater": "dual-anchor",
+  "calls": {
+    "W1-0012": {
+      "call": "context",
+      "translation_mediated": false,
+      "original_anchor": "verhandel op bates met hoë volatiliteit soos die NAS 100 die S&P 500 selfs goud",
+      "gloss_aid": "trade it on high-volatility assets like the NAS 100, the S&P 500, even gold"
+    },
+    "W1-0014": {
+      "call": "cannot-determine",
+      "translation_mediated": true,
+      "original_anchor": "die eerste keer weet hulle 'n vals strategie",
+      "gloss_aid": "the first time they know a false [strategy] — fragment, does not parse into a structural gate"
+    }
+  }
+}

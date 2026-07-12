@@ -1,0 +1,1032 @@
+{
+ "title": "H1 tier-2 quarantine split (pre-committed before the tier-2/discourse build exists)",
+ "policy": "Shakedown items are EVAL-ONLY for tier-1 (design set stays frozen 143 \u2014 leakage ban). For tier-2: this split is the honest held-out from birth. The tier-2 builder gets DESIGN exemplars ONLY; sealed_eval items are withheld until tier-2 is evaluated.",
+ "split_rule": "deterministic sha256(item_id) mod 5 < 2 -> sealed_eval (~40%), else design (~60%). RNG-free, reproducible.",
+ "counts": {
+  "english_targets": 206,
+  "labeled_consensus": 189,
+  "ambiguous_split": 17,
+  "design": 112,
+  "sealed_eval": 77
+ },
+ "sealed_eval_sha256": "701c3edbda2db0ea73979a20aa783048621adcafe9c0c10194ab6ae63c31376c",
+ "design_exemplars": [
+  {
+   "item_id": "W1-0018",
+   "concept_id": "c8VLqF0XDR4",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0019",
+   "concept_id": "c8VLqF0XDR4",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0022",
+   "concept_id": "c8VLqF0XDR4",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0023",
+   "concept_id": "c8VLqF0XDR4",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0025",
+   "concept_id": "HfZTCZTDfWk",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0031",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0032",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0033",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0034",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0035",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0039",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0040",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0044",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0045",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0047",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0049",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0050",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0051",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0052",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0053",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0055",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0056",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0057",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0058",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0059",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0060",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0062",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0066",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0067",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0071",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0072",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0073",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0075",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0076",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0077",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0078",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0079",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0081",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0082",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0084",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0087",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0091",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0092",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0093",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0096",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0097",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0098",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0102",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0106",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0107",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0111",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0112",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0113",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0116",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0118",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0120",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0121",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0122",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0123",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0124",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0125",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0126",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0127",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0128",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0129",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0130",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0131",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0132",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0133",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0136",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0137",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0138",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0139",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0146",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0147",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0148",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0150",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0154",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0155",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0156",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0159",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0165",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0167",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0168",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0170",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0172",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0174",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0175",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0176",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0179",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0183",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0184",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0185",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0187",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0190",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0192",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0194",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0196",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0197",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0198",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0199",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0200",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0202",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0203",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0207",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0208",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0212",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0213",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0215",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0216",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0219",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0220",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  }
+ ],
+ "sealed_eval": [
+  {
+   "item_id": "W1-0011",
+   "concept_id": "75DJN5UVQnw",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0017",
+   "concept_id": "c8VLqF0XDR4",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0020",
+   "concept_id": "c8VLqF0XDR4",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0021",
+   "concept_id": "c8VLqF0XDR4",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0024",
+   "concept_id": "c8VLqF0XDR4",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0027",
+   "concept_id": "HfZTCZTDfWk",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0028",
+   "concept_id": "HfZTCZTDfWk",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0030",
+   "concept_id": "HfZTCZTDfWk",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0036",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0037",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0038",
+   "concept_id": "FqxEKDxemtI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0041",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0042",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0043",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0046",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0048",
+   "concept_id": "snNkQSyWX4k",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0054",
+   "concept_id": "sVkmZklJDHI",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0061",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0065",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0068",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0070",
+   "concept_id": "N7uP9V0Iktc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0080",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0083",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0085",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0088",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0089",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0090",
+   "concept_id": "KXWRtV2LOVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0094",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0095",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0100",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0103",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0104",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0105",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0108",
+   "concept_id": "m-G1ag77aVc",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0109",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0110",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0115",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0117",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0119",
+   "concept_id": "UBvfsImdI2U",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0134",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0135",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0140",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0141",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0142",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0143",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0145",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0149",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0151",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0153",
+   "concept_id": "NMUd0oX_7Pg",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0157",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0158",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0160",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0162",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0163",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0164",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0166",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0169",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0171",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0173",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0177",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0178",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0181",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0182",
+   "concept_id": "ktkqq7QsN9Q",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0186",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0188",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0189",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0191",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0193",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0195",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0205",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0206",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0209",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0210",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0211",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0214",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  },
+  {
+   "item_id": "W1-0217",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "gate-strength"
+  },
+  {
+   "item_id": "W1-0218",
+   "concept_id": "oDLt9zh33LE",
+   "consensus_label": "context"
+  }
+ ],
+ "ambiguous_design_reference_only": [
+  {
+   "item_id": "W1-0026",
+   "concept_id": "HfZTCZTDfWk"
+  },
+  {
+   "item_id": "W1-0029",
+   "concept_id": "HfZTCZTDfWk"
+  },
+  {
+   "item_id": "W1-0063",
+   "concept_id": "N7uP9V0Iktc"
+  },
+  {
+   "item_id": "W1-0064",
+   "concept_id": "N7uP9V0Iktc"
+  },
+  {
+   "item_id": "W1-0069",
+   "concept_id": "N7uP9V0Iktc"
+  },
+  {
+   "item_id": "W1-0074",
+   "concept_id": "N7uP9V0Iktc"
+  },
+  {
+   "item_id": "W1-0086",
+   "concept_id": "KXWRtV2LOVc"
+  },
+  {
+   "item_id": "W1-0099",
+   "concept_id": "m-G1ag77aVc"
+  },
+  {
+   "item_id": "W1-0101",
+   "concept_id": "m-G1ag77aVc"
+  },
+  {
+   "item_id": "W1-0114",
+   "concept_id": "UBvfsImdI2U"
+  },
+  {
+   "item_id": "W1-0144",
+   "concept_id": "NMUd0oX_7Pg"
+  },
+  {
+   "item_id": "W1-0152",
+   "concept_id": "NMUd0oX_7Pg"
+  },
+  {
+   "item_id": "W1-0161",
+   "concept_id": "ktkqq7QsN9Q"
+  },
+  {
+   "item_id": "W1-0180",
+   "concept_id": "ktkqq7QsN9Q"
+  },
+  {
+   "item_id": "W1-0201",
+   "concept_id": "oDLt9zh33LE"
+  },
+  {
+   "item_id": "W1-0204",
+   "concept_id": "oDLt9zh33LE"
+  },
+  {
+   "item_id": "W1-0221",
+   "concept_id": "oDLt9zh33LE"
+  }
+ ]
+}
