@@ -29,3 +29,12 @@ The amendment assumed: *restore the 5-option schema and the neutralizer is DORMA
 - **The sealed sets stay PRISTINE** — the sealed 77 and the Wave-5 16-video sealed set were NEVER opened; there was no conformant instrument to read them on, and the fork fires on the design-pool instrumentation result per the operator's pre-commitment. They are preserved for the human-in-loop fork's own read.
 
 *Terminal. doer≠grader held to the end: two builds, three independent reviews, all void-or-verified by ablation/execution; the wave converted H1's open economics question into a hard, honest number. Downstream (execute the human-in-loop fork / Phase-2 H2 under human-in-loop economics) is the operator's call.*
+
+## §INDEP-CONFIRM — independent reviewer VOID (doer≠grader closed on the terminal verdict)
+The FINAL verdict is not builder-self-reported alone. A separate independent reviewer re-derived it via TWO non-overlapping measurement paths (the harness `--json` run + an independent driver capturing per-item `{label, resolved_by}`) + 26 targeted reproducibility reruns (**26/26 self-agreement** — rules out temp=0.1 noise) + confirmed the model weights predate pass-1 (no silent drift). Both builds → both VOID by independent ablation/execution.
+- **F-1 birth-gate:** W1-0147 → cannot-determine, 5/5 reproducible. Disqualifying alone (pre-reg §4).
+- **F-2 boundary:** 11 non-declined mismatches vs pass-1 (not 0). **Nuance: 10 of 11 flips RAISE correctness** (pass-1-wrong → consensus-match) — but per the scope-lock, an absorption RAISE voids *regardless of whether it looks like an improvement*, because a shifted boundary is unattributable. VOID stands.
+- **F-3 neutralizer:** 26/112 (23.2%) llm-margin declines (not 0); total decline 31/112 (27.7%). The 0%→28% routing shift IS the schema-shift signature.
+- **Structural gate ablation:** direction-safe in isolation (0/5 forced-wrong) — but the boundary drift + declines live in the margin path the gate doesn't touch, so it can't excuse them.
+- The pass-1-producing module was never committed/vaulted, so "boundary byte-identical" can NEVER be diff-verified again — only empirically, which failed twice. That unrecoverability is itself part of why the entanglement is terminal.
+Independent reviewer disposition: **fire the human-in-loop fork; do not license a further rebuild.** Matches the terminal verdict. Fork CONFIRMED.
