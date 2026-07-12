@@ -5016,10 +5016,42 @@ export async function updatePositionPrices(
             // Guard: tp1ClosedCount < pos.contracts is always true here (full close returns
             // positionClosed=true which prevents entering this block). Kept as a safety fence.
             if (tp1ClosedCount < pos.contracts) {
+              // CAPITAL-SAFETY FIX (freshscan11 2026-07-12): if this F4 re-invocation's handler
+              // decision turns out to be a FULL close (FILL_TP2 on the remainder — e.g. a 2-contract
+              // position where styleCScaleOut leaves a 0-contract runner), applyExitDecision's
+              // full-close branch calls closePosition(..., { precedingUnrealizedPnl:
+              // Number(pos.previousUnrealizedPnl) }) where `pos` there is THIS updatedPos object.
+              // Leaving updatedPos.previousUnrealizedPnl at the stale pre-bar value (prevUnrealized,
+              // "P0" below) double-counts: the TP1 leg's bookPartialClose has ALREADY backed the
+              // fresh N-basis unrealized (Pm, "unrealizedPnl" below) out of currentEquity on the
+              // assumption that the deferred end-of-loop aggregate credit (totalUnrealizedDelta,
+              // queued on the full pre-TP1 N-contract basis) will land — but a same-bar full close
+              // cancels that ENTIRE aggregate delta at the `positionClosed` branch a few lines below
+              // (`totalUnrealizedDelta -= unrealizedDelta`), so it never lands. Worked-example proof
+              // (MES $5/pt, 2 contracts, entry 5000, styleCScaleOut(2)={tp1:1,tp2:1,runner:0}):
+              // P0=80 (bar1), Pm=200 (bar2 fresh N=2 basis), tp1ClosedCount=1, N=2. bookPartialClose
+              // applies equityDelta=50-100=-50 (currentEquity: start+80-50=start+30). The stale-P0
+              // full-close would apply equityDelta=200-80=120 (currentEquity: start+150) — WRONG;
+              // true realized total is 50+200=start+250. The residual basis below —
+              // P0 - Pm*(tp1ClosedCount/N) = 80-100=-20 — makes closePosition's equityDelta =
+              // 200-(-20)=220, landing currentEquity at start+30+220=start+250 exactly (matches
+              // truth) once the cancelled aggregate (0, not the assumed +120) is accounted for.
+              // NOT the same as the DB row's own rebased value (which bookPartialClose set to the
+              // REMAINING portion's share, Pm*(N-tp1ClosedCount)/N — correct for a position that
+              // STAYS open, wrong for one that closes same-bar). See memory
+              // project_closepos_equity_double_count_2026_07_12 (closePosition fix 84490aa5) +
+              // project_bookpartialclose_equity_double_count_2026_07_12 (bookPartialClose fix
+              // 8db9ff19) — this reconciles the interaction between those two independently-correct
+              // fixes. NO-OP for a double-partial/runner-stays-open outcome: bookPartialClose always
+              // re-reads the row-locked DB value under its own `SELECT ... FOR UPDATE` claim and
+              // never reads this JS-side field, so that path stays byte-identical.
+              const f4ResidualPrecedingUnrealizedPnl =
+                prevUnrealized - unrealizedPnl * (tp1ClosedCount / pos.contracts);
               const updatedPos = {
                 ...pos,
                 tp1Filled: true,
                 contracts: pos.contracts - tp1ClosedCount,
+                previousUnrealizedPnl: String(f4ResidualPrecedingUnrealizedPnl),
               } as typeof pos;
               const tp2Result = await callExitHandler(updatedPos, exitBarContext, stratId, correlationId);
               if (tp2Result.decision !== "HOLD") {
