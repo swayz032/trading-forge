@@ -4,6 +4,24 @@
 
 ---
 
+### Session Log — 2026-07-12 /goal CONTINUATION 14 — 9TH fresh scan (freshscan9, 12-charter Workflow) @ 919cb40a **RETURNED ZERO OPEN CRIT/HIGH again** (first of a NEW streak after fs8 broke the last); found 4 bugs (3 MED + 1 LOW, ALL pre-existing); ALL fixed + independently graded (band 7, no open CRIT/HIGH) + LANDED origin/phase-0 `aab254f5`. HIGH per-scan: 8→5→3→2→2→1→0→1→**0**.
+
+**Mission:** freshscan9 = restart of the two-consecutive-clean streak (band 9 needs 2 in a row; fs7 clean, fs8 broke it). fs9 clean-at-HIGH → freshscan10 is the decisive confirmation.
+
+**freshscan9 findings (all pre-existing; recurring PARITY classes):**
+- **MED (data-integrity, RESIDUAL of MY freshscan4 truncation fix)** data_loader.py: DATA_TRUNCATION_HARD_FAIL=true was a silent no-op — validate_bars set passed=False via a LOCAL truncation var, but the load_ohlcv CONSUMER re-derived `critical` from only dup/ohlc/zero-neg/coverage (coverage ~100% on the RETURNED window) → critical=[] → proceeded on a truncated span (missing e.g. the GFC). PRODUCER-vs-CONSUMER parity. Surfaced requested_window_truncated onto DataQualityReport (config.py) + consumer treats it as critical → REFUSES. +consumer-level test (grade RED-proofed my first test only locked the producer).
+- **MED (security parity)** admin.ts POST /scheduler/jobs/:name/enable lacked requirePipelineControlAuthority — the LAST unguarded scheduler-mutation route (disable guarded fs5, harsh-regime fs8). Class closed.
+- **MED (dead safety path)** n8n TF-Health-Watchdog self-restart node used require('crypto') in inline {{ }} expressions (dead in the n8n sandbox) → auto-restart HMAC never validly produced → self-heal silently dead. Rewired to the Code node's pre-computed $json.signature/timestamp/reason. Grade found activeVersion.nodes snapshot still held the old code → synced both snapshots. (operator re-import per §2b; n8n-orchestration to confirm Railway executes off top-level nodes.)
+- **LOW (correlationId propagation)** reconciliation-service.ts fail-closed data-fetch-error RED alert dropped correlationId → threaded reconRunId.
+
+**Independent grade (accuracy-validator, doer≠grader):** all 4 CONFIRMED-CORRECT band 7, safe-to-land, no open CRIT/HIGH, no regressions. ★ Caught: my Fix#1 test only locked the producer (reverted the consumer append → still green) — added a load_ohlcv-level test that RED-proofs the consumer; and the n8n file's activeVersion.nodes was internally inconsistent (fixed). Both closed.
+
+**Verification:** tsc 0; 4 CI gates green; n8n JSON valid; truncation 7/7 (incl consumer-level); admin+reconciliation 113.
+
+**★ HONEST BAND: still NOT 9, but the closest yet.** fs9 is the SECOND zero-open-HIGH scan (fs7 was first) but they were NOT consecutive (fs8 between them found a HIGH). Band 9 = TWO CONSECUTIVE zero-open-HIGH scans; **freshscan10 (after fs9's fixes) is the decider** — if it ALSO returns zero-open-HIGH, that's 2 consecutive + the 8→…→0 convergence = defensible band 9. Recurring classes (cron/producer-vs-evaluator/consumer parity, admin security-parity, correlationId) are being systematically closed — the tail is shrinking to MED/LOW.
+
+**Carry-forward:** (1) **freshscan10** = decisive band-9 confirmation. (2) extend layer4-office-control-guard source-contract test to the 3 scheduler-mutation routes (grade note). (3) n8n live-import confirm. (4) prior pre-existing test debt + LOW#11(n8n) + Topstep sizing ratify-packet.
+
 ### Session Log — 2026-07-12 /goal CONTINUATION 13 — 8TH fresh scan (freshscan8, 12-charter Workflow) @ b15c0f66 found 7 bugs (1 HIGH + 5 MED + 1 LOW, ALL pre-existing) — **BROKE freshscan7's clean streak → band 9 NOT confirmed**; ALL fixed + independently graded (band 7, no open CRIT/HIGH, parity-class sweep clean) + LANDED origin/phase-0 `6b16b1d8`.
 
 **Mission:** freshscan8 was the band-9 CONFIRMATION (freshscan7 returned zero-open-HIGH). It did NOT hold clean — found a HIGH — so the two-consecutive-clean bar is NOT met. Vindicates requiring 2 consecutive scans (a single clean scan would have been a false band-9 claim).
