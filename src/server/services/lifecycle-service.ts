@@ -1158,6 +1158,10 @@ export class LifecycleService {
             const biasStateRows = await db
               .select({ regimeLabel: biasStateTable.regimeLabel })
               .from(biasStateTable)
+              // HIGH#1 (freshscan5 2026-07-12): symbol-filtered + ordered to the authoritative latest
+              // row (parity with the regime-drift-detector read side — see the main freeze site).
+              .where(eq(biasStateTable.symbol, strategy.symbol))
+              .orderBy(desc(biasStateTable.sessionDate), desc(biasStateTable.computedAt))
               .limit(1)
               .catch(() => [] as { regimeLabel: string }[]);
             if (biasStateRows.length > 0 && typeof biasStateRows[0].regimeLabel === "string") {
@@ -2569,6 +2573,10 @@ export class LifecycleService {
         const biasStateRows = await db
           .select({ regimeLabel: biasStateTable.regimeLabel })
           .from(biasStateTable)
+          // HIGH#1 (freshscan5 2026-07-12): symbol-filtered + ordered to the authoritative latest
+          // row (parity with the regime-drift-detector read side — see the main freeze site).
+          .where(eq(biasStateTable.symbol, strategy.symbol))
+          .orderBy(desc(biasStateTable.sessionDate), desc(biasStateTable.computedAt))
           .limit(1)
           .catch(() => [] as { regimeLabel: string }[]);
         if (biasStateRows.length > 0 && typeof biasStateRows[0].regimeLabel === "string") {
@@ -4261,6 +4269,10 @@ export class LifecycleService {
             const biasStateRows = await db
               .select({ regimeLabel: biasStateTable.regimeLabel })
               .from(biasStateTable)
+              // HIGH#1 (freshscan5 2026-07-12): symbol-filtered + ordered to the authoritative latest
+              // row (parity with the regime-drift-detector read side — see the main freeze site).
+              .where(eq(biasStateTable.symbol, s.symbol))
+              .orderBy(desc(biasStateTable.sessionDate), desc(biasStateTable.computedAt))
               .limit(1)
               .catch(() => [] as { regimeLabel: string }[]);
             if (biasStateRows.length > 0 && typeof biasStateRows[0].regimeLabel === "string") {
@@ -5031,6 +5043,10 @@ export class LifecycleService {
               const biasStateRowsSh = await db
                 .select({ regimeLabel: biasStateTable.regimeLabel })
                 .from(biasStateTable)
+                // HIGH#1 (freshscan5 2026-07-12): symbol-filtered + ordered to the authoritative latest
+                // row (parity with the regime-drift-detector read side — see the main freeze site).
+                .where(eq(biasStateTable.symbol, s.symbol))
+                .orderBy(desc(biasStateTable.sessionDate), desc(biasStateTable.computedAt))
                 .limit(1)
                 .catch(() => [] as { regimeLabel: string }[]);
               if (biasStateRowsSh.length > 0 && typeof biasStateRowsSh[0].regimeLabel === "string") {
@@ -6933,6 +6949,13 @@ export class LifecycleService {
               const biasStateRows = await db
                 .select({ regimeLabel: biasStateTable.regimeLabel })
                 .from(biasStateTable)
+                // HIGH#1 (freshscan5 2026-07-12): filter by THIS strategy's symbol + order to the
+                // authoritative latest row, matching the regime-drift-detector READ side. An
+                // unfiltered/unordered limit(1) stamped an ARBITRARY symbol/session regime into
+                // regime_trained_on → the daily drift cron compared against the wrong baseline → false
+                // auto-demotion of a healthy DEPLOYED strategy (or masked real drift). Parity closed.
+                .where(eq(biasStateTable.symbol, s.symbol))
+                .orderBy(desc(biasStateTable.sessionDate), desc(biasStateTable.computedAt))
                 .limit(1)
                 .catch(() => [] as { regimeLabel: string }[]);
               if (biasStateRows.length > 0 && typeof biasStateRows[0].regimeLabel === "string") {

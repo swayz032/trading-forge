@@ -190,6 +190,16 @@ const NEVER_DISABLE_JOBS = new Set([
   "pre-trading-day-health-check",
 ]);
 
+// HIGH#2 (freshscan5 2026-07-12): expose the NEVER_DISABLE_JOBS protection so the MANUAL admin
+// disable route (POST /api/admin/scheduler/jobs/:name/disable) can fail-CLOSED on the exact jobs the
+// AUTO-disable path (scheduler.ts ~343 `if (!NEVER_DISABLE_JOBS.has(name))`) already refuses to stop.
+// Without this the manual route was fail-OPEN on the safety infrastructure the auto path fail-CLOSES on —
+// a Bearer-key caller could silence db-backup (silent total-loss exposure) or the vacation-window
+// dead-man's heartbeat probes with no operator cookie and no override.
+export function isNeverDisableJob(name: string): boolean {
+  return NEVER_DISABLE_JOBS.has(name);
+}
+
 // deepscan6 A2: once-per-hour-per-signature dedup for the n8n-health-check Discord WARN
 // (the 15-min cron would otherwise spam a persistently-failing workflow set).
 const _n8nHealthAlertDedup = new Map<string, number>();

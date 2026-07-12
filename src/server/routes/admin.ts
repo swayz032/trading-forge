@@ -1204,8 +1204,22 @@ adminRoutes.post("/scheduler/jobs/:name/enable", async (req, res) => {
 
 // ─── POST /scheduler/jobs/:name/disable — Manually disable a job ──
 adminRoutes.post("/scheduler/jobs/:name/disable", async (req, res) => {
+  // HIGH#2 (freshscan5 2026-07-12): office-control authority guard (parity with the sibling
+  // pipeline/start|pause|vacation routes). Disabling a scheduler job is a pipeline-mutating
+  // privileged action — without this a relay-tunneled caller holding only the shared Bearer API_KEY
+  // (the exact threat office-control-guard was created to close) could silence safety crons.
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
-    const { getAllJobHealth } = await import("../scheduler.js");
+    const { getAllJobHealth, isNeverDisableJob } = await import("../scheduler.js");
+    // HIGH#2: fail-CLOSED on the NEVER_DISABLE_JOBS set — the manual route must not be able to stop
+    // the exact jobs the AUTO-disable path is forbidden from stopping (db-backup = silent total-loss
+    // exposure; heartbeat-* = the ONLY vacation-window liveness probes). No override via this route.
+    if (isNeverDisableJob(req.params.name)) {
+      res.status(403).json({
+        error: `Job "${req.params.name}" is protected (NEVER_DISABLE_JOBS) and cannot be manually disabled`,
+      });
+      return;
+    }
     const healthMap = getAllJobHealth();
     const health = healthMap.get(req.params.name);
     if (!health) {
