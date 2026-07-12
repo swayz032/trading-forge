@@ -1226,6 +1226,12 @@ def compute_position_sizes(
             # TS src/server/lib/risk-sizing.ts + paper-signal-service.ts wiring.
             # Fail-soft: if ts_event column absent or vectorizer raises, factor=1.0
             # (no scaling) so backward-compat preserved for legacy DataFrames.
+            # CRIT (fresh-scan 2026-07-12): keep pm_factors defined in ALL branches (defaults to 1.0 =
+            # no taper) so the pyramid FLOOR value below can apply the SAME PM taper the TS mirror does
+            # (risk-sizing.ts flooredBase = floor(base × pmFactor)). Without this the Python floor
+            # re-inflated a PM-tapered bar back to full base_contracts while paper floored to
+            # base×pmFactor — a sizing PARITY break (backtest over-sized PM-session trades vs live).
+            pm_factors = np.ones(n)
             try:
                 from src.engine.pm_size_factor import compute_pm_size_factor_vec
                 if "ts_event" in df.columns:
@@ -1264,7 +1270,12 @@ def compute_position_sizes(
                 # liquidity_comfort_cap=10 with base=18), the un-clamped floor re-inflated bar size ABOVE
                 # the cap → over-sizing / inflated backtest P&L vs live-achievable (the TS floor already
                 # clamps via flooredCandidates=[base, liquidityCap, firmCap?]). Mirror that here.
-                floored_val = np.minimum(float(base_contr), effective_firm_cap_bar)
+                # CRIT (fresh-scan 2026-07-12): apply the per-bar PM taper to the floor value, mirroring
+                # the TS flooredBase = Math.floor(base_contracts × pmFactor). pm_factors is 1.0 on
+                # non-PM bars (floor = base, unchanged) and ~0.5 in the PM session (floor = base×0.5),
+                # so a deliberate PM-session reduction is never silently re-inflated to full base — and
+                # Python now equals paper on the same afternoon bar.
+                floored_val = np.minimum(np.floor(float(base_contr) * pm_factors), effective_firm_cap_bar)
                 floored_val = np.minimum(floored_val, liquidity_cap_bar)
                 bar_sizes = np.where(
                     (bar_sizes < base_contr) & (pyramid_tier_per_bar >= base_contr),
