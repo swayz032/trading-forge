@@ -219,7 +219,12 @@ describe("Phase 4C cron registrations in scheduler", () => {
   });
 
   it("5. cron callback wraps weekly-drift-detection errors in try/catch (notifyCritical path is reachable)", async () => {
-    const driftCron = cronScheduleCalls.find((c) => c.expr === "0 22,23 * * 0");
+    // weekly-drift-2sigma-check shares this "0 22,23 * * 0" expression and is registered first, so a
+    // bare .find() on the expression captures the WRONG (2sigma) cron — which has no notifyCritical/
+    // drift-cron-failed. Disambiguate on the job-lock name to get weekly-drift-detection specifically.
+    const driftCron = cronScheduleCalls
+      .filter((c) => c.expr === "0 22,23 * * 0")
+      .find((c) => c.cb.toString().includes("weekly-drift-detection"));
     expect(driftCron).toBeDefined();
 
     // Fire with wrong ET hour
