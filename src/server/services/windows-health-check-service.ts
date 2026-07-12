@@ -354,7 +354,7 @@ export async function runPreTradingDayHealthCheck(
 async function pausePipelineSafely(reason: string): Promise<boolean> {
   try {
     const { setMode } = await import("./pipeline-control-service.js");
-    await setMode("PAUSED", `pre-market-health-check: ${reason}`);
+    await setMode("PAUSED", `pre-market-health-check: ${reason}`, null, "system"); // #28: autonomous pause
     return true;
   } catch (err) {
     logger.error(
@@ -492,7 +492,7 @@ export async function maybeAutoResumeAfterReboot(
     }
   }
 
-  await setMode("ACTIVE", "windows_health.auto_resumed_after_reboot — RebootPending flag cleared on subsequent health check");
+  await setMode("ACTIVE", "windows_health.auto_resumed_after_reboot — RebootPending flag cleared on subsequent health check", null, "system"); // #28: autonomous resume
   await setRebootPauseProvenance(false);
 
   const { insertAuditRowSafe } = await import("../lib/audit-log-helper.js");

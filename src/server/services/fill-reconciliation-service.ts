@@ -524,9 +524,20 @@ async function computeActualPnlForFullExit(params: {
       .orderBy(desc(serverMediatedOrders.filledAt))
       .limit(10);
 
+    // deep-scan 2026-07-11 LOW fix (#26): pair the exit with the SAME-DIRECTION entry it closes
+    // (exit_long ⟵ enter_long, exit_short ⟵ enter_short). The old predicate matched the most-recent
+    // enter_long OR enter_short, so an intervening opposite-direction entry within the same
+    // session+symbol flipped the sign of the realized PnL written to production_trades. A bare "exit"
+    // carries no direction, so it retains the legacy either-direction match.
+    const requiredEntryAction =
+      orderRow.intendedAction === "exit_long" ? "enter_long"
+      : orderRow.intendedAction === "exit_short" ? "enter_short"
+      : null;
     const entryRow = candidateEntries.find(
       (r) =>
-        (r.intendedAction === "enter_long" || r.intendedAction === "enter_short") &&
+        (requiredEntryAction
+          ? r.intendedAction === requiredEntryAction
+          : (r.intendedAction === "enter_long" || r.intendedAction === "enter_short")) &&
         r.filledAvgPrice !== null &&
         (!orderRow.filledAt || !r.filledAt || r.filledAt.getTime() <= orderRow.filledAt.getTime()),
     );

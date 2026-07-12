@@ -687,9 +687,13 @@ def inject_synthetic_stress(
     else:
         catastrophic_loss = 5.0 * np.min(losses)  # min is most negative, *5 makes it worse
 
-    # Cap to max risk (e.g., 2× max_stop_points × point_value = 2 × 6 × $5 = $60)
+    # Cap to max risk (e.g., 2× max_stop_points × point_value = 2 × 6 × $5 = $60).
+    # deep-scan 2026-07-11 LOW fix (#25): catastrophic_loss and -max_loss_cap are BOTH negative, so
+    # min() took the MORE-negative value → it FLOORED the injected loss deeper (e.g. min(-300,-60)=-300),
+    # defeating the stop-bounded realism cap entirely. max() caps the magnitude at max_loss_cap
+    # (max(-300,-60)=-60) so the injected catastrophic loss is never worse than the stop-bounded cap.
     if max_loss_cap > 0:
-        catastrophic_loss = min(catastrophic_loss, -max_loss_cap)
+        catastrophic_loss = max(catastrophic_loss, -max_loss_cap)
 
     # Determine injection points
     # F-2: Use PCG64DXSM for RNG family consistency across all MC paths.

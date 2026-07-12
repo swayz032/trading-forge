@@ -422,9 +422,13 @@ async function _handleAutopause(result: DDVelocityCheckResult): Promise<void> {
   });
 
   // 2. Set pipeline mode to AUTOPAUSE_DD_VELOCITY
+  // deep-scan 2026-07-11 LOW fix (#28): authority="system" — this is an AUTONOMOUS pause; stamping it
+  // "human" would poison the operator-absence auto-detector (24h of zero human rows → vacation autopilot).
   await setMode(
     "AUTOPAUSE_DD_VELOCITY",
     `DD velocity breach: ${pctDisplay}% in ${windowMin}min on session ${result.sessionId}`,
+    null,
+    "system",
   );
 
   // 3. Prometheus counter
@@ -581,8 +585,9 @@ export async function checkVacationAutoRecovery(
       "dd-velocity-gate: vacation-auto-recovery FIRING — new CME day boundary passed since autopause",
     );
 
-    // 5a. Set pipeline mode back to ACTIVE.
-    await setMode("ACTIVE", reason);
+    // 5a. Set pipeline mode back to ACTIVE. authority="system" — autonomous DD-velocity auto-recovery
+    // (deep-scan 2026-07-11 LOW #28: must not count as operator activity for the absence detector).
+    await setMode("ACTIVE", reason, null, "system");
 
     // 5b. Write audit row.
     const { auditLog } = await import("../db/schema.js");
