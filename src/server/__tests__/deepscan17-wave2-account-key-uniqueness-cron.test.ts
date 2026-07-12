@@ -91,10 +91,13 @@ describe("deepscan17 Wave 2 A-2 — scheduler.ts cron registration (static contr
     expect(region).toContain("runAccountKeyUniquenessSanityCheck");
   });
 
-  it("has a DST-safe double-fire cron.schedule pattern for the job", () => {
+  it("has a DST-safe double-fire cron pattern for the job", () => {
     const idx = src.indexOf('registerJob("account-key-uniqueness-sanity"');
     const region = src.slice(idx, idx + 2500);
-    expect(region).toMatch(/cron\.schedule\("\d+ \d+,\d+ \* \* \*"/);
+    // Accept both the raw cron.schedule(...) and the UTC-pinned scheduleUtc(...) wrapper — scheduler.ts
+    // migrated all crons to scheduleUtc(). The job now reads scheduleUtc("37 11,12 * * *") (7 AM ET
+    // double-fire: 11 UTC=EDT, 12 UTC=EST) with an etHour DST guard.
+    expect(region).toMatch(/(?:cron\.schedule|scheduleUtc)\("\d+ \d+,\d+ \* \* \*"/);
   });
 
   it("uses the overlap guard (_tryAcquireJobLock / _releaseJobLock) around the tick", () => {

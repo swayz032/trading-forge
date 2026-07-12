@@ -108,7 +108,12 @@ class TestFFNConsistency:
 # ─── Full Compliance Run ──────────────────────────────────────────
 
 class TestRunPropCompliance:
-    def test_returns_all_8_firms(self):
+    # Fresh-scan HIGH#9 (2026-07-12): the 9 legacy firms (tpt/apex/tradeify/alpha/ffn/…) were
+    # removed via migration 0097 (CLAUDE.md §6). FIRM_CONFIGS now holds ONLY topstep_50k + mffu_50k.
+    # These tests asserted the removed-firm era (len==8, results["tpt_50k"]/["alpha_50k"]) → 3 failures
+    # (KeyError) red-lit the whole test-python CI job, which SKIPS `build` → the 6 TS↔Python parity
+    # hard gates never ran. Realigned to the current 2-firm roster.
+    def test_returns_topstep_and_mffu_only(self):
         daily_pnls = [250] * 20
         stats = {
             "avg_daily_pnl": 250,
@@ -117,17 +122,11 @@ class TestRunPropCompliance:
             "consistency_ratio": 0.10,
         }
         results = run_prop_compliance(daily_pnls, stats)
-        assert len(results) == 8
-        assert "topstep_50k" in results
-        assert "mffu_50k" in results
-        assert "tpt_50k" in results
-        assert "apex_50k" in results
-        assert "tradeify_50k" in results
-        assert "alpha_50k" in results
-        assert "ffn_50k" in results
+        assert len(results) == 2
+        assert set(results.keys()) == {"topstep_50k", "mffu_50k"}
 
     def test_high_dd_fails_all_firms(self):
-        """$2,100 DD exceeds all firms' $2K limit — all fail."""
+        """$2,100 DD exceeds both firms' $2K limit — all fail."""
         daily_pnls = [500, 500, -700, -700, -700, 500, 500, 500, 500]
         stats = {
             "avg_daily_pnl": 300,
@@ -137,10 +136,10 @@ class TestRunPropCompliance:
         }
         results = run_prop_compliance(daily_pnls, stats)
         assert results["topstep_50k"]["passed"] is False
-        assert results["tpt_50k"]["passed"] is False  # All firms $2K limit now
+        assert results["mffu_50k"]["passed"] is False  # both firms $2K limit
 
-    def test_alpha_no_overnight(self):
-        """Alpha Futures flags overnight positions."""
+    def test_overnight_flagged_by_both_firms(self):
+        """Both Topstep and MFFU are day-trader-only (overnight_ok=False) → overnight positions fail."""
         daily_pnls = [250] * 20
         stats = {
             "avg_daily_pnl": 250,
@@ -149,7 +148,8 @@ class TestRunPropCompliance:
             "consistency_ratio": 0.10,
         }
         results = run_prop_compliance(daily_pnls, stats)
-        assert results["alpha_50k"]["passed"] is False
+        assert results["topstep_50k"]["passed"] is False
+        assert results["mffu_50k"]["passed"] is False
 
     def test_each_result_has_required_fields(self):
         daily_pnls = [250] * 20
@@ -218,7 +218,6 @@ class TestMFFUConsistencyStageScoping:
 
     def test_mffu_daily_loss_limit_is_1000_not_none(self):
         """MFFU daily_loss_limit must be 1000 (firm_config.py:148), not None."""
-        from src.engine.prop_compliance import FIRM_CONFIGS
         mffu = FIRM_CONFIGS["mffu_50k"]
         assert mffu["daily_loss_limit"] == 1000, (
             f"MFFU daily_loss_limit must be 1000 (per firm_config.py:148), "

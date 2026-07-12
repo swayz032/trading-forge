@@ -50,6 +50,7 @@ import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js"
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
+import { computeFirmRulesVersion } from "../lib/firm-rules-version.js"; // #23: promotion-time firm-rule drift check
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 import { evaluateCompositeShadow } from "../lib/composite-shadow-gate.js";
 import { routeShadowDisagreementAlert } from "../lib/composite-shadow-discord-router.js";
@@ -5555,6 +5556,7 @@ export class LifecycleService {
                 id: backtests.id,
                 gateResult: backtests.gateResult,
                 resultExtras: backtests.resultExtras,
+                firmRulesVersion: backtests.firmRulesVersion, // #23: for promotion-time firm-rule drift check
               })
               .from(backtests)
               .where(
@@ -5681,6 +5683,34 @@ export class LifecycleService {
                 .limit(1);
 
               if (latestMcForB14) {
+                // #23 (deep-scan 2026-07-11 LOW): re-validate firm_rules_version at PROMOTION time. The
+                // MC-run-time guard refuses to RUN MC under stale rules, but nothing re-checked at
+                // promotion — so an MC validated under V1 rules could promote after the operator tightens
+                // firm_config.py to V2 (within the 30-day staleness window), grading firm-breach ruin
+                // against the stale V1 survival model → a strategy that would FAIL B14 under current rules
+                // could reach live capital. Block fail-CLOSED on a NON-NULL mismatch; a null version
+                // (pre-W27.5 backtest) grandfathers through, matching the MC-run-time guard's behavior.
+                const currentFirmRulesVersion = computeFirmRulesVersion();
+                const btFirmRulesVersion = latestBtForB14.firmRulesVersion as string | null | undefined;
+                if (btFirmRulesVersion != null && btFirmRulesVersion !== currentFirmRulesVersion) {
+                  logger.warn(
+                    { strategyId: s.id, btFirmRulesVersion, currentFirmRulesVersion, transition: "PAPER→DEPLOY_READY" },
+                    "B14 promotion BLOCKED: MC firm_rules_version is stale — re-run the backtest + MC under current firm rules",
+                  );
+                  await db.insert(auditLog).values({
+                    action: "lifecycle.firm_rules_version_stale_block",
+                    entityId: s.id,
+                    entityType: "strategy",
+                    status: "failure",
+                    decisionAuthority: "gate",
+                    input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                    result: { bt_firm_rules_version: btFirmRulesVersion, current_firm_rules_version: currentFirmRulesVersion, reason: "mc_validated_under_stale_firm_rules" } as Record<string, unknown>,
+                    correlationId,
+                  }).catch((auditErr: unknown) => {
+                    logger.warn({ strategyId: s.id, err: auditErr }, "firm-rules-version stale-block audit insert failed (non-blocking)");
+                  });
+                  continue;
+                }
                 const rm = (latestMcForB14.riskMetrics as Record<string, unknown> | null) ?? {};
                 const ruinCi = (rm.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
                 const pointEstimate = latestMcForB14.probabilityOfRuin != null
@@ -5887,11 +5917,33 @@ export class LifecycleService {
             );
           }
         } catch (b15Err) {
-          // Fail-open: B15 gate read failure is non-blocking (pre-B15 strategies may not have data).
+          // deep-scan 2026-07-11 MED fix: a THROWN read error is a DB fault — NOT the pre-B15 "no
+          // battery data" case (that returns a null b15Battery, handled above and legitimately
+          // proceeds). When the gate is HARD (B15_BATTERY_ENABLED=true, default), fail CLOSED: skip
+          // this promotion so a transient DB error cannot let an un-robustness-validated strategy
+          // through, matching the sibling b14/wfe/pbo hard gates on this same transition. Advisory
+          // mode (disabled) stays fail-open.
           logger.warn(
-            { strategyId: s.id, err: b15Err },
-            "B15 Parameter Robustness Battery gate: read failed (non-blocking — promotion continues)",
+            { strategyId: s.id, err: b15Err, b15HardGateEnabled },
+            b15HardGateEnabled
+              ? "B15 Parameter Robustness Battery gate: read FAILED — blocking PAPER→DEPLOY_READY (fail-closed, hard gate)"
+              : "B15 Parameter Robustness Battery gate: read failed (advisory — promotion continues)",
           );
+          if (b15HardGateEnabled) {
+            await db.insert(auditLog).values({
+              action: "lifecycle.b15_gate_read_failed_fail_closed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: { error: b15Err instanceof Error ? b15Err.message : String(b15Err), fail_closed: true },
+              correlationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "B15 fail-closed audit insert failed (non-blocking)");
+            });
+            continue;
+          }
         }
 
         // F-5 Hardening 2026-06-23: REMOVED redundant standalone WFE gate (floor 0.70, evaluateWfeGate).

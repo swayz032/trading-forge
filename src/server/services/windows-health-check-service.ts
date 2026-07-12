@@ -278,7 +278,8 @@ export async function runPreTradingDayHealthCheck(
     // deepscan7 DS7-C2 2026-07-02: healthy = RebootPending flag is CLEAR. If the
     // pipeline is still paused from OUR earlier reboot-pending pause, auto-resume.
     try {
-      await maybeAutoResumeAfterReboot();
+      // This branch is the HEALTHY exit (RebootPending already verified clear) — skip the re-check.
+      await maybeAutoResumeAfterReboot({ healthAlreadyVerified: true });
     } catch (err) {
       logger.error({ err }, "windows-health-check: auto-resume-after-reboot check failed (non-blocking)");
     }
@@ -353,7 +354,7 @@ export async function runPreTradingDayHealthCheck(
 async function pausePipelineSafely(reason: string): Promise<boolean> {
   try {
     const { setMode } = await import("./pipeline-control-service.js");
-    await setMode("PAUSED", `pre-market-health-check: ${reason}`);
+    await setMode("PAUSED", `pre-market-health-check: ${reason}`, null, "system"); // #28: autonomous pause
     return true;
   } catch (err) {
     logger.error(
@@ -399,7 +400,8 @@ export type AutoResumeOutcome =
   | "resumed"
   | "no_provenance"
   | "not_paused"
-  | "operator_owns_pause";
+  | "operator_owns_pause"
+  | "reboot_still_pending";
 
 /**
  * deepscan7 DS7-C2 2026-07-02 — auto-resume after a reboot-pending pause.
@@ -415,7 +417,16 @@ export type AutoResumeOutcome =
  * If the flag is still set the health check exits non-zero (pending_reboot),
  * this function is never reached, and the pipeline stays paused.
  */
-export async function maybeAutoResumeAfterReboot(): Promise<{ resumed: boolean; outcome: AutoResumeOutcome }> {
+export async function maybeAutoResumeAfterReboot(
+  opts: {
+    healthAlreadyVerified?: boolean;
+    // Test seam: inject a health-check that resolves to an exit code (0=healthy). Production omits it
+    // and the real runHealthCheckScript() spawns the PowerShell probe. Exists because
+    // runHealthCheckScript is a same-module export (not mockable via vi.mock without mocking the
+    // function under test), and the reboot-still-pending DECLINE branch must be deterministically tested.
+    _runHealthCheckForTest?: () => Promise<number>;
+  } = {},
+): Promise<{ resumed: boolean; outcome: AutoResumeOutcome }> {
   const { db } = await import("../db/index.js");
   const { systemParameters, auditLog } = await import("../db/schema.js");
   const { eq, desc } = await import("drizzle-orm");
@@ -461,7 +472,27 @@ export async function maybeAutoResumeAfterReboot(): Promise<{ resumed: boolean; 
     return { resumed: false, outcome: "operator_owns_pause" };
   }
 
-  await setMode("ACTIVE", "windows_health.auto_resumed_after_reboot — RebootPending flag cleared on subsequent health check");
+  // deep-scan 2026-07-11 HIGH fix: re-verify the RebootPending flag is ACTUALLY clear before resuming.
+  // The three guards above (provenance / PAUSED / ownership) do NOT confirm the reboot happened — the
+  // pre-market path reaches here only from the HEALTHY branch (reboot verified clear), but the
+  // weekend cron (scheduler.ts:1614) and boot-time path (~6435) call this DIRECTLY, so without this
+  // re-check they would resume trading with a reboot still pending (C8 gate bypass). Skip the re-run
+  // only when the caller already ran a healthy check this invocation.
+  if (!opts.healthAlreadyVerified) {
+    const exitCode = opts._runHealthCheckForTest
+      ? await opts._runHealthCheckForTest()
+      : (await runHealthCheckScript()).exitCode;
+    const status = classifyExitCode(exitCode);
+    if (status !== "healthy") {
+      logger.warn(
+        { status, exitCode },
+        "windows-health-check: auto-resume DECLINED — host not healthy (reboot still pending / degraded); pipeline stays PAUSED",
+      );
+      return { resumed: false, outcome: "reboot_still_pending" };
+    }
+  }
+
+  await setMode("ACTIVE", "windows_health.auto_resumed_after_reboot — RebootPending flag cleared on subsequent health check", null, "system"); // #28: autonomous resume
   await setRebootPauseProvenance(false);
 
   const { insertAuditRowSafe } = await import("../lib/audit-log-helper.js");

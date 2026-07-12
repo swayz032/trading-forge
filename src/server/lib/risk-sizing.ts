@@ -73,9 +73,10 @@ export type FirmId = "topstep" | "mffu";
  * Counts ≤ 0 clamp to multiplier for 1 (1.0).
  * Counts ≥ 5 clamp to multiplier for 4 (2.0).
  *
- * The multiplier is applied to pyramidTier and riskDerivedCap BEFORE the
- * min() against firmCap and liquidityCap — so the upsize is always bounded
- * by the per-symbol liquidity_comfort_cap.
+ * The multiplier is applied to pyramidTier ONLY (NOT riskDerivedCap — HIGH#4
+ * 2026-07-12) BEFORE the min() against riskDerivedCap/firmCap/liquidityCap — so
+ * the upsize is bounded by the per-symbol liquidity_comfort_cap AND can never
+ * push the position past the 2%-per-trade risk-derived ceiling.
  *
  * Operator can override per-strategy via framework-overlay.ts
  * confluence_size_multiplier config field.
@@ -796,7 +797,12 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       // this early-return path previously omitted it, allowing base_contracts to
       // be returned even when DD room is too tight to support that many contracts.
       // drawdownRoomCap OVERRIDES the pyramid floor — consistent with line ~730 note.
-      const flooredCandidates: number[] = [cfg.base_contracts, liquidityCap];
+      // deep-scan 2026-07-11 HIGH fix: taper the floor's base by pmFactor so a DELIBERATE PM-session /
+      // news-caution size reduction is never silently re-inflated to full base_contracts. The floor
+      // protects Style-C partials from a fresh-combine narrow RISK-CAP, not from the EOD-DD PM taper.
+      // pmFactor=1 → floor = base_contracts (protection intact); pmFactor<1 → floor(base*pmFactor).
+      const flooredBase = Math.floor(cfg.base_contracts * pmFactor);
+      const flooredCandidates: number[] = [flooredBase, liquidityCap];
       if (effectiveFirmCapForFloor !== null) flooredCandidates.push(effectiveFirmCapForFloor);
       if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
       const flooredContracts = Math.min(...flooredCandidates);
@@ -912,20 +918,25 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       ? cfg.topstep_account_cap_override
       : (input.firmContractCap ?? null);
 
-  // W23H.4: Apply confluence multiplier to pyramidTier and riskDerivedCap
-  // BEFORE the min() against firmCap and liquidityCap. This ensures the upsize
-  // is always bounded by the per-symbol liquidity_comfort_cap (operator-canonical).
+  // W23H.4: Apply the confluence multiplier to pyramidTier BEFORE the min() against firmCap and
+  // liquidityCap so the upsize is bounded by the per-symbol liquidity_comfort_cap.
+  //
+  // HIGH#4 (deep-scan 2026-07-12): the multiplier upsizes the PYRAMID ramp (take more of your EARNED
+  // size on an A+ setup) but MUST NOT scale riskDerivedCap. riskDerivedCap = floor(riskDollars /
+  // stopDollars) where riskDollars = max_risk_pct (2%) × balance — i.e. the exact contract count
+  // whose stop-loss equals the 2%-per-trade ceiling. Multiplying it (the old riskDerivedCapMultiplied)
+  // let a 2.0x A+ setup risk ~4% at stop, a HARD MFFU 2%-per-trade breach (CLAUDE.md §6, a documented
+  // ban trigger) with no downstream compliance gate. The risk ceiling now binds UNMULTIPLIED below.
   //
   // contracts_before captures the unmultiplied pyramidTier for audit.
   const contractsBefore = pyramidTier;
   const pyramidTierMultiplied = Math.floor(pyramidTier * multiplier);
-  const riskDerivedCapMultiplied = Math.floor(riskDerivedCap * multiplier);
 
   // Final: compute the risk-capped minimum first, then apply pyramid floor.
-  // Step 1: min(pyramidTierMultiplied, riskDerivedCapMultiplied, firmCap, liquidityCap)
+  // Step 1: min(pyramidTierMultiplied, riskDerivedCap [UNMULTIPLIED 2% ceiling], firmCap, liquidityCap)
   // Wave 25 Pass 2 Inst-10: Also apply drawdownRoomCap when it's a Topstep input.
-  let finalContracts = Math.min(pyramidTierMultiplied, riskDerivedCapMultiplied, liquidityCap);
-  const firmCapApplied = effectiveFirmCap !== null && effectiveFirmCap < Math.min(pyramidTierMultiplied, riskDerivedCapMultiplied, liquidityCap);
+  let finalContracts = Math.min(pyramidTierMultiplied, riskDerivedCap, liquidityCap);
+  const firmCapApplied = effectiveFirmCap !== null && effectiveFirmCap < Math.min(pyramidTierMultiplied, riskDerivedCap, liquidityCap);
   if (effectiveFirmCap !== null) {
     finalContracts = Math.min(finalContracts, effectiveFirmCap);
   }
@@ -948,8 +959,17 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // not an upsize trigger. Multiplier applies via pyramidTier, not the floor value.
   // NOTE: drawdownRoomCap (Inst-10) OVERRIDES the pyramid floor — when DD room is very
   // small, forcing base_contracts would violate the 1%-of-room safety contract.
+  // HIGH#3 (deep-scan 2026-07-12): guard the floor TRIGGER with `pyramidTier >= base_contracts`,
+  // mirroring the Python per-bar path (sizing.py:1270 `pyramid_tier_per_bar >= base_contr`). The
+  // 2026-07-11 fix correctly tapered the floor VALUE (flooredBase = base×pmFactor) but left the
+  // trigger comparing the already-PM-tapered finalContracts against the UNTAPERED base_contracts —
+  // so on a healthy PM-session account with an earned tier (pyramidTier tapered to e.g. 6 < base 9)
+  // the floor WRONGLY fired and shrank finalContracts from 6 down to flooredBase 4: a "floor" that
+  // LOWERED the value it exists to raise, and a ~33% silent under-size vs the backtest that promoted
+  // the strategy (Python left it at 6). Only floor when the tapered tier itself is >= base — i.e. a
+  // CAP (not the deliberate PM/news taper) pushed the count below base.
   let pyramidFloorApplied = false;
-  if (!drawdownRoomCapBinding && accountIsHealthy && finalContracts < cfg.base_contracts) {
+  if (!drawdownRoomCapBinding && accountIsHealthy && finalContracts < cfg.base_contracts && pyramidTier >= cfg.base_contracts) {
     // MED C-2 fix (deep-scan #16 wave-1 track-3, 2026-07-04): this floor previously
     // force-set finalContracts = cfg.base_contracts UNCLAMPED — unlike the early-return
     // branch above (F-7/F-4), which was patched to min([base, liquidityCap, firmCap?,
@@ -962,25 +982,32 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
     // where drawdownRoomCap sits between the pre-floor finalContracts and base_contracts —
     // guard against that edge case too by including it when present, mirroring the
     // early-return floor's [base_contracts, liquidityCap, firmCap?, drawdownRoomCap?] set.
-    const flooredCandidates: number[] = [cfg.base_contracts, liquidityCap];
+    // deep-scan 2026-07-11 HIGH fix: taper the floor's base by pmFactor so a DELIBERATE PM-session /
+    // news-caution size reduction is never silently re-inflated to full base_contracts. The floor
+    // protects Style-C partials from a fresh-combine narrow RISK-CAP, not from the EOD-DD PM taper.
+    // pmFactor=1 → floor = base_contracts (protection intact); pmFactor<1 → floor(base*pmFactor),
+    // matching the PM/news-tapered pyramidTier (line ~574).
+    const flooredBase = Math.floor(cfg.base_contracts * pmFactor);
+    const flooredCandidates: number[] = [flooredBase, liquidityCap];
     if (effectiveFirmCap !== null) flooredCandidates.push(effectiveFirmCap);
     if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
     finalContracts = Math.min(...flooredCandidates);
     pyramidFloorApplied = true;
   }
 
-  // Which cap is binding? (Uses multiplied values for accurate attribution.)
+  // Which cap is binding? (pyramidTier is multiplied by the confluence upsize; riskDerivedCap is the
+  // UNMULTIPLIED 2% ceiling — HIGH#4 2026-07-12 — so attribution compares against it directly.)
   // drawdown_room takes priority when it was the binding constraint.
   let bindingCap = "pyramid";
   if (drawdownRoomCapBinding) {
     bindingCap = "drawdown_room";
   } else if (pyramidFloorApplied) {
     bindingCap = "pyramid_floor_override";
-  } else if (riskDerivedCapMultiplied <= pyramidTierMultiplied && (effectiveFirmCap === null || riskDerivedCapMultiplied <= effectiveFirmCap) && riskDerivedCapMultiplied <= liquidityCap) {
+  } else if (riskDerivedCap <= pyramidTierMultiplied && (effectiveFirmCap === null || riskDerivedCap <= effectiveFirmCap) && riskDerivedCap <= liquidityCap) {
     bindingCap = "risk_derived";
-  } else if (effectiveFirmCap !== null && effectiveFirmCap <= pyramidTierMultiplied && effectiveFirmCap <= riskDerivedCapMultiplied && effectiveFirmCap <= liquidityCap) {
+  } else if (effectiveFirmCap !== null && effectiveFirmCap <= pyramidTierMultiplied && effectiveFirmCap <= riskDerivedCap && effectiveFirmCap <= liquidityCap) {
     bindingCap = "firm_cap";
-  } else if (liquidityCap <= pyramidTierMultiplied && liquidityCap <= riskDerivedCapMultiplied && (effectiveFirmCap === null || liquidityCap <= effectiveFirmCap)) {
+  } else if (liquidityCap <= pyramidTierMultiplied && liquidityCap <= riskDerivedCap && (effectiveFirmCap === null || liquidityCap <= effectiveFirmCap)) {
     bindingCap = "liquidity_cap";
   }
 
@@ -1024,7 +1051,9 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       pyramidTier,
       pyramidTierMultiplied,
       riskDerivedCap,
-      riskDerivedCapMultiplied,
+      // HIGH#4 (2026-07-12): the risk cap is no longer multiplied by the confluence upsize (it is the
+      // hard 2% ceiling), so this audit field now equals riskDerivedCap. Kept for schema stability.
+      riskDerivedCapMultiplied: riskDerivedCap,
       firmCap: effectiveFirmCap,
       liquidityCap,
       drawdownRoomCap: drawdownRoomCap ?? null,

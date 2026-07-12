@@ -4680,10 +4680,18 @@ def run_backtest(
                 _partial_fill_audit["partial_fills"] = _combined_partials
                 _partial_fill_audit["avg_fill_ratio"] = round(_combined_avg_ratio, 4)
 
-            # Merge short partial fill adjustments into main sizes array
-            # (safe: same bar can't have both long and short entry)
-            short_fill_mask = short_entries_np.astype(bool)
-            sizes[short_fill_mask] = short_adjusted_sizes[short_fill_mask]
+            # deep-scan 2026-07-11 MED fix (#12): REMOVED a stray PRE-roll short-size write here
+            # (`sizes[short_entries_np.astype(bool)] = short_adjusted_sizes[...]`). It was redundant
+            # with the REAL post-roll short re-align below (the `for idx, pre_idx` loop, which reads
+            # short_adjusted_sizes and writes the correct POST-roll short entry bars), and it CORRUPTED
+            # a LONG trade's size whenever a short SIGNAL bar (pre-roll) collided with a long EXECUTION
+            # bar (post-roll B+1): it overwrote sizes[B+1] (the long's contract count, set by the long
+            # re-align above) with the short order's volume-degraded size → wrong Gross/Net PnL for that
+            # long trade, silently feeding every Sharpe/PF/DSR/expectancy metric + promotion gate. The
+            # old "safe: same bar can't have both long and short entry" comment only covered same-bar
+            # SIGNALS, not a short-signal / long-execution collision on the same index. The class path
+            # (fill_model.py apply_class_path_fill_model) never had this stray write — closing a real
+            # DSL-vs-class parity gap.
         # Shift short entries by 1 bar (next-bar fill)
         # Also shift the short-side sizes to match — sizes[N] was set for a signal
         # on bar N, but after the roll the signal is at bar N+1. We need to shift

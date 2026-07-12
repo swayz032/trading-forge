@@ -7,6 +7,7 @@ import { evaluateContextGate } from "./context-gate-service.js";
 import { checkAntiSetupGate, type AntiSetupGateResult } from "./anti-setup-gate-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
+import { toPythonWeekday } from "../lib/python-weekday.js";
 import { eq, and, isNull, ne, gte, lte, desc, sql } from "drizzle-orm";
 import { tracer } from "../lib/tracing.js";
 import { isDSLStrategy, translateDSLToPaperConfig } from "./dsl-translator.js";
@@ -31,7 +32,7 @@ import {
 import { getOrComputeBiasStateForDay, barTimestampToTradingDay, type BiasStateForSignal } from "./bias-state-service.js";
 // Trade-critique data bridge (2026-07-05): entry-time decision context carried
 // through pendingEntryQueue to openPosition() -> paper_positions.exit_plan JSONB.
-import type { EntryDecisionContext } from "../db/jsonb-shapes.js";
+import type { EntryDecisionContext, ExitPlanConfig } from "../db/jsonb-shapes.js";
 import { getSessionShapeScore } from "./volume-profile-service.js";
 // Wave 23H.D: per-strategy confirming_indicators evaluator
 import { evaluateConfirmingIndicators } from "./confirming-indicator-evaluator.js";
@@ -357,16 +358,27 @@ async function getCachedSignalCalendarStatus(
     //   bypass_news_blackout is NOT passed here; it is handled at the call site
     //   (evaluateSignals calendar gate block) where per-strategy config is available.
     const inProcessCheck = _checkInProcessTier1EventWindow(barTimestamp);
+    // LOW#17 (fresh-scan 2026-07-12): this inner catch handles the Python calendar_filter subprocess
+    // failure WITHOUT rethrowing, so calResult.is_holiday flows out as false and the OUTER catch's
+    // checkCmeHolidayFallback (evaluateSignals) — the documented guard for "is_holiday never consulted"
+    // — NEVER runs. Consult the static CME-closure table HERE too so a full market-closure day during a
+    // Python outage still reports is_holiday=true (holidays always fail-CLOSED / block, even for
+    // event-driven strategies).
+    const cmeHoliday = checkCmeHolidayFallback(barTimestamp);
     const entryToCache: SignalCalendarCacheEntry = inProcessCheck.blocked
       ? {
-          is_holiday: false,
+          is_holiday: cmeHoliday.isHoliday,
           is_triple_witching: false,
-          holiday_proximity: 999,
+          holiday_proximity: cmeHoliday.isHoliday ? 0 : 999,
           is_economic_event: true,
           economic_event_name: inProcessCheck.eventName,
           event_window_minutes: inProcessCheck.windowMinutes,
         }
-      : CALENDAR_SAFE_DEFAULT;
+      : {
+          ...CALENDAR_SAFE_DEFAULT,
+          is_holiday: cmeHoliday.isHoliday,
+          holiday_proximity: cmeHoliday.isHoliday ? 0 : CALENDAR_SAFE_DEFAULT.holiday_proximity,
+        };
 
     logger.error(
       { err, barTimestamp, key, inProcessBlocked: inProcessCheck.blocked, eventType: inProcessCheck.eventType },
@@ -573,6 +585,12 @@ interface CachedSession {
   // openPosition() — logged to lifecycle_shadow_signals but TradersPost webhook NOT called.
   // Pine alerts still fire on TradingView (operator sees signal on chart).
   shadowModeEnabled: boolean;
+  // #2 (2026-07-11): the strategy's exit_plan_config (separate `strategies.exit_plan_config` column,
+  // NOT inside strategy.config JSONB). Forwarded to openPosition's adaptiveExitInput so an opted-in
+  // `exit_style="adaptive"` strategy actually runs the adaptive exit plan on paper (was dormant — the
+  // deferred-fill path never carried it, so every strategy silently fell back to static_styleC). null
+  // for the vast majority (default static_styleC) → byte-identical legacy behavior.
+  exitPlanConfig: ExitPlanConfig | null;
 }
 
 // ─── B4.3: In-memory Governor State (per session) ──────────────
@@ -641,6 +659,11 @@ interface PendingEntry {
   // openPosition() call. Absent/undefined when nothing was known at signal time —
   // never fabricated. See EntryDecisionContext in jsonb-shapes.ts.
   entryContext: EntryDecisionContext | undefined;
+  // deep-scan 2026-07-11 MED fix (#9): true when the signal-time sizing ALREADY applied the Tier-1
+  // news reduce_size factor (signal fired inside the T1 window). The fill-time Gate 4 must NOT reduce
+  // again (double ×0.5 → 0.25×, or a silent drop to 0 for small base sizes). Absent/false = the signal
+  // was queued OUTSIDE the window, so Gate 4 legitimately applies the reduction when the fill crosses in.
+  newsReducedAtSignalTime?: boolean;
 }
 
 const pendingEntryQueue = new Map<string, PendingEntry>();
@@ -956,6 +979,9 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
     // Wave 29 Pass A.1: capture shadow_mode_enabled at cache-load time.
     // Fail-soft: if column is absent (legacy DB / schema drift), default to false.
     shadowModeEnabled: (strategy as unknown as Record<string, unknown>).shadowModeEnabled === true,
+    // #2 (2026-07-11): separate strategies.exit_plan_config column. Fail-soft to null if absent
+    // (legacy DB / schema drift) → openPosition treats it as static_styleC (no behavior change).
+    exitPlanConfig: (strategy.exitPlanConfig as ExitPlanConfig | null | undefined) ?? null,
   };
 
   sessionCache.set(sessionId, entry);
@@ -2323,6 +2349,14 @@ export async function evaluateSignals(
   // multiplicatively alongside the PM size factor at computeRiskDerivedContracts.
   let newsReduceSizeFactor = 1;
   let newsReduceEvent = "";
+  // deep-scan 2026-07-11 LOW fix (#22): C11 FOMC ±1-day advisory size-halving was computed
+  // into a local `fomcReducedContracts` that was ONLY logged/span-tagged and NEVER applied to
+  // the real contract count — so the FOMC taper was inert. Carry it as a factor and fold it
+  // into the size chain via min() with newsReduceSizeFactor (NOT product) so a Topstep signal
+  // inside the tight FOMC T1 window — which already reduces via newsReduceSizeFactor — is not
+  // double-tapered. 1 = no reduction. The ±1-day-but-outside-the-tight-T1-window case (where
+  // newsReduceSizeFactor stays 1) is exactly the gap this now covers.
+  let fomcSizeFactor = 1;
   try {
     const calResult = await getCachedSignalCalendarStatus(bar.timestamp);
 
@@ -2591,8 +2625,13 @@ export async function evaluateSignals(
               const { action: newsAction, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, false);
               if (newsAction === "block") {
                 pendingDropReason = "macro_blackout";
-              } else if (newsAction === "reduce_size") {
-                // CF4: Apply NEWS_REDUCE_SIZE_FACTOR at fill time (signal queued outside window).
+              } else if (newsAction === "reduce_size" && !pendingEntry.newsReducedAtSignalTime) {
+                // CF4: Apply NEWS_REDUCE_SIZE_FACTOR at fill time ONLY when the signal was queued
+                // OUTSIDE the T1 window (signal-time sizing did NOT already reduce). deep-scan
+                // 2026-07-11 MED fix (#9): the `&& !pendingEntry.newsReducedAtSignalTime` guard prevents
+                // the double ×0.5 (→ 0.25× base, or a silent drop to 0 for small base sizes) when BOTH
+                // the signal and the fill fall inside the same window. If already reduced at signal
+                // time, the entry proceeds with its already-reduced contracts (no fill-time change).
                 const originalContracts = pendingEntry.contracts;
                 const reducedContracts = Math.floor(originalContracts * sizeFactor);
                 if (reducedContracts <= 0) {
@@ -2684,7 +2723,11 @@ export async function evaluateSignals(
             accountStartingFloor,
           });
           const dllResult = evaluateCrossSymbolDll(cumPnL, personalDllDollars);
-          if (dllResult.action === "halt" || dllResult.action === "force_close") {
+          // deep-scan 2026-07-11 HIGH fix: `|| dllResult.degraded` — a DB fault inside
+          // getAccountSessionCumulativePnL is SWALLOWED (returns a degraded zero, does not throw), so
+          // the catch below never fires and action="none" let the fill through. Block fail-closed on
+          // the degraded signal, matching the documented fail-CLOSED DLL policy.
+          if (dllResult.action === "halt" || dllResult.action === "force_close" || dllResult.degraded) {
             pendingDropReason = "dll_halt";
           }
         } catch (_dllErr) {
@@ -2809,6 +2852,27 @@ export async function evaluateSignals(
       // Trade-critique data bridge (2026-07-05): entry-time decision context captured
       // at signal time (bar N) — see PendingEntry.entryContext.
       entryContext: pendingEntry.entryContext,
+      // #2 (2026-07-11): wire the adaptive exit plan into the paper deferred-fill path. It was
+      // DORMANT — openPosition only computes the adaptive plan when adaptiveExitInput is passed, and
+      // this (the sole paper entry path) never passed it, so every `exit_style="adaptive"` strategy
+      // silently ran static_styleC on paper while the backtester ran adaptive (a paper/backtest parity
+      // gap). Gated to adaptive-opted strategies only (default static_styleC → this is undefined →
+      // byte-identical legacy behavior). entry.stop is OMITTED: openPosition derives it from the fill
+      // price ∓ atr×2.0 (== the position's own managed stop) with zero drift. narrativePhase=null is
+      // parity-faithful — the backtester's compute_exit_plan_python passes no narrative_phase either,
+      // and check:ts-python-exit-parity locks the TS null-narrative behavior to that Python oracle.
+      // Fail-soft throughout: any computeExitPlan error inside openPosition → static_styleC fallback.
+      adaptiveExitInput:
+        sessionConfig.exitPlanConfig?.exit_style === "adaptive"
+          ? {
+              strategy: { id: sessionConfig.strategyId, exit_plan_config: sessionConfig.exitPlanConfig },
+              bar: { close: bar.close, high: bar.high, low: bar.low, volume: bar.volume },
+              marketState: {
+                regime: pendingEntry.entryContext?.regimeAtEntry ?? "UNKNOWN",
+                narrativePhase: null,
+              },
+            }
+          : undefined,
     }, {
       correlationId: pendingEntry.correlationId,
       // deepscan18 C-C1: forward this session's account/firm scope into
@@ -4156,7 +4220,7 @@ export async function evaluateSignals(
           // is Sun=0..Sat=6, which shifted every day-of-week rule by one weekday.
           // Convert to the Python weekday convention (matching the sibling skip
           // path at ~line 286 which already uses getUTCDay()).
-          day_of_week: (new Date(bar.timestamp).getUTCDay() + 6) % 7,
+          day_of_week: toPythonWeekday(bar.timestamp),
         },
       );
       if (antiSetupResult.blocked) {
@@ -5225,19 +5289,18 @@ export async function evaluateSignals(
             }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist macro gate block log"));
           }
         }
-        // C11: FOMC proximity → halve contracts (advisory, not a block)
-        // The halved contract count is stored in fomcReducedContracts and applied
-        // at position open time below.
+        // C11: FOMC proximity → halve size (advisory, not a block). #22 (deep-scan 2026-07-11):
+        // carry the halving as `fomcSizeFactor = 0.5` folded into the size chain via min() at the
+        // computeRiskDerivedContracts call below — previously this only computed a local
+        // `fomcReducedContracts` that was logged but never applied, so the taper was inert.
         if (macroGate.fomcSizeReduction && !macroGateBlocked) {
-          const fomcReducedContracts = Math.max(1, Math.floor((config.contracts ?? 1) / 2));
+          fomcSizeFactor = 0.5;
           span.setAttribute("fomc_size_reduction", true);
-          span.setAttribute("fomc_reduced_contracts", fomcReducedContracts);
+          span.setAttribute("fomc_size_factor", fomcSizeFactor);
           logger.info(
-            { sessionId, symbol, originalContracts: config.contracts, fomcReducedContracts },
-            "C11 FOMC ±1 day: contract size advisory halved (applied at entry)",
+            { sessionId, symbol, originalContracts: config.contracts, fomcSizeFactor },
+            "C11 FOMC ±1 day: size advisory ×0.5 (folded into size chain via min with news factor)",
           );
-          // Store in span attributes for downstream position open (best-effort signal)
-          span.setAttribute("c11_fomc_contracts", fomcReducedContracts);
         }
       } catch (macroGateErr) {
         // C11 fail-CLOSED: any infrastructure failure (DB down, import error, parse error)
@@ -5470,8 +5533,12 @@ export async function evaluateSignals(
           // Phase 2 (2026-06-22): PM session factor × firm-aware news-caution factor.
           // newsReduceSizeFactor is < 1 only when a Topstep account fires a signal inside a
           // T1 news window (caution = cut size; MFFU would have hard-blocked above instead).
+          // #22 (2026-07-11): × the STRONGER of {news-caution, C11 FOMC ±1-day} taper via
+          // min() — never the product — so a signal inside the tight FOMC window (both < 1)
+          // is not double-halved, while the ±1-day-outside-window case still gets the FOMC cut.
           pmSizeFactor:
-            computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor * newsReduceSizeFactor,
+            computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor *
+            Math.min(newsReduceSizeFactor, fomcSizeFactor),
           // Balanced scaling plan: pass proven-trades count so live sizing can apply
           // the proven-trades ramp gate. Backtests do not pass this field and keep
           // the dollar-profit fallback inside computeRiskDerivedContracts.
@@ -5960,6 +6027,10 @@ export async function evaluateSignals(
           medianBarVolume,
           signalBarTimestamp: bar.timestamp,
           correlationId,
+          // deep-scan 2026-07-11 MED fix (#9): record whether signal-time sizing already applied the
+          // Tier-1 news reduce factor (newsReduceSizeFactor < 1 ⟺ signal fired inside the T1 window) so
+          // fill-time Gate 4 does not double-reduce.
+          newsReducedAtSignalTime: newsReduceSizeFactor < 1,
           // Trade-critique data bridge (2026-07-05): whatever this signal actually knew
           // at bar N, carried to bar N+1's openPosition() call. `biasState` may be null
           // (legacy bypass strategy) — every field below degrades to null gracefully,

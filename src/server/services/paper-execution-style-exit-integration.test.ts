@@ -99,7 +99,7 @@ vi.mock("../db/index.js", () => {
         // (update...where(isNull(closedAt)).returning({id})) before the trade insert,
         // so the tx's update.where must expose .returning(); insert.values must too.
         insert: vi.fn(() => ({ values: vi.fn(() => ({ returning: vi.fn().mockResolvedValue([{ id: "trade-1", pnl: "0" }]), catch: vi.fn() })) })),
-        update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn().mockImplementation(() => { const p: any = Promise.resolve(undefined); p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]); return p; }) })) })),
+        update: vi.fn(() => ({ set: vi.fn((vals: Record<string, unknown>) => { capturedPositionUpdates.push({ ...vals }); return { where: vi.fn().mockImplementation(() => { const p: any = Promise.resolve(undefined); p.returning = vi.fn().mockResolvedValue([{ id: "pos-claimed" }]); return p; }) }; }) })),
       })),
     },
   };
@@ -235,12 +235,27 @@ describe("Track 3 Integration — exitBarContext wired end-to-end", () => {
       [{ strategyId: "strat-001" }],      // getSessionStrategyId query
     ];
 
-    mockRunPythonModuleImpl = () => Promise.resolve({
-      decision: "FILL_TP1_50PCT",
-      new_stop: null,
-      evidence: { trigger: "tp1_hit", atr_14: 4.0, entry_price: 4500, current_price: 4509 },
-      handler_version: "style_d_v1.0.0",
-    });
+    // 1st call = the TP1 exit decision. 2nd call = the F4 same-bar TP2 re-invocation on the
+    // TP1-filled position (returns HOLD here — no TP2 on this bar). See the assertion note below.
+    let _t1PyCall = 0;
+    mockRunPythonModuleImpl = () => {
+      _t1PyCall += 1;
+      return Promise.resolve(
+        _t1PyCall === 1
+          ? {
+              decision: "FILL_TP1_50PCT",
+              new_stop: null,
+              evidence: { trigger: "tp1_hit", atr_14: 4.0, entry_price: 4500, current_price: 4509 },
+              handler_version: "style_d_v1.0.0",
+            }
+          : {
+              decision: "HOLD",
+              new_stop: null,
+              evidence: { trigger: "no_tp2_this_bar" },
+              handler_version: "style_d_v1.0.0",
+            },
+      );
+    };
 
     await updatePositionPrices(
       "sess-int-001",
@@ -248,8 +263,11 @@ describe("Track 3 Integration — exitBarContext wired end-to-end", () => {
       INTEGRATION_BAR_CTX,
     );
 
-    // Python subprocess called exactly once
-    expect(mockRunPythonModule).toHaveBeenCalledTimes(1);
+    // Python subprocess called TWICE: (1) the TP1 exit decision, then (2) the F4 same-bar TP2
+    // re-invocation on the TP1-filled position — a large bar can hit TP1 AND TP2 on the same bar,
+    // mirroring the backtester's intrabar detection (paper-execution-service.ts:4646-4659). The
+    // 2nd call returns HOLD (no TP2 this bar). This test predated F4 and asserted 1; corrected to 2.
+    expect(mockRunPythonModule).toHaveBeenCalledTimes(2);
 
     // Verify Python was passed correct state dict fields
     const pythonCallArg = mockRunPythonModule.mock.calls[0][0] as {

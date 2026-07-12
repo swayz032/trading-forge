@@ -227,3 +227,24 @@ describe("C-1 — getAccountSessionCumulativePnL scopes by resolved account key,
     expect(result.firmId).toBe("topstep-A");
   });
 });
+
+// deep-scan 2026-07-11 HIGH regression: the DLL P&L source degraded-signal must propagate through
+// evaluateCrossSymbolDll so fail-CLOSED callers (kill-switch L2, fill-time gate) can block on a DB
+// fault instead of silently trusting a swallowed zero (which approved entries on an at-limit account).
+describe("degraded P&L propagation (fail-closed signal)", () => {
+  const base = { firmId: "topstep-A", sessionDate: TODAY, realizedPnL: 0, openPnLMtm: 0, pnLBySymbol: {} };
+
+  it("propagates degraded=true so fail-closed callers can halt", () => {
+    const r = evaluateCrossSymbolDll({ ...base, totalPnL: 0, degraded: true }, 1_000);
+    expect(r.degraded).toBe(true);
+    // action stays computed from totalPnL (=none here) so FAIL-OPEN callers are unaffected — the
+    // degraded flag is what the fail-closed callers key on, NOT a forced action.
+    expect(r.action).toBe("none");
+  });
+
+  it("degraded defaults to false for a trustworthy (non-degraded) result", () => {
+    const r = evaluateCrossSymbolDll({ ...base, totalPnL: -900 }, 1_000);
+    expect(r.degraded).toBe(false);
+    expect(r.action).toBe("halt"); // 90% of DLL — normal path unchanged
+  });
+});

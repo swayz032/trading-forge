@@ -1675,15 +1675,18 @@ def run_walk_forward(
         # level, which can artificially inflate or suppress the measured drawdown.
         _new_equity_bars = oos_result.get("equity_bars", [])
         if all_oos_equity_bars and _new_equity_bars:
-            # Drop the overlapping boundary bar from the EXISTING tail if the new
-            # window's first bar has the same value (same equity state at boundary).
+            # MED#11 (fresh-scan 2026-07-12): each window is an INDEPENDENT backtest whose equity_bars
+            # RESET to STARTING_CAPITAL. A naive concat (window N ends 51500, window N+1 starts 50000)
+            # injects a phantom -1500 drawdown at every boundary → the aggregate max_dd is inflated by
+            # the running sum of prior windows' profits (a profitable strategy looks like it has a huge
+            # drawdown). Make the equity curve CONTINUOUS: offset the new window so its first bar picks
+            # up from the prior window's LAST equity. The old value-equality dedup never fired across the
+            # STARTING_CAPITAL reset; after the offset the shared boundary bar is an exact duplicate and
+            # is dropped (correct for embargo=0; for embargo>0 the equity legitimately carries forward).
+            offset = all_oos_equity_bars[-1] - _new_equity_bars[0]
+            _new_equity_bars = [eq + offset for eq in _new_equity_bars]
             if abs(all_oos_equity_bars[-1] - _new_equity_bars[0]) < 1e-6:
                 all_oos_equity_bars.pop()
-                print(
-                    f"  Walk-forward dedup: dropped duplicate boundary equity bar "
-                    f"at window {i+1} boundary (value={_new_equity_bars[0]:.2f}).",
-                    file=sys.stderr,
-                )
         all_oos_equity_bars.extend(_new_equity_bars)
         all_oos_trades.extend(oos_result.get("trades", []))
 
@@ -3446,8 +3449,17 @@ def run_walk_forward_class(
         _deduped_pnls_cls = [r.get("pnl", 0.0) for r in _deduped_cls]
         all_oos_pnls.extend(_deduped_pnls_cls if _deduped_cls else oos_result.get("daily_pnls", []))
         all_oos_trades.extend(oos_result.get("trades", []))
-        # H5 FIX: collect bar-level equity from class backtest result
-        all_oos_equity_bars_cls.extend(oos_result.get("equity_bars", []))
+        # H5 FIX: collect bar-level equity from class backtest result.
+        # MED#11 (fresh-scan 2026-07-12): make the concatenated equity CONTINUOUS (same reset-to-
+        # STARTING_CAPITAL phantom-boundary-drawdown bug as the DSL path above) by offsetting each new
+        # window to continue from the prior window's last equity, then dropping the duplicate boundary bar.
+        _new_eq_cls = oos_result.get("equity_bars", [])
+        if all_oos_equity_bars_cls and _new_eq_cls:
+            _offset_cls = all_oos_equity_bars_cls[-1] - _new_eq_cls[0]
+            _new_eq_cls = [eq + _offset_cls for eq in _new_eq_cls]
+            if abs(all_oos_equity_bars_cls[-1] - _new_eq_cls[0]) < 1e-6:
+                all_oos_equity_bars_cls.pop()
+        all_oos_equity_bars_cls.extend(_new_eq_cls)
 
     # Aggregate OOS metrics — recompute from ALL trades, never average per-window rates
     total_trades = len(all_oos_trades)

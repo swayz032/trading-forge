@@ -110,7 +110,10 @@ describe("A6 — auto-resume after reboot-pending pause", () => {
     dbMocks.selectQueue.push([{ currentValue: "1" }]); // provenance row
     dbMocks.selectQueue.push([{ input: OUR_PAUSE_INPUT }]); // latest mode change = ours
 
-    const result = await maybeAutoResumeAfterReboot();
+    // deep-scan 2026-07-11: inject a HEALTHY (exit 0) re-check so this stays a deterministic unit test.
+    // Without the injection maybeAutoResumeAfterReboot spawns the real pre-trading-day-health-check.ps1
+    // against this tower — an accidental integration test that only passes when no reboot is pending.
+    const result = await maybeAutoResumeAfterReboot({ _runHealthCheckForTest: async () => 0 });
 
     expect(result.resumed).toBe(true);
     expect(result.outcome).toBe("resumed");
@@ -138,6 +141,22 @@ describe("A6 — auto-resume after reboot-pending pause", () => {
       "windows:health-check-auto-resumed",
       expect.objectContaining({ reason: "reboot_pending_flag_cleared" }),
     );
+  });
+
+  // deep-scan 2026-07-11 HIGH regression: the DECLINE branch. When called directly (weekend cron /
+  // boot path — no healthAlreadyVerified) and the re-check reports NOT healthy (reboot still pending),
+  // the resume MUST be declined and the pipeline MUST stay PAUSED (never setMode ACTIVE). Pre-fix this
+  // path had no re-check and would have resumed with a reboot pending (C8 bypass).
+  it("all guards pass but reboot still pending (exit 1) → DECLINE, pipeline stays PAUSED", async () => {
+    dbMocks.selectQueue.push([{ currentValue: "1" }]); // provenance row
+    dbMocks.selectQueue.push([{ input: OUR_PAUSE_INPUT }]); // latest mode change = ours
+
+    const result = await maybeAutoResumeAfterReboot({ _runHealthCheckForTest: async () => 1 }); // 1 = pending_reboot
+
+    expect(result.resumed).toBe(false);
+    expect(result.outcome).toBe("reboot_still_pending");
+    expect(pipelineMocks.setMode).not.toHaveBeenCalled(); // never resumes
+    expect(notifyMocks.notifyInfo).not.toHaveBeenCalled();
   });
 
   it("paused-by-operator + flag clear → NO resume; provenance cleared (ownership transferred)", async () => {

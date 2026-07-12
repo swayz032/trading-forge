@@ -620,7 +620,17 @@ def calendar_check(
     dow_num = check_date.weekday()
 
     year = check_date.year
-    holidays = _get_holidays_for_year(year)
+    # LOW#16 (fresh-scan 2026-07-12): include the ADJACENT years' holidays so a cross-year OBSERVED
+    # shift is caught — e.g. Jan 1 2028 falls on a Saturday, so the CME full-closure is observed on
+    # Fri Dec 31 2027, which only appears in _compute_federal_holidays(2028). The standalone is_holiday()
+    # already checks year-1/year/year+1; calendar_check only checked the current year, so it reported a
+    # closed day as OPEN (paper-signal-service reads calResult.is_holiday from HERE). Also improves
+    # holiday_proximity near a year boundary.
+    holidays = (
+        _get_holidays_for_year(year - 1)
+        + _get_holidays_for_year(year)
+        + _get_holidays_for_year(year + 1)
+    )
     triple_witching = _get_triple_witching_for_year(year)
 
     holiday_prox = _nearest_distance(check_date, holidays)

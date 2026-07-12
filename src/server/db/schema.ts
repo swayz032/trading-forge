@@ -836,6 +836,11 @@ export const paperPositions = pgTable(
     entryPrice: numeric("entry_price").notNull(),
     currentPrice: numeric("current_price"),
     contracts: integer("contracts").notNull().default(1),
+    // fresh-scan HIGH#5 (migration 0201, 2026-07-12): the ORIGINAL entry contract count. `contracts`
+    // is DECREMENTED on each partial close, so the Style C scale-out must read this to split
+    // 33/33/34 of the original size (not cascading 33% of a shrinking remainder). Nullable — legacy /
+    // in-flight rows fall back to the pre-fix remainder behavior.
+    entryContracts: integer("entry_contracts"),
     unrealizedPnl: numeric("unrealized_pnl").default("0"),
     entryTime: timestamp("entry_time").defaultNow().notNull(),
     closedAt: timestamp("closed_at"),

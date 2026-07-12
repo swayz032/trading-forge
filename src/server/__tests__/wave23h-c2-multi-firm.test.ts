@@ -100,6 +100,12 @@ vi.mock("../db/schema.js", () => ({
 
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((_col, _val) => `eq(${String(_val)})`),
+  // deep-scan 2026-07-11: `and` is required by cross-symbol-pnl.ts's open-MTM join (dynamic drizzle
+  // import). It was missing here, so getAccountSessionCumulativePnL threw `No "and" export` — SILENTLY
+  // swallowed pre-fix (→ zero P&L, no halt, masking this mock gap). After the DLL degraded-signal fix
+  // the swallowed error correctly sets degraded → L2 halts, exposing the incomplete mock. Adding `and`
+  // lets the P&L compute cleanly so the L7 "not suspended" assertion holds.
+  and: vi.fn((...args: unknown[]) => `and(${args.join(",")})`),
   desc: vi.fn(() => "desc"),
   // deepscan17: needed by cross-symbol-pnl.ts's dynamic drizzle-orm import.
   isNull: vi.fn(() => "isNull"),

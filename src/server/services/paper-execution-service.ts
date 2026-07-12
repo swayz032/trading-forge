@@ -18,6 +18,7 @@ import { CONSISTENCY_RULE_FIRMS, getConsistencyState } from "./consistency-track
 // Wave 27.5 Pass D.2: symbol-aware commission — replaces the legacy symbol-agnostic
 // getCommissionPerSide(firmId) for position-close P&L calculations.
 import { getCommissionPerSide as getCommissionPerSideBySymbol, getStopCeilingPts } from "../lib/contract-class.js";
+import { avwapTypicalPrice, shouldAdvanceRunnerTrail } from "../lib/runner-trail-ratchet.js";
 import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCache } from "./paper-risk-gate.js";
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 import { tracer } from "../lib/tracing.js";
@@ -40,6 +41,10 @@ import { isConnectivityDegraded } from "../lib/network-failover.js";
 import { getActiveAssignment } from "./strategy-assignment-service.js";
 // Wave 25.5 Track 1: adaptive exit plan wiring
 import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
+// #24 (deep-scan 2026-07-11): pure 15:55 ET flatten-bar predicate (DB-free — see lib module).
+import { _isTimeStopFlattenBar } from "../lib/time-stop-flatten.js";
+// fresh-scan HIGH#5 (2026-07-12): Style C 33/33/34 scale-out split off the ORIGINAL entry size.
+import { styleCScaleOut } from "../lib/style-c-scaleout.js";
 import type { ExitPlanWithRuntimeState, EntryDecisionContext } from "../db/jsonb-shapes.js";
 // Pass 6 Track D: per-call exit-handler Discord visibility
 import { notifyWarning, notifyCritical } from "./notification-service.js";
@@ -626,11 +631,15 @@ export interface PriceBarUpdate {
   high?: number;
   low?: number;
   volume?: number;
+  // deep-scan 2026-07-11 MED fix (#11): optional bar OPEN. When a caller supplies it, updatePositionPrices
+  // models gap-through-stop fills — a bar that OPENS beyond the stop fills at the gapped open (matching
+  // backtester.py, which counts gap_through_stop). Absent → falls back to filling at the exact stop.
+  open?: number;
 }
 
 export type PositionPriceUpdate = number | PriceBarUpdate;
 
-function normalizePriceUpdate(update: PositionPriceUpdate): Required<PriceBarUpdate> {
+function normalizePriceUpdate(update: PositionPriceUpdate): { close: number; high: number; low: number; volume: number } {
   if (typeof update === "number") {
     return { close: update, high: update, low: update, volume: 0 };
   }
@@ -643,6 +652,11 @@ function normalizePriceUpdate(update: PositionPriceUpdate): Required<PriceBarUpd
     volume: update.volume ?? 0,
   };
 }
+
+// #24 (deep-scan 2026-07-11): _isTimeStopFlattenBar was moved to ../lib/time-stop-flatten.ts (a
+// DB-free module, imported at the top of this file) so it is unit-testable without importing this
+// service — which throws at import when DATABASE_URL is unset (same split rationale as
+// consistency-scope.ts). The BL-1 flatten-bar stop-breach block below calls the imported helper.
 
 // ─── Session Classification ───────────────────────────────────
 // getEtOffsetMinutes is imported from src/server/lib/dst-utils.ts (shared utility).
@@ -704,7 +718,12 @@ export async function openPosition(sessionId: string, params: {
   /** Strategy metadata needed for computeExitPlan(). Requires id + exit_plan_config. */
   adaptiveExitInput?: {
     strategy: { id: string; exit_plan_config?: import("../db/jsonb-shapes.js").ExitPlanConfig | null };
-    entry: { stop: number };  // stop price at entry (structural stop derived before calling openPosition)
+    // #2 (2026-07-11): entry.stop is now OPTIONAL. When omitted (the paper deferred-fill caller),
+    // openPosition derives the exit-plan R-basis from actualEntry ∓ atr×2.0 — the SAME value the
+    // position's own initialStopPrice precedence-2 uses — so the adaptive TP1/TP2 R-multiples (and
+    // the static_styleC flat-2R TP2) are computed off the exact stop the position is managed
+    // against, with zero drift. A caller that already computed a structural stop may still supply it.
+    entry?: { stop: number };
     bar: { close: number; high: number; low: number; volume: number };
     marketState: { regime: string; narrativePhase: string | null };
     weightedScore?: import("./confluence-score.js").WeightedScoreResult;
@@ -2006,7 +2025,49 @@ export async function openPosition(sessionId: string, params: {
   const adaptiveInput = params.adaptiveExitInput;
   const exitStyle = adaptiveInput?.strategy?.exit_plan_config?.exit_style ?? "static_styleC";
 
-  if (exitStyle === "adaptive" && adaptiveInput != null) {
+  // #2 (2026-07-11) + HIGH#2 (2026-07-12): resolve the exit-plan R-basis stop = the position's OWN
+  // managed stop (initialStopPriceForInsert precedence-1 below) so the TP R-multiples correspond to
+  // the real stop with zero drift. For ADAPTIVE strategies the distance MUST mirror the backtester's
+  // _apply_adaptive_management (backtester.py:1943-1955): min(per-symbol ceiling, atr×1.5) — the exact
+  // stop it feeds compute_exit_plan_python (atr_stop_multiplier=1.5; ceilings 14 MES / 62 MNQ / 1.0
+  // MCL via getStopCeilingPts, the TS mirror of _get_stop_ceiling_for_symbol). Using atr×2.0 (uncapped)
+  // made paper adaptive stop+TP1+TP2 fire at DIFFERENT prices than the backtest the strategy was
+  // validated on (33% wider R on MES; far wider, uncapped, on MNQ) — the exact parity gap #2 set out
+  // to close. static_styleC strategies keep the legacy atr×2.0 managed stop (unchanged). null only when
+  // neither an explicit stop nor ATR exists → both exit-plan branches fall through to fail-soft.
+  const _stopDistancePts: number | null =
+    params.atr != null && params.atr > 0
+      ? (exitStyle === "adaptive"
+          ? Math.min(getStopCeilingPts(params.symbol), params.atr * 1.5)
+          : params.atr * 2.0)
+      : null;
+  const resolvedExitBasisStop: number | null =
+    adaptiveInput?.entry?.stop
+    ?? (_stopDistancePts != null
+      ? (params.side === "long" ? actualEntry - _stopDistancePts : actualEntry + _stopDistancePts)
+      : null);
+
+  // LOW#13 (fresh-scan 2026-07-12): an adaptive strategy with NO exit-plan R-basis (cold ATR at a
+  // session-start entry + no explicit stop) skips both exit-plan branches → position opens on the
+  // tickSize×16 fallback stop with NO stored TP1/TP2, silently managed as static via the Python
+  // handler despite exit_style=adaptive. Emit an audit row so this rare skip is queryable instead of
+  // leaving only a generic tickSize×16 warn log (the backtester still builds a plan via its atr=1.0
+  // NaN-fallback — a documented paper/backtest divergence on cold-ATR entries; we do NOT mirror the
+  // atr=1.0 degenerate here because it yields an absurd ~1.5pt live stop).
+  if (exitStyle === "adaptive" && adaptiveInput != null && resolvedExitBasisStop == null) {
+    db.insert(auditLog).values({
+      action: "signal.exit_plan_skipped_cold_atr",
+      entityType: "paper_position",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { sessionId, symbol: params.symbol, exitStyle, atr: params.atr ?? null } as Record<string, unknown>,
+      result: { reason: "adaptive_exit_plan_skipped_atr_unavailable", fallback: "tickSize_x16_stop_no_stored_tp" } as Record<string, unknown>,
+      status: "warning",
+      correlationId,
+    }).catch((err) => logger.warn({ err }, "signal.exit_plan_skipped_cold_atr audit write failed (non-blocking)"));
+  }
+
+  if (exitStyle === "adaptive" && adaptiveInput != null && resolvedExitBasisStop != null) {
     try {
       const exitPlanRaw: ExitPlan = await computeExitPlan({
         strategy: {
@@ -2016,7 +2077,7 @@ export async function openPosition(sessionId: string, params: {
         },
         entry: {
           price: actualEntry,
-          stop: adaptiveInput.entry.stop,
+          stop: resolvedExitBasisStop,
           direction: params.side,
           timestamp: params.barTimestamp ?? new Date(),
         },
@@ -2075,7 +2136,7 @@ export async function openPosition(sessionId: string, params: {
       }).catch((err) => logger.warn({ err }, "signal.exit_plan_fallback_static audit write failed (non-blocking)"));
       exitPlanForInsert = null;
     }
-  } else if (exitStyle === "static_styleC" && adaptiveInput != null) {
+  } else if (exitStyle === "static_styleC" && adaptiveInput != null && resolvedExitBasisStop != null) {
     // ── F-b parity fix: static_styleC TP2 = flat +2.0R ─────────────────────────
     // CLAUDE.md §4 canonical: static Style C TP2 ALWAYS = +2.0R flat.
     // Liquidity-mapped TPs belong exclusively to exit_style="adaptive".
@@ -2086,7 +2147,7 @@ export async function openPosition(sessionId: string, params: {
     // Storing the flat +2.0R price enables the C2 intrabar TP2 touch-detection
     // path in updatePositionPrices without spawning a Python subprocess.
     try {
-      const stopDistance = Math.abs(actualEntry - adaptiveInput.entry.stop);
+      const stopDistance = Math.abs(actualEntry - resolvedExitBasisStop);
 
       if (stopDistance > 0) {
         const tp2Price = params.side === "long"
@@ -2135,7 +2196,11 @@ export async function openPosition(sessionId: string, params: {
   // BL-1 / FINDING #7 FIX: compute initial stop price at entry for intrabar stop-breach detection.
   //
   // Precedence:
-  //   (1) adaptiveExitInput.entry.stop — structural stop derived by the strategy before calling openPosition
+  //   (1) resolvedExitBasisStop — the exact stop the exit plan was computed off (an explicit
+  //       caller stop, else actualEntry ∓ atr×2.0). #2 (2026-07-11): using the SAME resolved value
+  //       here guarantees the managed stop equals the exit-plan R-basis with zero drift (it already
+  //       folds in the legacy precedence-2 atr×2.0 derivation, so this is behavior-identical when
+  //       no explicit stop is supplied).
   //   (2) params.atr × 2.0             — ATR-based structural stop (standard BreakerStrategy sl_mult=2.0)
   //   (3) CONTRACT_SPECS[symbol].tickSize × 16 — last-resort structural floor so live positions NEVER
   //       have null initialStopPrice, which would cause updatePositionPrices to skip stop-breach detection
@@ -2146,8 +2211,8 @@ export async function openPosition(sessionId: string, params: {
   //
   // INVARIANT: initialStopPriceForInsert must NEVER be null for a live position.
   const initialStopPriceForInsert: number = (() => {
-    if (params.adaptiveExitInput?.entry.stop != null) {
-      return params.adaptiveExitInput.entry.stop;
+    if (resolvedExitBasisStop != null) {
+      return resolvedExitBasisStop;
     }
     if (params.atr != null && params.atr > 0) {
       const stopPts = params.atr * 2.0;
@@ -2252,6 +2317,9 @@ export async function openPosition(sessionId: string, params: {
     entryPrice: String(actualEntry),
     currentPrice: String(actualEntry),
     contracts: params.contracts,
+    // fresh-scan HIGH#5 (2026-07-12): record the ORIGINAL entry size so the Style C scale-out splits
+    // 33/33/34 of it, not of a shrinking remainder (`contracts` is decremented on each partial).
+    entryContracts: params.contracts,
     unrealizedPnl: "0",
     arrivalPrice: String(arrivalPrice),
     implementationShortfall: String(implementationShortfall),
@@ -3865,9 +3933,14 @@ async function applyExitDecision(
         logger.debug({ positionId: pos.id }, "style_exit: TP1 already filled — idempotent HOLD");
         return false;
       }
-      // Partial close: Style D=50%, Style C=33% of position contracts
-      const tp1Fraction = exitStyle === "C" ? 0.33 : 0.50;
-      const contractsToClose = Math.max(1, Math.floor(pos.contracts * tp1Fraction));
+      // fresh-scan HIGH#5 (2026-07-12): Style C legs split 33/33/34 of the ORIGINAL entry size
+      // (pos.entryContracts, migration 0201), NOT of the shrinking `contracts` remainder. At TP1
+      // `contracts` still equals the original, so the null-fallback is exact here; the divergence
+      // only bit at TP2 (remainder). Non-Style-C keeps the legacy 50%-of-remainder behavior.
+      const originalContractsTp1 = (pos as { entryContracts?: number | null }).entryContracts ?? pos.contracts;
+      const contractsToClose = exitStyle === "C"
+        ? Math.max(1, styleCScaleOut(originalContractsTp1).tp1)
+        : Math.max(1, Math.floor(pos.contracts * 0.50));
       const evidenceTyped = evidence as Record<string, unknown>;
       const tp1Price = evidenceTyped.tp1_price as number | undefined;
       const rMultiple = tp1Price != null && pos.entryPrice != null
@@ -3977,8 +4050,13 @@ async function applyExitDecision(
         logger.debug({ positionId: pos.id }, "style_exit: TP2 already filled — idempotent HOLD");
         return false;
       }
-      const tp2Fraction = 0.33;
-      const contractsToClose = Math.max(1, Math.floor(pos.contracts * tp2Fraction));
+      // fresh-scan HIGH#5 (2026-07-12): close the ORIGINAL-size TP2 leg (33% of entry size), leaving
+      // ~34% for the runner — NOT 33% of the already-decremented remainder (which left ~56% runner).
+      // Legacy rows with a null entryContracts fall back to the pre-fix remainder behavior.
+      const originalContractsTp2 = (pos as { entryContracts?: number | null }).entryContracts ?? null;
+      const contractsToClose = originalContractsTp2 != null
+        ? Math.max(1, styleCScaleOut(originalContractsTp2).tp2)
+        : Math.max(1, Math.floor(pos.contracts * 0.33));
       const tp2Evidence = evidence as Record<string, unknown>;
       if (contractsToClose < pos.contracts) {
         // 2026-06-29 Fix 1 (CRITICAL): await bookPartialClose BEFORE advancing state (same
@@ -4245,6 +4323,8 @@ export async function updatePositionPrices(
     const rawUpdate = prices[pos.symbol];
     if (rawUpdate === undefined) continue;
     const { close: currentPrice, high, low } = normalizePriceUpdate(rawUpdate);
+    // #11 gap-through-stop: the bar OPEN, only when a caller explicitly provides it (undefined otherwise).
+    const barOpen = typeof rawUpdate === "object" && Number.isFinite(rawUpdate.open) ? (rawUpdate.open as number) : undefined;
 
     // SDL-1 (deep-scan 2026-07-11): a non-finite bar price (NaN/Infinity from a malformed feed) would
     // poison unrealizedPnl below -> corrupt currentEquity to NaN. The cross-symbol DLL / trailing-DD
@@ -4371,30 +4451,53 @@ export async function updatePositionPrices(
             // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="stop_loss" is
             // now passed INTO closePosition() instead of incrementing paperTradesCounter a
             // second time here — this call site was double-counting every intrabar stop.
-            await closePosition(pos.id, stopLevel, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: "stop_loss" });
+            // deep-scan 2026-07-11 MED fix (#11): model gap-through-stop parity with the backtester.
+            // backtester.py fills a bar that OPENS beyond the stop at the gapped OPEN (a worse price)
+            // and counts gap_through_stop; paper previously filled at `stopLevel` UNCONDITIONALLY,
+            // understating losses on gap bars → inflated internal-sim Sharpe/PF vs the backtest the
+            // promotion gates trust. When the caller provides the bar open, fill at the WORSE of
+            // open/stop; absent an open, fall back to the stop (best available — the legacy behavior).
+            // deep-scan 2026-07-11 LOW fix (#24): on the 15:55 flatten bar the backtester checks the
+            // TIME-STOP first — it exits at the bar CLOSE with reason time_stop even when the bar also
+            // crossed the stop. BL-1 `continue`s below (skipping callExitHandler's TIME_STOP_FLATTEN), so
+            // without this the stop-breach would preempt the flatten with a divergent price+reason. On
+            // the flatten bar exit at close/time_stop; otherwise the #11 gap-through stop fill.
+            const isFlattenBar = _isTimeStopFlattenBar(exitBarContext?.currentTimeEt);
+            const stopFillPrice = isFlattenBar
+              ? currentPrice
+              : barOpen != null
+                ? (pos.side === "long" ? Math.min(barOpen, stopLevel) : Math.max(barOpen, stopLevel))
+                : stopLevel;
+            const stopExitOutcome: "time_stop" | "stop_loss" = isFlattenBar ? "time_stop" : "stop_loss";
+            await closePosition(pos.id, stopFillPrice, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: stopExitOutcome });
             closedByExitHandler.add(pos.id);
             totalUnrealizedDelta -= unrealizedDelta;
             totalUnrealizedPnl   -= unrealizedPnl;
             logger.info(
               {
                 positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
-                stopLevel, adversePrice, high, low, currentPrice, correlationId,
+                stopLevel, stopFillPrice, stopExitOutcome, adversePrice, high, low, currentPrice, correlationId,
               },
-              "paper.stop_breach: position closed at stop level (intrabar adverse extreme crossed stop)",
+              "paper.stop_breach: position closed (intrabar adverse extreme crossed stop)",
             );
+            // LOW#14 (fresh-scan 2026-07-12): the observability trail MUST report the ACTUAL fill
+            // (stopFillPrice) not the stop LEVEL — on a gap-through bar the position fills at the gapped
+            // open (worse than stopLevel) and on the 15:55 flatten bar at the close, so a hardcoded
+            // exitPrice=stopLevel diverges from the booked paper_trades row + realized P&L that
+            // reconciliation/parity tooling checks.
             db.insert(auditLog).values({
               action: "paper.stop_breach",
               entityType: "paper_position",
               entityId: pos.id,
               decisionAuthority: "system",
-              input: { stopLevel, adversePrice, high, low, currentPrice, trailHwm: pos.trailHwm, initialStopPrice: pos.initialStopPrice } as Record<string, unknown>,
-              result: { closed: true, exitPrice: stopLevel } as Record<string, unknown>,
+              input: { stopLevel, adversePrice, high, low, currentPrice, barOpen, trailHwm: pos.trailHwm, initialStopPrice: pos.initialStopPrice } as Record<string, unknown>,
+              result: { closed: true, exitPrice: stopFillPrice, stopLevel, outcome: stopExitOutcome } as Record<string, unknown>,
               status: "success",
               correlationId: correlationId ?? null,
             }).catch((err) => logger.warn({ err }, "stop_breach audit write failed (non-blocking)"));
             broadcastSSE("paper:position-stop-breached", {
               positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
-              stopLevel, adversePrice, currentPrice,
+              stopLevel, exitPrice: stopFillPrice, outcome: stopExitOutcome, adversePrice, currentPrice,
               correlationId: correlationId ?? null,
             });
           } catch (stopCloseErr) {
@@ -4457,7 +4560,7 @@ export async function updatePositionPrices(
             // Paper previously used close alone, so the anchored VWAP (and its trail stop / exit
             // price) diverged from backtest on any bar whose close skews to one end of the range —
             // violating the TS<->Python Exit Engine Parity contract.
-            const barMid = (high + low + currentPrice) / 3;
+            const barMid = avwapTypicalPrice(high, low, currentPrice);
             const newSumPv = prevSumPv + barMid * barVol;
             const newSumV  = prevSumV  + barVol;
             const avwap = newSumV > 0 ? newSumPv / newSumV : currentPrice;
@@ -4554,14 +4657,14 @@ export async function updatePositionPrices(
           //     (prior `currentTrailHwm == null` unconditionally accepted the first computedTrail,
           //     which for chandelier/near-entry AVWAP could sit at ~break-even, forcing premature
           //     exits, or wider than the structural stop, over-risking beyond the sized amount).
-          const tp2Ready = (pos.tp1Filled ?? false) && (pos.tp2Filled ?? false);
-          const initialStop = pos.initialStopPrice != null ? Number(pos.initialStopPrice) : null;
-          const ratchetFloor = currentTrailHwm ?? initialStop;
-          const isTighter = tp2Ready && ratchetFloor != null && (
-            pos.side === "long"
-              ? computedTrail > ratchetFloor  // long: higher stop = tighter
-              : computedTrail < ratchetFloor  // short: lower stop = tighter
-          );
+          const isTighter = shouldAdvanceRunnerTrail({
+            side: pos.side,
+            computedTrail,
+            currentTrailHwm,
+            initialStop: pos.initialStopPrice != null ? Number(pos.initialStopPrice) : null,
+            tp1Filled: pos.tp1Filled ?? false,
+            tp2Filled: pos.tp2Filled ?? false,
+          });
 
           if (isTighter) {
             // Build updated exit_plan with new runtime_state

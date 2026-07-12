@@ -35,6 +35,9 @@ let auditRows: Array<Record<string, unknown>> = [];
 let sessionRows: unknown[] = [];
 let updatePositionPricesOpenRows: unknown[] = [];
 let rollOpenPositionRows: unknown[] = [];
+// F1/F2 (deep-scan 2026-07-11): capture db.update(...).set(payload) so the adaptive runner-trail
+// write can be asserted through the REAL updatePositionPrices call site (not just the unit helper).
+let updateSetPayloads: Array<Record<string, unknown>> = [];
 let forceCloseSelectShouldThrow = false;
 let insertAuditRowSafeCalls: Array<Record<string, unknown>> = [];
 let systemErrorCalls: Array<unknown[]> = [];
@@ -123,9 +126,10 @@ vi.mock("../db/index.js", () => ({
       }),
     })),
     update: vi.fn(() => ({
-      set: vi.fn(() => ({
-        where: vi.fn(() => Promise.resolve(undefined)),
-      })),
+      set: vi.fn((payload: Record<string, unknown>) => {
+        updateSetPayloads.push(payload);
+        return { where: vi.fn(() => Promise.resolve(undefined)) };
+      }),
     })),
     transaction: vi.fn(async (fn: (tx: unknown) => unknown) => {
       const tx = {
@@ -348,6 +352,7 @@ beforeEach(() => {
   sessionRows = [];
   updatePositionPricesOpenRows = [];
   rollOpenPositionRows = [];
+  updateSetPayloads = [];
   forceCloseSelectShouldThrow = false;
   insertAuditRowSafeCalls = [];
   systemErrorCalls = [];
@@ -610,5 +615,82 @@ describe("E3: roll-day flatten failure escalates (audit + Discord), not silent",
 
     expect(results).toEqual([]);
     expect(insertAuditRowSafeCalls.find(r => r["action"] === "paper.roll_flatten_failed")).toBeUndefined();
+  });
+
+  // ─── F1/F2 adaptive runner-trail INTEGRATION (deep-scan 2026-07-11) ─────────────
+  // Drives the anchored_vwap trail through the REAL updatePositionPrices call site (not just the
+  // extracted helpers) and asserts the db.update trailHwm write. This is the integration-coverage
+  // gap the re-cert flagged: unit tests cover shouldAdvanceRunnerTrail/avwapTypicalPrice, but nothing
+  // exercised their WIRING inside updatePositionPrices with exit_plan + tp1/tp2 state.
+  describe("F1/F2 adaptive runner-trail write (integration through updatePositionPrices)", () => {
+    const makeAvwapPosition = (over: Record<string, unknown>) => ({
+      id: "pos-avwap",
+      sessionId: "sess-avwap",
+      symbol: "MES",
+      side: "long",
+      contracts: 3,
+      entryPrice: "5010",
+      currentPrice: "5010",
+      previousUnrealizedPnl: "0",
+      mae: "0",
+      mfe: "0",
+      highSinceEntryPrice: "5010",
+      lowSinceEntryPrice: "5010",
+      trailHwm: null,
+      initialStopPrice: "5000",
+      tp1Filled: true,
+      tp2Filled: true,
+      currentExitStyle: "adaptive",
+      exitPlan: { runner: { trail_method: "anchored_vwap" }, runtime_state: {} },
+      correlationId: null,
+      entryTime: null,
+      fillRatio: 1,
+      beStopApplied: false,
+      ...over,
+    });
+    const barCtx: StyleExitBarContext = { currentTimeEt: "10:30", atr14: { MES: 5 } };
+
+    it("F2: advances the trail on the TYPICAL price (high+low+close)/3 — NOT the close alone", async () => {
+      process.env.STYLE_C_EXIT_TS_NATIVE = "true";
+      updatePositionPricesOpenRows = [makeAvwapPosition({})];
+      // Bar with the close skewed to the HIGH: typical=(5045+5030+5045)/3=5040; close-only basis=5045.
+      const priceMap = { MES: { close: 5045, high: 5045, low: 5030, volume: 100 } };
+
+      await updatePositionPrices("sess-avwap", priceMap, barCtx, { correlationId: "corr-avwap" });
+
+      const trailWrite = updateSetPayloads.find((p) => "trailHwm" in p);
+      expect(trailWrite).toBeDefined();
+      // avwap(5040) - MES tick(0.25) = 5039.75 (typical basis). Close-only would be 5045-0.25=5044.75.
+      expect(Number(trailWrite!.trailHwm)).toBeCloseTo(5039.75, 2);
+      expect(Number(trailWrite!.trailHwm)).not.toBeCloseTo(5044.75, 2);
+    });
+
+    it("F1: does NOT advance the trail before TP2 fills (even when computedTrail beats the floor)", async () => {
+      process.env.STYLE_C_EXIT_TS_NATIVE = "true";
+      // tp1/tp2 unfilled + price just above entry (below TP1) so no live TP fill mutates the state.
+      updatePositionPricesOpenRows = [makeAvwapPosition({ tp1Filled: false, tp2Filled: false })];
+      const priceMap = { MES: { close: 5011, high: 5012, low: 5008, volume: 100 } };
+
+      await updatePositionPrices("sess-avwap", priceMap, barCtx, { correlationId: "corr-avwap-notp2" });
+
+      // computedTrail (~5010) > floor (initialStop 5000), but the F1 TP2 gate blocks the ratchet.
+      const trailWrite = updateSetPayloads.find((p) => "trailHwm" in p);
+      expect(trailWrite).toBeUndefined();
+      // The AVWAP accumulator still persists every bar (runtime_state) so TP2 has it ready.
+      expect(updateSetPayloads.some((p) => "exitPlan" in p && !("trailHwm" in p))).toBe(true);
+    });
+
+    it("F1: ratchet-only — does NOT loosen an existing trail when computedTrail is below the current trailHwm", async () => {
+      process.env.STYLE_C_EXIT_TS_NATIVE = "true";
+      // Existing trail at 5035, tp2 filled. Bar avwap (~5032) is below it but well above the 5000 stop
+      // (no stop-out). The ratchet floor = currentTrailHwm(5035), so the lower computedTrail is rejected.
+      updatePositionPricesOpenRows = [makeAvwapPosition({ trailHwm: "5035" })];
+      const priceMap = { MES: { close: 5033, high: 5034, low: 5030, volume: 100 } };
+
+      await updatePositionPrices("sess-avwap", priceMap, barCtx, { correlationId: "corr-avwap-ratchet" });
+
+      const trailWrite = updateSetPayloads.find((p) => "trailHwm" in p);
+      expect(trailWrite).toBeUndefined(); // trail holds at 5035 — never loosened downward
+    });
   });
 });

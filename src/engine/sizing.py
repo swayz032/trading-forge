@@ -1259,9 +1259,16 @@ def compute_position_sizes(
             # NOTE: Wave 26 Pass K — floor binds ONLY when pyramid_tier_per_bar >= base_contr
             # so PM-tapered bars don't get re-inflated above the EOD-DD safe size.
             if account_is_healthy_bar and base_contr > 0:
+                # deep-scan 2026-07-11 MED fix: the floor value must be CLAMPED to the firm + liquidity
+                # caps, not the raw base_contracts. When base_contracts >= a cap (e.g. a per-strategy
+                # liquidity_comfort_cap=10 with base=18), the un-clamped floor re-inflated bar size ABOVE
+                # the cap → over-sizing / inflated backtest P&L vs live-achievable (the TS floor already
+                # clamps via flooredCandidates=[base, liquidityCap, firmCap?]). Mirror that here.
+                floored_val = np.minimum(float(base_contr), effective_firm_cap_bar)
+                floored_val = np.minimum(floored_val, liquidity_cap_bar)
                 bar_sizes = np.where(
                     (bar_sizes < base_contr) & (pyramid_tier_per_bar >= base_contr),
-                    float(base_contr),
+                    floored_val,
                     bar_sizes,
                 )
             # Bars where risk_derived_caps == 0 and account unhealthy → 1 fallback (minimum tradeable)

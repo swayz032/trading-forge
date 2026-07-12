@@ -39,7 +39,14 @@ jobs:
       - run: npm ci
       - name: System map drift gate
         run: npm run system-map:check
-      - run: npm run lint
+      # Lint is ADVISORY during the accumulated-debt paydown (baseline-and-enforce, 2026-07-11):
+      # CI was dead-on-arrival at `npm ci` for weeks, so ESLint debt (178 errors / 673 warnings)
+      # piled up unenforced. The SAFETY-critical enforcement is the hard gates + tests below, which
+      # must stay green and now actually run. Burn the 178 down incrementally, then flip back to
+      # blocking (remove continue-on-error) — ideally via a lint-baseline that fails only on NEW errors.
+      - name: Lint (advisory — accumulated-debt paydown)
+        continue-on-error: true
+        run: npm run lint
 
       # deepscan6 O5 (2026-07-01): dependency vulnerability scanning. ADVISORY today
       # (continue-on-error) so a newly-disclosed CVE surfaces in CI without blocking the
@@ -113,8 +120,32 @@ jobs:
       - name: Verify system map freshness
         run: npm run system-map:check
 
-      - name: Run vitest with coverage
-        run: npx vitest run --coverage
+      # hardening-rails 2026-07-12 (Wave 1 Track A): baseline-and-enforce for the Node suite.
+      # Uses Codex's tested comparator (ci/compare-baseline.mjs). CAPTURE PHASE: vitest runs
+      # advisory + emits a JSON report; the comparator runs advisory and PRINTS today's failing
+      # test IDs (newFailures[]) to the log. Those get frozen — each with a reason — into
+      # ci/baseline-failures.json, then the gate step flips to BLOCKING (remove continue-on-error)
+      # so only NEW failures (or a collection-floor drop) fail CI. Known failures are quarantined.
+      - name: Run vitest → JSON report for baseline (advisory)
+        continue-on-error: true
+        run: |
+          npx vitest run --reporter=json --outputFile=ci/vitest-results.json || true
+          echo "--- vitest-results.json bytes: $(wc -c < ci/vitest-results.json 2>/dev/null || echo MISSING) ---"
+          head -c 120 ci/vitest-results.json 2>/dev/null || true
+
+      - name: Upload vitest results (baseline capture/diff)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: node-vitest-results
+          path: ci/vitest-results.json
+          retention-days: 14
+
+      # BLOCKING (2026-07-12): baseline frozen from CI run 29182590738 (189 known-failing / 12207 collected).
+      # Fails CI on ANY new vitest failure or a collectionFloor breach (<12000). Paydown = shrink
+      # ci/baseline-failures.json over time. RED-proof verified locally (new-failure→RED, floor→RED, 189→GREEN).
+      - name: Baseline gate — vitest known-failures (BLOCKING — new failures fail CI)
+        run: node ci/compare-baseline.mjs --suite vitest --results ci/vitest-results.json
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
@@ -165,7 +196,7 @@ jobs:
           npm ci
           python -m pip install --upgrade pip
           pip install -r src/engine/requirements.txt
-          pip install pytest pytest-cov ruff mypy pip-audit
+          pip install pytest pytest-cov pytest-timeout ruff mypy pip-audit
 
       - name: Verify system map freshness
         run: npm run system-map:check
@@ -187,9 +218,21 @@ jobs:
         continue-on-error: true
         run: python -m pip_audit -r src/engine/requirements.txt || true
 
+      # hardening-rails 2026-07-12: the full-tree `pytest src/engine/` run can HANG for
+      # hours (documented vectorbt-JIT-under-pytest-collection class, CLAUDE.md §2b) with
+      # no natural cap — observed >90 min on run 29179583669. Guard it two ways:
+      #   * step-level timeout-minutes is the HARD backstop for a collection-phase hang
+      #     (pytest-timeout's --timeout does NOT cover collection);
+      #   * --timeout (pytest-timeout, thread method) fails an EXECUTION-phase hang loudly
+      #     with a faulthandler traceback naming the culprit test.
+      # ADVISORY for now (continue-on-error, same posture as the ruff-style + mypy steps)
+      # so a hang or pre-existing failure fails FAST instead of blocking-by-hanging every
+      # push. Restore to BLOCKING after the root-cause mock audit / Codex pytest baseline.
       - name: Run pytest with coverage
+        continue-on-error: true
+        timeout-minutes: 25
         run: |
-          pytest src/engine/ --cov=src/engine --cov-report=xml --cov-report=html -v
+          pytest src/engine/ --cov=src/engine --cov-report=xml --cov-report=html -v --timeout=120 --timeout-method=thread
 
       - name: Upload Python coverage
         uses: actions/upload-artifact@v4

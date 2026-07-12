@@ -155,7 +155,7 @@ describe("wave26-pattern-aggregator", () => {
 
     // Call sequence: kill switch, critiques, maxVersion, running tests, active version
     buildSelectSequence([
-      [{ currentValue: "true" }],          // kill switch → enabled
+      [{ currentValue: "2" }],          // kill switch → enabled
       critiques,                             // 15 critique rows
       [{ maxVer: 2 }],                       // max version
       [],                                    // running tests → none
@@ -199,7 +199,7 @@ describe("wave26-pattern-aggregator", () => {
     const critiques = makeCritiques(5);
 
     buildSelectSequence([
-      [{ currentValue: "true" }], // kill switch → enabled
+      [{ currentValue: "2" }], // kill switch → enabled
       critiques,                   // only 5 critiques (< 10 threshold)
     ]);
     buildInsertMock();
@@ -216,7 +216,7 @@ describe("wave26-pattern-aggregator", () => {
   // ── 3. Kill switch engaged ────────────────────────────────────────────────────
   it("kill switch: auto_patch_loop_enabled=false → returns halted + no LLM call", async () => {
     buildSelectSequence([
-      [{ currentValue: "false" }], // kill switch → DISABLED
+      [{ currentValue: "0" }], // kill switch → DISABLED
     ]);
     buildInsertMock();
 
@@ -233,7 +233,7 @@ describe("wave26-pattern-aggregator", () => {
     const critiques = makeCritiques(12);
 
     buildSelectSequence([
-      [{ currentValue: "true" }],
+      [{ currentValue: "2" }],
       critiques,
     ]);
     buildInsertMock();
@@ -252,7 +252,7 @@ describe("wave26-pattern-aggregator", () => {
     const critiques = makeCritiques(12);
 
     buildSelectSequence([
-      [{ currentValue: "true" }],
+      [{ currentValue: "2" }],
       critiques,
     ]);
     buildInsertMock();
@@ -301,7 +301,7 @@ describe("wave26-pattern-aggregator", () => {
     const auditInserts: Record<string, unknown>[] = [];
 
     buildSelectSequence([
-      [{ currentValue: "true" }],
+      [{ currentValue: "2" }],
       critiques,
       [{ maxVer: 1 }],
       [],
@@ -340,7 +340,7 @@ describe("wave26-pattern-aggregator", () => {
     const auditInserts: Record<string, unknown>[] = [];
 
     buildSelectSequence([
-      [{ currentValue: "true" }],
+      [{ currentValue: "2" }],
       critiques,
     ]);
 
@@ -368,7 +368,7 @@ describe("wave26-pattern-aggregator", () => {
     const auditInserts: Record<string, unknown>[] = [];
 
     buildSelectSequence([
-      [{ currentValue: "false" }],
+      [{ currentValue: "0" }],
     ]);
 
     (db as any).insert = vi.fn().mockImplementation(() => ({
@@ -395,7 +395,7 @@ describe("wave26-pattern-aggregator", () => {
     const auditInserts: Record<string, unknown>[] = [];
 
     buildSelectSequence([
-      [{ currentValue: "true" }],
+      [{ currentValue: "2" }],
       critiques,
     ]);
 
@@ -439,7 +439,7 @@ describe("wave26-pattern-aggregator", () => {
     const critiques = makeCritiques(12);
 
     buildSelectSequence([
-      [{ currentValue: "true" }],
+      [{ currentValue: "2" }],
       critiques,
       [{ maxVer: 1 }],
       [],

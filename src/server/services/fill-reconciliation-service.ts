@@ -524,9 +524,20 @@ async function computeActualPnlForFullExit(params: {
       .orderBy(desc(serverMediatedOrders.filledAt))
       .limit(10);
 
+    // deep-scan 2026-07-11 LOW fix (#26): pair the exit with the SAME-DIRECTION entry it closes
+    // (exit_long ⟵ enter_long, exit_short ⟵ enter_short). The old predicate matched the most-recent
+    // enter_long OR enter_short, so an intervening opposite-direction entry within the same
+    // session+symbol flipped the sign of the realized PnL written to production_trades. A bare "exit"
+    // carries no direction, so it retains the legacy either-direction match.
+    const requiredEntryAction =
+      orderRow.intendedAction === "exit_long" ? "enter_long"
+      : orderRow.intendedAction === "exit_short" ? "enter_short"
+      : null;
     const entryRow = candidateEntries.find(
       (r) =>
-        (r.intendedAction === "enter_long" || r.intendedAction === "enter_short") &&
+        (requiredEntryAction
+          ? r.intendedAction === requiredEntryAction
+          : (r.intendedAction === "enter_long" || r.intendedAction === "enter_short")) &&
         r.filledAvgPrice !== null &&
         (!orderRow.filledAt || !r.filledAt || r.filledAt.getTime() <= orderRow.filledAt.getTime()),
     );
@@ -602,6 +613,25 @@ export async function ingestFillEvent(
     } catch (err) {
       logger.error({ err }, "fill-reconciliation: dedup check failed — proceeding conservatively");
     }
+  } else {
+    // deep-scan 2026-07-11 MED fix (#17): a fill WITHOUT a broker_fill_id CANNOT be deduplicated — a
+    // redelivered partial fill (broker webhook retry / DLQ replay) would re-accumulate filled_qty and
+    // inflate the server position. Emit a LOUD warn + audit so the gap is visible at go-live (when
+    // server-mediated execution is enabled and real TradersPost fills flow). A content-derived dedup
+    // key is deliberately NOT synthesized: the exact TradersPost fill-callback schema is unknown until
+    // a live feed (see the "requires live broker feed" caveat above), and one order legitimately
+    // produces multiple partial fills, so guessing a key risks dropping real fills. Revisit at go-live.
+    logger.warn(
+      { broker_order_ref: fillEvent.broker_order_ref, idempotency_key: fillEvent.idempotency_key, filled_qty: fillEvent.filled_qty },
+      "fill-reconciliation: fill has NO broker_fill_id — cannot dedup; a re-delivery would re-accumulate filled_qty (go-live schema gap)",
+    );
+    await writeAudit(
+      "fill_reconciliation.no_broker_fill_id_undeduped",
+      { broker_order_ref: fillEvent.broker_order_ref ?? null, idempotency_key: fillEvent.idempotency_key ?? null, filled_qty: fillEvent.filled_qty, filled_avg_price: fillEvent.filled_avg_price },
+      { dedup: "impossible_without_broker_fill_id", revisit: "before_go_live" },
+      "warning",
+      effectiveCorrelationId,
+    );
   }
 
   // ── Match fill to order row ───────────────────────────────────────────────
@@ -900,14 +930,24 @@ export async function checkPositionDrift(params: {
     const qty = row.filledQty;
     const price = Number(row.filledAvgPrice ?? 0);
 
-    if (action === "enter_long" || action === "enter_short") {
+    // Signed net position: LONG = positive, SHORT = negative — MUST match the broker snapshot
+    // contract (getBrokerPositionSnapshot: "Positive = long, 0 = flat, negative = short", ~line 1139).
+    // deep-scan 2026-07-11 HIGH fix: enter_short/exit_short previously used the long sign, so every
+    // open SHORT computed +qty vs the broker's -qty → qtyDrift = 2×qty → false drift → the account was
+    // marked needs_reconcile and ALL new entries blocked.
+    if (action === "enter_long") {
       serverNetQty += qty;
-      if (qty > 0) {
-        serverWeightedPrice = ((serverWeightedPrice * serverQtyForPrice) + (price * qty)) / (serverQtyForPrice + qty);
-        serverQtyForPrice += qty;
-      }
-    } else if (action === "exit_long" || action === "exit_short") {
+    } else if (action === "enter_short") {
       serverNetQty -= qty;
+    } else if (action === "exit_long") {
+      serverNetQty -= qty;
+    } else if (action === "exit_short") {
+      serverNetQty += qty;
+    }
+    // Average cost basis over ENTRY fills, weighted by contract count (direction-agnostic magnitude).
+    if ((action === "enter_long" || action === "enter_short") && qty > 0) {
+      serverWeightedPrice = ((serverWeightedPrice * serverQtyForPrice) + (price * qty)) / (serverQtyForPrice + qty);
+      serverQtyForPrice += qty;
     }
   }
 

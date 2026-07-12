@@ -127,6 +127,13 @@ export async function setMode(
   // Pass req.id ?? null from admin routes; internal callers may omit (generates UUID).
   // Falls back to a generated UUID so the audit row is never null.
   correlationId: string | null = null,
+  // deep-scan 2026-07-11 LOW fix (#28): who initiated this mode change. Operator-driven routes (admin
+  // endpoints, Office toggle, Carter voice) keep the default "human"; AUTONOMOUS callers (drift
+  // auto-HALT, DD-velocity autopause/recovery, reboot auto-resume) MUST pass "system" — otherwise the
+  // pipeline.mode_change audit rows they write count as operator activity and the operator-absence
+  // auto-detector (which flags 24h of ZERO decision_authority='human' rows) never engages, so vacation
+  // Tier-1 autopilot silently never turns on.
+  authority: "human" | "system" = "human",
 ): Promise<{
   previousMode: PipelineMode;
   newMode: PipelineMode;
@@ -184,7 +191,7 @@ export async function setMode(
     action: "pipeline.mode_change",
     entityType: "system",
     entityId: null,
-    decisionAuthority: "human",
+    decisionAuthority: authority,
     input: { previousMode, newMode: mode, reason } as Record<string, unknown>,
     result: { n8n: n8nResult } as unknown as Record<string, unknown>,
     status: n8nResult.failed === 0 ? "success" : "partial",

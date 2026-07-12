@@ -5571,10 +5571,13 @@ except Exception as e:
     await runRegimeDriftDetector();
   });
 
-  // 18:00 ET = 22:00 UTC (EST, UTC-5) or 21:00 UTC (EDT, UTC-4)
+  // 18:00 ET = 22:00 UTC (EDT, UTC-4) or 23:00 UTC (EST, UTC-5).
+  // deep-scan 2026-07-11 HIGH fix: was "23 21,22" (16:00/17:00 ET in EST) so the etHour===18 guard
+  // NEVER matched in winter — the safety cron silently never fired ~Nov–mid-Mar. The DST-safe pair
+  // for an 18:00-ET target is 22,23 UTC (same pair weekly-drift-detection at ~5888 uses correctly).
   // Pass 7 Track B cron jitter: offset to :23 to avoid pile-up with
   // consistency-tracker-daily-digest (:07) and composite-health-daily-digest (:13).
-  scheduleUtc("23 21,22 * * *", async () => {
+  scheduleUtc("23 22,23 * * *", async () => {
     if (!_tryAcquireJobLock("regime-drift-detector")) return;
     try {
       const now = new Date();

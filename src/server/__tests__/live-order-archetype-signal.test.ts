@@ -63,11 +63,24 @@ vi.mock("../db/index.js", () => ({
   db: {
     insert: () => ({ values: mocks.dbInsert }),
     execute: mocks.dbExecute,
+    // F-1 lifecycle capital-safety gate (live-order.ts:552-598): archetype_signal carrying a
+    // strategy_id is rejected 409 unless the strategy is in LIVE_EXECUTION_STATES (DEPLOYED/PILOT).
+    // These tests exercise the POST-gate archetype dispatch, so seed a DEPLOYED strategy. (Stub added
+    // 2026-07-11 — the gate post-dates this suite; without a .select stub the gate fail-closed to 409
+    // before reaching archetype logic, which is correct production behavior, just an unseeded test.)
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: () => Promise.resolve([{ lifecycleState: "DEPLOYED" }]),
+        }),
+      }),
+    }),
   },
 }));
 
 vi.mock("../db/schema.js", () => ({
   auditLog: Symbol("auditLog_mock"),
+  strategies: Symbol("strategies_mock"),
 }));
 
 // Pass 4.5 architect close: stub the archetype-routing observability emit helpers

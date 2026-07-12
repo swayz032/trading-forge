@@ -279,10 +279,14 @@ describe("F-3: vacation auto-recovery — checkVacationAutoRecovery", () => {
     const autopausedAtMs = nowMs() - 20 * 60 * 60_000;
     await checkVacationAutoRecovery({ sessionId: SESSION, autopausedAtMs });
 
-    // Must have called setMode("ACTIVE")
+    // Must have called setMode("ACTIVE") with system authority (#28 deep-scan 2026-07-11:
+    // autonomous recovery passes correlationId=null + authority="system" so the audit row
+    // is decision_authority='system', not 'human' — this is an unattended recovery).
     expect(vi.mocked(setMode)).toHaveBeenCalledWith(
       "ACTIVE",
       expect.stringContaining("dd_velocity_vacation_auto_recovery"),
+      null,
+      "system",
     );
   });
 
@@ -314,6 +318,56 @@ describe("F-3: vacation auto-recovery — checkVacationAutoRecovery", () => {
 
     const insertMock = vi.mocked(db.insert);
     expect(insertMock).toHaveBeenCalled();
+  });
+
+  // fresh-scan HIGH#7 (2026-07-12): the NO-ARG path (how the production dd-velocity-cron calls this)
+  // must age the pause from the latest risk.dd_velocity_autopause audit row, NOT default to Date.now()
+  // (which made pauseAge≈0 → never recovered → account stuck AUTOPAUSE for the whole vacation).
+  it("no-arg path recovers when the audit-logged autopause is older than a CME day", async () => {
+    vi.mocked(getMode).mockResolvedValue("AUTOPAUSE_DD_VELOCITY");
+    const { db } = await import("../db/index.js");
+    vi.mocked(db).select = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([
+            { operatorAbsentSince: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+          ]),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              { createdAt: new Date(Date.now() - 20 * 60 * 60_000) }, // 20h ago → past 17h boundary
+            ]),
+          }),
+        }),
+      }),
+    });
+
+    await checkVacationAutoRecovery(); // NO args — the production cron path
+
+    expect(vi.mocked(setMode)).toHaveBeenCalledWith("ACTIVE", expect.any(String), null, "system");
+  });
+
+  it("no-arg path does NOT recover when the audit-logged autopause is recent (same CME day)", async () => {
+    vi.mocked(getMode).mockResolvedValue("AUTOPAUSE_DD_VELOCITY");
+    vi.mocked(setMode).mockClear();
+    const { db } = await import("../db/index.js");
+    vi.mocked(db).select = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([
+            { operatorAbsentSince: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+          ]),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([
+              { createdAt: new Date(Date.now() - 1 * 60 * 60_000) }, // 1h ago → within same CME day
+            ]),
+          }),
+        }),
+      }),
+    });
+
+    await checkVacationAutoRecovery();
+
+    expect(vi.mocked(setMode)).not.toHaveBeenCalledWith("ACTIVE", expect.any(String), null, "system");
   });
 
   it("is fail-soft — a DB error during recovery check does NOT throw", async () => {
