@@ -50,6 +50,7 @@ import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js"
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
+import { computeFirmRulesVersion } from "../lib/firm-rules-version.js"; // #23: promotion-time firm-rule drift check
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 import { evaluateCompositeShadow } from "../lib/composite-shadow-gate.js";
 import { routeShadowDisagreementAlert } from "../lib/composite-shadow-discord-router.js";
@@ -5555,6 +5556,7 @@ export class LifecycleService {
                 id: backtests.id,
                 gateResult: backtests.gateResult,
                 resultExtras: backtests.resultExtras,
+                firmRulesVersion: backtests.firmRulesVersion, // #23: for promotion-time firm-rule drift check
               })
               .from(backtests)
               .where(
@@ -5681,6 +5683,34 @@ export class LifecycleService {
                 .limit(1);
 
               if (latestMcForB14) {
+                // #23 (deep-scan 2026-07-11 LOW): re-validate firm_rules_version at PROMOTION time. The
+                // MC-run-time guard refuses to RUN MC under stale rules, but nothing re-checked at
+                // promotion — so an MC validated under V1 rules could promote after the operator tightens
+                // firm_config.py to V2 (within the 30-day staleness window), grading firm-breach ruin
+                // against the stale V1 survival model → a strategy that would FAIL B14 under current rules
+                // could reach live capital. Block fail-CLOSED on a NON-NULL mismatch; a null version
+                // (pre-W27.5 backtest) grandfathers through, matching the MC-run-time guard's behavior.
+                const currentFirmRulesVersion = computeFirmRulesVersion();
+                const btFirmRulesVersion = latestBtForB14.firmRulesVersion as string | null | undefined;
+                if (btFirmRulesVersion != null && btFirmRulesVersion !== currentFirmRulesVersion) {
+                  logger.warn(
+                    { strategyId: s.id, btFirmRulesVersion, currentFirmRulesVersion, transition: "PAPER→DEPLOY_READY" },
+                    "B14 promotion BLOCKED: MC firm_rules_version is stale — re-run the backtest + MC under current firm rules",
+                  );
+                  await db.insert(auditLog).values({
+                    action: "lifecycle.firm_rules_version_stale_block",
+                    entityId: s.id,
+                    entityType: "strategy",
+                    status: "failure",
+                    decisionAuthority: "gate",
+                    input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                    result: { bt_firm_rules_version: btFirmRulesVersion, current_firm_rules_version: currentFirmRulesVersion, reason: "mc_validated_under_stale_firm_rules" } as Record<string, unknown>,
+                    correlationId,
+                  }).catch((auditErr: unknown) => {
+                    logger.warn({ strategyId: s.id, err: auditErr }, "firm-rules-version stale-block audit insert failed (non-blocking)");
+                  });
+                  continue;
+                }
                 const rm = (latestMcForB14.riskMetrics as Record<string, unknown> | null) ?? {};
                 const ruinCi = (rm.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
                 const pointEstimate = latestMcForB14.probabilityOfRuin != null
