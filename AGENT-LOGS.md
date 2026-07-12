@@ -4,6 +4,27 @@
 
 ---
 
+### Session Log — 2026-07-12 /goal CONTINUATION 13 — 8TH fresh scan (freshscan8, 12-charter Workflow) @ b15c0f66 found 7 bugs (1 HIGH + 5 MED + 1 LOW, ALL pre-existing) — **BROKE freshscan7's clean streak → band 9 NOT confirmed**; ALL fixed + independently graded (band 7, no open CRIT/HIGH, parity-class sweep clean) + LANDED origin/phase-0 `6b16b1d8`.
+
+**Mission:** freshscan8 was the band-9 CONFIRMATION (freshscan7 returned zero-open-HIGH). It did NOT hold clean — found a HIGH — so the two-consecutive-clean bar is NOT met. Vindicates requiring 2 consecutive scans (a single clean scan would have been a false band-9 claim).
+
+**★★★ SYSTEMIC CLASS CONFIRMED — cron-vs-pure-evaluator GATE PARITY** (3rd scan running this class: fs6 shadow-cron HIGH, fs7 BIF-manual MED, fs8 drift-cron HIGH + WFE-cron MED). The autonomous promotion crons hand-roll `isBlock = status === "blocked"` while the pure evaluators (paper-to-deploy-ready-gates.ts) check the FULL block-status set. Fixes:
+- **HIGH (3 cron sites)** lifecycle-service.ts: parameter-drift `blocked_classifier_error` (a crashed drift classifier's G2b fail-CLOSED verdict) fell through the cron's `=== "blocked"` check → treated as PASS across ALL 3 autonomous transitions incl PAPER→DEPLOY_READY (live-capital); drift gate is SOLE authority (no numeric fallback). Match the pure-evaluator's two-branch check.
+- **MED (2 cron sites)** WFE `degenerate_is_block` (wfe=0.0, worst signal) same fall-through at TESTING→PAPER + SHADOW→PAPER → wrongly advanced to PAPER broker. (PAPER→DEPLOY_READY WFE is numeric via the orchestrator, immune.)
+- **MED** sizing.py main-path pyramid floor omitted drawdown_room_cap (TS mirror + Python early-return floor both apply it) → 80% Topstep DD-room over-size (9 vs TS 5 on fresh-$2K combine; grader executed base=9→fixed=5).
+- **MED** admin.ts POST /harsh-regime-phase unguarded → relay-Bearer could loosen the TESTING→PAPER regime-survival hard gate. Added requirePipelineControlAuthority.
+- **MED** direct-bucket-graduator.ts wide-fingerprint dedup keyed on RAW direction (default 'long') vs persisted resolvedDirection (default 'both') → dedup escape. Fingerprint on resolved direction.
+- **MED** regime-drift-detector zombie-DECLINING sweep force-promoted ALL aged DECLINING to TESTING → reversed every legitimate one-step demotion. Scoped to genuine two-step-demotion zombies (latest transition INTO DECLINING from DEPLOYED via regime_drift/portfolio_drift reason).
+- **LOW** paper-signal-service.ts Tier-1 news/FOMC reduce factor applied only on the pyramid path; dynamic_atr/fixed dropped it. Apply to non-pyramid branches (flag-gated, no double-reduce).
+
+**Independent grade (accuracy-validator, doer≠grader):** ALL 7 CONFIRMED-CORRECT band 7, safe-to-land, no open CRIT/HIGH, no regressions. ★ Aspect-1c EXHAUSTIVE sweep for OTHER cron gate sites failing-open → CLEAN (DSR gate uses boolean !passed, immune). sizing.py executed base-vs-fix (9→5). 546 vitest + 200 pytest green; 12 regime-drift + 6 sizing failures base-verified PRE-EXISTING (temp-copy swap, not git checkout). Grader notes: no new regression tests shipped this wave (verified via trace/execution); cron-site fixes are hard to unit-test in isolation (inside the promoteStrategy cron loop) — the pure-evaluator already has block-status coverage.
+
+**Verification:** tsc 0; 4 CI gates green; PM-parity 14/14; sizing returns 5 (TS parity); touched suites green.
+
+**★ HONEST BAND: NOT 9.** freshscan7 clean → freshscan8 NOT clean = streak broken. The cron-vs-pure-evaluator parity class + the sizing/security tail show a large multi-gate codebase keeps surfacing real capital-safety issues. Band 9 = TWO consecutive zero-open-HIGH scans; freshscan9 restarts the streak.
+
+**Carry-forward:** (1) **freshscan9** = next band-9 attempt. (2) cron gate-site regression tests (hard-to-isolate; the pure-evaluator has coverage) + no self-verifying tests shipped this wave. (3) prior pre-existing test debt (12 wave29-pass-b3-regime-drift broken-mock, 6 wave22 sizing stale, deepscan14 `.returning`/source-inspection) + LOW#11(n8n) + Topstep sizing ratify-packet.
+
 ### Session Log — 2026-07-12 /goal CONTINUATION 12 — 7TH fresh scan (freshscan7, 12-charter Workflow) @ 4c3d7b99 **RETURNED ZERO OPEN CRIT/HIGH — first clean-at-HIGH scan (band9_zero_open_HIGH=true)**; only 1 MED + 1 LOW found, both fixed + graded band 7 + LANDED origin/phase-0 `b15c0f66`. HIGH per-scan across campaign: 8→5→3→2→2→1→**0**.
 
 **Mission:** 7th band-9 certifier scan. FIRST to return zero open CRIT/HIGH — the necessary band-9 condition finally met. freshscan8 dispatched as the CONFIRMATION (band 9 wants the clean state to HOLD across a 2nd consecutive fresh scan after the fixes).
