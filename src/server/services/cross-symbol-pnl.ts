@@ -228,40 +228,62 @@ export async function getAccountSessionCumulativePnL(
     // ── 2. Open MTM P&L: sum unrealized_pnl from open positions ─────────────
     // Join paper_positions to paper_sessions; account-key filtering happens in
     // application code for the same JSONB reason as above.
-    const openPositions = await db
-      .select({
-        symbol: paperPositions.symbol,
-        unrealizedPnl: paperPositions.unrealizedPnl,
-        sessionFirmId: paperSessions.firmId,
-        sessionConfig: paperSessions.config,
-      })
-      .from(paperPositions)
-      .innerJoin(paperSessions, eq(paperSessions.id, paperPositions.sessionId))
-      .where(and(
-        isNull(paperPositions.closedAt),
-        // deepscan7 paper-MED-1: a paused session's open positions are live firm
-        // exposure — count their MTM toward the firm DLL like the active set.
-        inArray(paperSessions.status, [...DLL_AGGREGATE_SESSION_STATUSES]),
-      ));
+    // MED (deep-scan 2026-07-12 #10): this MTM join has its OWN try/catch so a fault HERE (after the
+    // realized-loss scan already succeeded) preserves the realized figure as the totalPnL — a CERTAIN,
+    // banked lower bound on today's loss — flagged degraded. That lets the L2 kill-switch force-close
+    // when the REALIZED-alone loss already breaches the 95% DLL (a KNOWN breach) instead of only
+    // halting new entries. Only a realized-scan (step 1) fault falls to the outer catch's zeroed
+    // degraded return (there we genuinely have no trustworthy figure → halt, never force-close).
+    try {
+      const openPositions = await db
+        .select({
+          symbol: paperPositions.symbol,
+          unrealizedPnl: paperPositions.unrealizedPnl,
+          sessionFirmId: paperSessions.firmId,
+          sessionConfig: paperSessions.config,
+        })
+        .from(paperPositions)
+        .innerJoin(paperSessions, eq(paperSessions.id, paperPositions.sessionId))
+        .where(and(
+          isNull(paperPositions.closedAt),
+          // deepscan7 paper-MED-1: a paused session's open positions are live firm
+          // exposure — count their MTM toward the firm DLL like the active set.
+          inArray(paperSessions.status, [...DLL_AGGREGATE_SESSION_STATUSES]),
+        ));
 
-    let totalMtm = 0;
-    for (const pos of openPositions) {
-      if (resolveAccountKey({ firmId: pos.sessionFirmId, config: pos.sessionConfig }) !== accountKey) continue;
+      let totalMtm = 0;
+      for (const pos of openPositions) {
+        if (resolveAccountKey({ firmId: pos.sessionFirmId, config: pos.sessionConfig }) !== accountKey) continue;
 
-      const mtm = parseFloat(pos.unrealizedPnl ?? "0");
-      totalMtm += mtm;
-      const sym = pos.symbol ?? "UNKNOWN";
-      bySymbol[sym] = (bySymbol[sym] ?? 0) + mtm;
+        const mtm = parseFloat(pos.unrealizedPnl ?? "0");
+        totalMtm += mtm;
+        const sym = pos.symbol ?? "UNKNOWN";
+        bySymbol[sym] = (bySymbol[sym] ?? 0) + mtm;
+      }
+
+      return {
+        firmId: accountKey,
+        sessionDate,
+        realizedPnL: totalRealized,
+        openPnLMtm: totalMtm,
+        totalPnL: totalRealized + totalMtm,
+        pnLBySymbol: bySymbol,
+      };
+    } catch (mtmErr) {
+      logger.warn(
+        { err: mtmErr, accountKey, sessionDate, realizedPnL: totalRealized },
+        "cross-symbol-pnl: open-MTM join failed AFTER realized scan succeeded — returning realized-only DEGRADED (certain lower bound; a realized-alone DLL breach still force-closes)",
+      );
+      return {
+        firmId: accountKey,
+        sessionDate,
+        realizedPnL: totalRealized,
+        openPnLMtm: 0,
+        totalPnL: totalRealized, // realized alone = a certain lower bound on the loss
+        pnLBySymbol: bySymbol,
+        degraded: true,
+      };
     }
-
-    return {
-      firmId: accountKey,
-      sessionDate,
-      realizedPnL: totalRealized,
-      openPnLMtm: totalMtm,
-      totalPnL: totalRealized + totalMtm,
-      pnLBySymbol: bySymbol,
-    };
   } catch (err) {
     // deep-scan 2026-07-11 HIGH fix: mark the result DEGRADED so fail-CLOSED callers (kill-switch L2,
     // fill-time DLL gate) can honor their documented fail-closed contract. Previously this returned a

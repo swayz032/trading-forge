@@ -227,7 +227,7 @@ async function _confirmedForceClose(
 ): Promise<boolean> {
   const timeoutMs = FORCE_CLOSE_TIMEOUT_MS > 0 ? FORCE_CLOSE_TIMEOUT_MS : 10_000;
   try {
-    await Promise.race([
+    const fcResult = await Promise.race([
       import("../services/paper-execution-service.js").then(({ forceCloseAllPositions }) =>
         forceCloseAllPositions(reason, { correlationId, scope })
       ),
@@ -238,8 +238,47 @@ async function _confirmedForceClose(
         )
       ),
     ]);
-    logger.info({ reason, correlationId }, "kill-switch: forceCloseAllPositions completed");
-    return true;
+    // CRIT (deep-scan 2026-07-12): forceCloseAllPositions RESOLVES normally even when it closed
+    // 0-of-N positions — per-position closePosition() errors are caught, pushed to `errors`, and the
+    // loop CONTINUES (paper-execution-service.ts ~5425), returning { count, closed, stuck }. Returning
+    // `true` here on a partial/total failure made the L2 caller (a) write a false "completed=success"
+    // row contradicting the batch's own partial_failure row, and (b) arm the #8 _forceClosedTodayByAccount
+    // dedup — permanently DISARMING retry for the rest of the CME trading day while the bleeding
+    // position stays OPEN past the DLL (Topstep trailing-DD breach). Only report success when EVERY
+    // position actually closed; otherwise escalate + audit + return false so the caller re-attempts.
+    const closedAll =
+      fcResult != null &&
+      typeof fcResult === "object" &&
+      (fcResult as { count?: number }).count === (fcResult as { closed?: number }).closed &&
+      ((fcResult as { stuck?: number }).stuck ?? 0) === 0;
+    if (closedAll) {
+      logger.info({ reason, correlationId, ...fcResult }, "kill-switch: forceCloseAllPositions completed");
+      return true;
+    }
+    logger.error(
+      { reason, correlationId, result: fcResult },
+      "kill-switch: forceCloseAllPositions INCOMPLETE (closed < count or stuck) — positions may still be open; NOT arming day-dedup, will re-attempt",
+    );
+    AlertFactory.systemError(
+      "kill-switch-force-flatten-incomplete",
+      new Error(
+        `forceCloseAllPositions incomplete (${JSON.stringify(fcResult)}). Reason: ${reason}. ` +
+        `CorrelationId: ${correlationId}. IMMEDIATE ACTION REQUIRED — positions may still be open.`,
+      ),
+    );
+    insertAuditRow({
+      action: "paper.force_flatten_kill_switch_incomplete",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { reason, correlationId } as Record<string, unknown>,
+      result: { ...(fcResult as Record<string, unknown>), positions_may_be_open: true } as Record<string, unknown>,
+      status: "error",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error({ err: auditErr }, "kill-switch: force_flatten_incomplete audit write also failed"),
+    );
+    return false;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error(
@@ -493,12 +532,25 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
       // → action="none" → L2 approved an entry on an account potentially already at its DLL. We HALT
       // (block new risk) rather than force_close, since acting on unknown P&L would be over-aggressive.
       if (dllResult.degraded) {
-        logger.warn(
-          { account_key: accountKey, firm_id: rep.firmId },
-          "kill-switch L2: cross-symbol P&L DEGRADED (DB fault) — halting new entries (fail-closed)",
+        // MED (deep-scan 2026-07-12 #10): a degraded result now preserves the REALIZED-alone P&L (a
+        // certain, banked lower bound — see cross-symbol-pnl.ts MTM-only catch). If that alone already
+        // breaches the 95% force-close threshold, the breach is KNOWN despite the missing MTM — fall
+        // through to force-close the bleeding position (previously degraded ALWAYS short-circuited to a
+        // halt, leaving a known-over-DLL position open). Otherwise (realized under threshold, or P&L
+        // truly unknown) stay conservative: HALT new entries, never force-close on data we can't trust.
+        if (dllResult.action !== "force_close") {
+          logger.warn(
+            { account_key: accountKey, firm_id: rep.firmId, realized_pnl: dayPnl },
+            "kill-switch L2: cross-symbol P&L DEGRADED, realized-alone under 95% — halting new entries (fail-closed; no force-close on unknown P&L)",
+          );
+          decision = { halted: true, reason: "dll_pnl_degraded_fail_closed", layer: 2 };
+          break;
+        }
+        logger.error(
+          { account_key: accountKey, firm_id: rep.firmId, realized_pnl: dayPnl, dll: personalDllDollars },
+          "kill-switch L2: cross-symbol P&L DEGRADED but REALIZED-alone loss already breaches 95% DLL — force-closing the KNOWN breach (fall through)",
         );
-        decision = { halted: true, reason: "dll_pnl_degraded_fail_closed", layer: 2 };
-        break;
+        // fall through to the force_close handler below (do NOT break)
       }
 
       // ── M-1 FIX: 95% DLL force-close (highest band — check first) ───────────
