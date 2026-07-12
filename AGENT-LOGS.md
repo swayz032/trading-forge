@@ -4,6 +4,28 @@
 
 ---
 
+### Session Log — 2026-07-12 /goal CONTINUATION 9 — 4TH fresh scan (freshscan4, 12-charter Workflow) @ a62af172 found 8 bugs (2 HIGH + 3 MED + 3 LOW, ALL pre-existing); ALL fixed + independently graded (band 7, no open HIGH) + LANDED origin/phase-0 `01b99449`
+
+**Mission:** The band-9 certifier run — a fresh whole-system adversarial scan (12 finder charters → adversarial-verify pipeline) to test "does a fresh scan return ZERO open HIGHs?" It did NOT: 8 confirmed bugs incl 2 HIGH. So **band 9 is still NOT true.** All 8 fixed (fix-don't-skip); convergence continues.
+
+**freshscan4 findings (all CONFIRMED via ≥2 paths, all pre-existing / not introduced by prior waves):**
+- **HIGH#1 (CAPITAL SAFETY)** `paper-execution-service.ts` closePosition: the closedAt-guarded idempotency claim returned only {id}, but grossPnl/commission/rollCost/netPnl were computed on pos.contracts read PRE-tx. A concurrent partial close (bookPartialClose decrements contracts + sets tp1Filled but NOT closedAt) commits first → the claim still matches → full-close booked on STALE count → double-counts the partial's contracts into currentEquity + realizedPeakEquity (Topstep/Apex trailing-DD HWM → false breach). Fix: claim now `.returning({id,contracts})` + recompute P&L on the row-locked count.
+- **HIGH#2** `scripts/apply-missing-migrations.mjs`: hashed raw CRLF bytes, diverging from boot-runner readUtf8StripBom (BOM+CRLF→LF) — same crash-loop class the SIBLING stamp-applied-migrations.cjs was patched for (2026-07-11) but this recovery tool was left raw. Mirrored the normalization (hash input only).
+- **MED#3** `data_loader.py` validate_bars: coverage_pct denominator adapts to the RETURNED data → start/end truncation invisible (request 2008-2020, S3 holds 2015+ → ~100% coverage, passed=True on a 7yr-short backtest). Threaded requested_start/end + loud truncation warning (warn-only default; DATA_TRUNCATION_HARD_FAIL opt-in). **Grader caught a real Int64-dtype gap in the fix → closed (`_to_date` now handles epoch-ns).**
+- **MED#4 (SAFETY GATE)** `drift-detector.ts`: fetchBacktestExpectedSharpe window `[now-30d, now-30d)` was EMPTY → always null → severity forced green → the documented >2σ auto-HALT on Sharpe drift (CLAUDE.md §3) was PERMANENTLY DARK. Baseline lower bound → now-60d.
+- **MED#5** `direct-bucket-graduator.ts`: leader/variant regime parity — the MED#6 (freshscan3) all-regime branch existed only on the leader IIFE; per-market variant rows (MNQ/MCL) lacked it → excluded from RANGE_BOUND/TRENDING_DOWN picks. Same branch added to variant IIFE.
+- **LOW#6** scheduler: added portfolio-drift-demotion (no internal ET guard → boot catch-up demoted at wrong hour) + regime-drift-detector (has internal guard, defense-in-depth) to `_ET_HOUR_ANCHORED_NO_CATCHUP`.
+- **LOW#7** scheduler: critic-feedback weekly cron double-fired on the Nov DST fall-back Sunday (01:00 ET at both 05:00 UTC EDT + 06:00 UTC EST) → lastRunAt <12h dedup.
+- **LOW#8** sse.ts: heartbeat pruned dead clients without resyncing tf_sse_clients_connected → over-report masked the "0 clients" alert; resync each tick.
+
+**Independent grade (accuracy-validator, doer≠grader, from-zero):** VERIFIED **band 7, safe-to-land, NO open HIGH.** HIGH#1 (locking-model trace) + HIGH#2 (byte-comparison vs readUtf8StripBom) CONFIRMED-CORRECT. Caught 3 follow-ups: MED#3 Int64 silent-miss (real incomplete-fix), HIGH#1 2 stale telemetry sites, LOW#6 comment inaccuracy — ALL fixed this session + RED-proof regression tests added (test_data_loader_truncation.py 5 tests incl Int64; roll-spread HIGH#1 TOCTOU divergent-branch test). Why not 8/9: no further re-scan post-followup; still-thin fixture coverage on some items.
+
+**Verification:** tsc 0; 4 CI gates green (isolation, 2026-compliance, system-map, PM-parity 14/14); paper-exec 201/201; scheduler 87; data_loader 421 + truncation 5/5; graduator green. Base-verified nothing regressed.
+
+**Known-facts updates:** none new (reinforced: `_to_date`-style helpers must handle BOTH datetime and Int64 epoch-ns — the coverage block already branches on it; a fresh scan is still the ONLY band-9 evidence).
+
+**Carry-forward:** (1) **freshscan5** — band 9 still requires a fresh scan returning zero open HIGHs; freshscan4 found 2 HIGH so the campaign continues. (2) drift-detector SE-approximation uses configured lookbackDays not actual baseline row-count (pre-existing, now live — grader note). (3) still-thin fixture coverage on MED#4/MED#5/LOW items (grader note). (4) LOW#11 (operator-gated live-n8n) + 7 Topstep sizing-math stale tests (ratify-packet) from freshscan3 remain open.
+
 ### Session Log — 2026-07-12 /goal CONTINUATION 8 — 3RD follow-up fresh scan (freshscan3) @ 38c616d6 found 13 bugs (3 HIGH + 5 MED + 5 LOW); ALL fixed + independently graded (band 6, safe-to-land) + LANDED origin/phase-0 `180065cd`
 
 **Mission:** Continue the standing /goal band-9 convergence — a 3rd fresh whole-system adversarial re-scan, fix-don't-skip, doer≠grader, land FF-only, honest band. (The "fix-breeds-a-finding" convergence: CONT-6 found 17, CONT-7 found 11, CONT-8/freshscan3 found 13 → severity trending down; band 9 still requires a fresh scan returning ZERO open HIGHs.)
