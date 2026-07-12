@@ -116,18 +116,21 @@ class TestComputeVolumeBasedFillRatios:
 
         assert np.all(ratios == pytest.approx(1.0, abs=1e-9))
 
-    def test_zero_volume_bar_treated_as_unlimited(self):
-        """Zero-volume bars (e.g. pre-market stubs) return fill ratio = 1.0."""
+    def test_zero_volume_bar_degrades_not_unlimited(self):
+        """fresh-scan LOW#12 (2026-07-12): a GENUINE zero-volume execution bar is NOT unlimited
+        liquidity — it degrades to the insufficient-liquidity floor (zone 3, 0.5), NOT a 100% fill.
+        (Was previously treated as inf → ratio 0 → 1.0, silently over-filling entries on thin bars.)"""
         df = _make_df_with_volume(n=3, volume_per_bar=0)
         order_qtys = np.array([100.0, 100.0, 100.0])
 
         with patch.dict(os.environ, {"BACKTEST_PARTIAL_FILL_ENABLED": "true"}):
             import src.engine.fill_model as fm
             importlib.reload(fm)
+            # next_bar_fill=False (default) → no roll-off; all 3 bars are genuine zero-volume prints.
             ratios = fm.compute_volume_based_fill_ratios(df, order_qtys, volume_threshold=0.1)
 
-        # Zero volume → treated as inf → no degradation
-        assert np.all(ratios == pytest.approx(1.0, abs=1e-9))
+        # Zero volume → tiny-epsilon → order/volume >> 1 → zone 3 forced 0.5 (insufficient liquidity).
+        assert np.all(ratios == pytest.approx(0.5, abs=1e-9))
 
 
 # ─── Tests: apply_volume_partial_fills ──────────────────────────────────────

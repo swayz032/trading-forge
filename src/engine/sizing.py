@@ -651,13 +651,19 @@ def compute_risk_derived_contracts(
     # On drawdown accounts (< 85%), risk-cap fully binds — floor does not override.
     # Wave 25 Pass 2 Inst-10: drawdown_room_cap takes priority over pyramid floor —
     # when DD room is very small, forcing base_contracts would violate the 1%-of-room contract.
+    # LOW#9 (fresh-scan 2026-07-12): this SCALAR floor lacked the `pyramid_tier >= base` trigger guard
+    # and the pm-taper floor value that BOTH risk-sizing.ts and the Python per-bar path (compute_position_
+    # sizes) apply — a latent TS/scalar parity divergence. Without them, a PM-tapered scalar call
+    # (pm_size_factor<1) whose tapered pyramid_tier fell below base wrongly floored the size back UP to
+    # full base, re-inflating a deliberate PM reduction. Mirror the per-bar path.
     pyramid_floor_applied = False
     if (
         not drawdown_room_cap_binding
         and account_is_healthy
         and final_contracts < base_contracts
+        and pyramid_tier >= base_contracts
     ):
-        floor_value = base_contracts
+        floor_value = int(math.floor(base_contracts * _pm_factor))
         if effective_firm_cap is not None and effective_firm_cap < floor_value:
             floor_value = effective_firm_cap
         if liquidity_cap < floor_value:

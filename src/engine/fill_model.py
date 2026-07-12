@@ -347,8 +347,16 @@ def compute_volume_based_fill_ratios(
     if next_bar_fill:
         volume = np.roll(volume, -1)
         volume[-1] = np.inf
-    # Guard: zero or NaN volume → treat as unlimited (return 1.0)
-    safe_volume = np.where((volume > 0) & np.isfinite(volume), volume, np.inf)
+    # LOW#12 (fresh-scan 2026-07-12): a GENUINE zero-volume execution bar (illiquid pre-holiday/gap
+    # print) is NOT unlimited liquidity — the old `zero/NaN → inf → ratio 0 → 1.0 full fill` silently
+    # over-filled entries on unrepresentative bars. Map a FINITE zero/negative volume to a tiny epsilon
+    # so order/volume lands in zone 3 (forced 0.5 degrade = "bar volume insufficient"), reflecting the
+    # thin liquidity. The last-bar inf sentinel (set above — order rolls off) stays inf so its roll-off
+    # semantics are untouched. (The §12 BACKTEST_ZERO_VOLUME_TRADE_CRITICAL guard separately hard-fails
+    # a zero-volume STOP/TP bar; this covers the ENTRY-fill path the guard does not.)
+    _finite_zero_or_neg = np.isfinite(volume) & (volume <= 0)
+    safe_volume = np.where(_finite_zero_or_neg, 1e-9, volume)
+    safe_volume = np.where((safe_volume > 0) & np.isfinite(safe_volume), safe_volume, np.inf)
 
     order_q = np.asarray(order_quantities, dtype=np.float64)
     # B-12 fix: NaN/negative order quantities must not corrupt the ratio —

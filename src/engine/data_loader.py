@@ -631,12 +631,24 @@ def validate_bars(
             warn_list.append(f"{out_of_session} bars outside CME Globex session (17:xx ET)")
 
     # ── Zero or negative prices (hard fail) ──
-    zero_neg = df.filter(
-        (pl.col("close") <= 0) | (pl.col("open") <= 0)
-        | (pl.col("high") <= 0) | (pl.col("low") <= 0)
-    ).height
+    # LOW#13 (fresh-scan 2026-07-12): NEGATIVE prices are LEGITIMATE for crude (MCL/CL) — WTI settled
+    # ~-$37 on 2020-04-20 and ratio adjustment scales but never sign-flips, so a real multi-year crude
+    # backtest carries genuine negative bars. Hard-failing them refused to run a real crude backtest
+    # (the negative-settle is NOT corruption — never clamp/floor). For crude only an EXACT ZERO
+    # (missing-data sentinel) is invalid; negatives pass. Non-crude keeps the <= 0 gate.
+    _is_crude = symbol.upper().startswith(("MCL", "CL"))
+    if _is_crude:
+        zero_neg = df.filter(
+            (pl.col("close") == 0) | (pl.col("open") == 0)
+            | (pl.col("high") == 0) | (pl.col("low") == 0)
+        ).height
+    else:
+        zero_neg = df.filter(
+            (pl.col("close") <= 0) | (pl.col("open") <= 0)
+            | (pl.col("high") <= 0) | (pl.col("low") <= 0)
+        ).height
     if zero_neg > 0:
-        warn_list.append(f"{zero_neg} bars with zero or negative prices")
+        warn_list.append(f"{zero_neg} bars with {'zero' if _is_crude else 'zero or negative'} prices")
 
     # ── Large gap detection (reuse 5% threshold) ──
     large_gap_bars = 0

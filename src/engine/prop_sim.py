@@ -206,8 +206,14 @@ def simulate_prop_firm(
         # Trailing drawdown floor
         dd_limit = firm["max_drawdown"]
         if firm.get("locks_at_start", False):
-            # Floor locks at starting_balance - max_dd
-            floor = max(peak_equity - dd_limit, starting_balance - dd_limit)
+            # MED#8 (fresh-scan 2026-07-12): Topstep EOD trailing DD trails the peak by max_dd but the
+            # floor LOCKS at the STARTING BALANCE once the account is up by max_dd (peak-max_dd reaches
+            # starting_balance) — it does NOT keep trailing above starting_balance. So floor =
+            # min(peak-max_dd, starting_balance). The old `max(peak-dd, starting-dd)` never locked at
+            # starting balance (it kept trailing to peak-dd), producing FALSE breach verdicts on any
+            # profitable-then-pullback account (peak 54k → pullback to 52k, still +2k healthy, real
+            # floor 50k → survives, but old code floored at 52k → false breach). This is the CMP-1 twin.
+            floor = min(peak_equity - dd_limit, starting_balance)
         else:
             floor = peak_equity - dd_limit
 
