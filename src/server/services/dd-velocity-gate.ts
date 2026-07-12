@@ -558,9 +558,36 @@ export async function checkVacationAutoRecovery(
     }
 
     // 3. Determine when the autopause was set.
-    //    Use the caller-supplied timestamp if available; otherwise use Date.now() minus
-    //    a safe margin (0) to avoid false recoveries when autopausedAtMs is unknown.
-    const autopausedAtMs = opts.autopausedAtMs ?? Date.now();
+    //    HIGH#7 (fresh-scan 2026-07-12): the SOLE production caller (dd-velocity-cron) invokes this
+    //    with NO autopausedAtMs, so the old `?? Date.now()` made pauseAgeMs ≈ 0 → pauseAgeHours < 17
+    //    on EVERY 1-min tick → the gate NEVER auto-recovered; the account stayed AUTOPAUSE_DD_VELOCITY
+    //    for the whole vacation, breaking the documented "the gate clears automatically" / "14-day
+    //    vacations are safe by design" hands-off contract. Honor the documented behavior: when no
+    //    timestamp is supplied, read the most recent `risk.dd_velocity_autopause` audit row's created_at.
+    let autopausedAtMs: number;
+    if (opts.autopausedAtMs != null) {
+      autopausedAtMs = opts.autopausedAtMs;
+    } else {
+      const { auditLog } = await import("../db/schema.js");
+      const { desc } = await import("drizzle-orm");
+      const pauseRows = await db
+        .select({ createdAt: auditLog.createdAt })
+        .from(auditLog)
+        .where(eq(auditLog.action, "risk.dd_velocity_autopause"))
+        .orderBy(desc(auditLog.createdAt))
+        .limit(1);
+      const rowTs = pauseRows[0]?.createdAt;
+      if (rowTs == null) {
+        // In AUTOPAUSE_DD_VELOCITY mode but no autopause audit row found — cannot age the pause.
+        // Do NOT auto-recover on unknown age (conservative; operator can clear manually). Strictly
+        // safer than the pre-fix always-Date.now() (which also never recovered).
+        logger.warn(
+          "dd-velocity-gate: vacation-auto-recovery: in AUTOPAUSE_DD_VELOCITY but no risk.dd_velocity_autopause audit row found — cannot age the pause, skipping",
+        );
+        return;
+      }
+      autopausedAtMs = new Date(rowTs as unknown as string | number | Date).getTime();
+    }
     const pauseAgeMs = Date.now() - autopausedAtMs;
     const pauseAgeHours = pauseAgeMs / (60 * 60_000);
 
