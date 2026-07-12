@@ -1,0 +1,310 @@
+{
+ "scope": {
+  "pool": "112 DESIGN exemplars (design_exemplars) -- sealed_eval NEVER opened; 78-held-out SPENT",
+  "items_classified": 112,
+  "target_per_class_absorption": 0.85,
+  "model": "gemma4:e4b-it-qat (local, temp 0.1)"
+ },
+ "birth_gate": {
+  "classes": [
+   {
+    "class": "bias_vs_movement",
+    "gate_fires": [
+     {
+      "id": "W1-0116",
+      "expected": "gate-strength",
+      "got": "gate-strength",
+      "resolved_by": "deterministic-exclusion",
+      "ok": true
+     },
+     {
+      "id": "W1-0147",
+      "expected": "gate-strength",
+      "got": "gate-strength",
+      "resolved_by": "llm-margin",
+      "ok": true
+     }
+    ],
+    "context_silent": [
+     {
+      "id": "W1-0122",
+      "expected": "context",
+      "got": "context",
+      "resolved_by": "llm-margin",
+      "ok": true
+     },
+     {
+      "id": "W1-0053",
+      "expected": "context",
+      "got": "context",
+      "resolved_by": "llm-margin",
+      "ok": true
+     }
+    ],
+    "passed": true
+   },
+   {
+    "class": "walkthrough_narration",
+    "gate_fires": [
+     {
+      "id": "W1-0040",
+      "expected": "gate-strength",
+      "got": "gate-strength",
+      "resolved_by": "deterministic-rule",
+      "ok": true
+     },
+     {
+      "id": "W1-0082",
+      "expected": "gate-strength",
+      "got": "gate-strength",
+      "resolved_by": "llm-margin",
+      "ok": true
+     }
+    ],
+    "context_silent": [
+     {
+      "id": "W1-0078",
+      "expected": "context",
+      "got": "context",
+      "resolved_by": "deterministic-tangent",
+      "ok": true
+     },
+     {
+      "id": "W1-0066",
+      "expected": "context",
+      "got": "context",
+      "resolved_by": "llm-margin",
+      "ok": true
+     }
+    ],
+    "passed": true
+   }
+  ],
+  "all_pass": true,
+  "determinism_controls": {
+   "must_gate": [
+    {
+     "id": "W1-0075",
+     "got": "gate-strength",
+     "resolved_by": "deterministic-exclusion",
+     "ok": true
+    },
+    {
+     "id": "W1-0060",
+     "got": "gate-strength",
+     "resolved_by": "deterministic-exclusion",
+     "ok": true
+    },
+    {
+     "id": "W1-0031",
+     "got": "gate-strength",
+     "resolved_by": "deterministic-rule",
+     "ok": true
+    }
+   ],
+   "must_context": [
+    {
+     "id": "W1-0067",
+     "got": "context",
+     "resolved_by": "deterministic-tangent",
+     "ok": true
+    },
+    {
+     "id": "W1-0126",
+     "got": "context",
+     "resolved_by": "deterministic-tangent",
+     "ok": true
+    }
+   ],
+   "passed": true
+  }
+ },
+ "per_class_absorption": {
+  "bias_vs_movement": {
+   "n": 16,
+   "absorbed_correct": 14,
+   "declined": 0,
+   "absorbed_wrong": 2,
+   "wrong_items": [
+    {
+     "id": "W1-0127",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0174",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    }
+   ],
+   "absorption_rate": 0.875,
+   "routing_rate": 0.0,
+   "wrong_rate": 0.125,
+   "meets_target": true
+  },
+  "walkthrough_narration": {
+   "n": 96,
+   "absorbed_correct": 75,
+   "declined": 0,
+   "absorbed_wrong": 21,
+   "wrong_items": [
+    {
+     "id": "W1-0023",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0035",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0039",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0044",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0073",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0079",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0087",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0096",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0133",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0138",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0148",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0159",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0168",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0175",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0183",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0185",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0200",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0203",
+     "got": "context",
+     "truth": "gate-strength",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0213",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0215",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    },
+    {
+     "id": "W1-0216",
+     "got": "gate-strength",
+     "truth": "context",
+     "resolved_by": "llm-margin"
+    }
+   ],
+   "absorption_rate": 0.7812,
+   "routing_rate": 0.0,
+   "wrong_rate": 0.2188,
+   "meets_target": false
+  }
+ },
+ "economics": {
+  "n_items": 112,
+  "deterministic_resolved": 17,
+  "llm_margin_invoked": 95,
+  "llm_invocation_rate": 0.8482,
+  "tier3_routing_rate_cannot_determine": 0.0,
+  "total_tokens": 72578,
+  "tokens_per_item_overall": 648.0,
+  "tokens_per_llm_item": 764.0
+ },
+ "two_path_tally": {
+  "standalone_correct": 89,
+  "per_class_sum_correct": 89,
+  "agree": true
+ },
+ "determinism_envelope": {
+  "segmentation_exact": {
+   "exact": true,
+   "n": 112
+  },
+  "llm_margin_agreement": "run --determinism to measure"
+ },
+ "_pass": "design-pass-1",
+ "_finding": "cannot-determine routing 0.0 across 112 items despite wired+prompted decline path -> gemma FORCE-DETERMINES. walkthrough_narration 78.1%<85%; bias_vs_movement 87.5% meets. Absorption numbers are force-classify accuracy, not honest absorption. Pass-2 must activate the decline path."
+}

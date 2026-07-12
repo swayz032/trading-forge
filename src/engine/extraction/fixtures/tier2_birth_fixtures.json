@@ -1,0 +1,70 @@
+{
+  "title": "H1 tier-2 discourse-pass birth fixtures (pre-reg §4) -- own frozen fixture set from birth",
+  "frozen": "2026-07-12",
+  "provenance": {
+    "source": "112 DESIGN exemplars of docs/designs/h1-tier2-quarantine-split-2026-07-12.json (design_exemplars), quotes joined via docs/designs/h1-wave1-shakedown-packets-2026-07-12.json quote_anchor.verbatim.",
+    "leakage": "DESIGN carve ONLY. The 77 sealed_eval items were never opened. The 78-held-out is SPENT.",
+    "class_assignment_rule": "extracted_condition_type == WAIT_BIAS -> bias_vs_movement; else -> walkthrough_narration (the narrated-action-in-walkthrough surface)."
+  },
+  "note": "Birth gate: for EACH named class, the gate-fires items must resolve to 'gate-strength' and the context-silent items to 'context' (BOTH polarities per class -- pre-reg §4). LLM-margin items are classified by the real Gemma call WITH their concept siblings as cross-reference (the harness fetches siblings by concept_id). A prompt that fails its own fixtures does not ship. Deterministic-terminal items (exclusion / rule-declaration / tangent) never touch the LLM and are EXACT on re-run.",
+  "classes": [
+    {
+      "class": "bias_vs_movement",
+      "gate_fires": [
+        {"id": "W1-0116", "concept_id": "UBvfsImdI2U", "condition_type": "WAIT_BIAS",
+         "quote": "So, forget shorts. I am not in shorts at all. I don't even care to look for shorts at this moment.",
+         "expect_resolved_by": "deterministic-exclusion",
+         "why": "declared directional EXCLUSION binds to entries -> gate (Wave-1 bias class, gate polarity)"},
+        {"id": "W1-0147", "concept_id": "NMUd0oX_7Pg", "condition_type": "WAIT_BIAS",
+         "quote": "This needs to appear after a clear sharp red move downward.",
+         "expect_label": "gate-strength",
+         "why": "prescriptive precondition that binds to the reversal entry -> gate (margin/LLM)"}
+      ],
+      "context_silent": [
+        {"id": "W1-0122", "concept_id": "UBvfsImdI2U", "condition_type": "WAIT_BIAS",
+         "quote": "now wants to make a move to the opposite end of the candle.",
+         "expect_label": "context",
+         "why": "bare movement expectation, binds to no action -> context (Wave-1 bias class, context polarity)"},
+        {"id": "W1-0053", "concept_id": "sVkmZklJDHI", "condition_type": "WAIT_BIAS",
+         "quote": "Either the price is going to trade up into the range like this or it may trade low into the range like this.",
+         "expect_label": "context",
+         "why": "two-sided movement expectation -> context (margin/LLM)"}
+      ]
+    },
+    {
+      "class": "walkthrough_narration",
+      "gate_fires": [
+        {"id": "W1-0040", "concept_id": "snNkQSyWX4k", "condition_type": "WAIT_RETEST",
+         "quote": "we had price close this candle above both of the averages so it met our Rule now price came back down right here to retest the average so that is our entry",
+         "expect_resolved_by": "deterministic-rule",
+         "why": "narration that explicitly restates the rule / 'that is our entry' -> gate (walkthrough class, gate polarity)"},
+        {"id": "W1-0082", "concept_id": "KXWRtV2LOVc", "condition_type": "WAIT_CONFIRMATION",
+         "quote": "as soon as price closed above this candle you would confirm the order block and enter with the tap right here",
+         "expect_label": "gate-strength",
+         "why": "walkthrough clause that instantiates the confirm-then-enter rule -> gate (margin/LLM)"}
+      ],
+      "context_silent": [
+        {"id": "W1-0078", "concept_id": "KXWRtV2LOVc", "condition_type": "WAIT_SESSION",
+         "quote": "I'm doing this so you guys understand I am not cherry picking anything this is all random",
+         "expect_resolved_by": "deterministic-tangent",
+         "why": "meta aside, no trade content -> context (walkthrough class, context polarity)"},
+        {"id": "W1-0066", "concept_id": "N7uP9V0Iktc", "condition_type": "WAIT_STRUCTURE",
+         "quote": "we got a Apple pre-market high, 5m minute close above, a little retest, and then another retest",
+         "expect_label": "context",
+         "why": "pure result-narration / chart-pointing of a past example -> context (margin/LLM)"}
+      ]
+    }
+  ],
+  "determinism_controls": {
+    "note": "Deterministic terminals must be EXACT on re-run (segmentation envelope, pre-reg §4). These never invoke the LLM.",
+    "must_gate": [
+      {"id": "W1-0075", "quote": "I never take calls under VWAP and I never take puts over VWAP.", "condition_type": "FILTER"},
+      {"id": "W1-0060", "quote": "Because if it gets above VWAP, you can't take puts. That's our rule.", "condition_type": "FILTER"},
+      {"id": "W1-0031", "quote": "the rules for the trade goes as follows if the currency pair... we want to first thing we want to do is see the currency pair close at or above the third standard deviation Binger band", "condition_type": "WAIT_CONFIRMATION"}
+    ],
+    "must_context": [
+      {"id": "W1-0067", "quote": "I've said both in videos. I honestly I've been using the eight... Really no big difference at all.", "condition_type": "WAIT_BIAS"},
+      {"id": "W1-0126", "quote": "honestly, just close the screens and just log off.", "condition_type": "EXIT_HINT"}
+    ]
+  }
+}
