@@ -141,8 +141,10 @@ jobs:
           path: ci/vitest-results.json
           retention-days: 14
 
-      - name: Baseline gate — vitest known-failures (CAPTURE PHASE — advisory; flip to blocking after freezing baseline)
-        continue-on-error: true
+      # BLOCKING (2026-07-12): baseline frozen from CI run 29182590738 (189 known-failing / 12207 collected).
+      # Fails CI on ANY new vitest failure or a collectionFloor breach (<12000). Paydown = shrink
+      # ci/baseline-failures.json over time. RED-proof verified locally (new-failure→RED, floor→RED, 189→GREEN).
+      - name: Baseline gate — vitest known-failures (BLOCKING — new failures fail CI)
         run: node ci/compare-baseline.mjs --suite vitest --results ci/vitest-results.json
 
       - name: Upload coverage artifact

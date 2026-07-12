@@ -1,10 +1,767 @@
 {
   "frozen": true,
   "thresholdVersion": "rails_thresholds_v1",
-  "note": "PLACEHOLDER — capture phase. The vitest.knownFailures list is frozen from the first CI capture run (advisory), then this file is rewritten with reasoned entries and the gate flips to blocking. See docs/hardening-machine-rails plan Wave 1 Track A.",
+  "note": "Node vitest baseline frozen 2026-07-12 from CI run 29182590738 (12207 collected, 189 known-failing). compare-baseline.mjs fails CI on any NEW failure or collectionFloor breach. Paydown: shrink knownFailures over time.",
   "vitest": {
-    "collectionFloor": 1,
-    "knownFailures": []
+    "collectionFloor": 12000,
+    "knownFailures": [
+      {
+        "id": "assert-cross-validated.test.ts > assertCrossValidatedSource empty tags array is not exempt for non-allowed sources",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "audit-log-append-only.test.ts > Migration 0058: audit_log append-only provides a reversible DOWN migration",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "audit-log-append-only.test.ts > audit_log append-only — live DB UPDATE on audit_log row raises 'audit_log is append-only'",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "audit-log-helper.test.ts > insertAuditRow — null correlationId warning fires logger.warn when correlationId is null",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "autonomy-gaps-a8-a9-a11-a12-a13.test.ts > A-13 prop-firm-cookie-refresh runtime-file persistence cookie runtime file path uses .cookie-runtime-<firmId> naming (security: opaque name)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "autonomy-gaps-a8-a9-a11-a12-a13.test.ts > A-13 prop-firm-cookie-refresh runtime-file persistence loadCookiesFromRuntimeFiles fails silently on corrupt JSON",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "autonomy-gaps-a8-a9-a11-a12-a13.test.ts > A-13 prop-firm-cookie-refresh runtime-file persistence loadCookiesFromRuntimeFiles is a no-op when no runtime file exists",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "autonomy-gaps-a8-a9-a11-a12-a13.test.ts > A-13 prop-firm-cookie-refresh runtime-file persistence loadCookiesFromRuntimeFiles loads MFFU cookies from disk when env not set",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "autonomy-gaps-a8-a9-a11-a12-a13.test.ts > A-13 prop-firm-cookie-refresh runtime-file persistence loadCookiesFromRuntimeFiles loads Topstep cookies from disk",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "autonomy-gaps-a8-a9-a11-a12-a13.test.ts > A-13 prop-firm-cookie-refresh runtime-file persistence loadCookiesFromRuntimeFiles skips firm when env already set",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "autonomy-gaps-a8-a9-a11-a12-a13.test.ts > A-13 prop-firm-cookie-refresh runtime-file persistence redactSensitiveEnv masks MFFU_SESSION_COOKIES and TOPSTEP_SESSION_COOKIES",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "b14-survival-integration.test.ts > B14 Pass 2 merge gate: Pass 2B priors → Pass 2A math (live DB) MFFU P_fund_freeze_year is annualised (compounded), not raw 30-day rate",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "b14-survival-integration.test.ts > B14 Pass 2 merge gate: Pass 2B priors → Pass 2A math (live DB) MFFU priors from DB → p_180d strictly less than Topstep (fund_freeze risk)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "b14-survival-integration.test.ts > B14 Pass 2 merge gate: Pass 2B priors → Pass 2A math (live DB) Topstep P_profitable_trader_ban_year is annualised (compounded), not raw 30-day rate",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "backtest-truthiness-emit.test.ts > backtest truthiness emit writes audit_log row when invariants.overall_passed is false",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "broker-router-non-success-discord.test.ts > broker-router — non-success Discord visibility (Pass 4 Track C) Timeout (statusCode=undefined) → notifyWarning with degraded 'unknown' body",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "candidate-backtest-conveyor.test.ts > candidate-backtest-conveyor (a) enqueues one backtest for a zero-backtest CANDIDATE with the real config spread",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "candidate-backtest-conveyor.test.ts > candidate-backtest-conveyor (c) does not double-enqueue when the same strategy is returned by a second tick",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "carter-issue-watcher.test.ts > Migration 0181 — idempotency (pglite dry-run) applies twice without error",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "cf4-cf5-news-resize-and-final-sweep.test.ts > CF5 — check-family-grade-postscript lint script check:family-grade-postscript exits 0 against the post-CF5 codebase",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "deepscan-fixes-c2-h4-h5-h6-h7.test.ts > C2: alert-service Discord auth header logs warn with HTTP status when Discord bot returns 401",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "deepscan-fixes-c2-h4-h5-h6-h7.test.ts > C2: alert-service Discord auth header logs warn with status 403 when bot returns Forbidden",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "deepscan-fixes-c2-h4-h5-h6-h7.test.ts > H5: recheckOllamaHealth resets OLLAMA_HEALTHY to true on healthy response returns healthy:true when /api/tags returns the target model and probe passes",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "deepscan-fixes-c2-h4-h5-h6-h7.test.ts > H6: emitLocalLlmDownSignal aborts EXTRACTION LOST when recheck returns healthy emits logger.info 'EXTRACTION LOST alert aborted' when recheck is healthy",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "deepscan-wiring-fixes.test.ts > Finding #1 — kill-switch _confirmedForceClose failure → audit + CRITICAL kill-switch.ts uses _confirmedForceClose (not fire-and-forget import) for both HALT paths",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "deepscan14-shadow-stage.test.ts > deepscan14 H1 — Gate 2.5 (SHADOW → PAPER) reuses the SAME pure evaluators Gate 2 uses stamps the frozen-policy baseline via freezePolicyForStrategy on the SHADOW→PAPER cron path",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "deepscan14-shadow-stage.test.ts > deepscan14 H3 — 3-strike auto-graveyard counters engage on the SHADOW path the gate-name strings are IDENTICAL to the ones Gate 2 (legacy TESTING→PAPER) uses — same counter key",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "exchange-firm-classifier.test.ts > checkCmeStatus — CME outage classifier (C1 gate) AbortError (timeout) → operational=false, 'Request timed out'",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "exchange-firm-classifier.test.ts > checkCmeStatus — CME outage classifier (C1 gate) fetch throws → operational=false with fetchError",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "exchange-firm-classifier.test.ts > checkCmeStatus — CME outage classifier (C1 gate) non-200 (503) → operational=false, reason mentions HTTP",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "f1-f3-postscript-sweep-and-broadcast-wiring.test.ts > F1 — Family-Grade Postscript Sweep check:family-grade-postscript exits 0 against the post-F1 codebase",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "gate-ingestion-contract.test.ts > buildBacktestArgs — B15 battery flag (G1a) omits --b15-battery when B15_BATTERY_ENABLED is unset (default false)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard advancedModels exposes DeepAR and quantum runtime health",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard dlqHealth block has unresolvedCount, escalatedCount, oldestUnresolvedAgeMs, byCategory (or error)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard each subsystem has a status field",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard memory block has numeric MB fields",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard metrics is an array (empty or with sessions)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard paperSessions block has active / stale / total (or error)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard responseMs is a non-negative number under 10 seconds",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard returns 200 with expected top-level shape",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard scheduler block has jobs array",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard subsystems block contains postgres, ollama, python, n8n keys",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard topology block reports map freshness",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "health-dashboard.test.ts > GET /api/health/dashboard topology exposes proof status summaries and deep-scan engine subsystem entries",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "indicator-params.test.ts > param recovery over the 7 PARAMS_REQUIRED caches (escalation metric) measures explicit-param recovery rate",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "integration-smoke.test.ts > Integration Smoke Tests GET /api/journal returns 200",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "integration-smoke.test.ts > Integration Smoke Tests GET /api/portfolio/heat returns 200",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "integration-smoke.test.ts > Integration Smoke Tests GET /api/strategies returns 200 with array",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "integration-smoke.test.ts > Integration Smoke Tests GET /api/strategies/library returns 200",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "integration-smoke.test.ts > Integration Smoke Tests POST /api/backtests with invalid body returns 400",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "lifecycle-archetype-gateway-gate.test.ts > Pass 4.5 Track B — lifecycle-service.ts gate block source contract gate returns { success: false } on block (not silent skip)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "lifecycle-pass5-paper-deploy-ready.test.ts > Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring in lifecycle-service.ts loads latestBtP2D, latestMcP2D, frozenShadowRow as gate inputs",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "lifecycle-pass5-shadow-paper.test.ts > Pass 5 Track C — SHADOW→PAPER evaluator wiring in lifecycle-service.ts broadcasts SSE on block",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "lifecycle-transitions.test.ts > lifecycle_transitions — live DB FK to strategies exists with NOT NULL constraint",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "lifecycle-transitions.test.ts > lifecycle_transitions — live DB has all expected columns with correct types",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-execution-wiring.test.ts > Admin POST /switch — live_execution calls setExecutionMode(false) and returns on:false, status:PAPER",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-execution-wiring.test.ts > Admin POST /switch — live_execution calls setExecutionMode(true) and returns on:true, status:LIVE when configured",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-execution-wiring.test.ts > Admin POST /switch — live_execution emits an audit row on successful toggle",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-execution-wiring.test.ts > Admin POST /switch — live_execution returns 400 for an unknown switch id",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-execution-wiring.test.ts > Admin POST /switch — live_execution returns 503 and hint message when go-live setup is incomplete",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-execution-wiring.test.ts > Admin POST /switch — live_execution returns 503 when not configured (fail-closed)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Calendar gate — Python spawn storm prevention (F-2) CALENDAR_SAFE_DEFAULT sentinel is defined",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Calendar gate — Python spawn storm prevention (F-2) exports __resetCalendarFailLogForTests for test isolation",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Calendar gate — Python spawn storm prevention (F-2) failure tracker _recordCalendarFailure is defined",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Calendar gate — Python spawn storm prevention (F-2) getCachedSignalCalendarStatus has try/catch wrapping the subprocess call",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Calendar gate — Python spawn storm prevention (F-2) on failure, safe-default is written to cache to prevent re-spawn",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Compliance refresh service — firm ID lowercase (F-5) FIRMS array contains lowercase 'mffu'",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Compliance refresh service — firm ID lowercase (F-5) FIRMS array contains lowercase 'topstep'",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Compliance refresh service — firm ID lowercase (F-5) FIRMS array no longer contains Titlecase 'MFFU' as a string value",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Compliance refresh service — firm ID lowercase (F-5) FIRMS array no longer contains Titlecase 'Topstep' as a string value",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Compliance refresh service — firm ID lowercase (F-5) legacy firms are absent (Apex, FFN, Alpha, Tradeify, Earn2Trade, TPT)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) both layer 2 and 3 have fail-CLOSED error branches",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) contains DLL_HALT_PCT threshold constant",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) contains dll_at_ reason string for layer 2",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) contains trailing_dd_force_close reason string for layer 3",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) imports paperSessions table for live DB query",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) layer 2 queries active sessions by DLL threshold",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) layer 3 compares against TRAILING_DD_BUFFER_DOLLARS",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) no longer contains 'phase_4c_pending' stub text for layer 2",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > Kill Switch — Layer 2+3 real implementation (F-1) no longer contains 'phase_4c_pending' stub text for layer 3",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > compliance_gate.py — MFFU check_violation wiring (F-15) Apex household_max_pa_accounts check is removed",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > compliance_gate.py — MFFU check_violation wiring (F-15) automation_banned check is retained for both MFFU + Topstep",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > compliance_gate.py — MFFU check_violation wiring (F-15) check_violation calls check_hft_limit for MFFU",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > compliance_gate.py — MFFU check_violation wiring (F-15) check_violation calls check_two_percent_rule for MFFU",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "live-fix-sweep.test.ts > compliance_gate.py — MFFU check_violation wiring (F-15) check_violation enforces hedging ban (MNQ+NQ etc)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "m10-m13-recon-and-kasa-guard.test.ts > M10 — A/B routing recon detects missing broker_account row — emits per-orphan warn audit",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "m10-m13-recon-and-kasa-guard.test.ts > M10 — quantum-replay orphan recon finds completed backtests with no replay row — emits warn audit with orphan ids",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "m10-m13-recon-and-kasa-guard.test.ts > M10 — shadow-signal recon shadow-signal recon detects delta > 5% on SHADOW-state strategy",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "mffu-2026-compliance.test.ts > Canonical doc parity (sanity) MFFU 50K commissionPerSide is 0.62 (matches docs/prop-firm-rules-2026-mffu.md)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "mffu-2026-compliance.test.ts > MFFU 2026 Rule 9 — Bi-Weekly Payouts + 80/20 Split MFFU payout cycle is exactly 14 days",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "multi-firm-promotion-service.test.ts > evaluateMultiFirmEligibility firm_rules include max_drawdown_limit from firm-config for all 8 firms",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "obs-fix1-lockout-audit.test.ts > FIX 1 — writeLockoutFromKillEvent: audit row + correlationId emits strategy.lockout_written audit row with correlationId on success",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "obs-fix2-shadow-signal-audit.test.ts > FIX 2 — logShadowSignal: try/catch + audit + correlationId emits signal.shadow_logged audit row with correlationId on success",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "paper-execution-service.commission.test.ts > Round-trip commission arithmetic commission reduces a winning trade correctly",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "paper-execution-service.commission.test.ts > Round-trip commission arithmetic computes correct round-trip for Topstep 1-contract trade",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "paper-execution-service.commission.test.ts > getCommissionPerSide is case-insensitive (TOPSTEP matches topstep)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "paper-execution-service.commission.test.ts > getCommissionPerSide returns 0.37 for Topstep",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass5-lifecycle-wiring.test.ts > Pass 5 Track C — Cron sweep / PATCH parity (structural) both paths use evaluatePaperToDeployReadyGates and write auditLog with auditAction",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass5-lifecycle-wiring.test.ts > Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity blocks with return { success: false } on gate block",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass5-lifecycle-wiring.test.ts > Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity broadcasts SSE event on block",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass5-lifecycle-wiring.test.ts > Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity builds pdrInput with all required flat fields: b14SurvivalTwin, mcRuinCi, b15Battery, walkForwardResults, orchGates, frozenPolicy",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass5-lifecycle-wiring.test.ts > Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity wraps evaluator call in try/catch with fail-CLOSED behavior (F-1 hardening 2026-06-23)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass5-lifecycle-wiring.test.ts > Pass 5 Track C — SHADOW→PAPER audit action parity lifecycle:shadow_to_paper_blocked SSE event is emitted on block",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass5-lifecycle-wiring.test.ts > Pass 5 Track C — SHADOW→PAPER evaluator wiring parity broadcasts SSE event lifecycle:shadow_to_paper_blocked on block",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass5-lifecycle-wiring.test.ts > Pass 5 Track D — TESTING→PAPER stream stop + authority declaration stopStream call is fire-and-forget (async IIFE, non-blocking)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass6-ab-routing.test.ts > Pass 6 Track B — A/B routing source-code analysis (paper-signal-service.ts) routeOrder is only called when routingDecision === 'rl-challenger' AND resolvedAccountId is not null",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "pass7-remote-power-cycle.test.ts > Pass 7 Track B — cron jitter: distinct minute offsets scheduler.ts contains '23 21,22 * * *' for regime-drift-detector",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "placeability-suite.test.ts > PLACEABILITY regression suite — Coverage vs Placeability vs Compilability scores all benchmark caches + prints failure-reason histogram",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "production-convergence.test.ts > production convergence hardening 0A health monitor waits for all probes and persists alerts through the API",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "production-convergence.test.ts > production convergence hardening 5H reddit scout keeps the scout-ideas contract and dedupes against journal fingerprints",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "production-convergence.test.ts > production convergence hardening 8B source quality review uses the stable source-stats endpoint and valid code syntax",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "production-convergence.test.ts > production convergence hardening all n8n HTTP request nodes enforce baseline resilience controls",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "scout-extract-confluence.test.ts > Wave 23F — scout-extract confluence gate fields all 5 new fields populated → route emits them correctly",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "scout-extract-confluence.test.ts > Wave 23F — scout-extract confluence gate fields invalid enum token in confluence_factors → route filters it out silently (server-side whitelist)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "scout-extract-confluence.test.ts > Wave 23F — scout-extract confluence gate fields none of the 5 new fields present → route succeeds; fields absent from output",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "scout-extract-confluence.test.ts > Wave 23F — scout-extract confluence gate fields source_claim_win_rate: null → accepted and emitted as null",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "scout-extract.test.ts > POST /api/agent/scout-extract keeps MES strategy and maps DSL → strict scout shape",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "scout-extract.test.ts > POST /api/agent/scout-extract mixed batch: keeps MES (1×) and remaps ES → MES (10×)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "spec-onboarding-service.bandc.test.ts > spec-onboarding-service — Band C condition-family-compiler routing OVERLAY-VISIBLE: a condition-compiled onboarded strategy's REGISTERED name makes apply_eligibility_gate's Mode A/B toggle meaningful (closes the B2-class overlay-bypass bug)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "startup-config-check-deepscan17.test.ts > startup-config-check — deepscan17 G-1 (boot launcher self-check) isBootLauncherCheckApplicable / isBootLauncherActive pure predicates match env",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "startup-config-check-deepscan17.test.ts > startup-config-check — deepscan17 G-1 (boot launcher self-check) warns BOOT_LAUNCHER_NOT_ACTIVE + fires notifyCritical when NODE_ENV=production and marker unset (native platform)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "startup-config-check-deepscan17.test.ts > startup-config-check — deepscan17 G-1 daily reminder (runBootConfigReminderCheck) re-fires notifyCritical + notifyWarning on each tick while both gaps persist",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "startup-config-check-deepscan17.test.ts > startup-config-check — deepscan17 G-1 reminder scheduler (start/stop) re-fires the boot-launcher alert 24h after start() while the gap persists, and stop() halts further ticks",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "startup-config-check-deepscan17.test.ts > startup-config-check — deepscan17 G-1 reminder scheduler (start/stop) start() is idempotent — calling it twice does not double-schedule",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "startup-config-check-deepscan18.test.ts > startup-config-check — deepscan18 G-2 attemptBootLauncherAutoApply VITEST safety rail checkStartupSecrets() does not crash and falls back to the original alert path while under vitest",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "startup-config-check-pass1.test.ts > checkStartupSecrets — Pass 1 Track C produces no warnings when all required secrets are valid",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "strategy-assignment-service.test.ts > broker-router: real-service coverage (3 tests) 17. disabled account returns account_not_found reason (security mask)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "strategy-assignment-service.test.ts > broker-router: real-service coverage (3 tests) 18. concurrent routeOrder calls both write audit rows (no corruption)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "strategy-assignment-service.test.ts > broker-router: real-service coverage (3 tests) 19. DB select failure returns internal_error reason and audit row still written",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "strategy-assignment-service.test.ts > cross-cutting real-service tests (4 tests) 29. broker-router returns pipeline_paused reason when pipeline is paused",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_backtest_staleness.test.ts > LifecycleService — HIGH #14: backtest staleness gate blocks promotion when backtest is 31 days old (default 30-day limit)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_backtest_staleness.test.ts > LifecycleService — HIGH #14: backtest staleness gate respects BACKTEST_STALENESS_DAYS=7 env override — blocks 8-day-old backtest",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_invariant_blocks_promotion.test.ts > LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTING→PAPER allows TESTING→PAPER when invariants.overall_passed=true",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_invariant_blocks_promotion.test.ts > LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTING→PAPER allows promotion when resultExtras is null (legacy backtest without invariants)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_invariant_blocks_promotion.test.ts > LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTING→PAPER blocks TESTING→PAPER when invariants.overall_passed=false and writes invariant_blocked audit row",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_invariant_blocks_promotion.test.ts > LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTING→PAPER writes parity_shadow_warn audit row (advisory) when parity_shadow.passed=false but still promotes",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_pass2c_lifecycle_fixes.test.ts > F-12: Frankenstein gate applies to CANDIDATE→PAPER fast-track Frankenstein gate comment mentions CANDIDATE",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_pass2c_lifecycle_fixes.test.ts > F-12: Frankenstein gate applies to CANDIDATE→PAPER fast-track Frankenstein gate condition includes CANDIDATE as fromState",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "test_pass2c_lifecycle_fixes.test.ts > F-6: PAPER→DEPLOY_READY drift check infra error fails-closed drift check catch block includes continue after audit row (blocks promotion)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "track-a-fixes.test.ts > F-4: buildDrawdownDistance — real DLL wiring applies firm-specific DLL percentages (mffu=2%, topstep=5%)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "w01-db-backup-service.test.ts > db-backup-service: runDbBackup() 2. disabled via DB_BACKUP_ENABLED=false → status=disabled, no audit rows",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "w19-databento-schemas.test.ts > contract-specs-service getContractSpec falls back to hardcoded when DB is empty",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "w19-databento-schemas.test.ts > contract-specs-service hardcoded reference has correct multipliers",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "w3-3-ollama-health-recheck-lineage.test.ts > recheckOllamaHealth — Group A A1: stuck false→true after successful 2-phase probe",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "w3-3-ollama-health-recheck-lineage.test.ts > recheckOllamaHealth — Group A A6: model name with prefix match counts (e.g. gemma4:e2b registered as gemma4)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave-a-observability-corr-null.test.ts > correlationId: null rot — scoped files must have zero literal null writes src/server/scheduler.ts has no literal 'correlationId: null'",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave-a-observability-cron-concurrent.test.ts > scheduler.ts — cronJobsConcurrent wiring in withRetry withRetry calls cronJobsConcurrent.dec() inside a finally block",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23f-p-q-diversity.test.ts > W23F.V operator-curated query set (replaces W23F.P concept groups) operator set has exactly 8 queries (no scope creep)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23g-confluence-dsl.test.ts > W23G.11 backward compat: legacy single-indicator strategy rsi_reversal legacy → still compiles to rsi grammar unchanged",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23g-confluence-dsl.test.ts > W23G.11 direction=short with confirming indicators short-only strategy emits short clause AND-chained, long stays sentinel",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23g-confluence-dsl.test.ts > W23G.11 min_factors_satisfied < total (N-of-M) compiles with AND-chain (conservative fallback) and logs note",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23g-confluence-dsl.test.ts > W23H.1 audit acceptance: MTF strategy config (active gate) MTF strategy grammar contains bias_condition AND-gated with primary signal",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23g-extractor-tune.test.ts > W23G.7 — single-pass extraction (12K window) test 4: 10K transcript, strategy in middle 6K → first pass (12K window) succeeds, fallback NOT fired",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23g-extractor-tune.test.ts > W23G.7 — single-pass extraction (12K window) test 5: 15K transcript, empty first pass → chunked fallback fires with 3 chunks (4 total calls)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23g-extractor-tune.test.ts > W23G.7 — single-pass extraction (12K window) test 6: success response contains extraction_mode and tokens_estimated fields",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave23h-c1-cme-fail-closed.test.ts > Wave 23H Fix 1 — C1 CME Outage Layer 6 fail-CLOSED Layer 6: exception inserts audit_log row with action=kill_switch.c1_cme_outage_eval_failed",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave25-liquidity-map.test.ts > Cron — liquidity-map-refresh registration (static check) scheduler.ts source contains liquidity-map-refresh cron registration",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave26-pass-g-b3-observability.test.ts > Wave 26 Pass G B3 — confluence-quality-audit.ts source contracts exports AUTO_FLOOR_FACTORS set",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave26-pass-l-minimal-extractor.test.ts > Pass L #7 — Discord embed uses recipe format embed builds numberedRecipe via map().join() with 1., 2., 3.",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave26-pass-l-minimal-extractor.test.ts > Pass L #7 — Discord embed uses recipe format embed shows 💰 Target line",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave26-pass-l-minimal-extractor.test.ts > Pass L #7 — Discord embed uses recipe format embed shows 🛑 Stop with framework-default text",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave26-pass-l-minimal-extractor.test.ts > Pass L #7 — Discord embed uses recipe format embed uses 'Best when the market is' (recipe-style intro)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave26-pass-l-minimal-extractor.test.ts > Pass L #7 — Discord embed uses recipe format embed uses 'How to take the trade' header for numbered steps",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave26-pass-l-minimal-extractor.test.ts > Pass L #9 Tweak 2 — MCL pre-EIA cron registered cron schedule is '0 14,15 * * 3' (Wed, double-fire UTC for DST)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave26-transcript-extractor-gemma4-routing.test.ts > wave26-transcript-extractor-gemma4-routing T11: checkTranscriptExtractorOllamaHealth with gemma4 in tags sets OLLAMA_HEALTHY=true",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 1. Happy path: 5 DEPLOYED strategies, 1 drifted → only that one demoted",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 10. dryRun=true → drift detected but no demotion + no Discord + dry_run audit emitted",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 11. Family-grade Discord: appendFamilyGradePostscript called on drift",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 12. Non-DEPLOYED strategies are not queried (only DEPLOYED WHERE clause)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 13. regime_drift_detector.completed summary audit emitted with counts",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 2. DST guard at ET-hour=17 → skip + skipped_dst_guard audit",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 3. DST guard at ET-hour=19 → skip + skipped_dst_guard audit",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 5. Pipeline PAUSED: detector fires because it is in _PIPELINE_GATE_EXEMPT",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 6. regime_trained_on IS NULL (legacy) → skipped + legacy_strategy_skipped audit",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 7. 4 consecutive different-regime days → NO demotion (threshold is exactly 5)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 8. 5 consecutive different-regime days → demotion fires + lifecycle.regime_drift_demotion + Discord WARN",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-pass-b3-regime-drift.test.ts > runRegimeDriftDetector — regime drift detection 9. 5 days mixed (3 different, 2 same as trained) → NO demotion",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-prod-hardening-rl-training-runner.test.ts > Audit emission — subprocess failure exit code != 0 increments consecutive failure count",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-prod-hardening-rl-training-runner.test.ts > Audit emission — subprocess failure non-zero exit code rejects the promise",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-prod-hardening-rl-training-runner.test.ts > Audit emission — successful enqueue successful run includes durationMs",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-prod-hardening-rl-training-runner.test.ts > Audit emission — successful enqueue successful run resolves with status=completed",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-prod-hardening-rl-training-runner.test.ts > Circuit breaker — resets on success failure count returns to 0 after a successful run",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-prod-hardening-rl-training-runner.test.ts > Seed field — regression anchor for seed plumbing spawn args include --seed flag with the derived seed value",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-prod-hardening-rl-training-runner.test.ts > Seed field — regression anchor for seed plumbing spawn args include --strategy-id matching the input strategyId",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave29-prod-hardening-rl-training-runner.test.ts > Timeout — SIGKILL path calls proc.kill when subprocess never exits (timeout fires)",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave9-archetype-mechanic-coverage.test.ts > Wave 9 — ARCHETYPE_MECHANIC_KEYWORDS full coverage counts match: 38 registry entries, 38 mechanic keyword entries",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave9-archetype-mechanic-coverage.test.ts > Wave 9 — ARCHETYPE_MECHANIC_KEYWORDS full coverage every ARCHETYPE_REGISTRY key has a ARCHETYPE_MECHANIC_KEYWORDS entry",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave9-cv-guard-wiring.test.ts > Wave 9 P2D: evolution-service — tag propagation logic parent without cross-validated tag causes assertCrossValidatedSource to throw",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      },
+      {
+        "id": "wave9-zombie-archive.test.ts > Wave 9 — zombie strategy archive backfill backfills archived_at + archive_reason from archive tags; leaves clean rows untouched",
+        "reason": "pre-existing failing at 2026-07-12 Node baseline freeze (hardening-rails Wave 1 Track A); mix of integration/live-service + unit tests; triage + paydown pending (see AGENT-LOGS)"
+      }
+    ]
   },
   "pytest": {
     "collectionFloor": 1,
