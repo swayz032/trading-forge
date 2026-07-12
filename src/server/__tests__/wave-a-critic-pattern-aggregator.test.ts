@@ -96,8 +96,11 @@ function buildInsertMock(): void {
   }));
 }
 
-const KILL_SWITCH_DISABLED = [{ currentValue: "false" }];  // kill switch OFF  → halts prod
-const KILL_SWITCH_ENABLED  = [{ currentValue: "true" }];   // kill switch ON   → proceeds
+// auto_patch_loop_enabled is the numeric 3-mode contract (learning-loop-mode.ts): 0=OFF, 1=OBSERVE,
+// 2=AUTOPILOT; autonomousOn = mode>=2. The pre-3-mode booleans "false"/"true" now parse to NaN→OFF,
+// so "true" no longer proceeds (fail-closed HALT). Use the numeric modes.
+const KILL_SWITCH_DISABLED = [{ currentValue: "0" }];  // OFF (mode 0)       → halts prod
+const KILL_SWITCH_ENABLED  = [{ currentValue: "2" }];  // AUTOPILOT (mode 2) → proceeds
 const FIVE_CRITIQUES = Array.from({ length: 5 }, (_, i) => ({
   id: `crit-${i}`, grade: "A",
   technicalDiagnosis: {
