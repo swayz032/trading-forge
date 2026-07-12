@@ -44,12 +44,14 @@ describe("deep-scan #2 — adaptive exit paper wiring", () => {
     expect(SIGNAL).toMatch(/exitPlanConfig:\s*\(strategy\.exitPlanConfig/);
   });
 
-  it("(B) openPosition derives the exit-plan R-basis stop from actualEntry ∓ atr×2.0 when omitted", () => {
+  it("(B) openPosition derives the exit-plan R-basis stop when the caller omits it", () => {
     expect(EXEC).toContain("resolvedExitBasisStop");
-    // the derivation: explicit caller stop, else actualEntry ∓ atr*2.0 (matches precedence-2)
+    // explicit caller stop wins; else derive from ATR
     expect(EXEC).toMatch(/adaptiveInput\?\.entry\?\.stop/);
-    expect(EXEC).toMatch(/actualEntry\s*-\s*params\.atr\s*\*\s*2\.0/);
-    expect(EXEC).toMatch(/actualEntry\s*\+\s*params\.atr\s*\*\s*2\.0/);
+    // fresh-scan HIGH#2 (2026-07-12): ADAPTIVE strategies derive min(ceiling, atr*1.5) to match the
+    // backtester's _apply_adaptive_management; static_styleC keeps atr*2.0. (Was atr*2.0 for both.)
+    expect(EXEC).toMatch(/Math\.min\(getStopCeilingPts\(params\.symbol\),\s*params\.atr\s*\*\s*1\.5\)/);
+    expect(EXEC).toMatch(/params\.atr\s*\*\s*2\.0/); // static_styleC branch still present
   });
 
   it("(B) the managed initialStopPrice uses the SAME resolved basis (zero drift)", () => {

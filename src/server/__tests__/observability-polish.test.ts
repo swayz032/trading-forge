@@ -108,8 +108,9 @@ describe("4.11 broadcastSSE — sequence numbers and ring buffer", () => {
       "utf8"
     );
 
-    // id: field must be present in broadcast message
-    expect(src).toMatch(/id: \$\{seq\}/);
+    // id: field must be present in broadcast message. fresh-scan HIGH#8 (2026-07-12): the id is now
+    // per-boot-scoped `<bootId>.<seq>` so a server restart is detectable on reconnect.
+    expect(src).toMatch(/id: \$\{SSE_BOOT_ID\}\.\$\{seq\}/);
     // Ring buffer constant and structure must exist
     expect(src).toMatch(/RING_BUFFER_SIZE/);
     expect(src).toMatch(/ringBuffer/);
