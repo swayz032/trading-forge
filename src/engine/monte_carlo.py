@@ -2165,9 +2165,21 @@ def run_monte_carlo(
                     result["risk_metrics"]["probability_of_ruin_ci"] = authoritative_ci
                     result["bca_confidence_intervals"]["probability_of_ruin_ci"] = authoritative_ci
                 else:
-                    # No breach masks available (edge case: all firms returned errors)
+                    # No breach masks available (edge case: firms WERE configured but every one
+                    # returned an error). deep-scan 2026-07-11 MED fix: previously this wrote the
+                    # terminal<=0 fallback WITHOUT ruin_unavailable=True, so the B14 gate (b14-ci-gate.ts)
+                    # read the optimistic terminal-basis ruin as a VALID firm-breach estimate and could
+                    # PASS a strategy — fail-OPEN. Mirror the no-firms path below: flag
+                    # ruin_unavailable=True so the gate takes the legacy_ruin_scalar_fallback path and
+                    # explicitly logs the gap, and preserve the terminal data as a diagnostic-only key.
                     _fallback = dict(cis.get("probability_of_ruin_ci", cis.get("probability_of_ruin", {})))
                     _fallback["ruin_basis"] = "terminal_negative_no_firm"
+                    result["risk_metrics"]["terminal_negative_ci"] = dict(_fallback)
+                    _fallback["ruin_unavailable"] = True
+                    _fallback["ruin_basis_note"] = (
+                        "All configured prop-firm models returned errors for this MC run; "
+                        "firm-breach ruin CI is unavailable (not an optimistic pass)."
+                    )
                     result["risk_metrics"]["probability_of_ruin_ci"] = _fallback
                     result["bca_confidence_intervals"]["probability_of_ruin_ci"] = _fallback
             else:
