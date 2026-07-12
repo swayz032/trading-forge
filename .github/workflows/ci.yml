@@ -126,9 +126,12 @@ jobs:
       # test IDs (newFailures[]) to the log. Those get frozen — each with a reason — into
       # ci/baseline-failures.json, then the gate step flips to BLOCKING (remove continue-on-error)
       # so only NEW failures (or a collection-floor drop) fail CI. Known failures are quarantined.
-      - name: Run vitest with coverage (baseline-gated)
+      - name: Run vitest → JSON report for baseline (advisory)
         continue-on-error: true
-        run: npx vitest run --coverage --reporter=default --reporter=json --outputFile.json=ci/vitest-results.json
+        run: |
+          npx vitest run --reporter=json > ci/vitest-results.json || true
+          echo "--- vitest-results.json bytes: $(wc -c < ci/vitest-results.json 2>/dev/null || echo MISSING) ---"
+          head -c 400 ci/vitest-results.json 2>/dev/null || true
 
       - name: Upload vitest results (baseline capture/diff)
         uses: actions/upload-artifact@v4
