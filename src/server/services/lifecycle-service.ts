@@ -1263,10 +1263,13 @@ export class LifecycleService {
     // Pass 5 Track C: SHADOW → PAPER evaluator in _promoteStrategyInner
     if (fromState === "SHADOW" && toState === "PAPER") {
       try {
-        const { evaluateShadowToPaperGate } = await import("../lib/shadow-to-paper-gate.js");
+        const { evaluateShadowToPaperGate, getMinSampleSize: _getMinSampleManual } = await import("../lib/shadow-to-paper-gate.js");
         const correlationId = options.correlationId ?? randomUUID();
         const { loadDivergenceInputs: loadDiv } = await import("../lib/shadow-signal-divergence-loader.js");
-        const divInputs = await loadDiv(id);
+        // HIGH follow-up (freshscan6 grade): load getMinSampleSize() rows, not a hardcoded 20 — otherwise
+        // raising SHADOW_DIVERGENCE_MIN_SAMPLE above 20 makes this manual PATCH path permanently fail-closed
+        // (evaluateShadowToPaperGate needs ≥ min-sample loaded rows to ever pass). Mirrors the cron loader fix.
+        const divInputs = await loadDiv(id, _getMinSampleManual());
         const shadowGateResult = await evaluateShadowToPaperGate({
           strategyId: id,
           shadowSignals: divInputs.shadowSignals,

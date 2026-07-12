@@ -55,13 +55,14 @@ function makeSessionRow(opts: {
   accountKey?: string;
   lossToday: number;
   todayKey: string;
+  status?: "active" | "stopped" | "paused";
   startingCapital?: number;
   currentEquity?: number;
   peakEquity?: number;
   realizedPeakEquity?: number;
 }) {
   const {
-    id, firmId, accountKey, lossToday, todayKey,
+    id, firmId, accountKey, lossToday, todayKey, status = "active",
     startingCapital = 50_000, currentEquity = 50_000, peakEquity = 50_000, realizedPeakEquity = 50_000,
   } = opts;
   const dailyPnlBreakdown = lossToday > 0 ? { [todayKey]: -lossToday } : {};
@@ -70,7 +71,7 @@ function makeSessionRow(opts: {
     config: accountKey ? { account_key: accountKey, max_positions: 1 } : { max_positions: 1 },
     startingCapital, currentEquity, peakEquity, realizedPeakEquity,
     dailyPnlBreakdown,
-    status: "active",
+    status,
   };
 }
 
@@ -113,6 +114,23 @@ describe("deepscan18 C-C2: checkRiskGate daily-loss gate is account-scoped, not 
   afterEach(async () => {
     const { __resetDailyLossCacheForTests } = await import("./paper-risk-gate.js");
     __resetDailyLossCacheForTests();
+  });
+
+  it("freshscan6 MED: a STOPPED session's realized loss STILL counts toward the account backstop", async () => {
+    // Same account: an active session (-$2,000) + a stopped session (-$3,500). The stopped session's
+    // realized loss is still today's firm exposure. Pre-fix the aggregate filtered status="active" only,
+    // so it saw only -$2,000 (< $5,000) → ALLOWED, silently exceeding the $5,000 account ceiling. Post-fix
+    // it aggregates active+stopped+paused → -$5,500 ≥ $5,000 → BLOCKED. (The mock returns both sessions
+    // for the aggregate query, simulating the inArray(DLL_AGGREGATE_SESSION_STATUSES) result.)
+    const activeSess = makeSessionRow({ id: "sess-act", firmId: "topstep", accountKey: "acct-T", lossToday: 2000, todayKey });
+    const stoppedSess = makeSessionRow({ id: "sess-stop", firmId: "topstep", accountKey: "acct-T", lossToday: 3500, todayKey, status: "stopped" });
+    wireDbMock(activeSess, [activeSess, stoppedSess]);
+
+    const { checkRiskGate } = await import("./paper-risk-gate.js");
+    const result = await checkRiskGate("sess-act", "MES", 6);
+
+    expect(result.allowed).toBe(false);
+    expect(result.check).toBe("global_daily_loss");
   });
 
   it("Account A ($3,000 loss) is ALLOWED even though Account B ALSO lost $3,000 (combined $6,000 > $5,000)", async () => {
