@@ -440,6 +440,8 @@ export async function routeLiveExitPartial(params: {
     price,
     strategyId: ctx.strategyId,
     barTimestamp,
+    // fresh-scan HIGH#5: per-leg idempotency discriminator (TP1/TP2) so equal-qty market exits don't collide.
+    idempotencyTag: exitType,
   };
 
   return dispatchRouteOrder(
@@ -494,6 +496,8 @@ export async function routeLiveExitModify(params: {
     stopPrice: newStopPrice,
     strategyId: ctx.strategyId,
     barTimestamp,
+    // fresh-scan HIGH#5: per-leg tag (BE_MOVE/TRAIL); distinct stopPrice already separates successive trails.
+    idempotencyTag: modifyType,
   };
 
   return dispatchRouteOrder(
@@ -547,6 +551,9 @@ export async function routeLiveFlatten(params: {
     orderType: "market",
     strategyId: ctx.strategyId,
     barTimestamp,
+    // fresh-scan HIGH#5: the flatten's reason (TIME_STOP_1555 / DLL_FORCE_CLOSE) distinguishes the EOD
+    // hard-flatten from an equal-qty market TP leg → the 15:55 flatten is no longer deduped after TP1.
+    idempotencyTag: flattenReason,
   };
 
   return dispatchRouteOrder(

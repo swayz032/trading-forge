@@ -43,6 +43,18 @@ export interface WebhookSignal {
    * Optional — when absent the client falls back to strategyId-ticker-action.
    */
   barTimestamp?: string;
+
+  /**
+   * fresh-scan HIGH#5 (2026-07-12): a per-leg discriminator folded into the content-hash idempotency
+   * fallback so distinct exit legs on one position get DISTINCT keys. A closing position fires many
+   * exits that all carry action="exit_long", the SAME account/strategy/ticker, and (for the canonical
+   * Style C 33/33/34 base-9) the SAME quantity + no price/barTimestamp — so the qty/price/stop/orderType
+   * hash alone still collided, causing the broker to dedup TP2 / trail / the 15:55 hard-flatten after
+   * TP1. The executor sets this to the leg type ("TP1" | "TP2" | "TIME_STOP_1555" | "BE_MOVE" | "TRAIL"
+   * | flattenReason), which is distinct per leg but stable across a retry of the same leg (so a genuine
+   * redelivery still dedups). Optional — absent for entries and legacy callers.
+   */
+  idempotencyTag?: string;
 }
 
 // ─── Action mapping ───────────────────────────────────────────────────────────

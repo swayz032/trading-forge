@@ -1400,7 +1400,10 @@ export async function routeOrder(
         : `content_${createHash("sha256")
             .update(
               `${accountId}|${payload.strategyId ?? signal.strategyId ?? "tf"}|${signal.ticker}|${signal.action}` +
-                `|${signal.quantity ?? ""}|${signal.price ?? ""}|${signal.stopPrice ?? ""}|${signal.orderType ?? ""}`,
+                `|${signal.quantity ?? ""}|${signal.price ?? ""}|${signal.stopPrice ?? ""}|${signal.orderType ?? ""}` +
+                // fresh-scan HIGH#5 (2026-07-12): the per-leg tag distinguishes equal-quantity MARKET
+                // exit legs (TP1/TP2/15:55-flatten all hash identically without it → EOD flatten deduped).
+                `|${signal.idempotencyTag ?? ""}`,
               "utf8",
             )
             .digest("hex")
