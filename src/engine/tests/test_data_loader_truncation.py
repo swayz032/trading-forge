@@ -79,6 +79,28 @@ def test_no_requested_window_is_backward_compatible():
     assert not _has_trunc(r), "omitting the requested window must not emit a truncation warning"
 
 
+def test_hard_fail_surfaces_requested_window_truncated_on_report(monkeypatch):
+    # freshscan9 MED: the load_ohlcv consumer re-derives "critical" from report fields; it must be able to
+    # see the truncation verdict, not just passed=False. Under DATA_TRUNCATION_HARD_FAIL=true the report
+    # must carry requested_window_truncated=True (the field the consumer reads to REFUSE), else the operator's
+    # opt-in hard-fail silently proceeds on a truncated span (coverage_pct stays ~100% on the returned window).
+    monkeypatch.setenv("DATA_TRUNCATION_HARD_FAIL", "true")
+    ts = _dense_dt(2015, 2018)
+    df = pl.DataFrame({
+        "ts_event": ts,
+        "open": [1.0] * len(ts), "high": [2.0] * len(ts),
+        "low": [0.5] * len(ts), "close": [1.5] * len(ts), "volume": [10] * len(ts),
+    })
+    r = validate_bars(df, "ES", "daily", requested_start="2008-01-01", requested_end="2020-12-31")
+    assert r.requested_window_truncated is True
+    assert r.passed is False
+
+    # Warn-only default: field False, passed unaffected by truncation.
+    monkeypatch.delenv("DATA_TRUNCATION_HARD_FAIL", raising=False)
+    r2 = validate_bars(df, "ES", "daily", requested_start="2008-01-01", requested_end="2020-12-31")
+    assert r2.requested_window_truncated is False
+
+
 def test_warn_only_default_does_not_flip_passed(monkeypatch):
     # A dense frame that PASSES coverage, but truncated vs the requested window. Default (warn-only)
     # must leave passed unaffected by truncation; hard-fail opt-in flips it.

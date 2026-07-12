@@ -451,13 +451,16 @@ export async function runDailyReconciliation(
         correlationId: reconRunId,
       });
 
+      // LOW (freshscan9 2026-07-12): carry the recon run's correlationId into the Discord alert so the
+      // MOST critical recon event (data-fetch-error RED) is reconstructable Discord→DB — the fail-closed
+      // path dropped it while the failClosedResult above (and the non-fail-closed alerts) carry it.
       await AlertFactory.criticalReconciliationMismatch(reconDateStr, 1, [
         {
           source: "data_fetch",
           expected: "success",
           actual: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
         },
-      ]);
+      ], reconRunId);
 
       return failClosedResult;
     }

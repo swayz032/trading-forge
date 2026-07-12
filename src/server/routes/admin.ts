@@ -1188,6 +1188,12 @@ adminRoutes.get("/scheduler/jobs", async (req, res) => {
 
 // ─── POST /scheduler/jobs/:name/enable — Re-enable a disabled job ──
 adminRoutes.post("/scheduler/jobs/:name/enable", async (req, res) => {
+  // MED (freshscan9 2026-07-12): office-control authority guard — re-enabling a scheduler job is a
+  // pipeline-mutating control-plane action (reverses an operator disable or re-arms a job the health
+  // system quarantined). Its sibling /disable got this guard in freshscan5 and /harsh-regime in freshscan8;
+  // /enable was the last unguarded scheduler-mutation route → a relay-Bearer-only caller (no operator
+  // cookie) could re-arm a deliberately-disabled cron. Closes the last hole in this security-parity class.
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const { enableJob } = await import("../scheduler.js");
     const enabled = enableJob(req.params.name);

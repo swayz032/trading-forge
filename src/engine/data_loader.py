@@ -859,6 +859,7 @@ def validate_bars(
         dataset_hash="",
         warnings=warn_list,
         passed=passed,
+        requested_window_truncated=_requested_window_truncated,
     )
 
 
@@ -1222,6 +1223,15 @@ def load_ohlcv(
         if quality_report.coverage_pct < hard_floor:
             critical.append(
                 f"coverage {quality_report.coverage_pct:.1f}% below hard floor {hard_floor:.0f}%"
+            )
+        # MED (freshscan9 2026-07-12): honor the requested-window truncation hard-fail. passed=False can be
+        # set by truncation alone (DATA_TRUNCATION_HARD_FAIL=true), but coverage_pct is computed on the
+        # RETURNED window so it stays ~100% and none of the 4 checks above fire → critical stayed [] and the
+        # backtest silently ran on a truncated span (missing e.g. the GFC) with a green-ish report. Treat the
+        # opt-in truncation hard-fail as critical so load_ohlcv REFUSES, matching passed=False's own derivation.
+        if getattr(quality_report, "requested_window_truncated", False):
+            critical.append(
+                "requested-window truncation (DATA_TRUNCATION_HARD_FAIL=true) — backtest span is shorter than requested"
             )
         if not critical:
             # Soft-only failure (e.g. coverage 60% with no critical issues) —

@@ -724,6 +724,12 @@ class DataQualityReport(BaseModel):
     dataset_hash: str = ""
     warnings: list[str] = []
     passed: bool = True
+    # MED (freshscan9 2026-07-12): surface the requested-window truncation verdict onto the report so the
+    # load_ohlcv consumer (which re-derives "critical" from specific fields) honors it when
+    # DATA_TRUNCATION_HARD_FAIL=true. Previously it lived only as a local var forcing passed=False, but the
+    # consumer's critical-derivation omitted it → the operator's opt-in hard-fail silently proceeded on a
+    # truncated span. Only ever True when DATA_TRUNCATION_HARD_FAIL=true AND truncation was detected.
+    requested_window_truncated: bool = False
 
 
 # ─── Monte Carlo Request ─────────────────────────────────────────
