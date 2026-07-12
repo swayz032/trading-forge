@@ -162,7 +162,7 @@ _RE_RULE_DECL = re.compile(
 #     cross-reference binding, and to keep tangent/nav terminals honest).
 _RE_PRESCRIPTIVE = re.compile(
     r"what\s+(?:we'?re|we\s+are|you'?re|you\s+are)\s+looking\s+for"
-    r"|\byou\s+need\b|\bwe\s+need\b|\byou\s+want\b|\bwe\s+want\b|\bneeds\s+to\b"
+    r"|\byou\s+need\b|\bwe\s+need\b|\byou\s+want\b|\bwe\s+want\b"
     r"|\bwait\s+for\b|\byou\s+wait\b|we'?re\s+going\s+to\s+wait|going\s+to\s+wait\s+for"
     r"|\byou\s+would\b|in\s+order\s+for\b|\bhas\s+to\b|\bmust\b|\bhave\s+to\b"
     r"|step\s+(?:number|one|two|three|1|2|3)|the\s+reason\s+why"
@@ -283,16 +283,28 @@ def is_rule_or_exclusion_frame(text: str, condition_type: Optional[str] = None) 
 _OLLAMA_URL = "http://localhost:11434/api/chat"
 _GEMMA_MODEL = "gemma4:e4b-it-qat"
 
-# CONFORMANCE REBUILD (2026-07-12): the decline path is STRUCTURAL and PRE-CALL,
-# NOT a model judgment. The prior build's tunable `ambiguous` clause_kind ("if
-# unsure say ambiguous") was an absorption-tuning escape hatch in a conformance
-# costume (budget-ruling gaming guard) -- it is REMOVED. `cannot-determine` now
-# fires ONLY in `classify_item`, BEFORE gemma is invoked, when the cross-reference
-# binding resolver returns NO anchor (a deterministic existence check on the
-# concept's rule/exclusion siblings). Once an anchor exists, the model MUST commit
-# to gate-strength or context -- it has no decline option. This keeps the pre-reg
-# §1 IFF honest AND makes the decline gate cleanly ablatable (removing it sends the
-# unbound items back to gemma, which can only RAISE absorption -- never lower it):
+# FINAL CORRECTED CONFORMANCE REBUILD (2026-07-12): the prior rebuild VOIDed by
+# REMOVING the `ambiguous` enum option (5 -> 4). Removing an enum OPTION perturbs
+# the constrained-sampling probability distribution over the REMAINING options and
+# silently shifted the gate/context boundary on borderline items (16 flips, +6.25pp
+# bias / +5.2pp walkthrough) even though `ambiguous` was never emitted in pass-1
+# (routing 0.0). THE LAW: the schema IS part of the decision boundary; conformance
+# edits go in POST-PROCESSING, never the schema. So:
+#   (1) the 5-option schema/prompt/`_derive_label` are RESTORED byte-identical to
+#       pass-1 -- the enum, the constrained-sampling distribution, and therefore the
+#       gate/context boundary are UNPERTURBED (the 16 flips do not reappear);
+#   (2) the decline is achieved STRUCTURALLY and PRE-CALL in `classify_item`: when
+#       the cross-reference binding resolver returns NO anchor, `cannot-determine`
+#       is decided BEFORE gemma is invoked (a deterministic existence check on the
+#       concept's rule/exclusion siblings -- no threshold, no tunable, no prompt
+#       guidance). This is the ablation-verified direction-safe conformance gate;
+#   (3) the model still MAY emit `ambiguous` (its distribution is unperturbed), and
+#       any EMITTED `ambiguous` is NEUTRALIZED in `_derive_label` -> `cannot-determine`
+#       (routes to tier-3; strictly subtractive on absorption, never additive). On
+#       the design pool this neutralizer is DORMANT (pass-1 emitted `ambiguous` 0
+#       times); if it ever fires, the schema has shifted and the run voids by its
+#       own evidence.
+# The pre-reg §1 IFF, encoded literally:
 #   narrated action = gate IFF it instantiates a rule stated elsewhere (cited);
 #   directional statement = gate IFF it binds to an action/exclusion somewhere.
 # A binding that cannot be located structurally is a decline, not a model guess.
@@ -301,6 +313,7 @@ _CLAUSE_KINDS = (
     "instantiates_stated_rule", # narrates an action that ENACTS one of the listed RULES (must name it)
     "narrates_or_defines",      # past-narration / chart-pointing / setup / definition / meta
     "movement_expectation",     # bare directional or movement prediction, binds to no action
+    "ambiguous",                # decision-like but rule-vs-narration undecidable, or too fragmentary
 )
 
 _OUTPUT_SCHEMA = {
@@ -316,9 +329,8 @@ _OUTPUT_SCHEMA = {
 _SYSTEM_PROMPT = (
     "You are a discourse classifier for trading-education transcripts. You are "
     "given ONE quoted clause from a lesson, plus the list of RULES the speaker "
-    "states elsewhere in the same lesson (its cross-reference binding is already "
-    "known to exist -- your job is only to decide the clause's DISCOURSE ROLE).\n\n"
-    "Two outcomes:\n"
+    "states elsewhere in the same lesson. Decide the clause's DISCOURSE ROLE.\n\n"
+    "Three outcomes:\n"
     "- GATE-STRENGTH = a decision the trader ACTS ON before/at entry: an entry "
     "trigger, a stop-placement rule, a filter or exclusion, a session "
     "restriction, a required confirmation, or a precondition that must hold to "
@@ -327,36 +339,40 @@ _SYSTEM_PROMPT = (
     "- CONTEXT = the clause does NOT drive an entry decision: it narrates what "
     "already happened in a worked example, points at a chart, describes expected "
     "market MOVEMENT, sets up or DEFINES terms, adds indicators to the chart, or "
-    "gives meta / risk-psychology advice.\n\n"
+    "gives meta / risk-psychology advice.\n"
+    "- CANNOT-DETERMINE = the clause SOUNDS like it could be a rule the trader "
+    "applies, but you cannot tell whether it is stating a live rule or merely "
+    "NARRATING a past instance of one (the walkthrough-echoes-a-rule ambiguity), "
+    "OR it is a fragment too short to bind to any decision. Declining here is "
+    "CORRECT -- a good classifier routes the genuinely ambiguous to human review "
+    "instead of guessing.\n\n"
     "Report the clause's kind. The label is DERIVED from the kind:\n"
     "  states_rule                 -> gate-strength\n"
     "  instantiates_stated_rule    -> gate-strength  (only if you NAME the rule it enacts)\n"
     "  narrates_or_defines         -> context\n"
-    "  movement_expectation        -> context\n\n"
+    "  movement_expectation        -> context\n"
+    "  ambiguous                   -> cannot-determine\n\n"
     "Rules for choosing the kind:\n"
     "1. Choose `states_rule` when the clause ITSELF declares a decision the trader "
     "applies -- an entry trigger, a stop placement, a filter/exclusion, a session "
-    "window, a required confirmation, or a PRECONDITION that must hold before "
-    "entry -- even if spoken mid-walkthrough. Prescriptive/self-declaring phrasing "
-    "('the stop goes ...', 'I never take ...', 'you would confirm and enter', "
-    "'I trade from the open to noon', 'wait for X before Y') is a stated rule. A "
-    "clause that declares a NECESSITY the setup must satisfy ('X needs to ...', "
-    "'X has to ...', 'you need X ...', 'X must ...') is a stated precondition even "
-    "when it references a price MOVE -- the necessity is the rule, not a "
-    "prediction of what price will do.\n"
+    "window, or a required confirmation -- even if spoken mid-walkthrough. "
+    "Prescriptive/self-declaring phrasing ('the stop goes ...', 'I never take ...', "
+    "'you would confirm and enter', 'I trade from the open to noon', 'wait for X "
+    "before Y') is a stated rule.\n"
     "2. Choose `instantiates_stated_rule` ONLY when the clause narrates an action "
     "that clearly ENACTS one of the listed RULES, AND you can name that rule in "
     "`bound_rule`. If you cannot name the specific rule it enacts, do NOT use this "
-    "kind -- use `narrates_or_defines`.\n"
+    "kind -- use `ambiguous`.\n"
     "3. Choose `narrates_or_defines` for pure past-tense result-narration, "
     "chart-pointing/navigation, chart SETUP (adding indicators, drawing boxes), "
     "DEFINITIONS ('that is your box'), or meta / psychology advice. Setup and "
     "definitions are NOT gates even though they use 'we need to' / 'you mark out'.\n"
     "4. Choose `movement_expectation` for a bare directional or movement "
     "prediction that binds to no action ('price wants to move to the opposite "
-    "end', 'the market is not ready to reverse yet', 'VWAP is a magnet').\n\n"
-    "You MUST choose one of the four kinds. Do not decline -- if the clause is on "
-    "the boundary, pick the kind whose definition fits best.\n\n"
+    "end', 'the market is not ready to reverse yet', 'VWAP is a magnet').\n"
+    "5. Choose `ambiguous` when the clause echoes a rule while narrating a past "
+    "instance and you cannot tell which it is, or when it is a fragment too short "
+    "to bind. NEVER force a gate/context you are unsure of.\n\n"
     "Worked examples:\n"
     "  'The stop is going to go beyond the testing candle wick.' -> states_rule -> gate-strength\n"
     "  'I trade every morning from the New York open to around noon.' -> states_rule (session filter) -> gate-strength\n"
@@ -364,7 +380,9 @@ _SYSTEM_PROMPT = (
     "  'we got a pre-market high, a 5m close above, a little retest, and another retest' -> narrates_or_defines -> context\n"
     "  'you mark out the high and low of the first 15-minute candle; that is your box' -> narrates_or_defines (definition) -> context\n"
     "  'the first thing we need to do is add these two moving averages' -> narrates_or_defines (chart setup) -> context\n"
-    "  'price now wants to make a move to the opposite end of the candle' -> movement_expectation -> context"
+    "  'price now wants to make a move to the opposite end of the candle' -> movement_expectation -> context\n"
+    "  'the only other time it does it is over here where it closes above the third band' -> ambiguous (narrating a past instance that echoes the rule -- cannot tell if he is re-stating it) -> cannot-determine\n"
+    "  'once the market returns to this level' -> ambiguous (fragment, names no decision) -> cannot-determine"
 )
 
 
@@ -386,22 +404,35 @@ def _build_user_message(quote: str, frame: str, condition_type: Optional[str],
 
 def _derive_label(clause_kind: Optional[str], bound_rule: str) -> tuple:
     """Map the model's BINDING judgment to a tier-2 label (pre-reg §1 IFF, in code).
-    The model has NO decline option here -- `cannot-determine` is decided STRUCTURALLY
-    and PRE-CALL in `classify_item` (empty cross-reference binding), never by the
-    model. Once the model runs, an anchor already exists, so it must commit to
-    gate-strength or context. Returns (label, binds_to_rule)."""
+    This is the POST-PROCESSING neutralizer stage -- the 5-option schema is RESTORED
+    byte-identical to pass-1 (enum + constrained-sampling distribution UNPERTURBED),
+    so conformance lives HERE, never in the enum. Returns (label, binds_to_rule).
+
+    `ambiguous` -> cannot-determine is THE neutralizer (routes to tier-3; strictly
+    subtractive on absorption -- it never absorbs). It is DORMANT on the design pool
+    (pass-1 emitted `ambiguous` 0 times); a single fire means the schema shifted and
+    the run voids by its own evidence. An `instantiates_stated_rule` the model cannot
+    NAME is the "otherwise" branch of the IFF -- an unlocatable binding, a decline not
+    a guess. The PRIMARY decline still fires STRUCTURALLY and PRE-CALL in
+    `classify_item` (empty cross-reference binding) before gemma is ever invoked."""
     ck = (clause_kind or "").strip()
     if ck == "states_rule":
         return "gate-strength", True
     if ck == "instantiates_stated_rule":
-        # gate IFF the model actually named the rule it enacts (pre-reg §1 IFF);
-        # an unnamed instantiation is the "otherwise" branch of the IFF -> context,
-        # NOT a decline (declining is the pre-call gate's job, not the model's).
+        # gate ONLY if the model actually named the rule it enacts; an
+        # unlocatable binding is a decline, not a guess.
         if bound_rule and bound_rule.strip():
             return "gate-strength", True
+        return "cannot-determine", False
+    if ck in ("narrates_or_defines", "movement_expectation"):
         return "context", False
-    # narrates_or_defines / movement_expectation (and any unrecognized commit)
-    return "context", False
+    if ck == "ambiguous":
+        # POST-PROCESSING NEUTRALIZER -> tier-3. NOT -> context: -> context is a
+        # miniature force-determination that can ABSORB on unseen items; ->
+        # cannot-determine is strictly subtractive on every item.
+        return "cannot-determine", False
+    # unrecognized / empty kind -> honest decline
+    return "cannot-determine", False
 
 
 def gemma_classify_call(quote: str, frame: str, condition_type: Optional[str],
