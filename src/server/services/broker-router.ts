@@ -1383,12 +1383,24 @@ export async function routeOrder(
     // content hash of the stable order fields (identical across retries of the same order, distinct for
     // different orders). Over-dedup of two truly-identical timestamp-less orders is the SAFE failure
     // mode vs. a double broker submission.
+    // fresh-scan HIGH#6 (2026-07-12): the content hash MUST include the order-distinguishing fields
+    // (quantity/price/stopPrice/orderType), not just action. A closing position fires MANY exit orders
+    // that ALL carry action="exit_long" with the SAME accountId/strategyId/ticker and NO barTimestamp
+    // (TP1 partial, TP2 partial, BE move, each trail tighten, the 15:55 flatten) — hashing only
+    // {account,strategy,ticker,action} produced the IDENTICAL key for every one, so TradersPost deduped
+    // every exit after the first: TP2, all trail tightens, and the EOD hard-flatten were silently
+    // dropped at the broker (position held open with a stale stop → EOD trailing-DD / overnight-gap
+    // breach), while each deduped 200 still marked the audit row 'acked' (false green). Adding the
+    // per-order fields makes distinct legs distinct while a true HTTP retry of the SAME leg (identical
+    // fields) still collides → dedups correctly. Over-dedup of two truly-identical orders stays the SAFE
+    // failure mode. (Behind the default-OFF SME flag today; defeats the 15:55 flatten invariant when on.)
     const _stableIdempotencyFallback =
       webhookFiredAt != null
         ? `fired_${webhookFiredAt}`
         : `content_${createHash("sha256")
             .update(
-              `${accountId}|${payload.strategyId ?? signal.strategyId ?? "tf"}|${signal.ticker}|${signal.action}`,
+              `${accountId}|${payload.strategyId ?? signal.strategyId ?? "tf"}|${signal.ticker}|${signal.action}` +
+                `|${signal.quantity ?? ""}|${signal.price ?? ""}|${signal.stopPrice ?? ""}|${signal.orderType ?? ""}`,
               "utf8",
             )
             .digest("hex")
