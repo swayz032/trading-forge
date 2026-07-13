@@ -1,0 +1,12 @@
+{
+ "custom_id": "R5L890juvRw__s0",
+ "grade": {
+  "strategy_name": "vwap_band_trend_continuation",
+  "silenced": [],
+  "content_clean": true,
+  "inventory_overreach": [],
+  "notes": "No distinct transcript-taught content for this continuation setup was dropped; the key context, entry mechanics, and targets survive in the extraction."
+ },
+ "tokens": 5635,
+ "cached": 0
+}

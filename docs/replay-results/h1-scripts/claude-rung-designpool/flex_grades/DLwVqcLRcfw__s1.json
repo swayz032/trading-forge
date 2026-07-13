@@ -1,0 +1,12 @@
+{
+ "custom_id": "DLwVqcLRcfw__s1",
+ "grade": {
+  "strategy_name": "vwap_20sma_rejection_short",
+  "silenced": [],
+  "content_clean": true,
+  "inventory_overreach": [],
+  "notes": "Transcript teaches this short only once as an inverse trigger after losing VWAP+20 SMA; the extraction preserves that content and does not drop any distinct short-specific rule."
+ },
+ "tokens": 4661,
+ "cached": 2816
+}

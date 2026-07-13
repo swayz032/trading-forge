@@ -1,0 +1,18 @@
+{
+ "custom_id": "-igpOZs8LsM__s0",
+ "grade": {
+  "strategy_name": "fvg_trend_continuation_entry",
+  "silenced": [
+   {
+    "item": "Discipline rule to backtest the FVG setup, compare win rates, and apply proper risk management before risking money.",
+    "transcript_evidence": "\"All you just need to do is back test and see if it works for you and you know compare the win rates before you decide you know to risk your money.\" ... \"at the end of the day apply proper risk management. Remember no amount of you know over analysis or you know how beautiful your setup is that does not guarantee profit.\"",
+    "why_not_covered": "No entry step, confluence, stop, target, or variant preserves this discipline guidance. The coverage notes mention backtesting only incidentally in a note about null numeric fields, not as a preserved rule or an explicit ABSENT-WITH-REASON accounting; they also omit the compare-win-rates/proper-risk-management instruction."
+   }
+  ],
+  "content_clean": false,
+  "inventory_overreach": [],
+  "notes": "Core FVG mechanics were preserved, but the transcript’s explicit backtest/risk-management discipline was dropped."
+ },
+ "tokens": 7971,
+ "cached": 0
+}

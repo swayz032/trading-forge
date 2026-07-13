@@ -1,0 +1,12 @@
+{
+ "custom_id": "DLwVqcLRcfw__s0",
+ "grade": {
+  "strategy_name": "vwap_20sma_confluence_long",
+  "silenced": [],
+  "content_clean": true,
+  "inventory_overreach": [],
+  "notes": "No distinct transcript-taught long-side rule or exit vanished; the extraction preserves the taught entries, bounce/add logic, stops, and both exit paths, and the short-only material is honestly handled as out-of-scope/counterfactual."
+ },
+ "tokens": 9917,
+ "cached": 0
+}

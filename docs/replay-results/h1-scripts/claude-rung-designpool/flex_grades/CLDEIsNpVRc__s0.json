@@ -1,0 +1,18 @@
+{
+ "custom_id": "CLDEIsNpVRc__s0",
+ "grade": {
+  "strategy_name": "htf_irl_fvg_1m_inversion",
+  "silenced": [
+   {
+    "item": "Pre-9:30 liquidity-taken context that sets the opposite side as the draw on liquidity",
+    "transcript_evidence": "\"So let's say that if we have taken out the Asia high... Now you know that the draw on liquidity is going to be the Asia low... if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows, right?\" and \"Let's say that we have taken out London high before 9:30 a.m. New York time... Now, after 9:30 a.m., right, you want to see a 5-minut fair value gap form towards your draw on liquidity\"",
+    "why_not_covered": "The extraction says to identify draw-on-liquidity and lists possible liquidity references, but it never preserves the taught rule that a side being taken first (before the post-9:30 setup) makes the opposite corresponding side the draw. No entry/confluence/target field states this selection logic, and there is no absent-with-reason note."
+   }
+  ],
+  "content_clean": false,
+  "inventory_overreach": [],
+  "notes": "Core FVG/inversion mechanics are preserved, but the transcript’s explicit draw-selection rule was dropped."
+ },
+ "tokens": 11816,
+ "cached": 0
+}

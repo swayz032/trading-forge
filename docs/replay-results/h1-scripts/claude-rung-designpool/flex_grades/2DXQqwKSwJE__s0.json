@@ -1,0 +1,12 @@
+{
+ "custom_id": "2DXQqwKSwJE__s0",
+ "grade": {
+  "strategy_name": "mean_reversion_scalp",
+  "silenced": [],
+  "content_clean": true,
+  "inventory_overreach": [],
+  "notes": "Extraction preserves the transcript-taught mean-reversion content for this scoped strategy; no distinct mean-reversion mechanic was silently dropped."
+ },
+ "tokens": 5105,
+ "cached": 2816
+}

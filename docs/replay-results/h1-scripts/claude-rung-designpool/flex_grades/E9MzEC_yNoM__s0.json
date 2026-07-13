@@ -1,0 +1,23 @@
+{
+ "custom_id": "E9MzEC_yNoM__s0",
+ "grade": {
+  "strategy_name": "premarket_range_break_continuation",
+  "silenced": [
+   {
+    "item": "Accept the defined risk before entering the trade",
+    "transcript_evidence": "And every single time, our risk is well defined. So, if you enter the trade, you should be accepting the risk or there's no reason for you to even be in the trade to begin with. So, accept the risk before you get in. That way, the trade is stress free.",
+    "why_not_covered": "The extraction preserves stop placement and R-multiple management, but it never preserves the explicit discipline rule to accept the full risk before entry, and coverage_notes do not mark it absent-with-reason."
+   },
+   {
+    "item": "Do not expect or force this setup every day",
+    "transcript_evidence": "Now, one thing to keep in mind, this is not going to present itself every single day. Just like any other trading strategy, it's not always going to be there.",
+    "why_not_covered": "No entry step, confluence, stop, target, or coverage note preserves this explicit discipline guidance about setup frequency/availability."
+   }
+  ],
+  "content_clean": false,
+  "inventory_overreach": [],
+  "notes": "Breakout/retest mechanics are preserved, but two explicit discipline rules taught in the transcript were dropped."
+ },
+ "tokens": 9359,
+ "cached": 4992
+}

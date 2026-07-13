@@ -1,0 +1,18 @@
+{
+ "custom_id": "dV7chra4u4Q__s0",
+ "grade": {
+  "strategy_name": "break_and_retest",
+  "silenced": [
+   {
+    "item": "Discipline rule to favor only the first clean retest after the break and avoid repeatedly trading every break/retest attempt.",
+    "transcript_evidence": "So don't be sitting there trying to trade every break and retest, cuz literally the first retest is always the highest probability. So if you can master this one setup, you don't need anything else. One clean break, one clean retest, and one execution. That's it.",
+    "why_not_covered": "The extraction captures waiting for a retest, confirmation, A+ setups, and a second-chance example entry, but nowhere preserves the speaker's specific rule that the first retest is the highest-probability opportunity and that you should not keep trading multiple break-and-retest attempts; coverage_notes also do not mark this as omitted."
+   }
+  ],
+  "content_clean": false,
+  "inventory_overreach": [],
+  "notes": "Inventory items are preserved, but the transcript-taught first-retest/single-execution discipline was dropped."
+ },
+ "tokens": 8862,
+ "cached": 0
+}

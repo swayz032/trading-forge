@@ -1,0 +1,12 @@
+{
+ "custom_id": "PVMgOxHUqFA__s0",
+ "grade": {
+  "strategy_name": "abc_trend_continuation_reclaim",
+  "silenced": [],
+  "content_clean": true,
+  "inventory_overreach": [],
+  "notes": "All inventoried strategy content is preserved or correctly accounted for; no distinct transcript-taught mechanic was silently dropped."
+ },
+ "tokens": 8141,
+ "cached": 0
+}

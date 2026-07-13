@@ -1,0 +1,12 @@
+{
+ "custom_id": "ZF8uKPqAu8M__s1",
+ "grade": {
+  "strategy_name": "orb_breakout_pullback_continuation",
+  "silenced": [],
+  "content_clean": true,
+  "inventory_overreach": [],
+  "notes": "All inventoried mechanics are preserved or properly accounted for; no distinct transcript-taught rule for this pullback/continuation setup was silently dropped."
+ },
+ "tokens": 10033,
+ "cached": 5760
+}

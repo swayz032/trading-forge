@@ -1,0 +1,12 @@
+{
+ "custom_id": "_LS6qcSlDCs__s0",
+ "grade": {
+  "strategy_name": "vwap_reclaim_pullback_dip_buy",
+  "silenced": [],
+  "content_clean": true,
+  "inventory_overreach": [],
+  "notes": "All transcript-taught mechanics and filters for this VWAP reclaim pullback setup are preserved or honestly accounted for; no silent content loss found."
+ },
+ "tokens": 7724,
+ "cached": 0
+}

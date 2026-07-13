@@ -1,0 +1,18 @@
+{
+ "custom_id": "W7nlnHTUZQU__s0",
+ "grade": {
+  "strategy_name": "overnight_range_break_retest",
+  "silenced": [
+   {
+    "item": "Discipline rule to be selective and only take A+ versions of the setup rather than forcing trades every day",
+    "transcript_evidence": "\"So again, you want to be very picky because you don't need to trade every day.\" ... \"It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup.\"",
+    "why_not_covered": "The extraction preserves the setup mechanics, stops, and management, but nowhere includes the speaker's explicit discipline to avoid forcing daily trades and to only take the clean/A+ version of the setup; coverage_notes also do not mark this as omitted-with-reason."
+   }
+  ],
+  "content_clean": false,
+  "inventory_overreach": [],
+  "notes": "Core breakout-retest mechanics are preserved, but the A+-only/selective trade-taking discipline was dropped."
+ },
+ "tokens": 9254,
+ "cached": 5120
+}

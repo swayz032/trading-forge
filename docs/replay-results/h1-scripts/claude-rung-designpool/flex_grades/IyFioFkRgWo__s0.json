@@ -1,0 +1,23 @@
+{
+ "custom_id": "IyFioFkRgWo__s0",
+ "grade": {
+  "strategy_name": "support_bounce_scalp",
+  "silenced": [
+   {
+    "item": "Start small and scale up position size gradually instead of using all buying power; practice the in-and-out habit before sizing bigger.",
+    "transcript_evidence": "these are trading strategies you guys can Implement you can learn you can start small with okay I often talk about easing and scaling up in size okay easing to your positions don't come in with all the money in your account don't come into the game with all the money in your buying power what you want to do is look and learn to trade with small amounts learn to First establish how to get in and get out",
+    "why_not_covered": "The extraction preserves quick-profit and support/resistance mechanics, but nowhere records the explicit position-sizing discipline to start small, avoid using all buying power, and scale only after proving execution. No variant/entry/exit field or coverage note accounts for it."
+   },
+   {
+    "item": "Be selective; you do not need to take every support-bounce scalp, and one or two quality setups can be enough.",
+    "transcript_evidence": "you don't have to take every one of these guys the beauty about this is that you can find one or two and make your $2 or $3,000 off of these one quick plays or you can wait for one and then take the trade there",
+    "why_not_covered": "The extraction says the setup can be 'rinse and repeat,' but it omits the separate discipline rule about not taking every setup and waiting for one or two quality opportunities. No coverage note marks this as intentionally absent."
+   }
+  ],
+  "content_clean": false,
+  "inventory_overreach": [],
+  "notes": "Core support-bounce mechanics survived, but explicit sizing and selectivity discipline taught in the transcript were dropped."
+ },
+ "tokens": 7849,
+ "cached": 0
+}

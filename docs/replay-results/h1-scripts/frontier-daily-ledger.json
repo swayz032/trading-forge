@@ -1,6 +1,6 @@
 {
  "2026-07-13": {
-  "gpt54": 1320695,
+  "gpt54": 1391793,
   "mini": 309111,
   "_burst_gpt54": {
    "pool": "gpt54",
@@ -24,6 +24,13 @@
    "grantedAtSpent": 1153335,
    "signedBy": "operator (Tonio): config-pass v2 JOINT-BAR retest, $2, 'one sentence, two dollars'",
    "grantedUtcDate": "2026-07-13"
+  },
+  "_flex_content_panel": {
+   "tokens": 71098,
+   "cached": 24576,
+   "est_usd": 0.119,
+   "service_tier": "flex",
+   "effort": "high"
   }
  },
  "_balance_anchor": {

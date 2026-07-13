@@ -1,0 +1,12 @@
+{
+ "custom_id": "4cT8WTyxhYY__s0",
+ "grade": {
+  "strategy_name": "liquidity_grab_reversal",
+  "silenced": [],
+  "content_clean": true,
+  "inventory_overreach": [],
+  "notes": "Core liquidity-grab entry/exit plus all three inventoried additive confluences are preserved; no distinct transcript-taught rule was silently dropped."
+ },
+ "tokens": 5239,
+ "cached": 0
+}

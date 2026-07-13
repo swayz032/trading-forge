@@ -1,0 +1,23 @@
+{
+ "custom_id": "0xygpCMwxbQ__s0",
+ "grade": {
+  "strategy_name": "ict_aplus_entry_checklist",
+  "silenced": [
+   {
+    "item": "Prerequisite: apply the checklist only after establishing a daily bias/direction",
+    "transcript_evidence": "once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry",
+    "why_not_covered": "The extraction starts the method at the stop raid and never preserves this higher-timeframe prerequisite in entry_sequence, confluences, stops/targets, or coverage_notes; direction='both' is not the same as requiring a pre-existing daily bias before using the checklist."
+   },
+   {
+    "item": "Box setup variant's deviation/retest mechanic: after a deviation/manipulation of the range, look for a retest of that manipulation and target the other side of the range",
+    "transcript_evidence": "we get a move below this range and then back into the range so aggress it down aggressive up this is the deviation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manipulation to then be reaching for the other side here before going higher",
+    "why_not_covered": "The extraction preserves only that the box setup can work without a prior structure shift and still needs a prior liquidity raid; it does not preserve this taught box-setup mechanic (deviation/manipulation -> retest -> other-side objective) anywhere in the variant description, targets, or coverage_notes."
+   }
+  ],
+  "content_clean": false,
+  "inventory_overreach": [],
+  "notes": "All inventoried PD-array variants are present, but these two transcript-taught strategy pieces were dropped."
+ },
+ "tokens": 9683,
+ "cached": 0
+}

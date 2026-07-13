@@ -1,0 +1,7 @@
+{
+ "file_id": "file-KgRvwbhSwgFXrNTNirsGAk",
+ "batch_id": "batch_6a556853818481909cd89873fec7bd1e",
+ "status": "validating",
+ "reasoning_effort": "high",
+ "endpoint": "/v1/chat/completions"
+}

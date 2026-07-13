@@ -1,0 +1,18 @@
+{
+ "custom_id": "E9MzEC_yNoM__s1",
+ "grade": {
+  "strategy_name": "premarket_range_liquidity_sweep_reversal",
+  "silenced": [
+   {
+    "item": "Accept the predefined risk before entering the trade.",
+    "transcript_evidence": "And every single time, our risk is well defined. So, if you enter the trade, you should be accepting the risk or there's no reason for you to even be in the trade to begin with. So, accept the risk before you get in. That way, the trade is stress free.",
+    "why_not_covered": "The extraction includes stop placement, R-multiple targets, and trailing/scale-out management, but it does not preserve this separate discipline rule about mentally accepting the defined risk before entry. coverage_notes do not mark it absent-with-reason."
+   }
+  ],
+  "content_clean": false,
+  "inventory_overreach": [],
+  "notes": "Most liquidity-sweep mechanics are preserved; the main dropped taught content is the explicit risk-acceptance discipline rule."
+ },
+ "tokens": 8369,
+ "cached": 2816
+}
