@@ -1,0 +1,44 @@
+{
+  "strategies": [
+    {
+      "name": "vwap_20sma_rejection_short",
+      "direction": "short",
+      "entry_summary": "when price loses both VWAP and the 20 SMA collectively, closes below VWAP, and the following candle builds below, stop buying bounces and short the rejection of VWAP and the 20 SMA",
+      "entry_sequence": [
+        { "step": 1, "action": "if we were to lose vop and lose the 20 SMA collectively" },
+        { "step": 2, "action": "and then close below vop" },
+        { "step": 3, "action": "and then we have a following candle that starts to build below" },
+        { "step": 4, "action": "then yes I'm not looking to buy the bounce anymore what I'm looking to do is short the rejection of vwap and the 20 SMA" }
+      ],
+      "confluences": [
+        { "description": "lose vop and lose the 20 SMA collectively" },
+        { "description": "close below vop" },
+        { "description": "a following candle that starts to build below" }
+      ],
+      "stop": null,
+      "targets": [],
+      "exit": {
+        "gestural": true,
+        "level_fields_null_reason": "Speaker taught this short only as the inverse trigger of the long ('I'm not looking to buy the bounce anymore what I'm looking to do is short the rejection of vwap and the 20 SMA'). No stop level, no target level, and no exit management were stated for the short. Level fields nulled per v3.1 gestural-exit clause; strategy NOT deleted.",
+        "exit_words_verbatim": null
+      }
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "index_futures",
+    "instrument_primary": "NASDAQ futures (NQ)",
+    "instrument_note": "scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade but for me I trade the NASDAQ",
+    "timeframe": "two-minute time frame",
+    "is_options_mechanic": false,
+    "options_mechanic_reason": "No Greeks, strikes, or expiries; pure price/indicator (VWAP + 20 SMA) futures scalping."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "element_inventory[0] = 'this whole short object (recovered from v3.0 merge-silencing, cross-path confirmed)': ACCOUNTED-FOR / APPEARS — extracted as the sole strategy object above, entry verbatim from the single teaching passage near the end of the transcript ('now if we were to lose vop and lose the 20 SMA collectively and then close below vop and then we have a following candle that starts to build below then yes I'm not looking to buy the bounce anymore what I'm looking to do is short the rejection of vwap and the 20 SMA').",
+    "RULE-2 OPPOSITION honored: this is the SHORT half of the VWAP/20-SMA pair. The LONG setup (buy the bounce / hold over VWAP+20SMA / 20SMA-as-trailing-stop / sell into upper-lower bands) was DELIBERATELY NOT merged in — it is a separate object with its own entry and exit logic and is out of scope for this extraction.",
+    "STOP absent-with-reason: the transcript's only trailing-stop teaching ('the 20 SMA was acting as our trailing stop', 'if we do close below the 20 SMA maybe you can use that as an indication to get out') belongs to the LONG hold, NOT to this short. Pulling it into the short would be a Rule-2 merge violation; therefore stop = null for the short.",
+    "TARGETS absent-with-reason: the point targets ('sell for profits into the upper Channel', '15 20 points', 'almost 75 points') are all stated for the LONG. No target was stated for the short; targets = [].",
+    "GESTURAL-EXIT flag set: exit taught only as the inverse trigger with no explicit stop/target level. Level fields nulled, strategy preserved per v3.1 amendment (house exit overlay supplies levels downstream).",
+    "VERBATIM preserved including transcription artifacts 'vop'/'vwob' for VWAP — not normalized to 'VWAP', per Rule 1 (downstream check is character-for-character)."
+  ]
+}

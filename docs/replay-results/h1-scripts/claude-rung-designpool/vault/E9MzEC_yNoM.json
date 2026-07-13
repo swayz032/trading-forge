@@ -1,0 +1,115 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "premarket_range_break_continuation",
+      "entry_sequence": [
+       {
+        "action": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action"
+       },
+       {
+        "action": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action"
+       },
+       {
+        "action": "Once we get a clean break above pre-market highs or below pre-market lows, this is your first signal. So, this breakout could confirm a long entry. I personally like the retest, but depending on this scenario, I might take the breakout trade."
+       },
+       {
+        "action": "typically we are going to scale down to a lower time frame such as a 2-minut or you could even play around with a 1 minute. I just personally prefer the 2-minut. So when that twominut breaks out above that London high or where to break down below London low, we want to see the break and we actually want to see the close above or below the level."
+       },
+       {
+        "action": "if you were the breakout trader in this scenario, you would go long at the close of this two-minute candle. You want to wait for the close. You want to see the volume elevation. Ideally, looking at order flow as well. And if you get that, you can look to get long."
+       },
+       {
+        "action": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support to go long with a stop right below"
+       },
+       {
+        "action": "price breaks above it very very strong, pulls back, test it multiple times as support one, two, three, four, five times giving you many, many different entries, which again would have signaled a long entry with a stop-loss right below that London high"
+       },
+       {
+        "action": "we enter on the confirmation after the retest of the level, after the breakout of the level"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "we are looking for an increase in the volume to confirm that the breakout is actually valid"
+       },
+       {
+        "description": "Ideally, looking at order flow as well"
+       },
+       {
+        "description": "we want to see the break and we actually want to see the close above or below the level"
+       },
+       {
+        "description": "you need to wait for the break. You do not want to take early entries. You want to look for a solid candle close above or below the range."
+       },
+       {
+        "description": "you want to avoid overall fake outs by staying patient"
+       }
+      ],
+      "targets": [
+       {
+        "description": "ideally when I'm trading, I'm typically looking for bare minimum of 1x of my original risk. However, ideally what I'm looking for is a 1.5x to a 2x my original risk"
+       },
+       {
+        "description": "as the trade continues to move in my favor, I'm going to be looking to trail my stop-loss up at least to break even, ideally in profits, and to just let that sucker run. and I'll continue to scale out as it moves in my favor, continue to move my stop loss up"
+       }
+      ],
+      "stop": {
+       "anchor": "The stop is always going to go on the opposite side of the entry candle"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "premarket_range_liquidity_sweep_reversal",
+      "entry_sequence": [
+       {
+        "action": "we want to look for liquidity sweeps at those pre-market highs or those pre-market lows"
+       },
+       {
+        "action": "A liquidity sweep is going to be a brief fake out below or above the level"
+       },
+       {
+        "action": "you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep"
+       },
+       {
+        "action": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level"
+       },
+       {
+        "action": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "reclaims the level with a lot of volume"
+       },
+       {
+        "description": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator"
+       }
+      ],
+      "targets": [
+       {
+        "description": "bare minimum of 1x of my original risk"
+       },
+       {
+        "description": "ideally what I'm looking for is a 1.5x to a 2x my original risk"
+       }
+      ],
+      "stop": {
+       "anchor": "The stop is always going to go on the opposite side of the entry candle"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

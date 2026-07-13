@@ -1,0 +1,61 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "fvg_trend_continuation_entry",
+      "entry_sequence": [
+       {
+        "action": "the trend matters ... It is important you also pay attention to the trend ... for fair value gap it happens when the trend is when the momentum is very high and when the gap happens price can just come back tapping and keep moving"
+       },
+       {
+        "action": "you need to pay attention to the one that caused a break of structure. So once that break of structure happens you look out for the three candlesticks you know before that um breakoff structure"
+       },
+       {
+        "action": "when mapping out you map out from the first candlestick closing point ... the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance"
+       },
+       {
+        "action": "map out the FVG that cost the break of structure the FVG that is very close to the order block"
+       },
+       {
+        "action": "there should also be liquidity price will clear before you know tapping into the imbalance"
+       },
+       {
+        "action": "price will most likely you know come back mitigate the imbalance and keep pushing to the upside ... patiently wait for you know price to get back into that FVG that caused the break of structure ... wait for price to tap in and then push to your direction"
+       },
+       {
+        "action": "stop loss a little bit above if you're selling or below if you are buying and just wait for price to dish out the results"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "the trend matters ... the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend"
+       },
+       {
+        "description": "the imbalance must create a break of structure. So you should not just see any imbalance and just start setting your entries from there"
+       },
+       {
+        "description": "there should also be liquidity price will clear before you know tapping into the imbalance"
+       },
+       {
+        "description": "one of the confirmation you know for pointing out valid order block is the FVG that is very close to the order block and most of the times price may just come to that FVG react and push to our direction"
+       }
+      ],
+      "targets": [
+       {
+        "description": "keep pushing to the upside / it will just drop ... push to your direction ... wait for price to dish out the results"
+       }
+      ],
+      "stop": {
+       "anchor": "when setting your stop loss, it will just be a little bit below the FVG ... if you are taking your entries with fair value gap, all you just need to do is put your stop loss a little bit below the fair value gap. Just stick to the fair value gap ... stop loss a little bit above if you're selling or below if you are buying. Do NOT drag the stop loss to also accommodate the other block ('some traders may want to try to serve two masters at a time ... you will now drag the stop loss to also accommodate the other block that will you know kill the risk-to-reward ratio')"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

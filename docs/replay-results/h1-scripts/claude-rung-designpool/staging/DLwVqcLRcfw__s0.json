@@ -1,0 +1,76 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "vwap_20sma_confluence_long",
+      "direction": "long",
+      "instrument": "NASDAQ futures",
+      "timeframe": "the two-minute time frame",
+      "entry_summary": "First two-minute candle off the bell closes over both the 20 SMA and VWAP; wait for a following candle to confirm that candle's high; enter long at the confluence of VWAP and the 20 SMA; buy bounces that wick into but do not close below VWAP; optionally add/DCA on pullbacks into VWAP.",
+      "exit_summary": "Either scalp into the upper VWAP band for profits, or hold and trail the 20 SMA once price breaks away from VWAP, exiting on a close below the 20 SMA.",
+      "entry_sequence": [
+        {
+          "action": "the first two-minute candle off the Bell closes over the 20 SMA and vwap"
+        },
+        {
+          "action": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+        },
+        {
+          "action": "you get into a position here over the comp[luence] information of vwap and the 20 SMA"
+        },
+        {
+          "action": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+        },
+        {
+          "action": "we pull back into vwap this is a good loading opportunity to kind of lower that dollar cost average ... maybe we can add one time here",
+          "optional": true
+        }
+      ],
+      "confluences": [
+        {
+          "description": "if we're trading over the vwob [vwap] we're typically more bullish"
+        },
+        {
+          "description": "use vwap for extra Confluence in finding these setups"
+        },
+        {
+          "description": "all we're doing is back testing support here at vwap ... as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+        },
+        {
+          "description": "as long as the V up [vwap] is trending higher as long as your 20 SMA is trending higher you can hold hold this trade"
+        }
+      ],
+      "stop": {
+        "description": "use the previous Wick as a stop ... use the previous low Point as a stop",
+        "level": null
+      },
+      "targets": [
+        {
+          "label": "scalp into upper VWAP band",
+          "description": "you can throw the upper and and lower channels on the vop [vwap] the the bands and you can sell for profits into the upper Channel",
+          "magnitude_quote": "so we're talking about essentially uh you know 15 20 points here",
+          "level": null,
+          "level_note": "Exact prices (entering ~2,259, selling ~20275) are the July 3 walk-through example, not a rule; extracted the mechanic verbatim and the speaker's ~15-20 point magnitude."
+        },
+        {
+          "label": "hold / trail the 20 SMA",
+          "description": "you can use the 20 SMA as a trailing stop so if we do close below the 20 SMA maybe you can use that as an indication to get out of the trade",
+          "magnitude_quote": "we're talking about almost 75 points worth of runup that you would have been able to capture",
+          "level": null,
+          "level_note": "Runs only 'once we started to really break away from the vwap' and 'we create a little bit of a gap' — 20 SMA acts as trailing stop above extended price. The ~75 points (from 20258 to close below vwap at 20331) is the July 3 example magnitude, not a fixed rule level."
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "instrument_family": "index_futures",
+    "primary_instrument": "NASDAQ futures (NQ)",
+    "also_applicable": "scalp es scalp uh ym rty whatever instrument that you want to trade",
+    "is_options_mechanic": false,
+    "tradeable": true,
+    "quote": "in this video I want to show you guys how you can use the two-minute time frame scalp the NASDAQ futures"
+  },
+  "rejected_strategies": [],
+  "coverage_notes": "Inventory item 1 (MANDATORY scalp-band exit ~15-20pt): PRESENT as targets[0] — verbatim 'sell for profits into the upper Channel' via the VWAP upper band; magnitude preserved verbatim ('15 20 points'), derived from the July 3 example (entry ~2,259 -> sell ~20275); exact prices nulled as example-only per the rule. Inventory item 2 (MANDATORY 20SMA-trail exit ~75pt): PRESENT as targets[1] — verbatim 'use the 20 SMA as a trailing stop ... if we do close below the 20 SMA ... get out of the trade'; magnitude 'almost 75 points' preserved verbatim, from the example day (20258 -> close below vwap 20331); exact levels nulled as example-only. Both mandatory exit units are carried in targets[] — neither silenced. Inventory item 3 (20-SMA-only short = counterfactual): ABSENT-WITH-REASON — the 20-SMA-only short is taught only as a COUNTERFACTUAL to argue VWAP confluence prevents a bad short ('if you were simply following the 20 SMA strategy well then you would have been into this short position here and then rudely been stopped out'). Separately, the speaker teaches a genuine rejection SHORT ('short the rejection of vwap and the 20 SMA' once both are lost and price builds below), which is the OTHER object of the Rule-2 pair and a SEPARATE strategy — deliberately not extracted here. Neither short belongs to this long object. Note: the garbled 'comp information' in entry_sequence[2] is the speaker's word for 'confluence'; 'vwob'/'V up'/'vop' are transcription artifacts of 'vwap' and left as spoken with a bracketed gloss."
+}

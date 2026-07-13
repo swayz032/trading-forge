@@ -1,0 +1,57 @@
+{
+  "strategies": [
+    {
+      "name": "vwap_reclaim_pullback_dip_buy",
+      "entry_sequence": [
+        {
+          "action": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim"
+        },
+        {
+          "action": "i need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average ... preferably under 50 million if i can wait for smaller float stocks especially under 10 million then it's gonna work a larger percentage of the time"
+        },
+        {
+          "action": "especially if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into"
+        },
+        {
+          "action": "we had a ton of green consecutive candles ... a ton of green candles in a row which obviously shows a lot of strength"
+        },
+        {
+          "action": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support"
+        },
+        {
+          "action": "we're looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "volume is absolutely crucial i need this volume to be there if i'm going to take this trade if it's not i move on and look for a better option"
+        },
+        {
+          "description": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level like three dollars here"
+        },
+        {
+          "description": "the v-wap can act as a resistance level as well and so i never buy these stocks if the v is above me for that reason too many times the v wap's just going to reject it back down"
+        }
+      ],
+      "stop": null,
+      "targets": [],
+      "exit": {
+        "gestural": true,
+        "verbatim": "we bought into the pullback and we rode the bounce up scalping out of it with a really nice green trade ... try to ride the bounce up with it respecting that v wap area",
+        "note": "Gestural exit — speaker gave no stop or target level; only colloquial 'scalp out of it' / 'ride the bounce up'. Level fields nulled per v3.1; house overlay supplies levels downstream."
+      }
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "instrument": "momentum penny stocks",
+    "is_options_mechanic": false,
+    "note": "Cash equities / penny stocks — no Greeks, strikes, or expiries; a valid non-options strategy. Speaker: 'how penny stock traders use the v-wop', 'these momentum based penny stocks'."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "ELEMENT 1 (three examples XCLB/XELB, SOS, CEMI = same skeleton, not variants): ACCOUNTED — no variants[] emitted. XCLB/XELB, SOS, and CEMI are three live walk-through illustrations of the identical setup (weak open below VWAP -> reclaim above VWAP on volume with green candles in a row -> buy pullback to VWAP/whole-dollar as support). Speaker himself: 'this one looks very similar to the last few with a few subtle differences' — different tickers/days, one skeleton. Ticker names and the 1M-shares/min and $3 figures are that-day example numbers, not rules, so nulled.",
+    "ELEMENT 2 (VWAP-as-resistance 'never buy if VWAP above' = no-trade filter, not opposition): ACCOUNTED — APPEARS in extraction as a confluence/no-trade filter, verbatim: 'i never buy these stocks if the v is above me'. Treated as a directional filter on the long setup, NOT as a separate short/opposition strategy.",
+    "ELEMENT 3 (buying high-of-day breaks = others' mistake, unpromoted mention): ABSENT-WITH-REASON — deliberately NOT extracted as an entry. The speaker cites HOD-break buying only as what to AVOID / what others do wrong ('they don't want to buy it as it's breaking highs because that can get really easily faked out ... experienced traders are actually taking profit at those high of the day levels'). It is a contrast used to motivate waiting for the pullback, not a taught entry of this strategy, so it is not promoted to an entry step or variant."
+  ]
+}

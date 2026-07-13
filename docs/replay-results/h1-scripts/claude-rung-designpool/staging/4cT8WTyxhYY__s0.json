@@ -1,0 +1,72 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "liquidity_grab_reversal",
+      "entry_summary": "for the first step we are looking for what's called a liquidity grab ... once we find this liquidity grab we move to step two which involves the entry ... you were going to mark your entry point at the candle that made the liquidity grab",
+      "exit_summary": "set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high (mirror for shorts: stop loss right above the liquidity grab, take profit at a recent low)",
+      "direction": "both",
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "for the first step we are looking for what's called a liquidity grab a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+        },
+        {
+          "step": 1,
+          "action": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade"
+        },
+        {
+          "step": 2,
+          "action": "the entry is pretty simple you were going to mark your entry point at the candle that made the liquidity grab"
+        },
+        {
+          "step": 2,
+          "action": "your long entry would be at this point right here because this candle made this liquidity grab"
+        },
+        {
+          "step": 2,
+          "action": "it's the same thing with shorts ... your short entry would be at the bottom of this candle that initiated this liquidity grab"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "Peaks closer together than 10 days saw a slightly larger drop compared to Peaks farther apart so if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart ... so if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+          "optional": true
+        },
+        {
+          "description": "another way to improve this is by adding confluences like divergences to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum ... here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor",
+          "optional": true
+        },
+        {
+          "description": "we then move to a 1hour time frame and we see this Buy Signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame and on top of that we have a liquidity grab on a lower time frame which is a great Confluence ... this whole liquidity grab strategy works best if you're finding reversals at the bottoms or tops of big moves",
+          "optional": true
+        }
+      ],
+      "stop": "you would enter here set your stop loss right right below the liquidity grab (for shorts: set our stop loss right above the liquidity grab)",
+      "targets": [
+        {
+          "target": "set your take profit at a recent high (for shorts: setad her take profit at a recent low)"
+        }
+      ],
+      "variants": []
+    }
+  ],
+  "instrument_classification": {
+    "asset_classes_verbatim": "it works for everything stocks Forex crypto it doesn't matter",
+    "asset_classes": ["stocks", "Forex", "crypto"],
+    "timeframe_verbatim": "it works on all time frames",
+    "is_options_mechanic": false,
+    "classification": "instrument_agnostic_price_action"
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "element '10-candle peak-proximity filter (additive confluence)' — PRESENT (confluence #1): speaker states 'if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger' and 'if you want optimal entries you should look for liquidity grabs with Peaks closer together'. Framed as an additive optimization ('another way to improve'), not a hard entry gate.",
+    "element 'momentum-divergence confluence' — PRESENT (confluence #2): speaker teaches adding the MetaTrader momentum oscillator and reading price lower-lows vs oscillator higher-highs as a divergence that 'gives us a higher probability'. Optional add-on confluence.",
+    "element 'higher-timeframe S/R confluence' — PRESENT (confluence #3): speaker teaches dropping to a higher (1-hour) timeframe to confirm the lower-timeframe signal lands at higher-timeframe support/resistance ('strong demand'), and to skip signals that occur in the middle of the higher-timeframe range. Optional filter/confluence.",
+    "all 3 inventoried confluence elements accounted for as PRESENT; none dropped.",
+    "Exit is fully stated (stop below/above the grab; take profit at recent high/low) — NOT gestural; gestural-exit clause not invoked.",
+    "Promotional/sponsor segment ('Mr double your money' / 'panker trade' broker promo) and the 'private indicator' (tradinglab) automation pitch were treated as non-rule content and excluded — the indicator merely auto-detects the same manually-taught grab/entry, adding no new rule.",
+    "Thomas Bulkowski 14,000-trade backtest stat is cited evidence for why a liquidity-grab (first valley above second) beats the non-grab pattern; it is motivation, not an extractable rule — not extracted as a condition.",
+    "Nulled fields: no numeric R:R target, no ATR/volume filter, no specific instrument/timeframe requirement, no time-of-day rule — the speaker states the setup is instrument- and timeframe-agnostic and gives no such levels."
+  ]
+}

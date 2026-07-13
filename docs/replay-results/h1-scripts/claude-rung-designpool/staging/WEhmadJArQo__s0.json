@@ -1,0 +1,89 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "opening_range_fvg_break_entry",
+      "entry_summary": "At 9:30 ET mark the high/low of the first candle of the day; wait for a break of that level that leaves a fair value gap (a three-candle formation); the break direction sets bias; enter on the FVG when price trades back into it.",
+      "exit_summary": "Stop just beyond the FVG on the invalidation side with one tick of room; target a fixed R-multiple; then sit back and let the market do the heavy lifting with no micromanaging.",
+      "entry_sequence": [
+        {
+          "variant": "common",
+          "action": "we're going to get to our desks right at 9:30 a.m. EST"
+        },
+        {
+          "variant": "scalping",
+          "action": "We're going to start on our five-minute chart ... we're going to wait for the first candle of the day at that 9:30 time to print. And then, we're going to mark out the high and the low of the first 5-minute candle ... that happens at 9:30 to 9:35 a.m. Eastern Standard Time"
+        },
+        {
+          "variant": "scalping",
+          "action": "we are going to switch to the 1 minute chart ... Next, we're going to wait for a break of the level, but we need a fair value gap. Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it."
+        },
+        {
+          "variant": "common",
+          "action": "since we broke through the high, the direction is bullish. We're going to be looking for long trades."
+        },
+        {
+          "variant": "scalping",
+          "action": "first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap."
+        },
+        {
+          "variant": "scalping",
+          "action": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed ... And as soon as we get this engulfing, you're good to enter the trade."
+        },
+        {
+          "variant": "day_trading",
+          "action": "for this entry, you're going to start on the 15minute chart ... We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead. And then just like we did with the scalping strategy, we're going to mark the high and the low of the first 15-minute candle."
+        },
+        {
+          "variant": "day_trading",
+          "action": "Instead of going to the one minute chart, we're going to go to the five-minute chart ... we have now created our fair value gap through this first candle."
+        },
+        {
+          "variant": "day_trading",
+          "action": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market."
+        }
+      ],
+      "confluences": [
+        {
+          "variant": "common",
+          "description": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick"
+        },
+        {
+          "variant": "scalping",
+          "description": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level"
+        },
+        {
+          "variant": "scalping",
+          "description": "if you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles"
+        }
+      ],
+      "stop": {
+        "scalping": "for our stop loss or our invalidation point where we will cut our losses if we're wrong, you want to put that under the lowest area that we traded into that fair value gap. And you always want to give it one tick of breathing room.",
+        "day_trading": "for my stop loss, I'm going to put it right at the first candle in the fair value gap pattern. Remember a fair value gap is three candles. So it goes right under this first one."
+      },
+      "targets": [
+        {
+          "variant": "scalping",
+          "target": "we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade"
+        },
+        {
+          "variant": "day_trading",
+          "target": "instead of a 3 to one return we are going to target a fixed 2:1 return"
+        }
+      ],
+      "management": {
+        "variant": "common",
+        "description": "after you execute the trade, you sit back and let the market do the heavy lifting for you. No need to micromanage your trade.",
+        "day_trading_note": "every once in a while, you're going to have the market come down and revisit the fair value gap. That's totally fine. Don't freak out and close your trades. Just trust in the system."
+      }
+    }
+  ],
+  "instrument_classification": {
+    "is_options_strategy": false,
+    "asset_class": "market_agnostic",
+    "quote": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market.",
+    "rationale": "Price-action / opening-range FVG mechanic with no options-specific components (no strikes, expiries, or Greeks). Speaker explicitly states it applies to any market including futures."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": "The scoped strategy is a single skeleton (9:30 ET first-candle high/low levels -> break-with-FVG sets bias -> enter on the FVG) taught in TWO variants; both variants and all element_inventory items are accounted for below.\n\nVARIANT 1 (scalping) — element 'scalping variant: 5m levels/1m entry, retest+engulfing confirmation, 3:1': PRESENT. 5-minute chart for levels (entry_sequence[1]); 1-minute chart for direction/entry (entry_sequence[2]); confirmation = wait for retest of the FVG then wait for the retest candle to get engulfed (entry_sequence[4]-[5], with engulfing defined in confluences[2]); target = fixed 3:1 (targets[0]); stop = under the lowest area traded into the FVG + one tick (stop.scalping).\n\nVARIANT 2 (day trading) — element 'day-trading variant: 15m levels/5m entry, passive limit order, 2:1': PRESENT. 15-minute chart for levels using the 9:30-9:45 candle (entry_sequence[6]); 5-minute chart for direction (entry_sequence[7]); confirmation mechanic = NO retest wait, instead a passive limit order placed on the FVG for automatic entry (entry_sequence[8]); target = fixed 2:1 (targets[1]); stop = right at/under the first candle of the three-candle FVG pattern (stop.day_trading).\n\nSTOP DIFFERS BY VARIANT and is preserved separately (scalping = under lowest area traded into the FVG + 1 tick; day-trading = under the first candle of the FVG pattern) — not stated as identical, so not merged.\n\nSelection guidance (taught, but a discipline/meta note, not an entry rule): 'If you have blown accounts before or if you struggle with emotional trading, then use the day trading approach. It's more forgiving and it has a higher win rate.'\n\nEXAMPLE-ONLY NUMBERS EXCLUDED as day's-example per rule (not rules): $400 risk/$1,200 profit and 24-minute scalp; $945 risk/$1,900 profit and 35-minute day trade; backtest results ($10,950 @ 70%; $15,400 @ 81% over 16 trades). The 3:1 and 2:1 targets ARE rules (stated as fixed targets) and are kept."
+}

@@ -1,0 +1,67 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "ict_aplus_entry_checklist",
+      "entry_sequence": [
+       {
+        "action": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken"
+       },
+       {
+        "action": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over"
+       },
+       {
+        "action": "the next thing I look for is where there is a little bit flexibility I generally like to see price move back into a discount of this price range here"
+       },
+       {
+        "action": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+       },
+       {
+        "action": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together for my personal strategy for example I will look for a fair value Gap in an optimal trade entry or I'll look for the box set up in an optimal trade entry"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "the next thing I could look for is a fair value gap which we have a very small one right here"
+       },
+       {
+        "description": "an order block which would be this down close candle right here"
+       },
+       {
+        "description": "breaker block would be these up close candles here before the raid on liquidity"
+       },
+       {
+        "description": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here"
+       },
+       {
+        "description": "and lastly for the Box setup I would be looking for price to reach into this area here"
+       }
+      ],
+      "targets": [
+       {
+        "description": "then looking for buy side liquidity up here"
+       },
+       {
+        "description": "if I was too partial and reach for those lows I talked about earlier"
+       },
+       {
+        "description": "targeting a new low"
+       },
+       {
+        "description": "your target the initial highs from the morning and from there let runners run"
+       }
+      ],
+      "stop": {
+       "anchor": "putting my stop on this order block low"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

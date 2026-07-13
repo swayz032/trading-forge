@@ -1,0 +1,49 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_reclaim_pullback_dip_buy",
+      "entry_sequence": [
+       {
+        "action": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim"
+       },
+       {
+        "action": "i need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average ... preferably under 50 million if i can wait for smaller float stocks especially under 10 million then it's gonna work a larger percentage of the time"
+       },
+       {
+        "action": "especially if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into"
+       },
+       {
+        "action": "we had a ton of green consecutive candles ... a ton of green candles in a row which obviously shows a lot of strength"
+       },
+       {
+        "action": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support"
+       },
+       {
+        "action": "we're looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "volume is absolutely crucial i need this volume to be there if i'm going to take this trade if it's not i move on and look for a better option"
+       },
+       {
+        "description": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level like three dollars here"
+       },
+       {
+        "description": "the v-wap can act as a resistance level as well and so i never buy these stocks if the v is above me for that reason too many times the v wap's just going to reject it back down"
+       }
+      ],
+      "targets": [],
+      "stop": null
+     }
+    ]
+   }
+  }
+ ]
+}

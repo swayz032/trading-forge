@@ -1,0 +1,78 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "overnight_range_break_retest",
+      "entry_summary": "Mark the overnight/pre-market range (4:00pm–9:30am EST) high and low; wait for price to break above or below the range on a candle close with strength (break above) or weakness (break below) aligned with the overall trend; then enter on the pullback that retests the broken level with confirming price action and elevated volume.",
+      "exit_summary": "Stop on the opposite side of the breakout point (below the previous high for longs / above the level for shorts); take a first trim when comfortable, move stop to break-even, and let the winner run until satisfied or stopped out in profit.",
+      "session": "New York market session, 9:30 a.m. EST all the way until 4:00 pm EST",
+      "overnight_range_window": "from 4:00 p.m. EST all the way until 9:30 a.m. EST",
+      "direction": "both",
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action"
+        },
+        {
+          "step": 2,
+          "action": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range. Now if we can actually get that break we want to see it close below or above with strength or weakness"
+        },
+        {
+          "step": 3,
+          "action": "if for example if we're breaking below well then we want to see a break below with weakness. If we see a break above well then we want to look for price to break above with strength. If we are actually able to do that then that is actual confirmation that price is likely going to break and continue in that direction"
+        },
+        {
+          "step": 4,
+          "action": "when we get that break with strength or weakness, we are then going to look for price to pull back and retest that level"
+        },
+        {
+          "step": 5,
+          "action": "if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume. If we can get that, we are then going to look for a long entry"
+        },
+        {
+          "step": 6,
+          "action": "If price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this area as resistance with bearish price action, whether it be uh bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume. Well, if we get that, we are going to look for a short entry to take price lower"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks (for longs) / bearish hammer, gravestone dogee, long upper wick, bearish engulfing (for shorts)"
+        },
+        {
+          "description": "an elevation in the volume"
+        },
+        {
+          "description": "the overall trend is going to be very important when dictating are we looking for price to break above the range or are we looking for price to break below the range. if the overall trend is to the upside, well then ideally we're not looking for price to break below to look for shorts. Ideally we're waiting for price to break above to look for longs. Or if the overall trend is very weak, well then ideally we're looking for the market to break below this level and continue lower"
+        }
+      ],
+      "stop": {
+        "description": "our stop is going to be if price breaks back down below this previous high (long) / our stop is going to be if price breaks above this level (short). Your stop loss is always on the opposite side of the breakout point",
+        "level": null
+      },
+      "targets": [
+        {
+          "description": "once you feel comfortable with your first trim, take it, put your stop-loss at break even",
+          "level": null
+        },
+        {
+          "description": "it is also very important to let your winners run until one, you're satisfied with the trade or two, you're stopped out in profits",
+          "level": null
+        }
+      ],
+      "variants": [
+        {
+          "variant_label": "breakout-without-retest entry (dispreferred by speaker)",
+          "confirmation_mechanic_note": "I'm not a big fan of trading the breakouts. If you wanted to, you could have and you could have caught a nice little move up, but I'm a big fan of that retest",
+          "transcript_quote": "I'm not a big fan of trading the breakouts."
+        }
+      ],
+      "coverage_notes": "ELEMENT 1 (long/short = direction mirror, one object): ACCOUNTED-FOR — captured as a single strategy with direction=both; entry_sequence step 5 is the long path and step 6 is the speaker's explicit mirror short path ('or vice versa'), sharing one skeleton (mark range → close-break with strength/weakness → retest → confirming candle + volume). Stop is mirrored (below previous high for longs, above the level for shorts). ELEMENT 2 (breakout-without-retest = dispreferred alternative): ACCOUNTED-FOR — captured as a dispreferred VARIANT; the speaker explicitly states he prefers the retest and only mentions the raw-breakout entry as an option he does not favor ('I'm not a big fan of trading the breakouts... but I'm a big fan of that retest'). GESTURAL EXIT NOTE: the exit has stated management rules (first trim, move stop to break-even, let winners run) but NO stated target price/level — target levels nulled per the gestural-exit rule. R-multiple figures in the transcript (~1.5–2R, 2.6R) and dollar figures ($1,000/$2,000, $925 risk, $50-per-point, 15-point move) are day-of walk-through EXAMPLES, not rules, so they are excluded from the rule fields."
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "specific_instrument": null,
+    "notes": "No ticker is named verbatim. The speaker references trading in 'contracts' and 'points' with a '$50 a point' example (consistent with an equity-index future), and dollar-per-trade examples, but never states a specific instrument as a rule — specific_instrument nulled. The method itself is price-action / support-resistance based and instrument-agnostic."
+  },
+  "rejected_strategies": []
+}

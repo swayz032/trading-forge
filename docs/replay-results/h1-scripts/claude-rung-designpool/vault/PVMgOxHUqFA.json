@@ -1,0 +1,67 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "abc_trend_continuation_reclaim",
+      "entry_sequence": [
+       {
+        "action": "I was looking on the 4hour time frame."
+       },
+       {
+        "action": "as we scaled down, you should have been looking for the 15minut to go bullish."
+       },
+       {
+        "action": "You just have to start tracking your highs and lows on that 15-minut time frame."
+       },
+       {
+        "action": "you know the 4 hour and the one hour is bullish, all you're doing is waiting for that 15minut time frame or 5 minute time frame, whichever one's the clearest to you"
+       },
+       {
+        "action": "Price stops making lower lows"
+       },
+       {
+        "action": "Price goes for a lower high. It tries to come down, fails to do so. This is a bullish sign. This is telling us price could go bullish because it's not breaking a lower low or is not making a low."
+       },
+       {
+        "action": "But the second thing that confirms that would be price breaking above that lower high."
+       },
+       {
+        "action": "we have that push that break above your once again your entry goes here"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "That lets us know that there's a bunch of sellers waiting here at price, right? So, if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish."
+       },
+       {
+        "description": "That lets us know that buyers are holding at this price level"
+       },
+       {
+        "description": "Literally a ABC setup."
+       }
+      ],
+      "targets": [
+       {
+        "description": "you scale back out to that 1 hour time frame. Once you scale back out to that 1 hour time frame, you'll target that 1 hour high."
+       },
+       {
+        "description": "And that's a one that's a one to 10 setup."
+       },
+       {
+        "description": "if you would have scaled out more, you would have been like, \"Okay, 4 hour has broken the high and you would be scaling out now. You would probably be around a 1 to 32.\""
+       }
+      ],
+      "stop": {
+       "anchor": "putting your stop loss under that level where you don't want to see price get broken; your stop loss goes either here or here whichever one you want to use here"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

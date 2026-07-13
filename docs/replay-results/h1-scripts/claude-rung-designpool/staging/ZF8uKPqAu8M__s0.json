@@ -1,0 +1,39 @@
+{
+  "strategies": [
+    {
+      "name": "orb_15m_immediate_breakout",
+      "timeframe": "15-minute chart",
+      "session_timezone": "New York. So, that's UTC minus 4",
+      "direction": "long",
+      "entry_sequence": [
+        { "step": 1, "action": "I set my time zone to New York. So, that's UTC minus 4" },
+        { "step": 2, "action": "I then look for the 9:30 candle, which is the market open in New York" },
+        { "step": 3, "action": "I'm going to mark out the high and the low. So, I mark the high and then do the same thing with the low. This gives me my opening range" },
+        { "step": 4, "action": "After that, I'm just waiting for a candle to break out through this range" },
+        { "step": 5, "action": "I prefer to wait for the candle to actually break through and then close above. So, in this case, my signal is this candle here because it's the first one to actually break out and then close outside of that range" },
+        { "step": 6, "action": "I then enter at the open of the next one" }
+      ],
+      "confluences": [
+        { "description": "I don't trade after the 12:00 candle, which would be here. So that would be my cut off for entering a trade" },
+        { "description": "I also don't trade ranges that are either too small or too big based on the recent ATR" }
+      ],
+      "stop": "the stop loss goes at the bottom of the range",
+      "targets": [
+        { "description": "I target 1.5 to one reward to risk" }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equity_index",
+    "symbol": "S&P 500",
+    "evidence": "I have back tested 5 years of S&P 500 data",
+    "is_options_mechanic": false
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "element_inventory ['enter as soon as price breaks']: ABSENT-WITH-REASON — the transcript raises this only as an alternative the speaker explicitly REJECTS: 'I know that some people will enter as soon as the price is broken, like on this green wick up here. But I prefer to wait for the candle to actually break through and then close above.' It is therefore a rejected alternative for THIS strategy, not one of its entry rules; recorded here per the coverage contract rather than extracted as an entry step.",
+    "SCOPE ISOLATION: This is the IMMEDIATE-BREAKOUT recap object only. The 5-minute breakout-pullback-continuation setup, its stop/target alternatives ('It could also go at the bottom of this pullback candle', 'I don't have to always aim for one and a half times'), the stop-order-at-ORB variant, and the midpoint-entry variant are all part of the SEPARATE modified strategy and are deliberately excluded.",
+    "direction: only LONG is demonstrated in the recap ('I'll place my long entry here'); no short-side rule was stated, so a short mirror is left null rather than invented.",
+    "stop / target levels are stated as RULES (bottom of range; 1.5:1), not example numbers — no live-example prices exist in this recap to strip."
+  ]
+}

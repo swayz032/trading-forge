@@ -1,0 +1,61 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "spread_making_scalp",
+      "entry_summary": "In liquid but thin name near equilibrium, provide liquidity: place resting limit orders ahead of large bids/offers, market-maker style, to capture the spread as urgent participants cross.",
+      "exit_summary": "GESTURAL: capture the spread difference; Facebook-IPO example slam bids then kick offers out a point higher, repeat. No explicit stop.",
+      "entry_sequence": [
+        {
+          "action": "making the spread, especially in a liquid name",
+          "verbatim": true
+        },
+        {
+          "action": "Instead of aggressively taking liquidity, you provide the liquidity.",
+          "verbatim": true
+        },
+        {
+          "action": "You're placing resting limit orders in spread names ahead of large bids or offers with the aim to capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer.",
+          "verbatim": true
+        },
+        {
+          "action": "When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread. They'll pay that offer up there and hit the bid down there.",
+          "verbatim": true
+        },
+        {
+          "action": "In this sense, by providing that liquidity, you are acting more like a market maker than a momentum trader.",
+          "verbatim": true
+        }
+      ],
+      "confluences": [
+        {
+          "description": "The edge here does not come from predicting direction. It comes from understanding market microstructure."
+        },
+        {
+          "description": "To do this well, you must really understand market microstructure of order types, queue priority, and hidden versus visible orders."
+        }
+      ],
+      "stop": null,
+      "targets": [],
+      "exit": {
+        "gestural": true,
+        "level": null,
+        "quote": "capture the difference between the spread ... immediately just slamming in huge bids, only to just as quickly kick his offers out and his size out a point or two higher, and repeating it again and again before that spread compressed and the stock drifted lower.",
+        "note": "Exit taught only gesturally + via a live example. 'a point or two higher' is that trade's Facebook-IPO example number, not a stated rule → target LEVEL nulled. No stop stated anywhere for this strategy."
+      }
+    }
+  ],
+  "instrument_classification": {
+    "primary_instrument": "US equities (in-play stocks)",
+    "asset_class": "equities",
+    "is_options_mechanic": false,
+    "evidence": "Speaker talks in stocks/shares throughout ('in-play stock', '5,000 shares', cents-level moves, 'the Facebook IPO', 'over a dollar spread'). No Greeks, strikes, or expiries — mechanic is spread-capture / market-making, a strategy mechanic, not an options mechanic.",
+    "notes": "Spread-making is a liquidity-provision mechanic; instrument is equities but the mechanic is instrument-agnostic (not options)."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "swing trading = ABSENT-WITH-REASON: 'swing trading' appears only once in the transcript as a risk contrast ('Unlike with swing trading, where you are exposed to overnight risk, headline risk, and the whims of the overall market') to argue FOR scalping's tight-risk profile. It is not taught, and is unrelated to the spread-making setup — correctly not extracted.",
+    "GESTURAL EXIT (v3.1): strategy kept, entry extracted verbatim, stop and target LEVEL fields nulled, exit words preserved verbatim in exit.quote, flagged gestural. Speaker gave no stop and no rule-level target for spread-making — only 'capture the difference between the spread' plus the Facebook-IPO walk-through ('a point or two higher').",
+    "This is ONE of three scalp strategies taught (mean-reversion, continuation, making-the-spread). Only spread-making extracted per SCOPE; the other two are out of scope, not rejected."
+  ]
+}

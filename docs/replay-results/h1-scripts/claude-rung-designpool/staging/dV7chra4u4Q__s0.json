@@ -1,0 +1,84 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "break_and_retest",
+      "direction": "both",
+      "entry_summary": "Price breaks above a key level or breaks below a key level, it comes back, it retests that level, and it holds it, and it continues in the original direction; enter long on a held retest of a broken resistance (now support) or short on a held retest of broken support (now resistance), after confirmation.",
+      "exit_summary": "Stop is if price breaks back on the opposite side of the breakout level; target is the next obvious area of liquidity (previous high/low, supply/demand zone). Fixed risk per trade, A+ setups only, one to two trades a day at max.",
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, uh previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones."
+        },
+        {
+          "step": 2,
+          "action": "wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level. Now, on top of that, we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out. ... we want a clean push through these levels. It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it ... Literally like a couple big candles through the level, that's what we want to look for. So, if it looks weak, we ignore the setup, and we do not take it."
+        },
+        {
+          "step": 3,
+          "action": "wait for the retest ... We want to wait for price to pull back ... tests the level. We want to see price hold the level. If it's able to hold the level, we are then going to look for either bullish price action, if we're looking for price to go up, or bearish price action, if we're looking for price to go down."
+        },
+        {
+          "step": 4,
+          "action": "I enter after confirmation. So, again, if we do not get confirmation, we do not take the trade.",
+          "long_confirmation": "we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support.",
+          "short_confirmation": "we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid."
+        }
+      ],
+      "confluences": [
+        {
+          "description": "we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out."
+        },
+        {
+          "description": "if you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area. All those things combined, the volume confirmation, the price action telling you to get in, as well as the liquidity on Bookmap, all of that sets up for a very high probability trade.",
+          "optional": true
+        },
+        {
+          "description": "retests the 80 MA, reclaims it right here ... get back up above that 8 EMA. That's when I went long.",
+          "optional": true,
+          "note": "MA-reclaim (80 MA / 8 EMA) stated only in the on-chart walk-through examples, not in the step-by-step; treated as an optional confirmation the speaker used, not a formal step."
+        }
+      ],
+      "stop": "Your stop is if price breaks back on the opposite side of the breakout level. That's it. So, you're not risking a lot when you take these trades.",
+      "targets": [
+        {
+          "description": "your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market."
+        }
+      ],
+      "risk_management": "You risk a fixed amount per trade, and you only take A+ setups. One to two trades a day at max. Again, I always stress this. One to two trades a day, that's it.",
+      "variants": [
+        {
+          "variant_label": "first confirmation-candle entry",
+          "confirmation_mechanic_note": "maybe you took the trade based on this candle right here",
+          "target_note": null,
+          "timeframe_note": null,
+          "transcript_quote": "if you took this trade ... at the close of this candle ... your risk would be wider below that confirmation candle"
+        },
+        {
+          "variant_label": "second-chance tighter-stop entry",
+          "confirmation_mechanic_note": "a second, later retest candle instead of the first",
+          "target_note": null,
+          "timeframe_note": null,
+          "transcript_quote": "If you didn't like it, it did come back and give you another possible entry right here with an even tighter stop-loss."
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "is_tradeable_strategy": true,
+    "is_options_mechanic": false,
+    "instrument_class": "futures",
+    "instruments_mentioned": ["NASDAQ futures (NQ)"],
+    "rationale": "Pure price-action break-and-retest on index futures ('Let's do this on the NASDAQ futures'). No options mechanics (no strikes/Greeks/expiry). Instrument-agnostic setup; futures explicitly named."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "INVENTORY 1 'first confirmation-candle entry variant' -> PRESENT as variants[0]; speaker: 'maybe you took the trade based on this candle right here' with risk 'wider below that confirmation candle'.",
+    "INVENTORY 2 'second-chance tighter-stop entry variant' -> PRESENT as variants[1]; speaker: 'it did come back and give you another possible entry right here with an even tighter stop-loss'.",
+    "INVENTORY 3 'long/short = direction mirror, one object' -> PRESENT: one strategy object, direction='both'. Long = held retest of broken resistance-become-support with bullish price action; short = held retest of broken support-become-resistance with bearish price action ('vice versa to the downside'). Fully mirrored, not two strategies.",
+    "INVENTORY 4 'Bookmap order-flow confluence' -> PRESENT as confluences[1] (optional); speaker: 'if you like to use order flow, you could use Bookmap liquidity ... buyers or sellers are present at that area.'",
+    "NON-INVENTORY, captured for honesty: 80 MA / 8 EMA reclaim appears only in the on-chart examples as an entry confirmation ('reclaims it right here'; 'get back up above that 8 EMA. That's when I went long'), never stated as a step in the step-by-step; recorded as an optional confluence with that provenance note.",
+    "Example-only numbers ('about 70 points', 'about like another 10-15 minutes') are that-day walk-through outcomes, not rules; nulled/omitted from rule fields per the example-vs-rule rule."
+  ]
+}

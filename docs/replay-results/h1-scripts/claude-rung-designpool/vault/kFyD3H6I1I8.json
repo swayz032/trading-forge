@@ -1,0 +1,46 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "three_step_engulfing_orb_scalp",
+      "entry_sequence": [
+       {
+        "action": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction because I trade every day from 9:30 to 11:00 a.m. Eastern on Forex, Nasdaq, gold, everything. Now, if I want to buy, I want to see a bullish engulfing pattern form before my trading session. And if I want to sell, I want to see a bearish engulfing pattern form before my trading session."
+       },
+       {
+        "action": "I'm on the five-minute time frame, and I need to set up my range... I'm marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session. And you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy. This break of the range tells me the buyers have some momentum."
+       },
+       {
+        "action": "Now, step three is all about finding a point of interest. On this trading position, we have a level of demand off of this candle right here... And a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing. And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level, and that's exactly what happens. It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here."
+       }
+      ],
+      "confluences": [
+       {
+        "description": "You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again."
+       },
+       {
+        "description": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position."
+       },
+       {
+        "description": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear."
+       }
+      ],
+      "targets": [
+       {
+        "description": "And for my take profit, I'm always going to look left and see what I can find... I actually put it all the way up here. And the reason for that is because we had an aggressive level of supply. This is a supply zone right there, and I put this around right about there in the middle of that supply because you know, if price comes up to supply, it very likely can react and come down off of that level."
+       }
+      ],
+      "stop": {
+       "anchor": "My stop loss is pretty perfect here. I like it below the range."
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

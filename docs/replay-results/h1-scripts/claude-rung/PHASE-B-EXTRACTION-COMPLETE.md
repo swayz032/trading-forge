@@ -19,3 +19,10 @@ PERSISTENCE INTEGRITY: extractions must be persisted BYTE-EXACT by the extractor
 5. JOINT VERDICT = grounding (<=8% locator) AND content-preservation clean -> clear = freeze SHA -> sealed-12 terminal read; miss = paid understudies (terra/sol).
 
 Vault dirs staged: docs/replay-results/h1-scripts/claude-rung-designpool/{vault,staging}/.
+
+## STANDING COST MODEL (operator, 2026-07-13) — batch-first
+- BATCH API = 50% off all rates; non-interactive OpenAI jobs run batch-first by default, sync only when latency matters.
+- gpt-5.4 KEEPS the grading-panel job: free 250K/day beats sol/terra (NO free tier — batch parity only on paid tokens).
+- Paid understudy contingency (only if Claude misses joint bar): terra-batch ~$0.35/pool (auditions first, cheapest-capable), sol-batch ~$0.70/pool (= old 5.4 price, bigger brain). Both birth gates ~$0.25 together.
+- Ladder UNCHANGED: Claude free in chair ($0 beats cheap, mid-exam on best manual), terra before sol. 5.4 rung STAYS CLOSED (completeness not price — a discount can't fix a missing stop-loss).
+- Claude content panel: gpt-5.4 BATCH, $0.60 ticket, $1.10 sync-fallback. EMPIRICAL-OPEN: batch draws free pool or bills token-one? dashboard resolves after first job.

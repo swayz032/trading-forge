@@ -1,0 +1,90 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "continuation_breakout_scalp",
+      "entry_summary": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance. When scalping here, you are trying to be the first market participant to enter upon the break. So, if we have a $10 resistance level, you want to be buying $10.01 or $10.02.",
+      "exit_summary": "scalping out on that emotional follow-through ... potentially kicking it out 10, 20, or even 30 cents higher. Often, your stop loss would be right below that level if it gets back below the $50.",
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance.",
+          "note": "Setup context — the level whose break is traded (rule)."
+        },
+        {
+          "step": 2,
+          "action": "you are trying to be the first market participant to enter upon the break",
+          "note": "Core entry intent (rule)."
+        },
+        {
+          "step": 3,
+          "action": "if we have a $10 resistance level, you want to be buying $10.01 or $10.02",
+          "note": "Rule stated with a round-number resistance ($10); the +$.01/+$.02 above the level is the mechanic. $10 is illustrative."
+        },
+        {
+          "step": 4,
+          "action": "Good scalpers are the ones either buying that offer or having a stop limit buy order just above it to buy $25 and $25.02",
+          "note": "Two ways to be first (take the offer, or a resting stop-limit buy just above) — from the opening $25 example, same skeleton, folded in per element_inventory. The $25 figures are the example's numbers."
+        },
+        {
+          "step": 5,
+          "action": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone, you want to be the one buying at $50.01, if possible",
+          "note": "Trigger from the $48-$50 walk-through: enter just above ($X.01) as the resting offer shrinks then disappears. $50.01 is that example's number; the shrink-then-gone mechanic is the rule."
+        }
+      ],
+      "confluences": [
+        {
+          "description": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow."
+        },
+        {
+          "description": "Are the buyers aggressively lifting into that offer? Are prints going off repeatedly at $50? Is that offer refreshing? Meaning, it's reappearing after partial fills, or is it getting taken?"
+        },
+        {
+          "description": "You see multiple pushes into that $50. The pullbacks are shallow, and each dip finds buyers higher than the previous dip. That is attention building."
+        },
+        {
+          "description": "Strong breakouts feel urgent, and you want to see the stock burst through that level with conviction."
+        }
+      ],
+      "stop": {
+        "description": "Often, your stop loss would be right below that level if it gets back below the $50.",
+        "level": null,
+        "note": "Rule = just below the broken level; the $50 is the walk-through example, so the numeric level is null."
+      },
+      "targets": [
+        {
+          "description": "scalping out on that emotional follow-through",
+          "level": null,
+          "note": "Colloquial exit intent; no absolute level stated."
+        },
+        {
+          "description": "potentially kicking it out 10, 20, or even 30 cents higher",
+          "level": null,
+          "note": "Relative exit distances stated as the rule range (from the $48-$50 walk-through)."
+        },
+        {
+          "description": "they're kicking it out 10 cents higher at $25.10 and $25.12",
+          "level": null,
+          "note": "Same exit mechanic from the opening $25 example (folded in); $25.10/$25.12 are that example's numbers."
+        }
+      ],
+      "invalidation": {
+        "description": "Weak breakouts drift through a level and stall. The tape slows, sellers start hitting bids just above the resistance, and that often leads to failed breaks."
+      },
+      "variants": []
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "is_options_mechanic": false,
+    "evidence": "Speaker talks in shares and stock price levels — 'in-play stock', 'they might take their 5,000 shares', stock levels at $10/$25/$48-$50, 'level two box', 'time and sales'. No Greeks, strikes, or options mechanics.",
+    "notes": "Cash-equities / listed-stock scalping via order-flow (tape) reading. No specific ticker; examples are generic in-play names."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "element_inventory 'opening $25-offer example = same continuation skeleton, folds in': ACCOUNTED FOR — folded into this strategy. The speaker explicitly ties them ('much like the example we gave earlier'). The $25 offer-take example supplied entry_sequence step 4 (buy the offer OR resting stop-limit buy at $25/$25.02) and targets item 3 (kick out 10c higher at $25.10/$25.12). Its numbers ($25, $25.02, $25.10, $25.12, 5,000 shares) are that example's figures, not rules.",
+    "The $48-$50 earnings walk-through is a worked example, not a separate variant: 'earnings this morning', 'Volume is five times normal', 'up from $48 to $50', 'buying at $50.01', 'kicking it out 10, 20, or even 30 cents higher', stop 'below the $50'. Its relative mechanics (buy $X.01 as offer shrinks/disappears; +10/20/30c exits; stop just below level) are the rules; the absolute $ figures are example-specific and left as null levels.",
+    "Foundational conditions the speaker attaches to ALL scalps (in-play stock: 'significant price range', 'high volume', 'news catalyst'; a 'tight' level 'ideally one that aligns on multiple time frames'; 'reading the tape') are general prerequisites, not unique to continuation; not duplicated into confluences to avoid over-attributing shared foundation to this one strategy.",
+    "Only continuation-breakout extracted. Mean-reversion scalp ('stepping in when emotion peaks... take the offer and get long in front of that support level') and making-the-spread ('provide the liquidity... resting limit orders... capture the difference between the spread') are the other two of the three scalp strategies and are OUT OF SCOPE here — not extracted, not rejected."
+  ]
+}

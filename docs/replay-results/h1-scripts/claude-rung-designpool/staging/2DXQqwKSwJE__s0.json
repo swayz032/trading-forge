@@ -1,0 +1,64 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "mean_reversion_scalp",
+      "entry_summary": "On sharp fast move into support (mirror resistance) backed by large bids/offers, read tape for volume stalling (sellers stop hitting bid = momentum turn); take the offer and get long in front of support.",
+      "exit_summary": "GESTURAL: capture the bounce off the level; bids at support = protection. No explicit target.",
+      "variants": [],
+      "entry_sequence": [
+        {
+          "action": "Mean reversion scalps occur after price stretches too far too fast."
+        },
+        {
+          "action": "You are stepping in when emotion peaks and order flow begins to shift. That shift is visible in the tape before it's obvious on the chart."
+        },
+        {
+          "action": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid."
+        },
+        {
+          "action": "That pause is often the hesitation of sellers to push their hand and signifies a turn of momentum."
+        },
+        {
+          "action": "As a scalper, you then take the offer and get long in front of that support level"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "Often, these mean reversion scalps work best when the stock quickly and sharply shoots down to a support level with some massive bids or quickly and sharply shoots up to a resistance level with large offers."
+        },
+        {
+          "description": "The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal."
+        }
+      ],
+      "stop": {
+        "level": null,
+        "gestural": true,
+        "quote": "using the bids as at the support as your protection"
+      },
+      "targets": [
+        {
+          "level": null,
+          "gestural": true,
+          "quote": "seeking to capture the bounce we get off that level"
+        }
+      ],
+      "gestural_exit": true
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "instrument_named": "in-play stock",
+    "options_mechanic": false,
+    "mechanic_is_instrument_agnostic": true,
+    "note": "Taught on stocks/shares (level-two tape, bids/offers, support/resistance). Mechanic is tape-and-level scalping, not an options/Greeks mechanic; ports to futures. Numeric examples ($25, 5,000 shares, $500) belong to the continuation-scalp illustration, not this strategy."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "element_inventory was empty [] — no inventoried elements to account for beyond entry/exit; nothing silently dropped.",
+    "GESTURAL EXIT (v3.1): trader gave no stop LEVEL and no target LEVEL. Stop level and target level nulled; the speaker's protection words ('using the bids as at the support as your protection') and exit words ('seeking to capture the bounce we get off that level') preserved verbatim and flagged gestural. Strategy kept.",
+    "Scoped to mean-reversion ONLY. The continuation-breakout scalp ($10/$50 resistance, buy $10.01/$50.01, stop below level) and the spread-making/market-maker scalp (Facebook IPO) are separate strategies in this video and were deliberately excluded.",
+    "General tape-reading instruction ('how thick or thin the bids and offers are... Is the offer being taken, or are the bids being smashed?') is taught for ALL three scalps, not specific to mean-reversion, so it was not folded in as a mean-reversion confluence.",
+    "No explicit numeric level, stop distance, or profit target was stated for the mean-reversion setup; none invented (Rule 3)."
+  ]
+}

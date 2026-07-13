@@ -1,0 +1,139 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "mean_reversion_scalp",
+      "entry_sequence": [
+       {
+        "action": "Mean reversion scalps occur after price stretches too far too fast."
+       },
+       {
+        "action": "You are stepping in when emotion peaks and order flow begins to shift. That shift is visible in the tape before it's obvious on the chart."
+       },
+       {
+        "action": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid."
+       },
+       {
+        "action": "That pause is often the hesitation of sellers to push their hand and signifies a turn of momentum."
+       },
+       {
+        "action": "As a scalper, you then take the offer and get long in front of that support level"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "Often, these mean reversion scalps work best when the stock quickly and sharply shoots down to a support level with some massive bids or quickly and sharply shoots up to a resistance level with large offers."
+       },
+       {
+        "description": "The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal."
+       }
+      ],
+      "targets": [
+       {
+        "description": "seeking to capture the bounce we get off that level"
+       }
+      ],
+      "stop": {
+       "anchor": "using the bids as at the support as your protection"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "continuation_breakout_scalp",
+      "entry_sequence": [
+       {
+        "action": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance."
+       },
+       {
+        "action": "you are trying to be the first market participant to enter upon the break"
+       },
+       {
+        "action": "if we have a $10 resistance level, you want to be buying $10.01 or $10.02"
+       },
+       {
+        "action": "Good scalpers are the ones either buying that offer or having a stop limit buy order just above it to buy $25 and $25.02"
+       },
+       {
+        "action": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone, you want to be the one buying at $50.01, if possible"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow."
+       },
+       {
+        "description": "Are the buyers aggressively lifting into that offer? Are prints going off repeatedly at $50? Is that offer refreshing? Meaning, it's reappearing after partial fills, or is it getting taken?"
+       },
+       {
+        "description": "You see multiple pushes into that $50. The pullbacks are shallow, and each dip finds buyers higher than the previous dip. That is attention building."
+       },
+       {
+        "description": "Strong breakouts feel urgent, and you want to see the stock burst through that level with conviction."
+       }
+      ],
+      "targets": [
+       {
+        "description": "scalping out on that emotional follow-through"
+       },
+       {
+        "description": "potentially kicking it out 10, 20, or even 30 cents higher"
+       },
+       {
+        "description": "they're kicking it out 10 cents higher at $25.10 and $25.12"
+       }
+      ],
+      "stop": {
+       "anchor": "Often, your stop loss would be right below that level if it gets back below the $50."
+      }
+     }
+    ]
+   }
+  },
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "spread_making_scalp",
+      "entry_sequence": [
+       {
+        "action": "making the spread, especially in a liquid name"
+       },
+       {
+        "action": "Instead of aggressively taking liquidity, you provide the liquidity."
+       },
+       {
+        "action": "You're placing resting limit orders in spread names ahead of large bids or offers with the aim to capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer."
+       },
+       {
+        "action": "When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread. They'll pay that offer up there and hit the bid down there."
+       },
+       {
+        "action": "In this sense, by providing that liquidity, you are acting more like a market maker than a momentum trader."
+       }
+      ],
+      "confluences": [
+       {
+        "description": "The edge here does not come from predicting direction. It comes from understanding market microstructure."
+       },
+       {
+        "description": "To do this well, you must really understand market microstructure of order types, queue priority, and hidden versus visible orders."
+       }
+      ],
+      "targets": [],
+      "stop": null
+     }
+    ]
+   }
+  }
+ ]
+}

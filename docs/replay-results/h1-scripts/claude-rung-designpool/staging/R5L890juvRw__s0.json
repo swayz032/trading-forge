@@ -1,0 +1,60 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "vwap_band_trend_continuation",
+      "entry_summary": "With a directional bias, wait for price to run to the 1st/2nd VWAP std-dev band, then after it breaks/retests enter WITH the move (e.g. long once price pushed to band and held).",
+      "exit_summary": "Use 2nd and 3rd std-dev bands as profit target; exit only via band targets (no explicit stop).",
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "say you might have a long idea for your session"
+        },
+        {
+          "step": 2,
+          "action": "as the New York session opens we are still right on Fair Value we start running up you might want to wait until the price has gone at least to the first if not the second standard deviation"
+        },
+        {
+          "step": 3,
+          "action": "after we broke it and tested it we can try our long trade"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "it's always needed to have a context behind your trading idea you're not just going to trade based off of vwap only"
+        },
+        {
+          "description": "we've accumulated a bunch of orders below here and created volume below and see the vwap going down a little bit also"
+        }
+      ],
+      "stop": null,
+      "targets": [
+        {
+          "level": "second standard deviation",
+          "description": "you can use the second and third standard deviation as a Target"
+        },
+        {
+          "level": "third standard deviation",
+          "description": "you can use the second and third standard deviation as a Target"
+        }
+      ],
+      "variants": []
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "instruments_mentioned": ["five es contracts"],
+    "market_scope": "day trader",
+    "timeframe": null,
+    "notes": "Speaker frames it as a day-trading application of VWAP; references 'you as a day trader with five es contracts'. No specific chart timeframe stated for this setup."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "ENTRY — APPEARS: directional-bias precondition ('you might have a long idea for your session'), wait-for-band ('wait until the price has gone at least to the first if not the second standard deviation'), and break-and-retest trigger ('after we broke it and tested it we can try our long trade') all extracted verbatim as entry_sequence steps 1-3.",
+    "EXIT/TARGETS — APPEARS: 'you can use the second and third standard deviation as a Target' extracted verbatim as two target objects (2nd and 3rd std-dev bands). Consistent with exit_summary.",
+    "STOP — ABSENT-WITH-REASON: the speaker states no stop-loss level or stop rule anywhere for this continuation setup; exit is defined ONLY by the band targets. stop set to null (genuine absence, not gestural).",
+    "CONFLUENCES — APPEARS: the mandatory-context requirement ('it's always needed to have a context behind your trading idea you're not just going to trade based off of vwap only') and the order/volume-accumulation-below confirmation ('we've accumulated a bunch of orders below here and created volume below and see the vwap going down a little bit also').",
+    "SCOPE BOUNDARY: the mean-reversion/reversal setup ('if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels ... and use the central vwap as a target for Price rebalancing') is the OTHER object of the Rule-2 pair and was deliberately NOT extracted here.",
+    "NO INVENTED PRECISION: the walk-through phrasing is loose ('at least to the first if not the second') — kept verbatim, no exact price or numeric level fabricated. element_inventory was empty and variants empty, so no additional inventoried elements to account for."
+  ]
+}

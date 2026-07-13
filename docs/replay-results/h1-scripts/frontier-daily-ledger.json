@@ -4,6 +4,19 @@
   "mini": 309111,
   "_burst_gpt54": {
    "pool": "gpt54",
+   "limitTokens": 300000,
+   "limitUsd": 1.0,
+   "overageUsdPerMTok": 2.5,
+   "freePoolLine": 250000,
+   "grantedAtSpent": 1320695,
+   "signedBy": "operator (Tonio): CLAUDE CONTENT PANEL via OpenAI Batch API @ reasoning_effort=HIGH (omission-hunter; false-PASS is catastrophic -> buy the thinking); cap $1.00; SYNC-FALLBACK $1.10; batch-first + grader=HIGH standing policy.",
+   "grantedUtcDate": "2026-07-13",
+   "_sync_fallback_usd": 1.1,
+   "_delivery": "openai-batch-api",
+   "_empirical_open": "does batch traffic draw the free 250K pool or bill from token one? dashboard resolves after first job; ledger learns permanently."
+  },
+  "_burst_gpt54_configpass_RETIRED": {
+   "pool": "gpt54",
    "limitUsd": 2,
    "overageUsdPerMTok": 4.199999999999999,
    "limitTokens": 476190,

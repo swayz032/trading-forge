@@ -1,0 +1,94 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_20sma_confluence_long",
+      "entry_sequence": [
+       {
+        "action": "the first two-minute candle off the Bell closes over the 20 SMA and vwap"
+       },
+       {
+        "action": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+       },
+       {
+        "action": "you get into a position here over the comp[luence] information of vwap and the 20 SMA"
+       },
+       {
+        "action": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+       },
+       {
+        "action": "we pull back into vwap this is a good loading opportunity to kind of lower that dollar cost average ... maybe we can add one time here"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "if we're trading over the vwob [vwap] we're typically more bullish"
+       },
+       {
+        "description": "use vwap for extra Confluence in finding these setups"
+       },
+       {
+        "description": "all we're doing is back testing support here at vwap ... as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+       },
+       {
+        "description": "as long as the V up [vwap] is trending higher as long as your 20 SMA is trending higher you can hold hold this trade"
+       }
+      ],
+      "targets": [
+       {
+        "description": "you can throw the upper and and lower channels on the vop [vwap] the the bands and you can sell for profits into the upper Channel"
+       },
+       {
+        "description": "you can use the 20 SMA as a trailing stop so if we do close below the 20 SMA maybe you can use that as an indication to get out of the trade"
+       }
+      ],
+      "stop": {
+       "anchor": "use the previous Wick as a stop ... use the previous low Point as a stop"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_20sma_rejection_short",
+      "entry_sequence": [
+       {
+        "action": "if we were to lose vop and lose the 20 SMA collectively"
+       },
+       {
+        "action": "and then close below vop"
+       },
+       {
+        "action": "and then we have a following candle that starts to build below"
+       },
+       {
+        "action": "then yes I'm not looking to buy the bounce anymore what I'm looking to do is short the rejection of vwap and the 20 SMA"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "lose vop and lose the 20 SMA collectively"
+       },
+       {
+        "description": "close below vop"
+       },
+       {
+        "description": "a following candle that starts to build below"
+       }
+      ],
+      "targets": [],
+      "stop": null
+     }
+    ]
+   }
+  }
+ ]
+}

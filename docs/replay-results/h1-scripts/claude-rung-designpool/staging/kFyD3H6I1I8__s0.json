@@ -1,0 +1,98 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "three_step_engulfing_orb_scalp",
+      "entry_summary": "A three-step beginner scalping model traded 9:30 to 11:00 a.m. Eastern: (1) bias from a bullish/bearish engulfing pattern on the 7:00 a.m. and 8:00 a.m. 1-hour candles; (2) mark the 9:30-9:45 range on the 5-minute and require a break and close outside it in the bias direction; (3) find a demand/supply point of interest and enter on the retracement.",
+      "exit_summary": "Stop loss below the range (or beyond the entry level/wick); take profit found by 'looking left' at an opposing supply/demand level for roughly 2.16-2.3R; optionally set break even once in profit, or watch the trade and exit manually.",
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction because I trade every day from 9:30 to 11:00 a.m. Eastern on Forex, Nasdaq, gold, everything. Now, if I want to buy, I want to see a bullish engulfing pattern form before my trading session. And if I want to sell, I want to see a bearish engulfing pattern form before my trading session."
+        },
+        {
+          "step": 2,
+          "action": "I'm on the five-minute time frame, and I need to set up my range... I'm marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session. And you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy. This break of the range tells me the buyers have some momentum."
+        },
+        {
+          "step": 3,
+          "action": "Now, step three is all about finding a point of interest. On this trading position, we have a level of demand off of this candle right here... And a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing. And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level, and that's exactly what happens. It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here."
+        }
+      ],
+      "confluences": [
+        {
+          "description": "You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again.",
+          "element": "zone retest + engulfing confirmation variant"
+        },
+        {
+          "description": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position.",
+          "element": "passive limit order variant"
+        },
+        {
+          "description": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear.",
+          "element": "range break-and-retest edge variant"
+        }
+      ],
+      "stop": {
+        "description": "My stop loss is pretty perfect here. I like it below the range.",
+        "variant_notes": [
+          "I set my stop loss below this level right here. I felt like that was pretty safe... We had the level of demand right there. So, possibly could have triggered that and went into the trade. It [is] a little bit of an extra safeguard.",
+          "I put my stop loss above this recent wick to be safe"
+        ]
+      },
+      "targets": [
+        {
+          "description": "And for my take profit, I'm always going to look left and see what I can find... I actually put it all the way up here. And the reason for that is because we had an aggressive level of supply. This is a supply zone right there, and I put this around right about there in the middle of that supply because you know, if price comes up to supply, it very likely can react and come down off of that level.",
+          "risk_reward_note": "So, this gave me a risk reward of about 2.16. Actually, I think I had that a little bit higher there, about a 2.3. (stated for the walk-through example, not given as a fixed rule)"
+        }
+      ],
+      "management": {
+        "break_even": "Now, I set break even, okay? Once we got to about this level right here, I set break even, and we almost hit it, right?",
+        "manual_exit": "for my take profit, I actually just watched this trade manually."
+      },
+      "session": "I trade every day from 9:30 to 11:00 a.m. Eastern",
+      "indicators_mentioned": [
+        "For the session indicator, I'm using New York session by James Davey",
+        "It's called opening range with breakouts and targets by Lux Algo... Time period 15 minute, 9:30 to 9:45 UTC minus 4"
+      ],
+      "variants": [
+        {
+          "variant_label": "zone retest + engulfing confirmation",
+          "confirmation_mechanic_note": "enter on retrace into the demand/supply POI confirmed by another engulfing pattern",
+          "transcript_quote": "It taps into the level of demand, and it clearly respects the level... we also have another bullish engulfing pattern right here."
+        },
+        {
+          "variant_label": "passive limit order at POI",
+          "confirmation_mechanic_note": "resting limit order at the level, filled on touch (no engulfing confirmation required)",
+          "transcript_quote": "I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position."
+        },
+        {
+          "variant_label": "range break-and-retest edge + break-even",
+          "confirmation_mechanic_note": "enter at the range edge on the classic break-and-retest; set break even once in profit",
+          "transcript_quote": "the classic break and retest entry. This is one of the main orb entry models that I use"
+        },
+        {
+          "variant_label": "long/short direction mirror",
+          "confirmation_mechanic_note": "same three steps mirrored: bearish engulfing bias, break-and-close below the range, sell",
+          "transcript_quote": "Now, let's do the last example. It's a sell example. Yes, this works on sells, too."
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "is_options_mechanic": false,
+    "reason": "Pure price-action scalping mechanic (engulfing candles, opening range breakout, supply/demand zones); no Greeks, strikes, or options-specific mechanics. Instrument-agnostic by the speaker's own words.",
+    "instruments_stated": "Forex, Nasdaq, gold, everything",
+    "timeframe": "1-hour candles for bias (7am/8am); 5-minute for the 9:30-9:45 range and entries"
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "ITEM 1 'zone retest + engulfing confirmation variant' — PRESENT. Extracted as entry_sequence step 3 + confluences[0]/variants[0]: retrace into the level of demand, respects it, confirmed by 'another bullish engulfing pattern right here.'",
+    "ITEM 2 'passive limit order variant' — PRESENT. Extracted as confluences[1]/variants[1]: 'I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position' (forex example, no engulfing confirmation used).",
+    "ITEM 3 'range break-and-retest edge + break-even variant' — PRESENT (both halves). Edge entry: 'the bottom of the range entry, the classic break and retest entry... one of the main orb entry models that I use' (variants[2]/confluences[2]). Break-even: management.break_even 'Now, I set break even... Once we got to about this level right here, I set break even.'",
+    "ITEM 4 'long/short = direction mirror, one object' — PRESENT as a mirror, kept as ONE object per the direction-mirror rule. Buy path and sell path are symmetric: bullish engulfing→buy / bearish engulfing→sell ('if I want to buy... bullish engulfing... if I want to sell... bearish engulfing'), break-and-close above vs below the range, take profit at opposing supply vs demand. Captured in variants[3] and the mirrored quotes throughout; not split into a second strategy.",
+    "TARGET/R:R NOTE — the ~2.16/2.3R figures are stated only for the first walk-through example ('this gave me a risk reward of about 2.16... about a 2.3'), preserved verbatim but flagged as example numbers, not a fixed rule per the no-invented-precision rule. The RULE extracted is the verbatim 'look left' to the opposing supply/demand level.",
+    "MANUAL/GESTURAL EXIT NOTE — the third (sell) example's exit was discretionary ('I actually just watched this trade manually'), with a concrete supply/demand target still present, so no gestural-exit nulling was needed; both the manual-watch words and the level-based take profit are preserved.",
+    "NULLED — no numeric stop distance, tick/pip value, position size, or fixed R target was stated as a rule; those fields are left null (only example-specific R figures exist)."
+  ]
+}

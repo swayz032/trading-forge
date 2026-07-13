@@ -1,0 +1,72 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "abc_trend_continuation_reclaim",
+      "entry_summary": "With 4h/1h bullish, drop to 15m/5m and track corrective lower-highs/lower-lows; enter long once price stops making lower lows (higher low) AND breaks back above the last lower high (ABC reclaim).",
+      "exit_summary": "Stop under the swing low; target 1h high, scale with trend (~1:10 up to ~1:32 if 4h breaks); gestural 'scalp out' for the scalp variant.",
+      "entry_sequence": [
+        { "action": "I was looking on the 4hour time frame." },
+        { "action": "as we scaled down, you should have been looking for the 15minut to go bullish." },
+        { "action": "You just have to start tracking your highs and lows on that 15-minut time frame." },
+        { "action": "you know the 4 hour and the one hour is bullish, all you're doing is waiting for that 15minut time frame or 5 minute time frame, whichever one's the clearest to you" },
+        { "action": "Price stops making lower lows" },
+        { "action": "Price goes for a lower high. It tries to come down, fails to do so. This is a bullish sign. This is telling us price could go bullish because it's not breaking a lower low or is not making a low." },
+        { "action": "But the second thing that confirms that would be price breaking above that lower high." },
+        { "action": "we have that push that break above your once again your entry goes here" }
+      ],
+      "confluences": [
+        { "description": "That lets us know that there's a bunch of sellers waiting here at price, right? So, if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish." },
+        { "description": "That lets us know that buyers are holding at this price level" },
+        { "description": "Literally a ABC setup." }
+      ],
+      "stop": "putting your stop loss under that level where you don't want to see price get broken; your stop loss goes either here or here whichever one you want to use here",
+      "targets": [
+        { "description": "you scale back out to that 1 hour time frame. Once you scale back out to that 1 hour time frame, you'll target that 1 hour high." },
+        { "description": "And that's a one that's a one to 10 setup." },
+        { "description": "if you would have scaled out more, you would have been like, \"Okay, 4 hour has broken the high and you would be scaling out now. You would probably be around a 1 to 32.\"" }
+      ],
+      "variants": [
+        {
+          "variant_label": "15m variant (today's gold)",
+          "timeframe_note": "But on the 15, this is way cleaner to look at with the highs and lows.",
+          "confirmation_mechanic_note": null,
+          "target_note": null,
+          "transcript_quote": "on the 15, this is way cleaner to look at with the highs and lows"
+        },
+        {
+          "variant_label": "5m variant (yesterday)",
+          "timeframe_note": "actually this was the five minute time frame that I explained this on.",
+          "confirmation_mechanic_note": "Same setup as this low was made. Lower high was made. Price made a low, but it's higher than the previous one. Same setup. Literally a ABC setup.",
+          "target_note": null,
+          "transcript_quote": "Same with yesterday's trade that we caught."
+        },
+        {
+          "variant_label": "1m/5m quick-scalp variant",
+          "timeframe_note": "let me take this on that five minute time frame ... If we go to that one minute time frame",
+          "confirmation_mechanic_note": "I seen price come here. Once it came here, made a lower high, seen that lower high, boom, and got my price entry",
+          "target_note": "I took it back up to here.",
+          "transcript_quote": "I caught like a small scalp. I seen price correct."
+        }
+      ],
+      "gestural_exit": {
+        "applies_to_variant": "1m/5m quick-scalp variant",
+        "exit_words_verbatim": "I took it back up to here.",
+        "note": "Scalp variant exit given only colloquially with no stated stop/target level; entry taught, exit levels null."
+      }
+    }
+  ],
+  "instrument_classification": {
+    "instrument_mentioned": "gold",
+    "is_options_strategy": false,
+    "mechanic": "price-action swing-structure (tracking highs/lows, ABC reclaim break); no Greeks/strikes/expiries",
+    "reason": "Speaker breaks down a gold ('XAU') day-trade using multi-timeframe trend + swing high/low tracking. Instrument-agnostic price-action mechanic; not an options strategy."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "15m variant (today's gold): PRESENT — captured as variants[0]; today's gold walk-through taught on the 15-minute ('on the 15, this is way cleaner to look at with the highs and lows'), same ABC-reclaim skeleton.",
+    "5m variant (yesterday): PRESENT — captured as variants[1]; 'Same with yesterday's trade that we caught ... this was the five minute time frame that I explained this on.' Identical skeleton (low higher than previous + break above lower high = ABC), only the timeframe differs.",
+    "1m/5m quick-scalp variant: PRESENT — captured as variants[2] + gestural_exit; speaker's own live scalp ('I caught like a small scalp'), spotted correction/rejections on the 5m, entered on the 1m after a lower high ('made a lower high ... boom, and got my price entry'). Exit is gestural only ('I took it back up to here'), so stop/target levels are null per the gestural-exit rule.",
+    "bearish tracking = diagnostic only, no short taught: ABSENT-WITH-REASON — the transcript uses lower-low/lower-high tracking ('This means price is still bearish because it's still making lows. It's breaking levels of support') ONLY to diagnose when the down-correction is still active and when it ends; the speaker never teaches a short entry, stop, or target for the bearish leg. No short-side rule exists to extract, so it is correctly not present as a strategy or variant."
+  ]
+}

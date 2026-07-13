@@ -1,0 +1,86 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "premarket_range_liquidity_sweep_reversal",
+      "entry_summary": "At same pre-market high/low, watch for liquidity sweep: brief fakeout past the level that fails and reclaims; enter OPPOSITE the failed break on reclaim (sweep below low -> long).",
+      "exit_summary": "Stop opposite side of entry candle; target >=1x, ideally 1.5-2x; trail to breakeven then profit, scale out, let run.",
+      "direction": "both",
+      "range_definition": {
+        "action": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action",
+        "supporting_quote": "mark the highest high of that price action and the lowest low of that price action"
+      },
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "we want to look for liquidity sweeps at those pre-market highs or those pre-market lows"
+        },
+        {
+          "step": 2,
+          "action": "A liquidity sweep is going to be a brief fake out below or above the level"
+        },
+        {
+          "step": 3,
+          "action": "you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep",
+          "note_short_side": "we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below"
+        },
+        {
+          "step": 4,
+          "action": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level"
+        },
+        {
+          "step": 5,
+          "action": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long",
+          "rationale": "you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "reclaims the level with a lot of volume"
+        },
+        {
+          "description": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator"
+        }
+      ],
+      "stop": {
+        "description": "The stop is always going to go on the opposite side of the entry candle",
+        "supporting_quote": "Your stop loss has to be below your entry candle"
+      },
+      "targets": [
+        {
+          "description": "bare minimum of 1x of my original risk"
+        },
+        {
+          "description": "ideally what I'm looking for is a 1.5x to a 2x my original risk"
+        }
+      ],
+      "trade_management": {
+        "description": "as the trade continues to move in my favor, I'm going to be looking to trail my stop-loss up at least to break even, ideally in profits, and to just let that sucker run. and I'll continue to scale out as it moves in my favor, continue to move my stop loss up",
+        "supporting_quote": "move your stop-loss up and let that thing run until you are either stopped out or satisfied with your profits"
+      },
+      "timeframe": {
+        "primary": "I trade the five-minute time frame",
+        "entry_execution_note": null
+      },
+      "session": "this setup starts at 3:00 a.m. Eastern time ... all the way up into New York market open, which is going to be 9:30 a.m. EST",
+      "variants": []
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "instruments_named": "popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures",
+    "is_options_mechanic": false,
+    "tradeable_by_operator": true,
+    "notes": "Index-futures price-action/level strategy on the 5-minute timeframe. No options Greeks/strikes; no instrument-specific mechanic that would disqualify."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "element_inventory was EMPTY ([]) in the scope; there are no inventoried elements to account for. Coverage contract satisfied vacuously.",
+    "Extracted ONLY the liquidity-sweep-reversal object (Rule-2 opposite of the break-continuation). The break-continuation and the break-and-retest setups taught in the same video were deliberately NOT extracted per scope.",
+    "direction:both — speaker taught the sweep 'below or above the level'. Long side (sweep below London low -> reclaim -> long) is stated with a walk-through; short side (sweep above London high -> fail -> close below) is the explicit mirror the speaker also stated. Both preserved verbatim.",
+    "Entry-confirmation prose ('we enter on the confirmation after ... the liquidity sweep of the level'), the stop rule, the R-multiple targets, and the trail/scale-out management are all SHARED house rules the speaker applied across all three setups; they are extracted here because they govern this scoped strategy too.",
+    "EXCLUDED as live-example numbers (not rules), per prompt: '$1,500 on two ES contracts', 'a little more like 2K to maybe even 3K', 'risking about $400', 'risking roughly about like 500 bucks', 'risking four points'. These are that day's example dollars/points, so the target LEVEL fields stay as R-multiples and dollar levels are null.",
+    "The 'brief fake out' can manifest as a close beyond the level or just a wick ('Maybe it closes above the range a little bit, maybe it wicks above it') — preserved verbatim inside entry step 3; no invented precision added.",
+    "No numeric stop/target level was stated as a RULE for this setup, so stop.level and target price-levels are null; only the opposite-side-of-entry-candle stop rule and R-multiple targets were taught."
+  ]
+}

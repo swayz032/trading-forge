@@ -1,0 +1,84 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "orb_breakout_pullback_continuation",
+      "entry_summary": "On the 5-minute chart with the opening range defined by the first three candles, wait for a breakout, then wait for a pullback candle that breaks into the range but closes back above it, and enter on the break of that pullback candle's high.",
+      "exit_summary": "Stop loss at the bottom of the opening range (alternatively the bottom of the pullback candle); take-profit at 1.5 times risk, with tested variants sweeping 2.5 to 4.5.",
+      "entry_sequence": [
+        { "action": "First, I switch over to the 5-minut chart. This way, I can react to price action a lot quicker." },
+        { "action": "My orb range is still defined by the first 15 minutes of the day. But since I'm on the 5-minut time frame now, I have to use the first three candles to define my range high and range low." },
+        { "action": "Once I have those defined, I then wait for my breakout just like before. But this time, I don't buy immediately on the close of this breakout candle. Instead, I have to wait and see if price is going to make a pullback towards the opening range." },
+        { "action": "what I'm looking for is a candle that's going to break through the range but then close back above it, which is exactly what this candle here has done." },
+        { "action": "Once I get this pullback candle, I don't enter immediately. I want to see confirmation that price is going to bounce off and move back up. And I'm going to be waiting for a break of this most recent high. We get that on the next candle. And this gives me my confirmation to enter into a trade. So, the trade is opened here." }
+      ],
+      "confluences": [
+        { "description": "I need to take into account the height of this breakout. And I made sure that this was greater than at least 1 times ATR to be considered a suitable breakout." },
+        { "description": "The reason for this is that I want to see buyers coming back in and pushing the price back up. That gives me confirmation that this line is now starting to act as support." }
+      ],
+      "stop": {
+        "description": "The stop loss will still go at the bottom of my opening range.",
+        "alternative": "I don't have to put the stop loss down here. It could also go at the bottom of this pullback candle."
+      },
+      "targets": [
+        { "description": "I will target 1 and 1/2 times for my take-profit ratio.", "note": "And likewise, I don't have to always aim for one and a half times. And I will be testing out all of these different scenarios." },
+        { "description": "I tested take-profit ratios starting at 2 1/2 and going all the way up to 4 1/2 in increments of 0.5." }
+      ],
+      "variants": [
+        {
+          "variant_label": "break-of-high confirmation entry (base)",
+          "timeframe_note": "5-minut chart; orb range defined by first three candles",
+          "confirmation_mechanic_note": "wait for pullback candle that breaks through the range then closes back above it, then enter on break of this most recent high",
+          "target_note": "1 and 1/2 times take-profit ratio",
+          "transcript_quote": "I'm going to be waiting for a break of this most recent high. We get that on the next candle."
+        },
+        {
+          "variant_label": "target-R sweep 2.5 to 4.5",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": null,
+          "target_note": "take-profit ratios starting at 2 1/2 and going all the way up to 4 1/2 in increments of 0.5",
+          "transcript_quote": "I tested take-profit ratios starting at 2 1/2 and going all the way up to 4 1/2"
+        },
+        {
+          "variant_label": "stop-order at ORB top, no confirmation",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": "no pullback/high-break confirmation; place a stop order at the opening range so you get in immediately when price hits it",
+          "target_note": "1.5 take profit",
+          "transcript_quote": "should I just place a stop order at the opening range? That way, when price hits it, I get in immediately for that bounce back up."
+        },
+        {
+          "variant_label": "midpoint stop-order entry",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": "measure breakout from top of range but wait for price to pull back all the way into the midpoint and buy there with a stop order, no confirmation of a previous high being broken",
+          "target_note": "smaller stop at midpoint so less movement needed for 1.5x, or aim for even more",
+          "transcript_quote": "I'm waiting for price to pull back all the way into this midpoint here, and that's where I'm going to buy with a stop order."
+        },
+        {
+          "variant_label": "alt stop at pullback-candle low",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": null,
+          "target_note": null,
+          "transcript_quote": "It could also go at the bottom of this pullback candle."
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument_mentioned": "S&P 500",
+    "asset_class": "equity index (S&P 500 / ES futures)",
+    "is_options_strategy": false,
+    "options_mechanic_present": false,
+    "strategy_is_instrument_agnostic_mechanic": true,
+    "note": "I have back tested 5 years of S&P 500 data to find out for myself."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "break-of-high confirmation variant — PRESENT: entry_sequence step 5 + variant 'break-of-high confirmation entry (base)'; verbatim 'I'm going to be waiting for a break of this most recent high. We get that on the next candle.'",
+    "target-R sweep 2.5-4.5 variant — PRESENT: targets[1] + variant 'target-R sweep 2.5 to 4.5'; verbatim 'take-profit ratios starting at 2 1/2 and going all the way up to 4 1/2 in increments of 0.5.'",
+    "stop-order at ORB top (no confirmation) variant — PRESENT: variant 'stop-order at ORB top, no confirmation'; verbatim 'now I'm using a stop order at the top of the orb.'",
+    "midpoint stop-order entry variant — PRESENT: variant 'midpoint stop-order entry'; verbatim 'I just enter immediately as it reaches the midpoint.'",
+    "alt stop at pullback-candle low — PRESENT: stop.alternative + variant 'alt stop at pullback-candle low'; verbatim 'It could also go at the bottom of this pullback candle.'",
+    "closing 'do the opposite / breakout momentum' idea — ABSENT-WITH-REASON: this is a future-backtest proposal, not a taught runnable setup. Speaker frames it as a next-video idea with no rules given: 'this back test gave me another idea, which is actually to do the opposite of waiting for a pullback and instead focus on the momentum and the strength of the initial breakout... I can do a back test on that idea. If you want me to make a video on it...'. No entry/stop/target taught, so it is not extracted as a strategy or variant.",
+    "SCOPE NOTE — the separate immediate-breakout strategy (15-minute ORB, buy on breakout candle close, stop at range bottom, 1.5:1) is NOT extracted here per scope; it is a distinct strategy (different entry: no pullback/continuation). The 12:00 no-entry cutoff and the too-small/too-big ATR range filter were taught only in the recap of that original 15m strategy and are not part of this pullback-continuation object's inventory, so they are excluded."
+  ]
+}

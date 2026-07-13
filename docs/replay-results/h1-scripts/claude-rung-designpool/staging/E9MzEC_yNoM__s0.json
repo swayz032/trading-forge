@@ -1,0 +1,67 @@
+{
+  "strategies": [
+    {
+      "name": "premarket_range_break_continuation",
+      "entry_sequence": [
+        {
+          "action": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action"
+        },
+        {
+          "action": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action"
+        },
+        {
+          "action": "Once we get a clean break above pre-market highs or below pre-market lows, this is your first signal. So, this breakout could confirm a long entry. I personally like the retest, but depending on this scenario, I might take the breakout trade."
+        },
+        {
+          "action": "typically we are going to scale down to a lower time frame such as a 2-minut or you could even play around with a 1 minute. I just personally prefer the 2-minut. So when that twominut breaks out above that London high or where to break down below London low, we want to see the break and we actually want to see the close above or below the level."
+        },
+        {
+          "action": "if you were the breakout trader in this scenario, you would go long at the close of this two-minute candle. You want to wait for the close. You want to see the volume elevation. Ideally, looking at order flow as well. And if you get that, you can look to get long."
+        },
+        {
+          "action": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support to go long with a stop right below"
+        },
+        {
+          "action": "price breaks above it very very strong, pulls back, test it multiple times as support one, two, three, four, five times giving you many, many different entries, which again would have signaled a long entry with a stop-loss right below that London high"
+        },
+        {
+          "action": "we enter on the confirmation after the retest of the level, after the breakout of the level"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "we are looking for an increase in the volume to confirm that the breakout is actually valid"
+        },
+        {
+          "description": "Ideally, looking at order flow as well"
+        },
+        {
+          "description": "we want to see the break and we actually want to see the close above or below the level"
+        },
+        {
+          "description": "you need to wait for the break. You do not want to take early entries. You want to look for a solid candle close above or below the range."
+        },
+        {
+          "description": "you want to avoid overall fake outs by staying patient"
+        }
+      ],
+      "stop": "The stop is always going to go on the opposite side of the entry candle",
+      "targets": [
+        {
+          "target": "ideally when I'm trading, I'm typically looking for bare minimum of 1x of my original risk. However, ideally what I'm looking for is a 1.5x to a 2x my original risk"
+        },
+        {
+          "target": "as the trade continues to move in my favor, I'm going to be looking to trail my stop-loss up at least to break even, ideally in profits, and to just let that sucker run. and I'll continue to scale out as it moves in my favor, continue to move my stop loss up"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "is_options_mechanic": false,
+    "tradeable": true,
+    "quote": "popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures"
+  },
+  "rejected_strategies": [],
+  "coverage_notes": "element_inventory[0] 'breakout entry variant (2m close + volume)' — APPEARS: scale down to a 2-minute (or 1-minute) timeframe, wait for the break AND the close above/below the level, confirm with volume elevation (ideally order flow), go long at the close of the two-minute candle; stop below the breakout candle. All verbatim. element_inventory[1] 'break-and-retest entry variant (pullback to level as S/R, multiple retests = multiple entries)' — APPEARS: pull back down into the previous high, make it support, go long with a stop right below; the break-and-retest example explicitly tests the level as support 'one, two, three, four, five times giving you many, many different entries.' Both entry variants accounted for and present. NOT EXTRACTED (out of scope, separate Rule-2 object): the liquidity-sweep-reversal setup ('a brief fake out below or above the level ... reclaims the overall level'), per SCOPE. Example-only dollar figures ($500, $400, $1,500 on 2 ES contracts, 2K-3K) and the live walk-through numbers were treated as that day's example, not rules, and excluded per the Output rule on example numbers; the RULE-level R-multiple target and trailing/scale-out management were extracted instead. Stop is stated three ways (opposite side of entry candle / below the breakout candle / below entry candle) — the general rule 'opposite side of the entry candle' is used as the stop field; the breakout-specific 'below the breakout candle' and retest-specific 'stop right below' are carried inside their entry_sequence steps."
+}

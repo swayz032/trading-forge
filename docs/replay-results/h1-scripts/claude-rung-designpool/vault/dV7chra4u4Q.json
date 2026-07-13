@@ -1,0 +1,49 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "break_and_retest",
+      "entry_sequence": [
+       {
+        "action": "identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, uh previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones."
+       },
+       {
+        "action": "wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level. Now, on top of that, we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out. ... we want a clean push through these levels. It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it ... Literally like a couple big candles through the level, that's what we want to look for. So, if it looks weak, we ignore the setup, and we do not take it."
+       },
+       {
+        "action": "wait for the retest ... We want to wait for price to pull back ... tests the level. We want to see price hold the level. If it's able to hold the level, we are then going to look for either bullish price action, if we're looking for price to go up, or bearish price action, if we're looking for price to go down."
+       },
+       {
+        "action": "I enter after confirmation. So, again, if we do not get confirmation, we do not take the trade."
+       }
+      ],
+      "confluences": [
+       {
+        "description": "we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out."
+       },
+       {
+        "description": "if you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area. All those things combined, the volume confirmation, the price action telling you to get in, as well as the liquidity on Bookmap, all of that sets up for a very high probability trade."
+       },
+       {
+        "description": "retests the 80 MA, reclaims it right here ... get back up above that 8 EMA. That's when I went long."
+       }
+      ],
+      "targets": [
+       {
+        "description": "your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market."
+       }
+      ],
+      "stop": {
+       "anchor": "Your stop is if price breaks back on the opposite side of the breakout level. That's it. So, you're not risking a lot when you take these trades."
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

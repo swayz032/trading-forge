@@ -1,0 +1,83 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "support_bounce_scalp",
+      "timeframe": "5 minute chart",
+      "direction": "long",
+      "entry_summary": "Let the first 5-15 minutes establish where support is, then enter long when price wicks down to a dynamic support level and bounces.",
+      "exit_summary": "Ride the bounce up to resistance and take profit quickly on a small move; get in and get out, rinse and repeat.",
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at"
+        },
+        {
+          "step": 2,
+          "action": "this candle wick came down bounced off of that and then the stock got a up move ... the stock came down and it hit right there that's our entry for a scalp"
+        },
+        {
+          "step": 3,
+          "action": "you get in here as support and you ride it to resistance and you exit"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "this 13 EMA operated as a initial support"
+        },
+        {
+          "description": "look at Price action look at where stock is bottom at and bounce from"
+        },
+        {
+          "description": "look and learn to find and spot the demand zones okay those will be areas you can see okay every time we get to this price the stock take off for me ... that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone"
+        }
+      ],
+      "variants": [
+        {
+          "variant_label": "13 EMA initial support",
+          "confirmation_mechanic_note": "this 13 EMA operated as a initial support So this candle wick came down bounced off of that and then the stock got a up move",
+          "transcript_quote": "this 13 EMA operated as a initial support"
+        },
+        {
+          "variant_label": "200 EMA deeper support (after 13 EMA loses support status)",
+          "confirmation_mechanic_note": "this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status",
+          "transcript_quote": "a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+        },
+        {
+          "variant_label": "demand-zone / price-action support",
+          "confirmation_mechanic_note": "look at Price action look at where stock is bottom at and bounce from ... spot the demand zones ... a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+          "transcript_quote": "look and learn to find and spot the demand zones"
+        }
+      ],
+      "stop": null,
+      "targets": [
+        {
+          "description": "you ride it to resistance and you exit"
+        },
+        {
+          "description": "one green candle two green candles three four we went here and that was your exit"
+        },
+        {
+          "description": "you're holding for 10 cent 15 cent 30 Cent 50 Cent but you're making thousands of dollars off of that one small move"
+        }
+      ],
+      "exit_prose": "you get in and out you don't overstay your welcome you don't get greedy with these trades because they're intended for you to be quick ... seeing profit and taking profit ... rinse and repeat",
+      "gestural_exit": false
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equity",
+    "instrument_note": "Taught on stocks — speaker repeatedly says 'stock' and 'stock price' (\"profiting from minor price changes in a stock price\", \"look at where stock is bottom at\"); no specific ticker named, generic 5-minute intraday scalp.",
+    "options_mechanic": false,
+    "specific_symbol": null
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "13 EMA initial support variant — APPEARS (variants[0] + confluences[0]): 'this 13 EMA operated as a initial support So this candle wick came down bounced off of that and then the stock got a up move'.",
+    "200 EMA deeper support variant — APPEARS (variants[1]): 'this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status'.",
+    "demand-zone/price-action support variant — APPEARS (variants[2] + confluences[1..2]): 'look at Price action look at where stock is bottom at and bounce from' and 'spot the demand zones ... an area of emphasis for buyers to step in at which might be operating as support and or demand Zone'.",
+    "breakdown 'big move once support lost' — ABSENT-WITH-REASON: the speaker mentions it ('we finally lost the support level here and then this is the big move you guys really want to learn to catch') but does not teach a runnable long support-bounce entry for it — the words are self-contradictory as an entry ('you want to exit right there' then 'you would have entered there ... you had that coming all the way down'), and it describes catching a post-breakdown down-move, which is the opposite direction from this long support-bounce scalp. No runnable entry for THIS strategy, so it is not extracted as a variant.",
+    "stop = null — GENUINE ABSENCE: speaker repeats risk discipline ('managing your risk getting in getting out not overstaying your welcome') but never states a stop-loss level or a rule for where to place a stop.",
+    "Exit is target-bearing, not purely gestural: speaker gives concrete-ish targets (resistance; a few green candles; 10/15/30/50 cent moves), so gestural_exit=false even though no exact stop/target price is given."
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "strategies": [
+    {
+      "name": "htf_irl_fvg_1m_inversion",
+      "direction": "both",
+      "entry_sequence": [
+        { "action": "we always going to be trading from 9:30 till 11:30 a.m. New York time" },
+        { "action": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows" },
+        { "action": "after 9:30 a.m., right, you want to see a 5-minut fair value gap form towards your draw on liquidity" },
+        { "action": "a 5 minute or a 15minut fair value gap. So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw" },
+        { "action": "once a 5 minute or 15 minute fair value gap forms after 9:30 you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap" },
+        { "action": "what you want to do is drop down to one minute time frame" },
+        { "action": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap" },
+        { "action": "on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out" },
+        { "action": "you simply wait for price to close below this one minute fair value gap. Okay. So that is your inversion and inversion is when we have a bullish fair value gap but then price disrespects the bullish fair value gap and closes below it. So now it is inversed" },
+        { "action": "once price closes below this IFVG you want to take a short position right away" },
+        { "action": "if there are two fair value gaps in this manipulation leg on the one minute ... wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry" }
+      ],
+      "confluences": [
+        { "description": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap" },
+        { "description": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that" },
+        { "description": "if there are two fair value gaps in this manipulation leg on the one minute ... wait for both of them to get inversed ... if there are three, you're going to wait for all of those three fair value gaps to get inversed" }
+      ],
+      "stop": "you want to put your stop above the high",
+      "targets": [
+        { "description": "you can target the drawn liquidity" },
+        { "description": "you can go for 1:2 fixed risk-to-reward ratio. And I've seen that I've I've gotten more success when I go for a fixed risk-to-reward ratio" }
+      ],
+      "management": "you want to go break even. As soon as the closest liquidity after your entry is taken out. So this is the closest low after your entry. So as soon as price hits this level, you're going to go break even",
+      "gestural_exit": false
+    }
+  ],
+  "instrument_classification": {
+    "is_options_strategy": false,
+    "instrument_named": null,
+    "asset_class": null,
+    "reason": "Speaker never names a specific instrument or asset class. Strategy is a price-action / liquidity (ICT-style FVG inversion) mechanic keyed to the 9:30-11:30 New York session; no options mechanics (no strikes, expiries, or Greeks) are mentioned."
+  },
+  "rejected_strategies": []
+}

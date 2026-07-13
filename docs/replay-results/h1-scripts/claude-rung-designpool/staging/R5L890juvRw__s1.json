@@ -1,0 +1,52 @@
+{
+  "strategies": [
+    {
+      "name": "vwap_band_mean_reversion",
+      "entry_sequence": [
+        {
+          "action": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels not just based on previous price but based on the volume of the whole session"
+        },
+        {
+          "action": "we opened the session we shorted the out of the market we went down into the lower standard deviations and here is where you want to look for a trade this is the most convenient price in the whole session or the most convenient value and price compared to the rest of the session"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones because they're further away we will be from the dynamic fair value of the market and the most likely we will be rebalancing"
+        },
+        {
+          "description": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value"
+        },
+        {
+          "description": "vwap is not always working it's always needed to have a context behind your trading idea you're not just going to trade based off of vwap only"
+        },
+        {
+          "description": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation"
+        }
+      ],
+      "stop": null,
+      "targets": [
+        {
+          "description": "use the central vwap as a target for Price rebalancing this overbought situation"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "instrument": "ES (E-mini S&P 500 futures)",
+    "instrument_quote": "it's okay for you as a day trader with five es contracts",
+    "is_options_strategy": false,
+    "timeframe": "intraday / session-based day trading",
+    "timeframe_quote": "this is being reset because it's a reference for the session"
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "element_inventory was empty (no sub-variants), so there are no inventoried elements to account for beyond entry/exit.",
+    "STOP: ABSENT-WITH-REASON — the speaker gives an entry (fade the outer std-dev band) and a target (central VWAP) but never states any stop-loss level or stop rule for the reversal trade anywhere in the transcript; set to null. This is a stated-target exit, not a gestural exit.",
+    "ENTRY: the speaker teaches the reversal only conceptually / by walk-through ('here is where you want to look for a trade') and gives no mechanical trigger or confirmation beyond price reaching the outer standard-deviation band; extracted verbatim, no trigger invented.",
+    "TARGET: central VWAP is stated explicitly as the price-rebalancing target; extracted verbatim.",
+    "SCOPE DISCIPLINE: the transcript's other setup (the trend/continuation long — 'wait until the price has gone at least to the first if not the second standard deviation ... after we broke it and tested it we can try our long trade', using outer bands as a TARGET) is the trend-continuation object of the Rule-2 pair and was deliberately NOT extracted here.",
+    "No numeric price levels existed to extract — the only session numbers are chart walk-through references, not rules; band definitions (1 / 1.5 / 2 std dev) were kept verbatim as a confluence describing which bands count as the outer overbought/oversold levels."
+  ]
+}

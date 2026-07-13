@@ -1,0 +1,93 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "fvg_trend_continuation_entry",
+      "entry_summary": "In a trending market find a valid FVG (imbalance: gap from 1st candle close to 3rd candle open across 3 candles) that caused a break of structure and sits close to the order block, after liquidity cleared; wait for price to retrace/tap the FVG, enter WITH the trend (buy bullish FVG in uptrend, sell bearish FVG in downtrend).",
+      "exit_summary": "Stop just below FVG for buys (above for sells), kept tight to the FVG not dragged to the order block; target gestural (hold as price pushes), no explicit R.",
+      "entry_sequence": [
+        {
+          "action": "the trend matters ... It is important you also pay attention to the trend ... for fair value gap it happens when the trend is when the momentum is very high and when the gap happens price can just come back tapping and keep moving"
+        },
+        {
+          "action": "you need to pay attention to the one that caused a break of structure. So once that break of structure happens you look out for the three candlesticks you know before that um breakoff structure"
+        },
+        {
+          "action": "when mapping out you map out from the first candlestick closing point ... the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance"
+        },
+        {
+          "action": "map out the FVG that cost the break of structure the FVG that is very close to the order block"
+        },
+        {
+          "action": "there should also be liquidity price will clear before you know tapping into the imbalance"
+        },
+        {
+          "action": "price will most likely you know come back mitigate the imbalance and keep pushing to the upside ... patiently wait for you know price to get back into that FVG that caused the break of structure ... wait for price to tap in and then push to your direction"
+        },
+        {
+          "action": "stop loss a little bit above if you're selling or below if you are buying and just wait for price to dish out the results"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "the trend matters ... the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend"
+        },
+        {
+          "description": "the imbalance must create a break of structure. So you should not just see any imbalance and just start setting your entries from there"
+        },
+        {
+          "description": "there should also be liquidity price will clear before you know tapping into the imbalance"
+        },
+        {
+          "description": "one of the confirmation you know for pointing out valid order block is the FVG that is very close to the order block and most of the times price may just come to that FVG react and push to our direction"
+        }
+      ],
+      "stop": {
+        "description": "when setting your stop loss, it will just be a little bit below the FVG ... if you are taking your entries with fair value gap, all you just need to do is put your stop loss a little bit below the fair value gap. Just stick to the fair value gap ... stop loss a little bit above if you're selling or below if you are buying. Do NOT drag the stop loss to also accommodate the other block ('some traders may want to try to serve two masters at a time ... you will now drag the stop loss to also accommodate the other block that will you know kill the risk-to-reward ratio')",
+        "level": null
+      },
+      "targets": [
+        {
+          "description": "keep pushing to the upside / it will just drop ... push to your direction ... wait for price to dish out the results",
+          "level": null,
+          "gestural_exit": true
+        }
+      ],
+      "variants": [
+        {
+          "variant_label": "bullish FVG — buy in uptrend",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": "bullish imbalance mapped from 1st-candle close to 3rd-candle open; buy on tap-in, stop a little below FVG",
+          "target_note": null,
+          "transcript_quote": "this is you can see price pushed up closed here ... price will most likely you know come back mitigate the imbalance and keep pushing to the upside"
+        },
+        {
+          "variant_label": "bearish FVG — sell in downtrend",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": "bearish imbalance mapped from 1st-candle close to 3rd-candle open; sell on return to FVG, stop a little above FVG",
+          "target_note": null,
+          "transcript_quote": "this is an example of a bearish imbalance ... price will return to the FVG and it will just drop"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "mentioned_instrument": "XAUSD / gold ('this is very popular um if you are trading XAUSD' ... 'this works very much um on gold')",
+    "asset_class": "spot gold / forex (XAUSD)",
+    "mechanic_type": "price-action / smart-money-concept (fair value gap, break of structure, liquidity, order block) — instrument-agnostic mechanic, not an options mechanic",
+    "is_options_mechanic": false,
+    "instrument_specific": false,
+    "note": "Taught on gold/XAUSD by the speaker's own account, but the mechanic is generic SMC price action with no Greeks/strikes; transfers to futures. No timeframe stated anywhere."
+  },
+  "rejected_strategies": [],
+  "coverage_notes": [
+    "ENTRY: fully accounted — trend filter, 3-candle imbalance mapped 1st-close→3rd-open, must cause break of structure, FVG close to order block, liquidity cleared, tap-in with-trend. All verbatim.",
+    "STOP: accounted (verbatim) — 'a little bit below the fair value gap' (buys) / 'above' (sells), explicitly kept tight to the FVG, NOT dragged to the order block. Concrete rule, no numeric level → level null (only day-example screenshots shown, no stated price).",
+    "TARGET: gestural exit — speaker gives only directional prose ('keep pushing', 'it will just drop', 'push to your direction', 'wait for price to dish out the results'); no stated target level or R. Strategy KEPT, target level null, gestural_exit flagged per v3.1.",
+    "element_inventory 'order block (prior video)': PARTIALLY ACCOUNTED as a confluence anchor only — 'the FVG that is very close to the order block' is used as an FVG-validity confluence in THIS strategy. ABSENT-WITH-REASON as a standalone entry: the order-block entry model was taught in the PRIOR video ('The last video was on order block'); no runnable order-block entry is taught in this transcript.",
+    "element_inventory 'breaker blocks (next video)': ABSENT-WITH-REASON — named only as a deferred future topic ('in our next video we'll talk about breaker blocks'); no rules given here.",
+    "element_inventory 'flip zone': ABSENT-WITH-REASON — named once only as the 4th of the four SMC entry models ('We have the order block, fair value gap, breaker blocks and flip zone'); never explained or given any entry/exit rule in this transcript.",
+    "element_inventory 'named/deferred models, absent-with-reason (no runnable entry taught here)': confirmed — of the four models, only FVG has a runnable entry taught in this video; the other three (order block=prior, breaker blocks=next, flip zone=unexplained) are named/deferred and carry no runnable entry here.",
+    "No timeframe stated anywhere in the transcript → all timeframe_note fields null. No explicit numeric levels or R:R stated (speaker warns against over-analysis and to backtest); all numeric fields null."
+  ]
+}
