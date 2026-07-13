@@ -1,0 +1,547 @@
+{
+  "video_id": "0xygpCMwxbQ",
+  "extracted_at": 1783921865.5323465,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass2-two-phase"
+  },
+  "extraction_sha256": "f305ace793878c801f048b8ff1db2d978e02bf266c43033ccc94351df2eb7262",
+  "extraction": {
+    "video_id": "0xygpCMwxbQ-wave6-pass2",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "higher_timeframe": "15m",
+        "lower_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+            "step": 1,
+            "action": "Wait for a stop raid (a low put in before it was taken/broken).",
+            "rationale": "Stop raid clears liquidity and confirms initial intent."
+          },
+          {
+            "transcript_quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+            "step": 2,
+            "action": "Wait for a market structure shift or displacement (a previous high/low is broken and aggressively moved over).",
+            "rationale": "MSS confirms the directional bias."
+          },
+          {
+            "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+            "step": 3,
+            "action": "Wait for price to move back into a discount of the displacement range.",
+            "rationale": "Discount/Premium range identifies the optimal area for entry."
+          },
+          {
+            "transcript_quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+            "step": 4,
+            "action": "Identify a Point of Interest (POI) using a Fair Value Gap (FVG), Order Block (OB), Breaker Block (BB), or Optimal Trade Entry (OTE).",
+            "rationale": "The POI provides the specific setup for entry within the discount/premium range."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": null,
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": null
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "looking for buy side liquidity up here so letting this play out that would be my partial",
+            "priority": 1,
+            "type": "buy_side_liquidity",
+            "r_multiple": null,
+            "rationale": "Initial partial entry targets buy-side liquidity."
+          },
+          {
+            "transcript_quote": "depending on if I move my stop to break even it would have hit by side liquidity here",
+            "priority": 2,
+            "type": "buy_side_liquidity",
+            "r_multiple": null,
+            "rationale": "Stop move to break even targets buy-side liquidity."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+            "name": "stop_raid",
+            "description": "Wait for a stop raid (a low put in before it was taken/broken).",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+            "name": "market_structure_shift",
+            "description": "Wait for a market structure shift or displacement (a previous high/low is broken and aggressively moved over).",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+            "name": "discount_premium_range",
+            "description": "Wait for price to move back into a discount of the displacement range.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "transcript_quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+            "name": "point_of_interest_pd_array",
+            "description": "Identify a Point of Interest (POI) using a Fair Value Gap (FVG), Order Block (OB), Breaker Block (BB), or Optimal Trade Entry (OTE).",
+            "canonical_match": null
+          }
+        ],
+        "name": "poi_pd_array_strategy_15m",
+        "rejected_strategies": [],
+        "instrument_classification": "futures_primary",
+        "speaker_concepts": [
+          {
+            "term": "Stop Raid",
+            "role": "entry_step",
+            "verbatim_description": "a low was put in before it was rated or broken",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Structure Shift",
+            "role": "entry_step",
+            "verbatim_description": "a previous high was broken and aggressively moved over",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount of this price range",
+            "role": "zone",
+            "verbatim_description": "where there is a little bit flexibility I generally like to see price move back into a discount of this price range here",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "PD array",
+            "role": "entry_step",
+            "verbatim_description": "a general term for the various components used as entry points, such as fair value gap or order block",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap",
+            "role": "zone",
+            "verbatim_description": "A specific type of PD array component that is looked for in an optimal trade entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block",
+            "role": "zone",
+            "verbatim_description": "a specific type of PD array component, generally a down close candle or up close candles depending on the direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "OTE",
+            "role": "zone",
+            "verbatim_description": "A concept used to narrow down the discount range for longing by identifying premium areas where price should not be longed.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Breaker Block",
+            "role": "zone",
+            "verbatim_description": "a specific type of PD array component that is looked for in an optimal trade entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Box setup",
+            "role": "entry_step",
+            "verbatim_description": "A method used to identify a potential entry point, often blended with other concepts like FVG or OTE.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Buy side liquidity",
+            "role": "target",
+            "verbatim_description": "Liquidity resting above the current price action that is targeted for profit taking.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sell side liquidity",
+            "role": "target",
+            "verbatim_description": "Liquidity resting below the current price action that is targeted for profit taking.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Accumulation Manipulation",
+            "role": "phase",
+            "verbatim_description": "A phase where a deviation from range occurs, followed by manipulation before moving higher or lower.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Distribution",
+            "role": "phase",
+            "verbatim_description": "The phase of the market cycle where selling pressure is expected to dominate after accumulation/manipulation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 17\u00c3\u2014 in transcript)",
+            "transcript_quote": "s a market structure shift or displacement this means that a previous high was broken and aggressively moved over the next thing I lo",
+            "occurrences": 17,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 15\u00c3\u2014 in transcript)",
+            "transcript_quote": "o have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block I know this got a litt",
+            "occurrences": 15,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 12\u00c3\u2014 in transcript)",
+            "transcript_quote": "for example I will look for a fair value Gap in an optimal trade entry or I'll look for the box set up in an optimal trade entry there",
+            "occurrences": 12,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "viation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manip",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "he next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over th",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "our low going to Mark out the FIB and what do I have in this area right here well I have a breaker block and a fair value G",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "ICT",
+            "role": "model",
+            "verbatim_description": "ICT (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "is going to be over my a plus ICT entry checklist once I have a daily bias or Direction I will use this checklist to make s",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Equal Highs/Lows",
+            "role": "target",
+            "verbatim_description": "Equal Highs/Lows (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "ck down and we have all these equal lows resting below so let's dive into here so here we are on the five minute chart and if you",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "so ideally I'm looking for a retest of this manipulation to then be reaching for the other side here before going higher so l",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "phase_a_enumeration": {
+      "video_id": "0xygpCMwxbQ-wave6-pass2",
+      "strategies": [
+        {
+          "strategy_id": 0,
+          "name": "General ICT Checklist Strategy",
+          "entry_summary": "Identify a Point of Interest (POI) within a discount/premium range, typically using a Fair Value Gap (FVG), Order Block (OB), Breaker Block (BB), or Box setup, after confirming a Stop Raid and Market Structure Shift (MSS).",
+          "exit_summary": "Manage risk based on the identified POI, aiming for a favorable Risk-to-Reward ratio, and managing partial entries or moving stops to break even.",
+          "variants": [
+            {
+              "variant_label": "15m NASDAQ FVG/OB/Box Entry",
+              "timeframe_note": "15-minute chart",
+              "confirmation_mechanic_note": "Entry based on FVG, OB, or Box setup within a displacement range, targeting buy-side liquidity.",
+              "target_note": "Targeting buy-side liquidity (partial entry/stop move to BE).",
+              "transcript_quote": "for my entry I would personally be looking to enter the trade right here My Stop on this low first partial here and then looking for buy side liqudity"
+            },
+            {
+              "variant_label": "5m Breaker Block/FVG Entry",
+              "timeframe_note": "5-minute chart",
+              "confirmation_mechanic_note": "Entry based on Breaker Block or FVG within a displacement range, targeting buy-side liquidity.",
+              "target_note": "Targeting buy-side liquidity (partial entry/stop move to BE).",
+              "transcript_quote": "if I was just going to take the breaker block entry it would look something like this however if I was going to narrow that down to the fair value Gap"
+            },
+            {
+              "variant_label": "1m ES FVG/OB Entry",
+              "timeframe_note": "1-minute chart",
+              "confirmation_mechanic_note": "Entry based on FVG or OB within an Optimal Trade Entry (OTE) or premium, targeting a new low.",
+              "target_note": "Targeting a new low.",
+              "transcript_quote": "my entry would be on this order block targeting a new low and my stop on the order block High"
+            },
+            {
+              "variant_label": "5m ES OB Entry",
+              "timeframe_note": "5-minute chart",
+              "confirmation_mechanic_note": "Entry based on Order Block within an OTE, targeting a new low.",
+              "target_note": "Targeting a new low.",
+              "transcript_quote": "my entry would be on this order block targeting a new low and my stop on the order block High"
+            }
+          ]
+        }
+      ],
+      "enumeration_note": "The speaker presents a single, overarching ICT checklist strategy, with multiple examples demonstrating different entry concepts (FVG, OB, BB, Box) and timeframes, which are grouped as variants of the core strategy."
+    },
+    "per_strategy_extractions": [
+      {
+        "phase_a_strategy_id": 0,
+        "extraction": {
+          "video_id": "0xygpCMwxbQ-wave6-pass2::phaseA-s0",
+          "instrument_classification": null,
+          "strategies": [
+            {
+              "higher_timeframe": "15m",
+              "lower_timeframe": "15m",
+              "direction": "both",
+              "entry_sequence": [
+                {
+                  "transcript_quote": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+                  "step": 1,
+                  "action": "Wait for a stop raid (a low put in before it was taken/broken).",
+                  "rationale": "Stop raid clears liquidity and confirms initial intent."
+                },
+                {
+                  "transcript_quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+                  "step": 2,
+                  "action": "Wait for a market structure shift or displacement (a previous high/low is broken and aggressively moved over).",
+                  "rationale": "MSS confirms the directional bias."
+                },
+                {
+                  "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+                  "step": 3,
+                  "action": "Wait for price to move back into a discount of the displacement range.",
+                  "rationale": "Discount/Premium range identifies the optimal area for entry."
+                },
+                {
+                  "transcript_quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+                  "step": 4,
+                  "action": "Identify a Point of Interest (POI) using a Fair Value Gap (FVG), Order Block (OB), Breaker Block (BB), or Optimal Trade Entry (OTE).",
+                  "rationale": "The POI provides the specific setup for entry within the discount/premium range."
+                }
+              ],
+              "preferred_regime": "any",
+              "stop": {
+                "transcript_quote": null,
+                "anchor": null,
+                "buffer_atr": null,
+                "atr_multiplier": null,
+                "rationale": null
+              },
+              "stop_management": null,
+              "targets": [
+                {
+                  "transcript_quote": "looking for buy side liquidity up here so letting this play out that would be my partial",
+                  "priority": 1,
+                  "type": "buy_side_liquidity",
+                  "r_multiple": null,
+                  "rationale": "Initial partial entry targets buy-side liquidity."
+                },
+                {
+                  "transcript_quote": "depending on if I move my stop to break even it would have hit by side liquidity here",
+                  "priority": 2,
+                  "type": "buy_side_liquidity",
+                  "r_multiple": null,
+                  "rationale": "Stop move to break even targets buy-side liquidity."
+                }
+              ],
+              "confluences": [
+                {
+                  "transcript_quote": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+                  "name": "stop_raid",
+                  "description": "Wait for a stop raid (a low put in before it was taken/broken).",
+                  "canonical_match": null
+                },
+                {
+                  "transcript_quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+                  "name": "market_structure_shift",
+                  "description": "Wait for a market structure shift or displacement (a previous high/low is broken and aggressively moved over).",
+                  "canonical_match": "market_structure_aligned"
+                },
+                {
+                  "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+                  "name": "discount_premium_range",
+                  "description": "Wait for price to move back into a discount of the displacement range.",
+                  "canonical_match": "regime_match"
+                },
+                {
+                  "transcript_quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+                  "name": "point_of_interest_pd_array",
+                  "description": "Identify a Point of Interest (POI) using a Fair Value Gap (FVG), Order Block (OB), Breaker Block (BB), or Optimal Trade Entry (OTE).",
+                  "canonical_match": null
+                }
+              ],
+              "name": "poi_pd_array_strategy_15m",
+              "rejected_strategies": [],
+              "instrument_classification": "futures_primary",
+              "speaker_concepts": [
+                {
+                  "term": "Stop Raid",
+                  "role": "entry_step",
+                  "verbatim_description": "a low was put in before it was rated or broken",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Market Structure Shift",
+                  "role": "entry_step",
+                  "verbatim_description": "a previous high was broken and aggressively moved over",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Discount of this price range",
+                  "role": "zone",
+                  "verbatim_description": "where there is a little bit flexibility I generally like to see price move back into a discount of this price range here",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "PD array",
+                  "role": "entry_step",
+                  "verbatim_description": "a general term for the various components used as entry points, such as fair value gap or order block",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Fair Value Gap",
+                  "role": "zone",
+                  "verbatim_description": "A specific type of PD array component that is looked for in an optimal trade entry.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Order Block",
+                  "role": "zone",
+                  "verbatim_description": "a specific type of PD array component, generally a down close candle or up close candles depending on the direction.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "OTE",
+                  "role": "zone",
+                  "verbatim_description": "A concept used to narrow down the discount range for longing by identifying premium areas where price should not be longed.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Breaker Block",
+                  "role": "zone",
+                  "verbatim_description": "a specific type of PD array component that is looked for in an optimal trade entry.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Box setup",
+                  "role": "entry_step",
+                  "verbatim_description": "A method used to identify a potential entry point, often blended with other concepts like FVG or OTE.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Buy side liquidity",
+                  "role": "target",
+                  "verbatim_description": "Liquidity resting above the current price action that is targeted for profit taking.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Sell side liquidity",
+                  "role": "target",
+                  "verbatim_description": "Liquidity resting below the current price action that is targeted for profit taking.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Accumulation Manipulation",
+                  "role": "phase",
+                  "verbatim_description": "A phase where a deviation from range occurs, followed by manipulation before moving higher or lower.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Distribution",
+                  "role": "phase",
+                  "verbatim_description": "The phase of the market cycle where selling pressure is expected to dominate after accumulation/manipulation.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Market Phase",
+                  "role": "phase",
+                  "verbatim_description": "Market Phase (mentioned 17\u00c3\u2014 in transcript)",
+                  "transcript_quote": "s a market structure shift or displacement this means that a previous high was broken and aggressively moved over the next thing I lo",
+                  "occurrences": 17,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Order Block / Breaker Block",
+                  "role": "zone",
+                  "verbatim_description": "Order Block / Breaker Block (mentioned 15\u00c3\u2014 in transcript)",
+                  "transcript_quote": "o have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block I know this got a litt",
+                  "occurrences": 15,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Fair Value Gap (FVG)",
+                  "role": "zone",
+                  "verbatim_description": "Fair Value Gap (FVG) (mentioned 12\u00c3\u2014 in transcript)",
+                  "transcript_quote": "for example I will look for a fair value Gap in an optimal trade entry or I'll look for the box set up in an optimal trade entry there",
+                  "occurrences": 12,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Phase (A/M/D/R)",
+                  "role": "phase",
+                  "verbatim_description": "Phase (A/M/D/R) (mentioned 4\u00c3\u2014 in transcript)",
+                  "transcript_quote": "viation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manip",
+                  "occurrences": 4,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Market Structure Shift (MSS/BOS)",
+                  "role": "entry_step",
+                  "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 2\u00c3\u2014 in transcript)",
+                  "transcript_quote": "he next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over th",
+                  "occurrences": 2,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Gann Box / Fibonacci",
+                  "role": "indicator",
+                  "verbatim_description": "Gann Box / Fibonacci (mentioned 2\u00c3\u2014 in transcript)",
+                  "transcript_quote": "our low going to Mark out the FIB and what do I have in this area right here well I have a breaker block and a fair value G",
+                  "occurrences": 2,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "ICT",
+                  "role": "model",
+                  "verbatim_description": "ICT (mentioned 1\u00c3\u2014 in transcript)",
+                  "transcript_quote": "is going to be over my a plus ICT entry checklist once I have a daily bias or Direction I will use this checklist to make s",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Equal Highs/Lows",
+                  "role": "target",
+                  "verbatim_description": "Equal Highs/Lows (mentioned 1\u00c3\u2014 in transcript)",
+                  "transcript_quote": "ck down and we have all these equal lows resting below so let's dive into here so here we are on the five minute chart and if you",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Rebalance/Retest",
+                  "role": "entry_step",
+                  "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+                  "transcript_quote": "so ideally I'm looking for a retest of this manipulation to then be reaching for the other side here before going higher so l",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                }
+              ]
+            }
+          ],
+          "rejected_strategies": [],
+          "empty_reason": null
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "video_id": "W7nlnHTUZQU",
+  "extracted_at": 1783916397.872497,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "c26427803ef3eefd4b5d899061f791d42b9b31bd08db6378a676d89a9891e92a",
+  "extraction": {
+    "video_id": "W7nlnHTUZQU-wave6-pass1",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "overnight_range_breakout_and_retest_strategy",
+        "higher_timeframe": "1d",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "we want to identify our highest point of price action within that range? And then two, what is the lowest point of price action within that range?",
+            "step": 1,
+            "action": "Identify the highest point (Overnight High) and the lowest point (Overnight Low) of price action during the overnight/pre-market session.",
+            "rationale": "These two points define the trading range for the strategy."
+          },
+          {
+            "transcript_quote": "we want to see it close below or above with strength or weakness.",
+            "step": 2,
+            "action": "Wait for price to break above the overnight high or below the overnight low, confirming the break with strength (for long) or weakness (for short).",
+            "rationale": "A strong close above/below the range confirms the directional bias."
+          },
+          {
+            "transcript_quote": "we want to see it pull back and test this area as support.",
+            "step": 3,
+            "action": "Wait for price to pull back and retest the broken overnight high (for long) or overnight low (for short).",
+            "rationale": "The retest validates the breakout level as a potential support/resistance zone."
+          },
+          {
+            "transcript_quote": "we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume.",
+            "step": 4,
+            "action": "For a long entry, wait for bullish price action (e.g., bullish hammer, engulfing, long lower wicks) on the retest. For a short entry, wait for bearish price action (e.g., bearish hammer, engulfing, long upper wicks).",
+            "rationale": "Confirmation of reversal intent at the retested level."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "transcript_quote": "our stop is going to be if price breaks back down below this previous high or vice versa. If price were to break below this level again, we're going to look for it to break with weakness.",
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed on the opposite side of the breakout/retest level."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "we were up about like a 2.6R trade",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2.6,
+            "rationale": "The speaker demonstrated a potential 2.6R trade-off."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "it is going to be best used for the New York market session. So that is going to be from 9:30 a.m. EST all the way until 400 pm EST.",
+            "name": "ny_session_time_window",
+            "description": "The strategy is best used during the New York market session (9:30 a.m. EST to 4:00 p.m. EST).",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "the overall trend is going to be very important when dictating are we looking for price to break above the range or are we looking for price to break below the range.",
+            "name": "overall_trend_alignment",
+            "description": "The overall trend dictates whether to look for a long (break above) or short (break below) setup.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Overnight Highs",
+            "role": "zone",
+            "verbatim_description": "The highest point of price action within that range (the overnight and pre-market session).",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Overnight Lows",
+            "role": "zone",
+            "verbatim_description": "The lowest point of price action within that range (the overnight and pre-market session).",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break with Strength or Weakness",
+            "role": "entry_step",
+            "verbatim_description": "If we can actually get that break [above/below the range], we want to see it close below or above with strength or weakness.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bullish Price Action",
+            "role": "entry_step",
+            "verbatim_description": "When price pulls back and retests that level, we want to see some kind of bullish price action... whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Price Action",
+            "role": "entry_step",
+            "verbatim_description": "When price comes back up, test this area as resistance with bearish price action... whether it be bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop",
+            "role": "stop_anchor",
+            "verbatim_description": "Our stop is going to be if price breaks back down below this previous high or vice versa. If price were to break below this level again, we're going to look for it to break with weakness.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Overall Trend",
+            "role": "filter",
+            "verbatim_description": "A common mistake that I see a lot of people make is they don't understand the overall trend. Because if the overall trend is to the upside, well then ideally we're not looking for price to break below to look for shorts.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 5\u00c3\u2014 in transcript)",
+            "transcript_quote": "ok for price to pull back and retest that level. So if we break above the overnight highs, we want to see it break with streng",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "her price to break above that range or we are going to look for price to break below that range. Now if we can actually get th",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

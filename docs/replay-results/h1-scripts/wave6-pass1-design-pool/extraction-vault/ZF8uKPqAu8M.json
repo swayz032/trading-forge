@@ -1,0 +1,165 @@
+{
+  "video_id": "ZF8uKPqAu8M",
+  "extracted_at": 1783916617.909878,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "a960a38653faa778f0ab4b8c126ba765c5c1380bbbfbce915db1ae864941a600",
+  "extraction": {
+    "video_id": "ZF8uKPqAu8M-wave6-pass1",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "opening_range_breakout_15m_5m",
+        "higher_timeframe": "15m",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I then look for the 9:30 candle, which is the market open in New York, and that's this green candle here.",
+            "step": 1,
+            "action": "Identify the 9:30 NY market open candle on the 15-minute chart.",
+            "rationale": "This candle defines the start of the trading session."
+          },
+          {
+            "transcript_quote": "I then look for the 9:30 candle, which is the market open in New York, and that's this green candle here. Once I've got that, I'm going to mark out the high and the low. So, I mark the high and then do the same thing with the low. This gives me my opening range.",
+            "step": 2,
+            "action": "Mark the high and low of the 9:30 NY market open candle to define the opening range.",
+            "rationale": "The opening range is established by the first candle of the day."
+          },
+          {
+            "transcript_quote": "I'm just waiting for a candle to break out through this range. There are different ways to do this, and I know that some people will enter as soon as the price is broken, like on this green wick up here. But I prefer to wait for the candle to actually break through and then close above. So, in this case, my signal is this candle here because it's the first one to actually break out and then close outside of that range.",
+            "step": 3,
+            "action": "Wait for a candle to close outside of the opening range (breakout confirmation).",
+            "rationale": "Closing outside the range confirms the breakout and provides a clear entry signal."
+          },
+          {
+            "transcript_quote": "I then enter at the open of the next one. So, this here would be my entry.",
+            "step": 4,
+            "action": "Enter a long position at the open of the candle immediately following the breakout candle.",
+            "rationale": "Entry is taken at the open of the candle after the breakout confirmation."
+          },
+          {
+            "transcript_quote": "After that, the stop loss goes at the bottom of the range. So down here",
+            "step": 5,
+            "action": "Place the stop loss at the low of the opening range.",
+            "rationale": "The stop loss is placed at the opposite end of the opening range."
+          },
+          {
+            "transcript_quote": "And I target 1.5 to one reward to risk. So this takerit would be somewhere around here.",
+            "step": 6,
+            "action": "Target a 1.5:1 risk-to-reward ratio.",
+            "rationale": "The speaker targets a 1.5R take-profit."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "After that, the stop loss goes at the bottom of the range. So down here",
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss is placed at the bottom of the opening range."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "And I target 1.5 to one reward to risk. So this takerit would be somewhere around here.",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 1.5,
+            "rationale": "The speaker targets a 1.5:1 risk-to-reward ratio."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "I don't trade after the 12:00 candle, which would be here. So that would be my cut off for entering a trade.",
+            "name": "time_cutoff",
+            "description": "Do not trade after the 12:00 candle.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "I also don't trade ranges that are either too small or too big based on the recent ATR.",
+            "name": "range_size_filter",
+            "description": "Avoid trading ranges that are either too small or too big based on the recent ATR.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "opening range breakout strategy",
+            "role": "model",
+            "verbatim_description": "I've been trading the opening range breakout strategy for the last 6 months and I've made steady profits with it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "15minute opening range",
+            "role": "zone",
+            "verbatim_description": "This is a 15minute opening range. I then look for the 9:30 candle, which is the market open in New York, and that's this green candle here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "opening range high",
+            "role": "zone",
+            "verbatim_description": "I mark out the high and then do the same thing with the low. So, I mark the high and then do the same thing with the low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "opening range low",
+            "role": "zone",
+            "verbatim_description": "So, I mark the high and then do the same thing with the low. This gives me my opening range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "breakout",
+            "role": "entry_step",
+            "verbatim_description": "After that, I'm just waiting for a candle to break out through this range... So, in this case, my signal is this candle here because it's the first one to actually break out and then close outside of that range.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "pullback",
+            "role": "entry_step",
+            "verbatim_description": "But often what seems to happen after the initial breakout is that we get this pullback towards the opening range. This is how the modified strategy will work.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 13\u00c3\u2014 in transcript)",
+            "transcript_quote": "I've been trading the opening range breakout strategy for the last 6 months and I've made steady profits with it. The strategy",
+            "occurrences": 13,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "mation that price is going to bounce off and move back up. And I'm going to be waiting for a break of this most recent high. W",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "ATR",
+            "role": "indicator",
+            "verbatim_description": "ATR (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "r too big based on the recent ATR. I'm not going to go into all of that just now, but I'll leave a link to the detailed vid",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "fore that, it was pretty much sideways for the first 3 years. Going by the equity curve alone, I really wasn't impressed with th",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

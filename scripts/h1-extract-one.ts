@@ -62,11 +62,57 @@ import { callScoutExtractLlm } from "../src/server/services/model-router.js";
 import { runPass1VocabularyExtraction } from "../src/server/lib/two-pass-vocab-extractor.js";
 import { extractSpeakerConceptsFromTranscript } from "../src/server/lib/transcript-speaker-concepts.js";
 
+interface ScopeVariant {
+  variant_label: string;
+  timeframe_note?: string | null;
+  confirmation_mechanic_note?: string | null;
+  target_note?: string | null;
+}
+
+interface ExtractionScope {
+  entry_summary: string;
+  exit_summary: string;
+  variants?: ScopeVariant[];
+}
+
 interface InputPayload {
   video_id: string;
   transcript_text: string;
   title?: string;
   channel?: string;
+  /**
+   * H1 Wave-6 Pass-2 (2026-07-13) — optional Phase-A -> Phase-B handoff scope.
+   * When present, this call is SCOPED to exactly one Phase-A-enumerated
+   * strategy per docs/designs/h1-wave6-pass2-two-phase-PACKET-2026-07-13.md
+   * §2. Injected as prompt assembly only (no schema change) — the raw
+   * `transcript_text` field is left untouched so the mechanical
+   * quote-substring check downstream still validates against the true,
+   * unmodified transcript.
+   */
+  scope?: ExtractionScope;
+}
+
+/**
+ * Builds the §2 scoping instruction + per-variant checklist string. Returns
+ * "" when no scope is present (unscoped call — existing single-phase
+ * behavior, byte-identical to pre-pass-2 h1-extract-one.ts output).
+ */
+function buildScopeBlock(scope: ExtractionScope | undefined): string {
+  if (!scope) return "";
+  const lines: string[] = [];
+  lines.push(
+    `SCOPE (Phase A -> Phase B handoff): This call is scoped to ONE strategy: ${scope.entry_summary} / ${scope.exit_summary}. If the transcript teaches other strategies elsewhere, do NOT extract conditions for them -- another call handles each of those separately.`,
+  );
+  const variants = Array.isArray(scope.variants) ? scope.variants : [];
+  if (variants.length > 0) {
+    lines.push("VARIANT CHECKLIST -- attempt to quote-ground each item as its own entry_sequence step / confluence / target; use the no-quote sentinel (transcript_quote: null) rather than dropping or inventing a quote:");
+    for (const v of variants) {
+      lines.push(
+        `- Variant '${v.variant_label}' -- timeframe: ${v.timeframe_note ?? "n/a"}, confirmation: ${v.confirmation_mechanic_note ?? "n/a"}, target: ${v.target_note ?? "n/a"}.`,
+      );
+    }
+  }
+  return lines.join("\n");
 }
 
 async function readStdin(): Promise<string> {
@@ -141,12 +187,26 @@ async function main(): Promise<void> {
   // reimplement the chunked-fallback path (OOM-safe long-transcript handling);
   // clause 2's "one extraction pass per video" is the pilot's own contract, and
   // chunking is an orthogonal production-robustness feature out of scope here.
-  const userPayload = JSON.stringify({
+  const scopeBlock = buildScopeBlock(input.scope);
+  const basePayload = JSON.stringify({
     youtube_url: `h1-pilot://${videoId}`,
     title: input.title ?? videoId,
     channel: input.channel ?? "h1-pilot",
     transcript_text: input.transcript_text,
   });
+  // H1 Wave-6 Pass-2 (2026-07-13) fix: a scope reminder embedded EARLY inside
+  // the JSON payload (before the long transcript_text field) was observed to
+  // be ignored by gemma4:e4b-it-qat in a live birth-fixture run -- a scoped
+  // call re-extracted the SAME variant as its sibling unscoped call instead
+  // of honoring its checklist. Root cause (diagnosed, not guessed): the
+  // instruction sat far from the model's final generation point, buried
+  // inside a JSON string value ahead of a much longer transcript. Fix: the
+  // scope reminder is now a SEPARATE, plainly-delimited block appended AFTER
+  // the whole transcript payload -- the LAST text the model reads before
+  // generating (maximal recency), not nested inside JSON escaping.
+  const userPayload = scopeBlock
+    ? `${basePayload}\n\n=== SCOPE REMINDER (read this before extracting -- it overrides anything that looks like a different strategy in the transcript above) ===\n${scopeBlock}`
+    : basePayload;
 
   let raw: string | null = null;
   try {

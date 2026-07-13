@@ -1,0 +1,313 @@
+{
+  "video_id": "2DXQqwKSwJE",
+  "extracted_at": 1783915681.2483509,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "a6175ea0a22d94bf2ea4f58d180de695d4ba78b83c821613a57c8ff8dbfcf273",
+  "extraction": {
+    "video_id": "2DXQqwKSwJE-wave6-pass1",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "mean_reversion_scalping_support_resistance",
+        "higher_timeframe": null,
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid.",
+            "step": 1,
+            "action": "Wait for a sharp down move into support where volume stalls and bids stop hitting the support level.",
+            "rationale": "The pause signifies seller hesitation and a potential turn of momentum."
+          },
+          {
+            "transcript_quote": "As a scalper, you then take the offer and get long in front of that support level, using the bids as at the support as your protection, while then seeking to capture the bounce we get off that level.",
+            "step": 2,
+            "action": "Take the offer and enter long in front of the support level, using the bids at the support as the stop loss, aiming to capture the bounce.",
+            "rationale": "The entry is based on the shift in order flow and the potential for a reversal off the support."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "using the bids as at the support as your protection",
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed using the bids at the support level as protection."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "seeking to capture the bounce we get off that level",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": null,
+            "rationale": "The primary goal is to capture the bounce off the support level."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Mean reversion scalps occur after price stretches too far too fast.",
+            "name": "price_stretch_too_far",
+            "description": "Mean reversion scalps occur after price stretches too far too fast.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal.",
+            "name": "sharp_move_into_liquidity",
+            "description": "The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "In-play stock",
+            "role": "filter",
+            "verbatim_description": "A stock that has a significant price range, is doing high volume, and often trading on a news catalyst or interesting technical pattern.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Tight level",
+            "role": "zone",
+            "verbatim_description": "I want a very well-defined intraday support or resistance level. Ideally, one that aligns on multiple time frames.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Reading the tape",
+            "role": "model",
+            "verbatim_description": "You need to be paying attention to how thick or thin the bids and offers are, and look for disparity as well as which side is being more aggressive.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Mean reversion scalps",
+            "role": "phase",
+            "verbatim_description": "Occur after price stretches too far too fast. You are stepping in when emotion peaks and order flow begins to shift.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Continuation scalps",
+            "role": "phase",
+            "verbatim_description": "Occur around breaks of clean support or resistance. When scalping here, you are trying to be the first market participant to enter upon the break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Making the spread",
+            "role": "phase",
+            "verbatim_description": "Instead of aggressively taking liquidity, you provide the liquidity... with the aim to capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "e then seeking to capture the bounce we get off that level. Often, these mean reversion scalps work best when the stock quickl",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "continuation_scalping_breakout",
+        "higher_timeframe": null,
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance.",
+            "step": 1,
+            "action": "Wait for a clean break of support or resistance.",
+            "rationale": "Continuation scalps are based on breaks of clean support or resistance."
+          },
+          {
+            "transcript_quote": "So, if we have a $10 resistance level, you want to be buying $10.01 or $10.02, and scalping out on that emotional follow-through, much like the example we gave earlier.",
+            "step": 2,
+            "action": "Enter long immediately after the break (e.g., buying $10.01 after $10 resistance) and scalp out on the emotional follow-through.",
+            "rationale": "The entry is based on the immediate follow-through momentum after the break."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "transcript_quote": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow.",
+          "anchor": "sweep_wick_above_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed right below the resistance level if the price gets back below it."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "and scalping out on that emotional follow-through, much like the example we gave earlier.",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": null,
+            "rationale": "The goal is to capture the emotional follow-through momentum."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow.",
+            "name": "real_time_order_flow_confirmation",
+            "description": "Success depends heavily on timing and confirmation from real-time order flow.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "In-play stock",
+            "role": "filter",
+            "verbatim_description": "A stock that has a significant price range, is doing high volume, and often trading on a news catalyst or interesting technical pattern.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Tight level",
+            "role": "zone",
+            "verbatim_description": "I want a very well-defined intraday support or resistance level. Ideally, one that aligns on multiple time frames.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Reading the tape",
+            "role": "model",
+            "verbatim_description": "You need to be paying attention to how thick or thin the bids and offers are, and look for disparity as well as which side is being more aggressive.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Mean reversion scalps",
+            "role": "phase",
+            "verbatim_description": "Occur after price stretches too far too fast. You are stepping in when emotion peaks and order flow begins to shift.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Continuation scalps",
+            "role": "phase",
+            "verbatim_description": "Occur around breaks of clean support or resistance. When scalping here, you are trying to be the first market participant to enter upon the break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Making the spread",
+            "role": "phase",
+            "verbatim_description": "Instead of aggressively taking liquidity, you provide the liquidity... with the aim to capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "e then seeking to capture the bounce we get off that level. Often, these mean reversion scalps work best when the stock quickl",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "spread_making_scalping",
+        "higher_timeframe": null,
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Instead of aggressively taking liquidity, you provide the liquidity.",
+            "step": 1,
+            "action": "Provide liquidity by placing resting limit orders ahead of large bids or offers.",
+            "rationale": "The strategy involves acting as a market maker rather than a momentum trader."
+          },
+          {
+            "transcript_quote": "When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread.",
+            "step": 2,
+            "action": "Wait for market participants to cross the spread due to urgency.",
+            "rationale": "Urgent participants will cross the spread, hitting the bid and paying the offer."
+          },
+          {
+            "transcript_quote": "He took such quick and aggressive advantage of that, immediately just slamming in huge bids, only to just as quickly kick his offers out and his size out a point or two higher, and repeating it again and again before that spread compressed and the stock drifted lower.",
+            "step": 3,
+            "action": "Aggressively take advantage of the spread by slamming in huge bids and quickly kicking offers out to size out a point or two higher, repeating the process.",
+            "rationale": "The goal is to capture the difference between the bid and offer as the spread compresses."
+          }
+        ],
+        "preferred_regime": "ranging",
+        "stop": {
+          "transcript_quote": "before that spread compressed and the stock drifted lower.",
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The trade is exited or stopped when the spread compresses and the stock drifts lower."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer.",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": null,
+            "rationale": "The target is the difference between the bid and offer (the spread)."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread.",
+            "name": "relative_equilibrium_thin_market",
+            "description": "The strategy works best when a stock is in relative equilibrium but thin.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "transcript_quote": "The edge here does not come from predicting direction. It comes from understanding market microstructure.",
+            "name": "market_microstructure_understanding",
+            "description": "The edge comes from understanding market microstructure.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "In-play stock",
+            "role": "filter",
+            "verbatim_description": "A stock that has a significant price range, is doing high volume, and often trading on a news catalyst or interesting technical pattern.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Tight level",
+            "role": "zone",
+            "verbatim_description": "I want a very well-defined intraday support or resistance level. Ideally, one that aligns on multiple time frames.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Reading the tape",
+            "role": "model",
+            "verbatim_description": "You need to be paying attention to how thick or thin the bids and offers are, and look for disparity as well as which side is being more aggressive.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Mean reversion scalps",
+            "role": "phase",
+            "verbatim_description": "Occur after price stretches too far too fast. You are stepping in when emotion peaks and order flow begins to shift.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Continuation scalps",
+            "role": "phase",
+            "verbatim_description": "Occur around breaks of clean support or resistance. When scalping here, you are trying to be the first market participant to enter upon the break.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Making the spread",
+            "role": "phase",
+            "verbatim_description": "Instead of aggressively taking liquidity, you provide the liquidity... with the aim to capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "e then seeking to capture the bounce we get off that level. Often, these mean reversion scalps work best when the stock quickl",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

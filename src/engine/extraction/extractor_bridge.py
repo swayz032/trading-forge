@@ -69,6 +69,7 @@ from . import pilot_conveyor as pc
 
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 _EXTRACT_ONE_SCRIPT = os.path.join(_ROOT, "scripts", "h1-extract-one.ts")
+_ENUMERATE_SCRIPT = os.path.join(_ROOT, "scripts", "h1-enumerate-strategies.ts")
 
 
 class RealExtractorError(RuntimeError):
@@ -79,15 +80,38 @@ class RealExtractorError(RuntimeError):
     'real extractor' dry-run")."""
 
 
-def invoke_real_extractor(transcript_text: str, video_id: str, timeout_s: float = 240.0) -> dict:
+class EnumeratorError(RuntimeError):
+    """Raised on any failure invoking Phase A's strategy enumerator --
+    non-zero exit, bad JSON, timeout, or missing wrapper script. Same
+    never-fabricate contract as RealExtractorError."""
+
+
+def invoke_real_extractor(
+    transcript_text: str,
+    video_id: str,
+    timeout_s: float = 240.0,
+    scope: Optional[dict] = None,
+) -> dict:
     """Subprocess bridge: transcript in -> extracted-strategy JSON out.
     Shells out to `npx tsx scripts/h1-extract-one.ts`, feeding
     `{"video_id": ..., "transcript_text": ...}` on stdin, reading one JSON
     object off stdout. Raises `RealExtractorError` on any failure -- never
-    returns a partial/fabricated result."""
+    returns a partial/fabricated result.
+
+    `scope` (H1 Wave-6 Pass-2, 2026-07-13): optional Phase-A -> Phase-B
+    handoff scope dict `{"entry_summary": str, "exit_summary": str,
+    "variants": [{"variant_label": str, "timeframe_note": str|None,
+    "confirmation_mechanic_note": str|None, "target_note": str|None}, ...]}`
+    per docs/designs/h1-wave6-pass2-two-phase-PACKET-2026-07-13.md §2. When
+    None (default), behavior is byte-identical to pre-pass-2 (unscoped,
+    single-phase) calls -- the wrapper script only injects the scoping
+    instruction when this key is present in the stdin payload."""
     if not os.path.exists(_EXTRACT_ONE_SCRIPT):
         raise RealExtractorError(f"extractor CLI wrapper not found: {_EXTRACT_ONE_SCRIPT}")
-    payload = json.dumps({"video_id": video_id, "transcript_text": transcript_text})
+    payload_dict = {"video_id": video_id, "transcript_text": transcript_text}
+    if scope is not None:
+        payload_dict["scope"] = scope
+    payload = json.dumps(payload_dict)
     try:
         proc = subprocess.run(
             ["npx", "tsx", _EXTRACT_ONE_SCRIPT],
@@ -131,6 +155,160 @@ def invoke_real_extractor(transcript_text: str, video_id: str, timeout_s: float 
     if isinstance(result, dict) and result.get("error"):
         raise RealExtractorError(f"extractor CLI wrapper reported an error for video_id={video_id!r}: {result['error']}")
     return result
+
+
+def _run_node_cli_json(
+    script_path: str,
+    payload: str,
+    timeout_s: float,
+    video_id: str,
+    error_cls: type,
+    script_label: str,
+) -> dict:
+    """Shared subprocess seam: run `npx tsx <script_path>` with `payload` on
+    stdin, scrape the last stdout line that parses as JSON, raise
+    `error_cls` on any failure. Factored out of `invoke_real_extractor` /
+    `invoke_strategy_enumerator` so both CLI wrappers share identical
+    error-handling (JSON-line scraping tolerant of npm notices, timeout
+    handling, missing-wrapper detection) instead of drifting independently."""
+    if not os.path.exists(script_path):
+        raise error_cls(f"{script_label} CLI wrapper not found: {script_path}")
+    try:
+        proc = subprocess.run(
+            ["npx", "tsx", script_path],
+            input=payload,
+            capture_output=True,
+            text=True,
+            cwd=_ROOT,
+            timeout=timeout_s,
+            shell=(os.name == "nt"),
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise error_cls(
+            f"{script_label} CLI wrapper timed out after {timeout_s}s for video_id={video_id!r}"
+        ) from exc
+    except FileNotFoundError as exc:
+        raise error_cls(f"npx/tsx not found on PATH invoking {script_label} for video_id={video_id!r}") from exc
+
+    if proc.returncode != 0:
+        raise error_cls(
+            f"{script_label} CLI wrapper exited {proc.returncode} for video_id={video_id!r}: "
+            f"stderr_tail={proc.stderr[-2000:]!r} stdout_tail={proc.stdout[-1000:]!r}"
+        )
+    lines = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+    result = None
+    for ln in reversed(lines):
+        try:
+            result = json.loads(ln)
+            break
+        except json.JSONDecodeError:
+            continue
+    if result is None:
+        raise error_cls(
+            f"{script_label} CLI wrapper printed non-JSON stdout for video_id={video_id!r}: {proc.stdout[-500:]!r}"
+        )
+    if isinstance(result, dict) and result.get("error"):
+        raise error_cls(f"{script_label} CLI wrapper reported an error for video_id={video_id!r}: {result['error']}")
+    return result
+
+
+def build_phase_b_scope(phase_a_strategy: dict) -> dict:
+    """Pure helper: Phase-A strategy object -> the scope dict `invoke_real_extractor`'s
+    `scope` param expects (packet §2). Factored out so the Guard-1/Guard-2
+    tests can build a scope from a hand-constructed Phase-A object without
+    going through the full orchestrator."""
+    return {
+        "entry_summary": phase_a_strategy.get("entry_summary", ""),
+        "exit_summary": phase_a_strategy.get("exit_summary", ""),
+        "variants": phase_a_strategy.get("variants") or [],
+    }
+
+
+def run_two_phase_extraction(
+    transcript_text: str,
+    video_id: str,
+    enumerator_timeout_s: float = 240.0,
+    extractor_timeout_s: float = 240.0,
+) -> dict:
+    """H1 Wave-6 Pass-2 (2026-07-13) orchestrator -- the §2 handoff wiring.
+
+    Phase A (one whole-transcript call, `invoke_strategy_enumerator`) -> N
+    scoped Phase B calls (one per Phase-A-enumerated strategy,
+    `invoke_real_extractor` with `scope=build_phase_b_scope(...)`) ->
+    concatenated assembly into the SAME top-level `{"strategies": [...],
+    "rejected_strategies": [...], "instrument_classification": ...}` shape
+    the single-phase conveyor already consumes (packet §2 "downstream
+    assembly" -- the two-phase split is invisible past this function's
+    return value; no change to the outer schema any downstream consumer,
+    critic/paper/prop-sim/portfolio/export, reads).
+
+    Adds two diagnostic-only fields for debugging/regression-fixture use
+    (additive, per packet §6 -- never read by the existing single-phase
+    consumers): `phase_a_enumeration` (Phase A's raw output) and
+    `per_strategy_extractions` (each Phase B call's raw output, keyed by
+    Phase-A `strategy_id`).
+
+    Never fabricates: raises EnumeratorError if Phase A fails outright, or
+    RealExtractorError if any per-strategy Phase B call fails outright --
+    no partial/synthetic strategy is substituted on either failure. An
+    honest empty Phase-A enumeration (video teaches nothing extractable)
+    short-circuits to an empty `strategies: []` result without any Phase B
+    calls (nothing to scope them to)."""
+    enumeration = invoke_strategy_enumerator(transcript_text, video_id, timeout_s=enumerator_timeout_s)
+    phase_a_strategies = enumeration.get("strategies") or []
+
+    if not phase_a_strategies:
+        return {
+            "video_id": video_id,
+            "instrument_classification": None,
+            "strategies": [],
+            "rejected_strategies": [],
+            "phase_a_enumeration": enumeration,
+            "per_strategy_extractions": [],
+        }
+
+    all_strategies: list = []
+    all_rejected: list = []
+    instrument_classification = None
+    per_strategy_extractions = []
+
+    for phase_a_strat in phase_a_strategies:
+        scope = build_phase_b_scope(phase_a_strat)
+        strat_id = phase_a_strat.get("strategy_id")
+        extraction = invoke_real_extractor(
+            transcript_text,
+            f"{video_id}::phaseA-s{strat_id}",
+            timeout_s=extractor_timeout_s,
+            scope=scope,
+        )
+        per_strategy_extractions.append({"phase_a_strategy_id": strat_id, "extraction": extraction})
+        all_strategies.extend(extraction.get("strategies") or [])
+        all_rejected.extend(extraction.get("rejected_strategies") or [])
+        if instrument_classification is None and extraction.get("instrument_classification"):
+            instrument_classification = extraction["instrument_classification"]
+
+    return {
+        "video_id": video_id,
+        "instrument_classification": instrument_classification,
+        "strategies": all_strategies,
+        "rejected_strategies": all_rejected,
+        "phase_a_enumeration": enumeration,
+        "per_strategy_extractions": per_strategy_extractions,
+    }
+
+
+def invoke_strategy_enumerator(transcript_text: str, video_id: str, timeout_s: float = 240.0) -> dict:
+    """H1 Wave-6 Pass-2 (2026-07-13) — Phase A subprocess bridge: whole
+    transcript in -> strategy INVENTORY out (name + entry_summary +
+    exit_summary + variants[] per distinct strategy). Shells out to
+    `npx tsx scripts/h1-enumerate-strategies.ts`, same stdin/stdout contract
+    as `invoke_real_extractor` (feeds `{"video_id", "transcript_text"}`,
+    reads one JSON object off stdout). Raises `EnumeratorError` on any
+    failure -- never returns a partial/fabricated result. Per packet §1:
+    this is a NEW instrument (global, whole-transcript view) -- deliberately
+    NOT chunked and NOT scoped, unlike Phase B."""
+    payload = json.dumps({"video_id": video_id, "transcript_text": transcript_text})
+    return _run_node_cli_json(_ENUMERATE_SCRIPT, payload, timeout_s, video_id, EnumeratorError, "strategy-enumerator")
 
 
 # --------------------------------------------------------------------------- #

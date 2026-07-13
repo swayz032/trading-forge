@@ -1,0 +1,436 @@
+{
+  "video_id": "R5L890juvRw",
+  "extracted_at": 1783922952.846425,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass2-two-phase"
+  },
+  "extraction_sha256": "83fdc91da40c08903ba5eea4fa8c6ea181bcdc9db6ae4cb9c24f14c98a852f5b",
+  "extraction": {
+    "video_id": "R5L890juvRw-wave6-pass2",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "vwap_standard_deviation_reversal_strategy",
+        "higher_timeframe": "n/a",
+        "lower_timeframe": "n/a",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation we've accumulated a bunch of orders below here and created volume below",
+            "step": 1,
+            "action": "Wait for price to move at least to the 1st or 2nd Standard Deviation band to accumulate orders and create volume.",
+            "rationale": "Accumulation of orders and volume is observed at the outer standard deviation bands."
+          },
+          {
+            "transcript_quote": "after we broke it and tested it we can try our long trade",
+            "step": 2,
+            "action": "Enter a long trade after price breaks the VWAP and tests the VWAP.",
+            "rationale": "The VWAP serves as a dynamic reference point for potential rebalancing."
+          },
+          {
+            "transcript_quote": "once we're getting closer to the end of the session we bounce back right on the vwap again here",
+            "step": 3,
+            "action": "Wait for price to retest the VWAP near the end of the session for a potential bounce.",
+            "rationale": "Price often retests the VWAP as the session progresses."
+          },
+          {
+            "transcript_quote": "once we've established a strong Trend where still markets will keep buying even at higher and premium prices",
+            "step": 4,
+            "action": "Wait for a strong trend to be established where markets continue to buy even at higher and premium prices.",
+            "rationale": "VWAP is not always working and requires trend context."
+          },
+          {
+            "transcript_quote": "once we've established a strong Trend where still markets will keep buying even at higher and premium prices",
+            "step": 5,
+            "action": "Wait for a strong trend to be established where markets continue to buy even at higher and premium prices.",
+            "rationale": "VWAP is not always working and requires trend context."
+          },
+          {
+            "transcript_quote": "once we've established a strong Trend where still markets will keep buying even at higher and premium prices",
+            "step": 6,
+            "action": "Wait for a strong trend to be established where markets continue to buy even at higher and premium prices.",
+            "rationale": "VWAP is not always working and requires trend context."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": null,
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker does not explicitly state where to place the initial stop."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "use the second and third standard deviation as a Target or if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels",
+            "priority": 1,
+            "type": "standard_deviation_band",
+            "r_multiple": null,
+            "rationale": "The outer standard deviation bands are used as targets for reversal strategies."
+          },
+          {
+            "transcript_quote": "use the central vwap as a target for Price rebalancing",
+            "priority": 2,
+            "type": "vwap_rebalance",
+            "r_multiple": null,
+            "rationale": "The central VWAP is used as a target for price rebalancing."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "the first standard deviation is one the second here is 1.5 standard deviation usually i just keep it at two which is the third and even the third standard deviation",
+            "name": "standard_deviation_bands_active",
+            "description": "The strategy relies on the first, second, and third standard deviation bands being active.",
+            "canonical_match": "vwap_alignment"
+          },
+          {
+            "transcript_quote": "the more prices go outside and reaches for example the higher bends the higher is the chance there will be some level of reversal",
+            "name": "extreme_price_action",
+            "description": "The further price moves outside the standard deviation bands, the higher the chance of a reversal.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Execution Alpha",
+            "role": "phase",
+            "verbatim_description": "where Banks try to optimize their Edge even in the filling of the orders.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "volume weighted average price it's basically a moving average that doesn't consider only price in its formula but also includes trading volume in this video we will see how vwap actually works why is it used by smart money and how you can integrated in your trading strategy to potentially boost your Edge and your profits",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Gaussian Bell",
+            "role": "model",
+            "verbatim_description": "also known as normal distribution which in statistics represents the normal distribution of elements in a sample.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value Area",
+            "role": "zone",
+            "verbatim_description": "what is highlighted also known as the value area or the fair value area is none other than a standard deviation Trader at some point decided to put this at 70% to make things easier so in volume analysis the standard deviation is where most of the volume are traded and this would be the average",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount",
+            "role": "zone",
+            "verbatim_description": "everything that sits below the vwap is Discount related to the volume weighted average price of the session so an objective view of what was the actual fair value in the market what is the fair volume weighted price on average throughout the whole session whatever will be up here is going to be premium",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium",
+            "role": "zone",
+            "verbatim_description": "whatever sits below 50% or above 50% this would be premium this would be discount but still it remains an arbitrary decision where to track this and it's going to be measured in an Impulse",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Impulse",
+            "role": "phase",
+            "verbatim_description": "it is objective but it's completely arbitrary to choose which impulse we have a much more clear and objective indication of Premium discount and fair value inside of a session that's why it's being used by institution and smart money and Banks as a method of filling orders",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "the area where most of the sample are going to be is called a standard deviation also known as the 68 percentile and if you take a look at normal volume profile as an example you will see that it's basically a bell curve what is highlighted also known as the value area or the fair value area is none other than a standard deviation",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our discount standard deviation this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "we Break It We tend to maybe retest it a couple times before going down sometimes we just completely trade through it but sti",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "ian Bell also known as normal distribution which in statistics represents the normal distribution of elements in a sample so let's s",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "'s going to be measured in an Impulse this is a very simplistic view of discount and premiums that's the reason why so many impu",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "ICT",
+            "role": "model",
+            "verbatim_description": "ICT (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "um and discounts discussed by ICT is comparing to a swing high or a swing low whatever sits below 50% or above 50% this wou",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "phase_a_enumeration": {
+      "video_id": "R5L890juvRw-wave6-pass2",
+      "strategies": [
+        {
+          "strategy_id": 0,
+          "name": "VWAP/Standard Deviation Reversal Strategy",
+          "entry_summary": "Identify a trend or price movement away from the VWAP/Fair Value Area (FVA) and wait for a retest of a specific Standard Deviation band (1st, 2nd, or 3rd) to enter a reversal trade.",
+          "exit_summary": "Use the VWAP (central line) or the opposite Standard Deviation band as a target for price rebalancing or profit taking.",
+          "variants": [
+            {
+              "variant_label": "Long entry after breaking below VWAP",
+              "timeframe_note": null,
+              "confirmation_mechanic_note": "Wait for price to retest the 1st or 2nd Standard Deviation band after breaking below VWAP.",
+              "target_note": "Target the VWAP (central line) for price rebalancing.",
+              "transcript_quote": "after we broke it and tested it we can try our long trade this can be one of the ways to use it"
+            },
+            {
+              "variant_label": "Short entry after breaking above VWAP",
+              "timeframe_note": null,
+              "confirmation_mechanic_note": "Wait for price to retest the 1st or 2nd Standard Deviation band after breaking above VWAP.",
+              "target_note": "Target the VWAP (central line) for price rebalancing.",
+              "transcript_quote": "we shorted the out of the market we went down into the lower standard deviations and here is where you want to look for a trade"
+            },
+            {
+              "variant_label": "Long entry using outer bands as targets",
+              "timeframe_note": null,
+              "confirmation_mechanic_note": "Wait for price to reach the 2nd or 3rd Standard Deviation band.",
+              "target_note": "Use the 2nd or 3rd Standard Deviation band as a target for a reversal.",
+              "transcript_quote": "you can use the second and third standard deviation as a Target or if you're using reversal strategies you might want to use these as some sort of... "
+            }
+          ]
+        }
+      ],
+      "enumeration_note": "The video focuses on a single institutional reference (VWAP and Standard Deviations) and presents multiple ways to apply it (reversal entries, target setting) as variants of one core strategy."
+    },
+    "per_strategy_extractions": [
+      {
+        "phase_a_strategy_id": 0,
+        "extraction": {
+          "video_id": "R5L890juvRw-wave6-pass2::phaseA-s0",
+          "instrument_classification": "futures_primary",
+          "strategies": [
+            {
+              "name": "vwap_standard_deviation_reversal_strategy",
+              "higher_timeframe": "n/a",
+              "lower_timeframe": "n/a",
+              "direction": "both",
+              "entry_sequence": [
+                {
+                  "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation we've accumulated a bunch of orders below here and created volume below",
+                  "step": 1,
+                  "action": "Wait for price to move at least to the 1st or 2nd Standard Deviation band to accumulate orders and create volume.",
+                  "rationale": "Accumulation of orders and volume is observed at the outer standard deviation bands."
+                },
+                {
+                  "transcript_quote": "after we broke it and tested it we can try our long trade",
+                  "step": 2,
+                  "action": "Enter a long trade after price breaks the VWAP and tests the VWAP.",
+                  "rationale": "The VWAP serves as a dynamic reference point for potential rebalancing."
+                },
+                {
+                  "transcript_quote": "once we're getting closer to the end of the session we bounce back right on the vwap again here",
+                  "step": 3,
+                  "action": "Wait for price to retest the VWAP near the end of the session for a potential bounce.",
+                  "rationale": "Price often retests the VWAP as the session progresses."
+                },
+                {
+                  "transcript_quote": "once we've established a strong Trend where still markets will keep buying even at higher and premium prices",
+                  "step": 4,
+                  "action": "Wait for a strong trend to be established where markets continue to buy even at higher and premium prices.",
+                  "rationale": "VWAP is not always working and requires trend context."
+                },
+                {
+                  "transcript_quote": "once we've established a strong Trend where still markets will keep buying even at higher and premium prices",
+                  "step": 5,
+                  "action": "Wait for a strong trend to be established where markets continue to buy even at higher and premium prices.",
+                  "rationale": "VWAP is not always working and requires trend context."
+                },
+                {
+                  "transcript_quote": "once we've established a strong Trend where still markets will keep buying even at higher and premium prices",
+                  "step": 6,
+                  "action": "Wait for a strong trend to be established where markets continue to buy even at higher and premium prices.",
+                  "rationale": "VWAP is not always working and requires trend context."
+                }
+              ],
+              "preferred_regime": "any",
+              "stop": {
+                "transcript_quote": null,
+                "anchor": null,
+                "buffer_atr": null,
+                "atr_multiplier": null,
+                "rationale": "The speaker does not explicitly state where to place the initial stop."
+              },
+              "stop_management": null,
+              "targets": [
+                {
+                  "transcript_quote": "use the second and third standard deviation as a Target or if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels",
+                  "priority": 1,
+                  "type": "standard_deviation_band",
+                  "r_multiple": null,
+                  "rationale": "The outer standard deviation bands are used as targets for reversal strategies."
+                },
+                {
+                  "transcript_quote": "use the central vwap as a target for Price rebalancing",
+                  "priority": 2,
+                  "type": "vwap_rebalance",
+                  "r_multiple": null,
+                  "rationale": "The central VWAP is used as a target for price rebalancing."
+                }
+              ],
+              "confluences": [
+                {
+                  "transcript_quote": "the first standard deviation is one the second here is 1.5 standard deviation usually i just keep it at two which is the third and even the third standard deviation",
+                  "name": "standard_deviation_bands_active",
+                  "description": "The strategy relies on the first, second, and third standard deviation bands being active.",
+                  "canonical_match": "vwap_alignment"
+                },
+                {
+                  "transcript_quote": "the more prices go outside and reaches for example the higher bends the higher is the chance there will be some level of reversal",
+                  "name": "extreme_price_action",
+                  "description": "The further price moves outside the standard deviation bands, the higher the chance of a reversal.",
+                  "canonical_match": null
+                }
+              ],
+              "speaker_concepts": [
+                {
+                  "term": "Execution Alpha",
+                  "role": "phase",
+                  "verbatim_description": "where Banks try to optimize their Edge even in the filling of the orders.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "VWAP",
+                  "role": "indicator",
+                  "verbatim_description": "volume weighted average price it's basically a moving average that doesn't consider only price in its formula but also includes trading volume in this video we will see how vwap actually works why is it used by smart money and how you can integrated in your trading strategy to potentially boost your Edge and your profits",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Gaussian Bell",
+                  "role": "model",
+                  "verbatim_description": "also known as normal distribution which in statistics represents the normal distribution of elements in a sample.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Value Area",
+                  "role": "zone",
+                  "verbatim_description": "what is highlighted also known as the value area or the fair value area is none other than a standard deviation Trader at some point decided to put this at 70% to make things easier so in volume analysis the standard deviation is where most of the volume are traded and this would be the average",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Discount",
+                  "role": "zone",
+                  "verbatim_description": "everything that sits below the vwap is Discount related to the volume weighted average price of the session so an objective view of what was the actual fair value in the market what is the fair volume weighted price on average throughout the whole session whatever will be up here is going to be premium",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Premium",
+                  "role": "zone",
+                  "verbatim_description": "whatever sits below 50% or above 50% this would be premium this would be discount but still it remains an arbitrary decision where to track this and it's going to be measured in an Impulse",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Impulse",
+                  "role": "phase",
+                  "verbatim_description": "it is objective but it's completely arbitrary to choose which impulse we have a much more clear and objective indication of Premium discount and fair value inside of a session that's why it's being used by institution and smart money and Banks as a method of filling orders",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Standard Deviation",
+                  "role": "zone",
+                  "verbatim_description": "the area where most of the sample are going to be is called a standard deviation also known as the 68 percentile and if you take a look at normal volume profile as an example you will see that it's basically a bell curve what is highlighted also known as the value area or the fair value area is none other than a standard deviation",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Discount Standard Deviation",
+                  "role": "zone",
+                  "verbatim_description": "this is going to be our discount standard deviation this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Premium Standard Deviation",
+                  "role": "zone",
+                  "verbatim_description": "this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Rebalance/Retest",
+                  "role": "entry_step",
+                  "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+                  "transcript_quote": "we Break It We tend to maybe retest it a couple times before going down sometimes we just completely trade through it but sti",
+                  "occurrences": 3,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "New York",
+                  "role": "indicator",
+                  "verbatim_description": "Speaker uses term: \"New York\" (mentioned 3\u00c3\u2014 in transcript)",
+                  "transcript_quote": "the New York",
+                  "occurrences": 3,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Phase (A/M/D/R)",
+                  "role": "phase",
+                  "verbatim_description": "Phase (A/M/D/R) (mentioned 2\u00c3\u2014 in transcript)",
+                  "transcript_quote": "ian Bell also known as normal distribution which in statistics represents the normal distribution of elements in a sample so let's s",
+                  "occurrences": 2,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Market Phase",
+                  "role": "phase",
+                  "verbatim_description": "Market Phase (mentioned 2\u00c3\u2014 in transcript)",
+                  "transcript_quote": "'s going to be measured in an Impulse this is a very simplistic view of discount and premiums that's the reason why so many impu",
+                  "occurrences": 2,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "ICT",
+                  "role": "model",
+                  "verbatim_description": "ICT (mentioned 1\u00c3\u2014 in transcript)",
+                  "transcript_quote": "um and discounts discussed by ICT is comparing to a swing high or a swing low whatever sits below 50% or above 50% this wou",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                }
+              ]
+            }
+          ],
+          "rejected_strategies": [],
+          "empty_reason": null
+        }
+      }
+    ]
+  }
+}

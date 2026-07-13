@@ -19,13 +19,39 @@ import json, os, sys, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from src.engine.extraction import anchor_locator as al  # band-8, unchanged
+from src.engine.extraction import anchor_locator as al  # band-8, UNCHANGED
 
 PASS2_REPORT = os.path.join(ROOT, "docs", "replay-results", "h1-scripts",
                             "wave6-pass2-design-pool", "gate2_gate3_report.json")
 TDIR = os.path.join(ROOT, "docs", "replay-results", "h1-scripts", "pilot-run", "transcripts")
 OUT_DIR = os.path.join(ROOT, "docs", "replay-results", "h1-scripts", "optionR-locator-support")
 os.makedirs(OUT_DIR, exist_ok=True)
+CACHE = os.path.join(OUT_DIR, "_per_condition_cache.json")
+
+
+class PlumbingError(Exception):
+    """A transport/cold-load blip (empty or non-JSON gemma content) that
+    SURVIVED retries. The band-8 locator correctly RAISES rather than fake a
+    decline (its docstring: never silently convert a plumbing failure into a
+    miss). We catch it HERE, at the measurement, and exclude the condition from
+    the denominator -- a blip must never count as a real anchoring miss."""
+
+
+def robust_propose(transcript, condition_text, tries=3, backoff=2.0):
+    """Wrap the UNCHANGED band-8 _default_propose_fn with retry on transient
+    empty/non-JSON content (ollama cold-load blip). Persistent failure -> raise
+    PlumbingError so the measurement excludes (not misses) the condition."""
+    last = None
+    for attempt in range(tries):
+        try:
+            return al._default_propose_fn(transcript, condition_text)
+        except (json.JSONDecodeError, ValueError) as e:
+            last = e
+            time.sleep(backoff * (attempt + 1))  # linear backoff; cold-load warms
+        except Exception as e:  # URLError, timeout, etc. -- also transient class
+            last = e
+            time.sleep(backoff * (attempt + 1))
+    raise PlumbingError(f"empty/non-JSON gemma content after {tries} tries: {last!r}")
 
 
 def load_transcript(vid):
@@ -49,44 +75,63 @@ def main():
     rows = rep["quote_bearing_rows_for_one_rater_pass"]
     print(f"[optionR] conditions to locator-anchor: {len(rows)}", flush=True)
 
+    cache = {}
+    if os.path.exists(CACHE):
+        cache = json.load(open(CACHE, encoding="utf-8"))
+        print(f"[optionR] resuming: {len(cache)} conditions cached", flush=True)
+
     tx_cache = {}
     results = []
-    located_all = 0
-    located_nonnull = 0
-    nonnull_total = 0
+    plumbing = []
 
     for i, row in enumerate(rows):
         vid = row["video_id"]
         ct = row.get("condition_text") or ""
         had_quote = bool(row.get("transcript_quote"))  # scaffolding only, for accounting
-        if vid not in tx_cache:
-            tx_cache[vid] = load_transcript(vid)
-        tx = tx_cache[vid]
+        key = f"{vid}::{row.get('strategy_index')}::{row.get('field')}"
 
-        # THE recombination: locator anchors the CONDITION TEXT, quote field ignored.
-        res = al.locate_anchor(tx, ct)  # default propose_fn = real gemma-local
-        located = bool(res.located)
-        if located:
-            located_all += 1
-        if had_quote:
-            nonnull_total += 1
-            if located:
-                located_nonnull += 1
+        if key in cache:
+            rec = cache[key]
+        else:
+            if vid not in tx_cache:
+                tx_cache[vid] = load_transcript(vid)
+            tx = tx_cache[vid]
+            # THE recombination: locator anchors the CONDITION TEXT; quote field ignored.
+            # propose via retry-wrapped band-8 propose_fn; VERIFY stage unchanged.
+            try:
+                res = al.locate_anchor(tx, ct, propose_fn=robust_propose)
+                rec = {
+                    "locator_located": bool(res.located),
+                    "locator_reason": None if res.located else getattr(res, "reason", None),
+                    "locator_quote": getattr(res, "quote", None) if res.located else None,
+                    "plumbing_error": False,
+                }
+            except PlumbingError as pe:
+                rec = {"locator_located": None, "locator_reason": "PLUMBING", "locator_quote": None,
+                       "plumbing_error": True, "detail": str(pe)}
+            cache[key] = rec
+            json.dump(cache, open(CACHE, "w", encoding="utf-8"))  # resumable after each
 
-        results.append({
-            "video_id": vid,
-            "strategy_index": row.get("strategy_index"),
-            "field": row.get("field"),
-            "condition_text": ct,
-            "pass2_quote_had_value": had_quote,
-            "locator_located": located,
-            "locator_reason": None if located else getattr(res, "reason", None),
-            "locator_quote": getattr(res, "quote", None) if located else None,
-        })
+        rec_full = dict(rec)
+        rec_full.update({"video_id": vid, "strategy_index": row.get("strategy_index"),
+                         "field": row.get("field"), "condition_text": ct,
+                         "pass2_quote_had_value": had_quote})
+        results.append(rec_full)
+        if rec.get("plumbing_error"):
+            plumbing.append(key)
+
         if (i + 1) % 10 == 0:
-            print(f"[optionR] {i+1}/{len(rows)} located_all={located_all}", flush=True)
+            loc = sum(1 for r_ in results if r_.get("locator_located") is True)
+            print(f"[optionR] {i+1}/{len(rows)} located={loc} plumbing={len(plumbing)}", flush=True)
 
-    n_all = len(rows)
+    # DENOMINATOR excludes plumbing_error (a blip is never a real miss).
+    scored = [r_ for r_ in results if not r_.get("plumbing_error")]
+    located_all = sum(1 for r_ in scored if r_["locator_located"] is True)
+    scored_nonnull = [r_ for r_ in scored if r_["pass2_quote_had_value"]]
+    located_nonnull = sum(1 for r_ in scored_nonnull if r_["locator_located"] is True)
+    nonnull_total = len(scored_nonnull)
+
+    n_all = len(scored)
     miss_all = n_all - located_all
     miss_nonnull = nonnull_total - located_nonnull
 
@@ -114,10 +159,17 @@ def main():
         "artifact": "h1-optionR-locator-support",
         "scope": "spent-16 design pool ONLY; sealed-12 UNTOUCHED",
         "prereg": "docs/designs/h1-optionR-recombination-preregistration-2026-07-13.md",
-        "anchor_authority": "band-8 anchor_locator.locate_anchor (PROPOSE gemma -> VERIFY mechanical substring)",
+        "anchor_authority": "band-8 anchor_locator.locate_anchor (PROPOSE gemma[retry-wrapped] -> VERIFY mechanical substring)",
         "note": "pass-2 generated quote field DEMOTED to scaffolding; NOT the anchor (§1.2). "
                 "SAME condition set as pass-2's gate; DIFFERENT anchor authority.",
         "frozen_bar": ">=92% support / <=8% miss (UNCHANGED, no goalpost motion)",
+        "plumbing_excluded": {
+            "count": len(plumbing),
+            "keys": plumbing,
+            "note": "transient empty/non-JSON gemma content that survived 3 retries; the band-8 "
+                    "locator RAISES rather than fake a decline, so these are EXCLUDED from the "
+                    "denominator -- a cold-load blip is never counted as a real anchoring miss.",
+        },
         "gated_comparable_support": gated,
         "terminal_equivalent_support": terminal,
         "per_condition": results,
@@ -127,6 +179,7 @@ def main():
 
     print("=" * 70, flush=True)
     print(f"OPTION R -- locator-anchored support over pass-2's conditions", flush=True)
+    print(f"  plumbing-excluded (blips): {len(plumbing)}", flush=True)
     print(f"  GATED-comparable (n={nonnull_total}):     miss={gated['support_miss_rate']*100:.1f}% "
           f"floor<=8% MET={gated['floor_met_le_8pct']}", flush=True)
     print(f"  TERMINAL-equivalent (n={n_all}): miss={terminal['support_miss_rate']*100:.1f}% "

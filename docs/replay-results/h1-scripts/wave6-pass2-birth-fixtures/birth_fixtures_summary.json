@@ -1,0 +1,16 @@
+{
+  "artifact": "h1-wave6-pass2-birth-fixtures-summary",
+  "videos": [
+    "4cT8WTyxhYY",
+    "IyFioFkRgWo",
+    "WEhmadJArQo"
+  ],
+  "n_completed": 3,
+  "n_failures": 0,
+  "failures": [],
+  "per_video_phase_a_count": {
+    "4cT8WTyxhYY": 1,
+    "IyFioFkRgWo": 2,
+    "WEhmadJArQo": 2
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StrategyEnumeratorOutput",
+  "description": "H1 Wave-6 Pass-2 (2026-07-13) — Phase A global strategy enumeration. NEW instrument: whole-transcript-in, strategy-inventory-out. Distinct = own entry OR exit/management logic. Timeframe/confirmation-mechanic/target changes are VARIANTS within one strategy, not separate strategies. Per docs/designs/h1-wave6-pass2-two-phase-PACKET-2026-07-13.md §1.3 (verbatim).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["strategies"],
+  "properties": {
+    "strategies": {
+      "type": "array",
+      "description": "Distinct strategies taught in this video. Distinct = own entry OR exit/management logic. Empty array is honest if no strategy is taught.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["strategy_id", "name", "entry_summary", "exit_summary", "variants"],
+        "properties": {
+          "strategy_id": { "type": "integer", "minimum": 0 },
+          "name": { "type": "string", "maxLength": 80 },
+          "entry_summary": {
+            "type": "string", "maxLength": 300,
+            "description": "1-2 sentence entry logic — the axis that must differ for another strategy to count as distinct from this one."
+          },
+          "exit_summary": {
+            "type": "string", "maxLength": 300,
+            "description": "1-2 sentence exit/management logic — the other distinctness axis."
+          },
+          "variants": {
+            "type": "array",
+            "description": "Configuration differences on THIS strategy's skeleton (timeframe / confirmation mechanic / target). NOT separate strategies. Empty array if the speaker teaches only one configuration.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["variant_label"],
+              "properties": {
+                "variant_label": { "type": "string", "maxLength": 80 },
+                "timeframe_note": { "type": ["string", "null"], "maxLength": 120 },
+                "confirmation_mechanic_note": { "type": ["string", "null"], "maxLength": 120 },
+                "target_note": { "type": ["string", "null"], "maxLength": 120 },
+                "transcript_quote": {
+                  "type": ["string", "null"], "minLength": 5, "maxLength": 150,
+                  "description": "Optional locating quote for this variant — a hint for Phase B, not a hard grounding requirement (Phase B does its own quote-first grounding)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "enumeration_note": {
+      "type": ["string", "null"], "maxLength": 400,
+      "description": "Free-text flag for ambiguous cases, e.g. 'two variants share an identical skeleton, differ only in TF/confirmation/target'. Surfaced for the over-enumeration fence's review, never scored directly."
+    }
+  }
+}

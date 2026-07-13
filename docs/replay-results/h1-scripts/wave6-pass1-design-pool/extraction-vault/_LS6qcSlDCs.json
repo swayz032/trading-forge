@@ -1,0 +1,127 @@
+{
+  "video_id": "_LS6qcSlDCs",
+  "extracted_at": 1783916693.6345592,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "b4418c9b0c19b6ff37d27138b3c491c985e2619e093533aa040fc73cc865d383",
+  "extraction": {
+    "video_id": "_LS6qcSlDCs-wave6-pass1",
+    "instrument_classification": "non_futures_primary",
+    "strategies": [
+      {
+        "name": "vwap_breakout_pullback_strategy",
+        "higher_timeframe": "null",
+        "lower_timeframe": "null",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "transcript_quote": "when a stock drops and then breaks above that v-wop area actually holding it as support and bouncing off of it",
+            "step": 1,
+            "action": "Wait for a stock to break above the VWAP (V-WOP) after being below it, confirming it as a milestone level and potential support.",
+            "rationale": "The VWAP acts as a milestone level for the stock to break over, signaling strength."
+          },
+          {
+            "transcript_quote": "i'm looking to buy on those pull backs looking for the v-wap to hold it up as support",
+            "step": 2,
+            "action": "Buy on pullbacks to the VWAP after the initial break above it, anticipating the VWAP to hold as support.",
+            "rationale": "Buying on pullbacks capitalizes on the fact that many traders use the VWAP as a milestone level."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "transcript_quote": null,
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "No explicit initial stop placement was mentioned in the transcript."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "riding the bounce up scalping out of it with a really nice green trade",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": null,
+            "rationale": "The goal is to ride the bounce up and scalp out of the trade."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim",
+            "name": "high_volume_filter",
+            "description": "The stock must have an average volume over the last 20 minutes of over 200,000 shares traded per minute.",
+            "canonical_match": "delta_or_volume_signature"
+          },
+          {
+            "transcript_quote": "i need the float to be under 50 million",
+            "name": "low_float_filter",
+            "description": "The stock float must be under 50 million.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "especially if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in",
+            "name": "opening_bell_breakout",
+            "description": "The stock should open weak, drop below the VWAP at the opening bell, and then break above it with volume.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "V-WOP",
+            "role": "indicator",
+            "verbatim_description": "a milestone level for that penny stock to break over especially in day trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "zone",
+            "verbatim_description": "the v-wap as a milestone level and then i'm buying on the pullbacks to test as a support area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "average volume over the last 20 minutes of over 200 000 shares traded per minute",
+            "role": "filter",
+            "verbatim_description": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "float to be under 50 million",
+            "role": "filter",
+            "verbatim_description": "i need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "the pullback and we rode the bounce up scalping out of it with a really nice green trade again the key here is identifying re",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "less volatility in a smaller range on average and so with these strategies i'm looking for that momentum and i'm looking for",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "11 to 11",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"11 to 11\"",
+            "transcript_quote": "11 to 11 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

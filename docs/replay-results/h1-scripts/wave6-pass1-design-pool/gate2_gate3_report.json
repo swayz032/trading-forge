@@ -1,0 +1,1920 @@
+{
+  "artifact": "h1-wave6-pass1-design-pool-gate2-gate3-report",
+  "scope": "spent-16 gold regression corpus ONLY (never the fresh Wave-6 sealed set)",
+  "extractor_files_measured": [
+    "src/agents/transcript-extractor-minimal.md",
+    "src/agents/kb/transcript-extractor-minimal-schema.json"
+  ],
+  "n_videos": 16,
+  "n_extraction_failures": 1,
+  "extraction_failures": [
+    [
+      "CLDEIsNpVRc",
+      "extractor CLI wrapper exited 1 for video_id='CLDEIsNpVRc-wave6-pass1': stderr_tail='npm notice\\nnpm notice New minor version of npm available! 11.6.2 -> 11.18.0\\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v11.18.0\\nnpm notice To update run: npm install -g npm@11.18.0\\nnpm notice\\n' stdout_tail='{\"error\":\"callScoutExtractLlm returned null (both Ollama and cloud fallback exhausted or unavailable)\"}\\n[00:11:16.862] \\x1b[33mWARN\\x1b[39m (12440): \\x1b[36mcallScoutExtractLlm: Ollama"
+    ]
+  ],
+  "gate2_coverage": {
+    "baseline_total_spine_conditions": 253,
+    "pass1_total_spine_conditions": 233,
+    "floor_required": 228,
+    "floor_met": true,
+    "per_video": [
+      {
+        "video_id": "-igpOZs8LsM",
+        "strategies": 1,
+        "spine_conditions_pass1": 13,
+        "spine_conditions_baseline": 16,
+        "quote_bearing_slots": 9,
+        "quote_mechanical_pass": 9
+      },
+      {
+        "video_id": "0xygpCMwxbQ",
+        "strategies": 2,
+        "spine_conditions_pass1": 26,
+        "spine_conditions_baseline": 16,
+        "quote_bearing_slots": 17,
+        "quote_mechanical_pass": 17
+      },
+      {
+        "video_id": "2DXQqwKSwJE",
+        "strategies": 3,
+        "spine_conditions_pass1": 25,
+        "spine_conditions_baseline": 19,
+        "quote_bearing_slots": 18,
+        "quote_mechanical_pass": 18
+      },
+      {
+        "video_id": "4cT8WTyxhYY",
+        "strategies": 1,
+        "spine_conditions_pass1": 10,
+        "spine_conditions_baseline": 15,
+        "quote_bearing_slots": 8,
+        "quote_mechanical_pass": 5
+      },
+      {
+        "video_id": "DLwVqcLRcfw",
+        "strategies": 1,
+        "spine_conditions_pass1": 17,
+        "spine_conditions_baseline": 18,
+        "quote_bearing_slots": 10,
+        "quote_mechanical_pass": 7
+      },
+      {
+        "video_id": "E9MzEC_yNoM",
+        "strategies": 1,
+        "spine_conditions_pass1": 25,
+        "spine_conditions_baseline": 19,
+        "quote_bearing_slots": 17,
+        "quote_mechanical_pass": 16
+      },
+      {
+        "video_id": "IyFioFkRgWo",
+        "strategies": 1,
+        "spine_conditions_pass1": 10,
+        "spine_conditions_baseline": 15,
+        "quote_bearing_slots": 7,
+        "quote_mechanical_pass": 6
+      },
+      {
+        "video_id": "PVMgOxHUqFA",
+        "strategies": 1,
+        "spine_conditions_pass1": 11,
+        "spine_conditions_baseline": 13,
+        "quote_bearing_slots": 8,
+        "quote_mechanical_pass": 7
+      },
+      {
+        "video_id": "R5L890juvRw",
+        "strategies": 1,
+        "spine_conditions_pass1": 13,
+        "spine_conditions_baseline": 14,
+        "quote_bearing_slots": 8,
+        "quote_mechanical_pass": 7
+      },
+      {
+        "video_id": "W7nlnHTUZQU",
+        "strategies": 1,
+        "spine_conditions_pass1": 12,
+        "spine_conditions_baseline": 15,
+        "quote_bearing_slots": 8,
+        "quote_mechanical_pass": 6
+      },
+      {
+        "video_id": "WEhmadJArQo",
+        "strategies": 1,
+        "spine_conditions_pass1": 14,
+        "spine_conditions_baseline": 22,
+        "quote_bearing_slots": 11,
+        "quote_mechanical_pass": 11
+      },
+      {
+        "video_id": "ZF8uKPqAu8M",
+        "strategies": 1,
+        "spine_conditions_pass1": 16,
+        "spine_conditions_baseline": 8,
+        "quote_bearing_slots": 10,
+        "quote_mechanical_pass": 10
+      },
+      {
+        "video_id": "_LS6qcSlDCs",
+        "strategies": 1,
+        "spine_conditions_pass1": 9,
+        "spine_conditions_baseline": 9,
+        "quote_bearing_slots": 6,
+        "quote_mechanical_pass": 5
+      },
+      {
+        "video_id": "dV7chra4u4Q",
+        "strategies": 1,
+        "spine_conditions_pass1": 12,
+        "spine_conditions_baseline": 21,
+        "quote_bearing_slots": 8,
+        "quote_mechanical_pass": 8
+      },
+      {
+        "video_id": "kFyD3H6I1I8",
+        "strategies": 2,
+        "spine_conditions_pass1": 20,
+        "spine_conditions_baseline": 11,
+        "quote_bearing_slots": 14,
+        "quote_mechanical_pass": 10
+      }
+    ],
+    "per_strategy_guard": [
+      {
+        "strategy": "-igpOZs8LsM::s0",
+        "baseline_conditions": 16,
+        "pass1_conditions": 13,
+        "pct_retained": 81.25,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "-igpOZs8LsM::s1",
+        "baseline_conditions": 0,
+        "pass1_conditions": 0,
+        "pct_retained": null,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "0xygpCMwxbQ::s0",
+        "baseline_conditions": 16,
+        "pass1_conditions": 17,
+        "pct_retained": 106.25,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "2DXQqwKSwJE::s0",
+        "baseline_conditions": 8,
+        "pass1_conditions": 8,
+        "pct_retained": 100.0,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "2DXQqwKSwJE::s1",
+        "baseline_conditions": 7,
+        "pass1_conditions": 7,
+        "pct_retained": 100.0,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "2DXQqwKSwJE::s2",
+        "baseline_conditions": 4,
+        "pass1_conditions": 10,
+        "pct_retained": 250.0,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "4cT8WTyxhYY::s0",
+        "baseline_conditions": 6,
+        "pass1_conditions": 10,
+        "pct_retained": 166.66666666666669,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "4cT8WTyxhYY::s1",
+        "baseline_conditions": 9,
+        "pass1_conditions": 0,
+        "pct_retained": 0.0,
+        "loses_over_50pct": true
+      },
+      {
+        "strategy": "CLDEIsNpVRc::s0",
+        "baseline_conditions": 22,
+        "pass1_conditions": 0,
+        "pct_retained": 0.0,
+        "loses_over_50pct": true
+      },
+      {
+        "strategy": "DLwVqcLRcfw::s0",
+        "baseline_conditions": 18,
+        "pass1_conditions": 17,
+        "pct_retained": 94.44444444444444,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "E9MzEC_yNoM::s0",
+        "baseline_conditions": 19,
+        "pass1_conditions": 25,
+        "pct_retained": 131.57894736842107,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "IyFioFkRgWo::s0",
+        "baseline_conditions": 9,
+        "pass1_conditions": 10,
+        "pct_retained": 111.11111111111111,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "IyFioFkRgWo::s1",
+        "baseline_conditions": 6,
+        "pass1_conditions": 0,
+        "pct_retained": 0.0,
+        "loses_over_50pct": true
+      },
+      {
+        "strategy": "PVMgOxHUqFA::s0",
+        "baseline_conditions": 13,
+        "pass1_conditions": 11,
+        "pct_retained": 84.61538461538461,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "R5L890juvRw::s0",
+        "baseline_conditions": 14,
+        "pass1_conditions": 13,
+        "pct_retained": 92.85714285714286,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "R5L890juvRw::s1",
+        "baseline_conditions": 0,
+        "pass1_conditions": 0,
+        "pct_retained": null,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "R5L890juvRw::s2",
+        "baseline_conditions": 0,
+        "pass1_conditions": 0,
+        "pct_retained": null,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "R5L890juvRw::s3",
+        "baseline_conditions": 0,
+        "pass1_conditions": 0,
+        "pct_retained": null,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "W7nlnHTUZQU::s0",
+        "baseline_conditions": 15,
+        "pass1_conditions": 12,
+        "pct_retained": 80.0,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "WEhmadJArQo::s0",
+        "baseline_conditions": 12,
+        "pass1_conditions": 14,
+        "pct_retained": 116.66666666666667,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "WEhmadJArQo::s1",
+        "baseline_conditions": 10,
+        "pass1_conditions": 0,
+        "pct_retained": 0.0,
+        "loses_over_50pct": true
+      },
+      {
+        "strategy": "ZF8uKPqAu8M::s0",
+        "baseline_conditions": 8,
+        "pass1_conditions": 16,
+        "pct_retained": 200.0,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "_LS6qcSlDCs::s0",
+        "baseline_conditions": 9,
+        "pass1_conditions": 9,
+        "pct_retained": 100.0,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "dV7chra4u4Q::s0",
+        "baseline_conditions": 21,
+        "pass1_conditions": 12,
+        "pct_retained": 57.14285714285714,
+        "loses_over_50pct": false
+      },
+      {
+        "strategy": "kFyD3H6I1I8::s0",
+        "baseline_conditions": 11,
+        "pass1_conditions": 20,
+        "pct_retained": 181.8181818181818,
+        "loses_over_50pct": false
+      }
+    ],
+    "any_strategy_loses_over_50pct": true
+  },
+  "gate3_mechanical_prefilter": {
+    "total_quote_bearing_slots_with_quote": 159,
+    "mechanical_substring_pass": 142,
+    "mechanical_substring_fail": 17,
+    "mechanical_pass_rate": 0.8930817610062893
+  },
+  "quote_bearing_rows_for_one_rater_pass": [
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "The gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance",
+      "condition_text": "Identify a Fair Value Gap (FVG) formed by the gap between the closing point of the first candle and the opening point of the third candle in a three-candle sequence.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "the imbalance must create a break of structure",
+      "condition_text": "Ensure the FVG formation is preceded by a Break of Structure (BOS) or Change of Character (CHoCH).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "price will clear before you know tapping into the imbalance",
+      "condition_text": "Wait for price to clear liquidity before retracing into the FVG.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "entry_sequence[3]",
+      "transcript_quote": "all you just need to do is put your stop loss a little bit below the fair value gap",
+      "condition_text": "Place the stop loss a little bit below the FVG for long entries, or a little bit above the FVG for short entries.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "confluences[0]",
+      "transcript_quote": "the trend matters. It is important you also pay attention to the trend",
+      "condition_text": "The strategy requires attention to the overall market trend.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "confluences[1]",
+      "transcript_quote": "the gap you know is created between three candlesticks",
+      "condition_text": "The FVG is created between three candlesticks.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "confluences[2]",
+      "transcript_quote": "the imbalance must create a break of structure",
+      "condition_text": "The imbalance must create a break of structure.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "confluences[3]",
+      "transcript_quote": "price will clear before you know tapping into the imbalance",
+      "condition_text": "Price will clear liquidity before tapping into the imbalance.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "strategy_name": "fair_value_gap_trend_continuation_1m",
+      "field": "stop",
+      "transcript_quote": "all you just need to do is put your stop loss a little bit below the fair value gap",
+      "condition_text": "The stop loss is placed a little bit below the FVG.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "the first thing we want to notice is that we have sell side liquidity resting right here as price moves into that level",
+      "condition_text": "Wait for price to move into an area where sell side liquidity is resting.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "with this next candle we have shifted structure so we have that sell side liquidity or stop rate our shift in structure",
+      "condition_text": "Wait for a market structure shift or displacement to occur after the liquidity sweep.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+      "condition_text": "Wait for price to move back into a discount of the price range.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "entry_sequence[3]",
+      "transcript_quote": "I have a fair value Gap and this is nested within this order block here this also lines up with the Box setup",
+      "condition_text": "Identify a PD array (Fair Value Gap, Order Block, or Breaker Block) within the discount zone.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "entry_sequence[4]",
+      "transcript_quote": "for my entry I would personally be looking to enter the trade right here My Stop on this low first partial here",
+      "condition_text": "Enter the trade at the identified PD array (e.g., Fair Value Gap or Order Block).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "confluences[0]",
+      "transcript_quote": "I focus on a few things we'll go through them in order the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+      "condition_text": "Wait for a stop raid, meaning a low was put in before it was taken or broken.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "confluences[1]",
+      "transcript_quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+      "condition_text": "Wait for a market structure shift or displacement, where a previous high is broken and aggressively moved over.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "confluences[2]",
+      "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+      "condition_text": "Wait for price to move back into a discount of the price range.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "confluences[3]",
+      "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+      "condition_text": "Wait for a PD array (FVG, OB, or Breaker Block) to appear in the discount zone.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "stop",
+      "transcript_quote": "My Stop on this low first partial here",
+      "condition_text": "The stop is placed below the initial low of the entry setup.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "strategy_name": "ict_bias_aligned_pd_array_entry_15m_5m",
+      "field": "targets[0]",
+      "transcript_quote": "looking for buy side liquidity up here",
+      "condition_text": "The primary target is the next area of buy side liquidity.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 1,
+      "strategy_name": "es_1m_pd_array_entry_strategy",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "we have a high rusting right here you can see we break this High we close back in and currently the body is respecting this level here is our stop raid here is our shift and structure",
+      "condition_text": "Wait for a stop raid where a high is broken and the candle closes back in, confirming the shift in structure.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 1,
+      "strategy_name": "es_1m_pd_array_entry_strategy",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "I'm looking for a PD array in an OTE or in a premium whenever this low is put in",
+      "condition_text": "Look for a PD array (Breaker Block or Fair Value Gap) in an OTE or premium zone after the stop raid.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 1,
+      "strategy_name": "es_1m_pd_array_entry_strategy",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "price reaches up fills that fair value Gap reaches up into an OTE before continuing lower",
+      "condition_text": "Enter the trade on the PD array (e.g., Fair Value Gap) after price fills the OTE and continues lower.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 1,
+      "strategy_name": "es_1m_pd_array_entry_strategy",
+      "field": "confluences[0]",
+      "transcript_quote": "we have a high rusting right here you can see we break this High we close back in and currently the body is respecting this level here is our stop raid here is our shift and structure",
+      "condition_text": "Wait for a stop raid where a high is broken and the candle closes back in, confirming the shift in structure.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 1,
+      "strategy_name": "es_1m_pd_array_entry_strategy",
+      "field": "confluences[1]",
+      "transcript_quote": "I'm looking for a PD array in an OTE or in a premium whenever this low is put in",
+      "condition_text": "Look for a PD array in an OTE or premium zone after the stop raid.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 1,
+      "strategy_name": "es_1m_pd_array_entry_strategy",
+      "field": "stop",
+      "transcript_quote": "my risk would look something like this",
+      "condition_text": "The stop is placed above the swing high of the entry setup.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "strategy_name": "mean_reversion_scalping_support_resistance",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid.",
+      "condition_text": "Wait for a sharp down move into support where volume stalls and bids stop hitting the support level.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "strategy_name": "mean_reversion_scalping_support_resistance",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "As a scalper, you then take the offer and get long in front of that support level, using the bids as at the support as your protection, while then seeking to capture the bounce we get off that level.",
+      "condition_text": "Take the offer and enter long in front of the support level, using the bids at the support as the stop loss, aiming to capture the bounce.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "strategy_name": "mean_reversion_scalping_support_resistance",
+      "field": "confluences[0]",
+      "transcript_quote": "Mean reversion scalps occur after price stretches too far too fast.",
+      "condition_text": "Mean reversion scalps occur after price stretches too far too fast.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "strategy_name": "mean_reversion_scalping_support_resistance",
+      "field": "confluences[1]",
+      "transcript_quote": "The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal.",
+      "condition_text": "The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "strategy_name": "mean_reversion_scalping_support_resistance",
+      "field": "stop",
+      "transcript_quote": "using the bids as at the support as your protection",
+      "condition_text": "The stop is placed using the bids at the support level as protection.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "strategy_name": "mean_reversion_scalping_support_resistance",
+      "field": "targets[0]",
+      "transcript_quote": "seeking to capture the bounce we get off that level",
+      "condition_text": "The primary goal is to capture the bounce off the support level.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "strategy_name": "continuation_scalping_breakout",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance.",
+      "condition_text": "Wait for a clean break of support or resistance.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "strategy_name": "continuation_scalping_breakout",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "So, if we have a $10 resistance level, you want to be buying $10.01 or $10.02, and scalping out on that emotional follow-through, much like the example we gave earlier.",
+      "condition_text": "Enter long immediately after the break (e.g., buying $10.01 after $10 resistance) and scalp out on the emotional follow-through.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "strategy_name": "continuation_scalping_breakout",
+      "field": "confluences[0]",
+      "transcript_quote": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow.",
+      "condition_text": "Success depends heavily on timing and confirmation from real-time order flow.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "strategy_name": "continuation_scalping_breakout",
+      "field": "stop",
+      "transcript_quote": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow.",
+      "condition_text": "The stop is placed right below the resistance level if the price gets back below it.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "strategy_name": "continuation_scalping_breakout",
+      "field": "targets[0]",
+      "transcript_quote": "and scalping out on that emotional follow-through, much like the example we gave earlier.",
+      "condition_text": "The goal is to capture the emotional follow-through momentum.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "strategy_name": "spread_making_scalping",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "Instead of aggressively taking liquidity, you provide the liquidity.",
+      "condition_text": "Provide liquidity by placing resting limit orders ahead of large bids or offers.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "strategy_name": "spread_making_scalping",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread.",
+      "condition_text": "Wait for market participants to cross the spread due to urgency.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "strategy_name": "spread_making_scalping",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "He took such quick and aggressive advantage of that, immediately just slamming in huge bids, only to just as quickly kick his offers out and his size out a point or two higher, and repeating it again and again before that spread compressed and the stock drifted lower.",
+      "condition_text": "Aggressively take advantage of the spread by slamming in huge bids and quickly kicking offers out to size out a point or two higher, repeating the process.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "strategy_name": "spread_making_scalping",
+      "field": "confluences[0]",
+      "transcript_quote": "When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread.",
+      "condition_text": "The strategy works best when a stock is in relative equilibrium but thin.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "strategy_name": "spread_making_scalping",
+      "field": "confluences[1]",
+      "transcript_quote": "The edge here does not come from predicting direction. It comes from understanding market microstructure.",
+      "condition_text": "The edge comes from understanding market microstructure.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "strategy_name": "spread_making_scalping",
+      "field": "stop",
+      "transcript_quote": "before that spread compressed and the stock drifted lower.",
+      "condition_text": "The trade is exited or stopped when the spread compresses and the stock drifts lower.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "strategy_name": "spread_making_scalping",
+      "field": "targets[0]",
+      "transcript_quote": "capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer.",
+      "condition_text": "The target is the difference between the bid and offer (the spread).",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "strategy_name": "liquidity_grab_reversal_strategy",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "we are looking for what's called a liquidity grab a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+      "condition_text": "Identify a liquidity grab, which occurs when price breaks support or resistance and immediately reverses direction (fake out).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "strategy_name": "liquidity_grab_reversal_strategy",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "our entry would be at the candle that made the liquidity grab",
+      "condition_text": "Enter the trade at the candle that initiated the liquidity grab.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "strategy_name": "liquidity_grab_reversal_strategy",
+      "field": "confluences[0]",
+      "transcript_quote": "if the liquidity grab and and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks farther apart",
+      "condition_text": "The strategy performs better when the liquidity grab and entry candle are closer than 10 candles apart, indicating a more impulsive move.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "strategy_name": "liquidity_grab_reversal_strategy",
+      "field": "confluences[1]",
+      "transcript_quote": "if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal",
+      "condition_text": "Combining the liquidity grab with a bullish divergence on the momentum oscillator increases the probability of success.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "strategy_name": "liquidity_grab_reversal_strategy",
+      "field": "confluences[2]",
+      "transcript_quote": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame",
+      "condition_text": "The strategy performs best when the liquidity grab occurs at a support or resistance level on a higher timeframe (e.g., 1H).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "strategy_name": "liquidity_grab_reversal_strategy",
+      "field": "stop",
+      "transcript_quote": "set our stop loss right right below the liquidity grab",
+      "condition_text": "The stop loss is placed immediately below the liquidity grab candle for long entries, or above for short entries.",
+      "nullable": true,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "strategy_name": "liquidity_grab_reversal_strategy",
+      "field": "targets[0]",
+      "transcript_quote": "set your take profit at a recent high",
+      "condition_text": "The primary target is set at a recent high (for long entries).",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "strategy_name": "liquidity_grab_reversal_strategy",
+      "field": "targets[1]",
+      "transcript_quote": "set your take profit at a recent low",
+      "condition_text": "The primary target is set at a recent low (for short entries).",
+      "nullable": true,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+      "condition_text": "Wait for the first 2-minute candle after the market open to close above both the 20 SMA and the VWAP.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA",
+      "condition_text": "Wait for a subsequent candle to confirm the high of the candle that closed above the 20 SMA.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+      "condition_text": "Hold the position as long as the price remains above both the VWAP and the 20 SMA.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "entry_sequence[3]",
+      "transcript_quote": "as long as the 20 SMA starts to hold a little bit higher to the price action and we create a little bit of a gap",
+      "condition_text": "Use the 20 SMA as a trailing stop, exiting the trade if the price closes below the 20 SMA.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "entry_sequence[4]",
+      "transcript_quote": "if we were to lose vop and lose the 20 SMA collectively and then close below vop and then we have a following candle that starts to build below then yes I'm not looking to buy the bounce anymore what I'm looking to do is short the rejection of vwap and the 20 SMA",
+      "condition_text": "If the price closes below both the VWAP and the 20 SMA, look for a rejection of the VWAP and 20 SMA to initiate a short position.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "confluences[0]",
+      "transcript_quote": "if we're trading over vwap we're typically more bullish",
+      "condition_text": "Trading above the VWAP typically indicates a more bullish price action.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "confluences[1]",
+      "transcript_quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+      "condition_text": "The position can be held as long as the price remains above both the VWAP and the 20 SMA.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "confluences[2]",
+      "transcript_quote": "as long as the 20 SMA is trending higher",
+      "condition_text": "The 20 SMA must be trending higher to support the trade.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "targets[0]",
+      "transcript_quote": "you can sell for profits into the upper Channel you can sell for profits into the lower Channel",
+      "condition_text": "The upper and lower channels of the VWAP provide profit targets.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_20sma_trend_following_2m",
+      "field": "targets[1]",
+      "transcript_quote": "you're talking about essentially you know 15 20 points here",
+      "condition_text": "The speaker mentions a target of 15-20 points for scalp profits.",
+      "nullable": true,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "entry_sequence[0]",
+      "transcript_quote": "Once we get a clean break above pre-market highs or below pre-market lows, this is your first signal.",
+      "condition_text": "Wait for a clean break above the pre-market high or below the pre-market low.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "entry_sequence[1]",
+      "transcript_quote": "I personally like the retest, but depending on this scenario, I might take the breakout trade.",
+      "condition_text": "Wait for the price to retest the broken pre-market level (for a long entry) or wait for the price to break and retest the opposite side (for a short entry).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "entry_sequence[2]",
+      "transcript_quote": "So if you were the breakout trader in this scenario, you would go long at the close of this two-minute candle.",
+      "condition_text": "Enter long at the close of the 2-minute candle after a clean break above the pre-market high.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "entry_sequence[3]",
+      "transcript_quote": "You want to wait for the close. You want to see the volume elevation. Ideally, looking at order flow as well.",
+      "condition_text": "Confirm the breakout/retest with an increase in volume and ideally look at order flow.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "entry_sequence[4]",
+      "transcript_quote": "Your stop loss is going to be below the breakout candle.",
+      "condition_text": "Place the stop loss below the breakout candle (for long) or above the breakout candle (for short).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "entry_sequence[5]",
+      "transcript_quote": "A liquidity sweep is going to be a brief fake out below or above the level.",
+      "condition_text": "Wait for a liquidity sweep (brief fake out below the pre-market low or above the pre-market high) to trigger a reversal.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "entry_sequence[6]",
+      "transcript_quote": "If we go back to our chart and we go ahead and we look at this example right here, essentially what's happening with a liquidity sweep is some people are going to look to go short below this pre-market low or London low or anybody who has long previously might have a stop-loss set right below this area.",
+      "condition_text": "Enter long after a liquidity sweep of the pre-market low (London low) is confirmed by a strong reversal candle.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "confluences[0]",
+      "transcript_quote": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+      "condition_text": "The strategy is applied to popular futures instruments like S&P 500, NASDAQ, or Dow futures.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "confluences[1]",
+      "transcript_quote": "this setup starts at 3:00 a.m. Eastern time.",
+      "condition_text": "The strategy begins at 3:00 a.m. Eastern time.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "confluences[2]",
+      "transcript_quote": "all the way up into New York market open, which is going to be 9:30 a.m. EST",
+      "condition_text": "The price action is analyzed from 3:00 a.m. EST until the New York market open at 9:30 a.m. EST.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "confluences[3]",
+      "transcript_quote": "find the highest point of price action, and you want to find the lowest point of price action.",
+      "condition_text": "Identify the highest high and lowest low of price action within the specified pre-market window.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "confluences[4]",
+      "transcript_quote": "we want to look for breakouts, we want to look for retests, and we want to look for liquidity sweeps at those pre-market highs or those pre-market lows.",
+      "condition_text": "The strategy looks for breakouts, retests, or liquidity sweeps at the pre-market high or low.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "confluences[5]",
+      "transcript_quote": "we want to look for an increase in the volume to confirm that the breakout is actually valid.",
+      "condition_text": "An increase in volume is required to confirm the validity of the breakout or retest.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "stop",
+      "transcript_quote": "Your stop loss is going to be below the breakout candle.",
+      "condition_text": "The stop is placed below the candle that confirmed the entry.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "targets[0]",
+      "transcript_quote": "Ideally, looking at order flow as well. And if you get that, you can look to get long.",
+      "condition_text": "The speaker ideally looks for 1.5x of the original risk.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "targets[1]",
+      "transcript_quote": "Ideally, a little more like 2K to maybe even 3K, which is up here.",
+      "condition_text": "The speaker aims for at least 2x the original risk.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "strategy_name": null,
+      "field": "targets[2]",
+      "transcript_quote": "You get just about to that 2 R there.",
+      "condition_text": "The speaker mentions reaching 2R in a specific trade example.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "strategy_name": "ema_support_scalping_5m",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "this 13 EMA operated as a initial support",
+      "condition_text": "Wait for the price to approach the 13 EMA on the 5-minute chart.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "strategy_name": "ema_support_scalping_5m",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "the stock came down and it hit right there's our entry for a scalp",
+      "condition_text": "Enter a long position when the price hits the 13 EMA support level.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "strategy_name": "ema_support_scalping_5m",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "from here we got in in and then look at one green candle two green candles three four we went here and that was your exit",
+      "condition_text": "Exit the trade after a short move up, typically after 3-4 green candles.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "strategy_name": "ema_support_scalping_5m",
+      "field": "confluences[0]",
+      "transcript_quote": "this 13 EMA operated as a initial support",
+      "condition_text": "The 13 EMA is used as an initial support level for entry.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "strategy_name": "ema_support_scalping_5m",
+      "field": "confluences[1]",
+      "transcript_quote": "look at where stock is bottom at and bounce from",
+      "condition_text": "Look at where the stock bottoms out and bounces from to identify demand zones.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "strategy_name": "ema_support_scalping_5m",
+      "field": "confluences[2]",
+      "transcript_quote": "every time we get to this price the stock take off for me when you see that don't just don't just blow past that",
+      "condition_text": "Focus on price areas where the stock takes off, as these areas are areas of emphasis for buyers to step in.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "strategy_name": "ema_support_scalping_5m",
+      "field": "targets[0]",
+      "transcript_quote": "from here we got in in and then look at one green candle two green candles three four we went here and that was your exit",
+      "condition_text": "The trade is intended to be quick, profiting from minor price changes.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "strategy_name": "lower_high_reversal_15m_5m",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "we have a lower high. So right here we have a lower high and then this one we have a another lower high.",
+      "condition_text": "Identify a lower high on the 15-minute timeframe, indicating a potential shift from bearish to bullish momentum.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "strategy_name": "lower_high_reversal_15m_5m",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "price stops making the lower lows, right? Price stops making lower lows.",
+      "condition_text": "Wait for price to stop making lower lows, which is a bullish sign that the downtrend is ending.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "strategy_name": "lower_high_reversal_15m_5m",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "this is a bullish sign. This is telling us price could go bullish because it's not breaking a lower low or is not making a low.",
+      "condition_text": "Wait for price to break above the lower high to confirm the bullish reversal.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "strategy_name": "lower_high_reversal_15m_5m",
+      "field": "confluences[0]",
+      "transcript_quote": "since you're on that 15 minute time frame and you know the 4 hour and the one hour is bullish",
+      "condition_text": "The strategy requires the 4-hour and 1-hour timeframes to be bullish.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "strategy_name": "lower_high_reversal_15m_5m",
+      "field": "confluences[1]",
+      "transcript_quote": "all we did was session open",
+      "condition_text": "The trade is executed during the session open.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "strategy_name": "lower_high_reversal_15m_5m",
+      "field": "stop",
+      "transcript_quote": "put your stop loss under that level where you don't want to see price get broken, right? Broken.",
+      "condition_text": "The stop is placed under the level that would invalidate the bullish reversal (the lower high).",
+      "nullable": true,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "strategy_name": "lower_high_reversal_15m_5m",
+      "field": "targets[0]",
+      "transcript_quote": "Once you scale back out to that 1 hour time frame, you'll target that 1 hour high.",
+      "condition_text": "The initial target is the 1-hour high.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "strategy_name": "lower_high_reversal_15m_5m",
+      "field": "targets[1]",
+      "transcript_quote": "you would probably be around a 1 to 32.",
+      "condition_text": "A potential second target is around 1 to 3.2 R.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_standard_deviation_session_reference",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "once the fair value is established and the New York session open look at the time right here we test the vwap a couple times before pushing back up",
+      "condition_text": "Wait for the price to test the VWAP multiple times after the fair value is established, especially around the New York session open.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_standard_deviation_session_reference",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "we tend to trade back at it when we Break It We tend to maybe retest it a couple times before going down",
+      "condition_text": "Wait for price to retest the VWAP after breaking it, as it often acts as support or resistance.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_standard_deviation_session_reference",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "we start running up you might want to wait until the price has gone at least to the first if not the second standard deviation",
+      "condition_text": "Wait for price to reach at least the first standard deviation, or preferably the second standard deviation, to accumulate orders and create volume.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_standard_deviation_session_reference",
+      "field": "entry_sequence[3]",
+      "transcript_quote": "use the second and third standard deviation as a Target or if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels",
+      "condition_text": "Use the second and third standard deviation bands as targets for long trades, or as overbought/oversold levels for reversal strategies.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_standard_deviation_session_reference",
+      "field": "confluences[0]",
+      "transcript_quote": "the vwap first of all is an average so we could consider it as this middle line over here but it's not a static level it's a dynamic level it's a calculation constantly being updated which tells us the current volume weighted average of price",
+      "condition_text": "The VWAP is a dynamic level that represents the current volume-weighted average of price for the session.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_standard_deviation_session_reference",
+      "field": "confluences[1]",
+      "transcript_quote": "everything that sits below the vwap is Discount related to the volume weighted average price of the session so an objective view of what was the actual fair value in the market",
+      "condition_text": "Price below the VWAP is considered a discount relative to the volume-weighted average price of the session.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_standard_deviation_session_reference",
+      "field": "confluences[2]",
+      "transcript_quote": "the more prices go outside and reaches for example the higher bends the higher is the chance there will be some level of reversal",
+      "condition_text": "The further price moves outside the standard deviation bands, the higher the probability of a reversal.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "strategy_name": "vwap_standard_deviation_session_reference",
+      "field": "targets[0]",
+      "transcript_quote": "use the second and third standard deviation as a Target",
+      "condition_text": "The speaker suggests using the second and third standard deviation bands as targets.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "strategy_name": "overnight_range_breakout_and_retest_strategy",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "we want to identify our highest point of price action within that range? And then two, what is the lowest point of price action within that range?",
+      "condition_text": "Identify the highest point (Overnight High) and the lowest point (Overnight Low) of price action during the overnight/pre-market session.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "strategy_name": "overnight_range_breakout_and_retest_strategy",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "we want to see it close below or above with strength or weakness.",
+      "condition_text": "Wait for price to break above the overnight high or below the overnight low, confirming the break with strength (for long) or weakness (for short).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "strategy_name": "overnight_range_breakout_and_retest_strategy",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "we want to see it pull back and test this area as support.",
+      "condition_text": "Wait for price to pull back and retest the broken overnight high (for long) or overnight low (for short).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "strategy_name": "overnight_range_breakout_and_retest_strategy",
+      "field": "entry_sequence[3]",
+      "transcript_quote": "we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume.",
+      "condition_text": "For a long entry, wait for bullish price action (e.g., bullish hammer, engulfing, long lower wicks) on the retest. For a short entry, wait for bearish price action (e.g., bearish hammer, engulfing, long upper wicks).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "strategy_name": "overnight_range_breakout_and_retest_strategy",
+      "field": "confluences[0]",
+      "transcript_quote": "it is going to be best used for the New York market session. So that is going to be from 9:30 a.m. EST all the way until 400 pm EST.",
+      "condition_text": "The strategy is best used during the New York market session (9:30 a.m. EST to 4:00 p.m. EST).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "strategy_name": "overnight_range_breakout_and_retest_strategy",
+      "field": "confluences[1]",
+      "transcript_quote": "the overall trend is going to be very important when dictating are we looking for price to break above the range or are we looking for price to break below the range.",
+      "condition_text": "The overall trend dictates whether to look for a long (break above) or short (break below) setup.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "strategy_name": "overnight_range_breakout_and_retest_strategy",
+      "field": "stop",
+      "transcript_quote": "our stop is going to be if price breaks back down below this previous high or vice versa. If price were to break below this level again, we're going to look for it to break with weakness.",
+      "condition_text": "The stop is placed on the opposite side of the breakout/retest level.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "strategy_name": "overnight_range_breakout_and_retest_strategy",
+      "field": "targets[0]",
+      "transcript_quote": "we were up about like a 2.6R trade",
+      "condition_text": "The speaker demonstrated a potential 2.6R trade-off.",
+      "nullable": true,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "wait for a retest of the fair value gap",
+      "condition_text": "Wait for the market to trade back into the fair value gap.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "wait for this retest candle right here to get engulfed",
+      "condition_text": "Wait for the retest candle to get engulfed by opposing direction candles.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "as soon as we get this engulfing, you're good to enter the trade",
+      "condition_text": "Enter a long position as soon as the engulfing candle forms.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "confluences[0]",
+      "transcript_quote": "we're going to start on our five-minute chart",
+      "condition_text": "The strategy begins by identifying key levels on the 5-minute chart.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "confluences[1]",
+      "transcript_quote": "wait for a break of the level",
+      "condition_text": "The market must break through the high of the first 5-minute candle to confirm bullish direction.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "confluences[2]",
+      "transcript_quote": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick",
+      "condition_text": "A fair value gap must be present, defined as a gap between the first and third candle's wick in a three-candle formation.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "confluences[3]",
+      "transcript_quote": "since we broke through the high, the direction is bullish",
+      "condition_text": "A break above the first 5-minute candle's high confirms a bullish direction for long trades.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "confluences[4]",
+      "transcript_quote": "wait for a retest of the fair value gap",
+      "condition_text": "The market must trade back into the fair value gap for the entry trigger.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "confluences[5]",
+      "transcript_quote": "wait for this retest candle right here to get engulfed",
+      "condition_text": "The entry is triggered when the retest candle gets engulfed by opposing direction candles.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "stop",
+      "transcript_quote": "under the lowest area that we traded into that fair value gap",
+      "condition_text": "The stop is placed under the lowest area traded into the fair value gap.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "strategy_name": "scalping_fv_breakout_5m_1m",
+      "field": "targets[0]",
+      "transcript_quote": "targeting a fixed 3:1 return",
+      "condition_text": "The strategy targets a fixed 3:1 return on winning trades.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "I then look for the 9:30 candle, which is the market open in New York, and that's this green candle here.",
+      "condition_text": "Identify the 9:30 NY market open candle on the 15-minute chart.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "I then look for the 9:30 candle, which is the market open in New York, and that's this green candle here. Once I've got that, I'm going to mark out the high and the low. So, I mark the high and then do the same thing with the low. This gives me my opening range.",
+      "condition_text": "Mark the high and low of the 9:30 NY market open candle to define the opening range.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "I'm just waiting for a candle to break out through this range. There are different ways to do this, and I know that some people will enter as soon as the price is broken, like on this green wick up here. But I prefer to wait for the candle to actually break through and then close above. So, in this case, my signal is this candle here because it's the first one to actually break out and then close outside of that range.",
+      "condition_text": "Wait for a candle to close outside of the opening range (breakout confirmation).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "entry_sequence[3]",
+      "transcript_quote": "I then enter at the open of the next one. So, this here would be my entry.",
+      "condition_text": "Enter a long position at the open of the candle immediately following the breakout candle.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "entry_sequence[4]",
+      "transcript_quote": "After that, the stop loss goes at the bottom of the range. So down here",
+      "condition_text": "Place the stop loss at the low of the opening range.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "entry_sequence[5]",
+      "transcript_quote": "And I target 1.5 to one reward to risk. So this takerit would be somewhere around here.",
+      "condition_text": "Target a 1.5:1 risk-to-reward ratio.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "confluences[0]",
+      "transcript_quote": "I don't trade after the 12:00 candle, which would be here. So that would be my cut off for entering a trade.",
+      "condition_text": "Do not trade after the 12:00 candle.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "confluences[1]",
+      "transcript_quote": "I also don't trade ranges that are either too small or too big based on the recent ATR.",
+      "condition_text": "Avoid trading ranges that are either too small or too big based on the recent ATR.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "stop",
+      "transcript_quote": "After that, the stop loss goes at the bottom of the range. So down here",
+      "condition_text": "The stop loss is placed at the bottom of the opening range.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout_15m_5m",
+      "field": "targets[0]",
+      "transcript_quote": "And I target 1.5 to one reward to risk. So this takerit would be somewhere around here.",
+      "condition_text": "The speaker targets a 1.5:1 risk-to-reward ratio.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "strategy_name": "vwap_breakout_pullback_strategy",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "when a stock drops and then breaks above that v-wop area actually holding it as support and bouncing off of it",
+      "condition_text": "Wait for a stock to break above the VWAP (V-WOP) after being below it, confirming it as a milestone level and potential support.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "strategy_name": "vwap_breakout_pullback_strategy",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "i'm looking to buy on those pull backs looking for the v-wap to hold it up as support",
+      "condition_text": "Buy on pullbacks to the VWAP after the initial break above it, anticipating the VWAP to hold as support.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "strategy_name": "vwap_breakout_pullback_strategy",
+      "field": "confluences[0]",
+      "transcript_quote": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim",
+      "condition_text": "The stock must have an average volume over the last 20 minutes of over 200,000 shares traded per minute.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "strategy_name": "vwap_breakout_pullback_strategy",
+      "field": "confluences[1]",
+      "transcript_quote": "i need the float to be under 50 million",
+      "condition_text": "The stock float must be under 50 million.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "strategy_name": "vwap_breakout_pullback_strategy",
+      "field": "confluences[2]",
+      "transcript_quote": "especially if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in",
+      "condition_text": "The stock should open weak, drop below the VWAP at the opening bell, and then break above it with volume.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "strategy_name": "vwap_breakout_pullback_strategy",
+      "field": "targets[0]",
+      "transcript_quote": "riding the bounce up scalping out of it with a really nice green trade",
+      "condition_text": "The goal is to ride the bounce up and scalp out of the trade.",
+      "nullable": true,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "strategy_name": "break_and_retest_strategy_30m_orb_premarket",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, uh previous day's highs, previous day's lows, a strong area of support or resistance.",
+      "condition_text": "Identify a key level, such as a pre-market high/low, previous day's high/low, or the 30-minute opening range high/low.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "strategy_name": "break_and_retest_strategy_30m_orb_premarket",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level.",
+      "condition_text": "Wait for price to break the key level with strong momentum (aggressive push through, not just chopping).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "strategy_name": "break_and_retest_strategy_30m_orb_premarket",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "wait for the retest, and this is where most traders mess up. They chase the breakout, but instead, what I do is I wait. We want to wait for price to pull back, like we can see in these two scenarios right here. Price pulls back, tests the level. We want to see price hold the level.",
+      "condition_text": "Wait for price to pull back and retest the broken key level (the former resistance/support).",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "strategy_name": "break_and_retest_strategy_30m_orb_premarket",
+      "field": "entry_sequence[3]",
+      "transcript_quote": "if we come down and we test the previous resistance, pre-market high, whatever, we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. Or if we're looking at this scenario right here, when price breaks below, when it comes back up, we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid.",
+      "condition_text": "Enter after confirmation: For long, wait for bullish price action (e.g., lower wicks, bullish hammers) at the retested resistance. For short, wait for bearish price action (e.g., upper wicks, bearish hammers) at the retested support.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "strategy_name": "break_and_retest_strategy_30m_orb_premarket",
+      "field": "confluences[0]",
+      "transcript_quote": "we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out. Ideally, with the retest, we would like to see a strong confirmation, and then we want a clean push through these levels.",
+      "condition_text": "Ensure there is strong volume confirmation during the breakout and retest, avoiding low volume reactions.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "strategy_name": "break_and_retest_strategy_30m_orb_premarket",
+      "field": "confluences[1]",
+      "transcript_quote": "if we break out or if we react off a low volume, it's typically not going to work out. Ideally, with the retest, we would like to see a strong confirmation, and then we want a clean push through these levels.",
+      "condition_text": "The breakout must be clean and aggressive, not just a weak chop through the level.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "strategy_name": "break_and_retest_strategy_30m_orb_premarket",
+      "field": "stop",
+      "transcript_quote": "Your stop is if price breaks back on the opposite side of the breakout level. That's it.",
+      "condition_text": "The initial stop is placed on the opposite side of the original breakout level.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "strategy_name": "break_and_retest_strategy_30m_orb_premarket",
+      "field": "targets[0]",
+      "transcript_quote": "your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market.",
+      "condition_text": "The primary target is the next obvious area of liquidity (previous high/low, supply/demand zone).",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "entry_sequence[0]",
+      "transcript_quote": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session.",
+      "condition_text": "Wait for a bullish engulfing pattern to form on the 1H timeframe before the trading session.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "entry_sequence[1]",
+      "transcript_quote": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session.",
+      "condition_text": "Wait for a bearish engulfing pattern to form on the 1H timeframe before the trading session.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "entry_sequence[2]",
+      "transcript_quote": "I'm on the five-minute time frame, and I need to set up my range. So, you can see one, two, three candles on the five-minute, I'll turn off the sessions, you know where we're trading, and then I'm marking out the top and the bottom of that range from 9:30 to 9:45.",
+      "condition_text": "Define the trading range by marking the top and bottom of the 5M candles between 9:30 and 9:45 ET.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "entry_sequence[3]",
+      "transcript_quote": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy.",
+      "condition_text": "Wait for the price to break and close outside of the defined range for a long entry.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "entry_sequence[4]",
+      "transcript_quote": "I'm looking for the price to break out the bottom of that range... This is one of the main orb entry models that I use in my trading",
+      "condition_text": "Wait for the price to break and close outside of the defined range for a short entry.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "confluences[0]",
+      "transcript_quote": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction",
+      "condition_text": "The speaker uses 7:00 a.m. and 8:00 a.m. candles to determine the session direction.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "confluences[1]",
+      "transcript_quote": "I'm always trading 9:30 to 11:00 a.m. Eastern on Forex, Nasdaq, gold, everything.",
+      "condition_text": "The strategy is executed during the 9:30 to 11:00 a.m. Eastern trading session.",
+      "nullable": false,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "confluences[2]",
+      "transcript_quote": "I'm on the five-minute time frame, and I need to set up my range. So, you can see one, two, three candles on the five-minute, I'll turn off the sessions, you know where we're trading, and then I'm marking out the top and the bottom of that range from 9:30 to 9:45.",
+      "condition_text": "The initial range is set using the 5M candles from 9:30 to 9:45 ET.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "confluences[3]",
+      "transcript_quote": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy.",
+      "condition_text": "The price must break and close outside the defined range to confirm the direction.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "confluences[4]",
+      "transcript_quote": "I was also looking at the bottom of the range entry, the classic break and retest entry.",
+      "condition_text": "The entry is based on a break and retest of the range boundaries.",
+      "nullable": false,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "stop",
+      "transcript_quote": "I like it below the range.",
+      "condition_text": "The stop is placed below the defined trading range.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "targets[0]",
+      "transcript_quote": "I actually put it all the way up here. And the reason for that is because we had an aggressive level of supply.",
+      "condition_text": "The target is set at the aggressive supply zone.",
+      "nullable": true,
+      "mechanical_substring_pass": false
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "targets[1]",
+      "transcript_quote": "I actually just watched this trade manually. So, we can see here, I tapped into the position right there perfectly, shot down immediately.",
+      "condition_text": "The target is set at the bottom of the range.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "strategy_name": "engulfing_pattern_range_breakout_1h_5m",
+      "field": "targets[2]",
+      "transcript_quote": "I actually just watched this trade manually. So, we can see here, I tapped into the position right there perfectly, shot down immediately.",
+      "condition_text": "The target is set at the bottom of the range.",
+      "nullable": true,
+      "mechanical_substring_pass": true
+    }
+  ]
+}

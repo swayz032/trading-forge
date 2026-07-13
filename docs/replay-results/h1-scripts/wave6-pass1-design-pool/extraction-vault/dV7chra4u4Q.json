@@ -1,0 +1,193 @@
+{
+  "video_id": "dV7chra4u4Q",
+  "extracted_at": 1783916815.756977,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "12f3f47148bab26da406582d6dd8bcdca5ac167febc050ea51f1c87265c3bea8",
+  "extraction": {
+    "video_id": "dV7chra4u4Q-wave6-pass1",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "break_and_retest_strategy_30m_orb_premarket",
+        "higher_timeframe": "30m",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, uh previous day's highs, previous day's lows, a strong area of support or resistance.",
+            "step": 1,
+            "action": "Identify a key level, such as a pre-market high/low, previous day's high/low, or the 30-minute opening range high/low.",
+            "rationale": "The strategy relies on identifying a significant support or resistance level."
+          },
+          {
+            "transcript_quote": "wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level.",
+            "step": 2,
+            "action": "Wait for price to break the key level with strong momentum (aggressive push through, not just chopping).",
+            "rationale": "A clean break confirms the initial momentum and intent."
+          },
+          {
+            "transcript_quote": "wait for the retest, and this is where most traders mess up. They chase the breakout, but instead, what I do is I wait. We want to wait for price to pull back, like we can see in these two scenarios right here. Price pulls back, tests the level. We want to see price hold the level.",
+            "step": 3,
+            "action": "Wait for price to pull back and retest the broken key level (the former resistance/support).",
+            "rationale": "The retest provides the optimal entry point for a high-probability trade."
+          },
+          {
+            "transcript_quote": "if we come down and we test the previous resistance, pre-market high, whatever, we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. Or if we're looking at this scenario right here, when price breaks below, when it comes back up, we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid.",
+            "step": 4,
+            "action": "Enter after confirmation: For long, wait for bullish price action (e.g., lower wicks, bullish hammers) at the retested resistance. For short, wait for bearish price action (e.g., upper wicks, bearish hammers) at the retested support.",
+            "rationale": "Price action confirmation validates the reversal of the key level's role (resistance to support, or vice versa)."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "Your stop is if price breaks back on the opposite side of the breakout level. That's it.",
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The initial stop is placed on the opposite side of the original breakout level."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market.",
+            "priority": 1,
+            "type": "previous_daily_high",
+            "r_multiple": null,
+            "rationale": "The primary target is the next obvious area of liquidity (previous high/low, supply/demand zone)."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out. Ideally, with the retest, we would like to see a strong confirmation, and then we want a clean push through these levels.",
+            "name": "volume_confirmation",
+            "description": "Ensure there is strong volume confirmation during the breakout and retest, avoiding low volume reactions.",
+            "canonical_match": "delta_or_volume_signature"
+          },
+          {
+            "transcript_quote": "if we break out or if we react off a low volume, it's typically not going to work out. Ideally, with the retest, we would like to see a strong confirmation, and then we want a clean push through these levels.",
+            "name": "clean_break_and_retest",
+            "description": "The breakout must be clean and aggressive, not just a weak chop through the level.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Break and Retest Strategy",
+            "role": "model",
+            "verbatim_description": "A break and retest is pretty simple. Price breaks above a key level or breaks below a key level, it comes back, it retests that level, and it holds it, and it continues in the original direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Pre-market High",
+            "role": "zone",
+            "verbatim_description": "A pre-market high is a key level used to identify potential support or resistance for the break and retest setup.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Pre-market Low",
+            "role": "zone",
+            "verbatim_description": "A pre-market low is a key level used to identify potential support or resistance for the break and retest setup.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous Day's High",
+            "role": "zone",
+            "verbatim_description": "The previous day's high serves as a key level that price can break above to initiate a potential long trade on the subsequent retest.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous Day's Low",
+            "role": "zone",
+            "verbatim_description": "The previous day's low is a key level used in the strategy, acting as support or resistance for potential short trades.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "30-minute Orb High",
+            "role": "zone",
+            "verbatim_description": "A specific time-based zone (the 30-minute opening range high) used to identify key levels for the break and retest strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "30-minute Orb Low",
+            "role": "zone",
+            "verbatim_description": "A specific time-based zone (the 30-minute opening range low) used to identify key levels for the break and retest strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume Confirmation",
+            "role": "filter",
+            "verbatim_description": "We want strong momentum either at the breakout above resistance or the break below the support level. If we react off a low volume, it's typically not going to work out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Clean Push Through",
+            "role": "entry_step",
+            "verbatim_description": "The breakout must be very quick and aggressive through the level, not just like kind of chopping through it. It has to be a couple big candles through the level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bullish Price Action",
+            "role": "entry_step",
+            "verbatim_description": "When testing previous resistance (like pre-market high), we want to see bullish price action, such as long lower wicks or bullish hammers.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Price Action",
+            "role": "entry_step",
+            "verbatim_description": "When testing previous support (like pre-market low), we look for bearish price action, such as long upper wicks or gravestone dojis.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bookmap Liquidity",
+            "role": "entry_step",
+            "verbatim_description": "Using Bookmap liquidity to visually see if buyers or sellers are present at that area helps confirm the trade setup.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop Loss (Breakout Level)",
+            "role": "stop_anchor",
+            "verbatim_description": "Your stop is if price breaks back on the opposite side of the breakout level. That's it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Target (Next Obvious Area of Liquidity)",
+            "role": "target",
+            "verbatim_description": "The target is going to be the next obvious area of liquidity, which could be the previous high or the previous low, or a supply zone/demand zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 20\u00c3\u2014 in transcript)",
+            "transcript_quote": "cuss how to use the break and retest strategy, the multiple ways that you can use it to make money in the market, as well as r",
+            "occurrences": 20,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "t lows, the 30-minute opening range high and low, uh previous day's highs, previous day's lows, a strong area of support or re",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "10-15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"10-15\"",
+            "transcript_quote": "10-15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

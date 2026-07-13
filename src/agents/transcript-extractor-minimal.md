@@ -50,7 +50,83 @@ Many videos have a structured pre-market checklist at the end (numbered list). I
 
 If the speaker spends 8 minutes explaining "the 3 standard deviation bands contain 99.7% of price action" and 1 minute reciting a 5-item checklist at the end, your `entry_sequence` MUST reflect the 8-minute teaching, not just the 1-minute summary.
 
+### D. QUOTE-THEN-WRITE — copy the evidence BEFORE you write the condition
 
+For every `entry_sequence` step and every `confluences` condition (and `stop`/`targets`
+when the speaker states them explicitly): first copy a literal, verbatim, contiguous
+phrase from the transcript (≤150 characters) into `transcript_quote`. THEN write the
+condition. **The condition you write must not assert anything the quote you just copied
+does not support** — no added direction, no added timeframe, no added specificity beyond
+what the quote actually says.
+
+❌ **WRONG** (the pilot's actual failure — `CLDEIsNpVRc`):
+```json
+{"transcript_quote": "wait for price to close below the 1-minute FVG",
+ "action": "Take a long position after price closes above the bearish FVG."}
+```
+The quote says BELOW; the action says ABOVE. If you just copied "close below" you cannot
+also write "close above" two lines later — check what you copied before you commit the
+claim.
+
+✓ **RIGHT**:
+```json
+{"transcript_quote": "wait for price to close below the 1-minute FVG",
+ "action": "Take a short position after price closes below the 1-minute FVG."}
+```
+
+If you cannot find a literal quote that supports the exact condition you are about to
+write, **do not invent one and do not force the fit**. Either narrow the condition to
+only what the quote actually says (a quote giving "minimum 1x, ideally 1.5x-2x" supports
+a condition saying "at least 1x, ideally 1.5x-2x" — NOT a condition saying "targets 2x"),
+or drop the condition and add it to `rejected_strategies[]` with reason
+`not_enough_rules` if it was load-bearing.
+
+### E. NO-QUOTE SENTINEL — the honest third door
+
+Quote-then-write (section D) can corner you: you believe the trader taught a
+condition, but you cannot find a single literal, contiguous phrase that grounds it —
+often because the teaching is spread across several sentences, or because Phase A's
+variant checklist names something you can only paraphrase-locate. You have THREE
+options. Two are wrong:
+
+❌ **Invent a quote that doesn't literally appear** — caught by the mechanical
+substring check, and it is fabrication.
+❌ **Silently drop the condition** — caught by the coverage guard, and it is
+omission. If this was a Phase-A checklist item, dropping it reproduces the exact
+`WEhmadJArQo` failure this pass exists to fix.
+
+✓ **Set `transcript_quote: null` and keep the condition.** This is the HONEST
+answer: "I extracted this but cannot ground it in one verbatim quote." It routes
+UNANCHORED downstream (not certificate-grade on its own) — that is the correct,
+fair consequence, not a punishment to avoid. The pipeline already handles
+UNANCHORED conditions correctly; your job is to be honest about which bucket a
+condition belongs in, not to force everything into ANCHORED.
+
+### F. SCOPED CALLS (Phase A → Phase B handoff)
+
+Some calls to you are SCOPED to exactly one strategy that a prior global-enumeration
+pass (Phase A) already identified in this same transcript. When the input includes a
+`scope` block (an `entry_summary`, an `exit_summary`, and a `variant_checklist[]`),
+follow these rules:
+
+1. **Extract conditions for THIS scope only.** If the transcript teaches other
+   strategies elsewhere, do NOT extract conditions for them — a separate call
+   handles each of those separately. Extracting an out-of-scope strategy's
+   conditions into this call's output is a scope violation, not thoroughness.
+2. **Attempt to quote-ground every checklist item.** Each `variant_checklist[]`
+   entry names something Phase A believes is taught (e.g. a specific timeframe, a
+   confirmation mechanic, a target). Try to find each one its own
+   `entry_sequence` step, `confluences` entry, `stop`, or `targets` entry. If you
+   find a literal quote, use it (section D). If you cannot, use the NO-QUOTE
+   SENTINEL (section E above) — do NOT drop the checklist item and do NOT invent a
+   quote for it. A checklist item you cannot ground is still a condition you must
+   emit with `transcript_quote: null`.
+3. **Variants are NOT separate strategies here.** All of a scope's variants
+   (timeframe / confirmation-mechanic / target differences) are extracted as
+   differences WITHIN this one call's single strategy output — as distinct
+   `entry_sequence` steps, `confluences`, `stop` options, or `targets[]` entries —
+   never as additional `strategies[]` array entries. Phase A already decided the
+   segmentation; your job here is condition-level grounding within it.
 
 ## Output shape
 
@@ -86,30 +162,32 @@ Set `"both"` when the speaker explicitly teaches a symmetric long+short setup (e
 This is non-negotiable per CLAUDE.md §12 (`graduation_bidirectional_completeness` HARD gate). Mirroring sides in the entry_sequence is what makes the graduation pass.
 
 ### 3. `entry_sequence[]` — REQUIRED, 1-8 ORDERED steps
-Break the entry trigger into the steps the speaker actually teaches. **Use ONE step for simple strategies.** **Use multiple steps when the speaker teaches a phased setup** — accumulation, manipulation, breakout, rebalance, second entry, etc. Each step is `{step: int, action: string, rationale: string|null}`. Quote the speaker per step when possible. **DO NOT invent steps to look thorough** — a 1-step output is honest when the speaker is simple. **DO NOT compress a 5-phase teaching into 1 step.**
+Break the entry trigger into the steps the speaker actually teaches. **Use ONE step for simple strategies.** **Use multiple steps when the speaker teaches a phased setup** — accumulation, manipulation, breakout, rebalance, second entry, etc. Each step is `{transcript_quote: string, step: int, action: string, rationale: string|null}`. **DO NOT invent steps to look thorough** — a 1-step output is honest when the speaker is simple. **DO NOT compress a 5-phase teaching into 1 step.**
+
+**`transcript_quote` is REQUIRED and comes FIRST** — before you write `action`, copy a literal, verbatim, contiguous phrase (≤150 chars) from the transcript that is the evidence for this exact step. Write the quote, THEN write `action` so it matches what you just copied. See section D above for the full quote-then-write discipline and the WRONG/RIGHT worked example.
 
 **Simple 1-step example** ("Close above PDH → buy"):
 ```json
-[{"step": 1, "action": "When the 1H candle closes above the previous day high, buy the next bar.", "rationale": "PDH break confirms intraday bullish bias."}]
+[{"transcript_quote": "when the candle closes above the previous day's high, I buy", "step": 1, "action": "When the 1H candle closes above the previous day high, buy the next bar.", "rationale": "PDH break confirms intraday bullish bias."}]
 ```
 
 **Phased 5-step example** ("4h candle box continuation"):
 ```json
 [
-  {"step": 1, "action": "Wait for the previous 4H candle to close with a big body (avoid wicky/skinny candles).", "rationale": "Body shows directional conviction; wicky candles show indecision."},
-  {"step": 2, "action": "Draw the 4H candle box using high/low of that candle and project the 25%, 50%, 75% Fibonacci levels.", "rationale": "The 25-50% zone is the optimum entry retracement."},
-  {"step": 3, "action": "On the next 4H candle, watch for price to manipulate down into the 25-50% optimum zone.", "rationale": "Manipulation phase taps the hidden level for the entry trigger."},
-  {"step": 4, "action": "Enter long when price breaks back out above the 4H candle box high after the manipulation.", "rationale": "Breakout confirms bias is intact."},
-  {"step": 5, "action": "Optional second entry / scale-in when price rebalances back to the box at the premature level.", "rationale": "Second entry uses the IRS model (impulse/range/sweep) on the 5m for confirmation."}
+  {"transcript_quote": "wait for the previous 4H candle to close with a big body", "step": 1, "action": "Wait for the previous 4H candle to close with a big body (avoid wicky/skinny candles).", "rationale": "Body shows directional conviction; wicky candles show indecision."},
+  {"transcript_quote": "draw the box using the high and low of that candle", "step": 2, "action": "Draw the 4H candle box using high/low of that candle and project the 25%, 50%, 75% Fibonacci levels.", "rationale": "The 25-50% zone is the optimum entry retracement."},
+  {"transcript_quote": "price manipulates down into the 25 to 50 percent zone", "step": 3, "action": "On the next 4H candle, watch for price to manipulate down into the 25-50% optimum zone.", "rationale": "Manipulation phase taps the hidden level for the entry trigger."},
+  {"transcript_quote": "enter long when it breaks back out above the box high", "step": 4, "action": "Enter long when price breaks back out above the 4H candle box high after the manipulation.", "rationale": "Breakout confirms bias is intact."},
+  {"transcript_quote": "optional second entry when it rebalances back to the box", "step": 5, "action": "Optional second entry / scale-in when price rebalances back to the box at the premature level.", "rationale": "Second entry uses the IRS model (impulse/range/sweep) on the 5m for confirmation."}
 ]
 ```
 
 **Phased 3-step example** (ICT sweep + displacement):
 ```json
 [
-  {"step": 1, "action": "Wait for a liquidity sweep above the prior day high during the 09:30-11:00 ET killzone.", "rationale": "Sweep clears stops above PDH."},
-  {"step": 2, "action": "Watch for a 5M displacement candle that closes back below the sweep wick.", "rationale": "Displacement signals reversal intent."},
-  {"step": 3, "action": "Enter short on the next bar's open with stop above the sweep wick.", "rationale": "Sweep wick is the structural invalidation."}
+  {"transcript_quote": "wait for a liquidity sweep above the prior day high", "step": 1, "action": "Wait for a liquidity sweep above the prior day high during the 09:30-11:00 ET killzone.", "rationale": "Sweep clears stops above PDH."},
+  {"transcript_quote": "a 5 minute displacement candle that closes back below the wick", "step": 2, "action": "Watch for a 5M displacement candle that closes back below the sweep wick.", "rationale": "Displacement signals reversal intent."},
+  {"transcript_quote": "enter short on the next bar's open, stop above the wick", "step": 3, "action": "Enter short on the next bar's open with stop above the sweep wick.", "rationale": "Sweep wick is the structural invalidation."}
 ]
 ```
 
@@ -119,7 +197,8 @@ What kind of market the strategy needs. One of: `trending`, `ranging`, `any`. If
 ### 5. `stop` — object
 The INITIAL stop placement. ⛔ **NEVER extract fixed-point stops** (e.g. "always 10 points"). If the speaker uses a fixed-point stop, set `anchor: null` AND add the strategy to `rejected_strategies[]` with reason `fixed_point_stop_not_supported`. Fixed stops are banned per CLAUDE.md §13 because they get blown out on volatility expansion.
 
-Fields:
+Fields (`transcript_quote` FIRST — copy the literal evidence for `anchor` before you set it; null if `anchor` is null):
+- **`transcript_quote`**: literal, verbatim, contiguous phrase (≤150 chars) naming where the stop goes. null ONLY if `anchor` is null (speaker never says).
 - **`anchor`**: ONE of these (priority order from institutional 2026 research):
   - `sweep_wick_below_entry` / `sweep_wick_above_entry` — stop beyond a liquidity sweep wick (highest priority — TradeDisciple 2026-03)
   - `ob_low` / `ob_high` — stop beyond an order block
@@ -142,7 +221,8 @@ Explicit rule for moving the stop AFTER entry. Examples:
 Set null if the speaker uses no special management or only the default break-even-at-TP1 (the framework does this automatically).
 
 ### 7. `targets[]` — array, may be empty
-Where the speaker is AIMING with this trade. Each entry:
+Where the speaker is AIMING with this trade. Each entry (`transcript_quote` FIRST):
+- **`transcript_quote`**: literal, verbatim, contiguous phrase (≤150 chars) naming this target. null ONLY if the speaker never states a target for this entry (shouldn't normally happen — if there's no quote, don't add the target).
 - **`priority`**: integer 1, 2, 3 (priority order; primary target = priority 1)
 - **`type`**: one of: `previous_daily_high` | `previous_daily_low` | `previous_weekly_high` | `previous_weekly_low` | `equal_highs` | `equal_lows` | `range_high` | `range_low` | `fibonacci_1618` | `r_multiple` | speaker's own term (snake_case)
 - **`r_multiple`**: number if the speaker states an R-multiple target (e.g. `1.5` for "minimum 1.5R")
@@ -151,7 +231,8 @@ Where the speaker is AIMING with this trade. Each entry:
 Empty array if speaker doesn't mention targets (framework default Style C 33/33/33 takes over).
 
 ### 8. `confluences[]` — array, THE KEY FIELD
-List EVERY condition the speaker says must be TRUE before they take a trade. This is the speaker's edge — capture it faithfully. Each entry:
+List EVERY condition the speaker says must be TRUE before they take a trade. This is the speaker's edge — capture it faithfully. Each entry (`transcript_quote` REQUIRED, comes FIRST — copy the literal evidence BEFORE you write `name`/`description`; see section D above):
+- **`transcript_quote`**: literal, verbatim, contiguous phrase (≤150 chars) that is this condition's evidence. `description` must not assert anything this quote doesn't support.
 - **`name`**: short snake_case label. Use the speaker's term if they named it; otherwise be descriptive.
 - **`description`**: 1 sentence quoting the speaker.
 - **`canonical_match`**: map to ONE of these 11 canonical factors if it fits, else null:

@@ -1,0 +1,153 @@
+{
+  "video_id": "IyFioFkRgWo",
+  "extracted_at": 1783916201.9054284,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "22d6db912db6be602af1224c260719717846152ff02eb1672359b68d5a8671c7",
+  "extraction": {
+    "video_id": "IyFioFkRgWo-wave6-pass1",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "ema_support_scalping_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "this 13 EMA operated as a initial support",
+            "step": 1,
+            "action": "Wait for the price to approach the 13 EMA on the 5-minute chart.",
+            "rationale": "The 13 EMA is used as an initial support level for entry."
+          },
+          {
+            "transcript_quote": "the stock came down and it hit right there's our entry for a scalp",
+            "step": 2,
+            "action": "Enter a long position when the price hits the 13 EMA support level.",
+            "rationale": "The 13 EMA serves as the entry trigger for a quick scalp."
+          },
+          {
+            "transcript_quote": "from here we got in in and then look at one green candle two green candles three four we went here and that was your exit",
+            "step": 3,
+            "action": "Exit the trade after a short move up, typically after 3-4 green candles.",
+            "rationale": "The trade is intended to be quick, profiting from minor price changes."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": null,
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": null
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "from here we got in in and then look at one green candle two green candles three four we went here and that was your exit",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": null,
+            "rationale": "The trade is intended to be quick, profiting from minor price changes."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "this 13 EMA operated as a initial support",
+            "name": "ema_support_level",
+            "description": "The 13 EMA is used as an initial support level for entry.",
+            "canonical_match": "vwap_alignment"
+          },
+          {
+            "transcript_quote": "look at where stock is bottom at and bounce from",
+            "name": "price_action_demand_zone",
+            "description": "Look at where the stock bottoms out and bounces from to identify demand zones.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "every time we get to this price the stock take off for me when you see that don't just don't just blow past that",
+            "name": "demand_zone_emphasis",
+            "description": "Focus on price areas where the stock takes off, as these areas are areas of emphasis for buyers to step in.",
+            "canonical_match": null
+          }
+        ],
+        "rejected_strategies": [],
+        "instrument_classification": "non_futures_primary",
+        "speaker_concepts": [
+          {
+            "term": "being a sniper",
+            "role": "model",
+            "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "13 EMA",
+            "role": "indicator",
+            "verbatim_description": "this 13 EMA operated as a initial support",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 minute chart",
+            "role": "filter",
+            "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 EMA",
+            "role": "indicator",
+            "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "support level",
+            "role": "zone",
+            "verbatim_description": "I want to show you here now is support but that's also your entry",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "resistance",
+            "role": "zone",
+            "verbatim_description": "you ride it to resistance and you exit",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "demand Zone",
+            "role": "zone",
+            "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "being a sniper though okay",
+            "role": "indicator",
+            "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+            "transcript_quote": "I call it being a sniper though okay so",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "5 to 15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+            "transcript_quote": "5 to 15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

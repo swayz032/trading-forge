@@ -1,0 +1,208 @@
+{
+  "video_id": "E9MzEC_yNoM",
+  "extracted_at": 1783916111.0510702,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "30c9f61aef618097445dfa969d7cd76c2eb5ffb435e5a0091f7a5f870f6fac49",
+  "extraction": {
+    "video_id": "E9MzEC_yNoM-wave6-pass1",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "higher_timeframe": "5m",
+        "lower_timeframe": "2m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "Once we get a clean break above pre-market highs or below pre-market lows, this is your first signal.",
+            "step": 1,
+            "action": "Wait for a clean break above the pre-market high or below the pre-market low.",
+            "rationale": "The break confirms the initial directional bias."
+          },
+          {
+            "transcript_quote": "I personally like the retest, but depending on this scenario, I might take the breakout trade.",
+            "step": 2,
+            "action": "Wait for the price to retest the broken pre-market level (for a long entry) or wait for the price to break and retest the opposite side (for a short entry).",
+            "rationale": "The retest provides a higher probability entry after the initial break."
+          },
+          {
+            "transcript_quote": "So if you were the breakout trader in this scenario, you would go long at the close of this two-minute candle.",
+            "step": 3,
+            "action": "Enter long at the close of the 2-minute candle after a clean break above the pre-market high.",
+            "rationale": "The close confirms the breakout momentum."
+          },
+          {
+            "transcript_quote": "You want to wait for the close. You want to see the volume elevation. Ideally, looking at order flow as well.",
+            "step": 4,
+            "action": "Confirm the breakout/retest with an increase in volume and ideally look at order flow.",
+            "rationale": "Volume elevation confirms the validity of the breakout or retest."
+          },
+          {
+            "transcript_quote": "Your stop loss is going to be below the breakout candle.",
+            "step": 5,
+            "action": "Place the stop loss below the breakout candle (for long) or above the breakout candle (for short).",
+            "rationale": "The stop is placed beyond the candle that confirmed the entry."
+          },
+          {
+            "transcript_quote": "A liquidity sweep is going to be a brief fake out below or above the level.",
+            "step": 6,
+            "action": "Wait for a liquidity sweep (brief fake out below the pre-market low or above the pre-market high) to trigger a reversal.",
+            "rationale": "The sweep sets up a powerful move in the opposite direction."
+          },
+          {
+            "transcript_quote": "If we go back to our chart and we go ahead and we look at this example right here, essentially what's happening with a liquidity sweep is some people are going to look to go short below this pre-market low or London low or anybody who has long previously might have a stop-loss set right below this area.",
+            "step": 7,
+            "action": "Enter long after a liquidity sweep of the pre-market low (London low) is confirmed by a strong reversal candle.",
+            "rationale": "The sweep triggers a stop-run, setting up a reversal move in the opposite direction."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "Your stop loss is going to be below the breakout candle.",
+          "anchor": "displacement_candle_low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed below the candle that confirmed the entry."
+        },
+        "stop_management": "Move stop-loss up to at least break even, ideally in profits, and then let that thing run.",
+        "targets": [
+          {
+            "transcript_quote": "Ideally, looking at order flow as well. And if you get that, you can look to get long.",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 1.5,
+            "rationale": "The speaker ideally looks for 1.5x of the original risk."
+          },
+          {
+            "transcript_quote": "Ideally, a little more like 2K to maybe even 3K, which is up here.",
+            "priority": 2,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The speaker aims for at least 2x the original risk."
+          },
+          {
+            "transcript_quote": "You get just about to that 2 R there.",
+            "priority": 3,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The speaker mentions reaching 2R in a specific trade example."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+            "name": "instrument_selection",
+            "description": "The strategy is applied to popular futures instruments like S&P 500, NASDAQ, or Dow futures.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "this setup starts at 3:00 a.m. Eastern time.",
+            "name": "start_time",
+            "description": "The strategy begins at 3:00 a.m. Eastern time.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "all the way up into New York market open, which is going to be 9:30 a.m. EST",
+            "name": "time_window",
+            "description": "The price action is analyzed from 3:00 a.m. EST until the New York market open at 9:30 a.m. EST.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "find the highest point of price action, and you want to find the lowest point of price action.",
+            "name": "range_identification",
+            "description": "Identify the highest high and lowest low of price action within the specified pre-market window.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "we want to look for breakouts, we want to look for retests, and we want to look for liquidity sweeps at those pre-market highs or those pre-market lows.",
+            "name": "entry_triggers",
+            "description": "The strategy looks for breakouts, retests, or liquidity sweeps at the pre-market high or low.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "we want to look for an increase in the volume to confirm that the breakout is actually valid.",
+            "name": "volume_confirmation",
+            "description": "An increase in volume is required to confirm the validity of the breakout or retest.",
+            "canonical_match": "delta_or_volume_signature"
+          }
+        ],
+        "rejected_strategies": [],
+        "instrument_classification": "futures_primary",
+        "speaker_concepts": [
+          {
+            "term": "Pre-market Highs",
+            "role": "zone",
+            "verbatim_description": "The highest point of price action from 3:00 a.m. EST all the way up into New York market open.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Pre-market Lows",
+            "role": "zone",
+            "verbatim_description": "The lowest point of price action from 3:00 a.m. EST all the way up into New York market open.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Breakout Trade",
+            "role": "entry_step",
+            "verbatim_description": "A trade taken when price makes a clean break above pre-market highs or below pre-market lows, confirmed by volume and candle close on a lower timeframe.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break and Retest Trade",
+            "role": "entry_step",
+            "verbatim_description": "A trade taken when price pulls back into the previous high or low of the pre-market range, making it support/resistance for a new entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Sweep",
+            "role": "entry_step",
+            "verbatim_description": "A brief fake out below or above the level where price breaks through but then reclaims the overall range, trapping stops on both sides of the market.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "London High",
+            "role": "zone",
+            "verbatim_description": "The highest point of price action within the 3:00 a.m. EST to New York market open timeframe, used as a key level for trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "London Low",
+            "role": "zone",
+            "verbatim_description": "The lowest point of price action within the 3:00 a.m. EST to New York market open timeframe, used as a key level for trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 12\u00c3\u2014 in transcript)",
+            "transcript_quote": "et up for key breakout zones, retest zones, or even liquidity sweeps. Now, to mark your pre-market high, again, go to a 5minut",
+            "occurrences": 12,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 7\u00c3\u2014 in transcript)",
+            "transcript_quote": "t of price action within this range and we are going to mark the lowest point of price action within this range. So the lowest",
+            "occurrences": 7,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 7\u00c3\u2014 in transcript)",
+            "transcript_quote": "k and retest trade, or even a liquidity sweep. So, I want to go ahead and focus on this example right here, cuz this is where things st",
+            "occurrences": 7,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

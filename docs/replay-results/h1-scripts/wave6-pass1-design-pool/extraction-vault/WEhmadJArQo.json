@@ -1,0 +1,183 @@
+{
+  "video_id": "WEhmadJArQo",
+  "extracted_at": 1783916494.8136427,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "0ceb7d47590cbb6909e89833cda3ad820d96539b49210e617aa00c7e4cad8358",
+  "extraction": {
+    "video_id": "WEhmadJArQo-wave6-pass1",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "scalping_fv_breakout_5m_1m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "1m",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "transcript_quote": "wait for a retest of the fair value gap",
+            "step": 1,
+            "action": "Wait for the market to trade back into the fair value gap.",
+            "rationale": "The retest is the trigger for the entry."
+          },
+          {
+            "transcript_quote": "wait for this retest candle right here to get engulfed",
+            "step": 2,
+            "action": "Wait for the retest candle to get engulfed by opposing direction candles.",
+            "rationale": "The engulfing candle confirms the reversal intent and buyer control."
+          },
+          {
+            "transcript_quote": "as soon as we get this engulfing, you're good to enter the trade",
+            "step": 3,
+            "action": "Enter a long position as soon as the engulfing candle forms.",
+            "rationale": "The engulfing candle confirms the reversal intent and buyer control."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "under the lowest area that we traded into that fair value gap",
+          "anchor": "fvg_low",
+          "buffer_atr": 0,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed under the lowest area traded into the fair value gap."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "targeting a fixed 3:1 return",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 3,
+            "rationale": "The strategy targets a fixed 3:1 return on winning trades."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "we're going to start on our five-minute chart",
+            "name": "initial_timeframe_setup",
+            "description": "The strategy begins by identifying key levels on the 5-minute chart.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "wait for a break of the level",
+            "name": "fv_breakout",
+            "description": "The market must break through the high of the first 5-minute candle to confirm bullish direction.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick",
+            "name": "fv_presence",
+            "description": "A fair value gap must be present, defined as a gap between the first and third candle's wick in a three-candle formation.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "since we broke through the high, the direction is bullish",
+            "name": "directional_bias",
+            "description": "A break above the first 5-minute candle's high confirms a bullish direction for long trades.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "wait for a retest of the fair value gap",
+            "name": "fv_retest",
+            "description": "The market must trade back into the fair value gap for the entry trigger.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "wait for this retest candle right here to get engulfed",
+            "name": "engulfing_confirmation",
+            "description": "The entry is triggered when the retest candle gets engulfed by opposing direction candles.",
+            "canonical_match": null
+          }
+        ],
+        "rejected_strategies": [],
+        "instrument_classification": "futures_primary",
+        "speaker_concepts": [
+          {
+            "term": "FPG strategy",
+            "role": "model",
+            "verbatim_description": "This FPG strategy consistently gives me days like this, this, and this.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "scalping entry",
+            "role": "entry_step",
+            "verbatim_description": "For step one, we're going to identify our key levels... Next, we're going to wait for a break of the level, but we need a fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "zone",
+            "verbatim_description": "A fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "retest of the fair value gap",
+            "role": "entry_step",
+            "verbatim_description": "So, first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "engulfing",
+            "role": "entry_step",
+            "verbatim_description": "If you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 3:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "day trading entry",
+            "role": "entry_step",
+            "verbatim_description": "Let's learn how to use the day trading entry first... Now, this brings us to step one of the day trading entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "limit order on the FVG",
+            "role": "entry_step",
+            "verbatim_description": "Instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 2:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 16\u00c3\u2014 in transcript)",
+            "transcript_quote": ". And this is one of the only FVG strategies that actually works. And today, I'm going to teach you the full strategy, and",
+            "occurrences": 16,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": ", first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

@@ -1,0 +1,630 @@
+{
+  "video_id": "WEhmadJArQo",
+  "extracted_at": 1783920754.8632827,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass2-birth-fixture"
+  },
+  "extraction_sha256": "666c6eeff0e7c11e27db78ec7ea4d639168dd9bfc519069b30c2d637f492cf5e",
+  "extraction": {
+    "video_id": "WEhmadJArQo-wave6-pass2-birth",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "scalping_fvg_engulfing_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "1m",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "transcript_quote": "we're going to start on our five-minute chart",
+            "step": 1,
+            "action": "Start on the 5-minute chart and mark out the high and the low of the first 5-minute candle at 9:30 a.m. EST.",
+            "rationale": "This establishes the key levels for the trade."
+          },
+          {
+            "transcript_quote": "we're going to switch to the 1 minute chart by clicking this one minute button on Trading View",
+            "step": 2,
+            "action": "Switch to the 1-minute chart to look for a fair value gap (FVG).",
+            "rationale": "The 1m chart is used to identify the entry trigger."
+          },
+          {
+            "transcript_quote": "wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap",
+            "step": 3,
+            "action": "Wait for the market to trade back into the fair value gap.",
+            "rationale": "The retest of the FVG is the setup for the entry."
+          },
+          {
+            "transcript_quote": "wait for this retest candle right here to get engulfed",
+            "step": 4,
+            "action": "Wait for the retest candle to get engulfed by opposing direction candles.",
+            "rationale": "The engulfing candle confirms the reversal and entry."
+          },
+          {
+            "transcript_quote": "as soon as we get this engulfing, you're good to enter the trade",
+            "step": 5,
+            "action": "Enter a long position as soon as the engulfing candle is confirmed.",
+            "rationale": "The engulfing candle signals the entry point."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "you want to put that under the lowest area that we traded into that fair value gap",
+          "anchor": "fvg_low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed under the lowest area traded into the fair value gap."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "we're just targeting a fixed 3:1 return",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 3,
+            "rationale": "The target is a fixed 3:1 return on the trade."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "this is one of the only FVG strategies that actually works",
+            "name": "fvg_strategy_claim",
+            "description": "The speaker claims this is one of the only FVG strategies that actually works.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "FPG strategy",
+            "role": "model",
+            "verbatim_description": "This FPG strategy consistently gives me days like this, this, and this.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "scalping entry",
+            "role": "entry_step",
+            "verbatim_description": "For step one, we're going to identify our key levels... Next, we're going to wait for a break of the level, but we need a fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "zone",
+            "verbatim_description": "A fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "retest of the fair value gap",
+            "role": "entry_step",
+            "verbatim_description": "So, first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "engulfing",
+            "role": "entry_step",
+            "verbatim_description": "If you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 3:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "day trading entry",
+            "role": "entry_step",
+            "verbatim_description": "Let's learn how to use the day trading entry first... Now, this brings us to step one of the day trading entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "limit order on the FVG",
+            "role": "entry_step",
+            "verbatim_description": "Instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 2:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 16\u00c3\u2014 in transcript)",
+            "transcript_quote": ". And this is one of the only FVG strategies that actually works. And today, I'm going to teach you the full strategy, and",
+            "occurrences": 16,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": ", first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "fair_value_gap_limit_order_15m_5m",
+        "higher_timeframe": "15m",
+        "lower_timeframe": "5m",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "transcript_quote": "we're going to start on the 15minute chart",
+            "step": 1,
+            "action": "Start on the 15-minute chart and wait for the 9:30 to 9:45 Eastern Standard Time candle to close.",
+            "rationale": "The 15-minute chart is used to identify the initial key levels."
+          },
+          {
+            "transcript_quote": "we're going to mark the high and the low of the first 15-minute candle",
+            "step": 2,
+            "action": "Mark the high and the low of the first 15-minute candle.",
+            "rationale": "This establishes the initial range for the day."
+          },
+          {
+            "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG",
+            "step": 3,
+            "action": "Set a limit order on the Fair Value Gap (FVG) level.",
+            "rationale": "The limit order is placed on the FVG to automatically enter the market when price returns to that level."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "for my stop loss, I'm going to put it right at the first candle in the fair value gap pattern",
+          "anchor": "fvg_low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss is placed right at the first candle of the fair value gap pattern."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "for our target instead of a 3 to one return we are going to target a fixed 2:1 return",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The target is set to a fixed 2:1 return."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "we're going to wait for a very specific pattern. What we need is similar to the previous strategy, but a little bit different. As you'll see here, we have now created our fair value gap through this first candle.",
+            "name": "fair_value_gap_formation",
+            "description": "A fair value gap is formed through the first candle of the day.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "FPG strategy",
+            "role": "model",
+            "verbatim_description": "This FPG strategy consistently gives me days like this, this, and this.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "scalping entry",
+            "role": "entry_step",
+            "verbatim_description": "For step one, we're going to identify our key levels... Next, we're going to wait for a break of the level, but we need a fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "zone",
+            "verbatim_description": "A fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "retest of the fair value gap",
+            "role": "entry_step",
+            "verbatim_description": "So, first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "engulfing",
+            "role": "entry_step",
+            "verbatim_description": "If you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 3:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "day trading entry",
+            "role": "entry_step",
+            "verbatim_description": "Let's learn how to use the day trading entry first... Now, this brings us to step one of the day trading entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "limit order on the FVG",
+            "role": "entry_step",
+            "verbatim_description": "Instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 2:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 16\u00c3\u2014 in transcript)",
+            "transcript_quote": ". And this is one of the only FVG strategies that actually works. And today, I'm going to teach you the full strategy, and",
+            "occurrences": 16,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+            "transcript_quote": ", first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "phase_a_enumeration": {
+      "video_id": "WEhmadJArQo-wave6-pass2-birth",
+      "strategies": [
+        {
+          "strategy_id": 0,
+          "name": "FVG_Scalping_Strategy",
+          "entry_summary": "Identify the high/low of the first 5-minute candle at 9:30 a.m. EST, wait for the market to retest the fair value gap, and enter a long position once the retest candle is engulfed.",
+          "exit_summary": "Place the stop loss under the lowest point of the fair value gap and target a fixed 3:1 return.",
+          "variants": [
+            {
+              "variant_label": "5m chart, engulfing confirmation, 3:1 target",
+              "timeframe_note": "5-minute chart",
+              "confirmation_mechanic_note": "wait for the retest candle to get engulfed",
+              "target_note": "fixed 3:1 return",
+              "transcript_quote": "wait for this retest candle right here to get engulfed"
+            }
+          ]
+        },
+        {
+          "strategy_id": 1,
+          "name": "FVG_DayTrading_Strategy",
+          "entry_summary": "Identify the high/low of the first 15-minute candle at 9:30 a.m. EST, wait for the market to trade back into the fair value gap, and enter a long position using a passive limit order at the FVG level.",
+          "exit_summary": "Place the stop loss right at the first candle of the fair value gap pattern and target a fixed 2:1 return.",
+          "variants": [
+            {
+              "variant_label": "15m chart, passive limit order confirmation, 2:1 target",
+              "timeframe_note": "15-minute chart",
+              "confirmation_mechanic_note": "set a limit order on the FVG",
+              "target_note": "fixed 2:1 return",
+              "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG"
+            }
+          ]
+        }
+      ],
+      "enumeration_note": "The video teaches two distinct strategies based on their entry and exit logic: one uses a 5m timeframe with an engulfing confirmation and 3:1 target, while the other uses a 15m timeframe with a passive limit order entry and 2:1 target."
+    },
+    "per_strategy_extractions": [
+      {
+        "phase_a_strategy_id": 0,
+        "extraction": {
+          "video_id": "WEhmadJArQo-wave6-pass2-birth::phaseA-s0",
+          "instrument_classification": "futures_primary",
+          "strategies": [
+            {
+              "name": "scalping_fvg_engulfing_5m",
+              "higher_timeframe": "5m",
+              "lower_timeframe": "1m",
+              "direction": "long",
+              "entry_sequence": [
+                {
+                  "transcript_quote": "we're going to start on our five-minute chart",
+                  "step": 1,
+                  "action": "Start on the 5-minute chart and mark out the high and the low of the first 5-minute candle at 9:30 a.m. EST.",
+                  "rationale": "This establishes the key levels for the trade."
+                },
+                {
+                  "transcript_quote": "we're going to switch to the 1 minute chart by clicking this one minute button on Trading View",
+                  "step": 2,
+                  "action": "Switch to the 1-minute chart to look for a fair value gap (FVG).",
+                  "rationale": "The 1m chart is used to identify the entry trigger."
+                },
+                {
+                  "transcript_quote": "wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap",
+                  "step": 3,
+                  "action": "Wait for the market to trade back into the fair value gap.",
+                  "rationale": "The retest of the FVG is the setup for the entry."
+                },
+                {
+                  "transcript_quote": "wait for this retest candle right here to get engulfed",
+                  "step": 4,
+                  "action": "Wait for the retest candle to get engulfed by opposing direction candles.",
+                  "rationale": "The engulfing candle confirms the reversal and entry."
+                },
+                {
+                  "transcript_quote": "as soon as we get this engulfing, you're good to enter the trade",
+                  "step": 5,
+                  "action": "Enter a long position as soon as the engulfing candle is confirmed.",
+                  "rationale": "The engulfing candle signals the entry point."
+                }
+              ],
+              "preferred_regime": "any",
+              "stop": {
+                "transcript_quote": "you want to put that under the lowest area that we traded into that fair value gap",
+                "anchor": "fvg_low",
+                "buffer_atr": null,
+                "atr_multiplier": null,
+                "rationale": "The stop is placed under the lowest area traded into the fair value gap."
+              },
+              "stop_management": null,
+              "targets": [
+                {
+                  "transcript_quote": "we're just targeting a fixed 3:1 return",
+                  "priority": 1,
+                  "type": "r_multiple",
+                  "r_multiple": 3,
+                  "rationale": "The target is a fixed 3:1 return on the trade."
+                }
+              ],
+              "confluences": [
+                {
+                  "transcript_quote": "this is one of the only FVG strategies that actually works",
+                  "name": "fvg_strategy_claim",
+                  "description": "The speaker claims this is one of the only FVG strategies that actually works.",
+                  "canonical_match": null
+                }
+              ],
+              "speaker_concepts": [
+                {
+                  "term": "FPG strategy",
+                  "role": "model",
+                  "verbatim_description": "This FPG strategy consistently gives me days like this, this, and this.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "scalping entry",
+                  "role": "entry_step",
+                  "verbatim_description": "For step one, we're going to identify our key levels... Next, we're going to wait for a break of the level, but we need a fair value gap.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "fair value gap",
+                  "role": "zone",
+                  "verbatim_description": "A fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "retest of the fair value gap",
+                  "role": "entry_step",
+                  "verbatim_description": "So, first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "engulfing",
+                  "role": "entry_step",
+                  "verbatim_description": "If you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "fixed 3:1 return",
+                  "role": "target",
+                  "verbatim_description": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "day trading entry",
+                  "role": "entry_step",
+                  "verbatim_description": "Let's learn how to use the day trading entry first... Now, this brings us to step one of the day trading entry.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "limit order on the FVG",
+                  "role": "entry_step",
+                  "verbatim_description": "Instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "fixed 2:1 return",
+                  "role": "target",
+                  "verbatim_description": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Fair Value Gap (FVG)",
+                  "role": "zone",
+                  "verbatim_description": "Fair Value Gap (FVG) (mentioned 16\u00c3\u2014 in transcript)",
+                  "transcript_quote": ". And this is one of the only FVG strategies that actually works. And today, I'm going to teach you the full strategy, and",
+                  "occurrences": 16,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Rebalance/Retest",
+                  "role": "entry_step",
+                  "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+                  "transcript_quote": ", first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+                  "occurrences": 3,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "30 to 9",
+                  "role": "zone",
+                  "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+                  "transcript_quote": "30 to 9",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                }
+              ]
+            }
+          ],
+          "rejected_strategies": [],
+          "empty_reason": null
+        }
+      },
+      {
+        "phase_a_strategy_id": 1,
+        "extraction": {
+          "video_id": "WEhmadJArQo-wave6-pass2-birth::phaseA-s1",
+          "instrument_classification": "futures_primary",
+          "strategies": [
+            {
+              "name": "fair_value_gap_limit_order_15m_5m",
+              "higher_timeframe": "15m",
+              "lower_timeframe": "5m",
+              "direction": "long",
+              "entry_sequence": [
+                {
+                  "transcript_quote": "we're going to start on the 15minute chart",
+                  "step": 1,
+                  "action": "Start on the 15-minute chart and wait for the 9:30 to 9:45 Eastern Standard Time candle to close.",
+                  "rationale": "The 15-minute chart is used to identify the initial key levels."
+                },
+                {
+                  "transcript_quote": "we're going to mark the high and the low of the first 15-minute candle",
+                  "step": 2,
+                  "action": "Mark the high and the low of the first 15-minute candle.",
+                  "rationale": "This establishes the initial range for the day."
+                },
+                {
+                  "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG",
+                  "step": 3,
+                  "action": "Set a limit order on the Fair Value Gap (FVG) level.",
+                  "rationale": "The limit order is placed on the FVG to automatically enter the market when price returns to that level."
+                }
+              ],
+              "preferred_regime": "any",
+              "stop": {
+                "transcript_quote": "for my stop loss, I'm going to put it right at the first candle in the fair value gap pattern",
+                "anchor": "fvg_low",
+                "buffer_atr": null,
+                "atr_multiplier": null,
+                "rationale": "The stop loss is placed right at the first candle of the fair value gap pattern."
+              },
+              "stop_management": null,
+              "targets": [
+                {
+                  "transcript_quote": "for our target instead of a 3 to one return we are going to target a fixed 2:1 return",
+                  "priority": 1,
+                  "type": "r_multiple",
+                  "r_multiple": 2,
+                  "rationale": "The target is set to a fixed 2:1 return."
+                }
+              ],
+              "confluences": [
+                {
+                  "transcript_quote": "we're going to wait for a very specific pattern. What we need is similar to the previous strategy, but a little bit different. As you'll see here, we have now created our fair value gap through this first candle.",
+                  "name": "fair_value_gap_formation",
+                  "description": "A fair value gap is formed through the first candle of the day.",
+                  "canonical_match": null
+                }
+              ],
+              "speaker_concepts": [
+                {
+                  "term": "FPG strategy",
+                  "role": "model",
+                  "verbatim_description": "This FPG strategy consistently gives me days like this, this, and this.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "scalping entry",
+                  "role": "entry_step",
+                  "verbatim_description": "For step one, we're going to identify our key levels... Next, we're going to wait for a break of the level, but we need a fair value gap.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "fair value gap",
+                  "role": "zone",
+                  "verbatim_description": "A fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "retest of the fair value gap",
+                  "role": "entry_step",
+                  "verbatim_description": "So, first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "engulfing",
+                  "role": "entry_step",
+                  "verbatim_description": "If you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "fixed 3:1 return",
+                  "role": "target",
+                  "verbatim_description": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "day trading entry",
+                  "role": "entry_step",
+                  "verbatim_description": "Let's learn how to use the day trading entry first... Now, this brings us to step one of the day trading entry.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "limit order on the FVG",
+                  "role": "entry_step",
+                  "verbatim_description": "Instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "fixed 2:1 return",
+                  "role": "target",
+                  "verbatim_description": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return.",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Fair Value Gap (FVG)",
+                  "role": "zone",
+                  "verbatim_description": "Fair Value Gap (FVG) (mentioned 16\u00c3\u2014 in transcript)",
+                  "transcript_quote": ". And this is one of the only FVG strategies that actually works. And today, I'm going to teach you the full strategy, and",
+                  "occurrences": 16,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "Rebalance/Retest",
+                  "role": "entry_step",
+                  "verbatim_description": "Rebalance/Retest (mentioned 3\u00c3\u2014 in transcript)",
+                  "transcript_quote": ", first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+                  "occurrences": 3,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "30 to 9",
+                  "role": "zone",
+                  "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+                  "transcript_quote": "30 to 9",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                }
+              ]
+            }
+          ],
+          "rejected_strategies": [],
+          "empty_reason": null
+        }
+      }
+    ]
+  }
+}

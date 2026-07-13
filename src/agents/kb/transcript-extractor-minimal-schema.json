@@ -42,8 +42,14 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["step", "action"],
+              "required": ["transcript_quote", "step", "action"],
               "properties": {
+                "transcript_quote": {
+                  "type": ["string", "null"],
+                  "description": "A literal, contiguous substring copied VERBATIM from the transcript — the exact evidence for this condition. Checked by literal substring match; a quote that does not appear verbatim fails validation and routes UNANCHORED. Set null ONLY as the deliberate NO-QUOTE SENTINEL: you believe this condition is genuinely taught (directly, or as a checklist item from Phase A's variant list) but cannot find a literal contiguous quote for it. Do NOT invent a quote to fill this field, and do NOT drop the condition instead — null here is an honest, examined output, not a shortcut. A condition with a null quote here still counts toward coverage; it is excluded from the mechanical substring pre-filter and routed UNANCHORED for support scoring.",
+                  "minLength": 5,
+                  "maxLength": 150
+                },
                 "step": { "type": "integer", "minimum": 1, "maximum": 8 },
                 "action": {
                   "type": "string",
@@ -71,6 +77,12 @@
             "additionalProperties": false,
             "required": ["anchor"],
             "properties": {
+              "transcript_quote": {
+                "type": ["string", "null"],
+                "description": "A literal, contiguous substring copied VERBATIM from the transcript — the exact evidence for this condition, not a paraphrase. Do not add words, do not fix grammar, do not translate speaker jargon. This field is checked by a literal substring match against the transcript; a quote that does not appear verbatim fails validation. Set null ONLY when the paired field is itself null (e.g. stop.anchor=null, an empty confluences[] item is impossible since the array itself would just be empty).",
+                "minLength": 5,
+                "maxLength": 150
+              },
               "anchor": {
                 "type": ["string", "null"],
                 "description": "Where the initial stop sits. NEVER fixed_points (banned per CLAUDE.md §13).",
@@ -122,6 +134,12 @@
               "additionalProperties": false,
               "required": ["priority", "type"],
               "properties": {
+                "transcript_quote": {
+                  "type": ["string", "null"],
+                  "description": "A literal, contiguous substring copied VERBATIM from the transcript — the exact evidence for this condition, not a paraphrase. Do not add words, do not fix grammar, do not translate speaker jargon. This field is checked by a literal substring match against the transcript; a quote that does not appear verbatim fails validation. Set null ONLY when the paired field is itself null (e.g. stop.anchor=null, an empty confluences[] item is impossible since the array itself would just be empty).",
+                  "minLength": 5,
+                  "maxLength": 150
+                },
                 "priority": {
                   "type": "integer",
                   "minimum": 1,
@@ -152,8 +170,14 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["name", "description"],
+              "required": ["transcript_quote", "name", "description"],
               "properties": {
+                "transcript_quote": {
+                  "type": ["string", "null"],
+                  "description": "A literal, contiguous substring copied VERBATIM from the transcript — the exact evidence for this condition. Checked by literal substring match; a quote that does not appear verbatim fails validation and routes UNANCHORED. Set null ONLY as the deliberate NO-QUOTE SENTINEL: you believe this condition is genuinely taught (directly, or as a checklist item from Phase A's variant list) but cannot find a literal contiguous quote for it. Do NOT invent a quote to fill this field, and do NOT drop the condition instead — null here is an honest, examined output, not a shortcut. A condition with a null quote here still counts toward coverage; it is excluded from the mechanical substring pre-filter and routed UNANCHORED for support scoring.",
+                  "minLength": 5,
+                  "maxLength": 150
+                },
                 "name": {
                   "type": "string",
                   "description": "Speaker's term (if named) or descriptive snake_case label.",

@@ -1,0 +1,147 @@
+{
+  "video_id": "-igpOZs8LsM",
+  "extracted_at": 1783915450.7061586,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "90b2b19b18cb80c1a4eb75eb5524cc183206956c26096b98880787e5e339ab6e",
+  "extraction": {
+    "video_id": "-igpOZs8LsM-wave6-pass1",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "fair_value_gap_trend_continuation_1m",
+        "higher_timeframe": "1m",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "The gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance",
+            "step": 1,
+            "action": "Identify a Fair Value Gap (FVG) formed by the gap between the closing point of the first candle and the opening point of the third candle in a three-candle sequence.",
+            "rationale": "The FVG represents an imbalance where price moved aggressively in one direction without proper trading activity."
+          },
+          {
+            "transcript_quote": "the imbalance must create a break of structure",
+            "step": 2,
+            "action": "Ensure the FVG formation is preceded by a Break of Structure (BOS) or Change of Character (CHoCH).",
+            "rationale": "The imbalance must create a break of structure to be considered a valid setup."
+          },
+          {
+            "transcript_quote": "price will clear before you know tapping into the imbalance",
+            "step": 3,
+            "action": "Wait for price to clear liquidity before retracing into the FVG.",
+            "rationale": "Price will likely clear stops before tapping into the imbalance."
+          },
+          {
+            "transcript_quote": "all you just need to do is put your stop loss a little bit below the fair value gap",
+            "step": 4,
+            "action": "Place the stop loss a little bit below the FVG for long entries, or a little bit above the FVG for short entries.",
+            "rationale": "The stop loss should be placed relative to the FVG to accommodate the imbalance."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "transcript_quote": "all you just need to do is put your stop loss a little bit below the fair value gap",
+          "anchor": "fvg_low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss is placed a little bit below the FVG."
+        },
+        "stop_management": null,
+        "targets": [],
+        "confluences": [
+          {
+            "transcript_quote": "the trend matters. It is important you also pay attention to the trend",
+            "name": "trend_alignment",
+            "description": "The strategy requires attention to the overall market trend.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "transcript_quote": "the gap you know is created between three candlesticks",
+            "name": "three_candle_imbalance",
+            "description": "The FVG is created between three candlesticks.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "the imbalance must create a break of structure",
+            "name": "break_of_structure",
+            "description": "The imbalance must create a break of structure.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "price will clear before you know tapping into the imbalance",
+            "name": "liquidity_sweep",
+            "description": "Price will clear liquidity before tapping into the imbalance.",
+            "canonical_match": "liquidity_target_clear"
+          }
+        ],
+        "rejected_strategies": [],
+        "instrument_classification": "futures_with_forex_illustration",
+        "speaker_concepts": [
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "This simply means an imbalance in the market where price moved so aggressively in one direction that it left a gap between candles without proper trading activity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Imbalance",
+            "role": "zone",
+            "verbatim_description": "The gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance and price will most likely come back mitigate the imbalance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Structure",
+            "role": "entry_step",
+            "verbatim_description": "The imbalance must create a break of structure. So you should not just see any imbalance and just start setting your entries from there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Continuation Entry",
+            "role": "phase",
+            "verbatim_description": "This moves it's more of um a trend continuation entry if you want to be catching smart entries with you know fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 8\u00c3\u2014 in transcript)",
+            "transcript_quote": "ue gap. The last video was on order block. Remember we are talking about the four popular entry models for smart money concept. We",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 5\u00c3\u2014 in transcript)",
+            "transcript_quote": "tion to the one that caused a break of structure. So once that break of structure happens you look out for the three candlesticks you know",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "SMC (Smart Money Concepts)",
+            "role": "model",
+            "verbatim_description": "SMC (Smart Money Concepts) (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the different entry models of smart money concept and today we'll be talking about fair value gap. The last video was on order block. Remem",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "ce and traders can anticipate retracement into the FVG for high probability setups. So I'll show you guys on the next slide, you kn",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

@@ -1,0 +1,1028 @@
+{
+  "video_id": "IyFioFkRgWo",
+  "extracted_at": 1783922753.4021583,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass2-two-phase"
+  },
+  "extraction_sha256": "ee2687eaf5da6eda55b6a31542878e4ffa134181cd4528f016a3d99ba9f115df",
+  "extraction": {
+    "video_id": "IyFioFkRgWo-wave6-pass2",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "ema_support_scalping_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "I'm going to show you how to scalp using the F minute chart",
+            "step": 1,
+            "action": "Use the 5-minute chart for scalping entries.",
+            "rationale": "The speaker explicitly states the 5-minute chart is used for the example."
+          },
+          {
+            "transcript_quote": "this 13 EMA operated as a initial support",
+            "step": 2,
+            "action": "Wait for the price to touch or bounce off the 13 EMA, which acts as initial support.",
+            "rationale": "The 13 EMA is identified as the initial support level for the entry."
+          },
+          {
+            "transcript_quote": "from here we got in in and then look at one green candle two green candles three four we went here and that was your exit",
+            "step": 3,
+            "action": "Enter the trade and exit after a quick move, aiming for a small profit (e.g., 1-4 green candles).",
+            "rationale": "The speaker demonstrates exiting after a small, quick move."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": null,
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker does not explicitly state where to place the initial stop."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "that was your exit",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": null,
+            "rationale": "The speaker exits after a quick move, implying a small profit target."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "this 13 EMA operated as a initial support",
+            "name": "ema_support_level",
+            "description": "The 13 EMA is used as the initial support level for the entry.",
+            "canonical_match": "vwap_alignment"
+          },
+          {
+            "transcript_quote": "once we came back down we bounced again that was another quick scal",
+            "name": "price_bounce_off_ema",
+            "description": "The price bounces off the 13 EMA support level.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "being a sniper",
+            "role": "model",
+            "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "13 EMA",
+            "role": "indicator",
+            "verbatim_description": "this 13 EMA operated as a initial support",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 minute chart",
+            "role": "filter",
+            "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 EMA",
+            "role": "indicator",
+            "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "support level",
+            "role": "zone",
+            "verbatim_description": "I want to show you here now is support but that's also your entry",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "resistance",
+            "role": "zone",
+            "verbatim_description": "you ride it to resistance and you exit",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "demand Zone",
+            "role": "zone",
+            "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "being a sniper though okay",
+            "role": "indicator",
+            "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+            "transcript_quote": "I call it being a sniper though okay so",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "5 to 15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+            "transcript_quote": "5 to 15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "ema_support_retest_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "after we locked in profit there watch this action guys it came back down again boom same level you enter here",
+            "step": 1,
+            "action": "Wait for the price to retest the EMA support level after an initial move away.",
+            "rationale": "The speaker shows the price coming back to the same level after an initial entry."
+          },
+          {
+            "transcript_quote": "and then boom you got this move now we have formed this is your exit",
+            "step": 2,
+            "action": "Exit the trade after the price moves away from the retested EMA support.",
+            "rationale": "The speaker demonstrates exiting after the price moves away from the retest."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": null,
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker does not explicitly state where to place the initial stop."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "that's another quick, play in little to no time",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": null,
+            "rationale": "The speaker emphasizes the quick nature of the trade, implying a small profit target."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "same level you enter here",
+            "name": "ema_retest_confirmation",
+            "description": "The price retests the EMA support level for entry.",
+            "canonical_match": "vwap_alignment"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "being a sniper",
+            "role": "model",
+            "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "13 EMA",
+            "role": "indicator",
+            "verbatim_description": "this 13 EMA operated as a initial support",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 minute chart",
+            "role": "filter",
+            "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 EMA",
+            "role": "indicator",
+            "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "support level",
+            "role": "zone",
+            "verbatim_description": "I want to show you here now is support but that's also your entry",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "resistance",
+            "role": "zone",
+            "verbatim_description": "you ride it to resistance and you exit",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "demand Zone",
+            "role": "zone",
+            "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "being a sniper though okay",
+            "role": "indicator",
+            "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+            "transcript_quote": "I call it being a sniper though okay so",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "5 to 15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+            "transcript_quote": "5 to 15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "ema_support_deeper_support_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status",
+            "step": 1,
+            "action": "Wait for the price to drop to the 200 EMA, which acts as deeper support after the 13 EMA fails.",
+            "rationale": "The 200 EMA is identified as the deeper support level."
+          },
+          {
+            "transcript_quote": "you would enter here and you had that coming all the way down check it out guys",
+            "step": 2,
+            "action": "Enter the trade at the 200 EMA support level.",
+            "rationale": "The speaker shows the entry point at the 200 EMA."
+          },
+          {
+            "transcript_quote": "you want to exit right there",
+            "step": 3,
+            "action": "Exit the trade after the price moves up from the 200 EMA support.",
+            "rationale": "The speaker demonstrates exiting after the price moves away from the deeper support."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": null,
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker does not explicitly state where to place the initial stop."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "that's your big scout",
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": null,
+            "rationale": "The speaker refers to this as a 'big scout' move, implying a significant profit target."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "once the 13 EMA gave up its support status",
+            "name": "ema_failure_confirmation",
+            "description": "The 13 EMA loses its support status, signaling a deeper move.",
+            "canonical_match": "vwap_alignment"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "being a sniper",
+            "role": "model",
+            "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "13 EMA",
+            "role": "indicator",
+            "verbatim_description": "this 13 EMA operated as a initial support",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 minute chart",
+            "role": "filter",
+            "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 EMA",
+            "role": "indicator",
+            "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "support level",
+            "role": "zone",
+            "verbatim_description": "I want to show you here now is support but that's also your entry",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "resistance",
+            "role": "zone",
+            "verbatim_description": "you ride it to resistance and you exit",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "demand Zone",
+            "role": "zone",
+            "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "being a sniper though okay",
+            "role": "indicator",
+            "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+            "transcript_quote": "I call it being a sniper though okay so",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "5 to 15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+            "transcript_quote": "5 to 15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "demand_zone_scalping_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "look and learn to find and spot the demand zones",
+            "step": 1,
+            "action": "Identify demand zones (areas of emphasis for buyers) by looking at price action and historical bottoms.",
+            "rationale": "Demand zones are areas where buyers step in, operating as support."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": null,
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "No explicit initial stop placement was mentioned for the demand zone entry."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "exit there",
+            "priority": 1,
+            "type": "speaker's own term",
+            "r_multiple": null,
+            "rationale": "The goal is to exit after a short, quick move for a small profit."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+            "name": "demand_zone_emphasis",
+            "description": "Focus on demand zones because they indicate an area of emphasis for buyers to step in, operating as support or a demand zone.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "being a sniper",
+            "role": "model",
+            "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "13 EMA",
+            "role": "indicator",
+            "verbatim_description": "this 13 EMA operated as a initial support",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 minute chart",
+            "role": "filter",
+            "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 EMA",
+            "role": "indicator",
+            "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "support level",
+            "role": "zone",
+            "verbatim_description": "I want to show you here now is support but that's also your entry",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "resistance",
+            "role": "zone",
+            "verbatim_description": "you ride it to resistance and you exit",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "demand Zone",
+            "role": "zone",
+            "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "being a sniper though okay",
+            "role": "indicator",
+            "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+            "transcript_quote": "I call it being a sniper though okay so",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "5 to 15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+            "transcript_quote": "5 to 15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "phase_a_enumeration": {
+      "video_id": "IyFioFkRgWo-wave6-pass2",
+      "strategies": [
+        {
+          "strategy_id": 0,
+          "name": "EMA_Support_Scalp",
+          "entry_summary": "Identify support levels using the 13 EMA on a 5-minute chart and enter a trade when the price touches or bounces off this support.",
+          "exit_summary": "Exit the trade after a quick move, aiming for a small profit (e.g., a few green candles) or riding the move to resistance.",
+          "variants": [
+            {
+              "variant_label": "5m EMA support entry",
+              "timeframe_note": "5-minute chart",
+              "confirmation_mechanic_note": "Price touches/bounces off the 13 EMA support",
+              "target_note": "Quick profit (1-4 candles)",
+              "transcript_quote": "the 13 EMA operated as a initial support So this candle wick came down bounced off of that and then the stock got a up move"
+            },
+            {
+              "variant_label": "5m EMA support entry (retest)",
+              "timeframe_note": "5-minute chart",
+              "confirmation_mechanic_note": "Price retests the EMA support after a move away",
+              "target_note": "Quick profit",
+              "transcript_quote": "it came back down again boom same level you enter here and then boom you got this move"
+            },
+            {
+              "variant_label": "5m EMA support entry (deeper support)",
+              "timeframe_note": "5-minute chart",
+              "confirmation_mechanic_note": "Price touches/bounces off the 200 EMA support",
+              "target_note": "Quick profit",
+              "transcript_quote": "this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+            }
+          ]
+        },
+        {
+          "strategy_id": 1,
+          "name": "Demand_Zone_Scalp",
+          "entry_summary": "Identify demand zones (areas of emphasis for buyers) based on price action and historical bottoms, and enter a trade when the price reaches this zone.",
+          "exit_summary": "Exit the trade after a short, quick move, aiming for a small profit.",
+          "variants": [
+            {
+              "variant_label": "General Demand Zone entry",
+              "timeframe_note": null,
+              "confirmation_mechanic_note": "Price action identifies a demand zone/support area",
+              "target_note": "Short, quick move",
+              "transcript_quote": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me"
+            }
+          ]
+        }
+      ],
+      "enumeration_note": "The video teaches two distinct strategies: one based on specific EMA support levels (13 EMA and 200 EMA) and another based on general demand zones identified through price action."
+    },
+    "per_strategy_extractions": [
+      {
+        "phase_a_strategy_id": 0,
+        "extraction": {
+          "video_id": "IyFioFkRgWo-wave6-pass2::phaseA-s0",
+          "instrument_classification": "futures_with_forex_illustration",
+          "strategies": [
+            {
+              "name": "ema_support_scalping_5m",
+              "higher_timeframe": "5m",
+              "lower_timeframe": "5m",
+              "direction": "both",
+              "entry_sequence": [
+                {
+                  "transcript_quote": "I'm going to show you how to scalp using the F minute chart",
+                  "step": 1,
+                  "action": "Use the 5-minute chart for scalping entries.",
+                  "rationale": "The speaker explicitly states the 5-minute chart is used for the example."
+                },
+                {
+                  "transcript_quote": "this 13 EMA operated as a initial support",
+                  "step": 2,
+                  "action": "Wait for the price to touch or bounce off the 13 EMA, which acts as initial support.",
+                  "rationale": "The 13 EMA is identified as the initial support level for the entry."
+                },
+                {
+                  "transcript_quote": "from here we got in in and then look at one green candle two green candles three four we went here and that was your exit",
+                  "step": 3,
+                  "action": "Enter the trade and exit after a quick move, aiming for a small profit (e.g., 1-4 green candles).",
+                  "rationale": "The speaker demonstrates exiting after a small, quick move."
+                }
+              ],
+              "preferred_regime": "any",
+              "stop": {
+                "transcript_quote": null,
+                "anchor": null,
+                "buffer_atr": null,
+                "atr_multiplier": null,
+                "rationale": "The speaker does not explicitly state where to place the initial stop."
+              },
+              "stop_management": null,
+              "targets": [
+                {
+                  "transcript_quote": "that was your exit",
+                  "priority": 1,
+                  "type": "r_multiple",
+                  "r_multiple": null,
+                  "rationale": "The speaker exits after a quick move, implying a small profit target."
+                }
+              ],
+              "confluences": [
+                {
+                  "transcript_quote": "this 13 EMA operated as a initial support",
+                  "name": "ema_support_level",
+                  "description": "The 13 EMA is used as the initial support level for the entry.",
+                  "canonical_match": "vwap_alignment"
+                },
+                {
+                  "transcript_quote": "once we came back down we bounced again that was another quick scal",
+                  "name": "price_bounce_off_ema",
+                  "description": "The price bounces off the 13 EMA support level.",
+                  "canonical_match": null
+                }
+              ],
+              "speaker_concepts": [
+                {
+                  "term": "being a sniper",
+                  "role": "model",
+                  "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "13 EMA",
+                  "role": "indicator",
+                  "verbatim_description": "this 13 EMA operated as a initial support",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "5 minute chart",
+                  "role": "filter",
+                  "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "200 EMA",
+                  "role": "indicator",
+                  "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "support level",
+                  "role": "zone",
+                  "verbatim_description": "I want to show you here now is support but that's also your entry",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "resistance",
+                  "role": "zone",
+                  "verbatim_description": "you ride it to resistance and you exit",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "demand Zone",
+                  "role": "zone",
+                  "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Rebalance/Retest",
+                  "role": "entry_step",
+                  "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+                  "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "being a sniper though okay",
+                  "role": "indicator",
+                  "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+                  "transcript_quote": "I call it being a sniper though okay so",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "5 to 15",
+                  "role": "zone",
+                  "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+                  "transcript_quote": "5 to 15 ",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                }
+              ]
+            },
+            {
+              "name": "ema_support_retest_5m",
+              "higher_timeframe": "5m",
+              "lower_timeframe": "5m",
+              "direction": "both",
+              "entry_sequence": [
+                {
+                  "transcript_quote": "after we locked in profit there watch this action guys it came back down again boom same level you enter here",
+                  "step": 1,
+                  "action": "Wait for the price to retest the EMA support level after an initial move away.",
+                  "rationale": "The speaker shows the price coming back to the same level after an initial entry."
+                },
+                {
+                  "transcript_quote": "and then boom you got this move now we have formed this is your exit",
+                  "step": 2,
+                  "action": "Exit the trade after the price moves away from the retested EMA support.",
+                  "rationale": "The speaker demonstrates exiting after the price moves away from the retest."
+                }
+              ],
+              "preferred_regime": "any",
+              "stop": {
+                "transcript_quote": null,
+                "anchor": null,
+                "buffer_atr": null,
+                "atr_multiplier": null,
+                "rationale": "The speaker does not explicitly state where to place the initial stop."
+              },
+              "stop_management": null,
+              "targets": [
+                {
+                  "transcript_quote": "that's another quick, play in little to no time",
+                  "priority": 1,
+                  "type": "r_multiple",
+                  "r_multiple": null,
+                  "rationale": "The speaker emphasizes the quick nature of the trade, implying a small profit target."
+                }
+              ],
+              "confluences": [
+                {
+                  "transcript_quote": "same level you enter here",
+                  "name": "ema_retest_confirmation",
+                  "description": "The price retests the EMA support level for entry.",
+                  "canonical_match": "vwap_alignment"
+                }
+              ],
+              "speaker_concepts": [
+                {
+                  "term": "being a sniper",
+                  "role": "model",
+                  "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "13 EMA",
+                  "role": "indicator",
+                  "verbatim_description": "this 13 EMA operated as a initial support",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "5 minute chart",
+                  "role": "filter",
+                  "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "200 EMA",
+                  "role": "indicator",
+                  "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "support level",
+                  "role": "zone",
+                  "verbatim_description": "I want to show you here now is support but that's also your entry",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "resistance",
+                  "role": "zone",
+                  "verbatim_description": "you ride it to resistance and you exit",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "demand Zone",
+                  "role": "zone",
+                  "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Rebalance/Retest",
+                  "role": "entry_step",
+                  "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+                  "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "being a sniper though okay",
+                  "role": "indicator",
+                  "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+                  "transcript_quote": "I call it being a sniper though okay so",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "5 to 15",
+                  "role": "zone",
+                  "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+                  "transcript_quote": "5 to 15 ",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                }
+              ]
+            },
+            {
+              "name": "ema_support_deeper_support_5m",
+              "higher_timeframe": "5m",
+              "lower_timeframe": "5m",
+              "direction": "both",
+              "entry_sequence": [
+                {
+                  "transcript_quote": "this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status",
+                  "step": 1,
+                  "action": "Wait for the price to drop to the 200 EMA, which acts as deeper support after the 13 EMA fails.",
+                  "rationale": "The 200 EMA is identified as the deeper support level."
+                },
+                {
+                  "transcript_quote": "you would enter here and you had that coming all the way down check it out guys",
+                  "step": 2,
+                  "action": "Enter the trade at the 200 EMA support level.",
+                  "rationale": "The speaker shows the entry point at the 200 EMA."
+                },
+                {
+                  "transcript_quote": "you want to exit right there",
+                  "step": 3,
+                  "action": "Exit the trade after the price moves up from the 200 EMA support.",
+                  "rationale": "The speaker demonstrates exiting after the price moves away from the deeper support."
+                }
+              ],
+              "preferred_regime": "any",
+              "stop": {
+                "transcript_quote": null,
+                "anchor": null,
+                "buffer_atr": null,
+                "atr_multiplier": null,
+                "rationale": "The speaker does not explicitly state where to place the initial stop."
+              },
+              "stop_management": null,
+              "targets": [
+                {
+                  "transcript_quote": "that's your big scout",
+                  "priority": 1,
+                  "type": "r_multiple",
+                  "r_multiple": null,
+                  "rationale": "The speaker refers to this as a 'big scout' move, implying a significant profit target."
+                }
+              ],
+              "confluences": [
+                {
+                  "transcript_quote": "once the 13 EMA gave up its support status",
+                  "name": "ema_failure_confirmation",
+                  "description": "The 13 EMA loses its support status, signaling a deeper move.",
+                  "canonical_match": "vwap_alignment"
+                }
+              ],
+              "speaker_concepts": [
+                {
+                  "term": "being a sniper",
+                  "role": "model",
+                  "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "13 EMA",
+                  "role": "indicator",
+                  "verbatim_description": "this 13 EMA operated as a initial support",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "5 minute chart",
+                  "role": "filter",
+                  "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "200 EMA",
+                  "role": "indicator",
+                  "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "support level",
+                  "role": "zone",
+                  "verbatim_description": "I want to show you here now is support but that's also your entry",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "resistance",
+                  "role": "zone",
+                  "verbatim_description": "you ride it to resistance and you exit",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "demand Zone",
+                  "role": "zone",
+                  "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Rebalance/Retest",
+                  "role": "entry_step",
+                  "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+                  "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "being a sniper though okay",
+                  "role": "indicator",
+                  "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+                  "transcript_quote": "I call it being a sniper though okay so",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "5 to 15",
+                  "role": "zone",
+                  "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+                  "transcript_quote": "5 to 15 ",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                }
+              ]
+            }
+          ],
+          "rejected_strategies": [],
+          "empty_reason": null
+        }
+      },
+      {
+        "phase_a_strategy_id": 1,
+        "extraction": {
+          "video_id": "IyFioFkRgWo-wave6-pass2::phaseA-s1",
+          "instrument_classification": "futures_primary",
+          "strategies": [
+            {
+              "name": "demand_zone_scalping_5m",
+              "higher_timeframe": "5m",
+              "lower_timeframe": null,
+              "direction": "both",
+              "entry_sequence": [
+                {
+                  "transcript_quote": "look and learn to find and spot the demand zones",
+                  "step": 1,
+                  "action": "Identify demand zones (areas of emphasis for buyers) by looking at price action and historical bottoms.",
+                  "rationale": "Demand zones are areas where buyers step in, operating as support."
+                }
+              ],
+              "preferred_regime": "any",
+              "stop": {
+                "transcript_quote": null,
+                "anchor": null,
+                "buffer_atr": null,
+                "atr_multiplier": null,
+                "rationale": "No explicit initial stop placement was mentioned for the demand zone entry."
+              },
+              "stop_management": null,
+              "targets": [
+                {
+                  "transcript_quote": "exit there",
+                  "priority": 1,
+                  "type": "speaker's own term",
+                  "r_multiple": null,
+                  "rationale": "The goal is to exit after a short, quick move for a small profit."
+                }
+              ],
+              "confluences": [
+                {
+                  "transcript_quote": "when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+                  "name": "demand_zone_emphasis",
+                  "description": "Focus on demand zones because they indicate an area of emphasis for buyers to step in, operating as support or a demand zone.",
+                  "canonical_match": null
+                }
+              ],
+              "speaker_concepts": [
+                {
+                  "term": "being a sniper",
+                  "role": "model",
+                  "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "13 EMA",
+                  "role": "indicator",
+                  "verbatim_description": "this 13 EMA operated as a initial support",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "5 minute chart",
+                  "role": "filter",
+                  "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "200 EMA",
+                  "role": "indicator",
+                  "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "support level",
+                  "role": "zone",
+                  "verbatim_description": "I want to show you here now is support but that's also your entry",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "resistance",
+                  "role": "zone",
+                  "verbatim_description": "you ride it to resistance and you exit",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "demand Zone",
+                  "role": "zone",
+                  "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+                  "source": "pass1_llm_extraction"
+                },
+                {
+                  "term": "Rebalance/Retest",
+                  "role": "entry_step",
+                  "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+                  "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "being a sniper though okay",
+                  "role": "indicator",
+                  "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+                  "transcript_quote": "I call it being a sniper though okay so",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                },
+                {
+                  "term": "5 to 15",
+                  "role": "zone",
+                  "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+                  "transcript_quote": "5 to 15 ",
+                  "occurrences": 1,
+                  "source": "server_side_nlp"
+                }
+              ]
+            }
+          ],
+          "rejected_strategies": [],
+          "empty_reason": null
+        }
+      }
+    ]
+  }
+}

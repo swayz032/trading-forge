@@ -1,0 +1,435 @@
+{
+  "video_id": "kFyD3H6I1I8",
+  "extracted_at": 1783916950.9233482,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "ec9a6692606d0442b6b7eefaf0cda5f1314687797601b8df7657dee2b31f8327",
+  "extraction": {
+    "video_id": "kFyD3H6I1I8-wave6-pass1",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "engulfing_pattern_range_breakout_1h_5m",
+        "higher_timeframe": "1h",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session.",
+            "step": 1,
+            "action": "Wait for a bullish engulfing pattern to form on the 1H timeframe before the trading session.",
+            "rationale": "The pattern sets the directional bias for the trading session."
+          },
+          {
+            "transcript_quote": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session.",
+            "step": 1,
+            "action": "Wait for a bearish engulfing pattern to form on the 1H timeframe before the trading session.",
+            "rationale": "The pattern sets the directional bias for the trading session."
+          },
+          {
+            "transcript_quote": "I'm on the five-minute time frame, and I need to set up my range. So, you can see one, two, three candles on the five-minute, I'll turn off the sessions, you know where we're trading, and then I'm marking out the top and the bottom of that range from 9:30 to 9:45.",
+            "step": 2,
+            "action": "Define the trading range by marking the top and bottom of the 5M candles between 9:30 and 9:45 ET.",
+            "rationale": "This establishes the initial range for the session."
+          },
+          {
+            "transcript_quote": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy.",
+            "step": 2,
+            "action": "Wait for the price to break and close outside of the defined range for a long entry.",
+            "rationale": "Break of the range confirms buyer momentum."
+          },
+          {
+            "transcript_quote": "I'm looking for the price to break out the bottom of that range... This is one of the main orb entry models that I use in my trading",
+            "step": 2,
+            "action": "Wait for the price to break and close outside of the defined range for a short entry.",
+            "rationale": "Break of the range confirms seller momentum."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "transcript_quote": "I like it below the range.",
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed below the defined trading range."
+        },
+        "stop_management": "Set break even once the trade reaches a certain level.",
+        "targets": [
+          {
+            "transcript_quote": "I actually put it all the way up here. And the reason for that is because we had an aggressive level of supply.",
+            "priority": 1,
+            "type": "range_high",
+            "r_multiple": 2.3,
+            "rationale": "The target is set at the aggressive supply zone."
+          },
+          {
+            "transcript_quote": "I actually just watched this trade manually. So, we can see here, I tapped into the position right there perfectly, shot down immediately.",
+            "priority": 2,
+            "type": "range_low",
+            "r_multiple": null,
+            "rationale": "The target is set at the bottom of the range."
+          },
+          {
+            "transcript_quote": "I actually just watched this trade manually. So, we can see here, I tapped into the position right there perfectly, shot down immediately.",
+            "priority": 2,
+            "type": "range_low",
+            "r_multiple": null,
+            "rationale": "The target is set at the bottom of the range."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction",
+            "name": "pre_session_bias_pattern",
+            "description": "The speaker uses 7:00 a.m. and 8:00 a.m. candles to determine the session direction.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "I'm always trading 9:30 to 11:00 a.m. Eastern on Forex, Nasdaq, gold, everything.",
+            "name": "trading_session_time",
+            "description": "The strategy is executed during the 9:30 to 11:00 a.m. Eastern trading session.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "transcript_quote": "I'm on the five-minute time frame, and I need to set up my range. So, you can see one, two, three candles on the five-minute, I'll turn off the sessions, you know where we're trading, and then I'm marking out the top and the bottom of that range from 9:30 to 9:45.",
+            "name": "opening_range_setup",
+            "description": "The initial range is set using the 5M candles from 9:30 to 9:45 ET.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy.",
+            "name": "range_breakout_confirmation",
+            "description": "The price must break and close outside the defined range to confirm the direction.",
+            "canonical_match": null
+          },
+          {
+            "transcript_quote": "I was also looking at the bottom of the range entry, the classic break and retest entry.",
+            "name": "break_and_retest_entry",
+            "description": "The entry is based on a break and retest of the range boundaries.",
+            "canonical_match": null
+          }
+        ],
+        "rejected_strategies": [],
+        "speaker_concepts": [
+          {
+            "term": "Bullish Engulfing Pattern",
+            "role": "entry_step",
+            "verbatim_description": "I want to see a bullish engulfing pattern form before my trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Engulfing Pattern",
+            "role": "entry_step",
+            "verbatim_description": "And if I want to sell, I want to see a bearish engulfing pattern form before my trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trading Range",
+            "role": "zone",
+            "verbatim_description": "I'm marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Range",
+            "role": "entry_step",
+            "verbatim_description": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy. This break of the range tells me the buyers have some momentum.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Level of Demand",
+            "role": "zone",
+            "verbatim_description": "On this trading position, we have a level of demand off of this candle right here... And a level of demand is just when you have an aggressive push like you have right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Level of Supply",
+            "role": "zone",
+            "verbatim_description": "This is a supply zone right there, and I put this around right about there in the middle of that supply because you know, if price comes up to supply, it very likely can react and come down off of that level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Aggressive Push",
+            "role": "entry_step",
+            "verbatim_description": "You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing. And then we're waiting for a price retracement.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Orb Entry Model",
+            "role": "model",
+            "verbatim_description": "This is one of the main orb entry models that I use in my trading, especially when step one was so clear.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 8\u00c3\u2014 in transcript)",
+            "transcript_quote": "d let's get into do step two, range breakouts. For step two, I'm going to show you a full recent trade I took starting with st",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York Stock Exchange",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York Stock Exchange\" (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York Stock Exchange",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, [music] especia",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "e [music] waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my [music] level, and th",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 11",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 11\"",
+            "transcript_quote": "30 to 11",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "strategies": [
+          {
+            "name": "demand_zone_entry_after_range_breakout_5m",
+            "higher_timeframe": "5m",
+            "lower_timeframe": "5m",
+            "direction": "both",
+            "entry_sequence": [
+              {
+                "transcript_quote": "I'm on the five-minute time frame, and I need to set up my range. So, you can see one, two, three candles on the five-minute, I'll turn off the sessions, you know where we're trading, and then I'm marking out the top and the bottom of that range from 9:30 to 9:45.",
+                "step": 1,
+                "action": "Define the trading range by marking the top and bottom of the 5M candles between 9:30 and 9:45 ET.",
+                "rationale": "This establishes the initial range for the session."
+              },
+              {
+                "transcript_quote": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy.",
+                "step": 2,
+                "action": "Wait for the price to break and close outside of the defined range for a long entry.",
+                "rationale": "Break of the range confirms buyer momentum."
+              },
+              {
+                "transcript_quote": "I'm looking for the price to break out the bottom of that range... This is one of the main orb entry models that I use in my trading",
+                "step": 2,
+                "action": "Wait for the price to break and close outside of the defined range for a short entry.",
+                "rationale": "Break of the range confirms seller momentum."
+              },
+              {
+                "transcript_quote": "I had a level of support that I was looking at right here. You could see this level was used as resistance right here. I was expecting that to be a good level to enter my trading position right there.",
+                "step": 3,
+                "action": "Enter a long position when price reaches a level of demand/support after the range break.",
+                "rationale": "The level of demand/support is used as the entry trigger."
+              },
+              {
+                "transcript_quote": "I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position.",
+                "step": 3,
+                "action": "Enter a short position when price reaches a level of demand/support after the range break.",
+                "rationale": "The level of demand/support is used as the entry trigger."
+              }
+            ],
+            "preferred_regime": "any",
+            "stop": {
+              "transcript_quote": "I set my stop loss below this level right here.",
+              "anchor": "sweep_wick_below_entry",
+              "buffer_atr": null,
+              "atr_multiplier": null,
+              "rationale": "The stop is placed below the level of demand."
+            },
+            "stop_management": "Set break even once the trade reaches a certain level.",
+            "targets": [
+              {
+                "transcript_quote": "I actually just watched this trade manually. So, we can see here, I tapped into the position right there perfectly, shot down immediately.",
+                "priority": 1,
+                "type": "range_low",
+                "r_multiple": null,
+                "rationale": "The target is set at the bottom of the range."
+              },
+              {
+                "transcript_quote": "I know that's a big level, but that was the last level that had a huge push down. So, that's what I used for my take profit.",
+                "priority": 2,
+                "type": "range_low",
+                "r_multiple": null,
+                "rationale": "The target is set at the last significant push down level."
+              }
+            ],
+            "confluences": [
+              {
+                "transcript_quote": "I'm always trading 9:30 to 11:00 a.m. Eastern on Forex, Nasdaq, gold, everything.",
+                "name": "trading_session_time",
+                "description": "The strategy is executed during the 9:30 to 11:00 a.m. Eastern trading session.",
+                "canonical_match": "killzone_active"
+              },
+              {
+                "transcript_quote": "I'm on the five-minute time frame, and I need to set up my range. So, you can see one, two, three candles on the five-minute, I'll turn off the sessions, you know where we're trading, and then I'm marking out the top and the bottom of that range from 9:30 to 9:45.",
+                "name": "opening_range_setup",
+                "description": "The initial range is set using the 5M candles from 9:30 to 9:45 ET.",
+                "canonical_match": null
+              },
+              {
+                "transcript_quote": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy.",
+                "name": "range_breakout_confirmation",
+                "description": "The price must break and close outside the defined range to confirm the direction.",
+                "canonical_match": null
+              },
+              {
+                "transcript_quote": "I was also looking at the bottom of the range entry, the classic break and retest entry.",
+                "name": "break_and_retest_entry",
+                "description": "The entry is based on a break and retest of the range boundaries.",
+                "canonical_match": null
+              },
+              {
+                "transcript_quote": "I had a level of support that I was looking at right here. You could see this level was used as resistance right here. I was expecting that to be a good level to enter my trading position right there.",
+                "name": "level_of_demand_entry",
+                "description": "The entry is taken at a level of demand/support after the range break.",
+                "canonical_match": null
+              }
+            ],
+            "rejected_strategies": []
+          }
+        ],
+        "instrument_classification": "futures_with_forex_illustration",
+        "speaker_concepts": [
+          {
+            "term": "Bullish Engulfing Pattern",
+            "role": "entry_step",
+            "verbatim_description": "I want to see a bullish engulfing pattern form before my trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Engulfing Pattern",
+            "role": "entry_step",
+            "verbatim_description": "And if I want to sell, I want to see a bearish engulfing pattern form before my trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trading Range",
+            "role": "zone",
+            "verbatim_description": "I'm marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Range",
+            "role": "entry_step",
+            "verbatim_description": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy. This break of the range tells me the buyers have some momentum.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Level of Demand",
+            "role": "zone",
+            "verbatim_description": "On this trading position, we have a level of demand off of this candle right here... And a level of demand is just when you have an aggressive push like you have right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Level of Supply",
+            "role": "zone",
+            "verbatim_description": "This is a supply zone right there, and I put this around right about there in the middle of that supply because you know, if price comes up to supply, it very likely can react and come down off of that level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Aggressive Push",
+            "role": "entry_step",
+            "verbatim_description": "You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing. And then we're waiting for a price retracement.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Orb Entry Model",
+            "role": "model",
+            "verbatim_description": "This is one of the main orb entry models that I use in my trading, especially when step one was so clear.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 8\u00c3\u2014 in transcript)",
+            "transcript_quote": "d let's get into do step two, range breakouts. For step two, I'm going to show you a full recent trade I took starting with st",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 4\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York Stock Exchange",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York Stock Exchange\" (mentioned 2\u00c3\u2014 in transcript)",
+            "transcript_quote": "the New York Stock Exchange",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, [music] especia",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "e [music] waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my [music] level, and th",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 11",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 11\"",
+            "transcript_quote": "30 to 11",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

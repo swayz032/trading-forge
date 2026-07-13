@@ -1,0 +1,132 @@
+{
+  "video_id": "PVMgOxHUqFA",
+  "extracted_at": 1783916303.8374126,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat",
+    "pass": "wave6-pass1"
+  },
+  "extraction_sha256": "24a07eae6f25b01224b0f31bb65ab5af6cd4754beb4c61b5c2930c72883bcd75",
+  "extraction": {
+    "video_id": "PVMgOxHUqFA-wave6-pass1",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "lower_high_reversal_15m_5m",
+        "higher_timeframe": "4h",
+        "lower_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "transcript_quote": "we have a lower high. So right here we have a lower high and then this one we have a another lower high.",
+            "step": 1,
+            "action": "Identify a lower high on the 15-minute timeframe, indicating a potential shift from bearish to bullish momentum.",
+            "rationale": "The lower high signals that the previous bearish momentum is stalling."
+          },
+          {
+            "transcript_quote": "price stops making the lower lows, right? Price stops making lower lows.",
+            "step": 2,
+            "action": "Wait for price to stop making lower lows, which is a bullish sign that the downtrend is ending.",
+            "rationale": "Stopping the lower lows indicates a potential reversal in trend."
+          },
+          {
+            "transcript_quote": "this is a bullish sign. This is telling us price could go bullish because it's not breaking a lower low or is not making a low.",
+            "step": 3,
+            "action": "Wait for price to break above the lower high to confirm the bullish reversal.",
+            "rationale": "Breaking the lower high confirms the bullish reversal and provides a clear entry trigger."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "transcript_quote": "put your stop loss under that level where you don't want to see price get broken, right? Broken.",
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed under the level that would invalidate the bullish reversal (the lower high)."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "transcript_quote": "Once you scale back out to that 1 hour time frame, you'll target that 1 hour high.",
+            "priority": 1,
+            "type": "previous_daily_high",
+            "r_multiple": null,
+            "rationale": "The initial target is the 1-hour high."
+          },
+          {
+            "transcript_quote": "you would probably be around a 1 to 32.",
+            "priority": 2,
+            "type": "r_multiple",
+            "r_multiple": 3.2,
+            "rationale": "A potential second target is around 1 to 3.2 R."
+          }
+        ],
+        "confluences": [
+          {
+            "transcript_quote": "since you're on that 15 minute time frame and you know the 4 hour and the one hour is bullish",
+            "name": "higher_timeframe_bias",
+            "description": "The strategy requires the 4-hour and 1-hour timeframes to be bullish.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "transcript_quote": "all we did was session open",
+            "name": "session_open",
+            "description": "The trade is executed during the session open.",
+            "canonical_match": "killzone_active"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "lower low",
+            "role": "entry_step",
+            "verbatim_description": "Price is still bearish because it's still making lows.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "lower high",
+            "role": "entry_step",
+            "verbatim_description": "If you want to see price go bullish, it has to come above this lower high and then price makes another lower low, right?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "rejections",
+            "role": "entry_step",
+            "verbatim_description": "As we progress, we start to see price have some rejections right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "bullish sign",
+            "role": "entry_step",
+            "verbatim_description": "This is a bullish sign. This is telling us price could go bullish because it's not breaking a lower low or is not making a low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "ABC setup",
+            "role": "model",
+            "verbatim_description": "Same setup as this. Same setup as this low was made. Lower high was made. Price made a low, but it's higher than the previous one.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 1\u00c3\u2014 in transcript)",
+            "transcript_quote": "gold moves during that price range too as well that session as well. So all we had to do here was follow and track our highs",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "1 to 32",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"1 to 32\"",
+            "transcript_quote": "1 to 32",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

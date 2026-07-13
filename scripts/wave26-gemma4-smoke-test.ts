@@ -435,15 +435,47 @@ function checkV11Depth(strategy: Record<string, unknown>, minEntrySteps = 2): V1
 // docs/designs/3video-extraction-audit-2026-07-02.md as future fixture material.
 // They are NOT wired here yet — that is a follow-up task. The current fixtures
 // are hand-authored to test structural compliance, not extraction accuracy.
+//
+// H1 Wave-6 Pass-1 (2026-07-12) — WRITTEN RATIONALE for the fixture update below,
+// per the pass-1 packet's Gate 1 requirement ("fixtures updated + re-frozen with
+// written rationale... not just 'made it pass'"):
+//   WHAT CHANGED: `transcript_quote` is now a schema-required field on every
+//   `entry_sequence[]` step and `confluences[]` item (nullable-optional on
+//   `stop`/`targets`), and it MUST be the first declared JSON-schema property in
+//   each of those four objects (GBNF declaration-order is the actual mechanism —
+//   see the schema file's own field description and the pass-1 design packet §2.1).
+//   WHY THE OLD FIXTURES WOULD HAVE PASSED VACUOUSLY: MF1/MF2's hand-authored
+//   objects (and `checkMinimalShape`) had zero awareness of `transcript_quote` —
+//   running the OLD checker against the OLD fixtures after the schema edit would
+//   have kept reporting PASS despite the new required field being entirely absent,
+//   which is exactly the "parity passes vacuously when both sides are dead"
+//   failure mode the campaign laws (extraction-campaign skill, Law 1) name. So
+//   this pass (a) adds `transcript_quote` to every entry_sequence/confluences
+//   object in MF1 and MF2 (literal substrings of each fixture's own prose, faithful
+//   to the quote-then-write discipline being tested), and (b) extends
+//   `checkMinimalShape` to require transcript_quote presence/length AND to assert
+//   it is the FIRST key in each condition object — matching the schema's own
+//   declaration order, not just checking the field exists somewhere. A second,
+//   independent check (`checkSchemaPropertyOrder`) reads the ACTUAL schema JSON
+//   file on disk and asserts the same ordering there, so this gate verifies the
+//   real GBNF-consumed artifact, not just the hand-authored fixture's shape.
+//   WHY THIS IS STILL A REAL CHECK, NOT A LOOSENING: a schema/prompt regression
+//   that drops `transcript_quote`, reorders it after the condition field, or lets
+//   it go missing/empty on a required object will now FAIL this gate — it did not
+//   before this pass (there was no such field to fail on).
 
 interface MinimalStrategyShape {
   higher_timeframe: string;
   direction: string;
-  entry_sequence: Array<{ step: number; action: string; rationale?: string | null }>;
+  // H1 Wave-6 Pass-1: transcript_quote is REQUIRED on entry_sequence[] steps and
+  // confluences[] items (matches the schema's own required[] + declaration order).
+  entry_sequence: Array<{ transcript_quote: string; step: number; action: string; rationale?: string | null }>;
   preferred_regime: string;
-  stop: { anchor: string | null; buffer_atr?: number | null; atr_multiplier?: number | null; rationale?: string | null };
-  targets: Array<{ priority: number; type: string; r_multiple?: number | null; rationale?: string | null }>;
-  confluences: Array<{ name: string; description: string; canonical_match?: string | null }>;
+  // transcript_quote is nullable/optional here (stop.anchor can itself be null).
+  stop: { transcript_quote?: string | null; anchor: string | null; buffer_atr?: number | null; atr_multiplier?: number | null; rationale?: string | null };
+  // transcript_quote is nullable/optional here (targets[] may describe a framework default).
+  targets: Array<{ transcript_quote?: string | null; priority: number; type: string; r_multiple?: number | null; rationale?: string | null }>;
+  confluences: Array<{ transcript_quote: string; name: string; description: string; canonical_match?: string | null }>;
   name?: string | null;
   lower_timeframe?: string | null;
   stop_management?: string | null;
@@ -471,6 +503,83 @@ const VALID_STOP_ANCHORS = new Set([
   "displacement_candle_low", "displacement_candle_high", "swing_after_sfp",
   "atr_multiple",
 ]);
+
+// H1 Wave-6 Pass-1 — transcript_quote validation helper. Checks (a) presence/type/
+// length when required, (b) FIRST-KEY declaration order, matching the schema's own
+// property order (the actual GBNF mechanism — see schema file comment). `nullable`
+// = true for stop/targets (transcript_quote may be null there); false for
+// entry_sequence/confluences (schema-required, non-null in practice).
+function checkTranscriptQuote(
+  obj: Record<string, unknown>,
+  pfx: string,
+  nullable: boolean,
+  failures: string[],
+): void {
+  const hasKey = Object.prototype.hasOwnProperty.call(obj, "transcript_quote");
+  if (!hasKey) {
+    failures.push(`${pfx}: transcript_quote key missing entirely`);
+    return;
+  }
+  const firstKey = Object.keys(obj)[0];
+  if (firstKey !== "transcript_quote") {
+    failures.push(`${pfx}: transcript_quote is not the FIRST declared property (got first key "${firstKey}") — GBNF declaration-order is the mechanism, this breaks it`);
+  }
+  const q = obj["transcript_quote"];
+  if (q === null) {
+    if (!nullable) failures.push(`${pfx}: transcript_quote is null but this field is schema-required (non-nullable in practice)`);
+    return;
+  }
+  if (typeof q !== "string") {
+    failures.push(`${pfx}: transcript_quote is not a string or null (got ${typeof q})`);
+    return;
+  }
+  if (q.length < 5 || q.length > 150) {
+    failures.push(`${pfx}: transcript_quote length ${q.length} outside schema bounds [5,150]`);
+  }
+}
+
+// H1 Wave-6 Pass-1 — reads the ACTUAL schema JSON file on disk and asserts
+// transcript_quote is the first declared property in each of the four
+// condition-bearing objects. This is the real GBNF-consumed artifact, not a
+// hand-authored fixture's shape — it is the check that matters most, since a
+// regression here silently breaks the mechanism even if fixtures still "pass".
+function checkSchemaPropertyOrder(): MinimalParityCheck {
+  const failures: string[] = [];
+  const schemaPath = resolve(PROJECT_ROOT, "src/agents/kb/transcript-extractor-minimal-schema.json");
+  let schema: Record<string, unknown>;
+  try {
+    schema = JSON.parse(readFileSync(schemaPath, "utf-8")) as Record<string, unknown>;
+  } catch (err) {
+    return { pass: false, failures: [`could not read/parse schema at ${schemaPath}: ${(err as Error).message}`] };
+  }
+  const strat = (((schema["properties"] as Record<string, unknown>)?.["strategies"] as Record<string, unknown>)?.["items"] ?? {}) as Record<string, unknown>;
+  const stratProps = (strat["properties"] ?? {}) as Record<string, unknown>;
+
+  const checkFirstKey = (path: string, propsObj: Record<string, unknown> | undefined) => {
+    if (!propsObj) {
+      failures.push(`schema: ${path} properties block not found`);
+      return;
+    }
+    const first = Object.keys(propsObj)[0];
+    if (first !== "transcript_quote") {
+      failures.push(`schema: ${path} first declared property is "${first}", expected "transcript_quote"`);
+    }
+  };
+
+  const entrySeqItemProps = ((((stratProps["entry_sequence"] as Record<string, unknown>)?.["items"]) as Record<string, unknown>)?.["properties"]) as Record<string, unknown> | undefined;
+  checkFirstKey("entry_sequence[].properties", entrySeqItemProps);
+
+  const confluencesItemProps = ((((stratProps["confluences"] as Record<string, unknown>)?.["items"]) as Record<string, unknown>)?.["properties"]) as Record<string, unknown> | undefined;
+  checkFirstKey("confluences[].properties", confluencesItemProps);
+
+  const stopProps = ((stratProps["stop"] as Record<string, unknown>)?.["properties"]) as Record<string, unknown> | undefined;
+  checkFirstKey("stop.properties", stopProps);
+
+  const targetsItemProps = ((((stratProps["targets"] as Record<string, unknown>)?.["items"]) as Record<string, unknown>)?.["properties"]) as Record<string, unknown> | undefined;
+  checkFirstKey("targets[].properties", targetsItemProps);
+
+  return { pass: failures.length === 0, failures };
+}
 
 function checkMinimalShape(output: unknown, fixtureId: string): MinimalParityCheck {
   const failures: string[] = [];
@@ -517,6 +626,8 @@ function checkMinimalShape(output: unknown, fixtureId: string): MinimalParityChe
         if (typeof step["action"] !== "string" || (step["action"] as string).length < 10) {
           failures.push(`${pfx}.entry_sequence[${j}]: action missing or too short`);
         }
+        // H1 Wave-6 Pass-1: transcript_quote required + must be FIRST declared key.
+        checkTranscriptQuote(step, `${pfx}.entry_sequence[${j}]`, /* nullable */ false, failures);
       }
     }
 
@@ -534,11 +645,21 @@ function checkMinimalShape(output: unknown, fixtureId: string): MinimalParityChe
       if (anchor !== null && !VALID_STOP_ANCHORS.has(String(anchor))) {
         failures.push(`${pfx}: stop.anchor invalid (got: ${anchor})`);
       }
+      // H1 Wave-6 Pass-1: transcript_quote nullable here, but if present must be
+      // FIRST declared key (stop.anchor may legitimately be null → quote null too).
+      checkTranscriptQuote(stop, `${pfx}.stop`, /* nullable */ true, failures);
     }
 
     // targets — required array (can be empty)
     if (!Array.isArray(s["targets"])) {
       failures.push(`${pfx}: targets is not an array`);
+    } else {
+      const targets = s["targets"] as Array<Record<string, unknown>>;
+      for (let t = 0; t < targets.length; t++) {
+        // H1 Wave-6 Pass-1: transcript_quote nullable here, but if present must
+        // be FIRST declared key.
+        checkTranscriptQuote(targets[t]!, `${pfx}.targets[${t}]`, /* nullable */ true, failures);
+      }
     }
 
     // confluences — required array (can be empty)
@@ -554,6 +675,8 @@ function checkMinimalShape(output: unknown, fixtureId: string): MinimalParityChe
         if (typeof c["description"] !== "string" || (c["description"] as string).length < 5) {
           failures.push(`${pfx}.confluences[${k}]: description missing or too short`);
         }
+        // H1 Wave-6 Pass-1: transcript_quote required + must be FIRST declared key.
+        checkTranscriptQuote(c, `${pfx}.confluences[${k}]`, /* nullable */ false, failures);
       }
     }
 
@@ -590,34 +713,39 @@ const MINIMAL_PARITY_FIXTURE_OUTPUTS: Array<{ id: string; name: string; output: 
           direction: "both",
           entry_sequence: [
             {
+              transcript_quote: "9 EMA is above 21 EMA for long bias",
               step: 1,
               action: "Confirm 9 EMA is above 21 EMA for long bias, or 9 EMA below 21 EMA for short bias on the 15-minute chart.",
               rationale: "Speaker states the trend direction must be confirmed by EMA order before looking for entries.",
             },
             {
+              transcript_quote: "wait for price to pull back and test the 21 EMA",
               step: 2,
               action: "Wait for price to pull back and test the 21 EMA from above (for long) or from below (for short).",
               rationale: "Pullback to the 21 EMA is the entry trigger — speaker calls it 'the retest rule'.",
             },
             {
+              transcript_quote: "bullish engulfing candle or close back above the 21 EMA",
               step: 3,
               action: "Enter on a bullish engulfing candle or close back above the 21 EMA for long; mirror for short.",
               rationale: null,
             },
           ],
           preferred_regime: "trending",
-          stop: { anchor: "swing_low_below_entry", buffer_atr: 0.5, rationale: "Stop goes below the swing low with half-ATR buffer." },
+          stop: { transcript_quote: "Stop goes below the swing low with half-ATR buffer", anchor: "swing_low_below_entry", buffer_atr: 0.5, rationale: "Stop goes below the swing low with half-ATR buffer." },
           stop_management: "Trail to break-even after price moves 1R in favor.",
           targets: [
-            { priority: 1, type: "prev_swing_high", r_multiple: 2.0, rationale: "Speaker targets the prior swing high as primary exit." },
+            { transcript_quote: "targets the prior swing high as primary exit", priority: 1, type: "prev_swing_high", r_multiple: 2.0, rationale: "Speaker targets the prior swing high as primary exit." },
           ],
           confluences: [
             {
+              transcript_quote: "ADX must be above 25 to confirm trend strength",
               name: "ADX above 25",
               description: "ADX must be above 25 to confirm trend strength before entering.",
               canonical_match: "regime_match",
             },
             {
+              transcript_quote: "only trades Regular Trading Hours",
               name: "RTH session only",
               description: "Speaker only trades Regular Trading Hours — no pre-market or after-hours entries.",
               canonical_match: "killzone_active",
@@ -641,44 +769,51 @@ const MINIMAL_PARITY_FIXTURE_OUTPUTS: Array<{ id: string; name: string; output: 
           direction: "both",
           entry_sequence: [
             {
+              transcript_quote: "check the 4-hour chart for the overall bias",
               step: 1,
               action: "Check 4H chart for overall bias (bullish or bearish higher-timeframe context).",
               rationale: null,
             },
             {
+              transcript_quote: "10 AM to 11 AM Eastern, I watch for a liquidity sweep",
               step: 2,
               action: "During 10 AM to 11 AM Eastern killzone, watch for a liquidity sweep of equal highs or equal lows on the 5-minute chart.",
               rationale: "Speaker says the killzone window is critical — silver bullet only fires in this window.",
             },
             {
+              transcript_quote: "Market Structure Shift on the 5-minute chart",
               step: 3,
               action: "After the sweep, wait for a Market Structure Shift (MSS): price must break the most recent swing point in the opposite direction.",
               rationale: null,
             },
             {
+              transcript_quote: "wait for price to retrace back into that FVG",
               step: 4,
               action: "Wait for a fair value gap to form on the displacement candle. Enter when price retraces into the FVG.",
               rationale: "Stop goes below the displacement candle for longs, above for shorts.",
             },
           ],
           preferred_regime: "any",
-          stop: { anchor: "displacement_candle_low", rationale: null },
+          stop: { transcript_quote: "Stop goes below the displacement candle", anchor: "displacement_candle_low", rationale: null },
           stop_management: null,
           targets: [
-            { priority: 1, type: "opposing_liquidity", r_multiple: null, rationale: "Speaker targets the opposing liquidity pool." },
+            { transcript_quote: "target is the opposing liquidity", priority: 1, type: "opposing_liquidity", r_multiple: null, rationale: "Speaker targets the opposing liquidity pool." },
           ],
           confluences: [
             {
+              transcript_quote: "From 10 AM to 11 AM Eastern",
               name: "NY AM killzone",
               description: "Trade must occur between 10 AM and 11 AM Eastern time.",
               canonical_match: "killzone_active",
             },
             {
+              transcript_quote: "liquidity sweep of equal highs or equal lows",
               name: "liquidity sweep confirmation",
               description: "Price must raid equal highs or equal lows before the MSS fires.",
               canonical_match: "liquidity_target_clear",
             },
             {
+              transcript_quote: "I don't trade this on FOMC or CPI days",
               name: "no FOMC/CPI days",
               description: "Speaker explicitly excludes FOMC and CPI news days — no trades on those days.",
               canonical_match: "macro_alignment",
@@ -728,6 +863,19 @@ function runMinimalModeParityTests(): boolean {
       const rejected = (fixture.output.rejected_strategies ?? []).length;
       console.log(`  OK: ${strats} strategies, ${rejected} rejected_strategies, instrument_classification=${fixture.output.instrument_classification}`);
     }
+  }
+
+  // H1 Wave-6 Pass-1 — checks the ACTUAL schema file's property declaration
+  // order (not just the fixtures' shape). This is the real GBNF-consumed
+  // artifact; a regression here would silently break the mechanism.
+  console.log();
+  const schemaOrderResult = checkSchemaPropertyOrder();
+  console.log(`[minimal-parity] SCHEMA-ORDER (transcript-extractor-minimal-schema.json on disk): ${schemaOrderResult.pass ? "PASS" : "FAIL"}`);
+  if (!schemaOrderResult.pass) {
+    for (const f of schemaOrderResult.failures) console.log(`  FAIL: ${f}`);
+    allPass = false;
+  } else {
+    console.log("  OK: transcript_quote is the first declared property in entry_sequence[], confluences[], stop, and targets[]");
   }
 
   console.log();
