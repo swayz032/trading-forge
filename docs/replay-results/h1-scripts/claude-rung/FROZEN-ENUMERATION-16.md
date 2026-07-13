@@ -27,3 +27,10 @@
 - Gestural-exit objects (_LS6; 2DX mean-rev + spread-making; DLwVqc short; W7 if): null level fields, preserve exit words verbatim, flag gestural — NEVER delete.
 - Rule-2 opposition pairs (R5L890, E9MzEC, 2DX, DLwVqc): both sides extracted as separate objects, no merge.
 - Mention-not-object (IyF breakdown; -igp OB/breaker/flip; W7 breakout; 2DX swing): stay in coverage_notes as absent-with-reason, NOT extracted as strategies.
+
+---
+## OPERATOR RATIFICATION (2026-07-13) — two lines for the record
+1. **DLwVqc = the amendment proven load-bearing beyond its minting case.** v3.1 was written to fix over-abstention on gestural exits; it ALSO un-fused a genuine Rule-2 opposition that v3.0 had merge-silenced (the CRIT class) — caught at the ENUMERATION layer (the cheapest net), earliest-net-first, instead of surviving into Phase-B for the fence to catch downstream. Defense-in-depth working in the correct order: each net catches what it is positioned to catch. Hardening DLwVqc's coverage contract to 4 mandatory units closes the loop.
+2. **The unordered cross-path check = discipline internalized.** A load-bearing NEW promotion, independently confirmed by a blind transcript-only adjudicator BEFORE it entered the frozen count = doer!=grader applied at exactly the right moment. This is why "22 strategies / 16 videos" is a VALIDATED denominator, not a hopeful one — the economics rider reads against it later.
+
+Phase-B contract (operator-stated): 22 extractions free (Claude), locator free (local), gpt-5.4 content panel governor-PRE-FLIGHTED, OpenAI never grades OpenAI. Only 3 doors back to operator: joint verdict, governor wall, two-path alarm.
