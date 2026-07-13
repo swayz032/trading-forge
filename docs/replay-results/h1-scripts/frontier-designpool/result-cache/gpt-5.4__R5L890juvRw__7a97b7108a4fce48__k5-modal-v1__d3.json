@@ -1,0 +1,43 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_trend_continuation_reclaim",
+    "entry_summary": "In a directional session where the trader already has a bullish or bearish idea, wait for price to extend away from VWAP into at least the first, preferably the second, standard-deviation band, then enter in the trend direction after price breaks back through and retests that band/reclaim level.",
+    "exit_summary": "Use the outer VWAP bands as profit targets, specifically the second and third standard deviations; no other stop mechanic is stated.",
+    "variants": [
+     {
+      "variant_label": "Long continuation after reclaim from lower value area",
+      "timeframe_note": "intraday session / New York session examples",
+      "confirmation_mechanic_note": "wait for price to travel to the first or second deviation, then break and test the level before entering long",
+      "target_note": "use second and third standard deviations as targets",
+      "transcript_quote": "you might want to wait until the price has gone at least to the first if not the second standard deviation... and after we broke it and tested it weu0"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_band_mean_reversion",
+    "entry_summary": "Use the outer VWAP standard-deviation bands as overbought/oversold levels for reversal trades: when price reaches the outer premium or discount bands, look for a reversal entry expecting rebalancing back toward fair value.",
+    "exit_summary": "Target the central VWAP as the price-rebalancing objective. No concrete stop-loss rule is taught.",
+    "variants": [
+     {
+      "variant_label": "Reversal from premium or discount outer bands back to VWAP",
+      "timeframe_note": "intraday session",
+      "confirmation_mechanic_note": "treat outer standard deviations as overbought/oversold areas for reversal setups",
+      "target_note": "target central VWAP",
+      "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels... and use the central vwap as a target"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches two opposed executable skeletons using VWAP bands: continuation after reclaim in a directional context, and mean-reversion from outer bands back to VWAP. Stops are not concretely specified for either, but the exits taught are target-based."
+ },
+ "originalTokens": 5992,
+ "cachedTokensReported": 5376
+}

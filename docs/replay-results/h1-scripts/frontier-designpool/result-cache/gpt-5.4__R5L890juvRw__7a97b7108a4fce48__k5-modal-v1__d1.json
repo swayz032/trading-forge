@@ -1,0 +1,27 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_trend_continuation_retest",
+    "entry_summary": "Use VWAP as a directional context filter: if you already have a long session bias, wait for price to extend away from VWAP to at least the first, ideally the second, standard-deviation band, then enter in the trend direction after price breaks back above that band and retests it.",
+    "exit_summary": "Use the outer VWAP bands as profit targets, specifically the second and/or third standard deviation. The setup is invalid if price cannot reclaim and hold the band on the break-and-retest sequence.",
+    "variants": []
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_band_reversion_to_mean",
+    "entry_summary": "Trade reversals from stretched VWAP extremes: when price reaches outer VWAP standard-deviation bands in an overbought/oversold condition, look for a reversal entry from those extreme premium/discount levels.",
+    "exit_summary": "Target a rebalance back to the central session VWAP as the mean-reversion objective.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video teaches two opposed executable uses of the same VWAP structure: trend continuation after reclaim/retest of a deviation band, and reversal/mean reversion from outer deviation bands back to VWAP."
+ },
+ "originalTokens": 5790,
+ "cachedTokensReported": 5376
+}

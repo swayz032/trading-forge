@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__PVMgOxHUqFA__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "PVMgOxHUqFA",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "trend_reversal_to_higher_timeframe_trend_continuation",
+    "entry_summary": "Use the higher timeframe (4H/1H) trend bias first, then on the 15-minute or 5-minute chart wait for a bearish correction to stop making lower lows and then break above the most recent lower high. Enter on that bullish break as the lower timeframe turns back bullish in line with the higher timeframe.",
+    "exit_summary": "Place the stop loss under the invalidation low/level that should not break if the bullish shift is real. Target the next higher-timeframe high (such as the 1H high), with the option to continue holding if the broader trend keeps expanding.",
+    "variants": [
+     {
+      "variant_label": "15-minute bullish shift into London/New York continuation",
+      "timeframe_note": "15-minute execution with 4H/1H bullish bias",
+      "confirmation_mechanic_note": "price stops making lower lows, then breaks above the lower high",
+      "target_note": "target the 1H high; can hold further with the 4H trend",
+      "transcript_quote": "all you're doing is waiting for price to go back bullish on that 15minut time frame and putting your stop loss under that level where you don't wantto"
+     },
+     {
+      "variant_label": "5-minute ABC version of the same shift",
+      "timeframe_note": "5-minute execution",
+      "confirmation_mechanic_note": "higher low forms after the low, then break above the lower high",
+      "target_note": "target the 1H high, with runner potential if larger trend continues",
+      "transcript_quote": "Literally a ABC setup. And then we have that push that break above your once again your entry goes here and then your stop loss goes either here or h"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches one core strategy: align with higher-timeframe trend and enter when the lower timeframe shifts from bearish correction back to bullish; the 15-minute and 5-minute examples are compatible variants of the same skeleton. "
+ },
+ "originalTokens": 6059,
+ "cachedTokensReported": 5376
+}

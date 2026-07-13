@@ -1,0 +1,103 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "vwap_trend_continuation_retest",
+    "higher_timeframe": "1m",
+    "lower_timeframe": null,
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "you might have a long idea for your session",
+      "step": 1,
+      "action": "For long, start with a pre-existing long session bias; for short, start with a pre-existing short session bias.",
+      "rationale": "VWAP is used as a context filter, not a standalone signal."
+     },
+     {
+      "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+      "step": 2,
+      "action": "For long, wait for price to extend away from VWAP to at least the first, ideally the second, upper standard-deviation band; for short, wait for price to extend to at least the first, ideally the second, lower standard-deviation band.",
+      "rationale": "The setup wants price stretched away from fair value before continuation confirmation."
+     },
+     {
+      "transcript_quote": "after we broke it and tested it we can try our long trade",
+      "step": 3,
+      "action": "For long, enter after price breaks back above the selected VWAP band and retests it; for short, enter after price breaks back below the selected VWAP band and retests it.",
+      "rationale": "The break-and-retest is the continuation trigger after the extension."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": null,
+     "anchor": null,
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": null
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "you can use the second and third standard deviation as a Target",
+      "priority": 1,
+      "type": "second_standard_deviation",
+      "r_multiple": null,
+      "rationale": "The speaker says to use the second standard deviation as a target."
+     },
+     {
+      "transcript_quote": "you can use the second and third standard deviation as a Target",
+      "priority": 2,
+      "type": "third_standard_deviation",
+      "r_multiple": null,
+      "rationale": "The speaker says to use the third standard deviation as a target."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "you might have a long idea for your session",
+      "name": "session_bias_required",
+      "description": "The speaker frames the setup as something used when you already have a session idea in one direction.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "vwap is not always working it's always needed to have a context behind your trading idea",
+      "name": "context_required",
+      "description": "The speaker says VWAP should be used with context behind the trading idea, not by itself.",
+      "canonical_match": "regime_match"
+     },
+     {
+      "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+      "name": "extension_to_band",
+      "description": "The speaker waits for price to reach at least the first, ideally the second, standard-deviation band before considering the trade.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "we've accumulated a bunch of orders below here and created volume below",
+      "name": "volume_built_below_for_longs",
+      "description": "For the long example, the speaker wants volume built below before the continuation entry.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "see the vwap going down a little bit also",
+      "name": "vwap_drift_observed",
+      "description": "The speaker notes the VWAP's movement as part of the setup context.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "after we broke it and tested it we can try our long trade",
+      "name": "band_break_and_retest",
+      "description": "The speaker uses a break and test of the band as the continuation confirmation for entry.",
+      "canonical_match": "vwap_alignment"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 10838,
+ "cachedTokensReported": 0
+}

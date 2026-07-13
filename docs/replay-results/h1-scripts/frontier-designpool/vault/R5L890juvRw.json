@@ -1,0 +1,221 @@
+{
+ "video_id": "R5L890juvRw",
+ "phase_a": {
+  "counts": [
+   1,
+   2,
+   2,
+   2,
+   2
+  ],
+  "mode": 2,
+  "mode_n": 4,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "vwap_trend_continuation_retest",
+     "entry_summary": "Use VWAP as a directional context filter: if you already have a long session bias, wait for price to extend away from VWAP to at least the first, ideally the second, standard-deviation band, then enter in the trend direction after price breaks back above that band and retests it.",
+     "exit_summary": "Use the outer VWAP bands as profit targets, specifically the second and/or third standard deviation. The setup is invalid if price cannot reclaim and hold the band on the break-and-retest sequence.",
+     "variants": []
+    },
+    {
+     "strategy_id": 1,
+     "name": "vwap_band_reversion_to_mean",
+     "entry_summary": "Trade reversals from stretched VWAP extremes: when price reaches outer VWAP standard-deviation bands in an overbought/oversold condition, look for a reversal entry from those extreme premium/discount levels.",
+     "exit_summary": "Target a rebalance back to the central session VWAP as the mean-reversion objective.",
+     "variants": []
+    }
+   ],
+   "enumeration_note": "The video teaches two opposed executable uses of the same VWAP structure: trend continuation after reclaim/retest of a deviation band, and reversal/mean reversion from outer deviation bands back to VWAP."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Use VWAP as a directional context filter: if you already have a long session bias, wait for price to extend away from VWAP to at least the first, ideally the second, standard-deviation band, then enter in the trend direction after price breaks back above that band and retests it.",
+    "exit_summary": "Use the outer VWAP bands as profit targets, specifically the second and/or third standard deviation. The setup is invalid if price cannot reclaim and hold the band on the break-and-retest sequence.",
+    "name": "vwap_trend_continuation_retest"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_trend_continuation_retest",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "you might have a long idea for your session",
+        "step": 1,
+        "action": "For long, start with a pre-existing long session bias; for short, start with a pre-existing short session bias.",
+        "rationale": "VWAP is used as a context filter, not a standalone signal."
+       },
+       {
+        "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+        "step": 2,
+        "action": "For long, wait for price to extend away from VWAP to at least the first, ideally the second, upper standard-deviation band; for short, wait for price to extend to at least the first, ideally the second, lower standard-deviation band.",
+        "rationale": "The setup wants price stretched away from fair value before continuation confirmation."
+       },
+       {
+        "transcript_quote": "after we broke it and tested it we can try our long trade",
+        "step": 3,
+        "action": "For long, enter after price breaks back above the selected VWAP band and retests it; for short, enter after price breaks back below the selected VWAP band and retests it.",
+        "rationale": "The break-and-retest is the continuation trigger after the extension."
+       }
+      ],
+      "preferred_regime": "trending",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "you can use the second and third standard deviation as a Target",
+        "priority": 1,
+        "type": "second_standard_deviation",
+        "r_multiple": null,
+        "rationale": "The speaker says to use the second standard deviation as a target."
+       },
+       {
+        "transcript_quote": "you can use the second and third standard deviation as a Target",
+        "priority": 2,
+        "type": "third_standard_deviation",
+        "r_multiple": null,
+        "rationale": "The speaker says to use the third standard deviation as a target."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "you might have a long idea for your session",
+        "name": "session_bias_required",
+        "description": "The speaker frames the setup as something used when you already have a session idea in one direction.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "vwap is not always working it's always needed to have a context behind your trading idea",
+        "name": "context_required",
+        "description": "The speaker says VWAP should be used with context behind the trading idea, not by itself.",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+        "name": "extension_to_band",
+        "description": "The speaker waits for price to reach at least the first, ideally the second, standard-deviation band before considering the trade.",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "we've accumulated a bunch of orders below here and created volume below",
+        "name": "volume_built_below_for_longs",
+        "description": "For the long example, the speaker wants volume built below before the continuation entry.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "see the vwap going down a little bit also",
+        "name": "vwap_drift_observed",
+        "description": "The speaker notes the VWAP's movement as part of the setup context.",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "after we broke it and tested it we can try our long trade",
+        "name": "band_break_and_retest",
+        "description": "The speaker uses a break and test of the band as the continuation confirmation for entry.",
+        "canonical_match": "vwap_alignment"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "Trade reversals from stretched VWAP extremes: when price reaches outer VWAP standard-deviation bands in an overbought/oversold condition, look for a reversal entry from those extreme premium/discount levels.",
+    "exit_summary": "Target a rebalance back to the central session VWAP as the mean-reversion objective.",
+    "name": "vwap_band_reversion_to_mean"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_band_reversion_to_mean",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels",
+        "step": 1,
+        "action": "For long, wait for price to reach the lower VWAP standard-deviation bands in an oversold condition; for short, wait for price to reach the upper VWAP standard-deviation bands in an overbought condition.",
+        "rationale": "The speaker uses VWAP bands to define stretched premium/discount extremes for reversal setups."
+       },
+       {
+        "transcript_quote": "here is where you want to look for a trade this is the most convenient price in the whole session",
+        "step": 2,
+        "action": "Look for the reversal entry at those outer band extremes rather than in the middle of the session range.",
+        "rationale": "The edge is entering from the session's most stretched value area, where rebalancing is more likely."
+       }
+      ],
+      "preferred_regime": "ranging",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "use the central vwap as a target for Price rebalancing",
+        "priority": 1,
+        "type": "vwap_mean_reversion",
+        "r_multiple": null,
+        "rationale": "The speaker says the central VWAP is the rebalance objective."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value",
+        "name": "outer_band_stretch",
+        "description": "Price must be trading in the outer VWAP bands because that increases the chance of a bounce back to fair value.",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "you might want to use these as some sort of overbought or oversold levels",
+        "name": "overbought_oversold_condition",
+        "description": "The speaker wants the reversal taken only when price is in an overbought or oversold condition at the VWAP bands.",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "because they're further away we will be from the dynamic fair value of the market and the most likely we will be rebalancing",
+        "name": "far_from_fair_value",
+        "description": "The setup improves when price is far from the session's dynamic fair value, making rebalancing more likely.",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "vwap is not always working it's always needed to have a context behind your trading idea",
+        "name": "context_required",
+        "description": "The speaker says VWAP reversals should not be traded in isolation and require session context.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "there is moments with high momentum and once we've established a strong Trend where still markets will keep buying even at higher and premium prices",
+        "name": "avoid_strong_trend_conditions",
+        "description": "Avoid the reversal when strong momentum or a strong trend is established because price can keep moving at premium or discount.",
+        "canonical_match": "regime_match"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

@@ -1,0 +1,43 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_trend_continuation_retest",
+    "entry_summary": "Form a directional bias first, then wait for price to extend away from VWAP to at least the first, preferably the second, standard-deviation band. After price breaks back through that band and retests it, enter in the original trend direction.",
+    "exit_summary": "Use the higher outer standard-deviation bands as profit targets; the speaker specifically says the second and third standard deviations can be used as targets.",
+    "variants": [
+     {
+      "variant_label": "long continuation after reclaiming lower discount band",
+      "timeframe_note": "session-based intraday setup, especially around New York open",
+      "confirmation_mechanic_note": "wait for price to reach the first or second discount band, then break back above and retest before going long",
+      "target_note": "use the second and third standard deviations as targets",
+      "transcript_quote": "after we broke it and tested it we can try our long trade this can be one of the ways to use it and you can use the second and third standard deev atx"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_band_mean_reversion",
+    "entry_summary": "When price reaches the outer VWAP standard-deviation bands, treat them as overbought/oversold extremes and look for a reversal entry from those stretched levels.",
+    "exit_summary": "Target a move back to the central VWAP as the rebalance destination.",
+    "variants": [
+     {
+      "variant_label": "outer-band reversal back to VWAP",
+      "timeframe_note": "session-based intraday setup",
+      "confirmation_mechanic_note": "use the outer VWAP bands as overbought or oversold levels for reversal trades",
+      "target_note": "central VWAP as target for price rebalancing",
+      "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels not just based on previous price but bas"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches two distinct runnable skeletons: a continuation setup using a break-and-retest after extension from VWAP, and an opposing mean-reversion setup from outer VWAP bands back to the central VWAP."
+ },
+ "originalTokens": 5968,
+ "cachedTokensReported": 5376
+}

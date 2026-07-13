@@ -1,0 +1,133 @@
+{
+ "key": "gpt-5.4__W7nlnHTUZQU__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "W7nlnHTUZQU",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "overnight_range_break_retest_continuation",
+    "higher_timeframe": "5m",
+    "lower_timeframe": null,
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "what is the highest point of price action within that range? And then two, what is the lowest point of price action within that range?",
+      "step": 1,
+      "action": "Mark the overnight or pre-market high and the overnight or pre-market low from the 4:00 p.m. to 9:30 a.m. EST range.",
+      "rationale": "These are the two main zones the speaker says to focus on."
+     },
+     {
+      "transcript_quote": "we want to wait for is one for either price to break above that range or we are going to look for price to break below that range",
+      "step": 2,
+      "action": "During the New York session, wait for price to break above the overnight high for a potential long, or break below the overnight low for a potential short.",
+      "rationale": "The break of the overnight range is the trigger condition."
+     },
+     {
+      "transcript_quote": "we want to see it close below or above with strength or weakness",
+      "step": 3,
+      "action": "Require the breakout candle to close beyond the level with strength for upside breaks or weakness for downside breaks.",
+      "rationale": "The close beyond the range is the speaker's confirmation that price may continue."
+     },
+     {
+      "transcript_quote": "we are then going to look for price to pull back and retest that level",
+      "step": 4,
+      "action": "After the break, wait for price to pull back and retest the broken overnight level.",
+      "rationale": "The speaker prefers the retest rather than chasing the initial breakout."
+     },
+     {
+      "transcript_quote": "we want to see some kind of bullish price action",
+      "step": 5,
+      "action": "For longs, enter after the retest shows bullish confirmation at the broken overnight high; for shorts, enter after the retest shows bearish confirmation at the broken overnight low.",
+      "rationale": "The retest candle must confirm the direction before entry."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": "our stop is going to be if price breaks back down below this previous high or vice versa",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker places the stop back beyond the breakout level: below the prior overnight high for longs and above the prior overnight low for shorts."
+    },
+    "stop_management": "once you feel comfortable with your first trim, take it, put your stop-loss at break even",
+    "targets": [
+     {
+      "transcript_quote": "you were able to capture about like a 1.5, maybe just about a 2our trade off of this",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 1.5,
+      "rationale": "The speaker shows example outcomes around 1.5R to 2R."
+     },
+     {
+      "transcript_quote": "you were able to capture about like a 1.5, maybe just about a 2our trade off of this",
+      "priority": 2,
+      "type": "r_multiple",
+      "r_multiple": 2,
+      "rationale": "The speaker also frames the move as potentially about 2R."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "it is going to be best used for the New York market session",
+      "name": "new_york_session_only",
+      "description": "The speaker says the setup is best used during the New York market session.",
+      "canonical_match": "killzone_active"
+     },
+     {
+      "transcript_quote": "the overall trend is going to be very important",
+      "name": "overall_trend_alignment",
+      "description": "The speaker says the overall trend is very important in deciding which side of the range to trade.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "if the overall trend is to the upside, well then ideally we're not looking for price to break below to look for shorts",
+      "name": "trade_in_direction_of_trend",
+      "description": "If trend is up, focus on upside breaks; if trend is weak, focus on downside breaks.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "we want to see it close below or above with strength or weakness",
+      "name": "breakout_close_confirmation",
+      "description": "The breakout should close beyond the range with strength or weakness before considering an entry.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "when we get that break with strength or weakness, we are then going to look for price to pull back and retest that level",
+      "name": "retest_required",
+      "description": "After the breakout, the speaker waits for a pullback and retest of the broken level.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume",
+      "name": "bullish_retest_confirmation",
+      "description": "For long setups, the retest should show bullish candle confirmation and elevated volume.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume",
+      "name": "bearish_retest_confirmation",
+      "description": "For short setups, the retest should show bearish candle confirmation and elevated volume.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "when it popped above and it pulled back right here, there's no re-entry. There was no confirmation",
+      "name": "no_entry_without_confirmation",
+      "description": "The speaker says there is no re-entry when the pullback lacks confirmation.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "it's not a strategy that presents itself every day",
+      "name": "selective_a_plus_setups",
+      "description": "The speaker says to be picky and take the setup when it is A+.",
+      "canonical_match": "regime_match"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11610,
+ "cachedTokensReported": 0
+}

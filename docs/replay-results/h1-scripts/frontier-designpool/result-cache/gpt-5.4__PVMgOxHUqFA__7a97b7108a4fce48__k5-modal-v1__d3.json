@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__PVMgOxHUqFA__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "PVMgOxHUqFA",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "trend_reversal_to_higher_timeframe_continuation",
+    "entry_summary": "Use the higher timeframe (4H/1H) trend bias first, then on the 15-minute or 5-minute chart wait for a pullback trend to stop making lower lows, form a higher low, and then break above the most recent lower high to confirm the lower timeframe has turned bullish. Enter on that bullish break in the HTF",
+    "exit_summary": "Place the stop loss under the invalidation low / higher-low area that should not break if the reversal is valid. Target the next higher-timeframe high (such as the 1H high), with the option to continue holding if the broader 4H trend is still pushing higher.",
+    "variants": [
+     {
+      "variant_label": "15-minute bullish shift within bullish 4H context",
+      "timeframe_note": "15-minute execution chart with 4H/1H bullish bias",
+      "confirmation_mechanic_note": "wait for price to stop making lower lows and then break above the lower high",
+      "target_note": "target the 1H high; can hold further with the 4H trend",
+      "transcript_quote": "all you're doing is waiting for price to go back bullish on that 15minute time frame and putting your stop loss under that level where you don't want "
+     },
+     {
+      "variant_label": "5-minute ABC version of the same bullish shift",
+      "timeframe_note": "5-minute execution chart",
+      "confirmation_mechanic_note": "same A-B-C style structure: low, lower high, higher low, then break above lower high",
+      "target_note": "target the 1H high; speaker says this could expand much further with trend continuation",
+      "transcript_quote": "Literally a ABC setup. And then we have that push that break above your once again your entry goes here and then your stop loss goes either here or"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one core strategy: align with higher-timeframe trend and enter when the lower timeframe shifts bullish; the 15-minute and 5-minute examples are compatible variants of the same entry/exit skeleton. The final 1-minute scalp mention is not promoted because its exit/management is not taught concretely."
+ },
+ "originalTokens": 6104,
+ "cachedTokensReported": 5376
+}

@@ -1,0 +1,56 @@
+{
+ "key": "gpt-5.4__ZF8uKPqAu8M__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "ZF8uKPqAu8M",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "15m_opening_range_breakout_close_entry",
+    "entry_summary": "Define the opening range using the 9:30 15-minute candle high and low, then wait for a candle to break the range and close outside it. Enter at the open of the next candle after that confirmed breakout, with a cutoff of not taking new entries after the 12:00 candle.",
+    "exit_summary": "Place the stop loss at the opposite side of the opening range and target 1.5R.",
+    "variants": []
+   },
+   {
+    "strategy_id": 1,
+    "name": "orb_breakout_pullback_continuation_confirmed_reentry",
+    "entry_summary": "On a 5-minute chart, define the opening range from the first three 5-minute candles representing the first 15 minutes. After an initial breakout, wait for a pullback candle that breaks back through the range and closes back above it, then enter only when the next candle breaks the recent high to确认 a",
+    "exit_summary": "Place the stop loss at the bottom of the opening range, with an optional tighter stop at the bottom of the pullback candle, and target 1.5R or larger tested R-multiples.",
+    "variants": [
+     {
+      "variant_label": "range-stop 1.5R baseline",
+      "timeframe_note": "5-minute execution using first three candles for the 15-minute opening range",
+      "confirmation_mechanic_note": "wait for pullback candle to reclaim the range, then enter on break of the recent high",
+      "target_note": "1.5R target with stop at bottom of opening range",
+      "transcript_quote": "Once I get this pullback candle, I don't enter immediately... I'm going to be waiting for a break of this most recent high."
+     },
+     {
+      "variant_label": "same entry with optional tighter stop / larger target tests",
+      "timeframe_note": "5-minute execution",
+      "confirmation_mechanic_note": "same confirmed continuation entry",
+      "target_note": "speaker also tested stop at bottom of pullback candle and higher targets above 1.5R",
+      "transcript_quote": "The stop loss will still go at the bottom of my opening range... It could also go at the bottom of this pullback candle. And likewise, I don't have to"
+     }
+    ]
+   },
+   {
+    "strategy_id": 2,
+    "name": "orb_pullback_reentry_stop_order_at_range_high",
+    "entry_summary": "After the initial breakout and expected pullback, place a stop order at the top of the opening range so that if price bounces back up into that level you are entered immediately, without waiting for a previous-high break confirmation.",
+    "exit_summary": "Keep the stop loss at the bottom of the opening range and use a 1.5R take-profit target.",
+    "variants": []
+   },
+   {
+    "strategy_id": 3,
+    "name": "orb_midpoint_pullback_stop_order_entry",
+    "entry_summary": "Measure the breakout from the top of the opening range, but require price to pull back deeper to the midpoint of the opening range. Enter immediately with a stop order when price reaches that midpoint, without waiting for confirmation from a broken prior high.",
+    "exit_summary": "Use a stop loss below the opening range with a 1.5R target; the midpoint entry reduces stop size and can allow aiming for more, but the stated tested baseline is 1.5R.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "Enumerated the speaker's original 15m ORB plus three separately taught pullback-entry modifications; the final 'opposite' momentum idea is not promoted because no runnable exit/stop rules are taught."
+ },
+ "originalTokens": 6896,
+ "cachedTokensReported": 5888
+}

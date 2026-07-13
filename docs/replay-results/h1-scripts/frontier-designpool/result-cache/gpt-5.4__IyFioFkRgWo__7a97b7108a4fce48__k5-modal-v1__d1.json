@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__IyFioFkRgWo__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "support_bounce_scalp_to_resistance",
+    "entry_summary": "After the first 5 to 15 minutes, identify a support level on the 5-minute chart, using price action and moving averages such as the 13 EMA or 200 EMA. Enter a scalp when price comes down into that support and bounces.",
+    "exit_summary": "Take profit quickly at the next resistance or after the short upward move; the speaker repeatedly frames this as getting in at support and selling at resistance without overstaying.",
+    "variants": [
+     {
+      "variant_label": "13 EMA support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "let the first 5 to 15 minutes establish support, then buy the touch/bounce off the 13 EMA",
+      "target_note": "exit on the quick move up / at resistance",
+      "transcript_quote": "this 13 EMA operated as a initial support"
+     },
+     {
+      "variant_label": "200 EMA deeper support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "buy the bounce after the 13 EMA loses support and price finds deeper support at the 200 EMA",
+      "target_note": "ride it to resistance and exit",
+      "transcript_quote": "you get in here as support and you ride it to resistance and you exit"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "support_breakdown_short_scalp",
+    "entry_summary": "When an established support level, specifically the 200 EMA in the example, is finally lost, enter in the direction of the breakdown to catch the larger downward scalp move.",
+    "exit_summary": "Exit into the ensuing sharp drop after the breakdown; the speaker indicates taking the move down quickly rather than holding long-term.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "Enumerated two strategies because the video teaches both a long support-bounce scalp and the opposite breakdown move after support is lost; the latter has a concrete entry on loss of 200 EMA support and a quick exit into the down move, though its exit is described less precisely than the long setup."
+ },
+ "originalTokens": 5402,
+ "cachedTokensReported": 4864
+}

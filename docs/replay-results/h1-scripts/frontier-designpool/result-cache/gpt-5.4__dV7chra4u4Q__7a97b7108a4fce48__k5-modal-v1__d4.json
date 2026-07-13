@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__dV7chra4u4Q__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "dV7chra4u4Q",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "break_and_retest",
+    "entry_summary": "Identify an obvious key level such as pre-market high/low, previous day high/low, or 30-minute opening range high/low. Enter only after price breaks the level with strong momentum/volume, retests it, holds it, and prints confirming price action in the breakout direction (bullish confirmation for a .",
+    "exit_summary": "Place the stop on the opposite side of the breakout level, often just beyond the confirmation candle or beyond the broken level. Target the next obvious liquidity area such as a previous high/low or supply/demand zone; the speaker also mentions trimming profits and moving the remainder to break-even",
+    "variants": [
+     {
+      "variant_label": "Long break-and-retest of resistance turned support",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "bullish confirmation after retest, e.g. long lower wick, bullish hammer, dragonfly doji, optional Bookmap buyer/liqu",
+      "target_note": "next obvious liquidity area above, such as previous high",
+      "transcript_quote": "price breaks above it, we then want to see price come back down and test it as support. If it can do that, that would be considered a break and retest"
+     },
+     {
+      "variant_label": "Short break-and-retest of support turned resistance",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "bearish confirmation after retest, e.g. long upper wick, bearish hammer, gravestone doji, optional Bookmap seller liqu",
+      "target_note": "next obvious liquidity area below, such as previous low",
+      "transcript_quote": "price ends up breaking below the support, well now we have the break, we're waiting for price to come back up and retest it as resistance. If it can b"
+     },
+     {
+      "variant_label": "Alternative trigger placement on confirmation candle close",
+      "timeframe_note": "examples shown on 5-minute and 2-minute charts",
+      "confirmation_mechanic_note": "enter at the close of the confirmation candle; speaker also notes some examples may look better on a 2-minute chart",
+      "target_note": "same next-liquidity target logic",
+      "transcript_quote": "you go short at the close of this 5-minute candle. Stop loss right above there"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One strategy only: the video repeatedly teaches the same break-and-retest skeleton; long and short are opposite-direction variants of that single taught setup with mirrored entry/exit logic, not separate independently taught management frameworks."
+ },
+ "originalTokens": 6621,
+ "cachedTokensReported": 5888
+}

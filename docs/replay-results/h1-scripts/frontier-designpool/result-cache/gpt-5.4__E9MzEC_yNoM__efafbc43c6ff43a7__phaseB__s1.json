@@ -1,0 +1,110 @@
+{
+ "key": "gpt-5.4__E9MzEC_yNoM__efafbc43c6ff43a7__phaseB__s1",
+ "model": "gpt-5.4",
+ "videoId": "E9MzEC_yNoM",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s1",
+ "result": {
+  "strategies": [
+   {
+    "name": "premarket_level_liquidity_sweep_reversal",
+    "higher_timeframe": "5m",
+    "lower_timeframe": null,
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "after 3:00 a.m. Eastern time all the way up into New York market open",
+      "step": 1,
+      "action": "Mark the pre-market range from 3:00 a.m. Eastern time until the 9:30 a.m. New York market open.",
+      "rationale": "This defines the high and low levels used for the sweep setup."
+     },
+     {
+      "transcript_quote": "mark the highest high of that price action and the lowest low of that price action",
+      "step": 2,
+      "action": "Mark the highest high and the lowest low of that pre-market range as the key levels.",
+      "rationale": "These pre-market highs and lows are the sweep levels."
+     },
+     {
+      "transcript_quote": "A liquidity sweep is going to be a brief fake out below or above the level",
+      "step": 3,
+      "action": "For short, wait for price to briefly break above the pre-market high and fail; for long, wait for price to briefly break below the pre-market low and fail.",
+      "rationale": "The setup is a fake breakout through the marked level."
+     },
+     {
+      "transcript_quote": "it comes back down and closes below",
+      "step": 4,
+      "action": "For short, enter after price reclaims back below the pre-market high with confirmation; for long, enter after price reclaims back above the pre-market low with confirmation.",
+      "rationale": "The reclaim confirms the failed break has reversed."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "The stop is always going to go on the opposite side of the entry candle.",
+     "anchor": null,
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker says the stop goes on the opposite side of the entry candle."
+    },
+    "stop_management": "Move the stop-loss to at least break even, ideally into profits, and continue trailing it as the trade moves in your favor.",
+    "targets": [
+     {
+      "transcript_quote": "bare minimum of 1x of my original risk",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 1,
+      "rationale": "The speaker says the minimum objective is 1x original risk."
+     },
+     {
+      "transcript_quote": "what I'm looking for is a 1.5x to a 2x my original risk",
+      "priority": 2,
+      "type": "r_multiple",
+      "r_multiple": 1.5,
+      "rationale": "The speaker says the ideal target is 1.5x original risk."
+     },
+     {
+      "transcript_quote": "what I'm looking for is a 1.5x to a 2x my original risk",
+      "priority": 3,
+      "type": "r_multiple",
+      "r_multiple": 2,
+      "rationale": "The speaker says the ideal extension can reach 2x original risk."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "after 3:00 a.m. Eastern time all the way up into New York market open",
+      "name": "premarket_time_window",
+      "description": "Use the pre-market range formed after 3:00 a.m. Eastern time into the New York open.",
+      "canonical_match": "killzone_active"
+     },
+     {
+      "transcript_quote": "these levels act as magnets and they act as traps",
+      "name": "premarket_levels_as_traps",
+      "description": "The speaker says the pre-market highs and lows act as magnets and traps.",
+      "canonical_match": "liquidity_target_clear"
+     },
+     {
+      "transcript_quote": "A liquidity sweep is going to be a brief fake out below or above the level",
+      "name": "fakeout_through_level",
+      "description": "The entry requires a brief fake out above or below the pre-market level.",
+      "canonical_match": "liquidity_target_clear"
+     },
+     {
+      "transcript_quote": "it comes back down and closes below",
+      "name": "failed_break_reclaim_confirmation",
+      "description": "For a short, price must fail the break and close back below; for a long, it must reclaim back above the level.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "reclaims the level with a lot of volume",
+      "name": "volume_on_reclaim",
+      "description": "The speaker wants the reclaim to happen with strong volume.",
+      "canonical_match": "delta_or_volume_signature"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11490,
+ "cachedTokensReported": 0
+}

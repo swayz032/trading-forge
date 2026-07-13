@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__PVMgOxHUqFA__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "PVMgOxHUqFA",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "higher_timeframe_trend_resumption_after_lower_timeframe_reversal",
+    "entry_summary": "Align with a bullish higher timeframe (4H/1H), then on the 15-minute or 5-minute chart wait for the corrective downtrend to stop making lower lows and break above the most recent lower high. Enter on that break back bullish, with the speaker also showing the same structure as an ABC-style reversal/3",
+    "exit_summary": "Place the stop loss under the recent low/level that should not break if the reversal is valid. Target the next higher-timeframe high (such as the 1-hour high), with the option to keep holding if the broader trend continues.",
+    "variants": [
+     {
+      "variant_label": "15m bullish shift within bullish 4H context",
+      "timeframe_note": "15-minute entry chart with 4-hour/1-hour bullish bias",
+      "confirmation_mechanic_note": "wait for price to stop making lower lows and then break above the lower high",
+      "target_note": "target the 1-hour high or continue with the higher-timeframe trend",
+      "transcript_quote": "all you're doing is waiting for price to go back bullish on that 15minut time frame and putting your stop loss under that level"
+     },
+     {
+      "variant_label": "5m version of the same reversal structure",
+      "timeframe_note": "5-minute entry chart",
+      "confirmation_mechanic_note": "same ABC / higher-low then break-above-lower-high structure",
+      "target_note": "speaker describes this as potentially reaching the 1-hour high and even larger trend continuation",
+      "transcript_quote": "Same setup. Literally a ABC setup. And then we have that push that break above your once again your entry goes here and then your stop loss goes"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches one long trend-resumption/reversal-entry skeleton, shown on both 15-minute and 5-minute charts; the late one-minute scalp mention is not promoted because its exit is not taught with runnable rules."
+ },
+ "originalTokens": 6056,
+ "cachedTokensReported": 5376
+}

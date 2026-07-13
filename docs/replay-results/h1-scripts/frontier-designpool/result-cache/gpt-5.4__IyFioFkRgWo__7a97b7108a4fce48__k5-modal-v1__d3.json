@@ -1,0 +1,57 @@
+{
+ "key": "gpt-5.4__IyFioFkRgWo__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "support_to_resistance_scalp",
+    "entry_summary": "After the first 5 to 15 minutes, identify intraday support on the 5-minute chart using price action and moving averages such as the 13 EMA or, if that fails, the 200 EMA. Enter long when price comes down to that support area and bounces/holds there.",
+    "exit_summary": "Take profit quickly into the next resistance area rather than holding; the speaker repeatedly frames the exit as riding the bounce up to resistance and getting out without overstaying.",
+    "variants": [
+     {
+      "variant_label": "13 EMA support bounce on 5-minute chart",
+      "timeframe_note": "5-minute chart; wait first 5 to 15 minutes after open to establish support",
+      "confirmation_mechanic_note": "enter when price tags the 13 EMA support and bounces",
+      "target_note": "sell into resistance / after the quick upward move",
+      "transcript_quote": "the stock came down and it hit right there that's our entry for a scalp okay and then from here we got in in and then look at one green candle two..."
+     },
+     {
+      "variant_label": "Repeated retest of same support level",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "re-enter on later retests of the same support level",
+      "target_note": "exit on the next push up / resistance",
+      "transcript_quote": "it came back down again boom same level you enter here and then boom you got this move now we have formed this is your exit"
+     },
+     {
+      "variant_label": "200 EMA deeper support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "after 13 EMA loses support status, use the 200 EMA as deeper support and enter on the bounce there",
+      "target_note": "ride it to resistance and exit",
+      "transcript_quote": "you get in here as support and you ride it to resistance and you exit okay another quick Scout this one off a deeper support sitting at the 200 EMA"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "support_breakdown_short_scalp",
+    "entry_summary": "After the established support level, especially the 200 EMA, is lost, enter short on the breakdown as price moves below that support.",
+    "exit_summary": "Cover quickly after the sharp downward move; the speaker points to taking the 'big move' down and exiting soon after the flush rather than holding longer-term.",
+    "variants": [
+     {
+      "variant_label": "200 EMA support-loss breakdown",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "enter short once price loses the 200 EMA support",
+      "target_note": "exit after the immediate downside flush",
+      "transcript_quote": "once we lost the support of the 200 look at this move boom boom boom you want to exit right there okay that's your big scout you would have entered"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches two opposed executable skeletons: long bounces from support into resistance, and a separate short scalp after support breaks; repeated long examples are variants of the same support-bounce setup."
+ },
+ "originalTokens": 5601,
+ "cachedTokensReported": 4864
+}

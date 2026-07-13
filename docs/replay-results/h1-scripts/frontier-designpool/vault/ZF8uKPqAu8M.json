@@ -1,0 +1,478 @@
+{
+ "video_id": "ZF8uKPqAu8M",
+ "phase_a": {
+  "counts": [
+   4,
+   4,
+   4,
+   4,
+   4
+  ],
+  "mode": 4,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "opening_range_breakout_close_entry",
+     "entry_summary": "Define the 15-minute opening range from the 9:30 New York candle high and low. Enter long at the open of the next candle after a candle breaks above the range and closes outside it, with a cutoff of no new trades after the 12:00 candle.",
+     "exit_summary": "Place the stop loss at the bottom of the opening range and target 1.5:1 reward-to-risk.",
+     "variants": [
+      {
+       "variant_label": "15m ORB close-above breakout entry",
+       "timeframe_note": "15-minute chart; opening range is the 9:30 candle",
+       "confirmation_mechanic_note": "wait for a candle to break out and close above the range, then enter at the next candle open",
+       "target_note": "1.5:1 reward-to-risk; stop at bottom of range",
+       "transcript_quote": "I prefer to wait for the candle to actually break through and then close above. So, in this case, my signal is this candle here because it's the first"
+      },
+      {
+       "variant_label": "ATR-filtered breakout variant",
+       "timeframe_note": "15-minute opening range context",
+       "confirmation_mechanic_note": "breakout must be at least 1 times ATR to be considered suitable",
+       "target_note": "same 1.5:1 framework discussed for the base strategy",
+       "transcript_quote": "I made sure that this was greater than at least 1 times ATR to be considered a suitable breakout"
+      }
+     ]
+    },
+    {
+     "strategy_id": 1,
+     "name": "opening_range_breakout_pullback_continuation",
+     "entry_summary": "Use the first 15 minutes to define the opening range on a 5-minute chart via the first three candles. After an initial breakout, wait for price to pull back to the range, then for a candle to break through the range and close back above it; enter on confirmation when the next candle breaks the most-",
+     "exit_summary": "Place the stop loss at the bottom of the opening range, with an optional tighter stop at the bottom of the pullback candle, and target 1.5:1 reward-to-risk.",
+     "variants": [
+      {
+       "variant_label": "5m pullback-confirmation entry",
+       "timeframe_note": "5-minute chart; first three candles define the 15-minute opening range",
+       "confirmation_mechanic_note": "require pullback candle to break through the range and close back above it, then enter on break of the most recent high",
+       "target_note": "1.5:1 reward-to-risk; stop at bottom of range or optionally bottom of pullback candle",
+       "transcript_quote": "I'm going to be waiting for a break of this most recent high. We get that on the next candle. And this gives me my confirmation to enter into a trade"
+      },
+      {
+       "variant_label": "Higher R testing variant",
+       "timeframe_note": "same 5-minute pullback-continuation setup",
+       "confirmation_mechanic_note": "same entry logic",
+       "target_note": "tested take-profit ratios from 2.5R to 4.5R in 0.5 increments",
+       "transcript_quote": "I reran the simulation and this time I tested take-profit ratios starting at 2 1/2 and going all the way up to 4 1/2 in increments of 0.5"
+      }
+     ]
+    },
+    {
+     "strategy_id": 2,
+     "name": "opening_range_pullback_stop_order_at_range_high",
+     "entry_summary": "After the breakout, wait for price to pull back to the opening range and place a stop order at the top of the opening range so entry triggers immediately when price hits that level, rather than waiting for confirmation via a high break.",
+     "exit_summary": "Keep the stop loss at the bottom of the opening range and use a 1.5:1 take-profit target.",
+     "variants": []
+    },
+    {
+     "strategy_id": 3,
+     "name": "opening_range_pullback_midpoint_bounce_entry",
+     "entry_summary": "Measure the breakout from the top of the opening range, then wait for price to retrace deeper into the range to its midpoint. Enter immediately with a stop order at the midpoint instead of waiting for confirmation of a prior high break.",
+     "exit_summary": "Use a smaller stop because entry is at the midpoint; the speaker still frames targets around 1.5:1, with the possibility of aiming for more.",
+     "variants": []
+    }
+   ],
+   "enumeration_note": "The video teaches four runnable long-only entry/exit skeletons: the speaker's base 15m ORB breakout, a 5m breakout-pullback-continuation confirmation entry, a pullback stop-order-at-range-high variant, and a midpoint pullback stop-order entry. The closing mention about doing the opposite/focusing on momentum is not promoted because no runnable exit rules are taught."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Define the 15-minute opening range from the 9:30 New York candle high and low. Enter long at the open of the next candle after a candle breaks above the range and closes outside it, with a cutoff of no new trades after the 12:00 candle.",
+    "exit_summary": "Place the stop loss at the bottom of the opening range and target 1.5:1 reward-to-risk.",
+    "name": "opening_range_breakout_close_entry"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "opening_range_breakout_close_entry",
+      "higher_timeframe": "15m",
+      "lower_timeframe": null,
+      "direction": "long",
+      "entry_sequence": [
+       {
+        "transcript_quote": "I then look for the 9:30 candle, which is the market open in New York",
+        "step": 1,
+        "action": "Use the 9:30 New York 15-minute candle as the opening range reference candle.",
+        "rationale": "This candle defines the session's initial range."
+       },
+       {
+        "transcript_quote": "Once I've got that, I'm going to mark out the high and the low.",
+        "step": 2,
+        "action": "Mark the high and low of the 9:30 15-minute candle to define the opening range.",
+        "rationale": "The high and low become the breakout boundaries."
+       },
+       {
+        "transcript_quote": "I prefer to wait for the candle to actually break through and then close above",
+        "step": 3,
+        "action": "Wait for a 15-minute candle to break above the opening range and close above it.",
+        "rationale": "The close outside the range is the breakout confirmation."
+       },
+       {
+        "transcript_quote": "I then enter at the open of the next one.",
+        "step": 4,
+        "action": "Enter long at the open of the next candle after the breakout close.",
+        "rationale": "The next candle open is the actual execution point."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "the stop loss goes at the bottom of the range",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "He says the stop loss goes at the bottom of the range."
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "I target 1.5 to one reward to risk.",
+        "priority": 1,
+        "type": "r_multiple",
+        "r_multiple": 1.5,
+        "rationale": "He targets 1.5 to one reward to risk."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "I don't trade after the 12:00 candle",
+        "name": "no_entries_after_1200_candle",
+        "description": "He does not trade after the 12:00 candle.",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "I also don't trade ranges that are either too small or too big based on the recent ATR",
+        "name": "opening_range_size_filtered_by_atr",
+        "description": "He avoids opening ranges that are too small or too big based on the recent ATR.",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "I made sure that this was greater than at least 1 times ATR to be considered a suitable breakout.",
+        "name": "breakout_must_exceed_1_atr",
+        "description": "He requires the breakout height to be greater than at least 1 times ATR to count as a suitable breakout.",
+        "canonical_match": "regime_match"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "Use the first 15 minutes to define the opening range on a 5-minute chart via the first three candles. After an initial breakout, wait for price to pull back to the range, then for a candle to break through the range and close back above it; enter on confirmation when the next candle breaks the most-",
+    "exit_summary": "Place the stop loss at the bottom of the opening range, with an optional tighter stop at the bottom of the pullback candle, and target 1.5:1 reward-to-risk.",
+    "name": "opening_range_breakout_pullback_continuation"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "opening_range_breakout_pullback_continuation_15m_5m",
+      "higher_timeframe": "15m",
+      "lower_timeframe": "5m",
+      "direction": "long",
+      "entry_sequence": [
+       {
+        "transcript_quote": "my orb range is still defined by the first 15 minutes of the day",
+        "step": 1,
+        "action": "Define the opening range from the first 15 minutes of the session.",
+        "rationale": "This keeps the ORB anchored to the opening 15-minute window."
+       },
+       {
+        "transcript_quote": "I have to use the first three candles to define my range high and range low",
+        "step": 2,
+        "action": "On the 5-minute chart, use the first three candles to mark the opening range high and low.",
+        "rationale": "Those three 5-minute candles represent the first 15 minutes."
+       },
+       {
+        "transcript_quote": "I then wait for my breakout just like before",
+        "step": 3,
+        "action": "Wait for an initial breakout above the opening range.",
+        "rationale": "The setup starts only after price first breaks out of the range."
+       },
+       {
+        "transcript_quote": "I don't buy immediately on the close of this breakout candle",
+        "step": 4,
+        "action": "Do not enter on the initial breakout close.",
+        "rationale": "The strategy avoids chasing the first breakout move."
+       },
+       {
+        "transcript_quote": "I have to wait and see if price is going to make a pullback towards the opening range",
+        "step": 5,
+        "action": "Wait for price to pull back toward the opening range after the breakout.",
+        "rationale": "The pullback is required before looking for continuation."
+       },
+       {
+        "transcript_quote": "what I'm looking for is a candle that's going to break through the range but then close back above it",
+        "step": 6,
+        "action": "Wait for a pullback candle that breaks through the range and then closes back above it.",
+        "rationale": "This shows price dipping into the range but reclaiming it."
+       },
+       {
+        "transcript_quote": "I'm going to be waiting for a break of this most recent high",
+        "step": 7,
+        "action": "After the pullback candle forms, wait for price to break that most recent high as confirmation.",
+        "rationale": "The break of the recent high confirms the bounce is continuing."
+       },
+       {
+        "transcript_quote": "this gives me my confirmation to enter into a trade",
+        "step": 8,
+        "action": "Enter long when the next candle breaks the high of the pullback confirmation candle.",
+        "rationale": "That break is the actual continuation entry trigger."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "the stop loss will still go at the bottom of my opening range",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "He says the stop loss still goes at the bottom of the opening range."
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "I will target 1 and 1/2 times for my take-profit ratio",
+        "priority": 1,
+        "type": "r_multiple",
+        "r_multiple": 1.5,
+        "rationale": "He says to target 1 and 1/2 times for the take-profit ratio."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "price will often make a pullback and it will return back to the orb",
+        "name": "pullback_to_orb",
+        "description": "He waits for price to make a pullback and return back to the ORB before entering.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "what I'm looking for is a candle that's going to break through the range but then close back above it",
+        "name": "reclaim_of_opening_range",
+        "description": "He wants a candle to break through the range but then close back above it.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "I want to see buyers coming back in and pushing the price back up",
+        "name": "buyers_step_back_in",
+        "description": "He wants to see buyers coming back in and pushing the price back up.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "That gives me confirmation that this line is now starting to act as support",
+        "name": "range_line_acts_as_support",
+        "description": "He wants confirmation that the range line is starting to act as support.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "I'm going to be waiting for a break of this most recent high",
+        "name": "break_of_recent_high_confirmation",
+        "description": "He waits for a break of the most recent high as confirmation.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "I made sure that this was greater than at least 1 times ATR to be considered a suitable breakout",
+        "name": "minimum_breakout_size_atr",
+        "description": "He requires the breakout to be greater than at least 1 times ATR to count as suitable.",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "After the breakout, wait for price to pull back to the opening range and place a stop order at the top of the opening range so entry triggers immediately when price hits that level, rather than waiting for confirmation via a high break.",
+    "exit_summary": "Keep the stop loss at the bottom of the opening range and use a 1.5:1 take-profit target.",
+    "name": "opening_range_pullback_stop_order_at_range_high"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "opening_range_pullback_stop_order_at_range_high",
+      "higher_timeframe": "15m",
+      "lower_timeframe": "5m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "First, I switch over to the 5-minut chart.",
+        "step": 1,
+        "action": "Switch to the 5-minute chart for entry execution while keeping the opening range based on the first 15 minutes.",
+        "rationale": "The speaker uses the faster chart to react to the pullback setup."
+       },
+       {
+        "transcript_quote": "I have to use the first three candles to define my range high and range low.",
+        "step": 2,
+        "action": "Define the opening range using the first three 5-minute candles, which represent the first 15 minutes of the day.",
+        "rationale": "Those three candles establish the ORB high and low."
+       },
+       {
+        "transcript_quote": "I then wait for my breakout just like before.",
+        "step": 3,
+        "action": "For long, wait for price to break out above the opening range; for short, wait for price to break out below the opening range.",
+        "rationale": "The setup begins only after an initial breakout from the opening range."
+       },
+       {
+        "transcript_quote": "I prefer to wait for the candle to actually break through and then close above.",
+        "step": 4,
+        "action": "For long, require the breakout candle to close above the range; for short, require it to close below the range.",
+        "rationale": "The speaker prefers a closing breakout rather than an intrabar break."
+       },
+       {
+        "transcript_quote": "Instead, should I just place a stop order at the opening range? That way, when price hits it, I get in immediately",
+        "step": 5,
+        "action": "After the breakout, wait for price to pull back to the opening range and place a stop order at the range boundary so entry triggers immediately on the retest: buy at the range high for longs or sell at the range low for shorts.",
+        "rationale": "This variation enters on the retest instead of waiting for a confirmation high/low break."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "This time, the stop loss is still at the bottom of the range.",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "The speaker keeps the stop at the opposite side of the opening range."
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "I have a 1.5 take profit",
+        "priority": 1,
+        "type": "r_multiple",
+        "r_multiple": 1.5,
+        "rationale": "The speaker uses a 1.5 take-profit target for this variation."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "I'm here on a 15-minute chart, and I set my time zone to New York.",
+        "name": "new_york_session_open",
+        "description": "The setup is anchored to the New York market open and uses New York session timing.",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "I then look for the 9:30 candle, which is the market open in New York",
+        "name": "opening_range_defined_from_open",
+        "description": "The opening range starts from the 9:30 New York open.",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "I have to use the first three candles to define my range high and range low.",
+        "name": "first_three_5m_candles_define_range",
+        "description": "The opening range is defined by the first three 5-minute candles.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "I then wait for my breakout just like before.",
+        "name": "initial_breakout_required",
+        "description": "A valid trade requires an initial breakout before the pullback entry idea is considered.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "I prefer to wait for the candle to actually break through and then close above.",
+        "name": "breakout_must_close_outside_range",
+        "description": "The breakout must close outside the opening range rather than merely wick through it.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "This time, the stop loss is still at the bottom of the range. I have a 1.5 take profit, but now I'm using a stop order at the top of the orb.",
+        "name": "stop_order_at_orb_boundary",
+        "description": "The variation uses a stop order at the top of the ORB after the pullback instead of waiting for confirmation.",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "Measure the breakout from the top of the opening range, then wait for price to retrace deeper into the range to its midpoint. Enter immediately with a stop order at the midpoint instead of waiting for confirmation of a prior high break.",
+    "exit_summary": "Use a smaller stop because entry is at the midpoint; the speaker still frames targets around 1.5:1, with the possibility of aiming for more.",
+    "name": "opening_range_pullback_midpoint_bounce_entry"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "opening_range_pullback_midpoint_bounce_entry",
+      "higher_timeframe": "15m",
+      "lower_timeframe": "5m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "I'm still measuring the breakout from the top of the opening range",
+        "step": 1,
+        "action": "For long, define the opening range from the first 15 minutes and measure the breakout from the top of that range; for short, use the mirrored breakout from the bottom of the range.",
+        "rationale": "The setup begins from the opening range breakout reference."
+       },
+       {
+        "transcript_quote": "I'm waiting for price to pull back all the way into this midpoint here",
+        "step": 2,
+        "action": "For long, wait for price to retrace back into the opening range midpoint; for short, wait for price to retrace up into the midpoint from below.",
+        "rationale": "The midpoint is the deeper pullback level the speaker wants tested."
+       },
+       {
+        "transcript_quote": "that's where I'm going to buy with a stop order",
+        "step": 3,
+        "action": "For long, place a stop order at the midpoint and enter immediately when price reaches it; for short, mirror the entry at the midpoint on the opposite-side setup.",
+        "rationale": "The speaker replaces breakout confirmation with an immediate midpoint entry."
+       },
+       {
+        "transcript_quote": "I'm not looking for confirmation of a previous high being broken. I just enter immediately as it reaches the midpoint.",
+        "step": 4,
+        "action": "Do not wait for a prior swing high break for longs or a prior swing low break for shorts; enter as soon as price tags the midpoint.",
+        "rationale": "The variant specifically removes the extra confirmation step."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "the stop loss is still at the bottom of the range",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "The speaker says the stop loss is still at the bottom of the range."
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "I have a 1.5 take profit",
+        "priority": 1,
+        "type": "r_multiple",
+        "r_multiple": 1.5,
+        "rationale": "The speaker says he uses a 1.5 take profit for this test variation."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "quite often it actually moved quite far into it, somewhere around the halfway point before bouncing back up",
+        "name": "midpoint_pullback",
+        "description": "The speaker says price often retraces toward the halfway point before bouncing back up.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "the price would retrace back into that midpoint, bounce really strongly back up",
+        "name": "midpoint_bounce_expectation",
+        "description": "The speaker says price would retrace into the midpoint and bounce strongly back up.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "The additional benefit here is that because I'm at the midpoint, my stop loss is far smaller",
+        "name": "smaller_risk_from_midpoint_entry",
+        "description": "The speaker says entering at the midpoint gives a much smaller stop loss.",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

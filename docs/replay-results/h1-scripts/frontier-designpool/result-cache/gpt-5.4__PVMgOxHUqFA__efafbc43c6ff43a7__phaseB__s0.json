@@ -1,0 +1,108 @@
+{
+ "key": "gpt-5.4__PVMgOxHUqFA__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "PVMgOxHUqFA",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "trend_reversal_to_higher_timeframe_continuation",
+    "higher_timeframe": "4h",
+    "lower_timeframe": "15m",
+    "direction": "long",
+    "entry_sequence": [
+     {
+      "transcript_quote": "you know the 4 hour and the one hour is bullish, all you're doing is waiting for that 15minut time frame or 5 minute time frame",
+      "step": 1,
+      "action": "Use the 4-hour and 1-hour charts as bullish higher-timeframe bias before looking for an entry on the 15-minute or 5-minute chart.",
+      "rationale": "The speaker says the lower-timeframe trigger should align with the bullish 4-hour and 1-hour trend."
+     },
+     {
+      "transcript_quote": "Price stops making lower lows",
+      "step": 2,
+      "action": "On the pullback timeframe, wait for price to stop making lower lows.",
+      "rationale": "Failure to print another lower low is the first sign the bearish pullback may be ending."
+     },
+     {
+      "transcript_quote": "the second thing that confirms that would be price breaking above that lower high",
+      "step": 3,
+      "action": "Wait for price to break above the most recent lower high to confirm the pullback has turned bullish.",
+      "rationale": "The speaker uses the break of the lower high as confirmation that structure has shifted bullish."
+     },
+     {
+      "transcript_quote": "all you're doing is waiting for price to go back bullish on that 15minut time frame",
+      "step": 4,
+      "action": "Enter long when the 15-minute or 5-minute chart turns back bullish in the direction of the higher-timeframe trend.",
+      "rationale": "The entry is the lower-timeframe bullish structure break aligned with higher-timeframe continuation."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": "putting your stop loss under that level where you don't want to see price get broken",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker says to place the stop under the level that should not break if the bullish reversal is valid."
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "Once you scale back out to that 1 hour time frame, you'll target that 1 hour high.",
+      "priority": 1,
+      "type": "range_high",
+      "r_multiple": null,
+      "rationale": "The speaker says the target is the 1-hour high after entry."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "we already knew the 4hour time frame was bullish",
+      "name": "higher_timeframe_bullish_bias",
+      "description": "The setup requires the 4-hour trend to already be bullish.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "you know the 4 hour and the one hour is bullish",
+      "name": "multi_timeframe_bias_alignment",
+      "description": "The speaker wants both the 4-hour and 1-hour charts bullish before taking the lower-timeframe entry.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "Price stops making lower lows",
+      "name": "pullback_stops_making_lower_lows",
+      "description": "The bearish pullback must stop printing lower lows before the reversal entry is valid.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "price could go bullish because it's not breaking a lower low or is not making a low",
+      "name": "failed_bearish_continuation",
+      "description": "A bullish sign is that price fails to continue lower and does not make another low.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "price breaking above that lower high",
+      "name": "break_of_lower_high",
+      "description": "The speaker uses a break above the most recent lower high as the bullish confirmation trigger.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "gold moves during London session and New York session",
+      "name": "active_session_condition",
+      "description": "The speaker notes gold is most active during London and New York sessions.",
+      "canonical_match": "killzone_active"
+     },
+     {
+      "transcript_quote": "all that downtrending on the 15 minute time frame was only the four 4 hour making a higher low to push up more",
+      "name": "pullback_inside_higher_timeframe_trend",
+      "description": "The lower-timeframe selloff is treated as a pullback making a higher low within the bullish 4-hour trend.",
+      "canonical_match": "regime_match"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_with_forex_illustration"
+ },
+ "originalTokens": 11098,
+ "cachedTokensReported": 0
+}

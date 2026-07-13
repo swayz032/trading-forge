@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4___LS6qcSlDCs__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "_LS6qcSlDCs",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_break_and_pullback_long",
+    "entry_summary": "Trade long only after a penny stock opens weak below VWAP, then breaks above VWAP with strong volume and obvious bullish momentum. Enter on the pullback/retest of VWAP or nearby support after that breakout, anticipating VWAP holds as support and the stock bounces.",
+    "exit_summary": "Scale out into the bounce/scalp the move after VWAP support holds. The transcript does not give a precise stop/target level, but the taught management is to use the pullback buy for a bounce trade while avoiding entries when VWAP remains overhead as resistance.",
+    "variants": [
+     {
+      "variant_label": "Pullback long after VWAP break on XCLB",
+      "timeframe_note": "Intraday, around 10:00 market time",
+      "confirmation_mechanic_note": "Break above VWAP with consecutive green candles and volume; buy the pullback toward VWAP/nearby whole-dollar support",
+      "target_note": "Scalp out on the bounce",
+      "transcript_quote": "we saw this big run up over the v wap the milestone level we bought into the pullback and we rode the bounce up scalping out of it"
+     },
+     {
+      "variant_label": "Pullback long after VWAP break on SOS",
+      "timeframe_note": "Intraday, around 11:00 to 11:30 market time",
+      "confirmation_mechanic_note": "After rejection earlier, wait for sentiment shift, break above VWAP, strong green candles and volume, then buy the pullb",
+      "target_note": "Ride the first bounce after the pullback",
+      "transcript_quote": "we can wait for the volume to come in we can wait for a really nice and obvious upward move breaking over that v milestone level and we can buy the p"
+     },
+     {
+      "variant_label": "Pullback long after VWAP break on CEMI",
+      "timeframe_note": "Intraday, after first hour",
+      "confirmation_mechanic_note": "Wait for push back to VWAP with about 1 million shares per minute, break over VWAP, then dip-buy the pullback to VWAP",
+      "target_note": "Ride the bounce up for profit",
+      "transcript_quote": "when we finally break above that we're looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one long VWAP-break pullback strategy across multiple examples; stock-selection filters (volume, float) are conditions, not separate strategies, and no opposing short setup is taught with a runnable exit."
+ },
+ "originalTokens": 5987,
+ "cachedTokensReported": 4864
+}

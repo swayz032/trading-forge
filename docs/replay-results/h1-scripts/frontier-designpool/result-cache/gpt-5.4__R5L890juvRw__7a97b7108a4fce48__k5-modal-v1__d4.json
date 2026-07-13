@@ -1,0 +1,50 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_trend_continuation_retest",
+    "entry_summary": "In a directional session bias, wait for price to extend away from VWAP into at least the first, preferably the second, standard-deviation band, then enter in the direction of the session after price breaks back through that band level and retests it. The example given is a long after price moves up,",
+    "exit_summary": "Use the second and third standard-deviation bands as profit targets. No explicit stop-loss rule is taught beyond the retest structure, so the runnable exit taught is the band-based target progression.",
+    "variants": [
+     {
+      "variant_label": "long bias continuation from upper-band retest",
+      "timeframe_note": "session/intraday; New York session example",
+      "confirmation_mechanic_note": "wait for price to reach first or second standard deviation, then break and retest before entering with the long idea",
+      "target_note": "use second and third standard deviations as targets",
+      "transcript_quote": "say you might have a long idea for your session and as the New York session opens ... after we broke it and tested it we can try our long trade this c"
+     },
+     {
+      "variant_label": "short bias continuation from lower-band retest",
+      "timeframe_note": "session/intraday",
+      "confirmation_mechanic_note": "same skeleton in the opposite direction for a short-biased session after extension into lower deviations and reaction at",
+      "target_note": "use outer standard-deviation bands as targets",
+      "transcript_quote": "we opened the session we shorted the out of the market we went down into the lower standard deviations and here is where you want to look for a trade"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_mean_reversion_from_outer_bands",
+    "entry_summary": "Use the outer VWAP standard-deviation bands as overbought/oversold levels for reversal trades. Enter when price reaches an outer band area, betting on rebalancing back toward fair value rather than continuation away from it.",
+    "exit_summary": "Target the central VWAP as the rebalancing objective. The speaker explicitly presents VWAP itself as the take-profit target for this reversal idea.",
+    "variants": [
+     {
+      "variant_label": "generic outer-band reversal to VWAP",
+      "timeframe_note": "session/intraday",
+      "confirmation_mechanic_note": "use first/second/third standard-deviation extremes as overbought or oversold references",
+      "target_note": "central VWAP target for price rebalancing",
+      "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels ... and use the central vwap as a target"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Two distinct executable skeletons are taught: a continuation/retest trade in a session bias, and an opposite mean-reversion trade from outer VWAP bands back to VWAP; opposite logic requires separate strategies."
+ },
+ "originalTokens": 6109,
+ "cachedTokensReported": 5376
+}

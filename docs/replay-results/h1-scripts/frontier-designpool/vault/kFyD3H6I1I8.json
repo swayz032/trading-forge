@@ -1,0 +1,196 @@
+{
+ "video_id": "kFyD3H6I1I8",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "session_bias_opening_range_retest_scalp",
+     "entry_summary": "First determine directional bias from the 7:00 a.m. and 8:00 a.m. 1-hour candles: bullish engulfing for buys or bearish engulfing for sells before the New York session. Then on the 5-minute chart mark the 9:30-9:45 opening range, wait for price to break and close outside the range in the bias方向, and",
+     "exit_summary": "Enter on the retrace into the chosen point of interest after the range break. Stop goes beyond the invalidation area such as below/above the range or beyond the POI wick/zone, and take profit is placed at a left-side supply/resistance level for longs or demand/support level for shorts; in one sell例,",
+     "variants": [
+      {
+       "variant_label": "Long setup with bullish re-engulf confirmation at demand",
+       "timeframe_note": "Bias on H1; execution on 5-minute during 9:30-11:00 a.m. New York session",
+       "confirmation_mechanic_note": "After bullish bias and upside range break, wait for retrace into demand and a bullish engulfing candle before entering",
+       "target_note": "Target left-side supply/resistance area; example shown around 2.1-2.3R",
+       "transcript_quote": "it taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have另外"
+      },
+      {
+       "variant_label": "Long setup with passive limit at support/demand",
+       "timeframe_note": "Bias on H1; execution around New York session opening range",
+       "confirmation_mechanic_note": "After bullish bias and upside range break, place a limit order at support / overlapping demand instead of waiting for a",
+       "target_note": "Target prior level that caused a strong push down",
+       "transcript_quote": "on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position."
+      },
+      {
+       "variant_label": "Short setup with break-and-retest entry at range underside / supply",
+       "timeframe_note": "Bias on H1; execution around 9:30-9:45 opening range and after",
+       "confirmation_mechanic_note": "After bearish bias and downside range break, wait for retrace to the underside of the range / nearby supply and enter on",
+       "target_note": "Manual management example: move stop to break-even after price advances, then hold to take profit at lower target level",
+       "transcript_quote": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The video teaches one three-step opening-range breakout/retest scalping skeleton; the buy/sell examples and confirmation differences are compatible variants, not separate strategies."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "First determine directional bias from the 7:00 a.m. and 8:00 a.m. 1-hour candles: bullish engulfing for buys or bearish engulfing for sells before the New York session. Then on the 5-minute chart mark the 9:30-9:45 opening range, wait for price to break and close outside the range in the bias方向, and",
+    "exit_summary": "Enter on the retrace into the chosen point of interest after the range break. Stop goes beyond the invalidation area such as below/above the range or beyond the POI wick/zone, and take profit is placed at a left-side supply/resistance level for longs or demand/support level for shorts; in one sell例,",
+    "name": "session_bias_opening_range_retest_scalp"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "session_bias_opening_range_retest_scalp",
+      "higher_timeframe": "1h",
+      "lower_timeframe": "5m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session",
+        "step": 1,
+        "action": "For long setups, use the 7:00 a.m. and 8:00 a.m. 1-hour candles to require a bullish engulfing pattern before the New York session; for short setups, require a bearish engulfing pattern before the session.",
+        "rationale": "The pre-session 1-hour engulfing pattern sets the session bias."
+       },
+       {
+        "transcript_quote": "I'm marking out the top and the bottom of that range from 9:30 to 9:45",
+        "step": 2,
+        "action": "On the 5-minute chart, mark the opening range using the high and low from 9:30 to 9:45 a.m. Eastern.",
+        "rationale": "The first 15 minutes define the trading range for the session."
+       },
+       {
+        "transcript_quote": "I'm simply looking for the price to break and close outside of that range",
+        "step": 3,
+        "action": "For longs, wait for price to break and close above the opening range; for shorts, wait for price to break and close below the opening range.",
+        "rationale": "The break and close outside the range confirms momentum in the bias direction."
+       },
+       {
+        "transcript_quote": "step three is all about finding a point of interest",
+        "step": 4,
+        "action": "After the range break, identify a point of interest such as demand/support for longs or supply/resistance / range retest for shorts and wait for price to retrace into it.",
+        "rationale": "The retrace into the point of interest provides the entry location."
+       },
+       {
+        "transcript_quote": "it taps into the level of demand, and it clearly respects the level",
+        "step": 5,
+        "action": "Enter when price taps the chosen point of interest and shows respect there; for the long example, the speaker also used a bullish engulfing pattern at the level, and for shorts he also uses the classic break-and-retest entry at the range boundary.",
+        "rationale": "The speaker waits for the retracement to react from the chosen area before taking the trade."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "I like it below the range",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "The speaker places the long stop below the opening range and, on shorts, above a recent wick to stay beyond invalidation."
+      },
+      "stop_management": "Set break even once price moves sufficiently in favor; the speaker says, \"I set break even\" during the short example.",
+      "targets": [
+       {
+        "transcript_quote": "I'm always going to look left and see what I can find",
+        "priority": 1,
+        "type": "left_side_supply_or_resistance",
+        "r_multiple": null,
+        "rationale": "The speaker selects profit targets by looking left for a reaction level."
+       },
+       {
+        "transcript_quote": "we had an aggressive level of supply",
+        "priority": 2,
+        "type": "supply_zone",
+        "r_multiple": null,
+        "rationale": "For longs, he targeted into a supply zone because price can react there."
+       },
+       {
+        "transcript_quote": "that was the last level that had a huge push down",
+        "priority": 3,
+        "type": "prior_supply_or_resistance_level",
+        "r_multiple": null,
+        "rationale": "He also uses the last strong push-down level as the take-profit reference."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "bullish engulfing pattern form before my trading session",
+        "name": "pre_session_bullish_engulfing_bias",
+        "description": "For longs, the speaker wants a bullish engulfing pattern before the New York session.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "bearish engulfing pattern form before my trading session",
+        "name": "pre_session_bearish_engulfing_bias",
+        "description": "For shorts, the speaker wants a bearish engulfing pattern before the New York session.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "I trade every day from 9:30 to 11:00 a.m. Eastern",
+        "name": "new_york_session_only",
+        "description": "The setup is traded during the 9:30 to 11:00 a.m. Eastern window.",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "that's the first 15 minutes of the New York Stock Exchange open, and that is my trading range",
+        "name": "opening_range_defined",
+        "description": "The first 15 minutes of the NYSE open define the session's trading range.",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "This break of the range tells me the buyers have some momentum",
+        "name": "range_break_momentum_confirmation",
+        "description": "A break of the opening range is used as momentum confirmation in the bias direction.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "we have a level of demand off of this candle right here",
+        "name": "poi_demand_or_supply_level",
+        "description": "The speaker wants price to retrace into a point of interest such as a demand or supply level before entry.",
+        "canonical_match": "vp_level_proximity"
+       },
+       {
+        "transcript_quote": "You get the break of recent structure",
+        "name": "break_of_recent_structure",
+        "description": "The point of interest is strengthened when it comes from an aggressive move that breaks recent structure.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "we're looking for fair value gaps",
+        "name": "fair_value_gap_context",
+        "description": "The speaker references fair value gaps as part of the point-of-interest context.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "we also have another bullish engulfing pattern right here",
+        "name": "bullish_engulfing_at_poi",
+        "description": "In the long example, he adds a bullish engulfing pattern at the retracement level as confirmation.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "the classic break and retest entry",
+        "name": "break_and_retest_entry",
+        "description": "In the short example, he uses the range boundary retest as one of his main opening-range-breakout entries.",
+        "canonical_match": "market_structure_aligned"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_with_forex_illustration"
+   }
+  }
+ ]
+}

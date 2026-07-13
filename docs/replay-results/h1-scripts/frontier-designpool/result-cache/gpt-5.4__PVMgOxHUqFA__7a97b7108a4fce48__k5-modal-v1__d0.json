@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__PVMgOxHUqFA__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4",
+ "videoId": "PVMgOxHUqFA",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "trend_reversal_to_higher_timeframe_continuation",
+    "entry_summary": "Use the higher timeframe (4-hour/1-hour) trend bias, then on the 15-minute or 5-minute chart wait for the pullback downtrend to stop making lower lows and then break above the most recent lower high. Enter on that bullish structure break in the direction of the higher-timeframe trend.",
+    "exit_summary": "Place the stop loss under the low/level that should not break if the bullish reversal is valid. Target the next higher-timeframe high (such as the 1-hour high), with the possibility of holding further if the broader trend continues.",
+    "variants": [
+     {
+      "variant_label": "15-minute bullish shift after pullback",
+      "timeframe_note": "15-minute execution within 4-hour bullish context",
+      "confirmation_mechanic_note": "wait for price to stop making lower lows and then break above the lower high",
+      "target_note": "target the 1-hour high or continue with the higher-timeframe trend",
+      "transcript_quote": "all you're doing is waiting for price to go back bullish on that 15minut time frame and putting your stop loss under that level where you don't wanto'"
+     },
+     {
+      "variant_label": "5-minute version of the same structure-break entry",
+      "timeframe_note": "5-minute execution example",
+      "confirmation_mechanic_note": "same ABC / higher-low then break-above-lower-high logic",
+      "target_note": "target the 1-hour high; speaker mentions this could expand much further with trend continuation",
+      "transcript_quote": "And then we have that push that break above your once again your entry goes here and then your stop loss goes either here or here whichever one you w"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches one core strategy: trade with higher-timeframe trend by entering when lower-timeframe bearish pullback flips bullish; the 15-minute and 5-minute examples are compatible variants, not distinct strategies. The final 1-minute 'small scalp' mention is not promoted because it lacks a runnable exit rule."
+ },
+ "originalTokens": 6070,
+ "cachedTokensReported": 0
+}

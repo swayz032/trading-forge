@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__IyFioFkRgWo__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "support_bounce_to_resistance_scalp",
+    "entry_summary": "After the first 5 to 15 minutes, identify support on the 5-minute chart using price action and moving averages such as the 13 EMA or, if that fails, the 200 EMA. Enter when price comes down into that established support area and bounces.",
+    "exit_summary": "Take profit quickly into the ensuing move, selling at resistance rather than holding longer. The speaker repeatedly frames the management as getting in and out fast and exiting on the push up to resistance.",
+    "variants": [
+     {
+      "variant_label": "13 EMA support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "wait for the first 5 to 15 minutes to establish support, then buy the touch/bounce at the 13 EMA",
+      "target_note": "exit at resistance / after the quick multi-candle push up",
+      "transcript_quote": "the 13 EMA operated as a initial support... the stock came down and it hit right there that's our entry for a scalp"
+     },
+     {
+      "variant_label": "200 EMA deeper support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "after the 13 EMA loses support status, use the 200 EMA / deeper support zone for entry on the bounce",
+      "target_note": "ride it to resistance and exit",
+      "transcript_quote": "you get in here as support and you ride it to resistance and you exit okay another quick Scout this one off a deeper support sitting at the 200 EMA"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "A downside move after loss of 200 EMA support is mentioned with an entry, but its exit is only gestural ('you want to exit right there') and does not clear the exit evidence floor, so it is left unpromoted."
+ },
+ "originalTokens": 5357,
+ "cachedTokensReported": 4864
+}

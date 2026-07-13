@@ -1,0 +1,28 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_trend_continuation_retest",
+    "entry_summary": "Form a directional bias first, then wait for price to extend away from VWAP toward at least the first, preferably the second, standard-deviation band. After price breaks back through a band and retests it, enter in the original directional direction as continuation.",
+    "exit_summary": "Use the outer standard-deviation bands as profit targets, specifically the second or third standard deviation. No more specific stop rule is taught in the transcript.",
+    "variants": [
+     {
+      "variant_label": "long continuation after pullback and retest",
+      "timeframe_note": "session intraday / New York session example",
+      "confirmation_mechanic_note": "wait for price to move out to the first or second deviation, then after it breaks and tests the level, try the long",
+      "target_note": "use second and third standard deviation as targets",
+      "transcript_quote": "you might want to wait until the price has gone at least to the first if not the second standard deviation... and after we broke it and tested it we c"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one runnable strategy clearly enough to enumerate: VWAP-based continuation using a prior directional idea and deviation-band retest, with outer bands as targets. Reversal usage of outer bands back to central VWAP is mentioned, but lacks concrete executable entry rules and is left unpromoted under Rule 1."
+ },
+ "originalTokens": 5820,
+ "cachedTokensReported": 0
+}

@@ -1,0 +1,84 @@
+{
+ "key": "gpt-5.4__ZF8uKPqAu8M__efafbc43c6ff43a7__phaseB__s3",
+ "model": "gpt-5.4",
+ "videoId": "ZF8uKPqAu8M",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s3",
+ "result": {
+  "strategies": [
+   {
+    "name": "opening_range_pullback_midpoint_bounce_entry",
+    "higher_timeframe": "15m",
+    "lower_timeframe": "5m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "I'm still measuring the breakout from the top of the opening range",
+      "step": 1,
+      "action": "For long, define the opening range from the first 15 minutes and measure the breakout from the top of that range; for short, use the mirrored breakout from the bottom of the range.",
+      "rationale": "The setup begins from the opening range breakout reference."
+     },
+     {
+      "transcript_quote": "I'm waiting for price to pull back all the way into this midpoint here",
+      "step": 2,
+      "action": "For long, wait for price to retrace back into the opening range midpoint; for short, wait for price to retrace up into the midpoint from below.",
+      "rationale": "The midpoint is the deeper pullback level the speaker wants tested."
+     },
+     {
+      "transcript_quote": "that's where I'm going to buy with a stop order",
+      "step": 3,
+      "action": "For long, place a stop order at the midpoint and enter immediately when price reaches it; for short, mirror the entry at the midpoint on the opposite-side setup.",
+      "rationale": "The speaker replaces breakout confirmation with an immediate midpoint entry."
+     },
+     {
+      "transcript_quote": "I'm not looking for confirmation of a previous high being broken. I just enter immediately as it reaches the midpoint.",
+      "step": 4,
+      "action": "Do not wait for a prior swing high break for longs or a prior swing low break for shorts; enter as soon as price tags the midpoint.",
+      "rationale": "The variant specifically removes the extra confirmation step."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "the stop loss is still at the bottom of the range",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker says the stop loss is still at the bottom of the range."
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "I have a 1.5 take profit",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 1.5,
+      "rationale": "The speaker says he uses a 1.5 take profit for this test variation."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "quite often it actually moved quite far into it, somewhere around the halfway point before bouncing back up",
+      "name": "midpoint_pullback",
+      "description": "The speaker says price often retraces toward the halfway point before bouncing back up.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "the price would retrace back into that midpoint, bounce really strongly back up",
+      "name": "midpoint_bounce_expectation",
+      "description": "The speaker says price would retrace into the midpoint and bounce strongly back up.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "The additional benefit here is that because I'm at the midpoint, my stop loss is far smaller",
+      "name": "smaller_risk_from_midpoint_entry",
+      "description": "The speaker says entering at the midpoint gives a much smaller stop loss.",
+      "canonical_match": null
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11353,
+ "cachedTokensReported": 10496
+}

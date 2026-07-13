@@ -1,0 +1,84 @@
+{
+ "key": "gpt-5.4__ZF8uKPqAu8M__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "ZF8uKPqAu8M",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "opening_range_breakout_close_entry",
+    "higher_timeframe": "15m",
+    "lower_timeframe": null,
+    "direction": "long",
+    "entry_sequence": [
+     {
+      "transcript_quote": "I then look for the 9:30 candle, which is the market open in New York",
+      "step": 1,
+      "action": "Use the 9:30 New York 15-minute candle as the opening range reference candle.",
+      "rationale": "This candle defines the session's initial range."
+     },
+     {
+      "transcript_quote": "Once I've got that, I'm going to mark out the high and the low.",
+      "step": 2,
+      "action": "Mark the high and low of the 9:30 15-minute candle to define the opening range.",
+      "rationale": "The high and low become the breakout boundaries."
+     },
+     {
+      "transcript_quote": "I prefer to wait for the candle to actually break through and then close above",
+      "step": 3,
+      "action": "Wait for a 15-minute candle to break above the opening range and close above it.",
+      "rationale": "The close outside the range is the breakout confirmation."
+     },
+     {
+      "transcript_quote": "I then enter at the open of the next one.",
+      "step": 4,
+      "action": "Enter long at the open of the next candle after the breakout close.",
+      "rationale": "The next candle open is the actual execution point."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "the stop loss goes at the bottom of the range",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "He says the stop loss goes at the bottom of the range."
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "I target 1.5 to one reward to risk.",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 1.5,
+      "rationale": "He targets 1.5 to one reward to risk."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "I don't trade after the 12:00 candle",
+      "name": "no_entries_after_1200_candle",
+      "description": "He does not trade after the 12:00 candle.",
+      "canonical_match": "killzone_active"
+     },
+     {
+      "transcript_quote": "I also don't trade ranges that are either too small or too big based on the recent ATR",
+      "name": "opening_range_size_filtered_by_atr",
+      "description": "He avoids opening ranges that are too small or too big based on the recent ATR.",
+      "canonical_match": "regime_match"
+     },
+     {
+      "transcript_quote": "I made sure that this was greater than at least 1 times ATR to be considered a suitable breakout.",
+      "name": "breakout_must_exceed_1_atr",
+      "description": "He requires the breakout height to be greater than at least 1 times ATR to count as a suitable breakout.",
+      "canonical_match": "regime_match"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11291,
+ "cachedTokensReported": 0
+}

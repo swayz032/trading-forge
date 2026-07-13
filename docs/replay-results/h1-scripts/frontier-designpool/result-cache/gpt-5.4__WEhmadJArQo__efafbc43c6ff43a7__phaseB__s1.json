@@ -1,0 +1,114 @@
+{
+ "key": "gpt-5.4__WEhmadJArQo__efafbc43c6ff43a7__phaseB__s1",
+ "model": "gpt-5.4",
+ "videoId": "WEhmadJArQo",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s1",
+ "result": {
+  "strategies": [
+   {
+    "name": "opening_range_fvg_limit_entry_day_trade",
+    "higher_timeframe": "15m",
+    "lower_timeframe": "5m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "you're going to start on the 15minute chart",
+      "step": 1,
+      "action": "Start on the 15-minute chart.",
+      "rationale": "This sets the higher timeframe for the opening range."
+     },
+     {
+      "transcript_quote": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes",
+      "step": 2,
+      "action": "Wait for the 9:30 to 9:45 ET candle to close.",
+      "rationale": "The first 15-minute candle defines the opening range."
+     },
+     {
+      "transcript_quote": "we're going to mark the high and the low of the first 15-minute candle",
+      "step": 3,
+      "action": "Mark the high and low of the first 15-minute candle.",
+      "rationale": "These levels are the key levels for the setup."
+     },
+     {
+      "transcript_quote": "Instead of going to the one minute chart, we're going to go to the five-minute chart",
+      "step": 4,
+      "action": "Switch to the 5-minute chart for the entry trigger.",
+      "rationale": "The lower timeframe is used to confirm and enter the trade."
+     },
+     {
+      "transcript_quote": "we have now created our fair value gap through this first candle",
+      "step": 5,
+      "action": "For long, wait for price to break above the first 15-minute high while forming a fair value gap; for short, wait for price to break below the first 15-minute low while forming a fair value gap.",
+      "rationale": "The break of the opening range with an FVG provides direction and setup context."
+     },
+     {
+      "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG",
+      "step": 6,
+      "action": "Place a limit order on the fair value gap instead of waiting for a retest confirmation candle.",
+      "rationale": "The entry is taken automatically when price trades back into the gap."
+     },
+     {
+      "transcript_quote": "once the market trades back into the fair value gap, we're automatically entered into the market",
+      "step": 7,
+      "action": "Enter when price trades back into the fair value gap and fills the limit order.",
+      "rationale": "The retrace into the FVG is the actual execution trigger."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "for my stop loss, I'm going to put it right at the first candle in the fair value gap pattern",
+     "anchor": "fvg_low",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The stop is placed at the first candle of the three-candle fair value gap pattern."
+    },
+    "stop_management": "you don't need to micromanage your trades, and you can just sit back and let the market do the heavy lifting for you.",
+    "targets": [
+     {
+      "transcript_quote": "for our target instead of a 3 to one return we are going to target a fixed 2:1 return",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 2,
+      "rationale": "The day trading variation uses a fixed 2:1 target."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "we're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes",
+      "name": "first_15m_opening_range_defined",
+      "description": "Use the first 9:30 to 9:45 ET candle as the opening range reference.",
+      "canonical_match": "killzone_active"
+     },
+     {
+      "transcript_quote": "we're going to mark the high and the low of the first 15-minute candle",
+      "name": "opening_range_levels_marked",
+      "description": "The high and low of the first 15-minute candle must be marked before taking the setup.",
+      "canonical_match": "liquidity_target_clear"
+     },
+     {
+      "transcript_quote": "we have now created our fair value gap through this first candle",
+      "name": "fvg_forms_through_opening_range_level",
+      "description": "Price must create a fair value gap through the first candle level.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": null,
+      "name": "break_of_either_opening_range_side_sets_direction",
+      "description": "For longs, price breaks the opening-range high; for shorts, price breaks the opening-range low before the FVG limit entry is used.",
+      "canonical_match": "market_structure_aligned"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [
+   {
+    "name": "opening_range_fvg_limit_entry_day_trade",
+    "reason": "fixed_point_stop_not_supported",
+    "detail": "Speaker uses a fixed 2:1 target and a structural stop, but the stop placement is still extractable; rejection added because the strategy also specifies fixed R-based profit taking as the explicit exit method."
+   }
+  ],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11177,
+ "cachedTokensReported": 0
+}

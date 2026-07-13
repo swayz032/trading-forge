@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__W7nlnHTUZQU__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4",
+ "videoId": "W7nlnHTUZQU",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "overnight_range_break_retest_continuation",
+    "entry_summary": "Mark the overnight/pre-market high and low, then wait during the New York session for price to break above the overnight high with strength or break below the overnight low with weakness. Enter on a pullback/retest of the broken level once price shows confirming reversal-in-trend candle action and a",
+    "exit_summary": "Initial stop goes back on the opposite side of the breakout level: below the prior overnight high for longs, above the prior overnight low for shorts. Manage by taking continuation, optionally trimming partials and moving the stop to breakeven, or exiting if price closes back through the level / you",
+    "variants": [
+     {
+      "variant_label": "Bullish breakout above overnight high, retest long",
+      "timeframe_note": "Examples mention 5-minute timeframe for confirmation/failed hold",
+      "confirmation_mechanic_note": "After a strong break above the overnight high, wait for a retest holding as support with bullish confirmation such as a",
+      "target_note": "Examples cite about 1.5R to 2.6R; also mentions trimming partials, moving stop to breakeven, and letting winners run",
+      "transcript_quote": "if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support"
+     },
+     {
+      "variant_label": "Bearish breakout below overnight low, retest short",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "After a weak break below the overnight low, wait for a retest holding as resistance with bearish confirmation such as a",
+      "target_note": "Continuation lower; no fixed target, stop remains above the broken level",
+      "transcript_quote": "if price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One distinct strategy is taught: an overnight-range breakout-retest continuation setup, with long and short directional variants sharing the same entry/exit skeleton."
+ },
+ "originalTokens": 6297,
+ "cachedTokensReported": 5376
+}

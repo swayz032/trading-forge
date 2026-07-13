@@ -1,0 +1,126 @@
+{
+ "key": "gpt-5.4__ZF8uKPqAu8M__efafbc43c6ff43a7__phaseB__s1",
+ "model": "gpt-5.4",
+ "videoId": "ZF8uKPqAu8M",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s1",
+ "result": {
+  "strategies": [
+   {
+    "name": "opening_range_breakout_pullback_continuation_15m_5m",
+    "higher_timeframe": "15m",
+    "lower_timeframe": "5m",
+    "direction": "long",
+    "entry_sequence": [
+     {
+      "transcript_quote": "my orb range is still defined by the first 15 minutes of the day",
+      "step": 1,
+      "action": "Define the opening range from the first 15 minutes of the session.",
+      "rationale": "This keeps the ORB anchored to the opening 15-minute window."
+     },
+     {
+      "transcript_quote": "I have to use the first three candles to define my range high and range low",
+      "step": 2,
+      "action": "On the 5-minute chart, use the first three candles to mark the opening range high and low.",
+      "rationale": "Those three 5-minute candles represent the first 15 minutes."
+     },
+     {
+      "transcript_quote": "I then wait for my breakout just like before",
+      "step": 3,
+      "action": "Wait for an initial breakout above the opening range.",
+      "rationale": "The setup starts only after price first breaks out of the range."
+     },
+     {
+      "transcript_quote": "I don't buy immediately on the close of this breakout candle",
+      "step": 4,
+      "action": "Do not enter on the initial breakout close.",
+      "rationale": "The strategy avoids chasing the first breakout move."
+     },
+     {
+      "transcript_quote": "I have to wait and see if price is going to make a pullback towards the opening range",
+      "step": 5,
+      "action": "Wait for price to pull back toward the opening range after the breakout.",
+      "rationale": "The pullback is required before looking for continuation."
+     },
+     {
+      "transcript_quote": "what I'm looking for is a candle that's going to break through the range but then close back above it",
+      "step": 6,
+      "action": "Wait for a pullback candle that breaks through the range and then closes back above it.",
+      "rationale": "This shows price dipping into the range but reclaiming it."
+     },
+     {
+      "transcript_quote": "I'm going to be waiting for a break of this most recent high",
+      "step": 7,
+      "action": "After the pullback candle forms, wait for price to break that most recent high as confirmation.",
+      "rationale": "The break of the recent high confirms the bounce is continuing."
+     },
+     {
+      "transcript_quote": "this gives me my confirmation to enter into a trade",
+      "step": 8,
+      "action": "Enter long when the next candle breaks the high of the pullback confirmation candle.",
+      "rationale": "That break is the actual continuation entry trigger."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "the stop loss will still go at the bottom of my opening range",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "He says the stop loss still goes at the bottom of the opening range."
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "I will target 1 and 1/2 times for my take-profit ratio",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 1.5,
+      "rationale": "He says to target 1 and 1/2 times for the take-profit ratio."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "price will often make a pullback and it will return back to the orb",
+      "name": "pullback_to_orb",
+      "description": "He waits for price to make a pullback and return back to the ORB before entering.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "what I'm looking for is a candle that's going to break through the range but then close back above it",
+      "name": "reclaim_of_opening_range",
+      "description": "He wants a candle to break through the range but then close back above it.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "I want to see buyers coming back in and pushing the price back up",
+      "name": "buyers_step_back_in",
+      "description": "He wants to see buyers coming back in and pushing the price back up.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "That gives me confirmation that this line is now starting to act as support",
+      "name": "range_line_acts_as_support",
+      "description": "He wants confirmation that the range line is starting to act as support.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "I'm going to be waiting for a break of this most recent high",
+      "name": "break_of_recent_high_confirmation",
+      "description": "He waits for a break of the most recent high as confirmation.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "I made sure that this was greater than at least 1 times ATR to be considered a suitable breakout",
+      "name": "minimum_breakout_size_atr",
+      "description": "He requires the breakout to be greater than at least 1 times ATR to count as suitable.",
+      "canonical_match": null
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11709,
+ "cachedTokensReported": 10496
+}

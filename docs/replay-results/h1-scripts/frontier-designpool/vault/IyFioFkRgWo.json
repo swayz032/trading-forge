@@ -1,0 +1,183 @@
+{
+ "video_id": "IyFioFkRgWo",
+ "phase_a": {
+  "counts": [
+   1,
+   2,
+   1,
+   2,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 3,
+  "unstable": true,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "support_to_resistance_scalp",
+     "entry_summary": "After allowing the first 5 to 15 minutes to establish support on the 5-minute chart, enter long when price comes down into a recognized support area and bounces. The transcript teaches using moving-average support such as the 13 EMA or, if that fails, deeper support such as the 200 EMA, as well as a",
+     "exit_summary": "Exit the scalp at resistance or after a quick upward move; the repeated management rule is to get in and out quickly, take profit fast, and not overstay the trade.",
+     "variants": [
+      {
+       "variant_label": "13 EMA support bounce scalp",
+       "timeframe_note": "5-minute chart",
+       "confirmation_mechanic_note": "wait for the first 5 to 15 minutes to pass, then buy the touch/bounce off the 13 EMA acting as support",
+       "target_note": "sell into the quick move up / resistance",
+       "transcript_quote": "this 13 EMA operated as a initial support... the stock came down and it hit right there that's our entry for a scalp"
+      },
+      {
+       "variant_label": "200 EMA deeper support bounce scalp",
+       "timeframe_note": "5-minute chart",
+       "confirmation_mechanic_note": "after the 13 EMA loses support status, buy the bounce from deeper support at the 200 EMA",
+       "target_note": "ride it to resistance and exit",
+       "transcript_quote": "another quick Scout this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+      },
+      {
+       "variant_label": "Generic demand-zone support scalp",
+       "timeframe_note": "5-minute chart",
+       "confirmation_mechanic_note": "identify where price repeatedly bottoms and bounces / demand zones, then enter at that support",
+       "target_note": "sell right at resistance",
+       "transcript_quote": "take a quick small trade that you see at support sell right at resistance"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The video teaches one promoted strategy: a long support-bounce scalp sold into resistance/quick upside. A later short-after-support-break move is mentioned with an entry, but its exit is only gestural ('you want to exit right there'), so under Rule 1 it remains an unpromoted mention, not a second strategy object."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "After allowing the first 5 to 15 minutes to establish support on the 5-minute chart, enter long when price comes down into a recognized support area and bounces. The transcript teaches using moving-average support such as the 13 EMA or, if that fails, deeper support such as the 200 EMA, as well as a",
+    "exit_summary": "Exit the scalp at resistance or after a quick upward move; the repeated management rule is to get in and out quickly, take profit fast, and not overstay the trade.",
+    "name": "support_to_resistance_scalp"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "support_to_resistance_scalp",
+      "higher_timeframe": "5m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "in today's example I'm going to show you how to scalp using the F minute chart",
+        "step": 1,
+        "action": "Use the 5-minute chart for this scalping setup.",
+        "rationale": "The speaker frames the example on the 5-minute chart."
+       },
+       {
+        "transcript_quote": "what you want to do is time your entries once you have allowed the first 5 to 15 minutes to pass",
+        "step": 2,
+        "action": "Wait for the first 5 to 15 minutes after the open before taking an entry.",
+        "rationale": "This delay helps establish the key level first."
+       },
+       {
+        "transcript_quote": "it allows you to establish where support is at",
+        "step": 3,
+        "action": "Identify the support area before entry; for long, use established support below price, and for short, use the mirrored resistance area above price.",
+        "rationale": "The setup depends on a recognized reaction level."
+       },
+       {
+        "transcript_quote": "this 13 EMA operated as a initial support",
+        "step": 4,
+        "action": "For long entries, use the 13 EMA as support when price pulls back and reacts there; if trading the mirrored short version, use the failed support/resistance flip as the opposite-side trigger.",
+        "rationale": "The 13 EMA is taught as the first intraday support reference."
+       },
+       {
+        "transcript_quote": "the stock came down and it hit right there that's our entry for a scalp",
+        "step": 5,
+        "action": "Enter when price comes into the identified support area and bounces; for the mirrored short version, enter when price rallies into resistance and rejects.",
+        "rationale": "The entry is taken on the reaction off the level."
+       },
+       {
+        "transcript_quote": "another quick Scout this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status",
+        "step": 6,
+        "action": "If the 13 EMA no longer holds, look for a deeper support entry at the 200 EMA; for the mirrored short version, use the opposite-side deeper resistance/failure context.",
+        "rationale": "The speaker teaches the 200 EMA as the next support reference when the 13 EMA fails."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "you ride it to resistance and you exit",
+        "priority": 1,
+        "type": "range_high",
+        "r_multiple": null,
+        "rationale": "Primary target is resistance on the scalp."
+       },
+       {
+        "transcript_quote": "you get in and out you don't overstay your welcome",
+        "priority": 2,
+        "type": "quick_upward_move",
+        "r_multiple": null,
+        "rationale": "The management objective is a fast scalp rather than a prolonged hold."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "once you have allowed the first 5 to 15 minutes to pass",
+        "name": "initial_opening_range_wait",
+        "description": "The speaker waits for the first 5 to 15 minutes before entering.",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "it allows you to establish where support is at",
+        "name": "support_must_be_established",
+        "description": "The trade is only taken after support has been identified.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "this 13 EMA operated as a initial support",
+        "name": "13_ema_as_support",
+        "description": "The 13 EMA is used as the initial support reference.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "deeper support sitting at the 200 EMA once the 13 EMA gave up its support status",
+        "name": "200_ema_deeper_support",
+        "description": "If the 13 EMA fails, the 200 EMA becomes the deeper support area to watch.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "look at Price action look at where stock is bottom at and bounce from",
+        "name": "price_action_bounce_confirmation",
+        "description": "The speaker wants support confirmed by price bottoming and bouncing from that area.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "look and learn to find and spot the demand zones",
+        "name": "demand_zone_support",
+        "description": "Demand zones are taught as support areas where buyers may step in.",
+        "canonical_match": "vp_level_proximity"
+       },
+       {
+        "transcript_quote": "every time we get to this price the stock take off",
+        "name": "repeated_reaction_level",
+        "description": "A level is favored when price repeatedly takes off from it.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "sell right at resistance",
+        "name": "resistance_nearby_target",
+        "description": "The scalp is framed around buying support and exiting into resistance.",
+        "canonical_match": "liquidity_target_clear"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

@@ -1,0 +1,28 @@
+{
+ "key": "gpt-5.4___LS6qcSlDCs__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "_LS6qcSlDCs",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_break_and_pullback_long",
+    "entry_summary": "Go long only after a penny stock opens/starts weak below VWAP, then breaks above VWAP with strong volume and an obvious string of green candles. Enter on the subsequent pullback/dip buy into VWAP support (or nearby obvious support like a whole-dollar level) to catch the first bounce.",
+    "exit_summary": "Manage the trade as a scalp: sell into the bounce upward after VWAP holds as support rather than buying/holding at highs. The speaker frames exits as scalping out / riding the bounce for profit, but does not teach a more detailed mechanical stop/target beyond using the pullback-to-support risk/rewar",
+    "variants": [
+     {
+      "variant_label": "VWAP pullback long after obvious break with volume",
+      "timeframe_note": "Intraday, typically after the opening bell; examples around 10:00 and 11:00-11:30 market time",
+      "confirmation_mechanic_note": "Wait for break above VWAP plus strong volume and multiple green candles, then buy the pullback as VWAP holds support",
+      "target_note": "Scalp out into the bounce / upward momentum after support holds",
+      "transcript_quote": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap[p"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one long-only VWAP reclaim/pullback scalp across multiple examples; the examples are compatible variants of the same skeleton, not separate strategies. Exit logic is only lightly specified as scalping/riding the bounce, so no opposite or additional setup is promoted."
+ },
+ "originalTokens": 5818,
+ "cachedTokensReported": 4864
+}

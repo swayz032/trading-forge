@@ -1,0 +1,20 @@
+{
+ "key": "gpt-5.4___LS6qcSlDCs__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "_LS6qcSlDCs",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_break_and_pullback_long",
+    "entry_summary": "Trade long only after a penny stock opens/holds below VWAP, then breaks above VWAP with strong volume and an obvious string of green candles. Enter on the subsequent pullback/retest of VWAP (or a nearby key level like a whole-dollar area) as support, looking to buy the bounce rather than chase the H",
+    "exit_summary": "Exit by scalping out into the bounce/upward momentum after the pullback entry. No concrete stop-loss, target level, or repeatable exit rule is taught beyond taking profit on the bounce, so the management is only loosely specified.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video repeatedly teaches one long VWAP-reclaim pullback setup across several examples. A bearish rejection-at-VWAP idea is mentioned only as context/risk warning and is not promoted to a separate strategy because no runnable short entry-plus-exit rules are taught."
+ },
+ "originalTokens": 5676,
+ "cachedTokensReported": 4864
+}

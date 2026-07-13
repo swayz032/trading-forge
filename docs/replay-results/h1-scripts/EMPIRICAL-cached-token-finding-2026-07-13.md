@@ -13,3 +13,6 @@ The $0.08 leaked through the blind spot in the hours BEFORE the cross-run ledger
 
 ## Burst ticket (operator-signed, hard-bounded, PROVEN)
 `grantBurstTicket`/`evaluateWithBurst` (governor). Today's ticket: gpt54, **250K tokens OR $2.00, whichever first**, freePoolLine 250K, overage $6.67/1M, signed by operator (Tonio: "$2 not $4"), auto-expires at consumption OR UTC midnight → wall reverts to free-only. Bounds PROVEN (trip test: token-cap stops at paid>250K, usd-cap stops at $>2, no-ticket/expired refuse). Paid-so-far 12K=$0.08; headroom 238K (~3-4 videos). Sealed 12 CANNOT be bought at any price (protocol-locked, separate from the 16).
+
+## ADMIN KEY + Costs API (2026-07-13, later)
+Operator provided an admin key WITH `api.usage.read` scope → Costs API `/v1/organization/costs` now returns 200 (stored in gitignored `.env` as `OPENAI_ADMIN_KEY`, never committed). BUT it reports **$0 across 35 days** = OpenAI cost-reporting is **T+1 lagged** (no paid usage before today; today's ~$2 posts tomorrow). So the dollar-truth layer is a **DAILY reconciliation (T+1)**, exactly as designed — real-time safety stays the estimate-governor (token full-weight + $-ticket at measured-blend×1.5), and the Costs API corrects the prior day's estimate to actuals. Balance reads $6.30 now (nothing posted); will read ~$4.30 once today finalizes. NOT overclaimed as real-time.

@@ -1,0 +1,27 @@
+{
+ "key": "gpt-5.4__WEhmadJArQo__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4",
+ "videoId": "WEhmadJArQo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "opening_range_fvg_retest_scalp",
+    "entry_summary": "On the 5-minute chart, mark the high and low of the first 9:30-9:35 candle, then switch to the 1-minute chart and wait for price to break one of those levels with a fair value gap to confirm direction. After price retests the fair value gap, enter when the retest candle is engulfed in the directions",
+    "exit_summary": "Place the stop loss just beyond the deepest point price traded into the fair value gap, with one tick of breathing room. Use a fixed 3:1 target and do not micromanage the trade after entry.",
+    "variants": []
+   },
+   {
+    "strategy_id": 1,
+    "name": "opening_range_fvg_limit_entry_day_trade",
+    "entry_summary": "On the 15-minute chart, mark the high and low of the first 9:30-9:45 candle, then switch to the 5-minute chart and wait for price to break one of those levels while forming a fair value gap. Instead of waiting for a retest confirmation candle, place a limit order on the fair value gap so the trade a",
+    "exit_summary": "Place the stop loss at or just beyond the first candle of the three-candle fair value gap pattern. Use a fixed 2:1 target and let the trade play out without micromanagement.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video teaches two distinct strategies: a scalping FVG retest with engulfing confirmation and 3:1 target, and a day-trading FVG limit-entry variant with different timeframe structure, entry mechanic, stop placement, and 2:1 target."
+ },
+ "originalTokens": 6005,
+ "cachedTokensReported": 0
+}

@@ -3,6 +3,48 @@
  "pool": "gpt54",
  "partition": 200000,
  "videos": {
+  "-igpOZs8LsM": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 498520
+  },
+  "0xygpCMwxbQ": {
+   "enum_counts": [
+    2,
+    2,
+    1,
+    2,
+    2
+   ],
+   "mode": 2,
+   "mode_n": 4,
+   "unstable": false,
+   "n_strategies": 2,
+   "spent_so_far": 498520
+  },
+  "2DXQqwKSwJE": {
+   "enum_counts": [
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   "mode": 3,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 3,
+   "spent_so_far": 498520
+  },
   "4cT8WTyxhYY": {
    "enum_counts": [
     1,
@@ -15,7 +57,175 @@
    "mode_n": 5,
    "unstable": false,
    "n_strategies": 1,
-   "spent_so_far": 39196
+   "spent_so_far": 498520
+  },
+  "CLDEIsNpVRc": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 498520
+  },
+  "DLwVqcLRcfw": {
+   "enum_counts": [
+    1,
+    1,
+    2,
+    2,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 3,
+   "unstable": true,
+   "n_strategies": 1,
+   "spent_so_far": 498520
+  },
+  "E9MzEC_yNoM": {
+   "enum_counts": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "mode": 2,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 2,
+   "spent_so_far": 555681
+  },
+  "IyFioFkRgWo": {
+   "enum_counts": [
+    1,
+    2,
+    1,
+    2,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 3,
+   "unstable": true,
+   "n_strategies": 1,
+   "spent_so_far": 593405
+  },
+  "PVMgOxHUqFA": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 635018
+  },
+  "R5L890juvRw": {
+   "enum_counts": [
+    1,
+    2,
+    2,
+    2,
+    2
+   ],
+   "mode": 2,
+   "mode_n": 4,
+   "unstable": false,
+   "n_strategies": 2,
+   "spent_so_far": 686228
+  },
+  "W7nlnHTUZQU": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 729301
+  },
+  "WEhmadJArQo": {
+   "enum_counts": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "mode": 2,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 2,
+   "spent_so_far": 781690
+  },
+  "ZF8uKPqAu8M": {
+   "enum_counts": [
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "mode": 4,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 4,
+   "spent_so_far": 862795
+  },
+  "_LS6qcSlDCs": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 902960
+  },
+  "dV7chra4u4Q": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 948322
+  },
+  "kFyD3H6I1I8": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 992688
   }
  }
 }

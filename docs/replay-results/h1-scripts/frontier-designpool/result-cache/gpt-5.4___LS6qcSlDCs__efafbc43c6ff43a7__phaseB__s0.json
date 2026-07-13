@@ -1,0 +1,118 @@
+{
+ "key": "gpt-5.4___LS6qcSlDCs__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "_LS6qcSlDCs",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "vwap_break_and_pullback_long",
+    "higher_timeframe": "1m",
+    "lower_timeframe": null,
+    "direction": "long",
+    "entry_sequence": [
+     {
+      "transcript_quote": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs",
+      "step": 1,
+      "action": "Wait for a stock that opened below VWAP at the open to break back above VWAP.",
+      "rationale": "The reclaim of VWAP after opening weak is the milestone trigger for the setup."
+     },
+     {
+      "transcript_quote": "breaks above it with some volume coming in that's my favorite area to dip buy into",
+      "step": 2,
+      "action": "Require volume to come in on the move above VWAP before considering the trade.",
+      "rationale": "Volume confirms the reclaim is meaningful in these momentum penny stocks."
+     },
+     {
+      "transcript_quote": "i'm buying on the pullbacks to test as a support area",
+      "step": 3,
+      "action": "Enter long on the pullback/retest after the VWAP break, using VWAP as support.",
+      "rationale": "The trade is not the initial breakout; it is the dip buy on the support test."
+     },
+     {
+      "transcript_quote": "we bought into the pullback and we rode the bounce up",
+      "step": 4,
+      "action": "Buy the bounce from the pullback once price respects VWAP and starts moving back up.",
+      "rationale": "The entry thesis is that VWAP holds and price bounces higher from it."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": null,
+     "anchor": null,
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The transcript teaches VWAP must hold as support but does not give a precise initial stop placement."
+    },
+    "stop_management": null,
+    "targets": [],
+    "confluences": [
+     {
+      "transcript_quote": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute",
+      "name": "minimum_liquidity_filter",
+      "description": "Only trade stocks with average volume over the last 20 minutes above 200,000 shares per minute.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "i need this volume to be there if i'm going to take this trade if it's not i move on",
+      "name": "volume_required",
+      "description": "Volume must be present or the trade is skipped.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "i need the float to be under 50 million",
+      "name": "low_float_filter",
+      "description": "The stock needs a float under 50 million shares.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "especially under 10 million then it's gonna work a larger percentage of the time",
+      "name": "prefer_very_low_float",
+      "description": "Floats under 10 million are preferred for stronger momentum.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "opens weak on the day and actually drops at the opening bell below the v-wop",
+      "name": "weak_open_below_vwap",
+      "description": "The preferred setup starts with a weak open below VWAP.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "breaks above that v-wop area actually holding it as support and bouncing off of it",
+      "name": "vwap_reclaim_and_hold",
+      "description": "Price must break above VWAP, hold it as support, and bounce from it.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "with some volume coming in",
+      "name": "volume_on_reclaim",
+      "description": "The move back above VWAP should happen with volume coming in.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "we had a ton of green candles in a row which obviously shows a lot of strength",
+      "name": "obvious_bullish_momentum",
+      "description": "The setup should show obvious strength with many green candles in a row.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level like three dollars here",
+      "name": "pullback_to_support_level",
+      "description": "The pullback should return to VWAP or another nearby key support such as a whole-dollar level.",
+      "canonical_match": "vp_level_proximity"
+     },
+     {
+      "transcript_quote": "i never buy these stocks if the v is above me",
+      "name": "no_long_if_vwap_overhead",
+      "description": "Do not take the long if VWAP is still above price acting as resistance.",
+      "canonical_match": "vwap_alignment"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "non_futures_primary"
+ },
+ "originalTokens": 10947,
+ "cachedTokensReported": 0
+}

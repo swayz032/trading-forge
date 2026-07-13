@@ -1,0 +1,49 @@
+{
+ "key": "gpt-5.4__dV7chra4u4Q__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "dV7chra4u4Q",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "break_and_retest_continuation",
+    "entry_summary": "Identify an obvious key level such as pre-market high/low, previous day high/low, or 30-minute opening range high/low. Enter only after price breaks the level with strong momentum and volume, then retests it and shows confirmation that the level is holding in the breakout direction: bullish price/re",
+    "exit_summary": "Place the stop on the opposite side of the breakout level, often just beyond the confirmation candle or above/below the retest area. Target the next obvious liquidity area such as a previous high/low, supply zone, or demand zone; partials/break-even management may be used in examples.",
+    "variants": [
+     {
+      "variant_label": "Long break above resistance, then retest holds as support",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "Wait for bullish confirmation on the retest, such as long lower wicks, bullish hammers, dragonfly dojis, or reclaiming/\"",
+      "target_note": "Next obvious liquidity above, such as previous high or pre-market high",
+      "transcript_quote": "Price breaks above a key level or breaks below a key level, it comes back, it retests that level, and it holds it, and it continues in the original"
+     },
+     {
+      "variant_label": "Short break below support, then retest holds as resistance",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "Wait for bearish confirmation on the retest, such as long upper wicks, bearish hammers, gravestone dojis, or rejection",
+      "target_note": "Next obvious liquidity below, such as previous low or demand area",
+      "transcript_quote": "If it can become resistance, we're looking to go short, our stop loss is going to be if price comes back up above this break area."
+     },
+     {
+      "variant_label": "Order-flow / Bookmap confirmation add-on",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "Use Bookmap liquidity / order flow to visually confirm buyers or sellers at the retest area",
+      "target_note": null,
+      "transcript_quote": "if you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area."
+     },
+     {
+      "variant_label": "Timeframe examples on 5-minute / 2-minute and session-specific levels",
+      "timeframe_note": "Examples shown on 5-minute candles, possible 2-minute refinement, and levels from pre-market, Asia session, and 30-minOR",
+      "confirmation_mechanic_note": "Same break-retest-confirmation skeleton across examples",
+      "target_note": "Sometimes trim partials and move the rest to break even in examples",
+      "transcript_quote": "Maybe it looked better on the 2-minute time frame. But if you ended up going short, again, stop is right above this 30-minute orb low."
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One distinct strategy is taught: break-and-retest continuation. Long and short uses are opposite-direction variants of the same break-retest skeleton with shared entry/exit mechanics, and the other differences shown are confirmation/timeframe/management variations rather than separate strategies."
+ },
+ "originalTokens": 6762,
+ "cachedTokensReported": 5888
+}

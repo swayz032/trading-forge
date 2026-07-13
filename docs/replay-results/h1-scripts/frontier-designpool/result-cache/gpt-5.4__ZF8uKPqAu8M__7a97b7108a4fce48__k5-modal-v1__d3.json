@@ -1,0 +1,56 @@
+{
+ "key": "gpt-5.4__ZF8uKPqAu8M__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "ZF8uKPqAu8M",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "opening_range_breakout_close_entry",
+    "entry_summary": "Define the 15-minute opening range from the 9:30 New York candle high and low, then go long when a candle breaks above the range and closes outside it; enter at the open of the next candle. The speaker also notes a cutoff of no new entries after the 12:00 candle and avoids ranges that are too small/",
+    "exit_summary": "Place the stop loss at the bottom of the opening range and target 1.5:1 reward-to-risk.",
+    "variants": []
+   },
+   {
+    "strategy_id": 1,
+    "name": "opening_range_breakout_pullback_continuation",
+    "entry_summary": "On a 5-minute chart, define the opening range using the first three 5-minute candles, wait for an initial upside breakout, then wait for price to pull back toward the range. A valid pullback candle breaks through the range but closes back above it, and the long entry is taken only after the next-cc3",
+    "exit_summary": "Stop loss is placed at the bottom of the opening range; the speaker also mentions a compatible variant of placing the stop at the bottom of the pullback candle. Target is 1.5:1 reward-to-risk, with larger R targets later tested as variants.",
+    "variants": [
+     {
+      "variant_label": "base confirmation entry, 1.5R target",
+      "timeframe_note": "5-minute chart with opening range defined by first three 5-minute candles",
+      "confirmation_mechanic_note": "enter on break of the most recent high after a pullback candle breaks below the range and closes back above it",
+      "target_note": "1.5:1 reward-to-risk",
+      "transcript_quote": "Once I get this pullback candle, I don't enter immediately... I'm going to be waiting for a break of this most recent high."
+     },
+     {
+      "variant_label": "same pullback-continuation skeleton with larger profit targets",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "same confirmation entry after pullback and continuation",
+      "target_note": "tested take-profit ratios from 2.5R to 4.5R",
+      "transcript_quote": "I reran the simulation and this time I tested take-profit ratios starting at 2 1/2 and going all the way up to 4 1/2"
+     }
+    ]
+   },
+   {
+    "strategy_id": 2,
+    "name": "opening_range_breakout_pullback_top_of_range_stop_order",
+    "entry_summary": "After an opening-range breakout, wait for price to pull back to the top of the opening range and use a stop order there to enter immediately on the bounce, instead of waiting for confirmation via a break of the prior high.",
+    "exit_summary": "Stop loss remains at the bottom of the opening range and take profit is 1.5:1 reward-to-risk.",
+    "variants": []
+   },
+   {
+    "strategy_id": 3,
+    "name": "opening_range_breakout_pullback_midpoint_stop_order",
+    "entry_summary": "After measuring the breakout from the top of the opening range, wait for a deeper pullback to the midpoint of the opening range and buy immediately with a stop order when price reaches that midpoint, without waiting for a break of a previous high.",
+    "exit_summary": "Because entry is at the midpoint, the stop loss is smaller; the transcript frames the stop as tighter than prior versions while still using a 1.5:1 target as the stated test case.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video teaches four runnable long-entry skeletons with explicit stop/target mechanics: the original 15-minute ORB breakout, a pullback-confirmation continuation version, a top-of-range stop-order pullback entry, and a midpoint stop-order pullback entry; later mention of 'doing the opposite' momentum-focused breakout is not promoted because no concrete runnable exit is taught."
+ },
+ "originalTokens": 6955,
+ "cachedTokensReported": 5888
+}

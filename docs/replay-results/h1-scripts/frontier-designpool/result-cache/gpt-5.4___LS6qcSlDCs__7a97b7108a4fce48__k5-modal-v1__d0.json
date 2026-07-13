@@ -1,0 +1,28 @@
+{
+ "key": "gpt-5.4___LS6qcSlDCs__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4",
+ "videoId": "_LS6qcSlDCs",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_break_and_pullback_long",
+    "entry_summary": "Only on high-volume, lower-float penny stocks, wait for a stock that opened weak below VWAP to break back above VWAP with strong volume and obvious bullish momentum. Enter long on the subsequent pullback/retest of VWAP or a nearby key level as support, looking for the bounce.",
+    "exit_summary": "Manage as a scalp by selling into the bounce after VWAP holds and price pushes back up; the transcript does not give a precise stop/target formula, but the taught management is to use VWAP as the support thesis and avoid long entries when VWAP remains overhead as resistance.",
+    "variants": [
+     {
+      "variant_label": "VWAP pullback long after break with volume",
+      "timeframe_note": "Intraday, typically after the opening bell once volume expands",
+      "confirmation_mechanic_note": "Wait for strong volume, multiple green candles, a break above VWAP, then a clear pullback into VWAP support before going",
+      "target_note": "Scalp the bounce upward after support holds",
+      "transcript_quote": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap ["
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one long-only VWAP-reclaim pullback setup repeatedly across examples; bearish rejection below VWAP is discussed as context/filter, not promoted to a separate runnable strategy with its own concrete exit."
+ },
+ "originalTokens": 5781,
+ "cachedTokensReported": 0
+}

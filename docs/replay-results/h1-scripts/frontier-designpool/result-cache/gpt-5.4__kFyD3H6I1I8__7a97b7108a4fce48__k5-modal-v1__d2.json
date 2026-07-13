@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__kFyD3H6I1I8__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4",
+ "videoId": "kFyD3H6I1I8",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "session_bias_orb_retest_scalp",
+    "entry_summary": "First determine directional bias from the 7:00 a.m. and 8:00 a.m. one-hour candles: bullish engulfing for longs, bearish engulfing for shorts. Then on the 5-minute New York open, mark the 9:30-9:45 opening range, wait for price to break and close outside the range in the bias direction, and enter on",
+    "exit_summary": "Place the stop beyond the invalidation area for the retracement entry (examples: below the opening range or below demand for longs, above a recent wick for shorts). Take profit at a left-side opposing level such as supply/resistance for longs or support for shorts; in one variant the trade is also",
+    "variants": [
+     {
+      "variant_label": "Long entry via demand/support retrace after bullish ORB break",
+      "timeframe_note": "Bias on 1-hour candles; execution on 5-minute New York session",
+      "confirmation_mechanic_note": "After bullish 7:00/8:00 engulfing and break-close above the opening range, wait for retrace into demand/support; either",
+      "target_note": "Target left-side resistance/supply; example risk-reward around 2.16-2.3R",
+      "transcript_quote": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy... waiting for that price to come"
+     },
+     {
+      "variant_label": "Long entry via limit order at support/demand after bullish ORB break",
+      "timeframe_note": "Bias on 1-hour candles; execution around New York session opening range",
+      "confirmation_mechanic_note": "After bullish bias and break-close above range, place a passive limit order at the chosen support/demand level instead ",
+      "target_note": "Target the last left-side level associated with a strong push down/resistance",
+      "transcript_quote": "on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position"
+     },
+     {
+      "variant_label": "Short entry via break-and-retest of range bottom after bearish ORB break",
+      "timeframe_note": "Bias on 1-hour candles; execution on 5-minute New York session",
+      "confirmation_mechanic_note": "After bearish 7:00/8:00 engulfing and break-close below the opening range, enter on retrace to the bottom of the range /",
+      "target_note": "Manage manually; speaker says he moved stop to break even after price moved down, then held to take profit at a lower",
+      "transcript_quote": "I was also looking at the bottom of the range entry, the classic break and retest entry... I put my stop loss above this recent wick to be safe... Now"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one three-step opening-range breakout retracement scalping skeleton; buy/sell directions and confirmation differences (engulfing confirmation vs passive limit vs classic retest, plus target/management differences) are compatible variants rather than distinct strategies."
+ },
+ "originalTokens": 6546,
+ "cachedTokensReported": 5376
+}

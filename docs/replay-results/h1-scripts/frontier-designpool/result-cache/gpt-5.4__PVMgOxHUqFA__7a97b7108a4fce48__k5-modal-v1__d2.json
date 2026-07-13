@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__PVMgOxHUqFA__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4",
+ "videoId": "PVMgOxHUqFA",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "trend_reversal_to_higher_timeframe_trend_continuation",
+    "entry_summary": "Determine the higher-timeframe trend (4H/1H bullish in the examples), then on the 15-minute or 5-minute chart track the correction's lower highs and lower lows. Enter long when the pullback stops making lower lows and then breaks above the most recent lower high, with the higher timeframe still in a",
+    "exit_summary": "Place the stop loss below the level that should not break if the reversal is valid (under the recent low / invalidation level). Target the next higher-timeframe high first (e.g. 1H high), and optionally continue holding with the trend for larger R if higher timeframes are still pushing.",
+    "variants": [
+     {
+      "variant_label": "15m bullish shift in London-session gold correction",
+      "timeframe_note": "15-minute execution with 4-hour/1-hour bullish bias",
+      "confirmation_mechanic_note": "wait for price to stop making lower lows and then break above the lower high",
+      "target_note": "target next higher-timeframe high; stop under the recent invalidation low",
+      "transcript_quote": "all you're doing is waiting for price to go back bullish on that 15minut time frame and putting your stop loss under that level where you don't want t"
+     },
+     {
+      "variant_label": "5m ABC version of the same bullish shift",
+      "timeframe_note": "5-minute execution",
+      "confirmation_mechanic_note": "same A-B-C structure: low, lower high, higher low, then break above the lower high",
+      "target_note": "target the 1 hour high first; speaker notes roughly 1:10 and potentially more if holding with 4H trend",
+      "transcript_quote": "same same setup. Literally a ABC setup. And then we have that push that break above your once again your entry goes here and then your stop loss goes"
+     },
+     {
+      "variant_label": "small 1m/5m scalp continuation entry",
+      "timeframe_note": "speaker references a one-minute view after spotting structure on the five-minute",
+      "confirmation_mechanic_note": "after a correction and lower high, take the continuation scalp back up",
+      "target_note": "take profit back to the nearby prior level shown by the speaker",
+      "transcript_quote": "I seen price correct. Have some rejections here. So I was like, Okay, let me take this on that five minute time frame"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches one core long strategy: align with higher-timeframe trend, wait for lower-timeframe bearish correction to end, enter on break above the corrective lower high, and use a stop below invalidation with targets at higher-timeframe highs / trend continuation. The final scalp appears to be the same skeleton shown on a smaller timeframe, so it is treated as a variant rather than a 2"
+ },
+ "originalTokens": 6226,
+ "cachedTokensReported": 0
+}

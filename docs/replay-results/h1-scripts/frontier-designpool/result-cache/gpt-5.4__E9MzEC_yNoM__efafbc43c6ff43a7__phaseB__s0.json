@@ -1,0 +1,146 @@
+{
+ "key": "gpt-5.4__E9MzEC_yNoM__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "E9MzEC_yNoM",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "premarket_level_breakout_or_retest_continuation",
+    "higher_timeframe": "5m",
+    "lower_timeframe": "1m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "you want to find the highest point of price action, and you want to find the lowest point of price action",
+      "step": 1,
+      "action": "On the 5-minute chart, mark the pre-market high and pre-market low from 3:00 a.m. EST to the 9:30 a.m. market open.",
+      "rationale": "These levels define the key breakout and retest zones for the session."
+     },
+     {
+      "transcript_quote": "Once we get a clean break above pre-market highs or below pre-market lows, this is your first signal",
+      "step": 2,
+      "action": "For long, wait for a clean break above the pre-market high; for short, wait for a clean break below the pre-market low.",
+      "rationale": "The break of the pre-market boundary is the first signal for continuation."
+     },
+     {
+      "transcript_quote": "typically we are going to scale down to a lower time frame such as a 2-minut or you could even play around with a 1 minute",
+      "step": 3,
+      "action": "After the level is engaged, scale down to a lower timeframe such as 1-minute or 2-minute to execute the entry trigger.",
+      "rationale": "The lower timeframe is used to refine the breakout or retest entry."
+     },
+     {
+      "transcript_quote": "we want to see the break and we actually want to see the close above or below the level",
+      "step": 4,
+      "action": "For breakout entries, enter only after the lower-timeframe candle closes above the pre-market high for longs or below the pre-market low for shorts.",
+      "rationale": "Waiting for the close helps confirm the breakout is real."
+     },
+     {
+      "transcript_quote": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support",
+      "step": 5,
+      "action": "For retest entries, after a break above the pre-market high, wait for price to retest the broken level as support and go long; after a break below the pre-market low, wait for price to retest the broken level as resistance and go short.",
+      "rationale": "The retest confirms the broken level is holding before entry."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": "The stop is always going to go on the opposite side of the entry candle",
+     "anchor": "displacement_candle_low",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker says the initial stop goes on the opposite side of the entry candle."
+    },
+    "stop_management": "Move the stop-loss to at least break even, ideally into profit, and continue trailing it as the trade moves in your favor.",
+    "targets": [
+     {
+      "transcript_quote": "I'm typically looking for bare minimum of 1x of my original risk",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 1,
+      "rationale": "The speaker says the minimum objective is 1x original risk."
+     },
+     {
+      "transcript_quote": "ideally what I'm looking for is a 1.5x to a 2x my original risk",
+      "priority": 2,
+      "type": "r_multiple",
+      "r_multiple": 1.5,
+      "rationale": "The speaker says the preferred target range starts at 1.5x original risk."
+     },
+     {
+      "transcript_quote": "ideally what I'm looking for is a 1.5x to a 2x my original risk",
+      "priority": 3,
+      "type": "r_multiple",
+      "r_multiple": 2,
+      "rationale": "The speaker says the upper end of the preferred target range is 2x original risk."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "starting at 3:00 a.m. Eastern time",
+      "name": "premarket_window_defined",
+      "description": "Use the pre-market range starting at 3:00 a.m. Eastern time to define the key levels.",
+      "canonical_match": "killzone_active"
+     },
+     {
+      "transcript_quote": "all the way up into New York market open, which is going to be 9:30 a.m. EST",
+      "name": "range_ends_at_ny_open",
+      "description": "Build the pre-market range from 3:00 a.m. EST until the 9:30 a.m. New York market open.",
+      "canonical_match": "killzone_active"
+     },
+     {
+      "transcript_quote": "we want to look for breakouts, we want to look for retests",
+      "name": "trade_only_at_premarket_extremes",
+      "description": "The setup is only taken when price trades into the pre-market high or pre-market low and offers a breakout or retest.",
+      "canonical_match": "liquidity_target_clear"
+     },
+     {
+      "transcript_quote": "we want to see the break and we actually want to see the close above or below the level",
+      "name": "candle_close_confirmation",
+      "description": "Wait for a candle close above or below the level instead of entering early.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "we are looking for an increase in the volume to confirm that the breakout is actually valid",
+      "name": "elevated_volume_on_break",
+      "description": "The breakout should have increased volume to validate the move.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "you need to wait for the break. You do not want to take early entries",
+      "name": "no_early_entries",
+      "description": "Do not enter before the level has actually broken.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "look for that confirmation on the retest if you want to be the retest trader",
+      "name": "retest_confirmation",
+      "description": "For retest entries, wait for confirmation that the broken level is holding.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "you want to avoid overall fake outs by staying patient",
+      "name": "avoid_fakeouts_with_patience",
+      "description": "Patience is required to avoid fake breakouts around the pre-market levels.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "price breaks above it very very strong, pulls back, test it multiple times as support",
+      "name": "strong_break_then_hold",
+      "description": "The best retest continuation comes after a strong break and a successful hold of the broken level.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "these ranges set up for key breakout zones, retest zones",
+      "name": "range_based_breakout_context",
+      "description": "The pre-market range creates the breakout and retest zones used by the setup.",
+      "canonical_match": "regime_match"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11991,
+ "cachedTokensReported": 0
+}

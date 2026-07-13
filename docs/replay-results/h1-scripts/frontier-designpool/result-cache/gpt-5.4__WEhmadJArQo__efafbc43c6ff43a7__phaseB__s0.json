@@ -1,0 +1,102 @@
+{
+ "key": "gpt-5.4__WEhmadJArQo__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "WEhmadJArQo",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "opening_range_fvg_retest_scalp",
+    "higher_timeframe": "5m",
+    "lower_timeframe": "1m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "we're going to mark out the high and the low of the first 5-minute candle",
+      "step": 1,
+      "action": "Mark the high and low of the first 9:30-9:35 5-minute candle as the opening range levels.",
+      "rationale": "These levels define the key levels for the setup."
+     },
+     {
+      "transcript_quote": "we need a fair value gap",
+      "step": 2,
+      "action": "On the 1-minute chart, wait for price to break above the first 5-minute high for a long or below the first 5-minute low for a short, and require that the break forms a fair value gap.",
+      "rationale": "The fair value gap is the confirmation that the level break has force behind it."
+     },
+     {
+      "transcript_quote": "first we want to wait for a retest of the fair value gap",
+      "step": 3,
+      "action": "Wait for price to retest the fair value gap by trading back into it after the breakout.",
+      "rationale": "The setup needs price to come back into the imbalance before entry."
+     },
+     {
+      "transcript_quote": "then we wait for this retest candle right here to get engulfed",
+      "step": 4,
+      "action": "Enter long when the retest candle is engulfed to the upside after a bullish break, or enter short when the retest candle is engulfed to the downside after a bearish break.",
+      "rationale": "The engulfing confirms control by the side of the breakout."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "you want to put that under the lowest area that we traded into that fair value gap. And you always want to give it one tick of breathing room.",
+     "anchor": "fvg_low",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "Place the stop beyond the deepest point traded into the fair value gap with one tick of room."
+    },
+    "stop_management": "\"No need to micromanage your trade.\"",
+    "targets": [
+     {
+      "transcript_quote": "we are just targeting a fixed 3:1 return",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 3,
+      "rationale": "Target a fixed 3:1 return."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "we need a fair value gap",
+      "name": "fair_value_gap_required",
+      "description": "The breakout must include a fair value gap; simply crossing the level is not enough.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it.",
+      "name": "no_simple_level_cross",
+      "description": "A wick or candle close through the opening-range level alone is not a valid trigger.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "the middle candle was very expansive, showing a lot of force",
+      "name": "expansive_middle_candle",
+      "description": "The fair value gap should be formed by an expansive middle candle that shows force.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "especially when it happens through this first 5-minute candle level",
+      "name": "opening_range_level_break",
+      "description": "The fair value gap should form through the first 5-minute candle high or low.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "this shows us that buyers are in control",
+      "name": "engulfing_confirms_control",
+      "description": "The engulfing of the retest candle confirms control by the breakout side before entry.",
+      "canonical_match": "market_structure_aligned"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [
+   {
+    "name": "opening_range_fvg_retest_scalp",
+    "reason": "fixed_point_stop_not_supported",
+    "detail": "Speaker uses \"one tick of breathing room,\" which is a fixed-point stop buffer not supported by the schema."
+   }
+  ],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11012,
+ "cachedTokensReported": 0
+}

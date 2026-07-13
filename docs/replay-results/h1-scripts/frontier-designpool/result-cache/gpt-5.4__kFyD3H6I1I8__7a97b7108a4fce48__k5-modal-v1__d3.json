@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__kFyD3H6I1I8__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "kFyD3H6I1I8",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "session_bias_opening_range_retest_scalp",
+    "entry_summary": "Determine directional bias from the 7:00 a.m. and 8:00 a.m. one-hour candles using an engulfing pattern before the New York session: bullish engulfing for longs, bearish engulfing for shorts. Then on the 5-minute chart mark the 9:30-9:45 opening range, wait for price to break and close in the bias方向",
+    "exit_summary": "Enter on the retracement into the chosen point of interest after the breakout, with the stop beyond the structure/zone used for entry (e.g. below demand or below the range for longs, above recent wick/supply for shorts). Take profit at a left-side supply/resistance level for longs or support/demand/",
+    "variants": [
+     {
+      "variant_label": "Long entry using demand-zone retest with bullish engulfing confirmation",
+      "timeframe_note": "Bias from H1; execution on 5-minute opening range",
+      "confirmation_mechanic_note": "After bullish bias and upside range break/close, wait for retracement into demand and a local bullish engulfing pattern,",
+      "target_note": "Target left-side supply/resistance; example roughly 2.3R",
+      "transcript_quote": "it taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have 또"
+     },
+     {
+      "variant_label": "Long entry using passive limit at support/demand after upside breakout",
+      "timeframe_note": "Bias from H1; execution around New York opening range",
+      "confirmation_mechanic_note": "After bullish bias and upside range break/close, place a limit order at support / overlapping demand rather than waiting",
+      "target_note": "Target the last major level that caused a big push down",
+      "transcript_quote": "on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position."
+     },
+     {
+      "variant_label": "Short entry using break-and-retest of opening-range low",
+      "timeframe_note": "Bias from H1; execution around 9:30-9:45 opening range",
+      "confirmation_mechanic_note": "After bearish bias and downside range break/close, enter on retrace to the bottom of the range / supply area",
+      "target_note": "Managed manually; speaker says he moved stop to break even after price moved in favor and later took profit lower",
+      "transcript_quote": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my tr"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one three-step opening-range breakout/retest scalping skeleton; long and short examples, plus engulfing-confirmation vs passive-limit entry, are compatible variants rather than distinct strategies."
+ },
+ "originalTokens": 6498,
+ "cachedTokensReported": 0
+}

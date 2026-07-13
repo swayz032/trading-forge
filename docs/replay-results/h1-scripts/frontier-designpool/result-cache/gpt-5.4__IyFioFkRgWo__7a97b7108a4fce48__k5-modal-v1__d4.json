@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__IyFioFkRgWo__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "support_to_resistance_scalp",
+    "entry_summary": "After letting the first 5 to 15 minutes pass on the 5-minute chart, identify a support level and enter when price comes down to that support and bounces. The examples use the 13 EMA first and later a deeper support at the 200 EMA, but the core entry is buying at support after it is established.",
+    "exit_summary": "Exit the scalp at resistance / after the quick upward move; the speaker repeatedly frames it as getting in at support and selling at resistance without overstaying. Management is to take the quick profit and get out rather than hold all day.",
+    "variants": [
+     {
+      "variant_label": "13 EMA support bounce scalp",
+      "timeframe_note": "5-minute chart after first 5 to 15 minutes",
+      "confirmation_mechanic_note": "enter when price comes down to the established 13 EMA support and bounces",
+      "target_note": "sell into the quick move up / at resistance",
+      "transcript_quote": "this 13 EMA operated as a initial support... the stock came down and it hit right there that's our entry for a scalp okay"
+     },
+     {
+      "variant_label": "200 EMA deeper support bounce scalp",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "after the 13 EMA loses support status, enter off deeper support at the 200 EMA",
+      "target_note": "ride it to resistance and exit",
+      "transcript_quote": "another quick Scout this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches one runnable long scalp skeleton: buy established support on the 5-minute chart after the open and sell the quick move into resistance; the later downward 'big move' has an entry mention but only a gestural hindsight exit ('you want to exit right there'), so it is not promoted to a separate strategy under Rule 1."
+ },
+ "originalTokens": 5384,
+ "cachedTokensReported": 0
+}

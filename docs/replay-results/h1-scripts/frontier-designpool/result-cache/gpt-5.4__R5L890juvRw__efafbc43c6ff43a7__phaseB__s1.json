@@ -1,0 +1,84 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__efafbc43c6ff43a7__phaseB__s1",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s1",
+ "result": {
+  "strategies": [
+   {
+    "name": "vwap_band_reversion_to_mean",
+    "higher_timeframe": "1m",
+    "lower_timeframe": null,
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels",
+      "step": 1,
+      "action": "For long, wait for price to reach the lower VWAP standard-deviation bands in an oversold condition; for short, wait for price to reach the upper VWAP standard-deviation bands in an overbought condition.",
+      "rationale": "The speaker uses VWAP bands to define stretched premium/discount extremes for reversal setups."
+     },
+     {
+      "transcript_quote": "here is where you want to look for a trade this is the most convenient price in the whole session",
+      "step": 2,
+      "action": "Look for the reversal entry at those outer band extremes rather than in the middle of the session range.",
+      "rationale": "The edge is entering from the session's most stretched value area, where rebalancing is more likely."
+     }
+    ],
+    "preferred_regime": "ranging",
+    "stop": {
+     "transcript_quote": null,
+     "anchor": null,
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": null
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "use the central vwap as a target for Price rebalancing",
+      "priority": 1,
+      "type": "vwap_mean_reversion",
+      "r_multiple": null,
+      "rationale": "The speaker says the central VWAP is the rebalance objective."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value",
+      "name": "outer_band_stretch",
+      "description": "Price must be trading in the outer VWAP bands because that increases the chance of a bounce back to fair value.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "you might want to use these as some sort of overbought or oversold levels",
+      "name": "overbought_oversold_condition",
+      "description": "The speaker wants the reversal taken only when price is in an overbought or oversold condition at the VWAP bands.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "because they're further away we will be from the dynamic fair value of the market and the most likely we will be rebalancing",
+      "name": "far_from_fair_value",
+      "description": "The setup improves when price is far from the session's dynamic fair value, making rebalancing more likely.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "vwap is not always working it's always needed to have a context behind your trading idea",
+      "name": "context_required",
+      "description": "The speaker says VWAP reversals should not be traded in isolation and require session context.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "there is moments with high momentum and once we've established a strong Trend where still markets will keep buying even at higher and premium prices",
+      "name": "avoid_strong_trend_conditions",
+      "description": "Avoid the reversal when strong momentum or a strong trend is established because price can keep moving at premium or discount.",
+      "canonical_match": "regime_match"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 10693,
+ "cachedTokensReported": 9472
+}

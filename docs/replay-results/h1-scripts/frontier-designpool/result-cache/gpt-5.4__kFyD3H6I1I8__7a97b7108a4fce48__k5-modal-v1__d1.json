@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__kFyD3H6I1I8__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "kFyD3H6I1I8",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "opening_range_breakout_retest_with_session_bias",
+    "entry_summary": "Determine directional bias from the 7:00 a.m. and 8:00 a.m. 1-hour candles using an engulfing pattern before the New York session; then on the 5-minute chart mark the 9:30-9:45 opening range and wait for price to break and close outside the range in the bias direction. Enter on the retrace into a PO",
+    "exit_summary": "Place the stop beyond the invalidation area, typically below the opening range or below the demand/support level for buys, and above the recent wick/supply area for sells. Take profit at the next meaningful opposing level seen to the left, such as a supply/resistance zone for buys or lower target/TP",
+    "variants": [
+     {
+      "variant_label": "Buy setup using demand/support retrace after upside range break",
+      "timeframe_note": "Bias on 1-hour candles; execution on 5-minute opening range",
+      "confirmation_mechanic_note": "Wait for bullish 7:00/8:00 engulfing bias, upside break-and-close of the 9:30-9:45 range, then retrace into demand or a",
+      "target_note": "Take profit at a left-side supply/resistance area; example shown around 2.16-2.3R",
+      "transcript_quote": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy"
+     },
+     {
+      "variant_label": "Buy setup with passive limit at support after upside range break",
+      "timeframe_note": "Bias on 1-hour candles; execution around New York session range",
+      "confirmation_mechanic_note": "After upside break-and-close, place a limit order at support / overlapping demand instead of waiting for a fresh candle",
+      "target_note": "Take profit at the last major level that had a huge push down",
+      "transcript_quote": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position."
+     },
+     {
+      "variant_label": "Sell setup using classic break-and-retest after downside range break",
+      "timeframe_note": "Bias on 1-hour candles; execution around 9:30-9:45 New York opening range",
+      "confirmation_mechanic_note": "Wait for bearish 7:00/8:00 engulfing bias, downside break-and-close of the range, then enter on retrace to the bottom of",
+      "target_note": "Managed manually; stop moved to break even after price moved favorably, then take profit hit lower",
+      "transcript_quote": "I was also looking at the bottom of the range entry, the classic break and retest entry."
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one opening-range breakout/retest strategy skeleton with directional buy/sell applications and compatible entry/management variants (POI choice, passive limit vs retest confirmation, fixed target area vs manual break-even management), not separate opposing strategies because direction is selected by the same bias framework."
+ },
+ "originalTokens": 6541,
+ "cachedTokensReported": 5376
+}

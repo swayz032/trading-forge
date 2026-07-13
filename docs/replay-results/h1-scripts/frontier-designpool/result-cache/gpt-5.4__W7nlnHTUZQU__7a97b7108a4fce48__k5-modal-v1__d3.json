@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__W7nlnHTUZQU__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "W7nlnHTUZQU",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "overnight_range_break_retest_continuation",
+    "entry_summary": "Mark the overnight/pre-market high and low, then wait for price to break one side of that range with confirmation: strength for an upside break or weakness for a downside break. Enter on the pullback/retest of the broken level once it holds as support/resistance and prints confirming price action (e",
+    "exit_summary": "Place the stop on the opposite side of the broken overnight level: below the prior overnight high for longs, above the prior overnight low for shorts. Manage winners by taking profit when satisfied or by moving stop to breakeven / trailing so you are stopped out in profit; examples shown include ~1.",
+    "variants": [
+     {
+      "variant_label": "Long continuation after break above overnight high",
+      "timeframe_note": "5-minute examples mentioned",
+      "confirmation_mechanic_note": "Break above with strength, then bullish retest candle/price action with elevated volume",
+      "target_note": "Examples cited around 1.5R, 2R, and 2.6R; also suggests trimming and moving stop to breakeven or letting winner run",
+      "transcript_quote": "if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support"
+     },
+     {
+      "variant_label": "Short continuation after break below overnight low",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "Break below with weakness, then bearish retest candle/price action with elevated volume",
+      "target_note": "No fixed target; continuation lower with stop above broken level",
+      "transcript_quote": "if price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this a"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One strategy taught: an overnight-range break-and-retest continuation setup, with long and short directional variants sharing the same entry/exit skeleton."
+ },
+ "originalTokens": 6270,
+ "cachedTokensReported": 5376
+}
