@@ -1,0 +1,43 @@
+{
+ "artifact": "mini-phaseB-tryout-mechanical-judge",
+ "judge": "model-free locator anchor-rate (same instrument as Option R / design pool)",
+ "total_conditions": 64,
+ "located": 55,
+ "miss": 9,
+ "anchor_miss_rate": 0.1406,
+ "floor_le_8pct_MET": false,
+ "plumbing_excluded": 0,
+ "per_video": {
+  "-igpOZs8LsM": {
+   "conditions": 5,
+   "located": 5,
+   "anchor_rate": 1.0
+  },
+  "4cT8WTyxhYY": {
+   "conditions": 8,
+   "located": 6,
+   "anchor_rate": 0.75
+  },
+  "E9MzEC_yNoM": {
+   "conditions": 19,
+   "located": 18,
+   "anchor_rate": 0.9474
+  },
+  "IyFioFkRgWo": {
+   "conditions": 8,
+   "located": 6,
+   "anchor_rate": 0.75
+  },
+  "R5L890juvRw": {
+   "conditions": 8,
+   "located": 8,
+   "anchor_rate": 1.0
+  },
+  "WEhmadJArQo": {
+   "conditions": 16,
+   "located": 12,
+   "anchor_rate": 0.75
+  }
+ },
+ "verdict": "MINI does NOT qualify for Phase-B (copy-miss > 8%); default stays gpt-5.4 whole-job"
+}
