@@ -2,26 +2,33 @@
  "strategies": [
   {
    "strategy_id": 0,
-   "name": "fair_value_gap_trend_continuation_retest",
-   "entry_summary": "Trade in the direction of the trend after a fair value gap forms with strong momentum and causes a break of structure. Mark the gap between the first candle's close and the third candle's open, preferably the FVG closest to an order block, then wait for price to retrace into that FVG and enter on a ",
-   "exit_summary": "Place the stop loss just beyond the fair value gap itself—below it for buys, above it for sells—and hold for continuation in the trend direction. The speaker does not give a fixed target method beyond letting price continue after the tap into the FVG.",
+   "name": "fvg_trend_continuation_retest",
+   "entry_summary": "Identify the fair value gap that caused a break of structure in the direction of the trend, preferably one close to an order block. Wait for price to retrace back into that FVG, then enter in the trend direction from the gap area.",
+   "exit_summary": "Place the stop loss just beyond the fair value gap itself—below the FVG for buys and above it for sells—and hold for continuation in the expected direction.",
    "variants": [
     {
-     "variant_label": "Bullish FVG continuation entry",
+     "variant_label": "bullish FVG continuation entry",
      "timeframe_note": null,
-     "confirmation_mechanic_note": "wait for price to retrace into the bullish FVG that caused break of structure, then buy the tap",
+     "confirmation_mechanic_note": "wait for price to tap back into the bullish FVG that caused the break of structure",
      "target_note": null,
      "transcript_quote": "price will most likely come back mitigate the imbalance and keep pushing to the upside"
     },
     {
-     "variant_label": "Bearish FVG continuation entry",
+     "variant_label": "bearish FVG continuation entry",
      "timeframe_note": null,
-     "confirmation_mechanic_note": "wait for price to return to the bearish FVG that caused break of structure, then sell the tap",
+     "confirmation_mechanic_note": "wait for price to return to the bearish FVG that caused the break of structure",
      "target_note": null,
      "transcript_quote": "once that FVG is created, all you just need to do is patiently wait for you know price to get back into that FVG that caused the break of structure"
+    },
+    {
+     "variant_label": "FVG near order block preference",
+     "timeframe_note": null,
+     "confirmation_mechanic_note": "prefer the FVG very close to the order block rather than any arbitrary gap",
+     "target_note": null,
+     "transcript_quote": "map out the FVG that cost the break of structure the FVG that is very close to the order block"
     }
    ]
   }
  ],
- "enumeration_note": "Enumerated as one strategy with bullish and bearish variants because the video teaches the same FVG retest continuation skeleton in opposite directions, with mirrored entry and stop placement rather than contradictory archetypes like breakout-vs-fade."
+ "enumeration_note": "The video teaches one FVG trend-continuation retest skeleton; bullish/sell-side examples and the preference for an FVG near an order block are compatible variants, not distinct strategies."
 }

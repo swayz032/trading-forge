@@ -3,21 +3,21 @@
   {
    "strategy_id": 0,
    "name": "support_to_resistance_scalp",
-   "entry_summary": "After letting the first 5 to 15 minutes pass on the 5-minute chart to identify support, enter a scalp when price comes down into a support area and bounces. The examples use moving-average support such as the 13 EMA or 200 EMA, with the general rule to buy at support/demand.",
-   "exit_summary": "Take profit quickly into the next resistance or after the immediate bounce; the speaker repeatedly emphasizes getting in and out fast, taking profit without overstaying. Risk/management is framed as small quick moves rather than holding for extended runs.",
+   "entry_summary": "After the first 5 to 15 minutes, identify intraday support on the 5-minute chart using price action and/or moving averages acting as support, then enter when price comes down to that support and bounces. Exit the scalp into the next resistance area rather than holding for a larger move.",
+   "exit_summary": "Take profit quickly at resistance or after the short upward move; do not overstay the trade. Risk/management is framed as small, fast in-and-out trades with immediate profit-taking once the bounce plays out.",
    "variants": [
     {
      "variant_label": "13 EMA support bounce scalp",
-     "timeframe_note": "5-minute chart after first 5 to 15 minutes",
-     "confirmation_mechanic_note": "enter when price comes down to the 13 EMA acting as support and bounces",
-     "target_note": "exit on the quick push up into nearby resistance / after several green candles",
-     "transcript_quote": "this 13 EMA operated as a initial support"
+     "timeframe_note": "5-minute chart after allowing first 5 to 15 minutes to establish support",
+     "confirmation_mechanic_note": "enter when price tags the 13 EMA acting as support and bounces",
+     "target_note": "exit into the quick move/resistance; small scalp profit",
+     "transcript_quote": "this 13 EMA operated as a initial support... the stock came down and it hit right there that's our entry for a scalp"
     },
     {
      "variant_label": "200 EMA deeper support bounce scalp",
      "timeframe_note": "5-minute chart",
-     "confirmation_mechanic_note": "enter when the 13 EMA loses support status and price bounces from the deeper 200 EMA support",
-     "target_note": "ride it to resistance and exit",
+     "confirmation_mechanic_note": "enter off deeper support at the 200 EMA once the 13 EMA no longer holds support",
+     "target_note": "ride from support to resistance and exit quickly",
      "transcript_quote": "another quick Scout this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
     }
    ]
@@ -25,10 +25,18 @@
   {
    "strategy_id": 1,
    "name": "support_breakdown_short_scalp",
-   "entry_summary": "Once a key support level is lost, enter in the direction of the breakdown to catch the bigger move lower. The example specifically shows entering after price loses the 200 EMA support.",
-   "exit_summary": "Cover quickly after the sharp downside extension rather than holding indefinitely; the speaker marks the end of the fast drop as the exit for the 'big scalp.'",
-   "variants": []
+   "entry_summary": "Once a key support level is lost, enter in the direction of the breakdown to catch the fast move lower. This is taught as the bigger scalp that comes after repeated support bounces fail.",
+   "exit_summary": "Cover/take profit quickly after the sharp downward move rather than holding indefinitely. Management remains the same scalp style: get in, take the move, and get out fast.",
+   "variants": [
+    {
+     "variant_label": "200 EMA support-loss breakdown",
+     "timeframe_note": "5-minute chart",
+     "confirmation_mechanic_note": "enter after price loses the 200 EMA support",
+     "target_note": "exit after the large flush lower",
+     "transcript_quote": "once we lost the support of the 200 look at this move boom boom boom you want to exit right there okay that's your big scout you would have entered"
+    }
+   ]
   }
  ],
- "enumeration_note": "The video teaches two distinct, opposing executable scalps: buy support bounces into resistance, and short after support breaks; different EMA levels are variants of the support-bounce skeleton, not separate strategies."
+ "enumeration_note": "The video teaches two distinct executable skeletons: a long support-bounce scalp into resistance, and the opposite-direction short scalp after support breaks; repeated examples off 13 EMA vs 200 EMA are variants of the same support-bounce idea."
 }

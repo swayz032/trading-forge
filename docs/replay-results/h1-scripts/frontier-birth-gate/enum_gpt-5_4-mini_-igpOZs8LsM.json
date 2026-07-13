@@ -2,33 +2,26 @@
  "strategies": [
   {
    "strategy_id": 0,
-   "name": "fvg_trend_continuation_retest",
-   "entry_summary": "Look for a fair value gap created by a strong impulsive move that also causes a break of structure, with trend alignment and nearby liquidity. Wait for price to retrace back into that FVG and enter on the tap/retrace into the imbalance, rather than mapping any random gap.",
-   "exit_summary": "Place the stop loss a little below the FVG for buys or a little above it for sells; let price continue in the trend direction after mitigation. The speaker frames this as a trend-continuation entry and warns not to widen the stop to accommodate other structures because that hurts risk-reward.",
+   "name": "fvg_retest_trend_continuation",
+   "entry_summary": "In a strong trend, identify a valid fair value gap that caused a break of structure, preferably one close to an order block and after liquidity has been taken. Wait for price to retrace back into that FVG and enter on the retrace into the imbalance.",
+   "exit_summary": "Place the stop loss a little below the FVG for buys or a little above it for sells, and let price continue in the trend direction after mitigation.",
    "variants": [
     {
-     "variant_label": "bullish FVG continuation entry",
+     "variant_label": "bullish FVG continuation",
      "timeframe_note": null,
-     "confirmation_mechanic_note": "wait for price to retrace and tap into the bullish imbalance after the break of structure",
+     "confirmation_mechanic_note": "wait for price to tap back into the bullish imbalance/FVG after the break of structure",
      "target_note": null,
      "transcript_quote": "price will most likely come back, tap into that gap and keep pushing to the upside"
     },
     {
-     "variant_label": "bearish FVG continuation entry",
+     "variant_label": "bearish FVG continuation",
      "timeframe_note": null,
-     "confirmation_mechanic_note": "wait for price to return into the bearish imbalance after the break of structure",
+     "confirmation_mechanic_note": "wait for price to return to the bearish imbalance/FVG after the break of structure",
      "target_note": null,
-     "transcript_quote": "price will most likely you know come back into this point and you know keep pushing"
-    },
-    {
-     "variant_label": "FVG near-order-block confluence filter",
-     "timeframe_note": null,
-     "confirmation_mechanic_note": "prefer the FVG that caused the break of structure and is very close to the order block",
-     "target_note": null,
-     "transcript_quote": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure the FVG that is very close to the order block"
+     "transcript_quote": "price will most likely come back into this point and you know keep pushing"
     }
    ]
   }
  ],
- "enumeration_note": "One strategy is taught: trend-continuation FVG entries with BOS/liquidity filter and tight stop beyond the gap; bullish and bearish examples are compatible variants of the same skeleton."
+ "enumeration_note": "One FVG trend-continuation skeleton is taught with bullish and bearish examples; same entry/management logic, opposite direction as variants."
 }

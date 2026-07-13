@@ -1,0 +1,28 @@
+{
+ "key": "gpt-5.4-mini__IyFioFkRgWo__1b68fb28892a979d",
+ "model": "gpt-5.4-mini",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "1b68fb28892a979d",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "scalp_long_off_initial_support_after_opening_window",
+    "entry_summary": "After the first 5 to 15 minutes after market open, look for the 5-minute chart to establish support, especially around the 13 EMA. Enter long when price pulls back into that support and bounces.",
+    "exit_summary": "Take profit quickly at the next resistance or after a small favorable move; do not overstay the trade. The speaker emphasizes getting in and out fast and taking profit once the scalp moves in your favor.",
+    "variants": [
+     {
+      "variant_label": "5-minute opening-window scalp off 13 EMA support",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "wait for the first 5 to 15 minutes to pass, then enter on a bounce off the 13 EMA acting as support",
+      "target_note": "quick exit at resistance / small move",
+      "transcript_quote": "I'm going to show you how to scalp using the F minute chart... the 13 EMA operated as a initial support... time your entries once you have allowed the"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One long scalp skeleton is taught repeatedly off support/EMA on the 5-minute chart; later examples are reiterations of the same entry/exit idea, not separate strategies."
+ },
+ "originalTokens": 5029,
+ "cachedTokensReported": 4352
+}

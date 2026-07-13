@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__-igpOZs8LsM__1b68fb28892a979d",
+ "model": "gpt-5.4-mini",
+ "videoId": "-igpOZs8LsM",
+ "promptHash": "1b68fb28892a979d",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fvg_retest_trend_continuation",
+    "entry_summary": "In a strong trend, identify a valid fair value gap that caused a break of structure, preferably one close to an order block and after liquidity has been taken. Wait for price to retrace back into that FVG and enter on the retrace into the imbalance.",
+    "exit_summary": "Place the stop loss a little below the FVG for buys or a little above it for sells, and let price continue in the trend direction after mitigation.",
+    "variants": [
+     {
+      "variant_label": "bullish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to tap back into the bullish imbalance/FVG after the break of structure",
+      "target_note": null,
+      "transcript_quote": "price will most likely come back, tap into that gap and keep pushing to the upside"
+     },
+     {
+      "variant_label": "bearish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to return to the bearish imbalance/FVG after the break of structure",
+      "target_note": null,
+      "transcript_quote": "price will most likely come back into this point and you know keep pushing"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One FVG trend-continuation skeleton is taught with bullish and bearish examples; same entry/management logic, opposite direction as variants."
+ },
+ "originalTokens": 5185,
+ "cachedTokensReported": 4352
+}

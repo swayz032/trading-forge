@@ -1,0 +1,43 @@
+{
+ "key": "gpt-5.4-mini__WEhmadJArQo__1b68fb28892a979d",
+ "model": "gpt-5.4-mini",
+ "videoId": "WEhmadJArQo",
+ "promptHash": "1b68fb28892a979d",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "first_candle_fvg_retest_scalp",
+    "entry_summary": "On the 5-minute opening candle, mark the first 9:30-9:35 candle high/low, then use the 1-minute chart to wait for price to break the level, form a fair value gap, retest back into that FVG, and get the retest candle engulfed before entering long (after a bullish break above the high).",
+    "exit_summary": "Place the stop under the lowest area traded into the FVG with one tick of breathing room, and take a fixed 3:1 profit target. After entry, do not micromanage the trade.",
+    "variants": [
+     {
+      "variant_label": "5-minute opening range with 1-minute confirmation, 3:1 target",
+      "timeframe_note": "Start on 5-minute chart, confirm on 1-minute chart",
+      "confirmation_mechanic_note": "wait for FVG retest and engulfing candle before entry",
+      "target_note": "fixed 3:1 return",
+      "transcript_quote": "we're going to wait for a retest of the fair value gap... then we wait for this retest candle right here to get engulfed... you're good to enter the 3"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "first_candle_fvg_limit_order_day_trade",
+    "entry_summary": "On the 15-minute opening candle, mark the first 9:30-9:45 candle high/low, then switch to the 5-minute chart, wait for price to create a fair value gap after breaking the level, and enter automatically with a passive limit order placed on the FVG as price trades back into it.",
+    "exit_summary": "Place the stop at the first candle in the FVG pattern, just under that candle, and target a fixed 2:1 return. After entry, let the market do the heavy lifting without micromanaging, even if price revisits the FVG later.",
+    "variants": [
+     {
+      "variant_label": "15-minute opening range with 5-minute limit entry, 2:1 target",
+      "timeframe_note": "Start on 15-minute chart, confirm on 5-minute chart",
+      "confirmation_mechanic_note": "set a limit order on the FVG instead of waiting for a retest/engulfing candle",
+      "target_note": "fixed 2:1 return",
+      "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG... we are going to target a fixed 2:1 return"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": null
+ },
+ "originalTokens": 5956,
+ "cachedTokensReported": 4864
+}

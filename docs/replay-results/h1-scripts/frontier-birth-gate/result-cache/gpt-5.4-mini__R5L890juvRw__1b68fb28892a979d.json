@@ -1,0 +1,43 @@
+{
+ "key": "gpt-5.4-mini__R5L890juvRw__1b68fb28892a979d",
+ "model": "gpt-5.4-mini",
+ "videoId": "R5L890juvRw",
+ "promptHash": "1b68fb28892a979d",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_session_mean_reversion",
+    "entry_summary": "Use the session VWAP and its standard-deviation bands as a dynamic fair-value reference. Enter when price reaches an outer VWAP band or reclaims/fails the VWAP after extending away from it, especially when price is stretched into premium/discount relative to the session.",
+    "exit_summary": "Treat the VWAP or the next inner band as the rebalancing target; use the first, second, or third standard deviation bands as profit targets or reversal/mean-reversion reference levels. The speaker frames these levels as support/resistance and as likely bounce/rebalance zones rather than fixed-price,",
+    "variants": [
+     {
+      "variant_label": "trend-continuation pullback long using lower VWAP bands",
+      "timeframe_note": "session-based / intraday",
+      "confirmation_mechanic_note": "wait for price to run down to at least the first or second lower standard deviation, then break and retest/reclaim the v",
+      "target_note": "VWAP / central fair value as the target after the pullback entry",
+      "transcript_quote": "you might want to wait until the price has gone at least to the first if not the second standard deviation... after we broke it and tested it we can试"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_extreme_reversal",
+    "entry_summary": "Fade stretched moves at the VWAP outer bands by looking for reversal entries when price reaches the first, second, or third standard deviation away from session fair value. The speaker explicitly says the bands can be used as overbought/oversold levels for reversal strategies.",
+    "exit_summary": "Use the central VWAP as the rebalancing target, with the band touched on entry serving as the overextended condition to fade from. The trade idea is to capture the move back toward the session average after an extreme excursion.",
+    "variants": [
+     {
+      "variant_label": "short from upper VWAP bands / buy from lower VWAP bands",
+      "timeframe_note": "session-based / intraday",
+      "confirmation_mechanic_note": "enter on stretch into upper or lower standard deviation bands as an overbought/oversold reversal setup",
+      "target_note": "VWAP / session fair value",
+      "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels... and use the central vwap as a target"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches two distinct VWAP-based strategies: one continuation/pullback use of VWAP bands and one reversal/mean-reversion use of the bands. The sentence about waiting for price to reach lower bands then breaking/retesting VWAP is a compatible variation within the continuation idea, not a separate third strategy."
+ },
+ "originalTokens": 5858,
+ "cachedTokensReported": 4864
+}

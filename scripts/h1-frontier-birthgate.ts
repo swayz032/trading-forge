@@ -12,6 +12,7 @@
 import OpenAI from "openai";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
 import { resolvePoolPartition, assertExtractionBudgetOrThrow } from "../src/server/lib/extraction-token-governor";
+import { ExtractionResultCache, promptHash, cacheKey } from "../src/server/lib/extraction-result-cache";
 
 const ROOT = process.cwd();
 function envKey(): string {
@@ -74,7 +75,11 @@ async function main() {
   const outDir = `${ROOT}/docs/replay-results/h1-scripts/frontier-birth-gate`;
   mkdirSync(outDir, { recursive: true });
 
-  const report: any = { generated_note: "rung-1/1.5 parallel birth gate", models: {} };
+  // LAYER 1 result cache — keyed by (model, video, promptHash of the frozen instrument).
+  const cache = new ExtractionResultCache(`${outDir}/result-cache`);
+  const pHash = promptHash(prompt); // any instrument edit -> new hash -> correct re-run
+
+  const report: any = { generated_note: "rung-1/1.5 parallel birth gate", prompt_hash: pHash, models: {} };
 
   for (const m of MODELS) {
     const cap = resolvePoolPartition(m.pool);
@@ -83,30 +88,44 @@ async function main() {
     console.log(`\n=== ${m.rung}: ${m.id} (pool ${m.pool}, partition ${cap}) ===`);
     for (const fx of FIXTURES) {
       const tx = transcriptText(fx.id);
-      const estimate = Math.ceil(tx.length / 4) + 3500; // upper-ish estimate for the wall
-      assertExtractionBudgetOrThrow({ tokensSpentToday: spent, requestedTokens: estimate, partitionCap: cap });
-      let count = -1, tokens = 0, err: string | null = null, note = "";
-      try {
-        const resp = await client.chat.completions.create({
-          model: m.id,
-          messages: [
-            { role: "system", content: prompt },
-            { role: "user", content: `TRANSCRIPT:\n${tx}\n\nEnumerate the distinct strategies per the three canonical rules. Return ONLY the JSON object.` },
-          ],
-          response_format: { type: "json_schema", json_schema: { name: "StrategyEnumeratorOutput", schema, strict: true } },
-        });
-        tokens = resp.usage?.total_tokens ?? 0;
-        spent += tokens;
-        const parsed = JSON.parse(resp.choices[0]?.message?.content ?? "{}");
+      let count = -1, tokens = 0, cachedTokens = 0, err: string | null = null, note = "", hit = false;
+
+      // LAYER 1: check cache FIRST — a hit spends ZERO tokens (retry/resume/re-measure ride free).
+      const cached = cache.get<any>(m.id, fx.id, pHash);
+      if (cached) {
+        hit = true;
+        const parsed = cached.result;
         count = Array.isArray(parsed?.strategies) ? parsed.strategies.length : -1;
         note = parsed?.enumeration_note ?? "";
-        writeFileSync(`${outDir}/enum_${m.id.replace(/\./g, "_")}_${fx.id}.json`, JSON.stringify(parsed, null, 1));
-      } catch (e: any) {
-        err = String(e?.message ?? e).slice(0, 200);
+      } else {
+        const estimate = Math.ceil(tx.length / 4) + 3500; // upper-ish estimate for the wall
+        assertExtractionBudgetOrThrow({ tokensSpentToday: spent, requestedTokens: estimate, partitionCap: cap });
+        try {
+          const resp = await client.chat.completions.create({
+            model: m.id,
+            // LAYER 2 shape: static prefix (instructions + transcript) FIRST, per-call ask LAST.
+            messages: [
+              { role: "system", content: prompt },
+              { role: "user", content: `TRANSCRIPT:\n${tx}\n\nEnumerate the distinct strategies per the three canonical rules. Return ONLY the JSON object.` },
+            ],
+            response_format: { type: "json_schema", json_schema: { name: "StrategyEnumeratorOutput", schema, strict: true } },
+          });
+          tokens = resp.usage?.total_tokens ?? 0;
+          cachedTokens = (resp.usage as any)?.prompt_tokens_details?.cached_tokens ?? 0;
+          spent += tokens; // budgeted at FULL weight (cached-token discount unknown until measured)
+          const parsed = JSON.parse(resp.choices[0]?.message?.content ?? "{}");
+          count = Array.isArray(parsed?.strategies) ? parsed.strategies.length : -1;
+          note = parsed?.enumeration_note ?? "";
+          // write cache IMMEDIATELY (before anything downstream can crash)
+          cache.put({ key: cacheKey(m.id, fx.id, pHash), model: m.id, videoId: fx.id, promptHash: pHash, result: parsed, originalTokens: tokens, cachedTokensReported: cachedTokens });
+          writeFileSync(`${outDir}/enum_${m.id.replace(/\./g, "_")}_${fx.id}.json`, JSON.stringify(parsed, null, 1));
+        } catch (e: any) {
+          err = String(e?.message ?? e).slice(0, 200);
+        }
       }
       const inWindow = count >= fx.lo && count <= fx.hi;
-      rows.push({ fixture: fx.id, window: `${fx.lo}-${fx.hi}`, rule: fx.rule, count, in_window: inWindow, tokens, error: err });
-      console.log(`  ${fx.id}: count=${count} window=${fx.lo}-${fx.hi} ${inWindow ? "IN" : "OUT"} (${tokens} tok)${err ? " ERR:" + err : ""}`);
+      rows.push({ fixture: fx.id, window: `${fx.lo}-${fx.hi}`, rule: fx.rule, count, in_window: inWindow, tokens, cached_tokens: cachedTokens, cache_hit: hit, error: err });
+      console.log(`  ${fx.id}: count=${count} window=${fx.lo}-${fx.hi} ${inWindow ? "IN" : "OUT"} (${hit ? "CACHE HIT 0" : tokens} tok, cached_prefix=${cachedTokens})${err ? " ERR:" + err : ""}`);
     }
     const passed = rows.filter((r) => r.in_window).length;
     report.models[m.id] = { rung: m.rung, pool: m.pool, partition: cap, tokens_spent: spent, count_in_window: `${passed}/6`, rows };

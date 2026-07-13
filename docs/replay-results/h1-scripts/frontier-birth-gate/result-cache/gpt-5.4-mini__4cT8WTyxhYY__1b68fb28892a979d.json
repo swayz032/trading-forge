@@ -1,0 +1,57 @@
+{
+ "key": "gpt-5.4-mini__4cT8WTyxhYY__1b68fb28892a979d",
+ "model": "gpt-5.4-mini",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "1b68fb28892a979d",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "liquidity_grab_reversal",
+    "entry_summary": "Look for price to break a support or resistance, fake out, and reverse; specifically enter at the candle that made the liquidity grab. For longs, the candle that swept support becomes the entry reference; for shorts, the candle that swept resistance becomes the entry reference.",
+    "exit_summary": "Place the stop loss just beyond the liquidity grab and take profit at the next recent swing high/low, aiming to capture the impulsive reversal move.",
+    "variants": [
+     {
+      "variant_label": "bullish liquidity grab reversal",
+      "timeframe_note": "all timeframes",
+      "confirmation_mechanic_note": "enter at the candle that made the buy-side liquidity grab after the fakeout breaks support/resistance and reverses",
+      "target_note": "take profit at a recent high",
+      "transcript_quote": "your long entry would be at this point right here because this candle made this liquidity grab"
+     },
+     {
+      "variant_label": "bearish liquidity grab reversal",
+      "timeframe_note": "all timeframes",
+      "confirmation_mechanic_note": "enter at the candle that made the sell-side liquidity grab after the fakeout breaks support/resistance and reverses",
+      "target_note": "take profit at a recent low",
+      "transcript_quote": "your short entry would be at the bottom of this candle that initiated this liquidity grab"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "liquidity_grab_reversal_with_divergence_and_htf_location_filters",
+    "entry_summary": "Use the same liquidity-grab reversal entry, but only take it when it occurs at a higher-timeframe support or resistance and is reinforced by momentum divergence. The transcript frames these as filters/confluence to improve the same base reversal entry.",
+    "exit_summary": "Use the same stop beyond the liquidity grab and the same swing-based take profit; the added divergence and higher-timeframe context are entry-quality filters, not a different exit model.",
+    "variants": [
+     {
+      "variant_label": "daily/HTF-proximate liquidity grab with divergence confluence",
+      "timeframe_note": "lower timeframe entry filtered by higher timeframe support/resistance",
+      "confirmation_mechanic_note": "require momentum divergence alongside the liquidity grab",
+      "target_note": "same recent high/low take-profit logic as base reversal",
+      "transcript_quote": "we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
+     },
+     {
+      "variant_label": "15m entry aligned with 1h support/resistance",
+      "timeframe_note": "15-minute entry with 1-hour context",
+      "confirmation_mechanic_note": "only take the lower-timeframe liquidity grab if the signal sits at higher-timeframe support or resistance",
+      "target_note": "same 15-minute stop loss and take profit structure",
+      "transcript_quote": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One base liquidity-grab reversal is taught, then the same skeleton is improved with divergence and higher-timeframe location filters; these are compatible variants rather than separate opposing strategies."
+ },
+ "originalTokens": 5720,
+ "cachedTokensReported": 4864
+}

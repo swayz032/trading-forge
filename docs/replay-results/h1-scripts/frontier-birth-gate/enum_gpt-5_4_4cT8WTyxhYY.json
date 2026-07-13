@@ -3,46 +3,46 @@
   {
    "strategy_id": 0,
    "name": "liquidity_grab_reversal",
-   "entry_summary": "Enter at the price level of the candle that made the liquidity grab after price briefly breaks support or resistance and reverses. For a bullish setup, use a sell-side liquidity grab below support and enter long at the top of the grab candle; for a bearish setup, use a buy-side liquidity grab above/",
-   "exit_summary": "Place the stop loss just beyond the liquidity-grab extreme (below the grab for longs, above it for shorts) and take profit at the nearest/recent swing high for longs or recent swing low for shorts.",
+   "entry_summary": "Look for a liquidity grab where price briefly breaks support or resistance and then reverses. Enter at the price level of the candle that made the liquidity grab: for longs after a downside sweep of support, and for shorts after an upside sweep of resistance.",
+   "exit_summary": "Place the stop loss just beyond the liquidity-grab candle/extreme. Take profit at a recent swing high for longs or a recent swing low for shorts, aiming to capture the reversal with a large risk-reward.",
    "variants": [
     {
      "variant_label": "base discretionary liquidity-grab reversal",
-     "timeframe_note": "Works on all timeframes; examples include daily and 15-minute",
-     "confirmation_mechanic_note": "Identify a support/resistance fakeout liquidity grab and use the grab candle as the entry reference",
-     "target_note": "Take profit at a recent high/low",
+     "timeframe_note": "Works on all time frames; examples include 15-minute and daily-context discussion",
+     "confirmation_mechanic_note": "Manual identification of the liquidity grab and entry at the candle that made the grab",
+     "target_note": "Take profit at recent high/low",
      "transcript_quote": "your long entry would be at this point right here because this candle made this liquidity grab"
     },
     {
-     "variant_label": "indicator-signaled version",
-     "timeframe_note": null,
-     "confirmation_mechanic_note": "Use the indicator's marked liquidity grab and entry signal instead of manual spotting",
-     "target_note": "Take profit at a recent high/low",
-     "transcript_quote": "it'll find the liquidity grab Mark the entry point and will also tell you exactly when to enter"
+     "variant_label": "indicator-signaled liquidity-grab reversal",
+     "timeframe_note": "Not fixed; examples shown across chart examples",
+     "confirmation_mechanic_note": "Use the indicator's marked liquidity grab and wait for its entry signal before entering",
+     "target_note": "Take profit at a recent high for longs or recent low for shorts",
+     "transcript_quote": "we wait for the entry signal once we get it we enter set our stop loss right below the liquidity grab set a take profit at this recent High"
     },
     {
      "variant_label": "higher-timeframe support/resistance confluence",
-     "timeframe_note": "Lower timeframe entry with higher timeframe confirmation, e.g. 15-minute entry checked against 1-hour support/resistance",
-     "confirmation_mechanic_note": "Only take the normal liquidity-grab reversal when it occurs at a higher-timeframe top/bottom or support/resistance area",
+     "timeframe_note": "Example: 15-minute entry aligned with 1-hour support/resistance",
+     "confirmation_mechanic_note": "Take the standard liquidity-grab entry only when it occurs at the top or bottom of a higher-timeframe range/support-resi",
      "target_note": "Normal stop loss and take profit",
-     "transcript_quote": "we move back to the 15-minute time frame and do our normal stop loss and take profit"
+     "transcript_quote": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
     },
     {
      "variant_label": "divergence confluence",
      "timeframe_note": null,
-     "confirmation_mechanic_note": "Combine the liquidity-grab reversal with momentum divergence for added probability",
-     "target_note": "Same as base setup",
+     "confirmation_mechanic_note": "Combine the standard liquidity-grab reversal with momentum divergence as extra confirmation",
+     "target_note": "Normal stop loss and take profit",
      "transcript_quote": "we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
     },
     {
      "variant_label": "10-candle proximity preference",
-     "timeframe_note": "Daily timeframe statistic discussed, but framed as a general optimization rule",
-     "confirmation_mechanic_note": "Prefer setups where the relevant peaks are closer than 10 candles apart",
-     "target_note": "Same as base setup",
+     "timeframe_note": "Daily backtest statistic discussed, but presented as an optimization note",
+     "confirmation_mechanic_note": "Prefer setups where the peaks/legs related to the liquidity grab are closer than 10 candles apart",
+     "target_note": "Normal stop loss and take profit",
      "transcript_quote": "if you want optimal entries you should look for liquidity grabs with Peaks closer together"
     }
    ]
   }
  ],
- "enumeration_note": "The video teaches one reversal skeleton: a liquidity-grab reversal with the same entry/stop/target logic; indicator use, divergence, higher-timeframe S/R, and the 10-candle rule are compatible confluence/optimization variants rather than distinct strategies."
+ "enumeration_note": "The video teaches one reversal skeleton throughout: liquidity-grab reversal entry with stop beyond the grab and target at recent swing high/low; indicator use, divergence, higher-timeframe S/R, and 10-candle proximity are compatible confluence/optimization variants rather than distinct strategies."
 }
