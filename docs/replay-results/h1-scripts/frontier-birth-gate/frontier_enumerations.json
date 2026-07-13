@@ -1,0 +1,13 @@
+{
+ "instrument": "src/agents/strategy-enumerator.md (frozen)",
+ "reader": "frontier-class Claude-family in-subscription subagent, fresh-context, blind",
+ "results": {
+  "R5L890juvRw": {"gt": 2, "frontier": 2, "match": true, "note": "opposite VWAP setups split (merge-silencing correctly avoided)"},
+  "IyFioFkRgWo": {"gt": 1, "frontier": 2, "match": false, "note": "bounce vs support-break split; flagged lenient-could-be-1"},
+  "-igpOZs8LsM": {"gt": 1, "frontier": 1, "match": true, "note": "FVG only; order-block=confluence; mirror=variant"},
+  "4cT8WTyxhYY": {"gt": 1, "frontier": 1, "match": true, "note": "manual/indicator=confirmation variant; tips=confluences"},
+  "WEhmadJArQo": {"gt": 2, "frontier": 1, "match": false, "note": "same skeleton, 2 config variants = the instrument's own worked example"},
+  "E9MzEC_yNoM": {"gt": 3, "frontier": 1, "match": false, "note": "3 ways to trade one set of levels, unified exit; sweep-reversal could split"}
+ },
+ "summary": {"match": 3, "mismatch": 3, "mismatch_class": "different entry trigger on shared skeleton + unified exit (instrument=variant, GT-rubric=distinct)"}
+}
