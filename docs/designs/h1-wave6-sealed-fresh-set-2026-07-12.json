@@ -1,0 +1,413 @@
+{
+  "sealed_at_note": "H1 WAVE-6 fresh-set seal (§2 anti-set-shopping commitment device). Sealed by a fresh-context sealing agent BEFORE the quote-as-you-extract upgrade is designed and BEFORE any transcript in this set is opened. IDs + metadata ONLY. NO transcript content was read, quoted, stored, or reasoned over; the transcript probe recorded a retrievability BOOLEAN + a char-count EXISTENCE PROBE exclusively (live fetch at read-time is the frozen design). Sealed 2026-07-12 @ base 173f46bc in wt-h1-wave4-20260712.",
+  "criteria_version": "2026-07-12",
+  "exclusion_set_sizes": {
+    "corpus_source_url_ids": 201,
+    "spent_pilot_16": 16,
+    "sealed_77_tier2_unique_videos": 13,
+    "union_total": 217
+  },
+  "exclusion_set_method": {
+    "corpus": "Union of every YouTube video_id in config.metadata.source_url across all JSON/MD/TXT under docs/ (regex over youtube.com/watch + youtu.be + /embed/) PLUS the 40 authoritative video keys of source-videos-2026-07-02.json (.videos). Strictest superset reading. No live DB in worktree; docs tree is the authoritative committed corpus manifest. = 201.",
+    "spent_16": "sealed_id_list_sorted from docs/designs/h1-sealed-fresh-set-2026-07-12.json (the SPENT pilot 16). = 16.",
+    "sealed_77": "All unique concept_id (= source video_id) values across design_exemplars + sealed_eval + ambiguous in docs/designs/h1-tier2-quarantine-split-2026-07-12.json (the 77 sealed_eval items map to 13 unique source videos; all 13 already inside the corpus set). = 13 unique videos.",
+    "union": "Deduplicated union of the three sets = 217 IDs. Every sealed fresh ID checked absent from this union."
+  },
+  "fresh_set_size": 12,
+  "sealed_sha256": "4d7b3c29838b9a79eaf2692c5f44c585be89f935936d6b3fd84dadf509611b9a",
+  "sealed_sha256_method": "sha256 over the newline-joined sorted video_id list.",
+  "sealed_id_list_sorted": [
+    "0RBexa9JpIg",
+    "ExB66jcyKxg",
+    "LD1FEbwXU4o",
+    "SeqVUNanFeY",
+    "XbRI0sfcXU4",
+    "YGdFksLavKE",
+    "YqY0OkL5LMI",
+    "dENM6gt8ZRg",
+    "hcHuDfxdywI",
+    "iyKk9fpMSY8",
+    "pKzXxB9Blts",
+    "st5e-YJRfKc"
+  ],
+  "collision_check": {
+    "vs_corpus": "CLEAN (0 collisions)",
+    "vs_spent_16": "CLEAN (0 collisions)",
+    "vs_sealed_77": "CLEAN (0 collisions)"
+  },
+  "transcript_hard_prohibition": "No transcript text appears anywhere in this artifact. transcript_char_count is an existence probe (sum of caption-segment string lengths, never inspected). This preserves the commitment device: the population is fixed before the extractor upgrade is designed.",
+  "videos": [
+    {
+      "video_id": "iyKk9fpMSY8",
+      "title": "How to Indentify Liquidity Day Trading",
+      "channel": "The Moving Average",
+      "duration": "4:39",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Day trading is explicit in the title (\"Day Trading\"); teaches identifying intraday liquidity — no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 3935 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 3935,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "LD1FEbwXU4o",
+      "title": "How to Trade Liquidity on the 5 Minute Chart Day Trading Strategy",
+      "channel": "The Moving Average",
+      "duration": "5:12",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Explicit \"5 Minute Chart Day Trading Strategy\" — intraday timeframe stated; no swing/recap."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 4920 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 4920,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "XbRI0sfcXU4",
+      "title": "Futures Day Trading : Simple & Powerful Pullback Strategy  +$1,905",
+      "channel": "1 Minute Futures Trader",
+      "duration": "5:38",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Explicit \"Futures Day Trading\" pullback strategy — intraday futures setup; no swing framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 2065 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 2065,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "ExB66jcyKxg",
+      "title": "Moving Average Intraday Trading Strategy (With Backtesting)",
+      "channel": "Wealth Z Trader",
+      "duration": "6:43",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Explicit \"Intraday Trading Strategy\" (moving average) — intraday by title; no swing/position."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 4804 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 4804,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "YGdFksLavKE",
+      "title": "The BEST VWAP Scalping Trading Strategy - Secret VWAP Strategy Explained",
+      "channel": "Switch Stats",
+      "duration": "8:30",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "VWAP scalping = intraday-only mechanic (scalp); no swing/position framing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 8126 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 8126,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "SeqVUNanFeY",
+      "title": "Master VWAP Trading Strategy In Under 10 Minutes",
+      "channel": "Tom Crown",
+      "duration": "8:52",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "VWAP trading strategy = intraday-anchored indicator mechanic; \"In Under 10 Minutes\" tutorial, no swing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 7592 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 7592,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "st5e-YJRfKc",
+      "title": "Opening Range Breakout Strategy Explained (Part 1 of 6)",
+      "channel": "TOS Indicators",
+      "duration": "9:20",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Opening Range Breakout is an intraday-open mechanic; \"Strategy Explained\" tutorial, no swing/recap."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 9139 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 9139,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "YqY0OkL5LMI",
+      "title": "Trading The Opening Range Breakout Strategy For $702 In Profits | $VCIG",
+      "channel": "Master The Market",
+      "duration": "7:38",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Opening Range Breakout intraday mechanic; strategy-teaching with worked example, not a vlog/recap."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 7684 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 7684,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "dENM6gt8ZRg",
+      "title": "5-Minute ORB Strategy — I Built a Free MT5 Bot to Backtest It",
+      "channel": "Backtest Audit Lab",
+      "duration": "8:54",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "\"5-Minute ORB Strategy\" — intraday 5-minute opening-range mechanic; backtest-teaching (spent-16 precedent)."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 7047 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 7047,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "pKzXxB9Blts",
+      "title": "How to Use Volume Profile and VWAP to Trade Pullbacks",
+      "channel": "Trader Dale",
+      "duration": "5:30",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Volume Profile + VWAP pullbacks = intraday indicator mechanics; \"How to Use\" tutorial, no swing."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 4516 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 4516,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "0RBexa9JpIg",
+      "title": "🔴 Best Pullback Scalping Trading Strategy That Will Change Your Way of Trading",
+      "channel": "Riz Trading",
+      "duration": "4:22",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Pullback scalping = intraday scalp mechanic; strategy tutorial, no swing/position/recap."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 3324 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 3324,
+      "selected_at_criteria_version": "2026-07-12"
+    },
+    {
+      "video_id": "hcHuDfxdywI",
+      "title": "Best Order Block Trading Strategy (Simplified)",
+      "channel": "Graph Insight",
+      "duration": "9:23",
+      "criteria_match": {
+        "c1": {
+          "pass": true,
+          "why": "Order Block (SMC intraday execution) strategy \"Simplified\" tutorial; entry-mechanic teaching, no critique/news."
+        },
+        "c2": {
+          "pass": true,
+          "why": "Mechanic is price/structure/indicator-based (instrument-agnostic) — no options Greeks/strikes/expiry; portable to futures."
+        },
+        "c3": {
+          "pass": true,
+          "why": "Strategy-TEACHING — speaker teaches an entry/exit mechanic; no critique/news/vlog/podcast/reaction keyword (title-score not -3)."
+        },
+        "c4": {
+          "pass": true,
+          "why": "ZERO overlap — video_id absent from the 217-ID exclusion union (corpus 201 + spent-16 + sealed-77 videos)."
+        },
+        "c5": {
+          "pass": true,
+          "why": "English + transcript RETRIEVABLE — youtube-transcript returned 9162 chars (existence + count only; content UNREAD)."
+        }
+      },
+      "transcript_available": true,
+      "transcript_char_count": 9162,
+      "selected_at_criteria_version": "2026-07-12"
+    }
+  ]
+}
