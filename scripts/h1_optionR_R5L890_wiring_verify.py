@@ -101,49 +101,64 @@ def main():
     certB = assemble_certificate(**common, topology=topo, or_branches=None)
     dcB = certB["compile_integrity"]["direction_conflation_lint"]
 
+    # THE FENCE grade (ratify-packet) -- the CLOSURE witness.
+    trA = certA["terminal_read_grade"]; trA_clean = certA["terminal_read_clean"]
+    trB = certB["terminal_read_grade"]; trB_clean = certB["terminal_read_clean"]
+
     print("=" * 72)
-    print("§2 WIRING-VERIFY -- R5L890 real merged (merge-silenced) object")
+    print("§2 WIRING-VERIFY + CLOSURE -- R5L890 real merged (merge-silenced) object")
     print("=" * 72)
     print(f"anchors: LONG={long_anchor!r}")
     print(f"         REVERT={revert_anchor!r}")
     print("-" * 72)
     print("CASE A  (terminal-read reality -- no topology / unwired A-packet):")
     print(f"   direction_conflation_lint.status = {dcA['status']}  reason={dcA.get('reason')}")
-    print(f"   pilot_grade  = {certA['pilot_grade']}   <-- the grade the sealed-12 terminal read uses")
-    print(f"   full_grade   = {certA['full_grade']}")
+    print(f"   pilot_grade (OLD, ungated)       = {certA['pilot_grade']}   <-- the hole")
+    print(f"   terminal_read_grade (FENCE)      = {trA}  clean={trA_clean}   <-- the fix")
     print("-" * 72)
     print("CASE B  (counterfactual -- A-packet WIRED, opposite dirs in one and_group):")
-    print(f"   direction_conflation_lint.status = {dcB['status']}  "
-          f"offending={dcB.get('offending_anchor')}")
-    print(f"   pilot_grade  = {certB['pilot_grade']}   <-- does pilot_grade gate on the structural lint?")
-    print(f"   full_grade   = {certB['full_grade']}")
+    print(f"   direction_conflation_lint.status = {dcB['status']}  offending={dcB.get('offending_anchor')}")
+    print(f"   pilot_grade (OLD, ungated)       = {certB['pilot_grade']}   <-- STILL blind (CASE B)")
+    print(f"   terminal_read_grade (FENCE)      = {trB}  clean={trB_clean}   <-- the fix")
     print("=" * 72)
 
-    # VERDICT
-    sails_through_terminal = bool(certA["pilot_grade"])  # merged object accepted by terminal-read grade?
+    # ORIGINAL CRIT (pilot_grade blindness, for the before/after record)
+    sails_through_terminal = bool(certA["pilot_grade"])
     lint_would_catch_if_wired = (dcB["status"] == "FAIL")
     pilot_grade_blind_even_if_wired = bool(certB["pilot_grade"]) and lint_would_catch_if_wired
 
-    print("VERDICT:")
-    print(f"  merged object SAILS THROUGH terminal-read (pilot_grade True)? {sails_through_terminal}")
-    print(f"  lint WOULD catch it if A-packet wired (CASE B FAIL)?          {lint_would_catch_if_wired}")
-    print(f"  pilot_grade BLIND even with lint wired (True + lint FAIL)?    {pilot_grade_blind_even_if_wired}")
-    if sails_through_terminal:
-        print("  => CRIT: merge-silencing is NOT rejected by the terminal-read path. Fence required.")
+    # CLOSURE: fence must catch (NOT clean) in BOTH configs.
+    fence_catches_A = not trA_clean          # topology ABSENT  -> INDETERMINATE expected
+    fence_catches_B = not trB_clean          # topology PRESENT -> REJECTED expected
+    fence_closed = fence_catches_A and fence_catches_B
+
+    print("BEFORE (the CRIT):")
+    print(f"  pilot_grade sails through (A)?               {sails_through_terminal}")
+    print(f"  pilot_grade blind even if A-packet wired (B)? {pilot_grade_blind_even_if_wired}")
+    print("AFTER (the FENCE) -- CLOSURE CRITERION:")
+    print(f"  fence catches topology-ABSENT  (A not clean)? {fence_catches_A}  [{trA}]")
+    print(f"  fence catches topology-PRESENT (B not clean)? {fence_catches_B}  [{trB}]")
+    print(f"  => FENCE CLOSED (catches in BOTH configs)?    {fence_closed}")
+    if fence_closed:
+        print("     CERTIFIED: the witness that exposed the hole observes the catch.")
     else:
-        print("  => merged object rejected by terminal-read path; harm-model taxed, recorded.")
+        print("     NOT CLOSED: fence does not catch in both configs -- do not ship.")
 
     out = {
-        "case_A_terminal_reality": {
-            "direction_conflation": dcA, "pilot_grade": certA["pilot_grade"], "full_grade": certA["full_grade"]},
-        "case_B_apacket_wired": {
-            "direction_conflation": dcB, "pilot_grade": certB["pilot_grade"], "full_grade": certB["full_grade"]},
-        "verdict": {
+        "before_crit": {
+            "case_A": {"direction_conflation": dcA, "pilot_grade": certA["pilot_grade"]},
+            "case_B": {"direction_conflation": dcB, "pilot_grade": certB["pilot_grade"]},
             "sails_through_terminal_read": sails_through_terminal,
-            "lint_would_catch_if_wired": lint_would_catch_if_wired,
             "pilot_grade_blind_even_if_wired": pilot_grade_blind_even_if_wired,
-            "conclusion": "CRIT_FENCE_REQUIRED" if sails_through_terminal else "REJECTED_TAXED",
         },
+        "after_fence": {
+            "case_A": {"terminal_read_grade": trA, "clean": trA_clean},
+            "case_B": {"terminal_read_grade": trB, "clean": trB_clean},
+            "fence_catches_topology_absent": fence_catches_A,
+            "fence_catches_topology_present": fence_catches_B,
+            "fence_closed": fence_closed,
+        },
+        "conclusion": "FENCE_CLOSED_CERTIFIED" if fence_closed else "FENCE_NOT_CLOSED",
     }
     outp = os.path.join(ROOT, "docs", "replay-results", "h1-scripts",
                         "optionR-locator-support", "R5L890_wiring_verify.json")

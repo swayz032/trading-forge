@@ -1,31 +1,41 @@
 {
- "case_A_terminal_reality": {
-  "direction_conflation": {
-   "status": "NOT_EVALUATED",
-   "reason": "no_compiled_topology",
-   "offending_anchor": null,
-   "offending_char_span": null
+ "before_crit": {
+  "case_A": {
+   "direction_conflation": {
+    "status": "NOT_EVALUATED",
+    "reason": "no_compiled_topology",
+    "offending_anchor": null,
+    "offending_char_span": null
+   },
+   "pilot_grade": true
   },
-  "pilot_grade": true,
-  "full_grade": false
- },
- "case_B_apacket_wired": {
-  "direction_conflation": {
-   "status": "FAIL",
-   "reason": null,
-   "offending_anchor": "after we broke it and tested it we can try our long trade",
-   "offending_char_span": [
-    9770,
-    9827
-   ]
+  "case_B": {
+   "direction_conflation": {
+    "status": "FAIL",
+    "reason": null,
+    "offending_anchor": "after we broke it and tested it we can try our long trade",
+    "offending_char_span": [
+     9770,
+     9827
+    ]
+   },
+   "pilot_grade": true
   },
-  "pilot_grade": true,
-  "full_grade": false
- },
- "verdict": {
   "sails_through_terminal_read": true,
-  "lint_would_catch_if_wired": true,
-  "pilot_grade_blind_even_if_wired": true,
-  "conclusion": "CRIT_FENCE_REQUIRED"
- }
+  "pilot_grade_blind_even_if_wired": true
+ },
+ "after_fence": {
+  "case_A": {
+   "terminal_read_grade": "INDETERMINATE",
+   "clean": false
+  },
+  "case_B": {
+   "terminal_read_grade": "REJECTED",
+   "clean": false
+  },
+  "fence_catches_topology_absent": true,
+  "fence_catches_topology_present": true,
+  "fence_closed": true
+ },
+ "conclusion": "FENCE_CLOSED_CERTIFIED"
 }

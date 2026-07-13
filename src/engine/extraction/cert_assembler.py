@@ -150,6 +150,78 @@ def _spine_condition(condition_id: str, quote_anchor: str, char_span: Tuple[int,
     )
 
 
+# --------------------------------------------------------------------------- #
+# terminal_read_grade -- the MERGE-SILENCING FENCE (ratify-packet
+# h1-mergesilencing-fence-ratify-packet-2026-07-13.md). The ONLY grade the
+# sealed-12 terminal read consumes. Closes the §2 wiring-verify CRIT: pilot_grade
+# gates only f2+causality-regex, so a merge-silenced object (opposite-direction
+# entries fused, unsat comparators, OR-alternatives strictly-ANDed) sails through
+# it -- observed on R5L890. This grade GATES on the 3 structural lints too, with
+# fail-closed semantics: NOT_EVALUATED on a load-bearing lint = INDETERMINATE, and
+# ONLY affirmatively-CLEAN counts toward the >=60% video-unit bar.
+# --------------------------------------------------------------------------- #
+
+# Load-bearing lints for the terminal read's fidelity question. causality's
+# same_bar leg is DELIBERATELY excluded -- provably-not-load-bearing (execution
+# timing, orthogonal to extraction fidelity; ratify-packet disposition table).
+_TERMINAL_STRUCTURAL_LINTS = (
+    "direction_conflation_lint",
+    "unsat_sat_check",
+    "or_alternatives_honored",
+)
+
+
+def terminal_read_grade(lint_results: Dict[str, "cl.LintResult"]) -> dict:
+    """Fail-closed terminal-read grade. Returns {grade, clean, disposition}.
+      CLEAN         iff every load-bearing lint is affirmatively PASS.
+      REJECTED      if any load-bearing lint is FAIL.
+      INDETERMINATE if any load-bearing lint is NOT_EVALUATED and none FAIL.
+    `clean` (grade == CLEAN) is the ONLY value counting toward the >=60% bar --
+    INDETERMINATE != clean, REJECTED != clean. Without a compiled-topology
+    overlay the 3 structural lints are NOT_EVALUATED -> INDETERMINATE, which is
+    the forcing function that makes the A-packet a hard terminal-read
+    precondition (Hole 1) rather than a documented wish."""
+    disposition: Dict[str, str] = {}
+    any_fail = False
+    any_not_eval = False
+
+    # 3 structural lints: gate top-level status.
+    for name in _TERMINAL_STRUCTURAL_LINTS:
+        st = lint_results[name].status
+        disposition[name] = st
+        if st == cl.STATUS_FAIL:
+            any_fail = True
+        elif st == cl.STATUS_NOT_EVALUATED:
+            any_not_eval = True
+
+    # f2_coverage_gate: gate top-level status (never NOT_EVALUATED).
+    f2 = lint_results["f2_coverage_gate"].status
+    disposition["f2_coverage_gate"] = f2
+    if f2 == cl.STATUS_FAIL:
+        any_fail = True
+    elif f2 == cl.STATUS_NOT_EVALUATED:
+        any_not_eval = True
+
+    # causality: gate the REGEX leg only (same_bar leg is provably-not-load-
+    # bearing -- ratify-packet proof). regex_leg_status is the load-bearing leg.
+    caus = lint_results["causality_lint"]
+    regex_leg = caus.regex_leg_status
+    disposition["causality_lint.regex_leg"] = regex_leg
+    disposition["causality_lint.same_bar_leg"] = "EXEMPT_NOT_LOAD_BEARING"
+    if regex_leg == cl.STATUS_FAIL:
+        any_fail = True
+    elif regex_leg == cl.STATUS_NOT_EVALUATED:
+        any_not_eval = True
+
+    if any_fail:
+        grade = "REJECTED"
+    elif any_not_eval:
+        grade = "INDETERMINATE"
+    else:
+        grade = "CLEAN"
+    return {"grade": grade, "clean": grade == "CLEAN", "disposition": disposition}
+
+
 def assemble_certificate(
     full_transcript: str,
     full_transcript_sha256: str,
@@ -271,9 +343,20 @@ def assemble_certificate(
 
     full_grade = pilot_grade and all_five_pass and zero_not_evaluated
 
+    # THE FENCE (ratify-packet 2026-07-13): the ONLY grade the sealed-12
+    # terminal read consumes. Gates on the 3 structural lints too, fail-closed.
+    # A merge-silenced object that gets pilot_grade=True is REJECTED (topology
+    # present -> direction_conflation FAIL) or INDETERMINATE (topology absent ->
+    # structural lints NOT_EVALUATED) here -- never CLEAN. pilot_grade itself is
+    # UNCHANGED (pilot-era artifact); this is additive.
+    terminal_read = terminal_read_grade(lint_results)
+
     return {
         "conditions": condition_entries,
         "compile_integrity": compile_integrity,
+        "terminal_read_grade": terminal_read["grade"],
+        "terminal_read_clean": terminal_read["clean"],
+        "terminal_read_disposition": terminal_read["disposition"],
         "provenance": Provenance(
             source_video_id=source_video_id,
             full_transcript_sha256=full_transcript_sha256,
