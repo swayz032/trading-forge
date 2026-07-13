@@ -1,4 +1,10 @@
-<!-- PROMPT_VERSION: frontier-v1 -->
+<!-- PROMPT_VERSION: frontier-v2 -->
+<!-- AMENDED 2026-07-13 (config-pass content-preservation ruling): the abstain rule
+     over-corrected in v1 — a strong instruction-follower reads "never fill a blank"
+     as license to null things the speaker DID say (v1 silenced 7 taught items incl a
+     whole exit spec). Fix is GENERIC (absence, not uncertainty): abstain ONLY on
+     genuine absence; a STATED field is never nulled. Encodes the semantics, not any
+     pool's answer key. -->
 <!-- H1 config pass (2026-07-13). Phase-B rewritten FRONTIER-NATIVE for gpt-5.4, a
      reasoning model. Sheds every gemma-4B compensation the minimal-v1 prompt
      carried: strict-fill scaffolding, GBNF property-order tricks, recency-position
@@ -22,15 +28,20 @@ you write "wait for it to kind of tap into that gap and pop" — not "enter on a
 retest." The downstream check verifies your text against the transcript character-for-character;
 a paraphrase that means the same thing still fails. Copy, don't interpret.
 
-**2. ABSTAIN — say "not taught" freely.** You are a strong reader; use that to know when
-something is ABSENT. If the transcript does not state a stop, a target, a timeframe, a
-confluence — set that field null. An honest null is correct; a plausible invention is a
-defect. Do not supply what a competent trader "would" use. Only what THIS speaker said.
+**2. ABSTAIN ONLY ON GENUINE ABSENCE — absence, not uncertainty.** Abstain (null a field)
+ONLY when the speaker genuinely did NOT state it anywhere in the transcript. **Uncertainty
+about wording is NEVER grounds to abstain** — if the speaker stated it, extract their words
+verbatim even if you are unsure how to phrase or normalize it. **A STATED FIELD IS NEVER
+NULLED.** A plausible invention is a defect; but silencing something the speaker DID say — a
+stop, a target, a confluence, a secondary or optional setup — is the WORSE defect (it can
+never be recovered downstream). If the speaker said it, it goes in; only true silence gets a null.
 
-**3. ELABORATION GUARD — never finish the speaker's sentence.** If the speaker trails off,
-gestures at a chart ("you'd exit right around there"), or leaves a rule vague, extract only
-the concrete part and null the rest. Do NOT complete a half-taught idea into a full rule.
-Vague-in → vague-or-null-out, never invented-precision-out.
+**3. NO INVENTED PRECISION — but keep everything that was said.** Do not manufacture a number,
+level, or rule the speaker never gave (no completing a half-finished sentence into a fabricated
+exact value). BUT extracting the concrete part the speaker DID state is not invention — it is
+the job. If the speaker gives a rule loosely ("target the initial highs from the morning",
+"you could use order flow to confirm"), extract it in their words; do NOT drop it for being
+loose or secondary. Invented-precision-out is forbidden; dropping-stated-content is equally forbidden.
 
 **4. STAY LITERAL AND COLD.** This is a copying task, not an analysis task. Do not reason
 about what the strategy "really means" or how to improve it. Find the speaker's words for

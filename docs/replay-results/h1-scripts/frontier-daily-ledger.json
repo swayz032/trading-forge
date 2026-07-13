@@ -1,6 +1,6 @@
 {
  "2026-07-13": {
-  "gpt54": 1153335,
+  "gpt54": 1165485,
   "mini": 309111,
   "_burst_gpt54": {
    "pool": "gpt54",
@@ -8,8 +8,8 @@
    "overageUsdPerMTok": 4.199999999999999,
    "limitTokens": 476190,
    "freePoolLine": 250000,
-   "grantedAtSpent": 992688,
-   "signedBy": "operator (Tonio): config-pass, $2 cap, 'I SIGN OFF ON THE BALANCE'",
+   "grantedAtSpent": 1153335,
+   "signedBy": "operator (Tonio): config-pass v2 JOINT-BAR retest, $2, 'one sentence, two dollars'",
    "grantedUtcDate": "2026-07-13"
   }
  },

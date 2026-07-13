@@ -82,9 +82,11 @@ async function main() {
   const extSchema = strictify(JSON.parse(readFileSync(`${ROOT}/src/agents/kb/transcript-extractor-minimal-schema.json`, "utf8")));
   const enumHash = promptHash(enumPrompt), extHash = promptHash(extPrompt);
 
-  // config pass writes to a SEPARATE dir so the minimal-v1 vault (the 10.8% record) is preserved.
+  // config pass writes to a SEPARATE dir so prior vaults are preserved. --outdir overrides
+  // (used for the v2 retest so it doesn't overwrite the v1 configpass record).
   const isConfigPass = /frontier/.test(phasebPath);
-  const outDir = `${ROOT}/docs/replay-results/h1-scripts/frontier-designpool${isConfigPass ? "-configpass" : ""}`;
+  const outSub = arg.match(/--outdir=([^\s]+)/)?.[1] ?? `frontier-designpool${isConfigPass ? "-configpass" : ""}`;
+  const outDir = `${ROOT}/docs/replay-results/h1-scripts/${outSub}`;
   const vaultDir = `${outDir}/vault`;
   mkdirSync(vaultDir, { recursive: true });
   // Phase-A cache is SHARED (enumerator untouched -> reuse the birth/design-pool Phase-A draws, free);
