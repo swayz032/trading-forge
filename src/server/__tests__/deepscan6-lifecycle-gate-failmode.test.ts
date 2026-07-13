@@ -12,17 +12,23 @@ beforeAll(() => {
   src = readFileSync(resolve(here, "../services/lifecycle-service.ts"), "utf8");
 });
 
-describe("deepscan6 O1 — gate fail-open is observable + block decisions survive graveyard failure", () => {
-  it("emits an audit row for each of the 3 fail-open infra-error paths (not silent)", () => {
-    expect(src).toContain("lifecycle.parameter_drift_infra_error_proceeded");
-    expect(src).toContain("lifecycle.dsr_infra_error_proceeded");
-    expect(src).toContain("lifecycle.bif_infra_error_proceeded");
+describe("deepscan6 O1 — gate infra-errors block promotion and block decisions survive graveyard failure", () => {
+  it("emits a failure audit row for each of the 3 infra-error paths", () => {
+    expect(src).toContain("lifecycle.parameter_drift_infra_error_blocked");
+    expect(src).toContain("lifecycle.dsr_infra_error_blocked");
+    expect(src).toContain("lifecycle.bif_infra_error_blocked");
   });
 
-  it("still pushes data_unavailable so the evidence-completeness gate can see the slip", () => {
-    // 3 gate catches each push data_unavailable (plus any pre-existing ones).
-    const count = (src.match(/gateEvidenceStatuses\.push\("data_unavailable"\)/g) || []).length;
-    expect(count).toBeGreaterThanOrEqual(3);
+  it("uses a continue in each catch so the cron path cannot promote past an unavailable hard gate", () => {
+    for (const action of [
+      "lifecycle.parameter_drift_infra_error_blocked",
+      "lifecycle.dsr_infra_error_blocked",
+      "lifecycle.bif_infra_error_blocked",
+    ]) {
+      const index = src.indexOf(action);
+      expect(index).toBeGreaterThan(-1);
+      expect(src.slice(index, index + 950)).toContain("continue;");
+    }
   });
 
   it("wraps the block-decision graveyard writes so the block survives a DB hiccup", () => {
@@ -30,11 +36,11 @@ describe("deepscan6 O1 — gate fail-open is observable + block decisions surviv
     expect(src).toContain("block decision wins regardless of graveyard write outcome");
   });
 
-  it("keeps BIF fail-OPEN on infra error (pinned deliberate design) — audited, not blocked", () => {
-    // The BIF infra-error path proceeds (fail-open) but now writes the audit row.
-    const idx = src.indexOf("lifecycle.bif_infra_error_proceeded");
+  it("fails closed on BIF infra error", () => {
+    const idx = src.indexOf("lifecycle.bif_infra_error_blocked");
     expect(idx).toBeGreaterThan(-1);
-    const window = src.slice(idx, idx + 400);
-    expect(window).toContain("promotion continues");
+    const window = src.slice(idx, idx + 950);
+    expect(window).toContain("promotion blocked fail-closed");
+    expect(window).toContain("continue;");
   });
 });

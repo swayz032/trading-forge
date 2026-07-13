@@ -79,9 +79,8 @@ import {
 import { evaluateBifGate } from "../lib/bif-gate.js";
 // Wave A — Slippage-Survival promotion gate (PAPER → DEPLOY_READY).
 // Reads backtests.slippageSurvival JSONB (Python fixed-signal re-price sweep).
-// Default-OFF (SLIPPAGE_SURVIVAL_GATE_ENABLED=false) — advisory-only until the
-// operator opts in; hard-blocks when breaks_at <= SLIPPAGE_SURVIVAL_BLOCK_MULT
-// once enabled. Grandfather-passes on legacy null.
+// Required for promotion: missing, malformed, insufficient, or disabled
+// execution-stress evidence fails closed.
 import { evaluateSlippageSurvivalGate } from "../lib/slippage-survival-gate.js";
 // deep-scan #15 FIX M1: shared evidence-completeness roll-up accounting.
 // isIncompleteEvidenceStatus + *EvidenceBucket keep the cron path and the
@@ -123,7 +122,7 @@ function _incWfeGateCounter(
 ): void {
   try {
     const isLegacy = result.status === "legacy_null" || result.status === "cpcv_exempt";
-    const outcome = isLegacy ? "legacy" : result.passed ? "pass" : "block";
+    const outcome = !result.passed ? "block" : isLegacy ? "legacy" : "pass";
     wfeGateTotal.labels({ transition, outcome }).inc();
   } catch { /* non-blocking counter */ }
 }
@@ -134,7 +133,7 @@ function _incParameterDriftGateCounter(
 ): void {
   try {
     const isLegacy = result.status === "legacy_null" || result.status === "cpcv_exempt";
-    const outcome = isLegacy ? "legacy" : result.passed ? "pass" : "block";
+    const outcome = !result.passed ? "block" : isLegacy ? "legacy" : "pass";
     parameterDriftGateTotal.labels({ transition, outcome }).inc();
   } catch { /* non-blocking counter */ }
 }
@@ -1009,7 +1008,7 @@ export class LifecycleService {
               action: "lifecycle.bif_cpcv_unmeasured",
               entityId: id,
               entityType: "strategy",
-              status: "success",
+              status: bifCpcvResult.passed ? "success" : "failure",
               decisionAuthority: "gate",
               input: { fromState, toState },
               result: bifCpcvResult.auditPayload as Record<string, unknown>,
@@ -1017,6 +1016,12 @@ export class LifecycleService {
             }).catch((auditErr: unknown) => {
               logger.warn({ strategyId: id, err: auditErr }, "lifecycle.bif_cpcv_unmeasured audit insert failed (non-blocking)");
             });
+            if (!bifCpcvResult.passed) {
+              return {
+                success: false,
+                error: bifCpcvResult.reason,
+              };
+            }
           }
         }
 
@@ -1025,7 +1030,6 @@ export class LifecycleService {
         // Pass 5 Track A carve-out; rather than touch it, this gate is enforced
         // inline here (manual PATCH path) and again in the cron sweep below —
         // mirroring the BIF gate's dual-call-site pattern (manual + cron parity).
-        // Advisory-only while SLIPPAGE_SURVIVAL_GATE_ENABLED=false (default).
         // deepscan15 F-1: capture the slippage evidence bucket in an outer-scoped var
         // so the evidence-completeness governor below counts it on the MANUAL path too
         // (the shared evaluatePaperToDeployReadyGates has no slippage dimension). Without
@@ -1102,10 +1106,10 @@ export class LifecycleService {
               computationError: bifCompErrorCounter,
             },
           );
-          const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
-            ? "cpcv_unmeasured"
-            : !bifResult.passed
-              ? "blocked"
+          const bifOutcome = !bifResult.passed
+            ? "blocked"
+            : bifResult.reason === "bif.cpcv_unmeasured"
+              ? "cpcv_unmeasured"
               : bifResult.legacyNull
                 ? "legacy_null"
                 : bifResult.reason === "bif.warn_above_warn_threshold"
@@ -1811,11 +1815,10 @@ export class LifecycleService {
           const exitParams = (dslConfig?.exit_params ?? dslConfig?.exitParams) as Record<string, unknown> | undefined;
           const isStyleC = exitParams?.style === "c" || exitParams?.style === "C";
 
-          if (isStyleC && wfMode === "plain") {
+          if (wfMode !== "cpcv") {
             const error =
-              `lifecycle.wf_mode_insufficient: strategy ${id} uses Style C runner exits ` +
-              `but walk-forward mode is "plain" — overlapping runner bars leak IS→OOS. ` +
-              `Re-run backtest with WF_MODE=purged_embargo or WF_MODE=cpcv before promoting to PAPER.`;
+              `lifecycle.wf_mode_insufficient: strategy ${id} has walk-forward mode ${String(wfMode)}. ` +
+              `A fresh CPCV result is required before promoting to PAPER.`;
             logger.warn(
               { strategyId: id, fromState, toState, wfMode, isStyleC, backtestId: promotionEvidence.backtestId },
               error,
@@ -1828,10 +1831,10 @@ export class LifecycleService {
               status: "failure",
               input: { fromState, toState, backtestId: promotionEvidence.backtestId, wfMode } as Record<string, unknown>,
               result: {
-                reason: "plain_wf_with_style_c_runner",
+                reason: "cpcv_required_for_promotion",
                 wf_mode: wfMode,
                 is_style_c: isStyleC,
-                required_modes: ["purged_embargo", "cpcv"],
+                required_modes: ["cpcv"],
               } as Record<string, unknown>,
               correlationId: options.correlationId ?? null,
             }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.wf_mode_insufficient audit row write failed"));
@@ -1839,8 +1842,9 @@ export class LifecycleService {
           }
         }
       } catch (wfModeErr) {
-        // Non-blocking: WF mode gate failure must not abort a promotion.
-        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: wfModeErr }, "lifecycle.wf_mode_gate: read failed (non-blocking — promotion continues)");
+        const error = `lifecycle.wf_mode_gate_read_failed: ${wfModeErr instanceof Error ? wfModeErr.message : String(wfModeErr)}`;
+        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: wfModeErr }, error);
+        return { success: false, error };
       }
     }
 
@@ -6128,26 +6132,27 @@ export class LifecycleService {
             gateEvidenceStatuses.push("complete");
           }
         } catch (driftErr) {
-          // Fail-open: drift gate read failure is non-blocking.
+          // Fail-closed: a strategy cannot qualify for DEPLOY_READY when
+          // parameter-robustness evidence cannot be read or evaluated.
           try { parameterDriftGateTotal.labels({ transition: "PAPER_TO_DEPLOY_READY", outcome: "error" }).inc(); } catch { /* non-blocking counter */ }
           logger.warn(
             { strategyId: s.id, err: driftErr },
-            "Parameter drift gate: read failed (non-blocking — promotion continues)",
+            "Parameter drift gate: read failed — blocking promotion (fail-closed)",
           );
-          // O1-fix-1: emit observable audit row so this fail-open is not silent.
           await db.insert(auditLog).values({
-            action: "lifecycle.parameter_drift_infra_error_proceeded",
+            action: "lifecycle.parameter_drift_infra_error_blocked",
             entityId: s.id,
             entityType: "strategy",
-            status: "warning",
+            status: "failure",
             decisionAuthority: "gate",
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
-            result: { error: driftErr instanceof Error ? driftErr.message : String(driftErr), note: "infra read failure — fail-open, promotion continues" },
+            result: { error: driftErr instanceof Error ? driftErr.message : String(driftErr), note: "infra read/evaluation failure — promotion blocked fail-closed; retries next cron cycle" },
             correlationId,
           }).catch((auditErr: unknown) => {
-            logger.warn({ strategyId: s.id, err: auditErr }, "parameter_drift_infra_error_proceeded audit insert failed (non-blocking)");
+            logger.warn({ strategyId: s.id, err: auditErr }, "parameter_drift_infra_error_blocked audit insert failed (non-blocking)");
           });
-          gateEvidenceStatuses.push("data_unavailable");
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── E-1 (deepscan16 Wave 2 Track G2) — DSL guards_failed HARD gate: PAPER → DEPLOY_READY ──
@@ -6324,25 +6329,26 @@ export class LifecycleService {
             gateEvidenceStatuses.push("complete");
           }
         } catch (dsrPdrErr) {
-          // Fail-open: DSR gate infrastructure failure is non-blocking.
+          // Fail-closed: DSR is an institutional validation gate, not
+          // advisory telemetry.  Missing evidence may not advance a strategy.
           logger.warn(
             { strategyId: s.id, err: dsrPdrErr },
-            "DSR gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+            "DSR gate (PAPER→DEPLOY_READY): read failed — blocking promotion (fail-closed)",
           );
-          // O1-fix-2: emit observable audit row so this fail-open is not silent.
           await db.insert(auditLog).values({
-            action: "lifecycle.dsr_infra_error_proceeded",
+            action: "lifecycle.dsr_infra_error_blocked",
             entityId: s.id,
             entityType: "strategy",
-            status: "warning",
+            status: "failure",
             decisionAuthority: "gate",
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
-            result: { error: dsrPdrErr instanceof Error ? dsrPdrErr.message : String(dsrPdrErr), note: "infra read failure — fail-open, promotion continues" },
+            result: { error: dsrPdrErr instanceof Error ? dsrPdrErr.message : String(dsrPdrErr), note: "infra read/evaluation failure — promotion blocked fail-closed; retries next cron cycle" },
             correlationId,
           }).catch((auditErr: unknown) => {
-            logger.warn({ strategyId: s.id, err: auditErr }, "dsr_infra_error_proceeded audit insert failed (non-blocking)");
+            logger.warn({ strategyId: s.id, err: auditErr }, "dsr_infra_error_blocked audit insert failed (non-blocking)");
           });
-          gateEvidenceStatuses.push("data_unavailable");
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Deep-scan #5 H1 (2026-06-29): BIF gate on the AUTONOMOUS cron path ──
@@ -6446,30 +6452,28 @@ export class LifecycleService {
         } catch (bifErr) {
           logger.warn(
             { strategyId: s.id, err: bifErr },
-            "BIF gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+            "BIF gate (PAPER→DEPLOY_READY): read failed — blocking promotion (fail-closed)",
           );
-          // O1-fix-3: emit observable audit row so this fail-open is not silent.
           await db.insert(auditLog).values({
-            action: "lifecycle.bif_infra_error_proceeded",
+            action: "lifecycle.bif_infra_error_blocked",
             entityId: s.id,
             entityType: "strategy",
-            status: "warning",
+            status: "failure",
             decisionAuthority: "gate",
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
-            result: { error: bifErr instanceof Error ? bifErr.message : String(bifErr), note: "infra read failure — fail-open, promotion continues" },
+            result: { error: bifErr instanceof Error ? bifErr.message : String(bifErr), note: "infra read/evaluation failure — promotion blocked fail-closed; retries next cron cycle" },
             correlationId,
           }).catch((auditErr: unknown) => {
-            logger.warn({ strategyId: s.id, err: auditErr }, "bif_infra_error_proceeded audit insert failed (non-blocking)");
+            logger.warn({ strategyId: s.id, err: auditErr }, "bif_infra_error_blocked audit insert failed (non-blocking)");
           });
-          gateEvidenceStatuses.push("data_unavailable");
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Wave A (2026-07-03) — Slippage-Survival gate, cron-path enforcement ──
         // Mirrors the BIF block immediately above (same fetch/evaluate/audit/SSE/
-        // block/reset-counter shape). Default-OFF via SLIPPAGE_SURVIVAL_GATE_ENABLED
-        // (advisory-only — never alters flow while disabled); legacy-null and
-        // insufficient-sample both grandfather-pass with a warn. See design spec:
-        // docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+        // block/reset-counter shape). A missing, malformed, insufficient, or
+        // disabled slippage-survival result blocks promotion.
         try {
           const [latestBtForSlippage] = await db
             .select({ slippageSurvival: backtests.slippageSurvival })
@@ -6536,21 +6540,21 @@ export class LifecycleService {
         } catch (slippageSurvivalErr) {
           logger.warn(
             { strategyId: s.id, err: slippageSurvivalErr },
-            "Slippage-Survival gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+            "Slippage-Survival gate (PAPER→DEPLOY_READY): read failed — blocking promotion",
           );
           await db.insert(auditLog).values({
-            action: "lifecycle.slippage_survival_infra_error_proceeded",
+            action: "lifecycle.slippage_survival_infra_error_blocked",
             entityId: s.id,
             entityType: "strategy",
-            status: "warning",
+            status: "failure",
             decisionAuthority: "gate",
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
-            result: { error: slippageSurvivalErr instanceof Error ? slippageSurvivalErr.message : String(slippageSurvivalErr), note: "infra read failure — fail-open, promotion continues" },
+            result: { error: slippageSurvivalErr instanceof Error ? slippageSurvivalErr.message : String(slippageSurvivalErr), note: "infra read failure — fail-closed, promotion blocked" },
             correlationId,
           }).catch((auditErr: unknown) => {
-            logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival_infra_error_proceeded audit insert failed (non-blocking)");
+            logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival_infra_error_blocked audit insert failed (non-blocking)");
           });
-          gateEvidenceStatuses.push("data_unavailable");
+          continue;
         }
 
         // ── Wave 26 Pass G Pass E Gate Stack: WFE-0.80 + CPCV-15 + WRC + SPA ─

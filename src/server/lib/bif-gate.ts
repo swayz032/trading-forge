@@ -189,15 +189,15 @@ export function evaluateBifGate(
   // BIF ≈ 1.0 structurally (IS proxy and OOS agg_sharpe both from OOS series) —
   // NOT a real IS-vs-OOS comparison. Return a DISTINCT status so the audit row
   // ("bif.cpcv_unmeasured") is visible and distinguishable from a genuine bif.clean.
-  // Gate always passes — do NOT block on a structural measurement limitation.
+  // A structural measurement limitation cannot authorize promotion.
   if (opts?.bifReliable === false) {
     logger.warn(
       { bif: bifNum, k_eff: kEffNum },
       "BIF gate: bif_reliable=false (CPCV mode) — BIF is structurally unmeasured (IS proxy = OOS mean); " +
-        "gate passes with distinct audit (bif.cpcv_unmeasured)",
+        "blocking promotion with distinct audit (bif.cpcv_unmeasured)",
     );
     return {
-      passed: true,
+      passed: false,
       reason: "bif.cpcv_unmeasured",
       legacyNull: false,
       auditPayload: {
@@ -205,7 +205,7 @@ export function evaluateBifGate(
         k_eff: kEffNum,
         warn_threshold: warnThreshold,
         block_threshold: blockThreshold,
-        blocked: false,
+        blocked: true,
         legacy_null: false,
         reason: "bif.cpcv_unmeasured",
         proxy_basis_warn: proxyBasisWarn,
@@ -244,15 +244,14 @@ export function evaluateBifGate(
   }
 
   // ── 1. Legacy null — pre-Wave-3 backtest; bif field never emitted ──────────
-  // NEVER block on missing data.  Grandfather window: every fresh WF run since
-  // Wave 3 will emit `bif` and `k_eff`.
+  // Missing BIF evidence cannot authorize a fresh promotion.
   if (bifNum === null) {
     logger.warn(
       { k_eff: kEffNum, warnThreshold, blockThreshold },
-      "BIF gate: bif absent — pre-Wave-3 backtest; proceeding with legacy grandfather warn (bif.legacy_null_pre_wave3)",
+      "BIF gate: bif absent — blocking promotion until a fresh BIF result is present (bif.legacy_null_pre_wave3)",
     );
     return {
-      passed: true,
+      passed: false,
       reason: "bif.legacy_null_pre_wave3",
       legacyNull: true,
       auditPayload: {
@@ -260,7 +259,7 @@ export function evaluateBifGate(
         k_eff: kEffNum,
         warn_threshold: warnThreshold,
         block_threshold: blockThreshold,
-        blocked: false,
+        blocked: true,
         legacy_null: true,
         reason: "bif.legacy_null_pre_wave3",
         proxy_basis_warn: proxyBasisWarn,

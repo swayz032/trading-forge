@@ -15037,3 +15037,20 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 **Verification:**
 - `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts src/server/__tests__/slumhouse/crib-route.test.ts src/server/__tests__/slumhouse/index-route.test.ts` — 14/14 passed.
 - Live probe: anonymous `/slumhouse/does-not-exist` → `302 /slumhouse/login.html`; signed-in `/slumhouse/does-not-exist` and `/slumhouse/launch` → `302 /slumhouse/crib.html` on both `localhost:4000` and `tf-relay-production.up.railway.app`.
+
+### Session Log — 2026-07-12 validation-pipeline hardening
+
+**Mission:** Make the inactive strategy-validation pipeline fail closed on stale, missing, malformed, or unmeasured promotion evidence without starting strategies.
+
+**Work completed:**
+- Corrected the stale Monte Carlo EOD trailing-high-water-mark regression fixture to match the canonical $50K firm-rule behavior.
+- Required fresh CPCV before TESTING → PAPER and blocked PBO, WFE, DSR, BIF, parameter-drift, B14 CI, and slippage-survival evidence when unavailable or incomplete.
+- Closed cron and manual PAPER → DEPLOY_READY fail-open paths, including CPCV BIF that was previously only audited.
+- Made the slippage-survival gate default-on and fail closed when disabled, missing, malformed, or undersampled.
+
+**Verification:**
+- Focused Python validation suite: 408 passed.
+- Relevant TypeScript gate tests: 208 passed.
+- `npx tsc --noEmit` passed.
+
+**Known-facts updates:** Execution-model calibration still requires independently confirmed paper/broker fills. No strategies, backtests, or paper/live execution were started during this hardening pass.

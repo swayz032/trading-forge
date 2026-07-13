@@ -167,10 +167,10 @@ export function evaluatePboGate(
   if (pboRaw == null && backtestResult.pbo_degenerate_reason === "cpcv_is_sharpe_unavailable") {
     logger.warn(
       { threshold: effectiveThreshold, pbo_degenerate_reason: backtestResult.pbo_degenerate_reason },
-      "PBO gate: pbo_overall unavailable due to CPCV structural limitation — proceeding with CPCV-exempt audit (lifecycle.pbo_cpcv_is_unavailable)",
+      "PBO gate: pbo_overall unavailable due to CPCV structural limitation — blocking promotion pending an IS-basis result (lifecycle.pbo_cpcv_is_unavailable)",
     );
     return {
-      ok: true,
+      ok: false,
       pbo: null,
       threshold: effectiveThreshold,
       reason: "lifecycle.pbo_cpcv_is_unavailable",
@@ -179,7 +179,7 @@ export function evaluatePboGate(
         pbo: null,
         pbo_p_value: pValueRaw,
         threshold: effectiveThreshold,
-        blocked: false,
+        blocked: true,
         legacy_null: false,
         cpcv_exempt: true,
       },
@@ -192,10 +192,10 @@ export function evaluatePboGate(
   if (pboRaw == null) {
     logger.warn(
       { threshold: effectiveThreshold },
-      "PBO gate: pbo_overall unavailable (pre-Wave-29 backtest) — proceeding with legacy warn (lifecycle.pbo_unavailable_legacy)",
+      "PBO gate: pbo_overall unavailable — blocking promotion until a fresh result is present (lifecycle.pbo_unavailable_legacy)",
     );
     return {
-      ok: true,
+      ok: false,
       pbo: null,
       threshold: effectiveThreshold,
       reason: "lifecycle.pbo_unavailable_legacy",
@@ -204,7 +204,7 @@ export function evaluatePboGate(
         pbo: null,
         pbo_p_value: pValueRaw,
         threshold: effectiveThreshold,
-        blocked: false,
+        blocked: true,
         legacy_null: true,
       },
     };

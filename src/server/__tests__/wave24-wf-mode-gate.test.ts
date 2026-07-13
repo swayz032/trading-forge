@@ -1,13 +1,10 @@
 /**
  * Wave 24 Pass 1 — Item 10: WF mode gate tests.
  *
- * Tests the lifecycle-service.ts promotion gate that blocks Style C strategies
- * with plain walk-forward mode (overlapping runner bars → future info leak).
+ * Tests the lifecycle-service.ts promotion gate that requires CPCV evidence.
  *
- * Gate: TESTING → PAPER with wf_metadata.mode="plain" AND style C → BLOCK
- *       TESTING → PAPER with wf_metadata.mode="purged_embargo" → ALLOW
- *       TESTING → PAPER with wf_metadata.mode="cpcv" → ALLOW
- *       Non-Style-C with any mode → ALLOW
+ * Gate: TESTING → PAPER with wf_metadata.mode="cpcv" → ALLOW
+ *       Any other or missing mode → BLOCK
  *
  * Audit action: lifecycle.wf_mode_insufficient
  */
@@ -21,12 +18,12 @@ function evaluateWfModeGate(opts: {
   wfMode: string | undefined;
   isStyleC: boolean;
 }): { blocked: boolean; reason: string | null } {
-  const { wfMode, isStyleC } = opts;
+  const { wfMode } = opts;
 
-  if (isStyleC && wfMode === "plain") {
+  if (wfMode !== "cpcv") {
     return {
       blocked: true,
-      reason: "plain_wf_with_style_c_runner",
+      reason: "cpcv_required_for_promotion",
     };
   }
 
@@ -35,50 +32,30 @@ function evaluateWfModeGate(opts: {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe("WF Mode Gate (Item 10, Wave 24 Pass 1)", () => {
-  describe("Style C + plain WF → BLOCK", () => {
-    it("blocks promotion when style='c' and wf_mode='plain'", () => {
+describe("WF Mode Gate", () => {
+  describe("non-CPCV walk-forward → BLOCK", () => {
+    it("blocks promotion when wf_mode='plain'", () => {
       const result = evaluateWfModeGate({ wfMode: "plain", isStyleC: true });
       expect(result.blocked).toBe(true);
-      expect(result.reason).toBe("plain_wf_with_style_c_runner");
+      expect(result.reason).toBe("cpcv_required_for_promotion");
     });
 
-    it("blocks when style='C' (uppercase) and plain mode", () => {
-      // Case-insensitive check — both 'c' and 'C' are Style C
-      const result = evaluateWfModeGate({ wfMode: "plain", isStyleC: true });
-      expect(result.blocked).toBe(true);
-    });
-  });
-
-  describe("Style C + purged_embargo → ALLOW", () => {
-    it("allows promotion when style='c' and wf_mode='purged_embargo'", () => {
+    it("blocks purged_embargo because promotion requires CPCV", () => {
       const result = evaluateWfModeGate({ wfMode: "purged_embargo", isStyleC: true });
-      expect(result.blocked).toBe(false);
-      expect(result.reason).toBeNull();
+      expect(result.blocked).toBe(true);
+    });
+
+    it("blocks a missing walk-forward mode", () => {
+      const result = evaluateWfModeGate({ wfMode: undefined, isStyleC: false });
+      expect(result.blocked).toBe(true);
     });
   });
 
-  describe("Style C + cpcv → ALLOW", () => {
-    it("allows promotion when style='c' and wf_mode='cpcv'", () => {
+  describe("CPCV → ALLOW", () => {
+    it("allows promotion when wf_mode='cpcv'", () => {
       const result = evaluateWfModeGate({ wfMode: "cpcv", isStyleC: true });
       expect(result.blocked).toBe(false);
-    });
-  });
-
-  describe("Non-Style-C any mode → ALLOW", () => {
-    it("allows promotion when not Style C even with plain mode", () => {
-      const result = evaluateWfModeGate({ wfMode: "plain", isStyleC: false });
-      expect(result.blocked).toBe(false);
-    });
-
-    it("allows promotion when wf_mode is undefined and not Style C", () => {
-      const result = evaluateWfModeGate({ wfMode: undefined, isStyleC: false });
-      expect(result.blocked).toBe(false);
-    });
-
-    it("allows non-Style-C with purged_embargo", () => {
-      const result = evaluateWfModeGate({ wfMode: "purged_embargo", isStyleC: false });
-      expect(result.blocked).toBe(false);
+      expect(result.reason).toBeNull();
     });
   });
 

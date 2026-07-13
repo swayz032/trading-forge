@@ -693,32 +693,19 @@ class TestEODTrailingHWMFix:
     """
 
     def test_eod_trailing_hwm_deferred(self):
-        """A path that gains then drops should not see today's gain in today's floor.
+        """Topstep EOD trailing breaches after rule-accurate capped loss days.
 
-        Construct a scenario where the account:
-        - Day 1: +$3000 (HWM becomes $53000, floor = $53000 - $3000 = $50000)
-        - Day 2: -$2999 (balance = $50001, should be ABOVE floor)
-        - Day 3: -$3001 (balance = $49999, should breach floor at $50000)
-
-        With the bug: Day 2 would update HWM to $53000 before floor check,
-        then Day 3 floor = $50000 (correct for bug case since no new HWM gain on Day 3).
-        The bug manifests when a day's P&L is positive and raises HWM — the
-        same-day draw should still be measured from the prior EOD HWM.
-
-        We test the specific case: Day 1 gain → Day 1 same-session DD must NOT
-        allow the floor to reset by same-bar HWM update.
+        Day 1 makes $3000. Days 2–4 each lose $3000 before the configured
+        $1000 DLL cap. The third capped loss reaches Topstep's locked $50000
+        EOD floor and must breach.
         """
         from src.engine.monte_carlo import simulate_firm_survival
 
-        # Single simulation path: 3 steps (days)
-        # Starting balance $50000, max_dd = $3000 for topstep_50k
-        cumulative = np.array([[3000.0, 0.0, -3001.0]])  # cumulative P&L steps
+        # Four daily cumulative P&L observations.
+        cumulative = np.array([[3000.0, 0.0, -3000.0, -6000.0]])
 
         result = simulate_firm_survival(cumulative, "topstep_50k", account_size=50000)
-        # After fix: Day 3 balance = $50000 + (-$3001) = $46999 at end of path
-        # HWM at start of Day 3 = $53000 (from Day 1), floor = $50000
-        # balance $46999 < floor $50000 → breached
-        # The key invariant: result must reflect a breach
+        # Day 4 balance is $50000 after DLL caps; Topstep's floor comparison is <=.
         assert result["eval_pass_rate"] == 0.0 or result["breach_reasons"].get("trailing_dd", 0) > 0
 
     def test_eod_trailing_no_false_breach(self):

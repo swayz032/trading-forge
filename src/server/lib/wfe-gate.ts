@@ -145,7 +145,7 @@ export function evaluateWfeGate(
   if (wfeStatus === "cpcv_not_applicable") {
     return {
       status: "cpcv_exempt",
-      passed: true,
+      passed: false,
       wfeOverall: null,
       hardFloor: effectiveHardFloor,
       warnFloor: effectiveWarnFloor,
@@ -219,12 +219,11 @@ export function evaluateWfeGate(
     };
   }
 
-  // Legacy path — wfe_overall key genuinely absent (pre-Pass-B.1 backtest).
-  // Only reached when wfeStatus is NOT "degenerate_is" or "cpcv_per_path_is" (checked above).
+  // Missing WFE cannot authorize a fresh promotion.
   if (wfeOverall == null) {
     return {
       status: "legacy_null",
-      passed: true,
+      passed: false,
       wfeOverall: null,
       hardFloor: effectiveHardFloor,
       warnFloor: effectiveWarnFloor,

@@ -122,42 +122,42 @@ describe("evaluateDsrWalkForwardGate — dsr_unavailable=true (computation failu
   });
 });
 
-// ─── Test 4/5: dsr_pass=undefined|null (legacy) → legacy_proceed ──────────────
+// ─── Test 4/5: dsr_pass=undefined|null → insufficient evidence block ─────────
 
-describe("evaluateDsrWalkForwardGate — legacy (dsr_pass absent or null)", () => {
-  it("returns passed=true with status 'legacy_proceed' when dsr_pass is undefined", () => {
+describe("evaluateDsrWalkForwardGate — missing evidence", () => {
+  it("blocks when dsr_pass is undefined", () => {
     const input: WalkForwardDsrInput = { dsr: 0.5 };
     const result = evaluateDsrWalkForwardGate(input);
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.status).toBe("legacy_proceed" satisfies DsrGateStatus);
     expect(result.auditAction).toBe("lifecycle.dsr_unavailable_legacy");
     expect(result.reason).toBe("lifecycle.dsr_unavailable_legacy");
   });
 
-  it("returns passed=true with status 'legacy_proceed' when dsr_pass is null", () => {
+  it("blocks when dsr_pass is null", () => {
     const input: WalkForwardDsrInput = { dsr_pass: null };
     const result = evaluateDsrWalkForwardGate(input);
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.status).toBe("legacy_proceed");
     expect(result.auditAction).toBe("lifecycle.dsr_unavailable_legacy");
   });
 
-  it("null wfMetadata (completely absent) → legacy_proceed + warn audit", () => {
+  it("blocks on absent wfMetadata", () => {
     const result = evaluateDsrWalkForwardGate(null);
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.status).toBe("legacy_proceed");
     expect(result.auditPayload.dsr_pass).toBeNull();
   });
 
-  it("empty object input (no fields) → legacy_proceed", () => {
+  it("blocks on an empty input", () => {
     const result = evaluateDsrWalkForwardGate({});
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.status).toBe("legacy_proceed");
   });
 
-  it("audit payload marks blocked=false and dsr_pass=null for legacy path", () => {
+  it("audit payload marks blocked=true and dsr_pass=null for missing evidence", () => {
     const result = evaluateDsrWalkForwardGate({ dsr_pass: null, dsr: 1.2 });
-    expect(result.auditPayload.blocked).toBe(false);
+    expect(result.auditPayload.blocked).toBe(true);
     expect(result.auditPayload.dsr_pass).toBeNull();
     expect(result.auditPayload.dsr).toBe(1.2);
     expect(result.auditPayload.status).toBe("legacy_proceed");

@@ -88,20 +88,20 @@ describe("evaluatePboGate — pbo_overall = 0.20 → ok: false", () => {
   });
 });
 
-describe("evaluatePboGate — legacy null pbo_overall", () => {
-  it("proceeds with legacyNull=true when pbo_overall is undefined", () => {
+describe("evaluatePboGate — missing PBO blocks promotion", () => {
+  it("blocks with legacyNull=true when pbo_overall is undefined", () => {
     const result = evaluatePboGate({});
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     expect(result.pbo).toBeNull();
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
-    expect(result.auditPayload.blocked).toBe(false);
+    expect(result.auditPayload.blocked).toBe(true);
     expect(result.auditPayload.legacy_null).toBe(true);
   });
 
-  it("proceeds with legacyNull=true when pbo_overall is explicitly null", () => {
+  it("blocks with legacyNull=true when pbo_overall is explicitly null", () => {
     const result = evaluatePboGate({ pbo_overall: null });
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     expect(result.pbo).toBeNull();
     expect(result.legacyNull).toBe(true);
   });
@@ -174,7 +174,7 @@ describe("evaluatePboGate — audit payload completeness", () => {
       pbo: null,
       pbo_p_value: null,
       threshold: 0.15,
-      blocked: false,
+      blocked: true,
       legacy_null: true,
     });
   });
@@ -185,7 +185,7 @@ describe("evaluatePboGate — audit payload completeness", () => {
 // walk_forward.py emits pbo_degenerate_reason="cpcv_is_sharpe_unavailable" in
 // wf_metadata when mode="cpcv". PBO rank-comparison requires per-path IS Sharpe
 // which CPCV does not produce. The gate MUST:
-//   - return ok=true (do NOT block)
+//   - return ok=false until a valid IS-basis PBO result exists
 //   - return legacyNull=false (distinct from the grandfather window)
 //   - return reason="lifecycle.pbo_cpcv_is_unavailable" (distinct from "lifecycle.pbo_unavailable_legacy")
 //   - include cpcv_exempt=true in auditPayload
@@ -196,7 +196,7 @@ describe("evaluatePboGate — CPCV-exempt path (hardening/phase-0)", () => {
       pbo_overall: null,
       pbo_degenerate_reason: "cpcv_is_sharpe_unavailable",
     });
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     expect(result.pbo).toBeNull();
     expect(result.legacyNull).toBe(false);
     expect(result.reason).toBe("lifecycle.pbo_cpcv_is_unavailable");
@@ -209,7 +209,7 @@ describe("evaluatePboGate — CPCV-exempt path (hardening/phase-0)", () => {
     });
     expect(result.auditPayload.cpcv_exempt).toBe(true);
     expect(result.auditPayload.legacy_null).toBe(false);
-    expect(result.auditPayload.blocked).toBe(false);
+    expect(result.auditPayload.blocked).toBe(true);
   });
 
   it("cpcv_exempt reason is distinct from legacy_null reason", () => {
@@ -226,7 +226,7 @@ describe("evaluatePboGate — CPCV-exempt path (hardening/phase-0)", () => {
 
   it("regression: genuine legacy null (no pbo_degenerate_reason) → legacyNull=true, pbo_unavailable_legacy", () => {
     const result = evaluatePboGate({ pbo_overall: null });
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
     expect(result.auditPayload.legacy_null).toBe(true);
@@ -299,11 +299,9 @@ describe("lifecycle-service.ts integration contract", () => {
     expect(result.auditPayload.blocked).toBe(false);
   });
 
-  it("evaluatePboGate returns ok=true for missing pbo_overall (legacy grandfather)", () => {
-    // Pre-Wave-29 backtests have no pbo_overall in walkForwardResults.
-    // lifecycle-service.ts must PROCEED (not block) for these.
+  it("evaluatePboGate returns ok=false for missing pbo_overall", () => {
     const result = evaluatePboGate({ pbo_overall: undefined });
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
   });

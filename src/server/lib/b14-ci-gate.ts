@@ -134,10 +134,10 @@ export function evaluateDsrWalkForwardGate(
   if (dsrPass === undefined || dsrPass === null) {
     logger.warn(
       { dsr: dsrValue, dsrUnavailable },
-      "DSR gate: dsr_pass absent — pre-Wave-A backtest; proceeding with legacy warn (lifecycle.dsr_unavailable_legacy)",
+      "DSR gate: dsr_pass absent — blocking promotion until a fresh result is present (lifecycle.dsr_unavailable_legacy)",
     );
     return {
-      passed: true,
+      passed: false,
       status: "legacy_proceed",
       auditAction: "lifecycle.dsr_unavailable_legacy",
       reason: "lifecycle.dsr_unavailable_legacy",
@@ -146,7 +146,7 @@ export function evaluateDsrWalkForwardGate(
         dsr_unavailable: dsrUnavailable,
         dsr: dsrValue,
         status: "legacy_proceed",
-        blocked: false,
+        blocked: true,
       },
     };
   }
