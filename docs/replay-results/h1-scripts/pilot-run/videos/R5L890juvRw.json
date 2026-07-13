@@ -1,0 +1,2081 @@
+{
+  "video_id": "R5L890juvRw",
+  "title": "The Indicator Banks ACTUALLY Use - Full Guide to VWAP",
+  "channel": "Andrea Cimi",
+  "transcript_sha256": "38ed1f7e6aebf08f5a5f25eace7ecfdc10f6e3abafd2989859d19173dc22d5ea",
+  "transcript_char_count": 11512,
+  "transcript_final_outcome": "auto_recovered",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 4,
+  "raw_extraction": {
+    "video_id": "R5L890juvRw",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "vwap_standard_deviation_reversal_strategy",
+        "higher_timeframe": "1d",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify the Volume Weighted Average Price (VWAP) and its standard deviation bands (1\u03c3, 2\u03c3, 3\u03c3) for the current trading session.",
+            "rationale": "VWAP is a dynamic institutional reference point showing the volume-weighted average price of the session."
+          },
+          {
+            "step": 2,
+            "action": "Wait for price to move significantly away from the VWAP, ideally reaching the 1\u03c3 or 2\u03c3 bands (premium or discount zones).",
+            "rationale": "Price movement into outer bands indicates a potential extreme stretch or accumulation of orders."
+          },
+          {
+            "step": 3,
+            "action": "Look for price to rebalance back towards the VWAP or test the inner standard deviation bands (1\u03c3, 2\u03c3).",
+            "rationale": "The market tends to rebalance towards the dynamic fair value (VWAP) after reaching extremes."
+          },
+          {
+            "step": 4,
+            "action": "Enter a trade (long or short) upon price breaking back into the VWAP or testing the inner standard deviation bands.",
+            "rationale": "The retest of the dynamic fair value acts as a potential support or resistance level."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker does not specify an initial stop placement, relying on the dynamic nature of the bands."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "vwap_central_rebalance",
+            "r_multiple": null,
+            "rationale": "The central VWAP is used as a target for price rebalancing."
+          },
+          {
+            "priority": 2,
+            "type": "standard_deviation_bands",
+            "r_multiple": null,
+            "rationale": "The outer standard deviation bands (2\u03c3, 3\u03c3) can be used as targets."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "vwap_session_reference",
+            "description": "VWAP is a dynamic institutional reference point that tells us the current volume weighted average of price for the session.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "name": "standard_deviation_bands",
+            "description": "The standard deviation bands (1\u03c3, 2\u03c3, 3\u03c3) provide objective views of premium and discount pricing based on volume.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "name": "market_rebalancing",
+            "description": "Price tends to rebalance back towards the VWAP after moving into the outer standard deviation bands.",
+            "canonical_match": "liquidity_target_clear"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Execution Alpha",
+            "role": "phase",
+            "verbatim_description": "where Banks try to optimize their Edge even in the filling of the orders.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "volume weighted average price it's basically a moving average that doesn't consider only price in its formula but also includes trading volume in this video we will see how vwap actually works why is it used by smart money and how you can integrated in your trading strategy to potentially boost your Edge and your profits",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Gaussian Bell",
+            "role": "model",
+            "verbatim_description": "also known as normal distribution which in statistics represents the normal distribution of elements in a sample.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value Area",
+            "role": "zone",
+            "verbatim_description": "what is highlighted also known as the value area or the fair value area is none other than a standard deviation Trader at some point decided to put this at 70% to make things easier so in volume analysis the standard deviation is where most of the volume are traded and this would be the average",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount",
+            "role": "zone",
+            "verbatim_description": "everything that sits below the vwap is Discount related to the volume weighted average price of the session so an objective view of what was the actual fair value in the market what is the fair volume weighted price on average throughout the whole session whatever will be up here is going to be premium",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium",
+            "role": "zone",
+            "verbatim_description": "whatever sits below 50% or above 50% this would be premium this would be discount but still it remains an arbitrary decision where to track this and it's going to be measured in an Impulse",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Impulse",
+            "role": "phase",
+            "verbatim_description": "it is objective but it's completely arbitrary to choose which impulse we have a much more clear and objective indication of Premium discount and fair value inside of a session that's why it's being used by institution and smart money and Banks as a method of filling orders",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "the area where most of the sample are going to be is called a standard deviation also known as the 68 percentile and if you take a look at normal volume profile as an example you will see that it's basically a bell curve what is highlighted also known as the value area or the fair value area is none other than a standard deviation",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our discount standard deviation this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": "we Break It We tend to maybe retest it a couple times before going down sometimes we just completely trade through it but sti",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "ian Bell also known as normal distribution which in statistics represents the normal distribution of elements in a sample so let's s",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "'s going to be measured in an Impulse this is a very simplistic view of discount and premiums that's the reason why so many impu",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "ICT",
+            "role": "model",
+            "verbatim_description": "ICT (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "um and discounts discussed by ICT is comparing to a swing high or a swing low whatever sits below 50% or above 50% this wou",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "0": "r",
+        "1": "e",
+        "2": "j",
+        "3": "e",
+        "4": "c",
+        "5": "t",
+        "6": "e",
+        "7": "d",
+        "8": "_",
+        "9": "s",
+        "10": "t",
+        "11": "r",
+        "12": "a",
+        "13": "t",
+        "14": "e",
+        "15": "g",
+        "16": "i",
+        "17": "e",
+        "18": "s",
+        "19": "_",
+        "20": "l",
+        "21": "i",
+        "22": "s",
+        "23": "t",
+        "24": "_",
+        "25": "o",
+        "26": "f",
+        "27": "_",
+        "28": "s",
+        "29": "t",
+        "30": "r",
+        "31": "a",
+        "32": "t",
+        "33": "e",
+        "34": "g",
+        "35": "i",
+        "36": "e",
+        "37": "s",
+        "38": "_",
+        "39": "w",
+        "40": "i",
+        "41": "t",
+        "42": "h",
+        "43": "_",
+        "44": "r",
+        "45": "e",
+        "46": "a",
+        "47": "s",
+        "48": "o",
+        "49": "n",
+        "speaker_concepts": [
+          {
+            "term": "Execution Alpha",
+            "role": "phase",
+            "verbatim_description": "where Banks try to optimize their Edge even in the filling of the orders.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "volume weighted average price it's basically a moving average that doesn't consider only price in its formula but also includes trading volume in this video we will see how vwap actually works why is it used by smart money and how you can integrated in your trading strategy to potentially boost your Edge and your profits",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Gaussian Bell",
+            "role": "model",
+            "verbatim_description": "also known as normal distribution which in statistics represents the normal distribution of elements in a sample.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value Area",
+            "role": "zone",
+            "verbatim_description": "what is highlighted also known as the value area or the fair value area is none other than a standard deviation Trader at some point decided to put this at 70% to make things easier so in volume analysis the standard deviation is where most of the volume are traded and this would be the average",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount",
+            "role": "zone",
+            "verbatim_description": "everything that sits below the vwap is Discount related to the volume weighted average price of the session so an objective view of what was the actual fair value in the market what is the fair volume weighted price on average throughout the whole session whatever will be up here is going to be premium",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium",
+            "role": "zone",
+            "verbatim_description": "whatever sits below 50% or above 50% this would be premium this would be discount but still it remains an arbitrary decision where to track this and it's going to be measured in an Impulse",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Impulse",
+            "role": "phase",
+            "verbatim_description": "it is objective but it's completely arbitrary to choose which impulse we have a much more clear and objective indication of Premium discount and fair value inside of a session that's why it's being used by institution and smart money and Banks as a method of filling orders",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "the area where most of the sample are going to be is called a standard deviation also known as the 68 percentile and if you take a look at normal volume profile as an example you will see that it's basically a bell curve what is highlighted also known as the value area or the fair value area is none other than a standard deviation",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our discount standard deviation this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": "we Break It We tend to maybe retest it a couple times before going down sometimes we just completely trade through it but sti",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "ian Bell also known as normal distribution which in statistics represents the normal distribution of elements in a sample so let's s",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "'s going to be measured in an Impulse this is a very simplistic view of discount and premiums that's the reason why so many impu",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "ICT",
+            "role": "model",
+            "verbatim_description": "ICT (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "um and discounts discussed by ICT is comparing to a swing high or a swing low whatever sits below 50% or above 50% this wou",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "0": "i",
+        "1": "n",
+        "2": "s",
+        "3": "t",
+        "4": "r",
+        "5": "u",
+        "6": "m",
+        "7": "e",
+        "8": "n",
+        "9": "t",
+        "10": "_",
+        "11": "c",
+        "12": "l",
+        "13": "a",
+        "14": "s",
+        "15": "s",
+        "16": "i",
+        "17": "f",
+        "18": "i",
+        "19": "c",
+        "20": "a",
+        "21": "t",
+        "22": "i",
+        "23": "o",
+        "24": "n",
+        "speaker_concepts": [
+          {
+            "term": "Execution Alpha",
+            "role": "phase",
+            "verbatim_description": "where Banks try to optimize their Edge even in the filling of the orders.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "volume weighted average price it's basically a moving average that doesn't consider only price in its formula but also includes trading volume in this video we will see how vwap actually works why is it used by smart money and how you can integrated in your trading strategy to potentially boost your Edge and your profits",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Gaussian Bell",
+            "role": "model",
+            "verbatim_description": "also known as normal distribution which in statistics represents the normal distribution of elements in a sample.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value Area",
+            "role": "zone",
+            "verbatim_description": "what is highlighted also known as the value area or the fair value area is none other than a standard deviation Trader at some point decided to put this at 70% to make things easier so in volume analysis the standard deviation is where most of the volume are traded and this would be the average",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount",
+            "role": "zone",
+            "verbatim_description": "everything that sits below the vwap is Discount related to the volume weighted average price of the session so an objective view of what was the actual fair value in the market what is the fair volume weighted price on average throughout the whole session whatever will be up here is going to be premium",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium",
+            "role": "zone",
+            "verbatim_description": "whatever sits below 50% or above 50% this would be premium this would be discount but still it remains an arbitrary decision where to track this and it's going to be measured in an Impulse",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Impulse",
+            "role": "phase",
+            "verbatim_description": "it is objective but it's completely arbitrary to choose which impulse we have a much more clear and objective indication of Premium discount and fair value inside of a session that's why it's being used by institution and smart money and Banks as a method of filling orders",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "the area where most of the sample are going to be is called a standard deviation also known as the 68 percentile and if you take a look at normal volume profile as an example you will see that it's basically a bell curve what is highlighted also known as the value area or the fair value area is none other than a standard deviation",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our discount standard deviation this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": "we Break It We tend to maybe retest it a couple times before going down sometimes we just completely trade through it but sti",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "ian Bell also known as normal distribution which in statistics represents the normal distribution of elements in a sample so let's s",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "'s going to be measured in an Impulse this is a very simplistic view of discount and premiums that's the reason why so many impu",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "ICT",
+            "role": "model",
+            "verbatim_description": "ICT (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "um and discounts discussed by ICT is comparing to a swing high or a swing low whatever sits below 50% or above 50% this wou",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "0": "f",
+        "1": "u",
+        "2": "t",
+        "3": "u",
+        "4": "r",
+        "5": "e",
+        "6": "s",
+        "7": "_",
+        "8": "p",
+        "9": "r",
+        "10": "i",
+        "11": "m",
+        "12": "a",
+        "13": "r",
+        "14": "y",
+        "speaker_concepts": [
+          {
+            "term": "Execution Alpha",
+            "role": "phase",
+            "verbatim_description": "where Banks try to optimize their Edge even in the filling of the orders.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "volume weighted average price it's basically a moving average that doesn't consider only price in its formula but also includes trading volume in this video we will see how vwap actually works why is it used by smart money and how you can integrated in your trading strategy to potentially boost your Edge and your profits",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Gaussian Bell",
+            "role": "model",
+            "verbatim_description": "also known as normal distribution which in statistics represents the normal distribution of elements in a sample.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Value Area",
+            "role": "zone",
+            "verbatim_description": "what is highlighted also known as the value area or the fair value area is none other than a standard deviation Trader at some point decided to put this at 70% to make things easier so in volume analysis the standard deviation is where most of the volume are traded and this would be the average",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount",
+            "role": "zone",
+            "verbatim_description": "everything that sits below the vwap is Discount related to the volume weighted average price of the session so an objective view of what was the actual fair value in the market what is the fair volume weighted price on average throughout the whole session whatever will be up here is going to be premium",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium",
+            "role": "zone",
+            "verbatim_description": "whatever sits below 50% or above 50% this would be premium this would be discount but still it remains an arbitrary decision where to track this and it's going to be measured in an Impulse",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Impulse",
+            "role": "phase",
+            "verbatim_description": "it is objective but it's completely arbitrary to choose which impulse we have a much more clear and objective indication of Premium discount and fair value inside of a session that's why it's being used by institution and smart money and Banks as a method of filling orders",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "the area where most of the sample are going to be is called a standard deviation also known as the 68 percentile and if you take a look at normal volume profile as an example you will see that it's basically a bell curve what is highlighted also known as the value area or the fair value area is none other than a standard deviation",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our discount standard deviation this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Premium Standard Deviation",
+            "role": "zone",
+            "verbatim_description": "this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": "we Break It We tend to maybe retest it a couple times before going down sometimes we just completely trade through it but sti",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "ian Bell also known as normal distribution which in statistics represents the normal distribution of elements in a sample so let's s",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "'s going to be measured in an Impulse this is a very simplistic view of discount and premiums that's the reason why so many impu",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "ICT",
+            "role": "model",
+            "verbatim_description": "ICT (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "um and discounts discussed by ICT is comparing to a swing high or a swing low whatever sits below 50% or above 50% this wou",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 14,
+      "anchor_report": {
+        "total_spine_conditions": 14,
+        "anchored_count": 12,
+        "unanchored_count": 2,
+        "anchored_fraction": 0.8571,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 4,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 2,
+            "unanchored": 2
+          },
+          "confluences[].description": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 2,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 2
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8295,
+            8459
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            6358,
+            6597
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8568,
+            8778
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6358,
+            6640
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8886,
+            9402
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            7439,
+            7504
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3280,
+            3404
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5806,
+            6353
+          ]
+        },
+        {
+          "condition_ref": "confluences[2].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8568,
+            8778
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6358,
+            6597
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            10129,
+            10183
+          ]
+        },
+        {
+          "condition_ref": "targets[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8568,
+            8778
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_pending_tier3": 11,
+        "fallthrough_dual_read_disagreement": 1
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 12,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "text": "VWAP is a dynamic institutional reference point showing the volume-weighted average price of the session.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "text": "Price movement into outer bands indicates a potential extreme stretch or accumulation of orders.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 12
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=R5L890juvRw, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 12
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video R5L890juvRw strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 12,
+            "items": [
+              {
+                "item_id": "R5L890juvRw-S0-B000",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B001",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones because they're further away we will be from the dynamic fair value of the market"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B002",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value because Market have been built to make trading easier for big operators"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B003",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones because they're further away we will be from the dynamic fair value of the market and the most likely we will be rebalancing"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B004",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "and as you can see once we break off and rebre these levels we have a little bit of resistance in the first standard deviation some more resistant in the second standard deviation testing the first one going back but also there is moments with high momentum and once we've established a strong Trend where still markets will keep buying even at higher and premium prices so vwap is not always working it's always needed to have a context behind your trading idea you're not just going to trade based off of vwap only"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B005",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so often it will give a reaction and act as support or resistance"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B006",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "it's a dynamic level it's a calculation constantly being updated which tells us the current volume weighted average of price"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B007",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the best of the best to fill this orders is going to be exactly at the extreme of these lines which are going to be our standard deviations this is going to be our discount standard deviation this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B008",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value because Market have been built to make trading easier for big operators"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B009",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones because they're further away we will be from the dynamic fair value of the market"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B010",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "use the central vwap as a target for Price rebalancing"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "R5L890juvRw-S0-B011",
+                "video_id": "R5L890juvRw",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value because Market have been built to make trading easier for big operators"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "R5L890juvRw-S0-B000",
+              "extracted_condition_text": "Identify the Volume Weighted Average Price (VWAP) and its standard deviation bands (1\u03c3, 2\u03c3, 3\u03c3) for the current trading session.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B001",
+              "extracted_condition_text": "The speaker does not specify an initial stop placement, relying on the dynamic nature of the bands.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B002",
+              "extracted_condition_text": "The outer standard deviation bands (2\u03c3, 3\u03c3) can be used as targets.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B003",
+              "extracted_condition_text": "The market tends to rebalance towards the dynamic fair value (VWAP) after reaching extremes.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B004",
+              "extracted_condition_text": "Enter a trade (long or short) upon price breaking back into the VWAP or testing the inner standard deviation bands.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B005",
+              "extracted_condition_text": "The retest of the dynamic fair value acts as a potential support or resistance level.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B006",
+              "extracted_condition_text": "VWAP is a dynamic institutional reference point that tells us the current volume weighted average of price for the session.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B007",
+              "extracted_condition_text": "The standard deviation bands (1\u03c3, 2\u03c3, 3\u03c3) provide objective views of premium and discount pricing based on volume.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B008",
+              "extracted_condition_text": "The outer standard deviation bands (2\u03c3, 3\u03c3) can be used as targets.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B009",
+              "extracted_condition_text": "The speaker does not specify an initial stop placement, relying on the dynamic nature of the bands.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B010",
+              "extracted_condition_text": "The central VWAP is used as a target for price rebalancing.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "R5L890juvRw-S0-B011",
+              "extracted_condition_text": "The outer standard deviation bands (2\u03c3, 3\u03c3) can be used as targets.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "R5L890juvRw-S0-B000": [
+          8295,
+          8459
+        ],
+        "R5L890juvRw-S0-B001": [
+          6358,
+          6597
+        ],
+        "R5L890juvRw-S0-B002": [
+          8568,
+          8778
+        ],
+        "R5L890juvRw-S0-B003": [
+          6358,
+          6640
+        ],
+        "R5L890juvRw-S0-B004": [
+          8886,
+          9402
+        ],
+        "R5L890juvRw-S0-B005": [
+          7439,
+          7504
+        ],
+        "R5L890juvRw-S0-B006": [
+          3280,
+          3404
+        ],
+        "R5L890juvRw-S0-B007": [
+          5806,
+          6353
+        ],
+        "R5L890juvRw-S0-B008": [
+          8568,
+          8778
+        ],
+        "R5L890juvRw-S0-B009": [
+          6358,
+          6597
+        ],
+        "R5L890juvRw-S0-B010": [
+          10129,
+          10183
+        ],
+        "R5L890juvRw-S0-B011": [
+          8568,
+          8778
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "R5L890juvRw",
+        "full_transcript_sha256": "38ed1f7e6aebf08f5a5f25eace7ecfdc10f6e3abafd2989859d19173dc22d5ea",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    },
+    {
+      "strategy_index": 1,
+      "spine_condition_count": 0,
+      "anchor_report": {
+        "total_spine_conditions": 0,
+        "anchored_count": 0,
+        "unanchored_count": 0,
+        "anchored_fraction": null,
+        "by_field": {},
+        "unanchored_reason_breakdown": {}
+      },
+      "condition_outcomes": [],
+      "outcome_counts": {},
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 0,
+      "unanchored_conditions": [],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 0
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=R5L890juvRw, strategy=1.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 0
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video R5L890juvRw strategy 1 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 0,
+            "items": []
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": []
+        }
+      },
+      "item_span_map": {},
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "R5L890juvRw",
+        "full_transcript_sha256": "38ed1f7e6aebf08f5a5f25eace7ecfdc10f6e3abafd2989859d19173dc22d5ea",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    },
+    {
+      "strategy_index": 2,
+      "spine_condition_count": 0,
+      "anchor_report": {
+        "total_spine_conditions": 0,
+        "anchored_count": 0,
+        "unanchored_count": 0,
+        "anchored_fraction": null,
+        "by_field": {},
+        "unanchored_reason_breakdown": {}
+      },
+      "condition_outcomes": [],
+      "outcome_counts": {},
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 0,
+      "unanchored_conditions": [],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 0
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=R5L890juvRw, strategy=2.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 0
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video R5L890juvRw strategy 2 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 0,
+            "items": []
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": []
+        }
+      },
+      "item_span_map": {},
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "R5L890juvRw",
+        "full_transcript_sha256": "38ed1f7e6aebf08f5a5f25eace7ecfdc10f6e3abafd2989859d19173dc22d5ea",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    },
+    {
+      "strategy_index": 3,
+      "spine_condition_count": 0,
+      "anchor_report": {
+        "total_spine_conditions": 0,
+        "anchored_count": 0,
+        "unanchored_count": 0,
+        "anchored_fraction": null,
+        "by_field": {},
+        "unanchored_reason_breakdown": {}
+      },
+      "condition_outcomes": [],
+      "outcome_counts": {},
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 0,
+      "unanchored_conditions": [],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 0
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=R5L890juvRw, strategy=3.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 0
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video R5L890juvRw strategy 3 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 0,
+            "items": []
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": []
+        }
+      },
+      "item_span_map": {},
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "R5L890juvRw",
+        "full_transcript_sha256": "38ed1f7e6aebf08f5a5f25eace7ecfdc10f6e3abafd2989859d19173dc22d5ea",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 14,
+    "anchored": 12,
+    "unanchored": 2,
+    "tier1_classified": 0,
+    "tier1_fallthrough": 12,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 0,
+    "adjudications_aggregate": 12
+  }
+}

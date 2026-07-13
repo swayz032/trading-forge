@@ -1,0 +1,779 @@
+{
+  "artifact": "h1-pilot-FINAL-READ",
+  "control_gates": {
+    "raterA": {
+      "gate_ok": 5,
+      "context_ok": 5,
+      "passed": true
+    },
+    "raterB": {
+      "gate_ok": 5,
+      "context_ok": 5,
+      "passed": true
+    },
+    "both_pass": true
+  },
+  "fidelity": {
+    "n_videos": 16,
+    "certificate_grade_videos": 0,
+    "fidelity_fraction": 0.0,
+    "bar": 0.6,
+    "verdict": "FIDELITY_MISS (<60%)"
+  },
+  "economics": {
+    "STATISTIC": "verdict reads the MEAN per-video-aggregate adjudications vs ~15 (operator Addendum 8 \u00a73; distribution is annotation)",
+    "mean_adjudications_per_video_aggregate": 13.9375,
+    "ceiling": 15,
+    "verdict": "ECON_WITHIN_CEILING (mean<=~15)",
+    "per_video_adjudications": {
+      "-igpOZs8LsM": 16,
+      "0xygpCMwxbQ": 16,
+      "2DXQqwKSwJE": 17,
+      "4cT8WTyxhYY": 12,
+      "CLDEIsNpVRc": 15,
+      "DLwVqcLRcfw": 17,
+      "E9MzEC_yNoM": 17,
+      "IyFioFkRgWo": 10,
+      "PVMgOxHUqFA": 13,
+      "R5L890juvRw": 12,
+      "W7nlnHTUZQU": 15,
+      "WEhmadJArQo": 20,
+      "ZF8uKPqAu8M": 7,
+      "_LS6qcSlDCs": 7,
+      "dV7chra4u4Q": 19,
+      "kFyD3H6I1I8": 10
+    },
+    "annotation_videos_over_ceiling": 7,
+    "annotation_max_video_aggregate": 20,
+    "annotation_mean_adjudications_per_strategy": 8.92
+  },
+  "recorded_signals": {
+    "role_contested_count": 7,
+    "role_contested": [
+      {
+        "item_id": "-igpOZs8LsM-S0-B014",
+        "A": "context",
+        "B": "cannot-determine"
+      },
+      {
+        "item_id": "0xygpCMwxbQ-S0-B005",
+        "A": "gate-strength",
+        "B": "cannot-determine"
+      },
+      {
+        "item_id": "2DXQqwKSwJE-S0-B002",
+        "A": "gate-strength",
+        "B": "context"
+      },
+      {
+        "item_id": "2DXQqwKSwJE-S0-B003",
+        "A": "gate-strength",
+        "B": "context"
+      },
+      {
+        "item_id": "2DXQqwKSwJE-S0-B007",
+        "A": "gate-strength",
+        "B": "context"
+      },
+      {
+        "item_id": "2DXQqwKSwJE-S1-B002",
+        "A": "gate-strength",
+        "B": "context"
+      },
+      {
+        "item_id": "E9MzEC_yNoM-S0-B011",
+        "A": "gate-strength",
+        "B": "context"
+      }
+    ],
+    "role_agreed_cannot_determine_count": 0,
+    "support_contested_count": 12,
+    "support_contested": [
+      {
+        "item_id": "CLDEIsNpVRc-S0-B001",
+        "A": "partial",
+        "B": "confirmed"
+      },
+      {
+        "item_id": "DLwVqcLRcfw-S0-B009",
+        "A": "confirmed",
+        "B": "partial"
+      },
+      {
+        "item_id": "E9MzEC_yNoM-S0-B003",
+        "A": "partial",
+        "B": "confirmed"
+      },
+      {
+        "item_id": "PVMgOxHUqFA-S0-B002",
+        "A": "confirmed",
+        "B": "partial"
+      },
+      {
+        "item_id": "R5L890juvRw-S0-B002",
+        "A": "denied",
+        "B": "partial"
+      },
+      {
+        "item_id": "R5L890juvRw-S0-B004",
+        "A": "denied",
+        "B": "partial"
+      },
+      {
+        "item_id": "R5L890juvRw-S0-B008",
+        "A": "denied",
+        "B": "partial"
+      },
+      {
+        "item_id": "R5L890juvRw-S0-B011",
+        "A": "denied",
+        "B": "partial"
+      },
+      {
+        "item_id": "W7nlnHTUZQU-S0-B000",
+        "A": "partial",
+        "B": "confirmed"
+      },
+      {
+        "item_id": "W7nlnHTUZQU-S0-B001",
+        "A": "partial",
+        "B": "confirmed"
+      },
+      {
+        "item_id": "W7nlnHTUZQU-S0-B005",
+        "A": "confirmed",
+        "B": "partial"
+      },
+      {
+        "item_id": "dV7chra4u4Q-S0-B002",
+        "A": "confirmed",
+        "B": "partial"
+      }
+    ]
+  },
+  "video_table": [
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategies": 2,
+      "certificate_grade": false,
+      "adjudications_aggregate": 16
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 16
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategies": 3,
+      "certificate_grade": false,
+      "adjudications_aggregate": 17
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategies": 2,
+      "certificate_grade": false,
+      "adjudications_aggregate": 12
+    },
+    {
+      "video_id": "CLDEIsNpVRc",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 15
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 17
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 17
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategies": 2,
+      "certificate_grade": false,
+      "adjudications_aggregate": 10
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 13
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategies": 4,
+      "certificate_grade": false,
+      "adjudications_aggregate": 12
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 15
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategies": 2,
+      "certificate_grade": false,
+      "adjudications_aggregate": 20
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 7
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 7
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 19
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategies": 1,
+      "certificate_grade": false,
+      "adjudications_aggregate": 10
+    }
+  ],
+  "per_strategy_table": [
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "spine_conditions": 16,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 16,
+      "axis3_audit": 0,
+      "adjudications": 16,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 5,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 11
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 1,
+      "spine_conditions": 0,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 0,
+      "axis3_audit": 0,
+      "adjudications": 0,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 0,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 0
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "spine_conditions": 16,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 16,
+      "axis3_audit": 0,
+      "adjudications": 16,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 5,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 11
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "spine_conditions": 8,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 8,
+      "axis3_audit": 0,
+      "adjudications": 8,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 3,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 5
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "spine_conditions": 7,
+      "unanchored": 1,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 6,
+      "axis3_audit": 0,
+      "adjudications": 6,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 1,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 5
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "spine_conditions": 4,
+      "unanchored": 1,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 3,
+      "axis3_audit": 0,
+      "adjudications": 3,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 0,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 3
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "spine_conditions": 6,
+      "unanchored": 2,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 4,
+      "axis3_audit": 0,
+      "adjudications": 4,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 2,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 1,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 3
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "spine_conditions": 9,
+      "unanchored": 1,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 8,
+      "axis3_audit": 0,
+      "adjudications": 8,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 2,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 6
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "spine_conditions": 22,
+      "unanchored": 7,
+      "tier1_classified": 1,
+      "tier3_fallthroughs": 14,
+      "axis3_audit": 1,
+      "adjudications": 15,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 7,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 5,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 10
+      },
+      "axis3_audit_support": "partial"
+    },
+    {
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "spine_conditions": 18,
+      "unanchored": 1,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 17,
+      "axis3_audit": 0,
+      "adjudications": 17,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 6,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 11
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "spine_conditions": 19,
+      "unanchored": 1,
+      "tier1_classified": 1,
+      "tier3_fallthroughs": 17,
+      "axis3_audit": 0,
+      "adjudications": 17,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 6,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 12
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "spine_conditions": 9,
+      "unanchored": 2,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 7,
+      "axis3_audit": 0,
+      "adjudications": 7,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 2,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 1,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 6
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 1,
+      "spine_conditions": 6,
+      "unanchored": 3,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 3,
+      "axis3_audit": 0,
+      "adjudications": 3,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 3,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 2,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 1
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "spine_conditions": 13,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 13,
+      "axis3_audit": 0,
+      "adjudications": 13,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 3,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 10
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "spine_conditions": 14,
+      "unanchored": 2,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 12,
+      "axis3_audit": 0,
+      "adjudications": 12,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 2,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 6,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 6
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 1,
+      "spine_conditions": 0,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 0,
+      "axis3_audit": 0,
+      "adjudications": 0,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 0,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 0
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 2,
+      "spine_conditions": 0,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 0,
+      "axis3_audit": 0,
+      "adjudications": 0,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 0,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 0
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "R5L890juvRw",
+      "strategy_index": 3,
+      "spine_conditions": 0,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 0,
+      "axis3_audit": 0,
+      "adjudications": 0,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 0,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 0
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "spine_conditions": 15,
+      "unanchored": 0,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 15,
+      "axis3_audit": 0,
+      "adjudications": 15,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 0,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 4,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 11
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "spine_conditions": 12,
+      "unanchored": 1,
+      "tier1_classified": 1,
+      "tier3_fallthroughs": 10,
+      "axis3_audit": 1,
+      "adjudications": 11,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 3,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 8
+      },
+      "axis3_audit_support": "partial"
+    },
+    {
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "spine_conditions": 10,
+      "unanchored": 1,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 9,
+      "axis3_audit": 0,
+      "adjudications": 9,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 2,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 7
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "spine_conditions": 8,
+      "unanchored": 1,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 7,
+      "axis3_audit": 0,
+      "adjudications": 7,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 2,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 5
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "spine_conditions": 9,
+      "unanchored": 2,
+      "tier1_classified": 1,
+      "tier3_fallthroughs": 6,
+      "axis3_audit": 1,
+      "adjudications": 7,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 2,
+        "coverage_miss": 1,
+        "classification_fallthrough_unresolved": 0,
+        "tier3_fail": 0,
+        "lint_fail": 1,
+        "ok": 7
+      },
+      "axis3_audit_support": "partial"
+    },
+    {
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "spine_conditions": 21,
+      "unanchored": 2,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 19,
+      "axis3_audit": 0,
+      "adjudications": 19,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 2,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 1,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 18
+      },
+      "axis3_audit_support": null
+    },
+    {
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "spine_conditions": 11,
+      "unanchored": 1,
+      "tier1_classified": 0,
+      "tier3_fallthroughs": 10,
+      "axis3_audit": 0,
+      "adjudications": 10,
+      "pilot_grade": false,
+      "full_grade": false,
+      "diagnosis": {
+        "unanchored": 1,
+        "coverage_miss": 0,
+        "classification_fallthrough_unresolved": 4,
+        "tier3_fail": 0,
+        "lint_fail": 0,
+        "ok": 6
+      },
+      "axis3_audit_support": null
+    }
+  ]
+}

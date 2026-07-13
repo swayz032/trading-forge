@@ -1,0 +1,1209 @@
+{
+  "video_id": "dV7chra4u4Q",
+  "title": "The Break & Retest Strategy That Pays Me Daily (Simple & Effective)",
+  "channel": "BrandonTrades",
+  "transcript_sha256": "756d4d215fd699580dfeb6e29f588f32a2c680d2c40722b58cb0b26600bc75d6",
+  "transcript_char_count": 12518,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 1,
+  "raw_extraction": {
+    "video_id": "dV7chra4u4Q",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "break_and_retest_strategy_30m_premarket",
+        "higher_timeframe": "30m",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify a key level, such as a pre-market high/low, previous day's high/low, or the 30-minute opening range high/low, or a strong area of support/resistance.",
+            "rationale": "The strategy relies on identifying significant price levels that can act as support or resistance."
+          },
+          {
+            "step": 2,
+            "action": "Wait for price to break the key level with strong momentum, ensuring a clean push through the level (e.g., multiple big candles).",
+            "rationale": "A strong, aggressive break confirms the initial momentum and signals a potential shift in market bias."
+          },
+          {
+            "step": 3,
+            "action": "Wait for price to pull back and retest the broken key level.",
+            "rationale": "The retest is the critical phase where the broken level attempts to become support (if broken resistance) or resistance (if broken support)."
+          },
+          {
+            "step": 4,
+            "action": "Enter on confirmation of bullish price action (e.g., long lower wicks, bullish hammers, dragonfly dojis) if the level was broken above, or bearish price action (e.g., long upper wicks, bearish hammers, gravestone dojis) if the level was broken below.",
+            "rationale": "Confirmation signals that the broken level is holding its new role as support or resistance."
+          },
+          {
+            "step": 5,
+            "action": "Set the stop loss right on the opposite side of the breakout level.",
+            "rationale": "This limits risk to the initial breakout move."
+          },
+          {
+            "step": 6,
+            "action": "Target the next obvious area of liquidity, such as the previous high/low, a supply/demand zone, or a clear area of liquidity.",
+            "rationale": "Targets are set at clear areas where liquidity is sitting within the market."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss is placed right on the opposite side of the breakout level."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "rationale": "Targets are set at the next obvious area of liquidity, such as the previous high or previous low."
+          },
+          {
+            "priority": 2,
+            "type": "previous_daily_low",
+            "rationale": "Targets are set at the next obvious area of liquidity, such as the previous high or previous low."
+          },
+          {
+            "priority": 3,
+            "type": "range_high",
+            "rationale": "Targets are set at the next obvious area of liquidity, such as a supply zone or demand zone."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "key_level_identification",
+            "description": "Identify a key level, such as a pre-market high/low, previous day's high/low, or the 30-minute opening range high/low, or a strong area of support/resistance.",
+            "canonical_match": null
+          },
+          {
+            "name": "volume_confirmation",
+            "description": "We want to see volume confirmation during the break, and if we break out or react off a low volume, it's typically not going to work out.",
+            "canonical_match": "delta_or_volume_signature"
+          },
+          {
+            "name": "clean_break_through",
+            "description": "It has to be very quick and aggressive through the level, not just like, you know, kind of chopping through it.",
+            "canonical_match": null
+          },
+          {
+            "name": "price_action_confirmation",
+            "description": "We want to see bullish price action (e.g., long lower wicks, bullish hammers, dragonfly dojis) or bearish price action (e.g., long upper wicks, bearish hammers, gravestone dojis) on the retest.",
+            "canonical_match": null
+          },
+          {
+            "name": "order_flow_liquidity_check",
+            "description": "If you like to use order flow, you could use Bookmap liquidity, visually seen on the heat map that buyers or sellers are present at that area.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Break and Retest Strategy",
+            "role": "model",
+            "verbatim_description": "A break and retest is pretty simple. Price breaks above a key level or breaks below a key level, it comes back, it retests that level, and it holds it, and it continues in the original direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Pre-market High",
+            "role": "zone",
+            "verbatim_description": "A pre-market high is a key level used to identify potential support or resistance for the break and retest setup.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Pre-market Low",
+            "role": "zone",
+            "verbatim_description": "A pre-market low is a key level used to identify potential support or resistance for the break and retest setup.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous Day's High",
+            "role": "zone",
+            "verbatim_description": "The previous day's high serves as a key level that price can break above to initiate a potential long trade on the subsequent retest.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous Day's Low",
+            "role": "zone",
+            "verbatim_description": "The previous day's low is a key level used in the strategy, acting as support or resistance for potential short trades.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "30-minute Orb High",
+            "role": "zone",
+            "verbatim_description": "A specific time-based zone (the 30-minute opening range high) used to identify key levels for the break and retest strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "30-minute Orb Low",
+            "role": "zone",
+            "verbatim_description": "A specific time-based zone (the 30-minute opening range low) used to identify key levels for the break and retest strategy.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Volume Confirmation",
+            "role": "filter",
+            "verbatim_description": "We want strong momentum either at the breakout above resistance or the break below the support level. If we react off a low volume, it's typically not going to work out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Clean Push Through",
+            "role": "entry_step",
+            "verbatim_description": "The breakout must be very quick and aggressive through the level, not just like kind of chopping through it. It has to be a couple big candles through the level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bullish Price Action",
+            "role": "entry_step",
+            "verbatim_description": "When testing previous resistance (like pre-market high), we want to see bullish price action, such as long lower wicks or bullish hammers.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Price Action",
+            "role": "entry_step",
+            "verbatim_description": "When testing previous support (like pre-market low), we look for bearish price action, such as long upper wicks or gravestone dojis.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bookmap Liquidity",
+            "role": "entry_step",
+            "verbatim_description": "Using Bookmap liquidity to visually see if buyers or sellers are present at that area helps confirm the trade setup.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop Loss (Breakout Level)",
+            "role": "stop_anchor",
+            "verbatim_description": "Your stop is if price breaks back on the opposite side of the breakout level. That's it.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Target (Next Obvious Area of Liquidity)",
+            "role": "target",
+            "verbatim_description": "The target is going to be the next obvious area of liquidity, which could be the previous high or the previous low, or a supply zone/demand zone.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 20\u00d7 in transcript)",
+            "transcript_quote": "cuss how to use the break and retest strategy, the multiple ways that you can use it to make money in the market, as well as r",
+            "occurrences": 20,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "t lows, the 30-minute opening range high and low, uh previous day's highs, previous day's lows, a strong area of support or re",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "10-15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"10-15\"",
+            "transcript_quote": "10-15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 21,
+      "anchor_report": {
+        "total_spine_conditions": 21,
+        "anchored_count": 19,
+        "unanchored_count": 2,
+        "anchored_fraction": 0.9048,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 6,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 4,
+            "unanchored": 2
+          },
+          "confluences[].description": {
+            "anchored": 5,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 3,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 2
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1266,
+            2023
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1190,
+            1265
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            4343,
+            4464
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            1031,
+            1189
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1190,
+            1265
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            5411,
+            5936
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1190,
+            1265
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[4].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6365,
+            6442
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[5].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6511,
+            6768
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[5].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6520,
+            6768
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2136,
+            2246
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4196,
+            4342
+          ]
+        },
+        {
+          "condition_ref": "confluences[2].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4465,
+            4607
+          ]
+        },
+        {
+          "condition_ref": "confluences[3].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5411,
+            5936
+          ]
+        },
+        {
+          "condition_ref": "confluences[4].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5937,
+            6099
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6365,
+            6442
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6511,
+            6633
+          ]
+        },
+        {
+          "condition_ref": "targets[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6511,
+            6633
+          ]
+        },
+        {
+          "condition_ref": "targets[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6511,
+            6768
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_pending_tier3": 16,
+        "fallthrough_dual_read_disagreement": 3
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 19,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "text": "A strong, aggressive break confirms the initial momentum and signals a potential shift in market bias.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[4].rationale",
+          "text": "This limits risk to the initial breakout move.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 19
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=dV7chra4u4Q, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 19
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video dV7chra4u4Q strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 19,
+            "items": [
+              {
+                "item_id": "dV7chra4u4Q-S0-B000",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So if we were looking at this on, let's say a line chart, let's say that we have this resistance right here, pre-market high, right? Price breaks above it, we then want to see price come back down and test it as support. If it can do that, that would be considered a break and retest, and we would be looking to go long to capture a move higher, and our stop loss would be right below the break area, which is right here. Or let's say to the downside where we end up having some support, price ends up breaking below the support, well now we have the break, we're waiting for price to come back up and retest it as resistance. If it can become resistance, we're looking to go short, our stop loss is going to be if price comes back up above this break area."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B001",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So that level that it breaks is either then becoming support or resistance."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B002",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Ideally, with the retest, we would like to see a strong confirmation, and then we want a clean push through these levels."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B003",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Price breaks above a key level or breaks below a key level, it comes back, it retests that level, and it holds it, and it continues in the original direction."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B004",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So that level that it breaks is either then becoming support or resistance."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B005",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So, in this scenario, if we come down and we test the previous resistance, pre-market high, whatever, we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. Or if we're looking at this scenario right here, when price breaks below, when it comes back up, we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B006",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So that level that it breaks is either then becoming support or resistance."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B007",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Your stop is if price breaks back on the opposite side of the breakout level."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B008",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B009",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B010",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Pre-market highs, pre-market lows, previous day's highs, previous day's lows, or even our 30-minute orb level."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B011",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, on top of that, we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B012",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it, and then we start making a move down."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B013",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So, in this scenario, if we come down and we test the previous resistance, pre-market high, whatever, we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. Or if we're looking at this scenario right here, when price breaks below, when it comes back up, we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B014",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "On top of that, if you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B015",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Your stop is if price breaks back on the opposite side of the breakout level."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B016",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B017",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "dV7chra4u4Q-S0-B018",
+                "video_id": "dV7chra4u4Q",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "dV7chra4u4Q-S0-B000",
+              "extracted_condition_text": "Identify a key level, such as a pre-market high/low, previous day's high/low, or the 30-minute opening range high/low, or a strong area of support/resistance.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B001",
+              "extracted_condition_text": "Confirmation signals that the broken level is holding its new role as support or resistance.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B002",
+              "extracted_condition_text": "Wait for price to break the key level with strong momentum, ensuring a clean push through the level (e.g., multiple big candles).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B003",
+              "extracted_condition_text": "Wait for price to pull back and retest the broken key level.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B004",
+              "extracted_condition_text": "Confirmation signals that the broken level is holding its new role as support or resistance.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B005",
+              "extracted_condition_text": "We want to see bullish price action (e.g., long lower wicks, bullish hammers, dragonfly dojis) or bearish price action (e.g., long upper wicks, bearish hammers, gravestone dojis) on the retest.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B006",
+              "extracted_condition_text": "Confirmation signals that the broken level is holding its new role as support or resistance.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B007",
+              "extracted_condition_text": "The stop loss is placed right on the opposite side of the breakout level.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B008",
+              "extracted_condition_text": "Targets are set at the next obvious area of liquidity, such as a supply zone or demand zone.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B009",
+              "extracted_condition_text": "Targets are set at clear areas where liquidity is sitting within the market.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B010",
+              "extracted_condition_text": "Identify a key level, such as a pre-market high/low, previous day's high/low, or the 30-minute opening range high/low, or a strong area of support/resistance.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B011",
+              "extracted_condition_text": "We want to see volume confirmation during the break, and if we break out or react off a low volume, it's typically not going to work out.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B012",
+              "extracted_condition_text": "It has to be very quick and aggressive through the level, not just like, you know, kind of chopping through it.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B013",
+              "extracted_condition_text": "We want to see bullish price action (e.g., long lower wicks, bullish hammers, dragonfly dojis) or bearish price action (e.g., long upper wicks, bearish hammers, gravestone dojis) on the retest.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B014",
+              "extracted_condition_text": "If you like to use order flow, you could use Bookmap liquidity, visually seen on the heat map that buyers or sellers are present at that area.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B015",
+              "extracted_condition_text": "The stop loss is placed right on the opposite side of the breakout level.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B016",
+              "extracted_condition_text": "Targets are set at the next obvious area of liquidity, such as the previous high or previous low.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B017",
+              "extracted_condition_text": "Targets are set at the next obvious area of liquidity, such as the previous high or previous low.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "dV7chra4u4Q-S0-B018",
+              "extracted_condition_text": "Targets are set at the next obvious area of liquidity, such as a supply zone or demand zone.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "dV7chra4u4Q-S0-B000": [
+          1266,
+          2023
+        ],
+        "dV7chra4u4Q-S0-B001": [
+          1190,
+          1265
+        ],
+        "dV7chra4u4Q-S0-B002": [
+          4343,
+          4464
+        ],
+        "dV7chra4u4Q-S0-B003": [
+          1031,
+          1189
+        ],
+        "dV7chra4u4Q-S0-B004": [
+          1190,
+          1265
+        ],
+        "dV7chra4u4Q-S0-B005": [
+          5411,
+          5936
+        ],
+        "dV7chra4u4Q-S0-B006": [
+          1190,
+          1265
+        ],
+        "dV7chra4u4Q-S0-B007": [
+          6365,
+          6442
+        ],
+        "dV7chra4u4Q-S0-B008": [
+          6511,
+          6768
+        ],
+        "dV7chra4u4Q-S0-B009": [
+          6520,
+          6768
+        ],
+        "dV7chra4u4Q-S0-B010": [
+          2136,
+          2246
+        ],
+        "dV7chra4u4Q-S0-B011": [
+          4196,
+          4342
+        ],
+        "dV7chra4u4Q-S0-B012": [
+          4465,
+          4607
+        ],
+        "dV7chra4u4Q-S0-B013": [
+          5411,
+          5936
+        ],
+        "dV7chra4u4Q-S0-B014": [
+          5937,
+          6099
+        ],
+        "dV7chra4u4Q-S0-B015": [
+          6365,
+          6442
+        ],
+        "dV7chra4u4Q-S0-B016": [
+          6511,
+          6633
+        ],
+        "dV7chra4u4Q-S0-B017": [
+          6511,
+          6633
+        ],
+        "dV7chra4u4Q-S0-B018": [
+          6511,
+          6768
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "dV7chra4u4Q",
+        "full_transcript_sha256": "756d4d215fd699580dfeb6e29f588f32a2c680d2c40722b58cb0b26600bc75d6",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 21,
+    "anchored": 19,
+    "unanchored": 2,
+    "tier1_classified": 0,
+    "tier1_fallthrough": 19,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 0,
+    "adjudications_aggregate": 19
+  }
+}

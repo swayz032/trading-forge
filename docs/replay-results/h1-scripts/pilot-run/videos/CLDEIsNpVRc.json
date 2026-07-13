@@ -1,0 +1,1110 @@
+{
+  "video_id": "CLDEIsNpVRc",
+  "title": "The Only ICT Trading Strategy I'll Be Using In 2026! (80% Winrate)",
+  "channel": "Faiz SMC",
+  "transcript_sha256": "85184add3abc849587cd23c19e36329c776178718cca1ca67cb9c7d6daa2dd5d",
+  "transcript_char_count": 10456,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 1,
+  "raw_extraction": {
+    "video_id": "CLDEIsNpVRc",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "liquidity_sweep_inversion_5m_1m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "1m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify the draw on liquidity, which can be Asia high/low, London high/low, or previous day high/low, or equal highs/lows.",
+            "rationale": "The draw on liquidity is the most important thing to identify."
+          },
+          {
+            "step": 2,
+            "action": "After 9:30 AM NY time, wait for a 5-minute or 15-minute fair value gap (FVG) to form towards the identified draw on liquidity.",
+            "rationale": "The FVG acts as the higher timeframe IRL (Internal Range Liquidity)."
+          },
+          {
+            "step": 3,
+            "action": "Wait for price to tap into the higher timeframe FVG (5m or 15m).",
+            "rationale": null
+          },
+          {
+            "step": 4,
+            "action": "Drop down to the 1-minute timeframe and look for an inversion setup.",
+            "rationale": null
+          },
+          {
+            "step": 5,
+            "action": "Ensure the 1-minute price has swept some liquidity before tapping into the higher timeframe FVG or 15-minute FVG.",
+            "rationale": "This is a liquidity sweep check."
+          },
+          {
+            "step": 6,
+            "action": "Wait for the 1-minute price to close below the FVG (for a bullish FVG) or above the FVG (for a bearish FVG), creating an inversion.",
+            "rationale": "Inversion is when price disrespect[s] the FVG and closes on the opposite side, turning the FVG into resistance/support."
+          },
+          {
+            "step": 7,
+            "action": "Take a short position immediately after the 1-minute price closes below the bullish FVG.",
+            "rationale": "The inversion makes the FVG a resistance for price."
+          },
+          {
+            "step": 8,
+            "action": "Take a long position immediately after the 1-minute price closes above the bearish FVG.",
+            "rationale": "The inversion makes the FVG a support for price."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Stop is placed above the high of the 1-minute candle that created the inversion."
+        },
+        "stop_management": "Go break even as soon as the closest liquidity after your entry is taken out.",
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The speaker suggests going for a fixed 1:2 risk-to-reward ratio."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "time_window_active",
+            "description": "Trading is only done from 9:30 AM to 11:30 AM New York time.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "name": "liquidity_draw_on_liquidity",
+            "description": "The strategy requires identifying a draw on liquidity, such as Asia high/low, London high/low, or previous day high/low, or equal highs/lows.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "name": "higher_timeframe_irl",
+            "description": "A 5-minute or 15-minute fair value gap must form towards the draw on liquidity after 9:30 AM.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "name": "liquidity_sweep_check",
+            "description": "The 1-minute price must have swept some liquidity before tapping into the higher timeframe FVG.",
+            "canonical_match": null
+          },
+          {
+            "name": "inversion_setup",
+            "description": "The 1-minute price must close below the bullish FVG or above the bearish FVG, creating an inversion.",
+            "canonical_match": null
+          }
+        ],
+        "rejected_strategies": [],
+        "instrument_classification": "futures_primary",
+        "speaker_concepts": [
+          {
+            "term": "IRL",
+            "role": "zone",
+            "verbatim_description": "Internal range liquidity which is also a fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Draw on Liquidity",
+            "role": "target",
+            "verbatim_description": "This could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5-minut fair value gap",
+            "role": "zone",
+            "verbatim_description": "After 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Lower time frame confirmation or entry model",
+            "role": "model",
+            "verbatim_description": "This is the most important part of the strategy. Okay. So let's say this is the uh the 5minut fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inversion setup",
+            "role": "entry_step",
+            "verbatim_description": "This manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity sweep check",
+            "role": "entry_step",
+            "verbatim_description": "Make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inversion",
+            "role": "entry_step",
+            "verbatim_description": "And inversion is when we have a bullish fair value gap but then price disrespect[s] the bullish fair value gap and closes below it. So now it is inversed right and that becomes a resistance for price.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break even zone",
+            "role": "stop_anchor",
+            "verbatim_description": "As soon as the closest liquidity after your entry is taken out. So this is the closest low after your entry. So as soon as price hits this level, you're going to go break even.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Displacement",
+            "role": "filter",
+            "verbatim_description": "When we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 29\u00d7 in transcript)",
+            "transcript_quote": "nge liquidity which is also a fair value gap. Right? So, IRL is a fair value gap. Number two, we're going to be looking for lower time",
+            "occurrences": 29,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Equal Highs/Lows",
+            "role": "target",
+            "verbatim_description": "Equal Highs/Lows (mentioned 8\u00d7 in transcript)",
+            "transcript_quote": "also you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify a",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "for inversion setup. So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only on",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "me frame IRL. IRL is internal range liquidity which is also a fair value gap. Right? So, IRL is a fair value gap. Number two,",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Liquidity Pool",
+            "role": "zone",
+            "verbatim_description": "Liquidity Pool (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "our entry this is the closest liquidity level. So let's see how this plays out and bam right there. So you can see that the one to2 rew",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "swept this high. So we have a liquidity sweep check right and now what you want to do is wait for inversion. So we have this tiny fair",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "1 to2",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"1 to2\"",
+            "transcript_quote": "1 to2",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 22,
+      "anchor_report": {
+        "total_spine_conditions": 22,
+        "anchored_count": 15,
+        "unanchored_count": 7,
+        "anchored_fraction": 0.6818,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 7,
+            "unanchored": 1
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 3,
+            "unanchored": 3
+          },
+          "confluences[].description": {
+            "anchored": 3,
+            "unanchored": 2
+          },
+          "stop.rationale": {
+            "anchored": 0,
+            "unanchored": 1
+          },
+          "targets[].rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "stop_management": {
+            "anchored": 1,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 7
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2048,
+            2338
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5764,
+            5800
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3668,
+            3844
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            3668,
+            3844
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3845,
+            3962
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[4].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4439,
+            4596
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[4].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8578,
+            8618
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[5].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            4597,
+            4715
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[6].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4597,
+            4715
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[7].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4597,
+            4715
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1557,
+            1631
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2048,
+            2338
+          ]
+        },
+        {
+          "condition_ref": "confluences[3].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4439,
+            4596
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            7598,
+            7649
+          ]
+        },
+        {
+          "condition_ref": "stop_management",
+          "outcome": "classified_tier1",
+          "char_span": [
+            5368,
+            5461
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_pending_tier3": 12,
+        "fallthrough_dual_read_disagreement": 2,
+        "classified_tier1": 1
+      },
+      "tier1_classified_count": 1,
+      "tier1_fallthrough_count": 14,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "text": "After 9:30 AM NY time, wait for a 5-minute or 15-minute fair value gap (FVG) to form towards the identified draw on liquidity.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[5].rationale",
+          "text": "Inversion is when price disrespect[s] the FVG and closes on the opposite side, turning the FVG into resistance/support.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[6].rationale",
+          "text": "The inversion makes the FVG a resistance for price.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[7].rationale",
+          "text": "The inversion makes the FVG a support for price.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "confluences[2].description",
+          "text": "A 5-minute or 15-minute fair value gap must form towards the draw on liquidity after 9:30 AM.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "confluences[4].description",
+          "text": "The 1-minute price must close below the bullish FVG or above the bearish FVG, creating an inversion.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "text": "Stop is placed above the high of the 1-minute candle that created the inversion.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": [
+          5398,
+          5461
+        ],
+        "condition_text": "Go break even as soon as the closest liquidity after your entry is taken out.",
+        "item_id": "CLDEIsNpVRc-S0-AUDIT",
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 14
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=CLDEIsNpVRc, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 15
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video CLDEIsNpVRc strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 15,
+            "items": [
+              {
+                "item_id": "CLDEIsNpVRc-S0-B000",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? uh it is very simple. I'm going to teach you how you canidenti identify this and also you're going to identify equal highs right and equal lows."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B001",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "You just want to identify your draw."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B002",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now once a 5 minute or 15 minute fair value gap forms after 9:30 you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B003",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now once a 5 minute or 15 minute fair value gap forms after 9:30 you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B004",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So wait for price to tap into that fair value gap and then what you want to do is drop down to one minute time frame."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B005",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now the next step is make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B006",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So we have a liquidity sweep check right"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B007",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So this could be 1 minute high right and then you simply wait for price to close below this one minute fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B008",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So this could be 1 minute high right and then you simply wait for price to close below this one minute fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B009",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So this could be 1 minute high right and then you simply wait for price to close below this one minute fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B010",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So, we always going to be trading from 9:30 till 11:30 a.m. New York time."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B011",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? uh it is very simple. I'm going to teach you how you canidenti identify this and also you're going to identify equal highs right and equal lows."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B012",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now the next step is make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-B013",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then I'll simply go for one to two risk reward."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "CLDEIsNpVRc-S0-AUDIT",
+                "video_id": "CLDEIsNpVRc",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "As soon as the closest liquidity after your entry is taken out."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                },
+                "audit": true
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "CLDEIsNpVRc-S0-B000",
+              "extracted_condition_text": "The strategy requires identifying a draw on liquidity, such as Asia high/low, London high/low, or previous day high/low, or equal highs/lows.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B001",
+              "extracted_condition_text": "The draw on liquidity is the most important thing to identify.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B002",
+              "extracted_condition_text": "Wait for price to tap into the higher timeframe FVG (5m or 15m).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B003",
+              "extracted_condition_text": "Wait for price to tap into the higher timeframe FVG (5m or 15m).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B004",
+              "extracted_condition_text": "Drop down to the 1-minute timeframe and look for an inversion setup.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B005",
+              "extracted_condition_text": "The 1-minute price must have swept some liquidity before tapping into the higher timeframe FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B006",
+              "extracted_condition_text": "This is a liquidity sweep check.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B007",
+              "extracted_condition_text": "Take a long position immediately after the 1-minute price closes above the bearish FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B008",
+              "extracted_condition_text": "Take a long position immediately after the 1-minute price closes above the bearish FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B009",
+              "extracted_condition_text": "Take a long position immediately after the 1-minute price closes above the bearish FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B010",
+              "extracted_condition_text": "Trading is only done from 9:30 AM to 11:30 AM New York time.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B011",
+              "extracted_condition_text": "The strategy requires identifying a draw on liquidity, such as Asia high/low, London high/low, or previous day high/low, or equal highs/lows.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B012",
+              "extracted_condition_text": "The 1-minute price must have swept some liquidity before tapping into the higher timeframe FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-B013",
+              "extracted_condition_text": "The speaker suggests going for a fixed 1:2 risk-to-reward ratio.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "CLDEIsNpVRc-S0-AUDIT",
+              "extracted_condition_text": "Go break even as soon as the closest liquidity after your entry is taken out.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              },
+              "audit": true
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "CLDEIsNpVRc-S0-B000": [
+          2048,
+          2338
+        ],
+        "CLDEIsNpVRc-S0-B001": [
+          5764,
+          5800
+        ],
+        "CLDEIsNpVRc-S0-B002": [
+          3668,
+          3844
+        ],
+        "CLDEIsNpVRc-S0-B003": [
+          3668,
+          3844
+        ],
+        "CLDEIsNpVRc-S0-B004": [
+          3845,
+          3962
+        ],
+        "CLDEIsNpVRc-S0-B005": [
+          4439,
+          4596
+        ],
+        "CLDEIsNpVRc-S0-B006": [
+          8578,
+          8618
+        ],
+        "CLDEIsNpVRc-S0-B007": [
+          4597,
+          4715
+        ],
+        "CLDEIsNpVRc-S0-B008": [
+          4597,
+          4715
+        ],
+        "CLDEIsNpVRc-S0-B009": [
+          4597,
+          4715
+        ],
+        "CLDEIsNpVRc-S0-B010": [
+          1557,
+          1631
+        ],
+        "CLDEIsNpVRc-S0-B011": [
+          2048,
+          2338
+        ],
+        "CLDEIsNpVRc-S0-B012": [
+          4439,
+          4596
+        ],
+        "CLDEIsNpVRc-S0-B013": [
+          7598,
+          7649
+        ],
+        "CLDEIsNpVRc-S0-AUDIT": [
+          5398,
+          5461
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "CLDEIsNpVRc",
+        "full_transcript_sha256": "85184add3abc849587cd23c19e36329c776178718cca1ca67cb9c7d6daa2dd5d",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 22,
+    "anchored": 15,
+    "unanchored": 7,
+    "tier1_classified": 1,
+    "tier1_fallthrough": 14,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 1,
+    "adjudications_aggregate": 15
+  }
+}

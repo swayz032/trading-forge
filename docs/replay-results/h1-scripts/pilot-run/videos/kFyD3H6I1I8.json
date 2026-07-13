@@ -1,0 +1,840 @@
+{
+  "video_id": "kFyD3H6I1I8",
+  "title": "3 Step BEGINNER Scalping Strategy (500 Trade BACKTEST)",
+  "channel": "Trade with Pat",
+  "transcript_sha256": "a781c579328e2860da97b494ebdbb050e9adb0b0a9be14c98a53a218bd367d6e",
+  "transcript_char_count": 11138,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 1,
+  "raw_extraction": {
+    "video_id": "kFyD3H6I1I8",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "engulfing_pattern_range_breakout_1h_5m",
+        "higher_timeframe": "1h",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for a bullish engulfing pattern to form on the 7:00 a.m. candle and a bearish engulfing pattern to form on the 8:00 a.m. candle before the trading session.",
+            "rationale": "These patterns establish the session direction (bullish or bearish)."
+          },
+          {
+            "step": 2,
+            "action": "On the 5-minute timeframe, mark the range from 9:30 to 9:45 UTC-4 (the first 15 minutes of the NYSE open).",
+            "rationale": "This defines the trading range for the session."
+          },
+          {
+            "step": 3,
+            "action": "Enter long when price breaks and closes outside the range high, or enter short when price breaks and closes outside the range low.",
+            "rationale": "The break of the range confirms momentum in the desired direction."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed below the range low for long trades and above the range high for short trades."
+        },
+        "stop_management": "Set break even once the trade reaches a certain level (implied by the speaker's example).",
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2.16,
+            "rationale": "The speaker aims for a risk-reward of approximately 2.16 to 2.3."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "session_direction_bias",
+            "description": "Wait for a bullish engulfing pattern to form on the 7:00 a.m. candle and a bearish engulfing pattern to form on the 8:00 a.m. candle before the trading session.",
+            "canonical_match": null
+          },
+          {
+            "name": "range_breakout_confirmation",
+            "description": "Wait for the price to break and close outside of the 9:30 to 9:45 UTC-4 range.",
+            "canonical_match": "market_structure_aligned"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Bullish Engulfing Pattern",
+            "role": "entry_step",
+            "verbatim_description": "I want to see a bullish engulfing pattern form before my trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Bearish Engulfing Pattern",
+            "role": "entry_step",
+            "verbatim_description": "And if I want to sell, I want to see a bearish engulfing pattern form before my trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trading Range",
+            "role": "zone",
+            "verbatim_description": "I'm marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Range",
+            "role": "entry_step",
+            "verbatim_description": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy. This break of the range tells me the buyers have some momentum.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Level of Demand",
+            "role": "zone",
+            "verbatim_description": "On this trading position, we have a level of demand off of this candle right here... And a level of demand is just when you have an aggressive push like you have right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Level of Supply",
+            "role": "zone",
+            "verbatim_description": "This is a supply zone right there, and I put this around right about there in the middle of that supply because you know, if price comes up to supply, it very likely can react and come down off of that level.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Aggressive Push",
+            "role": "entry_step",
+            "verbatim_description": "You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing. And then we're waiting for a price retracement.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Orb Entry Model",
+            "role": "model",
+            "verbatim_description": "This is one of the main orb entry models that I use in my trading, especially when step one was so clear.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 8\u00d7 in transcript)",
+            "transcript_quote": "d let's get into do step two, range breakouts. For step two, I'm going to show you a full recent trade I took starting with st",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York\" (mentioned 4\u00d7 in transcript)",
+            "transcript_quote": "the New York",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "New York Stock Exchange",
+            "role": "indicator",
+            "verbatim_description": "Speaker uses term: \"New York Stock Exchange\" (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "the New York Stock Exchange",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, [music] especia",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "e [music] waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my [music] level, and th",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 11",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 11\"",
+            "transcript_quote": "30 to 11",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 11,
+      "anchor_report": {
+        "total_spine_conditions": 11,
+        "anchored_count": 10,
+        "unanchored_count": 1,
+        "anchored_fraction": 0.9091,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 1,
+            "unanchored": 1
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "stop_management": {
+            "anchored": 1,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "locator_declined": 1
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            1575,
+            1776
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1041,
+            1116
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3476,
+            3860
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2066,
+            2133
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            3861,
+            4016
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3861,
+            4080
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            3861,
+            4016
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5351,
+            5414
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5893,
+            6007
+          ]
+        },
+        {
+          "condition_ref": "stop_management",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            10364,
+            10483
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_dual_read_disagreement": 3,
+        "fallthrough_pending_tier3": 7
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 10,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "confluences[0].description",
+          "text": "Wait for a bullish engulfing pattern to form on the 7:00 a.m. candle and a bearish engulfing pattern to form on the 8:00 a.m. candle before the trading session.",
+          "strategy_index": 0,
+          "reason": "locator_declined"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 10
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=kFyD3H6I1I8, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 10
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video kFyD3H6I1I8 strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "kFyD3H6I1I8-S0-B000",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, if I want to buy, I want to see a bullish engulfing pattern form before [music] my trading session. And if I want to sell, I want to see a bearish engulfing pattern form before my trading session."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B001",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, let's jump into step number one, bias, understanding market direction."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B002",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "I'm on the five-minute time frame, and I need to set up my range. So, you can see one, two, three candles on the five-minute, I'll turn off the sessions, you know where we're trading, and then I'm marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B003",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And for my last buy example, I get my pattern, and price pushes up."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B004",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B005",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy. This break of the range tells me the buyers have some momentum."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B006",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B007",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "My stop loss is pretty perfect here. I like it below the range."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B008",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So, this gave me a risk reward of about 2.16. Actually, I think I had that a little bit higher there, about a 2.3."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "kFyD3H6I1I8-S0-B009",
+                "video_id": "kFyD3H6I1I8",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, I set break even, okay? Once we got to about this level right here, I set break even, and we almost hit it, right?"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "kFyD3H6I1I8-S0-B000",
+              "extracted_condition_text": "Wait for a bullish engulfing pattern to form on the 7:00 a.m. candle and a bearish engulfing pattern to form on the 8:00 a.m. candle before the trading session.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B001",
+              "extracted_condition_text": "These patterns establish the session direction (bullish or bearish).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B002",
+              "extracted_condition_text": "On the 5-minute timeframe, mark the range from 9:30 to 9:45 UTC-4 (the first 15 minutes of the NYSE open).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B003",
+              "extracted_condition_text": "This defines the trading range for the session.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B004",
+              "extracted_condition_text": "Wait for the price to break and close outside of the 9:30 to 9:45 UTC-4 range.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B005",
+              "extracted_condition_text": "The break of the range confirms momentum in the desired direction.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B006",
+              "extracted_condition_text": "Wait for the price to break and close outside of the 9:30 to 9:45 UTC-4 range.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B007",
+              "extracted_condition_text": "The stop is placed below the range low for long trades and above the range high for short trades.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B008",
+              "extracted_condition_text": "The speaker aims for a risk-reward of approximately 2.16 to 2.3.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "kFyD3H6I1I8-S0-B009",
+              "extracted_condition_text": "Set break even once the trade reaches a certain level (implied by the speaker's example).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "kFyD3H6I1I8-S0-B000": [
+          1575,
+          1776
+        ],
+        "kFyD3H6I1I8-S0-B001": [
+          1041,
+          1116
+        ],
+        "kFyD3H6I1I8-S0-B002": [
+          3476,
+          3860
+        ],
+        "kFyD3H6I1I8-S0-B003": [
+          2066,
+          2133
+        ],
+        "kFyD3H6I1I8-S0-B004": [
+          3861,
+          4016
+        ],
+        "kFyD3H6I1I8-S0-B005": [
+          3861,
+          4080
+        ],
+        "kFyD3H6I1I8-S0-B006": [
+          3861,
+          4016
+        ],
+        "kFyD3H6I1I8-S0-B007": [
+          5351,
+          5414
+        ],
+        "kFyD3H6I1I8-S0-B008": [
+          5893,
+          6007
+        ],
+        "kFyD3H6I1I8-S0-B009": [
+          10364,
+          10483
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "kFyD3H6I1I8",
+        "full_transcript_sha256": "a781c579328e2860da97b494ebdbb050e9adb0b0a9be14c98a53a218bd367d6e",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 11,
+    "anchored": 10,
+    "unanchored": 1,
+    "tier1_classified": 0,
+    "tier1_fallthrough": 10,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 0,
+    "adjudications_aggregate": 10
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "video_id": "CLDEIsNpVRc",
+  "extracted_at": 1783903483.7062733,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "defb9f4d1ca0e62590a1d98896e5afa99cd57e890c8e8941d91a90a16382ad2a",
+  "extraction": {
+    "video_id": "CLDEIsNpVRc",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "liquidity_sweep_inversion_5m_1m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "1m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify the draw on liquidity, which can be Asia high/low, London high/low, or previous day high/low, or equal highs/lows.",
+            "rationale": "The draw on liquidity is the most important thing to identify."
+          },
+          {
+            "step": 2,
+            "action": "After 9:30 AM NY time, wait for a 5-minute or 15-minute fair value gap (FVG) to form towards the identified draw on liquidity.",
+            "rationale": "The FVG acts as the higher timeframe IRL (Internal Range Liquidity)."
+          },
+          {
+            "step": 3,
+            "action": "Wait for price to tap into the higher timeframe FVG (5m or 15m).",
+            "rationale": null
+          },
+          {
+            "step": 4,
+            "action": "Drop down to the 1-minute timeframe and look for an inversion setup.",
+            "rationale": null
+          },
+          {
+            "step": 5,
+            "action": "Ensure the 1-minute price has swept some liquidity before tapping into the higher timeframe FVG or 15-minute FVG.",
+            "rationale": "This is a liquidity sweep check."
+          },
+          {
+            "step": 6,
+            "action": "Wait for the 1-minute price to close below the FVG (for a bullish FVG) or above the FVG (for a bearish FVG), creating an inversion.",
+            "rationale": "Inversion is when price disrespect[s] the FVG and closes on the opposite side, turning the FVG into resistance/support."
+          },
+          {
+            "step": 7,
+            "action": "Take a short position immediately after the 1-minute price closes below the bullish FVG.",
+            "rationale": "The inversion makes the FVG a resistance for price."
+          },
+          {
+            "step": 8,
+            "action": "Take a long position immediately after the 1-minute price closes above the bearish FVG.",
+            "rationale": "The inversion makes the FVG a support for price."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Stop is placed above the high of the 1-minute candle that created the inversion."
+        },
+        "stop_management": "Go break even as soon as the closest liquidity after your entry is taken out.",
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "The speaker suggests going for a fixed 1:2 risk-to-reward ratio."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "time_window_active",
+            "description": "Trading is only done from 9:30 AM to 11:30 AM New York time.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "name": "liquidity_draw_on_liquidity",
+            "description": "The strategy requires identifying a draw on liquidity, such as Asia high/low, London high/low, or previous day high/low, or equal highs/lows.",
+            "canonical_match": "liquidity_target_clear"
+          },
+          {
+            "name": "higher_timeframe_irl",
+            "description": "A 5-minute or 15-minute fair value gap must form towards the draw on liquidity after 9:30 AM.",
+            "canonical_match": "vp_level_proximity"
+          },
+          {
+            "name": "liquidity_sweep_check",
+            "description": "The 1-minute price must have swept some liquidity before tapping into the higher timeframe FVG.",
+            "canonical_match": null
+          },
+          {
+            "name": "inversion_setup",
+            "description": "The 1-minute price must close below the bullish FVG or above the bearish FVG, creating an inversion.",
+            "canonical_match": null
+          }
+        ],
+        "rejected_strategies": [],
+        "instrument_classification": "futures_primary",
+        "speaker_concepts": [
+          {
+            "term": "IRL",
+            "role": "zone",
+            "verbatim_description": "Internal range liquidity which is also a fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Draw on Liquidity",
+            "role": "target",
+            "verbatim_description": "This could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5-minut fair value gap",
+            "role": "zone",
+            "verbatim_description": "After 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Lower time frame confirmation or entry model",
+            "role": "model",
+            "verbatim_description": "This is the most important part of the strategy. Okay. So let's say this is the uh the 5minut fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inversion setup",
+            "role": "entry_step",
+            "verbatim_description": "This manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity sweep check",
+            "role": "entry_step",
+            "verbatim_description": "Make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Inversion",
+            "role": "entry_step",
+            "verbatim_description": "And inversion is when we have a bullish fair value gap but then price disrespect[s] the bullish fair value gap and closes below it. So now it is inversed right and that becomes a resistance for price.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break even zone",
+            "role": "stop_anchor",
+            "verbatim_description": "As soon as the closest liquidity after your entry is taken out. So this is the closest low after your entry. So as soon as price hits this level, you're going to go break even.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Displacement",
+            "role": "filter",
+            "verbatim_description": "When we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 29\u00d7 in transcript)",
+            "transcript_quote": "nge liquidity which is also a fair value gap. Right? So, IRL is a fair value gap. Number two, we're going to be looking for lower time",
+            "occurrences": 29,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Equal Highs/Lows",
+            "role": "target",
+            "verbatim_description": "Equal Highs/Lows (mentioned 8\u00d7 in transcript)",
+            "transcript_quote": "also you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify a",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "for inversion setup. So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only on",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "me frame IRL. IRL is internal range liquidity which is also a fair value gap. Right? So, IRL is a fair value gap. Number two,",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Liquidity Pool",
+            "role": "zone",
+            "verbatim_description": "Liquidity Pool (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "our entry this is the closest liquidity level. So let's see how this plays out and bam right there. So you can see that the one to2 rew",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "swept this high. So we have a liquidity sweep check right and now what you want to do is wait for inversion. So we have this tiny fair",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "1 to2",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"1 to2\"",
+            "transcript_quote": "1 to2",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

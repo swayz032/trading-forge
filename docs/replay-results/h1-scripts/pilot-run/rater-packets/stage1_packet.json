@@ -1,0 +1,951 @@
+{
+  "artifact": "h1-pilot-rater-STAGE1",
+  "task": "For EACH quote below, assign exactly ONE role from the closed taxonomy, judging FROM THE QUOTE ALONE (the trader's own words). You are NOT told any extractor label and there is no answer key. Do Set A first (top to bottom), then the targets.",
+  "closed_taxonomy": {
+    "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+    "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+    "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+  },
+  "control_gate_rule": "Your target calls count only if your Set A calls clear >= 4/5 in the gate direction AND >= 4/5 in the context direction. Which Set A items are which is not disclosed.",
+  "answer_format": "Return JSON: {\"<item_id>\": \"gate-strength\"|\"context\"|\"cannot-determine\", ...} for EVERY Set A item and EVERY target.",
+  "set_a_controls": [
+    {
+      "item_id": "W1-0001",
+      "quote": "only once you see that evidence confirmation that turn is happening should you take a trade"
+    },
+    {
+      "item_id": "W1-0002",
+      "quote": "today I'll share our 4-Hour chart strategy that I use every day"
+    },
+    {
+      "item_id": "W1-0003",
+      "quote": "wait for a retrace back to the 5 SMA"
+    },
+    {
+      "item_id": "W1-0004",
+      "quote": "now back to the euro dollar chart here"
+    },
+    {
+      "item_id": "W1-0005",
+      "quote": "again you have to know what time frames you're trading again I only trade us session"
+    },
+    {
+      "item_id": "W1-0006",
+      "quote": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+    },
+    {
+      "item_id": "W1-0007",
+      "quote": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+    },
+    {
+      "item_id": "W1-0008",
+      "quote": "now you want to go ahead and exit"
+    },
+    {
+      "item_id": "W1-0009",
+      "quote": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+    },
+    {
+      "item_id": "W1-0010",
+      "quote": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+    }
+  ],
+  "targets": [
+    {
+      "item_id": "-igpOZs8LsM-S0-B000",
+      "quote": "And then when setting your stop loss, it will just be a little bit below the FVG."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B001",
+      "quote": "Just stick to the fair value gap and then wait for price to tap in and then push to your direction."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B002",
+      "quote": "So have it in mind that the imbalance must create a break of structure."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B003",
+      "quote": "So have it in mind that the imbalance must create a break of structure."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B004",
+      "quote": "And then the gap you know is created between three candlesticks."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B005",
+      "quote": "So the gap from the closing point of the first candle to the opening point of the third candle."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B006",
+      "quote": "Just stick to the fair value gap and then wait for price to tap in and then push to your direction."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B007",
+      "quote": "So the gap in between is what is called an imbalance and price will most likely you know come back mitigate the imbalance and keep pushing to the upside."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B008",
+      "quote": "So once that happens, you can see price retraced just tapped in and continue to the upside."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B009",
+      "quote": "So once that happens, you can see price retraced just tapped in and continue to the upside."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B010",
+      "quote": "So once that happens, you can see price retraced just tapped in and continue to the upside."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B011",
+      "quote": "Now you can see once it happens price will return to the FVG and it will just drop just more like you know how um we catch entries using order block."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B012",
+      "quote": "Now number one the trend matters. It is important you also pay attention to the trend."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B013",
+      "quote": "So have it in mind that the imbalance must create a break of structure."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B014",
+      "quote": "price will clear before you know tapping into the imbalance."
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B015",
+      "quote": "So if you are trading or if you are taking your entries with fair value gap, all you just need to do is put your stop loss a little bit below the fair value gap."
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B000",
+      "quote": "this just means that a low was put in before it was rated or broken"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B001",
+      "quote": "the first thing I focus on is a stop raid"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B002",
+      "quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B003",
+      "quote": "I will use this checklist to make sure all requirements are met before I take an entry"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B004",
+      "quote": "I generally like to see price move back into a discount of this price range here"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B005",
+      "quote": "the next thing I look for is where there is a little bit flexibility"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B006",
+      "quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B007",
+      "quote": "I generally like to see price move back into a discount of this price range here"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B008",
+      "quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B009",
+      "quote": "I like to blend one two or three of these Concepts together for my personal strategy"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B010",
+      "quote": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B011",
+      "quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B012",
+      "quote": "I generally like to see price move back into a discount of this price range here"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B013",
+      "quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B014",
+      "quote": "My Stop on this low first partial here"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B015",
+      "quote": "and from here we have order block fair value Gap so I would be looking to enter here putting my stop on this order block low partial or move my stop to break even"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B000",
+      "quote": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B001",
+      "quote": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B002",
+      "quote": "As a scalper, you then take the offer and get long in front of that support level, using the bids as at the support as your protection, while then seeking to capture the bounce we get off that level."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B003",
+      "quote": "As a scalper, you then take the offer and get long in front of that support level, using the bids as at the support as your protection, while then seeking to capture the bounce we get off that level."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B004",
+      "quote": "To summarize what an in-play stock is, it's a stock that has a significant price range, is doing high volume, and often trading on a news catalyst or interesting technical pattern."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B005",
+      "quote": "Once you identify an in-play stock, the next step is identifying a tight level. I want a very well-defined intraday support or resistance level. Ideally, one that aligns on multiple time frames."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B006",
+      "quote": "You need to be paying attention to how thick or thin the bids and offers are, and look for disparity as well as which side is being more aggressive."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B007",
+      "quote": "As a scalper, you then take the offer and get long in front of that support level, using the bids as at the support as your protection, while then seeking to capture the bounce we get off that level."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B000",
+      "quote": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B001",
+      "quote": "When scalping here, you are trying to be the first market participant to enter upon the break."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B002",
+      "quote": "So, if we have a $10 resistance level, you want to be buying $10.01 or $10.02, and scalping out on that emotional follow-through, much like the example we gave earlier."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B003",
+      "quote": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B004",
+      "quote": "To summarize what an in-play stock is, it's a stock that has a significant price range, is doing high volume, and often trading on a news catalyst or interesting technical pattern."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B005",
+      "quote": "Often, your stop loss would be right below that level if it gets back below the $50."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S2-B000",
+      "quote": "You're placing resting limit orders in spread names [snorts] ahead of large bids or offers with the aim to capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S2-B001",
+      "quote": "You're placing resting limit orders in spread names [snorts] ahead of large bids or offers with the aim to capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer."
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S2-B002",
+      "quote": "To do this well, you must really understand market microstructure of order types, queue priority, and hidden versus visible orders."
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S0-B000",
+      "quote": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S0-B001",
+      "quote": "we want a liquidity grab because it adds fuel to the reversal"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S0-B002",
+      "quote": "set our stop loss right below the liquidity grab"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S0-B003",
+      "quote": "setad her take profit at a recent low"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B000",
+      "quote": "so here we are on the 15-minute time frame and we get a Buy Signal so what we end up doing is we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B001",
+      "quote": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B002",
+      "quote": "so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B003",
+      "quote": "we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B004",
+      "quote": "so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B005",
+      "quote": "this whole liquidity grab strategy works best if you're finding reversals at the bottoms or tops of big moves"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B006",
+      "quote": "set our stop loss right above the liquidity grab"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B007",
+      "quote": "setad her take profit at a recent low"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B000",
+      "quote": "Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? uh it is very simple. I'm going to teach you how you canidenti identify this and also you're going to identify equal highs right and equal lows."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B001",
+      "quote": "You just want to identify your draw."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B002",
+      "quote": "Now once a 5 minute or 15 minute fair value gap forms after 9:30 you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B003",
+      "quote": "Now once a 5 minute or 15 minute fair value gap forms after 9:30 you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B004",
+      "quote": "So wait for price to tap into that fair value gap and then what you want to do is drop down to one minute time frame."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B005",
+      "quote": "Now the next step is make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B006",
+      "quote": "So we have a liquidity sweep check right"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B007",
+      "quote": "So this could be 1 minute high right and then you simply wait for price to close below this one minute fair value gap."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B008",
+      "quote": "So this could be 1 minute high right and then you simply wait for price to close below this one minute fair value gap."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B009",
+      "quote": "So this could be 1 minute high right and then you simply wait for price to close below this one minute fair value gap."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B010",
+      "quote": "So, we always going to be trading from 9:30 till 11:30 a.m. New York time."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B011",
+      "quote": "Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? uh it is very simple. I'm going to teach you how you canidenti identify this and also you're going to identify equal highs right and equal lows."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B012",
+      "quote": "Now the next step is make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B013",
+      "quote": "And then I'll simply go for one to two risk reward."
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-AUDIT",
+      "quote": "As soon as the closest liquidity after your entry is taken out."
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B000",
+      "quote": "essentially the first two-minute candle off the Bell closes over the 20 SMA and vwap"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B001",
+      "quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B002",
+      "quote": "for me once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B003",
+      "quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B004",
+      "quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B005",
+      "quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B006",
+      "quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position now"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B007",
+      "quote": "because each back test now was so far above above vwap that the 20 SMA was acting as our trailing stop"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B008",
+      "quote": "so if we do close below the 20 SMA maybe you can use that as an indication to get out of the trade"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B009",
+      "quote": "as long as your 20 SMA is trending higher you can hold hold this trade now"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B010",
+      "quote": "if we were to lose vop and lose the 20 SMA collectively and then close below vop and then we have a following candle that starts to build below then yes I'm not looking to buy the bounce anymore what I'm looking to do is short the rejection of vwap and the 20 SMA"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B011",
+      "quote": "if we were to lose vop and lose the 20 SMA collectively and then close below vop and then we have a following candle that starts to build below then yes I'm not looking to buy the bounce anymore what I'm looking to do is short the rejection of vwap and the 20 SMA"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B012",
+      "quote": "essentially the first two-minute candle off the Bell closes over the 20 SMA and vwap"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B013",
+      "quote": "hold bounce use the previous low Point as a stop"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B014",
+      "quote": "you can sell for profits into the upper Channel"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B015",
+      "quote": "you can sell for profits into the upper Channel you can sell for profits into the lower Channel"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B016",
+      "quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position now"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B000",
+      "quote": "And again, these levels act as magnets and they act as traps."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B001",
+      "quote": "Once we get a clean break above pre-market highs or below pre-market lows, this is your first signal."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B002",
+      "quote": "Once we get a clean break above pre-market highs or below pre-market lows, this is your first signal."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B003",
+      "quote": "So when that twominut breaks out above that London high or where to break down below London low, we want to see the break and we actually want to see the close above or below the level."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B004",
+      "quote": "Now again, for those two examples, what's really important is you need to wait for the break. You do not want to take early entries."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B005",
+      "quote": "Now what we are looking for is we are looking for an increase in the volume to confirm that the breakout is actually valid."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B006",
+      "quote": "Now what we are looking for is we are looking for an increase in the volume to confirm that the breakout is actually valid."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B007",
+      "quote": "So if you were the breakout trader in this scenario, you would go long at the close of this two-minute candle."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B008",
+      "quote": "Now, if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support to go long with a stop right below."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B009",
+      "quote": "So, if we were looking at an example on the S&P futures, this blue shaded area is going to be our overnight session. So, what we want to do is we want to find 3:00 a.m. EST, which is going to be right here. And then we want to wait all the way until market open, which is going to be right here. Now again what we are going to do is we are going to mark the highest point of price action within this range and we are going to mark the lowest point of price action within this range."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B010",
+      "quote": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B011",
+      "quote": "And again, what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B012",
+      "quote": "Now what we are looking for is we are looking for an increase in the volume to confirm that the breakout is actually valid."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B013",
+      "quote": "Your stop loss has to be below your entry candle."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B014",
+      "quote": "Now, ideally when I'm trading, I'm typically looking for bare minimum of 1x of my original risk. However, ideally what I'm looking for is a 1.5x to a 2x my original risk."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B015",
+      "quote": "Now, ideally when I'm trading, I'm typically looking for bare minimum of 1x of my original risk. However, ideally what I'm looking for is a 1.5x to a 2x my original risk."
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B016",
+      "quote": "Now, as the trade continues to move in my favor, I'm going to be looking to trail my stop-loss up at least to break even, ideally in profits, and to just let that sucker run."
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B000",
+      "quote": "so guess what what you want to do is time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B001",
+      "quote": "because it allows you to establish where support is at"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B002",
+      "quote": "this 13 EMA operated as a initial support"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B003",
+      "quote": "this 13 EMA operated as a initial support"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B004",
+      "quote": "you can get in if you first establish where your support level is at there's various different ways you can find support okay often times look at Price action look at where stock is bottom at and bounce from"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B005",
+      "quote": "the stock came down and it hit right there that's our entry for a scalp"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B006",
+      "quote": "guess what what you want to do is time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S1-B000",
+      "quote": "this one off a deeper support sitting at the 200 EMA"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S1-B001",
+      "quote": "you can get in if you first establish where your support level is at there's various different ways you can find support okay often times look at Price action look at where stock is bottom at and bounce from"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S1-B002",
+      "quote": "scalping is a trading strategy Gears towards profiting from minor price changes in a stock price"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B000",
+      "quote": "So with that being said, today was a fairly simple trade um coming into that London session and all you had to do was wait for price to break and become back bullish because we already knew the 4hour time frame was bullish."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B001",
+      "quote": "It's all because I make trades based on what the trend is giving me. And when the trend has momentum, it's going to push through as far as you need it to push through. Like once again, like I trade the trend like relentlessly."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B002",
+      "quote": "So all we had to do here was follow and track our highs and lows as we see here we have a lower high. So right here we have a lower high and then this one we have a another lower high."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B003",
+      "quote": "Price shoots down, it corrects to make a lower high."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B004",
+      "quote": "Price stops making the lower lows, right? Price stops making lower lows. I think this is on gray. Let me change this to black. But price stops making a lower low."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B005",
+      "quote": "This is a bullish sign."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B006",
+      "quote": "But the second thing that confirms that would be price breaking above that lower high."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B007",
+      "quote": "But the second thing that confirms that would be price breaking above that lower high."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B008",
+      "quote": "because we already knew the 4hour time frame was bullish."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B009",
+      "quote": "Price stops making the lower lows, right? Price stops making lower lows."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B010",
+      "quote": "But all you're doing is waiting for price to go back bullish on that 15minut time frame and putting your stop loss under that level where you don't want to see price get broken, right?"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B011",
+      "quote": "And then you would probably just, you know, go with the flow of that. And that's a one that's a one to 10 setup."
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B012",
+      "quote": "And then if you're following the trend, so if you would have scaled out more, you would have been like, \"Okay, 4 hour has broken the high and you would be scaling out now. You would probably be around a 1 to 32.\""
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B000",
+      "quote": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B001",
+      "quote": "the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones because they're further away we will be from the dynamic fair value of the market"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B002",
+      "quote": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value because Market have been built to make trading easier for big operators"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B003",
+      "quote": "the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones because they're further away we will be from the dynamic fair value of the market and the most likely we will be rebalancing"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B004",
+      "quote": "and as you can see once we break off and rebre these levels we have a little bit of resistance in the first standard deviation some more resistant in the second standard deviation testing the first one going back but also there is moments with high momentum and once we've established a strong Trend where still markets will keep buying even at higher and premium prices so vwap is not always working it's always needed to have a context behind your trading idea you're not just going to trade based off of vwap only"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B005",
+      "quote": "so often it will give a reaction and act as support or resistance"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B006",
+      "quote": "it's a dynamic level it's a calculation constantly being updated which tells us the current volume weighted average of price"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B007",
+      "quote": "the best of the best to fill this orders is going to be exactly at the extreme of these lines which are going to be our standard deviations this is going to be our discount standard deviation this is going to be our first premium standard deviation so these prices and these prices are going to be optimal prices to get all those little fragmented order being executed then you can have even wider ranges which are going to be the second standard deviation so two standard deviations and a negative second standard deviation and so on and so forth"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B008",
+      "quote": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value because Market have been built to make trading easier for big operators"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B009",
+      "quote": "the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones because they're further away we will be from the dynamic fair value of the market"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B010",
+      "quote": "use the central vwap as a target for Price rebalancing"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B011",
+      "quote": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value because Market have been built to make trading easier for big operators"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B000",
+      "quote": "So we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B001",
+      "quote": "So we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B002",
+      "quote": "Now what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range. Now if we can actually get that break we want to see it close below or above with strength or weakness."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B003",
+      "quote": "If we are actually able to do that then that is actual confirmation that price is likely going to break and continue in that direction."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B004",
+      "quote": "So when we get that break with strength or weakness, we are then going to look for price to pull back and retest that level."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B005",
+      "quote": "I'm not a big fan of trading the breakouts. If you wanted to, you could have and you could have caught a nice little move up, but I'm a big fan of that retest."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B006",
+      "quote": "So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B007",
+      "quote": "So if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B008",
+      "quote": "We then want to see price come back up, test this area as resistance with bearish price action, whether it be uh bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B009",
+      "quote": "We then want to see price come back up, test this area as resistance with bearish price action, whether it be uh bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B010",
+      "quote": "Now what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range. Now if we can actually get that break we want to see it close below or above with strength or weakness."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B011",
+      "quote": "So when we get that break with strength or weakness, we are then going to look for price to pull back and retest that level. So if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B012",
+      "quote": "our stop is going to be if price breaks back down below this previous high or vice versa."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B013",
+      "quote": "And just based off of this, that was about a 2.6R trade, which means for every dollar that you were risking, you made $266."
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B014",
+      "quote": "And then obviously once you feel comfortable with your first trim, take it, put your stop-loss at break even."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B000",
+      "quote": "Next, we're going to wait for the first candle of the day at that 9:30 time to print."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B001",
+      "quote": "And then just like we did with the scalping strategy, we're going to mark the high and the low of the first 15-minute candle."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B002",
+      "quote": "For step two, we are going to switch to the 1 minute chart by clicking this one minute button on Trading View."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B003",
+      "quote": "Next, we're going to wait for a break of the level, but we need a fair value gap."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B004",
+      "quote": "Now, after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B005",
+      "quote": "Now, after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B006",
+      "quote": "And as soon as we get this engulfing, you're good to enter the trade."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B007",
+      "quote": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B008",
+      "quote": "So for our stop loss or our invalidation point where we will cut our losses if we're wrong, you want to put that under the lowest area that we traded into that fair value gap. And you always want to give it one tick of breathing room."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B009",
+      "quote": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade."
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-AUDIT",
+      "quote": "as soon as we get this engulfing"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B000",
+      "quote": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes."
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B001",
+      "quote": "And then just like we did with the scalping strategy, we're going to mark the high and the low of the first 15-minute candle."
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B002",
+      "quote": "Now, we're still going to identify key levels, but we're going to do it just a little differently because for this entry, you're going to start on the 15minute chart."
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B003",
+      "quote": "But here is where things get different because instead of waiting for a retest, we're actually going to set a limit order on the FVG."
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B004",
+      "quote": "This means once the market trades back into the fair value gap, we're automatically entered into the market."
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B005",
+      "quote": "And then just like we did with the scalping strategy, we're going to mark the high and the low of the first 15-minute candle."
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B006",
+      "quote": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick."
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B007",
+      "quote": "Now, for my stop loss, I'm going to put it right at the first candle in the fair value gap pattern."
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B008",
+      "quote": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return."
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B000",
+      "quote": "This is a 15minute opening range breakout."
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B001",
+      "quote": "Once I've got that, I'm going to mark out the high and the low."
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B002",
+      "quote": "I then enter at the open of the next one."
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B003",
+      "quote": "But I prefer to wait for the candle to actually break through and then close above."
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B004",
+      "quote": "I then enter at the open of the next one."
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B005",
+      "quote": "I jumped over to my back tester and started setting this up, but it actually turned out to be a lot more complicated than I thought."
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B006",
+      "quote": "After that, the stop loss goes at the bottom of the range."
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B000",
+      "quote": "so basically when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B001",
+      "quote": "and so basically when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support because again a lot of other traders are doing this exact same thing and a lot of traders are using it as that type of milestone level"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B002",
+      "quote": "and again we're using that v area as a milestone level when we finally break above that we're looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B003",
+      "quote": "we're looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B004",
+      "quote": "number one is that i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B005",
+      "quote": "and really this leads me to my next condition which is that i need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-AUDIT",
+      "quote": "if the v is above me for that reason too many times the v wap'"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B000",
+      "quote": "So if we were looking at this on, let's say a line chart, let's say that we have this resistance right here, pre-market high, right? Price breaks above it, we then want to see price come back down and test it as support. If it can do that, that would be considered a break and retest, and we would be looking to go long to capture a move higher, and our stop loss would be right below the break area, which is right here. Or let's say to the downside where we end up having some support, price ends up breaking below the support, well now we have the break, we're waiting for price to come back up and retest it as resistance. If it can become resistance, we're looking to go short, our stop loss is going to be if price comes back up above this break area."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B001",
+      "quote": "So that level that it breaks is either then becoming support or resistance."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B002",
+      "quote": "Ideally, with the retest, we would like to see a strong confirmation, and then we want a clean push through these levels."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B003",
+      "quote": "Price breaks above a key level or breaks below a key level, it comes back, it retests that level, and it holds it, and it continues in the original direction."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B004",
+      "quote": "So that level that it breaks is either then becoming support or resistance."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B005",
+      "quote": "So, in this scenario, if we come down and we test the previous resistance, pre-market high, whatever, we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. Or if we're looking at this scenario right here, when price breaks below, when it comes back up, we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B006",
+      "quote": "So that level that it breaks is either then becoming support or resistance."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B007",
+      "quote": "Your stop is if price breaks back on the opposite side of the breakout level."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B008",
+      "quote": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B009",
+      "quote": "your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B010",
+      "quote": "Pre-market highs, pre-market lows, previous day's highs, previous day's lows, or even our 30-minute orb level."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B011",
+      "quote": "Now, on top of that, we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B012",
+      "quote": "It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it, and then we start making a move down."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B013",
+      "quote": "So, in this scenario, if we come down and we test the previous resistance, pre-market high, whatever, we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. Or if we're looking at this scenario right here, when price breaks below, when it comes back up, we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B014",
+      "quote": "On top of that, if you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B015",
+      "quote": "Your stop is if price breaks back on the opposite side of the breakout level."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B016",
+      "quote": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B017",
+      "quote": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low."
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B018",
+      "quote": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supply zone, demand zone, whatever, but you're targeting clear areas of where liquidity is sitting within the market."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B000",
+      "quote": "Now, if I want to buy, I want to see a bullish engulfing pattern form before [music] my trading session. And if I want to sell, I want to see a bearish engulfing pattern form before my trading session."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B001",
+      "quote": "Now, let's jump into step number one, bias, understanding market direction."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B002",
+      "quote": "I'm on the five-minute time frame, and I need to set up my range. So, you can see one, two, three candles on the five-minute, I'll turn off the sessions, you know where we're trading, and then I'm marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B003",
+      "quote": "And for my last buy example, I get my pattern, and price pushes up."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B004",
+      "quote": "And you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B005",
+      "quote": "And you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy. This break of the range tells me the buyers have some momentum."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B006",
+      "quote": "And you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B007",
+      "quote": "My stop loss is pretty perfect here. I like it below the range."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B008",
+      "quote": "So, this gave me a risk reward of about 2.16. Actually, I think I had that a little bit higher there, about a 2.3."
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B009",
+      "quote": "Now, I set break even, okay? Once we got to about this level right here, I set break even, and we almost hit it, right?"
+    }
+  ],
+  "counts": {
+    "set_a": 10,
+    "targets": 223
+  }
+}

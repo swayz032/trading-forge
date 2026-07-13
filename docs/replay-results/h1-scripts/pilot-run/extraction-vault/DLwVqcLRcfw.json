@@ -1,0 +1,164 @@
+{
+  "video_id": "DLwVqcLRcfw",
+  "extracted_at": 1783904586.360065,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "771fbb38465157047921d0a6c33dc1d7c8136217991e6a2087c0ad8ec6aec547",
+  "extraction": {
+    "video_id": "DLwVqcLRcfw",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "vwap_20sma_trend_following_2m",
+        "higher_timeframe": "2m",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for the first two-minute candle after the bell to close above the 20 Simple Moving Average (SMA) and the Volume Weighted Average Price (VWAP).",
+            "rationale": "This confirms a bullish bias for the session."
+          },
+          {
+            "step": 2,
+            "action": "Wait for a following candle to confirm the high of the candle that closed above the 20 SMA.",
+            "rationale": "Confirmation of the initial breakout."
+          },
+          {
+            "step": 3,
+            "action": "If the price pulls back into the VWAP, this is a good buying opportunity to lower the dollar cost average.",
+            "rationale": "VWAP acts as support during a bullish trend."
+          },
+          {
+            "step": 4,
+            "action": "Hold the position as long as the VWAP and the 20 SMA are trending higher.",
+            "rationale": "The 20 SMA acts as a trailing stop."
+          },
+          {
+            "step": 5,
+            "action": "If the price closes below the 20 SMA, use that as an indication to exit the trade.",
+            "rationale": "The 20 SMA serves as the trailing stop/exit signal."
+          },
+          {
+            "step": 6,
+            "action": "If the price loses both VWAP and the 20 SMA collectively and then closes below VWAP, look to short the rejection of VWAP and the 20 SMA.",
+            "rationale": "Reversal signal for a short entry."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The speaker uses the previous wick/low point as a stop, which is a form of structural stop."
+        },
+        "stop_management": "Hold the position as long as the VWAP and the 20 SMA are trending higher, using the 20 SMA as a trailing stop.",
+        "targets": [
+          {
+            "priority": 1,
+            "type": "range_high",
+            "r_multiple": null,
+            "rationale": "Sell for profits into the upper channel of the VWAP bands."
+          },
+          {
+            "priority": 2,
+            "type": "range_low",
+            "r_multiple": null,
+            "rationale": "Sell for profits into the lower channel of the VWAP bands."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "vwap_and_20sma_alignment",
+            "description": "The first two-minute candle off the bell closes over the 20 SMA and VWAP.",
+            "canonical_match": "vwap_alignment"
+          },
+          {
+            "name": "trend_confirmation",
+            "description": "The VWAP and the 20 SMA are trending higher.",
+            "canonical_match": "regime_match"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "20 Simple Moving Average (20 SMA)",
+            "role": "indicator",
+            "verbatim_description": "The white line that you see on my screen... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP (Volume Weighted Average Price)",
+            "role": "indicator",
+            "verbatim_description": "The green line that you see is the vwap... [it] has to assume that they're taking a large number of buyers and sellers and they're getting a mathematical equation for around the average price of where a lot of people are sitting.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Upper and Lower Ranges of VWAP",
+            "role": "zone",
+            "verbatim_description": "The little black line on the upper and the black line on the lower is just the upper and lower ranges of the VW pretty simple right.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Confluence",
+            "role": "entry_step",
+            "verbatim_description": "use vwap for extra Confluence in finding these setups so for me once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trailing Stop",
+            "role": "stop_anchor",
+            "verbatim_description": "as long as your 20 SMA is trending higher you can hold hold this trade now it did take over about an hour to an hour and a half before price action really started to break away but you can see once we started to really break away from the vwap this last bounce here at 7:36 in the morning Pacific Standard time that was it okay because each back test now was so far above above vwap that the 20 SMA was acting as our trailing stop.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Upper Channel",
+            "role": "target",
+            "verbatim_description": "you can sell for profits into the upper Channel you can sell for profits into the lower Channel okay so if we're entering at a price of around 2,259 then we can sell upwards of a price of 20275.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Lower Channel",
+            "role": "target",
+            "verbatim_description": "you can sell for profits into the upper Channel you can sell for profits into the lower Channel okay so if we're entering at a price of around 2,259 then we can sell upwards of a price of 20275.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Previous Wick",
+            "role": "stop_anchor",
+            "verbatim_description": "come down to vop hold bounce use the previous Wick as a stop come down to vop hold bounce.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "indicator",
+            "verbatim_description": "VWAP (mentioned 25\u00d7 in transcript)",
+            "transcript_quote": "-minute time frame how to use vwap as well as a 20 period moving average which 20 simple moving average so this is how I per",
+            "occurrences": 25,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 9\u00d7 in transcript)",
+            "transcript_quote": "uture buying opportunities to bounce come down to vwap start a new position bounce come down to vop start a new position hold",
+            "occurrences": 9,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Neutral/Ranging Avoid",
+            "role": "filter",
+            "verbatim_description": "Neutral/Ranging Avoid (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "flat it's kind of just going sideways at this period of time this is clearly trending higher so this 20 SMA is clearly trending",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

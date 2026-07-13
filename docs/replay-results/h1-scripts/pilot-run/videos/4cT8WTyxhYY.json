@@ -1,0 +1,1271 @@
+{
+  "video_id": "4cT8WTyxhYY",
+  "title": "I Reveal My Reversal Strategy [AMAZING]",
+  "channel": "TradingLab",
+  "transcript_sha256": "67a27a9c3ca533d545c773e926b5bbae93bd91341c6d86cc0a46b05b1f3391bf",
+  "transcript_char_count": 10533,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 2,
+  "raw_extraction": {
+    "video_id": "4cT8WTyxhYY",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "liquidity_grab_reversal_15m_1h",
+        "higher_timeframe": "1h",
+        "lower_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for price to break a support or resistance level, creating a liquidity grab (fake out).",
+            "rationale": "A liquidity grab adds fuel to the reversal by triggering stop losses of traders who entered early."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Set stop loss right below the liquidity grab."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "r_multiple": null,
+            "rationale": "Set take profit at a recent high."
+          },
+          {
+            "priority": 2,
+            "type": "previous_daily_low",
+            "r_multiple": null,
+            "rationale": "Set take profit at a recent low."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "higher_timeframe_support_resistance",
+            "description": "The entry signal (liquidity grab) must occur at a support or resistance level on a higher timeframe.",
+            "canonical_match": "vp_level_proximity"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Liquidity Grab",
+            "role": "entry_step",
+            "verbatim_description": "A liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sell-side Liquidity",
+            "role": "zone",
+            "verbatim_description": "It can be either sell-side liquidity or buy side liquidity whichever you prefer to trade once we find this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Buy Side Liquidity",
+            "role": "zone",
+            "verbatim_description": "It can be either sell-side liquidity or buy side liquidity whichever you prefer to trade once we find this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Entry Point (Liquidity Grab)",
+            "role": "entry_step",
+            "verbatim_description": "Our entry would be at the candle that made the liquidity grab so your long entry would be at this point right here because this candle made this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop Loss (Liquidity Grab)",
+            "role": "stop_anchor",
+            "verbatim_description": "For example you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Take Profit (Liquidity Grab)",
+            "role": "target",
+            "verbatim_description": "For example you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Divergence",
+            "role": "entry_step",
+            "verbatim_description": "We combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "10 Candle Rule",
+            "role": "filter",
+            "verbatim_description": "If the liquidity grab and and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks farther apart.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 28\u00d7 in transcript)",
+            "transcript_quote": "e looking for what's called a liquidity grab a liquidity grab is simply when price breaks a support or resistance and does a fake out",
+            "occurrences": 28,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "ppening in the middle of this range on a higher time frame and like I said before this strategy performs the best if it's on t",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "liquidity_grab_divergence_15m_15m",
+        "higher_timeframe": "15m",
+        "lower_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify a liquidity grab (fake out) on the 15-minute timeframe.",
+            "rationale": "The liquidity grab is the primary reversal trigger."
+          },
+          {
+            "step": 2,
+            "action": "Confirm the liquidity grab with a divergence signal (e.g., Momentum oscillator making higher highs while price makes lower lows).",
+            "rationale": "Divergence adds a bullish signal and higher probability of working in favor."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Set stop loss right above the liquidity grab."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "r_multiple": null,
+            "rationale": "Set take profit at a recent high."
+          },
+          {
+            "priority": 2,
+            "type": "previous_daily_low",
+            "r_multiple": null,
+            "rationale": "Set take profit at a recent low."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "momentum_divergence",
+            "description": "Look for divergence using the Momentum oscillator (e.g., price making lower lows while the oscillator makes higher highs).",
+            "canonical_match": null
+          },
+          {
+            "name": "liquidity_grab_reversal",
+            "description": "The strategy works best when finding reversals at the bottoms or tops of big moves.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Liquidity Grab",
+            "role": "entry_step",
+            "verbatim_description": "A liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sell-side Liquidity",
+            "role": "zone",
+            "verbatim_description": "It can be either sell-side liquidity or buy side liquidity whichever you prefer to trade once we find this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Buy Side Liquidity",
+            "role": "zone",
+            "verbatim_description": "It can be either sell-side liquidity or buy side liquidity whichever you prefer to trade once we find this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Entry Point (Liquidity Grab)",
+            "role": "entry_step",
+            "verbatim_description": "Our entry would be at the candle that made the liquidity grab so your long entry would be at this point right here because this candle made this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop Loss (Liquidity Grab)",
+            "role": "stop_anchor",
+            "verbatim_description": "For example you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Take Profit (Liquidity Grab)",
+            "role": "target",
+            "verbatim_description": "For example you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Divergence",
+            "role": "entry_step",
+            "verbatim_description": "We combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "10 Candle Rule",
+            "role": "filter",
+            "verbatim_description": "If the liquidity grab and and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks farther apart.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 28\u00d7 in transcript)",
+            "transcript_quote": "e looking for what's called a liquidity grab a liquidity grab is simply when price breaks a support or resistance and does a fake out",
+            "occurrences": 28,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "ppening in the middle of this range on a higher time frame and like I said before this strategy performs the best if it's on t",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 6,
+      "anchor_report": {
+        "total_spine_conditions": 6,
+        "anchored_count": 4,
+        "unanchored_count": 2,
+        "anchored_fraction": 0.6667,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 0,
+            "unanchored": 1
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 1,
+            "unanchored": 1
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 2
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            901,
+            1025
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1026,
+            1087
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6592,
+            6640
+          ]
+        },
+        {
+          "condition_ref": "targets[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6359,
+            6396
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_dual_read_disagreement": 1,
+        "fallthrough_pending_tier3": 3
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 4,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "confluences[0].description",
+          "text": "The entry signal (liquidity grab) must occur at a support or resistance level on a higher timeframe.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "text": "Set take profit at a recent high.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 4
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=4cT8WTyxhYY, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 4
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video 4cT8WTyxhYY strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 4,
+            "items": [
+              {
+                "item_id": "4cT8WTyxhYY-S0-B000",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S0-B001",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we want a liquidity grab because it adds fuel to the reversal"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S0-B002",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "set our stop loss right below the liquidity grab"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S0-B003",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "setad her take profit at a recent low"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "4cT8WTyxhYY-S0-B000",
+              "extracted_condition_text": "Wait for price to break a support or resistance level, creating a liquidity grab (fake out).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S0-B001",
+              "extracted_condition_text": "A liquidity grab adds fuel to the reversal by triggering stop losses of traders who entered early.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S0-B002",
+              "extracted_condition_text": "Set stop loss right below the liquidity grab.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S0-B003",
+              "extracted_condition_text": "Set take profit at a recent low.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "4cT8WTyxhYY-S0-B000": [
+          901,
+          1025
+        ],
+        "4cT8WTyxhYY-S0-B001": [
+          1026,
+          1087
+        ],
+        "4cT8WTyxhYY-S0-B002": [
+          6592,
+          6640
+        ],
+        "4cT8WTyxhYY-S0-B003": [
+          6359,
+          6396
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "4cT8WTyxhYY",
+        "full_transcript_sha256": "67a27a9c3ca533d545c773e926b5bbae93bd91341c6d86cc0a46b05b1f3391bf",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    },
+    {
+      "strategy_index": 1,
+      "spine_condition_count": 9,
+      "anchor_report": {
+        "total_spine_conditions": 9,
+        "anchored_count": 8,
+        "unanchored_count": 1,
+        "anchored_fraction": 0.8889,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 1,
+            "unanchored": 1
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 1
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            9224,
+            9439
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            901,
+            1025
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8690,
+            8829
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8693,
+            8829
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            8406,
+            8631
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8936,
+            9045
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6306,
+            6354
+          ]
+        },
+        {
+          "condition_ref": "targets[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6359,
+            6396
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_pending_tier3": 7,
+        "fallthrough_dual_read_disagreement": 1
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 8,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "targets[0].rationale",
+          "text": "Set take profit at a recent high.",
+          "strategy_index": 1,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 8
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=4cT8WTyxhYY, strategy=1.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 8
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video 4cT8WTyxhYY strategy 1 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 8,
+            "items": [
+              {
+                "item_id": "4cT8WTyxhYY-S1-B000",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so here we are on the 15-minute time frame and we get a Buy Signal so what we end up doing is we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S1-B001",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S1-B002",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S1-B003",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S1-B004",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S1-B005",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this whole liquidity grab strategy works best if you're finding reversals at the bottoms or tops of big moves"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S1-B006",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "set our stop loss right above the liquidity grab"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "4cT8WTyxhYY-S1-B007",
+                "video_id": "4cT8WTyxhYY",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "setad her take profit at a recent low"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "4cT8WTyxhYY-S1-B000",
+              "extracted_condition_text": "Identify a liquidity grab (fake out) on the 15-minute timeframe.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S1-B001",
+              "extracted_condition_text": "The liquidity grab is the primary reversal trigger.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S1-B002",
+              "extracted_condition_text": "Confirm the liquidity grab with a divergence signal (e.g., Momentum oscillator making higher highs while price makes lower lows).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S1-B003",
+              "extracted_condition_text": "Divergence adds a bullish signal and higher probability of working in favor.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S1-B004",
+              "extracted_condition_text": "Look for divergence using the Momentum oscillator (e.g., price making lower lows while the oscillator makes higher highs).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S1-B005",
+              "extracted_condition_text": "The strategy works best when finding reversals at the bottoms or tops of big moves.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S1-B006",
+              "extracted_condition_text": "Set stop loss right above the liquidity grab.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "4cT8WTyxhYY-S1-B007",
+              "extracted_condition_text": "Set take profit at a recent low.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "4cT8WTyxhYY-S1-B000": [
+          9224,
+          9439
+        ],
+        "4cT8WTyxhYY-S1-B001": [
+          901,
+          1025
+        ],
+        "4cT8WTyxhYY-S1-B002": [
+          8690,
+          8829
+        ],
+        "4cT8WTyxhYY-S1-B003": [
+          8693,
+          8829
+        ],
+        "4cT8WTyxhYY-S1-B004": [
+          8406,
+          8631
+        ],
+        "4cT8WTyxhYY-S1-B005": [
+          8936,
+          9045
+        ],
+        "4cT8WTyxhYY-S1-B006": [
+          6306,
+          6354
+        ],
+        "4cT8WTyxhYY-S1-B007": [
+          6359,
+          6396
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "4cT8WTyxhYY",
+        "full_transcript_sha256": "67a27a9c3ca533d545c773e926b5bbae93bd91341c6d86cc0a46b05b1f3391bf",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 15,
+    "anchored": 12,
+    "unanchored": 3,
+    "tier1_classified": 0,
+    "tier1_fallthrough": 12,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 0,
+    "adjudications_aggregate": 12
+  }
+}

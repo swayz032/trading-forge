@@ -1,0 +1,888 @@
+{
+  "video_id": "PVMgOxHUqFA",
+  "title": "easiest trading strategy in the game",
+  "channel": "Trades By Sci",
+  "transcript_sha256": "a28141899bd67a0cc0c6f311df3673c00b62281b8db88125d6510da030f99993",
+  "transcript_char_count": 10326,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 1,
+  "raw_extraction": {
+    "video_id": "PVMgOxHUqFA",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "lower_high_reversal_15m_5m",
+        "higher_timeframe": "4h",
+        "lower_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify the current trend direction on the 4H timeframe (e.g., bullish or bearish).",
+            "rationale": "The strategy is based on trading the trend."
+          },
+          {
+            "step": 2,
+            "action": "On the 15M timeframe, track the highs and lows to identify a sequence of lower highs and lower lows (bearish trend).",
+            "rationale": "The speaker explains that the downtrend is identified by lower highs and lower lows."
+          },
+          {
+            "step": 3,
+            "action": "Wait for price to stop making lower lows (the last lower low) and then fail to break above the previous lower high.",
+            "rationale": "This is a bullish sign that the downtrend is ending."
+          },
+          {
+            "step": 4,
+            "action": "Enter long when price breaks above the previous lower high.",
+            "rationale": "The break above the lower high confirms the bullish reversal."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "sweep_wick_above_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss goes under that level where you don't want to see price get broken."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 1,
+            "rationale": "The initial target is a 1:10 setup."
+          },
+          {
+            "priority": 2,
+            "type": "r_multiple",
+            "r_multiple": 1,
+            "rationale": "If following the trend, the target could be 1:32."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "4h_trend_alignment",
+            "description": "The 4 hour timeframe is bullish.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "name": "15m_reversal_pattern",
+            "description": "Price stops making lower lows and fails to break above the previous lower high.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "lower low",
+            "role": "entry_step",
+            "verbatim_description": "Price is still bearish because it's still making lows.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "lower high",
+            "role": "entry_step",
+            "verbatim_description": "If you want to see price go bullish, it has to come above this lower high and then price makes another lower low, right?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "rejections",
+            "role": "entry_step",
+            "verbatim_description": "As we progress, we start to see price have some rejections right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "bullish sign",
+            "role": "entry_step",
+            "verbatim_description": "This is a bullish sign. This is telling us price could go bullish because it's not breaking a lower low or is not making a low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "ABC setup",
+            "role": "model",
+            "verbatim_description": "Same setup as this. Same setup as this low was made. Lower high was made. Price made a low, but it's higher than the previous one.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "gold moves during that price range too as well that session as well. So all we had to do here was follow and track our highs",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "1 to 32",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"1 to 32\"",
+            "transcript_quote": "1 to 32",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 13,
+      "anchor_report": {
+        "total_spine_conditions": 13,
+        "anchored_count": 13,
+        "unanchored_count": 0,
+        "anchored_fraction": 1.0,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 4,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 4,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 2,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {}
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6535,
+            6758
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            9186,
+            9412
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2478,
+            2662
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4090,
+            4142
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            4875,
+            5037
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5134,
+            5157
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            5269,
+            5355
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5269,
+            5355
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6701,
+            6758
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4875,
+            4947
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6342,
+            6526
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8730,
+            8842
+          ]
+        },
+        {
+          "condition_ref": "targets[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8843,
+            9055
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_pending_tier3": 11,
+        "fallthrough_dual_read_disagreement": 2
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 13,
+      "unanchored_conditions": [],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 13
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=PVMgOxHUqFA, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 13
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video PVMgOxHUqFA strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 13,
+            "items": [
+              {
+                "item_id": "PVMgOxHUqFA-S0-B000",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So with that being said, today was a fairly simple trade um coming into that London session and all you had to do was wait for price to break and become back bullish because we already knew the 4hour time frame was bullish."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B001",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "It's all because I make trades based on what the trend is giving me. And when the trend has momentum, it's going to push through as far as you need it to push through. Like once again, like I trade the trend like relentlessly."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B002",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So all we had to do here was follow and track our highs and lows as we see here we have a lower high. So right here we have a lower high and then this one we have a another lower high."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B003",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Price shoots down, it corrects to make a lower high."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B004",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Price stops making the lower lows, right? Price stops making lower lows. I think this is on gray. Let me change this to black. But price stops making a lower low."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B005",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "This is a bullish sign."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B006",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "But the second thing that confirms that would be price breaking above that lower high."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B007",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "But the second thing that confirms that would be price breaking above that lower high."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B008",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "because we already knew the 4hour time frame was bullish."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B009",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Price stops making the lower lows, right? Price stops making lower lows."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B010",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "But all you're doing is waiting for price to go back bullish on that 15minut time frame and putting your stop loss under that level where you don't want to see price get broken, right?"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B011",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then you would probably just, you know, go with the flow of that. And that's a one that's a one to 10 setup."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "PVMgOxHUqFA-S0-B012",
+                "video_id": "PVMgOxHUqFA",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then if you're following the trend, so if you would have scaled out more, you would have been like, \"Okay, 4 hour has broken the high and you would be scaling out now. You would probably be around a 1 to 32.\""
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "PVMgOxHUqFA-S0-B000",
+              "extracted_condition_text": "Identify the current trend direction on the 4H timeframe (e.g., bullish or bearish).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B001",
+              "extracted_condition_text": "The strategy is based on trading the trend.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B002",
+              "extracted_condition_text": "On the 15M timeframe, track the highs and lows to identify a sequence of lower highs and lower lows (bearish trend).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B003",
+              "extracted_condition_text": "The speaker explains that the downtrend is identified by lower highs and lower lows.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B004",
+              "extracted_condition_text": "Wait for price to stop making lower lows (the last lower low) and then fail to break above the previous lower high.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B005",
+              "extracted_condition_text": "This is a bullish sign that the downtrend is ending.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B006",
+              "extracted_condition_text": "The break above the lower high confirms the bullish reversal.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B007",
+              "extracted_condition_text": "The break above the lower high confirms the bullish reversal.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B008",
+              "extracted_condition_text": "The 4 hour timeframe is bullish.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B009",
+              "extracted_condition_text": "Price stops making lower lows and fails to break above the previous lower high.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B010",
+              "extracted_condition_text": "The stop loss goes under that level where you don't want to see price get broken.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B011",
+              "extracted_condition_text": "The initial target is a 1:10 setup.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "PVMgOxHUqFA-S0-B012",
+              "extracted_condition_text": "If following the trend, the target could be 1:32.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "PVMgOxHUqFA-S0-B000": [
+          6535,
+          6758
+        ],
+        "PVMgOxHUqFA-S0-B001": [
+          9186,
+          9412
+        ],
+        "PVMgOxHUqFA-S0-B002": [
+          2478,
+          2662
+        ],
+        "PVMgOxHUqFA-S0-B003": [
+          4090,
+          4142
+        ],
+        "PVMgOxHUqFA-S0-B004": [
+          4875,
+          5037
+        ],
+        "PVMgOxHUqFA-S0-B005": [
+          5134,
+          5157
+        ],
+        "PVMgOxHUqFA-S0-B006": [
+          5269,
+          5355
+        ],
+        "PVMgOxHUqFA-S0-B007": [
+          5269,
+          5355
+        ],
+        "PVMgOxHUqFA-S0-B008": [
+          6701,
+          6758
+        ],
+        "PVMgOxHUqFA-S0-B009": [
+          4875,
+          4947
+        ],
+        "PVMgOxHUqFA-S0-B010": [
+          6342,
+          6526
+        ],
+        "PVMgOxHUqFA-S0-B011": [
+          8730,
+          8842
+        ],
+        "PVMgOxHUqFA-S0-B012": [
+          8843,
+          9055
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "PVMgOxHUqFA",
+        "full_transcript_sha256": "a28141899bd67a0cc0c6f311df3673c00b62281b8db88125d6510da030f99993",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 13,
+    "anchored": 13,
+    "unanchored": 0,
+    "tier1_classified": 0,
+    "tier1_fallthrough": 13,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 0,
+    "adjudications_aggregate": 13
+  }
+}

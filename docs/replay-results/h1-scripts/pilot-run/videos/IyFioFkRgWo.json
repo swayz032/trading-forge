@@ -1,0 +1,1190 @@
+{
+  "video_id": "IyFioFkRgWo",
+  "title": "How to Scalp | Learn Scalping in 10 Minutes | Day Trading",
+  "channel": "Chris Sain",
+  "transcript_sha256": "13598833c731ac328e957fbddd010c7b76f6b16229e1f0d3764fb91ef293ac86",
+  "transcript_char_count": 8306,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 2,
+  "raw_extraction": {
+    "video_id": "IyFioFkRgWo",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "ema_support_scalping_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for the first 5 to 15 minutes after market open to pass to establish support levels.",
+            "rationale": "This allows you to establish where support is at."
+          },
+          {
+            "step": 2,
+            "action": "Identify the 13 EMA on the 5-minute chart and wait for price to bounce off of it (acting as initial support).",
+            "rationale": "The 13 EMA operated as an initial support."
+          },
+          {
+            "step": 3,
+            "action": "Enter a trade (long or short) when price hits the identified support/resistance level.",
+            "rationale": "The stock came down and it hit right there that's our entry for a scalp."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "No specific initial stop placement was mentioned, relying on framework defaults."
+        },
+        "stop_management": null,
+        "targets": [],
+        "confluences": [
+          {
+            "name": "time_filter",
+            "description": "Wait for the first 5 to 15 minutes after market open to pass.",
+            "canonical_match": "killzone_active"
+          },
+          {
+            "name": "ema_support_identification",
+            "description": "The 13 EMA on the 5-minute chart served as a quick support/resistance level.",
+            "canonical_match": "vwap_alignment"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "being a sniper",
+            "role": "model",
+            "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "13 EMA",
+            "role": "indicator",
+            "verbatim_description": "this 13 EMA operated as a initial support",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 minute chart",
+            "role": "filter",
+            "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 EMA",
+            "role": "indicator",
+            "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "support level",
+            "role": "zone",
+            "verbatim_description": "I want to show you here now is support but that's also your entry",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "resistance",
+            "role": "zone",
+            "verbatim_description": "you ride it to resistance and you exit",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "demand Zone",
+            "role": "zone",
+            "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "being a sniper though okay",
+            "role": "indicator",
+            "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+            "transcript_quote": "I call it being a sniper though okay so",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "5 to 15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+            "transcript_quote": "5 to 15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "ema_support_200_scalping_5m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify the 200 EMA on the 5-minute chart and wait for price to bounce off of it (acting as support).",
+            "rationale": "This one off a deeper support sitting at the 200 EMA."
+          },
+          {
+            "step": 2,
+            "action": "Enter a trade (long or short) when price hits the identified support/resistance level.",
+            "rationale": "You would enter here."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "No specific initial stop placement was mentioned, relying on framework defaults."
+        },
+        "stop_management": null,
+        "targets": [],
+        "confluences": [
+          {
+            "name": "ema_support_identification",
+            "description": "The 200 EMA served as a deeper support level.",
+            "canonical_match": "vwap_alignment"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "being a sniper",
+            "role": "model",
+            "verbatim_description": "I call it being a sniper though okay so that's what I'm referring to when I'm talking scalping it's really being a sniper",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "13 EMA",
+            "role": "indicator",
+            "verbatim_description": "this 13 EMA operated as a initial support",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "5 minute chart",
+            "role": "filter",
+            "verbatim_description": "in today's example I'm going to show you how to scalp using the F minute chart",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "200 EMA",
+            "role": "indicator",
+            "verbatim_description": "sitting at the 200 EMA once the 13 EMA gave up its support status",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "support level",
+            "role": "zone",
+            "verbatim_description": "I want to show you here now is support but that's also your entry",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "resistance",
+            "role": "zone",
+            "verbatim_description": "you ride it to resistance and you exit",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "demand Zone",
+            "role": "zone",
+            "verbatim_description": "look and learn to find and spot the demand zones okay those will be areas you can see every time we get to this price the stock take off for me when you see that don't just don't just blow past that actually focus on that because that's letting you know that area is a area of emphasis for buyers to step in at which might be operating as support and or demand Zone",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "where stock is bottom at and bounce from okay look and learn to find and spot the demand zones okay those will be areas you c",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "being a sniper though okay",
+            "role": "indicator",
+            "verbatim_description": "Speaker explicitly names: \"being a sniper though okay\"",
+            "transcript_quote": "I call it being a sniper though okay so",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "5 to 15",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"5 to 15\"",
+            "transcript_quote": "5 to 15 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 9,
+      "anchor_report": {
+        "total_spine_conditions": 9,
+        "anchored_count": 7,
+        "unanchored_count": 2,
+        "anchored_fraction": 0.7778,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 1,
+            "unanchored": 1
+          },
+          "stop.rationale": {
+            "anchored": 0,
+            "unanchored": 1
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 2
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            2396,
+            2561
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2507,
+            2561
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2266,
+            2307
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2266,
+            2307
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6749,
+            6956
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2726,
+            2797
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            2399,
+            2561
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_dual_read_disagreement": 2,
+        "fallthrough_pending_tier3": 5
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 7,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "confluences[1].description",
+          "text": "The 13 EMA on the 5-minute chart served as a quick support/resistance level.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "text": "No specific initial stop placement was mentioned, relying on framework defaults.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 7
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=IyFioFkRgWo, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 7
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video IyFioFkRgWo strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 7,
+            "items": [
+              {
+                "item_id": "IyFioFkRgWo-S0-B000",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so guess what what you want to do is time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "IyFioFkRgWo-S0-B001",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "because it allows you to establish where support is at"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "IyFioFkRgWo-S0-B002",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this 13 EMA operated as a initial support"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "IyFioFkRgWo-S0-B003",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this 13 EMA operated as a initial support"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "IyFioFkRgWo-S0-B004",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "you can get in if you first establish where your support level is at there's various different ways you can find support okay often times look at Price action look at where stock is bottom at and bounce from"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "IyFioFkRgWo-S0-B005",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the stock came down and it hit right there that's our entry for a scalp"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "IyFioFkRgWo-S0-B006",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "guess what what you want to do is time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "IyFioFkRgWo-S0-B000",
+              "extracted_condition_text": "Wait for the first 5 to 15 minutes after market open to pass to establish support levels.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "IyFioFkRgWo-S0-B001",
+              "extracted_condition_text": "This allows you to establish where support is at.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "IyFioFkRgWo-S0-B002",
+              "extracted_condition_text": "The 13 EMA operated as an initial support.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "IyFioFkRgWo-S0-B003",
+              "extracted_condition_text": "The 13 EMA operated as an initial support.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "IyFioFkRgWo-S0-B004",
+              "extracted_condition_text": "Enter a trade (long or short) when price hits the identified support/resistance level.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "IyFioFkRgWo-S0-B005",
+              "extracted_condition_text": "The stock came down and it hit right there that's our entry for a scalp.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "IyFioFkRgWo-S0-B006",
+              "extracted_condition_text": "Wait for the first 5 to 15 minutes after market open to pass.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "IyFioFkRgWo-S0-B000": [
+          2396,
+          2561
+        ],
+        "IyFioFkRgWo-S0-B001": [
+          2507,
+          2561
+        ],
+        "IyFioFkRgWo-S0-B002": [
+          2266,
+          2307
+        ],
+        "IyFioFkRgWo-S0-B003": [
+          2266,
+          2307
+        ],
+        "IyFioFkRgWo-S0-B004": [
+          6749,
+          6956
+        ],
+        "IyFioFkRgWo-S0-B005": [
+          2726,
+          2797
+        ],
+        "IyFioFkRgWo-S0-B006": [
+          2399,
+          2561
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "IyFioFkRgWo",
+        "full_transcript_sha256": "13598833c731ac328e957fbddd010c7b76f6b16229e1f0d3764fb91ef293ac86",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    },
+    {
+      "strategy_index": 1,
+      "spine_condition_count": 6,
+      "anchor_report": {
+        "total_spine_conditions": 6,
+        "anchored_count": 3,
+        "unanchored_count": 3,
+        "anchored_fraction": 0.5,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 1,
+            "unanchored": 1
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 0,
+            "unanchored": 1
+          },
+          "stop.rationale": {
+            "anchored": 0,
+            "unanchored": 1
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 3
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4223,
+            4275
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6749,
+            6956
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            625,
+            721
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_pending_tier3": 3
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 3,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "text": "Identify the 200 EMA on the 5-minute chart and wait for price to bounce off of it (acting as support).",
+          "strategy_index": 1,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "text": "The 200 EMA served as a deeper support level.",
+          "strategy_index": 1,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "text": "No specific initial stop placement was mentioned, relying on framework defaults.",
+          "strategy_index": 1,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 3
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=IyFioFkRgWo, strategy=1.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 3
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video IyFioFkRgWo strategy 1 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 3,
+            "items": [
+              {
+                "item_id": "IyFioFkRgWo-S1-B000",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this one off a deeper support sitting at the 200 EMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "IyFioFkRgWo-S1-B001",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "you can get in if you first establish where your support level is at there's various different ways you can find support okay often times look at Price action look at where stock is bottom at and bounce from"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "IyFioFkRgWo-S1-B002",
+                "video_id": "IyFioFkRgWo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "scalping is a trading strategy Gears towards profiting from minor price changes in a stock price"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "IyFioFkRgWo-S1-B000",
+              "extracted_condition_text": "This one off a deeper support sitting at the 200 EMA.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "IyFioFkRgWo-S1-B001",
+              "extracted_condition_text": "Enter a trade (long or short) when price hits the identified support/resistance level.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "IyFioFkRgWo-S1-B002",
+              "extracted_condition_text": "You would enter here.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "IyFioFkRgWo-S1-B000": [
+          4223,
+          4275
+        ],
+        "IyFioFkRgWo-S1-B001": [
+          6749,
+          6956
+        ],
+        "IyFioFkRgWo-S1-B002": [
+          625,
+          721
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "IyFioFkRgWo",
+        "full_transcript_sha256": "13598833c731ac328e957fbddd010c7b76f6b16229e1f0d3764fb91ef293ac86",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 15,
+    "anchored": 10,
+    "unanchored": 5,
+    "tier1_classified": 0,
+    "tier1_fallthrough": 10,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 0,
+    "adjudications_aggregate": 10
+  }
+}

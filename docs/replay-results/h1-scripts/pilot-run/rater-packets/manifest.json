@@ -1,0 +1,2238 @@
+{
+  "targets": [
+    {
+      "item_id": "-igpOZs8LsM-S0-B000",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        5701,
+        5782
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B001",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        6319,
+        6418
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B002",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        3874,
+        3945
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B003",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        3874,
+        3945
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B004",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        2686,
+        2750
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B005",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        3624,
+        3719
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B006",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        6319,
+        6418
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B007",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        3720,
+        3873
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B008",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        5247,
+        5338
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B009",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        5247,
+        5338
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B010",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        5247,
+        5338
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B011",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        6567,
+        6716
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B012",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        2139,
+        2225
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B013",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        3874,
+        3945
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B014",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        4144,
+        4204
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "-igpOZs8LsM-S0-B015",
+      "video_id": "-igpOZs8LsM",
+      "strategy_index": 0,
+      "span": [
+        6157,
+        6318
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B000",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        419,
+        486
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B001",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        377,
+        418
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B002",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        487,
+        627
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B003",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        139,
+        225
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B004",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        697,
+        777
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B005",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        628,
+        696
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B006",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        778,
+        963
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B007",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        697,
+        777
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B008",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        778,
+        963
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B009",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        1132,
+        1216
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B010",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        377,
+        486
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B011",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        487,
+        627
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B012",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        697,
+        777
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B013",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        778,
+        963
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B014",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        3645,
+        3683
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "0xygpCMwxbQ-S0-B015",
+      "video_id": "0xygpCMwxbQ",
+      "strategy_index": 0,
+      "span": [
+        8478,
+        8640
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B000",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "span": [
+        6280,
+        6418
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B001",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "span": [
+        6280,
+        6418
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B002",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "span": [
+        6518,
+        6717
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B003",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "span": [
+        6518,
+        6717
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B004",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "span": [
+        4374,
+        4554
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B005",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "span": [
+        4908,
+        5102
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B006",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "span": [
+        5563,
+        5711
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S0-B007",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 0,
+      "span": [
+        6518,
+        6717
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B000",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "span": [
+        7028,
+        7119
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B001",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "span": [
+        7120,
+        7214
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B002",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "span": [
+        7215,
+        7383
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B003",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "span": [
+        7384,
+        7500
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B004",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "span": [
+        4374,
+        4554
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S1-B005",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 1,
+      "span": [
+        8395,
+        8479
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S2-B000",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "span": [
+        9138,
+        9363
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S2-B001",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "span": [
+        9138,
+        9363
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "2DXQqwKSwJE-S2-B002",
+      "video_id": "2DXQqwKSwJE",
+      "strategy_index": 2,
+      "span": [
+        9749,
+        9880
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S0-B000",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "span": [
+        901,
+        1025
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S0-B001",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "span": [
+        1026,
+        1087
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S0-B002",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "span": [
+        6592,
+        6640
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S0-B003",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 0,
+      "span": [
+        6359,
+        6396
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B000",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "span": [
+        9224,
+        9439
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B001",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "span": [
+        901,
+        1025
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B002",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "span": [
+        8690,
+        8829
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B003",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "span": [
+        8693,
+        8829
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B004",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "span": [
+        8406,
+        8631
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B005",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "span": [
+        8936,
+        9045
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B006",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "span": [
+        6306,
+        6354
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "4cT8WTyxhYY-S1-B007",
+      "video_id": "4cT8WTyxhYY",
+      "strategy_index": 1,
+      "span": [
+        6359,
+        6396
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B000",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        2048,
+        2338
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B001",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        5764,
+        5800
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B002",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        3668,
+        3844
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B003",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        3668,
+        3844
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B004",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        3845,
+        3962
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B005",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        4439,
+        4596
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B006",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        8578,
+        8618
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B007",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        4597,
+        4715
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B008",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        4597,
+        4715
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B009",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        4597,
+        4715
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B010",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        1557,
+        1631
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B011",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        2048,
+        2338
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B012",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        4439,
+        4596
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-B013",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        7598,
+        7649
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "CLDEIsNpVRc-S0-AUDIT",
+      "video_id": "CLDEIsNpVRc",
+      "strategy_index": 0,
+      "span": [
+        5398,
+        5461
+      ],
+      "kind": "audit"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B000",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        1606,
+        1690
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B001",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        3639,
+        3745
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B002",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        2137,
+        2290
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B003",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        2144,
+        2290
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B004",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        3639,
+        3745
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B005",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        3639,
+        3745
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B006",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        3639,
+        3749
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B007",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        5649,
+        5751
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B008",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        6293,
+        6391
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B009",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        5321,
+        5395
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B010",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        7552,
+        7815
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B011",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        7552,
+        7815
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B012",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        1606,
+        1690
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B013",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        5149,
+        5197
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B014",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        3944,
+        3991
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B015",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        3944,
+        4039
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "DLwVqcLRcfw-S0-B016",
+      "video_id": "DLwVqcLRcfw",
+      "strategy_index": 0,
+      "span": [
+        3639,
+        3749
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B000",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        2056,
+        2117
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B001",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        3715,
+        3816
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B002",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        3715,
+        3816
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B003",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        4204,
+        4389
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B004",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        6031,
+        6163
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B005",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        4390,
+        4513
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B006",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        4390,
+        4513
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B007",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        4579,
+        4689
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B008",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        4972,
+        5163
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B009",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        2118,
+        2600
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B010",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        1069,
+        1282
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B011",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        3424,
+        3602
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B012",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        4390,
+        4513
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B013",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        10052,
+        10101
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B014",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        8862,
+        9032
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B015",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        8862,
+        9032
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "E9MzEC_yNoM-S0-B016",
+      "video_id": "E9MzEC_yNoM",
+      "strategy_index": 0,
+      "span": [
+        9033,
+        9207
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B000",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "span": [
+        2396,
+        2561
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B001",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "span": [
+        2507,
+        2561
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B002",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "span": [
+        2266,
+        2307
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B003",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "span": [
+        2266,
+        2307
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B004",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "span": [
+        6749,
+        6956
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B005",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "span": [
+        2726,
+        2797
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S0-B006",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 0,
+      "span": [
+        2399,
+        2561
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S1-B000",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 1,
+      "span": [
+        4223,
+        4275
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S1-B001",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 1,
+      "span": [
+        6749,
+        6956
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "IyFioFkRgWo-S1-B002",
+      "video_id": "IyFioFkRgWo",
+      "strategy_index": 1,
+      "span": [
+        625,
+        721
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B000",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        6535,
+        6758
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B001",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        9186,
+        9412
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B002",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        2478,
+        2662
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B003",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        4090,
+        4142
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B004",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        4875,
+        5037
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B005",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        5134,
+        5157
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B006",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        5269,
+        5355
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B007",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        5269,
+        5355
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B008",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        6701,
+        6758
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B009",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        4875,
+        4947
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B010",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        6342,
+        6526
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B011",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        8730,
+        8842
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "PVMgOxHUqFA-S0-B012",
+      "video_id": "PVMgOxHUqFA",
+      "strategy_index": 0,
+      "span": [
+        8843,
+        9055
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B000",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        8295,
+        8459
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B001",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        6358,
+        6597
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B002",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        8568,
+        8778
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B003",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        6358,
+        6640
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B004",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        8886,
+        9402
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B005",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        7439,
+        7504
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B006",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        3280,
+        3404
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B007",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        5806,
+        6353
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B008",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        8568,
+        8778
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B009",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        6358,
+        6597
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B010",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        10129,
+        10183
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "R5L890juvRw-S0-B011",
+      "video_id": "R5L890juvRw",
+      "strategy_index": 0,
+      "span": [
+        8568,
+        8778
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B000",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        726,
+        893
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B001",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        726,
+        893
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B002",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        2524,
+        2772
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B003",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        2959,
+        3094
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B004",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        3378,
+        3502
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B005",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        6145,
+        6304
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B006",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        3658,
+        3851
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B007",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        3503,
+        3657
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B008",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        4107,
+        4328
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B009",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        4107,
+        4328
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B010",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        2524,
+        2772
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B011",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        3378,
+        3851
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B012",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        3919,
+        4008
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B013",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        7667,
+        7790
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "W7nlnHTUZQU-S0-B014",
+      "video_id": "W7nlnHTUZQU",
+      "strategy_index": 0,
+      "span": [
+        8819,
+        8928
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B000",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        1580,
+        1665
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B001",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        5810,
+        5935
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B002",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        2169,
+        2279
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B003",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        2367,
+        2448
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B004",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        3383,
+        3495
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B005",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        3383,
+        3495
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B006",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        3782,
+        3851
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B007",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        2643,
+        2768
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B008",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        4107,
+        4341
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-B009",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        4342,
+        4516
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S0-AUDIT",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 0,
+      "span": [
+        3786,
+        3818
+      ],
+      "kind": "audit"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B000",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        5648,
+        5727
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B001",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        5810,
+        5935
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B002",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        5316,
+        5482
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B003",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        6500,
+        6633
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B004",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        6634,
+        6742
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B005",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        5810,
+        5935
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B006",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        2643,
+        2768
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B007",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        6984,
+        7083
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "WEhmadJArQo-S1-B008",
+      "video_id": "WEhmadJArQo",
+      "strategy_index": 1,
+      "span": [
+        7167,
+        7262
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B000",
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "span": [
+        580,
+        622
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B001",
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "span": [
+        820,
+        883
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B002",
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "span": [
+        1412,
+        1453
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B003",
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "span": [
+        1193,
+        1276
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B004",
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "span": [
+        1412,
+        1453
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B005",
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "span": [
+        4718,
+        4850
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "ZF8uKPqAu8M-S0-B006",
+      "video_id": "ZF8uKPqAu8M",
+      "strategy_index": 0,
+      "span": [
+        1560,
+        1618
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B000",
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "span": [
+        1399,
+        1538
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B001",
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "span": [
+        1395,
+        1720
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B002",
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "span": [
+        9468,
+        9652
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B003",
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "span": [
+        9556,
+        9652
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B004",
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "span": [
+        2700,
+        2853
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-B005",
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "span": [
+        3449,
+        3631
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "_LS6qcSlDCs-S0-AUDIT",
+      "video_id": "_LS6qcSlDCs",
+      "strategy_index": 0,
+      "span": [
+        10111,
+        10173
+      ],
+      "kind": "audit"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B000",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        1266,
+        2023
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B001",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        1190,
+        1265
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B002",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        4343,
+        4464
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B003",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        1031,
+        1189
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B004",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        1190,
+        1265
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B005",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        5411,
+        5936
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B006",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        1190,
+        1265
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B007",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        6365,
+        6442
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B008",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        6511,
+        6768
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B009",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        6520,
+        6768
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B010",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        2136,
+        2246
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B011",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        4196,
+        4342
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B012",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        4465,
+        4607
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B013",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        5411,
+        5936
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B014",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        5937,
+        6099
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B015",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        6365,
+        6442
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B016",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        6511,
+        6633
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B017",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        6511,
+        6633
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "dV7chra4u4Q-S0-B018",
+      "video_id": "dV7chra4u4Q",
+      "strategy_index": 0,
+      "span": [
+        6511,
+        6768
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B000",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        1575,
+        1776
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B001",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        1041,
+        1116
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B002",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        3476,
+        3860
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B003",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        2066,
+        2133
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B004",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        3861,
+        4016
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B005",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        3861,
+        4080
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B006",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        3861,
+        4016
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B007",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        5351,
+        5414
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B008",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        5893,
+        6007
+      ],
+      "kind": "fallthrough"
+    },
+    {
+      "item_id": "kFyD3H6I1I8-S0-B009",
+      "video_id": "kFyD3H6I1I8",
+      "strategy_index": 0,
+      "span": [
+        10364,
+        10483
+      ],
+      "kind": "fallthrough"
+    }
+  ],
+  "leak_violations": [],
+  "n_targets": 223,
+  "n_fallthrough": 220,
+  "n_audit": 3
+}

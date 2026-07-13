@@ -1,0 +1,244 @@
+{
+  "video_id": "4cT8WTyxhYY",
+  "extracted_at": 1783903284.816839,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "c8c0d2cc067212a452eb7126f65c027e03d6a1677af9ad738129a129d65acf6a",
+  "extraction": {
+    "video_id": "4cT8WTyxhYY",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "liquidity_grab_reversal_15m_1h",
+        "higher_timeframe": "1h",
+        "lower_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for price to break a support or resistance level, creating a liquidity grab (fake out).",
+            "rationale": "A liquidity grab adds fuel to the reversal by triggering stop losses of traders who entered early."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Set stop loss right below the liquidity grab."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "r_multiple": null,
+            "rationale": "Set take profit at a recent high."
+          },
+          {
+            "priority": 2,
+            "type": "previous_daily_low",
+            "r_multiple": null,
+            "rationale": "Set take profit at a recent low."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "higher_timeframe_support_resistance",
+            "description": "The entry signal (liquidity grab) must occur at a support or resistance level on a higher timeframe.",
+            "canonical_match": "vp_level_proximity"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Liquidity Grab",
+            "role": "entry_step",
+            "verbatim_description": "A liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sell-side Liquidity",
+            "role": "zone",
+            "verbatim_description": "It can be either sell-side liquidity or buy side liquidity whichever you prefer to trade once we find this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Buy Side Liquidity",
+            "role": "zone",
+            "verbatim_description": "It can be either sell-side liquidity or buy side liquidity whichever you prefer to trade once we find this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Entry Point (Liquidity Grab)",
+            "role": "entry_step",
+            "verbatim_description": "Our entry would be at the candle that made the liquidity grab so your long entry would be at this point right here because this candle made this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop Loss (Liquidity Grab)",
+            "role": "stop_anchor",
+            "verbatim_description": "For example you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Take Profit (Liquidity Grab)",
+            "role": "target",
+            "verbatim_description": "For example you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Divergence",
+            "role": "entry_step",
+            "verbatim_description": "We combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "10 Candle Rule",
+            "role": "filter",
+            "verbatim_description": "If the liquidity grab and and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks farther apart.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 28\u00d7 in transcript)",
+            "transcript_quote": "e looking for what's called a liquidity grab a liquidity grab is simply when price breaks a support or resistance and does a fake out",
+            "occurrences": 28,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "ppening in the middle of this range on a higher time frame and like I said before this strategy performs the best if it's on t",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "liquidity_grab_divergence_15m_15m",
+        "higher_timeframe": "15m",
+        "lower_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify a liquidity grab (fake out) on the 15-minute timeframe.",
+            "rationale": "The liquidity grab is the primary reversal trigger."
+          },
+          {
+            "step": 2,
+            "action": "Confirm the liquidity grab with a divergence signal (e.g., Momentum oscillator making higher highs while price makes lower lows).",
+            "rationale": "Divergence adds a bullish signal and higher probability of working in favor."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Set stop loss right above the liquidity grab."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "r_multiple": null,
+            "rationale": "Set take profit at a recent high."
+          },
+          {
+            "priority": 2,
+            "type": "previous_daily_low",
+            "r_multiple": null,
+            "rationale": "Set take profit at a recent low."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "momentum_divergence",
+            "description": "Look for divergence using the Momentum oscillator (e.g., price making lower lows while the oscillator makes higher highs).",
+            "canonical_match": null
+          },
+          {
+            "name": "liquidity_grab_reversal",
+            "description": "The strategy works best when finding reversals at the bottoms or tops of big moves.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Liquidity Grab",
+            "role": "entry_step",
+            "verbatim_description": "A liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sell-side Liquidity",
+            "role": "zone",
+            "verbatim_description": "It can be either sell-side liquidity or buy side liquidity whichever you prefer to trade once we find this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Buy Side Liquidity",
+            "role": "zone",
+            "verbatim_description": "It can be either sell-side liquidity or buy side liquidity whichever you prefer to trade once we find this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Entry Point (Liquidity Grab)",
+            "role": "entry_step",
+            "verbatim_description": "Our entry would be at the candle that made the liquidity grab so your long entry would be at this point right here because this candle made this liquidity grab.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Stop Loss (Liquidity Grab)",
+            "role": "stop_anchor",
+            "verbatim_description": "For example you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Take Profit (Liquidity Grab)",
+            "role": "target",
+            "verbatim_description": "For example you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Divergence",
+            "role": "entry_step",
+            "verbatim_description": "We combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "10 Candle Rule",
+            "role": "filter",
+            "verbatim_description": "If the liquidity grab and and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks farther apart.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Liquidity Raid",
+            "role": "entry_step",
+            "verbatim_description": "Liquidity Raid (mentioned 28\u00d7 in transcript)",
+            "transcript_quote": "e looking for what's called a liquidity grab a liquidity grab is simply when price breaks a support or resistance and does a fake out",
+            "occurrences": 28,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "ppening in the middle of this range on a higher time frame and like I said before this strategy performs the best if it's on t",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

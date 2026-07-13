@@ -1,0 +1,1104 @@
+{
+  "video_id": "0xygpCMwxbQ",
+  "title": "A+ ICT Entry Checklist - ICT Concepts",
+  "channel": "TTrades",
+  "transcript_sha256": "9ed51dfd4d9be7c9a1b1548a6cff35a20fbb4110b95f9559354d709d294be6b3",
+  "transcript_char_count": 9147,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 1,
+  "raw_extraction": {
+    "video_id": "0xygpCMwxbQ",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "ict_bias_aligned_pd_array_entry_15m_5m",
+        "higher_timeframe": "15m",
+        "lower_timeframe": "5m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for a stop raid (a low was put in before it was rated or broken).",
+            "rationale": "This is the first thing I focus on in my checklist."
+          },
+          {
+            "step": 2,
+            "action": "Wait for a market structure shift or displacement (a previous high was broken and aggressively moved over).",
+            "rationale": "This confirms the directional bias."
+          },
+          {
+            "step": 3,
+            "action": "Wait for price to move back into a discount of the price range (or premium).",
+            "rationale": "This is where I look for flexibility in the trade."
+          },
+          {
+            "step": 4,
+            "action": "Identify a PD array (Fair Value Gap, Order Block, OTE, or Breaker Block) within the discount/premium zone.",
+            "rationale": "I generally like to see price move back into a discount of this price range here."
+          },
+          {
+            "step": 5,
+            "action": "Enter the trade based on the identified PD array (e.g., Fair Value Gap, Order Block, or Box setup).",
+            "rationale": "I blend one, two, or three of these concepts together for my personal strategy."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop is placed on the low/high of the identified PD array (e.g., Fair Value Gap or Order Block)."
+        },
+        "stop_management": "Move stop to break-even at 1.5R, then no further management.",
+        "targets": [],
+        "confluences": [
+          {
+            "name": "stop_raid_prior_to_displacement",
+            "description": "I focus on a stop raid, meaning a low was put in before it was rated or broken.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "name": "market_structure_shift_or_displacement",
+            "description": "I look for a market structure shift or displacement, meaning a previous high was broken and aggressively moved over.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "name": "discount_or_premium_return",
+            "description": "I generally like to see price move back into a discount of this price range.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "name": "pd_array_presence",
+            "description": "I look for a PD array where generally I prefer to have a fair value gap or an order block.",
+            "canonical_match": null
+          }
+        ],
+        "rejected_strategies": [],
+        "instrument_classification": "futures_primary",
+        "speaker_concepts": [
+          {
+            "term": "Stop Raid",
+            "role": "entry_step",
+            "verbatim_description": "a low was put in before it was rated or broken",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Structure Shift",
+            "role": "entry_step",
+            "verbatim_description": "a previous high was broken and aggressively moved over",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Discount of this price range",
+            "role": "zone",
+            "verbatim_description": "where there is a little bit flexibility I generally like to see price move back into a discount of this price range here",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "PD array",
+            "role": "entry_step",
+            "verbatim_description": "a general term for the various components used as entry points, such as fair value gap or order block",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap",
+            "role": "zone",
+            "verbatim_description": "A specific type of PD array component that is looked for in an optimal trade entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block",
+            "role": "zone",
+            "verbatim_description": "a specific type of PD array component, generally a down close candle or up close candles depending on the direction.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "OTE",
+            "role": "zone",
+            "verbatim_description": "A concept used to narrow down the discount range for longing by identifying premium areas where price should not be longed.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Breaker Block",
+            "role": "zone",
+            "verbatim_description": "a specific type of PD array component that is looked for in an optimal trade entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Box setup",
+            "role": "entry_step",
+            "verbatim_description": "A method used to identify a potential entry point, often blended with other concepts like FVG or OTE.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Buy side liquidity",
+            "role": "target",
+            "verbatim_description": "Liquidity resting above the current price action that is targeted for profit taking.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Sell side liquidity",
+            "role": "target",
+            "verbatim_description": "Liquidity resting below the current price action that is targeted for profit taking.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Accumulation Manipulation",
+            "role": "phase",
+            "verbatim_description": "A phase where a deviation from range occurs, followed by manipulation before moving higher or lower.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Distribution",
+            "role": "phase",
+            "verbatim_description": "The phase of the market cycle where selling pressure is expected to dominate after accumulation/manipulation.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 17\u00d7 in transcript)",
+            "transcript_quote": "s a market structure shift or displacement this means that a previous high was broken and aggressively moved over the next thing I lo",
+            "occurrences": 17,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 15\u00d7 in transcript)",
+            "transcript_quote": "o have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block I know this got a litt",
+            "occurrences": 15,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 12\u00d7 in transcript)",
+            "transcript_quote": "for example I will look for a fair value Gap in an optimal trade entry or I'll look for the box set up in an optimal trade entry there",
+            "occurrences": 12,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Phase (A/M/D/R)",
+            "role": "phase",
+            "verbatim_description": "Phase (A/M/D/R) (mentioned 4\u00d7 in transcript)",
+            "transcript_quote": "viation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manip",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "he next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over th",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "our low going to Mark out the FIB and what do I have in this area right here well I have a breaker block and a fair value G",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "ICT",
+            "role": "model",
+            "verbatim_description": "ICT (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "is going to be over my a plus ICT entry checklist once I have a daily bias or Direction I will use this checklist to make s",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Equal Highs/Lows",
+            "role": "target",
+            "verbatim_description": "Equal Highs/Lows (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "ck down and we have all these equal lows resting below so let's dive into here so here we are on the five minute chart and if you",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "so ideally I'm looking for a retest of this manipulation to then be reaching for the other side here before going higher so l",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 16,
+      "anchor_report": {
+        "total_spine_conditions": 16,
+        "anchored_count": 16,
+        "unanchored_count": 0,
+        "anchored_fraction": 1.0,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 5,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 5,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 4,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "stop_management": {
+            "anchored": 1,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {}
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            419,
+            486
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            377,
+            418
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            487,
+            627
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            139,
+            225
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            697,
+            777
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            628,
+            696
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            778,
+            963
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            697,
+            777
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[4].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            778,
+            963
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[4].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1132,
+            1216
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            377,
+            486
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            487,
+            627
+          ]
+        },
+        {
+          "condition_ref": "confluences[2].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            697,
+            777
+          ]
+        },
+        {
+          "condition_ref": "confluences[3].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            778,
+            963
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3645,
+            3683
+          ]
+        },
+        {
+          "condition_ref": "stop_management",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            8478,
+            8640
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_dual_read_disagreement": 4,
+        "fallthrough_pending_tier3": 12
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 16,
+      "unanchored_conditions": [],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 16
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=0xygpCMwxbQ, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 16
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video 0xygpCMwxbQ strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 16,
+            "items": [
+              {
+                "item_id": "0xygpCMwxbQ-S0-B000",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this just means that a low was put in before it was rated or broken"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B001",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the first thing I focus on is a stop raid"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B002",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B003",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "I will use this checklist to make sure all requirements are met before I take an entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B004",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "I generally like to see price move back into a discount of this price range here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B005",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the next thing I look for is where there is a little bit flexibility"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B006",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B007",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "I generally like to see price move back into a discount of this price range here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B008",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B009",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "I like to blend one two or three of these Concepts together for my personal strategy"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B010",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B011",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B012",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "I generally like to see price move back into a discount of this price range here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B013",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B014",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "My Stop on this low first partial here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "0xygpCMwxbQ-S0-B015",
+                "video_id": "0xygpCMwxbQ",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "and from here we have order block fair value Gap so I would be looking to enter here putting my stop on this order block low partial or move my stop to break even"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "0xygpCMwxbQ-S0-B000",
+              "extracted_condition_text": "Wait for a stop raid (a low was put in before it was rated or broken).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B001",
+              "extracted_condition_text": "This is the first thing I focus on in my checklist.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B002",
+              "extracted_condition_text": "I look for a market structure shift or displacement, meaning a previous high was broken and aggressively moved over.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B003",
+              "extracted_condition_text": "This confirms the directional bias.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B004",
+              "extracted_condition_text": "I generally like to see price move back into a discount of this price range.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B005",
+              "extracted_condition_text": "This is where I look for flexibility in the trade.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B006",
+              "extracted_condition_text": "I look for a PD array where generally I prefer to have a fair value gap or an order block.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B007",
+              "extracted_condition_text": "I generally like to see price move back into a discount of this price range.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B008",
+              "extracted_condition_text": "I look for a PD array where generally I prefer to have a fair value gap or an order block.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B009",
+              "extracted_condition_text": "I blend one, two, or three of these concepts together for my personal strategy.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B010",
+              "extracted_condition_text": "I focus on a stop raid, meaning a low was put in before it was rated or broken.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B011",
+              "extracted_condition_text": "I look for a market structure shift or displacement, meaning a previous high was broken and aggressively moved over.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B012",
+              "extracted_condition_text": "I generally like to see price move back into a discount of this price range.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B013",
+              "extracted_condition_text": "I look for a PD array where generally I prefer to have a fair value gap or an order block.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B014",
+              "extracted_condition_text": "The stop is placed on the low/high of the identified PD array (e.g., Fair Value Gap or Order Block).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "0xygpCMwxbQ-S0-B015",
+              "extracted_condition_text": "Move stop to break-even at 1.5R, then no further management.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "0xygpCMwxbQ-S0-B000": [
+          419,
+          486
+        ],
+        "0xygpCMwxbQ-S0-B001": [
+          377,
+          418
+        ],
+        "0xygpCMwxbQ-S0-B002": [
+          487,
+          627
+        ],
+        "0xygpCMwxbQ-S0-B003": [
+          139,
+          225
+        ],
+        "0xygpCMwxbQ-S0-B004": [
+          697,
+          777
+        ],
+        "0xygpCMwxbQ-S0-B005": [
+          628,
+          696
+        ],
+        "0xygpCMwxbQ-S0-B006": [
+          778,
+          963
+        ],
+        "0xygpCMwxbQ-S0-B007": [
+          697,
+          777
+        ],
+        "0xygpCMwxbQ-S0-B008": [
+          778,
+          963
+        ],
+        "0xygpCMwxbQ-S0-B009": [
+          1132,
+          1216
+        ],
+        "0xygpCMwxbQ-S0-B010": [
+          377,
+          486
+        ],
+        "0xygpCMwxbQ-S0-B011": [
+          487,
+          627
+        ],
+        "0xygpCMwxbQ-S0-B012": [
+          697,
+          777
+        ],
+        "0xygpCMwxbQ-S0-B013": [
+          778,
+          963
+        ],
+        "0xygpCMwxbQ-S0-B014": [
+          3645,
+          3683
+        ],
+        "0xygpCMwxbQ-S0-B015": [
+          8478,
+          8640
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "0xygpCMwxbQ",
+        "full_transcript_sha256": "9ed51dfd4d9be7c9a1b1548a6cff35a20fbb4110b95f9559354d709d294be6b3",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 16,
+    "anchored": 16,
+    "unanchored": 0,
+    "tier1_classified": 0,
+    "tier1_fallthrough": 16,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 0,
+    "adjudications_aggregate": 16
+  }
+}

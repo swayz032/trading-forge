@@ -1,0 +1,676 @@
+{
+  "video_id": "_LS6qcSlDCs",
+  "title": "This Tested VWAP Scalping Trading Strategy is AMAZING! (MUST WATCH)",
+  "channel": "Beginner Trading",
+  "transcript_sha256": "59dd6524021da1141290efbb739970658da552646501f5945b65da50964872f4",
+  "transcript_char_count": 11002,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 1,
+  "raw_extraction": {
+    "video_id": "_LS6qcSlDCs",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "vwap_breakout_and_pullback_strategy",
+        "higher_timeframe": null,
+        "lower_timeframe": null,
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for a stock to break above the VWAP (Volume Weighted Average Price) after being below it at the opening bell.",
+            "rationale": "The break above VWAP is a milestone level that signals strength and attracts other traders."
+          },
+          {
+            "step": 2,
+            "action": "Wait for a pullback to the VWAP area after the initial move above VWAP.",
+            "rationale": "Experienced traders are waiting for pullbacks to buy into, as buying at the high of the day can lead to being faked out."
+          },
+          {
+            "step": 3,
+            "action": "Enter long on the pullback to the VWAP, anticipating a bounce at the VWAP level.",
+            "rationale": "The VWAP is used as a milestone level and support area because many other traders are using it as such."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": null,
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": null
+        },
+        "stop_management": null,
+        "targets": [],
+        "confluences": [
+          {
+            "name": "average_volume_check",
+            "description": "I'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim.",
+            "canonical_match": null
+          },
+          {
+            "name": "low_float_preference",
+            "description": "I need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average.",
+            "canonical_match": null
+          },
+          {
+            "name": "vwap_above_price_avoidance",
+            "description": "I never buy these stocks if the v is above me for that reason too many times the v wap's just going to reject it back down.",
+            "canonical_match": null
+          }
+        ],
+        "rejected_strategies": [],
+        "instrument_classification": "non_futures_primary",
+        "speaker_concepts": [
+          {
+            "term": "V-WOP",
+            "role": "indicator",
+            "verbatim_description": "a milestone level for that penny stock to break over especially in day trading.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "VWAP",
+            "role": "zone",
+            "verbatim_description": "the v-wap as a milestone level and then i'm buying on the pullbacks to test as a support area.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "average volume over the last 20 minutes of over 200 000 shares traded per minute",
+            "role": "filter",
+            "verbatim_description": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "float to be under 50 million",
+            "role": "filter",
+            "verbatim_description": "i need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 4\u00d7 in transcript)",
+            "transcript_quote": "the pullback and we rode the bounce up scalping out of it with a really nice green trade again the key here is identifying re",
+            "occurrences": 4,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "less volatility in a smaller range on average and so with these strategies i'm looking for that momentum and i'm looking for",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "11 to 11",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"11 to 11\"",
+            "transcript_quote": "11 to 11 ",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 9,
+      "anchor_report": {
+        "total_spine_conditions": 9,
+        "anchored_count": 7,
+        "unanchored_count": 2,
+        "anchored_fraction": 0.7778,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 1,
+            "unanchored": 2
+          },
+          "confluences[].description": {
+            "anchored": 3,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 2
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            1399,
+            1538
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            1395,
+            1720
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            9468,
+            9652
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            9556,
+            9652
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2700,
+            2853
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3449,
+            3631
+          ]
+        },
+        {
+          "condition_ref": "confluences[2].description",
+          "outcome": "classified_tier1",
+          "char_span": [
+            10079,
+            10208
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_dual_read_disagreement": 3,
+        "fallthrough_pending_tier3": 3,
+        "classified_tier1": 1
+      },
+      "tier1_classified_count": 1,
+      "tier1_fallthrough_count": 6,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "text": "Experienced traders are waiting for pullbacks to buy into, as buying at the high of the day can lead to being faked out.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "text": "The VWAP is used as a milestone level and support area because many other traders are using it as such.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": [
+          10111,
+          10173
+        ],
+        "condition_text": "I never buy these stocks if the v is above me for that reason too many times the v wap's just going to reject it back down.",
+        "item_id": "_LS6qcSlDCs-S0-AUDIT",
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 6
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=_LS6qcSlDCs, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 7
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video _LS6qcSlDCs strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 7,
+            "items": [
+              {
+                "item_id": "_LS6qcSlDCs-S0-B000",
+                "video_id": "_LS6qcSlDCs",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so basically when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "_LS6qcSlDCs-S0-B001",
+                "video_id": "_LS6qcSlDCs",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "and so basically when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support because again a lot of other traders are doing this exact same thing and a lot of traders are using it as that type of milestone level"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "_LS6qcSlDCs-S0-B002",
+                "video_id": "_LS6qcSlDCs",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "and again we're using that v area as a milestone level when we finally break above that we're looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "_LS6qcSlDCs-S0-B003",
+                "video_id": "_LS6qcSlDCs",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we're looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "_LS6qcSlDCs-S0-B004",
+                "video_id": "_LS6qcSlDCs",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "number one is that i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "_LS6qcSlDCs-S0-B005",
+                "video_id": "_LS6qcSlDCs",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "and really this leads me to my next condition which is that i need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "_LS6qcSlDCs-S0-AUDIT",
+                "video_id": "_LS6qcSlDCs",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "if the v is above me for that reason too many times the v wap'"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                },
+                "audit": true
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "_LS6qcSlDCs-S0-B000",
+              "extracted_condition_text": "Wait for a stock to break above the VWAP (Volume Weighted Average Price) after being below it at the opening bell.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "_LS6qcSlDCs-S0-B001",
+              "extracted_condition_text": "The break above VWAP is a milestone level that signals strength and attracts other traders.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "_LS6qcSlDCs-S0-B002",
+              "extracted_condition_text": "Wait for a pullback to the VWAP area after the initial move above VWAP.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "_LS6qcSlDCs-S0-B003",
+              "extracted_condition_text": "Enter long on the pullback to the VWAP, anticipating a bounce at the VWAP level.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "_LS6qcSlDCs-S0-B004",
+              "extracted_condition_text": "I'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute on thinkorswim.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "_LS6qcSlDCs-S0-B005",
+              "extracted_condition_text": "I need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "_LS6qcSlDCs-S0-AUDIT",
+              "extracted_condition_text": "I never buy these stocks if the v is above me for that reason too many times the v wap's just going to reject it back down.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              },
+              "audit": true
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "_LS6qcSlDCs-S0-B000": [
+          1399,
+          1538
+        ],
+        "_LS6qcSlDCs-S0-B001": [
+          1395,
+          1720
+        ],
+        "_LS6qcSlDCs-S0-B002": [
+          9468,
+          9652
+        ],
+        "_LS6qcSlDCs-S0-B003": [
+          9556,
+          9652
+        ],
+        "_LS6qcSlDCs-S0-B004": [
+          2700,
+          2853
+        ],
+        "_LS6qcSlDCs-S0-B005": [
+          3449,
+          3631
+        ],
+        "_LS6qcSlDCs-S0-AUDIT": [
+          10111,
+          10173
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "_LS6qcSlDCs",
+        "full_transcript_sha256": "59dd6524021da1141290efbb739970658da552646501f5945b65da50964872f4",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 9,
+    "anchored": 7,
+    "unanchored": 2,
+    "tier1_classified": 1,
+    "tier1_fallthrough": 6,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 1,
+    "adjudications_aggregate": 7
+  }
+}

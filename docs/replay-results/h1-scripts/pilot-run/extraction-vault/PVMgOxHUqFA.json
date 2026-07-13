@@ -1,0 +1,128 @@
+{
+  "video_id": "PVMgOxHUqFA",
+  "extracted_at": 1783905245.616375,
+  "seed_params": {
+    "seed": 42,
+    "temperature": 0.1,
+    "model": "gemma4:e4b-it-qat"
+  },
+  "extraction_sha256": "a06392ee67f1da09c822286b590b65df556640d0912310b9bc1d74f5c74fd094",
+  "extraction": {
+    "video_id": "PVMgOxHUqFA",
+    "instrument_classification": "futures_with_forex_illustration",
+    "strategies": [
+      {
+        "name": "lower_high_reversal_15m_5m",
+        "higher_timeframe": "4h",
+        "lower_timeframe": "15m",
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify the current trend direction on the 4H timeframe (e.g., bullish or bearish).",
+            "rationale": "The strategy is based on trading the trend."
+          },
+          {
+            "step": 2,
+            "action": "On the 15M timeframe, track the highs and lows to identify a sequence of lower highs and lower lows (bearish trend).",
+            "rationale": "The speaker explains that the downtrend is identified by lower highs and lower lows."
+          },
+          {
+            "step": 3,
+            "action": "Wait for price to stop making lower lows (the last lower low) and then fail to break above the previous lower high.",
+            "rationale": "This is a bullish sign that the downtrend is ending."
+          },
+          {
+            "step": 4,
+            "action": "Enter long when price breaks above the previous lower high.",
+            "rationale": "The break above the lower high confirms the bullish reversal."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "sweep_wick_above_entry",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "The stop loss goes under that level where you don't want to see price get broken."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 1,
+            "rationale": "The initial target is a 1:10 setup."
+          },
+          {
+            "priority": 2,
+            "type": "r_multiple",
+            "r_multiple": 1,
+            "rationale": "If following the trend, the target could be 1:32."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "4h_trend_alignment",
+            "description": "The 4 hour timeframe is bullish.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "name": "15m_reversal_pattern",
+            "description": "Price stops making lower lows and fails to break above the previous lower high.",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "lower low",
+            "role": "entry_step",
+            "verbatim_description": "Price is still bearish because it's still making lows.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "lower high",
+            "role": "entry_step",
+            "verbatim_description": "If you want to see price go bullish, it has to come above this lower high and then price makes another lower low, right?",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "rejections",
+            "role": "entry_step",
+            "verbatim_description": "As we progress, we start to see price have some rejections right here.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "bullish sign",
+            "role": "entry_step",
+            "verbatim_description": "This is a bullish sign. This is telling us price could go bullish because it's not breaking a lower low or is not making a low.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "ABC setup",
+            "role": "model",
+            "verbatim_description": "Same setup as this. Same setup as this low was made. Lower high was made. Price made a low, but it's higher than the previous one.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Market Phase",
+            "role": "phase",
+            "verbatim_description": "Market Phase (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "gold moves during that price range too as well that session as well. So all we had to do here was follow and track our highs",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "1 to 32",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"1 to 32\"",
+            "transcript_quote": "1 to 32",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  }
+}

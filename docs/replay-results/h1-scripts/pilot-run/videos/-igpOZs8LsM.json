@@ -1,0 +1,1334 @@
+{
+  "video_id": "-igpOZs8LsM",
+  "title": "The SECRET Entry Model Smart Money Traders Don\u2019t Talk About | FVG Explained \ud83d\udd11",
+  "channel": "HCNFXACADEMY",
+  "transcript_sha256": "766c18a4f02f67800f7cfa514aaf07a4a3d511b6065c35fe8c4851e08b43f712",
+  "transcript_char_count": 8707,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 2,
+  "raw_extraction": {
+    "video_id": "-igpOZs8LsM",
+    "instrument_classification": null,
+    "strategies": [
+      {
+        "name": "fair_value_gap_trend_continuation_1m",
+        "higher_timeframe": "1m",
+        "lower_timeframe": null,
+        "direction": "both",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Identify a trend with high momentum.",
+            "rationale": "The probability of the trade playing out is higher when sticking to the trend."
+          },
+          {
+            "step": 2,
+            "action": "Wait for a break of structure (BOS) to occur.",
+            "rationale": "The imbalance must create a break of structure."
+          },
+          {
+            "step": 3,
+            "action": "Identify a Fair Value Gap (FVG) formed by three consecutive candlesticks.",
+            "rationale": "The gap is created between the closing point of the first candle and the opening point of the third candle."
+          },
+          {
+            "step": 4,
+            "action": "Wait for price to retrace and tap into the FVG.",
+            "rationale": "Price will most likely come back to mitigate the imbalance and keep pushing to the upside."
+          },
+          {
+            "step": 5,
+            "action": "Enter long when price taps the FVG.",
+            "rationale": "Price retraced just tapped in and continued to the upside."
+          },
+          {
+            "step": 6,
+            "action": "Enter short when price taps the FVG.",
+            "rationale": "Price will return to the FVG and drop more like how we catch entries using order block."
+          }
+        ],
+        "preferred_regime": "trending",
+        "stop": {
+          "anchor": "fvg_low",
+          "buffer_atr": null,
+          "atr_multiplier": null,
+          "rationale": "Put your stop loss a little bit below the fair value gap."
+        },
+        "stop_management": null,
+        "targets": [],
+        "confluences": [
+          {
+            "name": "trend_alignment",
+            "description": "It is important you also pay attention to the trend.",
+            "canonical_match": "regime_match"
+          },
+          {
+            "name": "break_of_structure",
+            "description": "The imbalance must create a break of structure.",
+            "canonical_match": "market_structure_aligned"
+          },
+          {
+            "name": "liquidity_clear",
+            "description": "Price will clear before tapping into the imbalance.",
+            "canonical_match": "liquidity_target_clear"
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "This simply means an imbalance in the market where price moved so aggressively in one direction that it left a gap between candles without proper trading activity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Imbalance",
+            "role": "zone",
+            "verbatim_description": "The gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance and price will most likely come back mitigate the imbalance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Structure",
+            "role": "entry_step",
+            "verbatim_description": "The imbalance must create a break of structure. So you should not just see any imbalance and just start setting your entries from there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Continuation Entry",
+            "role": "phase",
+            "verbatim_description": "This moves it's more of um a trend continuation entry if you want to be catching smart entries with you know fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 8\u00d7 in transcript)",
+            "transcript_quote": "ue gap. The last video was on order block. Remember we are talking about the four popular entry models for smart money concept. We",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 5\u00d7 in transcript)",
+            "transcript_quote": "tion to the one that caused a break of structure. So once that break of structure happens you look out for the three candlesticks you know",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "SMC (Smart Money Concepts)",
+            "role": "model",
+            "verbatim_description": "SMC (Smart Money Concepts) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "the different entry models of smart money concept and today we'll be talking about fair value gap. The last video was on order block. Remem",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "ce and traders can anticipate retracement into the FVG for high probability setups. So I'll show you guys on the next slide, you kn",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "0": "r",
+        "1": "e",
+        "2": "j",
+        "3": "e",
+        "4": "c",
+        "5": "t",
+        "6": "e",
+        "7": "d",
+        "8": "_",
+        "9": "s",
+        "10": "t",
+        "11": "r",
+        "12": "a",
+        "13": "t",
+        "14": "e",
+        "15": "g",
+        "16": "i",
+        "17": "e",
+        "18": "s",
+        "speaker_concepts": [
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "This simply means an imbalance in the market where price moved so aggressively in one direction that it left a gap between candles without proper trading activity.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Imbalance",
+            "role": "zone",
+            "verbatim_description": "The gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance and price will most likely come back mitigate the imbalance.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Break of Structure",
+            "role": "entry_step",
+            "verbatim_description": "The imbalance must create a break of structure. So you should not just see any imbalance and just start setting your entries from there.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Trend Continuation Entry",
+            "role": "phase",
+            "verbatim_description": "This moves it's more of um a trend continuation entry if you want to be catching smart entries with you know fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Order Block / Breaker Block",
+            "role": "zone",
+            "verbatim_description": "Order Block / Breaker Block (mentioned 8\u00d7 in transcript)",
+            "transcript_quote": "ue gap. The last video was on order block. Remember we are talking about the four popular entry models for smart money concept. We",
+            "occurrences": 8,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Market Structure Shift (MSS/BOS)",
+            "role": "entry_step",
+            "verbatim_description": "Market Structure Shift (MSS/BOS) (mentioned 5\u00d7 in transcript)",
+            "transcript_quote": "tion to the one that caused a break of structure. So once that break of structure happens you look out for the three candlesticks you know",
+            "occurrences": 5,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "SMC (Smart Money Concepts)",
+            "role": "model",
+            "verbatim_description": "SMC (Smart Money Concepts) (mentioned 2\u00d7 in transcript)",
+            "transcript_quote": "the different entry models of smart money concept and today we'll be talking about fair value gap. The last video was on order block. Remem",
+            "occurrences": 2,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Gann Box / Fibonacci",
+            "role": "indicator",
+            "verbatim_description": "Gann Box / Fibonacci (mentioned 1\u00d7 in transcript)",
+            "transcript_quote": "ce and traders can anticipate retracement into the FVG for high probability setups. So I'll show you guys on the next slide, you kn",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 16,
+      "anchor_report": {
+        "total_spine_conditions": 16,
+        "anchored_count": 16,
+        "unanchored_count": 0,
+        "anchored_fraction": 1.0,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 6,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 6,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {}
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5701,
+            5782
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6319,
+            6418
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            3874,
+            3945
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3874,
+            3945
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2686,
+            2750
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3624,
+            3719
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            6319,
+            6418
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3720,
+            3873
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[4].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            5247,
+            5338
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[4].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5247,
+            5338
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[5].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            5247,
+            5338
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[5].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6567,
+            6716
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2139,
+            2225
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3874,
+            3945
+          ]
+        },
+        {
+          "condition_ref": "confluences[2].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4144,
+            4204
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6157,
+            6318
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_pending_tier3": 12,
+        "fallthrough_dual_read_disagreement": 4
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 16,
+      "unanchored_conditions": [],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 16
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=-igpOZs8LsM, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 16
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video -igpOZs8LsM strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 16,
+            "items": [
+              {
+                "item_id": "-igpOZs8LsM-S0-B000",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then when setting your stop loss, it will just be a little bit below the FVG."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B001",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Just stick to the fair value gap and then wait for price to tap in and then push to your direction."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B002",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So have it in mind that the imbalance must create a break of structure."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B003",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So have it in mind that the imbalance must create a break of structure."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B004",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then the gap you know is created between three candlesticks."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B005",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So the gap from the closing point of the first candle to the opening point of the third candle."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B006",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Just stick to the fair value gap and then wait for price to tap in and then push to your direction."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B007",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So the gap in between is what is called an imbalance and price will most likely you know come back mitigate the imbalance and keep pushing to the upside."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B008",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So once that happens, you can see price retraced just tapped in and continue to the upside."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B009",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So once that happens, you can see price retraced just tapped in and continue to the upside."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B010",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So once that happens, you can see price retraced just tapped in and continue to the upside."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B011",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now you can see once it happens price will return to the FVG and it will just drop just more like you know how um we catch entries using order block."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B012",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now number one the trend matters. It is important you also pay attention to the trend."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B013",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So have it in mind that the imbalance must create a break of structure."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B014",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "price will clear before you know tapping into the imbalance."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "-igpOZs8LsM-S0-B015",
+                "video_id": "-igpOZs8LsM",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So if you are trading or if you are taking your entries with fair value gap, all you just need to do is put your stop loss a little bit below the fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "-igpOZs8LsM-S0-B000",
+              "extracted_condition_text": "Identify a trend with high momentum.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B001",
+              "extracted_condition_text": "Wait for price to retrace and tap into the FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B002",
+              "extracted_condition_text": "The imbalance must create a break of structure.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B003",
+              "extracted_condition_text": "The imbalance must create a break of structure.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B004",
+              "extracted_condition_text": "Identify a Fair Value Gap (FVG) formed by three consecutive candlesticks.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B005",
+              "extracted_condition_text": "The gap is created between the closing point of the first candle and the opening point of the third candle.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B006",
+              "extracted_condition_text": "Wait for price to retrace and tap into the FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B007",
+              "extracted_condition_text": "Price will most likely come back to mitigate the imbalance and keep pushing to the upside.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B008",
+              "extracted_condition_text": "Enter short when price taps the FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B009",
+              "extracted_condition_text": "Enter short when price taps the FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B010",
+              "extracted_condition_text": "Enter short when price taps the FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B011",
+              "extracted_condition_text": "Price will return to the FVG and drop more like how we catch entries using order block.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B012",
+              "extracted_condition_text": "It is important you also pay attention to the trend.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B013",
+              "extracted_condition_text": "The imbalance must create a break of structure.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B014",
+              "extracted_condition_text": "Price will clear before tapping into the imbalance.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "-igpOZs8LsM-S0-B015",
+              "extracted_condition_text": "Put your stop loss a little bit below the fair value gap.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "-igpOZs8LsM-S0-B000": [
+          5701,
+          5782
+        ],
+        "-igpOZs8LsM-S0-B001": [
+          6319,
+          6418
+        ],
+        "-igpOZs8LsM-S0-B002": [
+          3874,
+          3945
+        ],
+        "-igpOZs8LsM-S0-B003": [
+          3874,
+          3945
+        ],
+        "-igpOZs8LsM-S0-B004": [
+          2686,
+          2750
+        ],
+        "-igpOZs8LsM-S0-B005": [
+          3624,
+          3719
+        ],
+        "-igpOZs8LsM-S0-B006": [
+          6319,
+          6418
+        ],
+        "-igpOZs8LsM-S0-B007": [
+          3720,
+          3873
+        ],
+        "-igpOZs8LsM-S0-B008": [
+          5247,
+          5338
+        ],
+        "-igpOZs8LsM-S0-B009": [
+          5247,
+          5338
+        ],
+        "-igpOZs8LsM-S0-B010": [
+          5247,
+          5338
+        ],
+        "-igpOZs8LsM-S0-B011": [
+          6567,
+          6716
+        ],
+        "-igpOZs8LsM-S0-B012": [
+          2139,
+          2225
+        ],
+        "-igpOZs8LsM-S0-B013": [
+          3874,
+          3945
+        ],
+        "-igpOZs8LsM-S0-B014": [
+          4144,
+          4204
+        ],
+        "-igpOZs8LsM-S0-B015": [
+          6157,
+          6318
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "-igpOZs8LsM",
+        "full_transcript_sha256": "766c18a4f02f67800f7cfa514aaf07a4a3d511b6065c35fe8c4851e08b43f712",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    },
+    {
+      "strategy_index": 1,
+      "spine_condition_count": 0,
+      "anchor_report": {
+        "total_spine_conditions": 0,
+        "anchored_count": 0,
+        "unanchored_count": 0,
+        "anchored_fraction": null,
+        "by_field": {},
+        "unanchored_reason_breakdown": {}
+      },
+      "condition_outcomes": [],
+      "outcome_counts": {},
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 0,
+      "unanchored_conditions": [],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 0
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=-igpOZs8LsM, strategy=1.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 0
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video -igpOZs8LsM strategy 1 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 0,
+            "items": []
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": []
+        }
+      },
+      "item_span_map": {},
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "-igpOZs8LsM",
+        "full_transcript_sha256": "766c18a4f02f67800f7cfa514aaf07a4a3d511b6065c35fe8c4851e08b43f712",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 16,
+    "anchored": 16,
+    "unanchored": 0,
+    "tier1_classified": 0,
+    "tier1_fallthrough": 16,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 0,
+    "adjudications_aggregate": 16
+  }
+}

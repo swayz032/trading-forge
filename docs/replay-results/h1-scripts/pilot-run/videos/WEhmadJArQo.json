@@ -1,0 +1,1600 @@
+{
+  "video_id": "WEhmadJArQo",
+  "title": "The Best FVG Trading Strategy (That Actually Works)",
+  "channel": "Jesse Rogers | Casper SMC",
+  "transcript_sha256": "e88a5308a6b66d77b48181e2f05b00ea6f93492fe6c9451de5371751ea73b4cf",
+  "transcript_char_count": 10527,
+  "transcript_final_outcome": "captioned_succeeded",
+  "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+  "taxonomy_version": "h1-pilot-2026-07-12",
+  "strategies_extracted": 2,
+  "raw_extraction": {
+    "video_id": "WEhmadJArQo",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "scalping_fv_breakout_5m_1m",
+        "higher_timeframe": "5m",
+        "lower_timeframe": "1m",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for the first 5-minute candle of the day to print at 9:30 a.m. EST and mark its high and low.",
+            "rationale": "This establishes the key levels for the trade."
+          },
+          {
+            "step": 2,
+            "action": "Switch to the 1-minute chart and wait for a break of the 5-minute high/low level, specifically looking for a Fair Value Gap (FVG).",
+            "rationale": "A break of the level, confirmed by an FVG, indicates market direction."
+          },
+          {
+            "step": 3,
+            "action": "Wait for the market to retest the Fair Value Gap and for the retest candle to be engulfed by opposing direction candles.",
+            "rationale": "The engulfing candle confirms the reversal intent and entry trigger."
+          },
+          {
+            "step": 4,
+            "action": "Enter a long position as soon as the engulfing candle is confirmed.",
+            "rationale": "The engulfing candle confirms buyers are in control."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": 0,
+          "atr_multiplier": null,
+          "rationale": "Place the stop under the lowest area traded into the fair value gap, giving one tick of breathing room."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 3,
+            "rationale": "Target a fixed 3:1 return."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "initial_level_identification",
+            "description": "Mark out the high and low of the first 5-minute candle at 9:30 a.m. EST.",
+            "canonical_match": null
+          },
+          {
+            "name": "fv_gap_formation",
+            "description": "The market must form a Fair Value Gap (three candle formation where a gap exists between one candle's wick and the third candle's wick).",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "FPG strategy",
+            "role": "model",
+            "verbatim_description": "This FPG strategy consistently gives me days like this, this, and this.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "scalping entry",
+            "role": "entry_step",
+            "verbatim_description": "For step one, we're going to identify our key levels... Next, we're going to wait for a break of the level, but we need a fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "zone",
+            "verbatim_description": "A fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "retest of the fair value gap",
+            "role": "entry_step",
+            "verbatim_description": "So, first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "engulfing",
+            "role": "entry_step",
+            "verbatim_description": "If you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 3:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "day trading entry",
+            "role": "entry_step",
+            "verbatim_description": "Let's learn how to use the day trading entry first... Now, this brings us to step one of the day trading entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "limit order on the FVG",
+            "role": "entry_step",
+            "verbatim_description": "Instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 2:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 16\u00d7 in transcript)",
+            "transcript_quote": ". And this is one of the only FVG strategies that actually works. And today, I'm going to teach you the full strategy, and",
+            "occurrences": 16,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": ", first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      },
+      {
+        "name": "day_trading_fv_limit_15m_5m",
+        "higher_timeframe": "15m",
+        "lower_timeframe": "5m",
+        "direction": "long",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "action": "Wait for the first 15-minute candle of the day to close at 9:30 to 9:45 a.m. EST and mark its high and low.",
+            "rationale": "This establishes the key levels for the trade."
+          },
+          {
+            "step": 2,
+            "action": "Switch to the 5-minute chart and wait for the market to trade back into the Fair Value Gap (FVG) created by the first 15-minute candle.",
+            "rationale": "The FVG provides the entry zone for the day trading strategy."
+          },
+          {
+            "step": 3,
+            "action": "Set a limit order on the Fair Value Gap to automatically enter the market when price returns to the FVG.",
+            "rationale": "The limit order ensures entry at the optimal retest level."
+          }
+        ],
+        "preferred_regime": "any",
+        "stop": {
+          "anchor": "sweep_wick_below_entry",
+          "buffer_atr": 0,
+          "atr_multiplier": null,
+          "rationale": "Place the stop right at the first candle in the fair value gap pattern."
+        },
+        "stop_management": null,
+        "targets": [
+          {
+            "priority": 1,
+            "type": "r_multiple",
+            "r_multiple": 2,
+            "rationale": "Target a fixed 2:1 return."
+          }
+        ],
+        "confluences": [
+          {
+            "name": "initial_level_identification",
+            "description": "Mark the high and low of the first 15-minute candle of the day.",
+            "canonical_match": null
+          },
+          {
+            "name": "fv_gap_formation",
+            "description": "The market must form a Fair Value Gap (three candle formation where a gap exists between one candle's wick and the third candle's wick).",
+            "canonical_match": null
+          }
+        ],
+        "speaker_concepts": [
+          {
+            "term": "FPG strategy",
+            "role": "model",
+            "verbatim_description": "This FPG strategy consistently gives me days like this, this, and this.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "scalping entry",
+            "role": "entry_step",
+            "verbatim_description": "For step one, we're going to identify our key levels... Next, we're going to wait for a break of the level, but we need a fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fair value gap",
+            "role": "zone",
+            "verbatim_description": "A fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "retest of the fair value gap",
+            "role": "entry_step",
+            "verbatim_description": "So, first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "engulfing",
+            "role": "entry_step",
+            "verbatim_description": "If you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 3:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "day trading entry",
+            "role": "entry_step",
+            "verbatim_description": "Let's learn how to use the day trading entry first... Now, this brings us to step one of the day trading entry.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "limit order on the FVG",
+            "role": "entry_step",
+            "verbatim_description": "Instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "fixed 2:1 return",
+            "role": "target",
+            "verbatim_description": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return.",
+            "source": "pass1_llm_extraction"
+          },
+          {
+            "term": "Fair Value Gap (FVG)",
+            "role": "zone",
+            "verbatim_description": "Fair Value Gap (FVG) (mentioned 16\u00d7 in transcript)",
+            "transcript_quote": ". And this is one of the only FVG strategies that actually works. And today, I'm going to teach you the full strategy, and",
+            "occurrences": 16,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "Rebalance/Retest",
+            "role": "entry_step",
+            "verbatim_description": "Rebalance/Retest (mentioned 3\u00d7 in transcript)",
+            "transcript_quote": ", first we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+            "occurrences": 3,
+            "source": "server_side_nlp"
+          },
+          {
+            "term": "30 to 9",
+            "role": "zone",
+            "verbatim_description": "Numerical zone reference: \"30 to 9\"",
+            "transcript_quote": "30 to 9",
+            "occurrences": 1,
+            "source": "server_side_nlp"
+          }
+        ]
+      }
+    ],
+    "rejected_strategies": [],
+    "empty_reason": null
+  },
+  "strategies": [
+    {
+      "strategy_index": 0,
+      "spine_condition_count": 12,
+      "anchor_report": {
+        "total_spine_conditions": 12,
+        "anchored_count": 11,
+        "unanchored_count": 1,
+        "anchored_fraction": 0.9167,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 4,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 4,
+            "unanchored": 0
+          },
+          "confluences[].description": {
+            "anchored": 1,
+            "unanchored": 1
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 1
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            1580,
+            1665
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5810,
+            5935
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2169,
+            2279
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2367,
+            2448
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            3383,
+            3495
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            3383,
+            3495
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].action",
+          "outcome": "classified_tier1",
+          "char_span": [
+            3782,
+            3851
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[3].rationale",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            3782,
+            3851
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2643,
+            2768
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4107,
+            4341
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            4342,
+            4516
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_dual_read_disagreement": 3,
+        "fallthrough_pending_tier3": 7,
+        "classified_tier1": 1
+      },
+      "tier1_classified_count": 1,
+      "tier1_fallthrough_count": 10,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "confluences[0].description",
+          "text": "Mark out the high and low of the first 5-minute candle at 9:30 a.m. EST.",
+          "strategy_index": 0,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": [
+          3786,
+          3818
+        ],
+        "condition_text": "Enter a long position as soon as the engulfing candle is confirmed.",
+        "item_id": "WEhmadJArQo-S0-AUDIT",
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 10
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=WEhmadJArQo, strategy=0.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 11
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video WEhmadJArQo strategy 0 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 11,
+            "items": [
+              {
+                "item_id": "WEhmadJArQo-S0-B000",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Next, we're going to wait for the first candle of the day at that 9:30 time to print."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B001",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then just like we did with the scalping strategy, we're going to mark the high and the low of the first 15-minute candle."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B002",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "For step two, we are going to switch to the 1 minute chart by clicking this one minute button on Trading View."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B003",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Next, we're going to wait for a break of the level, but we need a fair value gap."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B004",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B005",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B006",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And as soon as we get this engulfing, you're good to enter the trade."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B007",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B008",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "So for our stop loss or our invalidation point where we will cut our losses if we're wrong, you want to put that under the lowest area that we traded into that fair value gap. And you always want to give it one tick of breathing room."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-B009",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then for our takerit, we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S0-AUDIT",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "as soon as we get this engulfing"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                },
+                "audit": true
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "WEhmadJArQo-S0-B000",
+              "extracted_condition_text": "Wait for the first 5-minute candle of the day to print at 9:30 a.m. EST and mark its high and low.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B001",
+              "extracted_condition_text": "This establishes the key levels for the trade.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B002",
+              "extracted_condition_text": "Switch to the 1-minute chart and wait for a break of the 5-minute high/low level, specifically looking for a Fair Value Gap (FVG).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B003",
+              "extracted_condition_text": "A break of the level, confirmed by an FVG, indicates market direction.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B004",
+              "extracted_condition_text": "The engulfing candle confirms the reversal intent and entry trigger.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B005",
+              "extracted_condition_text": "The engulfing candle confirms the reversal intent and entry trigger.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B006",
+              "extracted_condition_text": "The engulfing candle confirms buyers are in control.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B007",
+              "extracted_condition_text": "The market must form a Fair Value Gap (three candle formation where a gap exists between one candle's wick and the third candle's wick).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B008",
+              "extracted_condition_text": "Place the stop under the lowest area traded into the fair value gap, giving one tick of breathing room.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-B009",
+              "extracted_condition_text": "Target a fixed 3:1 return.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S0-AUDIT",
+              "extracted_condition_text": "Enter a long position as soon as the engulfing candle is confirmed.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              },
+              "audit": true
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "WEhmadJArQo-S0-B000": [
+          1580,
+          1665
+        ],
+        "WEhmadJArQo-S0-B001": [
+          5810,
+          5935
+        ],
+        "WEhmadJArQo-S0-B002": [
+          2169,
+          2279
+        ],
+        "WEhmadJArQo-S0-B003": [
+          2367,
+          2448
+        ],
+        "WEhmadJArQo-S0-B004": [
+          3383,
+          3495
+        ],
+        "WEhmadJArQo-S0-B005": [
+          3383,
+          3495
+        ],
+        "WEhmadJArQo-S0-B006": [
+          3782,
+          3851
+        ],
+        "WEhmadJArQo-S0-B007": [
+          2643,
+          2768
+        ],
+        "WEhmadJArQo-S0-B008": [
+          4107,
+          4341
+        ],
+        "WEhmadJArQo-S0-B009": [
+          4342,
+          4516
+        ],
+        "WEhmadJArQo-S0-AUDIT": [
+          3786,
+          3818
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "WEhmadJArQo",
+        "full_transcript_sha256": "e88a5308a6b66d77b48181e2f05b00ea6f93492fe6c9451de5371751ea73b4cf",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    },
+    {
+      "strategy_index": 1,
+      "spine_condition_count": 10,
+      "anchor_report": {
+        "total_spine_conditions": 10,
+        "anchored_count": 9,
+        "unanchored_count": 1,
+        "anchored_fraction": 0.9,
+        "by_field": {
+          "entry_sequence[].action": {
+            "anchored": 3,
+            "unanchored": 0
+          },
+          "entry_sequence[].rationale": {
+            "anchored": 2,
+            "unanchored": 1
+          },
+          "confluences[].description": {
+            "anchored": 2,
+            "unanchored": 0
+          },
+          "stop.rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          },
+          "targets[].rationale": {
+            "anchored": 1,
+            "unanchored": 0
+          }
+        },
+        "unanchored_reason_breakdown": {
+          "proposed_quote_not_literal_substring": 1
+        }
+      },
+      "condition_outcomes": [
+        {
+          "condition_ref": "entry_sequence[0].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            5648,
+            5727
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5810,
+            5935
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[1].action",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5316,
+            5482
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].action",
+          "outcome": "fallthrough_dual_read_disagreement",
+          "char_span": [
+            6500,
+            6633
+          ]
+        },
+        {
+          "condition_ref": "entry_sequence[2].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6634,
+            6742
+          ]
+        },
+        {
+          "condition_ref": "confluences[0].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            5810,
+            5935
+          ]
+        },
+        {
+          "condition_ref": "confluences[1].description",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            2643,
+            2768
+          ]
+        },
+        {
+          "condition_ref": "stop.rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            6984,
+            7083
+          ]
+        },
+        {
+          "condition_ref": "targets[0].rationale",
+          "outcome": "fallthrough_pending_tier3",
+          "char_span": [
+            7167,
+            7262
+          ]
+        }
+      ],
+      "outcome_counts": {
+        "fallthrough_dual_read_disagreement": 2,
+        "fallthrough_pending_tier3": 7
+      },
+      "tier1_classified_count": 0,
+      "tier1_fallthrough_count": 9,
+      "unanchored_conditions": [
+        {
+          "condition_ref": "entry_sequence[1].rationale",
+          "text": "The FVG provides the entry zone for the day trading strategy.",
+          "strategy_index": 1,
+          "reason": "proposed_quote_not_literal_substring"
+        }
+      ],
+      "axis3_audit": {
+        "char_span": null,
+        "condition_text": null,
+        "item_id": null,
+        "ceiling": 15,
+        "fallthrough_count_at_selection": 9
+      },
+      "tier3_packet": {
+        "artifact": "h1-pilot-tier3-packet",
+        "version": "2026-07-12",
+        "purpose": "Pilot tier-3 blind adjudication packet, video=WEhmadJArQo, strategy=1.",
+        "blinding_contract": "This file exposes ZERO outcome/tally/verdict/rationale. No demotion label, no DRI, no counts, no class distribution, and no which-items-are-controls marking appears here. Those live ONLY in the verifier-facing answer key.",
+        "closed_taxonomy": {
+          "gate-strength": "The clause carries decision weight the trader acts on before entry \u2014 a hard requirement, a soft/bonus confluence the trader adds, or an either/or route. If a reasonable trader would change their entry decision based on this clause, it has gate-strength.",
+          "context": "Scene-setting, walkthrough narration of a past example, chart/UI navigation, indicator-setup instructions, or a belief the educator explicitly refutes (refuted strawman). The strategy does not CHECK this clause to decide entry.",
+          "cannot-determine": "The quote carries no clear modal gate signal either way; the surrounding evidence is insufficient to call gate-strength vs context."
+        },
+        "instructions": {
+          "read_order_LOCKED": [
+            "Set A (controls)",
+            "control-gate",
+            "Set B1..B14 (targets)"
+          ],
+          "procedure": [
+            "1. Adjudicate every item in Set A first, strictly top-to-bottom. Do NOT skip or reorder.",
+            "2. STOP after Set A. The verifier applies the control-gate before your target calls count.",
+            "3. Then adjudicate Set B1..B14 in listed order, top-to-bottom per section.",
+            "4. For each item, choose exactly ONE role from the closed taxonomy and write it to rater_response.role. Optional short justification in rater_response.notes.",
+            "5. You adjudicate what role the clause SHOULD carry from the quote alone. You are NOT told what any prior process assigned; there is no 'correct answer' shown to you."
+          ],
+          "control_gate_rule": "Set A is a calibration set with a private known-answer key held by the verifier. Your target (Set B) calls are COUNTED only if your Set A calls clear >= 4 of 5 in the gate direction AND >= 4 of 5 in the context direction. Which Set A items are gate vs context is NOT disclosed to you.",
+          "afrikaans_dual_anchor_rule": "Some items (concept jlShztsY3oA, family Range Breakout) are Afrikaans. Each carries needs_dual_anchor=true and an empty english_gloss. DO NOT rate these until a certified English gloss is attached by a separate translator dispatch. Rating on the Afrikaans surface alone is a protocol violation.",
+          "quote_anchor_rule": "Adjudicate from the verbatim quote. extracted_condition_type / extracted_object are the EXTRACTOR'S OWN labels (the representation under audit) \u2014 they are inputs to judge, not answers to trust."
+        },
+        "counts": {
+          "control_items": 10,
+          "target_items": 9
+        },
+        "sections": [
+          {
+            "section_id": "SET-A",
+            "concept_id": null,
+            "label": "Set A \u2014 general adjudication set (complete FIRST, in listed order)",
+            "item_count": 10,
+            "items": [
+              {
+                "item_id": "W1-0001",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_CONFIRMATION",
+                "extracted_object": "momentum waning buyers losing appetite sellers easing flows",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "only once you see that evidence confirmation that turn is happening should you take a trade"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0002",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "4 hour chart",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "today I'll share our 4-Hour chart strategy that I use every day"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0003",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_RETEST",
+                "extracted_object": "5 sma",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "wait for a retrace back to the 5 SMA"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0004",
+                "concept_id": "HfZTCZTDfWk",
+                "family": "Bias/Trend",
+                "timeframe": "4h",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "eur usd",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now back to the euro dollar chart here"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0005",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "us session trading",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "again you have to know what time frames you're trading again I only trade us session"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0006",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_BIAS",
+                "extracted_object": "go back up",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "let's kind of go back up here and let's kind of fix this thing here because we kind of messed it up"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0007",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "WAIT_SESSION",
+                "extracted_object": "event occurrence",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "so that's rule number one wait for it to close below the third standard deviation Binger band"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0008",
+                "concept_id": "snNkQSyWX4k",
+                "family": "MA Crossover",
+                "timeframe": "5m",
+                "extracted_condition_type": "EXIT_HINT",
+                "extracted_object": "exit",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "now you want to go ahead and exit"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0009",
+                "concept_id": "c8VLqF0XDR4",
+                "family": "General Entry (long/short)",
+                "timeframe": "15m",
+                "extracted_condition_type": "WAIT_STRUCTURE",
+                "extracted_object": "price tried to break below area",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "we are waiting for price to break below, come back and retest it as resistance before we can look for a short entry"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "W1-0010",
+                "concept_id": "FqxEKDxemtI",
+                "family": "Indicator (Bollinger Bands)",
+                "timeframe": "5m",
+                "extracted_condition_type": "FILTER",
+                "extracted_object": "ballinger bands bases",
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "this time I'm going to remove the bases we don't need it we're keeping the bases from the original one"
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          },
+          {
+            "section_id": "SET-B",
+            "concept_id": null,
+            "label": "Set B -- video WEhmadJArQo strategy 1 tier-1 fall-through targets (complete AFTER Set A + control-gate)",
+            "item_count": 9,
+            "items": [
+              {
+                "item_id": "WEhmadJArQo-S1-B000",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S1-B001",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then just like we did with the scalping strategy, we're going to mark the high and the low of the first 15-minute candle."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S1-B002",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, we're still going to identify key levels, but we're going to do it just a little differently because for this entry, you're going to start on the 15minute chart."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S1-B003",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "But here is where things get different because instead of waiting for a retest, we're actually going to set a limit order on the FVG."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S1-B004",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "This means once the market trades back into the fair value gap, we're automatically entered into the market."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S1-B005",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then just like we did with the scalping strategy, we're going to mark the high and the low of the first 15-minute candle."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S1-B006",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S1-B007",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "Now, for my stop loss, I'm going to put it right at the first candle in the fair value gap pattern."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              },
+              {
+                "item_id": "WEhmadJArQo-S1-B008",
+                "video_id": "WEhmadJArQo",
+                "family": null,
+                "timeframe": null,
+                "extracted_condition_type": null,
+                "extracted_object": null,
+                "quote_anchor": {
+                  "language": "en",
+                  "verbatim": "And then for our target instead of a 3 to one return we are going to target a fixed 2:1 return."
+                },
+                "rater_response": {
+                  "role": null,
+                  "notes": null
+                }
+              }
+            ]
+          }
+        ],
+        "stage2": {
+          "read_order_lock": "Stage 2 for an item_id may be read ONLY after Stage 1's rater_response.role is committed for that same item_id in Set B. Do not read stage2 before completing Set A + Set B.",
+          "task": "Does this quote express THIS condition?",
+          "support_taxonomy": {
+            "confirmed": "The quote fully and faithfully expresses this condition -- a reasonable reader would say the quote IS the trader's own grounding for it.",
+            "partial": "The quote is related to the condition but drifts from it -- captures only part of it, or generalizes/narrows what the trader actually said.",
+            "denied": "The quote does not express this condition at all -- the anchor is mis-grounded."
+          },
+          "items": [
+            {
+              "item_id": "WEhmadJArQo-S1-B000",
+              "extracted_condition_text": "Wait for the first 15-minute candle of the day to close at 9:30 to 9:45 a.m. EST and mark its high and low.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S1-B001",
+              "extracted_condition_text": "Mark the high and low of the first 15-minute candle of the day.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S1-B002",
+              "extracted_condition_text": "Switch to the 5-minute chart and wait for the market to trade back into the Fair Value Gap (FVG) created by the first 15-minute candle.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S1-B003",
+              "extracted_condition_text": "Set a limit order on the Fair Value Gap to automatically enter the market when price returns to the FVG.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S1-B004",
+              "extracted_condition_text": "The limit order ensures entry at the optimal retest level.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S1-B005",
+              "extracted_condition_text": "Mark the high and low of the first 15-minute candle of the day.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S1-B006",
+              "extracted_condition_text": "The market must form a Fair Value Gap (three candle formation where a gap exists between one candle's wick and the third candle's wick).",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S1-B007",
+              "extracted_condition_text": "Place the stop right at the first candle in the fair value gap pattern.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            },
+            {
+              "item_id": "WEhmadJArQo-S1-B008",
+              "extracted_condition_text": "Target a fixed 2:1 return.",
+              "adjudication_response": {
+                "support": null,
+                "support_justification": null
+              }
+            }
+          ]
+        }
+      },
+      "item_span_map": {
+        "WEhmadJArQo-S1-B000": [
+          5648,
+          5727
+        ],
+        "WEhmadJArQo-S1-B001": [
+          5810,
+          5935
+        ],
+        "WEhmadJArQo-S1-B002": [
+          5316,
+          5482
+        ],
+        "WEhmadJArQo-S1-B003": [
+          6500,
+          6633
+        ],
+        "WEhmadJArQo-S1-B004": [
+          6634,
+          6742
+        ],
+        "WEhmadJArQo-S1-B005": [
+          5810,
+          5935
+        ],
+        "WEhmadJArQo-S1-B006": [
+          2643,
+          2768
+        ],
+        "WEhmadJArQo-S1-B007": [
+          6984,
+          7083
+        ],
+        "WEhmadJArQo-S1-B008": [
+          7167,
+          7262
+        ]
+      },
+      "leak_scan_clean": true,
+      "provenance": {
+        "source_video_id": "WEhmadJArQo",
+        "full_transcript_sha256": "e88a5308a6b66d77b48181e2f05b00ea6f93492fe6c9451de5371751ea73b4cf",
+        "extractor_version": "gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4",
+        "taxonomy_version": "h1-pilot-2026-07-12"
+      }
+    }
+  ],
+  "video_rollup": {
+    "spine_conditions": 22,
+    "anchored": 20,
+    "unanchored": 2,
+    "tier1_classified": 1,
+    "tier1_fallthrough": 19,
+    "axis2_zero_content_overlap": 0,
+    "axis3_audit_items": 1,
+    "adjudications_aggregate": 20
+  }
+}
