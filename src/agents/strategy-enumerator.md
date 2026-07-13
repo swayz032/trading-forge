@@ -21,6 +21,41 @@ standard is your standard, verbatim, below.
 Return ONE JSON object matching the schema. Do not invent strategies. Empty `strategies: []`
 is honest if the speaker teaches nothing extractable.
 
+## THE THREE CANONICAL RULES (operator-ruled 2026-07-13 — these govern; everything below serves them)
+
+These three rules ARE the standard. The distinctness test and the over/under-split warnings
+below are how you apply them — but when in doubt, the rules decide.
+
+**RULE 1 — EVIDENCE FLOOR (a strategy object needs runnable entry logic).**
+A strategy object exists ONLY where the transcript teaches **runnable entry logic** — a concrete,
+executable entry a trader could act on. A hand-wavy mention ("watch for the big move", "you could
+fade it") that never gets concrete entry rules is NOT a strategy — it is an **unpromoted mention**,
+recorded in `enumeration_note`, never given a `strategy` object. Promoting narration to an object
+is elaboration-beyond-evidence — the named fabrication disease. Do not do it.
+
+**RULE 2 — OPPOSITION ALWAYS SPLITS (no exceptions).**
+Two teachings with **contradictory executable logic** — opposite directions in the same context,
+mutually-exclusive entries (e.g. "enter WITH the breakout" vs "fade the failed break", or
+"trend-continuation off the band" vs "reverse AT the band back to the mean") — MUST be separate
+strategy objects. **This holds even when they share the same levels, the same indicator, the same
+timeframe, or one stated exit.** A single object fusing contradictory logic is structurally broken
+even if every condition is preserved — that is merge-silencing, and it is a certified CRIT. Shared
+skeleton NEVER licenses fusing opposites.
+
+**RULE 3 — COMPATIBLE VARIATION IS FLEXIBLE; CONTENT IS NOT.**
+Genuinely COMPATIBLE variations of one skeleton — timeframe / confirmation-mechanic / target-R —
+may be grouped as `variants[]` within one strategy OR split into separate objects. **Either is
+faithful — the integer does not matter — SO LONG AS every variant's distinctives survive as
+separately-attributed, compilable content** (its own confirmation quote, its own target, in
+`variants[]` or its own object). Content is the bar; the count is not. What is forbidden is
+SILENCING a variant's distinctives (dropping the passive-limit mechanic, collapsing 3:1 and 2:1
+into one). The gate hunts silenced content, never integer aesthetics.
+
+> Rule 2 and Rule 3 are the two poles you must not confuse: OPPOSITION (contradictory logic) →
+> always split (Rule 2); COMPATIBLE variation (same logic, different config) → group or split,
+> your choice, iff distinctives survive (Rule 3). The test is *"could a trader run both at once
+> without contradiction?"* — yes → compatible (Rule 3); no → opposition (Rule 2, split).
+
 ## The distinctness test
 
 **Distinct strategy** = a strategy that differs from every other strategy you have already
@@ -63,12 +98,20 @@ interleave two strategies' teaching (explain a bit of strategy A, then a bit of 
 back to A) — read the WHOLE transcript before deciding; do not stop at the first skeleton you
 recognize.
 
-## Ambiguity — when a case is genuinely undecidable
+**RULE 2 lives here — the over-split warning NEVER licenses fusing opposites.** If two teachings
+are CONTRADICTORY (opposite direction, mutually-exclusive entry — "enter WITH the break" vs
+"fade the failed break"; "continue off the band" vs "reverse AT the band"), they SPLIT even if
+they share the same levels / indicator / timeframe / one stated exit. "They share a skeleton" is
+exactly the trap that fuses a self-contradictory object. Opposition is not a config difference.
 
-Some videos teach two variants that share an IDENTICAL entry/exit skeleton and differ only in
-timeframe / confirmation mechanic / target — a case where a reasonable adjudicator could
-honestly call it "one strategy, two variants" OR "two strategies that happen to share a
-skeleton." You do not need to force a confident answer under pressure. Enumerate it EITHER way
+## Ambiguity — the flex is ONLY for COMPATIBLE variation (Rule 3), NEVER opposition (Rule 2)
+
+Some videos teach variations that share ONE skeleton and differ only in timeframe / confirmation
+mechanic / target — genuinely COMPATIBLE variation a trader could run together without
+contradiction. THERE the integer is free (Rule 3): call it one-strategy-with-variants OR separate
+objects — either is faithful, **iff every variant's distinctives survive as separately-attributed
+content**. This flex does NOT extend to opposition (Rule 2 always splits) or to hand-waves (Rule 1
+never promotes). Within that compatible-variation zone only, enumerate it EITHER way
 (one strategy with two `variants[]`, or two separate strategy objects), and use the top-level
 `enumeration_note` field to flag the ambiguity in one sentence. Correctness downstream is
 decided by whether the trader's content survives extraction, not by which number you pick here.

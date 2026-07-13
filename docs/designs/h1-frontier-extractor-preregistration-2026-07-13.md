@@ -46,3 +46,19 @@ Adjudication load per video RECORDED. Hypothesis under test: **it falls well bel
 Frontier extractor = fresh-context in-subscription Claude-family agent. Locator/F-2/fence/raters = model-free or independently-graded, UNCHANGED. Downstream hardening (this week): locator `2b278757`, 3-axis defense `11be7e7b`, merge-silencing fence `34b2984a`/`71157801`. Prior fork evidence: Option R MISS `71157801`, pilot 0/16 `a73c1f60`.
 
 *Frozen 2026-07-13, operator-ruled, BEFORE any birth-fixture or design-pool number. Vaulted FF on `corpus-v3-gate3-cert-2026-07-06`.*
+
+---
+
+## ADDENDUM 1 — CANONICAL STANDARD RULED + instrument aligned (dated 2026-07-13, pre-number; PASS 1 of 2)
+The birth gate exposed a two-ontology ambiguity between the fixtures (runnable-trigger rubric) and the instrument (config-groups). Operator ruling: neither wholesale — the **three canonical rules** (`h1-canonical-enumeration-standard-2026-07-13.md`): Rule 1 evidence floor (§13), Rule 2 opposition-always-splits (fence law), Rule 3 compatible-variation-flexible-content-preserved (§10a/§11). **`strategy-enumerator.md` amended to encode all three explicitly** (Rule-2 override added to the over-split/under-split/ambiguity sections so "don't over-split" never licenses fusing opposites; Rule-1 evidence floor; Rule-3 content-is-the-bar). Pre-birth instrument alignment under an operator-ruled standard — NOT a bar move (reconciliation to frozen law). PASS-ACCOUNTING: this is PASS 1 of the pinned 2 (one build + one iteration); the amendment + re-mint + rung-1 build are all pass 1.
+
+## ADDENDUM 2 — BRAIN-AGNOSTIC LADDER (dated 2026-07-13, pre-number)
+The EXTRACTION seat is filled by a ladder; **identical instrument, birth gate, and frozen bars at every rung**; nobody skips the line, nobody gets an easier test:
+- **Rung 1 — gpt-5.4-mini** (2.5M/day free pool). First: free, pennies.
+- **Rung 1.5 — gpt-5.4 (full)** (250K/day free).
+- **Rung 2 — Claude in-subscription.**
+- **Rung 3 — human-in-loop** (economics already certified 13.94 ≤ 15).
+Each rung: pass the 6-fixture birth gate (re-minted windows + content checks) → design-pool 16 under the SAME ≤8% bar → clear → sealed-12 terminal read. Miss → next rung, same exam. **Tonight's Claude enumeration run = INSTRUMENT SHAKEDOWN (it caught the standards bug; purpose spent + honored), NOT a rung-2 result.** Rung order applies from here. GRADING stays Claude's seat (the ladder governs only the extraction seat).
+
+## ADDENDUM 3 — GOVERNOR BEFORE ANY METERED CALL (dated 2026-07-13)
+Nothing calls OpenAI until the token governor is BUILT + PROVEN: hard **1M/day extraction partition**, per-video receipts, **fail-closed wall under the free ceiling**, **synthetic-budget trip test as engagement proof** (the wall demonstrably trips before any real call), plus the measured **7-day pull from `ai_inference_log`** (designed-vs-measured, two-path). Order: standard → re-mint fixtures (Claude adjudicators, blind) → governor proven → rung-1 birth gate.
