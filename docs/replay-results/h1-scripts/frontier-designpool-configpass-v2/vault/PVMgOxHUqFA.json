@@ -1,0 +1,152 @@
+{
+ "video_id": "PVMgOxHUqFA",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "trend_reversal_to_higher_timeframe_continuation",
+     "entry_summary": "Use the higher timeframe (4-hour/1-hour) trend bias, then on the 15-minute or 5-minute chart wait for the pullback downtrend to stop making lower lows and then break above the most recent lower high. Enter on that bullish structure break in the direction of the higher-timeframe trend.",
+     "exit_summary": "Place the stop loss under the low/level that should not break if the bullish reversal is valid. Target the next higher-timeframe high (such as the 1-hour high), with the possibility of holding further if the broader trend continues.",
+     "variants": [
+      {
+       "variant_label": "15-minute bullish shift after pullback",
+       "timeframe_note": "15-minute execution within 4-hour bullish context",
+       "confirmation_mechanic_note": "wait for price to stop making lower lows and then break above the lower high",
+       "target_note": "target the 1-hour high or continue with the higher-timeframe trend",
+       "transcript_quote": "all you're doing is waiting for price to go back bullish on that 15minut time frame and putting your stop loss under that level where you don't wanto'"
+      },
+      {
+       "variant_label": "5-minute version of the same structure-break entry",
+       "timeframe_note": "5-minute execution example",
+       "confirmation_mechanic_note": "same ABC / higher-low then break-above-lower-high logic",
+       "target_note": "target the 1-hour high; speaker mentions this could expand much further with trend continuation",
+       "transcript_quote": "And then we have that push that break above your once again your entry goes here and then your stop loss goes either here or here whichever one you w"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The transcript teaches one core strategy: trade with higher-timeframe trend by entering when lower-timeframe bearish pullback flips bullish; the 15-minute and 5-minute examples are compatible variants, not distinct strategies. The final 1-minute 'small scalp' mention is not promoted because it lacks a runnable exit rule."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Use the higher timeframe (4-hour/1-hour) trend bias, then on the 15-minute or 5-minute chart wait for the pullback downtrend to stop making lower lows and then break above the most recent lower high. Enter on that bullish structure break in the direction of the higher-timeframe trend.",
+    "exit_summary": "Place the stop loss under the low/level that should not break if the bullish reversal is valid. Target the next higher-timeframe high (such as the 1-hour high), with the possibility of holding further if the broader trend continues.",
+    "name": "trend_reversal_to_higher_timeframe_continuation"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "trend_reversal_to_higher_timeframe_continuation",
+      "higher_timeframe": "4h",
+      "lower_timeframe": "15m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "you should have been looking for the 15minut to go bullish",
+        "step": 1,
+        "action": "you should have been looking for the 15minut to go bullish",
+        "rationale": "because we already knew the 4hour time frame was bullish"
+       },
+       {
+        "transcript_quote": "all we had to do here was follow and track our highs and lows",
+        "step": 2,
+        "action": "follow and track our highs and lows",
+        "rationale": "You just have to start tracking your highs and lows on that 15-minut time frame."
+       },
+       {
+        "transcript_quote": "Price stops making lower lows.",
+        "step": 3,
+        "action": "Price stops making lower lows.",
+        "rationale": "This is a bullish sign. This is telling us price could go bullish because it's not breaking a lower low or is not making a low."
+       },
+       {
+        "transcript_quote": "price breaking above that lower high",
+        "step": 4,
+        "action": "price breaking above that lower high",
+        "rationale": "the second thing that confirms that would be price breaking above that lower high"
+       },
+       {
+        "transcript_quote": "all you're doing is waiting for price to go back bullish on that 15minut time frame",
+        "step": 5,
+        "action": "waiting for price to go back bullish on that 15minut time frame",
+        "rationale": "all you had to do was wait for price to break and become back bullish because we already knew the 4hour time frame was bullish"
+       }
+      ],
+      "preferred_regime": "trending",
+      "stop": {
+       "transcript_quote": "putting your stop loss under that level where you don't want to see price get broken",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "putting your stop loss under that level where you don't want to see price get broken"
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "you'll target that 1 hour high",
+        "priority": 1,
+        "type": "1_hour_high",
+        "r_multiple": null,
+        "rationale": "Once you scale back out to that 1 hour time frame, you'll target that 1 hour high."
+       },
+       {
+        "transcript_quote": "go with the flow of that",
+        "priority": 2,
+        "type": "go_with_the_flow",
+        "r_multiple": null,
+        "rationale": "And then you would probably just, you know, go with the flow of that."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "you know the 4 hour and the one hour is bullish",
+        "name": "higher_timeframe_bullish",
+        "description": "you know the 4 hour and the one hour is bullish",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "You just have to start tracking your highs and lows on that 15-minut time frame.",
+        "name": "track_highs_and_lows",
+        "description": "You just have to start tracking your highs and lows on that 15-minut time frame.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "Price stops making lower lows.",
+        "name": "stops_making_lower_lows",
+        "description": "Price stops making lower lows.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "price breaking above that lower high",
+        "name": "break_above_lower_high",
+        "description": "price breaking above that lower high",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "this low is higher than the previous one. Same same setup.",
+        "name": "higher_low_than_previous_one",
+        "description": "this low is higher than the previous one. Same same setup.",
+        "canonical_match": "market_structure_aligned"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

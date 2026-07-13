@@ -1,0 +1,139 @@
+{
+ "video_id": "DLwVqcLRcfw",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   2,
+   2,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 3,
+  "unstable": true,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "vwap_20sma_long_pullback_continuation",
+     "entry_summary": "On the 2-minute chart, get bullish once the first candle closes above both VWAP and the 20 SMA, then enter long on a following candle confirming that high or on pullbacks/bounces that test VWAP while price continues to hold above VWAP and the 20 SMA.",
+     "exit_summary": "For a scalp, take profits into the upper VWAP band. For a runner, hold while VWAP and the 20 SMA trend higher and use the 20 SMA as a trailing stop, exiting on a close below the 20 SMA after price has separated upward from VWAP.",
+     "variants": [
+      {
+       "variant_label": "initial breakout confirmation long",
+       "timeframe_note": "2-minute chart",
+       "confirmation_mechanic_note": "enter after a following candle confirms the high of the candle that closed above the 20 SMA and VWAP",
+       "target_note": "can scalp into the upper VWAP band or hold with 20 SMA trailing stop",
+       "transcript_quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+      },
+      {
+       "variant_label": "VWAP pullback/bounce long",
+       "timeframe_note": "2-minute chart",
+       "confirmation_mechanic_note": "buy pullbacks into VWAP as long as price is testing/wicking around VWAP without closing below and building below it",
+       "target_note": "take profits into the upper VWAP band or continue holding while 20 SMA/VWAP trend higher",
+       "transcript_quote": "as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The transcript gives one fully runnable long VWAP/20-SMA continuation framework with compatible entry variants (initial confirmation entry vs VWAP pullback entry) and two compatible management styles (band scalp vs 20-SMA trailing hold). The later short idea is not promoted because it lacks a concrete exit/stop rule."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "On the 2-minute chart, get bullish once the first candle closes above both VWAP and the 20 SMA, then enter long on a following candle confirming that high or on pullbacks/bounces that test VWAP while price continues to hold above VWAP and the 20 SMA.",
+    "exit_summary": "For a scalp, take profits into the upper VWAP band. For a runner, hold while VWAP and the 20 SMA trend higher and use the 20 SMA as a trailing stop, exiting on a close below the 20 SMA after price has separated upward from VWAP.",
+    "name": "vwap_20sma_long_pullback_continuation"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_20sma_long_pullback_continuation",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "long",
+      "entry_sequence": [
+       {
+        "transcript_quote": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+        "step": 1,
+        "action": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+        "rationale": "if we're trading over the vwob we're typically more bullish"
+       },
+       {
+        "transcript_quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA",
+        "step": 2,
+        "action": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a a ",
+        "step": 3,
+        "action": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity",
+        "rationale": "realistically all we're doing is back testing support here at vwap"
+       }
+      ],
+      "preferred_regime": "clearly trending higher",
+      "stop": {
+       "transcript_quote": "use the previous low Point as a stop",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "use the previous low Point as a stop"
+      },
+      "stop_management": "if we do close below the 20 SMA maybe you can use that as an indication to get out of the trade",
+      "targets": [
+       {
+        "transcript_quote": "you can sell for profits into the upper Channel",
+        "priority": 1,
+        "type": "upper_channel",
+        "r_multiple": null,
+        "rationale": "you can sell for profits into the upper Channel"
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "if we're trading over the vwob we're typically more bullish",
+        "name": "over_vwap_bullish",
+        "description": "if we're trading over the vwob we're typically more bullish",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+        "name": "close_over_20sma_and_vwap",
+        "description": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "realistically all we're doing is back testing support here at vwap",
+        "name": "vwap_support_backtest",
+        "description": "realistically all we're doing is back testing support here at vwap",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "as long as we're not losing it closing below it and building below it this is a good buying opportunity",
+        "name": "hold_above_vwap",
+        "description": "as long as we're not losing it closing below it and building below it this is a good buying opportunity",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "as long as the V up is trending higher as long as your 20 SMA is trending higher you can hold hold this trade",
+        "name": "vwap_and_20sma_trending_higher",
+        "description": "as long as the V up is trending higher as long as your 20 SMA is trending higher you can hold hold this trade",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "we create a little bit of a gap now this here is not a gap this is not really a gap we're pretty flat it's kind of just going sideways at this period ",
+        "name": "gap_from_vwap",
+        "description": "we create a little bit of a gap",
+        "canonical_match": "regime_match"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

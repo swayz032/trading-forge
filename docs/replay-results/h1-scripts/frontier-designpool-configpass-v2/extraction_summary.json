@@ -1,0 +1,231 @@
+{
+ "model": "gpt-5.4",
+ "pool": "gpt54",
+ "partition": 200000,
+ "videos": {
+  "-igpOZs8LsM": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 1171343
+  },
+  "0xygpCMwxbQ": {
+   "enum_counts": [
+    2,
+    2,
+    1,
+    2,
+    2
+   ],
+   "mode": 2,
+   "mode_n": 4,
+   "unstable": false,
+   "n_strategies": 2,
+   "spent_so_far": 1171343
+  },
+  "2DXQqwKSwJE": {
+   "enum_counts": [
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   "mode": 3,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 3,
+   "spent_so_far": 1191264
+  },
+  "4cT8WTyxhYY": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 1197456
+  },
+  "CLDEIsNpVRc": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 1204529
+  },
+  "DLwVqcLRcfw": {
+   "enum_counts": [
+    1,
+    1,
+    2,
+    2,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 3,
+   "unstable": true,
+   "n_strategies": 1,
+   "spent_so_far": 1211159
+  },
+  "E9MzEC_yNoM": {
+   "enum_counts": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "mode": 2,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 2,
+   "spent_so_far": 1226011
+  },
+  "IyFioFkRgWo": {
+   "enum_counts": [
+    1,
+    2,
+    1,
+    2,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 3,
+   "unstable": true,
+   "n_strategies": 1,
+   "spent_so_far": 1231655
+  },
+  "PVMgOxHUqFA": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 1237980
+  },
+  "R5L890juvRw": {
+   "enum_counts": [
+    1,
+    2,
+    2,
+    2,
+    2
+   ],
+   "mode": 2,
+   "mode_n": 4,
+   "unstable": false,
+   "n_strategies": 2,
+   "spent_so_far": 1250869
+  },
+  "W7nlnHTUZQU": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 1258224
+  },
+  "WEhmadJArQo": {
+   "enum_counts": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "mode": 2,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 2,
+   "spent_so_far": 1271467
+  },
+  "ZF8uKPqAu8M": {
+   "enum_counts": [
+    4,
+    4,
+    4,
+    4,
+    4
+   ],
+   "mode": 4,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 4,
+   "spent_so_far": 1299299
+  },
+  "_LS6qcSlDCs": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 1305643
+  },
+  "dV7chra4u4Q": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 1313213
+  },
+  "kFyD3H6I1I8": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 1320695
+  }
+ }
+}

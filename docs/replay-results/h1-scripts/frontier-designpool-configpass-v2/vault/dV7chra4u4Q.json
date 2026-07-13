@@ -1,0 +1,187 @@
+{
+ "video_id": "dV7chra4u4Q",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "break_and_retest_continuation",
+     "entry_summary": "Identify an obvious key level such as pre-market high/low, previous day high/low, or the 30-minute opening range high/low. Enter only after price breaks the level with strong momentum and volume, then retests it and shows confirmation that the level is holding in the breakout direction: bullish cand",
+     "exit_summary": "Place the stop on the opposite side of the breakout level, often just beyond the confirmation candle / break area. Target the next obvious area of liquidity such as a previous high/low or supply/demand zone; the speaker also mentions trimming and moving the remainder to breakeven in some examples.",
+     "variants": [
+      {
+       "variant_label": "Long break-and-retest continuation",
+       "timeframe_note": "Examples shown on 5-minute and 2-minute charts; also references Asia session and New York session contexts",
+       "confirmation_mechanic_note": "After a strong break above resistance, wait for the retest to hold as support and use bullish price action such as long",
+       "target_note": "Next obvious liquidity above, such as previous high or pre-market high; sometimes trim partials and move rest to breake",
+       "transcript_quote": "Price breaks above a key level, it comes back, it retests that level, and it holds it, and it continues in the original direction."
+      },
+      {
+       "variant_label": "Short break-and-retest continuation",
+       "timeframe_note": "Examples shown on 5-minute and 2-minute charts; also references Asia session and New York session contexts",
+       "confirmation_mechanic_note": "After a strong break below support, wait for the retest to hold as resistance and use bearish price action such as long ",
+       "target_note": "Next obvious liquidity below, such as previous low or another demand/liquidity area; sometimes trim partials and move r",
+       "transcript_quote": "Price ends up breaking below the support, well now we have the break, we're waiting for price to come back up and retest it as resistance. If it can"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The video teaches one break-and-retest continuation skeleton; long and short executions are opposite-direction variants of the same setup with mirrored entry, stop, and liquidity-target rules, not separately taught management frameworks."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Identify an obvious key level such as pre-market high/low, previous day high/low, or the 30-minute opening range high/low. Enter only after price breaks the level with strong momentum and volume, then retests it and shows confirmation that the level is holding in the breakout direction: bullish cand",
+    "exit_summary": "Place the stop on the opposite side of the breakout level, often just beyond the confirmation candle / break area. Target the next obvious area of liquidity such as a previous high/low or supply/demand zone; the speaker also mentions trimming and moving the remainder to breakeven in some examples.",
+    "name": "break_and_retest_continuation"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "break_and_retest_continuation",
+      "higher_timeframe": "5m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "step number one is you want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, uhprevious",
+        "step": 1,
+        "action": "identify your key level",
+        "rationale": "Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, uh previous day's highs, previous day's lows, a strong area of support or resistance."
+       },
+       {
+        "transcript_quote": "Step number two is we want to wait for price to break the key level.",
+        "step": 2,
+        "action": "wait for price to break the key level",
+        "rationale": "So, we want strong momentum either at the breakout above resistance or the break below the support level."
+       },
+       {
+        "transcript_quote": "step number three, we want to wait for the retest",
+        "step": 3,
+        "action": "wait for the retest",
+        "rationale": "We want to wait for price to pull back"
+       },
+       {
+        "transcript_quote": "step number four is going to be the entry. I enter after confirmation.",
+        "step": 4,
+        "action": "I enter after confirmation.",
+        "rationale": "we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. Or if we're looking at this scenario right here, when price breaks below, when it comes back up, we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "Your stop is if price breaks back on the opposite side of the breakout level. That's it."
+      },
+      "stop_management": "Maybe caught a trim, maybe two trims, and stopped the rest break even, but still offered opportunity.",
+      "targets": [
+       {
+        "transcript_quote": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low. Maybe you have a supplyzone",
+        "priority": 1,
+        "type": "next_obvious_area_of_liquidity",
+        "r_multiple": null,
+        "rationale": "And then your target is going to be the next obvious area of liquidity, so could be the previous high or the previous low."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "we mainly want to focus on the most obvious ones.",
+        "name": "obvious_key_level",
+        "description": "we mainly want to focus on the most obvious ones.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "So, we want strong momentum either at the breakout above resistance or the break below the support level.",
+        "name": "strong_momentum",
+        "description": "So, we want strong momentum either at the breakout above resistance or the break below the support level.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "Now, on top of that, we do want to see volume confirmation.",
+        "name": "volume_confirmation",
+        "description": "Now, on top of that, we do want to see volume confirmation.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "Ideally, with the retest, we would like to see a strong confirmation, and then we want a clean push through these levels.",
+        "name": "clean_push_through_level",
+        "description": "Ideally, with the retest, we would like to see a strong confirmation, and then we want a clean push through these levels.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it, and then we start making a move down.",
+        "name": "quick_and_aggressive_break",
+        "description": "It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it, and then we start making a move down.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "Literally like a couple big candles through the level, that's what we want to look for.",
+        "name": "couple_big_candles_through_the_level",
+        "description": "Literally like a couple big candles through the level, that's what we want to look for.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "If it looks weak, we ignore the setup, and we do not take it.",
+        "name": "ignore_weak_setups",
+        "description": "If it looks weak, we ignore the setup, and we do not take it.",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "We want to see price hold the level.",
+        "name": "hold_the_level",
+        "description": "We want to see price hold the level.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "If it's able to hold the level, we are then going to look for either bullish price action, if we're looking for price to go up, or bearish priceaction",
+        "name": "bullish_or_bearish_price_action",
+        "description": "If it's able to hold the level, we are then going to look for either bullish price action, if we're looking for price to go up, or bearish price action, if we're looking for price to go down.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc.",
+        "name": "bullish_confirmation_candles",
+        "description": "we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc.",
+        "name": "bearish_confirmation_candles",
+        "description": "we're looking for bearish price action. Long upper wicks, uh bearish hammers, gravestone dojis, etc.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "if you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area.",
+        "name": "bookmap_liquidity_optional",
+        "description": "if you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "literally the first retest is always the highest probability.",
+        "name": "first_retest_highest_probability",
+        "description": "literally the first retest is always the highest probability.",
+        "canonical_match": "regime_match"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}
