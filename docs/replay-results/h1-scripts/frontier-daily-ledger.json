@@ -1,6 +1,15 @@
 {
  "2026-07-13": {
-  "gpt54": 251436,
-  "mini": 213199
+  "gpt54": 299799,
+  "mini": 213199,
+  "_burst_gpt54": {
+   "pool": "gpt54",
+   "limitTokens": 250000,
+   "limitUsd": 2,
+   "overageUsdPerMTok": 6.67,
+   "freePoolLine": 250000,
+   "signedBy": "operator (Tonio, explicit: '$2 not $4')",
+   "grantedUtcDate": "2026-07-13"
+  }
  }
 }

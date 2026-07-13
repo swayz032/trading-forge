@@ -18,7 +18,7 @@
  */
 import OpenAI from "openai";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
-import { resolvePoolPartition, assertExtractionBudgetOrThrow, readTodaySpend, recordSpend } from "../src/server/lib/extraction-token-governor";
+import { resolvePoolPartition, readTodaySpend, recordSpend, readBurstTicket, evaluateWithBurst } from "../src/server/lib/extraction-token-governor";
 import { ExtractionResultCache, promptHash, cacheKey } from "../src/server/lib/extraction-result-cache";
 
 const ROOT = process.cwd();
@@ -85,11 +85,14 @@ async function main() {
   const LEDGER = `${ROOT}/docs/replay-results/h1-scripts/frontier-daily-ledger.json`;
   const now = new Date();
   let spent = readTodaySpend(LEDGER, POOL, now);
-  console.log(`  [ledger] ${POOL} already spent today: ${spent}/${cap}`);
+  const burst = readBurstTicket(LEDGER, POOL, now);
+  console.log(`  [ledger] ${POOL} already spent today: ${spent}/${cap}${burst ? ` | BURST active ($${burst.limitUsd}/${burst.limitTokens}tok, signed: ${burst.signedBy})` : ""}`);
 
   async function call(system: string, user: string, schema: any, schemaName: string, tx: string): Promise<{ parsed: any; tokens: number; cached: number }> {
     const estimate = Math.ceil(tx.length / 4) + 3500;
-    assertExtractionBudgetOrThrow({ tokensSpentToday: spent, requestedTokens: estimate, partitionCap: cap });
+    const be = evaluateWithBurst(spent, estimate, cap, burst, now);
+    if (!be.allow) throw new Error(`[extraction-token-governor] BLOCKED: ${be.reason}`);
+    if (be.mode === "burst") console.log(`    [burst] paid ~${be.projectedPaidTokens} tok ($${be.projectedPaidUsd.toFixed(2)}) — operator-signed`);
     const resp = await client.chat.completions.create({
       model: MODEL,
       messages: [{ role: "system", content: system }, { role: "user", content: user }],

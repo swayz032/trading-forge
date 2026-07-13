@@ -220,6 +220,85 @@ export function seedTodaySpend(ledgerPath: string, pool: string, now: Date, toke
   _wf(ledgerPath, JSON.stringify(led, null, 1));
 }
 
+/**
+ * BURST TICKET — operator-signed, hard-bounded paid allowance (2026-07-13).
+ *
+ * The governor NEVER turns off; the operator hands it a metered ticket. A burst
+ * permits spend ABOVE the free pool line, capped by BOTH a token limit AND a
+ * dollar limit (whichever binds first), for one UTC day only, separately
+ * receipted, auto-expiring at consumption or midnight — then the wall reverts to
+ * free-only automatically. This is a gate you open with a ticket, not a fence you
+ * tear down. Empirically pinned: cached tokens count FULL-WEIGHT against the free
+ * cap; the cache discounts BILL-PRICE only (overage bills at ~$6.67/1M input).
+ */
+export interface BurstTicket {
+  pool: string;
+  limitTokens: number;   // hard token cap for the burst (paid tokens above freePoolLine)
+  limitUsd: number;      // hard dollar cap (whichever binds first)
+  overageUsdPerMTok: number; // discounted overage bill-rate (empirical: ~6.67 $/1M)
+  freePoolLine: number;  // the free daily ceiling above which spend is paid
+  signedBy: string;      // operator signature (audit)
+  grantedUtcDate: string;
+}
+
+export interface BurstEval {
+  allow: boolean;
+  mode: "free" | "burst" | "refused";
+  reason: string;
+  projectedPaidTokens: number;
+  projectedPaidUsd: number;
+}
+
+/**
+ * Burst-aware wall. Below the base partition → free mode. Above it, only a valid,
+ * un-exhausted burst permits the call, and ONLY within BOTH caps. Fail-closed:
+ * any cap breach or absent/expired ticket → refuse.
+ */
+export function evaluateWithBurst(
+  tokensSpentToday: number,
+  requestedTokens: number,
+  basePartition: number,
+  burst: BurstTicket | null,
+  now: Date,
+): BurstEval {
+  const free = evaluateExtractionBudget({ tokensSpentToday, requestedTokens, partitionCap: basePartition });
+  if (free.allow) return { allow: true, mode: "free", reason: "within free partition", projectedPaidTokens: 0, projectedPaidUsd: 0 };
+
+  if (!burst) return { allow: false, mode: "refused", reason: `free partition exhausted, no burst ticket: ${free.reason}`, projectedPaidTokens: 0, projectedPaidUsd: 0 };
+  if (burst.grantedUtcDate !== utcDateKey(now)) return { allow: false, mode: "refused", reason: "burst ticket expired (not today's UTC date)", projectedPaidTokens: 0, projectedPaidUsd: 0 };
+  if (![tokensSpentToday, requestedTokens, basePartition, burst.limitTokens, burst.limitUsd, burst.overageUsdPerMTok, burst.freePoolLine].every(Number.isFinite)) {
+    return { allow: false, mode: "refused", reason: "non-finite burst input (fail-closed)", projectedPaidTokens: 0, projectedPaidUsd: 0 };
+  }
+
+  const projected = tokensSpentToday + requestedTokens;
+  const projectedPaidTokens = Math.max(0, projected - burst.freePoolLine);
+  const projectedPaidUsd = (projectedPaidTokens / 1_000_000) * burst.overageUsdPerMTok;
+
+  if (projectedPaidTokens > burst.limitTokens) {
+    return { allow: false, mode: "refused", reason: `burst TOKEN cap: paid ${projectedPaidTokens} > ${burst.limitTokens} limit — revert to free`, projectedPaidTokens, projectedPaidUsd };
+  }
+  if (projectedPaidUsd > burst.limitUsd) {
+    return { allow: false, mode: "refused", reason: `burst USD cap: $${projectedPaidUsd.toFixed(2)} > $${burst.limitUsd.toFixed(2)} limit — revert to free`, projectedPaidTokens, projectedPaidUsd };
+  }
+  return { allow: true, mode: "burst", reason: `burst OK: paid ${projectedPaidTokens} tok ($${projectedPaidUsd.toFixed(2)}) within ${burst.limitTokens}/$${burst.limitUsd}`, projectedPaidTokens, projectedPaidUsd };
+}
+
+/** Read today's burst ticket from the ledger (null if none/expired). */
+export function readBurstTicket(ledgerPath: string, pool: string, now: Date): BurstTicket | null {
+  const led = loadLedger(ledgerPath) as any;
+  const t = led?.[utcDateKey(now)]?.[`_burst_${pool}`];
+  if (!t || t.grantedUtcDate !== utcDateKey(now)) return null;
+  return t as BurstTicket;
+}
+/** Grant an operator-signed burst ticket for today (audit-logged in the ledger). */
+export function grantBurstTicket(ledgerPath: string, now: Date, ticket: BurstTicket): void {
+  const led = loadLedger(ledgerPath) as any;
+  const dk = utcDateKey(now);
+  led[dk] = led[dk] ?? {};
+  led[dk][`_burst_${ticket.pool}`] = ticket;
+  _wf(ledgerPath, JSON.stringify(led, null, 1));
+}
+
 export interface TwoPathBudgetReport {
   designedDailyPartition: number;
   designed7DayCeiling: number;

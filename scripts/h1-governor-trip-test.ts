@@ -17,6 +17,8 @@ import {
   startOfUtcDay,
   EXTRACTION_DAILY_PARTITION_DEFAULT,
   POOLS,
+  evaluateWithBurst,
+  type BurstTicket,
 } from "../src/server/lib/extraction-token-governor";
 
 let failures = 0;
@@ -108,8 +110,29 @@ async function main() {
   if (savedG !== undefined) process.env.TF_EXTRACTION_GPT54_DAILY_TOKEN_CAP = savedG;
   else delete process.env.TF_EXTRACTION_GPT54_DAILY_TOKEN_CAP;
 
+  // 14. BURST TICKET — operator-signed, hard-bounded, both caps stop it.
+  const today = new Date();
+  const dk = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}-${String(today.getUTCDate()).padStart(2, "0")}`;
+  const ticket: BurstTicket = { pool: "gpt54", limitTokens: 250_000, limitUsd: 2.0, overageUsdPerMTok: 6.67, freePoolLine: 250_000, signedBy: "operator", grantedUtcDate: dk };
+  // below base partition -> free mode (no burst consumed)
+  check("burst: below partition = free mode", evaluateWithBurst(100_000, 10_000, 200_000, ticket, today).mode === "free");
+  // above partition, within both caps -> burst mode allow
+  const b1 = evaluateWithBurst(260_000, 10_000, 200_000, ticket, today);
+  check("burst: above partition within caps = burst allow", b1.allow && b1.mode === "burst");
+  // TOKEN cap: paid tokens would exceed 250K -> refuse
+  const b2 = evaluateWithBurst(490_000, 20_000, 200_000, ticket, today); // paid=260K>250K
+  check("burst: TOKEN cap stops it (paid>250K)", !b2.allow && /TOKEN cap/.test(b2.reason));
+  // USD cap: with a high token limit, $2 binds first (~299,850 paid tokens)
+  const bigTok: BurstTicket = { ...ticket, limitTokens: 1_000_000 };
+  const b3 = evaluateWithBurst(550_000, 10_000, 200_000, bigTok, today); // paid=310K -> $2.07 > $2
+  check("burst: USD cap stops it ($>2)", !b3.allow && /USD cap/.test(b3.reason));
+  // no ticket above partition -> refuse
+  check("burst: no ticket above partition = refuse", evaluateWithBurst(260_000, 10_000, 200_000, null, today).mode === "refused");
+  // expired ticket (wrong date) -> refuse
+  check("burst: expired ticket refused", evaluateWithBurst(260_000, 10_000, 200_000, { ...ticket, grantedUtcDate: "2000-01-01" }, today).mode === "refused");
+
   console.log(failures === 0
-    ? "\nGOVERNOR PROVEN — wall trips fail-closed on every dangerous path. Metered calls may now be wired behind it."
+    ? "\nGOVERNOR PROVEN — wall trips fail-closed on every dangerous path; burst ticket hard-bounded on tokens AND dollars. Metered calls may be wired behind it."
     : `\n${failures} CHECK(S) FAILED — governor NOT proven; no metered call may be wired.`);
   process.exit(failures === 0 ? 0 : 1);
 }
