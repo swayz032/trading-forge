@@ -727,24 +727,23 @@ class TestEODTrailingHWMFix:
 
 # ─── F-6: MFFU sliding-window consistency check ────────────────────
 
-class TestMFFUConsistencyNotModeledInB14:
-    """deepscan5 2026-06-29: MFFU Builder consistency (mffu_50pct_sim_payout) applies ONLY at the
-    discrete SIM-FUNDED payout stage — NONE at eval, NONE live (firm_config.py mffu_50k). The B14
-    eval+funded survival sim does not model that discrete payout gate, so simulate_firm_survival
-    EXPLICITLY SKIPS MFFU consistency (mirrors the Topstep standard-lane skip).
+class TestMFFUConsistencyIsSeparateFromSurvival:
+    """MFFU Builder consistency applies only to a sim-funded payout window.
+
+    The survival model now records that window separately, while account breach
+    and ruin metrics remain untouched by a recoverable payout ineligibility.
 
     SUPERSEDES the prior `TestMFFUSlidingWindowConsistency` class: that class assumed MFFU did a
     14-day sliding-window B14 consistency check, which predates the Builder reconfiguration
     (rule renamed mffu_50pct → mffu_50pct_sim_payout, payout_cycle_days 14 → 2,
     consistency_window_days → None). These tests lock in the current intended behavior: a path
-    that WOULD violate a 50% best-day cap produces NO consistency breach for mffu_50k, because the
-    rule is intentionally not enforced in B14.
+    that would violate a 50% best-day cap produces no consistency breach for
+    mffu_50k, because it is not an account-closing event.
     """
 
     def test_concentrated_path_does_not_breach_consistency(self):
         """A path where the single best day is >50% of total profit (would violate a 50% cap)
-        must NOT produce a consistency breach for mffu_50k — MFFU consistency is sim-payout-only,
-        not modeled in the B14 eval+funded sim."""
+        must NOT produce a consistency breach for mffu_50k."""
         from src.engine.monte_carlo import simulate_firm_survival
 
         # Best day $6000 of $8600 total ≈ 69.8% > 50% — a full-path 50% cap WOULD flag this.
@@ -772,10 +771,8 @@ class TestMFFUConsistencyNotModeledInB14:
         )
         assert result["breach_reasons"].get("consistency", 0) == 0
 
-    def test_topstep_consistency_lane_still_fires(self):
-        """Regression guard: the explicit MFFU skip must NOT disable Topstep consistency. In the
-        CONSISTENCY payout lane, a concentrated path on topstep_50k still produces a breach —
-        proving the skip is MFFU-scoped, not a blanket consistency-off."""
+    def test_topstep_consistency_lane_is_recorded_as_payout_eligibility(self):
+        """Topstep XFA Consistency paths report payout ineligibility, never breach."""
         import os
 
         from src.engine.monte_carlo import simulate_firm_survival
@@ -795,8 +792,8 @@ class TestMFFUConsistencyNotModeledInB14:
                 os.environ.pop("TOPSTEP_PAYOUT_LANE", None)
             else:
                 os.environ["TOPSTEP_PAYOUT_LANE"] = _prev
-        # Topstep consistency-lane full-path 50% cap still fires (skip is MFFU-scoped).
-        assert result["breach_reasons"].get("consistency", 0) > 0
+        assert result["breach_reasons"].get("consistency", 0) == 0
+        assert result["payout_eligibility"]["recoverable"] is True
 
 
 # ─── F-7: max_drawdown_p5 positive sign convention ─────────────────

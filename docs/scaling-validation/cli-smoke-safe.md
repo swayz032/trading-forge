@@ -21,16 +21,16 @@
 
 ## Tier Verdict Table
 
-| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Consistency fail |
+| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Payout eligibility (separate) |
 |---|---|---|---|---|---|---|
-| 9 | 0.00% | 5% | SAFE (0.0% breach < 5% gate) | 100.0% | 0.0% | 0.0% |
-| 12 | 0.00% | 5% | SAFE (0.0% breach < 5% gate) | 100.0% | 0.0% | 0.0% |
+| 9 | 0.00% | 5% | SAFE (0.0% breach < 5% gate) | 100.0% | 0.0% | standard: 100.0% |
+| 12 | 0.00% | 5% | SAFE (0.0% breach < 5% gate) | 100.0% | 0.0% | standard: 100.0% |
 
 ## Plain-English Verdict Per Tier
 
 ### Tier 9 contracts — SAFE
 
-About 0.0% of simulated 6-month runs hit the drawdown floor or triggered the consistency rule. That is very low risk — the account buffer absorbs this tier comfortably.
+About 0.0% of simulated 6-month runs hit the drawdown floor or a hard daily-loss limit. That is very low risk — the account buffer absorbs this tier comfortably.
 
 **Simulated max-drawdown percentiles (from account peak):**
 
@@ -40,7 +40,7 @@ About 0.0% of simulated 6-month runs hit the drawdown floor or triggered the con
 
 ### Tier 12 contracts — SAFE
 
-About 0.0% of simulated 6-month runs hit the drawdown floor or triggered the consistency rule. That is very low risk — the account buffer absorbs this tier comfortably.
+About 0.0% of simulated 6-month runs hit the drawdown floor or a hard daily-loss limit. That is very low risk — the account buffer absorbs this tier comfortably.
 
 **Simulated max-drawdown percentiles (from account peak):**
 
@@ -53,7 +53,7 @@ About 0.0% of simulated 6-month runs hit the drawdown floor or triggered the con
 ### What this harness VALIDATES
 
 - Per-tier firm-breach probability on this strategy's historical P&L distribution
-- Topstep EOD trailing-DD + daily-loss-limit + 50% consistency rule (via simulate_firm_survival)
+- Topstep EOD trailing-DD + hard daily-loss limit; dynamic Combine target and funded payout eligibility are reported separately
 - Block-bootstrap MC paths preserve short-run autocorrelation
 - Gate logic: breach rate < SCALING_BREACH_GATE_PCT (default 5%)
 - Fail-CLOSED: any data-missing or sim-error case exits non-zero

@@ -16,7 +16,9 @@ from src.engine.firm_rules_version import (
     _canonical_json,
     compute_firm_rules_version,
     compute_firm_rules_version_from_dicts,
+    compute_firm_rules_version_from_stage_rules,
 )
+from src.engine.firm_stage_rules import FIRM_STAGE_RULES
 
 # ─── Format contract tests ────────────────────────────────────────
 
@@ -61,6 +63,16 @@ class TestFirmRulesVersionDeterminism:
         v = compute_firm_rules_version_from_dicts(fc, fr)
         assert len(v) == 16
         assert all(c in "0123456789abcdef" for c in v)
+
+    def test_current_version_uses_canonical_stage_rules(self):
+        assert compute_firm_rules_version() == compute_firm_rules_version_from_stage_rules(
+            FIRM_STAGE_RULES
+        )
+
+    def test_stage_only_payout_change_changes_version(self):
+        copied = json.loads(json.dumps(FIRM_STAGE_RULES))
+        copied["firms"]["topstep_50k"]["payout"]["paths"]["standard"]["minimum_winning_days"] = 6
+        assert compute_firm_rules_version_from_stage_rules(copied) != compute_firm_rules_version()
 
 
 # ─── Sensitivity tests ───────────────────────────────────────────
@@ -181,7 +193,7 @@ TS_PARITY_FIXTURE_FC = {
         "locks_at_start": True,
         "max_drawdown": 2000,
         "min_payout_days": 5,
-        "min_trading_days": 5,
+        "min_trading_days": 2,
         "monthly_fee": 49,
         "name": "Topstep 50K",
         "ongoing_fee": 0,
@@ -206,7 +218,7 @@ TS_PARITY_FIXTURE_FR = {
         "max_contracts": 50,
         "max_drawdown": 2000,
         "min_payout_days": 5,
-        "min_trading_days": 5,
+        "min_trading_days": 2,
         "monthly_fee": 49,
         "multi_account_within_user_allowed": True,
         "ongoing_monthly_fee": 0,

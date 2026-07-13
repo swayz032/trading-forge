@@ -40,14 +40,6 @@ DEFAULT_WEIGHTS = {
     "eval_speed": 0.10,
 }
 
-# Evaluation profit targets per account type (approximate)
-EVAL_PROFIT_TARGETS = {
-    "50K": 3000,
-    "100K": 6000,
-    "Express": 3000,
-}
-
-
 def _recovery_speed_score(daily_pnls: list[float]) -> dict:
     """
     Calculate recovery speed from max drawdown in the equity curve.
@@ -205,6 +197,7 @@ def _commission_drag_score(
 def _eval_speed_score(
     daily_pnls: list[float],
     eval_profit_target: float,
+    min_trading_days: int,
 ) -> dict:
     """
     Estimate days to pass evaluation based on average daily P&L.
@@ -225,7 +218,10 @@ def _eval_speed_score(
     if avg_daily <= 0:
         return {"expected_eval_days": 999, "avg_daily_pnl": round(avg_daily, 2), "score": 0.0}
 
-    expected_days = int(np.ceil(eval_profit_target / avg_daily))
+    expected_days = max(
+        int(np.ceil(eval_profit_target / avg_daily)),
+        min_trading_days,
+    )
 
     # Score: faster = better
     # 5 days -> 100, 10 days -> ~82, 15 days -> ~67, 20 days -> ~55, 30 -> ~35
@@ -334,8 +330,11 @@ def survival_score(
     )
 
     # 7. Eval speed
-    eval_target = EVAL_PROFIT_TARGETS.get(account_type, 3000)
-    eval_result = _eval_speed_score(daily_pnls, eval_target)
+    eval_result = _eval_speed_score(
+        daily_pnls,
+        float(profile["evaluation_profit_target"]),
+        int(profile["evaluation_min_trading_days"]),
+    )
 
     # Collect normalized scores (each 0-100)
     metrics = {

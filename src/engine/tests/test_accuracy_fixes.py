@@ -449,9 +449,9 @@ class TestH4DoubleCommissionFix:
         result = _compute_net_daily_pnls(
             daily_pnls, "topstep_50k", symbol="MES",
             avg_trades_per_day=2.0,
-            backtester_commission_per_side=0.37,  # Topstep rate
+            backtester_commission_per_side=0.62,  # Topstep canonical rate
         )
-        # Topstep rate = $0.37/side. If delta = 0.37 - 0.37 = 0 → no adjustment
+        # Topstep rate = $0.62/side. If delta = 0.62 - 0.62 = 0 → no adjustment
         assert result == daily_pnls, \
             f"No adjustment expected when rates match. Got {result}"
 

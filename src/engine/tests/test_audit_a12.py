@@ -55,9 +55,11 @@ from src.engine.firm_config import (
     FIRM_CONTRACT_CAPS,
     FIRM_RULES,
 )
+from src.engine.firm_stage_rules import FIRM_STAGE_RULES, trailing_drawdown_floor
 from src.engine.indicators.core import compute_atr
 from src.engine.indicators.market_structure import detect_bos, detect_swings
 from src.engine.monte_carlo import optimal_block_length
+from src.engine.prop_compliance import FIRM_CONFIGS
 
 # ─── Audit Result Collector ────────────────────────────────────────────────
 
@@ -452,8 +454,8 @@ def test_cat05_pnl_math():
            MNQ point_value = 2.00, tick_size = 0.25, tick_value = 0.50
            MCL point_value = 100.00, tick_size = 0.01, tick_value = 1.00
       b) TS CONTRACT_SPECS in src/shared/firm-config.ts match Python exactly
-      c) Commission per side: per-firm dict matches docs/prop-firm-rules.md
-         Topstep: $0.37, MFFU/Apex/TPT/FFN/Earn2Trade: $0.62, Tradeify: $1.29, Alpha: $0.00
+      c) Commission per side: per-firm dict matches the canonical stage rule book
+         Topstep MES: $0.62, MFFU Builder MES: $0.95
       d) PnL math in backtester multiplies by point_value (NOT tick_value)
          pnl = (exit - entry) * point_value * contracts
       e) Slippage is SUBTRACTED from gross PnL (cost), never added
@@ -506,8 +508,8 @@ def test_cat05_pnl_math():
     # c) Per-firm commissions — 2026-05-19 phase19/phase20 stripped 6 legacy
     # firms (TPT/Apex/FFN/Alpha/Tradeify/Earn2Trade). Topstep + MFFU only.
     expected_commissions = {
-        "topstep_50k": 0.37,
-        "mffu_50k": 0.62,
+        "topstep_50k": 0.62,
+        "mffu_50k": 0.95,
     }
     for firm, expected_per_side in expected_commissions.items():
         if firm not in FIRM_COMMISSIONS:
@@ -863,7 +865,7 @@ def test_cat09_daily_pnl_aggregation():
     )
     findings.append(f"peakEquity HWM updated from MARKED-TO-MARKET (unrealized) equity: {'YES' if hwm_uses_unrealized else 'no'}")
     if hwm_uses_unrealized:
-        # Critical finding: per docs/prop-firm-rules.md, Topstep/Apex EOD trailing
+        # Critical finding: per the canonical Topstep stage rule, EOD trailing
         # DD uses CLOSED equity. Updating HWM intraday from unrealized PnL
         # over-tightens the trailing DD floor.
         failures.append(
@@ -905,9 +907,9 @@ def test_cat10_compliance_accuracy():
     max position aware of correlated positions.
 
     Checks:
-      a) FIRM_RULES sets daily_loss_limit per firm: Topstep $1000, MFFU/TPT/FFN/Tradeify/Alpha None,
-         Apex $1000, Earn2Trade $1100
-      b) trailing_drawdown_locks (locks_at_start) is implemented in monte_carlo / prop_compliance
+      a) FIRM_RULES sets daily_loss_limit per active firm: Topstep $1000 hard limit,
+         MFFU $1000 soft pause
+      b) stage-specific trailing-drawdown locks are implemented in monte_carlo / prop_compliance
       c) Correlation matrix loads via correlated-position-guard with threshold 0.70
       d) compliance_gate.check_kill_switch checks consecutive_losses, daily_loss_limit, max_trades_per_day
       e) Per-firm contract caps respected (FIRM_CONTRACT_CAPS)
@@ -918,7 +920,7 @@ def test_cat10_compliance_accuracy():
     # a) Per-firm DLL — 2026-05-19 legacy purge: Topstep + MFFU only.
     expected_dll = {
         "topstep_50k": 1000,
-        "mffu_50k": None,
+        "mffu_50k": 1000,
     }
     for firm, expected in expected_dll.items():
         actual = FIRM_RULES.get(firm, {}).get("daily_loss_limit")
@@ -934,16 +936,27 @@ def test_cat10_compliance_accuracy():
     else:
         findings.append("FIRM_RULES firm count: OK (2 firms — Topstep + MFFU)")
 
-    # b) locks_at_start in prop_compliance
+    # b) Stage-specific lock floors. A string-presence assertion alone once
+    # passed while MFFU's Builder $100 lock was wrong, so exercise the actual
+    # canonical helper and require both consumers to call it.
     prop_compliance = _read("src/engine/prop_compliance.py")
-    locks_pres = '"locks_at_start": True' in prop_compliance
-    locks_in_mc = "locks_at_start" in _read("src/engine/monte_carlo.py")
-    findings.append(f"prop_compliance.py locks_at_start: {'OK' if locks_pres else 'MISSING'}")
-    findings.append(f"monte_carlo.py honors locks_at_start: {'OK' if locks_in_mc else 'MISSING'}")
-    if not locks_pres:
-        failures.append("prop_compliance.py missing locks_at_start (trailing DD lock at starting balance)")
-    if not locks_in_mc:
-        failures.append("monte_carlo.py firm-survival sim does not honor locks_at_start")
+    topstep_stage = FIRM_RULES["topstep_50k"]["stages"]["evaluation"]
+    mffu_stage = FIRM_RULES["mffu_50k"]["stages"]["funded"]
+    lock_floors_correct = (
+        trailing_drawdown_floor(topstep_stage, 52_000, 50_000) == 50_000
+        and trailing_drawdown_floor(mffu_stage, 2_100, 0) == 100
+    )
+    lock_helper_in_compliance = "trailing_lock_floor_offset" in prop_compliance
+    lock_helper_in_mc = "trailing_drawdown_floor" in _read("src/engine/monte_carlo.py")
+    findings.append(f"stage-specific trailing lock floors: {'OK' if lock_floors_correct else 'MISMATCH'}")
+    findings.append(f"prop_compliance.py projects lock offset: {'OK' if lock_helper_in_compliance else 'MISSING'}")
+    findings.append(f"monte_carlo.py calls canonical lock helper: {'OK' if lock_helper_in_mc else 'MISSING'}")
+    if not lock_floors_correct:
+        failures.append("canonical Topstep/MFFU trailing lock floors are incorrect")
+    if not lock_helper_in_compliance:
+        failures.append("prop_compliance.py does not project stage-specific trailing lock offsets")
+    if not lock_helper_in_mc:
+        failures.append("monte_carlo.py does not call the canonical trailing floor helper")
 
     # c) Correlation matrix + guard
     yaml_path = REPO_ROOT / "src/engine/compliance/correlation_matrix.yaml"
@@ -974,9 +987,9 @@ def test_cat10_compliance_accuracy():
     if not kill_switch_complete:
         failures.append("compliance_gate.check_kill_switch missing one of [DLL, consec_losses, max_trades]")
 
-    # e) Per-firm contract caps — 2026-05-19 micros corrected to 50 (was 15).
-    EXPECTED_MICRO_CAP = 50
-    for firm in ["topstep_50k", "mffu_50k"]:
+    # e) Per-firm contract caps come from the active stage rule book.
+    EXPECTED_MICRO_CAPS = {"topstep_50k": 50, "mffu_50k": 40}
+    for firm, expected_micro_cap in EXPECTED_MICRO_CAPS.items():
         if firm not in FIRM_CONTRACT_CAPS:
             failures.append(f"FIRM_CONTRACT_CAPS missing {firm}")
             findings.append(f"FIRM_CONTRACT_CAPS[{firm}]: MISSING")
@@ -987,20 +1000,17 @@ def test_cat10_compliance_accuracy():
                 findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}]: MISSING")
                 continue
             actual_cap = FIRM_CONTRACT_CAPS[firm][sym]
-            if actual_cap != EXPECTED_MICRO_CAP:
-                failures.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap} (expected {EXPECTED_MICRO_CAP})")
-                findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap}: MISMATCH (expected {EXPECTED_MICRO_CAP})")
+            if actual_cap != expected_micro_cap:
+                failures.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap} (expected {expected_micro_cap})")
+                findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap}: MISMATCH (expected {expected_micro_cap})")
             else:
                 findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap}: OK")
 
-    # f) Soft finding: firm-config.ts marks ALL firms `trailing: "eod"` even though
-    #    a) MFFU offers "Rapid" plan with intraday_trailing
-    #    b) Apex offers both EOD and Intraday 50K accounts
+    # f) The active Topstep 50K and MFFU Builder contracts intentionally use EOD
+    # trailing. Historical plan variants are outside the active rule book.
     findings.append(
-        "(NOTE) src/shared/firm-config.ts marks ALL firms `trailing: \"eod\"`. "
-        "MFFU \"Rapid\" plan and Apex \"Intraday\" 50K account both use intraday "
-        "trailing per docs/prop-firm-rules.md. Acceptable for current trading "
-        "(user only uses EOD plans) but flagged for future plan additions."
+        "Active Topstep 50K and MFFU Builder stage rules use EOD trailing; "
+        "historical plan variants are not runtime configurations."
     )
 
     evidence = "\n  - ".join([""] + findings)
@@ -1150,37 +1160,34 @@ def test_cat12_source_of_truth_conflicts():
         "annualization. No documented precedence when they diverge."
     )
 
-    # b/c) Firm rule duplication
+    # b/c) Canonical firm-rule projection parity
     py_firms = _read("src/engine/firm_config.py")
-    py_propcomp = _read("src/engine/prop_compliance.py")
     ts_firms = _read("src/shared/firm-config.ts")
 
-    # Check three sources have identical max_drawdown for topstep_50k.
-    # Regexes are intentionally permissive: search the WHOLE file for the
-    # first topstep-block maxDrawdown value. Each file has only one Topstep
-    # 50K entry, so the first hit is always correct.
-    py_topstep_dd = re.search(r'"topstep_50k"\s*:.*?"max_drawdown"\s*:\s*([0-9]+)', py_firms, re.DOTALL)
-    py_pc_topstep_dd = re.search(r'"topstep[^"]*"\s*:\s*\{.*?"max_drawdown"\s*:\s*([0-9]+)', py_propcomp, re.DOTALL)
-    # TS: search topstep block, anywhere in the file, for "maxDrawdown: NNNN"
-    ts_topstep_dd = re.search(r'topstep\s*:\s*\{.*?maxDrawdown\s*:\s*([0-9_]+)', ts_firms, re.DOTALL)
-
-    py_v = int(py_topstep_dd.group(1)) if py_topstep_dd else None
-    py_pc_v = int(py_pc_topstep_dd.group(1)) if py_pc_topstep_dd else None
-    ts_v = int(ts_topstep_dd.group(1).replace("_", "")) if ts_topstep_dd else None
-    findings.append(f"Topstep maxDD: firm_config.py={py_v}, prop_compliance.py={py_pc_v}, shared/firm-config.ts={ts_v}")
-    if py_v is not None and ts_v is not None and py_v != ts_v:
-        failures.append(f"Topstep maxDD mismatch: firm_config.py={py_v}, shared/firm-config.ts={ts_v}")
-    if py_v is not None and py_pc_v is not None and py_v != py_pc_v:
-        failures.append(f"Topstep maxDD mismatch: firm_config.py={py_v}, prop_compliance.py={py_pc_v}")
-
-    # CLAUDE.md explicitly notes: "prop_compliance.py has its own FIRM_CONFIGS dict
-    # that duplicates some of these rules. Both must stay in sync. Do NOT delete
-    # either without full regression testing." — record as a known long-term risk.
+    canonical_topstep_dd = int(
+        FIRM_STAGE_RULES["firms"]["topstep_50k"]["evaluation"]["max_drawdown"]
+    )
+    py_v = int(FIRM_RULES["topstep_50k"]["max_drawdown"])
+    py_pc_v = int(FIRM_CONFIGS["topstep_50k"]["max_drawdown"])
+    ts_uses_stage_loader = 'from "./firm-stage-rules.js"' in ts_firms
+    py_uses_stage_loader = "firm_stage_rules" in py_firms
     findings.append(
-        "(NOTE) Firm rules are TRIPLICATED across src/shared/firm-config.ts (TS), "
-        "src/engine/firm_config.py (Py FIRM_RULES), and src/engine/prop_compliance.py "
-        "(Py FIRM_CONFIGS). CLAUDE.md flags this as a known sync risk. No automated "
-        "drift detection currently — flagged as Cat 12 source-of-truth weakness."
+        "Topstep maxDD canonical/projections: "
+        f"canonical={canonical_topstep_dd}, firm_config.py={py_v}, "
+        f"prop_compliance.py={py_pc_v}, shared loader={ts_uses_stage_loader}"
+    )
+    if len({canonical_topstep_dd, py_v, py_pc_v}) != 1:
+        failures.append(
+            "Topstep maxDD projection mismatch: "
+            f"canonical={canonical_topstep_dd}, firm_config.py={py_v}, "
+            f"prop_compliance.py={py_pc_v}"
+        )
+    if not (ts_uses_stage_loader and py_uses_stage_loader):
+        failures.append("Firm projections must load the canonical stage rule book.")
+
+    findings.append(
+        "Firm rules use one canonical JSON source with Python/TypeScript projections; "
+        "version and document-drift gates verify parity."
     )
 
     # d) backtest_provenance / result hash precedence
@@ -1400,10 +1407,10 @@ def _render_report() -> str:
     lines: list[str] = []
     lines.append("# A12 — 12-Category Code Audit Report")
     lines.append("")
-    lines.append(f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}  ")
-    lines.append("**Auditor:** W12 Team B (trading-forge-architect)  ")
-    lines.append("**Plan:** PART A §A12 of `C:\\Users\\tonio\\.claude\\plans\\reflective-dancing-moth.md`  ")
-    lines.append("**Scope:** Read-only static + numerical audit of existing Trading Forge code.  ")
+    lines.append(f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    lines.append("**Auditor:** W12 Team B (trading-forge-architect)")
+    lines.append("**Plan:** PART A §A12 of `C:\\Users\\tonio\\.claude\\plans\\reflective-dancing-moth.md`")
+    lines.append("**Scope:** Read-only static + numerical audit of existing Trading Forge code.")
     lines.append("**Test file:** `src/engine/tests/test_audit_a12.py`")
     lines.append("")
     lines.append("## Summary")

@@ -194,7 +194,9 @@ function detectPropDDTrap(dsl, evidence) {
 }
 ```
 
-**Source.** Trading Forge `docs/prop-firm-rules.md`. Topstep 2026 trailing drawdown rule. Real-world Apex 2025 funded-trader bans for buffer-thin strategies.
+**Source.** Trading Forge `src/shared/firm-stage-rules.json` and
+`docs/prop-firm-rules-2026-topstep.md`. Real-world Apex 2025 funded-trader bans
+remain historical context only.
 
 ---
 
@@ -285,5 +287,5 @@ function detectNewsHeadline(scoutFind) {
 - StockBench 2025 — LLM agent failure to outperform passive benchmarks
 - Trading Forge `src/server/services/dsl-diversity-service.ts` — C9 implementation
 - Trading Forge `src/engine/frankenstein_test.py` — A4 implementation
-- Trading Forge `docs/prop-firm-rules.md` — drawdown gate sources
+- Trading Forge `src/shared/firm-stage-rules.json` — active drawdown gate source
 - Trading Forge graveyard (`strategy_signal_vectors` cosine clusters) — empirical pattern library

@@ -2,7 +2,7 @@
  * Multi-Firm Promotion Service — B5 (W13 Team C Step 1)
  *
  * On PAPER → DEPLOY_READY promotion, iterate through all configured firms
- * (Topstep, Apex, MFFU, TPT, FFN, Alpha, Tradeify, Earn2Trade), run
+ * (Topstep and MFFU), run
  * compliance_gate.py per firm via check_strategy_compliance, and store one
  * per-firm deployment_eligibility row in strategy_firm_eligibility.
  *
@@ -22,7 +22,7 @@
  *
  * Reuse:
  *   - compliance_gate.py check_strategy_compliance (existing, action="check_strategy_compliance")
- *   - firm-config.ts FIRMS (all 8 configured firms)
+ *   - firm-config.ts FIRMS (the active firm projections)
  *   - pipeline-control-service.isActive()
  *
  * Parity notes (paper/backtest):
@@ -160,9 +160,12 @@ async function buildStrategyComplianceInput(
         Object.keys((backtestData.contracts_per_symbol as Record<string, number>)).length === 0 &&
         strategy.symbol
       ) {
-        // Default: the firm's published micro contract cap at $50K (50 micros = 5 minis × 10:1
-        // ratio, for both Topstep Combine/Funded and MFFU Core/Flex/Rapid).
-        backtestData.contracts_per_symbol = { [strategy.symbol]: 50 };
+        // The same strategy input is evaluated against both firms, so use the
+        // conservative active cap until per-firm sizing data is available.
+        const conservativeCap = Math.min(
+          ...Object.values(FIRMS).map((firm) => firm.accountTypes["50k"].maxContracts),
+        );
+        backtestData.contracts_per_symbol = { [strategy.symbol]: conservativeCap };
       }
     }
   }
@@ -191,7 +194,7 @@ function buildFirmRules(firmId: string): Record<string, unknown> {
       MNQ: acct.maxContracts,
       MCL: acct.maxContracts,
     },
-    automation_banned: false, // All 8 firms allow automation during eval phase
+    automation_banned: false, // Both active firms allow automation during evaluation.
     automation_banned_pa_live: false,
     commission_per_side: acct.commissionPerSide,
     profit_target: acct.profitTarget,
@@ -306,7 +309,7 @@ export async function evaluateMultiFirmEligibility(
     };
   }
 
-  const firmIds = Object.keys(FIRMS); // All 8 configured firms
+  const firmIds = Object.keys(FIRMS); // Active firm projections only.
   const evaluatedAt = new Date();
 
   logger.info(

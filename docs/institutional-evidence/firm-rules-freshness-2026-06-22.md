@@ -1,5 +1,11 @@
 # Prop Firm Rules Freshness Audit — 2026-06-22
 
+> **Historical audit — superseded for runtime use.** This report records the
+> discrepancies found on 2026-06-22. The active contract is the stage-aware
+> rule book at `src/shared/firm-stage-rules.json` and its two current rule docs;
+> it is scoped to Topstep 50K and MFFU 50K Builder, not the historical plans
+> discussed below.
+
 ## Audit Parameters
 
 - **Audit date:** 2026-06-22

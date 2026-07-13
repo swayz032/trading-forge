@@ -1,5 +1,10 @@
 # Risk Management / Kill-Switch / Position Sizing — Institutional Reference Evidence
 
+> **Historical evidence — not an active firm-rule source.** Current Topstep
+> 50K and MFFU 50K Builder rules are defined only in
+> `src/shared/firm-stage-rules.json`; this evidence retains conflicting
+> third-party claims for audit provenance.
+
 ## TL;DR (Trading Forge gap assessment)
 
 - Topstep Combine uses INTRADAY trailing MLL (not EOD) — bot must treat unrealized equity peak as the floor-ratchet trigger, not realized P&L

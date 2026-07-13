@@ -13,7 +13,7 @@
  *   6. Simultaneous limits at same price prohibited
  *   7. Slippage/bracket exploitation prohibited — 2-tick MES floor
  *   8. 2% price limit rule
- *   9. Bi-weekly payouts + 80/20 split
+ *   9. Builder 48-hour payouts + 80/20 split
  *  10. Hedging same underlying (reaffirm — same as 4)
  *
  * Plus sanity tests: per-firm independence, magic-number constants exposure,
@@ -72,25 +72,25 @@ beforeEach(() => {
 
 // ─── Rule 9: Bi-Weekly Payouts + 80/20 Split ────────────────────────────────
 
-describe("MFFU 2026 Rule 9 — Bi-Weekly Payouts + 80/20 Split", () => {
+describe("MFFU 2026 Rule 9 — Builder 48-hour Payouts + 80/20 Split", () => {
   it("MFFU payout split is exactly 0.80 in firm-config", () => {
     const acct = getFirmAccount("mffu", "50k");
     expect(acct).not.toBeNull();
     expect(acct!.payoutSplit).toBe(0.80);
   });
 
-  it("MFFU payout cycle is exactly 14 days", () => {
+  it("MFFU Builder payout cycle is exactly 2 days", () => {
     const acct = getFirmAccount("mffu", "50k");
     expect(acct).not.toBeNull();
-    expect(acct!.payoutCycleDays).toBe(14);
+    expect(acct!.payoutCycleDays).toBe(2);
   });
 
   it("MFFU_PAYOUT_SPLIT named constant is 0.80 (no magic numbers)", () => {
     expect(MFFU_PAYOUT_SPLIT).toBe(0.80);
   });
 
-  it("MFFU_PAYOUT_CYCLE_DAYS named constant is 14 (no magic numbers)", () => {
-    expect(MFFU_PAYOUT_CYCLE_DAYS).toBe(14);
+  it("MFFU_PAYOUT_CYCLE_DAYS named constant is 2 (no magic numbers)", () => {
+    expect(MFFU_PAYOUT_CYCLE_DAYS).toBe(2);
   });
 });
 
@@ -257,8 +257,8 @@ describe("Canonical doc parity (sanity)", () => {
     expect(acct!.maxDrawdown).toBe(2000);
   });
 
-  it("MFFU 50K commissionPerSide is 0.62 (matches docs/prop-firm-rules-2026-mffu.md)", () => {
+  it("MFFU Builder commissionPerSide is 0.95 (matches the canonical stage rule book)", () => {
     const acct = getFirmAccount("mffu", "50k");
-    expect(acct!.commissionPerSide).toBe(0.62);
+    expect(acct!.commissionPerSide).toBe(0.95);
   });
 });

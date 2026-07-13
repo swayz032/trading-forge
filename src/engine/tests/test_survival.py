@@ -58,9 +58,7 @@ def spiky_daily_pnls():
 class TestFirmProfiles:
     def test_all_firms_present(self):
         firms = list_firms()
-        expected = ["MFFU", "Topstep", "TPT", "Apex", "FFN", "Alpha", "Tradeify", "Earn2Trade"]
-        for f in expected:
-            assert f in firms, f"Missing firm: {f}"
+        assert firms == ["MFFU", "Topstep"]
 
     def test_all_profiles_have_required_fields(self):
         for firm_key, firm_data in FIRM_PROFILES.items():
@@ -77,6 +75,22 @@ class TestFirmProfiles:
         assert profile is not None
         assert profile["max_drawdown"] == 2000
         assert profile["drawdown_type"] == "EOD"
+
+    def test_profiles_project_current_stage_rules(self):
+        topstep = get_firm_profile("Topstep", "50K")
+        mffu = get_firm_profile("MFFU", "50K")
+
+        assert topstep is not None
+        assert topstep["commission_per_side"] == 0.62
+        assert topstep["evaluation_min_trading_days"] == 2
+        assert topstep["max_contracts"]["MES"] == 50
+        assert topstep["consistency_threshold"] is None
+
+        assert mffu is not None
+        assert mffu["commission_per_side"] == 0.95
+        assert mffu["evaluation_min_trading_days"] == 1
+        assert mffu["max_contracts"]["MES"] == 40
+        assert mffu["consistency_threshold"] is None
 
     def test_get_firm_profile_invalid(self):
         assert get_firm_profile("NonExistent") is None
@@ -248,10 +262,11 @@ class TestSurvivalScore:
         assert "error" in result
 
     def test_topstep_daily_limit_affects_score(self, good_daily_pnls):
-        # Topstep has $1000 daily limit, MFFU has none
+        # Topstep's hard $1,000 limit is an account-survival breach; MFFU's
+        # $1,000 soft pause is deliberately excluded from the survival score.
         mffu = survival_score(good_daily_pnls, firm="MFFU", num_mc_sims=500)
         topstep = survival_score(good_daily_pnls, firm="Topstep", num_mc_sims=500)
-        # MFFU should score higher on daily_breach_prob (no limit = 100)
+        # MFFU has no hard daily-loss account breach in this survival model.
         assert mffu["metrics"]["daily_breach_prob"] >= topstep["metrics"]["daily_breach_prob"]
 
     def test_custom_weights(self, good_daily_pnls):
@@ -334,5 +349,5 @@ class TestSurvivalComparator:
     def test_compare_default_all_firms(self, good_daily_pnls):
         strategies = [{"name": "TestStrat", "daily_pnls": good_daily_pnls}]
         result = compare_strategies(strategies, firms=None, num_mc_sims=200)
-        # Should test against all 8 firms
-        assert result["firms_tested"] == 8
+        # Only the two active firms are modeled.
+        assert result["firms_tested"] == 2

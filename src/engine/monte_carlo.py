@@ -837,9 +837,9 @@ def simulate_firm_survival(
 ) -> dict:
     """Per-firm Monte Carlo survival simulation.
 
-    Walks each MC path through firm rules (daily loss limits, trailing DD,
-    consistency, commissions). Returns pass rates, survival rates, breach
-    reasons, and drawdown percentiles.
+    Walks each MC path through stage-aware firm rules (daily loss limits,
+    trailing DD, evaluation eligibility, commissions). Payout eligibility is
+    reported separately from account-survival outcomes.
 
     Args:
         paths: 2D array (n_sims, n_steps) of cumulative P&L
@@ -856,73 +856,27 @@ def simulate_firm_survival(
 
     Returns:
         Dict with eval_pass_rate, funded_survival_6mo, breach_reasons,
-        drawdown_percentiles, consistency_fail_rate
+        drawdown_percentiles, a deprecated zero-valued consistency field, and
+        separate recoverable payout eligibility telemetry.
     """
     from src.engine.firm_config import FIRM_COMMISSIONS
-    from src.engine.prop_compliance import FIRM_CONFIGS
-    from src.engine.prop_sim import DAILY_LOSS_LIMITS
+    from src.engine.firm_stage_rules import (
+        evaluate_payout_eligibility,
+        get_firm_rules,
+        get_stage_rules,
+        topstep_effective_profit_target,
+        trailing_drawdown_floor,
+    )
 
-    firm = FIRM_CONFIGS.get(firm_key)
-
-    if firm is None:
+    try:
+        firm = get_firm_rules(firm_key)
+        evaluation_rules = get_stage_rules(firm_key, "evaluation")
+        funded_rules = get_stage_rules(firm_key, "funded")
+    except ValueError:
         return {"error": f"Unknown firm: {firm_key}"}
 
-    daily_loss_limit = DAILY_LOSS_LIMITS.get(firm_key)
-    max_dd = firm["max_drawdown"]
-    profit_target = firm["profit_target"]
-    is_realtime = firm["trailing"] == "realtime"
-    is_eod_trailing = firm["trailing"] == "eod"
-    locks_at_start = firm.get("locks_at_start", False)
-    # Map consistency rule to max single-day ratio.
-    # B14 fix 2026-06-22: "topstep_50pct" was MISSING from this map, causing
-    # consistency_ratio to resolve to None for Topstep → the consistency breach
-    # check block was never entered for Topstep → every Topstep survival sim ran
-    # WITHOUT the 50% best-day cap, inflating eval_pass_rate.  A spiky strategy
-    # with one day = 60% of cumulative profit passed survival with full confidence,
-    # but Topstep denies every payout under their consistency rule.
-    # Fix: add "topstep_50pct": 0.50 so the consistency branch fires for Topstep.
-    # The full-path fallback (payout_cycle_days=None for Topstep) correctly
-    # compares best_day_pnl / total_profit against this threshold.
-    # Fail-toward-breach: when consistency_ratio is non-None but the branch is
-    # entered, any ambiguity resolves as a violation (conservative).
-    _consistency_map = {
-        "topstep_50pct": 0.50,      # B14 fix 2026-06-22 — was MISSING, causing silent skip
-        "tpt_50pct": 0.50,
-        "alpha_50pct": 0.50,
-        "mffu_50pct": 0.50,
-        "mffu_50pct_sim_payout": 0.50,  # deepscan5 2026-06-29 — recognized rule name (firm_config
-                                        # uses this for mffu_50k); explicitly skipped in B14 below
-                                        # (sim-payout-stage only). Mapped (not silently absent) so a
-                                        # typo'd rule name would surface, not silently skip.
-        "ffn_40pct": 0.40,
-        "tradeify_40pct": 0.40,
-        "earn2trade_consistency": 0.50,
-        # apex_50pct_funded: applies only to funded payouts, not eval sim
-    }
-    consistency_ratio = _consistency_map.get(firm.get("consistency_rule"), None)
-
-    # FINDING-4 fix: Topstep STANDARD payout lane has consistency as OPT-IN (default OFF).
-    # Operator runs STANDARD lane (no per-day cap at payout request).
-    # The firm_config sets consistency_rule="topstep_50pct" because the RULE EXISTS at Topstep,
-    # but it only applies when the operator is in the CONSISTENCY payout lane.
-    # Default: TOPSTEP_PAYOUT_LANE=standard → skip the 50% best-day cap in B14 simulation.
-    # Set TOPSTEP_PAYOUT_LANE=consistency to re-enable when operator switches lanes.
-    _topstep_payout_lane = _os.environ.get("TOPSTEP_PAYOUT_LANE", "standard").strip().lower()
-    if (
-        consistency_ratio is not None
-        and firm_key == "topstep_50k"
-        and _topstep_payout_lane == "standard"
-    ):
-        consistency_ratio = None  # FINDING-4 fix: standard lane has no consistency cap
-
-    # deepscan5 2026-06-29: MFFU Builder consistency (mffu_50pct_sim_payout) applies ONLY at the
-    # discrete SIM-FUNDED payout stage — NONE at eval, NONE live (firm_config.py mffu_50k). The
-    # B14 eval+funded survival sim does not model that discrete payout gate, so MFFU consistency
-    # is intentionally NOT enforced here. This is an EXPLICIT, auditable skip (mirrors the Topstep
-    # standard-lane skip above) — NOT a silent map-miss. Re-enabling requires modeling the
-    # sim-payout stage as a distinct event, not flipping this skip.
-    if consistency_ratio is not None and firm_key == "mffu_50k":
-        consistency_ratio = None
+    profit_target = float(evaluation_rules["profit_target"])
+    topstep_payout_path = _os.environ.get("TOPSTEP_PAYOUT_LANE", "standard").strip().lower()
 
     # Per-firm commission per round trip per contract
     firm_comms = FIRM_COMMISSIONS.get(firm_key, {})
@@ -936,7 +890,10 @@ def simulate_firm_survival(
 
     eval_passed_count = 0
     survived_6mo_count = 0
-    consistency_fail_count = 0
+    payout_evaluable_count = 0
+    payout_eligible_count = 0
+    payout_ineligibility_reasons: dict[str, int] = {}
+    effective_eval_targets: list[float] = []
     breach_reasons: dict[str, int] = {
         "trailing_dd": 0,
         "daily_loss_limit": 0,
@@ -945,37 +902,13 @@ def simulate_firm_survival(
     }
     max_drawdowns_all = np.zeros(n_sims)
     days_to_pass_list: list[int] = []
-    # Wave hardening 2026-06-22, B14 ruin=firm-breach:
-    # Per-sim account-ending breach mask — True when trailing_dd OR daily_loss_limit
-    # trips the account closed, OR consistency rule denies payout.
-    # This is the CORRECT ruin event for a prop firm (not terminal<=0).
     breach_mask = np.zeros(n_sims, dtype=np.uint8)
-
-    # E4 (deep-scan #7 2026-07-02): shadow consistency-lane counter for Topstep
-    # standard-lane runs.  Counts sims that WOULD fail the 50% best-day cap if the
-    # operator switches to the Topstep consistency payout lane.  Advisory only —
-    # never changes eval_pass_rate or breach_mask.
-    _topstep_shadow_breach_count = 0
-    _run_topstep_shadow = (
-        firm_key == "topstep_50k"
-        and _topstep_payout_lane == "standard"
-    )
-    # Cache firm rules for shadow check (loaded once outside the hot sim loop)
-    _shadow_firm_entry_rules: dict = {}
-    if _run_topstep_shadow:
-        try:
-            from src.engine.firm_config import FIRM_RULES as _FR_shadow
-            _shadow_firm_entry_rules = _FR_shadow.get(firm_key, {})
-        except ImportError:
-            pass
 
     six_months_bars = 126  # ~6 months of trading days (no shortcut for short sims)
 
-    # For realtime trailing firms (e.g. Tradeify), simulate intraday equity
-    # movement within each day.  Split each day's P&L into sub-steps so that
-    # peak equity ratchets up intraday — making the trailing DD stricter than
-    # EOD-only tracking.
-    intraday_substeps = daily_trades_per_day if (is_realtime and granularity == "day") else 1
+    # Preserve the established output field while the per-step rule lookup below
+    # switches from the evaluation contract to the funded contract after a pass.
+    is_realtime = evaluation_rules["trailing"] == "realtime"
 
     # Compute commission delta ONCE (constant across all sims/steps)
     # Fix 4: was hardcoded 0.62*2=$1.24. Now accepts actual backtest commission from caller.
@@ -999,18 +932,29 @@ def simulate_firm_survival(
     for sim in range(n_sims):
         balance = account_size
         peak_equity = account_size
+        active_starting_balance = account_size
         breached = False
         passed_eval = False
         pass_step: int | None = None
         breach_reason: str | None = None
         best_day_pnl = 0.0
-        # C-8 FIX: collect commission+DLL-adjusted step P&Ls so the sliding-window
-        # consistency check can reuse them directly instead of re-applying adjustments
-        # from raw step_pnl (which caused double-deduction when the consistency check
-        # was rebuilding sim_pnls by subtracting comm_adj_day a second time).
+        # Collect commission- and DLL-adjusted daily P&Ls.  When a path clears
+        # evaluation, the post-pass slice is the separate funded payout window.
         _adjusted_step_pnls: list[float] = []
 
         for step in range(n_steps):
+            # Evaluation and funded accounts can have different loss mechanics.
+            # Resolve the active stage on every bar so a future rule change cannot
+            # accidentally inherit evaluation limits into funded survival.
+            active_rules = funded_rules if passed_eval else evaluation_rules
+            active_daily_loss_limit = active_rules.get("daily_loss_limit")
+            active_daily_loss_behavior = active_rules.get("daily_loss_behavior")
+            active_is_eod_trailing = active_rules["trailing"] == "eod"
+            active_intraday_substeps = (
+                daily_trades_per_day
+                if active_rules["trailing"] == "realtime" and granularity == "day"
+                else 1
+            )
             day_pnl = float(step_pnl[sim, step])
 
             # Paths are already net of backtest commission (default $0.62/side).
@@ -1020,21 +964,29 @@ def simulate_firm_survival(
             else:
                 day_pnl -= comm_adj_trade
 
-            # Daily loss limit enforcement — only when granularity is "day"
-            if granularity == "day" and daily_loss_limit is not None and day_pnl < -daily_loss_limit:
-                day_pnl = -daily_loss_limit
+            # A hard DLL closes the simulated path at its limit. A soft DLL
+            # pauses trading but cannot erase observed P&L or conceal an MLL
+            # breach, so its raw loss continues into the drawdown check.
+            if (
+                granularity == "day"
+                and active_daily_loss_limit is not None
+                and day_pnl < -float(active_daily_loss_limit)
+                and active_daily_loss_behavior == "hard_limit"
+            ):
+                day_pnl = -float(active_daily_loss_limit)
 
             _adjusted_step_pnls.append(day_pnl)
 
-            # Track best day for consistency check
-            if day_pnl > best_day_pnl:
+            # Topstep's evaluation target is derived only from Combine days.
+            # Once the path passes, later funded payout days cannot rewrite it.
+            if not passed_eval and day_pnl > best_day_pnl:
                 best_day_pnl = day_pnl
 
             # --- Realtime trailing: simulate intraday sub-steps ---
             # Split the day's P&L evenly across sub-steps so peak equity
             # ratchets up during winning intraday moves (stricter DD).
-            substep_pnl = day_pnl / intraday_substeps
-            for _sub in range(intraday_substeps):
+            substep_pnl = day_pnl / active_intraday_substeps
+            for _sub in range(active_intraday_substeps):
                 balance += substep_pnl
 
                 # F-5: EOD trailing — floor must use the PRIOR day's EOD peak
@@ -1043,24 +995,24 @@ def simulate_firm_survival(
                 # by the current day's gain, making the trailing DD appear more
                 # lenient than the actual Topstep rule.  We apply the HWM update
                 # after the breach check only when using EOD trailing.
-                if is_eod_trailing:
+                if active_is_eod_trailing:
                     # peak_equity holds the prev-EOD value; don't update yet.
-                    if locks_at_start:
-                        # CMP-1 (deep-scan 2026-07-11): lock-at-starting-balance. The prior
-                        # max(peak-max_dd, account_size-max_dd) was a no-op (peak>=account_size
-                        # monotonic) so Topstep's floor trailed HWM forever and never locked at
-                        # the starting balance the real EOD rule caps it at. min(peak-max_dd,
-                        # account_size) locks the floor at account_size once HWM climbs. Gated by
-                        # locks_at_start (Topstep-only); MFFU (locks_at_start=False) is unchanged.
-                        floor = min(peak_equity - max_dd, account_size)
-                    else:
-                        floor = peak_equity - max_dd
+                    # The shared rule helper applies the correct lock offset
+                    # for whichever stage is active (Topstep $0, Builder $100).
+                    floor = trailing_drawdown_floor(
+                        active_rules, peak_equity, active_starting_balance
+                    )
                     dd_from_peak = peak_equity - balance
                     max_drawdowns_all[sim] = max(max_drawdowns_all[sim], dd_from_peak)
                     if balance <= floor and not breached:
                         breached = True
                         breach_reason = "trailing_dd"
-                        if granularity == "day" and daily_loss_limit is not None and day_pnl <= -daily_loss_limit:
+                        if (
+                            granularity == "day"
+                            and active_daily_loss_limit is not None
+                            and day_pnl <= -float(active_daily_loss_limit)
+                            and active_daily_loss_behavior == "hard_limit"
+                        ):
                             breach_reason = "daily_loss_limit"
                         break
                     # Defer HWM ratchet to end-of-day (after floor check)
@@ -1069,17 +1021,10 @@ def simulate_firm_survival(
                     # Realtime / other trailing: ratchet HWM immediately (intraday)
                     peak_equity = max(peak_equity, balance)
 
-                    # Trailing drawdown floor
-                    if locks_at_start:
-                        # CMP-1 (deep-scan 2026-07-11): lock-at-starting-balance. The prior
-                        # max(peak-max_dd, account_size-max_dd) was a no-op (peak>=account_size
-                        # monotonic) so Topstep's floor trailed HWM forever and never locked at
-                        # the starting balance the real EOD rule caps it at. min(peak-max_dd,
-                        # account_size) locks the floor at account_size once HWM climbs. Gated by
-                        # locks_at_start (Topstep-only); MFFU (locks_at_start=False) is unchanged.
-                        floor = min(peak_equity - max_dd, account_size)
-                    else:
-                        floor = peak_equity - max_dd
+                    # The shared rule helper owns the active-stage lock floor.
+                    floor = trailing_drawdown_floor(
+                        active_rules, peak_equity, active_starting_balance
+                    )
 
                     dd_from_peak = peak_equity - balance
                     max_drawdowns_all[sim] = max(max_drawdowns_all[sim], dd_from_peak)
@@ -1087,109 +1032,86 @@ def simulate_firm_survival(
                     if balance <= floor and not breached:
                         breached = True
                         breach_reason = "trailing_dd"
-                        if granularity == "day" and daily_loss_limit is not None and day_pnl <= -daily_loss_limit:
+                        if (
+                            granularity == "day"
+                            and active_daily_loss_limit is not None
+                            and day_pnl <= -float(active_daily_loss_limit)
+                            and active_daily_loss_behavior == "hard_limit"
+                        ):
                             breach_reason = "daily_loss_limit"
                         break
 
             if breached:
                 break
 
-            # Check if eval passed
-            if not passed_eval and (balance - account_size) >= profit_target:
-                passed_eval = True
-                pass_step = step
+            # Topstep Combine's 50% rule raises its *effective target*; it is
+            # recoverable and never turns a payout/evaluation condition into an
+            # account breach. Other firms use their ordinary fixed target.
+            if not passed_eval:
+                if firm_key == "topstep_50k":
+                    effective_target = topstep_effective_profit_target(best_day_pnl)
+                    passed_eval = (
+                        step + 1 >= int(evaluation_rules["min_trading_days"])
+                        and (balance - account_size) >= effective_target
+                    )
+                else:
+                    passed_eval = (
+                        step + 1 >= int(evaluation_rules["min_trading_days"])
+                        and (balance - account_size) >= profit_target
+                    )
+                if passed_eval:
+                    pass_step = step
+                    active_starting_balance = float(funded_rules.get("starting_balance", 0.0))
+                    balance = active_starting_balance
+                    peak_equity = active_starting_balance
 
         if not breached and not passed_eval:
             breach_reason = "never_hit_target"
 
-        # Consistency check: best single day cannot exceed X% of total profit
-        # F-6 FIX: MFFU pays out every 14 days (payout_cycle_days). A sliding-window
-        # check is more accurate than comparing to the FULL eval path total — a single
-        # lucky day that represents 60% of a 14-day window is a rule violation even if
-        # it's only 20% of the full eval profit. We use payout_cycle_days if available
-        # in firm_rules; otherwise we fall back to the full-path check (Topstep has no
-        # consistency rule, so consistency_ratio is None and this block is skipped).
-        if passed_eval and not breached and consistency_ratio is not None:
-            _firm_rules_all = {}
-            try:
-                from src.engine.firm_config import FIRM_RULES as _FR
-                _firm_rules_all = _FR
-            except ImportError:
-                pass
-            _firm_entry_rules = _firm_rules_all.get(firm_key, {})
-            # Prefer explicit consistency_window_days over payout_cycle_days.
-            # payout_cycle_days drives PAYOUT FREQUENCY; consistency_window_days drives the
-            # sliding-window check independently. A 2-day payout cycle (MFFU Builder) would
-            # trivially fire the 50% cap on any non-uniform pair of positive days.
-            # When consistency_window_days is None (or absent) the full-path fallback runs.
-            if "consistency_window_days" in _firm_entry_rules:
-                _payout_cycle = _firm_entry_rules["consistency_window_days"]
+        effective_eval_targets.append(
+            topstep_effective_profit_target(best_day_pnl)
+            if firm_key == "topstep_50k"
+            else profit_target
+        )
+
+        # Payout eligibility is measured only on post-evaluation funded bars.
+        # It remains recoverable and never changes eval pass, funded survival,
+        # breach reasons, or the ruin mask.
+        if (
+            passed_eval
+            and not breached
+            and pass_step is not None
+            and granularity == "day"
+            and pass_step + 1 < n_steps
+        ):
+            payout_evaluable_count += 1
+            payout_kwargs = (
+                {"payout_path": topstep_payout_path}
+                if firm_key == "topstep_50k"
+                else {}
+            )
+            payout_result = evaluate_payout_eligibility(
+                firm_key,
+                _adjusted_step_pnls[pass_step + 1 :],
+                traded_days=[daily_trades_per_day > 0] * (n_steps - pass_step - 1),
+                account_state={
+                    "account_balance": balance,
+                    "balance_after_last_payout": None,
+                    "approved_payout_count": 0,
+                    "account_stage": "funded",
+                    "cycle_elapsed_hours": (n_steps - pass_step - 1) * 24.0,
+                },
+                **payout_kwargs,
+            )
+            if payout_result["eligible"]:
+                payout_eligible_count += 1
             else:
-                _payout_cycle = _firm_entry_rules.get("payout_cycle_days", None)
+                reason = str(payout_result["reason"])
+                payout_ineligibility_reasons[reason] = (
+                    payout_ineligibility_reasons.get(reason, 0) + 1
+                )
 
-            if _payout_cycle is not None and _payout_cycle > 0:
-                # Sliding-window consistency: any payout-cycle window where
-                # best_day / window_total > ratio triggers a violation.
-                # C-8 FIX: Use _adjusted_step_pnls (collected during the main sim loop,
-                # already commission-delta-adjusted and DLL-capped) instead of
-                # re-deriving from raw step_pnl[sim] with another comm_adj subtraction.
-                # The previous code subtracted comm_adj_day from step_pnl (raw) which
-                # is correct, BUT the original comment claimed step_pnl was "already
-                # commission-adjusted" — causing confusion and a potential future
-                # regression. Using the already-adjusted list eliminates ambiguity and
-                # ensures consistency check operates on the same P&Ls as the main loop.
-                sim_pnls = _adjusted_step_pnls
-
-                _violated = False
-                for _w_start in range(0, n_steps, _payout_cycle):
-                    _w_end = min(_w_start + _payout_cycle, n_steps)
-                    _window = sim_pnls[_w_start:_w_end]
-                    _window_total = sum(_w for _w in _window if _w > 0)
-                    _window_best = max((_w for _w in _window if _w > 0), default=0.0)
-                    if _window_total > 0 and _window_best / _window_total > consistency_ratio:
-                        _violated = True
-                        break
-                if _violated:
-                    passed_eval = False
-                    breached = True
-                    breach_reason = "consistency"
-                    consistency_fail_count += 1
-            else:
-                # Full-path fallback (firms without payout_cycle_days)
-                total_profit = balance - account_size
-                if total_profit > 0 and best_day_pnl / total_profit > consistency_ratio:
-                    passed_eval = False
-                    breached = True
-                    breach_reason = "consistency"
-                    consistency_fail_count += 1
-
-        # E4: shadow consistency-lane breach for Topstep standard lane (advisory).
-        # Runs AFTER the real consistency block; does NOT alter passed_eval or breached.
-        if _run_topstep_shadow and passed_eval and not breached:
-            _shadow_ratio_val = 0.50
-            if "consistency_window_days" in _shadow_firm_entry_rules:
-                _shadow_payout_cycle = _shadow_firm_entry_rules["consistency_window_days"]
-            else:
-                _shadow_payout_cycle = _shadow_firm_entry_rules.get("payout_cycle_days", None)
-
-            _shadow_violated = False
-            if _shadow_payout_cycle is not None and _shadow_payout_cycle > 0:
-                for _sw_start in range(0, n_steps, _shadow_payout_cycle):
-                    _sw_end = min(_sw_start + _shadow_payout_cycle, n_steps)
-                    _sw_window = _adjusted_step_pnls[_sw_start:_sw_end]
-                    _sw_total = sum(_w for _w in _sw_window if _w > 0)
-                    _sw_best = max((_w for _w in _sw_window if _w > 0), default=0.0)
-                    if _sw_total > 0 and _sw_best / _sw_total > _shadow_ratio_val:
-                        _shadow_violated = True
-                        break
-            else:
-                _shadow_total_profit = balance - account_size
-                if _shadow_total_profit > 0 and best_day_pnl / _shadow_total_profit > _shadow_ratio_val:
-                    _shadow_violated = True
-            if _shadow_violated:
-                _topstep_shadow_breach_count += 1
-
-        if passed_eval and not breached:
+        if passed_eval:
             eval_passed_count += 1
             if pass_step is not None:
                 if granularity == "day":
@@ -1208,11 +1130,9 @@ def simulate_firm_survival(
 
         if breach_reason:
             breach_reasons[breach_reason] = breach_reasons.get(breach_reason, 0) + 1
-            # Wave hardening 2026-06-22, B14 ruin=firm-breach:
-            # Mark sim as ruined when the account was closed (trailing_dd or daily_loss_limit)
-            # OR payout was denied (consistency violation).
-            # "never_hit_target" is NOT ruin — the account is not closed, just unprofitable.
-            if breach_reason in ("trailing_dd", "daily_loss_limit", "consistency"):
+            # Ruin means an account-closing breach only. A missed target or a
+            # recoverable payout requirement never enters the capital-at-risk mask.
+            if breach_reason in ("trailing_dd", "daily_loss_limit"):
                 breach_mask[sim] = 1
 
     # Drawdown percentiles
@@ -1236,32 +1156,40 @@ def simulate_firm_survival(
         "avg_days_to_pass": round(avg_days, 1) if avg_days is not None else None,
         "breach_reasons": breach_reasons,
         "drawdown_percentiles": dd_percentiles,
-        "consistency_fail_rate": round(consistency_fail_count / n_sims, 4),
+        # Deprecated compatibility field. Payout consistency is intentionally
+        # exposed only below, outside of survival / breach accounting.
+        "consistency_fail_rate": 0.0,
         "granularity": granularity,
         "commission_per_side": comm_per_side,
         "realtime_trailing": is_realtime,
-        # Wave hardening 2026-06-22, B14 ruin=firm-breach:
         # Per-sim breach mask (uint8, length n_sims).
-        # True (1) = account closed (trailing_dd or daily_loss_limit) or payout denied (consistency).
-        # "never_hit_target" is excluded — account is not closed, just not profitable.
-        # Additive field — all existing keys above are unchanged.
+        # True (1) = account closed by trailing DD or daily-loss limit.
+        # Evaluation and payout requirements are not account closures.
         "breach_mask": breach_mask,
-        # E4 (deep-scan #7 2026-07-02): Topstep consistency-lane shadow advisory.
-        # Only populated when firm_key="topstep_50k" and TOPSTEP_PAYOUT_LANE=standard.
-        # breach_rate = fraction of eval-passing sims that WOULD fail the 50% best-day
-        # cap if the operator switches to the Topstep consistency payout lane.
-        # This is ADVISORY ONLY — the gated ruin numbers (eval_pass_rate, breach_mask)
-        # are unchanged.  Emit None when not applicable (other firms, consistency lane).
-        "topstep_consistency_lane_shadow": (
-            {
-                "breach_rate": round(_topstep_shadow_breach_count / max(n_sims, 1), 4),
-                "n_shadow_breaches": _topstep_shadow_breach_count,
-                "lane_simulated": "consistency",
-                "consistency_ratio": 0.50,
-            }
-            if _run_topstep_shadow
-            else None
-        ),
+        "payout_eligibility": {
+            "path": topstep_payout_path if firm_key == "topstep_50k" else "sim_funded",
+            "eligible_rate": (
+                round(payout_eligible_count / payout_evaluable_count, 4)
+                if payout_evaluable_count
+                else None
+            ),
+            "evaluated_paths": payout_evaluable_count,
+            "eligible_paths": payout_eligible_count,
+            "ineligibility_reasons": payout_ineligibility_reasons,
+            "recoverable": True,
+            "account_state_mode": "first_payout_only",
+            "trade_day_evidence": "synthetic_assumption_from_daily_trades_per_day",
+            "cycle_time_evidence": "synthetic_assumption_from_daily_steps",
+        },
+        "evaluation_target": {
+            "base": profit_target,
+            "effective_p50": float(np.percentile(effective_eval_targets, 50)),
+            "effective_p95": float(np.percentile(effective_eval_targets, 95)),
+            "dynamic": firm_key == "topstep_50k",
+        },
+        # Retained only so older readers see an explicit non-applicable value;
+        # the old shadow used the wrong stage and the wrong 50% payout lane rule.
+        "topstep_consistency_lane_shadow": None,
     }
 
 
@@ -2089,7 +2017,7 @@ def run_monte_carlo(
             # institutionally-correct prop-firm breach event when firm models are present.
             # The terminal<=0 path gives a false read: cumulative P&L can be positive
             # while the EOD trailing DD has already triggered account closure.
-            # See: simulate_firm_survival breach_mask (trailing_dd + daily_loss_limit + consistency).
+            # See: simulate_firm_survival breach_mask (trailing_dd + daily_loss_limit).
             #
             # The breach_mask is {0, 1} uint8 (1 = breached/ruined).
             # We use np.mean as the statistic (= breach rate = fraction of 1s).
@@ -2117,16 +2045,6 @@ def run_monte_carlo(
                     )
                     _firm_ruin_ci["ruin_basis"] = "firm_breach"
                     _firm_ruin_ci["ruin_firm"] = _fk
-                    # deep-scan payout-denial-gate fix (2026-07-06):
-                    # b14-ci-gate.ts reads per_firm[firm].consistency_fail_rate to fire the
-                    # Topstep 40%-consistency payout-denial BLOCK, but consistency_fail_rate
-                    # was only ever written at firm_survival[firm] top-level (this loop built
-                    # per_firm entries fresh from compute_mc_confidence_intervals, which does
-                    # not carry it) — so the payout-denial gate could NEVER fire. Merge the
-                    # key from the source firm_survival dict so the TS gate has real data.
-                    _cfr = _fsurv.get("consistency_fail_rate")
-                    if _cfr is not None:
-                        _firm_ruin_ci["consistency_fail_rate"] = _cfr
                     per_firm_ruin_cis[_fk] = _firm_ruin_ci
                     # FIX 3 (deep-scan #9 2026-07-02): Select worst firm by ci_high, not
                     # point_estimate. B14 gates on ci_high; using point_estimate misaligns

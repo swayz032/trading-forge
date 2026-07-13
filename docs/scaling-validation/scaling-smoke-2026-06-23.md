@@ -1,5 +1,10 @@
 # Scaling-Schedule Survival Validation Report
 
+> **Historical simulation artifact.** Its former consistency field is
+> deprecated: payout eligibility is a separate recoverable funded-stage result,
+> never a survival breach. Regenerate with the current harness for stage-aware
+> output.
+
 **Overall verdict:** ONE OR MORE TIERS UNSAFE
 
 ## Configuration
@@ -21,7 +26,7 @@
 
 ## Tier Verdict Table
 
-| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Consistency fail |
+| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Deprecated consistency telemetry |
 |---|---|---|---|---|---|---|
 | 9 | 88.56% | 5% | UNSAFE (88.6% breach >= 5% gate) | 11.4% | 11.4% | 0.0% |
 | 12 | 95.76% | 5% | UNSAFE (95.8% breach >= 5% gate) | 4.2% | 4.2% | 0.0% |
@@ -127,7 +132,7 @@ About 100.0% of simulated runs ended in a breach — more than 1 in 5. Trading a
 ### What this harness VALIDATES
 
 - Per-tier firm-breach probability on this strategy's historical P&L distribution
-- Topstep EOD trailing-DD + daily-loss-limit + 50% consistency rule (via simulate_firm_survival)
+- Topstep EOD trailing-DD + hard daily-loss limit; dynamic Combine target and funded payout eligibility are separate
 - Block-bootstrap MC paths preserve short-run autocorrelation
 - Gate logic: breach rate < SCALING_BREACH_GATE_PCT (default 5%)
 - Fail-CLOSED: any data-missing or sim-error case exits non-zero

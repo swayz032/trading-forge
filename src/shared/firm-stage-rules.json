@@ -1,0 +1,181 @@
+{
+  "schema_version": 3,
+  "firms": {
+    "topstep_50k": {
+      "firm_id": "topstep",
+      "name": "Topstep",
+      "display_name": "Topstep",
+      "evaluation_type": "one_step",
+      "macro_blackout_mode": "advisory",
+      "evaluation": {
+        "account_size": 50000,
+        "monthly_fee": 49,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2000,
+        "trailing": "eod",
+        "locks_at_start": true,
+        "trailing_lock_floor_offset": 0,
+        "daily_loss_limit": 1000,
+        "daily_loss_behavior": "hard_limit",
+        "max_contracts": 50,
+        "min_trading_days": 2,
+        "overnight_ok": false,
+        "weekend_ok": false,
+        "consistency": {
+          "mode": "dynamic_profit_target",
+          "ratio": 0.5,
+          "best_day_persists_after_loss": true
+        }
+      },
+      "funded": {
+        "account_type": "xfa",
+        "starting_balance": 0,
+        "max_drawdown": 2000,
+        "trailing": "eod",
+        "locks_at_start": true,
+        "trailing_lock_floor_offset": 0,
+        "daily_loss_limit": 1000,
+        "daily_loss_behavior": "hard_limit",
+        "max_contracts": 50,
+        "overnight_ok": false,
+        "weekend_ok": false
+      },
+      "payout": {
+        "payout_split": 0.9,
+        "minimum_request": 125,
+        "account_balance_fraction": 0.5,
+        "default_path": "standard",
+        "paths": {
+          "standard": {
+            "minimum_winning_days": 5,
+            "minimum_winning_day_profit": 150,
+            "positive_net_profit_since_last_payout_required": true,
+            "first_payout_exempt": true,
+            "minimum_trading_days": null,
+            "minimum_trades_per_day": null,
+            "maximum_consistency_ratio": null,
+            "resets_after_payout": false,
+            "payout_cap": {
+              "base": 2000,
+              "with_dll": 4000
+            }
+          },
+          "consistency": {
+            "minimum_winning_days": null,
+            "minimum_winning_day_profit": null,
+            "minimum_trading_days": 3,
+            "minimum_trades_per_day": 1,
+            "positive_net_profit_required": true,
+            "maximum_consistency_ratio": 0.4,
+            "resets_after_payout": true,
+            "payout_cap": {
+              "base": 3000,
+              "with_dll": 6000
+            }
+          }
+        }
+      },
+      "live": {
+        "payout_cap": null
+      },
+      "execution": {
+        "commission_per_side": 0.62,
+        "platform_lockdown_date": "2026-01-12",
+        "required_platform": "topstepx",
+        "allows_vps": false,
+        "allows_vpn": false,
+        "allows_remote_desktop": false,
+        "multi_account_within_user_allowed": true,
+        "copy_trades_within_user_allowed": true
+      }
+    },
+    "mffu_50k": {
+      "firm_id": "mffu",
+      "name": "MFFU 50K Builder",
+      "display_name": "MyFundedFutures (MFFU)",
+      "evaluation_type": "one_step",
+      "macro_blackout_mode": "strict",
+      "evaluation": {
+        "account_size": 50000,
+        "monthly_fee": 77,
+        "activation_fee": 0,
+        "ongoing_monthly_fee": 0,
+        "profit_target": 3000,
+        "max_drawdown": 2000,
+        "trailing": "eod",
+        "locks_at_start": false,
+        "trailing_lock_floor_offset": 100,
+        "starting_floor": 48000,
+        "daily_loss_limit": 1000,
+        "daily_loss_behavior": "soft_pause",
+        "max_contracts": 40,
+        "min_trading_days": 1,
+        "overnight_ok": false,
+        "weekend_ok": false,
+        "consistency": null
+      },
+      "funded": {
+        "account_type": "sim_funded",
+        "starting_balance": 0,
+        "max_drawdown": 2000,
+        "trailing": "eod",
+        "locks_at_start": false,
+        "trailing_lock_floor_offset": 100,
+        "daily_loss_limit": 1000,
+        "daily_loss_behavior": "soft_pause",
+        "max_contracts": 40,
+        "overnight_ok": false,
+        "weekend_ok": false
+      },
+      "payout": {
+        "payout_split": 0.8,
+        "minimum_qualifying_days": 2,
+        "qualifying_day_minimum_profit": 0,
+        "payout_buffer": 2100,
+        "payout_buffer_must_remain_after_request": true,
+        "first_payout_profit_above_buffer": 500,
+        "subsequent_payout_minimum_profit_since_last_payout": 500,
+        "minimum_request": 500,
+        "maximum_request": 2000,
+        "payout_cycle_days": 2,
+        "minimum_hours_since_cycle_start": 48,
+        "maximum_consistency_ratio": 0.5,
+        "resets_after_payout": true,
+        "sim_payouts_to_live": 5
+      },
+      "live": {
+        "account_type": "live",
+        "starting_balance": 0,
+        "max_drawdown": 2000,
+        "trailing": "eod",
+        "locks_at_start": false,
+        "trailing_lock_floor_offset": 100,
+        "daily_loss_limit": 1000,
+        "daily_loss_behavior": "soft_pause",
+        "max_contracts": 40,
+        "overnight_ok": false,
+        "weekend_ok": false,
+        "consistency": null,
+        "payout_split": 0.8,
+        "payout_minimum_request": 250,
+        "payout_cycle_days": 1,
+        "payout_cap": null,
+        "maximum_active_accounts": 1,
+        "post_breach_cooldown_days": 21
+      },
+      "execution": {
+        "commission_per_side": 0.95,
+        "hft_max_trades_per_day": 500,
+        "collaborative_trading_banned": true,
+        "same_device_banned": true,
+        "hedging_same_underlying_banned": true,
+        "two_percent_rule_pct": 0.02,
+        "baseline_slippage_ticks_mes": 2,
+        "tier1_event_blackout_minutes": 30,
+        "simultaneous_limits_at_same_price_banned": true
+      }
+    }
+  }
+}

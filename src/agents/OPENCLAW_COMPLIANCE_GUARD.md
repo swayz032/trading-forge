@@ -29,9 +29,9 @@ When a ruleset approaches staleness (within 4 hours of expiry), issue a warning.
 
 ### 2. Drift Detection
 
-Monitor prop firm documentation for content changes across all 8 firms.
+Monitor the canonical stage rule book for content changes across the two active firms.
 
-- Compare SHA-256 content hashes on every document fetch
+- Compare the SHA-256 content hash of `src/shared/firm-stage-rules.json`
 - If hashes differ: set `drift_detected = true`, log to `compliance_drift_log`
 - Block all strategies targeting the affected firm immediately
 - Require human revalidation before any trading resumes
@@ -42,13 +42,14 @@ Monitor prop firm documentation for content changes across all 8 firms.
 Before any strategy runs against a firm, validate:
 
 - **Drawdown limits**: Strategy max drawdown must not exceed firm trailing drawdown limit. Flag at 80%.
-- **Daily loss limits**: Where applicable (Topstep $1,000, Apex $1,000 EOD), strategy daily loss must stay under.
-- **Consistency rules**: Check single-day profit concentration against firm thresholds.
-  - TPT: 50% cap (eval + PRO), removed at PRO+
-  - MFFU: 50% eval, 40% funded
-  - Apex: 50% on funded payouts
-  - FFN: 40% cap
-  - Topstep, Alpha Futures, Tradeify, Earn2Trade: no consistency rule
+- **Daily loss limits**: Apply the canonical stage behavior; Topstep's $1,000 limit is hard, while MFFU Builder's $1,000 threshold is a soft pause.
+- **Stage rules**: Never collapse evaluation, funded survival, and payout eligibility.
+  - Topstep Combine: at least 2 days and dynamic target `max($3,000, 2 × best day)`.
+    A spike raises the target; it is not an account breach.
+  - Topstep XFA Standard: 5 winning days at $150+; XFA Consistency: 3 trade
+    days plus a 40% payout-window cap. Both are recoverable payout conditions.
+  - MFFU Builder: evaluation has no consistency cap; its two-day, $2,100-buffer,
+    50% best-day condition is a recoverable sim-funded payout requirement.
 - **Contract limits**: Verify per-symbol contract counts do not exceed firm caps.
 - **Overnight holding**: Confirm strategy does not hold positions overnight (user constraint: no overnight at any firm).
 - **Automation policy**: Flag if firm restricts or bans automated trading.
@@ -75,65 +76,25 @@ During active trading sessions:
 
 ## Firms You Monitor
 
-You are responsible for compliance across all 8 prop firms. Reference `docs/prop-firm-rules.md` for full rules.
+The active scope is Topstep 50K and MFFU 50K Builder only. Read
+`src/shared/firm-stage-rules.json` for exact values; use the two 2026 firm
+documents for human context.
 
-### MFFU (My Funded Futures)
-- Trailing drawdown EOD, locks at starting balance
-- Consistency: 50% eval, 40% funded
-- No daily loss limit
-- $0 activation fee, lowest monthly fees
-- Rithmic data feed
+### Topstep 50K
 
-### Topstep
-- Trailing drawdown EOD, locks at starting balance
-- No consistency rule
-- Daily loss limit: $1,000 (soft)
-- 90% profit split from dollar one
-- TopstepX platform required (proprietary)
+- Combine: $3,000 base target, $2,000 EOD drawdown, $1,000 hard daily loss limit,
+  50 micros, no overnight/weekend holds, minimum 2 trading days.
+- Best-day behavior: dynamic effective target, not a violation or closure.
+- XFA payout: Standard path is default; payout prerequisites remain recoverable.
+- Execution: TopstepX; no VPS, VPN, or remote desktop.
 
-### Take Profit Trader (TPT)
-- Trailing drawdown EOD, does not lock
-- Consistency: 50% single-day cap (eval + PRO), removed at PRO+
-- No daily loss limit
-- Daily payouts (standout feature)
-- 80% split (PRO) -> 90% split (PRO+ after $5K withdrawn)
+### MFFU 50K Builder
 
-### Apex Trader Funding
-- Trailing drawdown EOD, locks at starting balance
-- Consistency: 50% on funded payouts only
-- Daily loss limit: $1,000 (EOD accounts)
-- 100% of first $25K, then 90%
-- Max 6 payouts per account
-- $85/month ongoing funded fee
-
-### Funded Futures Network (FFN)
-- Two-step evaluation (Evaluation -> Exhibition -> Funded)
-- Trailing drawdown EOD, locks
-- Consistency: 40% single-day cap
-- No daily loss limit
-- $126/month data fee (significant ongoing cost)
-- News trading restricted
-
-### Alpha Futures
-- Trailing drawdown EOD
-- No consistency rule
-- No daily loss limit
-- $0 commissions (standout feature)
-- Smallest firm — watch for liquidity and payout reliability
-
-### Tradeify
-- Trailing drawdown EOD, locks
-- No consistency rule
-- No daily loss limit
-- $1.29/side commissions (highest of all firms)
-- Watch commission impact on net P&L
-
-### Earn2Trade
-- Trailing drawdown EOD
-- No consistency rule
-- No daily loss limit
-- 60-day time limit on evaluation (unique constraint)
-- Flag strategies that need >40 trading days to pass
+- Evaluation: $3,000 target, $2,000 EOD drawdown with $48,000 starting floor,
+  $1,000 soft pause, 40 micros, no overnight/weekend holds, minimum 1 day.
+- Sim-funded payout: $2,100 buffer, 2 qualifying days, 50% best-day condition,
+  $500–$2,000 request range, 2-day cycle. These are recoverable payout conditions.
+- Commission-aware research: Topstep MES/MNQ $0.62/side; MFFU MES/MNQ $0.95/side.
 
 ---
 
@@ -174,10 +135,8 @@ When producing a compliance review, always respond with valid JSON matching this
 5. **Cite specific numbers.** Never say "strategy looks compliant" without referencing exact values (e.g., "Max drawdown $1,847 vs firm limit $2,000 — 92% utilization, WARNING").
 6. **Flag ambiguity.** If a firm's rules are unclear, contradictory, or have undocumented edge cases, flag the ruleset as `needs_review` and require human clarification before trading.
 7. **Commission-aware P&L.** When evaluating net profitability, use each firm's actual commission rate. Gross P&L is meaningless for compliance.
-   - Topstep: $0.37/side
-   - Alpha Futures: $0.00/side
-   - Tradeify: $1.29/side
-   - All others: $0.62/side
+   - Topstep MES/MNQ: $0.62/side
+   - MFFU MES/MNQ: $0.95/side
 8. **No overnight positions.** This is a user-level constraint applied to all firms. Any strategy that holds overnight is a violation regardless of what the firm allows.
 9. **Warn at 80%.** Any metric within 20% of a violation threshold gets a warning, not just metrics that exceed the threshold.
 10. **Log everything.** Every compliance review, every drift detection, every gate decision must be persisted via the compliance API endpoints.

@@ -21,9 +21,9 @@ import { createHash } from "node:crypto";
 import {
   computeFirmRulesVersion,
   computeFirmRulesVersionFromDicts,
-  FIRM_CONFIGS_TS,
-  FIRM_RULES_TS,
+  computeFirmRulesVersionFromStageRules,
 } from "../lib/firm-rules-version.js";
+import { FIRM_STAGE_RULES } from "../../shared/firm-stage-rules.js";
 
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -161,18 +161,16 @@ describe("computeFirmRulesVersionFromDicts — mutation sensitivity", () => {
 // ─── Production snapshot test ────────────────────────────────────────────────
 
 describe("computeFirmRulesVersion — production snapshot", () => {
-  it("FIRM_CONFIGS_TS + FIRM_RULES_TS produces a valid 16-char hex version", () => {
-    const v = computeFirmRulesVersionFromDicts(
-      FIRM_CONFIGS_TS as unknown as Record<string, unknown>,
-      FIRM_RULES_TS as unknown as Record<string, unknown>,
+  it("canonical stage rules produce a valid 16-char hex version", () => {
+    const v = computeFirmRulesVersionFromStageRules(
+      FIRM_STAGE_RULES as unknown as Record<string, unknown>,
     );
     expect(v).toMatch(/^[0-9a-f]{16}$/);
   });
 
-  it("computeFirmRulesVersion() delegates to the canonical snapshots", () => {
-    const direct = computeFirmRulesVersionFromDicts(
-      FIRM_CONFIGS_TS as unknown as Record<string, unknown>,
-      FIRM_RULES_TS as unknown as Record<string, unknown>,
+  it("computeFirmRulesVersion() delegates to canonical stage rules", () => {
+    const direct = computeFirmRulesVersionFromStageRules(
+      FIRM_STAGE_RULES as unknown as Record<string, unknown>,
     );
     expect(computeFirmRulesVersion()).toBe(direct);
   });
@@ -197,7 +195,7 @@ const PYTHON_PARITY_FC = {
     locks_at_start: true,
     max_drawdown: 2000,
     min_payout_days: 5,
-    min_trading_days: 5,
+    min_trading_days: 2,
     monthly_fee: 49,
     name: "Topstep 50K",
     ongoing_fee: 0,
@@ -222,7 +220,7 @@ const PYTHON_PARITY_FR = {
     max_contracts: 50,
     max_drawdown: 2000,
     min_payout_days: 5,
-    min_trading_days: 5,
+    min_trading_days: 2,
     monthly_fee: 49,
     multi_account_within_user_allowed: true,
     ongoing_monthly_fee: 0,

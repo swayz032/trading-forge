@@ -24,48 +24,64 @@ TODO (Wave 24): per-firm-resize — prop_sim does NOT re-size trades per firm.
 from __future__ import annotations  # noqa: I001
 
 import math
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 from src.engine.firm_config import FIRM_COMMISSIONS
+from src.engine.firm_stage_rules import (
+    evaluate_payout_eligibility,
+    evaluate_topstep_combine_until_pass,
+    get_firm_rules,
+    get_stage_rules,
+)
 
 
 # ─── Firm Configurations ──────────────────────────────────────────
-# All from docs/prop-firm-rules.md, exact 50K account specs
+# All values project from src/shared/firm-stage-rules.json.
+
+_TOPSTEP = get_firm_rules("topstep_50k")
+_TOPSTEP_EVALUATION = get_stage_rules("topstep_50k", "evaluation")
+_TOPSTEP_PAYOUT = get_stage_rules("topstep_50k", "payout")
+_MFFU = get_firm_rules("mffu_50k")
+_MFFU_EVALUATION = get_stage_rules("mffu_50k", "evaluation")
+_MFFU_PAYOUT = get_stage_rules("mffu_50k", "payout")
 
 FIRM_CONFIGS = {
     "topstep_50k": {
-        "name": "Topstep 50K",
-        "monthly_fee": 49,
-        "activation_fee": 0,
-        "profit_target": 3000,
-        "max_drawdown": 2000,
-        "trailing": "eod",
-        "locks_at_start": True,
-        "consistency_rule": "topstep_50pct",   # 50% best-day cap at Combine pass-request (same threshold as MFFU eval)
-        "overnight_ok": False,
-        "payout_split": 0.90,
+        "name": _TOPSTEP["name"],
+        "monthly_fee": _TOPSTEP_EVALUATION["monthly_fee"],
+        "activation_fee": _TOPSTEP_EVALUATION["activation_fee"],
+        "profit_target": _TOPSTEP_EVALUATION["profit_target"],
+        "max_drawdown": _TOPSTEP_EVALUATION["max_drawdown"],
+        "trailing": _TOPSTEP_EVALUATION["trailing"],
+        "locks_at_start": _TOPSTEP_EVALUATION["locks_at_start"],
+        "trailing_lock_floor_offset": _TOPSTEP_EVALUATION["trailing_lock_floor_offset"],
+        "consistency_rule": "topstep_dynamic_target_50pct",
+        "overnight_ok": _TOPSTEP_EVALUATION["overnight_ok"],
+        "payout_split": _TOPSTEP_PAYOUT["payout_split"],
         "payout_split_tiers": None,
         "ongoing_fee": 0,
-        "daily_loss_limit": 1000,
-        "min_payout_days": 5,
-        "min_trading_days": 5,
+        "daily_loss_limit": _TOPSTEP_EVALUATION["daily_loss_limit"],
+        "min_payout_days": _TOPSTEP_PAYOUT["paths"]["standard"]["minimum_winning_days"],
+        "min_trading_days": _TOPSTEP_EVALUATION["min_trading_days"],
     },
     "mffu_50k": {
-        "name": "MFFU 50K (Core)",
-        "monthly_fee": 77,
-        "activation_fee": 0,
-        "profit_target": 3000,
-        "max_drawdown": 2000,
-        "trailing": "eod",
-        "locks_at_start": True,
-        "consistency_rule": "mffu_50pct",
-        "overnight_ok": False,
-        "payout_split": 0.80,
+        "name": _MFFU["name"],
+        "monthly_fee": _MFFU_EVALUATION["monthly_fee"],
+        "activation_fee": _MFFU_EVALUATION["activation_fee"],
+        "profit_target": _MFFU_EVALUATION["profit_target"],
+        "max_drawdown": _MFFU_EVALUATION["max_drawdown"],
+        "trailing": _MFFU_EVALUATION["trailing"],
+        "locks_at_start": _MFFU_EVALUATION["locks_at_start"],
+        "trailing_lock_floor_offset": _MFFU_EVALUATION["trailing_lock_floor_offset"],
+        "consistency_rule": "mffu_50pct_sim_payout",
+        "overnight_ok": _MFFU_EVALUATION["overnight_ok"],
+        "payout_split": _MFFU_PAYOUT["payout_split"],
         "payout_split_tiers": None,
         "ongoing_fee": 0,
-        "daily_loss_limit": 1000,  # firm_config.py:148 — $1K daily limit (matches Topstep)
-        "min_payout_days": 5,
-        "min_trading_days": 5,
+        "daily_loss_limit": _MFFU_EVALUATION["daily_loss_limit"],
+        "daily_loss_behavior": _MFFU_EVALUATION["daily_loss_behavior"],
+        "min_payout_days": _MFFU_PAYOUT["minimum_qualifying_days"],
+        "min_trading_days": _MFFU_EVALUATION["min_trading_days"],
     },
     # Legacy firms (TPT, Apex, Tradeify, Alpha, FFN, Earn2Trade) removed
     # 2026-05-19 per CLAUDE.md §6 production scope (Topstep + MFFU only).
@@ -78,13 +94,16 @@ def simulate_trailing_drawdown_eod(
     daily_closing_balances: list[float],
     max_dd: float,
     locks_at_start: bool = True,
+    trailing_lock_floor_offset: float | None = None,
 ) -> tuple[bool, Optional[int], float]:
     """Simulate EOD trailing drawdown.
 
     Args:
         daily_closing_balances: End-of-day account balances
         max_dd: Maximum allowed drawdown
-        locks_at_start: If True, floor stops trailing at starting balance
+        locks_at_start: Compatibility fallback: floor stops at the start.
+        trailing_lock_floor_offset: Canonical lock offset from the stage
+            starting balance. Builder is $100; Topstep is $0.
 
     Returns:
         (passed, blown_on_day, max_drawdown_used)
@@ -100,8 +119,10 @@ def simulate_trailing_drawdown_eod(
         hwm = max(hwm, balance)
         floor = hwm - max_dd
 
-        if locks_at_start:
-            floor = max(floor, starting - max_dd)
+        if trailing_lock_floor_offset is not None:
+            floor = min(floor, starting + trailing_lock_floor_offset)
+        elif locks_at_start:
+            floor = min(floor, starting)
 
         dd_used = hwm - balance
         max_dd_used = max(max_dd_used, dd_used)
@@ -116,6 +137,7 @@ def simulate_trailing_drawdown_realtime(
     equity_path: list[float],
     max_dd: float,
     locks_at_start: bool = True,
+    trailing_lock_floor_offset: float | None = None,
 ) -> tuple[bool, Optional[int], float]:
     """Simulate real-time trailing drawdown (intraday).
 
@@ -132,8 +154,10 @@ def simulate_trailing_drawdown_realtime(
         hwm = max(hwm, value)
         floor = hwm - max_dd
 
-        if locks_at_start:
-            floor = max(floor, starting - max_dd)
+        if trailing_lock_floor_offset is not None:
+            floor = min(floor, starting + trailing_lock_floor_offset)
+        elif locks_at_start:
+            floor = min(floor, starting)
 
         dd_used = hwm - value
         max_dd_used = max(max_dd_used, dd_used)
@@ -232,6 +256,7 @@ def run_prop_compliance(
     stats: dict,
     backtester_commission_per_side: float = 0.62,
     enforce_mffu_consistency: bool = False,
+    payout_contexts: Mapping[str, Mapping[str, Any]] | None = None,
 ) -> dict[str, dict]:
     """Simulate strategy against all prop firms.
 
@@ -246,10 +271,16 @@ def run_prop_compliance(
         backtester_commission_per_side: The per-side commission the backtester
             already deducted (default $0.62 = MES/micro baseline). Used to
             compute only the DELTA when adjusting for per-firm rates (H4 fix).
-        enforce_mffu_consistency: When False (default), the MFFU 50% consistency
-            check is skipped — per firm_config.py §MFFU it is SIM-PAYOUT-stage-only
-            and MC survival sim deliberately omits it. Pass True only at sim-payout
-            evaluation stage. Topstep consistency is always enforced regardless.
+        enforce_mffu_consistency: Legacy opt-in name for returning MFFU
+            sim-funded payout eligibility. It never changes the account's
+            ``passed`` verdict. ``payout_contexts`` must provide a separate
+            post-evaluation window, trade-day evidence, and account state.
+            Topstep Combine is always evaluated against its separate two-day
+            dynamic-profit-target rule.
+        payout_contexts: Optional post-evaluation contexts keyed by firm. Each
+            value contains ``daily_pnls``, ``traded_days``, and
+            ``account_state``. Omitting it reports a recoverable, fail-closed
+            context requirement rather than reusing evaluation P&L.
 
     Returns:
         dict mapping firm_key → compliance result
@@ -271,6 +302,7 @@ def run_prop_compliance(
     for firm_key, firm in FIRM_CONFIGS.items():
         passed = True
         failures: list[str] = []
+        payout_eligibility: dict | None = None
 
         # Compute firm-adjusted daily PnLs (delta-adjusted from backtester commission).
         # H4 FIX: pass backtester_commission_per_side so only the delta is applied.
@@ -292,11 +324,17 @@ def run_prop_compliance(
         # Check drawdown (using net equity)
         if firm["trailing"] == "realtime":
             dd_passed, blown_day, dd_used = simulate_trailing_drawdown_realtime(
-                net_equity, firm["max_drawdown"], firm.get("locks_at_start", True)
+                net_equity,
+                firm["max_drawdown"],
+                firm.get("locks_at_start", True),
+                firm.get("trailing_lock_floor_offset"),
             )
         else:
             dd_passed, blown_day, dd_used = simulate_trailing_drawdown_eod(
-                net_equity, firm["max_drawdown"], firm.get("locks_at_start", True)
+                net_equity,
+                firm["max_drawdown"],
+                firm.get("locks_at_start", True),
+                firm.get("trailing_lock_floor_offset"),
             )
 
         if not dd_passed:
@@ -314,24 +352,30 @@ def run_prop_compliance(
                 f"${firm['max_drawdown']} limit (overnight risk)"
             )
 
-        # Check consistency rules (using net PnLs).
-        # Active rules: any firm whose consistency_rule contains "50pct".
-        # Topstep ("topstep_50pct"): always enforced — eval pass-request gate.
-        # MFFU ("mffu_50pct"): SIM-PAYOUT stage only (firm_config.py §MFFU);
-        #   MC survival sim skips it intentionally. The caller must pass
-        #   enforce_mffu_consistency=True to activate the MFFU check.
-        if isinstance(firm.get("consistency_rule"), str) and "50pct" in firm["consistency_rule"]:
-            if firm_key == "mffu_50k" and not enforce_mffu_consistency:
-                pass  # Skip — MFFU consistency is SIM-PAYOUT-stage-only
+        if firm_key == "topstep_50k":
+            combine = evaluate_topstep_combine_until_pass(net_pnls)
+            if not combine["passed"]:
+                passed = False
+                failures.append(
+                    "Topstep Combine not yet eligible (recoverable): "
+                    f"${combine['total_profit']:.0f} of ${combine['effective_profit_target']:.0f} "
+                    f"after {combine['trading_days']} trading days"
+                )
+        elif firm_key == "mffu_50k" and enforce_mffu_consistency:
+            payout_context = (payout_contexts or {}).get(firm_key)
+            if payout_context is None:
+                payout_eligibility = {
+                    "eligible": False,
+                    "reason": "separate_funded_payout_window_and_account_state_required",
+                    "recoverable": True,
+                }
             else:
-                cons_passed, worst_pct = check_tpt_consistency(net_pnls)
-                if not cons_passed:
-                    passed = False
-                    firm_label = "MFFU" if firm["consistency_rule"] == "mffu_50pct" else "Topstep"
-                    failures.append(
-                        f"{firm_label} 50% consistency violation: "
-                        f"best day = {worst_pct:.0%} of total profit"
-                    )
+                payout_eligibility = evaluate_payout_eligibility(
+                    firm_key,
+                    list(payout_context.get("daily_pnls", [])),
+                    traded_days=payout_context.get("traded_days"),
+                    account_state=payout_context.get("account_state"),
+                )
 
         # Calculate ROI estimates
         avg_daily = stats.get("avg_daily_pnl", 0)
@@ -360,6 +404,7 @@ def run_prop_compliance(
             "months_to_pass": round(months_to_pass, 1) if months_to_pass is not None and months_to_pass != float("inf") else None,
             "payout_split": firm["payout_split"],
             "ongoing_fee": firm["ongoing_fee"],
+            "payout_eligibility": payout_eligibility,
         }
 
     return results
@@ -380,11 +425,15 @@ def rank_firms_for_strategy(stats: dict) -> list[dict]:
             continue
         if not firm["overnight_ok"] and stats.get("trades_overnight", False):
             continue
-        if isinstance(firm.get("consistency_rule"), str) and "50pct" in firm["consistency_rule"] and stats.get("consistency_ratio", 0) > 0.50:
-            continue
+        # Topstep's 50% Combine condition raises a recoverable effective target;
+        # MFFU's 50% condition belongs only to sim-funded payout eligibility.
+        # Neither is an evaluation-ranking disqualifier.
 
         avg_daily = stats["avg_daily_pnl"]
-        days_to_target = firm["profit_target"] / avg_daily if avg_daily > 0 else 999
+        days_to_target = max(
+            firm["profit_target"] / avg_daily if avg_daily > 0 else 999,
+            firm["min_trading_days"],
+        )
         months_to_pass = days_to_target / 21
 
         single_eval_cost = firm["monthly_fee"] * max(1, math.ceil(months_to_pass)) + firm["activation_fee"]

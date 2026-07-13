@@ -1,13 +1,14 @@
 # MFFU 2026 Rules — Canonical Reference
 
 > **Source of truth.** This document is parsed by `scripts/verify-2026-rules-compliance.mjs`.
-> Code in `src/engine/firm_config.py`, `src/shared/firm-config.ts`, and the
-> compliance gates must match the values in the `## Canonical Values` block
-> below. Drift triggers CI failure.
+> Code reads `src/shared/firm-stage-rules.json` through the Python and
+> TypeScript stage-rule loaders. The `## Canonical Values` block below is
+> checked against that rule book; evaluation, sim-funded, payout, and live
+> rules must remain separate.
 >
 > Effective: 2026-01-01.
-> Last reviewed: 2026-06-22.
-> Evidence source: docs/institutional-evidence/firm-rules-freshness-2026-06-22.md
+> Last reviewed: 2026-07-12.
+> Evidence source: official [MFFU Builder 50K guide](https://help.myfundedfutures.com/en/articles/14290805-builder-plan-50k-a-comprehensive-guide), reviewed 2026-07-12.
 
 ---
 
@@ -20,17 +21,17 @@
 | Monthly fee | `$77` |
 | Ongoing monthly fee (post-funded) | `$0` |
 | Profit target | `$3,000` |
-| Max drawdown (also serves as buffer) | `$2,000` |
+| Evaluation / sim-funded max drawdown | `$2,000` |
 > **The operator's MFFU account is the BUILDER plan** (chosen 2026-06-23 — EOD trailing matches
 > our risk model + 40-micro room (vs Pro's 5) + cheapest + path to a real live broker). Values
 > below are MFFU **BUILDER 50K (Default)**.
 
-| Trailing type | `eod` — **Builder** EOD trailing (Max EOD Drawdown / MLL $2,000; eval starting floor $48,000). **LIVE** account: $2,000 EOD trailing, MLL **static once it reaches $0**. Matches Topstep basis + our `realizedPeakEquity` model — no intraday build. |
+| Trailing type | `eod` — **Builder** EOD trailing (Max EOD Drawdown / MLL $2,000; eval starting floor $48,000). The MLL locks permanently once it reaches **$100 above that stage's starting balance**: $50,100 in evaluation and $100 in sim-funded/live ledgers. |
 | Daily loss limit | `$1,000` — **SOFT pause** (hit it and trading pauses for the day; the account SURVIVES, not a hard breach). |
 | Max contracts | `40` micros (Builder = `4 mini / 40 micro`) — room for our pyramid base (6 MES / 6 MNQ / 18 MCL). |
 | Min trading days | `1` (Builder eval 1-day minimum) |
 | Min payout days | `2` qualifying days/cycle; Builder pays **every 48h** after buffer cleared |
-| Payout buffer | `$2,100` (Default) / `$1,600` (Add-On) cleared before first payout |
+| Payout buffer | `$2,100` (Default) / `$1,600` (Add-On); first payout needs `$500` above the buffer and the buffer must remain after the request; later payouts need `$500` net profit since the prior approved payout |
 | Payout amounts | min `$500`, **max $2,000/cycle**, **5 sim payouts** then → live transition |
 | Consistency rule | `50%` — **SIM-FUNDED payout stage ONLY** (NONE in eval, NONE on the live account) |
 | Overnight allowed | `false` |
@@ -43,29 +44,68 @@
 
 ## Canonical Values
 
-This block is parsed verbatim by the lint script. Keys mirror the field names
-in `firm_config.py:FIRM_RULES["mffu_50k"]` and
-`firm-config.ts:FIRMS.mffu.accountTypes["50k"]`.
+This block is parsed verbatim by the lint script. Keys map to the canonical
+stage rule book, not to a flattened legacy projection.
 
 ```yaml
 firm_id: mffu
-account_size: 50000
-monthly_fee: 77
-activation_fee: 0
-ongoing_monthly_fee: 0
-profit_target: 3000
-max_drawdown: 2000
-max_contracts: 40  # BUILDER 50K = 40 micros (4 mini / 40 micro) — room for our pyramid base
-trailing: eod  # BUILDER = EOD trailing (Max EOD Drawdown $2,000; eval floor $48,000); LIVE MLL static once it reaches $0
-payout_split: 0.80  # Builder 80/20 (eval + sim + live)
-min_payout_days: 2  # Builder: 2 qualifying days/cycle; pays every 48h after buffer
-min_trading_days: 1  # Builder eval 1-day minimum
-consistency_rule_pct: 0.50  # 50% at the SIM-FUNDED payout stage only — NONE eval, NONE live
-daily_loss_limit: 1000  # Builder $1,000 DLL — SOFT pause (account survives, not a breach)
-overnight_ok: false
-weekend_ok: false
-commission_per_side: 0.95  # MFFU MES/MNQ $1.90 RT ÷ 2; MCL is $0.58 ($1.16 RT) — exact per-symbol in firm_config.py
+evaluation_account_size: 50000
+evaluation_monthly_fee: 77
+evaluation_activation_fee: 0
+evaluation_profit_target: 3000
+evaluation_max_drawdown: 2000
+evaluation_trailing: eod
+evaluation_locks_at_start: false
+evaluation_trailing_lock_floor_offset: 100
+evaluation_starting_floor: 48000
+evaluation_daily_loss_limit: 1000
+evaluation_daily_loss_behavior: soft_pause
+evaluation_max_contracts: 40
+evaluation_min_trading_days: 1
+funded_account_type: sim_funded
+funded_starting_balance: 0
+funded_max_drawdown: 2000
+funded_trailing: eod
+funded_locks_at_start: false
+funded_trailing_lock_floor_offset: 100
+funded_daily_loss_limit: 1000
+funded_daily_loss_behavior: soft_pause
+funded_max_contracts: 40
+funded_overnight_ok: false
+funded_weekend_ok: false
+payout_split: 0.80
+payout_minimum_qualifying_days: 2
+payout_buffer: 2100
+payout_buffer_must_remain_after_request: true
+payout_first_payout_profit_above_buffer: 500
+payout_subsequent_minimum_profit_since_last_payout: 500
+payout_minimum_hours_since_cycle_start: 48
+payout_minimum_request: 500
+payout_maximum_request: 2000
 payout_cycle_days: 2
+payout_maximum_consistency_ratio: 0.50
+payout_resets_after_payout: true
+payout_sim_payouts_to_live: 5
+live_max_drawdown: 2000
+live_trailing: eod
+live_starting_balance: 0
+live_locks_at_start: false
+live_trailing_lock_floor_offset: 100
+live_daily_loss_limit: 1000
+live_daily_loss_behavior: soft_pause
+live_max_contracts: 40
+live_overnight_ok: false
+live_weekend_ok: false
+live_payout_split: 0.80
+live_payout_minimum_request: 250
+live_payout_cycle_days: 1
+live_payout_cap: null
+live_maximum_active_accounts: 1
+live_post_breach_cooldown_days: 21
+commission_per_side: 0.95
+hft_max_trades_per_day: 500
+two_percent_rule_pct: 0.02
+baseline_slippage_ticks_mes: 2
 ```
 
 ---
@@ -128,42 +168,17 @@ NQ. Same applies to MES↔ES and MCL↔CL.
   micros (NQ/ES/CL minis are deferred), the matrix is pre-loaded with
   these pairs so future graduation does not require a code change.
 
-### 5. Tier-1 News Trading — Restricted (current policy: MFFU Feb-2026)
+### 5. News Trading — Builder Plan Allowed
 
-> CORRECTION 2026-06-22: this section previously listed the T1 set as
-> "FOMC, CPI, NFP, GDP, Retail Sales, ISM, PPI" with a ±30-min window. That was
-> STALE and caused an over-block (GDP/ISM/PPI are NOT T1). The current MFFU News
-> Policy (Feb 22, 2026) is below.
+The selected account is **MFFU Builder 50K**, not Rapid. Builder permits news
+trading during both evaluation and sim-funded stages; it is not a firm-level
+Tier-1 hard-block. This reference must not use Rapid or Pro restrictions to
+score Builder research, evaluation, funded survival, or payout eligibility.
 
-**Tier-1 (T1) events:**
-- **All traders:** FOMC Meetings, **FOMC Minutes**, Employment Report (NFP), CPI
-- **Energy traders:** **EIA** (Crude Oil Inventories — Wed 10:30 ET, holiday-adjusted;
-  shifts to Thu 11:00 ET on Monday-holiday weeks). Affects CL/MCL only.
-- **Agricultural traders:** Agricultural Reports (not our products — skip)
-
-**Window:** **±2 minutes** flatten (NOT ±30). No position/order open T−2:00 → T+2:00
-(e.g. news at 8:30 → flat by 8:28:00, may reopen after 8:32:00). The bot uses a safety
-buffer: no NEW entry T−5 → T+2, flatten by T−2.
-
-**Account types:**
-- **Restricted (T1 trading PROHIBITED):** Rapid Sim Funded, Pro Sim Funded.
-  *(The operator's MFFU account is a 50k Rapid plan → T1 hard-block.)*
-- **Unrestricted (T1 allowed with ±2min flatten):** all evaluations, 25k/50k Flex Plans.
-
-**NOT T1 (removed from blackout):** GDP, ISM, PPI, Retail Sales (no confirmed dates),
-PCE. These trade normally.
-
-- **Enforcement (Phase 1, 2026-06-22):** `calendar_filter.py` universal blackout =
-  FOMC, FOMC_MINUTES, CPI, NFP (GDP/ISM/PPI removed). EIA staged in
-  `economic_calendar.py::STATIC_EVENTS["EIA"]`, product-scoped (MCL) + firm-aware in
-  Phase 2. Parity enforced by `npm run check:ts-python-tier1-parity`.
-- **Phase 2 (pending):** firm-aware behavior — Topstep (PRIMARY/first-choice) =
-  auto-reduce size (caution); MFFU Rapid (restricted) = hard-block T1. EIA product-scoped
-  to MCL. Asymmetric T−5/−2/+2 window.
-- **Override:** strategies may set `bypass_news_blackout: true` (W14 / B11). Holidays
-  still block.
-- **Prohibited (all news, all accounts):** straddles/strangles exploiting news bursts;
-  masking news trades as standard strategies.
+The application may still impose calendar filters as its own risk-management
+policy. Those filters are an operator safety choice, not a claim about a
+Builder plan restriction. News-related manipulation strategies remain
+prohibited by the firm's fair-play policy.
 
 ### 6. Simultaneous Limits at Same Price — Prohibited
 
@@ -191,12 +206,19 @@ single trade.
   Pre-order check; fails closed if intended max loss on the entry exceeds
   `MFFU_TWO_PERCENT_RULE_PCT * account_balance`.
 
-### 9. Bi-Weekly Payouts + 80/20 Split
+### 9. Builder Payout Cycle + 80/20 Split
 
-MFFU pays out every 14 days at an 80% / 20% split (operator / firm).
+The selected MFFU **Builder** plan evaluates payout eligibility every **2 days
+(48 hours)** after its two qualifying days are met. The first request needs
+$500 above the $2,100 buffer and must leave that buffer intact; each later
+cycle needs $500 net profit since the prior approved payout. The split is
+80% / 20% (operator / firm). Its 50% best-day condition is a recoverable
+**sim-funded payout** requirement only; it is not an evaluation, survival, or
+live-account breach.
 
-- **Enforcement:** `firm_config.py` `mffu_50k.payout_split = 0.80`,
-  `payout_cycle_days = 14`. `firm-config.ts` mirror.
+- **Modeling:** the canonical `payout` stage defines the two-day cycle, buffer,
+  request range, consistency rule, reset behavior, and five-sim-payout live
+  transition independently from evaluation and live rules.
 
 ### 10. Hedging Same Underlying (Reaffirmation)
 
@@ -238,7 +260,7 @@ news trading on Builder via per-strategy `bypass_news_blackout=true`.
 
 | Rule | Detail / our handling |
 |---|---|
-| **EOD trailing lock** | MLL trails EOD highs ($2,000 distance), never moves down, **locks permanently once it reaches $100 above the starting balance** (sim funded: locks at breakeven). Our `realizedPeakEquity` EOD model + floor-lock. Open-equity losses count at session close. |
+| **EOD trailing lock** | MLL trails EOD highs ($2,000 distance), never moves down, and **locks permanently once it reaches $100 above the starting balance** in each stage (evaluation: $50,100; sim/live P&L ledgers: $100). Our `realizedPeakEquity` EOD model + floor-lock. Open-equity losses count at session close. |
 | **Two MLL options** | **Default = $2,000 MLL / $48,000 floor** (configured) · Add-On = $1,500 MLL / $48,500 floor (cheaper, tighter). Everything else identical. ⚠️ confirm operator uses Default. |
 | **$1,000 soft-pause DLL** | All 3 stages (eval/sim/live). Soft = pause for the day, account survives (not a breach). `daily_loss_limit=1000`. |
 | **No overnight** | All positions auto-closed at session end (platform-enforced). Matches our **15:55 ET hard flatten**. `overnight_ok=false`. |
@@ -261,7 +283,7 @@ Do not rename without updating both.
 MFFU_HFT_MAX_TRADES_PER_DAY        = 500
 MFFU_TWO_PERCENT_RULE_PCT          = 0.02
 MFFU_BASELINE_SLIPPAGE_TICKS_MES   = 2
-MFFU_PAYOUT_CYCLE_DAYS             = 14
+MFFU_PAYOUT_CYCLE_DAYS             = 2
 MFFU_PAYOUT_SPLIT                  = 0.80
 ```
 

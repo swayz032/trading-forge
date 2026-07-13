@@ -2,47 +2,48 @@
 
 > **Loaded by:** `critic_evaluator`, `tournament_prosecutor`, `tournament_promoter`.
 > **Purpose:** Compliance-aware critique. When a strategy is evaluated, the critic must ask "would this strategy survive each firm's rules?" without consulting a long full-text reference.
-> **Source-of-truth:** `docs/prop-firm-rules.md`. This card is a SHORT digest tuned for prompt context. If a value here conflicts with `docs/prop-firm-rules.md`, the docs file wins.
-> **Last updated:** 2026-05-10. Reflects 2026 plan changes. SUPPORTED FIRMS: MFFU + Topstep ONLY.
+> **Source-of-truth:** `src/shared/firm-stage-rules.json`. This card is a SHORT
+> digest tuned for prompt context. If a value conflicts with the JSON rule book,
+> the JSON wins; use the two 2026 firm documents only for explanatory context.
+> **Last updated:** 2026-07-12. SUPPORTED FIRMS: MFFU Builder + Topstep 50K ONLY.
 
 ## How `critic_evaluator` should use this
 
 1. Read the strategy's reported metrics (max drawdown, max consecutive losers, single-day-pnl-as-percent-of-total, position size in contracts, overnight hold).
-2. For each firm below, check whether the strategy violates any hard rule.
+2. For each firm below, check evaluation and account-survival hard rules separately from payout eligibility.
 3. Surface the firm-specific violations in `risk_flags` (e.g. `"violates_topstep_drawdown:max_dd_2400_exceeds_2000_limit"`).
 4. Recommend the best-fit firm in `reasoning` if the strategy passes some firms but not others.
-5. **Never approve a strategy as PASS if it fails the universal performance gate** (avg_daily_pnl ≥ $250, win_rate_by_days ≥ 60%, profit_factor ≥ 1.75, max_drawdown ≤ $2,000) — those are hardcoded in `docs/prop-firm-rules.md` and apply BEFORE per-firm checks.
+5. **Never approve a strategy as PASS if it fails the deterministic performance gates.**
+   Payout eligibility can be not-yet-eligible without failing evaluation or account survival.
 
 ---
 
 ## Topstep
 
-- **50K eval:** $49/mo fee, $3,000 target, $2,000 EOD trailing drawdown (locks at start), 15 micros max
-- **Funded:** $0 activation, $0 monthly, 90% split from dollar one, $200 min payout, on-demand payouts (1–3 days)
+- **50K Combine:** $49/mo, $3,000 base target, $2,000 EOD trailing drawdown, 50 micros max, at least 2 trading days.
+- **Best-day rule:** `effective_target = max($3,000, 2 × best_day_profit)`. A spike raises the target; it is recoverable and does not breach the account.
+- **Funded / XFA:** $0 activation, $0 monthly, 90% split. Standard path (default): 5 winning days at $150+; Consistency path: 3 trade days with a 40% payout-window cap.
 - **Drawdown style:** EOD trailing — locks at starting balance once HWM reaches it
-- **Consistency rule:** None
-- **Min trading days:** 5
-- **Daily loss limit:** $1,000 soft (opt-in at checkout per Apr 14 2026 update)
+- **Consistency rule:** dynamic Combine target; payout path requirements are separate from survival.
+- **Min trading days:** 2
+- **Daily loss limit:** $1,000 hard limit
 - **Automation policy:** TopstepX API allowed, webhooks allowed, bots allowed; **VPS/VPN/remote BANNED** — must run on personal device (Skytech tower per Trading Forge ATS)
 - **Platform:** TopstepX-only (as of Jan 12 2026 platform lockdown; NinjaTrader/Tradovate banned for new accounts)
 - **Multi-account within one user:** Allowed (single Topstep subscription)
 - **Copy trades within Topstep accounts:** Allowed (does NOT trigger collaborative-trading flag)
 - **Overnight:** Not allowed (user constraint applies anyway)
-- **Commission:** $0.37/side (TopstepX clearing)
-- **Best for:** Cheapest eval, no consistency rule, fully automatable from local. **Trading Forge's primary ATS deployment.**
+- **Commission:** $0.62/side for MES/MNQ
+- **Best for:** local TopstepX execution with a dynamic Combine target.
 - **Avoid if:** Strategy needs > $2K drawdown; strategy routes through VPS/VPN
 - **Automation friendliness:** 1.0 (most algo-permissive of any firm)
 
 ## MFFU (My Funded Futures)
 
-- **50K Core eval:** $77/mo, $3,000 target, $2,000 EOD drawdown, 15 micros, 80% split
-- **50K Rapid eval:** $97/mo, $3,000 target, intraday-trailing drawdown, 90% split (effective Jan 12 2026)
-- **Funded:** $0 activation, $0 monthly, $250 min payout, bi-weekly payouts (14-day cycle)
-- **Drawdown style:** EOD locks at starting balance (Core) / intraday trailing (Rapid)
-- **Consistency rule:** 50% single-day cap (eval), 40% (funded)
-- **Min trading days:** 5 (updated Mar 2026)
-- **Daily loss limit:** None
-- **Commission:** $0.62/side
+- **50K Builder eval:** $77/mo, $3,000 target, $2,000 EOD drawdown with a $48,000 starting floor, 40 micros, minimum 1 day.
+- **Sim-funded payout:** 80% split; $2,100 buffer; 2 qualifying days; 50% best-day condition; $500–$2,000 request range; 2-day cycle.
+- **Drawdown / DLL:** EOD drawdown; $1,000 soft daily pause.
+- **Consistency rule:** no evaluation or account-survival cap. The 50% condition is payout-only and recoverable.
+- **Commission:** $0.95/side for MES/MNQ
 - **Automation policy:** ATS via TradersPost / PickMyTrade — fully permissive
 - **2026 MFFU-specific rules (enforced in code):**
   - **Collaborative trading BANNED:** identical or opposite strategies across unconnected accounts triggers compliance flag
@@ -63,25 +64,23 @@
 
 These apply regardless of firm choice:
 
-- `max_drawdown ≤ $2,000` for 50K accounts (Topstep is the binding constraint)
+- `max_drawdown ≤ $2,000` for the active 50K evaluation accounts
 - `max_consecutive_losers ≤ 4` (mental + drawdown survival)
-- `avg_daily_pnl ≥ $250` (universal performance gate, see `docs/prop-firm-rules.md`)
+- `avg_daily_pnl ≥ $250` where the deterministic performance gate applies
 - `profit_factor ≥ 1.75` on out-of-sample data
 - `sharpe_ratio ≥ 1.5`
 - `winning_days_per_month ≥ 12 of 20`
 - Overnight positions: **not allowed for any Trading Forge strategy** (user constraint, applies firm-wide)
 - Weekend positions: not allowed
 
-## Buffer phase math (both firms — $0 activation)
+## Payout-stage conditions
 
-`buffer_required = profit_target + max_drawdown` — the total profit needed before first payout.
+Do not use a generic `profit_target + max_drawdown` buffer formula.
 
-| Firm (50K) | Profit Target | Buffer (= maxDD) | Total Before 1st Payout | Split |
-|---|---|---|---|---|
-| Topstep 50K | $3,000 | $2,000 | **$5,000** | 90% |
-| MFFU 50K Core | $3,000 | $2,000 | **$5,000** | 80% |
-
-Days to first payout: at $500/day → 10 trading days. At $1,000/day → 5 days.
+| Firm (50K) | Evaluation condition | Separate payout condition |
+|---|---|---|
+| Topstep | Dynamic Combine target + 2 days | Standard: 5 winning $150+ days; Consistency: 3 trade days + 40% cap |
+| MFFU Builder | $3,000 target + 1 day | $2,100 buffer + 2 qualifying days + 50% best-day condition |
 
 ## Automation friendliness ranking
 
@@ -92,9 +91,7 @@ For Trading Forge's autonomous-execution-preferred posture:
 
 ## Sources
 
-- `docs/prop-firm-rules.md` — full per-firm rule reference
-- Topstep Apr 14 2026 daily-loss-limit + drawdown locks update
-- Topstep Jan 12 2026 platform lockdown (TopstepX-only)
-- MFFU 2026 Core/Rapid/Pro restructure + collaborative-trading/same-device/hedging bans
-- Trading Forge `src/engine/compliance/compliance_gate.py` — runtime enforcement
-- Trading Forge `src/shared/firm-config.ts` — per-firm config (single source of truth)
+- `src/shared/firm-stage-rules.json` — canonical active stage contract
+- `docs/prop-firm-rules-2026-topstep.md` — Topstep explanatory reference
+- `docs/prop-firm-rules-2026-mffu.md` — MFFU Builder explanatory reference
+- `src/engine/firm_stage_rules.py` and `src/shared/firm-stage-rules.ts` — canonical evaluators

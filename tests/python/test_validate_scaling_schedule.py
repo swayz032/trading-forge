@@ -125,6 +125,7 @@ def _mock_sim(breach_frac: float, n_sims: int) -> dict:
             "p95": 1800.0, "p99": 2000.0,
         },
         "consistency_fail_rate": 0.0,
+        "payout_eligibility": {"path": "standard", "eligible_rate": 0.25},
         "granularity": "day",
         "commission_per_side": 0.62,
         "realtime_trailing": False,
@@ -271,7 +272,8 @@ class TestRunTierSurvivalGateLogic:
             "n_contracts", "breach_pct", "breach_count", "n_sims",
             "passed", "gate_pct", "breach_reasons",
             "drawdown_percentiles", "eval_pass_rate",
-            "funded_survival_6mo", "consistency_fail_rate",
+            "funded_survival_6mo", "payout_path", "payout_eligible_rate",
+            "consistency_fail_rate",
         }
         missing = required_keys - set(result.keys())
         assert not missing, f"Missing result keys: {missing}"
@@ -426,6 +428,8 @@ class TestWriteReport:
                 },
                 "eval_pass_rate": 0.80,
                 "funded_survival_6mo": 0.65,
+                "payout_path": "standard",
+                "payout_eligible_rate": 0.40,
                 "consistency_fail_rate": 0.02,
             }
         ]

@@ -21,34 +21,34 @@
 
 ## Tier Verdict Table
 
-| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Consistency fail |
+| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Payout eligibility (separate) |
 |---|---|---|---|---|---|---|
-| 9 | 19.00% | 5% | UNSAFE (19.0% breach >= 5% gate) | 72.0% | 0.0% | 1.0% |
+| 9 | 15.00% | 5% | UNSAFE (15.0% breach >= 5% gate) | 80.0% | 0.0% | standard: 82.2% |
 
 ## Plain-English Verdict Per Tier
 
 ### Tier 9 contracts — UNSAFE
 
-About 19.0% of simulated runs ended in a breach. This tier carries material risk: roughly 1 in 5 simulated 6-month periods hits the floor. Waiting for a larger buffer before using this size is strongly recommended.
+About 15.0% of simulated runs ended in a breach. This tier carries material risk: roughly 1 in 7 simulated 6-month periods hits the floor. Waiting for a larger buffer before using this size is strongly recommended.
 
 **Breach reason breakdown:**
 
-- Hit EOD trailing drawdown floor: 18 sims (18.0%)
-- Never hit profit target (not a breach): 9 sims (9.0%)
-- Consistency rule violation (>50% profit in one day): 1 sims (1.0%)
+- Hit EOD trailing drawdown floor: 14 sims (14.0%)
+- Hit daily loss limit: 1 sims (1.0%)
+- Never hit profit target (not a breach): 11 sims (11.0%)
 
 **Simulated max-drawdown percentiles (from account peak):**
 
 | P50 | P75 | P90 | P95 | P99 |
 |---|---|---|---|---|
-| $1434 | $1609 | $2341 | $2341 | $2351 |
+| $1434 | $1609 | $2341 | $2341 | $2784 |
 
 ## Honest Scope Disclosure
 
 ### What this harness VALIDATES
 
 - Per-tier firm-breach probability on this strategy's historical P&L distribution
-- Topstep EOD trailing-DD + daily-loss-limit + 50% consistency rule (via simulate_firm_survival)
+- Topstep EOD trailing-DD + hard daily-loss limit; dynamic Combine target and funded payout eligibility are reported separately
 - Block-bootstrap MC paths preserve short-run autocorrelation
 - Gate logic: breach rate < SCALING_BREACH_GATE_PCT (default 5%)
 - Fail-CLOSED: any data-missing or sim-error case exits non-zero

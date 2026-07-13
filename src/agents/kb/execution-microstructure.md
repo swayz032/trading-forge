@@ -26,7 +26,8 @@ The critique compares realized `position.slippage` against the **expected ATR-sc
 
 **Session liquidity windows (ET).** Best: RTH 09:30-11:30 + PM 13:30-15:30 (PM = ~35% of HODs). AVOID: lunch dead zone 11:30-13:30 (>60% false-breakout rate — HARD blackout). Killzones: NY_AM 10:00-11:00, NY_PM 14:00-15:00, Silver Bullet windows. Overnight ETH is thin — widen slippage expectation.
 
-**Commission.** Topstep $0.37/side; MFFU $0.62/side (per `kb/prop-firm-rules-summary.md`).
+**Commission.** Topstep MES/MNQ $0.62/side; MFFU Builder MES/MNQ $0.95/side
+(per `src/shared/firm-stage-rules.json`).
 
 ## SYMBOL: mnq
 
@@ -38,7 +39,7 @@ The critique compares realized `position.slippage` against the **expected ATR-sc
 
 **Session liquidity windows (ET).** Same RTH structure as MES (NASDAQ-correlated). Best RTH 09:30-11:30 + PM 13:30-15:30; lunch blackout 11:30-13:30. MNQ leads on tech-driven momentum days — higher intra-window volatility, size the fill expectation up.
 
-**Commission.** Topstep $0.37/side; MFFU $0.62/side.
+**Commission.** Topstep MES/MNQ $0.62/side; MFFU Builder MES/MNQ $0.95/side.
 
 **Compliance note.** MNQ + NQ simultaneously = same underlying = MFFU hedging-ban violation (`kb/prop-firm-rules-summary.md`).
 
@@ -52,7 +53,7 @@ The critique compares realized `position.slippage` against the **expected ATR-sc
 
 **Session liquidity windows (ET).** Best around RTH crude pit hours + the EIA window aftermath. AVOID entries in the ±15 min EIA release window (Wed 10:30 ET) unless `bypass_news_blackout`. Overnight crude is thin and headline-sensitive (geopolitics move it first).
 
-**Commission.** Topstep $0.37/side; MFFU $0.62/side.
+**Commission.** Topstep MES/MNQ $0.62/side; MFFU Builder MES/MNQ $0.95/side.
 
 **Confluence note.** For MCL, `internals_aligned` (stock breadth) is zeroed and its weight redistributes to `cross_asset_aligned` (DXY/yields) — crude follows the dollar and rates, not NYSE breadth (CLAUDE.md §2b MCL redistribution).
 

@@ -1,5 +1,9 @@
-// ─── SINGLE SOURCE OF TRUTH for all prop firm data ──────────────────────────
-// Every TS file that needs firm rules imports from here. No duplicates.
+import { getFirmStageRules } from "./firm-stage-rules.js";
+
+// ─── Legacy projection of the canonical stage rule book ────────────────────
+// Every TS file that needs the legacy 50K account shape imports from here.
+// Rule values originate in firm-stage-rules.json, which separates evaluation,
+// funded, payout, and live requirements.
 // Only Topstep (PRIMARY) + MFFU (secondary) per CLAUDE.md §6.
 // Legacy firms (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade) removed 2026-05-19.
 // ALL firms are 50K accounts. We trade MICROS only (MES/MNQ/MCL).
@@ -89,84 +93,147 @@ export interface FirmConfig {
 
 // ─── Firm Data (50K accounts only) ──────────────────────────────────────────
 
+function stageNumber(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`Invalid numeric stage rule: ${label}`);
+  }
+  return value;
+}
+
+function stageBoolean(value: unknown, label: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`Invalid boolean stage rule: ${label}`);
+  }
+  return value;
+}
+
+function stageZero(value: unknown, label: string): 0 {
+  if (value !== 0) {
+    throw new Error(`Expected zero stage rule: ${label}`);
+  }
+  return 0;
+}
+
+function stageRecord(value: unknown, label: string): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Invalid object stage rule: ${label}`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function legacyTrailing(value: unknown, label: string): "eod" | "intraday" {
+  if (value === "eod") return "eod";
+  if (value === "realtime") return "intraday";
+  throw new Error(`Invalid trailing stage rule: ${label}`);
+}
+
+const MFFU_STAGE_RULES = getFirmStageRules("mffu_50k");
+const MFFU_EVALUATION = MFFU_STAGE_RULES.evaluation;
+const MFFU_PAYOUT = MFFU_STAGE_RULES.payout;
+const MFFU_EXECUTION = MFFU_STAGE_RULES.execution;
+const TOPSTEP_STAGE_RULES = getFirmStageRules("topstep_50k");
+const TOPSTEP_EVALUATION = TOPSTEP_STAGE_RULES.evaluation;
+const TOPSTEP_PAYOUT = TOPSTEP_STAGE_RULES.payout;
+const TOPSTEP_EXECUTION = TOPSTEP_STAGE_RULES.execution;
+const TOPSTEP_PAYOUT_PATHS = TOPSTEP_PAYOUT["paths"] as Record<string, Record<string, unknown>>;
+const TOPSTEP_STANDARD_CAP = stageRecord(
+  TOPSTEP_PAYOUT_PATHS["standard"]?.["payout_cap"],
+  "topstep.payout.standard.payout_cap",
+);
+const TOPSTEP_CONSISTENCY_CAP = stageRecord(
+  TOPSTEP_PAYOUT_PATHS["consistency"]?.["payout_cap"],
+  "topstep.payout.consistency.payout_cap",
+);
+
+/**
+ * Backward-compatible account projection. `consistencyRule` intentionally
+ * remains null: neither firm's payout-stage condition is an evaluation or
+ * account-survival violation. Stage-aware consumers use firm-stage-rules.ts.
+ */
 export const FIRMS: Record<string, FirmConfig> = {
   mffu: {
-    name: "mffu",
-    displayName: "MyFundedFutures (MFFU)",
-    evaluationType: "one_step",
-    // MFFU strict: rules §7 prohibit trading during Tier 1 economic data releases.
-    macro_blackout_mode: "strict",
+    name: MFFU_STAGE_RULES.firm_id,
+    displayName: MFFU_STAGE_RULES.display_name,
+    evaluationType: MFFU_STAGE_RULES.evaluation_type,
+    macro_blackout_mode: MFFU_STAGE_RULES.macro_blackout_mode,
     accountTypes: {
       "50k": {
-        // 2026-06-23: operator chose the MFFU BUILDER plan. Builder = EOD trailing (Max EOD
-        // Drawdown $2,000; eval floor $48,000; LIVE MLL static once it reaches $0) + 40 micros
-        // (room for our pyramid, unlike Pro's 5) + $1,000 SOFT-pause DLL (account survives) +
-        // news ALLOWED. 80/20 split; consistency 50% at the SIM-FUNDED payout stage only (NONE
-        // eval, NONE live); $500 min payout; 5 sim payouts → real live broker (Blue Row Capital).
-        accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 40, trailing: "eod",
-        payoutSplit: 0.80, minPayoutDays: 2, consistencyRule: 0.50, // Python: "mffu_50pct_sim_payout"
-        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.95, // MFFU MES/MNQ $1.90 RT; MCL $0.58 exact in firm_config per-symbol
-        minTradingDays: 1,
-        // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
-        payoutCycleDays: 2,
-        hftMaxTradesPerDay: 500,
-        // Rule 2: collaborative trading (2+ accounts same/opposite strategy → ban)
-        collaborativeTradingBanned: true,
-        // Rule 3: same-device ban (family members on shared device → ban)
-        sameDeviceBanned: true,
-        // Rule 4: hedging same underlying (MNQ+NQ simultaneously = violation)
-        hedgingSameUnderlyingBanned: true,
-        // Rule 8: 2% price limit (max 2% account loss per single trade)
-        twoPercentRulePct: 0.02,   // = MFFU_TWO_PERCENT_RULE_PCT (defined below; literal avoids forward-ref)
-        // Rule 7: slippage exploitation prohibited (2-tick MES floor)
-        baselineSlippageTicksMes: 2, // = MFFU_BASELINE_SLIPPAGE_TICKS_MES (literal avoids forward-ref)
-        // Rule 5: Tier-1 economic data blackout (±30 minutes around event)
-        tier1EventBlackoutMinutes: 30,
-        // Rule 6: simultaneous limit orders at same price banned
-        simultaneousLimitsAtSamePriceBanned: true,
+        accountSize: stageNumber(MFFU_EVALUATION.account_size, "mffu.evaluation.account_size"),
+        monthlyFee: stageNumber(MFFU_EVALUATION.monthly_fee, "mffu.evaluation.monthly_fee"),
+        activationFee: stageZero(MFFU_EVALUATION.activation_fee, "mffu.evaluation.activation_fee"),
+        ongoingMonthlyFee: stageNumber(MFFU_EVALUATION.ongoing_monthly_fee, "mffu.evaluation.ongoing_monthly_fee"),
+        profitTarget: stageNumber(MFFU_EVALUATION.profit_target, "mffu.evaluation.profit_target"),
+        maxDrawdown: stageNumber(MFFU_EVALUATION.max_drawdown, "mffu.evaluation.max_drawdown"),
+        maxContracts: stageNumber(MFFU_EVALUATION.max_contracts, "mffu.evaluation.max_contracts"),
+        trailing: legacyTrailing(MFFU_EVALUATION.trailing, "mffu.evaluation.trailing"),
+        payoutSplit: stageNumber(MFFU_PAYOUT["payout_split"], "mffu.payout.payout_split"),
+        minPayoutDays: stageNumber(MFFU_PAYOUT["minimum_qualifying_days"], "mffu.payout.minimum_qualifying_days"),
+        consistencyRule: null,
+        dailyLossLimit: stageNumber(MFFU_EVALUATION.daily_loss_limit, "mffu.evaluation.daily_loss_limit"),
+        overnightOk: stageBoolean(MFFU_EVALUATION.overnight_ok, "mffu.evaluation.overnight_ok"),
+        weekendOk: stageBoolean(MFFU_EVALUATION.weekend_ok, "mffu.evaluation.weekend_ok"),
+        commissionPerSide: stageNumber(MFFU_EXECUTION["commission_per_side"], "mffu.execution.commission_per_side"),
+        minTradingDays: stageNumber(MFFU_EVALUATION.min_trading_days, "mffu.evaluation.min_trading_days"),
+        payoutCycleDays: stageNumber(MFFU_PAYOUT["payout_cycle_days"], "mffu.payout.payout_cycle_days"),
+        hftMaxTradesPerDay: stageNumber(MFFU_EXECUTION["hft_max_trades_per_day"], "mffu.execution.hft_max_trades_per_day"),
+        collaborativeTradingBanned: stageBoolean(MFFU_EXECUTION["collaborative_trading_banned"], "mffu.execution.collaborative_trading_banned"),
+        sameDeviceBanned: stageBoolean(MFFU_EXECUTION["same_device_banned"], "mffu.execution.same_device_banned"),
+        hedgingSameUnderlyingBanned: stageBoolean(MFFU_EXECUTION["hedging_same_underlying_banned"], "mffu.execution.hedging_same_underlying_banned"),
+        twoPercentRulePct: stageNumber(MFFU_EXECUTION["two_percent_rule_pct"], "mffu.execution.two_percent_rule_pct"),
+        baselineSlippageTicksMes: stageNumber(MFFU_EXECUTION["baseline_slippage_ticks_mes"], "mffu.execution.baseline_slippage_ticks_mes"),
+        tier1EventBlackoutMinutes: stageNumber(MFFU_EXECUTION["tier1_event_blackout_minutes"], "mffu.execution.tier1_event_blackout_minutes"),
+        simultaneousLimitsAtSamePriceBanned: stageBoolean(MFFU_EXECUTION["simultaneous_limits_at_same_price_banned"], "mffu.execution.simultaneous_limits_at_same_price_banned"),
       },
     },
   },
-
   topstep: {
-    name: "topstep",
-    displayName: "Topstep",
-    evaluationType: "one_step",
-    // Topstep advisory: Help Center as of April 2026 publishes NO hard news-trading
-    // blackout (per proptradingvibes 2026-04-28). Warn but do not block. See docs/
-    // prop-firm-rules-2026-topstep.md §Macro.
-    macro_blackout_mode: "advisory",
+    name: TOPSTEP_STAGE_RULES.firm_id,
+    displayName: TOPSTEP_STAGE_RULES.display_name,
+    evaluationType: TOPSTEP_STAGE_RULES.evaluation_type,
+    macro_blackout_mode: TOPSTEP_STAGE_RULES.macro_blackout_mode,
     accountTypes: {
       "50k": {
-        accountSize: 50_000, monthlyFee: 49, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "eod",
-        payoutSplit: 0.90, minPayoutDays: 5, consistencyRule: 0.50, // Python: "topstep_50pct" — 50% best-day cap at Combine pass-request
-        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.62, // deep-scan cross-system F-1: 0.37 was STALE (correction 2026-06-23 authoritative $0.62; live P&L path contract-class.ts already 0.62)
-        minTradingDays: 5,
-        // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-topstep.md)
-        platformLockdownDate: "2026-01-12",
-        requiredPlatform: "topstepx",
-        allowsVps: false,
-        allowsVpn: false,
-        allowsRemoteDesktop: false,
-        // Cloud failover (Railway VPS path) is banned: VPS/VPN/remote desktop all prohibited
-        allowsCloudFailover: false,
-        multiAccountWithinUserAllowed: true,
-        copyTradesWithinUserAllowed: true,
-        // 2026-06-02 voluntary-DLL promo: opting into DLL at Combine checkout doubles
-        // the XFA per-request payout cap. LFA is uncapped (modeled by getPayoutCap returning null).
-        // IMPORTANT: conservative default for callers is dll_opted_in=false → base cap.
+        accountSize: stageNumber(TOPSTEP_EVALUATION.account_size, "topstep.evaluation.account_size"),
+        monthlyFee: stageNumber(TOPSTEP_EVALUATION.monthly_fee, "topstep.evaluation.monthly_fee"),
+        activationFee: stageZero(TOPSTEP_EVALUATION.activation_fee, "topstep.evaluation.activation_fee"),
+        ongoingMonthlyFee: stageNumber(TOPSTEP_EVALUATION.ongoing_monthly_fee, "topstep.evaluation.ongoing_monthly_fee"),
+        profitTarget: stageNumber(TOPSTEP_EVALUATION.profit_target, "topstep.evaluation.profit_target"),
+        maxDrawdown: stageNumber(TOPSTEP_EVALUATION.max_drawdown, "topstep.evaluation.max_drawdown"),
+        maxContracts: stageNumber(TOPSTEP_EVALUATION.max_contracts, "topstep.evaluation.max_contracts"),
+        trailing: legacyTrailing(TOPSTEP_EVALUATION.trailing, "topstep.evaluation.trailing"),
+        payoutSplit: stageNumber(TOPSTEP_PAYOUT["payout_split"], "topstep.payout.payout_split"),
+        minPayoutDays: stageNumber(TOPSTEP_PAYOUT_PATHS["standard"]?.["minimum_winning_days"], "topstep.payout.standard.minimum_winning_days"),
+        consistencyRule: null,
+        dailyLossLimit: stageNumber(TOPSTEP_EVALUATION.daily_loss_limit, "topstep.evaluation.daily_loss_limit"),
+        overnightOk: stageBoolean(TOPSTEP_EVALUATION.overnight_ok, "topstep.evaluation.overnight_ok"),
+        weekendOk: stageBoolean(TOPSTEP_EVALUATION.weekend_ok, "topstep.evaluation.weekend_ok"),
+        commissionPerSide: stageNumber(TOPSTEP_EXECUTION["commission_per_side"], "topstep.execution.commission_per_side"),
+        minTradingDays: stageNumber(TOPSTEP_EVALUATION.min_trading_days, "topstep.evaluation.min_trading_days"),
+        platformLockdownDate: String(TOPSTEP_EXECUTION["platform_lockdown_date"]),
+        requiredPlatform: String(TOPSTEP_EXECUTION["required_platform"]),
+        allowsVps: stageBoolean(TOPSTEP_EXECUTION["allows_vps"], "topstep.execution.allows_vps"),
+        allowsVpn: stageBoolean(TOPSTEP_EXECUTION["allows_vpn"], "topstep.execution.allows_vpn"),
+        allowsRemoteDesktop: stageBoolean(TOPSTEP_EXECUTION["allows_remote_desktop"], "topstep.execution.allows_remote_desktop"),
+        allowsCloudFailover: (
+          stageBoolean(TOPSTEP_EXECUTION["allows_vps"], "topstep.execution.allows_vps")
+          || stageBoolean(TOPSTEP_EXECUTION["allows_vpn"], "topstep.execution.allows_vpn")
+          || stageBoolean(TOPSTEP_EXECUTION["allows_remote_desktop"], "topstep.execution.allows_remote_desktop")
+        ),
+        multiAccountWithinUserAllowed: stageBoolean(TOPSTEP_EXECUTION["multi_account_within_user_allowed"], "topstep.execution.multi_account_within_user_allowed"),
+        copyTradesWithinUserAllowed: stageBoolean(TOPSTEP_EXECUTION["copy_trades_within_user_allowed"], "topstep.execution.copy_trades_within_user_allowed"),
         xfaPayoutCaps: {
-          standard:    { base: 2000, withDll: 4000 },
-          consistency: { base: 3000, withDll: 6000 },
+          standard: {
+            base: stageNumber(TOPSTEP_STANDARD_CAP["base"], "topstep.payout.standard.payout_cap.base"),
+            withDll: stageNumber(TOPSTEP_STANDARD_CAP["with_dll"], "topstep.payout.standard.payout_cap.with_dll"),
+          },
+          consistency: {
+            base: stageNumber(TOPSTEP_CONSISTENCY_CAP["base"], "topstep.payout.consistency.payout_cap.base"),
+            withDll: stageNumber(TOPSTEP_CONSISTENCY_CAP["with_dll"], "topstep.payout.consistency.payout_cap.with_dll"),
+          },
         },
       },
     },
   },
-
-  // 6 legacy firms (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade) removed
-  // 2026-05-19 per CLAUDE.md §6 — Topstep + MFFU only.
 };
 
 // ─── Phase 5 Feature Gate ─────────────────────────────────────────────────────
@@ -344,10 +411,9 @@ export function resolveContractSpec(
 }
 
 // ─── Contract Cap Bounds (mirrors Python firm_config.py) ────────────────────
-// Micros at $50K Combine/Funded:
-//   Topstep:       50 micros (5 minis × 10:1 ratio) per scaling plan max tier
-//   MFFU Core:     50 micros (5 minis × 10:1)
-//   MFFU Pro:      60 micros (6 minis × 10:1)
+// Active 50K stage contracts: Topstep permits 50 micros and MFFU Builder
+// permits 40. The global bound remains 60 for compatibility with historical
+// non-active plans; consumers must use the per-firm cap above it.
 
 export const CONTRACT_CAP_MIN = 0;
 export const CONTRACT_CAP_MAX = 60;
@@ -364,6 +430,17 @@ export function getFirmAccount(firmName: string, accountType: string = "50k"): F
   const firm = FIRMS[firmName.toLowerCase()];
   if (!firm) return null;
   return firm.accountTypes[accountType.toLowerCase()] ?? firm.accountTypes["50k"] ?? null;
+}
+
+function getFirmStageRulesByLegacyName(firmName: string) {
+  const normalized = firmName.trim().toLowerCase();
+  const firmKey = normalized === "topstep"
+    ? "topstep_50k"
+    : normalized === "mffu"
+      ? "mffu_50k"
+      : null;
+  if (!firmKey) throw new Error(`Unknown legacy firm name '${firmName}'.`);
+  return getFirmStageRules(firmKey);
 }
 
 /** Get risk-relevant limits for a firm (always 50K) */
@@ -413,7 +490,7 @@ export function getTightestDrawdown(): { firm: string; maxDrawdown: number } | n
 
 // ─── Commission Helpers ──────────────────────────────────────────────────────
 
-/** Default commission per side when firmId is null/unknown. $0.62 = MFFU baseline (Topstep is lower at $0.37). */
+/** Default commission per side when firmId is null/unknown. */
 export const DEFAULT_COMMISSION_PER_SIDE = 0.62;
 
 /**
@@ -431,18 +508,27 @@ export function getCommissionPerSide(firmId: string | null | undefined): number 
   return acct.commissionPerSide;
 }
 
-/** Buffer amount = maxDrawdown. After passing eval, trader must build this buffer before payouts. */
+/**
+ * Payout buffer required after funding. This is intentionally distinct from
+ * evaluation drawdown: MFFU Builder requires its $2,100 payout buffer, while
+ * Topstep's configured XFA paths do not declare a dollar payout buffer.
+ */
 export function getBufferAmount(firmName: string, _accountType: string = "50k"): number | null {
-  const acct = getFirmAccount(firmName, "50k");
-  if (!acct) return null;
-  return acct.maxDrawdown;
+  try {
+    const payout = getFirmStageRulesByLegacyName(firmName).payout;
+    const buffer = payout["payout_buffer"];
+    return typeof buffer === "number" ? buffer : 0;
+  } catch {
+    return null;
+  }
 }
 
-/** Total hurdle = profitTarget (to pass eval) + maxDrawdown (buffer phase). Total P&L before first payout. */
+/** Total hurdle = evaluation target + configured post-funding payout buffer. */
 export function getTotalHurdle(firmName: string, _accountType: string = "50k"): number | null {
   const acct = getFirmAccount(firmName, "50k");
-  if (!acct) return null;
-  return acct.profitTarget + acct.maxDrawdown;
+  const buffer = getBufferAmount(firmName, _accountType);
+  if (!acct || buffer == null) return null;
+  return acct.profitTarget + buffer;
 }
 
 // ─── Liquidity Comfort Caps (F-3) ───────────────────────────────────────────
@@ -476,31 +562,47 @@ export const TOPSTEP_TRAILING_DD_BY_SIZE: Record<number, number> = {
 // asserts equality between constants and firm-config values.
 
 /** Max trades per day before MFFU classifies the account as HFT (Rule 1). */
-export const MFFU_HFT_MAX_TRADES_PER_DAY = 500;
+export const MFFU_HFT_MAX_TRADES_PER_DAY = stageNumber(
+  MFFU_EXECUTION["hft_max_trades_per_day"],
+  "mffu.execution.hft_max_trades_per_day",
+);
 
 /** Max fraction of account balance that a single trade's intended loss may represent (Rule 8). */
-export const MFFU_TWO_PERCENT_RULE_PCT = 0.02;
+export const MFFU_TWO_PERCENT_RULE_PCT = stageNumber(
+  MFFU_EXECUTION["two_percent_rule_pct"],
+  "mffu.execution.two_percent_rule_pct",
+);
 
 /** Minimum slippage tick floor for MES on MFFU paths — enforced in slippage.py (Rule 7). */
-export const MFFU_BASELINE_SLIPPAGE_TICKS_MES = 2;
+export const MFFU_BASELINE_SLIPPAGE_TICKS_MES = stageNumber(
+  MFFU_EXECUTION["baseline_slippage_ticks_mes"],
+  "mffu.execution.baseline_slippage_ticks_mes",
+);
 
-/** Payout cycle in calendar days (bi-weekly, Rule 9). */
-export const MFFU_PAYOUT_CYCLE_DAYS = 14;
+/** Payout cycle in calendar days for the selected Builder plan. */
+export const MFFU_PAYOUT_CYCLE_DAYS = stageNumber(
+  MFFU_PAYOUT["payout_cycle_days"],
+  "mffu.payout.payout_cycle_days",
+);
 
 /** Initial trader payout split (Rule 9). */
-export const MFFU_PAYOUT_SPLIT = 0.80;
+export const MFFU_PAYOUT_SPLIT = stageNumber(MFFU_PAYOUT["payout_split"], "mffu.payout.payout_split");
 
 // ─── Topstep 2026 named constants (no magic numbers in compliance code) ───────
 // Canonical source: docs/prop-firm-rules-2026-topstep.md §Platform §API
 
 /** Date Topstep locked trading exclusively to TopstepX platform. */
-export const TOPSTEP_PLATFORM_LOCKDOWN_DATE = "2026-01-12";
+export const TOPSTEP_PLATFORM_LOCKDOWN_DATE = String(TOPSTEP_EXECUTION["platform_lockdown_date"]);
 
 /** Required platform identifier after lockdown. */
-export const TOPSTEP_REQUIRED_PLATFORM = "topstepx";
+export const TOPSTEP_REQUIRED_PLATFORM = String(TOPSTEP_EXECUTION["required_platform"]);
 
 /** Topstep does NOT allow cloud failover (VPS/VPN/remote desktop banned). */
-export const TOPSTEP_ALLOWS_CLOUD_FAILOVER = false;
+export const TOPSTEP_ALLOWS_CLOUD_FAILOVER = (
+  stageBoolean(TOPSTEP_EXECUTION["allows_vps"], "topstep.execution.allows_vps")
+  || stageBoolean(TOPSTEP_EXECUTION["allows_vpn"], "topstep.execution.allows_vpn")
+  || stageBoolean(TOPSTEP_EXECUTION["allows_remote_desktop"], "topstep.execution.allows_remote_desktop")
+);
 
 /** TopstepX API monthly subscription fee in USD (with promo code). */
 export const TOPSTEPX_API_MONTHLY_FEE_USD = 14.50;
@@ -522,8 +624,14 @@ export const TOPSTEPX_PROMO_CODE = "topstep";
 
 /** Topstep XFA payout caps per path. withDll = cap after voluntary-DLL opt-in. */
 export const TOPSTEP_XFA_PAYOUT_CAPS: Readonly<Record<string, { base: number; withDll: number }>> = {
-  standard:    { base: 2000, withDll: 4000 },
-  consistency: { base: 3000, withDll: 6000 },
+  standard: {
+    base: stageNumber(TOPSTEP_STANDARD_CAP["base"], "topstep.payout.standard.payout_cap.base"),
+    withDll: stageNumber(TOPSTEP_STANDARD_CAP["with_dll"], "topstep.payout.standard.payout_cap.with_dll"),
+  },
+  consistency: {
+    base: stageNumber(TOPSTEP_CONSISTENCY_CAP["base"], "topstep.payout.consistency.payout_cap.base"),
+    withDll: stageNumber(TOPSTEP_CONSISTENCY_CAP["with_dll"], "topstep.payout.consistency.payout_cap.with_dll"),
+  },
 } as const;
 
 /**
@@ -533,7 +641,7 @@ export const TOPSTEP_XFA_PAYOUT_CAPS: Readonly<Record<string, { base: number; wi
 export const TOPSTEP_LFA_PAYOUT_CAP: null = null;
 
 /** MFFU flat per-request payout cap. No voluntary-DLL promo applies. */
-export const MFFU_PAYOUT_CAP = 2000;
+export const MFFU_PAYOUT_CAP = stageNumber(MFFU_PAYOUT["maximum_request"], "mffu.payout.maximum_request");
 
 /**
  * Return the maximum payout per withdrawal request for a given firm/stage/path combination.

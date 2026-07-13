@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T07:13:54.678Z",
+  "generatedAt": "2026-07-13T07:49:40.731Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -293,7 +293,7 @@
         ],
         "preferredName": "14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T07:00:26.090Z",
         "lastFailureAt": null,
@@ -301,7 +301,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 192h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -311,7 +311,7 @@
         ],
         "preferredName": "3A_workflow_backup_5bfT33w0TylM0Hbk",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T06:00:04.767Z",
         "lastFailureAt": null,
@@ -319,7 +319,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 193h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -383,7 +383,7 @@
         ],
         "preferredName": "7A_auto_evolution_eEt2dJrZbV6C7TRL",
         "state": "production-active",
-        "healthStatus": "healthy",
+        "healthStatus": "stale",
         "failureCount": 0,
         "lastSuccessAt": "2026-07-05T07:20:01.637Z",
         "lastFailureAt": null,
@@ -391,7 +391,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Last known success is 192h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -409,7 +409,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 264h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 288h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -427,7 +427,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 210h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 234h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -445,7 +445,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 202h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 226h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -518,7 +518,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 201h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 226h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -536,7 +536,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 209h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 234h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -554,7 +554,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 210h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 234h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -955,6 +955,9 @@
       "sourceMissingWorkflowBlockers": [],
       "redeployWorkflowBlockers": [],
       "staleWorkflowBlockers": [
+        "14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
+        "3A_workflow_backup_5bfT33w0TylM0Hbk",
+        "7A_auto_evolution_eEt2dJrZbV6C7TRL",
         "Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
         "Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
         "Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
@@ -984,6 +987,9 @@
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
         "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
+        "workflow-stale:3A_workflow_backup_5bfT33w0TylM0Hbk",
+        "workflow-stale:7A_auto_evolution_eEt2dJrZbV6C7TRL",
         "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
         "workflow-stale:Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
         "workflow-stale:Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",
@@ -1020,6 +1026,9 @@
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_DGEk1D478xWJClKD",
         "workflow-missing-evidence:Slumdawg_Analyst_Anam_Tools_Gateway_4mlEUCez5FJ90GiT",
+        "workflow-stale:14A_master_nightly_intelligence_Nk4pmHP6c0VOEOaT",
+        "workflow-stale:3A_workflow_backup_5bfT33w0TylM0Hbk",
+        "workflow-stale:7A_auto_evolution_eEt2dJrZbV6C7TRL",
         "workflow-stale:Anti_Setup_Refresh_9KY6ixHP47mP7k0y",
         "workflow-stale:Daily_Compliance_Check_b8CSc84wQzJ4lEGH",
         "workflow-stale:Daily_Portfolio_Monitor_eZSbajXAi7v7tGPx",

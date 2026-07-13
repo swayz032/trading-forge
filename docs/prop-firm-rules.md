@@ -1,28 +1,27 @@
-# Prop Firm Rules Reference
+# Historical Prop Firm Rules Archive
 
-> This document is consumed by Trading Forge AI agents for strategy simulation,
-> evaluation feasibility scoring, and payout projections. All numbers are current
-> as of April 2026 (the **## 2026 Updates** section reflects the latest rule
-> changes; the per-firm blocks below contain the full historical detail).
-> Agents MUST use these constraints when simulating strategies.
+> **Do not use this file for runtime rules, research gates, ranking, payout
+> eligibility, or agent prompts.** It preserves pre-hardening historical notes,
+> including firms no longer supported and values superseded by later audits.
+>
+> The runtime source of truth is `src/shared/firm-stage-rules.json`. The human
+> reference documents are `docs/prop-firm-rules-2026-topstep.md` and
+> `docs/prop-firm-rules-2026-mffu.md`; the compliance refresh monitor hashes the
+> JSON rule book, not this archive.
+
+## Active Rule Contract
+
+| Firm | Evaluation | Funded payout | Account-survival treatment |
+|---|---|---|---|
+| Topstep 50K | $3,000 base target; at least 2 days; effective target `max($3,000, 2 × best day)` | Standard default: 5 winning days at $150+; Consistency: 3 trade days and 40% cap | A best-day spike raises the Combine target; payout eligibility is recoverable and never an account breach |
+| MFFU 50K Builder | $3,000 target; at least 1 day | 2 qualifying days, $2,100 buffer, 50% best-day condition | Payout conditions are recoverable sim-funded requirements, never evaluation/survival breaches |
+
+The rest of this document is archival context only. It may conflict with the
+canonical rule book and must not be interpreted as an active constraint.
 
 ---
 
-## How Agents Should Use This Document
-
-1. **Before backtesting:** Load the target firm's rules as hard constraints
-2. **During simulation:** Enforce drawdown limits, consistency rules, and contract caps
-3. **Scoring output:** Report whether a strategy PASSES or FAILS each firm's evaluation
-4. **Payout projection:** Calculate expected net profit after splits and fees
-5. **Firm ranking:** Given a strategy profile, rank firms by expected ROI
-
----
-
-## 2026 Updates
-
-> Source-of-truth overlay on top of the per-firm blocks below. When a value
-> here conflicts with a per-firm block, **this section wins** — the per-firm
-> blocks are kept for historical context and detailed payout/platform info.
+## Historical 2026 Notes
 
 ### Per-Firm Routing Matrix
 

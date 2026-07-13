@@ -44,12 +44,38 @@ class TestTrailingDrawdownEOD:
         """Once HWM pushes floor to starting balance, it stays locked."""
         balances = [50000, 52500, 52000, 51500, 50000]
         # HWM=52500, floor would be 52500-2000=50500 if not locked
-        # But locks_at_start means floor = max(50500, 50000-2000=48000) = 50500
-        # So 50000 < 50500 → blown
+        # The Topstep lock caps the floor at the original $50K balance.
+        # Hitting that floor is a breach.
         passed, _, _ = simulate_trailing_drawdown_eod(
             balances, max_dd=2000, locks_at_start=True
         )
         assert passed is False
+
+    def test_lock_at_start_allows_pullback_above_starting_balance(self):
+        balances = [50000, 52500, 50500]
+
+        passed, _, _ = simulate_trailing_drawdown_eod(
+            balances, max_dd=2000, locks_at_start=True
+        )
+
+        assert passed is True
+
+    def test_mffu_builder_lock_is_100_above_its_stage_start(self):
+        eval_passed, _, _ = simulate_trailing_drawdown_eod(
+            [50000, 52500, 50500],
+            max_dd=2000,
+            locks_at_start=False,
+            trailing_lock_floor_offset=100,
+        )
+        funded_passed, _, _ = simulate_trailing_drawdown_eod(
+            [0, 2100, 50],
+            max_dd=2000,
+            locks_at_start=False,
+            trailing_lock_floor_offset=100,
+        )
+
+        assert eval_passed is True
+        assert funded_passed is False
 
 
 # ─── Trailing Drawdown (Real-time) ────────────────────────────────
@@ -165,6 +191,22 @@ class TestRunPropCompliance:
             assert "expected_eval_cost" in result
             assert "payout_split" in result
 
+    def test_topstep_evaluation_freezes_after_first_passing_day(self):
+        results = run_prop_compliance(
+            [1500, 1500, 5000, -1000],
+            {
+                "avg_daily_pnl": 1750,
+                "max_drawdown": 1000,
+                "trades_overnight": False,
+            },
+        )
+
+        assert results["topstep_50k"]["passed"] is True
+        assert not any(
+            "Topstep Combine not yet eligible" in failure
+            for failure in results["topstep_50k"]["failures"]
+        )
+
 
 # ─── Firm Ranking ─────────────────────────────────────────────────
 
@@ -204,7 +246,8 @@ class TestRankFirms:
 class TestMFFUConsistencyStageScoping:
     """MFFU 50% consistency is SIM-PAYOUT-stage-only (firm_config.py §MFFU).
     MC survival sim skips it; enforce_mffu_consistency=True activates it.
-    Topstep consistency is always enforced regardless of the parameter.
+    Topstep Combine's dynamic effective target is evaluated regardless of the
+    MFFU payout-stage parameter.
     """
 
     def _good_stats(self) -> dict:
@@ -242,27 +285,32 @@ class TestMFFUConsistencyStageScoping:
             f"Got failures: {consistency_fail}"
         )
 
-    def test_mffu_consistency_enforced_when_opted_in(self):
-        """MFFU consistency check is enforced when enforce_mffu_consistency=True."""
-        # Same dominant-day scenario — now opt-in at sim-payout stage
-        # day0 = 900/1700 ≈ 53% > 50% threshold
-        pnls = [900, 100, 100, 50, 50, 100, 100, 100, 100, 100]
+    def test_mffu_payout_eligibility_is_separate_when_requested(self):
+        """A recoverable sim-funded payout delay never fails the account."""
+        # The sim-funded payout buffer must be met before consistency is evaluated.
+        # day0 remains above 50% of the funded payout window after firm costs.
+        pnls = [1800, 700, 700]
         results = run_prop_compliance(
-            pnls, self._good_stats(), enforce_mffu_consistency=True
+            pnls,
+            self._good_stats(),
+            enforce_mffu_consistency=True,
+            payout_contexts={
+                "mffu_50k": {
+                    "daily_pnls": pnls,
+                    "traded_days": [True, True, True],
+                    "account_state": {"account_balance": 3200.0, "cycle_elapsed_hours": 72.0},
+                }
+            },
         )
-        mffu_failures = results["mffu_50k"]["failures"]
-        consistency_fail = [f for f in mffu_failures if "consistency" in f.lower()]
-        assert len(consistency_fail) > 0, (
-            "MFFU consistency violation must be reported when enforce_mffu_consistency=True. "
-            f"Failures were: {mffu_failures}"
-        )
+        mffu = results["mffu_50k"]
+        assert mffu["passed"] is True
+        assert mffu["payout_eligibility"]["eligible"] is False
+        assert mffu["payout_eligibility"]["reason"] == "consistency_target_not_met"
 
-    def test_topstep_consistency_always_enforced(self):
-        """Topstep consistency must be enforced regardless of enforce_mffu_consistency.
-
-        enforce_mffu_consistency only gates the MFFU check. Topstep is always checked.
-        """
-        # day0 = 900/1700 ≈ 53% > 50% threshold for both MFFU and Topstep
+    def test_topstep_dynamic_target_is_always_evaluated(self):
+        """Topstep's two-day dynamic target does not depend on MFFU payout mode."""
+        # The first day is more than half of total profit, so Topstep must keep
+        # trading toward the raised effective target. This is recoverable.
         pnls = [900, 100, 100, 50, 50, 100, 100, 100, 100, 100]
         # Default (MFFU skip)
         results_default = run_prop_compliance(pnls, self._good_stats())
@@ -270,11 +318,11 @@ class TestMFFUConsistencyStageScoping:
         results_optin = run_prop_compliance(
             pnls, self._good_stats(), enforce_mffu_consistency=True
         )
-        # Topstep must have consistency failure in BOTH cases
+        # Topstep must report a recoverable evaluation shortfall in BOTH cases.
         for label, results in [("default", results_default), ("opt-in", results_optin)]:
             ts_failures = results["topstep_50k"]["failures"]
-            ts_consistency = [f for f in ts_failures if "consistency" in f.lower()]
-            assert len(ts_consistency) > 0, (
-                f"Topstep consistency must be enforced ({label}). "
+            dynamic_target_failure = [f for f in ts_failures if "not yet eligible" in f.lower()]
+            assert len(dynamic_target_failure) > 0, (
+                f"Topstep dynamic target must be evaluated ({label}). "
                 f"Failures were: {ts_failures}"
             )

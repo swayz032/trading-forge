@@ -10,6 +10,7 @@ import {
   getTotalHurdle,
   getAllFirms,
 } from "../../shared/firm-config.js";
+import { getFirmStageRulesById } from "../../shared/firm-stage-rules.js";
 import {
   simulateSurvivalCurve,
   deriveStrategyProfile,
@@ -278,10 +279,24 @@ propFirmRoutes.post("/rank", async (req, res) => {
 
       // Check compliance
       const violations: string[] = [];
+      const advisories: string[] = [];
       if (maxDrawdown > acct.maxDrawdown) violations.push(`Drawdown $${maxDrawdown} > limit $${acct.maxDrawdown}`);
       if (!acct.overnightOk && holdsOvernight) violations.push("No overnight holding allowed");
-      if (acct.consistencyRule && bestDayPct && bestDayPct > acct.consistencyRule) {
-        violations.push(`Best day ${(bestDayPct * 100).toFixed(0)}% > consistency limit ${(acct.consistencyRule * 100).toFixed(0)}%`);
+      const stageRules = getFirmStageRulesById(firm.name);
+      if (bestDayPct && firm.name === "topstep" && stageRules.evaluation.consistency) {
+        const ratio = stageRules.evaluation.consistency.ratio;
+        if (bestDayPct > ratio) {
+          advisories.push(
+            `Topstep Combine best day ${(bestDayPct * 100).toFixed(0)}% exceeds ${(ratio * 100).toFixed(0)}%; the effective profit target rises, but the account is not in violation.`,
+          );
+        }
+      } else if (bestDayPct && firm.name === "mffu") {
+        const payoutRatio = Number(stageRules.payout["maximum_consistency_ratio"]);
+        if (Number.isFinite(payoutRatio) && bestDayPct > payoutRatio) {
+          advisories.push(
+            `MFFU Builder's best-day consistency is a recoverable sim-funded payout condition, not an evaluation violation.`,
+          );
+        }
       }
       // Daily loss limit is informational — we don't have worstDailyLoss in the request
       // so we can't check for a breach. Don't count as a violation.
@@ -290,10 +305,11 @@ propFirmRoutes.post("/rank", async (req, res) => {
 
       // Estimate days to pass evaluation
       const daysToTarget = avgDailyPnl > 0 ? Math.ceil(acct.profitTarget / avgDailyPnl) : 999;
-      const evalDays = Math.max(daysToTarget, acct.minPayoutDays);
+      const evalDays = Math.max(daysToTarget, acct.minTradingDays);
 
-      // Buffer phase: after passing eval, must build buffer = maxDrawdown before payouts
-      const bufferDays = avgDailyPnl > 0 ? Math.ceil(acct.maxDrawdown / avgDailyPnl) : 999;
+      // Payout buffer belongs to the funded payout stage; it is not a drawdown proxy.
+      const payoutBuffer = getBufferAmount(firm.name) ?? 0;
+      const bufferDays = avgDailyPnl > 0 ? Math.ceil(payoutBuffer / avgDailyPnl) : 999;
       const totalDaysToFirstPayout = evalDays + bufferDays;
 
       // Monthly costs during evaluation
@@ -337,7 +353,9 @@ propFirmRoutes.post("/rank", async (req, res) => {
         accountType: ACCOUNT_TYPE,
         passes,
         violations,
+        advisories,
         evalDays,
+        payoutBuffer,
         bufferDays,
         totalDaysToFirstPayout,
         evalMonths,
@@ -406,10 +424,11 @@ propFirmRoutes.post("/payout", (req, res) => {
 
   const tradingDaysPerMonth = 20;
   const daysToTarget = Math.ceil(acct.profitTarget / avgDailyPnl);
-  const evalMonths = Math.ceil(Math.max(daysToTarget, acct.minPayoutDays) / tradingDaysPerMonth);
+  const evalMonths = Math.ceil(Math.max(daysToTarget, acct.minTradingDays) / tradingDaysPerMonth);
 
-  // Buffer phase: after eval, must earn maxDrawdown before payouts
-  const bufferDays = Math.ceil(acct.maxDrawdown / avgDailyPnl);
+  // The payout-stage buffer is firm-specific and distinct from drawdown.
+  const payoutBuffer = getBufferAmount(firmConfig.name) ?? 0;
+  const bufferDays = Math.ceil(payoutBuffer / avgDailyPnl);
   const bufferMonths = Math.ceil(bufferDays / tradingDaysPerMonth);
   const totalPrePayoutMonths = evalMonths + bufferMonths;
 
@@ -457,6 +476,8 @@ propFirmRoutes.post("/payout", (req, res) => {
     numAccounts,
     avgDailyPnl,
     payoutSplit: acct.payoutSplit,
+    payoutBuffer,
+    bufferAmount: payoutBuffer,
     ongoingMonthlyFee: acct.ongoingMonthlyFee,
     evalMonths,
     bufferMonths,
@@ -499,6 +520,8 @@ propFirmRoutes.post("/timeline", (req, res) => {
 
   // Optimistic: straight-line P&L
   const daysOptimistic = Math.ceil(acct.profitTarget / avgDailyPnl);
+  const payoutBuffer = getBufferAmount(firmConfig.name) ?? 0;
+  const totalHurdle = getTotalHurdle(firmConfig.name) ?? acct.profitTarget;
 
   // Guard: winRate=0 makes timeline meaningless — return max placeholders
   if (winRate <= 0) {
@@ -508,7 +531,7 @@ propFirmRoutes.post("/timeline", (req, res) => {
       daysOptimistic,
       daysRealistic: 999,
       daysConservative: 999,
-      bufferDaysOptimistic: Math.ceil(acct.maxDrawdown / avgDailyPnl),
+      bufferDaysOptimistic: Math.ceil(payoutBuffer / avgDailyPnl),
       bufferDaysRealistic: 999,
     });
     return;
@@ -526,9 +549,9 @@ propFirmRoutes.post("/timeline", (req, res) => {
   const adjustedTarget = acct.profitTarget + setbackAmount;
   const daysConservative = netPerDay > 0 ? Math.ceil(adjustedTarget / netPerDay) : 999;
 
-  // Buffer phase days (after passing eval)
-  const bufferDaysOptimistic = Math.ceil(acct.maxDrawdown / avgDailyPnl);
-  const bufferDaysRealistic = netPerDay > 0 ? Math.ceil(acct.maxDrawdown / netPerDay) : 999;
+  // Payout-stage buffer days (after passing evaluation).
+  const bufferDaysOptimistic = Math.ceil(payoutBuffer / avgDailyPnl);
+  const bufferDaysRealistic = netPerDay > 0 ? Math.ceil(payoutBuffer / netPerDay) : 999;
 
   // Check if strategy can survive at this firm
   const survives = maxDrawdown <= acct.maxDrawdown;
@@ -540,35 +563,37 @@ propFirmRoutes.post("/timeline", (req, res) => {
     maxDrawdown: acct.maxDrawdown,
     strategyMaxDrawdown: maxDrawdown,
     survives,
-    bufferAmount: acct.maxDrawdown,
-    totalHurdle: acct.profitTarget + acct.maxDrawdown,
+    payoutBuffer,
+    bufferAmount: payoutBuffer,
+    totalHurdle,
     timeline: {
       optimistic: {
-        evalDays: Math.max(daysOptimistic, acct.minPayoutDays),
+        evalDays: Math.max(daysOptimistic, acct.minTradingDays),
         bufferDays: bufferDaysOptimistic,
-        totalDays: Math.max(daysOptimistic, acct.minPayoutDays) + bufferDaysOptimistic,
-        calendarDays: Math.ceil((Math.max(daysOptimistic, acct.minPayoutDays) + bufferDaysOptimistic) * 1.4),
+        totalDays: Math.max(daysOptimistic, acct.minTradingDays) + bufferDaysOptimistic,
+        calendarDays: Math.ceil((Math.max(daysOptimistic, acct.minTradingDays) + bufferDaysOptimistic) * 1.4),
         description: "Assumes every trading day is profitable at avg P&L",
       },
       realistic: {
-        evalDays: Math.max(daysRealistic, acct.minPayoutDays),
+        evalDays: Math.max(daysRealistic, acct.minTradingDays),
         bufferDays: bufferDaysRealistic,
-        totalDays: Math.max(daysRealistic, acct.minPayoutDays) + bufferDaysRealistic,
-        calendarDays: Math.ceil((Math.max(daysRealistic, acct.minPayoutDays) + bufferDaysRealistic) * 1.4),
+        totalDays: Math.max(daysRealistic, acct.minTradingDays) + bufferDaysRealistic,
+        calendarDays: Math.ceil((Math.max(daysRealistic, acct.minTradingDays) + bufferDaysRealistic) * 1.4),
         description: `Based on ${(winRate * 100).toFixed(0)}% win rate with avg loss at 50% of avg win`,
       },
       conservative: {
-        evalDays: Math.max(daysConservative, acct.minPayoutDays),
+        evalDays: Math.max(daysConservative, acct.minTradingDays),
         bufferDays: bufferDaysRealistic,
-        totalDays: Math.max(daysConservative, acct.minPayoutDays) + bufferDaysRealistic,
-        calendarDays: Math.ceil((Math.max(daysConservative, acct.minPayoutDays) + bufferDaysRealistic) * 1.4),
+        totalDays: Math.max(daysConservative, acct.minTradingDays) + bufferDaysRealistic,
+        calendarDays: Math.ceil((Math.max(daysConservative, acct.minTradingDays) + bufferDaysRealistic) * 1.4),
         description: "Includes 2-day losing streak setback buffer",
       },
     },
+    minTradingDays: acct.minTradingDays,
     minPayoutDays: acct.minPayoutDays,
     monthlyFee: acct.monthlyFee,
     ongoingMonthlyFee: acct.ongoingMonthlyFee,
-    estimatedEvalCost: Math.round(acct.monthlyFee * Math.ceil(Math.max(daysRealistic, acct.minPayoutDays) / 20)),
+    estimatedEvalCost: Math.round(acct.monthlyFee * Math.ceil(Math.max(daysRealistic, acct.minTradingDays) / 20)),
   });
 });
 
@@ -661,12 +686,13 @@ propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
         if (maxDrawdown > acct.maxDrawdown) violations.push(`Drawdown exceeds limit`);
 
         const daysToTarget = Math.ceil(acct.profitTarget / avgDailyPnl);
-        const evalDays = Math.max(daysToTarget, acct.minPayoutDays);
+        const evalDays = Math.max(daysToTarget, acct.minTradingDays);
         const evalMonths = Math.ceil(evalDays / 20);
         const evalCost = acct.monthlyFee * evalMonths;
 
-        // Buffer phase
-        const bufferDays = Math.ceil(acct.maxDrawdown / avgDailyPnl);
+        // Separate payout-stage buffer from evaluation drawdown.
+        const payoutBuffer = getBufferAmount(firm.name) ?? 0;
+        const bufferDays = Math.ceil(payoutBuffer / avgDailyPnl);
         const bufferMonths = Math.ceil(bufferDays / 20);
 
         // monthlyNet = true take-home after split AND ongoing fees
@@ -693,6 +719,7 @@ propFirmRoutes.get("/simulate/:backtestId", async (req, res) => {
           violations,
           evalDays,
           bufferDays,
+          payoutBuffer,
           evalCost: Math.round(evalCost),
           ongoingMonthlyFee: acct.ongoingMonthlyFee,
           monthlyNet: Math.round(monthlyNet),

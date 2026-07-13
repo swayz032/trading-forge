@@ -1,7 +1,7 @@
 /**
  * Compliance Rule Auto-Refresh Service
  *
- * Periodically checks whether docs/prop-firm-rules.md has changed
+ * Periodically checks whether the canonical stage rule book has changed
  * since the last known compliance ruleset. If the hash differs,
  * drift is flagged per firm, logged to complianceDriftLog, and a
  * Discord alert is sent. This does NOT auto-apply rule changes —
@@ -31,23 +31,25 @@ const FIRMS = [
   "topstep",
 ] as const;
 
+const RULES_SOURCE = "src/shared/firm-stage-rules.json";
+
 export interface DriftCheckResult {
   drifted: boolean;
   details: Array<{ firm: string; oldHash: string | null; newHash: string }>;
 }
 
 /**
- * Check if the prop-firm-rules.md document has changed since the last
- * known ruleset. This detects when rules are manually updated in docs.
+ * Check if the canonical stage rule book has changed since the last known
+ * ruleset. This detects a runtime-rule update, not an archival-doc edit.
  *
  * Idempotent: if the newHash already matches the most recent ruleset's
  * contentHash, no duplicate drift entries are created.
  */
 export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
-  const rulesPath = path.resolve(process.cwd(), "docs/prop-firm-rules.md");
+  const rulesPath = path.resolve(process.cwd(), RULES_SOURCE);
 
   if (!fs.existsSync(rulesPath)) {
-    logger.warn("Compliance rules file not found at docs/prop-firm-rules.md");
+    logger.warn({ rulesPath }, "Canonical compliance stage rule book not found");
     return { drifted: false, details: [] };
   }
 
@@ -85,7 +87,7 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
 
   logger.warn(
     { oldHash, newHash },
-    "Compliance rule drift detected — rules document changed",
+      "Compliance rule drift detected — canonical stage rule book changed",
   );
 
   const driftDetails: DriftCheckResult["details"] = [];
@@ -115,12 +117,12 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
       .values({
         firm,
         accountType: "default",
-        sourceUrl: "docs/prop-firm-rules.md",
+        sourceUrl: RULES_SOURCE,
         contentHash: newHash,
         rawContent: content,
         status: "drift_detected",
         driftDetected: true,
-        driftDiff: `Document hash changed: ${firmOldHash?.slice(0, 12) ?? "none"} → ${newHash.slice(0, 12)}`,
+        driftDiff: `Canonical stage rule book hash changed: ${firmOldHash?.slice(0, 12) ?? "none"} → ${newHash.slice(0, 12)}`,
         retrievedAt: new Date(),
       })
       .returning({ id: complianceRulesets.id });
@@ -132,7 +134,7 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
       rulesetId: newRuleset.id,
       previousHash: firmOldHash ?? "none",
       newHash,
-      driftSummary: `Rules document changed — hash ${firmOldHash?.slice(0, 12) ?? "none"} → ${newHash.slice(0, 12)}`,
+      driftSummary: `Canonical stage rule book changed — hash ${firmOldHash?.slice(0, 12) ?? "none"} → ${newHash.slice(0, 12)}`,
     });
 
     driftDetails.push({ firm, oldHash: firmOldHash, newHash });
@@ -150,7 +152,7 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
     notifyCritical(
       "Compliance Rule Drift Detected",
       appendFamilyGradePostscript(
-        `The prop firm rules document has changed.\n` +
+          `The canonical prop-firm stage rule book has changed.\n` +
           `Affected firms: ${firmList}\n` +
           `Old hash: ${oldHash?.slice(0, 12) ?? "none"}\n` +
           `New hash: ${newHash.slice(0, 12)}\n` +

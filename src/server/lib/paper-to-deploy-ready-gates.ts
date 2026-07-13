@@ -102,10 +102,7 @@ export interface WalkForwardResultsInput {
 
 export interface McRuinCiInput {
   /** Full probability_of_ruin_ci dict from MC risk_metrics */
-  probability_of_ruin_ci?: RuinCiDict & {
-    ruin_unavailable?: boolean;
-    per_firm?: Record<string, { consistency_fail_rate?: number }>;
-  } | null;
+  probability_of_ruin_ci?: RuinCiDict & { ruin_unavailable?: boolean } | null;
   /** Scalar probability_of_ruin (pre-Pass-A fallback) */
   probability_of_ruin?: number | null;
 }

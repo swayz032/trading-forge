@@ -5,8 +5,7 @@ walks through each trading day as if executing on a real prop firm
 account, enforcing:
   - Daily loss limits (Topstep $1K, Alpha $1K)
   - Trailing drawdown (EOD vs realtime/intraday)
-  - Consistency rules (TPT 50%, FFN 40%)
-  - Profit targets and payout projections
+  - Stage-specific evaluation rules and payout projections
 
 Uses configs from prop_compliance.py and firm_config.py.
 """
@@ -16,16 +15,17 @@ from __future__ import annotations
 from typing import Optional
 
 from src.engine.config import CONTRACT_SPECS
-from src.engine.firm_config import FIRM_COMMISSIONS, FIRM_RULES
+from src.engine.firm_config import FIRM_COMMISSIONS
+from src.engine.firm_stage_rules import (
+    evaluate_payout_eligibility,
+    evaluate_topstep_combine,
+    get_stage_rules,
+    trailing_drawdown_floor,
+)
 from src.engine.prop_compliance import FIRM_CONFIGS
 
-DAILY_LOSS_LIMITS: dict[str, Optional[float]] = {
-    key: rules.get("daily_loss_limit") for key, rules in FIRM_RULES.items()
-}
-
-
 def _get_all_firm_configs() -> dict[str, dict]:
-    """Get all firm configs. All 8 firms are in FIRM_CONFIGS."""
+    """Get active firm projections from the canonical stage rule book."""
     return dict(FIRM_CONFIGS)
 
 
@@ -59,17 +59,21 @@ def simulate_prop_firm(
 
     # Commission adjustment per day
     comm_per_side = FIRM_COMMISSIONS.get(firm_key, {}).get(symbol, 2.52)
-    daily_loss_limit = DAILY_LOSS_LIMITS.get(firm_key)
-    # Tradeify uses realtime trailing DD (intraday equity, not EOD).
-    # Other firms (Topstep, MFFU, Apex, etc.) use EOD trailing.
-    is_realtime = firm["trailing"] == "realtime"
+    evaluation_rules = get_stage_rules(firm_key, "evaluation")
+    funded_rules = get_stage_rules(firm_key, "funded")
 
     balance = account_size
     peak_equity = account_size
     starting_balance = account_size
-    profit_target = firm["profit_target"]
+    active_starting_balance = starting_balance
+    funded_starting_balance = float(funded_rules.get("starting_balance", 0.0))
+    funded_transition_pending = False
+    profit_target = float(evaluation_rules["profit_target"])
 
     daily_statements: list[dict] = []
+    evaluation_pnls: list[float] = []
+    funded_pnls: list[float] = []
+    funded_pnl_records: list[tuple[str, float]] = []
     daily_loss_breaches: list[str] = []
     gap_breaches: list[str] = []  # Task 7.11: Days where overnight gap exceeded daily loss limit
     trailing_dd_breached = False
@@ -105,6 +109,18 @@ def simulate_prop_firm(
     dll_capped_losses_total = 0.0    # Sum of (true_loss - capped_loss) per breach day
 
     for day_idx, record in enumerate(daily_pnl_records):
+        if funded_transition_pending:
+            balance = funded_starting_balance
+            peak_equity = funded_starting_balance
+            active_starting_balance = funded_starting_balance
+            uncapped_balance = funded_starting_balance
+            dll_capped_losses_total = 0.0
+            funded_transition_pending = False
+
+        current_stage = "funded" if eval_passed else "evaluation"
+        active_rules = funded_rules if eval_passed else evaluation_rules
+        active_daily_loss_limit = active_rules.get("daily_loss_limit")
+        is_realtime = active_rules["trailing"] == "realtime"
         date_str = record.get("date", f"day_{day_idx}")
         # P&L from backtester is already net of commission — do NOT deduct again.
         net_pnl = record["pnl"]
@@ -146,7 +162,10 @@ def simulate_prop_firm(
         day_halted = False
         gap_breached = False
         original_net_pnl = net_pnl  # Preserved for downstream realtime-DD heuristic
-        if daily_loss_limit is not None and net_pnl < -daily_loss_limit:
+        if (
+            active_daily_loss_limit is not None
+            and net_pnl < -float(active_daily_loss_limit)
+        ):
             # Record the breach for operator awareness — do NOT cap the P&L.
             daily_loss_breaches.append(date_str)
             day_halted = True
@@ -180,6 +199,14 @@ def simulate_prop_firm(
         else:
             intraday_low = prev_balance + net_pnl  # EOD: use closing balance
 
+        # A passed Combine day remains in the evaluation window. Only later
+        # days form the separate funded payout window.
+        if not eval_passed:
+            evaluation_pnls.append(net_pnl)
+        else:
+            funded_pnls.append(net_pnl)
+            funded_pnl_records.append((str(date_str), net_pnl))
+
         # Update balance (DLL-capped — represents firm-halt simulation)
         balance += net_pnl
 
@@ -203,19 +230,11 @@ def simulate_prop_firm(
         # Compute drawdown from peak
         dd_from_peak = peak_equity - balance
 
-        # Trailing drawdown floor
-        dd_limit = firm["max_drawdown"]
-        if firm.get("locks_at_start", False):
-            # MED#8 (fresh-scan 2026-07-12): Topstep EOD trailing DD trails the peak by max_dd but the
-            # floor LOCKS at the STARTING BALANCE once the account is up by max_dd (peak-max_dd reaches
-            # starting_balance) — it does NOT keep trailing above starting_balance. So floor =
-            # min(peak-max_dd, starting_balance). The old `max(peak-dd, starting-dd)` never locked at
-            # starting balance (it kept trailing to peak-dd), producing FALSE breach verdicts on any
-            # profitable-then-pullback account (peak 54k → pullback to 52k, still +2k healthy, real
-            # floor 50k → survives, but old code floored at 52k → false breach). This is the CMP-1 twin.
-            floor = min(peak_equity - dd_limit, starting_balance)
-        else:
-            floor = peak_equity - dd_limit
+        # The canonical stage rule owns its lock threshold: Topstep locks at
+        # the stage start (offset $0), Builder at $100 above it.
+        floor = trailing_drawdown_floor(
+            active_rules, peak_equity, active_starting_balance
+        )
 
         # For realtime DD, check intraday low against floor (not just EOD balance).
         # This is what makes realtime trailing stricter than EOD trailing:
@@ -225,11 +244,23 @@ def simulate_prop_firm(
             trailing_dd_breached = True
             breach_day = date_str
 
-        # Check if eval passed (hit profit target + min trading days)
-        min_days = firm.get("min_trading_days", 1)
-        if not eval_passed and (balance - starting_balance) >= profit_target and (day_idx + 1) >= min_days:
-            eval_passed = True
-            days_to_pass_eval = day_idx + 1
+        if not eval_passed:
+            if firm_key == "topstep_50k":
+                combine = evaluate_topstep_combine(evaluation_pnls)
+                if combine["passed"] and not trailing_dd_breached:
+                    eval_passed = True
+                    days_to_pass_eval = day_idx + 1
+                    funded_transition_pending = True
+            else:
+                min_days = int(evaluation_rules.get("min_trading_days", 1))
+                if (
+                    (balance - starting_balance) >= profit_target
+                    and (day_idx + 1) >= min_days
+                    and not trailing_dd_breached
+                ):
+                    eval_passed = True
+                    days_to_pass_eval = day_idx + 1
+                    funded_transition_pending = True
 
         # H3 FIX: gross_pnl was reconstructing "net + display_commission" where
         # net_pnl already has the backtester's commission deducted, and display_comm
@@ -240,6 +271,7 @@ def simulate_prop_firm(
         # The "commission" field remains for display-only context.
         daily_statements.append({
             "date": date_str,
+            "stage": current_stage,
             "commission": round(comm_cost, 2),
             "net_pnl": round(net_pnl, 2),
             "balance": round(balance, 2),
@@ -252,6 +284,12 @@ def simulate_prop_firm(
             "overnight_gap_risk": date_str in overnight_days,
             "overnight_margin_warning": overnight_margin_warning,
         })
+
+    topstep_evaluation = (
+        evaluate_topstep_combine(evaluation_pnls)
+        if firm_key == "topstep_50k"
+        else None
+    )
 
     # Monthly summary
     monthly: dict[tuple[int, int], dict] = {}
@@ -296,28 +334,45 @@ def simulate_prop_firm(
     best_single_day = max((s["net_pnl"] for s in daily_statements), default=0)
     consistency_ratio = best_single_day / total_profit if total_profit > 0 else 0.0
 
-    # Consistency check. deepscan5 2026-06-29: recognize the FULL canonical rule-name vocabulary
-    # (must mirror monte_carlo.simulate_firm_survival `_consistency_map` keys) so real configured
-    # rules don't trip the "unknown rule" warning on every backtest. firm_config currently uses
-    # `topstep_50pct` (Combine pass-request) + `mffu_50pct_sim_payout` (Builder sim-payout stage) —
-    # both were previously unrecognized here, spamming the warning. A genuinely typo'd rule (not in
-    # this set) still warns. NOTE: this legacy daily-statement sim does NOT enforce these rules —
-    # B14 `simulate_firm_survival` is the authoritative consistency model (Topstep standard-lane and
-    # MFFU sim-payout are both intentionally skipped there). Enforcement below stays narrow.
-    _KNOWN_CONSISTENCY_RULES = {
-        "topstep_50pct", "tpt_50pct", "alpha_50pct", "mffu_50pct", "mffu_50pct_sim_payout",
-        "ffn_40pct", "tradeify_40pct", "earn2trade_consistency",
+    # Payout requirements are evaluated only after the account passes its
+    # evaluation window. They are recoverable and must not affect the account
+    # verdict, drawdown breach, or evaluation pass state.
+    payout_eligibility = {
+        "eligible": None,
+        "reason": "separate_funded_payout_window_required",
+        "recoverable": True,
     }
-    rule = firm.get("consistency_rule")
-    if rule and rule not in _KNOWN_CONSISTENCY_RULES:
-        import warnings
-        warnings.warn(f"Unknown consistency rule '{rule}' — check for typos")
+    if eval_passed and not trailing_dd_breached and funded_pnls:
+        payout_kwargs = (
+            {
+                "payout_path": str(
+                    get_stage_rules(firm_key, "payout")["default_path"]
+                )
+            }
+            if firm_key == "topstep_50k"
+            else {}
+        )
+        payout_eligibility = evaluate_payout_eligibility(
+            firm_key,
+            funded_pnls,
+            traded_days=[
+                trades_per_day.get(date, 0) > 0
+                for date, _pnl in funded_pnl_records
+            ],
+            account_state={
+                "account_balance": balance,
+                "balance_after_last_payout": None,
+                "approved_payout_count": 0,
+                "account_stage": "funded",
+                "cycle_elapsed_hours": len(funded_pnls) * 24.0,
+            },
+            **payout_kwargs,
+        )
 
+    # Deprecated compatibility fields: payout consistency is exposed in
+    # funded_phase_result.payout_eligibility, never as an account failure.
     consistency_passed = True
     consistency_failure = None
-    if firm.get("consistency_rule") == "mffu_50pct" and consistency_ratio > 0.50:
-        consistency_passed = False
-        consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (MFFU limit: 50%)"
 
     # Max drawdown in dollars (EOD and intraday tracked separately)
     max_dd_dollars = max((s["drawdown_from_peak"] for s in daily_statements), default=0)
@@ -352,9 +407,18 @@ def simulate_prop_firm(
         "short": {"trades": len(short_trades), "pnl": round(short_pnl, 2)},
     }
 
-    # Payout projection
-    total_net_profit = balance - starting_balance
-    if total_net_profit > 0 and eval_passed:
+    # Payouts are funded-stage economics only. Evaluation P&L earns passage,
+    # never a payout; ineligible funded windows remain recoverable but show no
+    # withdrawable projection.
+    payout_request_amount = payout_eligibility.get("permitted_request_max")
+    funded_month_keys = {
+        (date[:7] if len(date) >= 7 else date)
+        for date, _pnl in funded_pnl_records
+    }
+    if (
+        isinstance(payout_request_amount, (int, float))
+        and payout_eligibility.get("eligible") is True
+    ):
         # Alpha uses payout-count tiers (1st payout=70%, 2nd=80%, 3rd+=90%)
         # Other firms use dollar-threshold tiers (e.g. TPT: <$5K=80%, >$5K=90%)
         count_tiers = firm.get("payout_count_tiers")
@@ -365,7 +429,7 @@ def simulate_prop_firm(
             # In simulation we model the FIRST payout — use payout_number=1.
             first_tier = next((t for t in count_tiers if t["payout_number"] == 1), None)
             split = first_tier["split"] if first_tier else firm["payout_split"]
-            payout_amount = total_net_profit * split
+            payout_amount = float(payout_request_amount) * split
         elif dollar_tiers:
             # Dollar-threshold tiers: progressive split rates by profit amount.
             # Base split applies below first threshold, then each tier's split
@@ -377,23 +441,21 @@ def simulate_prop_firm(
             current_split = base_split
             for tier in sorted_tiers:
                 tier_threshold = tier["threshold"]
-                if total_net_profit < prev_threshold:
+                if float(payout_request_amount) < prev_threshold:
                     break
-                taxable = min(total_net_profit, tier_threshold) - prev_threshold
+                taxable = min(float(payout_request_amount), tier_threshold) - prev_threshold
                 if taxable > 0:
                     payout_amount += taxable * current_split
                 current_split = tier["split"]
                 prev_threshold = tier_threshold
             # Remaining profit above the last tier threshold
-            if total_net_profit > prev_threshold:
-                payout_amount += (total_net_profit - prev_threshold) * current_split
+            if float(payout_request_amount) > prev_threshold:
+                payout_amount += (float(payout_request_amount) - prev_threshold) * current_split
         else:
-            payout_amount = total_net_profit * firm["payout_split"]
+            payout_amount = float(payout_request_amount) * firm["payout_split"]
 
         monthly_fee = firm.get("ongoing_fee", 0)
-        total_months = len(monthly_summary) or 1
-        monthly_gross = payout_amount / total_months
-        payout_projection = round(monthly_gross - monthly_fee, 2)
+        payout_projection = round(payout_amount - monthly_fee, 2)
     else:
         payout_projection = 0
 
@@ -409,7 +471,6 @@ def simulate_prop_firm(
     passed = (
         eval_passed
         and not trailing_dd_breached
-        and consistency_passed
         and not overnight_violation
     )
 
@@ -430,17 +491,10 @@ def simulate_prop_firm(
         single_eval_cost / max(0.01, mc_pass_probability), 2
     )
 
-    # Annual net payout after all deductions
-    # NOTE: payout_projection already has ongoing_fee subtracted (line 370),
-    # so do NOT subtract annual_ongoing_fees again here.
-    annual_gross_payout = payout_projection * 12 if payout_projection > 0 else 0
-    # Amortize expected eval cost over first year
-    true_net_annual_payout = round(
-        annual_gross_payout - expected_eval_cost, 2
-    ) if annual_gross_payout > 0 else 0
-    true_net_monthly_payout = round(
-        true_net_annual_payout / 12, 2
-    ) if true_net_annual_payout > 0 else 0
+    # This is one current payout request, not a payout history or schedule.
+    # Do not turn it into fictional monthly or annual economics.
+    true_net_annual_payout = None
+    true_net_monthly_payout = None
 
     # ─── Eval/funded phase separation ──────────────────────
     eval_cost = single_eval_cost
@@ -460,6 +514,7 @@ def simulate_prop_firm(
         "firm": firm_key,
         "firm_name": firm["name"],
         "starting_balance": starting_balance,
+        "funded_starting_balance": funded_starting_balance,
         # ending_balance reflects the DLL-cap SIMULATION (firm halts on DLL day).
         # ending_balance_uncapped is what the strategy would actually have produced
         # without per-firm halting — matches the raw backtest total_return.
@@ -489,7 +544,8 @@ def simulate_prop_firm(
         "passed": passed,
         "payout_split": firm["payout_split"],
         "payout_projection": payout_projection,
-        "payout_projection_monthly": payout_projection,
+        "payout_projection_monthly": None,
+        "payout_projection_basis": "single_current_permitted_request",
         "daily_account_statement": daily_statements,
         "monthly_summary": monthly_summary,
         "worst_month": worst_month,
@@ -508,14 +564,42 @@ def simulate_prop_firm(
         "long_short_split": long_short_split,
         "eval_phase_result": {
             "profit_target": profit_target,
+            "effective_profit_target": (
+                topstep_evaluation["effective_profit_target"]
+                if topstep_evaluation is not None
+                else profit_target
+            ),
+            "best_day_profit": (
+                topstep_evaluation["best_day_profit"]
+                if topstep_evaluation is not None
+                else best_single_day
+            ),
             "days_to_target": days_to_pass_eval,
             "passed": eval_passed,
+            "reason": (
+                topstep_evaluation["reason"]
+                if topstep_evaluation is not None
+                else ("eligible" if eval_passed else "profit_target_not_met")
+            ),
             "cost_of_eval": eval_cost,
         },
         "funded_phase_result": {
-            "monthly_net_pnl": [round(m["pnl"], 2) for m in monthly_summary],
+            "monthly_net_pnl": [
+                round(
+                    sum(
+                        pnl
+                        for date, pnl in funded_pnl_records
+                        if (date[:7] if len(date) >= 7 else date) == month_key
+                    ),
+                    2,
+                )
+                for month_key in sorted(funded_month_keys)
+            ],
             "survival_months": survival_months,
             "payout_projection": payout_projection,
+            "payout_projection_basis": "single_current_permitted_request",
+            "payout_eligibility": payout_eligibility,
+            "payout_cycle_time_evidence": "synthetic_daily_bar_assumption",
         },
     }
 

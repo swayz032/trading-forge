@@ -207,7 +207,8 @@ def run_tier_survival(
     dict with keys:
         n_contracts, breach_pct, breach_count, n_sims, passed, gate_pct,
         breach_reasons, drawdown_percentiles, eval_pass_rate,
-        funded_survival_6mo, consistency_fail_rate
+        funded_survival_6mo, payout_path, payout_eligible_rate, and the
+        deprecated zero-valued consistency_fail_rate compatibility field
     """
     # Scale per-contract daily P&L to tier size
     tier_pnl = daily_pnls_per_contract * n_contracts
@@ -274,6 +275,9 @@ def run_tier_survival(
         )
 
     passed = breach_pct < breach_gate_pct
+    payout_eligibility = result.get("payout_eligibility", {})
+    if not isinstance(payout_eligibility, dict):
+        payout_eligibility = {}
 
     return {
         "n_contracts": n_contracts,
@@ -286,6 +290,8 @@ def run_tier_survival(
         "drawdown_percentiles": result.get("drawdown_percentiles", {}),
         "eval_pass_rate": result.get("eval_pass_rate"),
         "funded_survival_6mo": result.get("funded_survival_6mo"),
+        "payout_path": payout_eligibility.get("path"),
+        "payout_eligible_rate": payout_eligibility.get("eligible_rate"),
         "consistency_fail_rate": result.get("consistency_fail_rate"),
     }
 
@@ -306,7 +312,7 @@ def _plain_english_breach(breach_pct: float) -> str:
     if pct < 2:
         return (
             f"About {pct:.1f}% of simulated 6-month runs hit the drawdown floor or "
-            f"triggered the consistency rule. That is very low risk — the account "
+            f"a hard daily-loss limit. That is very low risk — the account "
             f"buffer absorbs this tier comfortably."
         )
     elif pct < 5:
@@ -385,7 +391,7 @@ def _write_report(
         "",
         "## Tier Verdict Table",
         "",
-        "| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Consistency fail |",
+        "| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Payout eligibility (separate) |",
         "|---|---|---|---|---|---|---|",
     ]
 
@@ -393,10 +399,12 @@ def _write_report(
         verdict = _verdict_pill(r["passed"], r["breach_pct"], gate_pct)
         ep = f"{r['eval_pass_rate']*100:.1f}%" if r["eval_pass_rate"] is not None else "n/a"
         fs = f"{r['funded_survival_6mo']*100:.1f}%" if r["funded_survival_6mo"] is not None else "n/a"
-        cf = f"{r['consistency_fail_rate']*100:.1f}%" if r["consistency_fail_rate"] is not None else "n/a"
+        payout_rate = r.get("payout_eligible_rate")
+        payout_rate_text = f"{payout_rate*100:.1f}%" if payout_rate is not None else "n/a"
+        payout_path = r.get("payout_path") or "n/a"
         lines.append(
             f"| {r['n_contracts']} | {r['breach_pct']*100:.2f}% | {gate_pct*100:.0f}% "
-            f"| {verdict} | {ep} | {fs} | {cf} |"
+            f"| {verdict} | {ep} | {fs} | {payout_path}: {payout_rate_text} |"
         )
 
     lines += [
@@ -422,7 +430,7 @@ def _write_report(
                     reason_readable = {
                         "trailing_dd": "Hit EOD trailing drawdown floor",
                         "daily_loss_limit": "Hit daily loss limit",
-                        "consistency": "Consistency rule violation (>50% profit in one day)",
+                        "consistency": "Deprecated consistency telemetry (not an account breach)",
                         "never_hit_target": "Never hit profit target (not a breach)",
                     }.get(reason, reason)
                     lines.append(f"- {reason_readable}: {count:,} sims ({pct_of_sims:.1f}%)")
@@ -446,7 +454,7 @@ def _write_report(
         "### What this harness VALIDATES",
         "",
         "- Per-tier firm-breach probability on this strategy's historical P&L distribution",
-        "- Topstep EOD trailing-DD + daily-loss-limit + 50% consistency rule (via simulate_firm_survival)",
+        "- Topstep EOD trailing-DD + hard daily-loss limit; dynamic Combine target and funded payout eligibility are reported separately",
         "- Block-bootstrap MC paths preserve short-run autocorrelation",
         "- Gate logic: breach rate < SCALING_BREACH_GATE_PCT (default 5%)",
         "- Fail-CLOSED: any data-missing or sim-error case exits non-zero",

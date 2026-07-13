@@ -9,10 +9,9 @@
  *     - ci_high=null (no MC run) → BLOCK
  *     - no MC row at all → BLOCK (lifecycle catch, not tested here — tested via lifecycle mock)
  *   F-2:   catch block in lifecycle-service fails OPEN → must fail CLOSED
- *   F-4:   consistency check uses full-history daily_pnls reimplementation
- *          → must read from MC firm_survival.consistency_fail_rate
+ *   F-4:   payout-window consistency must not be reconstructed from a full
+ *          backtest history or turned into an account-survival failure
  *   E:     threshold default 0.40 is too loose → 0.20
- *          + payout-denial gate when consistency_fail_rate available
  *   F-5:   B15_BATTERY_ENABLED default "false" → "true"
  *
  * Pure-function tests cover F-1/F-3/E (b14-ci-gate.ts).
@@ -201,30 +200,11 @@ describe("regression — firm-breach ruin CI available, below threshold → PASS
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// E: payout-denial rate from MC firm_survival
+// F-4: payout eligibility remains separate from survival
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("E — payout-denial: consistency_fail_rate from MC firm_survival", () => {
-  it("blocks when worst-firm consistency_fail_rate > B14_PAYOUT_DENIAL_THRESHOLD (default 0.10)", () => {
-    const ruinCi: RuinCiDict = {
-      ci_high: 0.10, // passes ruin gate
-      point_estimate: 0.06,
-      ci_low: 0.03,
-      ci_method: "BCa",
-      n_resamples: 9999,
-      ruin_basis: "firm_breach",
-      // per_firm contains consistency_fail_rate for payout-denial check
-      per_firm: {
-        topstep_50k: { consistency_fail_rate: 0.15 }, // > 0.10 default threshold
-      },
-    } as unknown as RuinCiDict;
-    const result = evaluateB14CiGate(ruinCi, null);
-    expect(result.passed).toBe(false);
-    expect(result.reason).toBe("b14.payout_denial_rate_exceeds_threshold");
-    expect(result.auditPayload.blocked).toBe(true);
-  });
-
-  it("passes when consistency_fail_rate is below threshold", () => {
+describe("F-4 — payout eligibility does not alter B14 survival", () => {
+  it("does not block a low-ruin strategy when historical payout telemetry is high", () => {
     const ruinCi: RuinCiDict = {
       ci_high: 0.10,
       point_estimate: 0.06,
@@ -233,74 +213,12 @@ describe("E — payout-denial: consistency_fail_rate from MC firm_survival", () 
       n_resamples: 9999,
       ruin_basis: "firm_breach",
       per_firm: {
-        topstep_50k: { consistency_fail_rate: 0.05 }, // < 0.10 threshold
+        topstep_50k: { consistency_fail_rate: 0.95 },
       },
-    } as unknown as RuinCiDict;
-    const result = evaluateB14CiGate(ruinCi, null);
-    expect(result.passed).toBe(true);
-  });
-
-  it("uses worst-firm consistency_fail_rate across multiple firms", () => {
-    const ruinCi: RuinCiDict = {
-      ci_high: 0.10,
-      point_estimate: 0.06,
-      ci_low: 0.03,
-      ci_method: "BCa",
-      n_resamples: 9999,
-      ruin_basis: "firm_breach",
-      per_firm: {
-        topstep_50k: { consistency_fail_rate: 0.04 },
-        mffu_50k:    { consistency_fail_rate: 0.18 }, // worst firm → blocks
-      },
-    } as unknown as RuinCiDict;
-    const result = evaluateB14CiGate(ruinCi, null);
-    expect(result.passed).toBe(false);
-    expect(result.reason).toBe("b14.payout_denial_rate_exceeds_threshold");
-  });
-
-  it("skips payout-denial check when per_firm is absent (pre-firm-model MC runs)", () => {
-    const ruinCi: RuinCiDict = {
-      ci_high: 0.10,
-      point_estimate: 0.06,
-      ci_low: 0.03,
-      ci_method: "BCa",
-      n_resamples: 9999,
-      ruin_basis: "firm_breach",
-      // no per_firm field
     } as unknown as RuinCiDict;
     const result = evaluateB14CiGate(ruinCi, null);
     expect(result.passed).toBe(true);
     expect(result.reason).toBe("b14.ci_high_within_threshold");
-  });
-
-  it("payout-denial threshold is env-overridable via B14_PAYOUT_DENIAL_THRESHOLD", () => {
-    process.env.B14_PAYOUT_DENIAL_THRESHOLD = "0.20";
-    const ruinCi: RuinCiDict = {
-      ci_high: 0.10,
-      point_estimate: 0.06,
-      ruin_basis: "firm_breach",
-      per_firm: {
-        topstep_50k: { consistency_fail_rate: 0.15 }, // < new threshold of 0.20 → passes
-      },
-    } as unknown as RuinCiDict;
-    const result = evaluateB14CiGate(ruinCi, null);
-    expect(result.passed).toBe(true);
-    delete process.env.B14_PAYOUT_DENIAL_THRESHOLD;
-  });
-
-  it("audit payload includes worst_consistency_fail_rate when blocked by payout-denial", () => {
-    const ruinCi: RuinCiDict = {
-      ci_high: 0.10,
-      point_estimate: 0.06,
-      ruin_basis: "firm_breach",
-      per_firm: {
-        topstep_50k: { consistency_fail_rate: 0.25 },
-      },
-    } as unknown as RuinCiDict;
-    const result = evaluateB14CiGate(ruinCi, null);
-    expect(result.passed).toBe(false);
-    expect((result.auditPayload as Record<string, unknown>).worst_consistency_fail_rate).toBe(0.25);
-    expect((result.auditPayload as Record<string, unknown>).payout_denial_threshold).toBeCloseTo(0.10);
   });
 });
 

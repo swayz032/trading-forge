@@ -37,19 +37,13 @@ _PF_THRESHOLD = float(os.environ.get("PERFORMANCE_GATE_PF_THRESHOLD", "1.7"))
 
 
 # P2-G: Per-firm avg_daily_pnl threshold adjustments.
-# Commission ranges: Topstep $0.37/side, Alpha $0.00/side, Tradeify $1.29/side, others $0.62/side.
-# At ~10 trades/day that's a $0-$25.8 swing in net daily P&L vs the $0.62 baseline.
-# Firms with lower commissions effectively raise the net hurdle (same gross needed, less deducted).
-# Firms with higher commissions (Tradeify) need a slightly lower gross to clear the same net bar.
-# Adjustment is in net P&L dollars: positive = easier threshold, negative = harder threshold.
-# Rationale: $0.62 baseline at 10 trades/day = $12.40 commission drag. Alpha at $0.00 = $0 drag,
-# so a strategy at $250 gross on Alpha actually clears $262.40 net. Tradeify at $1.29 = $25.80,
-# so $250 gross only clears $224.20 net — we relax by $25 to compensate for higher drag.
+# Active stage-rule commissions are Topstep MES/MNQ $0.62/side and MFFU
+# MES/MNQ $0.95/side. Backtests already apply firm-aware net P&L, so this
+# gate does not add a second commission adjustment.
 _FIRM_DAILY_PNL_ADJUSTMENT: dict[str, float] = {
-    # Topstep: $0.37/side — very low drag. Treat as baseline.
+    # Both active firms use already-net backtest P&L as the gate input.
     "topstep_50k": 0,
     "topstep_25k": 0,
-    # MFFU: $0.62/side — baseline. No adjustment.
     "mffu_50k": 0,
 }
 

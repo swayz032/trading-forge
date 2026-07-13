@@ -15054,3 +15054,24 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 - `npx tsc --noEmit` passed.
 
 **Known-facts updates:** Paper-engine validation must be grounded in the custom engine's API-driven execution path; Topstep fills are not a prerequisite. No strategies, backtests, or paper/live execution were started during this hardening pass.
+
+### Session Log — 2026-07-13 stage-aware prop-rule hardening
+
+**Mission:** Harden backtest, Monte Carlo, walk-forward/compliance rule modeling by separating evaluation, funded survival, payout eligibility, and live-transition rules without running strategies.
+
+**Work completed:**
+- Added one canonical Topstep/MFFU stage-rule book with TypeScript/Python parity checks.
+- Modeled Topstep's two-day dynamic evaluation target separately from funded Standard/Consistency payout paths.
+- Corrected Topstep payout caps to the lesser of the path cap and 50% of current balance, including first/subsequent payout state.
+- Corrected MFFU evaluation, sim-funded, and live trailing floors to lock $100 above their stage starting balances.
+- Made MFFU payout evaluation stateful across first, subsequent, and fifth-payout/live-transition cycles, including the $2,100 retained buffer and explicit 48-hour timing evidence.
+- Prevented evaluation P&L from being reused as funded payout evidence and prevented payout requirements from being classified as account ruin.
+- Labeled Monte Carlo trade-day and cycle-time evidence as synthetic assumptions; real payout decisions fail closed without actual account state.
+
+**Verification:**
+- Focused payout/stage suite: 56 Python tests and 16 TypeScript tests passed.
+- Broad affected Python suite: 331 passed; one unrelated existing `BARS_PER_DAY["1min"]` assertion was excluded because the engine currently defines 860 while that legacy test expects 1380.
+- Affected TypeScript suite: 131 passed.
+- TypeScript compilation, Python compileall, production isolation, 2026 compliance, firm sync, TS/Python rule hash parity, system-map sync/check, and `git diff --check` passed.
+
+**Known-facts updates:** This is stage-aware research and compliance modeling, not an FX Replay-style prop evaluation product. TradingView, custom paper APIs, broker routing, n8n, and strategy execution were not changed or run.

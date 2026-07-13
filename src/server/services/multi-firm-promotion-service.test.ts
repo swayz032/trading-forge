@@ -303,7 +303,7 @@ describe("evaluateMultiFirmEligibility", () => {
     expect(firstCall.correlationId).toBe(correlationId);
   });
 
-  it("firm_rules include max_drawdown_limit from firm-config for all 8 firms", async () => {
+  it("firm_rules include stage-projected drawdown and contract caps", async () => {
     mockIsActive.mockResolvedValue(true);
     mockRunPython.mockResolvedValue(PASS_RESULT as any);
 
@@ -311,9 +311,9 @@ describe("evaluateMultiFirmEligibility", () => {
 
     for (const call of mockRunPython.mock.calls) {
       const firmRules = (call[0].config as any).firm_rules;
+      const firmId = (call[0].config as any).firm;
       expect(firmRules.max_drawdown_limit).toBeGreaterThan(0);
-      // All 50K accounts in firm-config have maxContracts=50 (50 micros = 5 minis × 10:1 ratio)
-      expect(firmRules.contract_limits?.MES).toBe(50);
+      expect(firmRules.contract_limits?.MES).toBe(FIRMS[firmId].accountTypes["50k"].maxContracts);
     }
   });
 

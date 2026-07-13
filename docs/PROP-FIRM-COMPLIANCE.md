@@ -1,6 +1,10 @@
 # Prop Firm Compliance — Three-Layer Architecture
 
 > Compliance beats profit. No strategy runs if current rules are stale, ambiguous, or violated.
+>
+> **Active scope:** Topstep 50K and MFFU 50K Builder only. This is an
+> architecture guide, not a firm-rule source; the canonical stage contract is
+> `src/shared/firm-stage-rules.json` and its paired 2026 rule references.
 
 This document describes Trading Forge's live prop firm rule enforcement system. The system ensures every strategy deployed to a prop firm account is checked against verified, up-to-date rules before execution begins.
 
@@ -18,7 +22,7 @@ Layer 3: Human Approves            (trader validates drift, overrides gates)
 
 - System prompt: `src/agents/OPENCLAW_COMPLIANCE_GUARD.md`
 - Runs as a sidecar agent alongside the strategy pipeline
-- Monitors prop firm documentation for rule changes across all 8 firms
+- Monitors official documentation for the two active firms
 - Flags ambiguities, contradictions, and undocumented edge cases
 - Produces structured compliance reviews stored via `POST /api/compliance/review`
 - Has zero execution authority — it recommends, the gate decides
@@ -251,18 +255,14 @@ Audit trail of every drift event detected.
 
 ## Covered Firms
 
-The compliance system tracks all 8 prop firms with their specific rule variations. Full rules are documented in `docs/prop-firm-rules.md`.
+The active compliance scope is Topstep 50K and MFFU 50K Builder. Runtime rules
+come from `src/shared/firm-stage-rules.json`; `docs/prop-firm-rules.md` is a
+historical archive and is not a source of operational constraints.
 
-| Firm | Drawdown Type | Consistency Rule | Daily Loss Limit | Key Constraint |
-|------|--------------|------------------|-------------------|----------------|
-| **Topstep** | Trailing EOD, locks | None | $1,000 soft | No overnight; TopstepX platform required |
-| **Take Profit Trader (TPT)** | Trailing EOD | 50% single-day cap (eval + PRO) | None | Consistency removed at PRO+ |
-| **My Funded Futures (MFFU)** | Trailing EOD, locks | 50% eval / 40% funded | None | Lowest fees; $0 activation |
-| **Apex Trader Funding** | Trailing EOD, locks | 50% on funded payouts | $1,000 (EOD only) | 6 max payouts per account; $85/mo funded fee |
-| **Funded Futures Network (FFN)** | Trailing EOD, locks | 40% single-day cap | None | Two-step eval; $126/mo data fee |
-| **Alpha Futures** | Trailing EOD | None | None | $0 commissions; smallest firm |
-| **Tradeify** | Trailing EOD, locks | None | None | $1.29/side commissions (highest) |
-| **Earn2Trade** | Trailing EOD | None | None | 60-day time limit on evaluation |
+| Firm | Evaluation | Funded payout | Key constraint |
+|------|------------|---------------|----------------|
+| **Topstep** | $3,000 base target, at least 2 days, dynamic `max($3,000, 2 × best day)` target | Standard: 5 winning $150+ days; Consistency: 3 trade days + 40% cap | Best-day condition and payout paths are recoverable, never survival breaches |
+| **MFFU Builder** | $3,000 target, at least 1 day, $2,000 EOD drawdown | $2,100 buffer, 2 qualifying days, 50% best-day condition, 2-day cycle | Payout conditions are sim-funded and recoverable |
 
 ---
 

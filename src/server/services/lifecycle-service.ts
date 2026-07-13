@@ -5616,8 +5616,8 @@ export class LifecycleService {
         }
 
         // ── Wave 24 Item 9: B14 Survival Twin HARD gate: PAPER → DEPLOY_READY ──
-        // PropScorer 2026-03: Topstep documented $40K payout-denial bans for
-        // consistency violations. B14 must HARD-block before any live payout claim.
+        // B14 is an account-survival gate. Payout eligibility stays a separate,
+        // recoverable funded-stage result and cannot block this promotion.
         // Env: B14_HARD_GATE_ENABLED (default "true") — set "false" for emergency disable.
         //
         // Wave 27.5 Pass B.2: B14 now ALSO reads probability_of_ruin_ci.ci_high from
@@ -5651,16 +5651,9 @@ export class LifecycleService {
               const survivalTwin = b14Gate.survival_twin as Record<string, unknown> | undefined;
               survivalTwinPresentB14 = survivalTwin != null;
 
-              // Hardening 2026-06-22 (F-4): REMOVED the full-history daily-P&L consistency
-              // reimplementation (max/sum over entire backtest history). That check used the
-              // wrong denominator (aggregate not per-payout-cycle) and was redundant with the
-              // authoritative consistency_fail_rate that Python now exposes per-firm in
-              // probability_of_ruin_ci.per_firm (sliding-window, MC-simulated, firm-rule-aware).
-              //
-              // The payout-denial check is now enforced by evaluateB14CiGate() reading
-              // per_firm.*.consistency_fail_rate from riskMetrics.probability_of_ruin_ci.per_firm
-              // and blocking when worst-firm rate > B14_PAYOUT_DENIAL_THRESHOLD (default 0.10).
-              // That check runs in the CI gate block below, which is always evaluated.
+              // Payout-window requirements are intentionally not reconstructed from
+              // full-history daily P&L and are not consumed by B14. The canonical
+              // Monte Carlo result reports them separately as recoverable telemetry.
 
               const b14Failed = (survivalTwin && survivalTwin.passed === false);
               if (b14Failed) {
@@ -5739,7 +5732,7 @@ export class LifecycleService {
 
             // ── Wave 27.5 Pass B.2: B14 CI gate (probability_of_ruin_ci.ci_high) ──
             // Hardening 2026-06-22: threshold tightened 0.40 → 0.20; no-MC path now blocks
-            // fail-CLOSED (F-1); payout-denial from per_firm.consistency_fail_rate (F-4/E).
+            // fail-CLOSED (F-1) on account-survival evidence only.
             // Reads the latest MC run for this backtest and evaluates ci_high against threshold.
             // Falls back to scalar for pre-Pass-A runs (scalar also fails-CLOSED if absent).
             if (latestBtForB14?.id) {

@@ -47,16 +47,18 @@ class TestSimulateFirmSurvivalBreachMask:
         unique = set(int(v) for v in mask)
         assert unique.issubset({0, 1}), f"breach_mask contains unexpected values: {unique}"
 
-    def test_breach_mask_mean_consistent_with_breach_reasons(self):
-        """breach_mask sum must equal the count of trailing_dd + daily_loss_limit + consistency
-        breaches in breach_reasons (never_hit_target is excluded from ruin).
+    def test_breach_mask_mean_consistent_with_account_closing_reasons(self):
+        """breach_mask tracks trailing_dd + daily_loss_limit only.
+
+        Evaluation misses and recoverable payout requirements are not account
+        closures and therefore do not enter the ruin definition.
         """
         paths = self._make_paths(n_sims=500, seed=42)
         result = simulate_firm_survival(paths, "topstep_50k", account_size=50000)
         mask = result["breach_mask"]
         br = result["breach_reasons"]
         # Sum of account-ending breaches (not "never_hit_target")
-        expected_ruin_count = br.get("trailing_dd", 0) + br.get("daily_loss_limit", 0) + br.get("consistency", 0)
+        expected_ruin_count = br.get("trailing_dd", 0) + br.get("daily_loss_limit", 0)
         actual_ruin_count = int(np.sum(mask))
         assert actual_ruin_count == expected_ruin_count, (
             f"breach_mask sum {actual_ruin_count} != breach_reasons ruin count {expected_ruin_count}. "
@@ -71,7 +73,7 @@ class TestSimulateFirmSurvivalBreachMask:
         result = simulate_firm_survival(paths, "topstep_50k", account_size=50000)
         mask = result["breach_mask"]
         br = result["breach_reasons"]
-        account_closing = br.get("trailing_dd", 0) + br.get("daily_loss_limit", 0) + br.get("consistency", 0)
+        account_closing = br.get("trailing_dd", 0) + br.get("daily_loss_limit", 0)
         assert int(np.sum(mask)) == account_closing
 
     def test_existing_keys_unchanged(self):

@@ -21,32 +21,32 @@
 
 ## Tier Verdict Table
 
-| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Consistency fail |
+| Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Payout eligibility (separate) |
 |---|---|---|---|---|---|---|
-| 50 | 100.00% | 5% | UNSAFE (100.0% breach >= 5% gate) | 0.0% | 0.0% | 0.0% |
+| 50 | 55.00% | 5% | UNSAFE (55.0% breach >= 5% gate) | 69.0% | 0.0% | standard: 100.0% |
 
 ## Plain-English Verdict Per Tier
 
 ### Tier 50 contracts — UNSAFE
 
-About 100.0% of simulated runs ended in a breach — more than 1 in 5. Trading at this contract size on this strategy's P&L distribution is high-risk. Do not advance to this tier without substantially better per-trade P&L or a much larger buffer.
+About 55.0% of simulated runs ended in a breach — more than 1 in 5. Trading at this contract size on this strategy's P&L distribution is high-risk. Do not advance to this tier without substantially better per-trade P&L or a much larger buffer.
 
 **Breach reason breakdown:**
 
-- Hit daily loss limit: 500 sims (100.0%)
+- Hit daily loss limit: 275 sims (55.0%)
 
 **Simulated max-drawdown percentiles (from account peak):**
 
 | P50 | P75 | P90 | P95 | P99 |
 |---|---|---|---|---|
-| $2000 | $2000 | $2000 | $2395 | $2994 |
+| $4000 | $6000 | $8000 | $9000 | $11000 |
 
 ## Honest Scope Disclosure
 
 ### What this harness VALIDATES
 
 - Per-tier firm-breach probability on this strategy's historical P&L distribution
-- Topstep EOD trailing-DD + daily-loss-limit + 50% consistency rule (via simulate_firm_survival)
+- Topstep EOD trailing-DD + hard daily-loss limit; dynamic Combine target and funded payout eligibility are reported separately
 - Block-bootstrap MC paths preserve short-run autocorrelation
 - Gate logic: breach rate < SCALING_BREACH_GATE_PCT (default 5%)
 - Fail-CLOSED: any data-missing or sim-error case exits non-zero

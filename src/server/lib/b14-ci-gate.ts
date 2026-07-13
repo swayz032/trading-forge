@@ -18,9 +18,8 @@
  *     of the previous silent-PASS. Reason: "b14.firm_breach_ruin_unavailable_fail_closed".
  *   - Fail-CLOSED when ruinCi.ruin_unavailable===true (Python signals no firm
  *     models were configured, so the terminal<=0 basis is categorically wrong).
- *   - Payout-denial rate gate: if per_firm[*].consistency_fail_rate is present in
- *     the ruinCi dict, block when worst-firm rate > B14_PAYOUT_DENIAL_THRESHOLD
- *     (default 0.10, env-overridable via B14_PAYOUT_DENIAL_THRESHOLD).
+ *   - Payout eligibility is deliberately excluded. It belongs to a recoverable
+ *     funded payout window, not to account survival or lifecycle promotion.
  *
  * Env override: B14_RUIN_CI_HIGH_THRESHOLD (float string, default "0.20").
  * Convention: strict > (not ≥) — ci_high exactly equal to threshold is NOT blocked.
@@ -242,9 +241,6 @@ export interface B14CiGateResult {
     legacy_ruin_scalar_fallback: boolean;
     ci_method: string | null;
     n_resamples: number | null;
-    // Payout-denial fields (present only when per_firm data available)
-    worst_consistency_fail_rate?: number | null;
-    payout_denial_threshold?: number | null;
   };
 }
 
@@ -273,29 +269,6 @@ export function getB14CiHighThreshold(): number {
 }
 
 /**
- * Read B14_PAYOUT_DENIAL_THRESHOLD from env, defaulting to 0.10.
- *
- * When the MC firm_survival output includes per-firm consistency_fail_rate,
- * B14 gates on this too (Topstep documents payout-denial for consistency
- * violations; 10% is a conservative bound for funded-account risk aversion).
- *
- * Exported for tests.
- */
-export function getB14PayoutDenialThreshold(): number {
-  const raw = process.env.B14_PAYOUT_DENIAL_THRESHOLD;
-  if (raw === undefined || raw === "") return 0.10;
-  const parsed = parseFloat(raw);
-  if (isNaN(parsed) || parsed < 0 || parsed > 1) {
-    logger.warn(
-      { raw, defaulted: 0.10 },
-      "B14_PAYOUT_DENIAL_THRESHOLD is invalid — using default 0.10",
-    );
-    return 0.10;
-  }
-  return parsed;
-}
-
-/**
  * Evaluate the B14 CI gate.
  *
  * Priority order (first match wins):
@@ -318,10 +291,7 @@ export function getB14PayoutDenialThreshold(): number {
  * 3. ci_high > threshold
  *    → BLOCK "b14.ci_high_exceeds_threshold"
  *
- * 4. per_firm consistency_fail_rate > payout-denial threshold
- *    → BLOCK "b14.payout_denial_rate_exceeds_threshold"
- *
- * 5. ci_high <= threshold AND payout-denial ok (or absent)
+ * 4. ci_high <= threshold
  *    → PASS "b14.ci_high_within_threshold"
  *
  * @param ruinCi        The probability_of_ruin_ci dict from MC risk_metrics.
@@ -337,8 +307,6 @@ export function evaluateB14CiGate(
   threshold?: number,
 ): B14CiGateResult {
   const effectiveThreshold = threshold ?? getB14CiHighThreshold();
-  const payoutDenialThreshold = getB14PayoutDenialThreshold();
-
   let ciHigh: number | null = null;
   let ciLow: number | null = null;
   let ciMethod: string | null = null;
@@ -503,54 +471,6 @@ export function evaluateB14CiGate(
         n_resamples: nResamples,
       },
     };
-  }
-
-  // ── Payout-denial rate check (E — hardening 2026-06-22) ───────────────────
-  // When the MC output includes per_firm.*.consistency_fail_rate, gate on the
-  // worst-firm value. Topstep documents payout-denial bans for consistency
-  // violations (single-day concentration > 40% of payout-window P&L).
-  // consistency_fail_rate is the MC-simulated frequency of such violations.
-  const perFirm = ruinCi != null && typeof ruinCi === "object"
-    ? ((ruinCi as Record<string, unknown>).per_firm as Record<string, Record<string, unknown>> | null | undefined) ?? null
-    : null;
-
-  if (perFirm != null && typeof perFirm === "object") {
-    let worstConsistencyFailRate: number | null = null;
-    for (const firmData of Object.values(perFirm)) {
-      if (firmData && typeof firmData === "object") {
-        const rate = (firmData as Record<string, unknown>).consistency_fail_rate;
-        if (rate != null && typeof rate === "number" && Number.isFinite(rate)) {
-          if (worstConsistencyFailRate === null || rate > worstConsistencyFailRate) {
-            worstConsistencyFailRate = rate;
-          }
-        }
-      }
-    }
-
-    if (worstConsistencyFailRate !== null && worstConsistencyFailRate > payoutDenialThreshold) {
-      logger.warn(
-        { worstConsistencyFailRate, payoutDenialThreshold, threshold: effectiveThreshold },
-        "B14 payout-denial gate BLOCKED: worst-firm consistency_fail_rate exceeds threshold " +
-        "(b14.payout_denial_rate_exceeds_threshold)",
-      );
-      return {
-        passed: false,
-        reason: "b14.payout_denial_rate_exceeds_threshold",
-        legacyFallback,
-        auditPayload: {
-          point_estimate: pointEst,
-          ci_low: ciLow,
-          ci_high: ciHigh,
-          threshold: effectiveThreshold,
-          blocked: true,
-          legacy_ruin_scalar_fallback: legacyFallback,
-          ci_method: ciMethod,
-          n_resamples: nResamples,
-          worst_consistency_fail_rate: worstConsistencyFailRate,
-          payout_denial_threshold: payoutDenialThreshold,
-        },
-      };
-    }
   }
 
   // ── All checks passed ───────────────────────────────────────────────────────
