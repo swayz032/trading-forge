@@ -88,3 +88,21 @@ def test_disposition_table_covers_every_lint_no_silent_exemption():
                  "or_alternatives_honored", "f2_coverage_gate",
                  "causality_lint.regex_leg", "causality_lint.same_bar_leg"):
         assert name in d, f"lint {name} missing from disposition -> silent exemption"
+
+
+# --- WIRING (grader finding F fix): aggregate exposes the fenced fraction, and
+# a merge-silenced cert is excluded from it while still counted by the old one.
+def test_aggregate_exposes_terminal_read_clean_fraction_and_excludes_merge_silenced():
+    from src.engine.extraction.pilot_conveyor import aggregate
+    # a merge-silenced cert: pilot_grade True (the CRIT) but terminal_read_clean
+    # False (fenced). A clean cert: both True.
+    merge_silenced = {"pilot_grade": True, "terminal_read_clean": False,
+                      "full_grade": False, "conditions": [], "diagnosis": {}}
+    clean = {"pilot_grade": True, "terminal_read_clean": True,
+             "full_grade": True, "conditions": [], "diagnosis": {}}
+    agg = aggregate([merge_silenced, clean])
+    # OLD fraction counts BOTH (the blind gate) -- sealed-pilot record integrity
+    assert agg["pilot_grade_fraction"] == 1.0
+    # FENCED fraction excludes the merge-silenced one -- the gap is closed here
+    assert agg["terminal_read_clean_n"] == 1
+    assert agg["terminal_read_clean_fraction"] == 0.5

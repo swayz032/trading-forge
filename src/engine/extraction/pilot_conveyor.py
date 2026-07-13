@@ -1534,6 +1534,15 @@ def aggregate(certificates: List[dict]) -> dict:
     n = len(certificates)
     pilot_grade_n = sum(1 for c in certificates if c.get("pilot_grade"))
     full_grade_n = sum(1 for c in certificates if c.get("full_grade"))
+    # THE FENCE (ratify-packet 2026-07-13, wiring-verify F fix): additively
+    # expose the merge-silencing-fenced fraction. pilot_grade_fraction is
+    # UNCHANGED (sealed-pilot record integrity). The sealed-12 TERMINAL-READ
+    # driver MUST gate its >=60% bar on `terminal_read_clean_fraction`, NOT on
+    # `pilot_grade_fraction` -- a merge-silenced cert has terminal_read_clean
+    # False (REJECTED/INDETERMINATE) and is excluded here, but pilot_grade True
+    # and counted above. That gap is exactly the §2 CRIT; this field closes it
+    # for any consumer that reads it.
+    terminal_read_clean_n = sum(1 for c in certificates if c.get("terminal_read_clean"))
     adjudications_per_video = [
         sum(1 for cond in c["conditions"] if cond.get("classifying_tier") == 3)
         for c in certificates
@@ -1546,6 +1555,11 @@ def aggregate(certificates: List[dict]) -> dict:
         "n_videos": n,
         "pilot_grade_n": pilot_grade_n,
         "pilot_grade_fraction": round(pilot_grade_n / n, 4) if n else None,
+        # THE FENCE: the fraction the sealed-12 terminal read gates its >=60%
+        # bar on (merge-silencing-fenced). Additive; pilot_grade_fraction above
+        # is untouched for the sealed-pilot record.
+        "terminal_read_clean_n": terminal_read_clean_n,
+        "terminal_read_clean_fraction": round(terminal_read_clean_n / n, 4) if n else None,
         "full_grade_n": full_grade_n,
         "tier3_adjudications_per_video": adjudications_per_video,
         "mean_tier3_adjudications_per_video": (

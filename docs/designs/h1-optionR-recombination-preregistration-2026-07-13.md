@@ -89,3 +89,8 @@ Fed R5L890's ACTUAL merged object (real vault artifact, real transcript — two 
 **VERDICT = CRIT.** A self-contradictory spec gets `pilot_grade=True`; each merged condition can grade CLEAN at the terminal read while the strategy object is garbage → merge-silencing could INFLATE a fidelity verdict. Per the pre-committed branch: **FENCE REQUIRED (ratify-packet, instrument code) before ANY terminal read or H2 battery, regardless of the locator number.** The fence cannot be "wire the A-packet" — CASE B proves `pilot_grade` is blind even then; the fence must make the terminal-read grade itself reject a merge-silenced object (opposite-direction entries fused under one strategy with no directional OR-split). `full_grade` correctly rejects both cases (it is the H2 precondition), but the terminal read consumes `pilot_grade`.
 
 *§2 wiring-verify RESOLVED CRIT 2026-07-13. Any terminal read is now BLOCKED on the fence, independent of Option R's number.*
+
+
+## PRE-READ ADDENDUM 3 — terminal-read driver gates on the FENCED fraction (2026-07-13)
+
+The §3 CLEARS branch's terminal read, when built, MUST gate its **≥60% video-unit bar on `aggregate()['terminal_read_clean_fraction']`** (merge-silencing-fenced), NOT `pilot_grade_fraction`. This is the wiring-verify-F pin: the fence is only real end-to-end when the driver consumes the fenced grade. (Ratify-packet `h1-mergesilencing-fence-ratify-packet-2026-07-13.md`.)

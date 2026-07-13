@@ -39,3 +39,21 @@ The fence is NOT done when the code lands. It is done when **the same R5L890 pro
 
 ## GRADE (doer≠grader)
 Independent grade dispatched after build: verify (1) the disposition table has no silent exemption and the one proof holds, (2) fail-closed semantics correct (NE→INDETERMINATE, not clean), (3) `pilot_grade` unchanged, (4) the closure re-probe genuinely catches in BOTH configs, (5) direction-check (every disposition →fail except the proven exemption).
+
+---
+
+## INDEPENDENT GRADE (doer≠grader, fresh-context adversarial) + WIRING FIX (2026-07-13)
+
+Grade verdict: **grade layer SOUND (A–E all PASS), but criterion F FAILED — the fence was INERT.**
+- A (disposition completeness): PASS — all 6 legs dispositioned, same_bar exemption proof holds (execution timing cannot mask a structural merge).
+- B (fail-closed): PASS — FAIL dominates NE; NE→INDETERMINATE; clean only iff CLEAN.
+- C (pilot_grade unchanged): PASS — additive.
+- D (closure): PASS — real R5L890 witness catches in both configs.
+- E (direction-check): PASS — monotone-toward-fail except the proven exemption.
+- **F (fence consumed): FAIL** — nothing read `terminal_read_clean`; the terminal-read consumers still keyed on `pilot_grade` (`h1_pilot_phase3_finalize.py:142`, `pilot_conveyor.aggregate`'s fraction). A grade nothing reads cannot close a CRIT — the claimed-safeguards law firing on our own fence.
+
+**FIX (applied, with a correction to the grader's literal prescription):** the grader said "repoint `h1_pilot_phase3_finalize.py:142`" — but that file is the SEALED PILOT's driver (ran, sealed `a73c1f60`), not the sealed-12 terminal-read driver (which does not exist yet). Repointing it would corrupt the sealed pilot record. Instead:
+1. `pilot_conveyor.aggregate` now **additively exposes** `terminal_read_clean_n` + `terminal_read_clean_fraction` (from `cert["terminal_read_clean"]`). `pilot_grade_fraction` is UNCHANGED — sealed-pilot integrity preserved (and the fence only tightens the pilot's already-failed 0/16, so no re-read is owed).
+2. Test proves the wiring: a merge-silenced cert (`pilot_grade=True`, `terminal_read_clean=False`) counts toward `pilot_grade_fraction`=1.0 but is EXCLUDED from `terminal_read_clean_fraction`=0.5.
+
+**PINNED CONTRACT (the wiring requirement, now hard):** the sealed-12 TERMINAL-READ driver (frozen §6 read shape, when built) MUST gate its ≥60% video-unit bar on **`terminal_read_clean_fraction`**, NOT `pilot_grade_fraction`. The ratify-packet's earlier claim ("the only grade the sealed-12 read consumes") was aspirational at grade time; it is now TRUE-BY-CONTRACT — the instrument exposes the fenced fraction and this pin binds the driver to it. Until a terminal-read driver exists AND gates on it, the fence is wired at the instrument layer and contractually bound, but the end-to-end path completes only when that driver is built. Recorded honestly, not claimed done.
