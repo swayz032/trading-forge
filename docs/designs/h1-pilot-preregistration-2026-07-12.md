@@ -174,3 +174,17 @@ The frozen Wave-0 §4 schema stands EXCEPT `classifying_tier` ∈ {1 determinist
 - **Economics (adjudications/video) is measured PER-VIDEO AGGREGATE** — summed across ALL of that video's strategies' tier-3 adjudications (fallthroughs + axis-3 audits) — vs the ~15 affordability ceiling. This subsumes the F-2 carry (axis-3's per-strategy budget scoping): the ceiling is judged on the honest video-aggregate load, and a multi-strategy video exceeding ~15 is a RECORDED economics finding (never softened, per the standing variance guard), not a scoping bug to paper over. If the dry-run/pilot shows videos are ~1 strategy each, the F-2 distinction is moot; if multi-strategy, the aggregate is what the ≤~15 rider reads against.
 
 *Addendum 6 frozen 2026-07-12, operator-authored, pinned BLIND before the dry-run re-proof and before the sealed 16 is unsealed. Vaulted FF to `corpus-v3-gate3-cert-2026-07-06`.*
+
+---
+
+## ADDENDUM 7 — ECONOMICS-READING RULE (OPERATOR-AUTHORED, PINNED BLIND 2026-07-12, before the seal breaks)
+
+> Pinned SIGHT UNSEEN — before the sealed 16's strategy-composition is known — because the dry-run re-proof previewed the exact temptation: a 2-strategy video read 21 adjudications (over the ~15 ceiling in AGGREGATE, under it PER-STRATEGY). When the pilot number exists, the per-strategy reading will flatter, and re-deriving the criterion after the number is the Law-4 violation this pin forecloses.
+
+**THE VERDICT reads the ~15 affordability ceiling as PER-VIDEO AGGREGATE** — summed across all of a video's strategies' tier-3 adjudications (fallthroughs + axis-3 audits), exactly as Addendum 6 fixed the unit. **Law 4, strictest reading, NO re-derivation after the number exists.** The §1 economics measurement + the §2 "miss on economics" outcome are judged on the per-video aggregate vs ~15.
+
+**THE PER-STRATEGY NORMALIZATION is an ANNOTATION, never the verdict.** Cost-per-certified-strategy is — honestly — the truer long-run economics question for a conveyor whose PRODUCT is strategies. So it is RECORDED alongside the aggregate (both numbers side by side) and informs the CONSUMPTION decision AFTER the read — but it does NOT move the frozen criterion. If the pilot lands **"miss on aggregate, viable per-strategy,"** that is a LEGITIMATE, interesting outcome that arrives with its frozen criterion intact AND its better question documented — precedent: the 0.5 overlay read arrived exactly this way (frozen directional criterion + a better-question annotation) and aged well.
+
+**THE ECONOMICS-MISS PREVIEW, said plainly (nobody surprised at 4am):** the rehearsal's root cause — traders NARRATE their rules, tier-1 is prescriptive-tuned + low-recall by design, tier-2 is DEAD (human-in-loop fork), so narration floods tier-3 — means the sealed 16 MAY read economics miss. That is a PRE-WRITTEN §2 OUTCOME, NOT a failure: it escalates to the parked stronger-model tier-2 experiment as the next pre-registered move. The conveyor measuring its own cost honestly IS the product working. **A pilot that returns "fidelity YES, economics NO" would still be the most valuable measurement this project has ever taken.** The economics reading NEVER blocks or alters the FIDELITY (§1 ≥60% cert-grade) read — they are separate verdicts.
+
+*Addendum 7 frozen 2026-07-12, operator-authored, pinned BLIND before the sealed 16 is unsealed. Vaulted FF to `corpus-v3-gate3-cert-2026-07-06`.*
