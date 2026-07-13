@@ -1,0 +1,97 @@
+{
+ "artifact": "frontier-designpool-locator-support",
+ "n_videos": 16,
+ "total_conditions": 245,
+ "located": 240,
+ "miss": 5,
+ "support_miss_rate": 0.0204,
+ "floor_le_8pct_MET": true,
+ "plumbing_excluded": 0,
+ "enumeration_unstable_videos": [
+  "DLwVqcLRcfw",
+  "IyFioFkRgWo"
+ ],
+ "per_video": {
+  "-igpOZs8LsM": {
+   "conditions": 9,
+   "located": 8,
+   "anchor_rate": 0.8889
+  },
+  "0xygpCMwxbQ": {
+   "conditions": 16,
+   "located": 16,
+   "anchor_rate": 1.0
+  },
+  "2DXQqwKSwJE": {
+   "conditions": 28,
+   "located": 28,
+   "anchor_rate": 1.0
+  },
+  "4cT8WTyxhYY": {
+   "conditions": 9,
+   "located": 9,
+   "anchor_rate": 1.0
+  },
+  "CLDEIsNpVRc": {
+   "conditions": 14,
+   "located": 14,
+   "anchor_rate": 1.0
+  },
+  "DLwVqcLRcfw": {
+   "conditions": 8,
+   "located": 8,
+   "anchor_rate": 1.0
+  },
+  "E9MzEC_yNoM": {
+   "conditions": 21,
+   "located": 21,
+   "anchor_rate": 1.0
+  },
+  "IyFioFkRgWo": {
+   "conditions": 8,
+   "located": 8,
+   "anchor_rate": 1.0
+  },
+  "PVMgOxHUqFA": {
+   "conditions": 10,
+   "located": 10,
+   "anchor_rate": 1.0
+  },
+  "R5L890juvRw": {
+   "conditions": 14,
+   "located": 14,
+   "anchor_rate": 1.0
+  },
+  "W7nlnHTUZQU": {
+   "conditions": 13,
+   "located": 12,
+   "anchor_rate": 0.9231
+  },
+  "WEhmadJArQo": {
+   "conditions": 23,
+   "located": 22,
+   "anchor_rate": 0.9565
+  },
+  "ZF8uKPqAu8M": {
+   "conditions": 31,
+   "located": 31,
+   "anchor_rate": 1.0
+  },
+  "_LS6qcSlDCs": {
+   "conditions": 12,
+   "located": 10,
+   "anchor_rate": 0.8333
+  },
+  "dV7chra4u4Q": {
+   "conditions": 11,
+   "located": 11,
+   "anchor_rate": 1.0
+  },
+  "kFyD3H6I1I8": {
+   "conditions": 18,
+   "located": 18,
+   "anchor_rate": 1.0
+  }
+ },
+ "verdict": "DESIGN POOL CLEARS (<=8%) -> freeze SHA -> terminal read preconditions"
+}
