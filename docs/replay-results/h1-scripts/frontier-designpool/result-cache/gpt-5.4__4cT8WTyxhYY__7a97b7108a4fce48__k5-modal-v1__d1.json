@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__4cT8WTyxhYY__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "liquidity_grab_reversal",
+    "entry_summary": "Enter at the price level of the candle that made the liquidity grab after price breaks support or resistance and reverses: go long at the top of the candle that swept support, or go short at the bottom of the candle that swept resistance.",
+    "exit_summary": "Place the stop loss just beyond the liquidity grab wick/level, and take profit at a recent swing level in the opposite direction: recent high for longs, recent low for shorts.",
+    "variants": [
+     {
+      "variant_label": "base liquidity-grab reversal",
+      "timeframe_note": "Works on all time frames; examples shown on mixed charts",
+      "confirmation_mechanic_note": "No extra confirmation beyond identifying the liquidity-grab candle/entry signal",
+      "target_note": "Take profit at the nearest/recent swing high or swing low",
+      "transcript_quote": "you would enter here set your stop loss right right below the liquidity grab and you're going to set your take profit at a recent high"
+     },
+     {
+      "variant_label": "higher-probability confluence variant",
+      "timeframe_note": "Lower-timeframe entry aligned with higher-timeframe support/resistance; example uses 15-minute and 1-hour",
+      "confirmation_mechanic_note": "Prefer setups where peaks are closer than 10 candles apart, add momentum divergence, and only take signals occurring at/",
+      "target_note": "Normal stop loss and take profit rules still apply",
+      "transcript_quote": "we move back to the 15-minute time frame and do our normal stop loss and take profit"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one runnable liquidity-grab reversal skeleton; the 10-candle rule, divergence, and higher-timeframe support/resistance are presented as confluences/filter variants, not separate strategies with different exit logic."
+ },
+ "originalTokens": 5693,
+ "cachedTokensReported": 4864
+}

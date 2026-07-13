@@ -1,0 +1,91 @@
+{
+ "key": "gpt-5.4__4cT8WTyxhYY__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "liquidity_grab_reversal",
+    "higher_timeframe": "1h",
+    "lower_timeframe": "15m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "the first step we are looking for what's called a liquidity grab",
+      "step": 1,
+      "action": "Identify a liquidity grab where price breaks support or resistance, fakes out, and reverses in the opposite direction.",
+      "rationale": "The setup starts with a false break that signals a reversal."
+     },
+     {
+      "transcript_quote": "it can be either sell-side liquidity or buy side liquidity",
+      "step": 2,
+      "action": "For longs, use a sell-side liquidity grab below support; for shorts, use a buy-side liquidity grab above resistance.",
+      "rationale": "The speaker teaches the setup symmetrically on both sides."
+     },
+     {
+      "transcript_quote": "your entry would be at the candle that made the liquidity grab",
+      "step": 3,
+      "action": "Mark the entry at the liquidity-grab candle: for longs at the candle that swept below support, and for shorts at the candle that swept above resistance.",
+      "rationale": "The entry is anchored to the candle that initiated the grab."
+     }
+    ],
+    "preferred_regime": "at the absolute top or bottom of the range",
+    "stop": {
+     "transcript_quote": "set your stop loss right right below the liquidity grab",
+     "anchor": "sweep_wick_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The stop goes just beyond the liquidity grab."
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "you're going to set your take profit at a recent high",
+      "priority": 1,
+      "type": "speaker_recent_high",
+      "r_multiple": null,
+      "rationale": "For longs, the profit target is a recent high."
+     },
+     {
+      "transcript_quote": "setad her take profit at a recent low",
+      "priority": 2,
+      "type": "speaker_recent_low",
+      "r_multiple": null,
+      "rationale": "For shorts, the profit target is a recent low."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "if the liquidity grab and and the entry candle were closer than 10 candles apart",
+      "name": "peaks_closer_than_10_candles",
+      "description": "The speaker says entries perform better when the liquidity grab and entry candle are closer than 10 candles apart.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "adding confluences like divergences",
+      "name": "divergence",
+      "description": "The speaker improves the setup by adding divergence as confluence.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "it works best if you're finding reversals at the bottoms or tops of big moves",
+      "name": "reversal_at_range_extreme",
+      "description": "The strategy works best at the tops or bottoms of larger moves rather than in the middle.",
+      "canonical_match": "regime_match"
+     },
+     {
+      "transcript_quote": "happened exactly at a support on a higher time frame",
+      "name": "higher_timeframe_support_resistance",
+      "description": "The lower-timeframe signal is stronger when it aligns with higher-timeframe support or resistance.",
+      "canonical_match": "market_structure_aligned"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 10486,
+ "cachedTokensReported": 0
+}

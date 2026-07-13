@@ -176,6 +176,50 @@ export async function getExtractionTokensSpentToday(
   return row.totalTokens;
 }
 
+/**
+ * PERSISTENT DAILY LEDGER — the cross-run wall. The in-run counter resets every
+ * invocation, so it CANNOT enforce the true daily partition across separate runs
+ * (birth run + smoke run + design-pool run on the same day). This ledger persists
+ * `{ "<utc-date>": { "<pool>": tokens } }` on disk; every run reads today's spend
+ * as its starting `tokensSpentToday` and records each call's spend immediately.
+ * THIS is what protects the free-pool ceiling across a day's multiple runs.
+ * (Production wiring may instead read ai_inference_log; this file-ledger is the
+ * self-contained equivalent for the extraction drivers.)
+ */
+import { readFileSync as _rf, writeFileSync as _wf, existsSync as _ex } from "fs";
+
+function utcDateKey(now: Date): string {
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+}
+function loadLedger(path: string): Record<string, Record<string, number>> {
+  if (!_ex(path)) return {};
+  try { return JSON.parse(_rf(path, "utf8")); } catch { return {}; }
+}
+/** Tokens already spent on `pool` today (fail-closed: a corrupt ledger reads 0,
+ *  but the caller's wall still caps the run at the partition). */
+export function readTodaySpend(ledgerPath: string, pool: string, now: Date): number {
+  const day = loadLedger(ledgerPath)[utcDateKey(now)];
+  const v = day?.[pool];
+  return Number.isFinite(v) && v! >= 0 ? v! : 0;
+}
+/** Record spend immediately after a call (before anything downstream can crash). */
+export function recordSpend(ledgerPath: string, pool: string, now: Date, tokens: number): void {
+  const led = loadLedger(ledgerPath);
+  const dk = utcDateKey(now);
+  led[dk] = led[dk] ?? {};
+  led[dk][pool] = (led[dk][pool] ?? 0) + Math.max(0, tokens);
+  _wf(ledgerPath, JSON.stringify(led, null, 1));
+}
+/** Seed/adjust today's ledger to a known value (e.g. reconstructing spend already
+ *  made this session before the ledger existed). Sets (not increments). */
+export function seedTodaySpend(ledgerPath: string, pool: string, now: Date, tokens: number): void {
+  const led = loadLedger(ledgerPath);
+  const dk = utcDateKey(now);
+  led[dk] = led[dk] ?? {};
+  led[dk][pool] = Math.max(0, tokens);
+  _wf(ledgerPath, JSON.stringify(led, null, 1));
+}
+
 export interface TwoPathBudgetReport {
   designedDailyPartition: number;
   designed7DayCeiling: number;
