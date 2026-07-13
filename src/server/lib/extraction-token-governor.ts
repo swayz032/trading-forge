@@ -303,11 +303,16 @@ export function evaluateWithBurst(
  * never 300%. Absent the admin key, the token wall + dollar ticket still hold; only
  * the daily reconciliation is unavailable (flagged, never silently skipped).
  */
-export async function fetchOrgCostsUsd(adminKey: string, startUnixSec: number, endUnixSec?: number): Promise<number> {
+export async function fetchOrgCostsUsd(adminKey: string, startUnixSec: number, endUnixSec?: number, projectIds?: string[]): Promise<number> {
   if (!adminKey) throw new Error("[dollar-truth] OPENAI_ADMIN_KEY absent — cannot read Costs API (create an admin key)");
   const url = new URL("https://api.openai.com/v1/organization/costs");
   url.searchParams.set("start_time", String(startUnixSec));
+  url.searchParams.set("limit", "31");
   if (endUnixSec) url.searchParams.set("end_time", String(endUnixSec));
+  // MUST scope to the spending project (the org-level query returns $0 without it —
+  // the 2026-07-13 correction: spend is project-attributed; Aspire City =
+  // proj_lXgrb4JH3KrEPvzhKsXCBX1W). Same-day visible, NOT T+1 lagged.
+  for (const p of projectIds ?? []) url.searchParams.append("project_ids", p);
   const resp = await fetch(url, { headers: { Authorization: `Bearer ${adminKey}` } });
   if (!resp.ok) throw new Error(`[dollar-truth] Costs API ${resp.status}: ${(await resp.text()).slice(0, 160)}`);
   const body: any = await resp.json();
@@ -319,9 +324,12 @@ export async function fetchOrgCostsUsd(adminKey: string, startUnixSec: number, e
   return usd;
 }
 
-/** Remaining balance = startingBalance − actual billed spend (Costs API). */
-export async function remainingBalanceUsd(adminKey: string, startingBalanceUsd: number, sinceUnixSec: number): Promise<number> {
-  const spent = await fetchOrgCostsUsd(adminKey, sinceUnixSec);
+/** The spending project. Org-level cost queries return $0 without this scope. */
+export const ASPIRE_CITY_PROJECT_ID = "proj_lXgrb4JH3KrEPvzhKsXCBX1W";
+
+/** Remaining balance = startingBalance − actual billed spend (Costs API, project-scoped). */
+export async function remainingBalanceUsd(adminKey: string, startingBalanceUsd: number, sinceUnixSec: number, projectIds: string[] = [ASPIRE_CITY_PROJECT_ID]): Promise<number> {
+  const spent = await fetchOrgCostsUsd(adminKey, sinceUnixSec, undefined, projectIds);
   return Math.round((startingBalanceUsd - spent) * 100) / 100;
 }
 

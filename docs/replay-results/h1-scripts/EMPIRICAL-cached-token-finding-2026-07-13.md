@@ -16,3 +16,9 @@ The $0.08 leaked through the blind spot in the hours BEFORE the cross-run ledger
 
 ## ADMIN KEY + Costs API (2026-07-13, later)
 Operator provided an admin key WITH `api.usage.read` scope → Costs API `/v1/organization/costs` now returns 200 (stored in gitignored `.env` as `OPENAI_ADMIN_KEY`, never committed). BUT it reports **$0 across 35 days** = OpenAI cost-reporting is **T+1 lagged** (no paid usage before today; today's ~$2 posts tomorrow). So the dollar-truth layer is a **DAILY reconciliation (T+1)**, exactly as designed — real-time safety stays the estimate-governor (token full-weight + $-ticket at measured-blend×1.5), and the Costs API corrects the prior day's estimate to actuals. Balance reads $6.30 now (nothing posted); will read ~$4.30 once today finalizes. NOT overclaimed as real-time.
+
+## CORRECTION (2026-07-13) — the $0 was PROJECT SCOPE, not T+1 lag (operator caught it)
+My earlier "T+1 lag" claim was WRONG. The org-level `/organization/costs` returns $0 because spend is PROJECT-attributed and must be scoped: `project_ids=proj_lXgrb4JH3KrEPvzhKsXCBX1W` (the "Aspire City" project; there is also a separate empty "Aspire" project). Scoped, the Costs API shows TODAY's spend SAME-DAY:
+- **Usage today (Aspire City): 1,246,408 input + 114,808 output = 1.36M tokens.**
+- **Billed today: $1.9641.**  →  **remaining balance ≈ $6.30 − $1.96 = $4.34.**
+- Reconciliation: actual $1.96 vs estimate-governor's ~$2.16 → estimate erred SLIGHTLY HIGH (conservative, wallet-favoring), exactly as designed. Dollar-truth is REAL-TIME (same-day), not T+1. Governor `fetchOrgCostsUsd`/`remainingBalanceUsd` now default-scope to `ASPIRE_CITY_PROJECT_ID`.
