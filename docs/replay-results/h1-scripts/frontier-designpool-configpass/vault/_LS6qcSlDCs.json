@@ -1,0 +1,150 @@
+{
+ "video_id": "_LS6qcSlDCs",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "vwap_break_and_pullback_long",
+     "entry_summary": "Only on high-volume, lower-float penny stocks, wait for a stock that opened weak below VWAP to break back above VWAP with strong volume and obvious bullish momentum. Enter long on the subsequent pullback/retest of VWAP or a nearby key level as support, looking for the bounce.",
+     "exit_summary": "Manage as a scalp by selling into the bounce after VWAP holds and price pushes back up; the transcript does not give a precise stop/target formula, but the taught management is to use VWAP as the support thesis and avoid long entries when VWAP remains overhead as resistance.",
+     "variants": [
+      {
+       "variant_label": "VWAP pullback long after break with volume",
+       "timeframe_note": "Intraday, typically after the opening bell once volume expands",
+       "confirmation_mechanic_note": "Wait for strong volume, multiple green candles, a break above VWAP, then a clear pullback into VWAP support before going",
+       "target_note": "Scalp the bounce upward after support holds",
+       "transcript_quote": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap ["
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The video teaches one long-only VWAP-reclaim pullback setup repeatedly across examples; bearish rejection below VWAP is discussed as context/filter, not promoted to a separate runnable strategy with its own concrete exit."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Only on high-volume, lower-float penny stocks, wait for a stock that opened weak below VWAP to break back above VWAP with strong volume and obvious bullish momentum. Enter long on the subsequent pullback/retest of VWAP or a nearby key level as support, looking for the bounce.",
+    "exit_summary": "Manage as a scalp by selling into the bounce after VWAP holds and price pushes back up; the transcript does not give a precise stop/target formula, but the taught management is to use VWAP as the support thesis and avoid long entries when VWAP remains overhead as resistance.",
+    "name": "vwap_break_and_pullback_long"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_break_and_pullback_long",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "long",
+      "entry_sequence": [
+       {
+        "transcript_quote": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap",
+        "step": 1,
+        "action": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs",
+        "rationale": "looking for the v-wap to hold it up as support"
+       },
+       {
+        "transcript_quote": "especially if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some",
+        "step": 2,
+        "action": "find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it",
+        "rationale": "that's my favorite area to dip buy into"
+       },
+       {
+        "transcript_quote": "we can wait for the volume to come in we can wait for a really nice and obvious upward move breaking over that v milestone level and we can buy the p",
+        "step": 3,
+        "action": "wait for the volume to come in we can wait for a really nice and obvious upward move breaking over that v milestone level and we can buy the pullback into that first few bounces",
+        "rationale": "you can see the momentum coming in after that pullback was really really nice"
+       }
+      ],
+      "preferred_regime": "momentum based penny stocks",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "we bought into the pullback and we rode the bounce up scalping out of it with a really nice green trade",
+        "priority": 1,
+        "type": "scalp_out_of_the_bounce",
+        "r_multiple": null,
+        "rationale": "we rode the bounce up scalping out of it with a really nice green trade"
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute",
+        "name": "average_volume_over_200000_shares_per_minute",
+        "description": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "i need the float to be under 50 million",
+        "name": "float_under_50_million",
+        "description": "i need the float to be under 50 million",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "if i can wait for smaller float stocks especially under 10 million then it's gonna work a larger percentage of the time in my opinion",
+        "name": "preferably_under_10_million_float",
+        "description": "if i can wait for smaller float stocks especially under 10 million then it's gonna work a larger percentage of the time in my opinion",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "volume is absolutely crucial i need this volume to be there if i'm going to take this trade if it's not i move on and look for a better option",
+        "name": "volume_is_absolutely_crucial",
+        "description": "volume is absolutely crucial i need this volume to be there if i'm going to take this trade if it's not i move on and look for a better option",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "when the stock actually breaks above the v-wop after being below it at the opening bell",
+        "name": "breaks_above_vwap_after_being_below_at_open",
+        "description": "when the stock actually breaks above the v-wop after being below it at the opening bell",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "we had a ton of green candles in a row",
+        "name": "ton_of_green_candles_in_a_row",
+        "description": "we had a ton of green candles in a row",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "volume started to come in breaking 1 million shares traded per minute",
+        "name": "volume_started_to_come_in",
+        "description": "volume started to come in breaking 1 million shares traded per minute",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "when we break over the vwop which is again a milestone level and then we get a really obvious and self-evident pullback to it",
+        "name": "obvious_pullback_to_vwap",
+        "description": "when we break over the vwop which is again a milestone level and then we get a really obvious and self-evident pullback to it",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "i never buy these stocks if the v is above me",
+        "name": "vwap_not_overhead",
+        "description": "i never buy these stocks if the v is above me",
+        "canonical_match": "vwap_alignment"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "non_futures_primary"
+   }
+  }
+ ]
+}

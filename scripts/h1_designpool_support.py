@@ -12,8 +12,10 @@ sys.path.insert(0, ROOT)
 from src.engine.extraction import anchor_locator as al
 
 TDIR = os.path.join(ROOT, "docs", "replay-results", "h1-scripts", "pilot-run", "transcripts")
-VAULT = os.path.join(ROOT, "docs", "replay-results", "h1-scripts", "frontier-designpool", "vault")
-OUT = os.path.join(ROOT, "docs", "replay-results", "h1-scripts", "frontier-designpool")
+# optional arg: the design-pool subdir (default minimal-v1; config pass = frontier-designpool-configpass)
+_SUB = sys.argv[1] if len(sys.argv) > 1 else "frontier-designpool"
+VAULT = os.path.join(ROOT, "docs", "replay-results", "h1-scripts", _SUB, "vault")
+OUT = os.path.join(ROOT, "docs", "replay-results", "h1-scripts", _SUB)
 CACHE = os.path.join(OUT, "_support_cache.json")
 
 

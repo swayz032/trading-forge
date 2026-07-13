@@ -1,0 +1,155 @@
+{
+ "video_id": "W7nlnHTUZQU",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "overnight_range_break_retest_continuation",
+     "entry_summary": "Mark the overnight/pre-market high and low, then wait during the New York session for price to break above the overnight high with strength or below the overnight low with weakness. After the break, enter on a pullback/retest of that level once the retest shows confirming price action in the break's",
+     "exit_summary": "Initial stop goes on the opposite side of the breakout level: below the prior overnight high for longs, above the prior overnight low for shorts. Manage winners by taking profit when satisfied and/or moving the stop to break even after trimming; the speaker also shows examples measured around 1.5R-2",
+     "variants": [
+      {
+       "variant_label": "Long continuation after break above overnight high",
+       "timeframe_note": "5-minute examples shown; strategy stated for New York session using overnight/pre-market range",
+       "confirmation_mechanic_note": "Break above overnight high with strength, then bullish retest signals such as bullish hammer, bullish engulfing, dragon,",
+       "target_note": "Examples shown around 1.5R-2R and about 2.6R; also suggests trimming and moving stop to break even while letting winners",
+       "transcript_quote": "if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support"
+      },
+      {
+       "variant_label": "Short continuation after break below overnight low",
+       "timeframe_note": "New York session using overnight/pre-market range",
+       "confirmation_mechanic_note": "Break below overnight low with weakness, then bearish retest signals such as bearish hammer, gravestone doji, long upper",
+       "target_note": "No fixed target; continuation lower with stop above the broken level",
+       "transcript_quote": "if price were to break below this level again, we're going to look for it to break with weakness. We then want to see pri"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "One strategy is taught: the same overnight-range break-and-retest continuation skeleton in two directional variants (long above highs, short below lows) with shared stop/management logic."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Mark the overnight/pre-market high and low, then wait during the New York session for price to break above the overnight high with strength or below the overnight low with weakness. After the break, enter on a pullback/retest of that level once the retest shows confirming price action in the break's",
+    "exit_summary": "Initial stop goes on the opposite side of the breakout level: below the prior overnight high for longs, above the prior overnight low for shorts. Manage winners by taking profit when satisfied and/or moving the stop to break even after trimming; the speaker also shows examples measured around 1.5R-2",
+    "name": "overnight_range_break_retest_continuation"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "overnight_range_break_retest_continuation",
+      "higher_timeframe": "5m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "there's two things that we want to identify. One, what is the highest point of price action within that range? And then two, what is the lowest point\n",
+        "step": 1,
+        "action": "there's two things that we want to identify. One, what is the highest point of price action within that range? And then two, what is the lowest point of price action within that range?",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "we want to mark that highest point of price action and we want to mark that lowest point of price action.",
+        "step": 2,
+        "action": "we want to mark that highest point of price action and we want to mark that lowest point of price action.",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range.",
+        "step": 3,
+        "action": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range.",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "we want to see it close below or above with strength or weakness.",
+        "step": 4,
+        "action": "we want to see it close below or above with strength or weakness.",
+        "rationale": "that is actual confirmation that price is likely going to break and continue in that direction."
+       },
+       {
+        "transcript_quote": "we are then going to look for price to pull back and retest that level.",
+        "step": 5,
+        "action": "we are then going to look for price to pull back and retest that level.",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long l\",",
+        "step": 6,
+        "action": "when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume.",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "we are then going to look for a long entry",
+        "step": 7,
+        "action": "we are then going to look for a long entry",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "we then want to see price come back up, test this area as resistance with bearish price action, whether it be uh bearish hammer, gravestone dogee, l\",",
+        "step": 8,
+        "action": "we then want to see price come back up, test this area as resistance with bearish price action, whether it be uh bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume.",
+        "rationale": null
+       }
+      ],
+      "preferred_regime": "trending",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": "once you feel comfortable with your first trim, take it, put your stop-loss at break even.",
+      "targets": [],
+      "confluences": [
+       {
+        "transcript_quote": "if we see a break above well then we want to look for price to break above with strength.",
+        "name": "break_above_with_strength",
+        "description": "if we see a break above well then we want to look for price to break above with strength.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "if for example if we're breaking below well then we want to see a break below with weakness.",
+        "name": "break_below_with_weakness",
+        "description": "if for example if we're breaking below well then we want to see a break below with weakness.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an e\",",
+        "name": "bullish_retest_confirmation",
+        "description": "we want to see some kind of bullish price action, whether it be a bullish hammer, uh bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "we then want to see price come back up, test this area as resistance with bearish price action, whether it be uh bearish hammer, gravestone dogee, l\",",
+        "name": "bearish_retest_confirmation",
+        "description": "we then want to see price come back up, test this area as resistance with bearish price action, whether it be uh bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "the overall trend is going to be very important when dictating are we looking for price to break above the range or are we looking for price to break\n",
+        "name": "overall_trend",
+        "description": "the overall trend is going to be very important when dictating are we looking for price to break above the range or are we looking for price to break below the range.",
+        "canonical_match": "regime_match"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

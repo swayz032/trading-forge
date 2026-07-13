@@ -1,0 +1,280 @@
+{
+ "video_id": "E9MzEC_yNoM",
+ "phase_a": {
+  "counts": [
+   2,
+   2,
+   2,
+   2,
+   2
+  ],
+  "mode": 2,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "premarket_level_breakout_or_retest_continuation",
+     "entry_summary": "Mark the pre-market high and low from 3:00 a.m. EST to the 9:30 a.m. open on the 5-minute chart. Enter in the direction of a clean break above the pre-market high or below the pre-market low either on the lower-timeframe breakout candle close with elevated volume, or on a later retest of that broken",
+     "exit_summary": "Place the stop on the opposite side of the entry candle / below the breakout or retest support-resistance area. Target at least 1R, ideally 1.5R to 2R, then trail the stop to break-even or into profit and scale out as the move extends.",
+     "variants": [
+      {
+       "variant_label": "Lower-timeframe breakout entry with volume confirmation",
+       "timeframe_note": "5-minute pre-market levels, execution on 2-minute preferred (or 1-minute)",
+       "confirmation_mechanic_note": "enter on a clean close above/below the level with elevated volume",
+       "target_note": "minimum 1R; ideally 1.5R to 2R, then trail and scale out",
+       "transcript_quote": "when that two-minute breaks out above that London high or where to break down below London low, we want to see the break and we actually want to see,ص"
+      },
+      {
+       "variant_label": "Break-and-retest continuation entry",
+       "timeframe_note": "5-minute pre-market levels, with lower-timeframe execution implied",
+       "confirmation_mechanic_note": "wait for price to pull back to the broken level and hold it as support/resistance before entering",
+       "target_note": "minimum 1R; ideally 1.5R to 2R, then trail and scale out",
+       "transcript_quote": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support"
+      }
+     ]
+    },
+    {
+     "strategy_id": 1,
+     "name": "premarket_level_liquidity_sweep_reversal",
+     "entry_summary": "When price briefly breaks above the pre-market high and fails back below it, or breaks below the pre-market low and quickly reclaims it, enter in the opposite direction of the failed break after the reclaim/confirmation. The setup is a fake breakout or stop run that reverses back through the level.",
+     "exit_summary": "Place the stop on the opposite side of the entry candle. Target at least 1R, ideally 1.5R to 2R, then trim, move the stop to break-even or into profit, and trail the remainder as long as the reversal continues.",
+     "variants": []
+    }
+   ],
+   "enumeration_note": "The video teaches two distinct executable skeletons: continuation on a true break/retest of the pre-market level, and reversal on a liquidity sweep/failure of that level. Breakout and retest are grouped as compatible entry variants on the same continuation skeleton because they share the same directional thesis and management."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Mark the pre-market high and low from 3:00 a.m. EST to the 9:30 a.m. open on the 5-minute chart. Enter in the direction of a clean break above the pre-market high or below the pre-market low either on the lower-timeframe breakout candle close with elevated volume, or on a later retest of that broken",
+    "exit_summary": "Place the stop on the opposite side of the entry candle / below the breakout or retest support-resistance area. Target at least 1R, ideally 1.5R to 2R, then trail the stop to break-even or into profit and scale out as the move extends.",
+    "name": "premarket_level_breakout_or_retest_continuation"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "premarket_level_breakout_or_retest_continuation",
+      "higher_timeframe": "5m",
+      "lower_timeframe": "1m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that",
+        "step": 1,
+        "action": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that",
+        "rationale": "these levels act as magnets and they act as traps."
+       },
+       {
+        "transcript_quote": "we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade",
+        "step": 2,
+        "action": "we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "we want to see the break and we actually want to see the close above or below the level.",
+        "step": 3,
+        "action": "we want to see the break and we actually want to see the close above or below the level.",
+        "rationale": "this breakout could confirm a long entry."
+       },
+       {
+        "transcript_quote": "we are looking for an increase in the volume to confirm that the breakout is actually valid.",
+        "step": 4,
+        "action": "we are looking for an increase in the volume to confirm that the breakout is actually valid.",
+        "rationale": "to confirm that the breakout is actually valid."
+       },
+       {
+        "transcript_quote": "if you were the breakout trader in this scenario, you would go long at the close of this two-minute candle. You want to wait for the close.",
+        "step": 5,
+        "action": "if you were the breakout trader in this scenario, you would go long at the close of this two-minute candle. You want to wait for the close.",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support",
+        "step": 6,
+        "action": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support",
+        "rationale": "to go long"
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "The stop is always going to go on the opposite side of the entry candle."
+      },
+      "stop_management": "as the trade continues to move in my favor, I'm going to be looking to trail my stop-loss up at least to break even, ideally in profits, and to just let that sucker run.",
+      "targets": [
+       {
+        "transcript_quote": "I'm typically looking for bare minimum of 1x of my original risk.",
+        "priority": 1,
+        "type": "1x_original_risk",
+        "r_multiple": 1,
+        "rationale": "I'm typically looking for bare minimum of 1x of my original risk."
+       },
+       {
+        "transcript_quote": "ideally what I'm looking for is a 1.5x to a 2x my original risk.",
+        "priority": 2,
+        "type": "1_5x_to_2x_original_risk",
+        "r_multiple": null,
+        "rationale": "ideally what I'm looking for is a 1.5x to a 2x my original risk."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price",
+        "name": "premarket_high_low_from_3am_to_open",
+        "description": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "we want to see the break and we actually want to see the close above or below the level.",
+        "name": "close_above_or_below_level",
+        "description": "we want to see the break and we actually want to see the close above or below the level.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "we are looking for an increase in the volume to confirm that the breakout is actually valid.",
+        "name": "increase_in_volume",
+        "description": "we are looking for an increase in the volume to confirm that the breakout is actually valid.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "Ideally, looking at order flow as well.",
+        "name": "order_flow",
+        "description": "Ideally, looking at order flow as well.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "you would simply look for price to pull back down into this previous high over here, make it support",
+        "name": "make_it_support_on_retest",
+        "description": "you would simply look for price to pull back down into this previous high over here, make it support",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "you need to wait for the break. You do not want to take early entries.",
+        "name": "wait_for_the_break",
+        "description": "you need to wait for the break. You do not want to take early entries.",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "When price briefly breaks above the pre-market high and fails back below it, or breaks below the pre-market low and quickly reclaims it, enter in the opposite direction of the failed break after the reclaim/confirmation. The setup is a fake breakout or stop run that reverses back through the level.",
+    "exit_summary": "Place the stop on the opposite side of the entry candle. Target at least 1R, ideally 1.5R to 2R, then trim, move the stop to break-even or into profit, and trail the remainder as long as the reversal continues.",
+    "name": "premarket_level_liquidity_sweep_reversal"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "premarket_level_liquidity_sweep_reversal",
+      "higher_timeframe": "5m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price",
+        "step": 1,
+        "action": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price",
+        "rationale": "these levels act as magnets and they act as traps."
+       },
+       {
+        "transcript_quote": "The stop is always going to go on the opposite side of the entry candle. And every single time, our risk is well defined. So, if you enter the trade,",
+        "step": 2,
+        "action": "price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away",
+        "rationale": "That's going to be a liquidity sweep."
+       },
+       {
+        "transcript_quote": "as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level.",
+        "step": 3,
+        "action": "as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level.",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+        "step": 4,
+        "action": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+        "rationale": null
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "The stop is always going to go on the opposite side of the entry candle.",
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "The stop is always going to go on the opposite side of the entry candle."
+      },
+      "stop_management": "as the trade continues to move in your favor, move your stop-loss up and let that thing run until you are either stopped out or satisfied with your profits.",
+      "targets": [
+       {
+        "transcript_quote": "I'm typically looking for bare minimum of 1x of my original risk.",
+        "priority": 1,
+        "type": "r_multiple",
+        "r_multiple": 1,
+        "rationale": "I'm typically looking for bare minimum of 1x of my original risk."
+       },
+       {
+        "transcript_quote": "ideally what I'm looking for is a 1.5x to a 2x my original risk.",
+        "priority": 2,
+        "type": "r_multiple",
+        "r_multiple": 1.5,
+        "rationale": "ideally what I'm looking for is a 1.5x to a 2x my original risk."
+       },
+       {
+        "transcript_quote": "ideally what I'm looking for is a 1.5x to a 2x my original risk.",
+        "priority": 3,
+        "type": "r_multiple",
+        "r_multiple": 2,
+        "rationale": "ideally what I'm looking for is a 1.5x to a 2x my original risk."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price",
+        "name": "premarket_high_low_from_3am_to_open",
+        "description": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "A liquidity sweep is going to be a brief fake out below or above the level.",
+        "name": "liquidity_sweep",
+        "description": "A liquidity sweep is going to be a brief fake out below or above the level.",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes",
+        "name": "failed_break_above_then_close_back_below",
+        "description": "price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level.",
+        "name": "break_below_then_reclaim",
+        "description": "price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "Price breaks below but reclaims the level with a lot of volume.",
+        "name": "volume_on_reclaim",
+        "description": "Price breaks below but reclaims the level with a lot of volume.",
+        "canonical_match": "delta_or_volume_signature"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

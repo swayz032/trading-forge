@@ -1,0 +1,131 @@
+{
+ "video_id": "-igpOZs8LsM",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "fvg_trend_continuation_retest",
+     "entry_summary": "Trade in the direction of the trend after a fair value gap forms with strong momentum and causes a break of structure. Mark the gap between the first candle's close and the third candle's open, prefer the FVG that caused the break of structure and is close to the order block, then wait for price to返",
+     "exit_summary": "Enter on the retrace into the fair value gap. Place the stop loss a little beyond the fair value gap—below it for buys and above it for sells—and hold for continuation in the trend direction; no concrete profit-target rule is taught.",
+     "variants": [
+      {
+       "variant_label": "bullish FVG continuation",
+       "timeframe_note": null,
+       "confirmation_mechanic_note": "wait for price to retrace into the bullish FVG that caused the break of structure",
+       "target_note": null,
+       "transcript_quote": "price will most likely come back mitigate the imbalance and keep pushing to the upside"
+      },
+      {
+       "variant_label": "bearish FVG continuation",
+       "timeframe_note": null,
+       "confirmation_mechanic_note": "wait for price to return to the bearish FVG that caused the break of structure",
+       "target_note": null,
+       "transcript_quote": "once that FVG is created, all you just need to do is patiently wait for you know price to get back into that FVG that caused the break of structure"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "One runnable FVG trend-continuation strategy is taught, shown in bullish and bearish directions as compatible variants; exits specify stop placement beyond the FVG but do not give a fixed profit-target rule."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Trade in the direction of the trend after a fair value gap forms with strong momentum and causes a break of structure. Mark the gap between the first candle's close and the third candle's open, prefer the FVG that caused the break of structure and is close to the order block, then wait for price to返",
+    "exit_summary": "Enter on the retrace into the fair value gap. Place the stop loss a little beyond the fair value gap—below it for buys and above it for sells—and hold for continuation in the trend direction; no concrete profit-target rule is taught.",
+    "name": "fvg_trend_continuation_retest"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "fvg_trend_continuation_retest",
+      "higher_timeframe": "1h",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "pay attention to the trend if you want to catch smart entries using favor gap",
+        "step": 1,
+        "action": "pay attention to the trend if you want to catch smart entries using favor gap",
+        "rationale": "the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend"
+       },
+       {
+        "transcript_quote": "you need to pay attention to the one that caused a break of structure",
+        "step": 2,
+        "action": "you need to pay attention to the one that caused a break of structure",
+        "rationale": "have it in mind that the imbalance must create a break of structure"
+       },
+       {
+        "transcript_quote": "the gap from the closing point of the first candle to the opening point of the third candle",
+        "step": 3,
+        "action": "the gap from the closing point of the first candle to the opening point of the third candle",
+        "rationale": "So the gap in between is what is called an imbalance"
+       },
+       {
+        "transcript_quote": "patiently wait for you know price to get back into that FVG that caused the break of structure",
+        "step": 4,
+        "action": "patiently wait for you know price to get back into that FVG that caused the break of structure",
+        "rationale": "price will return to the FVG and it will just drop"
+       }
+      ],
+      "preferred_regime": "trend continuation",
+      "stop": {
+       "transcript_quote": "stop loss a little bit above if you're selling or below if you are buying",
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "stop loss a little bit above if you're selling or below if you are buying"
+      },
+      "stop_management": null,
+      "targets": [],
+      "confluences": [
+       {
+        "transcript_quote": "the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend",
+        "name": "trend",
+        "description": "the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "for fair value gap it happens when the trend is when the momentum is very high",
+        "name": "high_momentum",
+        "description": "for fair value gap it happens when the trend is when the momentum is very high",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "have it in mind that the imbalance must create a break of structure",
+        "name": "break_of_structure",
+        "description": "have it in mind that the imbalance must create a break of structure",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "there should also be liquidity price will clear before you know tapping into the imbalance",
+        "name": "liquidity_clear",
+        "description": "there should also be liquidity price will clear before you know tapping into the imbalance",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "the FVG that is very close to the order block",
+        "name": "fvg_close_to_order_block",
+        "description": "the FVG that is very close to the order block",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "non_futures_primary"
+   }
+  }
+ ]
+}

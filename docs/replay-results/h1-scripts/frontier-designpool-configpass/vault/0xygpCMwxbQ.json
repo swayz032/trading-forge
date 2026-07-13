@@ -1,0 +1,257 @@
+{
+ "video_id": "0xygpCMwxbQ",
+ "phase_a": {
+  "counts": [
+   2,
+   2,
+   1,
+   2,
+   2
+  ],
+  "mode": 2,
+  "mode_n": 4,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "ict_mss_retrace_pd_array_entry",
+     "entry_summary": "After establishing higher-timeframe bias, wait for a stop raid/liquidity sweep, then a market structure shift/displacement in the intended direction. Enter on the retrace into discount/premium or OTE, using a PD array in that zone such as a fair value gap, order block, breaker block, or blended conﬂ",
+     "exit_summary": "Place the stop beyond the relevant swing low/high or the PD array boundary (for example the order-block high/low). Take partials at opposing liquidity or prior highs/lows, optionally move stop to break even, and/or hold runners toward further liquidity targets.",
+     "variants": [
+      {
+       "variant_label": "Discount retrace with nested FVG + order block long",
+       "timeframe_note": "15-minute NASDAQ example",
+       "confirmation_mechanic_note": "after sell-side raid and bullish structure shift, enter on retrace into discount/OTE where a fair value gap is nested in",
+       "target_note": "first partial at buy-side liquidity / prior highs; optional break-even management afterward",
+       "transcript_quote": "for my entry I would personally be looking to enter the trade right here My Stop on this low first partial here and then looking for buy side liquid"
+      },
+      {
+       "variant_label": "Premium retrace into breaker block short",
+       "timeframe_note": "5-minute example",
+       "confirmation_mechanic_note": "after buy-side raid and bearish displacement, wait for price to return to breaker block; can refine further to the fair",
+       "target_note": "partials or target at the equal lows / sell-side liquidity below",
+       "transcript_quote": "if I was just going to take the breaker block entry it would look something like this however if I was going to narrow that down to the fair value Gap"
+      },
+      {
+       "variant_label": "Breaker block + FVG short in OTE after failed high",
+       "timeframe_note": "1-minute ES example",
+       "confirmation_mechanic_note": "after high is raided and price closes back in with bearish shift, wait for retrace into premium/OTE and PD array",
+       "target_note": "target a new low; stop above the setup area",
+       "transcript_quote": "I have a breaker block and a fair value Gap so letting this play out price reaches up fills that fair value Gap reaches up into an OTE before continu"
+      },
+      {
+       "variant_label": "Order block short on higher-timeframe view of same skeleton",
+       "timeframe_note": "5-minute ES example",
+       "confirmation_mechanic_note": "same stop-raid plus bearish displacement skeleton, entered from an order block in OTE rather than lower-timeframe FVG",
+       "target_note": "target a new low; stop on the order block high",
+       "transcript_quote": "we reach back up into an OTE what PD array do we have in this area well we have an order block right here and with that my entry would be on this ord"
+      },
+      {
+       "variant_label": "Multi-timeframe long from order block / FVG after sell-side raid",
+       "timeframe_note": "Daily to hourly to 15-minute to 5-minute ES example",
+       "confirmation_mechanic_note": "use higher-timeframe point of interest, then after sell-side raid and bullish displacement enter from valid discount PD",
+       "target_note": "partial or break-even at morning highs, then let runners run",
+       "transcript_quote": "I would be looking to enter here putting my stop on this order block low partial or move my stop to break even your target the initial highs from t"
+      }
+     ]
+    },
+    {
+     "strategy_id": 1,
+     "name": "box_setup_deviation_retest",
+     "entry_summary": "Use a range/deviation box setup: after price deviates below the range and reclaims back into it, wait for a retest of the manipulation/deviation area and enter for a move to the opposite side of the range. The speaker explicitly notes this can be taken even without the prior lower-timeframe stop-rai",
+     "exit_summary": "Take partials on the move higher and target the opposite-side liquidity above the range. The example implies managing around intermediate targets before the full reach to the highs.",
+     "variants": [
+      {
+       "variant_label": "Bullish deviation retest to opposite-side liquidity",
+       "timeframe_note": "1-minute NASDAQ example",
+       "confirmation_mechanic_note": "enter on retest of the manipulation after price deviates below the range and reclaims",
+       "target_note": "take partials, then aim for liquidity resting above / the other side of the range",
+       "transcript_quote": "this is the deviation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manipula"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The video teaches one core stop-raid plus MSS retracement strategy with multiple compatible PD-array/OTE variants, plus a separate box setup/deviation-retest entry that the speaker treats as distinct because it does not require the prior lower-timeframe liquidity raid/structure-shift sequence."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "After establishing higher-timeframe bias, wait for a stop raid/liquidity sweep, then a market structure shift/displacement in the intended direction. Enter on the retrace into discount/premium or OTE, using a PD array in that zone such as a fair value gap, order block, breaker block, or blended conﬂ",
+    "exit_summary": "Place the stop beyond the relevant swing low/high or the PD array boundary (for example the order-block high/low). Take partials at opposing liquidity or prior highs/lows, optionally move stop to break even, and/or hold runners toward further liquidity targets.",
+    "name": "ict_mss_retrace_pd_array_entry"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "ict_mss_retrace_pd_array_entry",
+      "higher_timeframe": "1d",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry",
+        "step": 1,
+        "action": "once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+        "step": 2,
+        "action": "the first thing I focus on is a stop raid",
+        "rationale": "this just means that a low was put in before it was rated or broken"
+       },
+       {
+        "transcript_quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+        "step": 3,
+        "action": "the next thing I look for is a market structure shift or displacement",
+        "rationale": "this means that a previous high was broken and aggressively moved over"
+       },
+       {
+        "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+        "step": 4,
+        "action": "I generally like to see price move back into a discount of this price range here",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in\n\n",
+        "step": 5,
+        "action": "the next thing I look for is some sort of PD array",
+        "rationale": "where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": "depending on if I move my stop to break even",
+      "targets": [],
+      "confluences": [
+       {
+        "transcript_quote": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+        "name": "stop_raid",
+        "description": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+        "name": "market_structure_shift_or_displacement",
+        "description": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+        "name": "discount_retrace",
+        "description": "I generally like to see price move back into a discount of this price range here",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in\n\n",
+        "name": "pd_array",
+        "description": "the next thing I look for is some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "I like to blend one two or three of these Concepts together for my personal strategy",
+        "name": "blended_concepts",
+        "description": "I like to blend one two or three of these Concepts together for my personal strategy",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "Use a range/deviation box setup: after price deviates below the range and reclaims back into it, wait for a retest of the manipulation/deviation area and enter for a move to the opposite side of the range. The speaker explicitly notes this can be taken even without the prior lower-timeframe stop-rai",
+    "exit_summary": "Take partials on the move higher and target the opposite-side liquidity above the range. The example implies managing around intermediate targets before the full reach to the highs.",
+    "name": "box_setup_deviation_retest"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "box_setup_deviation_retest",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "we get a move below this range and then back into the range",
+        "step": 1,
+        "action": "we get a move below this range and then back into the range",
+        "rationale": "this is the deviation from the range"
+       },
+       {
+        "transcript_quote": "ideally I'm looking for a retest of this manipulation to then be reaching for the other side here before going higher",
+        "step": 2,
+        "action": "ideally I'm looking for a retest of this manipulation",
+        "rationale": "to then be reaching for the other side here before going higher"
+       }
+      ],
+      "preferred_regime": "box setup",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "to then be reaching for the other side here before going higher",
+        "priority": 1,
+        "type": "other_side_of_the_range",
+        "r_multiple": null,
+        "rationale": "to then be reaching for the other side here before going higher"
+       },
+       {
+        "transcript_quote": "we have all this liquidity resting above and there we go",
+        "priority": 2,
+        "type": "liquidity_resting_above",
+        "r_multiple": null,
+        "rationale": "we have all this liquidity resting above and there we go"
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "this is the deviation from the range",
+        "name": "deviation_from_the_range",
+        "description": "this is the deviation from the range",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "accumulation manipulation I want to see distribution",
+        "name": "accumulation_manipulation_distribution",
+        "description": "accumulation manipulation I want to see distribution",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "without a lower time frame liquidity rate prior to a move I am not interested in it",
+        "name": "lower_time_frame_liquidity_rate_prior_to_a_move",
+        "description": "without a lower time frame liquidity rate prior to a move I am not interested in it",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "although we did not shift structure prior to this entry this is a box setup entry",
+        "name": "box_setup_entry_without_shift_structure",
+        "description": "although we did not shift structure prior to this entry this is a box setup entry",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

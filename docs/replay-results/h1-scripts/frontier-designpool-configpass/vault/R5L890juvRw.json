@@ -1,0 +1,209 @@
+{
+ "video_id": "R5L890juvRw",
+ "phase_a": {
+  "counts": [
+   1,
+   2,
+   2,
+   2,
+   2
+  ],
+  "mode": 2,
+  "mode_n": 4,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "vwap_trend_continuation_retest",
+     "entry_summary": "Use VWAP as a directional context filter: if you already have a long session bias, wait for price to extend away from VWAP to at least the first, ideally the second, standard-deviation band, then enter in the trend direction after price breaks back above that band and retests it.",
+     "exit_summary": "Use the outer VWAP bands as profit targets, specifically the second and/or third standard deviation. The setup is invalid if price cannot reclaim and hold the band on the break-and-retest sequence.",
+     "variants": []
+    },
+    {
+     "strategy_id": 1,
+     "name": "vwap_band_reversion_to_mean",
+     "entry_summary": "Trade reversals from stretched VWAP extremes: when price reaches outer VWAP standard-deviation bands in an overbought/oversold condition, look for a reversal entry from those extreme premium/discount levels.",
+     "exit_summary": "Target a rebalance back to the central session VWAP as the mean-reversion objective.",
+     "variants": []
+    }
+   ],
+   "enumeration_note": "The video teaches two opposed executable uses of the same VWAP structure: trend continuation after reclaim/retest of a deviation band, and reversal/mean reversion from outer deviation bands back to VWAP."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Use VWAP as a directional context filter: if you already have a long session bias, wait for price to extend away from VWAP to at least the first, ideally the second, standard-deviation band, then enter in the trend direction after price breaks back above that band and retests it.",
+    "exit_summary": "Use the outer VWAP bands as profit targets, specifically the second and/or third standard deviation. The setup is invalid if price cannot reclaim and hold the band on the break-and-retest sequence.",
+    "name": "vwap_trend_continuation_retest"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_trend_continuation_retest",
+      "higher_timeframe": "5m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "say you might have a long idea for your session",
+        "step": 1,
+        "action": "say you might have a long idea for your session",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "as the New York session opens we are still right on Fair Value",
+        "step": 2,
+        "action": "as the New York session opens we are still right on Fair Value",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "we start running up you might want to wait until the price has gone at least to the first if not the second standard deviation",
+        "step": 3,
+        "action": "we start running up you might want to wait until the price has gone at least to the first if not the second standard deviation",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "and after we broke it and tested it we can try our long trade",
+        "step": 4,
+        "action": "and after we broke it and tested it we can try our long trade",
+        "rationale": null
+       }
+      ],
+      "preferred_regime": "strong Trend",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "you can use the second and third standard deviation as a Target",
+        "priority": 1,
+        "type": "second_standard_deviation",
+        "r_multiple": null,
+        "rationale": "you can use the second and third standard deviation as a Target"
+       },
+       {
+        "transcript_quote": "you can use the second and third standard deviation as a Target",
+        "priority": 2,
+        "type": "third_standard_deviation",
+        "r_multiple": null,
+        "rationale": "you can use the second and third standard deviation as a Target"
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "say you might have a long idea for your session",
+        "name": "long_idea_for_your_session",
+        "description": "say you might have a long idea for your session",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "as the New York session opens we are still right on Fair Value",
+        "name": "new_york_session_opens_right_on_fair_value",
+        "description": "as the New York session opens we are still right on Fair Value",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "we've accumulated a bunch of orders below here and created volume below and see the vwap going down a little bit also",
+        "name": "accumulated_orders_below",
+        "description": "we've accumulated a bunch of orders below here and created volume below and see the vwap going down a little bit also",
+        "canonical_match": "delta_or_volume_signature"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "Trade reversals from stretched VWAP extremes: when price reaches outer VWAP standard-deviation bands in an overbought/oversold condition, look for a reversal entry from those extreme premium/discount levels.",
+    "exit_summary": "Target a rebalance back to the central session VWAP as the mean-reversion objective.",
+    "name": "vwap_band_reversion_to_mean"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_band_reversion_to_mean",
+      "higher_timeframe": "5m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels not just based on previous price but bas",
+        "step": 1,
+        "action": "use these as some sort of overbought or oversold levels",
+        "rationale": "not just based on previous price but bas"
+       },
+       {
+        "transcript_quote": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value",
+        "step": 2,
+        "action": "the more we trade in the outer bands",
+        "rationale": "the higher is the probability that at least we are going going to see a bounce back to the fair value"
+       },
+       {
+        "transcript_quote": "here is where you want to look for a trade this is the most convenient price in the whole session or the most convenient value and price compared to",
+        "step": 3,
+        "action": "here is where you want to look for a trade",
+        "rationale": "this is the most convenient price in the whole session or the most convenient value and price compared to"
+       }
+      ],
+      "preferred_regime": "overbought or oversold",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "use the central vwap as a target for Price rebalancing",
+        "priority": 1,
+        "type": "central_vwap",
+        "r_multiple": null,
+        "rationale": "use the central vwap as a target for Price rebalancing"
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value",
+        "name": "outer_bands",
+        "description": "the more we trade in the outer bands the higher is the probability that at least we are going going to see a bounce back to the fair value",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels not just based on previous price but bas",
+        "name": "overbought_or_oversold",
+        "description": "use these as some sort of overbought or oversold levels",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "not just based on previous price but based on the volume of the whole session",
+        "name": "volume_of_the_whole_session",
+        "description": "not just based on previous price but based on the volume of the whole session",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "we went down into the lower standard deviations and here is where you want to look for a trade",
+        "name": "lower_standard_deviations",
+        "description": "we went down into the lower standard deviations and here is where you want to look for a trade",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

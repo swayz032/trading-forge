@@ -1,0 +1,176 @@
+{
+ "video_id": "CLDEIsNpVRc",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+     "entry_summary": "After 9:30 a.m. New York time, identify the draw on liquidity, then wait for a 5-minute or 15-minute fair value gap to form in the direction of that draw. When price taps that higher-timeframe fair value gap, drop to the 1-minute chart and enter on inversion of the 1-minute fair value gap(s) after a",
+     "exit_summary": "Place the stop beyond the recent sweep/high-low used for the entry. Target either the draw on liquidity or, preferably, a fixed 1:2 risk-reward; move stop to break even once the closest post-entry liquidity level is taken out.",
+     "variants": [
+      {
+       "variant_label": "Bearish version",
+       "timeframe_note": "5-minute or 15-minute higher-timeframe fair value gap; 1-minute confirmation",
+       "confirmation_mechanic_note": "After price taps the higher-timeframe gap, wait for 1-minute liquidity sweep and bearish inversion of the bullish 1m FVG",
+       "target_note": "Target draw on liquidity or fixed 1:2; move to break even after nearest low is taken",
+       "transcript_quote": "once price closes below this IFVG you want to take a short position right away and you want to put your stop above the high and you can target the drn"
+      },
+      {
+       "variant_label": "Bullish version",
+       "timeframe_note": "5-minute or 15-minute higher-timeframe fair value gap; 1-minute confirmation",
+       "confirmation_mechanic_note": "After price taps the higher-timeframe gap, wait for 1-minute liquidity sweep and bullish inversion of the bearish 1m FVG",
+       "target_note": "Fixed 1:2 shown; move to break even after nearest high/closest liquidity is taken",
+       "transcript_quote": "we have inversed the 1 minute gap. We take our entry. We put our stop below these bodies and we go for 1 to2"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "One strategy skeleton is taught and demonstrated in both bearish and bullish directions; these are compatible directional variants of the same higher-timeframe FVG tap plus 1-minute inversion model."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "After 9:30 a.m. New York time, identify the draw on liquidity, then wait for a 5-minute or 15-minute fair value gap to form in the direction of that draw. When price taps that higher-timeframe fair value gap, drop to the 1-minute chart and enter on inversion of the 1-minute fair value gap(s) after a",
+    "exit_summary": "Place the stop beyond the recent sweep/high-low used for the entry. Target either the draw on liquidity or, preferably, a fixed 1:2 risk-reward; move stop to break even once the closest post-entry liquidity level is taken out.",
+    "name": "htf_fvg_tap_with_1m_ifvg_reversal"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+      "higher_timeframe": "5m",
+      "lower_timeframe": "1m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "we always going to be trading from 9:30 till 11:30 a.m. New York time",
+        "step": 1,
+        "action": "we always going to be trading from 9:30 till 11:30 a.m. New York time",
+        "rationale": "because most of the volume comes in after 9:30 a.m., okay? and you want to trade with the volume. You don't want to trade a choppy price action because you'll get wrecked."
+       },
+       {
+        "transcript_quote": "the very first step is identify your draw on liquidity",
+        "step": 2,
+        "action": "identify your draw on liquidity",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "after 9:30 a.m., right, you want to see a 5-minut fair value gap form towards your draw on liquidity",
+        "step": 3,
+        "action": "after 9:30 a.m., right, you want to see a 5-minut fair value gap form towards your draw on liquidity",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your do",
+        "step": 4,
+        "action": "first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your do",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap",
+        "step": 5,
+        "action": "wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "drop down to one minute time frame",
+        "step": 6,
+        "action": "drop down to one minute time frame",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap",
+        "step": 7,
+        "action": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "you want to look for inversion setup",
+        "step": 8,
+        "action": "you want to look for inversion setup",
+        "rationale": null
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": "You want to go break even. As soon as the closest liquidity after your entry is taken out.",
+      "targets": [
+       {
+        "transcript_quote": "you can target the drawn liquidity",
+        "priority": 1,
+        "type": "draw_on_liquidity",
+        "r_multiple": null,
+        "rationale": "you can target the drawn liquidity"
+       },
+       {
+        "transcript_quote": "you can go for 1:2 fixed risk-to-reward ratio",
+        "priority": 2,
+        "type": "fixed_risk_to_reward",
+        "r_multiple": 2,
+        "rationale": "you can go for 1:2 fixed risk-to-reward ratio"
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "higher time frame IRL. IRL is internal range liquidity which is also a fair value gap",
+        "name": "higher_timeframe_irl",
+        "description": "higher time frame IRL. IRL is internal range liquidity which is also a fair value gap",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "identify your draw on liquidity",
+        "name": "draw_on_liquidity",
+        "description": "identify your draw on liquidity",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "after 9:30 a.m., right, you want to see a 5-minut fair value gap form towards your draw on liquidity",
+        "name": "post_930_fvg_toward_draw",
+        "description": "after 9:30 a.m., right, you want to see a 5-minut fair value gap form towards your draw on liquidity",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap",
+        "name": "one_minute_liquidity_sweep",
+        "description": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a ",
+        "name": "displacement_on_inversion",
+        "description": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "if there are three, you're going to wait for all of those three fair value gaps to get inversed",
+        "name": "all_one_minute_gaps_inversed",
+        "description": "if there are three, you're going to wait for all of those three fair value gaps to get inversed",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "non_futures_primary"
+   }
+  }
+ ]
+}
