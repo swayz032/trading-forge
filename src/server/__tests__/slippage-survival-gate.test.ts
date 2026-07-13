@@ -5,10 +5,10 @@
  * Mirrors the structure of wave3-track3b-bif-gate.test.ts / wave27-5-pass-b-b14-ci-gate.test.ts.
  *
  * Covers every branch from the design spec (docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md):
- *   - disabled → BLOCK; execution evidence cannot be waived
- *   - legacy null (no slippage_survival on backtest) → BLOCK until a fresh sweep
- *   - malformed / wrong-key shape (present but missing `breaks_at` key) → BLOCK
- *   - insufficient_sample → BLOCK
+ *   - disabled (default) → PASS + advisory, regardless of underlying data
+ *   - legacy null (no slippage_survival on backtest) → PASS + legacy warn
+ *   - malformed / wrong-key shape (present but missing `breaks_at` key) → PASS + distinct warn (not "clean")
+ *   - insufficient_sample → PASS + warn
  *   - breaks_at <= block_mult (default 2.0) → BLOCK
  *   - breaks_at === 3.0 → PASS + warn
  *   - breaks_at === null (survives all) → clean PASS
@@ -44,18 +44,20 @@ afterEach(() => {
 // ─── Env-var helpers ──────────────────────────────────────────────────────────
 
 describe("getSlippageSurvivalGateEnabled", () => {
-  it("defaults to true when unset", () => {
+  it("defaults to false when unset", () => {
     delete process.env.SLIPPAGE_SURVIVAL_GATE_ENABLED;
-    expect(getSlippageSurvivalGateEnabled()).toBe(true);
+    expect(getSlippageSurvivalGateEnabled()).toBe(false);
   });
 
-  it("returns true for the explicit literal string 'true'", () => {
+  it("returns true only for the literal string 'true'", () => {
     process.env.SLIPPAGE_SURVIVAL_GATE_ENABLED = "true";
     expect(getSlippageSurvivalGateEnabled()).toBe(true);
   });
 
-  it("returns false only for the explicit literal string 'false'", () => {
-    process.env.SLIPPAGE_SURVIVAL_GATE_ENABLED = "false";
+  it("returns false for any other value (e.g. '1', 'TRUE', 'yes')", () => {
+    process.env.SLIPPAGE_SURVIVAL_GATE_ENABLED = "1";
+    expect(getSlippageSurvivalGateEnabled()).toBe(false);
+    process.env.SLIPPAGE_SURVIVAL_GATE_ENABLED = "TRUE";
     expect(getSlippageSurvivalGateEnabled()).toBe(false);
   });
 });
@@ -142,42 +144,43 @@ describe("evaluateSlippageSurvivalGate", () => {
     computed_at: "2026-07-03T00:00:00Z",
   };
 
-  describe("disabled", () => {
-    it("BLOCKS when explicitly disabled", () => {
-      const result = evaluateSlippageSurvivalGate(fragile, { enabled: false });
-      expect(result.passed).toBe(false);
+  describe("disabled (default — SLIPPAGE_SURVIVAL_GATE_ENABLED unset)", () => {
+    it("PASSes regardless of underlying data — even a fragile strategy", () => {
+      const result = evaluateSlippageSurvivalGate(fragile);
+      expect(result.passed).toBe(true);
       expect(result.status).toBe("disabled");
-      expect(result.reason).toBe("slippage_survival.gate_disabled_fail_closed");
+      expect(result.reason).toBe("slippage_survival.gate_disabled_advisory");
       expect(result.auditPayload.enabled).toBe(false);
+      // Still surfaces the underlying breaks_at for observability, even though disabled.
       expect(result.auditPayload.breaks_at).toBe(2.0);
     });
 
-    it("evaluates by default when the flag is unset", () => {
-      const result = evaluateSlippageSurvivalGate(fragile);
-      expect(result.passed).toBe(false);
-      expect(result.status).toBe("blocked");
+    it("PASSes when explicitly disabled via opts", () => {
+      const result = evaluateSlippageSurvivalGate(fragile, { enabled: false });
+      expect(result.passed).toBe(true);
+      expect(result.status).toBe("disabled");
     });
   });
 
   describe("legacy null — no slippage_survival on the backtest", () => {
-    it("BLOCKS when null", () => {
+    it("PASSes with legacy warn when null", () => {
       const result = evaluateSlippageSurvivalGate(null, { enabled: true });
-      expect(result.passed).toBe(false);
+      expect(result.passed).toBe(true);
       expect(result.status).toBe("legacy_null");
-      expect(result.reason).toBe("slippage_survival.unavailable_fail_closed");
+      expect(result.reason).toBe("slippage_survival.unavailable_legacy");
       expect(result.auditPayload.legacy_null).toBe(true);
       expect(result.auditPayload.breaks_at).toBeNull();
     });
 
-    it("BLOCKS when undefined", () => {
+    it("PASSes with legacy warn when undefined", () => {
       const result = evaluateSlippageSurvivalGate(undefined, { enabled: true });
-      expect(result.passed).toBe(false);
+      expect(result.passed).toBe(true);
       expect(result.status).toBe("legacy_null");
     });
   });
 
   describe("malformed / wrong-key shape (must NOT silently pass as clean)", () => {
-    it("BLOCKS when `breaks_at` key is entirely absent", () => {
+    it("PASSes but with a status DISTINCT from clean when `breaks_at` key is entirely absent", () => {
       // Simulates a producer that drifted to a different key name (e.g. `break_at`
       // typo, or a future schema rename) — the real fragile value (2.0, which
       // WOULD block) is present under the wrong key and invisible to the gate.
@@ -189,10 +192,10 @@ describe("evaluateSlippageSurvivalGate", () => {
 
       const result = evaluateSlippageSurvivalGate(wrongKeyShape, { enabled: true });
 
-      expect(result.passed).toBe(false);
+      expect(result.passed).toBe(true); // fail-OPEN — never fabricate a block from bad data
       expect(result.status).toBe("malformed");
       expect(result.status).not.toBe("clean"); // MUST be distinguishable from a genuine survivor
-      expect(result.reason).toBe("slippage_survival.malformed_fail_closed");
+      expect(result.reason).toBe("slippage_survival.malformed_missing_breaks_at");
       expect(result.auditPayload.breaks_at).toBeNull();
     });
 
@@ -204,7 +207,7 @@ describe("evaluateSlippageSurvivalGate", () => {
   });
 
   describe("insufficient_sample", () => {
-    it("BLOCKS when insufficient_sample=true, regardless of breaks_at", () => {
+    it("PASSes with warn when insufficient_sample=true, regardless of breaks_at", () => {
       const thinSample: SlippageSurvivalDict = {
         schema_version: 1,
         breaks_at: null,
@@ -212,9 +215,9 @@ describe("evaluateSlippageSurvivalGate", () => {
         insufficient_sample: true,
       };
       const result = evaluateSlippageSurvivalGate(thinSample, { enabled: true });
-      expect(result.passed).toBe(false);
+      expect(result.passed).toBe(true);
       expect(result.status).toBe("insufficient_sample");
-      expect(result.reason).toBe("slippage_survival.insufficient_sample_fail_closed");
+      expect(result.reason).toBe("slippage_survival.insufficient_sample");
       expect(result.auditPayload.insufficient_sample).toBe(true);
       expect(result.auditPayload.n_trades).toBe(8);
     });
@@ -226,7 +229,7 @@ describe("evaluateSlippageSurvivalGate", () => {
         insufficient_sample: true,
       };
       const result = evaluateSlippageSurvivalGate(thinButFragile, { enabled: true });
-      expect(result.passed).toBe(false);
+      expect(result.passed).toBe(true);
       expect(result.status).toBe("insufficient_sample");
     });
   });

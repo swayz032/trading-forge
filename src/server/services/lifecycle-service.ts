@@ -79,8 +79,9 @@ import {
 import { evaluateBifGate } from "../lib/bif-gate.js";
 // Wave A — Slippage-Survival promotion gate (PAPER → DEPLOY_READY).
 // Reads backtests.slippageSurvival JSONB (Python fixed-signal re-price sweep).
-// Required for promotion: missing, malformed, insufficient, or disabled
-// execution-stress evidence fails closed.
+// Default-OFF (SLIPPAGE_SURVIVAL_GATE_ENABLED=false) — advisory-only until the
+// operator opts in; hard-blocks when breaks_at <= SLIPPAGE_SURVIVAL_BLOCK_MULT
+// once enabled. Grandfather-passes on legacy null.
 import { evaluateSlippageSurvivalGate } from "../lib/slippage-survival-gate.js";
 // deep-scan #15 FIX M1: shared evidence-completeness roll-up accounting.
 // isIncompleteEvidenceStatus + *EvidenceBucket keep the cron path and the
@@ -1030,6 +1031,7 @@ export class LifecycleService {
         // Pass 5 Track A carve-out; rather than touch it, this gate is enforced
         // inline here (manual PATCH path) and again in the cron sweep below —
         // mirroring the BIF gate's dual-call-site pattern (manual + cron parity).
+        // Advisory-only while SLIPPAGE_SURVIVAL_GATE_ENABLED=false (default).
         // deepscan15 F-1: capture the slippage evidence bucket in an outer-scoped var
         // so the evidence-completeness governor below counts it on the MANUAL path too
         // (the shared evaluatePaperToDeployReadyGates has no slippage dimension). Without
@@ -6472,8 +6474,10 @@ export class LifecycleService {
 
         // ── Wave A (2026-07-03) — Slippage-Survival gate, cron-path enforcement ──
         // Mirrors the BIF block immediately above (same fetch/evaluate/audit/SSE/
-        // block/reset-counter shape). A missing, malformed, insufficient, or
-        // disabled slippage-survival result blocks promotion.
+        // block/reset-counter shape). Default-OFF via SLIPPAGE_SURVIVAL_GATE_ENABLED
+        // (advisory-only — never alters flow while disabled); legacy-null and
+        // insufficient-sample both grandfather-pass with a warn. See design spec:
+        // docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
         try {
           const [latestBtForSlippage] = await db
             .select({ slippageSurvival: backtests.slippageSurvival })
@@ -6540,21 +6544,21 @@ export class LifecycleService {
         } catch (slippageSurvivalErr) {
           logger.warn(
             { strategyId: s.id, err: slippageSurvivalErr },
-            "Slippage-Survival gate (PAPER→DEPLOY_READY): read failed — blocking promotion",
+            "Slippage-Survival gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
           );
           await db.insert(auditLog).values({
-            action: "lifecycle.slippage_survival_infra_error_blocked",
+            action: "lifecycle.slippage_survival_infra_error_proceeded",
             entityId: s.id,
             entityType: "strategy",
-            status: "failure",
+            status: "warning",
             decisionAuthority: "gate",
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
-            result: { error: slippageSurvivalErr instanceof Error ? slippageSurvivalErr.message : String(slippageSurvivalErr), note: "infra read failure — fail-closed, promotion blocked" },
+            result: { error: slippageSurvivalErr instanceof Error ? slippageSurvivalErr.message : String(slippageSurvivalErr), note: "infra read failure — fail-open, promotion continues" },
             correlationId,
           }).catch((auditErr: unknown) => {
-            logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival_infra_error_blocked audit insert failed (non-blocking)");
+            logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival_infra_error_proceeded audit insert failed (non-blocking)");
           });
-          continue;
+          gateEvidenceStatuses.push("data_unavailable");
         }
 
         // ── Wave 26 Pass G Pass E Gate Stack: WFE-0.80 + CPCV-15 + WRC + SPA ─

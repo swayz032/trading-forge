@@ -29,14 +29,16 @@
  *
  * Gate semantics (priority order — first match wins):
  *
- *   0. SLIPPAGE_SURVIVAL_GATE_ENABLED=false
- *      → passed=false, status="disabled", reason "slippage_survival.gate_disabled_fail_closed"
- *      → A disabled execution-risk gate cannot authorize DEPLOY_READY.
+ *   0. SLIPPAGE_SURVIVAL_GATE_ENABLED=false (default)
+ *      → passed=true, status="disabled", reason "slippage_survival.gate_disabled_advisory"
+ *      → Master switch is OFF by default (inert until operator enables it, exactly
+ *        like B15/BIF). Advisory-only: still surfaces whatever data is present in
+ *        the audit payload, but NEVER blocks while disabled.
  *
  *   1. slippage_survival is null/undefined (no producer output on this backtest —
  *      pre-Wave-A backtest, or the row genuinely has no sweep computed yet)
- *      → passed=false, status="legacy_null", reason "slippage_survival.unavailable_fail_closed"
- *      → Historical rows remain readable but must be re-run before promotion.
+ *      → passed=true, status="legacy_null", reason "slippage_survival.unavailable_legacy"
+ *      → documented grandfather warn; NEVER block on missing data.
  *
  *   2. slippage_survival is a non-null object but does NOT have `breaks_at` as an
  *      own property (producer shape drift / wrong-key write — e.g. a future
@@ -46,13 +48,15 @@
  *      key. Conflating the two would make a broken producer indistinguishable
  *      from a clean pass — an instruction from the parent task explicitly forbids
  *      this ("must NOT silently pass").
- *      → passed=false, status="malformed", reason "slippage_survival.malformed_fail_closed"
- *      → A malformed producer result is insufficient evidence to promote.
+ *      → passed=true, status="malformed", reason "slippage_survival.malformed_missing_breaks_at"
+ *      → fail-OPEN (gate never fabricates a block from missing/malformed data) but
+ *        visibly DISTINCT from "clean" — an operator scanning audit_log can tell
+ *        the difference between a real survivor and a broken producer write.
  *
  *   3. insufficient_sample === true (n_trades < SLIPPAGE_SURVIVAL_MIN_TRADES on the
  *      producer side; producer emits this flag with breaks_at=null per contract)
- *      → passed=false, status="insufficient_sample", reason "slippage_survival.insufficient_sample_fail_closed"
- *      → Not enough trades to trust the sweep, so no promotion.
+ *      → passed=true, status="insufficient_sample", reason "slippage_survival.insufficient_sample"
+ *      → PASS with warn; not enough trades to trust the sweep.
  *
  *   4. breaks_at != null AND breaks_at <= SLIPPAGE_SURVIVAL_BLOCK_MULT (default 2.0)
  *      → passed=false, status="blocked", reason "slippage_survival.blocked_breaks_at_at_or_below_threshold"
@@ -67,7 +71,7 @@
  *      → passed=true, status="clean", reason "slippage_survival.clean"
  *
  * Env overrides:
- *   SLIPPAGE_SURVIVAL_GATE_ENABLED  (default "true") — setting false blocks promotion
+ *   SLIPPAGE_SURVIVAL_GATE_ENABLED  (default "false") — master switch
  *   SLIPPAGE_SURVIVAL_BLOCK_MULT    (default "2.0")   — block if edge dies at ≤ this multiple
  *   SLIPPAGE_SURVIVAL_MULTIPLES     (default "1,2,3") — sweep points (producer-side; mirrored
  *                                                        here for TS-side display/telemetry only —
@@ -89,13 +93,13 @@ import { logger } from "./logger.js";
 
 /**
  * Read SLIPPAGE_SURVIVAL_GATE_ENABLED from env.
- * Default true. Disabling an execution-risk gate is itself insufficient evidence
- * for a promotion and therefore fails closed in the evaluator.
+ * Default false — inert (advisory-only) until the operator opts in, mirroring
+ * the B15/BIF rollout pattern (ship default-OFF with legacy-null grandfather).
  * Exported for tests.
  */
 export function getSlippageSurvivalGateEnabled(): boolean {
   const raw = process.env.SLIPPAGE_SURVIVAL_GATE_ENABLED;
-  return raw !== "false";
+  return raw === "true";
 }
 
 /**
@@ -293,31 +297,31 @@ export function evaluateSlippageSurvivalGate(
     };
   }
 
-  // ── 0. Master switch OFF — execution evidence cannot be waived ────────────
+  // ── 0. Master switch OFF (default) — advisory-only, never blocks ──────────
   if (!enabled) {
     logger.warn(
       { breaks_at: breaksAt, block_mult: blockMult },
-      "Slippage-Survival gate: SLIPPAGE_SURVIVAL_GATE_ENABLED=false — blocking promotion (slippage_survival.gate_disabled_fail_closed)",
+      "Slippage-Survival gate: SLIPPAGE_SURVIVAL_GATE_ENABLED=false — advisory-only (slippage_survival.gate_disabled_advisory)",
     );
     return buildResult(
       "disabled",
-      false,
-      "slippage_survival.gate_disabled_fail_closed",
-      { blocked: true },
+      true,
+      "slippage_survival.gate_disabled_advisory",
     );
   }
 
   // ── 1. Legacy null — no slippage_survival on this backtest ─────────────────
+  // NEVER block on missing data.
   if (slippageSurvival == null) {
     logger.warn(
       {},
-      "Slippage-Survival gate: slippage_survival absent — blocking promotion until a fresh sweep is present (slippage_survival.unavailable_fail_closed)",
+      "Slippage-Survival gate: slippage_survival absent — pre-Wave-A backtest; proceeding with legacy grandfather warn (slippage_survival.unavailable_legacy)",
     );
     return buildResult(
       "legacy_null",
-      false,
-      "slippage_survival.unavailable_fail_closed",
-      { legacyNull: true, blocked: true },
+      true,
+      "slippage_survival.unavailable_legacy",
+      { legacyNull: true },
     );
   }
 
@@ -330,13 +334,12 @@ export function evaluateSlippageSurvivalGate(
   if (!Object.prototype.hasOwnProperty.call(slippageSurvival, "breaks_at")) {
     logger.warn(
       { keys: Object.keys(slippageSurvival) },
-      "Slippage-Survival gate: slippage_survival present but missing `breaks_at` key — blocking malformed producer shape (slippage_survival.malformed_fail_closed)",
+      "Slippage-Survival gate: slippage_survival present but missing `breaks_at` key — malformed/wrong-key producer shape (slippage_survival.malformed_missing_breaks_at)",
     );
     return buildResult(
       "malformed",
-      false,
-      "slippage_survival.malformed_fail_closed",
-      { blocked: true },
+      true,
+      "slippage_survival.malformed_missing_breaks_at",
     );
   }
 
@@ -344,13 +347,13 @@ export function evaluateSlippageSurvivalGate(
   if (slippageSurvival.insufficient_sample === true) {
     logger.warn(
       { n_trades: nTrades },
-      "Slippage-Survival gate: insufficient_sample=true — blocking promotion pending adequate evidence (slippage_survival.insufficient_sample_fail_closed)",
+      "Slippage-Survival gate: insufficient_sample=true — proceeding with warn (slippage_survival.insufficient_sample)",
     );
     return buildResult(
       "insufficient_sample",
-      false,
-      "slippage_survival.insufficient_sample_fail_closed",
-      { insufficientSample: true, blocked: true },
+      true,
+      "slippage_survival.insufficient_sample",
+      { insufficientSample: true },
     );
   }
 

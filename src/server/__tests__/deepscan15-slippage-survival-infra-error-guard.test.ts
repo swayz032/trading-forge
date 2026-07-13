@@ -1,6 +1,11 @@
 // Deep-scan #15 FIX-3: source-guard coverage for the Slippage-Survival gate's
-// fail-closed infra-error path. Execution-stress evidence must be present and
-// readable before a strategy can reach DEPLOY_READY.
+// fail-open infra-error path, mirroring the existing pattern in
+// deepscan6-lifecycle-gate-failmode.test.ts:19,35 for
+// `lifecycle.bif_infra_error_proceeded`. That test locks the BIF gate's
+// fail-open-but-audited contract; this test locks the equivalent contract for
+// `lifecycle.slippage_survival_infra_error_proceeded` (Wave A, 2026-07-03) so a
+// future refactor can't silently regress either the audit-action string or the
+// "fail-open, promotion continues" observability note.
 //
 // (Behavioral coverage of lifecycle-service requires heavy DB/gate mocking;
 // this source-grep guard is intentionally read-only — same rationale as the
@@ -16,28 +21,35 @@ beforeAll(() => {
   src = readFileSync(resolve(here, "../services/lifecycle-service.ts"), "utf8");
 });
 
-describe("slippage-survival infra errors fail closed", () => {
-  it("emits an audit row for the slippage-survival infra-error path", () => {
-    expect(src).toContain("lifecycle.slippage_survival_infra_error_blocked");
+describe("deepscan15 FIX-3 — slippage-survival gate fail-open is observable (not silent)", () => {
+  it("emits an audit row for the slippage-survival fail-open infra-error path", () => {
+    expect(src).toContain("lifecycle.slippage_survival_infra_error_proceeded");
   });
 
-  it("blocks promotion on a slippage-survival infra error", () => {
-    const idx = src.indexOf("lifecycle.slippage_survival_infra_error_blocked");
+  it("keeps slippage-survival fail-OPEN on infra error (pinned deliberate design) — audited, not blocked", () => {
+    // Mirrors deepscan6-lifecycle-gate-failmode.test.ts:33-39 for the BIF gate.
+    const idx = src.indexOf("lifecycle.slippage_survival_infra_error_proceeded");
     expect(idx).toBeGreaterThan(-1);
     const window = src.slice(idx, idx + 500);
-    expect(window).toContain("promotion blocked");
+    expect(window).toContain("promotion continues");
   });
 
-  it("continues the outer promotion loop without promoting the failed strategy", () => {
-    const idx = src.indexOf("lifecycle.slippage_survival_infra_error_blocked");
+  it("still pushes data_unavailable on the fail-open path so the evidence-completeness gate can see the slip", () => {
+    // Locate the slippage-survival catch block specifically (scoped window
+    // around the audit-action string) rather than counting all
+    // gateEvidenceStatuses.push("data_unavailable") sites repo-wide — this
+    // guard only cares that THIS gate's catch block still marks evidence
+    // incomplete, not the total count across every gate (which drifts as
+    // gates are added).
+    const idx = src.indexOf("lifecycle.slippage_survival_infra_error_proceeded");
     expect(idx).toBeGreaterThan(-1);
     const window = src.slice(idx, idx + 750);
-    expect(window).toContain("continue;");
+    expect(window).toContain('gateEvidenceStatuses.push("data_unavailable")');
   });
 
   it("writes a non-blocking .catch() on the audit insert so a DB hiccup here cannot throw out of the gate", () => {
-    const idx = src.indexOf("lifecycle.slippage_survival_infra_error_blocked");
+    const idx = src.indexOf("lifecycle.slippage_survival_infra_error_proceeded");
     const window = src.slice(idx, idx + 750);
-    expect(window).toContain("slippage_survival_infra_error_blocked audit insert failed (non-blocking)");
+    expect(window).toContain("slippage_survival_infra_error_proceeded audit insert failed (non-blocking)");
   });
 });
