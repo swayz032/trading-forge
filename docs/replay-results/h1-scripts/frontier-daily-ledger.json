@@ -4,16 +4,15 @@
   "mini": 309111,
   "_burst_gpt54": {
    "pool": "gpt54",
-   "limitTokens": 300000,
-   "limitUsd": 1.0,
+   "limitTokens": 150000,
+   "limitUsd": 0.25,
    "overageUsdPerMTok": 2.5,
    "freePoolLine": 250000,
-   "grantedAtSpent": 1320695,
-   "signedBy": "operator (Tonio): CLAUDE CONTENT PANEL via OpenAI Batch API @ reasoning_effort=HIGH (omission-hunter; false-PASS is catastrophic -> buy the thinking); cap $1.00; SYNC-FALLBACK $1.10; batch-first + grader=HIGH standing policy.",
+   "grantedAtSpent": 1391793,
+   "signedBy": "operator (Tonio): v3.2 RETEST content panel, gpt-5.4-FLEX HIGH cross-vendor, $0.25 cap. Two-tier taxonomy (Tier-A gates, Tier-B=coaching_notes). One retest, joint bar unmoved.",
    "grantedUtcDate": "2026-07-13",
-   "_sync_fallback_usd": 1.1,
-   "_delivery": "openai-batch-api",
-   "_empirical_open": "does batch traffic draw the free 250K pool or bill from token one? dashboard resolves after first job; ledger learns permanently."
+   "_delivery": "openai-flex-sync",
+   "_effort": "high"
   },
   "_burst_gpt54_configpass_RETIRED": {
    "pool": "gpt54",
@@ -31,6 +30,19 @@
    "est_usd": 0.119,
    "service_tier": "flex",
    "effort": "high"
+  },
+  "_burst_gpt54_panel1_SPENT": {
+   "pool": "gpt54",
+   "limitTokens": 300000,
+   "limitUsd": 1.0,
+   "overageUsdPerMTok": 2.5,
+   "freePoolLine": 250000,
+   "grantedAtSpent": 1320695,
+   "signedBy": "operator (Tonio): CLAUDE CONTENT PANEL via OpenAI Batch API @ reasoning_effort=HIGH (omission-hunter; false-PASS is catastrophic -> buy the thinking); cap $1.00; SYNC-FALLBACK $1.10; batch-first + grader=HIGH standing policy.",
+   "grantedUtcDate": "2026-07-13",
+   "_sync_fallback_usd": 1.1,
+   "_delivery": "openai-batch-api",
+   "_empirical_open": "does batch traffic draw the free 250K pool or bill from token one? dashboard resolves after first job; ledger learns permanently."
   }
  },
  "_balance_anchor": {

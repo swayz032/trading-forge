@@ -1,4 +1,4 @@
-<!-- PROMPT_VERSION: strategy-enumerator-v1.1 (Rule-1 taught-as-a-setup amendment 2026-07-13) -->
+<!-- PROMPT_VERSION: strategy-enumerator-v1.2 (v3.2 granularity+compilability 2026-07-13) -->
 <!-- H1 Wave-6 Pass-2 (2026-07-13) — Phase A of the two-phase extractor.
      New instrument. Whole transcript IN, strategy INVENTORY out. This is
      NOT a bigger version of the quote-first extractor (Phase B) — Phase B's
@@ -200,3 +200,39 @@ Return exactly:
 Do not add fields not in the schema. Do not omit `variants` (use `[]` if there is only one
 configuration). Read the ENTIRE transcript before finalizing your count — a second skeleton
 taught diffusely late in the video is exactly the failure mode this instrument exists to catch.
+
+---
+## v3.2 AMENDMENT (2026-07-13) — INVENTORY GRANULARITY + THE COMPILABILITY LINE
+
+The enumeration COUNT is unchanged and frozen. This amendment grows what each strategy's
+INVENTORY must carry, so the downstream coverage contract can hold Phase-B accountable to
+content the coarse variant-list used to miss (the granularity-gap defect, same class as ZF8).
+
+For EACH strategy, in addition to `variants[]`, produce two new fields:
+
+### `element_inventory[]` — every TIER-A (compilable) element the transcript teaches
+Tier-A = **anything a bot could OBEY.** Enumerate each as a short element string. This MUST now include,
+beyond entries/exits/stops/targets/variants:
+- **PRECONDITIONS** — a gate that must hold before the setup applies ("only after a daily bias is
+  established", "only during 9:30-11:30", "only if float < 50M").
+- **VARIANT SUB-MECHANICS** — a variant's OWN distinct entry logic, not just its label ("box setup =
+  deviation/manipulation → retest of the manipulation → target the other side", not merely "box setup").
+- **SELECTION / FREQUENCY rules with executable semantics** — "take only the FIRST retest"
+  (occurrence-selection), "1-2 A+ setups per day" (frequency bound), "only A+ versions" (definable setup
+  filter), "skip ranges too small/large vs ATR" (filter). These GATE and are Tier-A.
+Each element is something Phase-B must later either extract verbatim OR mark absent-with-reason.
+
+### `coaching_notes[]` — every TIER-B (non-compilable) coaching line the transcript teaches
+Tier-B = taught, but **a bot cannot obey it** — mindset/discipline/education:
+"be patient", "accept the risk before you enter", "start small / don't use all your buying power",
+"backtest it first", "don't expect it every day". Capture each verbatim. Tier-B is RECORDED for
+faithfulness (the record shows everything the trader taught) but NEVER becomes a condition, never
+grounds, never gates all-conditions-clean. The house already owns the discipline layer in code
+(max-trades/day gate, baby-mode pyramid sizing, risk-derived sizing) — coaching routes to the
+framework exactly like exits and sizing do.
+
+### The test (mechanical, no vibes)
+"Could a bot execute this as a rule?" YES → `element_inventory` (Tier-A). NO → `coaching_notes` (Tier-B).
+A frequency bound / occurrence-selection / setup filter is YES (Tier-A). "Be patient / size small /
+accept risk" is NO (Tier-B). When a line has both an executable core and a coaching wrapper, extract
+the executable core to Tier-A and the wrapper to Tier-B.
