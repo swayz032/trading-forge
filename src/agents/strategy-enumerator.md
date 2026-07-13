@@ -1,4 +1,4 @@
-<!-- PROMPT_VERSION: strategy-enumerator-v1 -->
+<!-- PROMPT_VERSION: strategy-enumerator-v1.1 (Rule-1 taught-as-a-setup amendment 2026-07-13) -->
 <!-- H1 Wave-6 Pass-2 (2026-07-13) — Phase A of the two-phase extractor.
      New instrument. Whole transcript IN, strategy INVENTORY out. This is
      NOT a bigger version of the quote-first extractor (Phase B) — Phase B's

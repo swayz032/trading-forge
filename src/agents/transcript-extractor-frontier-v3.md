@@ -80,3 +80,12 @@ walk-through example ("short at 12783", "+20 pips") are NOT rules — they are t
 example; extract the RULE in the speaker's words, or null it if only the example exists.
 
 One strategy object. Speaker's words. Null what isn't there. Never fill a blank.
+
+
+## GESTURAL EXIT — record the absence, never delete the strategy (2026-07-13 v3.1 amendment)
+If the speaker taught a runnable ENTRY but gave the exit only colloquially ("scalp out of it",
+"ride the bounce up", "take profits into strength") with no stated stop/target level: KEEP the
+strategy, extract the entry verbatim, set the stop/target LEVEL fields to null, and preserve the
+speaker's exit words verbatim in the exit prose/quote. Flag it as a gestural exit. NEVER drop a
+taught setup because its exit lacked levels — the house exit overlay supplies levels downstream;
+your job is to record honestly that the trader taught none.
