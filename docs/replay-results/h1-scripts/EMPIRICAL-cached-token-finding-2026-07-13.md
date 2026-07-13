@@ -22,3 +22,7 @@ My earlier "T+1 lag" claim was WRONG. The org-level `/organization/costs` return
 - **Usage today (Aspire City): 1,246,408 input + 114,808 output = 1.36M tokens.**
 - **Billed today: $1.9641.**  →  **remaining balance ≈ $6.30 − $1.96 = $4.34.**
 - Reconciliation: actual $1.96 vs estimate-governor's ~$2.16 → estimate erred SLIGHTLY HIGH (conservative, wallet-favoring), exactly as designed. Dollar-truth is REAL-TIME (same-day), not T+1. Governor `fetchOrgCostsUsd`/`remainingBalanceUsd` now default-scope to `ASPIRE_CITY_PROJECT_ID`.
+
+## BALANCE CORRECTION #2 (2026-07-13) — anchor to the operator's dashboard, never guess
+I reported balance $4.34 using a GUESSED starting credit ($6.30, a stale mid-session figure). WRONG. Operator's dashboard: **$5.65 remaining**. Reconciles: start-of-today credit $7.61 − today's billed $1.96 = **$5.65**. The $1.96 SPEND (Costs API) was right; the balance was wrong only because the starting-credit input was guessed.
+RULE: balance = (operator-CONFIRMED starting credit) − (Costs API spend since). Never infer the starting credit — anchor it to the dashboard. ANCHOR SET: **$5.65 as of 2026-07-13 (post-tonight-spend); forward balance = $5.65 − future Costs-API spend.** Sealed-12 extraction later draws from this $5.65.

@@ -12,5 +12,11 @@
    "signedBy": "operator (Tonio): completion ticket, $3 cap, finish the pool tonight",
    "grantedUtcDate": "2026-07-13"
   }
+ },
+ "_balance_anchor": {
+  "confirmed_balance_usd": 5.65,
+  "as_of": "2026-07-13",
+  "source": "operator dashboard (Aspire City proj_lXgrb4JH3KrEPvzhKsXCBX1W)",
+  "note": "forward balance = 5.65 - Costs-API-spend-since; never guess starting credit"
  }
 }
