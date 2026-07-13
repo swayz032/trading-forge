@@ -120,3 +120,17 @@ The §10 content check (blind, mechanical, purpose-axis): **ALL THREE variant-B 
 **THE PRE-COMMITMENT, RESTATED (the one that matters):** this is the budget's LAST SWING. Design-pool gates CLEAR → extractor FREEZES at its SHA → terminal read on the fresh 12 (`h1-wave6-sealed-fresh-set` sha `4d7b3c29`), clean conductor, two blind raters, read ONCE, ≥60% all-conditions-clean, economics rider — **the bar does NOT move.** Gates SHORT → the Phase-1 fork fires with its options decided THERE, on that evidence. Either ending is an answer H1 was built to survive giving.
 
 *§11 frozen 2026-07-13, operator-authored, BEFORE the pass-2 build. The witness learned to quote but went quiet on one lesson; pass-2 teaches it to count the lessons first. Vaulted FF.*
+
+---
+
+## §12 — DESIGN-POOL REPORTING COMPLETENESS: both support numbers (NOT a gate change — gates frozen) (2026-07-13, before the pass-2 measurement runs)
+
+**THE VECTOR CLOSED.** The §8b sentinel is 15% non-gating and nulls are EXCLUDED from the support-miss ratio. That combination leaves a theoretical self-defeating GAMBIT: null the hard conditions, ace the support ratio over the EASY remainder, clear the design gate — then FAIL the terminal read anyway, because unanchored (null) conditions count AGAINST all-conditions-clean at certificate time (§4). The gambit CANNOT WIN — but it could WASTE THE LAST SWING by freezing a SHA on FALSE design-pool confidence (a support number the fresh 12 will not reproduce).
+
+**THE REQUIREMENT (reporting, not gating).** The design-pool report carries BOTH numbers SIDE BY SIDE:
+1. **GATED support-miss** — over QUOTED conditions only (nulls excluded). This is what the FROZEN §3/§11 gate reads (≤8%). Unchanged.
+2. **TERMINAL-EQUIVALENT support-miss** — over ALL conditions (nulls counted as MISSES). This is the number the fresh 12 will ACTUALLY grade at certificate time.
+
+The GATE reads #1 (frozen, no re-litigation). The **SHA-FREEZE DECISION reads #2** — because a SHA frozen on a gated number that the terminal read will not reproduce is a wasted final swing. Same precedent as the failure-attribution annotation and the economics per-strategy annotation: **the verdict on the frozen criterion, the truth beside it.** If #1 clears ≤8% but #2 is alarming (high null-rate inflating the terminal-equivalent), that is a documented reason to NOT freeze the SHA on this pass even though the gate passed — surfaced to the operator, decided before the fresh 12 are touched.
+
+*§12 frozen 2026-07-13, before the pass-2 design-pool measurement. Vaulted FF.*
