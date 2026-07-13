@@ -21,8 +21,11 @@ function assembleNightly({ prev, reportDate, buildSha, checkResults }) {
 
 // ── I/O layer ──
 function runCheck(name) {
-  // npm scripts each exit 0 (pass) / nonzero (fail). shell:true so npm resolves on Windows.
-  const r = spawnSync("npm", ["run", name], { encoding: "utf-8", timeout: 5 * 60 * 1000, windowsHide: true, shell: true });
+  // npm scripts each exit 0 (pass) / nonzero (fail). Use the npm.cmd shim on Windows directly
+  // instead of shell:true — the check names are frozen constants (no injection) but shell:true
+  // + args trips Node's DEP0190 warning; shell:false keeps the nightly log clean.
+  const npmBin = process.platform === "win32" ? "npm.cmd" : "npm";
+  const r = spawnSync(npmBin, ["run", name], { encoding: "utf-8", timeout: 5 * 60 * 1000, windowsHide: true });
   return r.status === 0 ? "pass" : "fail";
 }
 
