@@ -72,3 +72,21 @@ The ONLY clean-room moment in Wave-6 is the terminal read on the sealed 12 (`h1-
 **§9d — CRASH SELF-REFERENCE CHECK (cheap, before dismissing as plumbing).** `CLDEIsNpVRc` is ALSO the pass-1 prompt's worked EXAMPLE — so extracting its transcript makes the model re-encounter its own exemplar's source. Almost certainly plumbing (CLI exit 1), but "almost certainly" has died 7 times this campaign; the check is one log read. Then two-branch: re-extract + fold in (the crash is infra, not a coverage signal).
 
 *§9 frozen 2026-07-13, operator-authored, BEFORE the 3-case adjudication result. Vaulted FF.*
+
+---
+
+## §10 — THE GUARD DECIDES ON PURPOSE (silenced CONTENT), not ontology (strategy-count) — the WEhmadJArQo resolution (frozen 2026-07-13, BEFORE the content check runs)
+
+> The 3-case adjudication (§9b): `4cT8WTyxhYY`=1 (high), `IyFioFkRgWo`=1 (medium) — both baseline-over-split, pass-1 FAITHFUL. `WEhmadJArQo`=2 (medium), BUT the adjudicator flagged "a reasonable adjudicator could score this as 1" (two variants sharing the IDENTICAL opening-range-FVG-retest skeleton). The 1-vs-2 count is ONTOLOGICALLY UNDECIDABLE (same skeleton, different dress). Resolving it by advisor thumb (rule it 1) is the forbidden move; re-rolling it (a 2nd adjudicator) re-asks an undecidable question + invites rater-shopping optics. So the ruling re-grounds the question in the guard's FROZEN PURPOSE.
+
+**§10a — §7c HUNTS SILENCED CONTENT, NOT STRATEGY-COUNT METAPHYSICS.** "No strategy loses >50%" was always a CHEAP PROXY for "the extractor must not drop what the trader taught." Whether WEhmadJArQo teaches one strategy with two configurations or two strategies sharing a skeleton, the decidable empirical question is: **did pass-1's output PRESERVE variant-B's teaching, or SILENCE it?** — answerable from artifacts in hand, no ontology needed.
+
+**§10b — THE CONTENT CHECK (mechanical, blind to stakes).** A fresh-context checker receives: the TRANSCRIPT + the adjudicator's enumerated variant-B distinctives (the 15-minute timeframe, the passive-LIMIT confirmation, the 2:1 target) + PASS-1's extracted WEhmadJArQo condition set (`.../wave6-pass1-design-pool/extraction-vault/WEhmadJArQo.json`). **The BASELINE is IRRELEVANT — it is the reference for nothing now.** Element by element: is each variant-B distinctive PRESENT or ABSENT in pass-1's conditions, with quotes? Mechanical lookup, not worth-judgment.
+
+**§10c — PRE-COMMITTED BRANCHES (before the check):**
+- **Variant-B distinctives PRESENT in pass-1's conditions → NOTHING was silenced** — the teaching survived, re-segmented into one strategy object → **Gate 2 MET.** Record states plainly: the ontology question was MOOT; however you count the strategies, the trader's content crossed intact; the "-10" was RE-SEGMENTATION, not loss. → proceed to Gate 3.
+- **Distinctives ABSENT → the trader taught it and the extractor DROPPED it → Gate 2 FAILED per §9b strict** — and it fails REGARDLESS of what we call the dropped thing (the omission fence was never about nomenclature). → pass-2 carries BOTH levers (no-quote sentinel §8b + strategy-completeness stage §9b).
+
+**§10d — This is STRICT-ON-CONTENT, not strict-on-ontology.** The check is constructed to ASK THE QUESTION THE PROXY ALWAYS STOOD FOR, not to pass — it can absolutely still fail the gate. It is §9's own two-stage design continuing one level down: screen tripped → adjudication → adjudication ambiguous on the proxy axis → decide on the PURPOSE axis, from SOURCE. Supporting context (NOT verdict): the system's own library ontology already treats timeframe/confirmation/target variations as VARIANTS OF ONE CONCEPT (the variant-families architecture) — which is why strategy-count was always a fragile axis for this guard, and content-preservation the durable one.
+
+*§10 frozen 2026-07-13, operator-authored, BEFORE the WEhmadJArQo content check runs. Vaulted FF.*
