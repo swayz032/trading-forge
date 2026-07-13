@@ -1,0 +1,146 @@
+{
+ "video_id": "4cT8WTyxhYY",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "liquidity_grab_reversal",
+     "entry_summary": "Identify a liquidity grab where price briefly breaks support or resistance and then reverses. Enter at the level of the candle that made the liquidity grab: for longs after sell-side liquidity is grabbed, and for shorts after buy-side liquidity is grabbed.",
+     "exit_summary": "Place the stop loss just beyond the liquidity-grab wick/level. Take profit at the most recent opposing swing level: a recent high for longs or a recent low for shorts.",
+     "variants": [
+      {
+       "variant_label": "base discretionary liquidity-grab reversal",
+       "timeframe_note": "Works on all time frames; examples shown on mixed charts",
+       "confirmation_mechanic_note": "Directly use the candle that made the liquidity grab as the entry reference",
+       "target_note": "Take profit at a recent swing high/low",
+       "transcript_quote": "your long entry would be at this point right here because this candle made this liquidity grab"
+      },
+      {
+       "variant_label": "indicator-signaled version",
+       "timeframe_note": "Mixed chart examples",
+       "confirmation_mechanic_note": "Wait for the indicator's marked entry signal after it identifies the liquidity grab",
+       "target_note": "Take profit at a recent swing high/low",
+       "transcript_quote": "the indicator marks the liquidity grab for us it starts to Mark the entry point and the signal to enter"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The video teaches one reversal skeleton only; mentions of 10-candle spacing, divergence, and higher-timeframe support/resistance are confluence filters to improve the same strategy, not separate strategies."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Identify a liquidity grab where price briefly breaks support or resistance and then reverses. Enter at the level of the candle that made the liquidity grab: for longs after sell-side liquidity is grabbed, and for shorts after buy-side liquidity is grabbed.",
+    "exit_summary": "Place the stop loss just beyond the liquidity-grab wick/level. Take profit at the most recent opposing swing level: a recent high for longs or a recent low for shorts.",
+    "name": "liquidity_grab_reversal"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "liquidity_grab_reversal",
+      "higher_timeframe": "15m",
+      "lower_timeframe": "1h",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "that's Step One is finding a liquidity grab it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+        "step": 1,
+        "action": "finding a liquidity grab it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+        "rationale": "we want a liquidity grab because it adds fuel to the reversal we are looking for"
+       },
+       {
+        "transcript_quote": "you were going to mark your entry point at the candle that made the liquidity grab",
+        "step": 2,
+        "action": "you were going to mark your entry point at the candle that made the liquidity grab",
+        "rationale": "the entry is pretty simple"
+       },
+       {
+        "transcript_quote": "your long entry would be at this point right here because this candle made this liquidity grab",
+        "step": 3,
+        "action": "your long entry would be at this point right here because this candle made this liquidity grab",
+        "rationale": null
+       },
+       {
+        "transcript_quote": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+        "step": 4,
+        "action": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+        "rationale": null
+       }
+      ],
+      "preferred_regime": "bottoms or tops of big moves",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "you're going to set your take profit at a recent high",
+        "priority": 1,
+        "type": "recent_high",
+        "r_multiple": null,
+        "rationale": "you're going to set your take profit at a recent high"
+       },
+       {
+        "transcript_quote": "setad her take profit at a recent low",
+        "priority": 2,
+        "type": "recent_low",
+        "r_multiple": null,
+        "rationale": "setad her take profit at a recent low"
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "we want a liquidity grab because it adds fuel to the reversal we are looking for",
+        "name": "liquidity_grab",
+        "description": "we want a liquidity grab because it adds fuel to the reversal we are looking for",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+        "name": "peaks_closer_together",
+        "description": "if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "another way to improve this is by adding confluences like divergences",
+        "name": "divergences",
+        "description": "another way to improve this is by adding confluences like divergences",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "this whole liquidity grab strategy works best if you're finding reversals at the bottoms or tops of big moves",
+        "name": "bottoms_or_tops_of_big_moves",
+        "description": "this whole liquidity grab strategy works best if you're finding reversals at the bottoms or tops of big moves",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "we see this Buy Signal signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame",
+        "name": "higher_timeframe_support_or_resistance",
+        "description": "we see this Buy Signal signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame",
+        "canonical_match": "market_structure_aligned"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "non_futures_primary"
+   }
+  }
+ ]
+}

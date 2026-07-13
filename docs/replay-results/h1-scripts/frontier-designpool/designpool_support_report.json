@@ -1,0 +1,97 @@
+{
+ "artifact": "frontier-designpool-locator-support",
+ "n_videos": 16,
+ "total_conditions": 297,
+ "located": 265,
+ "miss": 32,
+ "support_miss_rate": 0.1077,
+ "floor_le_8pct_MET": false,
+ "plumbing_excluded": 2,
+ "enumeration_unstable_videos": [
+  "DLwVqcLRcfw",
+  "IyFioFkRgWo"
+ ],
+ "per_video": {
+  "-igpOZs8LsM": {
+   "conditions": 11,
+   "located": 11,
+   "anchor_rate": 1.0
+  },
+  "0xygpCMwxbQ": {
+   "conditions": 25,
+   "located": 23,
+   "anchor_rate": 0.92
+  },
+  "2DXQqwKSwJE": {
+   "conditions": 32,
+   "located": 30,
+   "anchor_rate": 0.9375
+  },
+  "4cT8WTyxhYY": {
+   "conditions": 8,
+   "located": 8,
+   "anchor_rate": 1.0
+  },
+  "CLDEIsNpVRc": {
+   "conditions": 17,
+   "located": 11,
+   "anchor_rate": 0.6471
+  },
+  "DLwVqcLRcfw": {
+   "conditions": 10,
+   "located": 10,
+   "anchor_rate": 1.0
+  },
+  "E9MzEC_yNoM": {
+   "conditions": 25,
+   "located": 24,
+   "anchor_rate": 0.96
+  },
+  "IyFioFkRgWo": {
+   "conditions": 14,
+   "located": 13,
+   "anchor_rate": 0.9286
+  },
+  "PVMgOxHUqFA": {
+   "conditions": 12,
+   "located": 12,
+   "anchor_rate": 1.0
+  },
+  "R5L890juvRw": {
+   "conditions": 16,
+   "located": 15,
+   "anchor_rate": 0.9375
+  },
+  "W7nlnHTUZQU": {
+   "conditions": 15,
+   "located": 12,
+   "anchor_rate": 0.8
+  },
+  "WEhmadJArQo": {
+   "conditions": 22,
+   "located": 16,
+   "anchor_rate": 0.7273
+  },
+  "ZF8uKPqAu8M": {
+   "conditions": 43,
+   "located": 38,
+   "anchor_rate": 0.8837
+  },
+  "_LS6qcSlDCs": {
+   "conditions": 14,
+   "located": 13,
+   "anchor_rate": 0.9286
+  },
+  "dV7chra4u4Q": {
+   "conditions": 18,
+   "located": 17,
+   "anchor_rate": 0.9444
+  },
+  "kFyD3H6I1I8": {
+   "conditions": 15,
+   "located": 12,
+   "anchor_rate": 0.8
+  }
+ },
+ "verdict": "DESIGN POOL MISSES (>8%) -> the ladder (Claude rung-2 same birth gate) / human-in-loop floor"
+}

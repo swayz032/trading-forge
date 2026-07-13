@@ -1,0 +1,21 @@
+{
+ "model": "gpt-5.4",
+ "pool": "gpt54",
+ "partition": 200000,
+ "videos": {
+  "4cT8WTyxhYY": {
+   "enum_counts": [
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "mode": 1,
+   "mode_n": 5,
+   "unstable": false,
+   "n_strategies": 1,
+   "spent_so_far": 998750
+  }
+ }
+}

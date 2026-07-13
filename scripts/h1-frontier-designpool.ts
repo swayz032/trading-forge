@@ -68,16 +68,28 @@ async function main() {
   const mm = arg.match(/--max=(\d+)/); if (mm) videos = ALL16.slice(0, Number(mm[1]));
 
   const client = new OpenAI({ apiKey: envKey() });
+  // CONFIG PASS: --phaseb-prompt swaps ONLY Phase-B (enumerator untouched, birth-certified).
+  // A different Phase-B prompt -> different promptHash -> Phase-B re-extracts, Phase-A stays cached.
+  const phasebPath = arg.match(/--phaseb-prompt=([^\s]+)/)?.[1] ?? "src/agents/transcript-extractor-minimal.md";
+  // Pinned reasoning params for Phase-B (config-pass, frozen in pre-reg; NEVER tuned vs results).
+  // NOTE: gpt-5.4 (reasoning model) FIXES temperature at 1 (rejects any other) — not tunable,
+  // a model constraint not a choice; reasoning_effort is the pinned lever. LOW = literal copying,
+  // minimal reasoning that would tempt paraphrase/elaboration (the verbatim mandate's intent).
+  const PHASEB_PARAMS = /frontier/.test(phasebPath) ? { reasoning_effort: "low" as const } : {};
   const enumPrompt = readFileSync(`${ROOT}/src/agents/strategy-enumerator.md`, "utf8");
   const enumSchema = strictify(JSON.parse(readFileSync(`${ROOT}/src/agents/kb/strategy-enumerator-schema.json`, "utf8")));
-  const extPrompt = readFileSync(`${ROOT}/src/agents/transcript-extractor-minimal.md`, "utf8");
+  const extPrompt = readFileSync(`${ROOT}/${phasebPath}`, "utf8");
   const extSchema = strictify(JSON.parse(readFileSync(`${ROOT}/src/agents/kb/transcript-extractor-minimal-schema.json`, "utf8")));
   const enumHash = promptHash(enumPrompt), extHash = promptHash(extPrompt);
 
-  const outDir = `${ROOT}/docs/replay-results/h1-scripts/frontier-designpool`;
+  // config pass writes to a SEPARATE dir so the minimal-v1 vault (the 10.8% record) is preserved.
+  const isConfigPass = /frontier/.test(phasebPath);
+  const outDir = `${ROOT}/docs/replay-results/h1-scripts/frontier-designpool${isConfigPass ? "-configpass" : ""}`;
   const vaultDir = `${outDir}/vault`;
   mkdirSync(vaultDir, { recursive: true });
-  const cache = new ExtractionResultCache(`${outDir}/result-cache`);
+  // Phase-A cache is SHARED (enumerator untouched -> reuse the birth/design-pool Phase-A draws, free);
+  // Phase-B cache is config-pass-local (new prompt).
+  const cache = new ExtractionResultCache(`${ROOT}/docs/replay-results/h1-scripts/frontier-designpool/result-cache`);
   const cap = resolvePoolPartition(POOL);
   // CROSS-RUN daily wall: start from the PERSISTENT ledger (today's real spend),
   // not 0 — this is what makes pause-at-wall/resume-tomorrow hold across runs and
@@ -88,7 +100,7 @@ async function main() {
   const burst = readBurstTicket(LEDGER, POOL, now);
   console.log(`  [ledger] ${POOL} already spent today: ${spent}/${cap}${burst ? ` | BURST active ($${burst.limitUsd}/${burst.limitTokens}tok, signed: ${burst.signedBy})` : ""}`);
 
-  async function call(system: string, user: string, schema: any, schemaName: string, tx: string): Promise<{ parsed: any; tokens: number; cached: number }> {
+  async function call(system: string, user: string, schema: any, schemaName: string, tx: string, extra: Record<string, unknown> = {}): Promise<{ parsed: any; tokens: number; cached: number }> {
     const estimate = Math.ceil(tx.length / 4) + 3500;
     const be = evaluateWithBurst(spent, estimate, cap, burst, now);
     if (!be.allow) throw new Error(`[extraction-token-governor] BLOCKED: ${be.reason}`);
@@ -97,7 +109,8 @@ async function main() {
       model: MODEL,
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
       response_format: { type: "json_schema", json_schema: { name: schemaName, schema, strict: true } },
-    });
+      ...extra,
+    } as any);
     const tokens = resp.usage?.total_tokens ?? 0;
     spent += tokens;
     recordSpend(LEDGER, POOL, now, tokens); // persist immediately (before any downstream crash)
@@ -137,7 +150,7 @@ async function main() {
       if (cb) ext = cb.result;
       else {
         const user = `TRANSCRIPT:\n${tx}\n\nSCOPE — extract ONLY this one strategy's conditions (ignore other strategies in the video):\n${JSON.stringify(scope)}\n\nReturn ONLY the JSON object.`;
-        const { parsed, tokens, cached } = await call(extPrompt, user, extSchema, "MinimalExtractorOutput", tx);
+        const { parsed, tokens, cached } = await call(extPrompt, user, extSchema, "MinimalExtractorOutput", tx, PHASEB_PARAMS);
         cache.put({ key: cacheKey(MODEL, vid, bHash), model: MODEL, videoId: vid, promptHash: bHash, result: parsed, originalTokens: tokens, cachedTokensReported: cached });
         ext = parsed;
       }

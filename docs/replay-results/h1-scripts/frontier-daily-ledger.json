@@ -1,15 +1,15 @@
 {
  "2026-07-13": {
-  "gpt54": 992688,
+  "gpt54": 998750,
   "mini": 309111,
   "_burst_gpt54": {
    "pool": "gpt54",
-   "limitUsd": 3,
+   "limitUsd": 2,
    "overageUsdPerMTok": 4.199999999999999,
-   "limitTokens": 714285,
+   "limitTokens": 476190,
    "freePoolLine": 250000,
-   "grantedAtSpent": 498520,
-   "signedBy": "operator (Tonio): completion ticket, $3 cap, finish the pool tonight",
+   "grantedAtSpent": 992688,
+   "signedBy": "operator (Tonio): config-pass, $2 cap, 'I SIGN OFF ON THE BALANCE'",
    "grantedUtcDate": "2026-07-13"
   }
  },
