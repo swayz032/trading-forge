@@ -40,3 +40,14 @@ Both deltas are RECOVERIES of content v3.0 SILENCED (object-deletion / merge-sil
 
 ## Next (held until DLwVqc adjudication returns + enumeration frozen)
 Phase-B under frontier-v3 coverage contract for all 16 (22 strategies) -> grounding (<=8% locator) + content-preservation (gpt-5.4 cross-vendor panel) JOINT VERDICT = operator stop-point.
+
+---
+## DLwVqc cross-path adjudication — RESOLVED, recovery CONFIRMED (2026-07-13)
+Independent blind adjudicator (transcript-only, NO instrument, NO stakes, own judgment) counted **3**, and independently identified the VWAP-rejection **SHORT as a distinct strategy**.
+- LOAD-BEARING question (is the recovered Rule-2 short real, or a Claude hallucination?): **CROSS-PATH CONFIRMED REAL.** Both paths (Claude-with-instrument, blind-adjudicator-without) find the short as its own object. v3.0's count=1 (which object-deleted the short) is independently confirmed as the DEFECT (merge-silencing CRIT).
+- Residual gap Claude=2 vs adjudicator=3: entirely on the Rule-3 flex axis — whether the long's TWO exit-management styles (scalp-band ~15-20pt vs hold-trail-20SMA ~75pt) are one-object-two-variants (Claude) or two-objects (adjudicator). Instrument Rule 3: "either is faithful, the integer does not matter, so long as every variant's distinctives survive as separately-attributed content." Both paths preserve all 3 content pieces. NOT silencing, NOT a two-path alarm -> no operator escalation.
+
+**FREEZE:** DLwVqc = 2 (k=5 consensus) — long (entry + BOTH exit variants) + Rule-2 rejection short. COVERAGE CONTRACT HARDENED: DLwVqc Phase-B MUST extract 4 content units — long entry, long band-scalp exit, long 20SMA-trail exit, short entry — none may be silenced inside the shared long object. Adjudicator's decomposition -> coverage requirement.
+
+## ENUMERATION FROZEN (2026-07-13): 22 strategies / 16 videos, cross-path validated.
+Ready for Phase-B under frontier-v3 coverage contract -> grounding + gpt-5.4 content-preservation panel -> JOINT VERDICT (operator stop-point).
