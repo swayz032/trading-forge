@@ -37,3 +37,36 @@ Gate-2's record closes **regardless of the fork road.** The 5 over/under-split e
 If ≥3 over-splits adjudicate as fabrications → §13 systematic fires → pass-2 output is suspect for any downstream use → **prunes Option R's option space before spend.** The terminal-read decision lands on the COMBINED evidence: Gate-2 record closed, recombined pipeline's honest number known, one clean room still unspent.
 
 *Frozen 2026-07-13, operator-ruled, BEFORE the design-pool locator number and BEFORE the adjudications return. Vaulted FF.*
+
+---
+
+## PRE-READ ADDENDUM 1 — plumbing-exclusion protocol (dated 2026-07-13, added AFTER freeze, BEFORE the number is read)
+
+The band-8 locator's `_default_propose_fn` RAISES on empty/non-JSON gemma content (a cold-load blip) — correct fail-closed design: it never silently fakes a decline. The Option R measurement therefore wraps the propose call in retry (3×, linear backoff — the blip warms) and, on persistent failure, records the condition as `plumbing_error` and **EXCLUDES it from BOTH numerator and denominator.**
+
+**RATIONALE:** a transient transport blip is not a real anchoring outcome; counting it as a miss would launder plumbing into a fidelity signal. Exclusion is numerator-AND-denominator-neutral — it fabricates nothing.
+
+**DIRECTION-OF-EFFECT: neutral-to-strict.** Exclusion cannot inflate the pass rate of the scored set (see the worst-case line below, which re-counts every exclusion as a miss).
+
+**THREE PINS (operator-ratified):**
+1. **This amendment is papered** — written here before the read, so the number is judged against a pre-reg whose text matches the instrument that produced it.
+2. **Exclusion cap = 5% of rows (~10 of 195).** Above the cap → the run is **INDETERMINATE-for-instrument-instability**; the remedy is a WARM re-probe of the excluded keys (the tower is already warm), NOT a read on a gutted denominator.
+3. **Worst-case sensitivity line in the report** — support recomputed with EVERY excluded row counted as a miss. Verdict survives worst-case → exclusion-robust. Worst-case flips the verdict → INDETERMINATE → warm re-probe before any read.
+
+**SINGLE-EPOCH CONFIRMATION:** the read run uses a FRESH per-condition cache, all 195 rows under the retry-wrapped propose_fn, one epoch — no instrument mix inside the run.
+
+---
+
+## PRE-READ ADDENDUM 2 — §9b FIRES; pass-2 Gate 2 = FAILED (scope = the GATE); merge-silencing named; §2 wiring-verify pending (dated 2026-07-13)
+
+**§9b RULING (operator):** R5L890juvRw is an adjudicated-real under-split (stage-2 blind transcript adjudication: 2 genuine VWAP setups, pass-2 wrote 1). The frozen words leave no discretion — "any real loss fails the gate; one silenced strategy is one too many" (§9b); "under-split = STRICT FAIL" (§13). Medium confidence counts (neither §9a nor §9b qualifies "adjudicated-real" by confidence tier; un-pinned terms resolve to the strictest reading — for an omission-hunting guard, the reading that keeps the net tight). **Pass-2's Gate 2 flips MET → FAILED. Scope = the GATE, not the video, not the campaign.**
+
+This re-opens nothing and forks nothing new: Gate 3 already failed, the budget is spent, the fork already fired. Gate 2 joining Gate 3 completes the honest record — **pass-2 as a certified unit is dead twice over**, the exact state Option R was licensed under (Option R never claimed pass-2 was gate-clean; it claimed the components were honestly graded).
+
+**Phase-A enumeration defect ledger (recorded):** 2 fabrications (§13-handled: excluded/recorded/taxed) + 1 confirmed silencing. **Lower bound ≥1/16 videos silenced** — stated as a LOWER BOUND, never a rate: only baseline-disagreement trips were adjudicated, the baseline was itself wrong in 2 of 5 adjudications, and a merge both instruments agree on is invisible. **Nobody is licensed to quote "1/16" as a rate.**
+
+**THE DISEASE — MERGE-SILENCING (a third class §13's physics never enumerated):** not omission-of-content (17 conditions extracted vs baseline 14 — Phase-B did its job) and not invention. It is fully-taught, fully-anchorable content packaged under WRONG OBJECT BOUNDARIES — two opposite-direction VWAP setups fused into one self-contradictory strategy. It sits in the blind spot of BOTH nets: the coverage lint hunts dropped content (nothing dropped); Stage-2 support hunts unanchorable inventions (every condition anchors — it was taught). Worst harm: at the terminal read each merged condition could individually grade CLEAN while the strategy object is garbage → **merge-silencing could inflate a fidelity verdict.**
+
+**§2 WIRING-VERIFY (owed, claimed-safeguards law, H1 catch #4):** the note "likely self-fails cert on contradictory entries" is a CLAIM. Feed R5L890's ACTUAL merged object (real vault artifact, not synthetic) through the downstream path claimed to catch it (cert compile / contradictory-entry / Stage-2) and OBSERVE. Rejected → recorded, harm-model "corrupt spec never trusted; the two real setups stay untested until re-run", acceptable+taxed. Sails through → CRIT: fence it (ratify-packet, instrument code) before any terminal read or H2 battery, regardless of the locator number.
+
+**SCOPE LINE carried by ANY terminal verdict from here:** "enumeration mis-packaging unmeasured on the sealed set; design-pool lower bound 1/16." (Claim-scoping, not bar motion — read shape/metric/≥60% bar untouched; the precondition only makes the read HARDER to reach — the legal direction.)
