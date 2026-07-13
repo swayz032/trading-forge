@@ -1,0 +1,58 @@
+{
+ "key": "gpt-5.4-mini__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4-mini",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_session_reversion",
+    "entry_summary": "Trade in the direction of a session reversion around VWAP: wait for price to move out toward the outer VWAP bands and then look for a return/reaction at or back toward the VWAP, especially after the market has established value for the session. The speaker frames this both as longing after a move to",
+    "exit_summary": "Use VWAP as the central rebalancing target, with the first, second, and third standard deviation bands serving as profit-taking or reversal reference levels depending on context. The management logic is to expect mean reversion toward fair value rather than holding blindly through the bands.",
+    "variants": [
+     {
+      "variant_label": "long after discount extension toward VWAP bands",
+      "timeframe_note": "session-based / intraday",
+      "confirmation_mechanic_note": "wait for price to trade down into discount or a lower deviation band, then react/reverse back upward",
+      "target_note": "VWAP / fair value rebalancing",
+      "transcript_quote": "you might want to wait until the price has gone at least to the first if not the second standard deviation... and after we broke it and tested it we可以"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_session_continuation_with_value_confirmation",
+    "entry_summary": "Trade with the prevailing session bias only after price confirms acceptance around VWAP and then reclaims or respects it as support/resistance. The speaker specifically suggests waiting for price to break VWAP, retest it, and then enter in the direction of the move, rather than fading every touch of",
+    "exit_summary": "Use the upper or lower deviation bands as targets for the continuation move, or use the central VWAP as the rebalancing reference if the move stalls. This is a trend/continuation management framework rather than a pure fade.",
+    "variants": [
+     {
+      "variant_label": "long continuation after VWAP reclaim",
+      "timeframe_note": "session-based / intraday",
+      "confirmation_mechanic_note": "wait for price to break VWAP, test it, and then take the long trade",
+      "target_note": "first/second/third standard deviation bands",
+      "transcript_quote": "after we broke it and tested it we can try our long trade"
+     }
+    ]
+   },
+   {
+    "strategy_id": 2,
+    "name": "vwap_upper_band_short_reversion",
+    "entry_summary": "When price opens strong or trades up into premium above VWAP, look for a short from the upper VWAP deviation bands as an overbought/extreme location. The transcript explicitly says that if the session is short-biased, institutions load volume in premium and the higher bands are optimal sell areas.",
+    "exit_summary": "Take profit back toward VWAP or the central fair-value area, with the outer deviations serving as the high-probability reversal zones. The management logic is to fade the premium extension back toward equilibrium.",
+    "variants": [
+     {
+      "variant_label": "short from premium into upper deviations",
+      "timeframe_note": "session-based / intraday",
+      "confirmation_mechanic_note": "wait for price to extend into the upper deviation bands / premium area",
+      "target_note": "VWAP or lower deviation bands depending on strength",
+      "transcript_quote": "if the position is short they will try to load most of the volume in the premium area... these prices and these prices are going to be optimal prices"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches multiple distinct VWAP-based skeletons: a mean-reversion/fade idea, a continuation-with-retest idea, and a premium-area short/reversal idea. Some passages overlap in shared VWAP reference levels, but the entry logic differs enough to split them."
+ },
+ "originalTokens": 6258,
+ "cachedTokensReported": 5376
+}

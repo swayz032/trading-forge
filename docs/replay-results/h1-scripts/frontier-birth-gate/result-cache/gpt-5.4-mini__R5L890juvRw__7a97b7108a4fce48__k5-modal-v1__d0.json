@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4-mini",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_session_reversion_and_support_resistance",
+    "entry_summary": "Use the session VWAP as an institutional dynamic reference and look for trades when price reaches, tests, or reclaims it within the session. Long bias is favored when price is below or at fair value and then breaks/retests VWAP; short bias is favored when price is above fair value and loses VWAP or,",
+    "exit_summary": "Manage the trade with VWAP bands and session reversion logic: use the first/second/third standard deviation bands as profit targets or reversal zones, and use the central VWAP as the rebalancing target. The transcript also describes taking profit back toward VWAP after a band excursion and treating ",
+    "variants": [
+     {
+      "variant_label": "Long continuation after VWAP reclaim / retest",
+      "timeframe_note": "daily or weekly session VWAP",
+      "confirmation_mechanic_note": "wait for price to break and retest VWAP after being below fair value",
+      "target_note": "use upper standard deviations as targets or trail toward session rebalancing",
+      "transcript_quote": "after we broke it and tested it we can try our long trade"
+     },
+     {
+      "variant_label": "Short continuation after VWAP loss / resistance",
+      "timeframe_note": "daily or weekly session VWAP",
+      "confirmation_mechanic_note": "look for price above fair value failing back under VWAP or testing VWAP as resistance",
+      "target_note": "use lower standard deviations as targets or trail toward session rebalancing",
+      "transcript_quote": "same if the position is short they will try to load most of the volume in the premium area"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One VWAP-based strategy is taught; long/short usage around the same VWAP framework are opposite directional applications of the same session-reference skeleton, so they are represented as variants within one strategy."
+ },
+ "originalTokens": 5904,
+ "cachedTokensReported": 2816
+}

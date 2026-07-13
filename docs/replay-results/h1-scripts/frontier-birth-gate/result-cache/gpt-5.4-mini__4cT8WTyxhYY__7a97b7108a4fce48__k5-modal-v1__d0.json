@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__4cT8WTyxhYY__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4-mini",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "liquidity_grab_reversal",
+    "entry_summary": "Look for a liquidity grab: price breaks support or resistance, fakes out, and then reverses. Enter at the candle that made the liquidity grab, with the direction depending on whether the grab is buy-side or sell-side liquidity.",
+    "exit_summary": "Place the stop loss just beyond the liquidity grab and take profit at a recent high for longs or a recent low for shorts; the speaker also frames this as a small-loss / large-win reversal trade.",
+    "variants": [
+     {
+      "variant_label": "sell-side or buy-side liquidity grab reversal",
+      "timeframe_note": "works on all time frames; examples shown on lower time frames",
+      "confirmation_mechanic_note": "enter at the candle that initiated the liquidity grab / signal candle",
+      "target_note": "take profit at a recent high or low depending on direction",
+      "transcript_quote": "mark your entry point at the candle that made the liquidity grab"
+     },
+     {
+      "variant_label": "higher-timeframe confluence version",
+      "timeframe_note": "15-minute entry aligned with 1-hour support/resistance",
+      "confirmation_mechanic_note": "confirm the lower-timeframe liquidity grab with higher-timeframe support or resistance at the swing extreme",
+      "target_note": "normal stop loss and take profit after confirmation",
+      "transcript_quote": "move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One liquidity-grab reversal skeleton is taught, with compatible variants for general all-timeframe execution and for higher-timeframe confluence; divergences are presented as a filter, not a separate strategy."
+ },
+ "originalTokens": 5665,
+ "cachedTokensReported": 2816
+}

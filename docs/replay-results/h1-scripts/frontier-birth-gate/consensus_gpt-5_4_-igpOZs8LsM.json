@@ -1,0 +1,41 @@
+{
+ "counts": [
+  1,
+  1,
+  1,
+  1,
+  1
+ ],
+ "mode": 1,
+ "modeN": 5,
+ "inWindowDraws": 5,
+ "stable": true,
+ "unstable": false,
+ "canonical": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fair_value_gap_trend_continuation_retest",
+    "entry_summary": "Trade in the direction of the prevailing trend using a fair value gap that caused a break of structure. Identify the three-candle imbalance, prefer the FVG close to the order block, then wait for price to retrace back into that FVG and enter on the tap/retest for continuation.",
+    "exit_summary": "Place the stop loss just beyond the fair value gap itself—below the FVG for buys and above the FVG for sells. No concrete profit-target rule is given; management is to hold for continuation in the expected direction.",
+    "variants": [
+     {
+      "variant_label": "Bullish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to tap back into the bullish FVG that caused the break of structure",
+      "target_note": null,
+      "transcript_quote": "once that happens, price may most likely leave out the order block and just tap into the fair value gap and start pushing to the upside"
+     },
+     {
+      "variant_label": "Bearish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to return to the bearish FVG that caused the break of structure",
+      "target_note": null,
+      "transcript_quote": "once that FVG is created, all you just need to do is patiently wait for price to get back into that FVG that caused the break of structure"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Enumerated as one strategy with bullish and bearish directional variants; the video teaches the same FVG retest continuation skeleton and gives a concrete stop rule but no explicit profit-target mechanic."
+ }
+}

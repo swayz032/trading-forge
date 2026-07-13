@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4-mini__IyFioFkRgWo__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4-mini",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "support_resistance_ema_scalp",
+    "entry_summary": "After the first 5 to 15 minutes of the session, look for price to establish support on the 5-minute chart, often using the 13 EMA as initial support or a deeper 200 EMA support. Enter the scalp when price bounces at that support or demand zone, or when the level is confirmed as support after the gap",
+    "exit_summary": "Take profit quickly at resistance, or exit after a small one-shot move; the speaker emphasizes getting in and out without overstaying the trade. In one example, the exit is simply the move up into resistance after the support bounce.",
+    "variants": [
+     {
+      "variant_label": "13 EMA initial-support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "wait for the first 5 to 15 minutes to pass so support can form, then enter on a bounce off the 13 EMA",
+      "target_note": "exit at resistance after a quick scalp",
+      "transcript_quote": "the 13 EMA operated as a initial support So this candle wick came down bounced off of that and then the stock got a up move"
+     },
+     {
+      "variant_label": "200 EMA deeper-support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "enter when price bounces from a deeper support level at the 200 EMA after the 13 EMA gives up its support status",
+      "target_note": "exit at resistance after the rebound",
+      "transcript_quote": "another quick Scout this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+     },
+     {
+      "variant_label": "demand-zone / prior-bottom support bounce",
+      "timeframe_note": "unspecified chart context within the same scalping framework",
+      "confirmation_mechanic_note": "find where price has bottomed and bounced before, then buy when it returns to that demand/support area",
+      "target_note": "sell right at resistance or after a short favorable move",
+      "transcript_quote": "often times look at Price action look at where stock is bottom at and bounce from okay look and learn to find and spot the demand zones"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One scalping skeleton is taught throughout; the transcript gives compatible variants by support source (13 EMA, 200 EMA, demand zone/prior bounce) and target framing, but no separate contradictory strategy."
+ },
+ "originalTokens": 5468,
+ "cachedTokensReported": 4864
+}

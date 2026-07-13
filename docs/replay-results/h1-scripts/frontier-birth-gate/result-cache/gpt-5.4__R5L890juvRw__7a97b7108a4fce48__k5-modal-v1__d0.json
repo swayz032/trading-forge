@@ -1,0 +1,12 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [],
+  "enumeration_note": "The transcript explains VWAP and its bands as an institutional reference and mentions possible uses (trend continuation after reclaim/retest, or reversal from outer bands back to VWAP), but neither is taught with a fully runnable entry-plus-exit rule set. Entries are gestural/example-based and exits are only suggested broadly (e.g. outer bands as targets or central VWAP as target), so under Rule 1"
+ },
+ "originalTokens": 5622,
+ "cachedTokensReported": 0
+}

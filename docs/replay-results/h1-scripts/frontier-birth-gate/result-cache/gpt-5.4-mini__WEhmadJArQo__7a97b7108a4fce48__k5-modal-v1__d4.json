@@ -1,0 +1,27 @@
+{
+ "key": "gpt-5.4-mini__WEhmadJArQo__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4-mini",
+ "videoId": "WEhmadJArQo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fvg_first_candle_break_retest_scalp",
+    "entry_summary": "On the 5-minute chart, mark the high/low of the first 9:30-9:35 candle, then switch to the 1-minute chart and wait for price to break that level, form a fair value gap, retest the FVG, and get the retest candle engulfed before entering long or short in the direction of the break.",
+    "exit_summary": "Place the stop beyond the extreme of the move into the fair value gap with one tick of breathing room, and take profit at a fixed 3:1 reward-to-risk target. Do not micromanage the trade after entry.",
+    "variants": []
+   },
+   {
+    "strategy_id": 1,
+    "name": "fvg_first_candle_limit_entry_day_trade",
+    "entry_summary": "On the 15-minute chart, mark the high/low of the first 9:30-9:45 candle, then switch to the 5-minute chart and wait for a fair value gap formed through that first candle; instead of waiting for a retest/engulfing candle, place a limit order directly on the FVG once price trades back into it.",
+    "exit_summary": "Place the stop at the first candle in the fair value gap pattern, beneath the first candle for longs, and target a fixed 2:1 reward-to-risk. The trade is managed passively with no micromanagement.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "Two distinct strategies are taught: a 1-minute retest/engulfing scalp and a 5-minute passive-limit day trade. They share the FVG family but differ in entry logic and target/management."
+ },
+ "originalTokens": 6006,
+ "cachedTokensReported": 5376
+}

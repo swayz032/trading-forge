@@ -1,0 +1,48 @@
+{
+ "counts": [
+  1,
+  1,
+  1,
+  1,
+  1
+ ],
+ "mode": 1,
+ "modeN": 5,
+ "inWindowDraws": 5,
+ "stable": true,
+ "unstable": false,
+ "canonical": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fvg_trend_continuation_retrace_entry",
+    "entry_summary": "In the direction of the trend, wait for a valid fair value gap that forms on strong impulsive price movement and causes a break of structure. The usable FVG is the one between the first candle's close and the third candle's open, especially the FVG that is near an order block and has liquidity taken",
+    "exit_summary": "Place the stop loss a little below the fair value gap for buys, or a little above it for sells, and let price retrace into the gap and continue in the intended direction.",
+    "variants": [
+     {
+      "variant_label": "bullish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to retrace into the bullish imbalance after a break of structure",
+      "target_note": null,
+      "transcript_quote": "price will most likely come back, tap into that gap and keep pushing to the upside"
+     },
+     {
+      "variant_label": "bearish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to retrace into the bearish imbalance after a break of structure",
+      "target_note": null,
+      "transcript_quote": "price will most likely you know come back into this point and you know keep pushing"
+     },
+     {
+      "variant_label": "FVG near order block confluence",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "prioritize the FVG very close to the order block rather than any random imbalance",
+      "target_note": null,
+      "transcript_quote": "the FVG that is very close to the order block"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One strategy was taught: a trend-continuation FVG retrace entry with stop just beyond the gap; bullish/bearish examples and order-block proximity are compatible variants, not separate strategies."
+ }
+}

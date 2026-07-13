@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4-mini",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_session_mean_reversion",
+    "entry_summary": "Use the session VWAP as a dynamic fair-value reference. Look for price to move to or beyond the outer VWAP standard-deviation bands and then take a reversal/rebalancing trade back toward VWAP; the speaker also describes waiting for price to reclaim or reject VWAP after a break before entering, as a ",
+    "exit_summary": "Exit into the opposite side of the move: use VWAP as the rebalancing target/mean reversion target, or use the standard-deviation bands as extension targets depending on the trade direction. The speaker frames the bands as overbought/oversold zones and the central VWAP as the main target for price to",
+    "variants": [
+     {
+      "variant_label": "Long after discount/oversold band reversion",
+      "timeframe_note": "session VWAP / daily or weekly reference",
+      "confirmation_mechanic_note": "wait for price to get down to the first, second, or third negative standard deviation and show a bounce/retest back up",
+      "target_note": "VWAP/mean reversion back toward the session fair value",
+      "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels ... and use the central vwap as a target"
+     },
+     {
+      "variant_label": "Short after premium/overbought band reversion",
+      "timeframe_note": "session VWAP / daily or weekly reference",
+      "confirmation_mechanic_note": "wait for price to get up to the first, second, or third positive standard deviation and show rejection back down",
+      "target_note": "VWAP/mean reversion back toward the session fair value",
+      "transcript_quote": "when we go further and further away from this average we tend to trade back at it ... these prices and these prices are going to be optimal prices to"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One VWAP mean-reversion skeleton is taught, with long/short reversal variants around the same session reference; no separate second strategy is clearly promoted."
+ },
+ "originalTokens": 5947,
+ "cachedTokensReported": 5376
+}

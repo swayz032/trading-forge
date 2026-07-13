@@ -1,0 +1,50 @@
+{
+ "key": "gpt-5.4-mini__IyFioFkRgWo__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4-mini",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "ema_support_scalp_long",
+    "entry_summary": "After the first 5 to 15 minutes, watch the 5-minute chart for price to pull back to support, especially where the 13 EMA is acting as initial support. Enter on the bounce off that support or demand zone.",
+    "exit_summary": "Take profit quickly at resistance; the speaker repeatedly frames the trade as getting in and out, seeing profit and not overstaying your welcome.",
+    "variants": [
+     {
+      "variant_label": "5-minute opening scalp using 13 EMA support",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "wait for the first 5 to 15 minutes to pass, then enter on the bounce off the 13 EMA/support",
+      "target_note": "exit at resistance for a quick scalp",
+      "transcript_quote": "time your entries once you have allowed the first 5 to 15 minutes to pass ... look at this indicator the 13 EMA in this example on the 5 minute chart"
+     },
+     {
+      "variant_label": "deeper support scalp using 200 EMA",
+      "timeframe_note": "same intraday scalp context",
+      "confirmation_mechanic_note": "enter off deeper support at the 200 EMA when the 13 EMA has lost support status",
+      "target_note": "ride it to resistance and exit",
+      "transcript_quote": "now we have formed this is your exit ... another quick Scout this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "breakdown_continuation_short",
+    "entry_summary": "When price loses the support level, especially after losing the 200 EMA support, enter in the direction of the breakdown for the big move lower.",
+    "exit_summary": "Exit into the downside move after the breakdown; the speaker marks the takeaway as the large move that follows the loss of support, with the exit shown at the point where the drop has already unfolded.",
+    "variants": [
+     {
+      "variant_label": "support-loss breakdown after 200 EMA failure",
+      "timeframe_note": "same intraday chart context",
+      "confirmation_mechanic_note": "enter once support of the 200 EMA is lost",
+      "target_note": "exit at the lower move after the breakdown",
+      "transcript_quote": "once we lost the support of the 200 look at this move boom boom boom you want to exit right there ... you would enter here and you had that coming all"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches one long scalp family with two compatible support-based variants, plus a separate downside breakdown strategy taught after support fails; the long and short teachings are oppositional and therefore split."
+ },
+ "originalTokens": 5519,
+ "cachedTokensReported": 4864
+}

@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__-igpOZs8LsM__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4-mini",
+ "videoId": "-igpOZs8LsM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fair_value_gap_trend_continuation",
+    "entry_summary": "Wait for a fair value gap created by an aggressive move that also causes a break of structure. Prefer the FVG aligned with the trend, and only take the imbalance that price is likely to retrace into after liquidity is taken.",
+    "exit_summary": "Place the stop-loss a little below the FVG for buys or a little above the FVG for sells, and let price retrace into the gap and continue in the trend direction.",
+    "variants": [
+     {
+      "variant_label": "bullish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "bullish imbalance formed by the gap between the close of the first candle and the open of the third candle after a break",
+      "target_note": null,
+      "transcript_quote": "you map it out from the first candlestick closing point... the gap from the closing point of the first candle to the opening point of the third candle"
+     },
+     {
+      "variant_label": "bearish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "bearish imbalance formed by the gap between the close of the first candle and the open of the third candle after a break",
+      "target_note": null,
+      "transcript_quote": "when it's a sell... it's from the closing point of the first candle and also the opening point of the third candle"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One strategy is taught: FVG trend-continuation entries, with bullish and bearish directions as variants of the same skeleton."
+ },
+ "originalTokens": 5447,
+ "cachedTokensReported": 4864
+}

@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__4cT8WTyxhYY__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "liquidity_grab_reversal",
+    "entry_summary": "Identify a liquidity grab where price briefly breaks support or resistance and then reverses. Enter at the level of the candle that made the liquidity grab: for longs after sell-side liquidity is grabbed, and for shorts after buy-side liquidity is grabbed.",
+    "exit_summary": "Place the stop loss just beyond the liquidity grab wick/level. Take profit at the nearest recent swing extreme in the reversal direction: a recent high for longs or a recent low for shorts.",
+    "variants": [
+     {
+      "variant_label": "Base discretionary version",
+      "timeframe_note": "Works on all timeframes; examples include 15-minute and daily-stat discussion",
+      "confirmation_mechanic_note": "Manual identification of the liquidity-grab candle and reversal entry level",
+      "target_note": "Take profit at recent swing high/low",
+      "transcript_quote": "your long entry would be at this point right here because this candle made this liquidity grab"
+     },
+     {
+      "variant_label": "Indicator-signaled version",
+      "timeframe_note": "Any timeframe supported by the indicator examples",
+      "confirmation_mechanic_note": "Wait for the indicator to mark the liquidity grab and print the entry signal before entering",
+      "target_note": "Take profit at recent swing high/low",
+      "transcript_quote": "we wait for the entry signal once we get it we enter set our stop loss right below the liquidity grab set a take profit at this recent High"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One runnable reversal strategy is taught; the 10-candle preference, divergence, and higher-timeframe support/resistance are presented as confluences/filters to improve the same skeleton, not separate strategies."
+ },
+ "originalTokens": 5662,
+ "cachedTokensReported": 4864
+}

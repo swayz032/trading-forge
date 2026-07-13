@@ -1,0 +1,50 @@
+{
+ "key": "gpt-5.4-mini__4cT8WTyxhYY__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4-mini",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "liquidity_grab_reversal",
+    "entry_summary": "Look for a liquidity grab: price breaks support or resistance, makes a fakeout, and then reverses in the opposite direction. Enter at the candle that made the liquidity grab; for longs, the entry is at the candle that broke support, and for shorts, the entry is at the candle that made the resistance",
+    "exit_summary": "Place the stop loss just beyond the liquidity grab, and take profit at a recent swing high for longs or recent swing low for shorts. The video also frames the trade as a reversal at the top or bottom of the move, with higher-timeframe support/resistance used as a confluence filter in one variant.",
+    "variants": [
+     {
+      "variant_label": "raw liquidity grab reversal",
+      "timeframe_note": "works on all time frames",
+      "confirmation_mechanic_note": "enter at the candle that initiated the liquidity grab",
+      "target_note": "take profit at a recent high/low",
+      "transcript_quote": "your entry would be at the candle that made the liquidity grab"
+     },
+     {
+      "variant_label": "liquidity grab with divergence confluence",
+      "timeframe_note": "not specified; same setup with added oscillator confirmation",
+      "confirmation_mechanic_note": "combine the liquidity grab with momentum divergence confirmation",
+      "target_note": "same stop/target structure; profit from the reversal after confluence",
+      "transcript_quote": "we combine both the powers of the Divergence and the bullish liquidity grab"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "higher_timeframe_liquidity_grab_reversal_filter",
+    "entry_summary": "On a lower timeframe, take a liquidity-grab reversal only when the signal occurs at a higher-timeframe support or resistance level. The example uses a 15-minute signal checked against a 1-hour chart and only takes the trade when the lower-timeframe reversal aligns with the higher-timeframe level.",
+    "exit_summary": "Use the normal liquidity-grab stop loss below/above the grab and take profit at the recent swing high/low on the lower timeframe. Do not take the trade if the higher-timeframe context shows the move is in the middle of a range rather than at an extreme.",
+    "variants": [
+     {
+      "variant_label": "15m entry confirmed by 1h support/resistance",
+      "timeframe_note": "15-minute execution with 1-hour context",
+      "confirmation_mechanic_note": "require the lower-timeframe liquidity grab to occur at higher-timeframe support/resistance",
+      "target_note": "normal 15m stop loss and take profit structure",
+      "transcript_quote": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Two distinct skeletons are taught: the base liquidity-grab reversal, and a separate higher-timeframe support/resistance filter for taking only extremes; divergence is a compatible confluence variant of the base setup."
+ },
+ "originalTokens": 5916,
+ "cachedTokensReported": 4864
+}

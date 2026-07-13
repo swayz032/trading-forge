@@ -1,0 +1,43 @@
+{
+ "key": "gpt-5.4__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_trend_continuation_retest",
+    "entry_summary": "Trade in the direction of the session idea after price extends away from VWAP to at least the first, preferably the second, standard-deviation band, then breaks back and retests that level before resuming. The speaker's example is a long after price has built volume below, reached the outer band, 'b",
+    "exit_summary": "Use the second or third standard-deviation bands as profit targets. No explicit stop-loss rule is taught, but the target/management mechanic is stated as exiting at outer VWAP bands.",
+    "variants": [
+     {
+      "variant_label": "long continuation after pullback/retest from lower area back into trend",
+      "timeframe_note": "session-based / intraday",
+      "confirmation_mechanic_note": "wait until price has reached at least first or second standard deviation, then after it breaks and tests the level, try",
+      "target_note": "use second and third standard deviation as target",
+      "transcript_quote": "you might want to wait until the price has gone at least to the first if not the second standard deviation... and after we broke it and tested it we c"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_mean_reversion_from_outer_bands",
+    "entry_summary": "Use outer VWAP standard-deviation bands as overbought/oversold extremes for reversal trades, entering when price reaches the extreme bands and looking for rebalancing back toward fair value. The setup is framed as using those bands as the most convenient premium/discount price of the session.",
+    "exit_summary": "Target the central VWAP as the price-rebalancing objective. The speaker explicitly says to use central VWAP as the target for reversal trades.",
+    "variants": [
+     {
+      "variant_label": "reversal from overbought/oversold VWAP deviation",
+      "timeframe_note": "session-based / intraday",
+      "confirmation_mechanic_note": "use first/second/third standard-deviation bands as overbought or oversold contextual levels",
+      "target_note": "central VWAP target for rebalancing",
+      "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels... and use the central vwap as a target"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches two opposing executable VWAP skeletons: trend-continuation after a break/retest versus mean-reversion from outer deviation bands back to VWAP. A stop-loss rule is not clearly taught for either, so exits are limited to the stated target mechanics."
+ },
+ "originalTokens": 6049,
+ "cachedTokensReported": 5376
+}

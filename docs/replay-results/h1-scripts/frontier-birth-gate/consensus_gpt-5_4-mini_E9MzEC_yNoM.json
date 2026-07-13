@@ -1,0 +1,48 @@
+{
+ "counts": [
+  3,
+  3,
+  3,
+  1,
+  2
+ ],
+ "mode": 3,
+ "modeN": 3,
+ "inWindowDraws": 4,
+ "stable": true,
+ "unstable": true,
+ "canonical": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "pre_market_level_breakout",
+    "entry_summary": "After 3:00 a.m. EST, mark the pre-market high/low on the 5-minute chart. Enter in the direction of a clean breakout only after a lower-timeframe candle closes beyond the level, with volume elevation confirming the move.",
+    "exit_summary": "Place the stop on the opposite side of the breakout candle. Manage the trade by taking at least 1R, ideally 1.5R to 2R, then trail the stop toward break-even or into profit as price extends.",
+    "variants": [
+     {
+      "variant_label": "2-minute breakout confirmation",
+      "timeframe_note": "2-minute chart for breakout confirmation",
+      "confirmation_mechanic_note": "Wait for a candle close beyond the level with increased volume; optionally use order flow confirmation.",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R; scale out and trail stop.",
+      "transcript_quote": "we are going to scale down to a lower time frame such as a 2-minut... we want to see the break and we actually want to see the close above or below..."
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "pre_market_level_retest",
+    "entry_summary": "After a breakout of the pre-market high or low, wait for price to pull back and retest that level and then enter in the breakout direction once the level acts as support or resistance.",
+    "exit_summary": "Put the stop below the retest/entry candle on longs or above it on shorts. Manage toward at least 1R, ideally 1.5R to 2R, then trail the stop up and scale out as the trade moves.",
+    "variants": []
+   },
+   {
+    "strategy_id": 2,
+    "name": "liquidity_sweep_reversal",
+    "entry_summary": "When price briefly sweeps above the pre-market high or below the pre-market low and then reclaims the level, enter in the reversal direction after that reclaim/failed-break confirmation.",
+    "exit_summary": "Stop goes on the opposite side of the entry candle. The trade is managed with defined risk, aiming for at least 1R and preferably 1.5R to 2R or more while trailing the stop as price runs.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "Three distinct teachings were presented: breakout continuation, break-and-retest continuation, and liquidity-sweep reversal. The breakout and retest are separate because their entry logic differs; the video also gives a shared risk/trailing framework for all three."
+ }
+}

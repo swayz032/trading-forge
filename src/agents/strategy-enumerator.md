@@ -26,12 +26,23 @@ is honest if the speaker teaches nothing extractable.
 These three rules ARE the standard. The distinctness test and the over/under-split warnings
 below are how you apply them — but when in doubt, the rules decide.
 
-**RULE 1 — EVIDENCE FLOOR (a strategy object needs runnable entry logic).**
-A strategy object exists ONLY where the transcript teaches **runnable entry logic** — a concrete,
-executable entry a trader could act on. A hand-wavy mention ("watch for the big move", "you could
-fade it") that never gets concrete entry rules is NOT a strategy — it is an **unpromoted mention**,
-recorded in `enumeration_note`, never given a `strategy` object. Promoting narration to an object
-is elaboration-beyond-evidence — the named fabrication disease. Do not do it.
+**RULE 1 — EVIDENCE FLOOR (a strategy object needs runnable entry logic AND a runnable exit).**
+A strategy object exists ONLY where the transcript teaches BOTH a **runnable entry** AND a
+**runnable exit/stop** — concrete, executable rules a trader could act on. A hand-wavy mention
+("watch for the big move", "you could fade it") that never gets concrete rules is NOT a strategy —
+it is an **unpromoted mention**, recorded in `enumeration_note`, never given a `strategy` object.
+Promoting narration to an object is elaboration-beyond-evidence — the named fabrication disease.
+
+**The exit floor is where over-promotion hides — apply it strictly.** A teaching with a concrete
+ENTRY but a **gestural, level-less exit** does NOT clear the floor. If the exit is shown only by
+pointing at a chart in hindsight — "you'd exit right *there*", "boom boom boom, get out",
+"you want to be out around here" — with **no rule** (no level, no R-multiple, no stop/target
+mechanic, no repeatable condition), it is an **unpromoted mention, NOT an object**, even though the
+entry looks runnable. Retrospective framing ("you *would have* entered/exited") is the same tell.
+This is the single most common over-split: a real setup's narrated "opposite play" that has an
+entry trigger but only a wave at the chart for its exit. Do not promote it. Because it is never
+promoted, any Rule-2 opposition it *would* have created never fires (an un-promoted teaching cannot
+oppose anything).
 
 **RULE 2 — OPPOSITION ALWAYS SPLITS (no exceptions).**
 Two teachings with **contradictory executable logic** — opposite directions in the same context,

@@ -1,0 +1,65 @@
+{
+ "key": "gpt-5.4-mini__4cT8WTyxhYY__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4-mini",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "liquidity_grab_reversal",
+    "entry_summary": "Look for a liquidity grab: price sweeps support or resistance, fakes out, and then you enter at the candle that made the grab. The direction depends on the grab: buy-side liquidity grab for shorts, sell-side liquidity grab for longs.",
+    "exit_summary": "Place the stop loss just beyond the liquidity grab and take profit at the recent opposite swing high/low. The video also frames the trade as a reversal play with a small loss and a large impulse move in the target direction.",
+    "variants": [
+     {
+      "variant_label": "short after resistance sweep",
+      "timeframe_note": "works on all time frames",
+      "confirmation_mechanic_note": "enter at the candle that made the resistance liquidity grab",
+      "target_note": "take profit at a recent low",
+      "transcript_quote": "your short entry would be at the bottom of this candle that initiated this liquidity grab"
+     },
+     {
+      "variant_label": "long after support sweep",
+      "timeframe_note": "works on all time frames",
+      "confirmation_mechanic_note": "enter at the candle that made the support liquidity grab",
+      "target_note": "take profit at a recent high",
+      "transcript_quote": "your long entry would be at this point right here because this candle made this liquidity grab"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "liquidity_grab_reversal_with_divergence_confluence",
+    "entry_summary": "Trade the same liquidity-grab reversal only when it also lines up with momentum divergence: on a bullish reversal, price makes lower lows while momentum makes higher highs, and the opposite for bearish cases implied by the same confluence logic.",
+    "exit_summary": "Use the same stop beyond the liquidity grab and take profit at the recent swing high/low, but the divergence is added as a confluence to improve the odds rather than to change the exit.",
+    "variants": [
+     {
+      "variant_label": "divergence-filtered liquidity grab",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "requires divergence on the oscillator alongside the liquidity grab",
+      "target_note": "same recent high/low take-profit logic as the base setup",
+      "transcript_quote": "we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
+     }
+    ]
+   },
+   {
+    "strategy_id": 2,
+    "name": "higher_timeframe_support_resistance_filtered_liquidity_grab",
+    "entry_summary": "Take the liquidity-grab reversal only when the lower-timeframe signal occurs at a higher-timeframe support or resistance level. The video uses a 15-minute signal that aligns with a 1-hour support/demand zone as the valid example.",
+    "exit_summary": "Manage it with the same normal liquidity-grab stop loss beyond the sweep and target at the recent high/low; the added higher-timeframe context is a filter, not a different exit.",
+    "variants": [
+     {
+      "variant_label": "lower-timeframe reversal aligned with higher-timeframe level",
+      "timeframe_note": "example uses 15-minute entries with 1-hour context",
+      "confirmation_mechanic_note": "require the signal to occur at higher-timeframe support or resistance before entering",
+      "target_note": "normal stop loss and take profit from the base liquidity-grab setup",
+      "transcript_quote": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One base liquidity-grab reversal is taught, then two compatible filter variants are added: divergence confluence and higher-timeframe support/resistance alignment."
+ },
+ "originalTokens": 6037,
+ "cachedTokensReported": 4864
+}

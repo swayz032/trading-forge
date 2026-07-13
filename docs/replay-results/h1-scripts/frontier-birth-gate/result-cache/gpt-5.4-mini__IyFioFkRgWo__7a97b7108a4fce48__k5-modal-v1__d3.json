@@ -1,0 +1,50 @@
+{
+ "key": "gpt-5.4-mini__IyFioFkRgWo__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4-mini",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "ema_support_scalp",
+    "entry_summary": "After the first 5 to 15 minutes, identify support on the 5-minute chart using the 13 EMA, especially when price bounces off the 13 EMA or a nearby support/demand zone. Enter on the bounce and ride the move while support holds.",
+    "exit_summary": "Exit at the nearby resistance level or when the move has played out; the transcript repeatedly frames this as getting in and out quickly, taking profit without overstaying the trade.",
+    "variants": [
+     {
+      "variant_label": "13 EMA initial-support bounce on the 5-minute chart",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "enter after the first 5-15 minutes once the 13 EMA shows support and price bounces",
+      "target_note": "sell into the next resistance / quick scalp move",
+      "transcript_quote": "time your entries once you have allowed the first 5 to 15 minutes to pass ... look at this indicator the 13 EMA in this example on the 5 minute chart"
+     },
+     {
+      "variant_label": "deeper support bounce with the 200 EMA as backup support",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "enter when price bounces at support after the 13 EMA loses support status, with the 200 EMA acting as deeper support",
+      "target_note": "exit at resistance after the bounce",
+      "transcript_quote": "now is support but that's also your entry ... this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "support_breakdown_momentum_short",
+    "entry_summary": "When price loses a major support level, especially the 200 EMA, enter on the breakdown expecting the strong continuation move lower. This is presented as the 'big move' scalp the viewer wants to learn to catch.",
+    "exit_summary": "Exit into the downside continuation after the breakdown move develops; the transcript points to getting out on the fast move down rather than holding.",
+    "variants": [
+     {
+      "variant_label": "break of the 200 EMA support on the 5-minute chart",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "enter once the 200 EMA support is lost",
+      "target_note": "cover into the sharp downside move after the break",
+      "transcript_quote": "once we lost the support of the 200 look at this move boom boom boom you want to exit right there"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript teaches one scalp family with support-bounce variants and a separate opposite-direction breakdown scalp; the first strategy has two compatible support-entry variants, while the breakdown setup is distinct because its entry logic is the opposite of the bounce setups."
+ },
+ "originalTokens": 5541,
+ "cachedTokensReported": 4864
+}

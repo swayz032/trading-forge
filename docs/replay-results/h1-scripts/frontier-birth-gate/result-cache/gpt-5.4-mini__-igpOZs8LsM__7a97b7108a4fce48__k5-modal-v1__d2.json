@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__-igpOZs8LsM__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4-mini",
+ "videoId": "-igpOZs8LsM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fvg_retest_trend_continuation",
+    "entry_summary": "Identify a valid fair value gap created by a strong impulsive move that also caused a break of structure; in the direction of the trend, wait for price to retrace back into that FVG, especially one near the order block, before entering. Use the three-candle imbalance and only map the gap after the B",
+    "exit_summary": "Place the stop loss a little bit below the FVG for buys or a little bit above the FVG for sells, and let price continue in the trend direction after tapping the gap. Do not widen the stop to include the order block, because that harms the risk-to-reward ratio.",
+    "variants": [
+     {
+      "variant_label": "bullish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to retrace into the bullish imbalance/FVG after a break of structure",
+      "target_note": null,
+      "transcript_quote": "price will most likely come back, tap into that gap and keep pushing to the upside"
+     },
+     {
+      "variant_label": "bearish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to retrace into the bearish imbalance/FVG after a break of structure",
+      "target_note": null,
+      "transcript_quote": "price will most likely come back into this point and you know keep pushing like I stated before"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One FVG continuation setup is taught, with bullish and bearish directional variants; no separate exit/management skeleton beyond stop placement around the FVG."
+ },
+ "originalTokens": 5459,
+ "cachedTokensReported": 4864
+}

@@ -1,0 +1,57 @@
+{
+ "key": "gpt-5.4-mini__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4-mini",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_session_mean_reversion",
+    "entry_summary": "Use VWAP as a dynamic session fair-value reference. Look for price to move away from VWAP into the outer deviation bands, then enter in the direction of reversion when price reaches an extreme band or after a break-and-retest of VWAP/its bands in a reversal context.",
+    "exit_summary": "Manage the trade with VWAP and its standard-deviation bands as reference points: take profit back toward VWAP/fair value, or use the first/second/third deviation bands as staged targets depending on how far price extended.",
+    "variants": [
+     {
+      "variant_label": "long off discounted VWAP deviation",
+      "timeframe_note": "session-based (daily / intraday VWAP reset)",
+      "confirmation_mechanic_note": "wait for price to be in discount and reach the first or second lower standard deviation before entering long, often with",
+      "target_note": "target reversion back toward VWAP or use the higher deviation bands as targets",
+      "transcript_quote": "you might want to wait until the price has gone at least to the first if not the second standard deviation ... and after we broke it and tested it we"
+     },
+     {
+      "variant_label": "short off premium VWAP deviation",
+      "timeframe_note": "session-based (daily / intraday VWAP reset)",
+      "confirmation_mechanic_note": "wait for price to be in premium and reach the upper standard deviation bands before entering short, or use the VWAP area",
+      "target_note": "target reversion back toward VWAP/fair value",
+      "transcript_quote": "if the position is short they will try to load most of the volume in the premium area ... use the central vwap as a target for Price rebalancing"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_breakout_followthrough",
+    "entry_summary": "When price breaks VWAP or a VWAP band and shows momentum/acceptance beyond it, enter in the direction of the break rather than fading it. The transcript explicitly notes that in strong trends markets can keep buying even at higher premium prices and that sometimes price trades through VWAP and keeps",
+    "exit_summary": "Manage the trade by using the VWAP bands as reaction points and continuation context rather than as a mean-reversion target; exits are taken into strength/extension as price reaches later deviation bands or when the move loses momentum and starts reacting back to VWAP.",
+    "variants": [
+     {
+      "variant_label": "break and hold above VWAP",
+      "timeframe_note": "session-based (daily / intraday VWAP reset)",
+      "confirmation_mechanic_note": "enter after price breaks VWAP and holds/accepts above it, instead of fading the move",
+      "target_note": "use higher deviation bands as continuation targets, or trail while momentum persists",
+      "transcript_quote": "sometimes we just completely trade through it ... once we've established a strong Trend where still markets will keep buying even at higher and premie"
+     },
+     {
+      "variant_label": "break and hold below VWAP",
+      "timeframe_note": "session-based (daily / intraday VWAP reset)",
+      "confirmation_mechanic_note": "enter after price breaks below VWAP and accepts below it, instead of fading the move",
+      "target_note": "use lower deviation bands as continuation targets, or trail while momentum persists",
+      "transcript_quote": "when we Break It We tend to maybe retest it a couple times before going down"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Two distinct skeletons are taught: a VWAP mean-reversion/rebalancing setup and a VWAP breakout/continuation setup. They share the same indicator but have opposite entry logic, so they split under Rule 2."
+ },
+ "originalTokens": 6260,
+ "cachedTokensReported": 5376
+}

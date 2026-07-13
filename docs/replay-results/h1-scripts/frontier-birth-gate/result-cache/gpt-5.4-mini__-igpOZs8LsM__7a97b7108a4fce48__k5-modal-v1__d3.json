@@ -1,0 +1,20 @@
+{
+ "key": "gpt-5.4-mini__-igpOZs8LsM__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4-mini",
+ "videoId": "-igpOZs8LsM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fair_value_gap_trend_continuation_entry",
+    "entry_summary": "Trade in the direction of the trend after a strong impulsive move creates a fair value gap / imbalance. Only map the FVG that caused a break of structure, and wait for price to retrace back into that gap to enter.",
+    "exit_summary": "Place the stop loss a little below the FVG for buys, or a little above the FVG for sells. Then let price tap into the gap and continue in the trend direction; no separate fixed profit target is taught.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The transcript teaches one FVG trend-continuation setup; the bullish and bearish examples are opposite directions of the same skeleton, not separate strategies because the entry/management rules are identical aside from direction."
+ },
+ "originalTokens": 5304,
+ "cachedTokensReported": 4864
+}

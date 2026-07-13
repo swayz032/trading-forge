@@ -1,0 +1,79 @@
+{
+ "key": "gpt-5.4-mini__E9MzEC_yNoM__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4-mini",
+ "videoId": "E9MzEC_yNoM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "premarket_level_breakout_continuation",
+    "entry_summary": "After 3:00 a.m. ET, mark the pre-market high/low on the 5-minute chart and wait for a clean breakout beyond the level. Enter on a confirmed candle close above/below the level, ideally with volume expansion and/or lower-timeframe confirmation.",
+    "exit_summary": "Place the stop on the opposite side of the breakout candle. Manage the trade by scaling out for at least 1R, ideally 1.5R to 2R, and trail the stop toward break-even or in profit as price continues in your favor.",
+    "variants": [
+     {
+      "variant_label": "2-minute breakout confirmation",
+      "timeframe_note": "Lower timeframe confirmation on the 2-minute chart",
+      "confirmation_mechanic_note": "Wait for the 2-minute candle to close beyond the pre-market level with increased volume",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R",
+      "transcript_quote": "typically we are going to scale down to a lower time frame such as a 2-minut... we want to see the break and we actually want to see the close above"
+     },
+     {
+      "variant_label": "1-minute breakout confirmation",
+      "timeframe_note": "Alternative lower timeframe on the 1-minute chart",
+      "confirmation_mechanic_note": "The speaker mentions you could also play around with a 1-minute chart for the breakout confirmation",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R",
+      "transcript_quote": "or you could even play around with a 1 minute. I just personally prefer the 2-minut."
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "premarket_level_break_and_retest",
+    "entry_summary": "After price breaks the pre-market high/low, wait for a pullback to retest that level and turn it into support or resistance. Enter on the confirmation of the retest rather than on the initial break.",
+    "exit_summary": "Put the stop just beyond the retested level, on the opposite side of the entry candle. Manage the trade for at least 1R and preferably 1.5R to 2R, then trail the stop as the move develops.",
+    "variants": [
+     {
+      "variant_label": "supporting retest after upside breakout",
+      "timeframe_note": "Shown on the same 5-minute pre-market level framework",
+      "confirmation_mechanic_note": "Wait for price to pull back into the broken high and hold it as support",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R",
+      "transcript_quote": "you would simply look for price to pull back down into this previous high over here, make it support to go long with a stop right below"
+     },
+     {
+      "variant_label": "multiple-entry retest sequence",
+      "timeframe_note": "Same level, multiple retests during the session",
+      "confirmation_mechanic_note": "Price tests the broken level multiple times, giving several possible entries off support",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R",
+      "transcript_quote": "price breaks above it very very strong, pulls back, test it multiple times as support one, two, three, four, five times giving you many, many many, I"
+     }
+    ]
+   },
+   {
+    "strategy_id": 2,
+    "name": "premarket_level_liquidity_sweep_reversal",
+    "entry_summary": "At the pre-market high or low, wait for a brief fakeout through the level and then a reclaim or failure back inside the range. Enter in the reversal direction once the sweep is confirmed.",
+    "exit_summary": "Place the stop beyond the sweep/entry candle on the opposite side. Manage the trade with a minimum 1R objective, ideally 1.5R to 2R, and trail the stop as price expands away from the swept level.",
+    "variants": [
+     {
+      "variant_label": "sweep below pre-market low then long on reclaim",
+      "timeframe_note": "Same pre-market high/low framework on the 5-minute chart",
+      "confirmation_mechanic_note": "Price briefly breaks below the low, then reclaims it; the reclaim is the long trigger",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R",
+      "transcript_quote": "price breaks below but reclaims the level with a lot of volume. You are going to look to get long."
+     },
+     {
+      "variant_label": "sweep above pre-market high then short on failure",
+      "timeframe_note": "Same pre-market high/low framework on the 5-minute chart",
+      "confirmation_mechanic_note": "Price briefly breaks above the high, then fails back below; the failure is the short trigger",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R",
+      "transcript_quote": "price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes..."
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Three distinct strategies are taught: breakout continuation, break-and-retest, and liquidity-sweep reversal. The breakout and retest share the same pre-market levels but have different entry logic, so they split; target/risk management is shared across all three."
+ },
+ "originalTokens": 7128,
+ "cachedTokensReported": 5888
+}

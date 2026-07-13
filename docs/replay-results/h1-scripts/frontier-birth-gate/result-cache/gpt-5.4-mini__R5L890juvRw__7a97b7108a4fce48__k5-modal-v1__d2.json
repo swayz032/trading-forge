@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__R5L890juvRw__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4-mini",
+ "videoId": "R5L890juvRw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_mean_reversion_with_session_bands",
+    "entry_summary": "Use session VWAP as the dynamic fair-value reference. Look for price to reach an outer VWAP deviation band and then take the reversal side: if price is stretched above VWAP into premium bands, look for a short; if price is stretched below VWAP into discount bands, look for a long.",
+    "exit_summary": "Use the VWAP mean as the primary reversion target, with the first, second, and third standard deviation bands acting as progressively stretched reversal zones and optional take-profit areas. The speaker also describes the bands as support/resistance levels and says to target rebalancing back toward/",
+    "variants": [
+     {
+      "variant_label": "long from discount back to VWAP",
+      "timeframe_note": "session-based; daily or weekly VWAP context",
+      "confirmation_mechanic_note": "wait for price to be below VWAP or into lower deviation bands and then react/rebalance upward",
+      "target_note": "VWAP / fair value mean reversion target",
+      "transcript_quote": "if the position is short they will try to load most of the volume in the premium area"
+     },
+     {
+      "variant_label": "short from premium back to VWAP",
+      "timeframe_note": "session-based; daily or weekly VWAP context",
+      "confirmation_mechanic_note": "wait for price to be above VWAP or into upper deviation bands and then react/rebalance downward",
+      "target_note": "VWAP / fair value mean reversion target",
+      "transcript_quote": "if we enable the bands ... the more we trade in the outer bands the higher is the probability that at least we are going to see a bounce back to the ["
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One VWAP-based strategy is taught with opposite-direction reversal applications (long from discount, short from premium); the transcript also mentions trend/context caveats but not a separate fully-runnable strategy."
+ },
+ "originalTokens": 5915,
+ "cachedTokensReported": 5376
+}

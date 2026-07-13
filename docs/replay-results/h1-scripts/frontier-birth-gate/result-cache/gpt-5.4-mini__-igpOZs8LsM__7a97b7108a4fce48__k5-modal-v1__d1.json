@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__-igpOZs8LsM__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4-mini",
+ "videoId": "-igpOZs8LsM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fair_value_gap_trend_continuation_retest",
+    "entry_summary": "Identify a valid fair value gap created by a strong impulsive move that also causes a break of structure, then wait for price to retrace back into that FVG and tap it for a continuation entry. The speaker emphasizes trading with the trend and only mapping the FVG associated with the BOS, especially,",
+    "exit_summary": "Place the stop loss a little below the FVG for buys or a little above it for sells, and let price continue in the trend direction after the retracement. The management rule is to keep the stop tight to the FVG rather than widening it to include the nearby order block.",
+    "variants": [
+     {
+      "variant_label": "bullish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to retrace into the bullish imbalance after the break of structure",
+      "target_note": null,
+      "transcript_quote": "price will most likely come back, tap into that gap and keep pushing to the upside"
+     },
+     {
+      "variant_label": "bearish FVG continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "wait for price to retrace into the bearish imbalance after the break of structure",
+      "target_note": null,
+      "transcript_quote": "price will most likely you know come back into this point and you know keep pushing"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One distinct strategy is taught: FVG trend-continuation entries with tight stops around the gap. Bullish and bearish examples are compatible variants of the same skeleton, not separate strategies."
+ },
+ "originalTokens": 5458,
+ "cachedTokensReported": 4864
+}

@@ -1,0 +1,33 @@
+{
+ "counts": [
+  2,
+  2,
+  2,
+  2,
+  2
+ ],
+ "mode": 2,
+ "modeN": 5,
+ "inWindowDraws": 5,
+ "stable": true,
+ "unstable": false,
+ "canonical": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "opening_range_fvg_retest_scalp",
+    "entry_summary": "On the 5-minute chart, mark the high and low of the first 9:30-9:35 candle. On the 1-minute chart, wait for price to break one of those levels with a fair value gap, then wait for price to retest the fair value gap and enter when the retest candle is engulfed in the breakout direction.",
+    "exit_summary": "Place the stop loss just beyond the deepest point traded into the fair value gap, with one tick of breathing room. Take profit at a fixed 3:1 reward-to-risk target and otherwise do not micromanage the trade.",
+    "variants": []
+   },
+   {
+    "strategy_id": 1,
+    "name": "opening_range_fvg_limit_reentry_day_trade",
+    "entry_summary": "On the 15-minute chart, mark the high and low of the first 9:30-9:45 candle. On the 5-minute chart, wait for price to break one of those levels with a fair value gap, then place a limit order on the fair value gap so that a pullback into it automatically enters the trade.",
+    "exit_summary": "Place the stop loss just beyond the first candle of the three-candle fair value gap pattern. Take profit at a fixed 2:1 reward-to-risk target and otherwise let the trade play out without micromanagement.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video teaches two distinct strategies: a scalping FVG retest-plus-engulfing entry with 3:1 target, and a day-trading FVG limit-entry variant with different timeframe structure and 2:1 target."
+ }
+}

@@ -1,0 +1,43 @@
+{
+ "key": "gpt-5.4__WEhmadJArQo__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "WEhmadJArQo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "opening_5m_range_fvg_retest_scalp",
+    "entry_summary": "On the 5-minute chart, mark the high and low of the first 9:30-9:35 candle. On the 1-minute chart, wait for price to break one of those levels with a fair value gap, then wait for price to retest the fair value gap and for the retest candle to be engulfed; enter in the breakout direction once that 1",
+    "exit_summary": "Place the stop just beyond the deepest point price traded into the fair value gap, with one tick of breathing room. Use a fixed 3:1 reward-to-risk target and do not micromanage the trade.",
+    "variants": [
+     {
+      "variant_label": "Bullish example shown",
+      "timeframe_note": "5-minute opening range marked; 1-minute execution chart",
+      "confirmation_mechanic_note": "enter after the retest candle into the fair value gap gets engulfed",
+      "target_note": "fixed 3:1 return",
+      "transcript_quote": "first we want to wait for a retest of the fair value gap... then we wait for this retest candle right here to get engulfed... as soon as we get this"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "opening_15m_range_fvg_limit_order_day_trade",
+    "entry_summary": "On the 15-minute chart, mark the high and low of the first 9:30-9:45 candle. On the 5-minute chart, wait for price to break one of those levels with a fair value gap, then place a limit order at the fair value gap so that a retrace into the gap automatically enters the trade in the breakout दिशा.",
+    "exit_summary": "Place the stop at the first candle of the fair value gap pattern. Use a fixed 2:1 reward-to-risk target and let the trade play out without micromanaging it.",
+    "variants": [
+     {
+      "variant_label": "Day trading limit-entry version",
+      "timeframe_note": "15-minute opening range marked; 5-minute execution chart",
+      "confirmation_mechanic_note": "no engulfing wait; use a passive limit order on the fair value gap",
+      "target_note": "fixed 2:1 return",
+      "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Two distinct strategies are taught: the scalping version requires a retest-plus-engulfing entry and uses a 3:1 target, while the day-trading version uses a passive limit entry at the FVG and a 2:1 target."
+ },
+ "originalTokens": 6200,
+ "cachedTokensReported": 5376
+}

@@ -1,0 +1,41 @@
+{
+ "counts": [
+  1,
+  1,
+  1,
+  2,
+  1
+ ],
+ "mode": 1,
+ "modeN": 4,
+ "inWindowDraws": 4,
+ "stable": true,
+ "unstable": false,
+ "canonical": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "support_to_resistance_scalp",
+    "entry_summary": "After the first 5 to 15 minutes, identify a support level on the 5-minute chart using price action and moving averages such as the 13 EMA or, if that fails, the 200 EMA. Enter when price comes down into that support area and bounces.",
+    "exit_summary": "Take profit quickly at the next resistance / after the bounce move; the speaker repeatedly frames the management as getting in and out fast and selling into the move rather than holding all day.",
+    "variants": [
+     {
+      "variant_label": "13 EMA support bounce scalp",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "wait for the opening minutes to establish support, then buy the touch/bounce at the 13 EMA",
+      "target_note": "exit at nearby resistance / after several green candles",
+      "transcript_quote": "this 13 EMA operated as a initial support... the stock came down and it hit right there that's our entry for a scalp"
+     },
+     {
+      "variant_label": "200 EMA deeper support bounce scalp",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "when the 13 EMA loses support status, use the 200 EMA as deeper support and enter on the bounce",
+      "target_note": "ride it to resistance and exit",
+      "transcript_quote": "this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status... you ride it to resistance and you exit"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one concrete long scalping skeleton: buy support after the first 5-15 minutes and sell at resistance; 13 EMA vs 200 EMA are support-location variants. A later downside 'big move' is not promoted because its exit is only gestural ('exit right there') rather than a runnable rule."
+ }
+}

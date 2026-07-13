@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__4cT8WTyxhYY__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4-mini",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "liquidity_grab_reversal",
+    "entry_summary": "Look for a liquidity grab where price breaks support or resistance in a fakeout and then marks the candle that made the grab as the entry point. The direction depends on whether the grab is below support for a long or above resistance for a short.",
+    "exit_summary": "Place the stop loss just beyond the liquidity grab and take profit at a recent swing high for longs or recent swing low for shorts. The speaker frames this as a reversal trade with a small stop and a large risk-reward target.",
+    "variants": [
+     {
+      "variant_label": "lower-timeframe reversal with indicator-assisted signal",
+      "timeframe_note": "15-minute examples shown, with the indicator auto-marking the setup",
+      "confirmation_mechanic_note": "enter when the indicator gives the reversal signal after the liquidity grab candle",
+      "target_note": "recent high for longs / recent low for shorts",
+      "transcript_quote": "the indicator marks the liquidity grab for us it starts to Mark the entry point and the signal to enter"
+     },
+     {
+      "variant_label": "higher-timeframe context filter for reversal entries",
+      "timeframe_note": "15-minute entry aligned with 1-hour context",
+      "confirmation_mechanic_note": "only take the liquidity-grab reversal when the lower-timeframe signal occurs at higher-timeframe support or resistance",
+      "target_note": "same recent swing high/low target as the base setup",
+      "transcript_quote": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One core liquidity-grab reversal strategy is taught, with compatible variants for indicator-assisted execution and higher-timeframe confluence filtering."
+ },
+ "originalTokens": 5675,
+ "cachedTokensReported": 4864
+}

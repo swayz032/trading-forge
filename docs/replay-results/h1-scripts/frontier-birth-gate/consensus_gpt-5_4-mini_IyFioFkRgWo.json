@@ -1,0 +1,48 @@
+{
+ "counts": [
+  1,
+  1,
+  1,
+  2,
+  2
+ ],
+ "mode": 1,
+ "modeN": 3,
+ "inWindowDraws": 3,
+ "stable": false,
+ "unstable": true,
+ "canonical": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "scalping_with_ema_support_and_resistance",
+    "entry_summary": "After the first 5 to 15 minutes of the session, use the 5-minute chart and enter when price comes down to a support area, especially where the 13 EMA is acting as initial support. The speaker also points to deeper support at the 200 EMA or demand-zone style areas as valid entry locations for the sn`",
+    "exit_summary": "Exit quickly at resistance or after a small favorable move; the core management rule is to get in and get out without overstaying your welcome. The examples are narrated as quick scalps off support to resistance, with the larger breakdown move exited at the point where support is lost and the move/p",
+    "variants": [
+     {
+      "variant_label": "5-minute gap-up open, 13 EMA support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "wait 5 to 15 minutes after the open, then enter when price bounces off the 13 EMA acting as initial support",
+      "target_note": "exit at the quick pop / resistance after one to several green candles",
+      "transcript_quote": "time your entries once you have allowed the first 5 to 15 minutes to pass ... look at this indicator the 13 EMA in this example on the 5 minute chart"
+     },
+     {
+      "variant_label": "5-minute deeper support bounce off the 200 EMA",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "enter when price comes back to a deeper support level sitting at the 200 EMA after the 13 EMA has lost support status",
+      "target_note": "exit into resistance on the quick bounce",
+      "transcript_quote": "another quick scout this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+     },
+     {
+      "variant_label": "5-minute breakdown after loss of 200 EMA support",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "enter when price loses the 200 EMA support and starts the larger move down",
+      "target_note": "exit on the big move down; the speaker says to get out at the point marked as the exit on the chart",
+      "transcript_quote": "once we lost the support of the 200 look at this move boom boom boom you want to exit right there"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One scalping skeleton is taught throughout: enter at support after the open, manage quickly at resistance/after the move. The transcript gives multiple compatible configurations (13 EMA bounce, 200 EMA bounce, 200 EMA breakdown) and I grouped them as variants."
+ }
+}

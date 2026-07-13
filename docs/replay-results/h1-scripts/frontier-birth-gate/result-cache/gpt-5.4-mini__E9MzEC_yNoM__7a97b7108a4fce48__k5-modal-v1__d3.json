@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4-mini__E9MzEC_yNoM__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4-mini",
+ "videoId": "E9MzEC_yNoM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "pre_market_high_low_breakout_retest_liquidity_sweep_strategy",
+    "entry_summary": "On the 5-minute chart, mark the pre-market high and low from 3:00 a.m. EST until the New York open. Trade when price reaches one of those levels via a clean breakout, a break-and-retest, or a liquidity sweep/reclaim after the level is taken.",
+    "exit_summary": "Place the stop on the opposite side of the entry candle or below/above the level being traded. Manage profit by taking at least 1R and ideally 1.5R-2R+, then trail the stop toward breakeven or into profit and scale out as the move extends.",
+    "variants": [
+     {
+      "variant_label": "breakout continuation on 2-minute confirmation",
+      "timeframe_note": "Lower timeframe confirmation on the 2-minute chart (speaker mentions 1-minute as possible, but prefers 2-minute).",
+      "confirmation_mechanic_note": "Wait for a solid candle close above/below the pre-market level with elevated volume and ideally order-flow confirmation,",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R or more, then trail stop and scale out.",
+      "transcript_quote": "you would go long at the close of this two-minute candle. You want to wait for the close. You want to see the volume elevation."
+     },
+     {
+      "variant_label": "break-and-retest entry",
+      "timeframe_note": "5-minute levels with confirmation on the retest; may also be observed on a lower timeframe.",
+      "confirmation_mechanic_note": "Wait for price to pull back into the broken level and turn it into support/resistance before entering.",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R or more, then trail stop and scale out.",
+      "transcript_quote": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support"
+     },
+     {
+      "variant_label": "liquidity sweep / reclaim reversal",
+      "timeframe_note": "5-minute pre-market level context; confirmation can be read with volume or order flow.",
+      "confirmation_mechanic_note": "Wait for price to briefly sweep above/below the level and then reclaim it, signaling trapped traders and a reversal in a",
+      "target_note": "Bare minimum 1R, ideally 1.5R to 2R or more, then trail stop and scale out.",
+      "transcript_quote": "price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One pre-market high/low framework is taught with three compatible entry configurations: breakout, retest, and liquidity sweep. They share the same management rules and are enumerated as variants rather than separate strategies."
+ },
+ "originalTokens": 6664,
+ "cachedTokensReported": 5888
+}

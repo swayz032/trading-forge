@@ -1,0 +1,43 @@
+{
+ "key": "gpt-5.4-mini__WEhmadJArQo__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4-mini",
+ "videoId": "WEhmadJArQo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "first_candle_fvg_retest_scalp",
+    "entry_summary": "On the 5-minute chart, mark the high/low of the first 9:30-9:35 candle, then switch to the 1-minute chart and wait for price to break the level with a fair value gap. After price retests into that FVG, enter on engulfing confirmation.",
+    "exit_summary": "Place the stop under the lowest area traded into the FVG with one tick of breathing room, and take profit at a fixed 3:1 reward-to-risk target. No micromanagement after entry.",
+    "variants": [
+     {
+      "variant_label": "5-minute opening candle + 1-minute confirmation, 3:1 target",
+      "timeframe_note": "Start on 5-minute chart for levels; confirm on 1-minute chart",
+      "confirmation_mechanic_note": "wait for FVG retest and then engulfing candle confirmation",
+      "target_note": "fixed 3:1 return",
+      "transcript_quote": "we're going to wait for a retest of the fair value gap... then we wait for this retest candle right here to get engulfed... for our takerit, we are j‍"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "first_candle_fvg_limit_entry_day_trade",
+    "entry_summary": "On the 15-minute chart, mark the high/low of the first 9:30-9:45 candle, then switch to the 5-minute chart and wait for a fair value gap. Instead of waiting for a retest/engulfing confirmation, place a passive limit order directly on the FVG so the trade enters when price trades back into it.",
+    "exit_summary": "Place the stop at the first candle in the FVG pattern, just under that candle, and target a fixed 2:1 reward-to-risk. The speaker says to hold through revisits of the FVG and not to micromanage the trade.",
+    "variants": [
+     {
+      "variant_label": "15-minute opening candle + 5-minute passive limit, 2:1 target",
+      "timeframe_note": "Start on 15-minute chart for levels; confirm on 5-minute chart",
+      "confirmation_mechanic_note": "set a limit order on the FVG instead of waiting for a retest",
+      "target_note": "fixed 2:1 return",
+      "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG... for our target instead of a 3 to one return we are going to t"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Two distinct strategies are taught: a scalp entry using FVG retest + engulfing confirmation, and a day-trade entry using a passive limit on the FVG. They share the FVG skeleton but differ in entry logic and exit target, so they are separate objects."
+ },
+ "originalTokens": 6236,
+ "cachedTokensReported": 5376
+}

@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4-mini__IyFioFkRgWo__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4-mini",
+ "videoId": "IyFioFkRgWo",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "ema_support_resistance_scalp",
+    "entry_summary": "After the first 5 to 15 minutes, use the 5-minute chart to identify support; enter when price bounces off the 13 EMA acting as initial support, or later from a deeper support such as the 200 EMA / demand zone when support is confirmed by price action.",
+    "exit_summary": "Take profit quickly as price moves from support toward resistance; the speaker repeatedly emphasizes getting in and out, not overstaying, and exiting at resistance or after a short favorable move.",
+    "variants": [
+     {
+      "variant_label": "5-minute chart, 13 EMA initial-support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "wait for the first 5 to 15 minutes to establish support, then enter on the bounce off the 13 EMA",
+      "target_note": "exit into the quick move / at resistance",
+      "transcript_quote": "time your entries once you have allowed the first 5 to 15 minutes to pass ... look at this indicator the 13 EMA in this example on the 5 minute chart"
+     },
+     {
+      "variant_label": "5-minute chart, deeper 200 EMA support bounce",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "enter when price bounces from deeper support at the 200 EMA after the 13 EMA loses support status",
+      "target_note": "exit on the short move up toward resistance",
+      "transcript_quote": "this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One scalping skeleton is taught repeatedly with compatible variants: 13 EMA support bounce and deeper 200 EMA / demand-zone bounce. The late 'big move' after losing 200 EMA support is treated as the same short-entry scalp family because the exit logic remains a quick in-and-out move, not a separate fully-executed strategy."
+ },
+ "originalTokens": 5383,
+ "cachedTokensReported": 4864
+}

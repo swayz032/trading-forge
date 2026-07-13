@@ -81,55 +81,65 @@ async function main() {
 
   const report: any = { generated_note: "rung-1/1.5 parallel birth gate", prompt_hash: pHash, models: {} };
 
+  const K = 5;                       // k=5 modal consensus (operator ruling; PRODUCTION procedure)
+  const POLICY = "k5-modal-v1";      // cache-key component: policy version
+  const modeOf = (xs: number[]) => {
+    const f = new Map<number, number>();
+    xs.forEach((x) => f.set(x, (f.get(x) ?? 0) + 1));
+    let best = xs[0], bestN = 0;
+    for (const [v, n] of f) if (n > bestN || (n === bestN && v < best)) { best = v; bestN = n; }
+    return { mode: best, modeN: bestN };
+  };
+
   for (const m of MODELS) {
     const cap = resolvePoolPartition(m.pool);
-    let spent = 0; // in-run cumulative (fail-closed accounting; production reads ai_inference_log)
+    let spent = 0; // in-run cumulative. NOTE: resets per invocation — a TRUE daily wall
+    // must read ai_inference_log (carry-forward); adequate here as a bounded-run cap.
     const rows: any[] = [];
-    console.log(`\n=== ${m.rung}: ${m.id} (pool ${m.pool}, partition ${cap}) ===`);
+    console.log(`\n=== ${m.rung}: ${m.id} (pool ${m.pool}, partition ${cap}) k=${K} ===`);
     for (const fx of FIXTURES) {
       const tx = transcriptText(fx.id);
-      let count = -1, tokens = 0, cachedTokens = 0, err: string | null = null, note = "", hit = false;
-
-      // LAYER 1: check cache FIRST — a hit spends ZERO tokens (retry/resume/re-measure ride free).
-      const cached = cache.get<any>(m.id, fx.id, pHash);
-      if (cached) {
-        hit = true;
-        const parsed = cached.result;
-        count = Array.isArray(parsed?.strategies) ? parsed.strategies.length : -1;
-        note = parsed?.enumeration_note ?? "";
-      } else {
-        const estimate = Math.ceil(tx.length / 4) + 3500; // upper-ish estimate for the wall
+      const draws: { count: number; parsed: any }[] = [];
+      let tokens = 0, cachedTok = 0;
+      for (let i = 0; i < K; i++) {
+        // per-DRAW cache (resume-friendly): a wall-trip mid-draws keeps finished draws.
+        const dHash = `${pHash}__${POLICY}__d${i}`;
+        const cd = cache.get<any>(m.id, fx.id, dHash);
+        if (cd) { draws.push({ count: Array.isArray(cd.result?.strategies) ? cd.result.strategies.length : -1, parsed: cd.result }); continue; }
+        const estimate = Math.ceil(tx.length / 4) + 3500;
         assertExtractionBudgetOrThrow({ tokensSpentToday: spent, requestedTokens: estimate, partitionCap: cap });
-        try {
-          const resp = await client.chat.completions.create({
-            model: m.id,
-            // LAYER 2 shape: static prefix (instructions + transcript) FIRST, per-call ask LAST.
-            messages: [
-              { role: "system", content: prompt },
-              { role: "user", content: `TRANSCRIPT:\n${tx}\n\nEnumerate the distinct strategies per the three canonical rules. Return ONLY the JSON object.` },
-            ],
-            response_format: { type: "json_schema", json_schema: { name: "StrategyEnumeratorOutput", schema, strict: true } },
-          });
-          tokens = resp.usage?.total_tokens ?? 0;
-          cachedTokens = (resp.usage as any)?.prompt_tokens_details?.cached_tokens ?? 0;
-          spent += tokens; // budgeted at FULL weight (cached-token discount unknown until measured)
-          const parsed = JSON.parse(resp.choices[0]?.message?.content ?? "{}");
-          count = Array.isArray(parsed?.strategies) ? parsed.strategies.length : -1;
-          note = parsed?.enumeration_note ?? "";
-          // write cache IMMEDIATELY (before anything downstream can crash)
-          cache.put({ key: cacheKey(m.id, fx.id, pHash), model: m.id, videoId: fx.id, promptHash: pHash, result: parsed, originalTokens: tokens, cachedTokensReported: cachedTokens });
-          writeFileSync(`${outDir}/enum_${m.id.replace(/\./g, "_")}_${fx.id}.json`, JSON.stringify(parsed, null, 1));
-        } catch (e: any) {
-          err = String(e?.message ?? e).slice(0, 200);
-        }
+        const resp = await client.chat.completions.create({
+          model: m.id,
+          messages: [
+            { role: "system", content: prompt },
+            { role: "user", content: `TRANSCRIPT:\n${tx}\n\nEnumerate the distinct strategies per the three canonical rules. Return ONLY the JSON object.` },
+          ],
+          response_format: { type: "json_schema", json_schema: { name: "StrategyEnumeratorOutput", schema, strict: true } },
+        });
+        const t = resp.usage?.total_tokens ?? 0;
+        tokens += t; spent += t;
+        cachedTok += (resp.usage as any)?.prompt_tokens_details?.cached_tokens ?? 0;
+        const parsed = JSON.parse(resp.choices[0]?.message?.content ?? "{}");
+        cache.put({ key: cacheKey(m.id, fx.id, dHash), model: m.id, videoId: fx.id, promptHash: dHash, result: parsed, originalTokens: t, cachedTokensReported: (resp.usage as any)?.prompt_tokens_details?.cached_tokens ?? 0 });
+        draws.push({ count: Array.isArray(parsed?.strategies) ? parsed.strategies.length : -1, parsed });
       }
-      const inWindow = count >= fx.lo && count <= fx.hi;
-      rows.push({ fixture: fx.id, window: `${fx.lo}-${fx.hi}`, rule: fx.rule, count, in_window: inWindow, tokens, cached_tokens: cachedTokens, cache_hit: hit, error: err });
-      console.log(`  ${fx.id}: count=${count} window=${fx.lo}-${fx.hi} ${inWindow ? "IN" : "OUT"} (${hit ? "CACHE HIT 0" : tokens} tok, cached_prefix=${cachedTokens})${err ? " ERR:" + err : ""}`);
+      const counts = draws.map((d) => d.count);
+      const { mode, modeN } = modeOf(counts);
+      const inWindowDraws = counts.filter((c) => c >= fx.lo && c <= fx.hi).length;
+      const modeInWindow = mode >= fx.lo && mode <= fx.hi;
+      const stable = inWindowDraws >= 4;                 // birth: >=4/5 draws inside window
+      const unstable = modeN < 4;                        // production route trigger
+      // canonical draw = FIRST draw matching the modal count (deterministic, no cherry-pick)
+      const canonical = draws.find((d) => d.count === mode)?.parsed ?? draws[0]?.parsed;
+      const countPass = modeInWindow && stable;
+      writeFileSync(`${outDir}/consensus_${m.id.replace(/\./g, "_")}_${fx.id}.json`,
+        JSON.stringify({ counts, mode, modeN, inWindowDraws, stable, unstable, canonical }, null, 1));
+      rows.push({ fixture: fx.id, window: `${fx.lo}-${fx.hi}`, rule: fx.rule, counts, mode, mode_n: modeN, in_window_draws: inWindowDraws, mode_in_window: modeInWindow, stable, unstable, count_pass: countPass, tokens, cached_tokens: cachedTok });
+      console.log(`  ${fx.id}: draws=[${counts.join(",")}] mode=${mode}(${modeN}/5) win=${fx.lo}-${fx.hi} inWinDraws=${inWindowDraws}/5 -> ${countPass ? "PASS" : (unstable ? "UNSTABLE" : "MISS")} (${tokens} tok)`);
     }
-    const passed = rows.filter((r) => r.in_window).length;
-    report.models[m.id] = { rung: m.rung, pool: m.pool, partition: cap, tokens_spent: spent, count_in_window: `${passed}/6`, rows };
-    console.log(`  ${m.id}: COUNT-in-window ${passed}/6, ${spent} tokens spent (partition ${cap})`);
+    const passed = rows.filter((r) => r.count_pass).length;
+    report.models[m.id] = { rung: m.rung, pool: m.pool, partition: cap, policy: POLICY, tokens_spent: spent, count_gate: `${passed}/6`, rows };
+    console.log(`  ${m.id}: COUNT-GATE ${passed}/6 (mode-in-window AND >=4/5 draws in window), ${spent} tokens (partition ${cap})`);
   }
 
   writeFileSync(`${outDir}/rung1_birthgate_report.json`, JSON.stringify(report, null, 1));

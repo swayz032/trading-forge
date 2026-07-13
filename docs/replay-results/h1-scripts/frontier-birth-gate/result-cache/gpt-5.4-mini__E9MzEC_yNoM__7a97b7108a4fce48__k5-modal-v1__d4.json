@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4-mini__E9MzEC_yNoM__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4-mini",
+ "videoId": "E9MzEC_yNoM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "pre_market_level_breakout_retest",
+    "entry_summary": "After 3:00 a.m. ET, mark the pre-market high and low on the 5-minute chart, then trade the clean break of that level. Entry is taken only after a confirming candle close beyond the level, with elevated volume; a retest of the broken level as support/resistance is an alternate confirmation for the 같은",
+    "exit_summary": "Use a stop on the opposite side of the breakout/entry candle, then trail risk as price moves in favor. The speaker says to look for at least 1R and ideally 1.5R to 2R, moving the stop to break even or in profit as the trade develops.",
+    "variants": [
+     {
+      "variant_label": "breakout entry on 2-minute confirmation",
+      "timeframe_note": "2-minute execution after identifying the 5-minute pre-market level",
+      "confirmation_mechanic_note": "wait for a close above/below the level with volume confirmation",
+      "target_note": "bare minimum 1R, ideally 1.5R to 2R",
+      "transcript_quote": "you would go long at the close of this two-minute candle. You want to wait for the close. You want to see the volume elevation."
+     },
+     {
+      "variant_label": "retest entry after breakout",
+      "timeframe_note": "5-minute level, entry after pullback/retest",
+      "confirmation_mechanic_note": "wait for price to pull back into the broken level and hold it as support/resistance",
+      "target_note": "bare minimum 1R, ideally 1.5R to 2R",
+      "transcript_quote": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "liquidity_sweep_reversal",
+    "entry_summary": "After 3:00 a.m. ET, mark the pre-market high/low and look for a brief stop-run above or below that level that fails and reclaims the area. Enter in the opposite direction once the sweep is confirmed by price reclaiming the level with volume.",
+    "exit_summary": "Place the stop on the opposite side of the entry candle, then manage the trade by scaling out and trailing the stop to break even or into profit. The stated profit framework is at least 1R, ideally 1.5R to 2R, with the possibility of letting the move run further.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "Three taught trade plans appear: breakout, break-and-retest, and liquidity-sweep reversal. Breakout and retest are compatible variants of one pre-market level strategy; liquidity sweep is a distinct opposite-direction reversal setup."
+ },
+ "originalTokens": 6625,
+ "cachedTokensReported": 5888
+}

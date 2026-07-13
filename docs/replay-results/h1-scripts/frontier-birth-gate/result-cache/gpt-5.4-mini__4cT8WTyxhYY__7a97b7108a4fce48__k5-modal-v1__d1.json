@@ -1,0 +1,65 @@
+{
+ "key": "gpt-5.4-mini__4cT8WTyxhYY__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4-mini",
+ "videoId": "4cT8WTyxhYY",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "liquidity_grab_reversal",
+    "entry_summary": "Look for price to make a liquidity grab: a fake breakout of support or resistance that then reverses direction. Enter on the candle that made the liquidity grab, with longs taken after a bullish grab and shorts after a bearish grab.",
+    "exit_summary": "Place the stop loss just beyond the liquidity grab, and take profit at a recent swing high for longs or recent swing low for shorts. The trade is managed as a reversal with a tight stop and a fixed nearby target.",
+    "variants": [
+     {
+      "variant_label": "bullish liquidity grab reversal",
+      "timeframe_note": "Works on all time frames; example shown on lower timeframe with higher-timeframe confluence.",
+      "confirmation_mechanic_note": "Enter at the candle that initiated the liquidity grab after price breaks support and reverses up.",
+      "target_note": "Take profit at a recent high; stop below the liquidity grab.",
+      "transcript_quote": "your long entry would be at this point right here because this candle made this liquidity grab"
+     },
+     {
+      "variant_label": "bearish liquidity grab reversal",
+      "timeframe_note": "Works on all time frames; example shown on lower timeframe with higher-timeframe confluence.",
+      "confirmation_mechanic_note": "Enter at the candle that initiated the liquidity grab after price breaks resistance and reverses down.",
+      "target_note": "Take profit at a recent low; stop above the liquidity grab.",
+      "transcript_quote": "your short entry would be at the bottom of this candle that initiated this liquidity grab"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "liquidity_grab_reversal_with_divergence_confluence",
+    "entry_summary": "Use the same liquidity-grab reversal entry, but only when the liquidity grab aligns with momentum divergence: for example, price makes lower lows while the oscillator makes higher highs for a bullish setup. The divergence is an added confirmation filter, not a different base entry trigger.",
+    "exit_summary": "Use the same reversal management as the base liquidity-grab setup: stop just beyond the grab and take profit at the next recent swing extreme.",
+    "variants": [
+     {
+      "variant_label": "liquidity grab plus momentum divergence confluence",
+      "timeframe_note": "Demonstrated as an added filter on top of the base setup; no fixed timeframe change stated.",
+      "confirmation_mechanic_note": "Require divergence on the momentum oscillator in addition to the liquidity grab.",
+      "target_note": "Same recent-high/recent-low target as the base setup.",
+      "transcript_quote": "we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability"
+     }
+    ]
+   },
+   {
+    "strategy_id": 2,
+    "name": "higher_timeframe_support_resistance_filtered_liquidity_grab_reversal",
+    "entry_summary": "Take the liquidity-grab reversal only when the setup occurs at a higher-timeframe support or resistance area. The trader confirms the lower-timeframe liquidity grab by checking that the signal sits at a meaningful higher-timeframe level, then enters the normal reversal trade.",
+    "exit_summary": "Manage the trade exactly like the normal liquidity-grab reversal: stop beyond the grab and target the nearby swing extreme on the active trading timeframe.",
+    "variants": [
+     {
+      "variant_label": "15m entry filtered by 1h support/resistance",
+      "timeframe_note": "Lower-timeframe signal checked against a higher timeframe; example uses 15-minute entries and 1-hour context.",
+      "confirmation_mechanic_note": "Require the signal to occur at higher-timeframe support or resistance before taking the lower-timeframe liquidity grab.",
+      "target_note": "Use the normal 15-minute stop loss and take profit at the recent high/low.",
+      "transcript_quote": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One base liquidity-grab reversal is taught, plus two compatible confluence filters that preserve the same management skeleton: divergence and higher-timeframe support/resistance."
+ },
+ "originalTokens": 6115,
+ "cachedTokensReported": 4864
+}

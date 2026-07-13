@@ -1,0 +1,49 @@
+{
+ "key": "gpt-5.4-mini__E9MzEC_yNoM__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4-mini",
+ "videoId": "E9MzEC_yNoM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "pre_market_level_breakout",
+    "entry_summary": "After 3:00 a.m. EST, mark the pre-market high/low on the 5-minute chart and wait for a clean breakout above pre-market high or below pre-market low. On the lower timeframe, require a candle close beyond the level and volume confirmation before entering in the breakout direction.",
+    "exit_summary": "Place the stop on the opposite side of the entry candle/breakout candle and manage the trade by trailing the stop toward break-even or in profit, scaling out as the move extends. The speaker’s profit objective is at least 1R, ideally 1.5R to 2R+ before trailing.",
+    "variants": [
+     {
+      "variant_label": "5-minute level breakout with 2-minute confirmation",
+      "timeframe_note": "5-minute chart for level marking; 2-minute chart for execution/confirmation",
+      "confirmation_mechanic_note": "wait for a 2-minute candle close beyond the level with elevated volume (and ideally order flow confirmation)",
+      "target_note": "aim for at least 1R, ideally 1.5R to 2R before trailing",
+      "transcript_quote": "if you were the breakout trader in this scenario, you would go long at the close of this two-minute candle. You want to wait for the close. You want,�"
+     },
+     {
+      "variant_label": "5-minute level breakout with 1-minute alternative confirmation",
+      "timeframe_note": "5-minute chart for level marking; 1-minute can also be used for execution/confirmation",
+      "confirmation_mechanic_note": "wait for a 1-minute breakout close beyond the level with volume confirmation",
+      "target_note": "aim for at least 1R, ideally 1.5R to 2R before trailing",
+      "transcript_quote": "you could even play around with a 1 minute. I just personally prefer the 2-minute."
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "pre_market_level_retest",
+    "entry_summary": "After a valid break above pre-market high or below pre-market low, wait for price to pull back and retest that level. Enter on the retest once the level holds and flips to support/resistance in the breakout direction.",
+    "exit_summary": "Place the stop just beyond the retest/entry candle on the opposite side of the level and manage the position by trailing the stop to break-even or better as price advances. The trade is managed for at least 1R, ideally 1.5R to 2R+.",
+    "variants": []
+   },
+   {
+    "strategy_id": 2,
+    "name": "pre_market_level_liquidity_sweep_reversal",
+    "entry_summary": "At the pre-market high or low, wait for a brief fakeout/sweep beyond the level that fails and then reclaims it. Enter in the reversal direction after the reclaim/confirmation, using the sweep as the signal.",
+    "exit_summary": "Place the stop on the opposite side of the entry candle/sweep and manage by moving the stop toward break-even or in profit while scaling out. The speaker frames the trade for at least 1R, ideally 1.5R to 2R+.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video teaches one pre-market-level framework with three distinct entry logics: breakout, retest, and liquidity-sweep reversal. Breakout has 2-minute/1-minute execution variants, while retest and sweep are separate strategy objects because their entry triggers differ."
+ },
+ "originalTokens": 6764,
+ "cachedTokensReported": 5888
+}

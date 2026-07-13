@@ -1,0 +1,50 @@
+{
+ "key": "gpt-5.4__E9MzEC_yNoM__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4",
+ "videoId": "E9MzEC_yNoM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "premarket_level_breakout_or_retest_continuation",
+    "entry_summary": "Mark the pre-market high and low from 3:00 a.m. EST to the 9:30 a.m. open on the 5-minute chart. Enter in the direction of the move only after price cleanly breaks above the high or below the low and either (a) closes beyond the level with elevated volume, or (b) pulls back to retest the broken pre-",
+    "exit_summary": "Place the stop on the opposite side of the entry/breakout candle or just below/above the retest entry candle. Initial profit objective is at least 1R, ideally 1.5R to 2R, then trim/scale out and trail the stop to breakeven or into profit until stopped out or satisfied.",
+    "variants": [
+     {
+      "variant_label": "direct breakout entry with volume confirmation",
+      "timeframe_note": "Uses 5-minute pre-market levels; entry trigger often checked on 2-minute, optionally 1-minute",
+      "confirmation_mechanic_note": "Enter at the close of the breakout candle only after a solid close beyond the level with elevated volume; speaker also \"",
+      "target_note": "At least 1R, ideally 1.5R to 2R, then trail stop and scale out",
+      "transcript_quote": "you would go long at the close of this two-minute candle. You want to wait for the close. You want to see the volume elevation"
+     },
+     {
+      "variant_label": "break and retest entry after level flips",
+      "timeframe_note": "Uses 5-minute pre-market levels; examples shown with lower-timeframe execution",
+      "confirmation_mechanic_note": "Wait for price to pull back to the broken pre-market high/low and hold it as support/resistance before entering",
+      "target_note": "At least 1R, ideally 1.5R to 2R, then trail stop and scale out",
+      "transcript_quote": "you would simply look for price to pull back down into this previous high over here, make it support to go long with a stop right below"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "premarket_level_liquidity_sweep_reversal",
+    "entry_summary": "When price briefly breaks above the pre-market high or below the pre-market low but then fails and reclaims the level, enter in the opposite direction of the failed break. The reclaim/failure of the level is the confirmation, with volume helping validate the sweep.",
+    "exit_summary": "Place the stop on the opposite side of the entry candle. Look for at least 1R, ideally 1.5R to 2R, then trim/scale out and move the stop to breakeven or into profit, letting the trade continue until stopped out or profit is sufficient.",
+    "variants": [
+     {
+      "variant_label": "reclaim after sweep with volume",
+      "timeframe_note": "Built from 5-minute pre-market high/low levels",
+      "confirmation_mechanic_note": "Price breaks the level, then quickly reclaims it; speaker notes volume and optionally a stops/orderflow tool like Book",
+      "target_note": "At least 1R, ideally 1.5R to 2R, then trail stop and scale out",
+      "transcript_quote": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches two distinct executable skeletons: continuation off a confirmed break of the pre-market level (with compatible breakout-vs-retest entry variants) and the opposite failed-break/liquidity-sweep reversal."
+ },
+ "originalTokens": 6799,
+ "cachedTokensReported": 5888
+}
