@@ -24,3 +24,8 @@ Claude extraction draws the SAME subscription windows as grading + orchestration
 3. Joint-clear → freeze prompt+model SHA → terminal-read preconditions. Miss → terra+5.5 parallel birth gate.
 
 *Frozen 2026-07-13, operator-ruled, BEFORE any Claude number. Vaulted FF.*
+
+---
+
+## AMENDMENT 1 — paid last-resort seat: gpt-5.5 DROPPED, sol takes it (dated 2026-07-13, BEFORE any Claude number)
+Operator amended the ladder: **gpt-5.5 is DROPPED as dominated** (double terra's price, not on the free tier, bills from token one — a paid brain must earn its premium through the same gate, and the premium only matters if cheaper brains genuinely can't do the job). **sol takes the paid last-resort seat** (same price class, newer generation). So Pin 3's miss-branch is now: **miss → terra + sol both sit the 6-fixture birth gate in parallel (<$1), cheapest passer first (terra first claim at half sol's price); sol only if terra flunks and sol passes.** human-in-loop holds the floor. Papered now so the record matches the ruling everywhere, before any number.
