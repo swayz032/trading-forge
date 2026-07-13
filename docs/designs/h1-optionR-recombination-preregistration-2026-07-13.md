@@ -70,3 +70,22 @@ This re-opens nothing and forks nothing new: Gate 3 already failed, the budget i
 **§2 WIRING-VERIFY (owed, claimed-safeguards law, H1 catch #4):** the note "likely self-fails cert on contradictory entries" is a CLAIM. Feed R5L890's ACTUAL merged object (real vault artifact, not synthetic) through the downstream path claimed to catch it (cert compile / contradictory-entry / Stage-2) and OBSERVE. Rejected → recorded, harm-model "corrupt spec never trusted; the two real setups stay untested until re-run", acceptable+taxed. Sails through → CRIT: fence it (ratify-packet, instrument code) before any terminal read or H2 battery, regardless of the locator number.
 
 **SCOPE LINE carried by ANY terminal verdict from here:** "enumeration mis-packaging unmeasured on the sealed set; design-pool lower bound 1/16." (Claim-scoping, not bar motion — read shape/metric/≥60% bar untouched; the precondition only makes the read HARDER to reach — the legal direction.)
+
+---
+
+## §2 WIRING-VERIFY — RESOLVED = CRIT (observed 2026-07-13, real R5L890 object through the real cert path)
+
+Fed R5L890's ACTUAL merged object (real vault artifact, real transcript — two verbatim opposite-direction entries: long trend-continuation `"...we can try our long trade"` + reversion `"use the central vwap as a target"`) through `assemble_certificate`. OBSERVED, not inferred (script `scripts/h1_optionR_R5L890_wiring_verify.py`, report `R5L890_wiring_verify.json`):
+
+| | direction_conflation_lint | **pilot_grade** (terminal-read grade) | full_grade |
+|---|---|---|---|
+| **CASE A** — terminal reality (no topology / unwired A-packet) | **NOT_EVALUATED** (`no_compiled_topology`) | **TRUE — sails through** | False |
+| **CASE B** — counterfactual (A-packet wired, opposite dirs in one and_group) | **FAIL** (correctly catches it) | **TRUE — STILL sails through** | False |
+
+**THE CLAIM "likely self-fails cert on contradictory entries" is FALSIFIED.** Two independent reasons the merge-silenced object is NOT rejected by the terminal-read path:
+1. Terminal reality: no topology overlay → `direction`/`and_group` never populate → the conflict is structurally invisible AND `direction_conflation_lint` is NOT_EVALUATED.
+2. **Even if the A-packet were wired** (CASE B): `pilot_grade` gates ONLY on `f2_coverage_gate` PASS + `causality_lint` regex-leg PASS — it does **NOT** gate on `direction_conflation_lint`. The lint FAILing is invisible to `pilot_grade`. Wiring the A-packet alone would NOT save the terminal read.
+
+**VERDICT = CRIT.** A self-contradictory spec gets `pilot_grade=True`; each merged condition can grade CLEAN at the terminal read while the strategy object is garbage → merge-silencing could INFLATE a fidelity verdict. Per the pre-committed branch: **FENCE REQUIRED (ratify-packet, instrument code) before ANY terminal read or H2 battery, regardless of the locator number.** The fence cannot be "wire the A-packet" — CASE B proves `pilot_grade` is blind even then; the fence must make the terminal-read grade itself reject a merge-silenced object (opposite-direction entries fused under one strategy with no directional OR-split). `full_grade` correctly rejects both cases (it is the H2 precondition), but the terminal read consumes `pilot_grade`.
+
+*§2 wiring-verify RESOLVED CRIT 2026-07-13. Any terminal read is now BLOCKED on the fence, independent of Option R's number.*
