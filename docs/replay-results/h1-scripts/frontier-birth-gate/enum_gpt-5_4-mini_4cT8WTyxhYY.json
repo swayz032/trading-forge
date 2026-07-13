@@ -1,0 +1,57 @@
+{
+ "strategies": [
+  {
+   "strategy_id": 0,
+   "name": "liquidity_grab_reversal",
+   "entry_summary": "Look for price to break support or resistance, fake out, and then reverse in the opposite direction. The executable entry is placed at the candle that made the liquidity grab; enter long on a bullish grab or short on a bearish grab.",
+   "exit_summary": "Place the stop loss beyond the liquidity grab and take profit at a recent swing high/low or the next major extremity, aiming to capture the impulsive reversal move.",
+   "variants": [
+    {
+     "variant_label": "long reversal on buy-side liquidity grab",
+     "timeframe_note": "works on all time frames; example shown on lower timeframes",
+     "confirmation_mechanic_note": "enter at the candle that made the bullish liquidity grab after support is broken and price reverses up",
+     "target_note": "take profit at a recent high",
+     "transcript_quote": "your entry would be at the candle that made the liquidity grab ... with this candle right here our entry would be at this point right here because the"
+    },
+    {
+     "variant_label": "short reversal on sell-side liquidity grab",
+     "timeframe_note": "works on all time frames; example shown on lower timeframes",
+     "confirmation_mechanic_note": "enter at the candle that made the bearish liquidity grab after resistance is broken and price reverses down",
+     "target_note": "take profit at a recent low",
+     "transcript_quote": "with shorts you have a resistance price breaks this resistance barely does a liquidity grab your short entry would be at the bottom of this candle"
+    }
+   ]
+  },
+  {
+   "strategy_id": 1,
+   "name": "liquidity_grab_reversal_with_divergence_confluence",
+   "entry_summary": "Take the same liquidity-grab reversal entry, but only when momentum divergence confirms the setup: price makes a liquidity grab while the oscillator makes the opposite higher-high/lower-low behavior. Enter in the direction of the reversal once both signals align.",
+   "exit_summary": "Use the same stop beyond the grab and take profit at the next swing extreme; the divergence is a filter/confluence, not a separate exit rule.",
+   "variants": [
+    {
+     "variant_label": "bullish liquidity grab with bullish divergence confluence",
+     "timeframe_note": "not tied to one timeframe",
+     "confirmation_mechanic_note": "price makes lower lows on the liquidity grab while momentum makes higher highs",
+     "target_note": "take profit on the upside reversal toward a recent high",
+     "transcript_quote": "the indicator gave us a long Buy Signal ... the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's"
+    }
+   ]
+  },
+  {
+   "strategy_id": 2,
+   "name": "liquidity_grab_reversal_with_higher_timeframe_support_filter",
+   "entry_summary": "Use the liquidity-grab reversal entry only when it occurs at a meaningful higher-timeframe support or resistance level. The trader drops to a lower timeframe for the grab/entry, but first checks the higher timeframe to confirm the location is at the top or bottom of the larger range.",
+   "exit_summary": "Exit the lower-timeframe reversal at the usual nearby swing extreme; the higher-timeframe check is a location filter for improving the reversal entry, not a different exit method.",
+   "variants": [
+    {
+     "variant_label": "lower-timeframe buy signal at higher-timeframe support",
+     "timeframe_note": "15-minute entry with 1-hour context",
+     "confirmation_mechanic_note": "a 15-minute liquidity grab that occurs exactly at 1-hour support",
+     "target_note": "use the normal 15-minute stop loss and take profit structure",
+     "transcript_quote": "here we are on the 15-minute time frame and we get a Buy Signal so what we end up doing is we then move to a 1hour time frame and we see this Buy"
+    }
+   ]
+  }
+ ],
+ "enumeration_note": "One base liquidity-grab reversal skeleton is taught, then two compatible filters are layered on top of it as distinct strategy teachings: divergence confluence and higher-timeframe support/resistance context."
+}

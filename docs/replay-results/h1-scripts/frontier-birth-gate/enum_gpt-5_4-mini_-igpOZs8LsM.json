@@ -1,0 +1,34 @@
+{
+ "strategies": [
+  {
+   "strategy_id": 0,
+   "name": "fvg_trend_continuation_retest",
+   "entry_summary": "Look for a fair value gap created by a strong impulsive move that also causes a break of structure, with trend alignment and nearby liquidity. Wait for price to retrace back into that FVG and enter on the tap/retrace into the imbalance, rather than mapping any random gap.",
+   "exit_summary": "Place the stop loss a little below the FVG for buys or a little above it for sells; let price continue in the trend direction after mitigation. The speaker frames this as a trend-continuation entry and warns not to widen the stop to accommodate other structures because that hurts risk-reward.",
+   "variants": [
+    {
+     "variant_label": "bullish FVG continuation entry",
+     "timeframe_note": null,
+     "confirmation_mechanic_note": "wait for price to retrace and tap into the bullish imbalance after the break of structure",
+     "target_note": null,
+     "transcript_quote": "price will most likely come back, tap into that gap and keep pushing to the upside"
+    },
+    {
+     "variant_label": "bearish FVG continuation entry",
+     "timeframe_note": null,
+     "confirmation_mechanic_note": "wait for price to return into the bearish imbalance after the break of structure",
+     "target_note": null,
+     "transcript_quote": "price will most likely you know come back into this point and you know keep pushing"
+    },
+    {
+     "variant_label": "FVG near-order-block confluence filter",
+     "timeframe_note": null,
+     "confirmation_mechanic_note": "prefer the FVG that caused the break of structure and is very close to the order block",
+     "target_note": null,
+     "transcript_quote": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure the FVG that is very close to the order block"
+    }
+   ]
+  }
+ ],
+ "enumeration_note": "One strategy is taught: trend-continuation FVG entries with BOS/liquidity filter and tight stop beyond the gap; bullish and bearish examples are compatible variants of the same skeleton."
+}

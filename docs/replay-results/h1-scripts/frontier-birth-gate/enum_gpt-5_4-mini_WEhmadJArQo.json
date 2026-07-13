@@ -1,0 +1,35 @@
+{
+ "strategies": [
+  {
+   "strategy_id": 0,
+   "name": "first_candle_fvg_retest_scalp",
+   "entry_summary": "On the 5-minute chart, mark the high/low of the first 9:30-9:35 candle, switch to the 1-minute chart, wait for price to break the level and form a fair value gap, then wait for price to retest the FVG and for that retest candle to be engulfed before entering long (after a bullish break through the 5",
+   "exit_summary": "Place the stop under the lowest area traded into the FVG with one tick of breathing room. Take profit at a fixed 3:1 R multiple and then let the trade play out without micromanaging it.",
+   "variants": [
+    {
+     "variant_label": "5-minute first candle / 1-minute confirmation / 3:1 target",
+     "timeframe_note": "5-minute chart for the opening candle, then 1-minute chart for direction confirmation",
+     "confirmation_mechanic_note": "wait for the retest candle to get engulfed after the market trades back into the FVG",
+     "target_note": "fixed 3:1 return",
+     "transcript_quote": "we're going to wait for this retest candle right here to get engulfed... and then for our takerit, we are just targeting a fixed 3:1 return"
+    }
+   ]
+  },
+  {
+   "strategy_id": 1,
+   "name": "first_candle_fvg_limit_entry_day_trade",
+   "entry_summary": "On the 15-minute chart, mark the high/low of the first 9:30-9:45 candle, switch to the 5-minute chart, wait for a fair value gap formed from the first candle, and place a limit order directly on the FVG so that the market automatically enters when it trades back into the gap.",
+   "exit_summary": "Place the stop right under the first candle in the FVG pattern. Take profit at a fixed 2:1 R multiple and do not micromanage the position even if price revisits the fair value gap.",
+   "variants": [
+    {
+     "variant_label": "15-minute first candle / 5-minute limit-on-FVG / 2:1 target",
+     "timeframe_note": "15-minute chart for the opening candle, then 5-minute chart for the FVG setup",
+     "confirmation_mechanic_note": "set a limit order on the FVG instead of waiting for a retest and engulfing candle",
+     "target_note": "fixed 2:1 return",
+     "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG... we are going to target a fixed 2:1 return"
+    }
+   ]
+  }
+ ],
+ "enumeration_note": "Two distinct strategies are taught: a scalp entry and a day-trade entry. They share the same broad first-candle/FVG idea but differ in entry logic and target/management, so they are separate objects."
+}

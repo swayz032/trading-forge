@@ -1,0 +1,131 @@
+{
+ "generated_note": "rung-1/1.5 parallel birth gate",
+ "models": {
+  "gpt-5.4-mini": {
+   "rung": "rung-1",
+   "pool": "mini",
+   "partition": 1000000,
+   "tokens_spent": 35554,
+   "count_in_window": "4/6",
+   "rows": [
+    {
+     "fixture": "WEhmadJArQo",
+     "window": "1-2",
+     "rule": "Rule3 compatible",
+     "count": 2,
+     "in_window": true,
+     "tokens": 6012,
+     "error": null
+    },
+    {
+     "fixture": "R5L890juvRw",
+     "window": "2-2",
+     "rule": "Rule2 opposition",
+     "count": 2,
+     "in_window": true,
+     "tokens": 6056,
+     "error": null
+    },
+    {
+     "fixture": "IyFioFkRgWo",
+     "window": "1-1",
+     "rule": "Rule1 breakdown=mention",
+     "count": 2,
+     "in_window": false,
+     "tokens": 5424,
+     "error": null
+    },
+    {
+     "fixture": "4cT8WTyxhYY",
+     "window": "1-1",
+     "rule": "Rule3 filters+Rule1",
+     "count": 3,
+     "in_window": false,
+     "tokens": 5885,
+     "error": null
+    },
+    {
+     "fixture": "E9MzEC_yNoM",
+     "window": "2-3",
+     "rule": "Rule2 sweep separate",
+     "count": 3,
+     "in_window": true,
+     "tokens": 6861,
+     "error": null
+    },
+    {
+     "fixture": "-igpOZs8LsM",
+     "window": "1-1",
+     "rule": "Rule1 others deferred",
+     "count": 1,
+     "in_window": true,
+     "tokens": 5316,
+     "error": null
+    }
+   ]
+  },
+  "gpt-5.4": {
+   "rung": "rung-1.5",
+   "pool": "gpt54",
+   "partition": 200000,
+   "tokens_spent": 34427,
+   "count_in_window": "5/6",
+   "rows": [
+    {
+     "fixture": "WEhmadJArQo",
+     "window": "1-2",
+     "rule": "Rule3 compatible",
+     "count": 2,
+     "in_window": true,
+     "tokens": 5772,
+     "error": null
+    },
+    {
+     "fixture": "R5L890juvRw",
+     "window": "2-2",
+     "rule": "Rule2 opposition",
+     "count": 2,
+     "in_window": true,
+     "tokens": 5798,
+     "error": null
+    },
+    {
+     "fixture": "IyFioFkRgWo",
+     "window": "1-1",
+     "rule": "Rule1 breakdown=mention",
+     "count": 2,
+     "in_window": false,
+     "tokens": 5206,
+     "error": null
+    },
+    {
+     "fixture": "4cT8WTyxhYY",
+     "window": "1-1",
+     "rule": "Rule3 filters+Rule1",
+     "count": 1,
+     "in_window": true,
+     "tokens": 5707,
+     "error": null
+    },
+    {
+     "fixture": "E9MzEC_yNoM",
+     "window": "2-3",
+     "rule": "Rule2 sweep separate",
+     "count": 3,
+     "in_window": true,
+     "tokens": 6681,
+     "error": null
+    },
+    {
+     "fixture": "-igpOZs8LsM",
+     "window": "1-1",
+     "rule": "Rule1 others deferred",
+     "count": 1,
+     "in_window": true,
+     "tokens": 5263,
+     "error": null
+    }
+   ]
+  }
+ }
+}

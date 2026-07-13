@@ -1,0 +1,56 @@
+{
+ "strategies": [
+  {
+   "strategy_id": 0,
+   "name": "ema_support_scalp_long",
+   "entry_summary": "After the first 5 to 15 minutes, look for price to bounce off support on the 5-minute chart, especially when the 13 EMA is acting as initial support. Enter on the bounce/reclaim of that support level for a quick scalp long.",
+   "exit_summary": "Exit quickly into nearby resistance or after the short impulse move; the speaker emphasizes getting in and out, not overstaying, and taking profit once the scalp move completes.",
+   "variants": [
+    {
+     "variant_label": "5-minute opening-range bounce off 13 EMA support",
+     "timeframe_note": "5-minute chart",
+     "confirmation_mechanic_note": "wait for the first 5 to 15 minutes to pass and for the candle/wick to bounce off the 13 EMA support",
+     "target_note": "exit into the quick upward move / nearby resistance",
+     "transcript_quote": "time your entries once you have allowed the first 5 to 15 minutes to pass ... look at this indicator the 13 EMA in this example on the 5 minute chart"
+    },
+    {
+     "variant_label": "bounce off support after price forms/retests the level",
+     "timeframe_note": "5-minute chart",
+     "confirmation_mechanic_note": "enter when price comes back down and bounces again off the same support level",
+     "target_note": "take the quick move up and exit",
+     "transcript_quote": "it came back down again boom same level you enter here and then boom you got this move"
+    },
+    {
+     "variant_label": "deeper support scalp off 200 EMA",
+     "timeframe_note": "5-minute chart",
+     "confirmation_mechanic_note": "use the 200 EMA as deeper support once the 13 EMA loses support status",
+     "target_note": "ride the move to resistance and exit",
+     "transcript_quote": "you want to understand is you get in and out ... this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status"
+    }
+   ]
+  },
+  {
+   "strategy_id": 1,
+   "name": "ema_support_breakdown_short",
+   "entry_summary": "When price loses the support level, especially after breaking below the 200 EMA support, enter in the direction of the breakdown for the larger scalp move. The transcript frames this as the move you really want to catch after support fails.",
+   "exit_summary": "Exit into the continuation leg after the breakdown move has extended; the speaker points to the move down as the place to get out, again stressing a quick in-and-out scalp.",
+   "variants": [
+    {
+     "variant_label": "breakdown after losing 200 EMA support",
+     "timeframe_note": "5-minute chart",
+     "confirmation_mechanic_note": "enter once the stock loses the 200 EMA support / support level breaks",
+     "target_note": "cover into the big down move after the break",
+     "transcript_quote": "once we lost the support of the 200 look at this move boom boom boom you want to exit right there"
+    },
+    {
+     "variant_label": "lost 13 EMA support then continuation lower",
+     "timeframe_note": "5-minute chart",
+     "confirmation_mechanic_note": "after the 13 EMA no longer holds as support, use the failed support as the trigger for the short scalp",
+     "target_note": "take profit on the ensuing decline",
+     "transcript_quote": "once the 13 EMA gave up its support status"
+    }
+   ]
+  }
+ ],
+ "enumeration_note": null
+}

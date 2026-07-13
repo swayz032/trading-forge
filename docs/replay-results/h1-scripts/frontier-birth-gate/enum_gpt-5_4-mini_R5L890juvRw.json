@@ -1,0 +1,49 @@
+{
+ "strategies": [
+  {
+   "strategy_id": 0,
+   "name": "vwap_mean_reversion_session_extremes",
+   "entry_summary": "During a session, look for price to be extended away from the session VWAP into the first, second, or third standard deviation bands, then enter in the direction of reversion back toward VWAP when those outer bands are reached or after a break/retest of the VWAP or bands confirms the move. The video",
+   "exit_summary": "Use the central VWAP as the main rebalancing target for reversal trades, or use the outer VWAP deviation bands as targets when trading toward premium/discount extremes; the speaker also notes the first/second/third standard deviation bands can serve as profit targets for longs or shorts depending on",
+   "variants": [
+    {
+     "variant_label": "Longs from discounted VWAP bands / retest",
+     "timeframe_note": "session-based, including New York session examples",
+     "confirmation_mechanic_note": "wait for price to get to at least the first or second standard deviation, then break and retest VWAP or the band before",
+     "target_note": "target a move back toward VWAP / fair value; outer bands can be used as targets on longs",
+     "transcript_quote": "you might want to wait until the price has gone at least to the first if not the second standard deviation ... after we broke it and tested it we can"
+    },
+    {
+     "variant_label": "Shorts from premium VWAP bands / overbought",
+     "timeframe_note": "session-based",
+     "confirmation_mechanic_note": "short when price reaches premium/overbought outer bands and shows reaction away from VWAP",
+     "target_note": "target the central VWAP for price rebalancing",
+     "transcript_quote": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels ... and use the central vwap as a target"
+    }
+   ]
+  },
+  {
+   "strategy_id": 1,
+   "name": "vwap_support_resistance_continuation",
+   "entry_summary": "Trade in the direction of the prevailing session move when price breaks and holds above or below the VWAP or its bands, treating the VWAP and standard deviation lines as dynamic support or resistance for continuation entries. The speaker describes buying after price bounces off VWAP or pulling back",
+   "exit_summary": "Exit into the next VWAP band, back at VWAP, or at the next reaction level created by the standard deviation bands; the line can also be used as a target when price rebalances after extension.",
+   "variants": [
+    {
+     "variant_label": "Long continuation off VWAP or lower bands",
+     "timeframe_note": "session-based, with New York/London examples",
+     "confirmation_mechanic_note": "wait for price to break VWAP, retest it, and then resume higher; or buy when price bounces from VWAP as support",
+     "target_note": "use the second or third standard deviation as target, or VWAP if entering from an extension",
+     "transcript_quote": "when we Break It We tend to maybe retest it a couple times before going down ... once we've established a strong Trend where still markets will keep买"
+    },
+    {
+     "variant_label": "Short continuation off VWAP or upper bands",
+     "timeframe_note": "session-based",
+     "confirmation_mechanic_note": "wait for price to test VWAP or upper bands as resistance and then continue lower",
+     "target_note": "target the lower deviations / VWAP as the rebalancing point",
+     "transcript_quote": "we start feeling this vwap more and more as a form of resistance"
+    }
+   ]
+  }
+ ],
+ "enumeration_note": "The transcript teaches two distinct VWAP-based skeletons: mean-reversion off premium/discount extremes and continuation using VWAP/bands as dynamic support-resistance. Within each, the exact deviation band and session example vary as compatible configuration."
+}
