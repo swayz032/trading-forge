@@ -1,0 +1,96 @@
+{
+ "key": "gpt-5.4__DLwVqcLRcfw__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "DLwVqcLRcfw",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "vwap_20sma_long_pullback_continuation",
+    "higher_timeframe": "1m",
+    "lower_timeframe": null,
+    "direction": "long",
+    "entry_sequence": [
+     {
+      "transcript_quote": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+      "step": 1,
+      "action": "On the 2-minute chart, wait for the first candle off the bell to close above both the 20 SMA and VWAP.",
+      "rationale": "The close over both indicators establishes the initial bullish condition."
+     },
+     {
+      "transcript_quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle",
+      "step": 2,
+      "action": "Enter long when a following candle confirms the high of the candle that closed above the 20 SMA.",
+      "rationale": "The follow-through confirms buyers are continuing higher after the initial close above the averages."
+     },
+     {
+      "transcript_quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+      "step": 3,
+      "action": "Also use pullbacks into VWAP as long opportunities while price continues holding above VWAP and the 20 SMA.",
+      "rationale": "The speaker treats VWAP retests as support while the broader bullish structure remains intact."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": "use the previous Wick as a stop",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker says to use the previous wick or previous low point as the stop on the pullback entries."
+    },
+    "stop_management": "Use the 20 SMA as a trailing stop once price has broken away from VWAP and the 20 SMA is clearly trending higher; exit if price closes below the 20 SMA.",
+    "targets": [
+     {
+      "transcript_quote": "you can sell for profits into the upper Channel",
+      "priority": 1,
+      "type": "upper_vwap_band",
+      "r_multiple": null,
+      "rationale": "For a scalp, the speaker says to take profits into the upper VWAP channel."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "if we're trading over the vwob we're typically more bullish",
+      "name": "above_vwap_bullish_bias",
+      "description": "The speaker says trading over VWAP means price action is typically more bullish.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+      "name": "close_above_vwap_and_20sma",
+      "description": "The setup begins when the first 2-minute candle closes above both VWAP and the 20 SMA.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "I'm looking for a following candle to confirm the high of that candle",
+      "name": "follow_through_high_confirmation",
+      "description": "The speaker wants a following candle to confirm the high before taking the trade.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "as long as we're not losing it closing below it and building below it this is a good buying opportunity",
+      "name": "vwap_holds_on_retest",
+      "description": "A VWAP retest is buyable as long as price does not lose VWAP by closing and building below it.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+      "name": "hold_above_vwap_and_20sma",
+      "description": "The bullish thesis stays valid while price remains above both VWAP and the 20 SMA.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "this is clearly trending higher so this 20 SMA is clearly trending higher",
+      "name": "20sma_trending_higher",
+      "description": "The speaker wants the 20 SMA clearly trending higher rather than flat sideways action.",
+      "canonical_match": "regime_match"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 10652,
+ "cachedTokensReported": 0
+}

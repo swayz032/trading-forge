@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__DLwVqcLRcfw__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "DLwVqcLRcfw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_20sma_bullish_pullback_long",
+    "entry_summary": "On the 2-minute chart, get bullish bias when the opening candle closes above both VWAP and the 20 SMA, then go long on confirmation of that candle’s high or on later pullbacks/bounces that hold VWAP while price remains above VWAP and the 20 SMA.",
+    "exit_summary": "For a scalp, take profit into the upper VWAP band. For a bigger hold, stay in the trade while VWAP and the 20 SMA trend higher, using the 20 SMA or the prior wick/low on the pullback as a trailing stop; exit if price closes below the 20 SMA once price has broken away higher.",
+    "variants": [
+     {
+      "variant_label": "initial breakout confirmation long",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "enter after a following candle confirms the high of the candle that closed above the 20 SMA",
+      "target_note": "can scalp into the upper VWAP band or hold with 20 SMA trailing stop",
+      "transcript_quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+     },
+     {
+      "variant_label": "VWAP pullback/bounce long",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "enter/add on pullbacks into VWAP as long as price tests but does not close below and remains above the 20 SMA / VWAP con",
+      "target_note": "either sell into the upper channel or hold while VWAP and 20 SMA trend higher",
+      "transcript_quote": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one fully-runnable long strategy built around bullish VWAP + 20 SMA support; the later short idea is not promoted because its exit/stop is not taught concretely enough to clear Rule 1."
+ },
+ "originalTokens": 5698,
+ "cachedTokensReported": 4864
+}

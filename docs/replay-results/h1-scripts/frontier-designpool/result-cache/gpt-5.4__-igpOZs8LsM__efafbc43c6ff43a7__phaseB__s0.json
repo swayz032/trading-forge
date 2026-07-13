@@ -1,0 +1,94 @@
+{
+ "key": "gpt-5.4__-igpOZs8LsM__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "-igpOZs8LsM",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "fvg_trend_continuation_retest",
+    "higher_timeframe": "1m",
+    "lower_timeframe": null,
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "this moves it's more of um a trend continuation entry",
+      "step": 1,
+      "action": "Use the setup as a trend-continuation entry, taking buys in an uptrend and sells in a downtrend.",
+      "rationale": "The speaker says FVG entries are continuation trades, so direction should follow the trend."
+     },
+     {
+      "transcript_quote": "you need to pay attention to the one that caused a break of structure",
+      "step": 2,
+      "action": "Identify the fair value gap that caused the break of structure rather than using any gap on the chart.",
+      "rationale": "The speaker treats the structure-breaking imbalance as the valid one to trade."
+     },
+     {
+      "transcript_quote": "the gap from the closing point of the first candle to the opening point of the third candle",
+      "step": 3,
+      "action": "Mark the FVG between the first candle's close and the third candle's open in the three-candle sequence.",
+      "rationale": "This is the speaker's definition of how to map the imbalance."
+     },
+     {
+      "transcript_quote": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure the FVG that is very close to the order block",
+      "step": 4,
+      "action": "Prefer the FVG that caused the break of structure and is very close to the order block.",
+      "rationale": "The speaker says the nearby structure-breaking FVG is the one price is more likely to respect."
+     },
+     {
+      "transcript_quote": "patiently wait for you know price to get back into that FVG that caused the break of structure",
+      "step": 5,
+      "action": "Wait for price to retrace back into the chosen FVG, then take the continuation entry from that retest in the trend direction.",
+      "rationale": "The entry is not on the impulse; it is on the return into the imbalance."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": "stop loss a little bit above if you're selling or below if you are buying",
+     "anchor": "fvg_low",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker says to place the stop a little bit above for sells or below for buys, using the fair value gap as the boundary."
+    },
+    "stop_management": null,
+    "targets": [],
+    "confluences": [
+     {
+      "transcript_quote": "the trend matters",
+      "name": "trend_matters",
+      "description": "The speaker says the trend matters and that trades have higher probability when you stick to the trend.",
+      "canonical_match": "regime_match"
+     },
+     {
+      "transcript_quote": "it happens when the momentum is very high",
+      "name": "strong_momentum",
+      "description": "The speaker says the setup happens when momentum is very high.",
+      "canonical_match": "regime_match"
+     },
+     {
+      "transcript_quote": "it must also create a break structure",
+      "name": "break_of_structure_required",
+      "description": "The speaker says the imbalance must also create a break of structure.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "there should also be liquidity price will clear before you know tapping into the imbalance",
+      "name": "liquidity_clearance_before_tap",
+      "description": "The speaker says there should also be liquidity price will clear before tapping into the imbalance.",
+      "canonical_match": "liquidity_target_clear"
+     },
+     {
+      "transcript_quote": "the FVG that is very close to the order block",
+      "name": "fvg_close_to_order_block",
+      "description": "The speaker says to focus on the FVG that is very close to the order block.",
+      "canonical_match": null
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_with_forex_illustration"
+ },
+ "originalTokens": 10441,
+ "cachedTokensReported": 0
+}

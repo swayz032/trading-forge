@@ -1,0 +1,79 @@
+{
+ "key": "gpt-5.4__2DXQqwKSwJE__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4",
+ "videoId": "2DXQqwKSwJE",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "mean_reversion_scalp",
+    "entry_summary": "Enter after price stretches too far too fast into a clearly defined support or resistance level and the tape shows order-flow hesitation/reversal. On a sharp down move into support, when volume stalls and sellers stop hitting the bid, take the offer and get long in front of support; the opposite can",
+    "exit_summary": "Use the support/resistance level's bids or offers as protection, i.e. risk against that level with a tight stop if it fails, and capture the bounce/reversal off the level.",
+    "variants": [
+     {
+      "variant_label": "long off sharp flush into support",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "volume stalls, sellers stop hitting the bid, tape shows hesitation at support",
+      "target_note": "capture the bounce off support",
+      "transcript_quote": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid. As a scal,0"
+     },
+     {
+      "variant_label": "short off sharp squeeze into resistance",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "best when price quickly and sharply shoots up into resistance with large offers",
+      "target_note": "capture the reversal off resistance",
+      "transcript_quote": "Often, these mean reversion scalps work best when the stock quickly and sharply shoots up to a resistance level with large offers."
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "continuation_breakout_scalp",
+    "entry_summary": "Enter on a clean break of support or resistance in an in-play stock, using tape confirmation that the level is being taken. For an upside break, buy just above the level, e.g. $10.01/$10.02 or $50.01 once buyers lift the offer and it disappears.",
+    "exit_summary": "Scalp out into immediate emotional follow-through for roughly 10 to 30 cents, and use a tight stop back below the broken level if price fails the breakout.",
+    "variants": [
+     {
+      "variant_label": "generic resistance break continuation",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "be first in on the break of clean support/resistance",
+      "target_note": "scalp the follow-through",
+      "transcript_quote": "if we have a $10 resistance level, you want to be buying $10.01 or $10.02, and scalping out on that emotional follow-through"
+     },
+     {
+      "variant_label": "$50 psychological level breakout example",
+      "timeframe_note": "first hour intraday example",
+      "confirmation_mechanic_note": "buyers repeatedly lift the $50 offer, offer shrinks or disappears, then buy $50.01",
+      "target_note": "kick it out 10, 20, or even 30 cents higher",
+      "transcript_quote": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone, you want to be the one buying at $50.01, if possible, and pot"
+     }
+    ]
+   },
+   {
+    "strategy_id": 2,
+    "name": "spread_making_scalp",
+    "entry_summary": "Provide liquidity rather than taking it by placing resting limit bids/offers in spread names ahead of large bids or offers, aiming to get filled by urgent participants crossing the spread. The setup is a relatively balanced but thin market where microstructure, queue priority, and order placement,2.",
+    "exit_summary": "Sell the acquired position back out on the other side of the spread, 'kicking offers out' a point or two higher in the example, and repeat while the spread remains wide before it compresses.",
+    "variants": [
+     {
+      "variant_label": "general spread capture",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "resting limit orders in spread names ahead of large bids or offers",
+      "target_note": "capture the bid-ask spread as others cross",
+      "transcript_quote": "You're placing resting limit orders in spread names ahead of large bids or offers with the aim to capture the difference between the spread"
+     },
+     {
+      "variant_label": "facebook ipo wide-spread example",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "slam in huge bids during a very wide, active spread",
+      "target_note": "kick offers out a point or two higher and repeat before the spread compresses",
+      "transcript_quote": "immediately just slamming in huge bids, only to just as quickly kick his offers out and his size out a point or two higher, and repeating it again and"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video explicitly teaches three distinct scalp strategy skeletons: mean reversion, continuation breakout, and spread making."
+ },
+ "originalTokens": 6532,
+ "cachedTokensReported": 0
+}

@@ -1,0 +1,49 @@
+{
+ "key": "gpt-5.4__DLwVqcLRcfw__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "DLwVqcLRcfw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_20sma_long_pullback_trend_scalp",
+    "entry_summary": "On the 2-minute chart, when the opening candle closes above both VWAP and the 20 SMA, look for bullish continuation and buy pullbacks/bounces while price remains above VWAP and the 20 SMA. Additional entries can be taken on tests of VWAP that wick below but do not close below, or after price gets re",
+    "exit_summary": "For a quicker scalp, take profits into the upper VWAP band. For a larger hold, stay in the trade while VWAP and the 20 SMA trend higher, then use the 20 SMA as a trailing stop and exit on a close below it once price has separated upward from VWAP.",
+    "variants": [
+     {
+      "variant_label": "initial breakout confirmation over VWAP and 20 SMA",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "enter after a candle closes over the 20 SMA and VWAP and a following candle confirms the high of that candle",
+      "target_note": "take profit into the upper VWAP band or hold with 20 SMA trailing stop",
+      "transcript_quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+     },
+     {
+      "variant_label": "VWAP pullback/bounce add-on entry",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "buy tests of VWAP that wick around it but do not close below or build below; can add/load at VWAP",
+      "target_note": "sell into the upper VWAP band for a scalp or keep holding while VWAP and 20 SMA trend higher",
+      "transcript_quote": "as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+     },
+     {
+      "variant_label": "re-break over 20 SMA continuation entry",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "after the trend run, a new long can be started once price gets back over the 20 SMA",
+      "target_note": "managed the same way with trend hold / trailing stop logic",
+      "transcript_quote": "you could have also started a new position here once we got back over the 20 SMA"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_20sma_short_rejection_trend_scalp",
+    "entry_summary": "If price loses both VWAP and the 20 SMA, closes below VWAP, and a following candle starts to build below, stop looking to buy the bounce and instead short the rejection of VWAP and the 20 SMA.",
+    "exit_summary": "Use the same framework in reverse: hold the short only while price remains accepted below VWAP/20 SMA, with those levels acting as resistance; cover on loss of that bearish acceptance or on a reclaim back above the moving-average/VWAP resistance area.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video teaches two opposed executable setups using the same indicators: a long buy-the-bounce above VWAP/20 SMA and a short rejection below VWAP/20 SMA; the short exit is less detailed but still framed as holding only while price stays below those levels."
+ },
+ "originalTokens": 5933,
+ "cachedTokensReported": 4864
+}

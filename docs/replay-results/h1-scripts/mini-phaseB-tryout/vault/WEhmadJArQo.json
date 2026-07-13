@@ -1,0 +1,171 @@
+{
+ "video_id": "WEhmadJArQo",
+ "phase_b": [
+  {
+   "scope": {
+    "entry_summary": "On the 5-minute chart, mark the high and low of the first 9:30-9:35 candle. On the 1-minute chart, wait for price to break one of those levels with a fair value gap, then wait for price to retest the fair value gap and enter when the retest candle is engulfed in the breakout direction.",
+    "exit_summary": "Place the stop loss just beyond the deepest point traded into the fair value gap, with one tick of breathing room. Take profit at a fixed 3:1 reward-to-risk target and otherwise do not micromanage the trade.",
+    "name": "opening_range_fvg_retest_scalp"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "opening_range_fvg_retest_scalp_5m_1m",
+      "higher_timeframe": "5m",
+      "lower_timeframe": "1m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "mark out the high and the low of the first 5-minute candle",
+        "step": 1,
+        "action": "Mark the high and low of the first 5-minute candle of the day as the key levels.",
+        "rationale": "These levels define the opening range used for the setup."
+       },
+       {
+        "transcript_quote": "wait for a break of the level, but we need a fair value gap",
+        "step": 2,
+        "action": "Wait for price to break one of the marked opening-range levels only when a fair value gap forms with the break.",
+        "rationale": "The break alone is not enough; the fair value gap confirms the move."
+       },
+       {
+        "transcript_quote": "we need the market to trade back into the fair value gap",
+        "step": 3,
+        "action": "Wait for price to retest back into the fair value gap.",
+        "rationale": "The retest is the pullback required before entry."
+       },
+       {
+        "transcript_quote": "wait for this retest candle right here to get engulfed",
+        "step": 4,
+        "action": "Enter when the retest candle is engulfed in the breakout direction.",
+        "rationale": "Engulfing provides confirmation that buyers or sellers remain in control."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "put that under the lowest area that we traded into that fair value gap. And you always want to give it one tick of breathing room",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "\"put that under the lowest area that we traded into that fair value gap\" with \"one tick of breathing room\"."
+      },
+      "stop_management": "No need to micromanage your trade.",
+      "targets": [
+       {
+        "transcript_quote": "we are just targeting a fixed 3:1 return",
+        "priority": 1,
+        "type": "r_multiple",
+        "r_multiple": 3,
+        "rationale": "The speaker says the scalping target is a fixed 3:1 return."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "we're going to start on our five-minute chart",
+        "name": "five_minute_chart",
+        "description": "Start on the five-minute chart.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "mark out the high and the low of the first 5-minute candle",
+        "name": "opening_range_levels",
+        "description": "Mark the high and low of the first 5-minute candle.",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "we're going to wait for a break of the level, but we need a fair value gap",
+        "name": "fvg_break_confirmation",
+        "description": "Wait for a break of the level, but only if a fair value gap forms.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "we need the market to trade back into the fair value gap",
+        "name": "fvg_retest",
+        "description": "Wait for the market to trade back into the fair value gap.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "wait for this retest candle right here to get engulfed",
+        "name": "engulfing_confirmation",
+        "description": "Wait for the retest candle to get engulfed.",
+        "canonical_match": "market_structure_aligned"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_with_forex_illustration"
+   }
+  },
+  {
+   "scope": {
+    "entry_summary": "On the 15-minute chart, mark the high and low of the first 9:30-9:45 candle. On the 5-minute chart, wait for price to break one of those levels with a fair value gap, then place a limit order on the fair value gap so that a pullback into it automatically enters the trade.",
+    "exit_summary": "Place the stop loss just beyond the first candle of the three-candle fair value gap pattern. Take profit at a fixed 2:1 reward-to-risk target and otherwise let the trade play out without micromanagement.",
+    "name": "opening_range_fvg_limit_reentry_day_trade"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "opening_range_fvg_limit_reentry_day_trade",
+      "higher_timeframe": "15m",
+      "lower_timeframe": "5m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "we're going to mark the high and the low of the first 15-minute candle",
+        "step": 1,
+        "action": "Mark the high and low of the first 15-minute candle on the 15-minute chart.",
+        "rationale": "These levels define the opening range reference for the setup."
+       },
+       {
+        "transcript_quote": "we're going to wait for a very specific pattern",
+        "step": 2,
+        "action": "On the 5-minute chart, wait for price to break one of the opening-range levels with a fair value gap.",
+        "rationale": "The break plus FVG confirms directional intent."
+       },
+       {
+        "transcript_quote": "instead of waiting for a retest, we're actually going to set a limit order on the FVG",
+        "step": 3,
+        "action": "Place a limit order on the fair value gap so a pullback into it automatically enters the trade.",
+        "rationale": "The pullback into the FVG is the entry trigger."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "I'm going to put it right at the first candle in the fair value gap pattern",
+       "anchor": "displacement_candle_low",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "\"put it right at the first candle in the fair value gap pattern\""
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "we are going to target a fixed 2:1 return",
+        "priority": 1,
+        "type": "r_multiple",
+        "r_multiple": 2,
+        "rationale": "The speaker says to target \"a fixed 2:1 return\"."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "we're going to mark the high and the low of the first 15-minute candle",
+        "name": "first_15m_opening_range",
+        "description": "Mark the high and low of the first 15-minute candle.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "we're going to wait for a very specific pattern",
+        "name": "fvg_break_setup",
+        "description": "Wait for price to break a level with a fair value gap pattern.",
+        "canonical_match": "market_structure_aligned"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_with_forex_illustration"
+   }
+  }
+ ]
+}

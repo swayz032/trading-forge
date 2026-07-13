@@ -1,0 +1,71 @@
+{
+ "key": "gpt-5.4__0xygpCMwxbQ__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "0xygpCMwxbQ",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "ict_stop_raid_mss_retracement_pd_array_entry",
+    "entry_summary": "After establishing directional bias, wait for a liquidity raid/stop raid, then a market structure shift or displacement in the intended direction. Enter on the retracement into discount/premium or OTE where a PD array is present, typically using a fair value gap, order block, breaker block, or a con",
+    "exit_summary": "Place the stop beyond the entry structure/PD array or the swept low/high. Take a first partial at opposing liquidity or the initial target level, then either move the stop to breakeven and let the rest run or continue targeting further liquidity.",
+    "variants": [
+     {
+      "variant_label": "NASDAQ 15m long using nested FVG + order block + box setup",
+      "timeframe_note": "15-minute chart",
+      "confirmation_mechanic_note": "after sell-side raid and structure shift, enter on retracement into OTE/discount where a fair value gap is nested in an",
+      "target_note": "first partial at buy-side liquidity; then breakeven management / continue higher",
+      "transcript_quote": "for my entry I would personally be looking to enter the trade right here My Stop on this low first partial here and then looking for buy side li"
+     },
+     {
+      "variant_label": "5m short using breaker block or narrowed FVG entry",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "after buy-side raid and aggressive move down, re-enter on return to premium at breaker block, optionally narrowed to the",
+      "target_note": "take partials / target the equal lows below",
+      "transcript_quote": "if I was just going to take the breaker block entry it would look something like this however if I was going to narrow t"
+     },
+     {
+      "variant_label": "ES 1m short using breaker block + FVG in premium/OTE",
+      "timeframe_note": "1-minute chart",
+      "confirmation_mechanic_note": "after high raid and shift down, wait for retracement into premium/OTE where breaker block and fair value gap overlap",
+      "target_note": "risk defined above entry structure; continuation lower",
+      "transcript_quote": "what do I have in this area right here well I have a breaker block and a fair value Gap so letting this play out price r"
+     },
+     {
+      "variant_label": "ES 5m short using order block at OTE",
+      "timeframe_note": "5-minute chart",
+      "confirmation_mechanic_note": "same setup shown on higher timeframe, but entry taken from order block after retracement into OTE",
+      "target_note": "target a new low; stop on the order block high",
+      "transcript_quote": "with that my entry would be on this order block targeting a new low and my stop on the order block High"
+     },
+     {
+      "variant_label": "Top-down ES long using hourly/15m/5m alignment into order block + FVG",
+      "timeframe_note": "Daily to hourly to 15-minute to 5-minute top-down process",
+      "confirmation_mechanic_note": "after higher-timeframe point of interest and lower-timeframe sell-side raid plus displacement, enter at 5m order block/",
+      "target_note": "partial or breakeven at morning highs, then let runners run",
+      "transcript_quote": "I would be looking to enter here putting my stop on this order block low partial or move my stop to break even your tar"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "ict_box_setup_deviation_retest_reversal",
+    "entry_summary": "Use a range-deviation box setup: after price deviates below the range and reclaims back into it, treat that as manipulation and enter on the retest of the manipulation area for a move to the opposite side of the range. This setup is presented as valid even without the prior lower-timeframe stop-raid",
+    "exit_summary": "Take partials as price moves toward the opposite side of the range and continue holding for liquidity resting beyond that side. Stop is implied beneath the retest/manipulation area.",
+    "variants": [
+     {
+      "variant_label": "NASDAQ 1m box setup long after downside deviation re-entry",
+      "timeframe_note": "1-minute chart",
+      "confirmation_mechanic_note": "wait for deviation below the range, aggressive reclaim back into range, then retest of the manipulation zone",
+      "target_note": "take partials, then aim for the liquidity above / other side of the range",
+      "transcript_quote": "this is the deviation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking "
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Two distinct strategy skeletons are taught: the main stop-raid + MSS + retracement into PD-array model, and a separate box-setup deviation/retest reversal. The various FVG/order-block/breaker/OTE examples within the first are compatible entry-model variants, not separate strategies."
+ },
+ "originalTokens": 6144,
+ "cachedTokensReported": 4864
+}

@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__DLwVqcLRcfw__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4",
+ "videoId": "DLwVqcLRcfw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_20sma_long_pullback_continuation",
+    "entry_summary": "On the 2-minute chart, get bullish once the first candle closes above both VWAP and the 20 SMA, then enter long on a following candle confirming that high or on pullbacks/bounces that test VWAP while price continues to hold above VWAP and the 20 SMA.",
+    "exit_summary": "For a scalp, take profits into the upper VWAP band. For a runner, hold while VWAP and the 20 SMA trend higher and use the 20 SMA as a trailing stop, exiting on a close below the 20 SMA after price has separated upward from VWAP.",
+    "variants": [
+     {
+      "variant_label": "initial breakout confirmation long",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "enter after a following candle confirms the high of the candle that closed above the 20 SMA and VWAP",
+      "target_note": "can scalp into the upper VWAP band or hold with 20 SMA trailing stop",
+      "transcript_quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+     },
+     {
+      "variant_label": "VWAP pullback/bounce long",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "buy pullbacks into VWAP as long as price is testing/wicking around VWAP without closing below and building below it",
+      "target_note": "take profits into the upper VWAP band or continue holding while 20 SMA/VWAP trend higher",
+      "transcript_quote": "as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The transcript gives one fully runnable long VWAP/20-SMA continuation framework with compatible entry variants (initial confirmation entry vs VWAP pullback entry) and two compatible management styles (band scalp vs 20-SMA trailing hold). The later short idea is not promoted because it lacks a concrete exit/stop rule."
+ },
+ "originalTokens": 5701,
+ "cachedTokensReported": 0
+}

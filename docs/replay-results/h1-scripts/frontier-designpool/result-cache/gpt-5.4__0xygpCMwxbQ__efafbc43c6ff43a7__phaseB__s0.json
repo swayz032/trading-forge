@@ -1,0 +1,127 @@
+{
+ "key": "gpt-5.4__0xygpCMwxbQ__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "0xygpCMwxbQ",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "ict_mss_retrace_pd_array_entry",
+    "higher_timeframe": "15m",
+    "lower_timeframe": "5m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "once I have a daily bias or Direction I will use this checklist",
+      "step": 1,
+      "action": "After establishing higher-timeframe bias or direction, use the checklist to qualify the trade.",
+      "rationale": "The checklist is only used after the trader already has directional bias."
+     },
+     {
+      "transcript_quote": "the first thing I focus on is a stop raid",
+      "step": 2,
+      "action": "Wait for a stop raid or liquidity sweep first.",
+      "rationale": "The setup starts with liquidity being raided before entry is considered."
+     },
+     {
+      "transcript_quote": "the next thing I look for is a market structure shift or displacement",
+      "step": 3,
+      "action": "Then wait for a market structure shift or displacement in the intended direction.",
+      "rationale": "The shift confirms the post-sweep move is expanding away with intent."
+     },
+     {
+      "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+      "step": 4,
+      "action": "For longs, wait for price to retrace into discount or OTE of the displacement range; for shorts, wait for price to retrace into premium or OTE of the displacement range.",
+      "rationale": "The retrace zone is where the trader wants to re-enter after displacement."
+     },
+     {
+      "transcript_quote": "I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+      "step": 5,
+      "action": "Use a PD array in that retrace zone, preferably a fair value gap or order block, but a breaker block or OTE can also be used.",
+      "rationale": "The PD array is the actual entry location inside the retrace area."
+     },
+     {
+      "transcript_quote": "I like to blend one two or three of these Concepts together for my personal strategy",
+      "step": 6,
+      "action": "Prefer entries where two or three of the concepts overlap rather than using only one in isolation.",
+      "rationale": "The trader's edge comes from combining multiple concepts into one entry area."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "My Stop on this low",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The stop is placed beyond the relevant swing low for longs, and the examples also show using the order block boundary on shorts."
+    },
+    "stop_management": "optionally move stop to break even after partials.",
+    "targets": [
+     {
+      "transcript_quote": "looking for buy side liquidity up here",
+      "priority": 1,
+      "type": "equal_highs",
+      "r_multiple": null,
+      "rationale": "Primary target is opposing liquidity such as buy-side liquidity above for longs or sell-side liquidity below for shorts."
+     },
+     {
+      "transcript_quote": "target the initial highs from the morning",
+      "priority": 2,
+      "type": "range_high",
+      "r_multiple": null,
+      "rationale": "A further target can be prior session highs such as the morning highs."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "once I have a daily bias or Direction",
+      "name": "higher_timeframe_bias",
+      "description": "Only use the setup after a daily bias or direction is established.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "the first thing I focus on is a stop raid",
+      "name": "stop_raid",
+      "description": "The first required condition is a stop raid or liquidity sweep.",
+      "canonical_match": "liquidity_target_clear"
+     },
+     {
+      "transcript_quote": "the next thing I look for is a market structure shift or displacement",
+      "name": "market_structure_shift_or_displacement",
+      "description": "A market structure shift or displacement must occur after the stop raid.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "I generally like to see price move back into a discount of this price range here",
+      "name": "discount_or_premium_retrace",
+      "description": "Price should retrace into the favorable side of the displacement range before entry.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+      "name": "pd_array_in_retrace_zone",
+      "description": "The retrace zone should contain a PD array such as a fair value gap, order block, breaker block, or OTE.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "I like to blend one two or three of these Concepts together for my personal strategy",
+      "name": "concept_overlap",
+      "description": "He prefers trades where multiple concepts are blended together.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "I prefer to have a stop rate prior to the displacement",
+      "name": "sweep_before_displacement",
+      "description": "He prefers the liquidity raid to happen before the displacement move.",
+      "canonical_match": "market_structure_aligned"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 10720,
+ "cachedTokensReported": 0
+}

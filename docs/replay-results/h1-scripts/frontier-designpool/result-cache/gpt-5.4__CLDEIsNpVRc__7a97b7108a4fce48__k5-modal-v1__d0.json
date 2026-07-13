@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__CLDEIsNpVRc__7a97b7108a4fce48__k5-modal-v1__d0",
+ "model": "gpt-5.4",
+ "videoId": "CLDEIsNpVRc",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d0",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+    "entry_summary": "After 9:30 a.m. New York time, identify the draw on liquidity, then wait for a 5-minute or 15-minute fair value gap to form in the direction of that draw. When price taps that higher-timeframe fair value gap, drop to the 1-minute chart and enter on inversion of the 1-minute fair value gap(s) after a",
+    "exit_summary": "Place the stop beyond the recent sweep/high-low used for the entry. Target either the draw on liquidity or, preferably, a fixed 1:2 risk-reward; move stop to break even once the closest post-entry liquidity level is taken out.",
+    "variants": [
+     {
+      "variant_label": "Bearish version",
+      "timeframe_note": "5-minute or 15-minute higher-timeframe fair value gap; 1-minute confirmation",
+      "confirmation_mechanic_note": "After price taps the higher-timeframe gap, wait for 1-minute liquidity sweep and bearish inversion of the bullish 1m FVG",
+      "target_note": "Target draw on liquidity or fixed 1:2; move to break even after nearest low is taken",
+      "transcript_quote": "once price closes below this IFVG you want to take a short position right away and you want to put your stop above the high and you can target the drn"
+     },
+     {
+      "variant_label": "Bullish version",
+      "timeframe_note": "5-minute or 15-minute higher-timeframe fair value gap; 1-minute confirmation",
+      "confirmation_mechanic_note": "After price taps the higher-timeframe gap, wait for 1-minute liquidity sweep and bullish inversion of the bearish 1m FVG",
+      "target_note": "Fixed 1:2 shown; move to break even after nearest high/closest liquidity is taken",
+      "transcript_quote": "we have inversed the 1 minute gap. We take our entry. We put our stop below these bodies and we go for 1 to2"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One strategy skeleton is taught and demonstrated in both bearish and bullish directions; these are compatible directional variants of the same higher-timeframe FVG tap plus 1-minute inversion model."
+ },
+ "originalTokens": 6209,
+ "cachedTokensReported": 0
+}

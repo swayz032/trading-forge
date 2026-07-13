@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__DLwVqcLRcfw__7a97b7108a4fce48__k5-modal-v1__d2",
+ "model": "gpt-5.4",
+ "videoId": "DLwVqcLRcfw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d2",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_20sma_long_pullback_trend_scalp",
+    "entry_summary": "On the 2-minute chart, get bullish once price closes over both VWAP and the 20 SMA, then enter long on a following candle confirming that strength or on pullbacks/bounces that retest VWAP while price continues to hold above VWAP and the 20 SMA. Additional buy entries can be taken on repeated VWAP b-",
+    "exit_summary": "For a quick scalp, take profits into the upper VWAP band. For a longer hold, stay in the trade while VWAP and the 20 SMA trend higher, then use the 20 SMA as a trailing stop and exit on a close below the 20 SMA once price has separated from VWAP.",
+    "variants": [
+     {
+      "variant_label": "quick scalp to VWAP upper band",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "enter after close above VWAP and 20 SMA, or on bounce/retest of VWAP while holding above it",
+      "target_note": "take profits into the upper VWAP channel/band",
+      "transcript_quote": "you can throw the upper and lower channels on the vwap... and you can sell for profits into the upper Channel"
+     },
+     {
+      "variant_label": "extended hold with 20 SMA trailing stop",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "keep buying/holding VWAP tests that do not close below VWAP",
+      "target_note": "hold while VWAP and 20 SMA trend higher; exit on close below 20 SMA as trailing stop",
+      "transcript_quote": "you can use the 20 SMA as a trailing stop so if we do close below the 20 SMA maybe you can use that as an indication to get out of the trade"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "vwap_20sma_short_rejection_after_bearish_break",
+    "entry_summary": "If price loses VWAP and the 20 SMA together, closes below VWAP, and a following candle starts to build below, stop looking to buy the bounce and instead short the rejection of VWAP and the 20 SMA.",
+    "exit_summary": "Exit logic is not concretely taught beyond the short entry/rejection idea; no runnable stop, target, or repeatable management rule is provided for the short.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video clearly teaches one runnable long VWAP+20 SMA pullback strategy with two compatible management variants (quick band target vs longer trailing-stop hold). The bearish short is mentioned as an opposite idea, but its exit/management is not taught concretely enough to satisfy the evidence floor."
+ },
+ "originalTokens": 5822,
+ "cachedTokensReported": 4864
+}

@@ -1,0 +1,57 @@
+{
+ "key": "gpt-5.4__0xygpCMwxbQ__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "0xygpCMwxbQ",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "ict_bias_aligned_stop_raid_mss_pd_array_retracement",
+    "entry_summary": "After establishing higher-timeframe bias, wait for a liquidity raid/stop run, then a market structure shift/displacement in the intended direction. Enter on the retracement into discount/premium or OTE at a PD array such as a fair value gap, order block, breaker block, or box setup confluence.",
+    "exit_summary": "Place the stop beyond the invalidation swing or PD-array boundary (for longs, below the low/order block; for shorts, above the high/order block). Take a first partial at opposing liquidity or a nearby objective, then either move stop to breakeven and hold for further liquidity targets/new highs or-l",
+    "variants": [
+     {
+      "variant_label": "Long via OTE + fair value gap/order block/box confluence",
+      "timeframe_note": "Shown on NASDAQ 15-minute and ES top-down to 5-minute examples",
+      "confirmation_mechanic_note": "After sell-side raid and bullish displacement, buy retracement into discount/OTE aligned with FVG, order block, breaker,",
+      "target_note": "First partial at nearby buy-side liquidity or morning highs; optionally hold runners higher",
+      "transcript_quote": "for my entry I would personally be looking to enter the trade right here My Stop on this low first partial here and then looking for buy sideliquidity"
+     },
+     {
+      "variant_label": "Short via breaker block or fair value gap in premium after buy-side raid",
+      "timeframe_note": "Shown on 5-minute and 1-minute/5-minute ES examples",
+      "confirmation_mechanic_note": "After buy-side raid and bearish displacement, sell retracement into premium/OTE at breaker block, fair value gap, orated",
+      "target_note": "Target prior lows/new low; stop on order block or setup high",
+      "transcript_quote": "my entry would be on this order block targeting a new low and my stop on the order block High"
+     },
+     {
+      "variant_label": "Order-block-only retracement variant",
+      "timeframe_note": "Shown on ES 5-minute reframing of the same example",
+      "confirmation_mechanic_note": "Uses order block as the chosen PD array instead of FVG/breaker while keeping same stop-raid plus structure-shift retrace",
+      "target_note": "Target a new low with stop on the order block high",
+      "transcript_quote": "what PD array do we have in this area well we have an order block right here and with that my entry would be on this order block targeting a new low"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "box_setup_deviation_retest_reversal",
+    "entry_summary": "When price deviates below a range low and reclaims back into the range, treat it as a box setup/accumulation-manipulation-distribution pattern. Enter on the retest of the manipulation area, looking for price to travel to the opposite side of the range.",
+    "exit_summary": "Take partial profits as price moves higher and use the opposite-side liquidity above the range as the main target. The transcript does not give a precise stop placement rule beyond using the manipulated area as the retest/invalidation zone.",
+    "variants": [
+     {
+      "variant_label": "Bullish range-deviation retest",
+      "timeframe_note": "Shown on NASDAQ 1-minute chart",
+      "confirmation_mechanic_note": "Requires deviation below range, reclaim into range, then retest of the manipulation before continuation",
+      "target_note": "Take partials, then target liquidity resting above the range",
+      "transcript_quote": "ideally I'm looking for a retest of this manipulation to then be reaching for the other side here before going higher"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "Enumerated two strategies: the main ICT stop-raid plus MSS retracement model, and a separate box-setup deviation-retest reversal. Directional long/short uses of the main model are treated as compatible variants of one skeleton, while the box setup is separate because the speaker explicitly notes it can trigger without the prior structure-shift requirement."
+ },
+ "originalTokens": 5968,
+ "cachedTokensReported": 4864
+}

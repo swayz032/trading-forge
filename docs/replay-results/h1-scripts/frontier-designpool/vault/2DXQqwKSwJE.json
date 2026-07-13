@@ -1,0 +1,397 @@
+{
+ "video_id": "2DXQqwKSwJE",
+ "phase_a": {
+  "counts": [
+   3,
+   3,
+   3,
+   3,
+   3
+  ],
+  "mode": 3,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "mean_reversion_scalp",
+     "entry_summary": "Enter after price stretches too far too fast into a clearly defined support or resistance level and the tape shows order-flow hesitation/reversal. On a sharp down move into support, when volume stalls and sellers stop hitting the bid, take the offer and get long in front of support; the opposite can",
+     "exit_summary": "Use the support/resistance level's bids or offers as protection, i.e. risk against that level with a tight stop if it fails, and capture the bounce/reversal off the level.",
+     "variants": [
+      {
+       "variant_label": "long off sharp flush into support",
+       "timeframe_note": null,
+       "confirmation_mechanic_note": "volume stalls, sellers stop hitting the bid, tape shows hesitation at support",
+       "target_note": "capture the bounce off support",
+       "transcript_quote": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid. As a scal,0"
+      },
+      {
+       "variant_label": "short off sharp squeeze into resistance",
+       "timeframe_note": null,
+       "confirmation_mechanic_note": "best when price quickly and sharply shoots up into resistance with large offers",
+       "target_note": "capture the reversal off resistance",
+       "transcript_quote": "Often, these mean reversion scalps work best when the stock quickly and sharply shoots up to a resistance level with large offers."
+      }
+     ]
+    },
+    {
+     "strategy_id": 1,
+     "name": "continuation_breakout_scalp",
+     "entry_summary": "Enter on a clean break of support or resistance in an in-play stock, using tape confirmation that the level is being taken. For an upside break, buy just above the level, e.g. $10.01/$10.02 or $50.01 once buyers lift the offer and it disappears.",
+     "exit_summary": "Scalp out into immediate emotional follow-through for roughly 10 to 30 cents, and use a tight stop back below the broken level if price fails the breakout.",
+     "variants": [
+      {
+       "variant_label": "generic resistance break continuation",
+       "timeframe_note": null,
+       "confirmation_mechanic_note": "be first in on the break of clean support/resistance",
+       "target_note": "scalp the follow-through",
+       "transcript_quote": "if we have a $10 resistance level, you want to be buying $10.01 or $10.02, and scalping out on that emotional follow-through"
+      },
+      {
+       "variant_label": "$50 psychological level breakout example",
+       "timeframe_note": "first hour intraday example",
+       "confirmation_mechanic_note": "buyers repeatedly lift the $50 offer, offer shrinks or disappears, then buy $50.01",
+       "target_note": "kick it out 10, 20, or even 30 cents higher",
+       "transcript_quote": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone, you want to be the one buying at $50.01, if possible, and pot"
+      }
+     ]
+    },
+    {
+     "strategy_id": 2,
+     "name": "spread_making_scalp",
+     "entry_summary": "Provide liquidity rather than taking it by placing resting limit bids/offers in spread names ahead of large bids or offers, aiming to get filled by urgent participants crossing the spread. The setup is a relatively balanced but thin market where microstructure, queue priority, and order placement,2.",
+     "exit_summary": "Sell the acquired position back out on the other side of the spread, 'kicking offers out' a point or two higher in the example, and repeat while the spread remains wide before it compresses.",
+     "variants": [
+      {
+       "variant_label": "general spread capture",
+       "timeframe_note": null,
+       "confirmation_mechanic_note": "resting limit orders in spread names ahead of large bids or offers",
+       "target_note": "capture the bid-ask spread as others cross",
+       "transcript_quote": "You're placing resting limit orders in spread names ahead of large bids or offers with the aim to capture the difference between the spread"
+      },
+      {
+       "variant_label": "facebook ipo wide-spread example",
+       "timeframe_note": null,
+       "confirmation_mechanic_note": "slam in huge bids during a very wide, active spread",
+       "target_note": "kick offers out a point or two higher and repeat before the spread compresses",
+       "transcript_quote": "immediately just slamming in huge bids, only to just as quickly kick his offers out and his size out a point or two higher, and repeating it again and"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "The video explicitly teaches three distinct scalp strategy skeletons: mean reversion, continuation breakout, and spread making."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "Enter after price stretches too far too fast into a clearly defined support or resistance level and the tape shows order-flow hesitation/reversal. On a sharp down move into support, when volume stalls and sellers stop hitting the bid, take the offer and get long in front of support; the opposite can",
+    "exit_summary": "Use the support/resistance level's bids or offers as protection, i.e. risk against that level with a tight stop if it fails, and capture the bounce/reversal off the level.",
+    "name": "mean_reversion_scalp"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "mean_reversion_scalp_1m",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "Mean reversion scalps occur after price stretches too far too fast.",
+        "step": 1,
+        "action": "For long, wait for price to stretch down too far too fast into support; for short, wait for price to stretch up too far too fast into resistance.",
+        "rationale": "The setup starts with an emotional overextension into a key level."
+       },
+       {
+        "transcript_quote": "Once you identify an in-play stock, the next step is identifying a tight level.",
+        "step": 2,
+        "action": "Identify a tight, well-defined intraday support or resistance level before taking the scalp.",
+        "rationale": "A tight level defines the setup and risk."
+       },
+       {
+        "transcript_quote": "On a sharp down move into support, you will often see a moment where volume stalls",
+        "step": 3,
+        "action": "For long, on a sharp down move into support, wait for volume to stall; for short, on a sharp up move into resistance, wait for the analogous stall at the level.",
+        "rationale": "The stall signals the move is losing force at the level."
+       },
+       {
+        "transcript_quote": "it's this pause where people stop hitting the bid",
+        "step": 4,
+        "action": "For long, wait for the tape to show sellers stop hitting the bid; for short, wait for buyers to stop aggressively lifting the offer.",
+        "rationale": "Order-flow hesitation shows the momentum shift before it is obvious on the chart."
+       },
+       {
+        "transcript_quote": "you then take the offer and get long in front of that support level",
+        "step": 5,
+        "action": "For long, take the offer and get long in front of support; for short, hit the bid and get short in front of resistance.",
+        "rationale": "The entry is taken as order flow begins to reverse at the key level."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "using the bids as at the support as your protection",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "Risk against the support or resistance level acting as protection."
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "capture the bounce we get off that level",
+        "priority": 1,
+        "type": "bounce_off_level",
+        "r_multiple": null,
+        "rationale": "The objective is to capture the reversal bounce off the level."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "if you are not trading in-play names, you are handicapping yourself",
+        "name": "in_play_stock",
+        "description": "Only take the setup in an in-play stock.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "I want a very well-defined intraday support or resistance level.",
+        "name": "well_defined_intraday_level",
+        "description": "The trade requires a very well-defined intraday support or resistance level.",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "Ideally, one that aligns on multiple time frames.",
+        "name": "multiple_timeframe_alignment",
+        "description": "Ideally the level aligns on multiple time frames.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "That shift is visible in the tape before it's obvious on the chart.",
+        "name": "tape_shift",
+        "description": "Order-flow shift on the tape should appear before the reversal is obvious on the chart.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "volume stalls",
+        "name": "volume_stall_at_level",
+        "description": "Look for volume to stall as price stretches into the level.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "people stop hitting the bid",
+        "name": "seller_hesitation",
+        "description": "For longs, sellers stopping hitting the bid confirms hesitation; for shorts, the opposite applies at resistance.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal.",
+        "name": "sharp_move_into_big_liquidity",
+        "description": "The best reversals come after a sharp move into really big bids or offers.",
+        "canonical_match": "delta_or_volume_signature"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "non_futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "Enter on a clean break of support or resistance in an in-play stock, using tape confirmation that the level is being taken. For an upside break, buy just above the level, e.g. $10.01/$10.02 or $50.01 once buyers lift the offer and it disappears.",
+    "exit_summary": "Scalp out into immediate emotional follow-through for roughly 10 to 30 cents, and use a tight stop back below the broken level if price fails the breakout.",
+    "name": "continuation_breakout_scalp"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "continuation_breakout_scalp",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance.",
+        "step": 1,
+        "action": "Wait for price to approach a clean support or resistance level for a continuation break; for long, a break of resistance, or for short, a break of support.",
+        "rationale": "The setup is specifically a clean break continuation trade."
+       },
+       {
+        "transcript_quote": "if you are not trading in-play names, you are handicapping yourself.",
+        "step": 2,
+        "action": "Only trade the breakout in an in-play stock.",
+        "rationale": "The speaker says stock selection is foundational to effective scalping."
+       },
+       {
+        "transcript_quote": "you want to be the first market participant to enter upon the break",
+        "step": 3,
+        "action": "Enter as the level breaks; for long, buy just above resistance, or for short, sell just below support.",
+        "rationale": "Early execution on the break is the edge in this scalp."
+       },
+       {
+        "transcript_quote": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone, you want to be the one buying",
+        "step": 4,
+        "action": "Use tape confirmation that the resting liquidity at the level is being consumed before triggering the breakout entry; for long, buyers should lift the offer, or for short, sellers should hit the bid.",
+        "rationale": "Real-time order flow confirms whether the level is actually being taken."
+       }
+      ],
+      "preferred_regime": "trending",
+      "stop": {
+       "transcript_quote": "Often, your stop loss would be right below that level if it gets back below the $50.",
+       "anchor": "swing_low_below_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "The speaker places the stop back below the broken level if the breakout fails."
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "potentially kicking it out 10, 20, or even 30 cents higher",
+        "priority": 1,
+        "type": "emotional_follow_through",
+        "r_multiple": null,
+        "rationale": "The scalp target is the immediate post-break momentum burst."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "if you are not trading in-play names, you are handicapping yourself.",
+        "name": "in_play_stock",
+        "description": "Only take the setup in an in-play stock with strong activity.",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "I want a very well-defined intraday support or resistance level. Ideally, one that aligns on multiple time frames.",
+        "name": "clean_multitimeframe_level",
+        "description": "The breakout level should be a well-defined intraday support or resistance, ideally aligned across multiple time frames.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "Volume is five times normal.",
+        "name": "elevated_volume",
+        "description": "The stock should have unusually high volume for the breakout to matter.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "The pullbacks are shallow, and each dip finds buyers higher than the previous dip.",
+        "name": "tight_consolidation_pressure",
+        "description": "Repeated shallow pullbacks and higher dip buyers show pressure building into the breakout level.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow.",
+        "name": "tape_confirmation",
+        "description": "The trade requires real-time order flow confirmation before entry.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "Are the buyers aggressively lifting into that offer? Are prints going off repeatedly at $50?",
+        "name": "aggressive_buyers_or_sellers",
+        "description": "For longs, buyers should aggressively lift the offer; for shorts, the mirrored condition is sellers aggressively hitting the bid.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone",
+        "name": "level_getting_taken",
+        "description": "The resting liquidity at the level should visibly shrink and disappear, showing the breakout level is being taken.",
+        "canonical_match": "delta_or_volume_signature"
+       },
+       {
+        "transcript_quote": "Strong breakouts feel urgent, and you want to see the stock burst through that level with conviction.",
+        "name": "urgent_breakout",
+        "description": "The breakout should move through the level with urgency and conviction rather than drift.",
+        "canonical_match": "delta_or_volume_signature"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [
+     {
+      "name": "continuation_breakout_scalp",
+      "reason": "fixed_point_stop_not_supported",
+      "detail": "The speaker also gives fixed-price examples such as buying $10.01/$10.02 or targeting 10 to 30 cents, which are example-specific and not portable fixed-stop/target rules."
+     }
+    ],
+    "instrument_classification": "non_futures_primary"
+   }
+  },
+  {
+   "phase_a_scope": {
+    "entry_summary": "Provide liquidity rather than taking it by placing resting limit bids/offers in spread names ahead of large bids or offers, aiming to get filled by urgent participants crossing the spread. The setup is a relatively balanced but thin market where microstructure, queue priority, and order placement,2.",
+    "exit_summary": "Sell the acquired position back out on the other side of the spread, 'kicking offers out' a point or two higher in the example, and repeat while the spread remains wide before it compresses.",
+    "name": "spread_making_scalp"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "spread_making_scalp",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "Instead of aggressively taking liquidity, you provide the liquidity.",
+        "step": 1,
+        "action": "Provide liquidity instead of taking it aggressively.",
+        "rationale": "The setup is based on passive order placement rather than market orders."
+       },
+       {
+        "transcript_quote": "You're placing resting limit orders in spread names ahead of large bids or offers",
+        "step": 2,
+        "action": "Place resting limit orders in spread names ahead of large bids for long fills or ahead of large offers for short fills.",
+        "rationale": "The trader positions in the queue before urgent participants cross the spread."
+       },
+       {
+        "transcript_quote": "with the aim to capture the difference between the spread as other participants are crossing",
+        "step": 3,
+        "action": "Let urgent participants cross the spread into your resting orders to capture the bid-ask spread.",
+        "rationale": "The edge comes from being the liquidity provider when others need urgency."
+       }
+      ],
+      "preferred_regime": "relative_equilibrium_but_thin",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "only to just as quickly kick his offers out and his size out a point or two higher",
+        "priority": 1,
+        "type": "opposite_side_of_spread",
+        "r_multiple": null,
+        "rationale": "Exit by offering the acquired position back out on the other side of the spread."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "The edge here does not come from predicting direction. It comes from understanding market microstructure.",
+        "name": "market_microstructure_edge",
+        "description": "The edge comes from understanding market microstructure rather than predicting direction.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread.",
+        "name": "relative_equilibrium_but_thin",
+        "description": "The setup works when the stock is in relative equilibrium but thin so urgent traders cross the spread.",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "To do this well, you must really understand market microstructure of order types, queue priority, and hidden versus visible orders.",
+        "name": "queue_priority_and_order_types",
+        "description": "The trader requires understanding of order types, queue priority, and hidden versus visible orders.",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_with_forex_illustration"
+   }
+  }
+ ]
+}

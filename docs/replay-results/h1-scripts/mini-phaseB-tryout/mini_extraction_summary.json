@@ -1,0 +1,29 @@
+{
+ "model": "gpt-5.4-mini",
+ "videos": {
+  "WEhmadJArQo": {
+   "n_strategies": 2,
+   "spent": 234801
+  },
+  "R5L890juvRw": {
+   "n_strategies": 2,
+   "spent": 255703
+  },
+  "IyFioFkRgWo": {
+   "n_strategies": 1,
+   "spent": 265808
+  },
+  "4cT8WTyxhYY": {
+   "n_strategies": 1,
+   "spent": 276277
+  },
+  "E9MzEC_yNoM": {
+   "n_strategies": 2,
+   "spent": 299080
+  },
+  "-igpOZs8LsM": {
+   "n_strategies": 1,
+   "spent": 309111
+  }
+ }
+}

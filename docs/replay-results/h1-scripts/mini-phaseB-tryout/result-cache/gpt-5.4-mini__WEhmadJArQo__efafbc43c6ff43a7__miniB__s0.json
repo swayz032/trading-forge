@@ -1,0 +1,96 @@
+{
+ "key": "gpt-5.4-mini__WEhmadJArQo__efafbc43c6ff43a7__miniB__s0",
+ "model": "gpt-5.4-mini",
+ "videoId": "WEhmadJArQo",
+ "promptHash": "efafbc43c6ff43a7__miniB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "opening_range_fvg_retest_scalp_5m_1m",
+    "higher_timeframe": "5m",
+    "lower_timeframe": "1m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "mark out the high and the low of the first 5-minute candle",
+      "step": 1,
+      "action": "Mark the high and low of the first 5-minute candle of the day as the key levels.",
+      "rationale": "These levels define the opening range used for the setup."
+     },
+     {
+      "transcript_quote": "wait for a break of the level, but we need a fair value gap",
+      "step": 2,
+      "action": "Wait for price to break one of the marked opening-range levels only when a fair value gap forms with the break.",
+      "rationale": "The break alone is not enough; the fair value gap confirms the move."
+     },
+     {
+      "transcript_quote": "we need the market to trade back into the fair value gap",
+      "step": 3,
+      "action": "Wait for price to retest back into the fair value gap.",
+      "rationale": "The retest is the pullback required before entry."
+     },
+     {
+      "transcript_quote": "wait for this retest candle right here to get engulfed",
+      "step": 4,
+      "action": "Enter when the retest candle is engulfed in the breakout direction.",
+      "rationale": "Engulfing provides confirmation that buyers or sellers remain in control."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "put that under the lowest area that we traded into that fair value gap. And you always want to give it one tick of breathing room",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "\"put that under the lowest area that we traded into that fair value gap\" with \"one tick of breathing room\"."
+    },
+    "stop_management": "No need to micromanage your trade.",
+    "targets": [
+     {
+      "transcript_quote": "we are just targeting a fixed 3:1 return",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 3,
+      "rationale": "The speaker says the scalping target is a fixed 3:1 return."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "we're going to start on our five-minute chart",
+      "name": "five_minute_chart",
+      "description": "Start on the five-minute chart.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "mark out the high and the low of the first 5-minute candle",
+      "name": "opening_range_levels",
+      "description": "Mark the high and low of the first 5-minute candle.",
+      "canonical_match": "liquidity_target_clear"
+     },
+     {
+      "transcript_quote": "we're going to wait for a break of the level, but we need a fair value gap",
+      "name": "fvg_break_confirmation",
+      "description": "Wait for a break of the level, but only if a fair value gap forms.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "we need the market to trade back into the fair value gap",
+      "name": "fvg_retest",
+      "description": "Wait for the market to trade back into the fair value gap.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "wait for this retest candle right here to get engulfed",
+      "name": "engulfing_confirmation",
+      "description": "Wait for the retest candle to get engulfed.",
+      "canonical_match": "market_structure_aligned"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_with_forex_illustration"
+ },
+ "originalTokens": 10910,
+ "cachedTokensReported": 0
+}

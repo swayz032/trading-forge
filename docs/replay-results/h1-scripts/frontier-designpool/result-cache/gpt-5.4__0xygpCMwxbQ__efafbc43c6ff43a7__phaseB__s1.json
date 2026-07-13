@@ -1,0 +1,115 @@
+{
+ "key": "gpt-5.4__0xygpCMwxbQ__efafbc43c6ff43a7__phaseB__s1",
+ "model": "gpt-5.4",
+ "videoId": "0xygpCMwxbQ",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s1",
+ "result": {
+  "strategies": [
+   {
+    "name": "box_setup_deviation_retest",
+    "higher_timeframe": "1m",
+    "lower_timeframe": null,
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "we get a move below this range and then back into the range",
+      "step": 1,
+      "action": "Define the setup when price deviates outside the range and then reclaims back into it; for long, deviate below the range and reclaim back inside, and for short, deviate above the range and reclaim back inside.",
+      "rationale": "The deviation back into the range marks the manipulation phase of the box setup."
+     },
+     {
+      "transcript_quote": "aggress it down aggressive up this is the deviation from the range",
+      "step": 2,
+      "action": "Use the aggressive move away from the deviation as confirmation of the reclaim; for long, aggressive down then aggressive up, and for short, aggressive up then aggressive down.",
+      "rationale": "The aggressive return suggests rejection of the deviation."
+     },
+     {
+      "transcript_quote": "accumulation manipulation I want to see distribution",
+      "step": 3,
+      "action": "Frame the trade as a box setup sequence of accumulation, manipulation, then distribution before entry.",
+      "rationale": "The speaker uses this sequence to define the setup logic."
+     },
+     {
+      "transcript_quote": "ideally I'm looking for a retest of this manipulation",
+      "step": 4,
+      "action": "Wait for a retest of the manipulation/deviation area before entering; for long, retest the lower deviation area, and for short, retest the upper deviation area.",
+      "rationale": "The retest gives the actual entry location after the reclaim."
+     },
+     {
+      "transcript_quote": "be reaching for the other side here",
+      "step": 5,
+      "action": "Enter on the retest for a move toward the opposite side of the range; for long, target the upper side, and for short, target the lower side.",
+      "rationale": "The box setup aims for expansion across the range to the opposite side."
+     }
+    ],
+    "preferred_regime": "ranging",
+    "stop": {
+     "transcript_quote": null,
+     "anchor": null,
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker does not state a structural initial stop for this scoped box setup segment."
+    },
+    "stop_management": "Take partials as price moves toward the opposite side and the example shows the possibility of moving the stop to break even after partials.",
+    "targets": [
+     {
+      "transcript_quote": "be reaching for the other side here",
+      "priority": 1,
+      "type": "opposite_side_of_range",
+      "r_multiple": null,
+      "rationale": "The speaker says the setup is looking for price to reach the other side of the range."
+     },
+     {
+      "transcript_quote": "we have all this liquidity resting above",
+      "priority": 2,
+      "type": "equal_highs",
+      "r_multiple": null,
+      "rationale": "The move is intended to reach the liquidity resting above the range."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "this is the deviation from the range",
+      "name": "range_deviation",
+      "description": "The setup requires a deviation outside the range before the reclaim.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "move below this range and then back into the range",
+      "name": "range_reclaim",
+      "description": "Price must move back into the range after the deviation.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "accumulation manipulation I want to see distribution",
+      "name": "amd_box_sequence",
+      "description": "The speaker wants to see accumulation, manipulation, then distribution in the box setup.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "ideally I'm looking for a retest of this manipulation",
+      "name": "manipulation_retest",
+      "description": "The preferred entry is on a retest of the manipulation area.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "although we did not shift structure prior to this entry this is a box setup entry",
+      "name": "no_prior_ltf_stop_raid_required",
+      "description": "This box setup can be taken even without a prior lower-timeframe stop raid or structure shift before entry.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "without a lower time frame liquidity rate prior to a move I am not interested in it",
+      "name": "requires_clear_manipulation_before_move",
+      "description": "The speaker still wants to see a clear lower-timeframe liquidity event tied to the move, even if not a prior stop raid in the standard checklist format.",
+      "canonical_match": "liquidity_target_clear"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 10591,
+ "cachedTokensReported": 9472
+}

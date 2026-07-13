@@ -1,0 +1,28 @@
+{
+ "key": "gpt-5.4__CLDEIsNpVRc__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "CLDEIsNpVRc",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+    "entry_summary": "After 9:30 a.m. New York time, identify the draw on liquidity, then wait for a 5-minute or 15-minute fair value gap to form in the direction of that draw. When price taps that higher-timeframe fair value gap, drop to the 1-minute chart, require a liquidity sweep and then an inversion of the 1-minute",
+    "exit_summary": "Enter as soon as the 1-minute fair value gap is inversed, place the stop beyond the manipulation high/low, and target either the draw on liquidity or a fixed 1:2 risk-reward ratio. Move the stop to break even once the closest post-entry liquidity level is taken out.",
+    "variants": [
+     {
+      "variant_label": "Bearish version",
+      "timeframe_note": "Higher-timeframe setup uses 5-minute or 15-minute fair value gap; confirmation on 1-minute",
+      "confirmation_mechanic_note": "Wait for price to tap the HTF gap, sweep 1-minute liquidity, then close below the bullish 1-minute fair value gap; if多个 ",
+      "target_note": "Usually fixed 1:2 risk-reward; speaker also mentions targeting draw on liquidity",
+      "transcript_quote": "once price closes below this IFVG you want to take a short position right away and you want to put your stop above the high and you can target the dr{"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one core strategy skeleton with bullish and bearish directional versions, plus 5-minute vs 15-minute higher-timeframe gap and target-choice differences as compatible variants, not distinct strategies."
+ },
+ "originalTokens": 6098,
+ "cachedTokensReported": 5376
+}

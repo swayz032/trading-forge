@@ -1,0 +1,72 @@
+{
+ "key": "gpt-5.4-mini__R5L890juvRw__efafbc43c6ff43a7__miniB__s0",
+ "model": "gpt-5.4-mini",
+ "videoId": "R5L890juvRw",
+ "promptHash": "efafbc43c6ff43a7__miniB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "vwap_trend_continuation_retest_5m",
+    "higher_timeframe": "5m",
+    "lower_timeframe": "5m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+      "step": 1,
+      "action": "Wait for price to move away from VWAP to at least the first, preferably the second, standard-deviation band.",
+      "rationale": "The speaker says to wait for price to extend to the outer VWAP bands before taking the continuation setup."
+     },
+     {
+      "transcript_quote": "after we broke it and tested it we can try our long trade",
+      "step": 2,
+      "action": "After price breaks the chosen VWAP standard-deviation band and retests it, enter in the direction of the session bias.",
+      "rationale": "The setup is a break-and-retest continuation trade."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": null,
+     "anchor": null,
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": null
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "use the second and third standard deviation as a Target",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": null,
+      "rationale": "The speaker says the second and third VWAP standard-deviation bands can be used as targets."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "say you might have a long idea for your session",
+      "name": "session_bias",
+      "description": "Trade in the direction of the session bias.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+      "name": "vwapsd_extension",
+      "description": "Wait for price to extend to at least the first, preferably the second, standard-deviation band away from VWAP.",
+      "canonical_match": "vwap_alignment"
+     },
+     {
+      "transcript_quote": "after we broke it and tested it",
+      "name": "break_and_retest",
+      "description": "Require a break and retest of the VWAP standard-deviation band before entry.",
+      "canonical_match": "vwap_alignment"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 10515,
+ "cachedTokensReported": 6912
+}

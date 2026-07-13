@@ -1,0 +1,114 @@
+{
+ "key": "gpt-5.4__2DXQqwKSwJE__efafbc43c6ff43a7__phaseB__s0",
+ "model": "gpt-5.4",
+ "videoId": "2DXQqwKSwJE",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s0",
+ "result": {
+  "strategies": [
+   {
+    "name": "mean_reversion_scalp_1m",
+    "higher_timeframe": "1m",
+    "lower_timeframe": null,
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "Mean reversion scalps occur after price stretches too far too fast.",
+      "step": 1,
+      "action": "For long, wait for price to stretch down too far too fast into support; for short, wait for price to stretch up too far too fast into resistance.",
+      "rationale": "The setup starts with an emotional overextension into a key level."
+     },
+     {
+      "transcript_quote": "Once you identify an in-play stock, the next step is identifying a tight level.",
+      "step": 2,
+      "action": "Identify a tight, well-defined intraday support or resistance level before taking the scalp.",
+      "rationale": "A tight level defines the setup and risk."
+     },
+     {
+      "transcript_quote": "On a sharp down move into support, you will often see a moment where volume stalls",
+      "step": 3,
+      "action": "For long, on a sharp down move into support, wait for volume to stall; for short, on a sharp up move into resistance, wait for the analogous stall at the level.",
+      "rationale": "The stall signals the move is losing force at the level."
+     },
+     {
+      "transcript_quote": "it's this pause where people stop hitting the bid",
+      "step": 4,
+      "action": "For long, wait for the tape to show sellers stop hitting the bid; for short, wait for buyers to stop aggressively lifting the offer.",
+      "rationale": "Order-flow hesitation shows the momentum shift before it is obvious on the chart."
+     },
+     {
+      "transcript_quote": "you then take the offer and get long in front of that support level",
+      "step": 5,
+      "action": "For long, take the offer and get long in front of support; for short, hit the bid and get short in front of resistance.",
+      "rationale": "The entry is taken as order flow begins to reverse at the key level."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "using the bids as at the support as your protection",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "Risk against the support or resistance level acting as protection."
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "capture the bounce we get off that level",
+      "priority": 1,
+      "type": "bounce_off_level",
+      "r_multiple": null,
+      "rationale": "The objective is to capture the reversal bounce off the level."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "if you are not trading in-play names, you are handicapping yourself",
+      "name": "in_play_stock",
+      "description": "Only take the setup in an in-play stock.",
+      "canonical_match": null
+     },
+     {
+      "transcript_quote": "I want a very well-defined intraday support or resistance level.",
+      "name": "well_defined_intraday_level",
+      "description": "The trade requires a very well-defined intraday support or resistance level.",
+      "canonical_match": "liquidity_target_clear"
+     },
+     {
+      "transcript_quote": "Ideally, one that aligns on multiple time frames.",
+      "name": "multiple_timeframe_alignment",
+      "description": "Ideally the level aligns on multiple time frames.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "That shift is visible in the tape before it's obvious on the chart.",
+      "name": "tape_shift",
+      "description": "Order-flow shift on the tape should appear before the reversal is obvious on the chart.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "volume stalls",
+      "name": "volume_stall_at_level",
+      "description": "Look for volume to stall as price stretches into the level.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "people stop hitting the bid",
+      "name": "seller_hesitation",
+      "description": "For longs, sellers stopping hitting the bid confirms hesitation; for shorts, the opposite applies at resistance.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal.",
+      "name": "sharp_move_into_big_liquidity",
+      "description": "The best reversals come after a sharp move into really big bids or offers.",
+      "canonical_match": "delta_or_volume_signature"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "non_futures_primary"
+ },
+ "originalTokens": 11017,
+ "cachedTokensReported": 0
+}

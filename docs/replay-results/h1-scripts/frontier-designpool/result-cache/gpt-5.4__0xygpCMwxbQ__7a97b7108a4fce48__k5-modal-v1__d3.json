@@ -1,0 +1,57 @@
+{
+ "key": "gpt-5.4__0xygpCMwxbQ__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "0xygpCMwxbQ",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "ict_stop_raid_mss_retracement_pd_array_entry",
+    "entry_summary": "After forming a daily bias, wait for a stop raid/liquidity sweep, then a market structure shift/displacement in the intended direction. Enter on the retracement into discount/premium or OTE, using a PD array such as a fair value gap, order block, breaker block, or box overlap as the entry location.",
+    "exit_summary": "Place the stop beyond the invalidation low/high of the chosen PD array or swing. Take a first partial at opposing liquidity or prior highs/lows, then either move stop to breakeven and hold for further liquidity, or target the next liquidity pool/new high or low.",
+    "variants": [
+     {
+      "variant_label": "Discount retracement into nested FVG/order block for longs",
+      "timeframe_note": "15-minute example on NASDAQ",
+      "confirmation_mechanic_note": "after sell-side raid and bullish structure shift, look for retracement into discount/OTE and enter on a fair value gap/n",
+      "target_note": "first partial at buy-side liquidity, then optional breakeven management for further upside",
+      "transcript_quote": "for my entry I would personally be looking to enter the trade right here My Stop on this low first partial here and then looking for buy side liqui"
+     },
+     {
+      "variant_label": "Premium retracement into breaker block or nested FVG for shorts",
+      "timeframe_note": "5-minute and 1-minute examples; also shown on 5-minute as same setup",
+      "confirmation_mechanic_note": "after buy-side raid and bearish structure shift, wait for return into premium/OTE and short a breaker block, fair value/",
+      "target_note": "target equal lows, a new low, or other sell-side liquidity; stop above the order block/breaker high",
+      "transcript_quote": "what I'd like to see is price return to this breaker block and at the most into this fair value Gap"
+     },
+     {
+      "variant_label": "Higher-timeframe point-of-interest plus lower-timeframe PD array retracement",
+      "timeframe_note": "Daily to hourly to 15-minute to 5-minute example on ES",
+      "confirmation_mechanic_note": "use higher-timeframe volume imbalance/equilibrium as context, then lower-timeframe stop raid plus displacement and enter",
+      "target_note": "partial or breakeven at morning highs, then let runners continue",
+      "transcript_quote": "from here we have order block fair value Gap so I would be looking to enter here putting my stop on this order block low partial or move my stop to br"
+     }
+    ]
+   },
+   {
+    "strategy_id": 1,
+    "name": "ict_box_setup_deviation_retest",
+    "entry_summary": "Trade a box/deviation setup by identifying a range, waiting for price to deviate below or above it and then reclaim the range. Enter on the retest of the manipulation/deviation area, aiming for price to travel to the opposite side of the range.",
+    "exit_summary": "Take partials as price moves toward the other side of the range and opposing liquidity; the example implies scaling out into highs above the range rather than using a fixed R target.",
+    "variants": [
+     {
+      "variant_label": "Bullish deviation below range then reclaim and retest",
+      "timeframe_note": "1-minute example on NASDAQ",
+      "confirmation_mechanic_note": "after deviation below the range and aggressive reclaim, wait for retest of the manipulation zone before entering long",
+      "target_note": "take partials and aim for liquidity resting above / the other side of the range",
+      "transcript_quote": "I want to see distribution so ideally I'm looking for a retest of this manipulation to then be reaching for the other side here before going higher"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The main checklist examples share one retracement-after-stop-raid-and-structure-shift skeleton with PD-array/OTE configuration changes, so they are grouped as one strategy with variants; the separate box setup is oppositional in entry logic and is enumerated separately."
+ },
+ "originalTokens": 5951,
+ "cachedTokensReported": 4864
+}

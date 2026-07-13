@@ -1,0 +1,120 @@
+{
+ "key": "gpt-5.4__2DXQqwKSwJE__efafbc43c6ff43a7__phaseB__s1",
+ "model": "gpt-5.4",
+ "videoId": "2DXQqwKSwJE",
+ "promptHash": "efafbc43c6ff43a7__phaseB__s1",
+ "result": {
+  "strategies": [
+   {
+    "name": "continuation_breakout_scalp",
+    "higher_timeframe": "1m",
+    "lower_timeframe": null,
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance.",
+      "step": 1,
+      "action": "Wait for price to approach a clean support or resistance level for a continuation break; for long, a break of resistance, or for short, a break of support.",
+      "rationale": "The setup is specifically a clean break continuation trade."
+     },
+     {
+      "transcript_quote": "if you are not trading in-play names, you are handicapping yourself.",
+      "step": 2,
+      "action": "Only trade the breakout in an in-play stock.",
+      "rationale": "The speaker says stock selection is foundational to effective scalping."
+     },
+     {
+      "transcript_quote": "you want to be the first market participant to enter upon the break",
+      "step": 3,
+      "action": "Enter as the level breaks; for long, buy just above resistance, or for short, sell just below support.",
+      "rationale": "Early execution on the break is the edge in this scalp."
+     },
+     {
+      "transcript_quote": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone, you want to be the one buying",
+      "step": 4,
+      "action": "Use tape confirmation that the resting liquidity at the level is being consumed before triggering the breakout entry; for long, buyers should lift the offer, or for short, sellers should hit the bid.",
+      "rationale": "Real-time order flow confirms whether the level is actually being taken."
+     }
+    ],
+    "preferred_regime": "trending",
+    "stop": {
+     "transcript_quote": "Often, your stop loss would be right below that level if it gets back below the $50.",
+     "anchor": "swing_low_below_entry",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "The speaker places the stop back below the broken level if the breakout fails."
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "potentially kicking it out 10, 20, or even 30 cents higher",
+      "priority": 1,
+      "type": "emotional_follow_through",
+      "r_multiple": null,
+      "rationale": "The scalp target is the immediate post-break momentum burst."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "if you are not trading in-play names, you are handicapping yourself.",
+      "name": "in_play_stock",
+      "description": "Only take the setup in an in-play stock with strong activity.",
+      "canonical_match": "regime_match"
+     },
+     {
+      "transcript_quote": "I want a very well-defined intraday support or resistance level. Ideally, one that aligns on multiple time frames.",
+      "name": "clean_multitimeframe_level",
+      "description": "The breakout level should be a well-defined intraday support or resistance, ideally aligned across multiple time frames.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "Volume is five times normal.",
+      "name": "elevated_volume",
+      "description": "The stock should have unusually high volume for the breakout to matter.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "The pullbacks are shallow, and each dip finds buyers higher than the previous dip.",
+      "name": "tight_consolidation_pressure",
+      "description": "Repeated shallow pullbacks and higher dip buyers show pressure building into the breakout level.",
+      "canonical_match": "market_structure_aligned"
+     },
+     {
+      "transcript_quote": "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow.",
+      "name": "tape_confirmation",
+      "description": "The trade requires real-time order flow confirmation before entry.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "Are the buyers aggressively lifting into that offer? Are prints going off repeatedly at $50?",
+      "name": "aggressive_buyers_or_sellers",
+      "description": "For longs, buyers should aggressively lift the offer; for shorts, the mirrored condition is sellers aggressively hitting the bid.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone",
+      "name": "level_getting_taken",
+      "description": "The resting liquidity at the level should visibly shrink and disappear, showing the breakout level is being taken.",
+      "canonical_match": "delta_or_volume_signature"
+     },
+     {
+      "transcript_quote": "Strong breakouts feel urgent, and you want to see the stock burst through that level with conviction.",
+      "name": "urgent_breakout",
+      "description": "The breakout should move through the level with urgency and conviction rather than drift.",
+      "canonical_match": "delta_or_volume_signature"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [
+   {
+    "name": "continuation_breakout_scalp",
+    "reason": "fixed_point_stop_not_supported",
+    "detail": "The speaker also gives fixed-price examples such as buying $10.01/$10.02 or targeting 10 to 30 cents, which are example-specific and not portable fixed-stop/target rules."
+   }
+  ],
+  "instrument_classification": "non_futures_primary"
+ },
+ "originalTokens": 11135,
+ "cachedTokensReported": 0
+}

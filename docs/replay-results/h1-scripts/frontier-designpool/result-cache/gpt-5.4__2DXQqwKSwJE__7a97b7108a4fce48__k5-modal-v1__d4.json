@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__2DXQqwKSwJE__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "2DXQqwKSwJE",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "mean_reversion_scalp",
+    "entry_summary": "After a sharp, emotional move into a clearly defined support or resistance level, wait for order flow to stall and shift on the tape, then fade the move by taking the offer to get long in front of support or, by extension, shorting near resistance. The setup is strongest when price stretches quickly",
+    "exit_summary": "Use the bids/offers at the key support/resistance level as protection, implying a tight stop if that level fails, and exit by capturing the bounce/reversal off the level.",
+    "variants": []
+   },
+   {
+    "strategy_id": 1,
+    "name": "continuation_breakout_scalp",
+    "entry_summary": "On a clean break of support or resistance, enter with the breakout as soon as the level is actually cleared, using tape confirmation that aggressive buyers/sellers are taking the level. Example given: buy just above resistance at $10.01/$10.02 or $50.01 once the offer is taken and the breakout shows",
+    "exit_summary": "Stop out if price falls back below the broken level, and scalp out into the immediate emotional follow-through, often 10 to 30 cents higher in the long example.",
+    "variants": [
+     {
+      "variant_label": "breakout examples at different price levels",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "watch for aggressive lifting into the offer, shrinking offer size, and the offer disappearing before entry",
+      "target_note": "example follow-through of 10, 20, or 30 cents higher",
+      "transcript_quote": "if buyers continue lifting and the offer size begins to shrink, then suddenly it's gone, you want to be the one buying at $50.01, if possible, and 90t"
+     }
+    ]
+   },
+   {
+    "strategy_id": 2,
+    "name": "spread_making_scalp",
+    "entry_summary": "Instead of taking liquidity, place resting limit orders inside/wide spreads ahead of large bids or offers in liquid names to provide liquidity and get filled by urgent participants crossing the spread. The edge comes from market microstructure rather than directional prediction.",
+    "exit_summary": "Once filled, quickly offer out or sell the acquired position one or two points higher to capture the spread, repeating the process while the spread remains wide before it compresses.",
+    "variants": []
+   }
+  ],
+  "enumeration_note": "The video explicitly teaches three distinct scalp skeletons: mean reversion, continuation breakout, and spread making; examples within continuation differ only by price level and follow-through size."
+ },
+ "originalTokens": 6127,
+ "cachedTokensReported": 5376
+}

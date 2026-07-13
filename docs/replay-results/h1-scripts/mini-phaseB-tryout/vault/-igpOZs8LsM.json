@@ -1,0 +1,62 @@
+{
+ "video_id": "-igpOZs8LsM",
+ "phase_b": [
+  {
+   "scope": {
+    "entry_summary": "Trade in the direction of the prevailing trend using a fair value gap that caused a break of structure. Identify the three-candle imbalance, prefer the FVG close to the order block, then wait for price to retrace back into that FVG and enter on the tap/retest for continuation.",
+    "exit_summary": "Place the stop loss just beyond the fair value gap itself—below the FVG for buys and above the FVG for sells. No concrete profit-target rule is given; management is to hold for continuation in the expected direction.",
+    "name": "fair_value_gap_trend_continuation_retest"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "fair_value_gap_trend_continuation_retest",
+      "higher_timeframe": "1m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "wait for price to get back into that FVG",
+        "step": 1,
+        "action": "Wait for price to retrace back into the fair value gap before entering for continuation.",
+        "rationale": "The speaker says to patiently wait for price to return to the FVG and tap in."
+       }
+      ],
+      "preferred_regime": "trending",
+      "stop": {
+       "transcript_quote": "put your stop loss a little bit below the fair value gap",
+       "anchor": "fvg_low",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "For buys, the stop is 'a little bit below the fair value gap'; for sells, 'a little bit above'."
+      },
+      "stop_management": null,
+      "targets": [],
+      "confluences": [
+       {
+        "transcript_quote": "the trend matters",
+        "name": "trend_matters",
+        "description": "Pay attention to the trend because 'the probability of your treads playing out when you are sticking to the trend is higher'",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "it must also create a break of structure",
+        "name": "break_of_structure",
+        "description": "Use the FVG that 'must also create a break of structure'.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "prefer the FVG close to the order block",
+        "name": "fvg_near_ob",
+        "description": "The speaker says to focus on 'the FVG that is very close to the order block'.",
+        "canonical_match": "market_structure_aligned"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_with_forex_illustration"
+   }
+  }
+ ]
+}

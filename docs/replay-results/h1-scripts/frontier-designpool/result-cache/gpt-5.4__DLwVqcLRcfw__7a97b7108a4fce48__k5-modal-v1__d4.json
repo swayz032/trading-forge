@@ -1,0 +1,42 @@
+{
+ "key": "gpt-5.4__DLwVqcLRcfw__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "DLwVqcLRcfw",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "vwap_20sma_long_trend_bounce",
+    "entry_summary": "On the 2-minute chart, get bullish once price closes above both VWAP and the 20 SMA, then enter long when a following candle confirms that move or on subsequent pullbacks/bounces that hold VWAP as support without closing and building below it. The setup is specifically to buy pullbacks/bounces in an",
+    "exit_summary": "For a quick scalp, take profits into the upper VWAP band. For a larger hold, stay in the trade while VWAP and the 20 SMA trend higher, then use the 20 SMA as a trailing stop and exit on a close below it once price has separated upward from VWAP.",
+    "variants": [
+     {
+      "variant_label": "Initial breakout confirmation long",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "after the first candle closes over both VWAP and the 20 SMA, wait for a following candle to confirm the high of that bar",
+      "target_note": "can scalp into the upper VWAP band or hold with 20 SMA trailing stop",
+      "transcript_quote": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+     },
+     {
+      "variant_label": "VWAP pullback/bounce long",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "buy pullbacks into VWAP as long as price tests or wicks around it but does not close below it and build below it",
+      "target_note": "can scalp into the upper VWAP band or hold while VWAP and 20 SMA trend higher, using prior wick/low or the 20 SMA as the",
+      "transcript_quote": "as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+     },
+     {
+      "variant_label": "Extended trend hold with 20 SMA trailing stop",
+      "timeframe_note": "2-minute chart",
+      "confirmation_mechanic_note": "after price breaks away from VWAP and the 20 SMA trends higher with separation, continue holding the long",
+      "target_note": "exit on a close below the 20 SMA as trailing stop",
+      "transcript_quote": "you can use the 20 SMA as a trailing stop so if we do close below the 20 SMA maybe you can use that as an indication to get out of the trade"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one runnable long trend-following VWAP+20 SMA skeleton with compatible entry/management variations; the mentioned short side is not promoted because it lacks a concrete runnable exit/stop."
+ },
+ "originalTokens": 5813,
+ "cachedTokensReported": 4864
+}

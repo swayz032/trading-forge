@@ -1,0 +1,135 @@
+{
+ "video_id": "R5L890juvRw",
+ "phase_b": [
+  {
+   "scope": {
+    "entry_summary": "Trade in the direction of a session bias after price has moved away from VWAP to at least the first, preferably the second, standard-deviation band, then broken back through and retested that band. The example given is a long: after building volume below and pushing away from fair value, enter once ",
+    "exit_summary": "Use the second and third VWAP standard-deviation bands as profit targets. The setup is presented as a continuation trade after the retest, with those outer bands serving as target levels.",
+    "name": "vwap_trend_continuation_retest"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_trend_continuation_retest_5m",
+      "higher_timeframe": "5m",
+      "lower_timeframe": "5m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+        "step": 1,
+        "action": "Wait for price to move away from VWAP to at least the first, preferably the second, standard-deviation band.",
+        "rationale": "The speaker says to wait for price to extend to the outer VWAP bands before taking the continuation setup."
+       },
+       {
+        "transcript_quote": "after we broke it and tested it we can try our long trade",
+        "step": 2,
+        "action": "After price breaks the chosen VWAP standard-deviation band and retests it, enter in the direction of the session bias.",
+        "rationale": "The setup is a break-and-retest continuation trade."
+       }
+      ],
+      "preferred_regime": "trending",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "use the second and third standard deviation as a Target",
+        "priority": 1,
+        "type": "r_multiple",
+        "r_multiple": null,
+        "rationale": "The speaker says the second and third VWAP standard-deviation bands can be used as targets."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "say you might have a long idea for your session",
+        "name": "session_bias",
+        "description": "Trade in the direction of the session bias.",
+        "canonical_match": "market_structure_aligned"
+       },
+       {
+        "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+        "name": "vwapsd_extension",
+        "description": "Wait for price to extend to at least the first, preferably the second, standard-deviation band away from VWAP.",
+        "canonical_match": "vwap_alignment"
+       },
+       {
+        "transcript_quote": "after we broke it and tested it",
+        "name": "break_and_retest",
+        "description": "Require a break and retest of the VWAP standard-deviation band before entry.",
+        "canonical_match": "vwap_alignment"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  },
+  {
+   "scope": {
+    "entry_summary": "Use the outer VWAP standard-deviation bands as overbought/oversold extremes and enter a reversal when price reaches those stretched levels away from session fair value. The transcript frames the lower standard deviations as the place ",
+    "exit_summary": "Target the central VWAP for price rebalancing back toward fair value. The trade management is explicitly described as using the session VWAP as the mean-reversion objective.",
+    "name": "vwap_band_mean_reversion"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_band_mean_reversion_1h_1m",
+      "higher_timeframe": "1h",
+      "lower_timeframe": "1m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "use the second and third standard deviation as a Target or if you're using reversal strategies",
+        "step": 1,
+        "action": "For both long and short reversal setups, wait for price to reach the outer VWAP standard-deviation bands as the stretched extreme.",
+        "rationale": "The speaker says the outer bands are used for reversal strategies at stretched levels."
+       }
+      ],
+      "preferred_regime": "ranging",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "use the central vwap as a target for Price rebalancing",
+        "priority": 1,
+        "type": "vwap",
+        "r_multiple": null,
+        "rationale": "The speaker explicitly says to use the central VWAP as the rebalancing target."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+        "name": "outer_vwap_band_reach",
+        "description": "Wait until price has gone at least to the first if not the second standard deviation.",
+        "canonical_match": "vp_level_proximity"
+       },
+       {
+        "transcript_quote": "these as some sort of overbought or oversold levels",
+        "name": "overbought_oversold_extreme",
+        "description": "Treat the outer VWAP bands as overbought or oversold levels.",
+        "canonical_match": "regime_match"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}

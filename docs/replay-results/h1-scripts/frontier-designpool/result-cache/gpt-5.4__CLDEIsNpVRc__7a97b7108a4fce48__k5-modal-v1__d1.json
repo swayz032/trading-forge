@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__CLDEIsNpVRc__7a97b7108a4fce48__k5-modal-v1__d1",
+ "model": "gpt-5.4",
+ "videoId": "CLDEIsNpVRc",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d1",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+    "entry_summary": "After 9:30 a.m. New York time, identify a 5-minute or 15-minute fair value gap forming toward the draw on liquidity. Wait for price to tap that higher-timeframe fair value gap, then on the 1-minute chart require a liquidity sweep and inversion of the manipulation-leg fair value gap(s); enter as soon",
+    "exit_summary": "Place the stop beyond the sweep high/low (above the high for shorts, below the low/bodies for longs). Target either the draw on liquidity or, preferably per the speaker, a fixed 1:2 risk-reward; move the stop to break even once the closest post-entry liquidity level is taken.",
+    "variants": [
+     {
+      "variant_label": "Short reversal from HTF FVG after upside liquidity sweep",
+      "timeframe_note": "5-minute or 15-minute higher-timeframe fair value gap; 1-minute confirmation",
+      "confirmation_mechanic_note": "price sweeps 1-minute highs inside the HTF gap, then closes below one or more bullish 1-minute fair value gaps to invert",
+      "target_note": "target draw on liquidity or fixed 1:2; speaker says fixed 1:2 works better",
+      "transcript_quote": "once price closes below this IFVG you want to take a short position right away and you want to put your stop above the high and you can target the dr"
+     },
+     {
+      "variant_label": "Long reversal from HTF FVG after downside liquidity sweep",
+      "timeframe_note": "5-minute or 15-minute higher-timeframe fair value gap; 1-minute confirmation",
+      "confirmation_mechanic_note": "price sweeps 1-minute lows inside the HTF gap, then closes above one or more bearish 1-minute fair value gaps to invert",
+      "target_note": "fixed 1:2, with break-even after the closest liquidity is taken",
+      "transcript_quote": "we have swept this low we have this fair value gap we have our draw up there so let's see if we can inverse above this gap right there we have invers"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "The video teaches one symmetric HTF-FVG tap plus 1-minute inversion model, shown in bullish and bearish directions; these are opposite-direction applications of the same reversal skeleton rather than separately taught management rules."
+ },
+ "originalTokens": 6229,
+ "cachedTokensReported": 5376
+}

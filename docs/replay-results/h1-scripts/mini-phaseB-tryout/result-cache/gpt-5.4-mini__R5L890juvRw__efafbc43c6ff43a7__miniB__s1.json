@@ -1,0 +1,60 @@
+{
+ "key": "gpt-5.4-mini__R5L890juvRw__efafbc43c6ff43a7__miniB__s1",
+ "model": "gpt-5.4-mini",
+ "videoId": "R5L890juvRw",
+ "promptHash": "efafbc43c6ff43a7__miniB__s1",
+ "result": {
+  "strategies": [
+   {
+    "name": "vwap_band_mean_reversion_1h_1m",
+    "higher_timeframe": "1h",
+    "lower_timeframe": "1m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "use the second and third standard deviation as a Target or if you're using reversal strategies",
+      "step": 1,
+      "action": "For both long and short reversal setups, wait for price to reach the outer VWAP standard-deviation bands as the stretched extreme.",
+      "rationale": "The speaker says the outer bands are used for reversal strategies at stretched levels."
+     }
+    ],
+    "preferred_regime": "ranging",
+    "stop": {
+     "transcript_quote": null,
+     "anchor": null,
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": null
+    },
+    "stop_management": null,
+    "targets": [
+     {
+      "transcript_quote": "use the central vwap as a target for Price rebalancing",
+      "priority": 1,
+      "type": "vwap",
+      "r_multiple": null,
+      "rationale": "The speaker explicitly says to use the central VWAP as the rebalancing target."
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "wait until the price has gone at least to the first if not the second standard deviation",
+      "name": "outer_vwap_band_reach",
+      "description": "Wait until price has gone at least to the first if not the second standard deviation.",
+      "canonical_match": "vp_level_proximity"
+     },
+     {
+      "transcript_quote": "these as some sort of overbought or oversold levels",
+      "name": "overbought_oversold_extreme",
+      "description": "Treat the outer VWAP bands as overbought or oversold levels.",
+      "canonical_match": "regime_match"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 10387,
+ "cachedTokensReported": 9472
+}

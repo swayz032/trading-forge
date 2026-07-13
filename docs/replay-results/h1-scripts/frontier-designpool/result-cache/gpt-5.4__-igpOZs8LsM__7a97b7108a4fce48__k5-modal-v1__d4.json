@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__-igpOZs8LsM__7a97b7108a4fce48__k5-modal-v1__d4",
+ "model": "gpt-5.4",
+ "videoId": "-igpOZs8LsM",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d4",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "fair_value_gap_trend_continuation_retest",
+    "entry_summary": "Trade in the direction of the trend using the fair value gap that caused a break of structure. Wait for price to retrace back into that FVG, preferably one close to an order block, and enter on the tap/retest for continuation.",
+    "exit_summary": "Place the stop loss just beyond the fair value gap itself: a little below the FVG for buys and a little above the FVG for sells. No concrete profit-target rule is taught beyond waiting for continuation in the trade direction.",
+    "variants": [
+     {
+      "variant_label": "Bullish FVG continuation entry",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "Use the bullish FVG that caused break of structure; wait for price to tap back into it in-trend.",
+      "target_note": null,
+      "transcript_quote": "price will most likely come back mitigate the imbalance and keep pushing to the upside"
+     },
+     {
+      "variant_label": "Bearish FVG continuation entry",
+      "timeframe_note": null,
+      "confirmation_mechanic_note": "Use the bearish FVG that caused break of structure; wait for price to return into it and then sell for continuation.",
+      "target_note": null,
+      "transcript_quote": "once that FVG is created, all you just need to do is patiently wait for you know price to get back into that FVG that caused the break of structure"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One strategy is taught: an in-trend fair-value-gap retest continuation setup, shown in bullish and bearish directions as compatible directional variants with the same stop mechanic; no separate opposing or alternate exit skeleton is taught."
+ },
+ "originalTokens": 5471,
+ "cachedTokensReported": 4864
+}

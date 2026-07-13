@@ -1,0 +1,94 @@
+{
+ "video_id": "IyFioFkRgWo",
+ "phase_b": [
+  {
+   "scope": {
+    "entry_summary": "After the first 5 to 15 minutes, identify a support level on the 5-minute chart using price action and moving averages such as the 13 EMA or, if that fails, the 200 EMA. Enter when price comes down into that support area and bounces.",
+    "exit_summary": "Take profit quickly at the next resistance / after the bounce move; the speaker repeatedly frames the management as getting in and out fast and selling into the move rather than holding all day.",
+    "name": "support_to_resistance_scalp"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "support_to_resistance_scalp_5m",
+      "higher_timeframe": "5m",
+      "lower_timeframe": null,
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "time your entries once you have allowed the first 5 to 15 minutes to pass",
+        "step": 1,
+        "action": "Wait for the first 5 to 15 minutes after market open to pass before timing entries.",
+        "rationale": "The speaker says this waiting period helps establish support."
+       },
+       {
+        "transcript_quote": "look at this indicator the 13 EMA in this example on the 5 minute chart",
+        "step": 2,
+        "action": "Use the 5-minute chart and identify support with the 13 EMA; if that support fails, use deeper support such as the 200 EMA.",
+        "rationale": "The setup is built around support on the 5-minute chart using moving averages."
+       },
+       {
+        "transcript_quote": "what you want to do is look and learn to trade with small amounts",
+        "step": 3,
+        "action": "Trade the scalp with small size and focus on getting in and out quickly.",
+        "rationale": "The speaker frames scalping as a quick in-and-out trade."
+       },
+       {
+        "transcript_quote": "sell right at resistance",
+        "step": 4,
+        "action": "Enter when price comes down into support and bounces, then exit into the move at resistance.",
+        "rationale": "The trade is a support-to-resistance scalp."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": null,
+       "anchor": null,
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": null
+      },
+      "stop_management": null,
+      "targets": [
+       {
+        "transcript_quote": "sell right at resistance",
+        "priority": 1,
+        "type": "resistance",
+        "r_multiple": null,
+        "rationale": "The speaker says to sell right at resistance."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "allowed the first 5 to 15 minutes to pass",
+        "name": "wait_for_opening_range_to_settle",
+        "description": "Wait for the first 5 to 15 minutes after market open to pass.",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "this indicator the 13 EMA in this example on the 5 minute chart",
+        "name": "13_ema_support_on_5m",
+        "description": "Use the 13 EMA on the 5-minute chart as initial support.",
+        "canonical_match": "vp_level_proximity"
+       },
+       {
+        "transcript_quote": "if that fails, use the 200 EMA",
+        "name": "fallback_to_200_ema",
+        "description": "If the 13 EMA support fails, look to the 200 EMA as deeper support.",
+        "canonical_match": "vp_level_proximity"
+       },
+       {
+        "transcript_quote": "look and learn to trade with small amounts",
+        "name": "small_size_scalping",
+        "description": "Trade with small amounts and focus on quick in-and-out scalps.",
+        "canonical_match": null
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [],
+    "instrument_classification": "non_futures_primary"
+   }
+  }
+ ]
+}

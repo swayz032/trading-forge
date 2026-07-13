@@ -1,0 +1,73 @@
+{
+ "key": "gpt-5.4-mini__E9MzEC_yNoM__efafbc43c6ff43a7__miniB__s1",
+ "model": "gpt-5.4-mini",
+ "videoId": "E9MzEC_yNoM",
+ "promptHash": "efafbc43c6ff43a7__miniB__s1",
+ "result": {
+  "strategies": [
+   {
+    "name": "premarket_level_liquidity_sweep_reversal_5m_2m",
+    "higher_timeframe": "5m",
+    "lower_timeframe": "1m",
+    "direction": "both",
+    "entry_sequence": [
+     {
+      "transcript_quote": "wait for price to briefly break or wick beyond the level and then reclaim/fail it",
+      "step": 1,
+      "action": "Wait for price to briefly break or wick beyond the pre-market level and then reclaim or fail it; trade the opposite direction of the failed break.",
+      "rationale": "A liquidity sweep is a brief fakeout above or below the level followed by a reclaim."
+     },
+     {
+      "transcript_quote": "after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level",
+      "step": 2,
+      "action": "Enter after the liquidity sweep/reclaim confirmation at the level.",
+      "rationale": "The speaker says entries come after confirmation of the level interaction."
+     }
+    ],
+    "preferred_regime": "any",
+    "stop": {
+     "transcript_quote": "The stop is always going to go on the opposite side of the entry candle.",
+     "anchor": "displacement_candle_low",
+     "buffer_atr": null,
+     "atr_multiplier": null,
+     "rationale": "\"The stop is always going to go on the opposite side of the entry candle.\""
+    },
+    "stop_management": "Move the stop to breakeven or into profit as the trade moves in your favor, then let it run until stopped out or satisfied with profits.",
+    "targets": [
+     {
+      "transcript_quote": "bare minimum of 1x of my original risk",
+      "priority": 1,
+      "type": "r_multiple",
+      "r_multiple": 1,
+      "rationale": "\"I'm typically looking for bare minimum of 1x of my original risk.\""
+     },
+     {
+      "transcript_quote": "ideally what I'm looking for is a 1.5x to a 2x my original risk",
+      "priority": 2,
+      "type": "r_multiple",
+      "r_multiple": 1.5,
+      "rationale": "\"ideally what I'm looking for is a 1.5x to a 2x my original risk.\""
+     }
+    ],
+    "confluences": [
+     {
+      "transcript_quote": "after 3:00 a.m. Eastern time all the way up into New York market open",
+      "name": "pre_market_window",
+      "description": "Trade only after 3:00 a.m. Eastern time up into New York market open.",
+      "canonical_match": "killzone_active"
+     },
+     {
+      "transcript_quote": "look for that confirmation in the volume",
+      "name": "volume_confirmation",
+      "description": "Look for confirmation in the volume.",
+      "canonical_match": "delta_or_volume_signature"
+     }
+    ]
+   }
+  ],
+  "rejected_strategies": [],
+  "instrument_classification": "futures_primary"
+ },
+ "originalTokens": 11148,
+ "cachedTokensReported": 9984
+}

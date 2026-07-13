@@ -1,0 +1,35 @@
+{
+ "key": "gpt-5.4__CLDEIsNpVRc__7a97b7108a4fce48__k5-modal-v1__d3",
+ "model": "gpt-5.4",
+ "videoId": "CLDEIsNpVRc",
+ "promptHash": "7a97b7108a4fce48__k5-modal-v1__d3",
+ "result": {
+  "strategies": [
+   {
+    "strategy_id": 0,
+    "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+    "entry_summary": "After 9:30 a.m. New York time, identify a 5-minute or 15-minute fair value gap forming toward the draw on liquidity. When price taps that higher-timeframe gap, drop to the 1-minute chart, require a sweep of nearby 1-minute liquidity, then enter when the relevant 1-minute fair value gap(s) in the tap",
+    "exit_summary": "Place the stop beyond the local sweep/high-low used for the inversion setup. Target either the draw on liquidity or, preferably per the speaker, a fixed 1:2 risk-reward; move stop to break-even once the closest post-entry liquidity level is taken out.",
+    "variants": [
+     {
+      "variant_label": "Bearish version after upper liquidity is taken",
+      "timeframe_note": "Higher-timeframe setup uses 5-minute or 15-minute fair value gap; confirmation on 1-minute",
+      "confirmation_mechanic_note": "Wait for price to tap the HTF gap, sweep 1-minute highs, then close below bullish 1-minute fair value gap(s) to create a",
+      "target_note": "Target draw on liquidity or fixed 1:2; speaker says fixed 1:2 has worked better",
+      "transcript_quote": "once price closes below this IFVG you want to take a short position right away and you want to put your stop above the high and you can target the dr{"
+     },
+     {
+      "variant_label": "Bullish version after lower liquidity is taken",
+      "timeframe_note": "Higher-timeframe setup uses 5-minute or 15-minute fair value gap; confirmation on 1-minute",
+      "confirmation_mechanic_note": "Wait for price to tap the HTF gap, sweep 1-minute lows, then close above bearish 1-minute fair value gap(s) to create a ",
+      "target_note": "Fixed 1:2 with break-even after nearest liquidity is taken",
+      "transcript_quote": "we closed right above this fair value gap. So we have inversed the 1 minute gap. We take our entry. We put our stop below these bodies and we go for 1"
+     }
+    ]
+   }
+  ],
+  "enumeration_note": "One strategy taught: the same HTF fair-value-gap tap plus 1-minute inversion skeleton is shown in both bearish and bullish directions, which are compatible directional mirrors of one setup; 5m vs 15m HTF gap, targeting draw vs fixed 1:2, and number of 1m gaps to invert are variants/configuration details."
+ },
+ "originalTokens": 6275,
+ "cachedTokensReported": 5376
+}

@@ -1,0 +1,194 @@
+{
+ "video_id": "CLDEIsNpVRc",
+ "phase_a": {
+  "counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "mode": 1,
+  "mode_n": 5,
+  "unstable": false,
+  "consensus": {
+   "strategies": [
+    {
+     "strategy_id": 0,
+     "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+     "entry_summary": "After 9:30 a.m. New York time, identify the draw on liquidity, then wait for a 5-minute or 15-minute fair value gap to form in the direction of that draw. When price taps that higher-timeframe fair value gap, drop to the 1-minute chart and enter on inversion of the 1-minute fair value gap(s) after a",
+     "exit_summary": "Place the stop beyond the recent sweep/high-low used for the entry. Target either the draw on liquidity or, preferably, a fixed 1:2 risk-reward; move stop to break even once the closest post-entry liquidity level is taken out.",
+     "variants": [
+      {
+       "variant_label": "Bearish version",
+       "timeframe_note": "5-minute or 15-minute higher-timeframe fair value gap; 1-minute confirmation",
+       "confirmation_mechanic_note": "After price taps the higher-timeframe gap, wait for 1-minute liquidity sweep and bearish inversion of the bullish 1m FVG",
+       "target_note": "Target draw on liquidity or fixed 1:2; move to break even after nearest low is taken",
+       "transcript_quote": "once price closes below this IFVG you want to take a short position right away and you want to put your stop above the high and you can target the drn"
+      },
+      {
+       "variant_label": "Bullish version",
+       "timeframe_note": "5-minute or 15-minute higher-timeframe fair value gap; 1-minute confirmation",
+       "confirmation_mechanic_note": "After price taps the higher-timeframe gap, wait for 1-minute liquidity sweep and bullish inversion of the bearish 1m FVG",
+       "target_note": "Fixed 1:2 shown; move to break even after nearest high/closest liquidity is taken",
+       "transcript_quote": "we have inversed the 1 minute gap. We take our entry. We put our stop below these bodies and we go for 1 to2"
+      }
+     ]
+    }
+   ],
+   "enumeration_note": "One strategy skeleton is taught and demonstrated in both bearish and bullish directions; these are compatible directional variants of the same higher-timeframe FVG tap plus 1-minute inversion model."
+  }
+ },
+ "phase_b": [
+  {
+   "phase_a_scope": {
+    "entry_summary": "After 9:30 a.m. New York time, identify the draw on liquidity, then wait for a 5-minute or 15-minute fair value gap to form in the direction of that draw. When price taps that higher-timeframe fair value gap, drop to the 1-minute chart and enter on inversion of the 1-minute fair value gap(s) after a",
+    "exit_summary": "Place the stop beyond the recent sweep/high-low used for the entry. Target either the draw on liquidity or, preferably, a fixed 1:2 risk-reward; move stop to break even once the closest post-entry liquidity level is taken out.",
+    "name": "htf_fvg_tap_with_1m_ifvg_reversal"
+   },
+   "extraction": {
+    "strategies": [
+     {
+      "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+      "higher_timeframe": "15m",
+      "lower_timeframe": "1m",
+      "direction": "both",
+      "entry_sequence": [
+       {
+        "transcript_quote": "we always going to be trading from 9:30 till 11:30 a.m. New York time",
+        "step": 1,
+        "action": "Only look for setups after 9:30 a.m. New York time within the 9:30-11:30 a.m. session.",
+        "rationale": "The speaker wants the setup traded during the active NY morning volume window."
+       },
+       {
+        "transcript_quote": "identify your draw on liquidity. So, the very first step is identify your draw on liquidity",
+        "step": 2,
+        "action": "Identify the draw on liquidity first: for shorts, if a buy-side level like Asia high, London high, previous day high, or equal highs is taken, look to the opposite-side liquidity below; for longs, if a sell-side level like Asia low, London low, previous day low, or equal lows is taken, look to the opposite-side liquidity above.",
+        "rationale": "The draw on liquidity defines where price is expected to move next."
+       },
+       {
+        "transcript_quote": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity",
+        "step": 3,
+        "action": "After 9:30, wait for a 5-minute fair value gap to form toward the draw on liquidity; if no 5-minute gap forms, use a 15-minute fair value gap instead.",
+        "rationale": "The higher-timeframe fair value gap is the IRL zone used for the setup."
+       },
+       {
+        "transcript_quote": "wait for price to tap into the higher time frame IRL which is your 5m minute fair value gap",
+        "step": 4,
+        "action": "Wait for price to tap into that higher-timeframe fair value gap, then drop to the 1-minute chart.",
+        "rationale": "The entry is only considered once price returns into the higher-timeframe IRL."
+       },
+       {
+        "transcript_quote": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap",
+        "step": 5,
+        "action": "On the 1-minute chart, require a liquidity sweep before the inversion trigger: for shorts, sweep a 1-minute high before the tap; for longs, sweep a 1-minute low before the tap.",
+        "rationale": "The speaker wants a sweep of nearby 1-minute liquidity before entry confirmation."
+       },
+       {
+        "transcript_quote": "you simply wait for price to close below this one minute fair value gap",
+        "step": 6,
+        "action": "For shorts, enter when price closes below the 1-minute bullish fair value gap, inverting it into resistance. For longs, enter when price closes above the 1-minute bearish fair value gap, inverting it into support.",
+        "rationale": "The 1-minute inversion is the actual entry trigger."
+       },
+       {
+        "transcript_quote": "if there are three, you're going to wait for all of those three fair value gaps to get inversed",
+        "step": 7,
+        "action": "If there are multiple 1-minute fair value gaps in the manipulation leg, wait for all of them to be inversed before entering.",
+        "rationale": "The speaker requires full inversion of all relevant 1-minute gaps when more than one appears."
+       }
+      ],
+      "preferred_regime": "any",
+      "stop": {
+       "transcript_quote": "you want to put your stop above the high",
+       "anchor": "swing_high_above_entry",
+       "buffer_atr": null,
+       "atr_multiplier": null,
+       "rationale": "The speaker says to put the stop above the high for shorts, and the long example mirrors this below the recent low/bodies."
+      },
+      "stop_management": "Go break even as soon as the closest liquidity after entry is taken out.",
+      "targets": [
+       {
+        "transcript_quote": "you can target the drawn liquidity",
+        "priority": 1,
+        "type": "liquidity_draw",
+        "r_multiple": null,
+        "rationale": "The speaker says one target option is the draw on liquidity."
+       },
+       {
+        "transcript_quote": "you can go for 1:2 fixed risk-to-reward ratio",
+        "priority": 2,
+        "type": "r_multiple",
+        "r_multiple": 2,
+        "rationale": "The speaker says you can go for a fixed 1:2 risk-to-reward ratio."
+       }
+      ],
+      "confluences": [
+       {
+        "transcript_quote": "we always going to be trading from 9:30 till 11:30 a.m. New York time",
+        "name": "new_york_morning_window",
+        "description": "Only trade the model from 9:30 to 11:30 a.m. New York time.",
+        "canonical_match": "killzone_active"
+       },
+       {
+        "transcript_quote": "you want to trade with the volume. You don't want to trade a choppy price action",
+        "name": "active_volume_not_chop",
+        "description": "The speaker wants volume after 9:30 and avoids choppy price action.",
+        "canonical_match": "regime_match"
+       },
+       {
+        "transcript_quote": "identify your draw on liquidity",
+        "name": "draw_on_liquidity_identified",
+        "description": "A clear draw on liquidity must be identified before taking the setup.",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low",
+        "name": "key_external_liquidity_level",
+        "description": "The draw can be based on Asia high/low, London high/low, or previous day high/low.",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "you're going to identify equal highs right and equal lows",
+        "name": "equal_highs_or_lows_as_draw",
+        "description": "Equal highs or equal lows can also define the draw on liquidity.",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "a 5 minute or a 15minut fair value gap",
+        "name": "htf_fvg_present",
+        "description": "The setup needs a 5-minute or 15-minute fair value gap after 9:30.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "wait for price to tap into the higher time frame IRL",
+        "name": "htf_irl_tapped",
+        "description": "Price must tap into the higher-timeframe IRL before the lower-timeframe entry is considered.",
+        "canonical_match": null
+       },
+       {
+        "transcript_quote": "make sure on the one minute price has swept some of liquidity",
+        "name": "one_minute_liquidity_sweep",
+        "description": "On the 1-minute chart, price must sweep some liquidity before the inversion entry.",
+        "canonical_match": "liquidity_target_clear"
+       },
+       {
+        "transcript_quote": "we should see displacement. It shouldn't be a choppy price action",
+        "name": "displacement_on_inversion",
+        "description": "The inversion should happen with displacement, not choppy price action.",
+        "canonical_match": "market_structure_aligned"
+       }
+      ]
+     }
+    ],
+    "rejected_strategies": [
+     {
+      "name": "htf_fvg_tap_with_1m_ifvg_reversal",
+      "reason": "fixed_point_stop_not_supported",
+      "detail": "Speaker prefers a fixed 1:2 risk-reward target option, which is not supported as a required framework stop/exit mechanic."
+     }
+    ],
+    "instrument_classification": "futures_primary"
+   }
+  }
+ ]
+}
