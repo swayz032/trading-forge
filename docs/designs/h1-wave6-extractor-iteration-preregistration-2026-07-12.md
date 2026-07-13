@@ -134,3 +134,23 @@ The §10 content check (blind, mechanical, purpose-axis): **ALL THREE variant-B 
 The GATE reads #1 (frozen, no re-litigation). The **SHA-FREEZE DECISION reads #2** — because a SHA frozen on a gated number that the terminal read will not reproduce is a wasted final swing. Same precedent as the failure-attribution annotation and the economics per-strategy annotation: **the verdict on the frozen criterion, the truth beside it.** If #1 clears ≤8% but #2 is alarming (high null-rate inflating the terminal-equivalent), that is a documented reason to NOT freeze the SHA on this pass even though the gate passed — surfaced to the operator, decided before the fresh 12 are touched.
 
 *§12 frozen 2026-07-13, before the pass-2 design-pool measurement. Vaulted FF.*
+
+---
+
+## §13 — THE OVER-SPLIT DISPOSITION: asymmetric to under-split, on physics (frozen 2026-07-13, BEFORE the design-pool over-split number exists)
+
+> Phase-A birth fixtures already show `IyFioFkRgWo`→2 where its blind adjudication ruled 1 (a hand-wavy "big move" mention, no runnable second setup). An over-split. Its rule is pinned before its design-pool number.
+
+**NAME THE DISEASE:** an enumerator writing a runnable strategy from a hand-wavy mention is ELABORATION-BEYOND-EVIDENCE at the STRATEGY level — the same disease family as pass-1's dominant 37% condition-level class, one floor up. Fabrication and silencing are BOTH infidelity — but they are NOT symmetric at the certificate layer, and the rule follows the physics:
+- **SILENCED content (under-split) is UNRECOVERABLE downstream** — a certificate that omits what the trader taught lies forever; nothing later can know. → **under-split = STRICT FAIL** (§9b/§10, already enforced).
+- **FABRICATED strategies (over-split) are SELF-CORRECTING downstream** — a phantom built from narration has no runnable rules to quote, so its conditions can't anchor and can't survive Stage-2 support; **it fails cert-grade ON ITS OWN.** The certificate layer catches INVENTION; it cannot catch OMISSION. The strictness budget goes where the net doesn't reach.
+
+**THE RULE (pre-committed):** an ADJUDICATED over-split (transcript teaches no runnable second setup — the transcript-adjudication of the §9a-screen trip decides this, as IyF's already does) →
+1. the phantom is **EXCLUDED from the video's strategy set for gating** (it does not count as a strategy toward the ≥1-clean bar, over OR under),
+2. **recorded as a strategy-level elaboration defect**, and
+3. its wasted adjudications **count honestly against the video's economics AGGREGATE** (§8b/Add-7).
+**NOT an automatic Gate-2 fail — UNLESS SYSTEMATIC:** adjudicated fabrications in **more than 2 of the 16 design videos = the enumerator is unreliable = Gate 2 FAILS.** (Threshold is a CALIBRATION ESTIMATE, set now while only the one birth-fixture case is known, grounded as "the known case PLUS ONE" — beyond that, the defect generalizes.) Since this is the budget's FINAL pass, no prompt iteration is available regardless — the rule decides whether pass-2 FREEZES with a recorded characteristic or FAILS on a systematic one.
+
+**WHAT THIS PRESERVES:** Addendum 6 → a phantom NEVER blocks the real strategy's certification; the exclusion rule → it never HELPS either; the economics tax → its cost is never HIDDEN. **Invention can't win, can't block, can't hide — it can only be counted.**
+
+*§13 frozen 2026-07-13, operator-authored, BEFORE the design-pool over-split number exists. Vaulted FF.*
