@@ -26,23 +26,31 @@ is honest if the speaker teaches nothing extractable.
 These three rules ARE the standard. The distinctness test and the over/under-split warnings
 below are how you apply them — but when in doubt, the rules decide.
 
-**RULE 1 — EVIDENCE FLOOR (a strategy object needs runnable entry logic AND a runnable exit).**
-A strategy object exists ONLY where the transcript teaches BOTH a **runnable entry** AND a
-**runnable exit/stop** — concrete, executable rules a trader could act on. A hand-wavy mention
-("watch for the big move", "you could fade it") that never gets concrete rules is NOT a strategy —
-it is an **unpromoted mention**, recorded in `enumeration_note`, never given a `strategy` object.
-Promoting narration to an object is elaboration-beyond-evidence — the named fabrication disease.
+**RULE 1 — EVIDENCE FLOOR (a strategy object needs a runnable, TAUGHT ENTRY).**
+A strategy object exists where the transcript **teaches a runnable entry** — concrete, executable
+entry mechanics a viewer could act on. A hand-wavy mention ("watch for the big move", "you could
+fade it") that never gets concrete entry rules is NOT a strategy — it is an **unpromoted mention**,
+recorded in `enumeration_note`, never given a `strategy` object. Promoting narration to an object
+is elaboration-beyond-evidence — the named fabrication disease.
 
-**The exit floor is where over-promotion hides — apply it strictly.** A teaching with a concrete
-ENTRY but a **gestural, level-less exit** does NOT clear the floor. If the exit is shown only by
-pointing at a chart in hindsight — "you'd exit right *there*", "boom boom boom, get out",
-"you want to be out around here" — with **no rule** (no level, no R-multiple, no stop/target
-mechanic, no repeatable condition), it is an **unpromoted mention, NOT an object**, even though the
-entry looks runnable. Retrospective framing ("you *would have* entered/exited") is the same tell.
-This is the single most common over-split: a real setup's narrated "opposite play" that has an
-entry trigger but only a wave at the chart for its exit. Do not promote it. Because it is never
-promoted, any Rule-2 opposition it *would* have created never fires (an un-promoted teaching cannot
-oppose anything).
+**The discriminator is TEACHING INTENT ON THE ENTRY (2026-07-13 v3.1 amendment).**
+- A **scenario mentioned in passing** — an entry gestured at inside a lesson about something else,
+  with NO runnable entry mechanics ("if it breaks support it could make a big move") — is an
+  **unpromoted mention.** Its exit being gestural is beside the point; it was never a taught setup.
+- A **TAUGHT SETUP** — runnable entry mechanics the viewer could execute, the thing the segment is
+  actually teaching — **IS a strategy object EVEN WHEN its exit is gestural.** A taught setup whose
+  exit is given only colloquially ("scalp out of it", "ride the bounce up", "take profits into
+  strength") is a strategy WITH a vague exit, **not a non-strategy.** Keep the object; the gestural
+  exit nulls the exit LEVEL fields downstream (never invent levels), and the speaker's exit words
+  are preserved verbatim. Do NOT delete a taught setup because its exit was taught loosely —
+  **object-level over-deletion is silencing, the unrecoverable direction.** (Half of trading YouTube
+  teaches entries precisely and exits casually; the house exit overlay supplies levels downstream.)
+
+Retrospective framing ("you *would have* entered/exited") on a **passing scenario** is still an
+unpromoted mention. But a taught setup is a taught setup even if its exit is hand-waved. When a
+narrated "opposite play" has only a gestured exit AND no taught entry mechanics, it stays a mention
+(and its Rule-2 opposition never fires); when it has genuinely taught entry mechanics, it is an
+object (and Rule 2 then applies).
 
 **RULE 2 — OPPOSITION ALWAYS SPLITS (no exceptions).**
 Two teachings with **contradictory executable logic** — opposite directions in the same context,
