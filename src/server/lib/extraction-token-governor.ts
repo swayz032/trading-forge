@@ -233,10 +233,16 @@ export function seedTodaySpend(ledgerPath: string, pool: string, now: Date, toke
  */
 export interface BurstTicket {
   pool: string;
-  limitTokens: number;   // hard token cap for the burst (paid tokens above freePoolLine)
+  limitTokens: number;   // hard token cap for the burst (paid tokens since grant)
   limitUsd: number;      // hard dollar cap (whichever binds first)
-  overageUsdPerMTok: number; // discounted overage bill-rate (empirical: ~6.67 $/1M)
+  overageUsdPerMTok: number; // pricing rate for the ticket. DOLLAR-TRUTH (2026-07-13):
+                         // set to the MEASURED blend (~$2.80/1M from the $0.70 receipt)
+                         // × 1.5 safety = ~$4.20/1M — errs in the wallet's favor by 50%,
+                         // not 300% (the old $6.67 list-rate over-charged ~3×).
   freePoolLine: number;  // the free daily ceiling above which spend is paid
+  grantedAtSpent?: number; // spend level when granted — paid = spend - this (NOT freePoolLine)
+                         // so a ticket granted mid-day caps only NEW spend. Falls back to
+                         // freePoolLine when absent (back-compat with the first ticket).
   signedBy: string;      // operator signature (audit)
   grantedUtcDate: string;
 }
@@ -271,7 +277,10 @@ export function evaluateWithBurst(
   }
 
   const projected = tokensSpentToday + requestedTokens;
-  const projectedPaidTokens = Math.max(0, projected - burst.freePoolLine);
+  // Paid tokens are those ABOVE the grant point (mid-day tickets cap only NEW spend);
+  // falls back to freePoolLine for the original ticket that had no grant point.
+  const baseline = Number.isFinite(burst.grantedAtSpent as number) ? (burst.grantedAtSpent as number) : burst.freePoolLine;
+  const projectedPaidTokens = Math.max(0, projected - baseline);
   const projectedPaidUsd = (projectedPaidTokens / 1_000_000) * burst.overageUsdPerMTok;
 
   if (projectedPaidTokens > burst.limitTokens) {
@@ -281,6 +290,39 @@ export function evaluateWithBurst(
     return { allow: false, mode: "refused", reason: `burst USD cap: $${projectedPaidUsd.toFixed(2)} > $${burst.limitUsd.toFixed(2)} limit — revert to free`, projectedPaidTokens, projectedPaidUsd };
   }
   return { allow: true, mode: "burst", reason: `burst OK: paid ${projectedPaidTokens} tok ($${projectedPaidUsd.toFixed(2)}) within ${burst.limitTokens}/$${burst.limitUsd}`, projectedPaidTokens, projectedPaidUsd };
+}
+
+/**
+ * DOLLAR-TRUTH layer (2026-07-13) — OpenAI Costs API. Reports ACTUAL billed spend
+ * per day, straight from billing (ground truth in dollars). Needs an ADMIN-type
+ * org key (regular keys can't read billing): create at platform.openai.com →
+ * Settings → Organization → API keys → admin key, put in .env as OPENAI_ADMIN_KEY.
+ * Balance is arithmetic: you tell the governor a starting balance once, it polls
+ * this, and every receipt shows exact remaining dollars. Reconciles the ticket's
+ * estimate (measured-blend × 1.5) against reality daily — estimates then err ≤50%,
+ * never 300%. Absent the admin key, the token wall + dollar ticket still hold; only
+ * the daily reconciliation is unavailable (flagged, never silently skipped).
+ */
+export async function fetchOrgCostsUsd(adminKey: string, startUnixSec: number, endUnixSec?: number): Promise<number> {
+  if (!adminKey) throw new Error("[dollar-truth] OPENAI_ADMIN_KEY absent — cannot read Costs API (create an admin key)");
+  const url = new URL("https://api.openai.com/v1/organization/costs");
+  url.searchParams.set("start_time", String(startUnixSec));
+  if (endUnixSec) url.searchParams.set("end_time", String(endUnixSec));
+  const resp = await fetch(url, { headers: { Authorization: `Bearer ${adminKey}` } });
+  if (!resp.ok) throw new Error(`[dollar-truth] Costs API ${resp.status}: ${(await resp.text()).slice(0, 160)}`);
+  const body: any = await resp.json();
+  // Sum every bucket's amount.value (USD). Shape: { data: [{ results: [{ amount: { value, currency } }] }] }
+  let usd = 0;
+  for (const bucket of body?.data ?? [])
+    for (const r of bucket?.results ?? [])
+      if (typeof r?.amount?.value === "number") usd += r.amount.value;
+  return usd;
+}
+
+/** Remaining balance = startingBalance − actual billed spend (Costs API). */
+export async function remainingBalanceUsd(adminKey: string, startingBalanceUsd: number, sinceUnixSec: number): Promise<number> {
+  const spent = await fetchOrgCostsUsd(adminKey, sinceUnixSec);
+  return Math.round((startingBalanceUsd - spent) * 100) / 100;
 }
 
 /** Read today's burst ticket from the ledger (null if none/expired). */
