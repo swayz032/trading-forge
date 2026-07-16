@@ -1,18 +1,19 @@
 {
  "2026-07-13": {
-  "gpt54": 1591634,
+  "gpt54": 1695580,
   "mini": 309111,
   "_burst_gpt54": {
    "pool": "gpt54",
-   "limitTokens": 150000,
-   "limitUsd": 0.25,
+   "limitTokens": 300000,
+   "limitUsd": 0.6,
    "overageUsdPerMTok": 2.5,
    "freePoolLine": 250000,
-   "grantedAtSpent": 1391793,
-   "signedBy": "operator (Tonio): v3.2 RETEST content panel, gpt-5.4-FLEX HIGH cross-vendor, $0.25 cap. Two-tier taxonomy (Tier-A gates, Tier-B=coaching_notes). One retest, joint bar unmoved.",
+   "grantedAtSpent": 1591634,
+   "signedBy": "operator (Tonio): SEMANTIC CONFLATION CHECK calibration pair (R5L890-fused REJECT + -igp mirror PASS) + design-pool 22, gpt-5.4-FLEX HIGH, $0.60 cap, hard-cap guard ENFORCING mid-run.",
    "grantedUtcDate": "2026-07-13",
    "_delivery": "openai-flex-sync",
-   "_effort": "high"
+   "_effort": "high",
+   "_hardcap": "enforced"
   },
   "_burst_gpt54_configpass_RETIRED": {
    "pool": "gpt54",
@@ -50,6 +51,25 @@
    "est_usd": 0.487,
    "ticket_cap": 0.25,
    "overrun_usd": 0.237
+  },
+  "_burst_gpt54_RETIRED_history": [
+   {
+    "pool": "gpt54",
+    "limitTokens": 150000,
+    "limitUsd": 0.25,
+    "overageUsdPerMTok": 2.5,
+    "freePoolLine": 250000,
+    "grantedAtSpent": 1391793,
+    "signedBy": "operator (Tonio): v3.2 RETEST content panel, gpt-5.4-FLEX HIGH cross-vendor, $0.25 cap. Two-tier taxonomy (Tier-A gates, Tier-B=coaching_notes). One retest, joint bar unmoved.",
+    "grantedUtcDate": "2026-07-13",
+    "_delivery": "openai-flex-sync",
+    "_effort": "high"
+   }
+  ],
+  "_conflation_check": {
+   "tokens": 103946,
+   "est_usd": 0.26,
+   "cal_ok": true
   }
  },
  "_balance_anchor": {
@@ -57,5 +77,15 @@
   "as_of": "2026-07-13",
   "source": "operator dashboard (Aspire City proj_lXgrb4JH3KrEPvzhKsXCBX1W)",
   "note": "forward balance = 5.65 - Costs-API-spend-since; never guess starting credit"
+ },
+ "_STANDING_ENVELOPE": {
+  "effective": "2026-07-15",
+  "per_task_usd": 1.0,
+  "per_day_usd": 2.0,
+  "floor_balance_usd": 2.0,
+  "bigger_asks_operator": true,
+  "kill_switch": "'stop spending' halts all",
+  "receipts": "every cent in ledger",
+  "signedBy": "operator (Tonio): 'you make the calls not me' + envelope"
  }
 }
