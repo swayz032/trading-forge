@@ -1,0 +1,49 @@
+{
+  "video": "0xygpCMwxbQ",
+  "strategies": [
+    {
+      "name": "ict_aplus_entry_checklist",
+      "entry_summary": "Once a daily bias/direction is established, run an A+ checklist: (1) stop raid (a low swept/broken), (2) market-structure shift / displacement (a prior high broken and aggressively moved through), (3) price returns into the DISCOUNT of the displacement range (below 0.5, refined by OTE), (4) a PD array at the point of interest (FVG, order block, breaker block, or OTE) that 'catches the eye' — used alone or by blending 1-3 concepts. A separate BOX-SETUP variant enters on a deviation/manipulation out of a range, a retest of that manipulation, then a push to the other side (no structure shift required).",
+      "exit_summary": "Stop placed on the taught order block (order-block HIGH for shorts, order-block LOW for longs) or on the swept structure low; take a first partial at the nearer liquidity, move stop to break-even, then target opposite-side liquidity (buy-side liquidity above for longs, a new low / sell-side for shorts, 'the other side' for the box setup, or the initial highs from the morning) and let runners run.",
+      "element_inventory": [
+        "PRECONDITION (Tier-A gate): a daily bias / direction must already be established before the checklist is applied — 'once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry'.",
+        "CHECKLIST STEP 1 — STOP RAID: a prior low must be put in and then raided/broken (liquidity sweep) — 'the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken'.",
+        "CHECKLIST STEP 2 — MARKET STRUCTURE SHIFT / DISPLACEMENT: a previous high is broken and aggressively moved through — 'a previous high was broken and aggressively moved over'.",
+        "FILTER (sequencing gate): the displacement must be PRECEDED by a stop raid; a displacement with no prior (lower-timeframe) liquidity raid is rejected — 'I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up' and 'without a lower time frame liquidity rate prior to a move I am not interested in it'.",
+        "CHECKLIST STEP 3 — RETURN TO DISCOUNT: after displacement, wait for price to retrace back into the DISCOUNT of the displacement range; do not enter (long) above the 0.5 — 'I'd want to be longing this green section down here' / 'I'm not looking too long Above This 0.5'. (Flexibility acknowledged: 'where there is a little bit flexibility'.)",
+        "OTE REFINEMENT: an OTE (optimal trade entry) fib narrows the discount zone — premium above is a no-long area, the OTE marks the refined discount entry band — 'using an OTE ... this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE'.",
+        "CHECKLIST STEP 4 — PD ARRAY at the point of interest; taught variants: FAIR VALUE GAP (preferred), ORDER BLOCK (preferred), OTE, BREAKER BLOCK — 'some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE ... as well as a breaker block'. Order block = a down-close candle (for shorts) / breaker block = the up-close candles before the liquidity raid.",
+        "BOX-SETUP VARIANT SUB-MECHANIC: a deviation/manipulation out of the range (aggressive move down then aggressive move up = accumulation/manipulation) → wait for a RETEST of that manipulation → target the OTHER SIDE of the range — 'this is the deviation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manipulation to then be reaching for the other side'. Explicitly does NOT require a prior structure shift — 'although we did not shift structure prior to this entry this is a box setup entry'.",
+        "SELECTION / BLEND rule: each concept can be used as an entry model by itself OR 1-3 concepts blended together — 'each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together'; examples: FVG within an OTE, box setup within an OTE, FVG nested inside an order block that lines up with the box setup.",
+        "ENTRY-SELECTION by RISK-TO-REWARD (executable core): moving the entry closer to the stop increases R:R but raises no-fill risk; balance R:R against getting filled — 'as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled'.",
+        "DISCOUNT/PREMIUM FILTER on the PD array: reject a PD array (e.g. an FVG) that sits in the PREMIUM of the range for a long — 'does that meet all my criteria it does not because it is in a premium of the range'.",
+        "ENTRY: enter at the chosen PD array (FVG / order block / breaker block / OTE / box-setup retest), e.g. 'for my entry I would personally be looking to enter the trade right here', 'my entry would be on this order block', 'from here we have order block fair value Gap so I would be looking to enter here'.",
+        "STOP — the taught ORDER-BLOCK stop: stop on the order block — order-block HIGH for a short ('my stop on the order block High'), order-block LOW for a long ('putting my stop on this order block low'); or on the swept structure low ('My Stop on this low').",
+        "TARGET: opposite-side liquidity — buy-side liquidity above for longs ('looking for buy side liquidity up here'), a new low / sell-side for shorts ('targeting a new low'), 'the other side' for the box setup, or the initial highs from the morning ('target the initial highs from the morning').",
+        "MANAGEMENT: take a first partial at the nearer liquidity, then move stop to break-even, then let runners run to the further liquidity — 'first partial here', 'if I move my stop to break even', 'partial or move my stop to break even your target the initial highs ... and from there let runners run'.",
+        "OCCURRENCE TOLERANCE: a single tick beyond the low is not counted as invalidating the level — 'we did go a tick below this low but I do not count that personally'."
+      ],
+      "coaching_notes": [
+        "if you want to pause and see what you see go ahead and do that",
+        "I just do what catches my eye the most",
+        "so what I try to do is find a balance between risk to reward what catches my eye and just getting into the trade",
+        "I wanted to throw it in here just to show that without a lower time frame liquidity rate prior to a move I am not interested in it"
+      ],
+      "variants": [
+        {
+          "variant_label": "Blended PD-array A+ entry (FVG / order block / breaker / OTE, discount return after stop-raid + MSS)",
+          "confirmation_mechanic_note": "stop raid -> market-structure shift/displacement -> return into discount (OTE-refined) -> PD array (FVG/OB/breaker/OTE), blend 1-3",
+          "target_note": "opposite-side liquidity (buy-side above / new low / initial highs from the morning), first partial then break-even then runners",
+          "transcript_quote": "I will look for a fair value Gap in an optimal trade entry or I'll look for the box set up in an optimal trade entry"
+        },
+        {
+          "variant_label": "Box setup (deviation/manipulation -> retest -> other side; no structure shift required)",
+          "confirmation_mechanic_note": "deviation/manipulation out of range (aggressive down then up) -> retest of the manipulation -> reach for the other side",
+          "target_note": "the other side of the range / liquidity resting above",
+          "transcript_quote": "this is the deviation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manipulation to then be reaching for the other side"
+        }
+      ]
+    }
+  ],
+  "enumeration_note": "One strategy: a single A+ ICT checklist skeleton (daily-bias precondition -> stop raid -> MSS/displacement -> return to discount -> PD-array entry -> stop on the order block/structure low -> opposite-side liquidity target with partial/break-even/runners). The five worked examples are the same skeleton across timeframes/instruments; the box setup is a compatible variant sub-mechanic (deviation/manipulation -> retest -> other side, no MSS required), not an opposing logic — no Rule-2 opposition, so not split."
+}

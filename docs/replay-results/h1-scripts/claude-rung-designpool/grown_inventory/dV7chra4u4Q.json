@@ -1,0 +1,35 @@
+{
+  "video": "dV7chra4u4Q",
+  "strategies": [
+    {
+      "name": "break_and_retest",
+      "element_inventory": [
+        "CORE DEFINITION: price breaks above/below a key level, comes back and retests that level, holds it, and continues in the original direction; the broken level flips role (broken resistance becomes support, broken support becomes resistance). 'Price breaks above a key level or breaks below a key level, it comes back, it retests that level, and it holds it, and it continues in the original direction.'",
+        "LONG ENTRY: price breaks ABOVE a key level, pulls back down, retests the level as support and holds it, then enter long on bullish confirmation. 'Price breaks above it, we then want to see price come back down and test it as support... we would be looking to go long to capture a move higher.'",
+        "SHORT ENTRY: price breaks BELOW a support level, pulls back up, retests the level as resistance and holds it, then enter short on bearish confirmation. 'Price ends up breaking below the support... we're waiting for price to come back up and retest it as resistance. If it can become resistance, we're looking to go short.'",
+        "PRECONDITION / KEY-LEVEL SET (Step 1 — identify key level): pre-market highs, pre-market lows, previous day's highs, previous day's lows, 30-minute opening-range (ORB) high, 30-minute ORB low, or a strong area of support/resistance. Filter: 'not all levels matter... we mainly want to focus on the most obvious ones.'",
+        "BREAK GATE (Step 2): require strong momentum on the break AND volume confirmation; the push through must be quick and aggressive ('literally like a couple big candles through the level'), not choppy. 'If we break out or if we react off a low volume, it's typically not going to work out... If it looks weak, we ignore the setup, and we do not take it.'",
+        "RETEST GATE (Step 3): wait for price to pull back to the broken level and HOLD it before acting — do not chase the breakout. 'We want to wait for price to pull back... We want to see price hold the level.'",
+        "ENTRY CONFIRMATION (Step 4): enter only after confirmation candles/price action. LONG: bullish price action — long lower wicks, bullish hammers, dragonfly dojis. SHORT: bearish price action — long upper wicks, bearish hammers, gravestone dojis. 'If we do not get confirmation, we do not take the trade.'",
+        "OPTIONAL ORDER-FLOW CONFIRMATION (variant sub-mechanic): use Bookmap liquidity heat map to confirm buyers/sellers present at the level, stacked with volume + price-action confirmation for a high-probability trade. 'If you like to use order flow, you could use Bookmap liquidity.'",
+        "STOP LOSS (Step 5): place stop just on the opposite side of the breakout level (below the break area for longs, above the break area for shorts). 'Your stop is if price breaks back on the opposite side of the breakout level.'",
+        "TARGET (Step 5): target the next obvious area of liquidity — previous high, previous low, supply zone, or demand zone. 'Your target is going to be the next obvious area of liquidity.'",
+        "RISK SIZING: risk a fixed amount per trade. 'You risk a fixed amount per trade.'",
+        "OCCURRENCE-SELECTION RULE (Tier-A, executable): take ONLY the first retest of a level; do not trade every break and retest. 'The first retest is always the highest probability... don't be sitting there trying to trade every break and retest.'",
+        "FREQUENCY / QUALITY BOUND (Tier-A, executable): take only A+ setups, one to two trades per day maximum. 'You only take A+ setups. One to two trades a day at max.'",
+        "VARIANT — moving-average reclaim confirmation: in chart examples an 80 MA / 8 EMA reclaim at the retest is used as added confirmation to time the long/short entry. 'Retests the 80 MA, reclaims it right here... get back up above that 8 EMA. That's when I went long.'",
+        "VARIANT — timeframe: setup shown/executed primarily on the 5-minute chart, with a lower 2-minute timeframe used to refine some entries. 'You go short at the close of this 5-minute candle... Maybe it looked better on the 2-minute time frame.'"
+      ],
+      "coaching_notes": [
+        "Most traders, they try to predict where price is going. I personally do not. I wait for price to show me where it wants to go, then I enter on confirmation. That's the difference between me and other traders, a profitable trader versus an unprofitable trader.",
+        "Step number three, we want to wait for the retest, and this is where most traders mess up. They chase the breakout, but instead, what I do is I wait.",
+        "Now, this setup is very powerful, but only if you manage risk correctly.",
+        "Again, I always stress this. One to two trades a day, that's it. And this is how I turn consistency into profits.",
+        "Now, here's why most people fail this setup. They chase the breakout, they don't wait for confirmation, they trade weak levels, and they overtrade every small move.",
+        "This setup, it's very simple, but it requires patience.",
+        "So don't be sitting there trying to trade every break and retest.",
+        "So if you can master this one setup, you don't need anything else. One clean break, one clean retest, and one execution. That's it. And that's how you stay consistent in trading."
+      ]
+    }
+  ]
+}

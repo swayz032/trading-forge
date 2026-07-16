@@ -1,0 +1,88 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "three_step_engulfing_orb_scalp",
+      "entry_sequence": [
+       {
+        "action": "I trade every day from 9:30 to 11:00 a.m. Eastern"
+       },
+       {
+        "action": "a simple 1-hour candle pattern I follow before my trading session every day"
+       },
+       {
+        "action": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction"
+       },
+       {
+        "action": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session"
+       },
+       {
+        "action": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session"
+       },
+       {
+        "action": "I'm on the five-minute time frame, and I need to set up my range"
+       },
+       {
+        "action": "marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session"
+       },
+       {
+        "action": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy"
+       },
+       {
+        "action": "I'm looking for the price to break out the bottom of that range"
+       },
+       {
+        "action": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing"
+       },
+       {
+        "action": "This created a level of supply. I was looking at this supply level right here"
+       },
+       {
+        "action": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level"
+       },
+       {
+        "action": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again"
+       },
+       {
+        "action": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "on Forex, Nasdaq, gold, everything"
+       },
+       {
+        "description": "I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range"
+       },
+       {
+        "description": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear"
+       },
+       {
+        "description": "For the session indicator, I'm using New York session by James Davey, you can get that in your indicators in TradingView ... just make sure you have UTC minus four here in the bottom right"
+       },
+       {
+        "description": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4"
+       }
+      ],
+      "targets": [
+       {
+        "description": "for my take profit, I'm always going to look left and see what I can find"
+       },
+       {
+        "description": "I put this around right about there in the middle of that supply because you know, if price comes up to supply, it very likely can react and come down off of that level"
+       }
+      ],
+      "stop": {
+       "anchor": "LONG — 'My stop loss is pretty perfect here. I like it below the range.' SHORT — 'I put my stop loss above this recent wick to be safe.' Break-even management — 'Now, I set break even, okay? Once we got to about this level right here, I set break even.'"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

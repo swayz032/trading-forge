@@ -1,0 +1,100 @@
+{
+  "strategies": [
+    {
+      "name": "vwap_20sma_confluence_long",
+      "direction": "long",
+      "timeframe": "the two-minute time frame",
+      "instruments": "scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade but for me I trade the NASDAQ",
+      "entry_sequence": [
+        {
+          "action": "the first two-minute candle off the Bell closes over the 20 SMA and vwap"
+        },
+        {
+          "action": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+        },
+        {
+          "action": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+        },
+        {
+          "action": "come down to vwap start a new position bounce come down to vop start a new position"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "if we're trading over the vwob we're typically more bullish"
+        },
+        {
+          "description": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position"
+        },
+        {
+          "description": "the white line that you see on my screen that's the 20 SMA ... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average"
+        },
+        {
+          "description": "the green line that you see is the vwap ... the little black line on the upper and the black line on the lower is just the upper and lower ranges of the VW"
+        }
+      ],
+      "scale_in": {
+        "add_rule": "depending on the prop firm that you trade with ... we pull back into vwap this is a good loading opportunity to kind of lower that dollar cost average okay ... you can do this with top step",
+        "frequency_gate": "now if you're on another firm where they don't really like you to dollar cost average or you're only allowed to dollar cost average once ... then maybe we can add one time here or not"
+      },
+      "stop": "hold bounce use the previous Wick as a stop come down to vop hold bounce use the previous low Point as a stop",
+      "hold_rule": "as long as the V up is trending higher as long as your 20 SMA is trending higher you can hold hold this trade",
+      "targets": [
+        {
+          "unit": "band_scalp",
+          "description": "if you're looking for a little bit of a scalp where you necessarily don't like to hold positions for a long time then you can throw the upper and and lower channels on the vop the the bands and you can sell for profits into the upper Channel",
+          "level": null,
+          "gestural_or_example_note": "speaker's only magnitude came from that day's live example ('entering at a price of around 2,259 then we can sell upwards of a price of 20275 ... 15 20 points'); the example levels are nulled per the no-invented-precision rule, the rule ('sell for profits into the upper Channel') is kept verbatim."
+        },
+        {
+          "unit": "sma20_trailing_stop",
+          "description": "as long as we've broken away from vwap and as long as the 20 SMA starts to hold a little bit higher to the price action and we create a little bit of a gap ... you can use the 20 SMA as a trailing stop so if we do close below the 20 SMA maybe you can use that as an indication to get out of the trade",
+          "activation_gate": "this here is not a gap this is not really a gap we're pretty flat it's kind of just going sideways at this period of time this is clearly trending higher so this 20 SMA is clearly trending higher",
+          "level": null,
+          "gestural_or_example_note": "speaker's only magnitude came from that day's live example ('20258 to when we closed below the vwap of 20331 ... almost 75 points worth of runup'); example levels nulled, exit rule (close below the 20 SMA) kept verbatim."
+        }
+      ],
+      "reentry": "now you could have also started a new position here once we got back over the 20 SMA",
+      "sizing": "so if you're used to trading micro contracts we're going to want to trade one micro contract if you're already trading one lot we're going to bump that up two even three lots"
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "primary_instrument": "NASDAQ futures",
+    "also_stated_applicable": ["ES", "YM", "RTY"],
+    "timeframe": "2-minute",
+    "is_options_mechanic": false,
+    "extractable": true,
+    "source_words": "how you can use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade but for me I trade the NASDAQ"
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "how to use vwap ... to help you kind of avoid getting chopped up how to stay on the right side of the trend and how to hold your positions maybe a little bit longer with a trailing stop",
+    "a lot of times Traders will jump into a specific play like this see this pull back for two four six minutes get scared get panicked start complaining on social media that the market is chopping but realistically all we're doing is back testing support here at vwap",
+    "just have the confidence that as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+    "now this is going to take a specific type of Trader because I know a lot of you guys who trade Futures a lot of you guys who are newer today trading period you guys really don't like to hold positions through draw down through ups and downs and you get nervous and panicked",
+    "it did take over about an hour to an hour and a half before price action really started to break away",
+    "a lot of times when Traders see price action start to get extended they're quick to short they're quick to short but in all reality the price and the charge and the technicals are telling you that this is a uptrend so instead of looking to find the short for a quick scalp look for the pullback and look for the bounce off of support",
+    "this is how you can use vwap to pass prop firm evaluations extremely quickly and I'm talking about just a few days",
+    "how we can do that is by putting on a little bit more size than we're used to"
+  ],
+  "coverage_notes": [
+    "PRECONDITION timeframe/instruments -> APPEARS as strategies[0].timeframe + instruments ('the two-minute time frame ... scalp es scalp uh ym rty ... for me I trade the NASDAQ').",
+    "PRECONDITION indicators (20 SMA not smoothed/exp + VWAP with upper/lower bands) -> APPEARS as confluences[2] and confluences[3], verbatim.",
+    "PRECONDITION directional bias gate (only longs while over VWAP) -> APPEARS as confluences[0] ('if we're trading over the vwob we're typically more bullish').",
+    "PRECONDITION confluence gate (over BOTH 20 SMA AND VWAP) -> APPEARS as confluences[1].",
+    "PRECONDITION session open context (first 2-min candle off bell closes over 20 SMA and VWAP) -> APPEARS as entry_sequence[0].",
+    "ENTRY trigger (close over 20 SMA then following candle takes out that candle's high) -> APPEARS as entry_sequence[1], verbatim.",
+    "ENTRY re-load / pullback buy (buy pullback into VWAP if wick-below but no close/build below) -> APPEARS as entry_sequence[2], verbatim.",
+    "SELECTION / re-entry rule (each never-closes-below bounce = new position) -> APPEARS as entry_sequence[3] ('come down to vwap start a new position').",
+    "SCALE-IN adds (add on pullback into VWAP to lower DCA; Topstep permits) -> APPEARS as scale_in.add_rule, verbatim.",
+    "SCALE-IN FREQUENCY gate (firm-conditional: add one time or not) -> APPEARS as scale_in.frequency_gate, verbatim.",
+    "STOP (previous wick / previous low point of prior bounce) -> APPEARS as strategies[0].stop, verbatim.",
+    "HOLD / stay-in rule (hold while VWAP and 20 SMA trending higher) -> APPEARS as strategies[0].hold_rule, verbatim.",
+    "EXIT UNIT A band scalp (~15-20pt) -> APPEARS as targets[0] (band_scalp); rule verbatim, example levels/magnitude nulled per no-invented-precision.",
+    "EXIT UNIT B 20 SMA trailing stop (~75pt) -> APPEARS as targets[1] (sma20_trailing_stop); rule verbatim (exit on close below 20 SMA), example levels/magnitude nulled.",
+    "EXIT-B precondition (activation gate: only trail after separation + real gap) -> APPEARS as targets[1].activation_gate, verbatim.",
+    "RE-ENTRY after trail exit (new long once back over 20 SMA) -> APPEARS as strategies[0].reentry, verbatim.",
+    "SIZING executable core (micro->one micro; 1 lot->2 or 3 lots) -> APPEARS as strategies[0].sizing, verbatim; the 'more size than we're used to' wrapper is recorded in coaching_notes as instructed."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+ "custom_id": "DLwVqcLRcfw__s0",
+ "grade": {
+  "strategy_name": "vwap_20sma_confluence_long",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "All transcript-taught Tier-A mechanics in the inventory are preserved in the extraction, and the referenced Tier-B coaching lines are also retained."
+ },
+ "tokens": 8399,
+ "cached": 0
+}

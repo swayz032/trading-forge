@@ -1,0 +1,109 @@
+{
+  "strategies": [
+    {
+      "name": "orb_breakout_pullback_continuation",
+      "direction": null,
+      "entry_sequence": [
+        {
+          "action": "First, I switch over to the 5-minut chart. This way, I can react to price action a lot quicker."
+        },
+        {
+          "action": "My orb range is still defined by the first 15 minutes of the day. But since I'm on the 5-minut time frame now, I have to use the first three candles to define my range high and range low."
+        },
+        {
+          "action": "Once I have those defined, I then wait for my breakout just like before."
+        },
+        {
+          "action": "But this time, I don't buy immediately on the close of this breakout candle."
+        },
+        {
+          "action": "Instead, I have to wait and see if price is going to make a pullback towards the opening range."
+        },
+        {
+          "action": "what I'm looking for is a candle that's going to break through the range but then close back above it, which is exactly what this candle here has done."
+        },
+        {
+          "action": "Once I get this pullback candle, I don't enter immediately. I want to see confirmation that price is going to bounce off and move back up."
+        },
+        {
+          "action": "And I'm going to be waiting for a break of this most recent high. We get that on the next candle. And this gives me my confirmation to enter into a trade. So, the trade is opened here."
+        }
+      ],
+      "confluences": [
+        {
+          "description": "for my back tester, I need to take into account the height of this breakout. And I made sure that this was greater than at least 1 times ATR to be considered a suitable breakout."
+        },
+        {
+          "description": "The reason for this is that I want to see buyers coming back in and pushing the price back up. That gives me confirmation that this line is now starting to act as support."
+        }
+      ],
+      "stop": {
+        "description": "The stop loss will still go at the bottom of my opening range.",
+        "level": null
+      },
+      "targets": [
+        {
+          "description": "And I will target 1 and 1/2 times for my take-profit ratio.",
+          "level": null
+        }
+      ],
+      "variants": [
+        {
+          "name": "stop_loss_at_pullback_candle",
+          "description": "I don't have to put the stop loss down here. It could also go at the bottom of this pullback candle."
+        },
+        {
+          "name": "take_profit_ratio_sweep",
+          "description": "I don't have to always aim for one and a half times. And I will be testing out all of these different scenarios. ... this time I tested take-profit ratios starting at 2 1/2 and going all the way up to 4 1/2 in increments of 0.5."
+        },
+        {
+          "name": "invalidation_and_second_setup",
+          "description": "the initial pullback broke all the way through into the opening range. So that invalidated the trade. I waited for the second breakout and that was followed by a second pullback."
+        },
+        {
+          "name": "stop_order_at_top_of_orb",
+          "description": "should I just place a stop order at the opening range? That way, when price hits it, I get in immediately for that bounce back up. ... the stop loss is still at the bottom of the range. I have a 1.5 take profit, but now I'm using a stop order at the top of the orb."
+        },
+        {
+          "name": "midpoint_entry",
+          "description": "it's actually the midpoint. ... I'm still measuring the breakout from the top of the opening range, but now a pullback down to the opening range isn't enough. I'm waiting for price to pull back all the way into this midpoint here, and that's where I'm going to buy with a stop order. I'm not looking for confirmation of a previous high being broken. I just enter immediately as it reaches the midpoint. ... because I'm at the midpoint, my stop loss is far smaller."
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equity_index",
+    "instrument_mentioned": "S&P 500",
+    "is_options_strategy": false,
+    "timeframe": "5-minute (ORB defined by the first 15 minutes / first three 5-minute candles)",
+    "rationale": "Speaker states 'I have back tested 5 years of S&P 500 data'; strategy is a price-action opening-range breakout with no options mechanics (no strikes/Greeks)."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "And this will be difficult psychologically because I'll be getting FOMO about missing out on a potential trade, especially if it continues going up the way.",
+    "The theory here is pretty simple, but it requires patience not to chase that initial move, but to actually wait for price to come back down and give a better entry.",
+    "many of the screenshots that we see in all of these videos that promote the strategy are these perfect cherrypicked examples. They make the setup look really simple and reliable, but as I've shown, the majority of trades don't look like this at all.",
+    "the best breakouts are the ones that have strong momentum, and they don't often pull back down to the opening range. They might have small corrections along the way, but nothing significant.",
+    "By sitting and waiting for a pullback, I'm essentially skipping out on the strongest breakouts, trading only those that were weak enough to come back down to the opening range."
+  ],
+  "coverage_notes": [
+    "Timeframe: switch to the 5-minute chart — APPEARS: entry_sequence[0].",
+    "ORB range still defined by first 15 minutes; on 5m use the FIRST THREE candles for range high/low — APPEARS: entry_sequence[1].",
+    "Wait for the breakout through the opening range — APPEARS: entry_sequence[2].",
+    "Do NOT buy immediately on the close of the breakout candle — APPEARS: entry_sequence[3].",
+    "Wait to see if price makes a pullback back toward the opening range — APPEARS: entry_sequence[4].",
+    "BREAKOUT-DEFINITION FILTER: breakout height must be greater than at least 1x ATR — APPEARS: confluences[0].",
+    "Pullback confirmation candle (breaks below the range then closes back above it) — APPEARS: entry_sequence[5].",
+    "Do not enter on the pullback confirmation candle itself; wait for confirmation of the bounce — APPEARS: entry_sequence[6].",
+    "Entry trigger: a break of the most-recent high (on the next candle) gives confirmation to enter — APPEARS: entry_sequence[7].",
+    "Enter on the candle that breaks that most-recent high — APPEARS: entry_sequence[7] ('the trade is opened here').",
+    "Stop loss placed at the bottom of the opening range — APPEARS: stop.",
+    "Stop-loss variant: bottom of the pullback candle — APPEARS: variants[0] (stop_loss_at_pullback_candle).",
+    "Target 1.5:1 reward-to-risk (baseline) — APPEARS: targets[0].",
+    "Target-R variant sweep: 2.5:1 up to 4.5:1 in increments of 0.5 — APPEARS: variants[1] (take_profit_ratio_sweep).",
+    "Trade-invalidation rule: initial pullback breaks all the way through into the opening range invalidates the trade — APPEARS: variants[2] (invalidation_and_second_setup).",
+    "Occurrence-selection: after an invalidated first pullback, take the second breakout followed by the second pullback — APPEARS: variants[2] (invalidation_and_second_setup).",
+    "Stop-order-at-ORB variant: place a stop order at the top of the ORB for immediate entry; stop still at bottom of range; 1.5 take-profit — APPEARS: variants[3] (stop_order_at_top_of_orb).",
+    "Midpoint-entry variant: require pullback into the MIDPOINT of the opening range; enter immediately with a stop order at the midpoint (no prior-high confirmation); smaller stop — APPEARS: variants[4] (midpoint_entry)."
+  ]
+}

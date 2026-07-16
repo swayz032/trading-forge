@@ -1,0 +1,128 @@
+{
+  "strategies": [
+    {
+      "name": "three_step_engulfing_orb_scalp",
+      "entry_sequence": [
+        {
+          "action": "I trade every day from 9:30 to 11:00 a.m. Eastern"
+        },
+        {
+          "action": "a simple 1-hour candle pattern I follow before my trading session every day"
+        },
+        {
+          "action": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction"
+        },
+        {
+          "action": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session"
+        },
+        {
+          "action": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session"
+        },
+        {
+          "action": "I'm on the five-minute time frame, and I need to set up my range"
+        },
+        {
+          "action": "marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session"
+        },
+        {
+          "action": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy"
+        },
+        {
+          "action": "I'm looking for the price to break out the bottom of that range"
+        },
+        {
+          "action": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing"
+        },
+        {
+          "action": "This created a level of supply. I was looking at this supply level right here"
+        },
+        {
+          "action": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level"
+        },
+        {
+          "action": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again"
+        },
+        {
+          "action": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "on Forex, Nasdaq, gold, everything"
+        },
+        {
+          "description": "I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range"
+        },
+        {
+          "description": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear"
+        },
+        {
+          "description": "For the session indicator, I'm using New York session by James Davey, you can get that in your indicators in TradingView ... just make sure you have UTC minus four here in the bottom right"
+        },
+        {
+          "description": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4"
+        }
+      ],
+      "stop": {
+        "description": "LONG — 'My stop loss is pretty perfect here. I like it below the range.' SHORT — 'I put my stop loss above this recent wick to be safe.' Break-even management — 'Now, I set break even, okay? Once we got to about this level right here, I set break even.'"
+      },
+      "targets": [
+        {
+          "description": "for my take profit, I'm always going to look left and see what I can find"
+        },
+        {
+          "description": "I put this around right about there in the middle of that supply because you know, if price comes up to supply, it very likely can react and come down off of that level"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument_type": "multi-asset (instrument-agnostic)",
+    "specific_instrument": "Forex, Nasdaq, gold ('everything') — speaker states it applies across all",
+    "asset_class": "mixed (FX, equity index, metals)",
+    "is_options_strategy": false,
+    "day_trading": true,
+    "session_based": true,
+    "reasoning": "Speaker explicitly applies the method 'on Forex, Nasdaq, gold, everything' and trades a fixed intraday window '9:30 to 11:00 a.m. Eastern'. It is a session-anchored 3-step scalping mechanic (1h engulfing bias -> 9:30-9:45 opening-range break-and-close -> demand/supply retest entry), fully day-trading and session-based. No options mechanics (no strikes, Greeks, or expiries). The mechanic is instrument-agnostic; the instrument list is the speaker's stated universe, not a strategy constraint."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "Traders fail when they don't recognize market direction.",
+    "This is really easy for beginners, and for scalpers, it's fantastic because these are hour-long candles here.",
+    "We really only need to pick up just a small amount of this green candle in order to win the trading position.",
+    "Now, this isn't proof that the strategy will work in the future. Back-testing is just a way to see how a model performed on prior data.",
+    "I've personally back-tested 500 times.",
+    "I never promise or guarantee any trading results.",
+    "Because once you see this play out on the chart multiple times, it really starts to click.",
+    "but let's not clutter up the charts.",
+    "at that point, I've got my take profit set, my stop loss set, and I can just walk off, go to the gym.",
+    "with all of this consolidation, at some point if you were watching this trade, you probably would have exited here as well regardless."
+  ],
+  "coverage_notes": [
+    "PRECONDITION session window (9:30-11:00 a.m. Eastern daily): APPEARS — entry_sequence[0] ('I trade every day from 9:30 to 11:00 a.m. Eastern').",
+    "PRECONDITION pre-session bias from the 7am/8am 1-hour candles before the session: APPEARS — entry_sequence[1] ('a simple 1-hour candle pattern I follow before my trading session every day') + entry_sequence[2] ('I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction').",
+    "Step 1 bias timeframe = 1-hour candles: APPEARS — entry_sequence[1] ('a simple 1-hour candle pattern ...') + entry_sequence[2] (the 7am/8am candles).",
+    "Step 1 LONG bias (bullish engulfing => buy bias): APPEARS — entry_sequence[3] ('if I want to buy, I want to see a bullish engulfing pattern form before my trading session').",
+    "Step 1 SHORT bias (bearish engulfing => sell bias): APPEARS — entry_sequence[4] ('if I want to sell, I want to see a bearish engulfing pattern form before my trading session').",
+    "Instrument universe (Forex, Nasdaq, gold, 'everything'): APPEARS — confluences[0] ('on Forex, Nasdaq, gold, everything').",
+    "Step 2 timeframe = 5-minute chart for the range: APPEARS — entry_sequence[5] ('I'm on the five-minute time frame, and I need to set up my range').",
+    "Step 2 range definition (top/bottom of 9:30-9:45 first-15-min NYSE range): APPEARS — entry_sequence[6] ('marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session').",
+    "Step 2 LONG confirmation (break AND close above range top): APPEARS — entry_sequence[7] ('I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy').",
+    "Step 2 SHORT confirmation (break below range bottom): APPEARS — entry_sequence[8] ('I'm looking for the price to break out the bottom of that range'). Speaker also confirms break-and-close for the short: 'We got the break and close out the bottom.'",
+    "SELECTION rule (breakout direction must match Step 1 bias): APPEARS — confluences[1] ('I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range'); mirrored long-side 'you know I'm looking for buys, so I'm simply looking for the price to break and close outside of that range.'",
+    "Step 3 LONG point-of-interest (demand zone from aggressive push / break of structure / FVG): APPEARS — entry_sequence[9] ('a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing').",
+    "Step 3 SHORT point-of-interest (supply zone from aggressive push / break of structure): APPEARS — entry_sequence[10] ('This created a level of supply. I was looking at this supply level right here'); the demand/aggressive-push definition in entry_sequence[9] is the speaker's mirror mechanic for supply.",
+    "Step 3 wait for retracement to the demand/supply level: APPEARS — entry_sequence[11] ('And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level').",
+    "Entry variant A (confirmation entry — tap + respect level + engulfing forms): APPEARS — entry_sequence[12] ('It taps into the level of demand, and it clearly respects the level ... because we also have another bullish engulfing pattern right here ... telling me we have that momentum to the upside yet again').",
+    "Entry variant B (passive limit order at the level): APPEARS — entry_sequence[13] ('So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position').",
+    "Entry model label (classic break-and-retest ORB entry): APPEARS — confluences[2] ('the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear').",
+    "Stop-loss LONG (below the range / below demand): APPEARS — stop.description ('My stop loss is pretty perfect here. I like it below the range').",
+    "Stop-loss SHORT (above the recent wick): APPEARS — stop.description ('I put my stop loss above this recent wick to be safe').",
+    "Take-profit rule ('look left' to next opposing supply/demand level): APPEARS — targets[0] ('for my take profit, I'm always going to look left and see what I can find').",
+    "Take-profit placement detail LONG (middle of the opposing supply zone): APPEARS — targets[1] ('I put this around right about there in the middle of that supply ...').",
+    "Target R approximately 2.1-2.3: ABSENT-WITH-REASON — the speaker states the risk-reward only as the OUTCOME of the walk-through example ('this gave me a risk reward of about 2.16 ... about a 2.3'), never as a target rule (no 'I aim for 2R'). Per the example-not-a-rule guard, no standalone target-R rule is extracted; the stated TP rule is the 'look left' / opposing-zone placement captured in targets[].",
+    "Management break-even (move stop to break-even once price advances to a level): APPEARS — folded into stop.description ('Now, I set break even, okay? Once we got to about this level right here, I set break even'). The exact level is example-specific; the break-even rule itself is stated and preserved.",
+    "Indicator config — session ('New York session by James Davey', TradingView, UTC-4): APPEARS — confluences[3].",
+    "Indicator config — range/ORB ('opening range with breakouts and targets by Lux Algo', 15-minute, 9:30-9:45, UTC-4): APPEARS — confluences[4]."
+  ]
+}

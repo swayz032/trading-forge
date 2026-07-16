@@ -1,0 +1,37 @@
+{
+  "video": "WEhmadJArQo",
+  "strategies": [
+    {
+      "name": "opening_range_fvg_break_entry",
+      "element_inventory": [
+        "Precondition (timing): only trade at the regular-session open — be at the desk at 9:30 a.m. EST; the first candle of the day at 9:30 anchors the setup",
+        "Precondition (market-agnostic): works on any market (futures, stocks, crypto, forex) using the same 9:30 EST open time",
+        "Direction rule: break ABOVE the first-candle HIGH = bullish, take long trades (mirror: break below the LOW = bearish/short); the broken side determines trade direction",
+        "Qualifying-break gate: a valid break of the level must form a fair value gap — merely crossing the level with a wick or a candle closure does NOT qualify",
+        "FVG definition: a 3-candle formation leaving a gap between candle-1's wick and candle-3's wick, with an expansive middle candle showing force in the break direction",
+        "SCALPING variant — Step 1 (levels): on the 5-minute chart, mark the high and the low of the first 5-minute candle (9:30-9:35 EST)",
+        "SCALPING variant — Step 2 (direction confirm): switch to the 1-minute chart and wait for a break of the marked level that forms a fair value gap",
+        "SCALPING variant — Step 3 (entry): wait for a retest of the FVG (price trades back into the gap), then wait for the retest candle to get engulfed, and enter on the engulfing",
+        "SCALPING variant — engulfing definition: the body of the retest candle is completely closed through by opposing-direction candle(s)",
+        "SCALPING variant — stop loss: place it under the lowest area price traded into the FVG, plus one tick of breathing room",
+        "SCALPING variant — target: fixed 3:1 reward-to-risk",
+        "DAY-TRADING variant — Step 1 (levels): on the 15-minute chart, wait for the first 15-minute candle (9:30-9:45 EST) to close, then mark its high and low",
+        "DAY-TRADING variant — Step 2 (direction confirm): switch to the 5-minute chart and wait for a fair value gap formed through the first candle",
+        "DAY-TRADING variant — entry: instead of waiting for a retest, set a LIMIT order on the FVG so entry is automatic once price trades back into the fair value gap",
+        "DAY-TRADING variant — stop loss: place it at/under the first candle of the 3-candle FVG pattern",
+        "DAY-TRADING variant — target: fixed 2:1 reward-to-risk",
+        "Management rule: after entry, hold through a revisit — do not exit if the market comes down and revisits the fair value gap"
+      ],
+      "coaching_notes": [
+        "knowing when to decide between the two is what separates profitable traders from the unprofitable traders",
+        "after you execute the trade, you sit back and let the market do the heavy lifting for you. No need to micromanage your trade.",
+        "There's no guessing and no confusion with this strategy.",
+        "knowing when to use the scalping versus the day trading entry is what separates the profitable traders from the unprofitable",
+        "the one thing that isn't different about this strategy from the last is that you don't need to micromanage your trades, and you can just sit back and let the market do the heavy lifting for you",
+        "Don't freak out and close your trades. Just trust in the system.",
+        "If you have blown accounts before or if you struggle with emotional trading, then use the day trading approach. It's more forgiving and it has a higher win rate.",
+        "as you've seen in the back test, the scalping works, too. But it requires split-second decision-making that most struggling traders aren't ready to make."
+      ]
+    }
+  ]
+}

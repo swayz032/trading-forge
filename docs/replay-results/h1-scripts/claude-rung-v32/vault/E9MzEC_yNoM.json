@@ -1,0 +1,85 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "premarket_range_break_continuation",
+      "entry_sequence": [
+       {
+        "action": "as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level."
+       }
+      ],
+      "confluences": [
+       {
+        "description": "what's really important is you need to wait for the break. You do not want to take early entries. You want to look for a solid candle close above or below the range."
+       }
+      ],
+      "targets": [
+       {
+        "description": "ideally when I'm trading, I'm typically looking for bare minimum of 1x of my original risk. However, ideally what I'm looking for is a 1.5x to a 2x my original risk."
+       }
+      ],
+      "stop": {
+       "anchor": "The stop is always going to go on the opposite side of the entry candle. And every single time, our risk is well defined."
+      }
+     }
+    ]
+   }
+  },
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "premarket_range_liquidity_sweep_reversal",
+      "entry_sequence": [
+       {
+        "action": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures."
+       },
+       {
+        "action": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action."
+       },
+       {
+        "action": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps."
+       },
+       {
+        "action": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep."
+       },
+       {
+        "action": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep."
+       },
+       {
+        "action": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way"
+       },
+       {
+        "action": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level."
+       },
+       {
+        "action": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long."
+       }
+      ],
+      "confluences": [
+       {
+        "description": "reclaims the level with a lot of volume"
+       },
+       {
+        "description": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator."
+       }
+      ],
+      "targets": [
+       {
+        "description": "ideally when I'm trading, I'm typically looking for bare minimum of 1x of my original risk. However, ideally what I'm looking for is a 1.5x to a 2x my original risk."
+       }
+      ],
+      "stop": {
+       "anchor": "The stop is always going to go on the opposite side of the entry candle. And every single time, our risk is well defined. Your stop loss has to be below your entry candle."
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

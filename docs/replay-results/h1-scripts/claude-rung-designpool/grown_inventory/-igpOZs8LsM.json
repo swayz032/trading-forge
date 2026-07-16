@@ -1,0 +1,31 @@
+{
+  "video": "-igpOZs8LsM",
+  "strategies": [
+    {
+      "name": "fvg_trend_continuation_entry",
+      "element_inventory": [
+        "FVG detection: a fair value gap / imbalance is where price moved so aggressively in one direction that it left a gap between candles without proper trading activity",
+        "FVG is created across three candlesticks; map the gap from the closing point of the FIRST candle to the opening point of the THIRD candle — the space in between is the imbalance",
+        "Bullish FVG (buy setup): gap mapped from first-candle close to third-candle open on an up-move",
+        "Bearish FVG (sell setup): gap mapped from first-candle close to third-candle open on a down-move",
+        "PRECONDITION — trade only in the direction of the prevailing trend/momentum (this is a trend-continuation entry; only take FVG entries aligned with the trend)",
+        "PRECONDITION / filter — the imbalance must have caused a break of structure; only consider the FVG that created the break of structure (look at the three candlesticks before that break of structure)",
+        "SELECTION rule — do not map out every FVG on the chart; select only the FVG that caused the break of structure",
+        "PRECONDITION / filter — there must be liquidity that price clears before tapping into the imbalance",
+        "SELECTION rule — prefer the FVG that is very close to the order block (price tends to target the FVG nearest the order block and react from it)",
+        "ENTRY — wait for price to retrace and tap into the selected FVG, then enter in the trend-continuation direction (price taps in and continues pushing)",
+        "STOP (buy) — place stop loss a little bit below the FVG",
+        "STOP (sell) — place stop loss a little bit above the FVG",
+        "STOP constraint — do not drag the stop loss to also accommodate the order block; keep the stop just beyond the FVG only (dragging it to cover the order block kills the risk-to-reward)"
+      ],
+      "coaching_notes": [
+        "All you just need to do is back test and see if it works for you and you know compare the win rates before you decide you know to risk your money.",
+        "but then remember trading is risky.",
+        "all you just need to do is patiently wait for you know price to get back into that FVG that caused the break of structure.",
+        "So um I keep saying this this works very much um on gold but at the end of the day apply proper risk management.",
+        "Remember no amount of you know over analysis or you know how beautiful your setup is that does not guarantee profit.",
+        "So have it in mind that trading you know involves risk and you can also lose your capital."
+      ]
+    }
+  ]
+}

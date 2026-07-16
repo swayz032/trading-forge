@@ -1,0 +1,59 @@
+{
+  "strategies": [
+    {
+      "name": "vwap_band_mean_reversion",
+      "direction": "both",
+      "indicator": "add volume by Price values go to vwap developing vwap",
+      "entry_sequence": [
+        {
+          "action": "this line is being reset as soon as every single session starts again so with every new session this is being reset because it's a reference for the session"
+        },
+        {
+          "action": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation"
+        },
+        {
+          "action": "the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones because they're further away we will be from the dynamic fair value of the market and the most likely we will be rebalancing"
+        },
+        {
+          "action": "if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels not just based on previous price but based on the volume of the whole session"
+        },
+        {
+          "action": "here is where you want to look for a trade this is the most convenient price in the whole session or the most convenient value"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "use these as some sort of overbought or oversold levels not just based on previous price but based on the volume of the whole session"
+        }
+      ],
+      "stop": null,
+      "targets": [
+        {
+          "target": "use the central vwap as a target for Price rebalancing this overbought situation"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument_agnostic": true,
+    "instruments_mentioned": ["ES (five es contracts)"],
+    "asset_class": "futures",
+    "timeframe": "intraday / session-based day trading",
+    "rationale": "The speaker addresses 'you as a day trader with five es contracts' and anchors the tool to the trading session ('a reference for the session', 'the volume of the whole session'). VWAP with standard-deviation bands is a session-anchored intraday indicator that is not tied to a single instrument."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "of course this is not a law this is just a dynamic reference which is a much deeper reason to have an edge rather than normal Ballinger bands or moving averages",
+    "so of course you might want to back test test it a lot and see for yourself the actual edge of the average",
+    "try to back test a little bit with it in your trading strategy and see if it can be an edge booster if it is leave a comment and let me know if it helped"
+  ],
+  "coverage_notes": [
+    "INDICATOR (session-anchored developing VWAP, reset each session): APPEARS — 'indicator' field ('add volume by Price values go to vwap developing vwap') plus entry_sequence step 1 ('this line is being reset as soon as every single session starts again...it's a reference for the session').",
+    "LEVELS (standard-deviation bands 1 / 1.5 / 2 / 3 SD): APPEARS — entry_sequence step 2 ('the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation').",
+    "SETUP/FILTER (price extended far into outer bands; further out = higher reversal probability): APPEARS — entry_sequence step 3 ('the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones...').",
+    "LEVEL SEMANTICS (outer bands as overbought/oversold defined by whole-session volume, not previous price): APPEARS — confluence ('use these as some sort of overbought or oversold levels not just based on previous price but based on the volume of the whole session'), also embedded in entry_sequence step 4.",
+    "ENTRY (fade at extreme outer band, the most convenient price of the session; short upper premium / buy lower discount; direction:both): APPEARS — direction field set to 'both' and entry_sequence steps 4-5 ('if you're using reversal strategies you might want to use these as some sort of overbought or oversold levels...', 'here is where you want to look for a trade this is the most convenient price in the whole session or the most convenient value'). The explicit long-example numbers ('we shorted...went down into the lower standard deviations') were a live walk-through and are stripped; the symmetric both-direction rule is grounded in 'same thing with the lower ones' and the premium/discount semantics.",
+    "TARGET (central VWAP as target for rebalancing): APPEARS — targets[] ('use the central vwap as a target for Price rebalancing this overbought situation').",
+    "STOP: ABSENT-WITH-REASON — the speaker taught no stop level (nor any gestural exit) for the mean-reversion fade; only the central-VWAP target was stated. Stop field nulled honestly, not invented."
+  ]
+}

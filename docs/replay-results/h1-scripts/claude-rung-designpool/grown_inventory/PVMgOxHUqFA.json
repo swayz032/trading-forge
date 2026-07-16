@@ -1,0 +1,32 @@
+{
+  "video": "PVMgOxHUqFA",
+  "strategies": [
+    {
+      "name": "abc_trend_continuation_reclaim",
+      "element_inventory": [
+        "PRECONDITION (HTF bias): the 4-hour timeframe must already be bullish before the setup is valid — 'we already knew the 4hour time frame was bullish'",
+        "PRECONDITION (HTF confirm): the 1-hour timeframe must also be bullish alongside the 4h — 'you know the 4 hour and the one hour is bullish'",
+        "PRECONDITION (context gate): the lower-timeframe downtrend is only the 4h forming a higher low to push higher — the setup is only taken as a correction WITHIN the bullish HTF trend ('all that downtrending on the 15 minute time frame was only the 4 hour making a higher low to push up more')",
+        "STRUCTURE step: scale down to the 15-minute timeframe to track the correction and its end ('finding the correction and when it's over is fairly easy... start tracking your highs and lows on that 15-minut time frame')",
+        "STRUCTURE rule: while price makes lower highs AND lower lows it is still bearish/correcting — do NOT buy ('price is still bearish because it's still making lows... breaking levels of support')",
+        "END-OF-CORRECTION signal 1: price stops making lower lows — the last lower low holds and price fails to make a new low ('Price stops making lower lows... it tries to come down, fails to do so. This is a bullish sign')",
+        "END-OF-CORRECTION signal 2 / ENTRY CONFIRMATION: price breaks back ABOVE the most recent lower high (the level where sellers sit) — 'the moment price comes above this level, this lets us know that price is bullish'",
+        "ABC pattern definition: A = a low, B = a lower high (identified by rejections / price coming up and shooting down), C = a low that is HIGHER than the previous low (higher low) — 'Literally a ABC setup'; the trigger is the break above B",
+        "ENTRY: buy on the break above the lower-high level — 'once you find this... breaking above that level... your entry goes here'",
+        "STOP LOSS placement: under the level you do not want to see broken (the reclaim / higher-low level); explicit operator choice of either the higher-low or the prior low — 'your stop loss goes either here or here whichever one you want to use'",
+        "TARGET (base): scale back out to the 1-hour timeframe and target the 1-hour high — 'you'll target that 1 hour high'; framed as a ~1:10 setup",
+        "TARGET (extended trend-follow): if following the trend and the 4h breaks its high, keep scaling out for a larger runner (~1:32) — 'if you would have scaled out more... you would probably be around a 1 to 32'",
+        "VARIANT (entry timeframe): use the 15-minute OR the 5-minute for the entry, whichever shows the cleanest highs/lows — 'that 15minut time frame or 5 minute time frame, whichever one's the clearest to you'",
+        "SESSION gate: trade gold during the London and New York sessions (USD-driven); expect larger moves in New York — 'gold moves during London session and New York session because it's USD'",
+        "VARIANT SUB-MECHANIC (lower-timeframe scalp): same reclaim logic applied intraday on the 5-min/1-min — spot a correction showing rejections, wait for a lower high, enter on the reclaim for a small scalp ('I seen price correct. Have some rejections here... take this on that five minute time frame... made a lower high, seen that lower high, boom, and got my price entry')"
+      ],
+      "coaching_notes": [
+        "I trade the trend like relentlessly. I don't trade anything if it doesn't look like it's the trend. If I can't capitalize off of it for the next few days, I try not to place that trade.",
+        "It's all because I make trades based on what the trend is giving me. And when the trend has momentum, it's going to push through as far as you need it to push through.",
+        "you will most likely see it move more in New York session but don't get um don't get discouraged when something happens in London session because that price um gold moves during that price range too as well that session as well.",
+        "even though those rejections was looking like it was going to do something, we still didn't take a buy because why? It didn't give us a confirmation that price was going to be bullish.",
+        "finding the correction and when it's over is fairly easy. You just have to start tracking your highs and lows on that 15-minut time frame."
+      ]
+    }
+  ]
+}

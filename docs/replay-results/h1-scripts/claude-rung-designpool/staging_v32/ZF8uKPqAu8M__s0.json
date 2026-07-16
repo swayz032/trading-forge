@@ -1,0 +1,70 @@
+{
+  "strategies": [
+    {
+      "name": "orb_15m_immediate_breakout",
+      "direction": "long",
+      "timeframe": "15-minute chart",
+      "entry_sequence": [
+        {
+          "action": "I'm here on a 15-minute chart, and I set my time zone to New York. So, that's UTC minus 4."
+        },
+        {
+          "action": "I then look for the 9:30 candle, which is the market open in New York, and that's this green candle here."
+        },
+        {
+          "action": "Once I've got that, I'm going to mark out the high and the low. So, I mark the high and then do the same thing with the low. This gives me my opening range."
+        },
+        {
+          "action": "After that, I'm just waiting for a candle to break out through this range."
+        },
+        {
+          "action": "There are different ways to do this, and I know that some people will enter as soon as the price is broken, like on this green wick up here. But I prefer to wait for the candle to actually break through and then close above."
+        },
+        {
+          "action": "So, in this case, my signal is this candle here because it's the first one to actually break out and then close outside of that range."
+        },
+        {
+          "action": "I then enter at the open of the next one."
+        }
+      ],
+      "confluences": [
+        {
+          "description": "I don't trade after the 12:00 candle, which would be here. So that would be my cut off for entering a trade."
+        },
+        {
+          "description": "I also don't trade ranges that are either too small or too big based on the recent ATR."
+        }
+      ],
+      "stop": "the stop loss goes at the bottom of the range",
+      "targets": [
+        {
+          "description": "I target 1.5 to one reward to risk"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equity_index_futures",
+    "instrument": "S&P 500",
+    "is_options_strategy": false,
+    "mechanic_is_tradeable": true,
+    "reason": "Opening-range breakout demonstrated on the S&P 500 (\"I have back tested 5 years of S&P 500 data\"); a pure price-action mechanic with no options Greeks or strikes."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [],
+  "coverage_notes": [
+    "Timeframe: 15-minute chart — APPEARS: entry_sequence step 1 (\"I'm here on a 15-minute chart\").",
+    "Timezone set to New York (UTC-4) — APPEARS: entry_sequence step 1 (\"I set my time zone to New York. So, that's UTC minus 4\").",
+    "Identify the 9:30 candle = New York market open (green open candle) — APPEARS: entry_sequence step 2 (\"the 9:30 candle, which is the market open in New York, and that's this green candle here\").",
+    "Mark the HIGH of the 9:30 opening-range candle — APPEARS: entry_sequence step 3 (\"I mark the high\").",
+    "Mark the LOW of the 9:30 opening-range candle — APPEARS: entry_sequence step 3 (\"do the same thing with the low. This gives me my opening range\").",
+    "Wait for a candle to break out through the opening range — APPEARS: entry_sequence step 4 (\"I'm just waiting for a candle to break out through this range\").",
+    "Entry trigger (preferred): first candle to break through AND close outside/above the range is the signal candle — APPEARS: entry_sequence steps 5-6 (\"I prefer to wait for the candle to actually break through and then close above\"; \"my signal is this candle here because it's the first one to actually break out and then close outside of that range\").",
+    "Entry sub-mechanic (acknowledged alternative, rejected): some enter immediately on the breakout wick; speaker rejects it in favor of waiting for a close outside — APPEARS: entry_sequence step 5 (\"some people will enter as soon as the price is broken, like on this green wick up here. But I prefer to wait for the candle to actually break through and then close above\").",
+    "Enter at the OPEN of the next candle after the signal candle — APPEARS: entry_sequence step 7 (\"I then enter at the open of the next one\").",
+    "Stop loss at the bottom of the opening range — APPEARS: stop (\"the stop loss goes at the bottom of the range\").",
+    "Target 1.5:1 reward-to-risk take-profit — APPEARS: targets (\"I target 1.5 to one reward to risk\").",
+    "TIME FILTER precondition: do not enter after the 12:00 candle — APPEARS: confluences (\"I don't trade after the 12:00 candle... that would be my cut off for entering a trade\").",
+    "RANGE-SIZE FILTER: do not trade ranges too small or too big based on recent ATR — APPEARS: confluences (\"I also don't trade ranges that are either too small or too big based on the recent ATR\")."
+  ]
+}

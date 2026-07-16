@@ -1,0 +1,69 @@
+{
+  "strategies": [
+    {
+      "name": "spread_making_scalp",
+      "entry_sequence": [
+        {
+          "action": "Instead of aggressively taking liquidity, you provide the liquidity. You're placing resting limit orders in spread names ahead of large bids or offers"
+        },
+        {
+          "action": "immediately just slamming in huge bids, only to just as quickly kick his offers out and his size out a point or two higher, and repeating it again and again before that spread compressed and the stock drifted lower"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "making the spread, especially in a liquid name"
+        },
+        {
+          "description": "When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread. They'll pay that offer up there and hit the bid down there."
+        },
+        {
+          "description": "Scalping thrives on liquidity and volatility. You need both."
+        },
+        {
+          "description": "by providing that liquidity, you are acting more like a market maker than a momentum trader"
+        },
+        {
+          "description": "Often, all you need is a few high-quality opportunities where structure and order flow align."
+        }
+      ],
+      "stop": null,
+      "targets": [
+        {
+          "description": "capture the difference between the spread as other participants are crossing and hitting the bid and paying the offer. The edge here does not come from predicting direction."
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "instrument": "US single-name stocks (in-play / liquid spread names)",
+    "mechanic": "order-flow / market-microstructure scalping (liquidity provision)",
+    "is_options_strategy": false,
+    "notes": "Taught on US equities using the level-2 box (bids/offers) and time-and-sales tape and spread microstructure; not an options (Greeks/strikes) mechanic."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "The edge here does not come from predicting direction. It comes from understanding market microstructure.",
+    "To do this well, you must really understand market microstructure of order types, queue priority, and hidden versus visible orders.",
+    "one of the most impressive trades I've ever seen someone make was when he made hundreds of thousands of dollars in minutes during the Facebook IPO",
+    "identify a key emotional level, confirm with the tape, and execute without hesitation",
+    "There is no room for distraction, and you're interpreting real-time information and making fast, calculated decisions.",
+    "The strategy is also cognitively demanding, requiring sustained focus over the course of a long day.",
+    "The margin for error is thin, and a single large mistake can erase many small gains.",
+    "Scalping is highly execution-dependent. Minor slippage, hesitation, or routing inefficiencies can eliminate or impair your expected value.",
+    "Transaction costs matter significantly because profit targets are small relative to frequency.",
+    "The more size you do, the more slippage you face, and in turn the more your edge degrades.",
+    "you tend to need to be glued to the desk during market hours",
+    "You do not need too many trades per day... often you can fall for the trap of not being selective enough and your win rate suffers."
+  ],
+  "coverage_notes": [
+    "element_inventory[0] (PRECONDITION: liquid 'spread' name in relative equilibrium but thin, urgency participants cross the spread): APPEARS verbatim as confluences 'making the spread, especially in a liquid name' and 'When a stock is in relative equilibrium, but thin, market participants who need urgency will cross the spread...'.",
+    "element_inventory[1] (PRECONDITION: foundational in-play/liquidity context — scalping thrives on liquidity, need a real spread and volume): APPEARS verbatim as confluence 'Scalping thrives on liquidity and volatility. You need both.'",
+    "element_inventory[2] (ENTRY MECHANIC: provide liquidity via resting limit orders ahead of large bids/offers, acting like a market maker): APPEARS verbatim as entry_sequence[0] plus confluence 'by providing that liquidity, you are acting more like a market maker than a momentum trader'.",
+    "element_inventory[3] (PROFIT MECHANIC: capture the spread difference as participants cross; edge is non-directional): APPEARS verbatim as targets[0].",
+    "element_inventory[4] (VARIANT SUB-MECHANIC: wide-spread Facebook-IPO-style — slam huge bids, kick offers out a point or two higher, repeat before spread compresses): APPEARS verbatim as entry_sequence[1]; the 'hundreds of thousands during the Facebook IPO' anecdote is stripped as an example and recorded in coaching_notes.",
+    "element_inventory[5] (SELECTION FILTER: take only a few high-quality opportunities where structure and order flow align; do not overtrade): APPEARS verbatim as confluence 'Often, all you need is a few high-quality opportunities where structure and order flow align.'",
+    "stop: ABSENT-WITH-REASON — the transcript teaches no stop level for spread-making; the speaker gives no protective-exit rule for this scalp (non-directional liquidity provision), so stop is null."
+  ]
+}

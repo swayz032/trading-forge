@@ -1,6 +1,6 @@
 {
  "2026-07-13": {
-  "gpt54": 1391793,
+  "gpt54": 1591634,
   "mini": 309111,
   "_burst_gpt54": {
    "pool": "gpt54",
@@ -25,9 +25,9 @@
    "grantedUtcDate": "2026-07-13"
   },
   "_flex_content_panel": {
-   "tokens": 71098,
-   "cached": 24576,
-   "est_usd": 0.119,
+   "tokens": 199841,
+   "cached": 5248,
+   "est_usd": 0.487,
    "service_tier": "flex",
    "effort": "high"
   },
@@ -43,6 +43,13 @@
    "_sync_fallback_usd": 1.1,
    "_delivery": "openai-batch-api",
    "_empirical_open": "does batch traffic draw the free 250K pool or bill from token one? dashboard resolves after first job; ledger learns permanently."
+  },
+  "_flex_content_panel_v32_OVERRUN": {
+   "note": "v3.2 retest content panel (grader v2, HIGH effort) cost ~$0.487 vs $0.25 ticket cap = OVERRUN ~$0.24. Flex runner records spend but does not HARD-STOP mid-run; high-effort reasoning tokens (199,841 tot) far exceeded the $0.12-anchored estimate. Process gap: add mid-run cap enforcement. Result sound (21/22 clean) but spend exceeded authorization. Surfaced to operator.",
+   "tokens": 199841,
+   "est_usd": 0.487,
+   "ticket_cap": 0.25,
+   "overrun_usd": 0.237
   }
  },
  "_balance_anchor": {

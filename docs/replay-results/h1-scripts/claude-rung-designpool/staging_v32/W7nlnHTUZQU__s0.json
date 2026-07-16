@@ -1,0 +1,106 @@
+{
+  "strategies": [
+    {
+      "name": "overnight_range_break_retest",
+      "direction": "both",
+      "timeframe": "5 minute",
+      "session": "it is going to be best used for the New York market session. So that is going to be from 9:30 a.m. EST all the way until 400 pm EST",
+      "preconditions": [
+        {
+          "type": "session_filter",
+          "description": "it is going to be best used for the New York market session. So that is going to be from 9:30 a.m. EST all the way until 400 pm EST"
+        },
+        {
+          "type": "overall_trend_router",
+          "description": "if the overall trend is to the upside, well then ideally we're not looking for price to break below to look for shorts. Ideally we're waiting for price to break above to look for longs. Or if the overall trend is very weak, well then ideally we're looking for the market to break below this level and continue lower. We're not looking for price to break above this high to continue higher if the market is weak"
+        }
+      ],
+      "entry_sequence": [
+        {
+          "action": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action"
+        },
+        {
+          "action": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range"
+        },
+        {
+          "action": "if we can actually get that break we want to see it close below or above with strength or weakness. So if for example if we're breaking below well then we want to see a break below with weakness. If we see a break above well then we want to look for price to break above with strength"
+        },
+        {
+          "action": "we are waiting for candle closes to actually confirm... price wicked right back down and reclaimed on the opposite side. So there was no entry"
+        },
+        {
+          "action": "LONG: if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume. If we can get that, we are then going to look for a long entry"
+        },
+        {
+          "action": "SHORT: If price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this area as resistance with bearish price action, whether it be bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume. Well, if we get that, we are going to look for a short entry to take price lower"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)"
+        },
+        {
+          "description": "an elevation in the volume"
+        },
+        {
+          "description": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky because you don't need to trade every day"
+        },
+        {
+          "description": "ENTRY-MECHANIC VARIANT: I'm not a big fan of trading the breakouts. If you wanted to, you could have and you could have caught a nice little move up, but I'm a big fan of that retest"
+        }
+      ],
+      "stop": "Your stop loss is always on the opposite side of the breakout point -- our stop is going to be if price breaks back down below this previous high (long); our stop is going to be if price breaks above this level (short)",
+      "targets": [
+        {
+          "description": "once you feel comfortable with your first trim, take it, put your stop-loss at break even"
+        },
+        {
+          "description": "let your winners run until one, you're satisfied with the trade or two, you're stopped out in profits"
+        }
+      ],
+      "trade_management": [
+        {
+          "description": "TRIM + BREAK-EVEN: once you feel comfortable with your first trim, take it, put your stop-loss at break even"
+        },
+        {
+          "description": "INVALIDATION / SMALL-LOSS EXIT + RE-ENTRY GATE (5-min): as soon as price started to close below, especially on the 5 minute time frame, you simply just get out for a small loss. You could always look for a potential re-entry, but as we see when it popped above and it pulled back right here, there's no re-entry. There was no confirmation"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "instrument_family": "index_futures",
+    "specific_instrument": null,
+    "is_options_mechanic": false,
+    "notes": "Instrument-agnostic price-action strategy; speaker never names a specific ticker. Sizing example uses '$50 a point' and per-contract risk figures consistent with an equity-index future, but no instrument is explicitly stated -- classified generically, not invented."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "But a common mistake that I see a lot of people make is they don't understand the overall trend.",
+    "So again, you want to be very picky because you don't need to trade every day.",
+    "Say you only took this one trade and you didn't trade tomorrow. Well, you still average $1,000 per those two days.",
+    "And this just goes to show you could take one trade in for the next two days, you're good.",
+    "But it is also very important to let your winners run until one, you're satisfied with the trade or two, you're stopped out in profits.",
+    "Worst case scenario, you give back some of your potential gains.",
+    "Again, that's part of the game. And no strategy is going to be 100% correct all the time.",
+    "Cuz remember, not all strategies are going to be 100%.",
+    "It's not a strategy that presents itself every day."
+  ],
+  "coverage_notes": [
+    "SESSION FILTER (element 1): APPEARS -- preconditions[session_filter], verbatim.",
+    "OVERNIGHT RANGE DEFINITION (element 2): APPEARS -- entry_sequence step 1 + confluences (overnight high/low identification), verbatim.",
+    "BREAK TRIGGER (element 3): APPEARS -- entry_sequence step 2, verbatim.",
+    "BREAK CONFIRMATION on candle close (element 4): APPEARS -- entry_sequence steps 3 and 4 (strength/weakness close + candle-close confirm, reject reclaiming wicks), verbatim.",
+    "OVERALL-TREND PRECONDITION / direction router (element 5): APPEARS -- preconditions[overall_trend_router], verbatim.",
+    "LONG ENTRY (element 6): APPEARS -- entry_sequence step 5, verbatim.",
+    "SHORT ENTRY (element 7): APPEARS -- entry_sequence step 6, verbatim.",
+    "STOP opposite side of breakout (element 8): APPEARS -- stop, verbatim.",
+    "SELECTIVITY / A+ SETUP-QUALITY FILTER (element 9): APPEARS -- confluences (SELECTIVITY / A+ FILTER), verbatim: 'if you get a setup like I just showed you in the last two examples where it's A+, take that setup' + 'you want to be very picky because you don't need to trade every day'. This was the item silenced last pass; extracted here as an executable Tier-A filter condition.",
+    "ENTRY-MECHANIC VARIANT retest-vs-breakout (element 10): APPEARS -- confluences (ENTRY-MECHANIC VARIANT), verbatim.",
+    "TIMEFRAME 5-minute (element 11): APPEARS -- strategy.timeframe + trade_management invalidation quote ('especially on the 5 minute time frame'), verbatim.",
+    "TRADE MANAGEMENT first trim then break-even (element 12): APPEARS -- targets + trade_management (TRIM + BREAK-EVEN), verbatim.",
+    "INVALIDATION / SMALL-LOSS EXIT + RE-ENTRY GATE (element 13): APPEARS -- trade_management (INVALIDATION), verbatim.",
+    "ALL 13 element_inventory items ACCOUNTED FOR (all APPEAR verbatim; none ABSENT). Live-example numbers (short/long prices, +$266, $925/$450 risk, 2.6R, $50 a point, $1,000/$2,000 up) treated as that-day examples, not extracted as rules."
+  ]
+}

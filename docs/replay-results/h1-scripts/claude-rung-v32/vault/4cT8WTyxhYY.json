@@ -1,0 +1,55 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "liquidity_grab_reversal",
+      "entry_sequence": [
+       {
+        "action": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+       },
+       {
+        "action": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade"
+       },
+       {
+        "action": "you were going to mark your entry point at the candle that made the liquidity grab"
+       },
+       {
+        "action": "your short entry would be at the bottom of this candle that initiated this liquidity grab"
+       },
+       {
+        "action": "we wait for the entry signal once we get it we enter"
+       },
+       {
+        "action": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together"
+       },
+       {
+        "description": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
+       },
+       {
+        "description": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame and on top of that we have a liquidity grab on a lower time frame which is a great Confluence we move back to the 15-minute time frame and do our normal stop loss and take profit ... we would not enter on this trade because the move is happening in the middle of this range on a higher time frame"
+       }
+      ],
+      "targets": [
+       {
+        "description": "set your take profit at a recent high (for longs); set her take profit at a recent low (for shorts)"
+       }
+      ],
+      "stop": {
+       "anchor": "set your stop loss right right below the liquidity grab (for longs); set our stop loss right above the liquidity grab (for shorts)"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

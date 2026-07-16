@@ -1,0 +1,13 @@
+{
+ "custom_id": "PVMgOxHUqFA__s0",
+ "grade": {
+  "strategy_name": "abc_trend_continuation_reclaim",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "All transcript-taught Tier-A elements in the inventory are preserved in the extraction or supporting notes; no content silencing found."
+ },
+ "tokens": 9344,
+ "cached": 0
+}

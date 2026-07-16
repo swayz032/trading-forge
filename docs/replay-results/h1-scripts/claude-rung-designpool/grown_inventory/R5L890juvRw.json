@@ -1,0 +1,40 @@
+{
+  "video": "R5L890juvRw",
+  "strategies": [
+    {
+      "name": "vwap_band_trend_continuation",
+      "element_inventory": [
+        "INDICATOR: plot a session-anchored developing VWAP (volume-weighted average price) as the central reference line ('add volume by Price values go to vwap developing vwap').",
+        "PRECONDITION: the VWAP is reset at the start of every new session; it is a per-session reference ('this line is being reset as soon as every single session starts again so with every new session this is being reset because it's a reference for the session').",
+        "LEVELS: plot standard-deviation bands around the VWAP — 1st = 1 SD, then 1.5 SD, 2nd = 2 SD, 3rd = 3 SD ('the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation').",
+        "PRECONDITION: arm the setup only when an independent directional session bias/context exists — do not trade off VWAP alone (executable core of 'you're not just going to trade based off of vwap only'; e.g. 'you might have a long idea for your session').",
+        "PRECONDITION: at New York session open price is still at fair value (sitting on the VWAP) and then begins running in the bias direction ('as the New York session opens we are still right on Fair Value we start running up').",
+        "ENTRY TRIGGER: wait until price has traveled at least to the 1st standard-deviation band, ideally the 2nd, before acting ('you might want to wait until the price has gone at least to the first if not the second standard deviation').",
+        "ENTRY CONFIRMATION: after price breaks the level and then retests it, enter in the trend-continuation direction (long) ('after we broke it and tested it we can try our long trade').",
+        "TARGET: use the 2nd and 3rd standard-deviation band as the profit target ('you can use the second and third standard deviation as a Target')."
+      ],
+      "coaching_notes": [
+        "vwap is not always working it's always needed to have a context behind your trading idea you're not just going to trade based off of vwap only",
+        "this can be one of the ways to use it",
+        "so of course you might want to back test it a lot and see for yourself the actual edge of the average",
+        "try to back test a little bit with it in your trading strategy and see if it can be an edge booster"
+      ]
+    },
+    {
+      "name": "vwap_band_mean_reversion",
+      "element_inventory": [
+        "INDICATOR: session-anchored developing VWAP as the central mean/fair-value line, reset each new session (shared indicator).",
+        "LEVELS: standard-deviation bands around the VWAP — 1st (1 SD) / 1.5 SD / 2nd (2 SD) / 3rd (3 SD) — used here as overbought/oversold extremes.",
+        "SETUP/FILTER: price is extended far from the VWAP into the outer standard-deviation bands; the further outside price reaches, the higher the reversal probability ('the more prices go outside and reaches for example the higher bends the higher the chance there will be some level of reversal same thing with the lower ones').",
+        "LEVEL SEMANTICS: treat the outer bands as overbought (upper/premium) and oversold (lower/discount) levels defined by whole-session volume, not by previous price ('use these as some sort of overbought or oversold levels not just based on previous price but based on the volume of the whole session').",
+        "ENTRY: fade at the extreme outer band — the most convenient price of the session — taking the reversal back toward the mean; short at the upper premium band, buy at the lower discount band; direction:both (mirror upper/lower) ('we went down into the lower standard deviations and here is where you want to look for a trade this is the most convenient price in the whole session or the most convenient value').",
+        "TARGET: use the central VWAP (mean / fair value) as the target for price rebalancing ('use the central vwap as a target for Price rebalancing this overbought situation')."
+      ],
+      "coaching_notes": [
+        "of course this is not a law this is just a dynamic reference which is a much deeper reason to have an edge rather than normal Ballinger bands or moving averages",
+        "so of course you might want to back test it a lot and see for yourself the actual edge of the average",
+        "try to back test a little bit with it in your trading strategy and see if it can be an edge booster if it is leave a comment and let me know if it helped"
+      ]
+    }
+  ]
+}

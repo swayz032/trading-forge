@@ -1,0 +1,77 @@
+{
+  "strategies": [
+    {
+      "name": "liquidity_grab_reversal",
+      "direction": "both",
+      "preconditions": [
+        {
+          "description": "this whole liquidity grab strategy works best if you're finding reversals at the bottoms or tops of big moves if you're trying to find liquidity grabs in the middle of moves while the chart is going up or down like this it doesn't work so good"
+        }
+      ],
+      "entry_sequence": [
+        {
+          "action": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+        },
+        {
+          "action": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade"
+        },
+        {
+          "action": "you were going to mark your entry point at the candle that made the liquidity grab"
+        },
+        {
+          "action": "your short entry would be at the bottom of this candle that initiated this liquidity grab"
+        },
+        {
+          "action": "we wait for the entry signal once we get it we enter"
+        },
+        {
+          "action": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together"
+        },
+        {
+          "description": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor"
+        },
+        {
+          "description": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame and on top of that we have a liquidity grab on a lower time frame which is a great Confluence we move back to the 15-minute time frame and do our normal stop loss and take profit ... we would not enter on this trade because the move is happening in the middle of this range on a higher time frame"
+        }
+      ],
+      "stop": {
+        "description": "set your stop loss right right below the liquidity grab (for longs); set our stop loss right above the liquidity grab (for shorts)"
+      },
+      "targets": [
+        {
+          "description": "set your take profit at a recent high (for longs); set her take profit at a recent low (for shorts)"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument_agnostic": true,
+    "asset_classes": "it works for everything stocks Forex crypto it doesn't matter",
+    "timeframes": "it works on all time frames",
+    "mechanic_type": "price_action",
+    "is_options_mechanic": false
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "now of course this strategy isn't absolutely perfect and there are going to be times when it doesn't work",
+    "so sure we lost this trade but if we compare it to all of our winners with these huge massive wins this loss is really just a pebble that's what makes the strategy so profitable"
+  ],
+  "coverage_notes": [
+    "PRECONDITION (location filter) — PRESENT as preconditions[0], verbatim (bottoms/tops of big moves, not the middle).",
+    "STEP 1 / TRIGGER (liquidity grab definition) — PRESENT as entry_sequence[0], verbatim.",
+    "DIRECTION (both, mirrored) — PRESENT via direction:'both'; sell-side/buy-side choice captured verbatim in entry_sequence[1]; long entry at the candle (entry_sequence[2]) and short entry at the bottom of the candle (entry_sequence[3]) both captured.",
+    "ENTRY (mark entry at the candle that made the liquidity grab) — PRESENT as entry_sequence[2] (long) and entry_sequence[3] (short bottom-of-candle), verbatim.",
+    "STOP LOSS (below for longs / above for shorts) — PRESENT as stop.description, both mirrored halves verbatim.",
+    "TAKE PROFIT (recent high longs / recent low shorts) — PRESENT as targets[0].description, both mirrored halves verbatim.",
+    "ENTRY-SIGNAL GATE (indicator-dependent; wait for entry signal; show reversals=True) — PRESENT as entry_sequence[4] (wait for the entry signal) and entry_sequence[5] (set show reversals to Tru), verbatim.",
+    "SELECTION FILTER (10-candle rule) — PRESENT as confluences[0], verbatim.",
+    "CONFLUENCE (divergence confirmation via momentum oscillator) — PRESENT as confluences[1], verbatim including the MetaTrader Insert>Indicators>Oscillators>Momentum path.",
+    "CONFLUENCE / MULTI-TIMEFRAME FILTER (HTF support/resistance, skip middle-of-range) — PRESENT as confluences[2], verbatim including the skip-if-middle-of-range bad example.",
+    "All 10 element_inventory items accounted for and PRESENT verbatim; none absent. Exit levels are stated (stop below/above liquidity grab; take profit at recent high/low), so this is NOT a gestural exit. Numbers in the transcript were only a broker-promo aside ($696/$6,999) and Thomas Bulkowski's 14,000-trade backtest stat — neither is a strategy rule, so none extracted."
+  ]
+}

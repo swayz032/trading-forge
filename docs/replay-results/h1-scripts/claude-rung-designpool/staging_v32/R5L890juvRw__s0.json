@@ -1,0 +1,68 @@
+{
+  "strategies": [
+    {
+      "name": "vwap_band_trend_continuation",
+      "entry_sequence": [
+        {
+          "action": "add volume by Price values go to vwap developing vwap"
+        },
+        {
+          "action": "this line is being reset as soon as every single session starts again so with every new session this is being reset because it's a reference for the session"
+        },
+        {
+          "action": "you might have a long idea for your session"
+        },
+        {
+          "action": "as the New York session opens we are still right on Fair Value we start running up"
+        },
+        {
+          "action": "you might want to wait until the price has gone at least to the first if not the second standard deviation"
+        },
+        {
+          "action": "after we broke it and tested it we can try our long trade"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation"
+        },
+        {
+          "description": "you're not just going to trade based off of vwap only"
+        }
+      ],
+      "stop": null,
+      "targets": [
+        {
+          "description": "you can use the second and third standard deviation as a Target"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument_type": "futures",
+    "specific_instrument": "ES (E-mini S&P 500 futures)",
+    "asset_class": "equity index futures",
+    "is_options_strategy": false,
+    "day_trading": true,
+    "session_based": true,
+    "reasoning": "Speaker addresses 'you as a day trader with five es contracts'; the strategy is a session-anchored VWAP method for intraday futures day trading (New York session references), no options mechanics (no strikes/Greeks). VWAP-band mechanic is instrument-agnostic across session-based futures."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "vwap is not always working it's always needed to have a context behind your trading idea you're not just going to trade based off of vwap only",
+    "this can be one of the ways to use it",
+    "so of course you might want to back test test it a lot and see for yourself the actual edge of the average",
+    "try to back test a little bit with it in your trading strategy and see if it can be an edge booster"
+  ],
+  "coverage_notes": [
+    "INDICATOR (plot session-anchored developing VWAP): APPEARS — entry_sequence step 1 ('add volume by Price values go to vwap developing vwap').",
+    "PRECONDITION (VWAP reset each new session): APPEARS — entry_sequence step 2 ('this line is being reset as soon as every single session starts again so with every new session this is being reset because it's a reference for the session').",
+    "LEVELS (plot 1/1.5/2/3 SD bands): APPEARS — confluences[0] ('the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation').",
+    "PRECONDITION (independent directional session bias/context; not VWAP alone): APPEARS — entry_sequence step 3 executable core ('you might have a long idea for your session') plus confluences[1] ('you're not just going to trade based off of vwap only'); coaching wrapper recorded in coaching_notes.",
+    "PRECONDITION (NY open still at fair value on VWAP, then runs in bias direction): APPEARS — entry_sequence step 4 ('as the New York session opens we are still right on Fair Value we start running up').",
+    "ENTRY TRIGGER (wait until price reaches at least 1st, ideally 2nd SD band): APPEARS — entry_sequence step 5 ('you might want to wait until the price has gone at least to the first if not the second standard deviation').",
+    "ENTRY CONFIRMATION (break the level then retest, then enter long/continuation): APPEARS — entry_sequence step 6 ('after we broke it and tested it we can try our long trade').",
+    "TARGET (2nd and 3rd SD band as profit target): APPEARS — targets[0] ('you can use the second and third standard deviation as a Target').",
+    "STOP: ABSENT-WITH-REASON — the speaker taught a runnable entry/target for this trend-continuation setup but stated no stop-loss level or stop rule anywhere for it; stop set to null (no gestural exit words given for the stop either)."
+  ]
+}

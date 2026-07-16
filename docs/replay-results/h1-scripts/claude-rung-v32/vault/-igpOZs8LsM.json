@@ -1,0 +1,57 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "fvg_trend_continuation_entry",
+      "entry_sequence": [
+       {
+        "action": "the gap you know is created between three candlesticks"
+       },
+       {
+        "action": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance"
+       },
+       {
+        "action": "this is a bullish imbalance"
+       },
+       {
+        "action": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle"
+       },
+       {
+        "action": "patiently wait for you know price to get there tap in"
+       },
+       {
+        "action": "wait for price to tap in and then push to your direction"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend"
+       },
+       {
+        "description": "the imbalance must create a break of structure"
+       },
+       {
+        "description": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure"
+       },
+       {
+        "description": "there should also be liquidity price will clear before you know tapping into the imbalance"
+       },
+       {
+        "description": "map out the FVG that is very close to the order block"
+       }
+      ],
+      "targets": [],
+      "stop": {
+       "anchor": "put your stop loss a little bit below the fair value gap"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

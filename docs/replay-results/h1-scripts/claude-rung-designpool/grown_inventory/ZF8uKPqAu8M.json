@@ -1,0 +1,54 @@
+{
+  "video": "ZF8uKPqAu8M",
+  "strategies": [
+    {
+      "name": "orb_15m_immediate_breakout",
+      "element_inventory": [
+        "Timeframe: 15-minute chart",
+        "Timezone set to New York (UTC-4)",
+        "Identify the 9:30 candle = New York market open (the green open candle)",
+        "Mark the HIGH of the 9:30 opening-range candle",
+        "Mark the LOW of the 9:30 opening-range candle (high + low together define the opening range)",
+        "Wait for a candle to break out through the opening range",
+        "Entry trigger (preferred): the FIRST candle to break through AND close outside/above the range is the signal candle",
+        "Entry sub-mechanic (acknowledged alternative): some traders enter immediately as soon as price breaks the range on the breakout wick; speaker rejects this in favor of waiting for a close outside the range",
+        "Enter at the OPEN of the next candle after the signal candle",
+        "Stop loss placed at the bottom of the opening range",
+        "Target 1.5:1 reward-to-risk take-profit",
+        "TIME FILTER / precondition: do not enter any trade after the 12:00 candle (12:00 candle is the cutoff for entering)",
+        "RANGE-SIZE FILTER: do not trade ranges that are too small or too big based on the recent ATR"
+      ],
+      "coaching_notes": []
+    },
+    {
+      "name": "orb_breakout_pullback_continuation",
+      "element_inventory": [
+        "Timeframe: switch to the 5-minute chart (to react to price action more quickly)",
+        "ORB range is still defined by the first 15 minutes of the day; on the 5-minute timeframe use the FIRST THREE candles to define range high and range low",
+        "Wait for the breakout through the opening range (same as base strategy)",
+        "Do NOT buy immediately on the close of the breakout candle",
+        "Wait to see if price makes a pullback back toward the opening range",
+        "BREAKOUT-DEFINITION FILTER / precondition: the height of the breakout must be greater than at least 1x ATR to be considered a suitable breakout",
+        "Pullback confirmation candle: a candle that breaks through (below) the range but then CLOSES back above it (confirms buyers returning and the range line now acting as support)",
+        "Do not enter on the pullback confirmation candle itself; wait for confirmation that price will bounce and move back up",
+        "Entry trigger: a break of the most-recent high (occurs on the next candle) gives confirmation to enter",
+        "Enter on the candle that breaks that most-recent high",
+        "Stop loss placed at the bottom of the opening range",
+        "Stop-loss variant sub-mechanic: stop loss may instead be placed at the bottom of the pullback candle",
+        "Target 1.5:1 reward-to-risk take-profit (baseline)",
+        "Target-R variant sweep: test take-profit ratios from 2.5:1 up to 4.5:1 in increments of 0.5",
+        "Trade-invalidation rule: if the initial pullback breaks all the way THROUGH into the opening range, the trade is invalidated (then wait for a second breakout and second pullback)",
+        "Occurrence-selection sub-mechanic: after an invalidated first pullback, take the setup on the second breakout followed by the second pullback",
+        "Stop-order-at-ORB variant sub-mechanic: instead of waiting for pullback + high-break confirmation, place a STOP ORDER at the top of the ORB so entry fires immediately when price returns to that level; stop loss still at the bottom of the range; 1.5 take-profit",
+        "Midpoint-entry variant sub-mechanic: still measure the breakout from the top of the opening range, but require the pullback to go all the way into the MIDPOINT of the opening range; enter immediately with a stop order at the midpoint (no confirmation of a prior high being broken); stop loss is smaller because entry is at the midpoint"
+      ],
+      "coaching_notes": [
+        "And this will be difficult psychologically because I'll be getting FOMO about missing out on a potential trade, especially if it continues going up the way.",
+        "The theory here is pretty simple, but it requires patience not to chase that initial move, but to actually wait for price to come back down and give a better entry.",
+        "many of the screenshots that we see in all of these videos that promote the strategy are these perfect cherrypicked examples. They make the setup look really simple and reliable, but as I've shown, the majority of trades don't look like this at all.",
+        "the best breakouts are the ones that have strong momentum, and they don't often pull back down to the opening range. They might have small corrections along the way, but nothing significant.",
+        "By sitting and waiting for a pullback, I'm essentially skipping out on the strongest breakouts, trading only those that were weak enough to come back down to the opening range."
+      ]
+    }
+  ]
+}

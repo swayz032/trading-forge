@@ -1,0 +1,88 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_20sma_confluence_long",
+      "entry_sequence": [
+       {
+        "action": "the first two-minute candle off the Bell closes over the 20 SMA and vwap"
+       },
+       {
+        "action": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+       },
+       {
+        "action": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity"
+       },
+       {
+        "action": "come down to vwap start a new position bounce come down to vop start a new position"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "if we're trading over the vwob we're typically more bullish"
+       },
+       {
+        "description": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position"
+       },
+       {
+        "description": "the white line that you see on my screen that's the 20 SMA ... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average"
+       },
+       {
+        "description": "the green line that you see is the vwap ... the little black line on the upper and the black line on the lower is just the upper and lower ranges of the VW"
+       }
+      ],
+      "targets": [
+       {
+        "description": "if you're looking for a little bit of a scalp where you necessarily don't like to hold positions for a long time then you can throw the upper and and lower channels on the vop the the bands and you can sell for profits into the upper Channel"
+       },
+       {
+        "description": "as long as we've broken away from vwap and as long as the 20 SMA starts to hold a little bit higher to the price action and we create a little bit of a gap ... you can use the 20 SMA as a trailing stop so if we do close below the 20 SMA maybe you can use that as an indication to get out of the trade"
+       }
+      ],
+      "stop": {
+       "anchor": "hold bounce use the previous Wick as a stop come down to vop hold bounce use the previous low Point as a stop"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_20sma_rejection_short",
+      "entry_sequence": [
+       {
+        "action": "use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade"
+       },
+       {
+        "action": "how to use vwap as well as a 20 period moving average which 20 simple moving average"
+       },
+       {
+        "action": "if we were to lose vop and lose the 20 SMA collectively and then close below vop"
+       },
+       {
+        "action": "then we have a following candle that starts to build below"
+       },
+       {
+        "action": "what I'm looking to do is short the rejection of vwap and the 20 SMA"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "as long as we don't close below vwap we should still not be trying to short the market here"
+       }
+      ],
+      "targets": [],
+      "stop": null
+     }
+    ]
+   }
+  }
+ ]
+}

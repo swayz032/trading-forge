@@ -1,0 +1,13 @@
+{
+ "custom_id": "_LS6qcSlDCs__s0",
+ "grade": {
+  "strategy_name": "vwap_reclaim_pullback_dip_buy",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "No Tier-A omissions found; the extraction preserves the executable rules, and the ticker-specific walk-throughs are accounted for as examples of the same core setup."
+ },
+ "tokens": 10006,
+ "cached": 0
+}

@@ -1,0 +1,13 @@
+{
+ "custom_id": "ZF8uKPqAu8M__s1",
+ "grade": {
+  "strategy_name": "orb_breakout_pullback_continuation",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "No Tier-A content was silenced; the extraction preserves the taught setup, filters, stop/target logic, and named variants, and all referenced Tier-B coaching lines are captured."
+ },
+ "tokens": 9297,
+ "cached": 0
+}

@@ -1,0 +1,132 @@
+{
+  "strategies": [
+    {
+      "name": "ict_aplus_entry_checklist",
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry",
+          "note": "PRECONDITION — the checklist is only applied after a daily bias / direction is already established"
+        },
+        {
+          "step": 2,
+          "action": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken"
+        },
+        {
+          "step": 3,
+          "action": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over"
+        },
+        {
+          "step": 4,
+          "action": "I generally like to see price move back into a discount of this price range here",
+          "note": "the next thing I look for is where there is a little bit flexibility; I'm not looking too long Above This 0.5, I'd want to be longing this green section down here"
+        },
+        {
+          "step": 5,
+          "action": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here"
+        },
+        {
+          "step": 6,
+          "action": "some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+          "note": "an order block which would be this down close candle right here and then breaker block would be these up close candles here before the raid on liquidity"
+        },
+        {
+          "step": 7,
+          "action": "for my entry I would personally be looking to enter the trade right here",
+          "note": "enter at the chosen PD array; also 'my entry would be on this order block' and 'from here we have order block fair value Gap so I would be looking to enter here'"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together",
+          "note": "for example: I will look for a fair value Gap in an optimal trade entry or I'll look for the box set up in an optimal trade entry"
+        },
+        {
+          "description": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up",
+          "note": "sequencing filter — a displacement with no prior lower-timeframe liquidity raid is rejected: 'without a lower time frame liquidity rate prior to a move I am not interested in it'"
+        },
+        {
+          "description": "does that meet all my criteria it does not because it is in a premium of the range",
+          "note": "discount/premium filter on the PD array — reject a PD array (e.g. an FVG) that sits in the premium of the range for a long"
+        },
+        {
+          "description": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade",
+          "note": "entry-selection by risk-to-reward — balance R:R against getting filled"
+        },
+        {
+          "description": "we did go a tick below this low but I do not count that personally",
+          "note": "occurrence tolerance — a single tick beyond the low is not counted as invalidating the level"
+        }
+      ],
+      "stop": "putting my stop on this order block low (order-block LOW for a long); my stop on the order block High (order-block HIGH for a short); or My Stop on this low (on the swept structure low)",
+      "targets": [
+        {
+          "description": "looking for buy side liquidity up here",
+          "note": "buy-side liquidity above for longs"
+        },
+        {
+          "description": "targeting a new low",
+          "note": "a new low / sell-side for shorts"
+        },
+        {
+          "description": "reaching for the other side",
+          "note": "the other side of the range for the box setup"
+        },
+        {
+          "description": "your target the initial highs from the morning",
+          "note": "let runners run: 'partial or move my stop to break even your target the initial highs from the morning and from there let runners run'"
+        }
+      ],
+      "management": "first partial here, then depending on if I move my stop to break even, then let runners run to the further liquidity — 'partial or move my stop to break even your target the initial highs from the morning and from there let runners run'",
+      "variants": [
+        {
+          "variant_label": "Blended PD-array A+ entry (FVG / order block / breaker / OTE, discount return after stop-raid + MSS)",
+          "confirmation_mechanic_note": "stop raid -> market-structure shift/displacement -> return into discount (OTE-refined) -> PD array (FVG/OB/breaker/OTE), blend 1-3",
+          "target_note": "opposite-side liquidity (buy-side above / new low / initial highs from the morning), first partial then break-even then runners",
+          "transcript_quote": "I will look for a fair value Gap in an optimal trade entry or I'll look for the box set up in an optimal trade entry"
+        },
+        {
+          "variant_label": "Box setup (deviation/manipulation -> retest -> other side; no structure shift required)",
+          "confirmation_mechanic_note": "deviation/manipulation out of range (aggressive down then up) -> retest of the manipulation -> reach for the other side",
+          "target_note": "the other side of the range / liquidity resting above",
+          "transcript_quote": "this is the deviation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manipulation to then be reaching for the other side"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument_class": "index_futures",
+    "example_instruments": ["NASDAQ (NQ)", "ES"],
+    "is_instrument_specific": false,
+    "is_options_mechanic": false,
+    "timeframes": ["daily", "hourly", "15 minute", "5 minute", "1 minute"],
+    "session": "intraday / day-trading (targets 'the initial highs from the morning')",
+    "rationale": "ICT price-action mechanic (stop raid, market-structure shift/displacement, discount/premium, PD arrays: FVG/order block/breaker/OTE). Demonstrated on NASDAQ and ES index futures across intraday timeframes but the logic is instrument-agnostic and not options-specific (no strikes/Greeks)."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "if you want to pause and see what you see go ahead and do that",
+    "I just do what catches my eye the most",
+    "so what I try to do is find a balance between risk to reward what catches my eye and just getting into the trade",
+    "I wanted to throw it in here just to show that without a lower time frame liquidity rate prior to a move I am not interested in it"
+  ],
+  "coverage_notes": [
+    "PRECONDITION (daily bias) — APPEARS as entry_sequence step 1: 'once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry'.",
+    "CHECKLIST STEP 1 STOP RAID — APPEARS as entry_sequence step 2: 'the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken'.",
+    "CHECKLIST STEP 2 MSS/DISPLACEMENT — APPEARS as entry_sequence step 3: 'a previous high was broken and aggressively moved over'.",
+    "FILTER (sequencing gate: displacement must be preceded by a stop raid) — APPEARS as confluence: 'I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up' / 'without a lower time frame liquidity rate prior to a move I am not interested in it'.",
+    "CHECKLIST STEP 3 RETURN TO DISCOUNT — APPEARS as entry_sequence step 4: 'price move back into a discount of this price range' / 'I'm not looking too long Above This 0.5'; flexibility noted.",
+    "OTE REFINEMENT — APPEARS as entry_sequence step 5: 'this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE'.",
+    "CHECKLIST STEP 4 PD ARRAY (FVG/order block/OTE/breaker) — APPEARS as entry_sequence step 6, with the order-block=down-close-candle and breaker=up-close-candles definitions preserved.",
+    "BOX-SETUP VARIANT SUB-MECHANIC — APPEARS verbatim in variants[] (Box setup): 'this is the deviation from the range and so accumulation manipulation I want to see distribution so ideally I'm looking for a retest of this manipulation to then be reaching for the other side'; no structure shift required: 'although we did not shift structure prior to this entry this is a box setup entry'.",
+    "SELECTION / BLEND rule — APPEARS as confluence: 'each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together'.",
+    "ENTRY-SELECTION by RISK-TO-REWARD — APPEARS as confluence: 'as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled'.",
+    "DISCOUNT/PREMIUM FILTER on the PD array — APPEARS as confluence: 'does that meet all my criteria it does not because it is in a premium of the range'.",
+    "ENTRY at the chosen PD array — APPEARS as entry_sequence step 7: 'for my entry I would personally be looking to enter the trade right here' / 'my entry would be on this order block' / 'from here we have order block fair value Gap so I would be looking to enter here'.",
+    "STOP (taught order-block stop) — APPEARS in stop field: 'putting my stop on this order block low' (long), 'my stop on the order block High' (short), 'My Stop on this low' (swept structure low).",
+    "TARGET (opposite-side liquidity) — APPEARS in targets[]: 'looking for buy side liquidity up here', 'targeting a new low', 'reaching for the other side', 'target the initial highs from the morning'.",
+    "MANAGEMENT (first partial -> break-even -> runners) — APPEARS in management field: 'first partial here', 'if I move my stop to break even', 'partial or move my stop to break even your target the initial highs from the morning and from there let runners run'.",
+    "OCCURRENCE TOLERANCE — APPEARS as confluence: 'we did go a tick below this low but I do not count that personally'.",
+    "ALL 16 element_inventory items accounted for and APPEAR verbatim; none absent."
+  ]
+}

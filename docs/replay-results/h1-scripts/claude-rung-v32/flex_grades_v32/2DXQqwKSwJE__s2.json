@@ -1,0 +1,19 @@
+{
+ "custom_id": "2DXQqwKSwJE__s2",
+ "grade": {
+  "strategy_name": "spread_making_scalp",
+  "silenced": [
+   {
+    "item": "Facebook-IPO-style variant precondition: the aggressive repeated bid/offer recycling is taught in the context of an exceptionally wide spread with heavy two-sided volume.",
+    "transcript_evidence": "\"When there was over a dollar spread and just absolutely incredible amounts of volume going off on both sides of the market. He took such quick and aggressive advantage of that, immediately just slamming in huge bids, only to just as quickly kick his offers out and his size out a point or two higher, and repeating it again and again before that spread compressed and the stock drifted lower.\"",
+    "why_not_covered": "The extraction preserves the action sequence (slam bids, kick offers out, repeat before compression) in entry_sequence[1], but nowhere preserves the executable setup condition of an over-a-dollar/wide spread with extraordinary volume on both sides. The existing confluences about a liquid, thin, relative-equilibrium name are broader and not this variant trigger, and coverage_notes do not honestly mark the omitted setup as absent-with-reason."
+   }
+  ],
+  "content_clean": false,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "Core spread-making mechanics are preserved, but the wide-spread/high-two-sided-volume trigger for the Facebook-IPO-style variant was lost."
+ },
+ "tokens": 9713,
+ "cached": 0
+}

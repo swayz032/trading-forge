@@ -1,0 +1,47 @@
+{
+  "video": "kFyD3H6I1I8",
+  "strategies": [
+    {
+      "name": "three_step_engulfing_orb_scalp",
+      "element_inventory": [
+        "PRECONDITION — session window: only trade during 9:30–11:00 a.m. Eastern each day ('I trade every day from 9:30 to 11:00 a.m. Eastern')",
+        "PRECONDITION — pre-session bias must be established before the session from the two 1-hour candles at 7:00 a.m. and 8:00 a.m. ('I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m ... before my trading session')",
+        "Step 1 bias timeframe = 1-hour candles",
+        "Step 1 LONG bias: a bullish engulfing pattern across the 7am/8am 1-hour candles => buy/long bias for the session ('if I want to buy, I want to see a bullish engulfing pattern form before my trading session')",
+        "Step 1 SHORT bias: a bearish engulfing pattern across the 7am/8am 1-hour candles => sell/short bias for the session ('if I want to sell, I want to see a bearish engulfing pattern form before my trading session')",
+        "Instrument universe: applies to Forex, Nasdaq, gold ('everything')",
+        "Step 2 timeframe = 5-minute chart for the range",
+        "Step 2 range definition: mark the top and bottom of the 9:30–9:45 range (first 15 minutes of NYSE open) as the session trading range",
+        "Step 2 LONG confirmation: wait for price to break AND CLOSE above the top of the range ('break and close outside of that range as my next confirmation that I want to buy')",
+        "Step 2 SHORT confirmation: wait for price to break AND CLOSE below the bottom of the range ('looking for the price to break out the bottom of that range')",
+        "SELECTION rule — breakout direction must match the Step 1 bias (only take upside breakouts when bias is bullish, only downside breakouts when bias is bearish)",
+        "Step 3 LONG point-of-interest: identify a demand zone created by an aggressive push / break of recent structure / fair value gap",
+        "Step 3 SHORT point-of-interest: identify a supply zone created by an aggressive push / break of structure",
+        "Step 3 wait for retracement: wait for price to retrace back to the demand/supply level ('waiting for that price to come back to my level')",
+        "Entry variant A (confirmation entry): enter when price taps into and respects the level AND a bullish/bearish engulfing pattern forms at the level ('we also have another bullish engulfing pattern right here ... telling me we have that momentum')",
+        "Entry variant B (passive limit entry): set a limit order at the level so entry fills as soon as price touches it ('I set my limit order right there ... as soon as price touched that level, I'd be into my trading position')",
+        "Entry model label: classic break-and-retest ORB entry ('the classic break and retest entry ... one of the main orb entry models that I use')",
+        "Stop-loss LONG: place stop below the range / below the demand level ('My stop loss is pretty perfect here. I like it below the range')",
+        "Stop-loss SHORT: place stop above the recent wick ('I put my stop loss above this recent wick to be safe')",
+        "Take-profit rule: 'look left' and place the take profit at the next opposing supply/demand level ('for my take profit, I'm always going to look left and see what I can find')",
+        "Take-profit placement detail (LONG): place TP in the middle of the opposing supply zone ('put this around right about there in the middle of that supply')",
+        "Target R: approximately 2.1–2.3 risk-reward ('this gave me a risk reward of about 2.16 ... about a 2.3')",
+        "Management — break-even: move the stop to break-even once price advances to a defined level ('Once we got to about this level right here, I set break even')",
+        "Indicator config — session: 'New York session by James Davey' on TradingView, set to UTC-4",
+        "Indicator config — range/ORB: 'opening range with breakouts and targets by Lux Algo', time period 15-minute, 9:30–9:45, UTC-4"
+      ],
+      "coaching_notes": [
+        "Traders fail when they don't recognize market direction.",
+        "This is really easy for beginners, and for scalpers, it's fantastic because these are hour-long candles here.",
+        "We really only need to pick up just a small amount of this green candle in order to win the trading position.",
+        "Now, this isn't proof that the strategy will work in the future. Back-testing is just a way to see how a model performed on prior data.",
+        "I've personally back-tested 500 times.",
+        "I never promise or guarantee any trading results.",
+        "Because once you see this play out on the chart multiple times, it really starts to click.",
+        "but let's not clutter up the charts.",
+        "at that point, I've got my take profit set, my stop loss set, and I can just walk off, go to the gym.",
+        "with all of this consolidation, at some point if you were watching this trade, you probably would have exited here as well regardless."
+      ]
+    }
+  ]
+}

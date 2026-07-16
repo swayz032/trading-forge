@@ -1,0 +1,47 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "support_bounce_scalp",
+      "entry_sequence": [
+       {
+        "action": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at"
+       },
+       {
+        "action": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off"
+       },
+       {
+        "action": "the stock came down and it hit right there that's our entry for a scalp"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "I got the 5 minute chart"
+       },
+       {
+        "description": "this 13 EMA operated as a initial support ... this candle wick came down bounced off of that"
+       },
+       {
+        "description": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there"
+       }
+      ],
+      "targets": [
+       {
+        "description": "one green candle two green candles three four we went here and that was your exit"
+       },
+       {
+        "description": "you get in here as support and you ride it to resistance and you exit"
+       }
+      ],
+      "stop": null
+     }
+    ]
+   }
+  }
+ ]
+}

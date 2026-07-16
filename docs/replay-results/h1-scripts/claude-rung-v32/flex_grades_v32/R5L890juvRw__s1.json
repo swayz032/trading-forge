@@ -1,0 +1,15 @@
+{
+ "custom_id": "R5L890juvRw__s1",
+ "grade": {
+  "strategy_name": "vwap_band_mean_reversion",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [
+   "vwap is not always working it's always needed to have a context behind your trading idea you're not just going to trade based off of vwap only"
+  ],
+  "inventory_overreach": [],
+  "notes": "All Tier-A mean-reversion mechanics in the inventory are preserved; only a non-compilable context caution was omitted."
+ },
+ "tokens": 8563,
+ "cached": 0
+}

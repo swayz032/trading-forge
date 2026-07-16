@@ -1,0 +1,90 @@
+{
+  "strategies": [
+    {
+      "name": "fvg_trend_continuation_entry",
+      "direction": "both",
+      "instrument": "XAUSD (gold)",
+      "setup_type": "trend continuation entry",
+      "description": "an imbalance in the market where price moved so aggressively in one direction that it left a gap between candles without proper trading activity",
+      "entry_sequence": [
+        {
+          "action": "the gap you know is created between three candlesticks"
+        },
+        {
+          "action": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance"
+        },
+        {
+          "action": "this is a bullish imbalance"
+        },
+        {
+          "action": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle"
+        },
+        {
+          "action": "patiently wait for you know price to get there tap in"
+        },
+        {
+          "action": "wait for price to tap in and then push to your direction"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend"
+        },
+        {
+          "description": "the imbalance must create a break of structure"
+        },
+        {
+          "description": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure"
+        },
+        {
+          "description": "there should also be liquidity price will clear before you know tapping into the imbalance"
+        },
+        {
+          "description": "map out the FVG that is very close to the order block"
+        }
+      ],
+      "stop": {
+        "description": "put your stop loss a little bit below the fair value gap",
+        "buy_rule": "stop loss a little bit ... below if you are buying",
+        "sell_rule": "stop loss a little bit above if you're selling",
+        "constraint": "you will now drag the stop loss to also accommodate the other block that will you know kill the um risk-to-reward ratio of the tread ... Just stick to the fair value gap",
+        "level": null
+      },
+      "targets": [],
+      "gestural_exit": true,
+      "exit_note": "Gestural exit only — no target level stated. Speaker's exit words: \"keep pushing to the upside\", \"tap in and continue to the upside\", \"wait for price to dish out the results\". Target/level fields null; house exit overlay supplies levels downstream."
+    }
+  ],
+  "instrument_classification": {
+    "primary_instrument": "XAUSD (gold)",
+    "asset_class": "commodity / spot gold",
+    "is_futures": false,
+    "instruments_mentioned": ["XAUSD", "gold"],
+    "note": "Speaker repeatedly scopes the strategy to gold — \"this is very popular um if you are trading XAUSD\", \"this works very much um on gold\". No futures contract named; the mechanic (FVG / smart-money-concept imbalance) is instrument-agnostic."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "All you just need to do is back test and see if it works for you and you know compare the win rates before you decide you know to risk your money.",
+    "but then remember trading is risky.",
+    "all you just need to do is patiently wait for you know price to get back into that FVG that caused the break of structure.",
+    "So um I keep saying this this works very much um on gold but at the end of the day apply proper risk management.",
+    "Remember no amount of you know over analysis or you know how beautiful your setup is that does not guarantee profit.",
+    "So have it in mind that trading you know involves risk and you can also lose your capital."
+  ],
+  "coverage_notes": [
+    "element 1 (FVG detection / imbalance definition) — APPEARS: strategy.description verbatim (\"an imbalance in the market where price moved so aggressively...without proper trading activity\").",
+    "element 2 (three-candle mapping: first-candle close to third-candle open) — APPEARS: entry_sequence steps 1 & 2 verbatim.",
+    "element 3 (Bullish FVG = buy setup) — APPEARS: entry_sequence step 3 (\"this is a bullish imbalance\") + stop buy_rule (\"below if you are buying\").",
+    "element 4 (Bearish FVG = sell setup) — APPEARS: entry_sequence step 4 verbatim (bearish imbalance, mapped from first-candle close to third-candle open on a sell) + stop sell_rule.",
+    "element 5 (PRECONDITION — trade only in trend/momentum direction) — APPEARS: confluences[0] verbatim (sticking-to-the-trend probability).",
+    "element 6 (PRECONDITION — imbalance must cause break of structure) — APPEARS: confluences[1] verbatim (\"the imbalance must create a break of structure\").",
+    "element 7 (SELECTION — do not map every FVG, only the one that caused BOS) — APPEARS: confluences[2] verbatim.",
+    "element 8 (PRECONDITION — liquidity price clears before tapping) — APPEARS: confluences[3] verbatim.",
+    "element 9 (SELECTION — prefer FVG very close to the order block) — APPEARS: confluences[4] verbatim.",
+    "element 10 (ENTRY — wait for retrace/tap into selected FVG, then enter in trend direction) — APPEARS: entry_sequence steps 5 & 6 verbatim.",
+    "element 11 (STOP buy — a little bit below the FVG) — APPEARS: stop.description + stop.buy_rule verbatim.",
+    "element 12 (STOP sell — a little bit above the FVG) — APPEARS: stop.sell_rule verbatim.",
+    "element 13 (STOP constraint — do not drag stop to accommodate the order block) — APPEARS: stop.constraint verbatim.",
+    "EXIT/TARGET — ABSENT-WITH-REASON: no profit-target level was ever stated. Speaker gave only gestural exit language (\"keep pushing to the upside\", \"wait for price to dish out the results\"). Per v3.1 gestural-exit rule, strategy KEPT, entry+stop extracted, target level null, exit words preserved in exit_note, gestural_exit flagged."
+  ]
+}

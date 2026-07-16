@@ -1,0 +1,91 @@
+{
+  "strategies": [
+    {
+      "name": "vwap_reclaim_pullback_dip_buy",
+      "direction": "long",
+      "preconditions": [
+        {
+          "description": "i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute ... as long as the average just about is over 200 000 shares traded per minute on the stock i'm looking for i consider that good enough volume here in penny stocks for me to attack these strategies and volume is absolutely crucial i need this volume to be there if i'm going to take this trade",
+          "type": "volume_gate"
+        },
+        {
+          "description": "i need this volume to be there if i'm going to take this trade if it's not i move on and look for a better option",
+          "type": "no_volume_skip"
+        },
+        {
+          "description": "i need the float to be under 50 million with larger floats they usually have less volatility in a smaller range on average ... preferably under 50 million if i can wait for smaller float stocks especially under 10 million then it's gonna work a larger percentage of the time",
+          "type": "float_gate"
+        },
+        {
+          "description": "i never buy these stocks if the v is above me for that reason too many times the v wap's just going to reject it back down",
+          "type": "no_trade_filter_vwap_above_price"
+        }
+      ],
+      "entry_sequence": [
+        {
+          "action": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support"
+        },
+        {
+          "action": "i'm using that vwop level as that big milestone level and then i'm buying on the pullbacks to test as a support area ... looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+        },
+        {
+          "action": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "they see the volume come in ... a ton of green candles in a row which obviously shows a lot of strength"
+        },
+        {
+          "description": "if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into"
+        },
+        {
+          "description": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level"
+        }
+      ],
+      "stop": null,
+      "targets": [],
+      "exit": {
+        "gestural_exit": true,
+        "stop_level": null,
+        "target_level": null,
+        "exit_prose": "we bought into the pullback and we rode the bounce up scalping out of it ... they're waiting for better risk reward dip by entries that they can bounce up and ride that up for profit",
+        "flag": "GESTURAL_EXIT — exit taught only colloquially ('rode the bounce up scalping out of it' / 'ride that up for profit'); no stop, target, or numeric exit level stated. Level fields null; exit words preserved verbatim; strategy retained per gestural-exit amendment."
+      }
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "sub_class": "penny stocks",
+    "timeframe": "intraday / day trading",
+    "options_mechanic": false,
+    "reasoning": "Speaker is trading penny stocks intraday ('how penny stock traders use the v-wop', 'here in penny stocks', 'especially in these momentum based penny stocks'). No options Greeks/strikes; a directional long dip-buy on the underlying. VWAP-reclaim pullback entries are executed on stock price."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "i can't guarantee these setups and strategies will work for you everyone's a little bit different and has different personalities and so i can't guarantee they will work but i can't say they have worked for me so far",
+    "as always i can't guarantee this setup and strategy is actually going to work for you because everyone's a little bit different and there's more nuance to it than that",
+    "you just have to have the patience to wait for these type of indicators and signals with volume coming in with it breaking over the v-wop",
+    "it's a really profitable trade again guys if you can have the discipline for it",
+    "again if you can kind of condition yourself to take these type of trades and condition that discipline you need to make this work",
+    "as i always say i can't guarantee this is going to work for everyone else nothing is 100 in trading",
+    "you have to test them yourself and make sure you understand that before you move forward day trading can be incredibly risky we are not experts here we're just a free resourcing community",
+    "so make sure to test everything yourself before risking your money and that's something that you should always do regardless of how good or bad someone says they are"
+  ],
+  "coverage_notes": [
+    "PRECONDITION (volume gate >200k/min): PRESENT — preconditions[0], verbatim.",
+    "PRECONDITION (no-volume = no-trade skip): PRESENT — preconditions[1], verbatim.",
+    "PRECONDITION (float < 50M, pref < 10M): PRESENT — preconditions[2], verbatim.",
+    "NO-TRADE FILTER (VWAP-above-price veto): PRESENT — preconditions[3], verbatim.",
+    "ENTRY CONTEXT (open below VWAP, break above with volume, hold as support): PRESENT — entry_sequence[0], verbatim.",
+    "ENTRY TRIGGER (buy pullback retest of reclaimed VWAP support): PRESENT — entry_sequence[1], verbatim.",
+    "ENTRY CONFIRMATION (volume coming in + run of green candles): PRESENT — confluences[0], verbatim. The '1 million shares traded per minute' figure is an example-day number, not a rule, so only the rule words ('volume come in', 'green candles in a row') are extracted.",
+    "PREFERRED / A+ SETUP (opens weak, drops below VWAP at open, then breaks above with volume): PRESENT — confluences[1], verbatim.",
+    "SUPPORT-LEVEL DEFINITION (VWAP or a whole-dollar level): PRESENT — confluences[2], verbatim. The 'like three dollars here' figure stripped as an example.",
+    "OCCURRENCE-SELECTION (first few bounces / first pullback): PRESENT — entry_sequence[2], verbatim.",
+    "VARIANT SUB-MECHANIC (XCLB, Monday): ACCOUNTED — this is a live walk-through EXAMPLE of the single core mechanic (break over VWAP -> buy pullback), not a distinct rule variant; the distinguishing details ('around 10 o'clock market time', '1 million shares/min') are that day's example, not rules. Its exit gesture ('we rode the bounce up scalping out of it') is captured verbatim in exit.exit_prose. No separate rule to extract beyond the core entry_sequence.",
+    "VARIANT SUB-MECHANIC (SOS): ACCOUNTED — live walk-through EXAMPLE of the same core mechanic (rejected at VWAP at open, later breaks above with volume, buy the pullback on first bounces). Timing details ('around 11 to 11 30 market time') are that day's example, not rules; entry logic is identical to entry_sequence and is already extracted there.",
+    "VARIANT SUB-MECHANIC (CEMI): ACCOUNTED — live walk-through EXAMPLE of the same core mechanic (below VWAP first hour, pushes up to test VWAP with volume + green candles, buy pullback anticipating a bounce respecting VWAP). Its language 'in anticipating a bounce at the v-wap level' is folded into entry_sequence[1]; day-specific details are example, not rules.",
+    "EXIT (GESTURAL): PRESENT + FLAGGED — exit object; stop_level/target_level null, exit words preserved verbatim, gestural_exit flag set. No numeric stop, target, or exit level is taught anywhere in the transcript."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+ "custom_id": "WEhmadJArQo__s0",
+ "grade": {
+  "strategy_name": "opening_range_fvg_break_entry",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [
+   "Direction-rule mirror overreach: the inventory's 'break below the LOW = bearish/short; the broken side determines trade direction' mirror is not explicitly taught in the transcript, which only verbalizes the break-above-high bullish/long case."
+  ],
+  "notes": "All transcript-taught Tier-A mechanics are preserved; only the inventory's short-side mirror extends beyond what the speaker explicitly taught."
+ },
+ "tokens": 11049,
+ "cached": 0
+}

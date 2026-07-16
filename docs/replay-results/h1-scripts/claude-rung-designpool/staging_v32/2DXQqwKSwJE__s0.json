@@ -1,0 +1,93 @@
+{
+  "strategies": [
+    {
+      "name": "mean_reversion_scalp",
+      "direction": "both",
+      "setup": "Mean reversion scalps occur after price stretches too far too fast. You are stepping in when emotion peaks and order flow begins to shift. That shift is visible in the tape before it's obvious on the chart.",
+      "entry_sequence": [
+        {
+          "action": "it's a stock that has a significant price range, is doing high volume, and often trading on a news catalyst or interesting technical pattern",
+          "role": "precondition"
+        },
+        {
+          "action": "Scalping thrives on liquidity and volatility. You need both. Random tickers with average volume and no catalyst do not provide clean intraday imbalances. They provide choppiness and will inevitably lead to paper cut losses.",
+          "role": "precondition"
+        },
+        {
+          "action": "I want a very well-defined intraday support or resistance level. Ideally, one that aligns on multiple time frames. Something other participants clearly see as well. Ultimately, the tighter the level, the more defined your risk",
+          "role": "precondition"
+        },
+        {
+          "action": "You need to be paying attention to how thick or thin the bids and offers are, and look for disparity as well as which side is being more aggressive. Is the offer being taken, or are the bids being smashed? The time and sales window reveals who is being more aggressive. If you are not watching the tape, which is the level two box of the buyers and sellers and the time and sales window, you are missing the story.",
+          "role": "precondition"
+        },
+        {
+          "action": "On a sharp down move into support, you will often see a moment where volume stalls, and it's this pause where people stop hitting the bid. That pause is often the hesitation of sellers to push their hand and signifies a turn of momentum. As a scalper, you then take the offer and get long in front of that support level",
+          "role": "entry_trigger"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "Often, these mean reversion scalps work best when the stock quickly and sharply shoots down to a support level with some massive bids or quickly and sharply shoots up to a resistance level with large offers. The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal."
+        },
+        {
+          "description": "Often, all you need is a few high-quality opportunities where structure and order flow align."
+        }
+      ],
+      "stop": {
+        "description": "using the bids as at the support as your protection",
+        "level": null,
+        "gestural": true
+      },
+      "targets": [
+        {
+          "description": "seeking to capture the bounce we get off that level",
+          "level": null,
+          "gestural": true
+        }
+      ],
+      "variants": [
+        {
+          "name": "short_mirror_at_resistance",
+          "description": "quickly and sharply shoots up to a resistance level with large offers"
+        }
+      ],
+      "gestural_exit": true
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "market": "US stocks (intraday, in-play names)",
+    "is_options_strategy": false,
+    "options_mechanic": false,
+    "notes": "Order-flow / tape-reading scalp on in-play cash equities; speaker references share-based examples ($25 / $50 levels, 5,000 shares, Facebook IPO). Strategy mechanic (support/resistance mean-reversion via level-2 and time-and-sales), not an options-mechanic (no Greeks/strikes)."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "You are stepping in when emotion peaks and order flow begins to shift.",
+    "identify a key emotional level, confirm with the tape, and execute without hesitation",
+    "There is no room for distraction, and you're interpreting real-time information and making fast, calculated decisions.",
+    "The strategy is also cognitively demanding, requiring sustained focus over the course of a long day.",
+    "The margin for error is thin, and a single large mistake can erase many small gains.",
+    "Scalping is highly execution-dependent. Minor slippage, hesitation, or routing inefficiencies can eliminate or impair your expected value.",
+    "Transaction costs matter significantly because profit targets are small relative to frequency.",
+    "The more size you do, the more slippage you face, and in turn the more your edge degrades.",
+    "you tend to need to be glued to the desk during market hours",
+    "When you get the reps, you'll develop small positive edges, which, when repeated consistently, can compound meaningfully over time.",
+    "You do not need too many trades per day... often you can fall for the trap of not being selective enough and your win rate suffers."
+  ],
+  "coverage_notes": [
+    "PRECONDITION in-play stocks: PRESENT as entry_sequence precondition — 'a stock that has a significant price range, is doing high volume, and often trading on a news catalyst or interesting technical pattern' (verbatim).",
+    "PRECONDITION both liquidity and volatility / reject random tickers: PRESENT as entry_sequence precondition — 'Scalping thrives on liquidity and volatility. You need both. Random tickers with average volume and no catalyst do not provide clean intraday imbalances. They provide choppiness and will inevitably lead to paper cut losses.'",
+    "PRECONDITION identify tight well-defined level aligning multiple timeframes: PRESENT as entry_sequence precondition — verbatim tight-level passage, incl. 'the tighter the level, the more defined your risk'.",
+    "PRECONDITION read the tape (level-2 box + time-and-sales): PRESENT as entry_sequence precondition — verbatim bids/offers thickness, disparity, aggression, and the level-two/time-and-sales passage.",
+    "SETUP mean-reversion triggers after price stretches too far too fast / step in as emotion peaks and order flow shifts: PRESENT in strategy.setup, verbatim.",
+    "ENTRY TRIGGER long at support (volume stalls, sellers stop hitting bid, take the offer and get long in front of support): PRESENT as entry_sequence entry_trigger, verbatim.",
+    "STOP long (use bids at support as protection): PRESENT in stop.description verbatim; level null (gestural — no numeric stop stated for this setup).",
+    "TARGET (capture the bounce off the level): PRESENT in targets[0].description verbatim; level null (gestural — no numeric target stated).",
+    "VARIANT SUB-MECHANIC short mirror at resistance: PRESENT in variants[] — 'quickly and sharply shoots up to a resistance level with large offers' (the mirror is stated only inside the sharp-move filter sentence; no separate short entry-trigger prose beyond this, so extracted verbatim as the variant's own wording).",
+    "FILTER prefer sharp/big move into big size (massive bids at support / large offers at resistance): PRESENT as confluence — 'The sharper and bigger the move into really big bids or offers, the better it is to scalp a reversal.'",
+    "SELECTION FILTER take only a few high-quality opportunities / do not overtrade: PRESENT as confluence — 'Often, all you need is a few high-quality opportunities where structure and order flow align.' (companion coaching 'You do not need too many trades per day...' recorded in coaching_notes).",
+    "GESTURAL EXIT: both stop and target were taught only colloquially (bids as protection / capture the bounce) with no numeric levels for the mean-reversion setup; strategy KEPT, entry verbatim, level fields null, gestural_exit flagged per v3.1 amendment."
+  ]
+}

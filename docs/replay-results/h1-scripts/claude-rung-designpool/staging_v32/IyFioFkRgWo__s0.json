@@ -1,0 +1,94 @@
+{
+  "strategies": [
+    {
+      "name": "support_bounce_scalp",
+      "timeframe": "in today's example I'm going to show you how to scalp using the 5 minute chart",
+      "direction": "long",
+      "entry_sequence": [
+        {
+          "action": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at"
+        },
+        {
+          "action": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off"
+        },
+        {
+          "action": "the stock came down and it hit right there that's our entry for a scalp"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "I got the 5 minute chart"
+        },
+        {
+          "description": "this 13 EMA operated as a initial support ... this candle wick came down bounced off of that"
+        },
+        {
+          "description": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there"
+        }
+      ],
+      "stop": null,
+      "targets": [
+        {
+          "description": "one green candle two green candles three four we went here and that was your exit"
+        },
+        {
+          "description": "you get in here as support and you ride it to resistance and you exit"
+        }
+      ],
+      "variants": [
+        {
+          "name": "re_entry_same_level",
+          "entry": "it came back down again boom same level you enter here",
+          "exit": null,
+          "direction": "long",
+          "note": "these are trades you can rinse and repeat"
+        },
+        {
+          "name": "deeper_support_200_ema",
+          "entry": "another quick Scout this one off a deeper support sitting at the 200 EMA once the 13 EMA gave up its support status",
+          "exit": null,
+          "direction": "long",
+          "note": "enter on the bounce off the 200 EMA once the 13 EMA gave up its support status"
+        },
+        {
+          "name": "breakdown_continuation",
+          "entry": "this is the big move you guys really want to learn to catch ... you would enter here and you had that coming all the way down",
+          "exit": "once we lost the support of the 200 look at this move boom boom boom you want to exit right there",
+          "direction": "short",
+          "gestural_exit": true,
+          "note": "directionally opposite to the long bounce; entered once the 200 EMA support is lost, ride the move down; exit stated only gesturally with no level"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "instrument": "stocks",
+    "is_options_mechanic": false,
+    "notes": "Speaker teaches scalping a stock on the 5-minute chart off 13 EMA / 200 EMA support and demand zones, referencing buying power and per-play dollar profits. No options Greeks/strikes/expiry mechanics; strategy is a directional price-action scalp."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "you get in and out you don't overstay your welcome you don't get greedy with these trades because they're intended for you to be quick intended for you to make your money in a short amount of time",
+    "be snipers guys one shot one kill something you can reload the clip do it time and time again",
+    "I often talk about easing and scaling up in size okay easing to your positions don't come in with all the money in your account don't come into the game with all the money in your buying power",
+    "look and learn to trade with small amounts learn to First establish how to get in and get out",
+    "you want to practice the habit of just getting in and out getting in and out getting in and out",
+    "the thing about it is managing your risk getting in getting out not over[staying] your welcome seeing profit and taking profit",
+    "give yourself Grace all of this that I teach comes with the learning curve yes it can change your life but first you got to be willing to put in the work",
+    "I want you to Perfect The Craft",
+    "I want you guys to give this a try on tomorrow take a quick small trade that you see at support sell right at resistance"
+  ],
+  "coverage_notes": [
+    "TIMEFRAME (5-minute chart) — APPEARS: strategy.timeframe ('scalp using the 5 minute chart') and confluence ('I got the 5 minute chart').",
+    "PRECONDITION opening delay (first 5-15 min pass) — APPEARS: entry_sequence[0], verbatim.",
+    "PRECONDITION level-identification (establish support / demand zones) — APPEARS: entry_sequence[1], verbatim ('first establish where your support level is at', 'find and spot the demand zones', 'every time we get to this price the stock take off').",
+    "LEVEL/INDICATOR 13 EMA initial support — APPEARS: confluences[1], verbatim ('this 13 EMA operated as a initial support').",
+    "ENTRY primary (long bounce off 13 EMA) — APPEARS: entry_sequence[2], verbatim ('the stock came down and it hit right there that's our entry for a scalp').",
+    "EXIT primary (few green candles / at resistance) — APPEARS: targets[0] and targets[1], verbatim.",
+    "RE-ENTRY rinse-repeat (same level) — APPEARS: variants[0] re_entry_same_level, verbatim ('same level you enter here', 'rinse and repeat').",
+    "VARIANT deeper support (200 EMA once 13 EMA gives up) — APPEARS: variants[1] deeper_support_200_ema, verbatim.",
+    "BREAKDOWN-CONTINUATION (opposite direction, gestural exit, once 200 EMA lost) — APPEARS: variants[2] breakdown_continuation, verbatim; exit is gestural ('you want to exit right there') with no stated level, flagged gestural_exit=true.",
+    "SELECTION/FREQUENCY bound (don't take every one; take one or two, or wait for one) — APPEARS: confluences[2] (Tier-A filter), verbatim per v3.2 (frequency/selection rule is a compilable condition, not coaching)."
+  ]
+}

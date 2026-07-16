@@ -1,0 +1,40 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "vwap_reclaim_pullback_dip_buy",
+      "entry_sequence": [
+       {
+        "action": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support"
+       },
+       {
+        "action": "i'm using that vwop level as that big milestone level and then i'm buying on the pullbacks to test as a support area ... looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+       },
+       {
+        "action": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "they see the volume come in ... a ton of green candles in a row which obviously shows a lot of strength"
+       },
+       {
+        "description": "if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into"
+       },
+       {
+        "description": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level"
+       }
+      ],
+      "targets": [],
+      "stop": null
+     }
+    ]
+   }
+  }
+ ]
+}

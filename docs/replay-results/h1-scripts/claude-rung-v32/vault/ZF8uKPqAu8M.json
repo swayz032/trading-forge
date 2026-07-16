@@ -1,0 +1,106 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "orb_15m_immediate_breakout",
+      "entry_sequence": [
+       {
+        "action": "I'm here on a 15-minute chart, and I set my time zone to New York. So, that's UTC minus 4."
+       },
+       {
+        "action": "I then look for the 9:30 candle, which is the market open in New York, and that's this green candle here."
+       },
+       {
+        "action": "Once I've got that, I'm going to mark out the high and the low. So, I mark the high and then do the same thing with the low. This gives me my opening range."
+       },
+       {
+        "action": "After that, I'm just waiting for a candle to break out through this range."
+       },
+       {
+        "action": "There are different ways to do this, and I know that some people will enter as soon as the price is broken, like on this green wick up here. But I prefer to wait for the candle to actually break through and then close above."
+       },
+       {
+        "action": "So, in this case, my signal is this candle here because it's the first one to actually break out and then close outside of that range."
+       },
+       {
+        "action": "I then enter at the open of the next one."
+       }
+      ],
+      "confluences": [
+       {
+        "description": "I don't trade after the 12:00 candle, which would be here. So that would be my cut off for entering a trade."
+       },
+       {
+        "description": "I also don't trade ranges that are either too small or too big based on the recent ATR."
+       }
+      ],
+      "targets": [
+       {
+        "description": "I target 1.5 to one reward to risk"
+       }
+      ],
+      "stop": {
+       "anchor": "the stop loss goes at the bottom of the range"
+      }
+     }
+    ]
+   }
+  },
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "orb_breakout_pullback_continuation",
+      "entry_sequence": [
+       {
+        "action": "First, I switch over to the 5-minut chart. This way, I can react to price action a lot quicker."
+       },
+       {
+        "action": "My orb range is still defined by the first 15 minutes of the day. But since I'm on the 5-minut time frame now, I have to use the first three candles to define my range high and range low."
+       },
+       {
+        "action": "Once I have those defined, I then wait for my breakout just like before."
+       },
+       {
+        "action": "But this time, I don't buy immediately on the close of this breakout candle."
+       },
+       {
+        "action": "Instead, I have to wait and see if price is going to make a pullback towards the opening range."
+       },
+       {
+        "action": "what I'm looking for is a candle that's going to break through the range but then close back above it, which is exactly what this candle here has done."
+       },
+       {
+        "action": "Once I get this pullback candle, I don't enter immediately. I want to see confirmation that price is going to bounce off and move back up."
+       },
+       {
+        "action": "And I'm going to be waiting for a break of this most recent high. We get that on the next candle. And this gives me my confirmation to enter into a trade. So, the trade is opened here."
+       }
+      ],
+      "confluences": [
+       {
+        "description": "for my back tester, I need to take into account the height of this breakout. And I made sure that this was greater than at least 1 times ATR to be considered a suitable breakout."
+       },
+       {
+        "description": "The reason for this is that I want to see buyers coming back in and pushing the price back up. That gives me confirmation that this line is now starting to act as support."
+       }
+      ],
+      "targets": [
+       {
+        "description": "And I will target 1 and 1/2 times for my take-profit ratio."
+       }
+      ],
+      "stop": {
+       "anchor": "The stop loss will still go at the bottom of my opening range."
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,61 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "htf_irl_fvg_1m_inversion",
+      "entry_sequence": [
+       {
+        "action": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify as a draw on liquidity. ... or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high"
+       },
+       {
+        "action": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows"
+       },
+       {
+        "action": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw"
+       },
+       {
+        "action": "you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap"
+       },
+       {
+        "action": "drop down to one minute time frame. Now here is when our lower time frame confirmation or entry model comes in and this is very important. This is the most important part of the strategy"
+       },
+       {
+        "action": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap"
+       },
+       {
+        "action": "So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out"
+       },
+       {
+        "action": "you simply wait for price to close below this one minute fair value gap. Okay. So that is your inversion and inversion is when we have a bullish fair value gap but then price disrespects the bullish fair value gap and closes below it. So now it is inversed right and that becomes a resistance for price. So price will not go above that. So once price closes below this IFVG you want to take a short position right away"
+       },
+       {
+        "action": "Now let's say that there are two fair value gaps in this manipulation leg on the one minute. So what you want to do is wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that"
+       }
+      ],
+      "targets": [
+       {
+        "description": "you can target the drawn liquidity"
+       },
+       {
+        "description": "you can go for 1:2 fixed risk-to-reward ratio"
+       }
+      ],
+      "stop": {
+       "anchor": "you want to put your stop above the high (short case); below the low / below the bodies (long case)"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

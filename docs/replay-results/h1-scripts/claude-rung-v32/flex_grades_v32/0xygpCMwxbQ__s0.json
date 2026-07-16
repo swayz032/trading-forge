@@ -1,0 +1,13 @@
+{
+ "custom_id": "0xygpCMwxbQ__s0",
+ "grade": {
+  "strategy_name": "ict_aplus_entry_checklist",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "No Tier-A checklist content was silenced; the extraction preserves the taught precondition, checklist steps, filters, variants, stops, targets, and management, and all referenced Tier-B coaching lines are present in coaching_notes."
+ },
+ "tokens": 10303,
+ "cached": 0
+}

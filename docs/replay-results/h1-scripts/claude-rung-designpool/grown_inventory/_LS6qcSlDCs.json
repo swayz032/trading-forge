@@ -1,0 +1,34 @@
+{
+  "video": "_LS6qcSlDCs",
+  "strategies": [
+    {
+      "name": "vwap_reclaim_pullback_dip_buy",
+      "element_inventory": [
+        "PRECONDITION (volume gate, mandatory): only attack stocks whose average volume over the last 20 minutes is over 200,000 shares traded per minute (measured on thinkorswim). Verbatim: 'i'm only attacking stocks that have an average volume over the last 20 minutes of over 200 000 shares traded per minute ... as long as the average just about is over 200 000 shares traded per minute on the stock i'm looking for i consider that good enough volume'. Executable as a hard gate.",
+        "PRECONDITION (no-volume = no-trade, skip rule): if the >200k/min volume is not there, do not take the trade — move on to a better option. Verbatim: 'i need this volume to be there if i'm going to take this trade if it's not i move on and look for a better option'. Occurrence-level skip filter, Tier-A.",
+        "PRECONDITION (float gate): float must be under 50 million; under 10 million is preferred and works a larger percentage of the time. Verbatim: 'i need the float to be under 50 million ... preferably under 50 million if i can wait for smaller float stocks especially under 10 million then it's gonna work a larger percentage of the time'. Executable as float < 50M (preferred < 10M).",
+        "NO-TRADE FILTER (VWAP-above-price veto): never buy if VWAP is above current price, because VWAP then acts as resistance and rejects the move. Verbatim: 'i never buy these stocks if the v is above me ... too many times the v wap's just going to reject it back down'. Executable directional gate: reject entry when price < VWAP.",
+        "ENTRY CONTEXT (setup precondition): stock opens below VWAP at the opening bell, then breaks above VWAP with volume coming in, holding VWAP as support. Verbatim: 'when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support'. Gates the entry.",
+        "ENTRY TRIGGER: buy on the pullback that retests the reclaimed VWAP as a support area, anticipating a bounce. Verbatim: 'i'm buying on the pullbacks to test as a support area' / 'looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level'. Executable entry.",
+        "ENTRY CONFIRMATION (momentum/volume + candles): require volume coming in (examples ran ~1 million shares/min) and a run of consecutive green candles showing strength before the pullback entry. Verbatim: 'they see the volume come in breaking 1 million shares traded per minute ... a ton of green candles in a row which obviously shows a lot of strength'. Executable confirmation condition.",
+        "PREFERRED / A+ SETUP (definable setup filter): favorite version is a stock that opens weak, drops below VWAP at the opening bell, then breaks above it with volume. Verbatim: 'if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into'. Definable higher-quality setup filter, Tier-A.",
+        "SUPPORT-LEVEL DEFINITION: the pullback support can be the VWAP milestone level OR a whole-dollar level (e.g. $3). Verbatim: 'waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level like three dollars here'. Executable as alternate support level for the pullback entry.",
+        "OCCURRENCE-SELECTION (first bounces): take the entry on the first few bounces / the first pullback after the VWAP reclaim, not later ones. Verbatim: 'we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice'. Executable occurrence-selection rule.",
+        "VARIANT SUB-MECHANIC (XCLB, Monday): short/neutral open with consolidation and small upward moves -> break over VWAP with a run of green candles and volume coming in around 10:00 market time (breaking ~1M shares/min) -> buy the pullback to VWAP -> scalp out of the bounce. Verbatim exit gesture: 'we bought into the pullback and we rode the bounce up scalping out of it'.",
+        "VARIANT SUB-MECHANIC (SOS): opens and gets rejected at VWAP at the opening bell, maintains a downward/bearish trend, then around 11:00-11:30 market time breaks above VWAP with volume changing sentiment bearish->bullish -> buy the pullback entry on the first bounces. Verbatim: 'later on in the day at around 11 to 11 30 market time this one actually started to break above the v wap ... we can buy the pullback into that first few bounces'.",
+        "VARIANT SUB-MECHANIC (CEMI): maintains below VWAP for the first hour or so after the open (downtrend), then pushes back up to test the VWAP area with volume (~1M shares/min) and consecutive green candles -> buy the pullback to VWAP anticipating a bounce that respects VWAP. Verbatim: 'when we finally started to push back up and test the v-wap area we got volume coming in we were maintaining about a million shares traded per minute ... waiting for the pullback entry to dip buy into to try to ride the bounce up with it respecting that v wap area'.",
+        "EXIT (GESTURAL — exit-level fields null, no invented levels): exit given only colloquially as scalping out of the bounce / riding the bounce up for profit. Verbatim: 'we rode the bounce up scalping out of it' / 'bounce up and ride that up for profit'. Entry mechanics are Tier-A and compilable; exit level/stop/target fields remain null because no numeric exit, stop, or target level is taught."
+      ],
+      "coaching_notes": [
+        "i can't guarantee these setups and strategies will work for you everyone's a little bit different and has different personalities and so i can't guarantee they will work but i can't say they have worked for me so far",
+        "as always i can't guarantee this setup and strategy is actually going to work for you because everyone's a little bit different and there's more nuance to it than that",
+        "you just have to have the patience to wait for these type of indicators and signals with volume coming in with it breaking over the v-wop",
+        "it's a really profitable trade again guys if you can have the discipline for it",
+        "again if you can kind of condition yourself to take these type of trades and condition that discipline you need to make this work",
+        "as i always say i can't guarantee this is going to work for everyone else nothing is 100 in trading",
+        "you have to test them yourself and make sure you understand that before you move forward day trading can be incredibly risky we are not experts here we're just a free resourcing community",
+        "so make sure to test everything yourself before risking your money and that's something that you should always do regardless of how good or bad someone says they are"
+      ]
+    }
+  ]
+}

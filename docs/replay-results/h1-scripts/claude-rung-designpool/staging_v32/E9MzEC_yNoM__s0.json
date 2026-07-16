@@ -1,0 +1,92 @@
+{
+  "strategies": [
+    {
+      "name": "premarket_range_break_continuation",
+      "preconditions": [
+        "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+        "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action.",
+        "mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps."
+      ],
+      "setup_trigger": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep.",
+      "direction": "Once we get a clean break above pre-market highs or below pre-market lows, this is your first signal. So, this breakout could confirm a long entry.",
+      "variants": [
+        {
+          "name": "breakout",
+          "entry_sequence": [
+            { "action": "typically we are going to scale down to a lower time frame such as a 2-minut or you could even play around with a 1 minute. I just personally prefer the 2-minut." },
+            { "action": "So when that twominut breaks out above that London high or where to break down below London low, we want to see the break and we actually want to see the close above or below the level." },
+            { "action": "you would go long at the close of this two-minute candle. You want to wait for the close." }
+          ],
+          "confluences": [
+            { "description": "what we are looking for is we are looking for an increase in the volume to confirm that the breakout is actually valid." },
+            { "description": "Ideally, looking at order flow as well." }
+          ],
+          "stop": "And your stop loss is going to be below the breakout candle.",
+          "targets": null
+        },
+        {
+          "name": "retest",
+          "entry_sequence": [
+            { "action": "if you wanted to wait for a retest of this level, you would simply look for price to pull back down into this previous high over here, make it support to go long with a stop right below." },
+            { "action": "pulls back, test it multiple times as support one, two, three, four, five times giving you many, many different entries, which again would have signaled a long entry with a stop-loss right below that London high." }
+          ],
+          "confluences": [
+            { "description": "look for that confirmation on the retest if you want to be the retest trader." }
+          ],
+          "stop": "make it support to go long with a stop right below.",
+          "targets": null
+        }
+      ],
+      "entry_sequence": [
+        { "action": "as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level." }
+      ],
+      "confluences": [
+        { "description": "what's really important is you need to wait for the break. You do not want to take early entries. You want to look for a solid candle close above or below the range." }
+      ],
+      "stop": "The stop is always going to go on the opposite side of the entry candle. And every single time, our risk is well defined.",
+      "targets": [
+        { "description": "ideally when I'm trading, I'm typically looking for bare minimum of 1x of my original risk. However, ideally what I'm looking for is a 1.5x to a 2x my original risk." }
+      ],
+      "exit_management": [
+        "as the trade continues to move in my favor, I'm going to be looking to trail my stop-loss up at least to break even, ideally in profits, and to just let that sucker run.",
+        "and I'll continue to scale out as it moves in my favor, continue to move my stop loss up... So, as the trade continues to move in your favor, move your stop-loss up and let that thing run until you are either stopped out or satisfied with your profits."
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "sub_class": "equity_index_futures",
+    "instruments": ["S&P 500 futures", "NASDAQ futures", "Dow futures"],
+    "timeframe": "5-minute",
+    "options_mechanic": false
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "So, if you enter the trade, you should be accepting the risk or there's no reason for you to even be in the trade to begin with. So, accept the risk before you get in. That way, the trade is stress free.",
+    "you want to avoid overall fake outs by staying patient",
+    "Now, one thing to keep in mind, this is not going to present itself every single day. Just like any other trading strategy, it's not always going to be there.",
+    "being aware of this strategy and knowing exactly what to look for when these strategies present themselves is very important because you can capitalize off of it and make money."
+  ],
+  "coverage_notes": [
+    "Precondition (5-min index futures): APPEARS in preconditions[0] verbatim.",
+    "Precondition (define pre-market range 3:00am ET to 9:30am ET open): APPEARS in preconditions[1] verbatim.",
+    "Precondition (mark pre-market high/low as setup boundaries): APPEARS in preconditions[2] verbatim.",
+    "Setup trigger (wait for price to trade INTO a pre-market level): APPEARS in setup_trigger verbatim.",
+    "Direction/continuation (clean break above high = long, below low = short, trade WITH the break): APPEARS in direction verbatim.",
+    "Breakout-variant sub-mechanic (scale down to 2-min preferred / 1-min optional): APPEARS in variants[breakout].entry_sequence[0] verbatim.",
+    "Breakout-variant entry gate (break AND close above/below, wait for close, no early entries): APPEARS in variants[breakout].entry_sequence[1] and entry_sequence[2] plus general confluences[0] verbatim.",
+    "Breakout-variant confirmation (volume increase/elevation): APPEARS in variants[breakout].confluences[0] verbatim.",
+    "Breakout-variant confirmation (order flow ideally): APPEARS in variants[breakout].confluences[1] verbatim.",
+    "Breakout-variant execution (enter at close of confirming 2-min candle): APPEARS in variants[breakout].entry_sequence[2] verbatim.",
+    "Breakout-variant stop (below the breakout candle): APPEARS in variants[breakout].stop verbatim.",
+    "Retest-variant sub-mechanic (pull back / retest broken level, make old high support, then enter): APPEARS in variants[retest].entry_sequence[0] verbatim.",
+    "Retest-variant occurrence rule (level retested multiple times, each a new entry): APPEARS in variants[retest].entry_sequence[1] verbatim.",
+    "Retest-variant confirmation (enter on confirmation of retest holding): APPEARS in variants[retest].confluences[0] and general entry_sequence[0] verbatim.",
+    "Retest-variant stop (just below the retested level / entry candle): APPEARS in variants[retest].stop and entry_sequence[0] verbatim.",
+    "General entry rule (enter on confirmation after breakout or retest of the level): APPEARS in entry_sequence[0] verbatim (speaker's line also names liquidity sweep, which belongs to the other strategy).",
+    "General stop rule (opposite side of entry candle; risk well-defined): APPEARS in stop verbatim.",
+    "Target (bare-minimum 1R; ideal 1.5x-2x risk): APPEARS in targets[0] verbatim. Worked-example dollar figures ($400/$1,500 etc.) stripped as day-of examples, not rules.",
+    "Exit/management (trail stop to break-even then into profit): APPEARS in exit_management[0] verbatim.",
+    "Exit/management (scale out while trailing, let it run until stopped out or satisfied): APPEARS in exit_management[1] verbatim."
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "video": "E9MzEC_yNoM",
+  "strategies": [
+    {
+      "name": "premarket_range_break_continuation",
+      "element_inventory": [
+        "Precondition: trade the 5-minute time frame on index futures (S&P/ES, NASDAQ/NQ, or Dow/YM).",
+        "Precondition: define the pre-market range from 3:00 a.m. ET (European/London session open) up to New York market open at 9:30 a.m. ET.",
+        "Precondition: mark the highest high (pre-market high) and the lowest low (pre-market low) of that 3:00am-9:30am price action; treat these levels as the setup boundaries.",
+        "Setup trigger: wait for price to trade INTO one of those pre-market levels (high or low) before looking for a trade.",
+        "Direction (continuation): a clean break above the pre-market high = long bias; a clean break below the pre-market low = short bias (trade WITH the break).",
+        "Breakout-variant sub-mechanic: scale down to a lower timeframe to time the entry (2-minute preferred, 1-minute optional).",
+        "Breakout-variant entry gate: require the lower-timeframe candle to break AND CLOSE above/below the level; wait for the candle close, do not take early entries.",
+        "Breakout-variant confirmation: require an increase/elevation in volume to validate that the breakout is real.",
+        "Breakout-variant confirmation: ideally confirm with order flow.",
+        "Breakout-variant execution: enter (go long/short) at the close of the confirming 2-minute breakout candle.",
+        "Breakout-variant stop: stop-loss below the breakout candle (opposite side for shorts).",
+        "Retest-variant sub-mechanic: instead of the breakout, wait for price to pull back and retest the broken level, make the old high support (old low resistance for shorts), then enter in the break direction.",
+        "Retest-variant occurrence rule: the level can be retested multiple times, each retest giving another entry.",
+        "Retest-variant confirmation: enter on confirmation of the retest holding as support/resistance.",
+        "Retest-variant stop: stop just below the retested level / below the entry candle.",
+        "General entry rule: enter on the confirmation after the breakout of the level or after the retest of the level.",
+        "General stop rule: the stop always goes on the opposite side of the entry candle; risk is well-defined at entry.",
+        "Target: bare-minimum 1x original risk (1R); ideal 1.5x to 2x original risk.",
+        "Exit/management: as the trade moves in favor, trail the stop-loss up to at least break-even, ideally into profit.",
+        "Exit/management: scale out as the trade moves in favor while continuing to trail the stop; let it run until stopped out or satisfied with profits."
+      ],
+      "coaching_notes": [
+        "So, if you enter the trade, you should be accepting the risk or there's no reason for you to even be in the trade to begin with. So, accept the risk before you get in. That way, the trade is stress free.",
+        "you want to avoid overall fake outs by staying patient",
+        "Now, one thing to keep in mind, this is not going to present itself every single day. Just like any other trading strategy, it's not always going to be there.",
+        "being aware of this strategy and knowing exactly what to look for when these strategies present themselves is very important because you can capitalize off of it and make money."
+      ]
+    },
+    {
+      "name": "premarket_range_liquidity_sweep_reversal",
+      "element_inventory": [
+        "Precondition: trade the 5-minute time frame on index futures (S&P/ES, NASDAQ/NQ, or Dow/YM).",
+        "Precondition: define the pre-market range from 3:00 a.m. ET up to New York market open at 9:30 a.m. ET; mark the pre-market high (highest high) and pre-market low (lowest low).",
+        "Setup trigger: wait for price to trade into the pre-market high or pre-market low.",
+        "Entry definition: a liquidity sweep = a brief fakeout beyond the level that fails and reclaims - price wicks/closes slightly above the pre-market high then closes back below, or breaks slightly below the pre-market low then reclaims and closes back above.",
+        "Direction (reversal): FADE the failed break - a sweep above the pre-market high sets up a SHORT; a sweep below the pre-market low sets up a LONG (opposite direction to the breakout/continuation play).",
+        "Mechanic/rationale: on a sweep below the low, resting long stops and new breakout shorts both get stopped out on the reclaim, fueling a powerful aggressive move the opposite way (target that move).",
+        "Entry execution: enter on the confirmation AFTER the level is reclaimed - e.g. go long when price breaks below the pre-market low but reclaims the level with a lot of volume.",
+        "Confirmation: reclaim ideally accompanied by high/elevated volume.",
+        "Confirmation tool: use order flow (Bookmap 'stops indicator') to identify liquidity sweeps with high probability.",
+        "Stop: stop-loss must be on the opposite side of / below the entry (reclaim) candle.",
+        "Target: bare-minimum 1x risk, ideal 1.5x to 2x risk (worked example: risking ~$1,500 on 2 ES contracts, target at least $1,500, ideally $2K-$3K).",
+        "Exit/management: as the trade moves in favor, trail the stop to at least break-even then into profit, scale/trim out, and let it run until stopped out or satisfied."
+      ],
+      "coaching_notes": [
+        "So, if you enter the trade, you should be accepting the risk or there's no reason for you to even be in the trade to begin with. So, accept the risk before you get in. That way, the trade is stress free.",
+        "you want to avoid overall fake outs by staying patient",
+        "Now, one thing to keep in mind, this is not going to present itself every single day. Just like any other trading strategy, it's not always going to be there."
+      ]
+    }
+  ]
+}

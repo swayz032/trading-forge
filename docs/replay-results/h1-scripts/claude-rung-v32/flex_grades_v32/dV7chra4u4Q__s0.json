@@ -1,0 +1,13 @@
+{
+ "custom_id": "dV7chra4u4Q__s0",
+ "grade": {
+  "strategy_name": "break_and_retest",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "All transcript-taught Tier-A elements in the inventory are preserved in the extraction (including occurrence-selection, A+ / 1-2 trades-per-day bounds, and the example-based MA/timeframe variants), and the listed Tier-B coaching lines are present in coaching_notes."
+ },
+ "tokens": 8759,
+ "cached": 0
+}

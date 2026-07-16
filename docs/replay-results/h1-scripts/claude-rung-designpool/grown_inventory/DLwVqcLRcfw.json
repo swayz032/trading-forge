@@ -1,0 +1,54 @@
+{
+  "video": "DLwVqcLRcfw",
+  "strategies": [
+    {
+      "name": "vwap_20sma_confluence_long",
+      "element_inventory": [
+        "PRECONDITION — timeframe: trade on the 2-minute chart (NASDAQ futures; also stated as applicable to ES/YM/RTY).",
+        "PRECONDITION — indicators: 20 simple moving average (not smoothed, not exponential) plus VWAP with its upper and lower bands/channels on the chart.",
+        "PRECONDITION — directional bias gate: only take longs while price is trading OVER VWAP ('if we're trading over the vwap we're typically more bullish'); over-VWAP = bullish regime.",
+        "PRECONDITION — confluence gate: require price over BOTH the 20 SMA AND VWAP before treating a long setup as valid.",
+        "PRECONDITION — session open context: the first 2-minute candle off the bell closes over the 20 SMA and VWAP.",
+        "ENTRY trigger: after a candle closes over the 20 SMA, wait for the FOLLOWING candle to confirm by taking out the high of that closing candle, then enter long ('once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA').",
+        "ENTRY (re-load / pullback buy): buy the pullback into VWAP as long as price only wicks below VWAP and does NOT close below and build below it ('as long as we're not losing it closing below it and building below it this is a good buying opportunity').",
+        "SELECTION / re-entry rule: each bounce off VWAP that tests-but-never-closes-below is a new buying opportunity — start a new position on each such bounce ('come down to vwap start a new position bounce ... come down to vop start a new position').",
+        "SCALE-IN (adds): add to the position on a pullback into VWAP to lower the dollar-cost average (permitted on Topstep-style firms that allow averaging).",
+        "SCALE-IN FREQUENCY gate (firm-conditional): on firms that restrict dollar-cost-averaging, add only ONE time (or not at all) — add frequency is gated by prop-firm rules.",
+        "STOP (for pullback/re-entry positions): place the stop under the previous wick / previous low point of the prior bounce ('use the previous Wick as a stop ... use the previous low Point as a stop').",
+        "HOLD / stay-in rule: continue holding while VWAP is trending higher AND the 20 SMA is trending higher / price stays over both.",
+        "EXIT UNIT A — band scalp (~15-20 pt): for a shorter hold, sell for profit into the upper VWAP band/channel; example entry ~20259 -> sell ~20275 = roughly 15-20 points.",
+        "EXIT UNIT B — 20 SMA trailing stop (~75 pt): once price has broken AWAY from VWAP and the 20 SMA holds higher creating a gap between price and the 20 SMA, use the 20 SMA as a trailing stop and exit on a CLOSE below the 20 SMA (example ~20258 to close-below-VWAP ~20331 ≈ almost 75 points of run captured).",
+        "EXIT-B precondition (activation gate): only switch to the 20-SMA trail after price has separated from VWAP and a real gap exists between price and the 20 SMA ('this here is not a gap ... this is clearly trending higher so this 20 SMA is clearly trending higher').",
+        "RE-ENTRY after trail exit: a new long position may be started once price gets back over the 20 SMA ('you could have also started a new position here once we got back over the 20 SMA').",
+        "SIZING (executable core): if normally trading micros, trade one micro contract; if already trading 1 lot, increase to 2 or even 3 lots (wrapper 'more size than we're used to' recorded as coaching)."
+      ],
+      "coaching_notes": [
+        "how to use vwap ... to help you kind of avoid getting chopped up how to stay on the right side of the trend and how to hold your positions maybe a little bit longer with a trailing stop",
+        "a lot of times Traders will jump into a specific play like this see this pull back for two four six minutes get scared get panicked start complaining on social media that the market is chopping but realistically all we're doing is back testing support here at vwap",
+        "just have the confidence that as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+        "now this is going to take a specific type of Trader because I know a lot of you guys who trade Futures a lot of you guys who are newer today trading period you guys really don't like to hold positions through draw down through ups and downs and you get nervous and panicked",
+        "it did take over about an hour to an hour and a half before price action really started to break away",
+        "a lot of times when Traders see price action start to get extended they're quick to short they're quick to short but in all reality the price and the charge and the technicals are telling you that this is a uptrend so instead of looking to find the short for a quick scalp look for the pullback and look for the bounce off of support",
+        "this is how you can use vwap to pass prop firm evaluations extremely quickly and I'm talking about just a few days",
+        "how we can do that is by putting on a little bit more size than we're used to"
+      ]
+    },
+    {
+      "name": "vwap_20sma_rejection_short",
+      "element_inventory": [
+        "PRECONDITION — timeframe: trade on the 2-minute chart, same indicator stack (20 SMA + VWAP with bands).",
+        "PRECONDITION — regime-flip gate: price must lose BOTH VWAP and the 20 SMA collectively and then CLOSE below VWAP before a short is on the table ('if we were to lose vop and lose the 20 SMA collectively and then close below vop').",
+        "ENTRY confirmation: require a following candle that starts to BUILD below VWAP after the close-below ('then we have a following candle that starts to build below').",
+        "ENTRY trigger: short the rejection of VWAP and the 20 SMA ('what I'm looking to do is short the rejection of vwap and the 20 SMA').",
+        "SHORT-SUPPRESSION filter (confluence gate): do NOT short while price is holding above VWAP / has not closed below VWAP — VWAP support overrides a 20-SMA-only short signal ('as long as we don't close below vwap we should still not be trying to short the market here')."
+      ],
+      "coaching_notes": [
+        "I don't use use vop a lot on an everyday basis but I do look at it from time to time for Confluence",
+        "if you were simply following the 20 SMA strategy well then you would have been into to this short position here and then rudely been stopped out but if you had the vop on your screen you would have seen that we had Firm support here",
+        "you would have you know taken a quick five points on the scalp but why not just wait for the next bounce opportunity was here at 736 and kind of avoid the headache and stress of this potential play here that could have turned into a loser",
+        "in this particular situation maybe went long but then got stopped out because of fear because of too much size on the table",
+        "if you're already kind of familiar with vop maybe you can incorporate using this 20 SMA alongside of it maybe if you're purely and solely using the 20 SMA maybe you can add vwap to your screens to give you that little bit more extra Confluence"
+      ]
+    }
+  ]
+}

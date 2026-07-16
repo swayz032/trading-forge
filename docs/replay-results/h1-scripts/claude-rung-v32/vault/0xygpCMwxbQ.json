@@ -1,0 +1,73 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "ict_aplus_entry_checklist",
+      "entry_sequence": [
+       {
+        "action": "once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry"
+       },
+       {
+        "action": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken"
+       },
+       {
+        "action": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over"
+       },
+       {
+        "action": "I generally like to see price move back into a discount of this price range here"
+       },
+       {
+        "action": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here"
+       },
+       {
+        "action": "some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+       },
+       {
+        "action": "for my entry I would personally be looking to enter the trade right here"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together"
+       },
+       {
+        "description": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up"
+       },
+       {
+        "description": "does that meet all my criteria it does not because it is in a premium of the range"
+       },
+       {
+        "description": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade"
+       },
+       {
+        "description": "we did go a tick below this low but I do not count that personally"
+       }
+      ],
+      "targets": [
+       {
+        "description": "looking for buy side liquidity up here"
+       },
+       {
+        "description": "targeting a new low"
+       },
+       {
+        "description": "reaching for the other side"
+       },
+       {
+        "description": "your target the initial highs from the morning"
+       }
+      ],
+      "stop": {
+       "anchor": "putting my stop on this order block low (order-block LOW for a long); my stop on the order block High (order-block HIGH for a short); or My Stop on this low (on the swept structure low)"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

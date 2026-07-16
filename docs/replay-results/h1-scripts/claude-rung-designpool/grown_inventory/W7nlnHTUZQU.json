@@ -1,0 +1,34 @@
+{
+  "video": "W7nlnHTUZQU",
+  "strategies": [
+    {
+      "name": "overnight_range_break_retest",
+      "element_inventory": [
+        "SESSION FILTER (precondition, Tier-A gate): trade only the New York session 9:30am-4:00pm EST -- 'it is going to be best used for the New York market session. So that is going to be from 9:30 a.m. EST all the way until 400 pm EST'",
+        "OVERNIGHT RANGE DEFINITION: from the overnight/pre-market session 4:00pm EST to 9:30am EST, identify the highest point of price action (overnight/pre-market high) and the lowest point (overnight/pre-market low); draw support/resistance lines marking that highest and lowest point -- 'we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point'",
+        "BREAK TRIGGER: wait for price to break above the overnight high OR break below the overnight low -- 'we are going to wait for... either price to break above that range or we are going to look for price to break below that range'",
+        "BREAK CONFIRMATION on candle close: require a close beyond the level with strength (break above) or weakness (break below); confirm on candle closes and reject wicks that reclaim the opposite side -- 'we want to see it close below or above with strength or weakness... we are waiting for candle closes to actually confirm... price wicked right back down and reclaimed on the opposite side. So there was no entry'",
+        "OVERALL-TREND PRECONDITION (direction router): the overall trend gates which side to take -- if trend is up, only take breaks ABOVE for longs; if trend is weak/down, only take breaks BELOW for shorts; do not counter-trend -- 'if the overall trend is to the upside... ideally we're waiting for price to break above to look for longs... if the overall trend is very weak... we're looking for the market to break below'",
+        "LONG ENTRY: after a confirmed strong break above the overnight high, wait for price to pull back and retest that level as support with bullish price action (bullish hammer / bullish engulfing / dragonfly doji / long lower wicks) plus an elevation in volume, then enter long at the candle close -- 'we want to see it pull back and test this area as support... bullish hammer... bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume... look for a long entry'",
+        "SHORT ENTRY: after a confirmed weak break below the overnight low, wait for price to come back up and test that level as resistance with bearish price action (bearish hammer / gravestone doji / long upper wick / bearish engulfing) plus an elevation in volume, then enter short at the candle close -- 'test this area as resistance with bearish price action... bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume... look for a short entry'",
+        "STOP: always on the opposite side of the breakout point -- long stop if price breaks back down below the prior overnight high; short stop if price breaks back above the overnight low -- 'Your stop loss is always on the opposite side of the breakout point'",
+        "SELECTIVITY / SETUP-QUALITY FILTER (Tier-A executable core): take only A+ setups; it is not a setup that presents every day -- 'if you get a setup like I just showed you in the last two examples where it's A+, take that setup'",
+        "ENTRY-MECHANIC VARIANT (compatible, same skeleton/direction): retest entry is the preferred confirmation mechanic; the breakout entry (enter on the break itself) is the optional alternative -- 'I'm not a big fan of trading the breakouts. If you wanted to, you could have... but I'm a big fan of that retest'",
+        "TIMEFRAME: entries/exit management shown on the 5-minute chart -- 'as soon as price started to close below, especially on the 5 minute time frame, you simply just get out'",
+        "TRADE MANAGEMENT: take a first trim, then move the stop-loss to break-even -- 'once you feel comfortable with your first trim, take it, put your stop-loss at break even'",
+        "INVALIDATION / SMALL-LOSS EXIT + RE-ENTRY GATE: if a retest long closes back below the level (on the 5-min), exit for a small loss; only re-enter on fresh confirmation, otherwise no re-entry -- 'as soon as price started to close below... you simply just get out for a small loss. You could always look for a potential re-entry, but... there's no re-entry. There was no confirmation'"
+      ],
+      "coaching_notes": [
+        "But a common mistake that I see a lot of people make is they don't understand the overall trend.",
+        "So again, you want to be very picky because you don't need to trade every day.",
+        "Say you only took this one trade and you didn't trade tomorrow. Well, you still average $1,000 per those two days.",
+        "And this just goes to show you could take one trade in for the next two days, you're good.",
+        "But it is also very important to let your winners run until one, you're satisfied with the trade or two, you're stopped out in profits.",
+        "Worst case scenario, you give back some of your potential gains.",
+        "Again, that's part of the game. And no strategy is going to be 100% correct all the time.",
+        "Cuz remember, not all strategies are going to be 100%.",
+        "It's not a strategy that presents itself every day."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "abc_trend_continuation_reclaim",
+      "entry_sequence": [
+       {
+        "action": "You just have to start tracking your highs and lows on that 15-minut time frame."
+       },
+       {
+        "action": "while price is still making lower highs and lower lows, do not buy: this means price is still bearish because it's still making lows. It's breaking levels of support."
+       },
+       {
+        "action": "wait for the end of the correction: Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign."
+       },
+       {
+        "action": "confirmation to enter: the moment price comes above this level, this lets us know that price is bullish"
+       },
+       {
+        "action": "once you find this... breaking above that level... your entry goes here"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "Literally a ABC setup."
+       },
+       {
+        "description": "A is a low, B is a lower high identified by rejections (price comes up, shoots down in a different direction), and C is a low that is higher than the previous one: 'Price made a low, but it's higher than the previous one. Same setup. Literally a ABC setup.'"
+       },
+       {
+        "description": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'"
+       }
+      ],
+      "targets": [
+       {
+        "description": "scale back out to the 1 hour time frame and target the 1 hour high; framed as 'that's a one to 10 setup'"
+       },
+       {
+        "description": "if following the trend and the 4 hour breaks its high, keep scaling out for a larger runner: '4 hour has broken the high and you would be scaling out now. You would probably be around a 1 to 32.'"
+       }
+      ],
+      "stop": {
+       "anchor": "putting your stop loss under that level where you don't want to see price get broken; explicit operator choice of either the higher-low/reclaim level or the prior low ('either here or here whichever one you want to use')"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

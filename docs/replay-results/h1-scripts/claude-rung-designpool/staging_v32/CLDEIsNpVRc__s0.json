@@ -1,0 +1,111 @@
+{
+  "strategies": [
+    {
+      "name": "htf_irl_fvg_1m_inversion",
+      "direction": "both",
+      "preconditions": [
+        {
+          "description": "we always going to be trading from 9:30 till 11:30 a.m. New York time. So, make sure your time zone is set to New York over here so you don't get confused about uh the timings"
+        },
+        {
+          "description": "the first thing we need for the strategy is higher time frame IRL. IRL is internal range liquidity which is also a fair value gap"
+        }
+      ],
+      "entry_sequence": [
+        {
+          "step": 1,
+          "action": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify as a draw on liquidity. ... or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high"
+        },
+        {
+          "step": 2,
+          "action": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows"
+        },
+        {
+          "step": 3,
+          "action": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw"
+        },
+        {
+          "step": 4,
+          "action": "you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap"
+        },
+        {
+          "step": 5,
+          "action": "drop down to one minute time frame. Now here is when our lower time frame confirmation or entry model comes in and this is very important. This is the most important part of the strategy"
+        },
+        {
+          "step": 6,
+          "action": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap"
+        },
+        {
+          "step": 7,
+          "action": "So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out"
+        },
+        {
+          "step": 8,
+          "action": "you simply wait for price to close below this one minute fair value gap. Okay. So that is your inversion and inversion is when we have a bullish fair value gap but then price disrespects the bullish fair value gap and closes below it. So now it is inversed right and that becomes a resistance for price. So price will not go above that. So once price closes below this IFVG you want to take a short position right away"
+        },
+        {
+          "step": 9,
+          "action": "Now let's say that there are two fair value gaps in this manipulation leg on the one minute. So what you want to do is wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that"
+        }
+      ],
+      "stop": {
+        "description": "you want to put your stop above the high (short case); below the low / below the bodies (long case)",
+        "short_quote": "you want to put your stop above the high",
+        "long_quote": "we put our stop below these bodies"
+      },
+      "targets": [
+        {
+          "description": "you can target the drawn liquidity"
+        },
+        {
+          "description": "you can go for 1:2 fixed risk-to-reward ratio"
+        }
+      ],
+      "risk_management": {
+        "description": "you want to go break even. As soon as the closest liquidity after your entry is taken out. So this is the closest low after your entry. So as soon as price hits this level, you're going to go break even"
+      },
+      "variant": {
+        "description": "if you invert the chart over, we have taken out the London low ... Or we have taken out let's say the previous day low, right? Or we have taken out like equal lows or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high. Right? Then you want to wait for a 5m minute fair value gap to form after 9:30 towards your draw on liquidity. Then you want to wait for price to tap into that fair value gap ... Then you wait for one minute inversion. Okay, above this fair value gap"
+      }
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": null,
+    "specific_instrument": null,
+    "is_options_mechanic": false,
+    "notes": "Instrument-agnostic ICT-style price-action model (HTF IRL/FVG tap + 1-minute inversion). No specific instrument or asset class is named in the transcript; timing is tied to the 9:30-11:30 a.m. New York session."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "you want to trade with the volume. You don't want to trade a choppy price action because you'll get wrecked.",
+    "drawn liquidity is not extremely important. As long as you're following this model where you get a tap into the 5 minute or 15 minute fair value gap and you get inversion off of it, you're going to get at least a a decent one to two move.",
+    "the risk management is very important for this strategy.",
+    "this is going to save you a lot of times. A lot of times.",
+    "I've seen that I've I've gotten more success when I go for a fixed risk-to-reward ratio.",
+    "You will not be confused after watching this video. I promise you that."
+  ],
+  "coverage_notes": [
+    "PRECONDITION (session window) -> APPEARS: preconditions[0] (9:30-11:30 a.m. New York, chart timezone New York).",
+    "PRECONDITION (HTF IRL required) -> APPEARS: preconditions[1] (higher time frame IRL = fair value gap).",
+    "STEP 1 / PRECONDITION (identify draw on liquidity) -> APPEARS: entry_sequence step 1 (Asia/London/previous-day high-low, equal highs/lows, 1h/4h swing high/low).",
+    "DRAW-SELECTION rule (side taken first sets opposite side as the draw) -> APPEARS verbatim: entry_sequence step 2 (Asia high taken -> draw is Asia low; previous day high -> previous day low; London high -> London low; equal highs -> equal lows).",
+    "ENTRY STEP 2 (form HTF FVG toward the draw; 5m first, else 15m) -> APPEARS: entry_sequence step 3.",
+    "ENTRY STEP 3 (tap the HTF IRL) -> APPEARS: entry_sequence step 4.",
+    "ENTRY STEP 4 (drop to 1m for the entry model) -> APPEARS: entry_sequence step 5.",
+    "ENTRY STEP 5 / PRECONDITION (1m liquidity sweep before the tap) -> APPEARS: entry_sequence step 6.",
+    "ENTRY STEP 6 (identify all 1m FVGs in the manipulation leg) -> APPEARS: entry_sequence step 7.",
+    "ENTRY TRIGGER (1m inversion / IFVG; close below -> short right away) -> APPEARS: entry_sequence step 8.",
+    "MULTI-FVG RULE (wait for ALL to invert) -> APPEARS: entry_sequence step 9.",
+    "DISPLACEMENT FILTER (displacement, not choppy, at inversion) -> APPEARS: confluences[0].",
+    "STOP (above the high short / below the low or bodies long) -> APPEARS: stop.",
+    "TARGET (two options: draw on liquidity OR fixed 1:2 RR) -> APPEARS: targets[0] and targets[1].",
+    "RISK MANAGEMENT (break-even when closest liquidity after entry is taken out) -> APPEARS: risk_management.",
+    "VARIANT / DIRECTION (both, mirrored long case) -> APPEARS: variant and direction='both'."
+  ]
+}

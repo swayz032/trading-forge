@@ -1,0 +1,24 @@
+{
+  "video": "4cT8WTyxhYY",
+  "strategies": [
+    {
+      "name": "liquidity_grab_reversal",
+      "element_inventory": [
+        "PRECONDITION (location filter) — Only take setups at the bottom or top of a big move; skip liquidity grabs that occur in the middle of an ongoing up/down move. Verbatim: \"this whole liquidity grab strategy works best if you're finding reversals at the bottoms or tops of big moves if you're trying to find liquidity grabs in the middle of moves while the chart is going up or down like this it doesn't work so good\".",
+        "STEP 1 / TRIGGER — Identify a liquidity grab: price breaks a support or resistance and does a fake-out, then heads in the opposite direction. Can be sell-side OR buy-side liquidity (trader's choice). Verbatim: \"a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction ... it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade\".",
+        "DIRECTION (both, mirrored) — Resistance broken + fake-out then reversal down → SHORT; support broken + fake-out then reversal up → LONG. Verbatim (short side): \"if we found this liquidity grab and entered a short we would benefit from the strong impulsive movement\"; (long side): \"your long entry would be at this point right here because this candle made this liquidity grab\".",
+        "ENTRY — Mark the entry at the candle that made the liquidity grab (long: at that candle; short: at the bottom of the candle that initiated the liquidity grab). Verbatim: \"you were going to mark your entry point at the candle that made the liquidity grab ... your short entry would be at the bottom of this candle that initiated this liquidity grab\".",
+        "STOP LOSS — Just below the liquidity grab for longs / just above the liquidity grab for shorts. Verbatim: \"set your stop loss right right below the liquidity grab\" and \"set our stop loss right above the liquidity grab\".",
+        "TAKE PROFIT — At a recent high for longs / a recent low for shorts. Verbatim: \"set your take profit at a recent high\" and \"set her take profit at a recent low\".",
+        "ENTRY-SIGNAL GATE (indicator-dependent) — Wait for the entry signal before entering; the private indicator auto-marks the liquidity grab, marks the entry point, and signals exactly when to enter (color-graded red=short/long), enabled by setting \"show reversals\" to True. Verbatim: \"we wait for the entry signal once we get it we enter\" / \"set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you\".",
+        "SELECTION FILTER (10-candle rule) — Prefer setups where the liquidity grab and the entry candle (the two peaks) are closer than 10 candles apart; those historically produced a larger, more impulsive move. Verbatim: \"if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart ... if you want optimal entries you should look for liquidity grabs with Peaks closer together\".",
+        "CONFLUENCE (divergence confirmation) — Add a momentum oscillator (MetaTrader → Insert → Indicators → Oscillators → Momentum); require divergence — price making lower lows while the momentum oscillator makes higher highs (bullish; mirror for bearish) — for a higher-probability entry. Verbatim: \"the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal\".",
+        "CONFLUENCE / MULTI-TIMEFRAME FILTER — After a signal on the lower timeframe (e.g. 15-minute), switch to a higher timeframe (e.g. 1-hour) and only take the trade if the signal sits at higher-timeframe support (long) / resistance i.e. the top or bottom of the range; skip it if it falls in the middle of the higher-timeframe range. Then return to the lower timeframe to place the normal stop loss and take profit. Verbatim: \"we then move to a 1hour time frame and we see this Buy Signal happened exactly at a support on a higher time frame ... we would not enter on this trade because the move is happening in the middle of this range on a higher time frame\"."
+      ],
+      "coaching_notes": [
+        "now of course this strategy isn't absolutely perfect and there are going to be times when it doesn't work",
+        "so sure we lost this trade but if we compare it to all of our winners with these huge massive wins this loss is really just a pebble that's what makes the strategy so profitable"
+      ]
+    }
+  ]
+}

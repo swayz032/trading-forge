@@ -1,0 +1,92 @@
+{
+  "video": "2DXQqwKSwJE",
+  "strategies": [
+    {
+      "name": "mean_reversion_scalp",
+      "element_inventory": [
+        "PRECONDITION: trade only in-play stocks — a stock with a significant price range, doing high volume, often trading on a news catalyst or interesting technical pattern",
+        "PRECONDITION: require BOTH liquidity and volatility; reject random tickers with average volume and no catalyst (they provide choppiness and paper-cut losses)",
+        "PRECONDITION: identify a tight, well-defined intraday support/resistance level, ideally one that aligns on multiple timeframes and that other participants clearly see (tighter level = more defined risk)",
+        "PRECONDITION: read the tape before entering — watch how thick/thin the bids and offers are, look for disparity and which side is more aggressive, using the level-2 box (bids/offers) and the time-and-sales window",
+        "SETUP: mean-reversion scalp triggers after price stretches too far too fast into a level — step in when emotion peaks and order flow begins to shift (the shift is visible in the tape before it is obvious on the chart)",
+        "ENTRY TRIGGER (long at support): on a sharp DOWN move into support, wait for the moment where volume stalls and people stop hitting the bid (seller hesitation signifying a momentum turn), then take the offer and get long in front of the support level",
+        "STOP (long): use the bids at the support level as your protection (exit if the support gives way)",
+        "TARGET: capture the bounce we get off that level",
+        "VARIANT SUB-MECHANIC (short mirror at resistance): on a sharp UP move into a resistance level with large offers, fade it for the reversal — the mirror of the long-at-support entry",
+        "FILTER: prefer setups where the move into the level is sharp and big into really big size — massive bids at support (long) or large offers at resistance (short); the sharper and bigger the move into big bids/offers, the better the reversal scalp",
+        "SELECTION FILTER: take only a few high-quality opportunities where structure and order flow align; do not overtrade"
+      ],
+      "coaching_notes": [
+        "You are stepping in when emotion peaks and order flow begins to shift.",
+        "identify a key emotional level, confirm with the tape, and execute without hesitation",
+        "There is no room for distraction, and you're interpreting real-time information and making fast, calculated decisions.",
+        "The strategy is also cognitively demanding, requiring sustained focus over the course of a long day.",
+        "The margin for error is thin, and a single large mistake can erase many small gains.",
+        "Scalping is highly execution-dependent. Minor slippage, hesitation, or routing inefficiencies can eliminate or impair your expected value.",
+        "Transaction costs matter significantly because profit targets are small relative to frequency.",
+        "The more size you do, the more slippage you face, and in turn the more your edge degrades.",
+        "you tend to need to be glued to the desk during market hours",
+        "When you get the reps, you'll develop small positive edges, which, when repeated consistently, can compound meaningfully over time.",
+        "You do not need too many trades per day... often you can fall for the trap of not being selective enough and your win rate suffers."
+      ]
+    },
+    {
+      "name": "continuation_breakout_scalp",
+      "element_inventory": [
+        "PRECONDITION: trade only in-play stocks — significant price range, high volume, often on a news catalyst or interesting technical pattern",
+        "PRECONDITION: require BOTH liquidity and volatility; reject random tickers with average volume and no catalyst",
+        "PRECONDITION: identify a tight, clean, well-defined intraday support/resistance level, ideally aligning on multiple timeframes and clearly seen by other participants",
+        "PRECONDITION: read the tape (level-2 bids/offers box + time-and-sales) to confirm real-time order flow before entering",
+        "SETUP: continuation scalp triggers around breaks of clean support or resistance; aim to be the FIRST market participant to enter upon the break",
+        "CONSOLIDATION SUB-CONDITION: look for price consolidating under the level with multiple pushes into it, shallow pullbacks, and each dip finding buyers higher than the previous dip (attention building)",
+        "ORDER-FLOW CONFIRMATION: watch the large offer sitting at the level — check whether buyers are aggressively lifting into it, whether prints are going off repeatedly at the level, and whether the offer is refreshing (reappearing after partial fills) vs getting taken; require the offer size to begin shrinking then suddenly be gone",
+        "ENTRY (long): buy just above the resistance level on the break — e.g. $10.01 or $10.02; buy $50.01 if possible; buy $25 / $25.02 as the offer gets taken",
+        "ENTRY MECHANIC VARIANT: place a stop-limit buy order just above the offer/level to auto-enter the moment the whole offer is taken and resistance breaks",
+        "TARGET: scalp out on the emotional follow-through of traders scrambling to buy higher — kick it out roughly 10, 20, or even 30 cents higher (worked example: 5,000 shares kicked out ~10c higher at $25.10-$25.12 = ~$500)",
+        "STOP: place the stop right below the level; exit if price gets back below it (e.g. back below $50)",
+        "FILTER: require a strong, urgent breakout that bursts through the level with conviction and moves quickly in your favor; skip weak breakouts that drift through and stall (tape slows, sellers start hitting bids just above resistance, leading to failed breaks)",
+        "VARIANT SUB-MECHANIC (short mirror): applies symmetrically to breaks of clean support (breaks of clean support OR resistance)",
+        "SELECTION FILTER: take only a few high-quality opportunities where structure and order flow align; do not overtrade"
+      ],
+      "coaching_notes": [
+        "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow.",
+        "Strong breakouts feel urgent, and you want to see the stock burst through that level with conviction.",
+        "identify a key emotional level, confirm with the tape, and execute without hesitation",
+        "There is no room for distraction, and you're interpreting real-time information and making fast, calculated decisions.",
+        "The strategy is also cognitively demanding, requiring sustained focus over the course of a long day.",
+        "The margin for error is thin, and a single large mistake can erase many small gains.",
+        "Scalping is highly execution-dependent. Minor slippage, hesitation, or routing inefficiencies can eliminate or impair your expected value.",
+        "Transaction costs matter significantly because profit targets are small relative to frequency.",
+        "The more size you do, the more slippage you face, and in turn the more your edge degrades.",
+        "you tend to need to be glued to the desk during market hours",
+        "When you get the reps, you'll develop small positive edges, which, when repeated consistently, can compound meaningfully over time.",
+        "You do not need too many trades per day... often you can fall for the trap of not being selective enough and your win rate suffers."
+      ]
+    },
+    {
+      "name": "spread_making_scalp",
+      "element_inventory": [
+        "PRECONDITION: use in a liquid 'spread' name where the stock is in relative equilibrium but thin — market participants who need urgency will cross the spread (pay the offer up there and hit the bid down there)",
+        "PRECONDITION: this is a foundational in-play/liquidity context — scalping thrives on liquidity; you need a real spread and volume for others to cross",
+        "ENTRY MECHANIC: provide the liquidity instead of taking it — place resting (passive) limit orders in spread names ahead of large bids or offers (acting like a market maker, not a momentum trader)",
+        "PROFIT MECHANIC: capture the difference between the spread as other participants cross and hit the bid / pay the offer; the edge is non-directional (does not come from predicting direction)",
+        "VARIANT SUB-MECHANIC (wide-spread event, Facebook-IPO-style): when there is an over-a-dollar spread with incredible volume going off on both sides, slam in huge bids only to just as quickly kick the offers/size out a point or two higher, repeating it again and again before the spread compresses (and the stock drifts lower)",
+        "SELECTION FILTER: take only a few high-quality opportunities where structure and order flow align; do not overtrade"
+      ],
+      "coaching_notes": [
+        "The edge here does not come from predicting direction. It comes from understanding market microstructure.",
+        "To do this well, you must really understand market microstructure of order types, queue priority, and hidden versus visible orders.",
+        "one of the most impressive trades I've ever seen someone make was when he made hundreds of thousands of dollars in minutes during the Facebook IPO",
+        "identify a key emotional level, confirm with the tape, and execute without hesitation",
+        "There is no room for distraction, and you're interpreting real-time information and making fast, calculated decisions.",
+        "The strategy is also cognitively demanding, requiring sustained focus over the course of a long day.",
+        "The margin for error is thin, and a single large mistake can erase many small gains.",
+        "Scalping is highly execution-dependent. Minor slippage, hesitation, or routing inefficiencies can eliminate or impair your expected value.",
+        "Transaction costs matter significantly because profit targets are small relative to frequency.",
+        "The more size you do, the more slippage you face, and in turn the more your edge degrades.",
+        "you tend to need to be glued to the desk during market hours",
+        "You do not need too many trades per day... often you can fall for the trap of not being selective enough and your win rate suffers."
+      ]
+    }
+  ]
+}

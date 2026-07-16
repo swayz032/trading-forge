@@ -1,0 +1,13 @@
+{
+ "custom_id": "E9MzEC_yNoM__s0",
+ "grade": {
+  "strategy_name": "premarket_range_break_continuation",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "All transcript-taught Tier-A continuation mechanics in the inventory are preserved in the extraction, and all listed Tier-B coaching lines are present in coaching_notes."
+ },
+ "tokens": 10407,
+ "cached": 1408
+}

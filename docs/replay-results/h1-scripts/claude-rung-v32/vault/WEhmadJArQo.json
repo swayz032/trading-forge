@@ -1,0 +1,97 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "opening_range_fvg_break_entry",
+      "entry_sequence": [
+       {
+        "action": "we're going to get to our desks right at 9:30 a.m. EST"
+       },
+       {
+        "action": "we're going to wait for the first candle of the day at that 9:30 time to print"
+       },
+       {
+        "action": "We're going to start on our five-minute chart."
+       },
+       {
+        "action": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time"
+       },
+       {
+        "action": "we are going to switch to the 1 minute chart"
+       },
+       {
+        "action": "we're going to wait for a break of the level, but we need a fair value gap"
+       },
+       {
+        "action": "we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap."
+       },
+       {
+        "action": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed"
+       },
+       {
+        "action": "as soon as we get this engulfing, you're good to enter the trade"
+       },
+       {
+        "action": "you're going to start on the 15minute chart"
+       },
+       {
+        "action": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead."
+       },
+       {
+        "action": "we're going to mark the high and the low of the first 15-minute candle"
+       },
+       {
+        "action": "Instead of going to the one minute chart, we're going to go to the five-minute chart."
+       },
+       {
+        "action": "we have now created our fair value gap through this first candle"
+       },
+       {
+        "action": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market."
+       }
+      ],
+      "confluences": [
+       {
+        "description": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market."
+       },
+       {
+        "description": "since we broke through the high, the direction is bullish. We're going to be looking for long trades."
+       },
+       {
+        "description": "Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it."
+       },
+       {
+        "description": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick"
+       },
+       {
+        "description": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level"
+       },
+       {
+        "description": "if you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles"
+       },
+       {
+        "description": "every once in a while, you're going to have the market come down and revisit the fair value gap. That's totally fine."
+       }
+      ],
+      "targets": [
+       {
+        "description": "we are just targeting a fixed 3:1 return, meaning that on our winning trades, we make three times as much profit as we would lose on a losing trade."
+       },
+       {
+        "description": "instead of a 3 to one return we are going to target a fixed 2:1 return"
+       }
+      ],
+      "stop": {
+       "anchor": "you want to put that under the lowest area that we traded into that fair value gap. And you always want to give it one tick of breathing room."
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

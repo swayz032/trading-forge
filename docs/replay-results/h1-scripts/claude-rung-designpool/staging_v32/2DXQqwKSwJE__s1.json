@@ -1,0 +1,96 @@
+{
+  "strategies": [
+    {
+      "name": "continuation_breakout_scalp",
+      "direction": "both",
+      "entry_sequence": [
+        {
+          "action": "Continuation scalps, on the other hand, occur around breaks of clean support or resistance. When scalping here, you are trying to be the first market participant to enter upon the break."
+        },
+        {
+          "action": "Now, it's consolidating under $50, a clean psychological resistance level. You see multiple pushes into that $50. The pullbacks are shallow, and each dip finds buyers higher than the previous dip. That is attention building."
+        },
+        {
+          "action": "Now, you watch the tape. Are the buyers aggressively lifting into that offer? Are prints going off repeatedly at $50? Is that offer refreshing? Meaning, it's reappearing after partial fills, or is it getting taken?"
+        },
+        {
+          "action": "If buyers continue lifting and the offer size begins to shrink, then suddenly it's gone, you want to be the one buying at $50.01, if possible"
+        },
+        {
+          "action": "So, if we have a $10 resistance level, you want to be buying $10.01 or $10.02, and scalping out on that emotional follow-through, much like the example we gave earlier."
+        },
+        {
+          "action": "Good scalpers are the ones either buying that offer or having a stop limit buy order just above it to buy $25 and $25.02, only then to kick it out"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "To summarize what an in-play stock is, it's a stock that has a significant price range, is doing high volume, and often trading on a news catalyst or interesting technical pattern."
+        },
+        {
+          "description": "Scalping thrives on liquidity and volatility. You need both. Random tickers with average volume and no catalyst do not provide clean intraday imbalances. They provide choppiness and will inevitably lead to paper cut losses."
+        },
+        {
+          "description": "I want a very well-defined intraday support or resistance level. Ideally, one that aligns on multiple time frames. Something other participants clearly see as well. Ultimately, the tighter the level, the more defined your risk"
+        },
+        {
+          "description": "You need to be paying attention to how thick or thin the bids and offers are, and look for disparity as well as which side is being more aggressive. Is the offer being taken, or are the bids being smashed? The time and sales window reveals who is being more aggressive. If you are not watching the tape, which is the level two box of the buyers and sellers and the time and sales window, you are missing the story."
+        },
+        {
+          "description": "Strong breakouts feel urgent, and you want to see the stock burst through that level with conviction. Weak breakouts drift through a level and stall. The tape slows, sellers start hitting bids just above the resistance, and that often leads to failed breaks. A continuation scalp that works well will move quickly in your favor."
+        },
+        {
+          "description": "Often, all you need is a few high-quality opportunities where structure and order flow align."
+        }
+      ],
+      "stop": {
+        "description": "Often, your stop loss would be right below that level if it gets back below the $50.",
+        "level": null
+      },
+      "targets": [
+        {
+          "description": "potentially kicking it out 10, 20, or even 30 cents higher",
+          "level": null
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "is_options_strategy": false,
+    "instruments_referenced": ["in-play individual stocks / equities"],
+    "timeframe": "intraday scalping (seconds to minutes)",
+    "reasoning": "The speaker teaches scalping of in-play stocks using share sizes (e.g. 5,000 shares), the level-two box, and dollar/cent price levels ($10, $25, $50). No options mechanics (strikes, Greeks, expiries) are present; this is a directional equities day-scalp."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "Your success in a continuation scalp trade will depend heavily on timing and confirmation from real-time order flow.",
+    "Strong breakouts feel urgent, and you want to see the stock burst through that level with conviction.",
+    "identify a key emotional level, confirm with the tape, and execute without hesitation",
+    "There is no room for distraction, and you're interpreting real-time information and making fast, calculated decisions.",
+    "The strategy is also cognitively demanding, requiring sustained focus over the course of a long day.",
+    "The margin for error is thin, and a single large mistake can erase many small gains.",
+    "Scalping is highly execution-dependent. Minor slippage, hesitation, or routing inefficiencies can eliminate or impair your expected value.",
+    "Transaction costs matter significantly because profit targets are small relative to frequency.",
+    "The more size you do, the more slippage you face, and in turn the more your edge degrades.",
+    "you tend to need to be glued to the desk during market hours",
+    "When you get the reps, you'll develop small positive edges, which, when repeated consistently, can compound meaningfully over time.",
+    "You do not need too many trades per day. Some scalpers are hyperactive. If it works, fine, but often you can fall for the trap of not being selective enough and your win rate suffers."
+  ],
+  "coverage_notes": [
+    "PRECONDITION in-play stocks: APPEARS as confluence #1 (verbatim in-play definition).",
+    "PRECONDITION liquidity AND volatility / reject random tickers: APPEARS as confluence #2 (verbatim).",
+    "PRECONDITION tight clean intraday support/resistance level, multi-timeframe, seen by others: APPEARS as confluence #3 (verbatim).",
+    "PRECONDITION read the tape (level-2 bids/offers box + time-and-sales): APPEARS as confluence #4 (verbatim).",
+    "SETUP continuation triggers around breaks of clean support or resistance; be FIRST participant on the break: APPEARS as entry_sequence step 1 (verbatim).",
+    "CONSOLIDATION SUB-CONDITION (consolidating under level, multiple pushes, shallow pullbacks, each dip finds buyers higher): APPEARS as entry_sequence step 2 (verbatim); '$50' is that day's example.",
+    "ORDER-FLOW CONFIRMATION (watch the large offer, aggressive lifting, repeated prints, offer refreshing vs taken, size shrinking then gone): APPEARS as entry_sequence steps 3-4 (verbatim).",
+    "ENTRY (long) buy just above the resistance level on the break: APPEARS as entry_sequence steps 4-5 (verbatim); the specific prices ($50.01, $10.01/$10.02, $25/$25.02) are the speaker's live examples, not fixed rule levels.",
+    "ENTRY MECHANIC VARIANT stop-limit buy order just above the offer/level: APPEARS as entry_sequence step 6 (verbatim, 'having a stop limit buy order just above it').",
+    "TARGET scalp out on emotional follow-through, 10/20/30 cents higher: APPEARS as targets[0] (verbatim); level null because it is a relative cents move, and the '5,000 shares / $25.10-$25.12 / $500' figures are a worked example stripped per the numbers-are-examples rule.",
+    "STOP right below the level, exit if price gets back below it: APPEARS as stop (verbatim); '$50' is the example level, so the level field is null.",
+    "FILTER strong urgent breakout that bursts through with conviction and moves quickly; skip weak breakouts that drift/stall (tape slows, sellers hit bids above resistance, failed breaks): APPEARS as confluence #5 (verbatim).",
+    "VARIANT SUB-MECHANIC short mirror (applies symmetrically to breaks of clean support): APPEARS within entry_sequence step 1, which states the setup occurs at 'breaks of clean support or resistance' — the short side is the mirror of the long-at-resistance walkthrough; the speaker gave the detailed walk-through only for the long/resistance case.",
+    "SELECTION FILTER take only a few high-quality opportunities where structure and order flow align; do not overtrade: APPEARS as confluence #6 (verbatim executable core); the coaching wrapper ('You do not need too many trades per day...') is captured in coaching_notes."
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "video": "CLDEIsNpVRc",
+  "strategies": [
+    {
+      "name": "htf_irl_fvg_1m_inversion",
+      "element_inventory": [
+        "PRECONDITION (session window): only trade 9:30 to 11:30 a.m. New York time; set chart timezone to New York. Quote: 'we always going to be trading from 9:30 till 11:30 a.m. New York time.'",
+        "PRECONDITION (HTF IRL required): the setup requires a higher-time-frame IRL, which is a fair value gap (5-minute, or 15-minute if no 5m). Quote: 'the first thing we need for the strategy is higher time frame IRL. IRL is internal range liquidity which is also a fair value gap.'",
+        "STEP 1 / PRECONDITION (identify draw on liquidity): before the setup applies, identify the draw on liquidity from these level types: Asia high/low, London high/low, previous day high/low, equal highs/equal lows, or a 1h/4h significant swing high/low. Quote: 'the very first step is identify your draw on liquidity.'",
+        "DRAW-SELECTION rule (the side taken first sets the opposite side as the draw): if a high is taken/swept, the draw is the corresponding low, and vice versa. Enumerated: Asia high taken -> draw is Asia low; previous day high taken -> draw is previous day low; London high taken -> draw is London low; equal highs taken -> draw is equal lows (and each mirrored). Quote: 'if we have taken out the Asia high ... now you know that the draw on liquidity is going to be the Asia low.'",
+        "ENTRY STEP 2 (form the HTF FVG toward the draw): after 9:30, wait for a 5-minute fair value gap to form toward the draw on liquidity; check 5m first, and if there is no 5m FVG, look at the 15-minute for one. Quote: 'after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity ... If there's no 5m minute, you can look at 15 minute.'",
+        "ENTRY STEP 3 (tap the HTF IRL): wait for price to tap into the higher-time-frame IRL (the 5m/15m FVG). Quote: 'wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap.'",
+        "ENTRY STEP 4 (drop to 1m for the entry model): after the tap, drop to the 1-minute timeframe for the lower-time-frame confirmation / inversion entry model. Quote: 'drop down to one minute time frame. Now here is when our lower time frame confirmation or entry model comes in ... This is the most important part of the strategy.'",
+        "ENTRY STEP 5 / PRECONDITION (1m liquidity sweep): on the 1-minute, price must have swept some liquidity before tapping into the 5m/15m FVG (e.g. taken a 1-minute high). Quote: 'make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap.'",
+        "ENTRY STEP 6 (identify the 1m FVGs in the manipulation leg): on the 1-minute manipulation leg, identify ALL the fair value gaps; if there is only one, mark that one out. Quote: 'this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out.'",
+        "ENTRY TRIGGER (1m inversion / IFVG): wait for price to close below (short case) the 1-minute bullish FVG; a bullish FVG that price disrespects and closes below is inversed (IFVG) and becomes resistance. Enter a short position right away once price closes below the IFVG. Quote: 'once price closes below this IFVG you want to take a short position right away.'",
+        "MULTI-FVG RULE (wait for ALL to invert): if there are two fair value gaps in the 1-minute manipulation leg, wait for BOTH to get inversed before entering; if three, wait for all three to invert; then take the entry. Quote: 'if there are two fair value gaps in this manipulation leg on the one minute ... wait for both of them to get inversed ... if there are three, you're going to wait for all of those three fair value gaps to get inversed.'",
+        "DISPLACEMENT FILTER: at the moment of inverting the gap there must be displacement, not choppy price action; a choppy inversion is a low-probability inversion and must be skipped. Quote: 'when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action ... That is a low probability inversion and we don't want to take that.'",
+        "STOP: place the stop above the high (short case) / below the low or below the bodies (long case) of the inversion. Quote: 'put your stop above the high' and 'put your stop below these bodies.'",
+        "TARGET (two options): target the draw on liquidity, OR go for a fixed 1:2 risk-to-reward. Quote: 'you can target the drawn liquidity or you can go for 1:2 fixed risk-to-reward ratio.'",
+        "RISK MANAGEMENT (break-even trigger): move the trade to break even as soon as the closest liquidity after entry is taken out (the closest low after a short entry). Quote: 'you want to go break even ... as soon as the closest liquidity after your entry is taken out.'",
+        "VARIANT / DIRECTION (both, mirrored): the model is symmetric — the described short case (bullish FVG inverted below) mirrors to a long case when the London low / previous day low / equal lows / swing low is taken, waiting for the 5m FVG toward the upside draw, then 1m inversion ABOVE the gap for a long. Quote: 'if you invert the chart over, we have taken out the London low ... you wait for one minute inversion. Okay, above this fair value gap.'"
+      ],
+      "coaching_notes": [
+        "'you want to trade with the volume. You don't want to trade a choppy price action because you'll get wrecked.'",
+        "'drawn liquidity is not extremely important. As long as you're following this model where you get a tap into the 5 minute or 15 minute fair value gap and you get inversion off of it, you're going to get at least a a decent one to two move.'",
+        "'the risk management is very important for this strategy.'",
+        "'this is going to save you a lot of times. A lot of times.'",
+        "'I've seen that I've I've gotten more success when I go for a fixed risk-to-reward ratio.'",
+        "'You will not be confused after watching this video. I promise you that.'"
+      ]
+    }
+  ]
+}

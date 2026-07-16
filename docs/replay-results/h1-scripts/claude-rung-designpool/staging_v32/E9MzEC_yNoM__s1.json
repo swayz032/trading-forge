@@ -1,0 +1,76 @@
+{
+  "strategies": [
+    {
+      "name": "premarket_range_liquidity_sweep_reversal",
+      "entry_sequence": [
+        {
+          "action": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures."
+        },
+        {
+          "action": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action."
+        },
+        {
+          "action": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps."
+        },
+        {
+          "action": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep."
+        },
+        {
+          "action": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep."
+        },
+        {
+          "action": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way"
+        },
+        {
+          "action": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level."
+        },
+        {
+          "action": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long."
+        }
+      ],
+      "confluences": [
+        {
+          "description": "reclaims the level with a lot of volume"
+        },
+        {
+          "description": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator."
+        }
+      ],
+      "stop": "The stop is always going to go on the opposite side of the entry candle. And every single time, our risk is well defined. Your stop loss has to be below your entry candle.",
+      "targets": [
+        "ideally when I'm trading, I'm typically looking for bare minimum of 1x of my original risk. However, ideally what I'm looking for is a 1.5x to a 2x my original risk."
+      ],
+      "exit_management": "as the trade continues to move in my favor, I'm going to be looking to trail my stop-loss up at least to break even, ideally in profits, and to just let that sucker run. and I'll continue to scale out as it moves in my favor, continue to move my stop loss up because at the end of the day, whenever we enter a position, we never know how much the trade can move in our favor. So, as the trade continues to move in your favor, move your stop-loss up and let that thing run until you are either stopped out or satisfied with your profits."
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "futures",
+    "instruments": [
+      "S&P 500 futures (ES)",
+      "NASDAQ futures (NQ)",
+      "Dow futures (YM)"
+    ],
+    "timeframe": "five-minute (scale down to a 2-minute or 1-minute to time the entry)",
+    "is_options_mechanic": false
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "So, if you enter the trade, you should be accepting the risk or there's no reason for you to even be in the trade to begin with. So, accept the risk before you get in. That way, the trade is stress free.",
+    "you want to avoid overall fake outs by staying patient",
+    "Now, one thing to keep in mind, this is not going to present itself every single day. Just like any other trading strategy, it's not always going to be there."
+  ],
+  "coverage_notes": [
+    "Precondition (5-minute index futures): APPEARS - entry_sequence step 1 (five-minute time frame on S&P 500 / NASDAQ / Dow futures).",
+    "Precondition (define pre-market range 3:00am ET to 9:30am NY open, mark pre-market high/low): APPEARS - entry_sequence steps 2 and 3.",
+    "Setup trigger (wait for price to trade into the pre-market high or low): APPEARS - entry_sequence step 4.",
+    "Entry definition (liquidity sweep = brief fakeout beyond the level that fails and reclaims): APPEARS - entry_sequence step 5, verbatim.",
+    "Direction (reversal, fade the failed break - sweep above the high = short, sweep below the low = long): APPEARS - entry_sequence step 8 ('You are going to look to get long' after a sweep below), with the fade rationale in step 6; the speaker states the sweep-below-then-long case verbatim and the vice-versa above-then-fail case in the step 5 definition.",
+    "Mechanic/rationale (both resting long stops and new breakout shorts get stopped out on the reclaim, fueling an aggressive move the opposite way): APPEARS - entry_sequence step 6, verbatim.",
+    "Entry execution (enter on confirmation AFTER the level is reclaimed): APPEARS - entry_sequence steps 7 and 8.",
+    "Confirmation (reclaim accompanied by high/elevated volume): APPEARS - confluences[0] ('reclaims the level with a lot of volume').",
+    "Confirmation tool (order flow / Bookmap 'stops indicator'): APPEARS - confluences[1], verbatim.",
+    "Stop (opposite side of / below the entry reclaim candle): APPEARS - stop field, verbatim.",
+    "Target (bare-minimum 1x risk, ideal 1.5x-2x risk): APPEARS - targets[0], verbatim; the $1,500 / 2 ES contracts / $2K-$3K figures are that day's live example and were stripped per the numbers-are-not-rules rule.",
+    "Exit/management (trail stop to break-even then profit, scale/trim out, let it run until stopped out or satisfied): APPEARS - exit_management field, verbatim."
+  ]
+}

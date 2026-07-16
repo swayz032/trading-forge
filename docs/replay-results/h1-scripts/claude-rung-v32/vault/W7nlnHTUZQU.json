@@ -1,0 +1,61 @@
+{
+ "phase_a": {
+  "unstable": false
+ },
+ "phase_b": [
+  {
+   "extraction": {
+    "strategies": [
+     {
+      "name": "overnight_range_break_retest",
+      "entry_sequence": [
+       {
+        "action": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action"
+       },
+       {
+        "action": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range"
+       },
+       {
+        "action": "if we can actually get that break we want to see it close below or above with strength or weakness. So if for example if we're breaking below well then we want to see a break below with weakness. If we see a break above well then we want to look for price to break above with strength"
+       },
+       {
+        "action": "we are waiting for candle closes to actually confirm... price wicked right back down and reclaimed on the opposite side. So there was no entry"
+       },
+       {
+        "action": "LONG: if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume. If we can get that, we are then going to look for a long entry"
+       },
+       {
+        "action": "SHORT: If price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this area as resistance with bearish price action, whether it be bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume. Well, if we get that, we are going to look for a short entry to take price lower"
+       }
+      ],
+      "confluences": [
+       {
+        "description": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)"
+       },
+       {
+        "description": "an elevation in the volume"
+       },
+       {
+        "description": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky because you don't need to trade every day"
+       },
+       {
+        "description": "ENTRY-MECHANIC VARIANT: I'm not a big fan of trading the breakouts. If you wanted to, you could have and you could have caught a nice little move up, but I'm a big fan of that retest"
+       }
+      ],
+      "targets": [
+       {
+        "description": "once you feel comfortable with your first trim, take it, put your stop-loss at break even"
+       },
+       {
+        "description": "let your winners run until one, you're satisfied with the trade or two, you're stopped out in profits"
+       }
+      ],
+      "stop": {
+       "anchor": "Your stop loss is always on the opposite side of the breakout point -- our stop is going to be if price breaks back down below this previous high (long); our stop is going to be if price breaks above this level (short)"
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

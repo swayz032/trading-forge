@@ -1,0 +1,13 @@
+{
+ "custom_id": "E9MzEC_yNoM__s1",
+ "grade": {
+  "strategy_name": "premarket_range_liquidity_sweep_reversal",
+  "silenced": [],
+  "content_clean": true,
+  "coaching_dropped": [],
+  "inventory_overreach": [],
+  "notes": "All transcript-taught Tier-A elements for the liquidity-sweep reversal survive in the extraction; the mirrored short case is adequately preserved via the bidirectional sweep definition plus generic post-sweep confirmation entry."
+ },
+ "tokens": 7784,
+ "cached": 3840
+}

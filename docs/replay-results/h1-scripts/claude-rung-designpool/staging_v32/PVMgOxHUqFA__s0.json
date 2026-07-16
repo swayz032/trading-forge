@@ -1,0 +1,121 @@
+{
+  "strategies": [
+    {
+      "name": "abc_trend_continuation_reclaim",
+      "description": "A trend-continuation reclaim: within a bullish higher-timeframe trend, track a lower-timeframe correction (an ABC), and buy the break back above the most recent lower high once price stops making lower lows.",
+      "direction": "long",
+      "preconditions": [
+        {
+          "type": "htf_bias",
+          "quote": "we already knew the 4hour time frame was bullish"
+        },
+        {
+          "type": "htf_confirm",
+          "quote": "you know the 4 hour and the one hour is bullish"
+        },
+        {
+          "type": "context_gate",
+          "quote": "all that downtrending on the 15 minute time frame was only the four 4 hour making a higher low to push up more"
+        }
+      ],
+      "entry_sequence": [
+        {
+          "action": "You just have to start tracking your highs and lows on that 15-minut time frame."
+        },
+        {
+          "action": "while price is still making lower highs and lower lows, do not buy: this means price is still bearish because it's still making lows. It's breaking levels of support."
+        },
+        {
+          "action": "wait for the end of the correction: Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign."
+        },
+        {
+          "action": "confirmation to enter: the moment price comes above this level, this lets us know that price is bullish"
+        },
+        {
+          "action": "once you find this... breaking above that level... your entry goes here"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "Literally a ABC setup."
+        },
+        {
+          "description": "A is a low, B is a lower high identified by rejections (price comes up, shoots down in a different direction), and C is a low that is higher than the previous one: 'Price made a low, but it's higher than the previous one. Same setup. Literally a ABC setup.'"
+        },
+        {
+          "description": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'"
+        }
+      ],
+      "stop": {
+        "level": null,
+        "quote": "your stop loss goes either here or here whichever one you want to use",
+        "description": "putting your stop loss under that level where you don't want to see price get broken; explicit operator choice of either the higher-low/reclaim level or the prior low ('either here or here whichever one you want to use')"
+      },
+      "targets": [
+        {
+          "level": null,
+          "type": "base",
+          "quote": "you'll target that 1 hour high",
+          "description": "scale back out to the 1 hour time frame and target the 1 hour high; framed as 'that's a one to 10 setup'"
+        },
+        {
+          "level": null,
+          "type": "extended_trend_follow",
+          "quote": "if you would have scaled out more... you would probably be around a 1 to 32",
+          "description": "if following the trend and the 4 hour breaks its high, keep scaling out for a larger runner: '4 hour has broken the high and you would be scaling out now. You would probably be around a 1 to 32.'"
+        }
+      ],
+      "variants": [
+        {
+          "type": "entry_timeframe",
+          "quote": "that 15minut time frame or 5 minute time frame, whichever one's the clearest to you",
+          "description": "use the 15-minute OR the 5-minute for the entry, whichever shows the cleanest highs/lows"
+        },
+        {
+          "type": "lower_timeframe_scalp",
+          "quote": "I seen price correct. Have some rejections here. So I was like, \"Okay, let me take this on that five minute time frame.\" ... I seen price come here. Once it came here, made a lower high, seen that lower high, boom, and got my price entry",
+          "description": "same reclaim logic applied intraday on the 5-minute / 1-minute: spot a correction showing rejections, wait for a lower high, enter on the reclaim for a small scalp",
+          "exit_type": "gestural",
+          "exit_quote": "This was nothing crazy. Literally nothing crazy. I took it back up to here.",
+          "exit_note": "Scalp exit given only gesturally ('I took it back up to here') with no stated stop/target level; level fields null, speaker's exit words preserved."
+        }
+      ],
+      "session_gate": {
+        "quote": "gold moves during London session and New York session because it's USD",
+        "description": "trade gold during the London and New York sessions (USD-driven); expect larger moves in New York"
+      }
+    }
+  ],
+  "instrument_classification": {
+    "instrument": "gold (XAU / USD)",
+    "asset_class": "commodity",
+    "is_options_mechanic": false,
+    "tradeable": true,
+    "notes": "Speaker breaks down a gold setup, referencing the London and New York sessions and gold moving because 'it's USD'. Pure price-structure / timeframe strategy; no options mechanics (no strikes, Greeks, or expiries)."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "I trade the trend like relentlessly. I don't trade anything if it doesn't look like it's the trend. If I can't capitalize off of it for the next few days, I try not to place that trade.",
+    "It's all because I make trades based on what the trend is giving me. And when the trend has momentum, it's going to push through as far as you need it to push through.",
+    "you will most likely see it move more in New York session but don't get um don't get discouraged when something happens in London session because that price um gold moves during that price range too as well that session as well.",
+    "even though those rejections was looking like it was going to do something, we still didn't take a buy because why? It didn't give us a confirmation that price was going to be bullish.",
+    "finding the correction and when it's over is fairly easy. You just have to start tracking your highs and lows on that 15-minut time frame."
+  ],
+  "coverage_notes": [
+    "PRECONDITION (HTF bias, 4h bullish): APPEARS in preconditions[0] verbatim ('we already knew the 4hour time frame was bullish').",
+    "PRECONDITION (HTF confirm, 1h bullish): APPEARS in preconditions[1] verbatim ('you know the 4 hour and the one hour is bullish').",
+    "PRECONDITION (context gate, correction-within-uptrend): APPEARS in preconditions[2] verbatim ('all that downtrending on the 15 minute time frame was only the four 4 hour making a higher low to push up more').",
+    "STRUCTURE step (scale to 15m, track highs/lows): APPEARS in entry_sequence[0] verbatim ('start tracking your highs and lows on that 15-minut time frame'); also echoed in coaching_notes.",
+    "STRUCTURE rule (LH+LL still bearish, do NOT buy): APPEARS in entry_sequence[1] verbatim ('price is still bearish because it's still making lows. It's breaking levels of support').",
+    "END-OF-CORRECTION signal 1 (stops making lower lows): APPEARS in entry_sequence[2] verbatim ('Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign').",
+    "END-OF-CORRECTION signal 2 / ENTRY CONFIRMATION (break above recent lower high): APPEARS in entry_sequence[3] verbatim ('the moment price comes above this level, this lets us know that price is bullish').",
+    "ABC pattern definition (A low, B lower high via rejections, C higher low; trigger = break above B): APPEARS in confluences[0] and confluences[1] verbatim ('Literally a ABC setup'; 'Price made a low, but it's higher than the previous one').",
+    "ENTRY (buy on break above lower-high level): APPEARS in entry_sequence[4] verbatim ('your entry goes here').",
+    "STOP LOSS placement (under level not to be broken; operator choice of higher-low or prior low): APPEARS in stop verbatim ('your stop loss goes either here or here whichever one you want to use'; 'under that level where you don't want to see price get broken').",
+    "TARGET (base, 1h high, ~1:10): APPEARS in targets[0] verbatim ('you'll target that 1 hour high'; 'that's a one to 10 setup').",
+    "TARGET (extended trend-follow, ~1:32 on 4h high break): APPEARS in targets[1] verbatim ('if you would have scaled out more... you would probably be around a 1 to 32').",
+    "VARIANT (entry timeframe, 15m or 5m): APPEARS in variants[0] verbatim ('that 15minut time frame or 5 minute time frame, whichever one's the clearest to you').",
+    "SESSION gate (gold during London + New York, USD-driven): APPEARS in session_gate verbatim ('gold moves during London session and New York session because it's USD').",
+    "VARIANT SUB-MECHANIC (lower-timeframe 5m/1m scalp): APPEARS in variants[1] verbatim, with gestural exit recorded (levels null, exit words 'I took it back up to here' preserved)."
+  ]
+}
