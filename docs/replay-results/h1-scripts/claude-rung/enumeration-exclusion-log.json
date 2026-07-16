@@ -1,0 +1,13 @@
+{
+  "artifact": "h1-certified-enumeration-exclusion-log",
+  "source": "FROZEN-ENUMERATION-16.md 'Mention-not-object' + per-strategy coverage flags; certified enumeration (tag h1-certified-reader-v3.2) authority",
+  "note": "Mentions the certified enumeration ruled UNPROMOTED (no runnable entry) and EXCLUDED. A Phase-B variant matching one of these = enumeration-consistency violation (mention re-promoted to runnable variant) -> fail-closed not-clean unless blind adjudication promotes from source.",
+  "excluded_mentions": {
+    "IyFioFkRgWo": [{"key": "breakdown", "desc": "breakdown 'big move' once support lost", "direction": "short", "why_mention": "retrospective 'you would have entered there', no runnable entry"}],
+    "-igpOZs8LsM": [{"key": "order block", "desc": "order block (prior video)", "direction": null, "why_mention": "deferred/named model, no runnable entry taught here"},
+                    {"key": "breaker", "desc": "breaker blocks (next video)", "direction": null, "why_mention": "deferred to next video"},
+                    {"key": "flip zone", "desc": "flip zone", "direction": null, "why_mention": "named-only, never explained"}],
+    "W7nlnHTUZQU": [{"key": "breakout", "desc": "breakout-without-retest entry", "direction": null, "why_mention": "dispreferred alternative, speaker prefers retest"}],
+    "2DXQqwKSwJE": [{"key": "swing", "desc": "swing trading", "direction": null, "why_mention": "risk-contrast mention, never taught"}]
+  }
+}
