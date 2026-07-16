@@ -45,9 +45,9 @@ async function collectBacktestMetrics(): Promise<void> {
   const since = new Date(Date.now() - 60 * 60 * 1000); // Last hour
 
   const [stats] = await db.select({
-    completed: sql<number>`count(*) filter (where status = 'completed' and created_at >= ${since})::int`,
-    failed: sql<number>`count(*) filter (where status = 'failed' and created_at >= ${since})::int`,
-    avgExecutionMs: sql<number>`coalesce(avg(execution_time_ms) filter (where status = 'completed' and created_at >= ${since}), 0)::int`,
+    completed: sql<number>`count(*) filter (where status = 'completed' and created_at >= ${since.toISOString()})::int`,
+    failed: sql<number>`count(*) filter (where status = 'failed' and created_at >= ${since.toISOString()})::int`,
+    avgExecutionMs: sql<number>`coalesce(avg(execution_time_ms) filter (where status = 'completed' and created_at >= ${since.toISOString()}), 0)::int`,
     totalPending: sql<number>`count(*) filter (where status = 'pending')::int`,
   }).from(backtests);
 
@@ -104,9 +104,9 @@ async function collectScoutMetrics(): Promise<void> {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000); // Last 24h
 
   const [stats] = await db.select({
-    scouted: sql<number>`count(*) filter (where status = 'scouted' and created_at >= ${since})::int`,
-    tested: sql<number>`count(*) filter (where status = 'tested' and created_at >= ${since})::int`,
-    promoted: sql<number>`count(*) filter (where status = 'promoted' and created_at >= ${since})::int`,
+    scouted: sql<number>`count(*) filter (where status = 'scouted' and created_at >= ${since.toISOString()})::int`,
+    tested: sql<number>`count(*) filter (where status = 'tested' and created_at >= ${since.toISOString()})::int`,
+    promoted: sql<number>`count(*) filter (where status = 'promoted' and created_at >= ${since.toISOString()})::int`,
   }).from(systemJournal);
 
   const scoutedCount = stats?.scouted ?? 0;
