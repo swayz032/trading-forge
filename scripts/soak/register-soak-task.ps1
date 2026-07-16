@@ -2,10 +2,13 @@
 # The script FILE may live in an isolated worktree (frozen) while WorkingDirectory points at the
 # MAIN checkout so .env + data/soak resolve to the live tree. Re-run with new -ScriptPath after landing.
 param(
-  [string]$ScriptPath = "C:\Users\tonio\Projects\trading-forge\wt-soak\scripts\soak\soak-watcher.cjs",
+  [string]$ScriptPath = "C:\Users\tonio\Projects\trading-forge\trading-forge\scripts\soak\soak-watcher.cjs",
   [string]$WorkingDir = "C:\Users\tonio\Projects\trading-forge\trading-forge",
   [string]$TaskName   = "TF-Tower-Soak",
-  [string]$At         = "3:00AM"
+  # 3:20 not 3:00 — Windows Automatic Maintenance + OneDrive/Pca/Device/Monitoring tasks ALL fire at
+  # 03:00:00 and stall the backend event loop, timing out the soak's health probe (backend_unreachable
+  # every scheduled night). 3:20 clears the pileup; still finishes inside the operator's 3-9AM window.
+  [string]$At         = "3:20AM"
 )
 $ErrorActionPreference = "Stop"
 $Node = (Get-Command node).Source

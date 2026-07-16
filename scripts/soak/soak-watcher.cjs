@@ -20,13 +20,19 @@ const dotenv = require("dotenv");
 })();
 
 const postgres = require("postgres");
-const { takeSample } = require("./soak-sensors.cjs");
+const { takeSample, readHealthResilient } = require("./soak-sensors.cjs");
 const { decide } = require("./soak-guard.cjs");
 const V = require("./soak-verdict.cjs");
 
 const CFG = {
-  healthUrl: process.env.SOAK_HEALTH_URL || "http://localhost:4000/api/health",
+  // 127.0.0.1 not localhost: undici resolves "localhost" dual-stack (~2.3s overhead measured) and can
+  // race the 8s timeout under 3AM maintenance load; the loopback IPv4 is deterministic + fast.
+  healthUrl: process.env.SOAK_HEALTH_URL || "http://127.0.0.1:4000/api/health",
   port: Number(process.env.SOAK_BACKEND_PORT || 4000),
+  // Startup/abort health-probe patience — rides through the 03:00 Windows-maintenance event-loop stall.
+  healthAttempts: Number(process.env.SOAK_HEALTH_ATTEMPTS || 6),
+  healthGapMs: Number(process.env.SOAK_HEALTH_GAP_SEC || 15) * 1000,
+  healthTimeoutMs: Number(process.env.SOAK_HEALTH_TIMEOUT_MS || 10000),
   gpuBusyPct: Number(process.env.SOAK_GPU_BUSY_PCT || 25),
   windowMin: Number(process.env.SOAK_WINDOW_MIN || 360),
   sampleSec: Number(process.env.SOAK_SAMPLE_SEC || 30),
@@ -87,12 +93,17 @@ async function main() {
   const idx = await nightIndex();
 
   const first = await sample();
+  // A single-shot startup probe times out under the 03:00 maintenance pileup even though the backend
+  // is up → every scheduled night SKIPPED backend_unreachable. Retry patiently before condemning it.
+  if (first.health.reachable === false) {
+    first.health = await readHealthResilient({ healthUrl: CFG.healthUrl, attempts: CFG.healthAttempts, gapMs: CFG.healthGapMs, timeoutMs: CFG.healthTimeoutMs });
+  }
   const sw0 = await readSwitch();
   const g0 = CFG.forceRun ? { action: "RUN", reason: "forced" } : decide({ sample: first, sw: sw0, gpuBusyPct: CFG.gpuBusyPct, nowMs: Date.now(), phase: "startup" });
   if (g0.action !== "RUN") {
-    appendJsonl(jsonl, { type: "skip", reason: g0.reason, tMs: startMs, nightIndex: idx });
-    await writeAudit({ outcome: "SKIPPED", verdict: "SKIPPED", reason: g0.reason, nightIndex: idx, thresholds: V.THRESHOLDS_V1.version, buildSha: CFG.buildSha });
-    await discord(`⚪ Tower Soak SKIPPED — ${g0.reason} (night ${idx})`);
+    appendJsonl(jsonl, { type: "skip", reason: g0.reason, tMs: startMs, nightIndex: idx, health: first.health });
+    await writeAudit({ outcome: "SKIPPED", verdict: "SKIPPED", reason: g0.reason, healthErr: first.health?.errCode ?? null, healthAttempts: first.health?.attempts ?? null, nightIndex: idx, thresholds: V.THRESHOLDS_V1.version, buildSha: CFG.buildSha });
+    await discord(`⚪ Tower Soak SKIPPED — ${g0.reason}${g0.reason === "backend_unreachable" && first.health?.errCode ? ` (${first.health.errCode})` : ""} (night ${idx})`);
     await sql.end(); return;
   }
   appendJsonl(jsonl, { type: "start", tMs: startMs, nightIndex: idx, sample: first });
@@ -110,7 +121,15 @@ async function main() {
     if (!CFG.forceRun && (CFG.dryRun || Date.now() - lastRecheck >= CFG.recheckSec * 1000)) {
       lastRecheck = Date.now();
       const g = decide({ sample: s, sw: await readSwitch(), gpuBusyPct: CFG.gpuBusyPct, nowMs: Date.now(), phase: "midrun" });
-      if (g.action === "ABORT") { aborted = g.reason; break; }
+      if (g.action === "ABORT") {
+        // A transient maintenance-spike health miss must not abort a running soak — confirm the backend
+        // is really gone before believing it. Real contention aborts (backtests/python/gpu) stand as-is.
+        if (g.reason === "backend_unreachable") {
+          const rh = await readHealthResilient({ healthUrl: CFG.healthUrl, attempts: CFG.healthAttempts, gapMs: CFG.healthGapMs, timeoutMs: CFG.healthTimeoutMs });
+          if (rh.reachable) continue; // false alarm — backend answered on retry
+        }
+        aborted = g.reason; break;
+      }
     }
   }
 
