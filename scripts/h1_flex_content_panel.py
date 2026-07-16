@@ -2,7 +2,9 @@
 """Run the content-preservation panel via FLEX-sync (batch price, synchronous) on gpt-5.4.
 Reads the prebuilt batch JSONL bodies, runs each with service_tier=flex, retries 429 w/ backoff.
 reasoning_effort=HIGH pinned (already in bodies). Concurrent. Records $ + tokens; caps at $1.00."""
-import json, os, time, threading
+import json, os, time, threading, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from h1_metered_cap_guard import MeteredCapGuard, CapBreach
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from openai import OpenAI
 ROOT="."
@@ -12,6 +14,8 @@ IN=os.path.join(ROOT,"docs","replay-results","h1-scripts","claude-rung-designpoo
 OUTD=os.path.join(ROOT,"docs","replay-results","h1-scripts","claude-rung-designpool","flex_grades")
 os.makedirs(OUTD,exist_ok=True)
 reqs=[json.loads(l) for l in open(IN,encoding="utf-8")]
+TICKET_USD=float(os.environ.get("TF_PANEL_TICKET_USD","0.25"))
+capg=MeteredCapGuard(TICKET_USD)
 lock=threading.Lock(); tot_tok=[0]; tot_cached=[0]; done=[0]
 
 def run(req):
@@ -22,6 +26,8 @@ def run(req):
     delay=8.0
     for attempt in range(6):
         try:
+            est=(len(json.dumps(body))//4)+3000
+            with lock: capg.guard_or_raise(est)
             r=c.chat.completions.create(**body)
             grade=json.loads(r.choices[0].message.content)
             json.dump({"custom_id":cid,"grade":grade,
@@ -29,7 +35,7 @@ def run(req):
                        "cached":(getattr(r.usage,'prompt_tokens_details',None) or {}) and getattr(r.usage.prompt_tokens_details,'cached_tokens',0)},
                       open(outp,"w",encoding="utf-8"),ensure_ascii=False,indent=1)
             with lock:
-                tot_tok[0]+=r.usage.total_tokens; done[0]+=1
+                tot_tok[0]+=r.usage.total_tokens; done[0]+=1; capg.record(r.usage.total_tokens)
                 cached=getattr(getattr(r.usage,'prompt_tokens_details',None),'cached_tokens',0) or 0
                 tot_cached[0]+=cached
                 print(f"  [{done[0]}/22] {cid}: clean={grade.get('content_clean')} silenced={len(grade.get('silenced',[]))} ({r.usage.total_tokens}tok)",flush=True)
