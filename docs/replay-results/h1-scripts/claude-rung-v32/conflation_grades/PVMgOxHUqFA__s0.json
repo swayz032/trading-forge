@@ -1,0 +1,12 @@
+{
+ "custom_id": "PVMgOxHUqFA__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "abc_trend_continuation_reclaim",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one coherent long trend-continuation setup, not two opposite trades fused together: it requires a bullish higher-timeframe context (\"we already knew the 4hour time frame was bullish,\" \"the 4 hour and the one hour is bullish\"), then a lower-timeframe bearish correction/ABC, then waiting until price \"stops making lower lows\" and finally buying when price breaks back above the most recent lower high (\"the moment price comes above this level, this lets us know that price is bullish\"). The stop under the invalidation level and the targets at the 1-hour high with an optional extended trend runner are compatible trade-management choices, and the listed variants (15m or 5m entry timeframe, separate scalp variant) are alternatives rather than co-required opposite-direction conditions. A single trade instance can satisfy all core conditions at once, so this is a context-consistent mirror/variant structure, not a contradictory fusion.",
+  "fused_pair": null
+ },
+ "tokens": 4908
+}

@@ -1,0 +1,12 @@
+{
+ "custom_id": "-igpOZs8LsM__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "fvg_trend_continuation_entry",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one mirror-image FVG trend-continuation setup whose side is selected by context, not two co-required opposite trades: the core conditions stay the same across instances—identify a three-candle fair value gap/imbalance, require trend alignment, require that the FVG caused a break of structure, note liquidity clearance and proximity to an order block, then wait for price to tap back into the FVG and continue in the trend direction. Its bullish and bearish lines are explicit inversions of the same logic (\"this is a bullish imbalance\" / \"this is an example of a bearish imbalance just same thing with... the bullish imbalance\"), and the stop rules are side-conditional alternatives (below for buys, above for sells), not simultaneous requirements. A single trade instance can coherently satisfy all conditions by taking either the bullish version or the bearish version depending on the chart.",
+  "fused_pair": null
+ },
+ "tokens": 3853
+}

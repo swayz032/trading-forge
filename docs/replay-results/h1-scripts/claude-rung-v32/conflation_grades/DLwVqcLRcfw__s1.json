@@ -1,0 +1,12 @@
+{
+ "custom_id": "DLwVqcLRcfw__s1",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_20sma_rejection_short",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent short setup, not two opposite trades fused together: its co-required conditions all point in the same direction—on the 2-minute chart using VWAP and the 20 SMA, price must first 'lose VWAP and lose the 20 SMA collectively and then close below VWAP,' then 'a following candle... starts to build below,' and only then does the trader 'short the rejection of VWAP and the 20 SMA.' The confluence also consistently suppresses shorts unless that bearish regime flip has occurred ('as long as we don't close below VWAP we should still not be trying to short the market here'). There is no simultaneous requirement to also buy, no contradictory target logic, and no welded long setup inside the same trade instance.",
+  "fused_pair": null
+ },
+ "tokens": 3819
+}

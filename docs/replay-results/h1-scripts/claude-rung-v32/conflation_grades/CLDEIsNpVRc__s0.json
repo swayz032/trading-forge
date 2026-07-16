@@ -1,0 +1,12 @@
+{
+ "custom_id": "CLDEIsNpVRc__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "htf_irl_fvg_1m_inversion",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one coherent mirrored setup, not two co-required opposite trades: for any single instance, the trader first identifies which liquidity was taken (e.g. London high implies draw to London low, or vice versa), then waits after 9:30 for a 5m/15m fair value gap toward that draw, a tap into the higher-timeframe IRL, a 1m liquidity sweep, and a 1m inversion before entering. The main entry_sequence gives the short expression (close below the 1m bullish FVG -> short), while the opposite-direction logic appears in the explicitly labeled \"variant\" as \"if you invert the chart over,\" which is a context-selected alternative, not a simultaneous requirement. Likewise, the target is phrased as a choice (draw on liquidity or 1:2 RR), not a contradiction that must be hit at once.",
+  "fused_pair": null
+ },
+ "tokens": 5133
+}

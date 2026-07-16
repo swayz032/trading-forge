@@ -1,0 +1,12 @@
+{
+ "custom_id": "kFyD3H6I1I8__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "three_step_engulfing_orb_scalp",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one mirrored three-step scalping model whose direction is chosen by context in step one, not two opposite trades that must be executed together: the 7:00/8:00 candles 'give me my session direction,' with 'if I want to buy' requiring a bullish engulfing and 'if I want to sell' requiring a bearish engulfing. The later long/short elements follow that same side-selected skeleton—buy side uses a break/close above the 9:30-9:45 range, retrace to demand, and stop below the range; sell side uses a break below the range, retrace to supply or bottom-of-range retest, and stop above the recent wick. Those are alternative mirrored expressions of the same setup, not co-required conditions a single trade must satisfy simultaneously.",
+  "fused_pair": null
+ },
+ "tokens": 5647
+}

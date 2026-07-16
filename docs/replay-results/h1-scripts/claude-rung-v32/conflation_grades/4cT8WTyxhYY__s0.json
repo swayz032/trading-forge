@@ -1,0 +1,12 @@
+{
+ "custom_id": "4cT8WTyxhYY__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "liquidity_grab_reversal",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one mirrored reversal setup, not two welded opposite trades: the core co-required logic is a liquidity grab that breaks support/resistance, fakes out, and reverses, with the side chosen by context—explicitly, 'it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade.' The stop and target rules are conditional mirrors ('below the liquidity grab' and 'recent high' for longs; 'above the liquidity grab' and 'recent low' for shorts), so a single trade instance would use only the long set or the short set, not both at once. The higher-timeframe top/bottom-of-range filter and divergence confluence also fit the same reversal skeleton rather than creating contradictory simultaneous requirements.",
+  "fused_pair": null
+ },
+ "tokens": 4080
+}

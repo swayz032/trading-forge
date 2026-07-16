@@ -1,0 +1,12 @@
+{
+ "custom_id": "_LS6qcSlDCs__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_reclaim_pullback_dip_buy",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent long setup, not two opposite trades fused together: the stock opens weak below VWAP, then breaks back above VWAP with volume and consecutive green candles, and the trader buys the pullback to VWAP expecting it to hold as support and bounce. The preconditions all reinforce that same instance—high recent volume, low float, and the explicit filter 'i never buy these stocks if the v is above me'—which excludes the bearish/resistance case rather than co-requiring it. There is no simultaneous short logic, no contradictory entry requirement, and no conflicting exit/target logic welded into the same trade object.",
+  "fused_pair": null
+ },
+ "tokens": 4207
+}

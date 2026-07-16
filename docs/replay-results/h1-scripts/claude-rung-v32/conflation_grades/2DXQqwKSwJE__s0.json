@@ -1,0 +1,12 @@
+{
+ "custom_id": "2DXQqwKSwJE__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "mean_reversion_scalp",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent mean-reversion scalp skeleton, not two welded opposite trades. Its co-required trade logic is internally consistent: after a sharp down move into support, volume stalls, sellers stop hitting the bid, and the trader 'take[s] the offer and get[s] long in front of that support level,' using support bids as protection and targeting 'the bounce we get off that level.' The opposite-direction language appears only as an explicit alternative ('shoots up to a resistance level with large offers') and is further separated into a labeled `variants` entry (`short_mirror_at_resistance`), which makes it a context-selected mirror, not a simultaneous requirement. A single instance would choose support/long or resistance/short, not both at once.",
+  "fused_pair": null
+ },
+ "tokens": 4386
+}

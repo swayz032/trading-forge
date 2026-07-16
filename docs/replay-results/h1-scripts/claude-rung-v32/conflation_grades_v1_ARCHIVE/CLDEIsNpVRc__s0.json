@@ -1,0 +1,12 @@
+{
+ "custom_id": "CLDEIsNpVRc__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "htf_irl_fvg_1m_inversion",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one mirrored setup, not two welded opposite trades: first identify which side’s liquidity was taken (e.g. Asia/London/PD high implies draw to lows; Asia/London/PD low implies draw to highs), then after 9:30 wait for a 5m/15m fair value gap forming toward that draw, wait for price to tap that higher-timeframe IRL, drop to 1m, require a liquidity sweep and inversion of the 1m FVG(s), and enter in the direction implied by that context. The short logic is explicitly paired with the long logic via “if you invert the chart over,” so the long/short elements are alternatives selected by market structure, not simultaneous requirements. Likewise, stop placement and target choice are side-specific or optional variants, not co-required contradictions in a single trade instance.",
+  "fused_pair": null
+ },
+ "tokens": 4817
+}

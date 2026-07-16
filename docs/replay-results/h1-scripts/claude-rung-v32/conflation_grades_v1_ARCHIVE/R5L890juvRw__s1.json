@@ -1,0 +1,12 @@
+{
+ "custom_id": "R5L890juvRw__s1",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_band_mean_reversion",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one coherent mean-reversion skeleton, with direction chosen by context rather than two co-required opposite trades. Its own conditions say price reaching the higher or lower VWAP bands creates an overbought/oversold reversal opportunity, and the trade then uses the central VWAP as the target for rebalancing. A single instance would therefore be: short from an upper band back to VWAP, or long from a lower band back to VWAP. Those are mirror alternatives of the same setup, not simultaneous contradictory requirements welded together.",
+  "fused_pair": null
+ },
+ "tokens": 3806
+}

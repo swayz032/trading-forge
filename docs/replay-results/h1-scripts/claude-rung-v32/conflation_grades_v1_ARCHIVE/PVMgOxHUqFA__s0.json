@@ -1,0 +1,12 @@
+{
+ "custom_id": "PVMgOxHUqFA__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "abc_trend_continuation_reclaim",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent long trend-continuation setup, not two opposite trades fused together: the higher-timeframe bias is explicitly bullish (\"we already knew the 4hour time frame was bullish,\" \"the 4 hour and the one hour is bullish\"), the lower timeframe is only a correction within that bullish context (\"all that downtrending on the 15 minute time frame was only the four 4 hour making a higher low to push up more\"), and the entry logic is sequentially consistent for one buy trade—track lower highs/lows during the pullback, do not buy while lower lows continue, wait until price \"stops making lower lows,\" then buy when price breaks back above the most recent lower high. The stop placement alternatives (\"either here or here\") and target choices (base target at the 1 hour high vs extended trend-follow runner) are optional execution variants, not co-required contradictory logic, and the 15-minute or 5-minute entry timeframe is likewise a context-selected alternative for the same long setup.",
+  "fused_pair": null
+ },
+ "tokens": 4485
+}

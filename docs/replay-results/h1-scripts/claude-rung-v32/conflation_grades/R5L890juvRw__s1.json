@@ -1,0 +1,12 @@
+{
+ "custom_id": "R5L890juvRw__s1",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_band_mean_reversion",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one coherent mean-reversion skeleton, not two welded opposite trades: price extends to VWAP bands, those outer deviations are treated as 'overbought or oversold levels,' and the trade targets 'the central vwap as a target for Price rebalancing.' The long/short element is context-selected by which side of VWAP price is stretched to in a given session—short from higher bands or long from lower bands—but a single trade instance only takes one side at a time using the same reversal logic and same rebalancing target, so there is no co-required contradiction inside the entry, confluence, or target logic.",
+  "fused_pair": null
+ },
+ "tokens": 4027
+}

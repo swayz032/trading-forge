@@ -1,0 +1,12 @@
+{
+ "custom_id": "DLwVqcLRcfw__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_20sma_confluence_long",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object is one coherent long setup, not two opposite trades fused together: every required condition points the same way—enter after a two-minute candle closes over both the 20 SMA and VWAP, confirm the break, buy pullbacks that test VWAP without closing/building below it, and keep holding while VWAP and the 20 SMA trend higher. The object does not mix long and short execution in one instance; its exit logic is also presented as context-selected alternatives, not a contradiction: either take a quicker scalp into the upper VWAP band ('if you're looking for a little bit of a scalp') or hold longer with the 20 SMA as a trailing stop after price breaks away from VWAP. A single long trade can execute these rules coherently.",
+  "fused_pair": null
+ },
+ "tokens": 4400
+}

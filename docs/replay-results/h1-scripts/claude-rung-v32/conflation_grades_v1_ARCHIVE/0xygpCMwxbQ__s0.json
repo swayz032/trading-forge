@@ -1,0 +1,12 @@
+{
+ "custom_id": "0xygpCMwxbQ__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "ict_aplus_entry_checklist",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes a context-selected mirror, not two opposite trades fused into one: it explicitly starts with the precondition 'once I have a daily bias or Direction,' so the side is chosen first, and the long/short elements in the stop and target fields ('order-block LOW for a long' vs 'order-block HIGH for a short,' 'buy-side liquidity above' vs 'targeting a new low') are direction-dependent alternatives rather than simultaneous requirements. The core checklist itself is coherent for one trade instance—stop raid, market-structure shift/displacement, return into discount/premium/OTE relative to the chosen bias, then enter at a selected PD array. The 'Box setup' is presented as a labeled variant/alternative entry model ('or I’ll look for the box setup'), not as a co-required contradiction with the PD-array checklist, so a single trade instance can still execute coherently by selecting one bias and one entry variant.",
+  "fused_pair": null
+ },
+ "tokens": 4648
+}

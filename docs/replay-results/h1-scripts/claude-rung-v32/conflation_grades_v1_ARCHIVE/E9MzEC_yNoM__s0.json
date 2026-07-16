@@ -1,0 +1,12 @@
+{
+ "custom_id": "E9MzEC_yNoM__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "premarket_range_break_continuation",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one premarket-range framework: mark the 3:00 a.m.-to-open high/low, then trade those levels on confirmation. Its seemingly opposite elements are presented as alternatives, not co-required conditions: it says price can reach the levels to \"either look for a breakout trade, a break and retest trade, or even a liquidity sweep,\" and later says to enter \"after the retest ... after the breakout ... or after the liquidity sweep.\" That means one trade instance selects the applicable path by context, with the same stop/management schema, rather than requiring a continuation breakout and a failed-break reversal at the same time. So this is not two opposite trades welded into one contradictory setup.",
+  "fused_pair": null
+ },
+ "tokens": 7473
+}

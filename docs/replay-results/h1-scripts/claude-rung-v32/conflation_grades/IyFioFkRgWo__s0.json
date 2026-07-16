@@ -1,0 +1,12 @@
+{
+ "custom_id": "IyFioFkRgWo__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "support_bounce_scalp",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object's co-required logic is one coherent long support-bounce scalp: wait 5–15 minutes to establish support, identify support/demand on the 5-minute chart, use the 13 EMA as initial support, enter when price comes down and hits that support, and exit on the bounce/into resistance after a few green candles. Those entry, confluence, and target conditions can all be satisfied by a single long trade instance at once. The opposite-direction 'breakdown_continuation' appears only as a separately labeled variant in `variants[]`, so it is an alternative setup rather than a contradictory condition welded into the main trade object.",
+  "fused_pair": null
+ },
+ "tokens": 3645
+}

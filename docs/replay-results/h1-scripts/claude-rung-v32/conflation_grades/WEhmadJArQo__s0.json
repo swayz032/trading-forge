@@ -1,0 +1,12 @@
+{
+ "custom_id": "WEhmadJArQo__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "opening_range_fvg_break_entry",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object does not weld opposite-direction trades into one self-contradictory setup; it presents two explicitly labeled alternatives, \"scalping\" and \"day trading,\" each with its own timeframe, entry trigger, stop, and target. A single trade instance would follow one variant only: the scalping path uses the first 5-minute range, 1-minute FVG retest plus engulfing, stop under the FVG sweep, and a 3:1 target, while the day-trading path uses the first 15-minute range, 5-minute FVG with a limit entry on retrace, stop under the first FVG candle, and a 2:1 target. Those are alternative variant-specific rules, not co-required conditions, and the directional logic is the same breakout/FVG continuation idea rather than two opposite trades fused together.",
+  "fused_pair": null
+ },
+ "tokens": 4819
+}

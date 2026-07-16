@@ -24,3 +24,5 @@ Conflation absent or errored -> None -> INDETERMINATE (not clean). A read cannot
 - Regression: existing cert_assembler/compile_lints tests still green (the lints unchanged; only their terminal-read GATING moves).
 
 ## ROLLBACK: revert the terminal_read_grade signature + harness call; falls back to prior lint-gated grade. No live default, pre-live.
+
+## §5 UPDATE (F-1 verified): design-pool clean fraction = 22/22, reproduced by the grader's own repro over the PERSISTED v1.1 artifacts (not the stale v1 run). Wiring code independently graded Band 6 SAFE-TO-LAND, no test-gutting.

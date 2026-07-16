@@ -1,0 +1,12 @@
+{
+ "custom_id": "2DXQqwKSwJE__s1",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "continuation_breakout_scalp",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent continuation-breakout scalp, not two opposite trades fused together. Its co-required conditions all align around a single breakout execution: an in-play, high-volume stock consolidating beneath resistance, shallow pullbacks, buyers aggressively lifting the offer, the offer shrinking/gone, entry by buying just above the level ($50.01, $10.01/$10.02), stop back below that level, and a quick momentum target 10–30 cents higher. Although the object is tagged direction='both' and mentions breaks of support or resistance in general, the actual entry_sequence, stop, and target here are not simultaneously requiring both long and short logic; they form one executable breakout setup, with any opposite-side version merely an alternative mirror by context rather than a co-required contradiction.",
+  "fused_pair": null
+ },
+ "tokens": 4387
+}

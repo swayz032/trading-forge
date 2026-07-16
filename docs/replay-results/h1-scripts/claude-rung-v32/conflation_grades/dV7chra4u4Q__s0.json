@@ -1,0 +1,12 @@
+{
+ "custom_id": "dV7chra4u4Q__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "break_and_retest",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent break-and-retest skeleton whose direction is selected by context, not two co-required opposite trades welded together. Its co-required logic is consistent within a single instance: identify a key level, wait for a strong break with volume, wait for the retest to hold, then take confirmation in the direction of that break—bullish price action after a break above for a long, or bearish price action after a break below for a short. The stop is likewise mirrored coherently on the opposite side of the breakout level, and the target is the next obvious liquidity area. The long and short elements are explicitly alternatives based on whether price breaks above resistance or below support, so a trader would execute one side per setup, not both simultaneously.",
+  "fused_pair": null
+ },
+ "tokens": 5211
+}

@@ -1,0 +1,12 @@
+{
+ "custom_id": "WEhmadJArQo__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "opening_range_fvg_break_entry",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object does not fuse opposite trades into one impossible setup; it explicitly contains two labeled variants of the same opening-range/FVG breakout idea, and the transcript says there are 'two ways that you can use this strategy depending on whether you're scalping or day trading.' Those differences are alternatives, not simultaneous requirements: the scalping path uses the first 5-minute candle, a 1-minute confirmation, retest plus engulfing, and a 3:1 target, while the day-trading path uses the first 15-minute candle, a 5-minute FVG, a limit entry on the gap, and a 2:1 target. A single trade instance would choose one variant, not satisfy both at once, so this is a context-selected alternative structure rather than a co-required contradiction.",
+  "fused_pair": null
+ },
+ "tokens": 4863
+}

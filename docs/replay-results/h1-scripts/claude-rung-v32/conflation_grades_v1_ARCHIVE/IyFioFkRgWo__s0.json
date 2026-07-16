@@ -1,0 +1,15 @@
+{
+ "custom_id": "IyFioFkRgWo__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "support_bounce_scalp",
+  "verdict": "REJECT",
+  "is_single_coherent_trade": false,
+  "reasoning": "The object is not one single executable setup because its main logic is a long support-bounce scalp: wait 5–15 minutes, identify support/demand on the 5-minute chart, buy when price comes down into the 13 EMA or 200 EMA support, and exit into resistance after the bounce. But it also contains a separate opposite-direction variant, \"breakdown_continuation,\" that explicitly triggers only \"once we lost the support of the 200\" and then enters short to ride the move down. Those are not one context-selected mirror of the same entry skeleton; they require opposite states of the same level (support holding vs support failing), so a single trade instance cannot satisfy all of them at once.",
+  "fused_pair": [
+   "long support-bounce scalp off 13/200 EMA or demand",
+   "short breakdown-continuation scalp after loss of 200 EMA support"
+  ]
+ },
+ "tokens": 4583
+}

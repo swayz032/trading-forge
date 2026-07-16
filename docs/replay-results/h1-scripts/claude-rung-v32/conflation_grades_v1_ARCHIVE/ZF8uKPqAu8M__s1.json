@@ -1,0 +1,12 @@
+{
+ "custom_id": "ZF8uKPqAu8M__s1",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "orb_breakout_pullback_continuation",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent ORB continuation trade, not two opposite trades fused together: on the 5-minute chart it defines the first 15-minute opening range, waits for an upside breakout, then waits for a pullback candle that dips through the range but closes back above it, and only enters after a break of the most recent high, with stop at the bottom of the opening range and a 1.5R target. The language is consistently one-sided ('buy,' 'buyers coming back in,' 'act as support,' 'move back up'), so there is no welded long-vs-short contradiction. The listed items under variants (alternate stop placement, TP sweep, second breakout after invalidation, stop-order entry at top of ORB, midpoint entry) are optional alternative implementations or follow-on scenarios, not simultaneous co-required conditions for one trade instance.",
+  "fused_pair": null
+ },
+ "tokens": 5025
+}

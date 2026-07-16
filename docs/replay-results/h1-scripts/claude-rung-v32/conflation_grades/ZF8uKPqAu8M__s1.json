@@ -1,0 +1,12 @@
+{
+ "custom_id": "ZF8uKPqAu8M__s1",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "orb_breakout_pullback_continuation",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent breakout-pullback-continuation setup, not two opposite trades fused together: a single trade instance can satisfy all co-required conditions at once by defining the 15-minute ORB on the 5-minute chart, waiting for a breakout, requiring that breakout to be at least 1 ATR, then waiting for a pullback candle that dips through the range but closes back above it to show support, and entering only after the next break of the recent high, with the stop at the bottom of the opening range and a 1.5R target. The listed `variants` are explicitly separate alternatives (different stop placement, target ratios, stop-order entry, midpoint entry, second setup after invalidation), not simultaneous requirements, and there is no welded long-vs-short contradiction in the co-required logic.",
+  "fused_pair": null
+ },
+ "tokens": 5200
+}

@@ -1,0 +1,12 @@
+{
+ "custom_id": "dV7chra4u4Q__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "break_and_retest",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one symmetric break-and-retest setup whose direction is selected by context, not two co-required opposite trades. The same sequence applies in either case: identify a key level, wait for a strong high-volume break, wait for the retest to hold, then enter only on matching confirmation. The long case is specifically for a break above resistance that retests as support with bullish price action, while the short case is the mirrored alternative for a break below support that retests as resistance with bearish price action. A single trade instance would take one branch or the other depending on the break direction; the object does not require both long and short conditions simultaneously, and its stop/target logic remains coherent for either branch.",
+  "fused_pair": null
+ },
+ "tokens": 4967
+}

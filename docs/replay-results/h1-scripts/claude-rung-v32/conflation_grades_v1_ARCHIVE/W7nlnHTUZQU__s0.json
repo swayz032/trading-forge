@@ -1,0 +1,12 @@
+{
+ "custom_id": "W7nlnHTUZQU__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "overnight_range_break_retest",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one breakout-retest framework applied symmetrically to the overnight range, not two co-required opposite trades fused together. The trader first marks the overnight high and low, then waits for either a break above with strength or a break below with weakness, followed by a retest of that same broken level; the long path requires bullish retest behavior at the overnight high, while the short path requires bearish retest behavior at the overnight low. Crucially, the object explicitly routes direction by context—\"if the overall trend is to the upside... waiting for price to break above to look for longs\" and \"if the overall trend is very weak... looking for the market to break below... for shorts\"—so a single trade instance chooses one side, not both simultaneously. Stops and management also remain internally consistent for the chosen side.",
+  "fused_pair": null
+ },
+ "tokens": 4813
+}

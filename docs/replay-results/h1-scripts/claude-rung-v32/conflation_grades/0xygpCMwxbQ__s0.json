@@ -1,0 +1,12 @@
+{
+ "custom_id": "0xygpCMwxbQ__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "ict_aplus_entry_checklist",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one context-selected ICT entry framework, not two opposite trades fused into one: it explicitly starts with the precondition 'once I have a daily bias or Direction,' then applies a single checklist (stop raid -> market-structure shift/displacement -> return into discount/OTE -> chosen PD array entry). The long/short references in `stop` and `targets` are alternatives selected by that prior bias, not simultaneous requirements; a single instance would use either 'order-block LOW for a long' and 'buy-side liquidity up here' or 'order-block HIGH for a short' and 'targeting a new low,' not both at once. Likewise, the `variants` are separately labeled alternatives ('Blended PD-array A+ entry' vs 'Box setup'), and the PD-array choices themselves are framed with 'or' and 'blend one two or three,' so there is no co-required contradiction that would make one trade instance impossible to execute coherently.",
+  "fused_pair": null
+ },
+ "tokens": 4874
+}

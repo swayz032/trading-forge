@@ -1,0 +1,15 @@
+{
+ "custom_id": "CAL_R5L890_FUSED",
+ "expect": "REJECT",
+ "verdict": {
+  "strategy_name": "vwap_band_FUSED_ADVERSARIAL",
+  "verdict": "REJECT",
+  "is_single_coherent_trade": false,
+  "reasoning": "The object welds together two opposite VWAP-band setups as if they were one trade: a continuation-long sequence ('you might have a long idea,' price 'start[s] running up,' then 'after we broke it and tested it we can try our long trade') with targets at the 'second and third standard deviation,' and a mean-reversion setup where outer bands are 'overbought or oversold levels' and the 'central vwap' is the target for 'Price rebalancing.' Those targets and premises are co-required inside one object but cannot describe a single coherent instance, because one trade is betting on extension away from VWAP toward outer bands while the other is betting on reversal from outer bands back to VWAP.",
+  "fused_pair": [
+   "VWAP breakout/retest continuation long to outer bands",
+   "VWAP outer-band mean-reversion trade back to central VWAP"
+  ]
+ },
+ "tokens": 4519
+}

@@ -1,0 +1,12 @@
+{
+ "custom_id": "W7nlnHTUZQU__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "overnight_range_break_retest",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent overnight-range breakout/retest framework with direction chosen by context, not two co-required opposite trades. Its own wording makes the directional elements alternatives: first mark the overnight high/low, then wait for price to break either above or below the range, confirm the candle close, and take the matching retest setup—LONG only after a strong break above and bullish retest of the overnight high as support, or SHORT only after a weak break below and bearish retest of the overnight low as resistance. The precondition explicitly routes side selection by overall trend (uptrend favors longs above the range; weak/downtrend favors shorts below the range), so a single trade instance would execute one side or the other, not both simultaneously. Stops and management also remain side-consistent rather than contradictory.",
+  "fused_pair": null
+ },
+ "tokens": 5062
+}

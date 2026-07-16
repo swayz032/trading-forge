@@ -1,0 +1,12 @@
+{
+ "custom_id": "2DXQqwKSwJE__s2",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "spread_making_scalp",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent spread-capture/liquidity-provision scalp, not two opposite setups welded together. Its co-required logic is consistent: the trader provides liquidity with resting limit orders in a spread name, in a stock that is 'in relative equilibrium, but thin,' and aims to 'capture the difference between the spread' as urgent participants cross; the example given is a single executable cycle of 'slamming in huge bids' and then 'kick[ing] his offers out ... higher.' The mention of orders 'ahead of large bids or offers' is best read as context-selected side choice within the same market-making framework, not as simultaneous contradictory long-and-short requirements, and the target explicitly says the edge 'does not come from predicting direction,' so there is no co-required directional contradiction.",
+  "fused_pair": null
+ },
+ "tokens": 4352
+}

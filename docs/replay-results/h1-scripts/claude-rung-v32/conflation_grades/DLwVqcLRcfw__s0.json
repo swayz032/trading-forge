@@ -1,0 +1,12 @@
+{
+ "custom_id": "DLwVqcLRcfw__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_20sma_confluence_long",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent long setup, not two opposite trades fused together: the entry conditions all align on bullish context—price closes over both the 20 SMA and VWAP, a following candle confirms the high, and pullbacks into VWAP that do not close/build below it are treated as buying opportunities, with holds allowed only while VWAP and the 20 SMA remain supportive and trending higher. The stop logic (previous wick/low) and reentry above the 20 SMA are consistent with that same long thesis. The two target styles are framed as trader-choice alternatives rather than co-required contradictions: \"if you're looking for a little bit of a scalp\" take profits into the upper VWAP band, otherwise after price breaks away you may trail with the 20 SMA. Since a single trade instance can execute this logic coherently as one bullish setup, it passes the mirror-vs-fusion test.",
+  "fused_pair": null
+ },
+ "tokens": 4623
+}

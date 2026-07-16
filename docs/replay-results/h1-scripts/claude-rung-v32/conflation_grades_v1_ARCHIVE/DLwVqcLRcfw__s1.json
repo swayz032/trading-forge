@@ -1,0 +1,12 @@
+{
+ "custom_id": "DLwVqcLRcfw__s1",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_20sma_rejection_short",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent short setup, not two opposite trades fused together: on the 2-minute chart with VWAP and the 20 SMA, the short is only allowed after price first loses both, closes below VWAP, then a following candle builds below, at which point the trigger is to short the rejection of VWAP and the 20 SMA. Its added filter—'as long as we don't close below vwap we should still not be trying to short the market here'—suppresses premature shorts rather than introducing a conflicting long requirement. There are no co-required bullish entry conditions, no contradictory long/short triggers, and no incompatible exit logic welded into the same object.",
+  "fused_pair": null
+ },
+ "tokens": 3553
+}

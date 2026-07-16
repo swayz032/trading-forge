@@ -1,0 +1,12 @@
+{
+ "custom_id": "-igpOZs8LsM__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "fvg_trend_continuation_entry",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one fair-value-gap trend-continuation setup whose direction is selected by context, not two co-required opposite trades. Its own conditions are symmetric: use the same three-candle FVG definition, require trend alignment, require that the imbalance caused a break of structure, wait for price to return and tap the FVG, then continue in the prevailing direction; the object explicitly frames the bearish case as 'just same thing with the explanation for the bullish imbalance.' The buy/sell stop rules are also mirror alternatives ('below if you are buying' / 'above if you're selling'), so a single trade instance would take either the bullish version or the bearish version depending on the chart, not both simultaneously.",
+  "fused_pair": null
+ },
+ "tokens": 3512
+}

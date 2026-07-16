@@ -1,0 +1,12 @@
+{
+ "custom_id": "_LS6qcSlDCs__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_reclaim_pullback_dip_buy",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent long setup, not two opposite trades fused together: it requires a stock that opened below VWAP, then breaks above VWAP with volume, and the trader buys the pullback to VWAP expecting VWAP to hold as support and produce a bounce. The preconditions all align with that same long thesis—20-minute volume over 200,000 shares/minute, float under 50 million, and explicitly 'i never buy these stocks if the v is above me'—so the bearish references in the transcript are just prior context (the stock was weak before reclaiming VWAP), not a simultaneous short setup. A single trade instance can satisfy all listed conditions at once coherently.",
+  "fused_pair": null
+ },
+ "tokens": 3956
+}

@@ -151,19 +151,31 @@ def _spine_condition(condition_id: str, quote_anchor: str, char_span: Tuple[int,
 
 
 # --------------------------------------------------------------------------- #
-# terminal_read_grade -- the MERGE-SILENCING FENCE (ratify-packet
-# h1-mergesilencing-fence-ratify-packet-2026-07-13.md). The ONLY grade the
-# sealed-12 terminal read consumes. Closes the §2 wiring-verify CRIT: pilot_grade
-# gates only f2+causality-regex, so a merge-silenced object (opposite-direction
-# entries fused, unsat comparators, OR-alternatives strictly-ANDed) sails through
-# it -- observed on R5L890. This grade GATES on the 3 structural lints too, with
-# fail-closed semantics: NOT_EVALUATED on a load-bearing lint = INDETERMINATE, and
-# ONLY affirmatively-CLEAN counts toward the >=60% video-unit bar.
+# terminal_read_grade -- the MERGE-SILENCING FENCE, re-based (ratify-packet
+# h1-conflation-wiring-ratify-2026-07-15.md, superseding the lint-gated
+# structural axis of h1-mergesilencing-fence-ratify-packet-2026-07-13.md). The
+# ONLY grade the sealed-12 terminal read consumes. Closes the §2 wiring-verify
+# CRIT: pilot_grade gates only f2+causality-regex, so a merge-silenced object
+# (opposite-direction entries fused, unsat comparators, OR-alternatives
+# strictly-ANDed) sails through it -- observed on R5L890.
+#
+# STRUCTURAL AXIS RE-BASE: the 3 mechanical structural lints
+# (direction_conflation/unsat_sat/or_alternatives) were proven BLIND on real
+# prose objects (grader Band-3 NOT-SAFE -- they report NOT_EVALUATED/vacuous
+# when no compiled topology exists, which is the pilot conveyor's actual
+# state). They are REMOVED from this gate and RE-STATIONED to the H2/compiled-
+# spec layer (still live in full_grade, unchanged). The structural axis is now
+# the CALIBRATED SEMANTIC conflation check (both-polarity certified): its
+# per-strategy verdict is threaded in as `conflation_verdict`.
+#
+# Fail-closed semantics unchanged: NOT_EVALUATED on a live axis = INDETERMINATE,
+# and ONLY affirmatively-CLEAN counts toward the >=60% video-unit bar.
 # --------------------------------------------------------------------------- #
 
-# Load-bearing lints for the terminal read's fidelity question. causality's
-# same_bar leg is DELIBERATELY excluded -- provably-not-load-bearing (execution
-# timing, orthogonal to extraction fidelity; ratify-packet disposition table).
+# The 3 structural lints RE-STATIONED to H2 (full_grade keeps them). They no
+# longer gate the terminal read -- listed here only so the disposition table
+# records the re-stationing explicitly (anti-silent-exemption discipline),
+# never a silent drop.
 _TERMINAL_STRUCTURAL_LINTS = (
     "direction_conflation_lint",
     "unsat_sat_check",
@@ -171,30 +183,52 @@ _TERMINAL_STRUCTURAL_LINTS = (
 )
 
 
-def terminal_read_grade(lint_results: Dict[str, "cl.LintResult"]) -> dict:
+def terminal_read_grade(
+    lint_results: Dict[str, "cl.LintResult"],
+    conflation_verdict: Optional[str] = None,
+) -> dict:
     """Fail-closed terminal-read grade. Returns {grade, clean, disposition}.
-      CLEAN         iff every load-bearing lint is affirmatively PASS.
-      REJECTED      if any load-bearing lint is FAIL.
-      INDETERMINATE if any load-bearing lint is NOT_EVALUATED and none FAIL.
-    `clean` (grade == CLEAN) is the ONLY value counting toward the >=60% bar --
-    INDETERMINATE != clean, REJECTED != clean. Without a compiled-topology
-    overlay the 3 structural lints are NOT_EVALUATED -> INDETERMINATE, which is
-    the forcing function that makes the A-packet a hard terminal-read
-    precondition (Hole 1) rather than a documented wish."""
+
+    Live axes: the calibrated semantic conflation verdict (structural axis),
+    `f2_coverage_gate`, and `causality_lint`'s regex leg. causality's same_bar
+    leg is DELIBERATELY exempt -- provably-not-load-bearing (execution timing,
+    orthogonal to extraction fidelity; ratify-packet disposition table).
+
+    Structural axis (`conflation_verdict`, "PASS"|"REJECT"|None):
+      "REJECT" -> FAIL contribution (co-required contradiction).
+      "PASS"   -> clean contribution.
+      None (or anything else -- check absent/errored) -> NOT_EVALUATED
+                  contribution (fail-closed: a read cannot pass without a real
+                  conflation verdict).
+
+    Grade combination (FAIL dominates NOT_EVALUATED):
+      REJECTED      if any live axis is FAIL (conflation REJECT, f2 FAIL, or
+                    causality-regex FAIL).
+      INDETERMINATE if none FAIL but any live axis is NOT_EVALUATED
+                    (conflation None, or f2/causality-regex NOT_EVALUATED).
+      CLEAN         iff conflation==PASS AND f2==PASS AND causality-regex==PASS.
+    `clean` (grade == CLEAN) is the ONLY value counting toward the >=60% bar."""
     disposition: Dict[str, str] = {}
     any_fail = False
     any_not_eval = False
 
-    # 3 structural lints: gate top-level status.
-    for name in _TERMINAL_STRUCTURAL_LINTS:
-        st = lint_results[name].status
-        disposition[name] = st
-        if st == cl.STATUS_FAIL:
-            any_fail = True
-        elif st == cl.STATUS_NOT_EVALUATED:
-            any_not_eval = True
+    # Structural axis: the calibrated semantic conflation verdict (REPLACES the
+    # 3 mechanical structural lints, proven blind on prose). Fail-closed on None.
+    if conflation_verdict == "REJECT":
+        disposition["conflation_check"] = "REJECT"
+        any_fail = True
+    elif conflation_verdict == "PASS":
+        disposition["conflation_check"] = "PASS"
+    else:
+        disposition["conflation_check"] = "NOT_EVALUATED"
+        any_not_eval = True
 
-    # f2_coverage_gate: gate top-level status (never NOT_EVALUATED).
+    # The 3 structural lints: RE-STATIONED to H2 (full_grade). Recorded as
+    # informational only -- they no longer contribute to the terminal gate.
+    for name in _TERMINAL_STRUCTURAL_LINTS:
+        disposition[name] = "RE_STATIONED_TO_H2"
+
+    # f2_coverage_gate: LIVE axis (never NOT_EVALUATED in practice).
     f2 = lint_results["f2_coverage_gate"].status
     disposition["f2_coverage_gate"] = f2
     if f2 == cl.STATUS_FAIL:
@@ -234,6 +268,7 @@ def assemble_certificate(
     topology: Optional[List[ConditionTopology]] = None,
     or_branches: Optional[List[List[str]]] = None,
     scope_line: Optional[str] = None,
+    conflation_verdict: Optional[str] = None,
 ) -> dict:
     """Assemble one fidelity certificate. Pure function: no I/O, no LLM call
     (tier-3 verdicts are consumed as data, per the Wave-4 brief), no
@@ -343,13 +378,15 @@ def assemble_certificate(
 
     full_grade = pilot_grade and all_five_pass and zero_not_evaluated
 
-    # THE FENCE (ratify-packet 2026-07-13): the ONLY grade the sealed-12
-    # terminal read consumes. Gates on the 3 structural lints too, fail-closed.
-    # A merge-silenced object that gets pilot_grade=True is REJECTED (topology
-    # present -> direction_conflation FAIL) or INDETERMINATE (topology absent ->
-    # structural lints NOT_EVALUATED) here -- never CLEAN. pilot_grade itself is
-    # UNCHANGED (pilot-era artifact); this is additive.
-    terminal_read = terminal_read_grade(lint_results)
+    # THE FENCE (ratify-packet 2026-07-15, structural axis re-based): the ONLY
+    # grade the sealed-12 terminal read consumes. Structural axis = the
+    # calibrated semantic conflation verdict (`conflation_verdict`), fail-closed.
+    # A merge-silenced object that gets pilot_grade=True is REJECTED here when
+    # the conflation check returns REJECT, and INDETERMINATE when no verdict was
+    # supplied (fail-closed) -- never CLEAN. pilot_grade itself is UNCHANGED
+    # (pilot-era artifact); this is additive. The read harness (pilot_conveyor
+    # finalize) supplies `conflation_verdict` per strategy.
+    terminal_read = terminal_read_grade(lint_results, conflation_verdict)
 
     return {
         "conditions": condition_entries,

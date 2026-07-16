@@ -1,0 +1,12 @@
+{
+ "custom_id": "kFyD3H6I1I8__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "three_step_engulfing_orb_scalp",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes one mirrored three-step framework whose direction is selected by Step 1 bias, not two co-required opposite trades: it explicitly says 'if I want to buy, I want to see a bullish engulfing pattern' and 'if I want to sell, I want to see a bearish engulfing pattern,' then uses the corresponding opening-range confirmation ('break and close outside of that range' for buys vs. 'break out the bottom of that range' for sells) and the matching point of interest (demand for longs, supply/retest for shorts). A single trade instance would only take one branch after the 7:00/8:00 a.m. bias is determined, so the long and short elements are context-selected alternatives rather than simultaneous contradictory requirements.",
+  "fused_pair": null
+ },
+ "tokens": 4731
+}

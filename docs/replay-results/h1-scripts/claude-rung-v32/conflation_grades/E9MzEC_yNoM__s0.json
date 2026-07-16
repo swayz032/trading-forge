@@ -1,0 +1,12 @@
+{
+ "custom_id": "E9MzEC_yNoM__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "premarket_range_break_continuation",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "The object describes a single premarket-range framework with context-selected alternatives, not co-required opposite trades welded together: it says price can trade to the marked premarket high/low to ‘either look for a breakout trade, a break and retest trade, or even a liquidity sweep,’ and the root entry rule repeats ‘after the retest ... after the breakout ... or after the liquidity sweep,’ which makes these entry styles alternatives rather than simultaneous requirements. Likewise, ‘break above pre-market highs or below pre-market lows’ is a mirror choice based on which side of the range is being tested, not a demand to be long and short at once. A single trade instance would pick one side and one trigger, then use the shared stop/target management coherently.",
+  "fused_pair": null
+ },
+ "tokens": 5866
+}

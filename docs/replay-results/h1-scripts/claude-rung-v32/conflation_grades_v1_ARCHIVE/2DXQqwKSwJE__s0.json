@@ -1,0 +1,12 @@
+{
+ "custom_id": "2DXQqwKSwJE__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "mean_reversion_scalp",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent mean-reversion scalp skeleton, with direction chosen by context rather than two co-required opposite trades. Its core logic is consistent: trade an in-play stock with liquidity/volatility at a well-defined intraday support or resistance level, confirm the order-flow shift on the tape, and fade an overextended move. The explicit entry sequence gives the long instance ('sharp down move into support' where sellers stop hitting bids, then 'take the offer and get long'), while the confluence and listed variant ('quickly and sharply shoots up to a resistance level with large offers' / 'short_mirror_at_resistance') show the short side as the mirrored alternative. A single trade instance would use either the support-bounce long or the resistance-reversal short, not both simultaneously, so this is a context-selected mirror, not a fused contradiction.",
+  "fused_pair": null
+ },
+ "tokens": 4223
+}

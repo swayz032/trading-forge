@@ -1,0 +1,12 @@
+{
+ "custom_id": "ZF8uKPqAu8M__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "orb_15m_immediate_breakout",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent long opening-range-breakout trade, not two opposite trades fused together. Its co-required conditions all align in the same direction: define the 9:30 opening range on the 15-minute chart, wait for a candle to break the range and close above it, enter at the next candle’s open, place the stop at the bottom of the range, and target 1.5R, with additional filters of no entries after 12:00 and avoiding ranges too small or too large versus ATR. Nothing in the entry, stop, or target logic requires an opposite short setup or mutually contradictory objectives in the same trade instance.",
+  "fused_pair": null
+ },
+ "tokens": 4561
+}

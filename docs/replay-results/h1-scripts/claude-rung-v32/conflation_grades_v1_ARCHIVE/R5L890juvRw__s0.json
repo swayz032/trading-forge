@@ -1,0 +1,12 @@
+{
+ "custom_id": "R5L890juvRw__s0",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "vwap_band_trend_continuation",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent trend-continuation trade, not two opposite setups fused together: the trader already has a long bias for the session, price opens near VWAP/fair value, runs up, reaches the first or second standard-deviation band, then after that level is broken and retested the entry is a long, with the second and third standard deviations used as continuation targets. All of those conditions can occur in a single trade instance and point in the same direction; the object does not simultaneously require a mean-reversion short back to VWAP or any opposite-direction logic.",
+  "fused_pair": null
+ },
+ "tokens": 3821
+}

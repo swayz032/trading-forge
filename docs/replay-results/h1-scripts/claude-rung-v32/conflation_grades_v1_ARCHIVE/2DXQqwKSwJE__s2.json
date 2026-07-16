@@ -1,0 +1,12 @@
+{
+ "custom_id": "2DXQqwKSwJE__s2",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "spread_making_scalp",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes one coherent spread-capture/microstructure scalp, not two opposite trades fused together. Its own conditions consistently say to \"provide the liquidity,\" use \"resting limit orders in spread names,\" operate when a stock is \"in relative equilibrium, but thin,\" and profit by \"capture[ing] the difference between the spread\" as urgent traders cross. The references to bids and offers are the two sides of the same spread-making mechanism, not co-required contradictory long and short directional setups; a single instance can coherently buy on bids and exit on offers without needing an opposite thesis at the same time. The note that the edge \"does not come from predicting direction\" further supports that this is one market-making style scalp rather than welded opposing directional trades.",
+  "fused_pair": null
+ },
+ "tokens": 4023
+}

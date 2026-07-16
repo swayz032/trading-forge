@@ -1,0 +1,12 @@
+{
+ "custom_id": "E9MzEC_yNoM__s1",
+ "expect": "PASS?",
+ "verdict": {
+  "strategy_name": "premarket_range_liquidity_sweep_reversal",
+  "verdict": "PASS",
+  "is_single_coherent_trade": true,
+  "reasoning": "This object describes a context-selected mirror, not two welded opposite trades: the core setup is a premarket high/low liquidity sweep reversal where price briefly breaks above or below a marked level, then fails/reclaims it with volume, and the trade direction is chosen by which side gets swept. The object's own wording makes these alternatives explicit — 'below or above the level' and 'or vice versa' — so a single instance would take either the long reclaim after sweeping the low or the short failure after sweeping the high, not both at once. The mentions of breakout, break-and-retest, or liquidity sweep are also presented as separate alternative ways to trade the same premarket levels, not simultaneous co-required conditions.",
+  "fused_pair": null
+ },
+ "tokens": 5345
+}

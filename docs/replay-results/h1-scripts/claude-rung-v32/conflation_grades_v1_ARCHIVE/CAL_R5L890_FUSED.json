@@ -1,0 +1,15 @@
+{
+ "custom_id": "CAL_R5L890_FUSED",
+ "expect": "REJECT",
+ "verdict": {
+  "strategy_name": "vwap_band_FUSED_ADVERSARIAL",
+  "verdict": "REJECT",
+  "is_single_coherent_trade": false,
+  "reasoning": "This object welds two incompatible setups into one trade definition. Its entry sequence says \"you might have a long idea for your session,\" then after price runs up from fair value to the first/second standard deviation and \"we broke it and tested it we can try our long trade,\" which is a continuation-long framework targeting expansion; but the same object also says \"the more prices go outside... the higher the chance there will be some level of reversal,\" to \"use these as some sort of overbought or oversold levels,\" and its targets include both \"the second and third standard deviation as a Target\" and \"use the central vwap as a target for Price rebalancing.\" A single trade cannot coherently be both a long continuation aimed outward to the bands and a mean-reversion trade aimed back to central VWAP at the same time, so this is co-required contradiction, not a context-selected mirror.",
+  "fused_pair": [
+   "VWAP continuation long from fair value/break-retest toward the outer second/third standard-deviation bands",
+   "VWAP mean-reversion trade from overbought outer bands back to the central VWAP"
+  ]
+ },
+ "tokens": 4462
+}
