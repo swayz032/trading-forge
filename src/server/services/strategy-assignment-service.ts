@@ -7,22 +7,24 @@
  *   - Family publish-to-family gate
  *   - Track 6 per-recipient Pine export (getActiveAssignment API)
  *
- * MFFU collaborative-trading detection:
- *   When 2+ family member accounts are about to run the same strategy on the same
- *   MFFU firm, we emit a compliance:collaborative_trading_warning SSE event and write
- *   an audit_log row (severity=warning). Assignment is NOT blocked — the warning gives
- *   the operator a chance to cancel and re-assign a different strategy.
+ * MFFU collaborative-trading detection (goalscan 2026-07-16 — doc corrected to match code):
+ *   When 2+ family member accounts are about to run the same strategy on the same MFFU firm,
+ *   assignment is HARD-BLOCKED: assignStrategyToAccount() throws CollaborativeTradingBlockedError
+ *   (409-equivalent), broadcasts SSE `compliance:collaborative_trading_blocked`, and writes an
+ *   audit_log row `strategy_assignment.collaborative_trading_blocked` (severity=critical).
+ *   ⚠ This docstring PREVIOUSLY claimed "warn-only, assignment is NOT blocked" — that was STALE
+ *   and contradicted the code (the exact stale-doc-vs-runtime drift class this repo has been burned
+ *   by). Do NOT "restore" warn-only believing it is the documented deliberate behavior; the code's
+ *   hard-block is the safe MFFU-collaborative-ban-compliant default.
  *
- *   Topstep multi-account exception: Topstep 2026 rules explicitly allow the same user
- *   to run the same strategy across multiple accounts. The warning does NOT fire for
- *   accounts whose firm_id='topstep'.
+ *   Topstep multi-account exception: Topstep 2026 rules explicitly allow the same user to run the
+ *   same strategy across multiple accounts. The block does NOT fire for accounts whose firm_id='topstep'.
  *
- *   2026-07-10 review: this is warn-only, asymmetric with Topstep's HARD-blocking
- *   consistency gate (lifecycle-service.ts). Confirmed deliberate, not an oversight —
- *   MFFU is the operator's opt-in fallback firm with no funded account today (see
- *   feedback_topstep_only_mffu_not_a_blocker memory), so blocking assignment outright
- *   would stop family members from even being ASSIGNED a strategy pending the operator's
- *   own cancel-and-reassign judgment call. Revisit if MFFU becomes primary/funded.
+ *   Operator PRODUCT decision (open, per CLAUDE.md §2): whether MFFU should be warn-only instead of
+ *   hard-block is the operator's call — MFFU is the opt-in fallback firm with no funded account today
+ *   (feedback_topstep_only_mffu_not_a_blocker). Until the operator decides otherwise, the code
+ *   hard-blocks and this doc reflects that. Flipping to warn-only is a deliberate code+doc change, not
+ *   a bug fix.
  *
  * Pipeline-pause guard: all write operations (assign, unassign, releaseToFamily) check
  * isPipelineActive() and reject with a 423-equivalent error when paused.

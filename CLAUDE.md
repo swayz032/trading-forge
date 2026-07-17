@@ -636,6 +636,18 @@ Why: sessions that share ONE working directory also share ONE `.git` index, ONE 
 
 ---
 
+## §11c. Zero Carry-Forwards (HARD RULE — pinned 2026-07-16)
+
+**Operator mandate: NO carry-forwards, ever.** Every finding a scan / fix wave / task surfaces on YOUR fixable surface must close in the SAME wave — n8n exports, doc-drift, CI-lint coverage, and LOW-severity items are NOT exempt. "Log it for next wave" / "minor, defer it" is banned. Parked carry-forwards rot: prior waves filled the journal with stale TODOs that never came back.
+
+The deep-scan skill's zero-carry-forward *default* is now an absolute *rule* for this repo.
+
+- **The only legitimate non-closure** is a finding whose fix lives in a file another concurrent agent actively owns (worktree-isolation §11b + an explicit "don't interfere" instruction). That is NOT a carry-forward — it is an **immediate, verified HAND-OFF** to the owning agent, surfaced to the operator in the SAME session (with `file:line` + a ready-to-apply fix design), never parked for a future session of yours. If a finding has no active owner, it is yours — close it.
+- At Phase-6 record time the carry-forward ledger MUST be empty (or contain only actioned-this-session hand-offs with a named owner + the reason they're cross-agent). An unjustified carry-forward = the wave is not done.
+- Pairs with §11a (commit-and-push) and the fix-don't-skip / fix-the-whole-class disciplines. Memory: `feedback_zero_carry_forwards_absolute_2026_07_16`.
+
+---
+
 ## §12. Hard Gates — Don't Bypass
 
 | Gate | Stage | What it catches |

@@ -434,10 +434,10 @@ router.get("/drift/unresolved", async (_req: Request, res: Response) => {
 // Trigger compliance cascade revalidation for a firm
 router.post("/drift/:firm/cascade", idempotencyMiddleware, async (req: Request, res: Response) => {
   // goalscan 2026-07-16 (auth-parity class): mass-pausing a firm's entire book +
-  // invalidating its compliance reviews is an operator control action, not an
-  // OpenClaw ingest — its in-process callers (drift crons) hit cascadeRevalidation()
-  // directly, never this route. Its sibling /drift/:id/resolve was Office-guarded in
-  // the 2026-07-06 routes F-2 fix; /cascade (greater blast radius) was missed.
+  // invalidating its compliance reviews is an operator control action. This HTTP route is
+  // the SOLE caller of cascadeRevalidation() (verified: no in-process cron/service invokes it),
+  // so Office-guarding the route fully gates the behavior. Its sibling /drift/:id/resolve was
+  // Office-guarded in the 2026-07-06 routes F-2 fix; /cascade (greater blast radius) was missed.
   if (!requireOfficeControlAuthority(req, res, "compliance.drift_cascade_denied")) return;
   const firm = req.params.firm as string;
 

@@ -95,10 +95,15 @@ describe("goalscan 2026-07-16 — A4/A3/A6 admin.ts guards", () => {
     // guard precedes the marker-clearing call
     expect(body.indexOf("requirePipelineControlAuthority")).toBeLessThan(body.indexOf("clearOperatorAbsenceMarkers("));
   });
-  it("A3: liquidity-map batch route is guarded", () => {
+  it("A3: liquidity-map batch route admits shared-secret OR Office authority (blocks relay-Bearer)", () => {
     const idx = src.indexOf('adminRoutes.post("/liquidity-map/naked-pocs-batch"');
     expect(idx).toBeGreaterThan(-1);
-    expect(src.slice(idx, idx + 200)).toContain("requirePipelineControlAuthority(req, res)");
+    const body = src.slice(idx, idx + 1500);
+    // secret is now an ADMISSION path, and the Office guard is the fallback when no valid secret
+    expect(body).toContain("hasValidSecret");
+    expect(body).toContain("requirePipelineControlAuthority(req, res)");
+    // the Office guard must be gated behind the no-valid-secret branch (automation path can bypass it)
+    expect(body.indexOf("if (!hasValidSecret)")).toBeLessThan(body.indexOf("requirePipelineControlAuthority(req, res)"));
   });
   it("A6: the false 'tower-relay HMAC gateway' security claim is removed", () => {
     // the doc-rot that rationalized the weak liquidity-batch auth must be gone

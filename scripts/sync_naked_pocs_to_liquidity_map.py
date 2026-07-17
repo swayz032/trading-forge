@@ -246,14 +246,26 @@ def _sync_one_symbol(
         import urllib.error
 
         data = json.dumps(payload).encode("utf-8")
+        # goalscan 2026-07-16 (A3/F-1): authenticate. The endpoint is under /api which requires the
+        # shared Bearer API_KEY at the base gate (middleware/auth.ts, no loopback exemption), and the
+        # route itself now admits the X-Liquidity-Map-Secret automation path (routes/admin.ts). Send
+        # both when present; without them this daily sync silently 401s at the base gate and the
+        # liquidity_target_clear confluence factor runs on stale/absent naked-POC data.
+        _headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "TradingForge-NakedPocSync/1.0",
+        }
+        _api_key = os.environ.get("API_KEY")
+        if _api_key:
+            _headers["Authorization"] = f"Bearer {_api_key}"
+        _batch_secret = os.environ.get("LIQUIDITY_MAP_BATCH_SECRET")
+        if _batch_secret:
+            _headers["X-Liquidity-Map-Secret"] = _batch_secret
         req = urllib.request.Request(
             url,
             data=data,
             method="POST",
-            headers={
-                "Content-Type": "application/json",
-                "User-Agent": "TradingForge-NakedPocSync/1.0",
-            },
+            headers=_headers,
         )
         with urllib.request.urlopen(req, timeout=30) as resp:
             body = resp.read().decode("utf-8")

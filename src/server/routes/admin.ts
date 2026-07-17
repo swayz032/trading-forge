@@ -1480,25 +1480,33 @@ adminRoutes.get("/data-integrity-findings", async (req, res) => {
 // threshold or seed bogus exit targets. The prior comment claimed "admin routes are mounted
 // behind the tower-relay HMAC gateway so this is defense-in-depth" — that gateway DOES NOT EXIST
 // (verified: the only /api boundary is the shared Bearer API_KEY in middleware/auth.ts; the relay
-// forwards it verbatim and adds no HMAC). So the shared secret was the ONLY real control and it is
-// OPTIONAL (unset by default). Fix: require the same Office/operator control authority the other
-// trade-influencing admin mutations carry — this admits the operator's LOCAL daily cron (loopback,
-// non-relay) and the Office admin cookie, and blocks a relay-tunneled Bearer-only caller. The
-// optional X-Liquidity-Map-Secret remains an ADDITIONAL layer, not the primary boundary.
+// forwards it verbatim and adds no HMAC). So the shared secret was the ONLY route-level control and
+// it was OPTIONAL (unset by default → no control at all).
+//
+// This is an AUTOMATION endpoint (the daily scripts/sync_naked_pocs_to_liquidity_map.py sync), so an
+// Office-cookie-only guard is wrong — a cron can't hold a cookie, and via the relay it can't satisfy
+// the loopback branch either. Fix: admit EITHER (a) a valid shared batch secret (the automation path —
+// the sync script sends X-Liquidity-Map-Secret) OR (b) Office/operator control authority (manual
+// operator on loopback / admin cookie). A relay-tunneled Bearer-only caller with neither is BLOCKED.
+// The secret is now an ADMISSION path, not merely a reject-on-mismatch-when-set check.
 //
 // Audit: liquidity_map.naked_pocs_batched row carries the correlation_id.
 adminRoutes.post("/liquidity-map/naked-pocs-batch", async (req, res) => {
-  if (!requirePipelineControlAuthority(req, res)) return;
   const correlationId = randomUUID();
 
-  // ── Optional shared-secret check (secondary layer; primary is the guard above) ──
+  // ── Auth: shared-batch-secret OR Office/operator control authority ──
   const requiredSecret = process.env.LIQUIDITY_MAP_BATCH_SECRET;
-  if (requiredSecret && requiredSecret.length > 0) {
-    const providedSecret = req.header("x-liquidity-map-secret") ?? "";
-    if (providedSecret !== requiredSecret) {
+  const providedSecret = req.header("x-liquidity-map-secret") ?? "";
+  const hasValidSecret =
+    typeof requiredSecret === "string" && requiredSecret.length > 0 && providedSecret === requiredSecret;
+  if (!hasValidSecret) {
+    if (requiredSecret && requiredSecret.length > 0 && providedSecret.length > 0) {
+      // a secret was configured and one was supplied but did not match — explicit 401 (not a fallthrough)
       logger.warn({ correlationId }, "liquidity-map naked-pocs-batch: shared-secret mismatch");
       return res.status(401).json({ error: "shared_secret_mismatch", correlationId });
     }
+    // no valid secret presented → require Office/operator control authority (blocks relay-Bearer injection)
+    if (!requirePipelineControlAuthority(req, res)) return;
   }
 
   // ── Body validation ─────────────────────────────────────────────────────
