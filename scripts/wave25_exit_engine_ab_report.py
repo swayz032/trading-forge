@@ -23,17 +23,27 @@ Usage:
     python -m scripts.wave25_exit_engine_ab_report --days 7 --strategies silver_bullet
     python -m scripts.wave25_exit_engine_ab_report --days 30 --strategies silver_bullet,power_of_3
 
-Design note — adaptive path status (W25.17):
-  P7.A1+A2 (adaptive-exit-engine.ts) is being built in parallel by the paper-parity agent.
-  Until the TS adaptive engine is wired into the Python compile pipeline (P7.A5), the
-  "adaptive" exit mode in run_class_backtest() behaves identically to "static_styleC"
-  (the exit_engine parameter is propagated but _apply_trade_management() does not yet
-  branch on it — that wiring lands in P7.A5).
+Design note — adaptive path status (W25.17, corrected 2026-07-17):
+  Wave 25.5 (2026-05-24) wired the adaptive exit engine LIVE end-to-end
+  (Gap B: _apply_trade_management() in backtester.py branches on
+  exit_engine="adaptive" + a non-None adaptive_ctx and routes to
+  _apply_adaptive_management()). The dispatch requires BOTH the exit_engine
+  string AND a constructed AdaptiveExitContext — passing exit_engine="adaptive"
+  alone silently falls back to static_styleC (see
+  TestDispatchRouting.test_adaptive_without_ctx_falls_back_to_static in
+  src/engine/tests/test_apply_trade_management_branching.py). This harness's
+  `_run_backtest_for_strategy()` now constructs a default AdaptiveExitContext
+  for the adaptive arm so both arms genuinely exercise their respective exit
+  logic on identical entries (fixwave adaptive-exit-engine-safe-surface,
+  2026-07-17 — the "adaptive_ctx never threaded through" bug is closed).
 
-  The harness is designed with a `ADAPTIVE_WIRED` flag that lets callers verify whether
-  the adaptive path is producing different results.  When False (current state), the A/B
-  comparison will show zero delta — that is EXPECTED and is logged clearly in the report.
-  When P7.A5 ships, set ADAPTIVE_WIRED=true in the env to activate the live gate.
+  The harness is designed with an `ADAPTIVE_WIRED` flag that lets callers
+  toggle whether the non-regression gate is ENFORCED (blocking) vs advisory-
+  only. Default False = advisory (log deltas, never block); set
+  ADAPTIVE_WIRED=true in the env to make Sharpe/max_DD/trade-count
+  regressions fail the run. This flag no longer controls whether the
+  adaptive path itself runs — that is now unconditional whenever the
+  "adaptive" arm executes.
 """
 
 from __future__ import annotations
@@ -79,8 +89,11 @@ SHARPE_TOLERANCE = 0.05    # adaptive Sharpe may be up to 0.05 below static
 MAX_DD_TOLERANCE = 0.10    # adaptive max_DD may be up to 10% higher than static
 TRADE_COUNT_TOLERANCE = 0.20  # adaptive trade count must be within 20% of static
 
-# When True: non-regression gate is ENFORCED (expect P7.A5+ wiring)
-# When False (current state): gate is advisory only, delta=0 is expected
+# The adaptive exit engine itself runs unconditionally on the adaptive arm
+# (fixwave 2026-07-17 adaptive_ctx fix). This flag ONLY controls whether a
+# detected non-regression violation blocks the run:
+# When True: non-regression gate is ENFORCED (a regression fails the run).
+# When False (default): gate verdict is advisory only (logged, never blocking).
 ADAPTIVE_WIRED = os.environ.get("ADAPTIVE_WIRED", "false").lower() == "true"
 
 # ─── Direct backtester import ──────────────────────────────────────────
@@ -96,6 +109,7 @@ def _run_backtest_for_strategy(
     Returns the raw result dict or an error dict with 'error' key.
     """
     from src.engine.backtester import run_class_backtest
+    from src.engine.config import AdaptiveExitContext
     from src.engine.data_loader import load_ohlcv
 
     info = STRATEGY_REGISTRY[strategy_key]
@@ -111,6 +125,24 @@ def _run_backtest_for_strategy(
     except Exception as exc:
         return {"error": f"Failed to load strategy class {strategy_cls_path}: {exc}"}
 
+    # FIX (fixwave adaptive-exit-engine-safe-surface, 2026-07-17):
+    # run_class_backtest() only routes to the real adaptive exit engine
+    # (_apply_adaptive_management) when BOTH exit_engine="adaptive" AND
+    # adaptive_ctx is not None — see _apply_trade_management's dispatch in
+    # backtester.py and TestDispatchRouting.test_adaptive_without_ctx_falls_back_to_static
+    # in src/engine/tests/test_apply_trade_management_branching.py. Previously
+    # this call passed exit_engine=exit_engine but NEVER adaptive_ctx, so the
+    # "adaptive" arm silently fell back to _apply_static_styleC_management —
+    # identical logic to the "static" arm — and the harness could never detect
+    # a real adaptive-engine regression because it never exercised the
+    # adaptive path at all. Construct a default AdaptiveExitContext (empty
+    # liquidity snapshot, regime_at_entry=None -> "UNKNOWN" regime fallback
+    # per adaptive_exits.py's own documented default) and thread it through
+    # only for the adaptive arm, so the two arms now run genuinely different
+    # exit logic (Style C fixed R-multiples vs the liquidity/regime-aware
+    # adaptive engine) on identical entries.
+    adaptive_ctx = AdaptiveExitContext(liquidity_snapshot=[]) if exit_engine == "adaptive" else None
+
     try:
         result = run_class_backtest(
             strategy=strategy,
@@ -123,6 +155,7 @@ def _run_backtest_for_strategy(
             max_trades_per_day=2,
             use_performance_gate=False,    # Skip perf gate for A/B speed
             exit_engine=exit_engine,
+            adaptive_ctx=adaptive_ctx,
         )
     except Exception as exc:
         return {"error": f"run_class_backtest failed for {strategy_key}/{exit_engine}: {exc}"}
@@ -167,7 +200,10 @@ def _apply_non_regression_gate(static: dict, adaptive: dict, strategy_key: str) 
             "blocking_failures": list[str],
         }
 
-    When ADAPTIVE_WIRED=false (current P7.A1-A4 state), the gate is advisory only.
+    The adaptive exit engine itself always runs when the "adaptive" arm executes
+    (see the 2026-07-17 adaptive_ctx fix in _run_backtest_for_strategy). When
+    ADAPTIVE_WIRED=false (default), this gate's verdict is advisory only — a
+    FAIL is reported and logged but does not fail the overall run.
     """
     checks = []
     blocking_failures: list[str] = []
@@ -253,13 +289,19 @@ def _build_markdown_report(
     lines.append(f"**Run date:** {run_date}")
     lines.append(f"**Window:** {start_date} → {end_date}")
     lines.append(f"**Strategies tested:** {len(strategy_results)}")
-    lines.append(f"**Adaptive exit wired:** {'YES' if adaptive_wired else 'NO (P7.A1–A4 state; adaptive path stubs to static_styleC)'}")
+    lines.append(
+        f"**Non-regression gate enforcement:** "
+        f"{'ENFORCED (blocking)' if adaptive_wired else 'ADVISORY (logged, not blocking)'}"
+    )
     lines.append("")
 
     if not adaptive_wired:
-        lines.append("> NOTE: adaptive exit engine wiring (P7.A5) is not yet complete.")
-        lines.append("> Expect zero delta between adaptive and static_styleC runs.")
-        lines.append("> Gate is advisory only until `ADAPTIVE_WIRED=true`.")
+        lines.append("> NOTE: the adaptive exit engine runs unconditionally on the adaptive")
+        lines.append("> arm (fixwave 2026-07-17 adaptive_ctx fix) — real divergence from")
+        lines.append("> static_styleC is expected below. `ADAPTIVE_WIRED=false` (default)")
+        lines.append("> only means the non-regression gate is advisory, not that the")
+        lines.append("> adaptive path is a stub. Set `ADAPTIVE_WIRED=true` to make a")
+        lines.append("> detected regression fail the run.")
         lines.append("")
 
     # ── Overall gate banner ────────────────────────────────────────────
@@ -340,7 +382,7 @@ def _build_markdown_report(
         # Gate summary
         gate_status = "PASS" if gate["passed"] else "FAIL"
         if not adaptive_wired:
-            gate_status += " (advisory — adaptive not yet wired)"
+            gate_status += " (advisory — gate enforcement off)"
         lines.append(f"**Strategy gate:** {gate_status}")
         lines.append("")
         lines.append("---")

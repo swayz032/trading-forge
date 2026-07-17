@@ -58,16 +58,6 @@ from src.engine.data_loader import (
     flag_rollover_days,
     load_ohlcv,
 )
-# Wave 2 (2026-07-16): per-symbol stop geometry moved to the stdlib-only
-# src/engine/stop_geometry.py so the TS↔Python parity gate can import it without
-# pulling the JIT backtester. Thin `_get_*` aliases are defined below (where the
-# old function bodies were) so existing imports/tests keep resolving.
-from src.engine.stop_geometry import (
-    get_stop_ceiling_for_symbol,
-    get_stop_floor_for_symbol,
-    managed_stop_pts,
-    sizing_stop_pts,
-)
 from src.engine.decay.half_life import fit_decay
 from src.engine.decay.sub_signals import composite_decay_score
 from src.engine.firm_config import (
@@ -84,6 +74,16 @@ from src.engine.sanity_checks import run_sanity_checks
 from src.engine.signals import generate_signals
 from src.engine.sizing import compute_position_sizes
 from src.engine.slippage import compute_slippage
+
+# Wave 2 (2026-07-16): per-symbol stop geometry moved to the stdlib-only
+# src/engine/stop_geometry.py so the TS↔Python parity gate can import it without
+# pulling the JIT backtester. Thin `_get_*` aliases are defined below (where the
+# old function bodies were) so existing imports/tests keep resolving.
+from src.engine.stop_geometry import (
+    get_stop_ceiling_for_symbol,
+    get_stop_floor_for_symbol,
+    managed_stop_pts,
+)
 from src.engine.strategy_base import BaseStrategy
 
 # ─── Signal Fill Convention ──────────────────────────────────────────
@@ -2077,6 +2077,28 @@ def _apply_adaptive_management(
                 tp2_hit = (not is_short and bar_high >= tp2_price) or (is_short and bar_low <= tp2_price)
                 if tp2_hit:
                     tp2_filled = True
+                    # FIX (fixwave adaptive-exit-engine-safe-surface, 2026-07-17):
+                    # scaling.runner_pct can be 0 for a valid regime-selected
+                    # scaling tuple (e.g. LOW_LIQ_CHOP's 50/50/0 — "no runner,
+                    # chop kills convexity"). When the runner leg is 0% of the
+                    # position, TP1+TP2 already closed 100% of size — there is
+                    # NO remaining runner position for the trail-stop logic
+                    # below to manage. Previously the bar loop continued
+                    # unconditionally after TP2 filled, advancing trail_stop
+                    # for a phantom 0%-weighted runner leg; if a later bar's
+                    # low/high crossed that phantom trail, exit_reason got
+                    # overwritten to "stop_loss"/"trailing_stop" even though
+                    # the trade was already a fully-profitable TP-complete
+                    # close (the blended final_exit price was still correct
+                    # because runner_pct=0 zeroes that term's weight — only
+                    # the exit_reason label and exit_idx were wrong). Short-
+                    # circuit here: with no runner to manage, the trade is
+                    # done the moment TP2 fills.
+                    if scaling.runner_pct <= 0:
+                        exit_price = float(close_np[bar]) if bar < len(close_np) else bar_open
+                        exit_idx = bar
+                        exit_reason = "take_profit"
+                        break
 
             # ── Pre-lunch partial (W25.16) ─────────────────────────────
             if (
