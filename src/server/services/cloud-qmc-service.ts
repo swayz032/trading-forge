@@ -106,6 +106,121 @@ export interface PollResult {
   completed: number;
   failed: number;
   skipped: number;
+  staleSwept: number;
+}
+
+// ─── Stale queued/running job sweep ───────────────────────────────────────────
+//
+// fixwave (2026-07-17): pollPendingJobs() had no upper bound on how long a row
+// could sit in "queued" or "running" — a row whose IBM submission failed
+// silently (ibmJobId stays null; the existing comment at the skip site above
+// literally says "submit failed silently?") or whose IBM job status polling
+// never resolves (poll_ibm_job keeps returning "running", or throws every
+// cycle) occupies one of the LIMIT-20 slots forever, crowding out fresh runs
+// and giving the operator no signal that anything is stuck — it just silently
+// never completes. Two thresholds, not one: a "queued" row with NO ibmJobId
+// never had an async external dependency in the first place (submission is a
+// synchronous step inside enqueueCloudQmcRun), so it can be swept quickly; a
+// "running" row with a real ibmJobId may legitimately sit in IBM's public
+// QPU queue for many hours, so it gets a much longer grace window before
+// being declared stale.
+
+/** Hours a "queued" row with no ibmJobId may sit before being swept as stale
+ * (submission never even happened — nothing async to wait for). */
+export const CLOUD_QMC_STALE_QUEUED_NO_JOB_ID_HOURS = Number(
+  process.env.CLOUD_QMC_STALE_QUEUED_NO_JOB_ID_HOURS ?? "1",
+);
+
+/** Hours a "queued"/"running" row WITH an ibmJobId may sit before being swept
+ * as stale — generous to cover legitimate IBM public-tier queue wait times. */
+export const CLOUD_QMC_STALE_RUNNING_HOURS = Number(
+  process.env.CLOUD_QMC_STALE_RUNNING_HOURS ?? "48",
+);
+
+/**
+ * Pure predicate: has this queued/running cloud_qmc_runs row exceeded its
+ * staleness window? No DB access — testable in isolation.
+ */
+export function isCloudQmcRunStale(
+  row: { status: string; ibmJobId: string | null; createdAt: Date },
+  now: Date = new Date(),
+): boolean {
+  if (row.status !== "queued" && row.status !== "running") return false;
+
+  const ageHours = (now.getTime() - row.createdAt.getTime()) / (1000 * 60 * 60);
+
+  if (row.status === "queued" && !row.ibmJobId) {
+    return ageHours >= CLOUD_QMC_STALE_QUEUED_NO_JOB_ID_HOURS;
+  }
+  return ageHours >= CLOUD_QMC_STALE_RUNNING_HOURS;
+}
+
+/**
+ * Sweep stale queued/running cloud_qmc_runs rows to status="failed" so they
+ * stop occupying poll slots and the operator gets a visible failure signal
+ * instead of silent indefinite limbo. Never throws — DB failures are logged
+ * and swallowed (matches quantum-cost-tracker.ts::pruneStalePendingCosts).
+ * Returns the count of rows swept.
+ */
+export async function sweepStaleCloudQmcRuns(): Promise<number> {
+  try {
+    const pendingRows = await db
+      .select({
+        id: cloudQmcRuns.id,
+        status: cloudQmcRuns.status,
+        ibmJobId: cloudQmcRuns.ibmJobId,
+        createdAt: cloudQmcRuns.createdAt,
+      })
+      .from(cloudQmcRuns)
+      .where(inArray(cloudQmcRuns.status, ["queued", "running"]));
+
+    const now = new Date();
+    const staleIds: string[] = [];
+    const staleReasons = new Map<string, string>();
+
+    for (const row of pendingRows) {
+      if (!isCloudQmcRunStale(row, now)) continue;
+      staleIds.push(row.id);
+      staleReasons.set(
+        row.id,
+        row.status === "queued" && !row.ibmJobId
+          ? "stale_queued_no_ibm_job_id_swept"
+          : "stale_pending_swept_exceeded_staleness_window",
+      );
+    }
+
+    if (staleIds.length === 0) return 0;
+
+    // Group by error message so each distinct reason gets one UPDATE.
+    const byReason = new Map<string, string[]>();
+    for (const id of staleIds) {
+      const reason = staleReasons.get(id)!;
+      const bucket = byReason.get(reason) ?? [];
+      bucket.push(id);
+      byReason.set(reason, bucket);
+    }
+
+    for (const [reason, ids] of byReason) {
+      await db
+        .update(cloudQmcRuns)
+        .set({
+          status: "failed",
+          completedAt: now,
+          errorMessage: reason,
+        })
+        .where(inArray(cloudQmcRuns.id, ids));
+    }
+
+    logger.warn(
+      { staleCount: staleIds.length },
+      "cloud-qmc: swept stale queued/running run(s) to failed",
+    );
+
+    return staleIds.length;
+  } catch (err) {
+    logger.warn({ err }, "cloud-qmc: sweepStaleCloudQmcRuns failed");
+    return 0;
+  }
 }
 
 // ─── Python runner helper ─────────────────────────────────────────────────────
@@ -119,6 +234,10 @@ interface CloudQmcPythonResult {
   ising_corrected_estimate: number | null;
   pymatching_estimate: number | null;
   uncorrected_estimate: number | null;
+  // True only when a REAL Ising ONNX decode happened (IsingDecoderWrapper.is_ising_loaded).
+  // ising_corrected_estimate is non-null even when the PyMatching identity-matrix
+  // placeholder fallback ran — do not infer decode success from that field alone.
+  ising_model_loaded: boolean;
   error_message: string | null;
   n_logical_qubits: number;
   n_physical_qubits: number;
@@ -505,7 +624,7 @@ export async function enqueueCloudQmcRun(input: CloudQmcEnqueueInput): Promise<v
  *   3. Update row to "completed" or "failed"
  */
 export async function pollPendingJobs(): Promise<PollResult> {
-  const result: PollResult = { processed: 0, completed: 0, failed: 0, skipped: 0 };
+  const result: PollResult = { processed: 0, completed: 0, failed: 0, skipped: 0, staleSwept: 0 };
 
   // isActive() guard
   if (!(await isPipelineActive())) {
@@ -519,6 +638,13 @@ export async function pollPendingJobs(): Promise<PollResult> {
     logger.debug("cloud-qmc-poll: QUANTUM_CLOUD_ENABLED not set — skipping poll");
     return result;
   }
+
+  // Sweep rows stuck in queued/running past their staleness window BEFORE
+  // fetching this cycle's work — a swept row won't also be re-processed
+  // below (it's now "failed"), and this runs every 5-min cron cycle so no
+  // separate cron registration is needed (scheduler.ts is out of scope for
+  // this fix — see sweepStaleCloudQmcRuns() docstring for the failure mode).
+  result.staleSwept = await sweepStaleCloudQmcRuns();
 
   // Find all queued and running rows
   let pendingRows: Array<{
@@ -657,8 +783,11 @@ export async function pollPendingJobs(): Promise<PollResult> {
           })
           .where(eq(cloudQmcRuns.id, row.id));
 
-        // Determine whether the Ising decoder produced a real estimate or fell back to PyMatching
-        const isingDecoderSucceeded = pyResult.ising_corrected_estimate != null;
+        // Determine whether a REAL Ising ONNX decode occurred (vs the PyMatching
+        // identity-matrix placeholder fallback). ising_corrected_estimate is non-null
+        // in BOTH cases (the fallback backfills it), so it cannot be used as the
+        // success signal — use the decoder's own ising_model_loaded flag instead.
+        const isingDecoderSucceeded = pyResult.ising_model_loaded === true;
         const isingDecodeErrorMsg = isingDecoderSucceeded
           ? null
           : "ising_fallback_to_pymatching";

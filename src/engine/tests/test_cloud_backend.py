@@ -284,6 +284,73 @@ class TestCloudBudgetTrackerPersistence:
         assert remaining["ibm_seconds_used"] == 0
 
 
+class TestCloudBudgetTrackerConcurrency:
+    """MED REGRESSION: check-then-record was a cross-process TOCTOU / lost-update
+    race. submit_surface_code_iae() runs as a fresh OS subprocess per
+    cloud-qmc-service.ts submission — each gets its OWN CloudBudgetTracker()
+    instance with its own in-memory `self._data` snapshot from __init__. The
+    pre-fix record_ibm_usage() did `self._data[...] += seconds; self._save()`
+    against that stale snapshot, so two concurrent recorders (simulated here
+    with threads + independent tracker instances against the SAME budget
+    file, which reproduces the identical stale-snapshot mechanics without
+    needing real subprocesses) could each compute their increment off the
+    SAME base and the second save silently clobbers the first — the true
+    total usage is under-reported (a real budget overshoot goes unnoticed).
+    """
+
+    def test_concurrent_record_ibm_usage_no_lost_update(self, tmp_budget_path: Path):
+        import threading
+
+        n_workers = 8
+        seconds_each = 10.0
+        barrier = threading.Barrier(n_workers)
+
+        def worker(idx: int) -> None:
+            # Each worker gets its OWN tracker instance (own __init__ snapshot),
+            # exactly like two independent poll_ibm_job/submit_surface_code_iae
+            # OS subprocesses each constructing `tracker = CloudBudgetTracker()`.
+            t = CloudBudgetTracker(path=tmp_budget_path)
+            barrier.wait()  # maximize the chance all snapshots are equally stale
+            t.record_ibm_usage(seconds_each, job_id=f"job-{idx}", backend_name="ibm_fez")
+
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(n_workers)]
+        for th in threads:
+            th.start()
+        for th in threads:
+            th.join(timeout=30)
+            assert not th.is_alive(), "worker thread did not complete — possible deadlock"
+
+        final = CloudBudgetTracker(path=tmp_budget_path)
+        remaining = final.get_remaining()
+        assert remaining["ibm_seconds_used"] == n_workers * seconds_each, (
+            f"expected {n_workers * seconds_each}s (no lost updates), "
+            f"got {remaining['ibm_seconds_used']}s — a concurrent record was clobbered"
+        )
+        assert len(final._data["runs"]) == n_workers, (
+            "every concurrent record_ibm_usage() call must produce its own run row"
+        )
+
+    def test_concurrent_can_run_ibm_reads_fresh_state_not_stale_init_snapshot(
+        self, tmp_budget_path: Path
+    ):
+        """can_run_ibm() must reflect usage recorded by ANOTHER tracker instance
+        after this tracker's own __init__, not the stale snapshot from
+        construction time."""
+        t1 = CloudBudgetTracker(path=tmp_budget_path)
+        t2 = CloudBudgetTracker(path=tmp_budget_path)  # constructed with t1's (empty) state
+
+        # t1 records real usage AFTER t2 was already constructed.
+        t1.record_ibm_usage(580, job_id="j1", backend_name="ibm_torino")
+
+        # t2's __init__ snapshot is stale (still shows 0 used) — but a correct
+        # can_run_ibm() must consult FRESH disk state, not that snapshot.
+        # 580 used; 20s remaining; 25 * 2 = 50 > 20 -> must be blocked.
+        assert t2.can_run_ibm(25, limit_seconds=600) is False, (
+            "can_run_ibm() returned True using a stale __init__ snapshot instead of "
+            "re-reading fresh on-disk state written by a concurrent tracker instance"
+        )
+
+
 # ─── BRAKET_DEVICES Mapping ──────────────────────────────────────────────────
 
 
@@ -844,6 +911,104 @@ class TestIBMChannelEnvDriven:
             assert call_kwargs["instance"] == crn, (
                 f"Expected instance='{crn}', got '{call_kwargs['instance']}'. "
                 "poll_ibm_job must read IBM_QUANTUM_CRN instead of 'open-instance'."
+            )
+        finally:
+            self._restore_ibm(cb, originals)
+
+    def test_poll_ibm_job_completed_forwards_ising_model_loaded_true_on_real_decode(self):
+        """REGRESSION: when a real Ising ONNX decode ran, poll_ibm_job's completed
+        response must carry ising_model_loaded=True so the TS caller's
+        isingDecoderSucceeded flag is accurate."""
+        import src.engine.cloud_backend as cb
+        mock_qs_cls, originals = self._inject_mock_ibm(cb)
+        try:
+            mock_svc = mock_qs_cls.return_value
+            mock_job = MagicMock()
+            mock_job.status.return_value = "DONE"
+            mock_job.metrics.side_effect = Exception("no metrics in this fixture")
+            mock_result = MagicMock()
+            mock_result.__getitem__.side_effect = TypeError("not subscriptable in this fixture")
+            mock_job.result.return_value = mock_result
+            mock_svc.job.return_value = mock_job
+
+            mock_decoder = MagicMock()
+            mock_decoder.decode.return_value = {
+                "ising_corrected_estimate": 0.031,
+                "pymatching_estimate": 0.029,
+                "uncorrected_estimate": 0.4,
+                "raw_syndrome_count": 1,
+                "backend_used": "onnx_cuda",
+                "ising_model_loaded": True,  # real ONNX decode ran
+            }
+
+            env = {"QUANTUM_CLOUD_ENABLED": "true", "IBM_QUANTUM_TOKEN": "t"}
+            with patch.dict(os.environ, env, clear=False), \
+                 patch.object(cb, "CloudBudgetTracker") as mock_tracker_cls, \
+                 patch(
+                     "src.engine.ising_decoder_wrapper.create_decoder",
+                     return_value=mock_decoder,
+                 ):
+                mock_tracker_cls.return_value = MagicMock()
+                result = cb.poll_ibm_job("job-real-decode", "ibm_fez")
+
+            assert result["status"] == "completed"
+            assert result["ising_model_loaded"] is True, (
+                "poll_ibm_job must forward ising_model_loaded=True from the decoder "
+                "when a real ONNX decode occurred."
+            )
+        finally:
+            self._restore_ibm(cb, originals)
+
+    def test_poll_ibm_job_completed_forwards_ising_model_loaded_false_on_placeholder_fallback(self):
+        """REGRESSION (HIGH finding): when the decoder falls back to the PyMatching
+        identity-matrix placeholder (no real ONNX decode), poll_ibm_job's completed
+        response must carry ising_model_loaded=False EVEN THOUGH
+        ising_corrected_estimate is non-null (the fallback still backfills a number).
+        Prior to the fix, the TS caller inferred success from
+        ising_corrected_estimate != null alone, which is true in this exact case —
+        falsely reporting a real quantum decode occurred."""
+        import src.engine.cloud_backend as cb
+        mock_qs_cls, originals = self._inject_mock_ibm(cb)
+        try:
+            mock_svc = mock_qs_cls.return_value
+            mock_job = MagicMock()
+            mock_job.status.return_value = "DONE"
+            mock_job.metrics.side_effect = Exception("no metrics in this fixture")
+            mock_result = MagicMock()
+            mock_result.__getitem__.side_effect = TypeError("not subscriptable in this fixture")
+            mock_job.result.return_value = mock_result
+            mock_svc.job.return_value = mock_job
+
+            mock_decoder = MagicMock()
+            mock_decoder.decode.return_value = {
+                # Placeholder identity-matrix PyMatching fallback still produces a
+                # non-null estimate (effective_ising = ising_result or pymatching_result).
+                "ising_corrected_estimate": 0.11,
+                "pymatching_estimate": 0.11,
+                "uncorrected_estimate": 0.4,
+                "raw_syndrome_count": 1,
+                "backend_used": "pymatching",
+                "ising_model_loaded": False,  # no real ONNX decode ran
+            }
+
+            env = {"QUANTUM_CLOUD_ENABLED": "true", "IBM_QUANTUM_TOKEN": "t"}
+            with patch.dict(os.environ, env, clear=False), \
+                 patch.object(cb, "CloudBudgetTracker") as mock_tracker_cls, \
+                 patch(
+                     "src.engine.ising_decoder_wrapper.create_decoder",
+                     return_value=mock_decoder,
+                 ):
+                mock_tracker_cls.return_value = MagicMock()
+                result = cb.poll_ibm_job("job-fallback-decode", "ibm_fez")
+
+            assert result["status"] == "completed"
+            assert result["ising_corrected_estimate"] is not None, (
+                "sanity check: the placeholder fallback DOES backfill a non-null estimate"
+            )
+            assert result["ising_model_loaded"] is False, (
+                "poll_ibm_job must report ising_model_loaded=False when only the "
+                "PyMatching identity-matrix placeholder ran, even though "
+                "ising_corrected_estimate is non-null."
             )
         finally:
             self._restore_ibm(cb, originals)

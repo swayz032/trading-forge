@@ -14,26 +14,22 @@ lifecycle decisions. This module is challenger-only evidence.
 """
 from __future__ import annotations
 
-import math
-import sys
+import random
+import threading
 import time
-from typing import Optional
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 # Import the module under test
 from src.engine.quantum_adversarial_stress import (
+    WALL_CLOCK_LIMIT_S,
     AdversarialStressResult,
     PropFirmRules,
     TradeRecord,
-    GOVERNANCE_LABELS,
-    WALL_CLOCK_LIMIT_S,
     _compute_breach_prob_classical,
     run_adversarial_stress,
 )
-
-import random
 
 # ─── Module-level flag enablement ─────────────────────────────────────────────
 # F-1 (2026-05-21): run_adversarial_stress now gates on QUANTUM_ADVERSARIAL_STRESS_ENABLED.
@@ -280,25 +276,36 @@ class TestCostCeiling:
 
     def test_abort_on_grover_timeout(self):
         """If Grover exceeds WALL_CLOCK_LIMIT_S, status becomes 'aborted'."""
-        import concurrent.futures
-
         trades = _make_trades([-300.0, -400.0, 200.0, -100.0, -500.0])
         rules = _standard_rules(500.0)
 
+        # Cooperatively-stoppable mock (threading.Event) instead of a bare
+        # time.sleep(35) — a real fixwave (2026-07-17) regression: because
+        # run_adversarial_stress no longer blocks the caller on
+        # ThreadPoolExecutor's default wait=True shutdown, this mock's
+        # background thread would otherwise keep running for the full 35s
+        # AFTER the test's assertions already passed, needlessly slowing
+        # down the rest of the pytest session. Releasing it in `finally`
+        # keeps this test's real wall-clock cost near-zero either way.
+        release = threading.Event()
+
         def slow_grover(*args, **kwargs):
-            time.sleep(35)  # Exceeds 30s limit
+            release.wait(timeout=10.0)  # bounded safety net, never the real bound under test
             return 0.5, [], 2, 5, "local_simulator"
 
-        with patch(
-            "src.engine.quantum_adversarial_stress._run_grover",
-            side_effect=slow_grover,
-        ), patch(
-            "src.engine.quantum_adversarial_stress.WALL_CLOCK_LIMIT_S",
-            0.1,  # Shrink to 100ms for test speed
-        ):
-            result = run_adversarial_stress(trades, rules, seed=42)
+        try:
+            with patch(
+                "src.engine.quantum_adversarial_stress._run_grover",
+                side_effect=slow_grover,
+            ), patch(
+                "src.engine.quantum_adversarial_stress.WALL_CLOCK_LIMIT_S",
+                0.1,  # Shrink to 100ms for test speed
+            ):
+                result = run_adversarial_stress(trades, rules, seed=42)
+        finally:
+            release.set()
 
-        # With 100ms limit and 35s sleep, must abort OR fall back to classical
+        # With 100ms limit and a slow mock, must abort OR fall back to classical
         # (ThreadPoolExecutor raises TimeoutError -> aborted or classical runs instead)
         assert result.status in ("aborted", "completed")
         if result.status == "aborted":
@@ -309,27 +316,89 @@ class TestCostCeiling:
         trades = _make_trades([-300.0, -400.0, 200.0])
         rules = _standard_rules(500.0)
 
+        # See test_abort_on_grover_timeout for why this uses a cooperative
+        # Event instead of time.sleep(35).
+        release = threading.Event()
+
         def slow_classical(*args, **kwargs):
-            time.sleep(35)
+            release.wait(timeout=10.0)
             return 0.0, [], None
 
-        with patch(
-            "src.engine.quantum_adversarial_stress.PENNYLANE_AVAILABLE",
-            False,
-        ), patch(
-            "src.engine.quantum_adversarial_stress._compute_breach_prob_classical",
-            side_effect=slow_classical,
-        ), patch(
-            "src.engine.quantum_adversarial_stress.WALL_CLOCK_LIMIT_S",
-            0.1,
-        ):
-            result = run_adversarial_stress(trades, rules, seed=42)
+        try:
+            with patch(
+                "src.engine.quantum_adversarial_stress.PENNYLANE_AVAILABLE",
+                False,
+            ), patch(
+                "src.engine.quantum_adversarial_stress._compute_breach_prob_classical",
+                side_effect=slow_classical,
+            ), patch(
+                "src.engine.quantum_adversarial_stress.WALL_CLOCK_LIMIT_S",
+                0.1,
+            ):
+                result = run_adversarial_stress(trades, rules, seed=42)
+        finally:
+            release.set()
 
         assert result.status in ("aborted", "completed")
 
     def test_wall_clock_constant_value(self):
         """WALL_CLOCK_LIMIT_S must be <= 30 seconds."""
         assert WALL_CLOCK_LIMIT_S <= 30.0
+
+    def test_wall_clock_bounds_caller_return_latency_not_executor_shutdown_join(self):
+        """REGRESSION (fixwave 2026-07-17): run_adversarial_stress() must
+        RETURN within roughly WALL_CLOCK_LIMIT_S of a slow classical
+        fallback, not block on ThreadPoolExecutor's implicit
+        shutdown(wait=True) join.
+
+        `with ThreadPoolExecutor(...) as executor:` calls shutdown(wait=True)
+        on __exit__, which blocks until the submitted (uncancellable) worker
+        thread actually finishes — REGARDLESS of future.result(timeout=...)
+        having already raised TimeoutError inside the with-block. So the old
+        code reported status="aborted" but did not actually return to the
+        caller until the slow call finished on its own, silently defeating
+        the documented "aborts... if wall clock exceeded" contract: the
+        function's real wall-clock cost equalled the slow call's true
+        duration, not WALL_CLOCK_LIMIT_S.
+
+        Uses a cooperatively-stoppable mock (threading.Event) rather than a
+        long time.sleep() so a real failure here (function still blocking)
+        is bounded at ~10s instead of hanging, and the passing case leaves
+        no slow background thread behind.
+        """
+        trades = _make_trades([-300.0, -400.0, 200.0])
+        rules = _standard_rules(500.0)
+
+        release = threading.Event()
+
+        def slow_classical(*args, **kwargs):
+            release.wait(timeout=10.0)
+            return 0.0, [], None
+
+        try:
+            with patch(
+                "src.engine.quantum_adversarial_stress.PENNYLANE_AVAILABLE",
+                False,
+            ), patch(
+                "src.engine.quantum_adversarial_stress._compute_breach_prob_classical",
+                side_effect=slow_classical,
+            ), patch(
+                "src.engine.quantum_adversarial_stress.WALL_CLOCK_LIMIT_S",
+                0.2,
+            ):
+                t0 = time.time()
+                result = run_adversarial_stress(trades, rules, seed=42)
+                elapsed = time.time() - t0
+        finally:
+            release.set()
+
+        assert result.status == "aborted"
+        assert elapsed < 2.0, (
+            f"run_adversarial_stress took {elapsed:.2f}s to return after a "
+            "0.2s WALL_CLOCK_LIMIT_S timeout — it is blocking on "
+            "ThreadPoolExecutor's default shutdown(wait=True) join instead "
+            "of returning as soon as future.result() times out."
+        )
 
 
 # ─── 6. Classical breach computation unit tests ───────────────────────────────
@@ -374,6 +443,91 @@ class TestClassicalBreachComputation:
         if len(examples) >= 2:
             for i in range(len(examples) - 1):
                 assert examples[i]["loss_sum"] >= examples[i + 1]["loss_sum"]
+
+    def test_loss_assignment_matches_grover_consecutive_streak_indexing(self):
+        """REGRESSION (MED): classical fallback must index loss_amounts by
+        CONSECUTIVE-LOSS-STREAK position (resets on every win), exactly like
+        the Grover oracle's `consecutive_loss_idx` in _grover_circuit — NOT
+        by the trade's absolute ordering position (`i % len(loss_amounts)`,
+        the pre-fix scheme).
+
+        Worked counter-example: loss_amounts=[10,20,30] (in that order),
+        ordering=[1,0,1,1,0] (loss, win, loss, loss, win).
+
+        Old (buggy) `i % len(loss_amounts)` scheme:
+          i=0 bit=1 -> idx 0%3=0 -> +10 (running=10)
+          i=1 bit=0 -> reset (running=0)
+          i=2 bit=1 -> idx 2%3=2 -> +30 (running=30)
+          i=3 bit=1 -> idx 3%3=0 -> +10 (running=40)   <- WRONG: reuses
+                                                            loss_amounts[0]
+                                                            mid-streak
+          i=4 bit=0 -> reset
+          worst = 40
+
+        Grover-matching consecutive-streak scheme (the fix):
+          i=0 bit=1, streak pos 0 -> idx 0 -> +10 (running=10, streak=1)
+          i=1 bit=0 -> reset (running=0, streak=0)
+          i=2 bit=1, streak pos 0 -> idx 0 -> +10 (running=10, streak=1)
+          i=3 bit=1, streak pos 1 -> idx 1 -> +20 (running=30, streak=2)
+          i=4 bit=0 -> reset
+          worst = 30
+
+        This asserts on `breach_prob` (computed over ALL 2**5=32 enumerated
+        orderings) rather than presence in the top-5 truncated examples list
+        — at daily_loss_limit=25.0 there are many higher-sum breaching
+        orderings (e.g. the all-losses [1,1,1,1,1] = 90), so [1,0,1,1,0]'s
+        loss_sum=30 never survives the top-5 cut even under the FIXED
+        algorithm, making top-5 presence an unreliable/lossy assertion
+        (verified empirically: it fails against the fixed code, a false
+        RED). `breach_prob` is not truncated, so it is the correct signal.
+
+        daily_loss_limit=35.0 is chosen so the two schemes disagree on the
+        overall breach SET, not just this one ordering's exact sum — a
+        stronger, hand-verified assertion:
+          - NEW (streak) scheme: a 2-consecutive-run always sums to exactly
+            loss_amounts[0]+loss_amounts[1]=30 regardless of WHERE it
+            occurs (that's the whole point of streak-relative indexing), so
+            30 < 35 never breaches; only runs of length >= 3 do. Exactly 3
+            of the 32 orderings have a max run >= 3 with all 3 losses
+            forming ONE block, but longer streak-tail reuse (clamped to
+            loss_amounts[-1]) also pushes some 4/5-length-run orderings
+            over 35 — full brute-force enumeration (verified by an
+            independent throwaway script against this exact algorithm)
+            gives breach_count=8, breach_prob=8/32=0.25.
+          - OLD (positional i % len) scheme: worst-value depends on ABSOLUTE
+            bit position, so several 2-consecutive-run orderings coincidentally
+            land on high-value indices (e.g. [1,0,1,1,0] itself: old=40 >= 35,
+            a false breach under the buggy scheme) — independently verified
+            breach_count=12, breach_prob=12/32=0.375.
+        These counts are provably different (8 vs 12), so this assertion
+        would fail under the pre-fix positional scheme.
+        """
+        rng = random.Random(42)
+        prob, examples, minimal_n = _compute_breach_prob_classical(
+            [-10.0, -20.0, -30.0, 5.0, 5.0],  # loss_amounts=[10,20,30] positionally
+            daily_loss_limit=35.0,
+            n_orderings_sampled=1000,  # unused (n=5 <= 12 -> brute force)
+            rng=rng,
+        )
+        assert prob == pytest.approx(8 / 32), (
+            "classical fallback breach_prob at daily_loss_limit=35.0 with "
+            "loss_amounts=[10,20,30] must be 8/32=0.25 (consecutive-streak "
+            "indexing, matching the Grover oracle's breach SET), not "
+            "12/32=0.375 (the old absolute-position `i % len(loss_amounts)` "
+            f"scheme that broke the documented 'mandatory parity' contract). Got {prob}."
+        )
+        # [1,0,1,1,0] is the docstring's worked counter-example: it breaches
+        # under the OLD scheme (worst=40 >= 35) but must NOT breach under the
+        # fixed streak-relative scheme (worst=30 < 35) — confirm it is absent
+        # from the (non-truncated-relevant here, since breach_count=8 > 5 so
+        # this ordering's sum=30 would be excluded from top-5 either way, but
+        # we check membership by sequence, not by list position/index) example set.
+        target = [e for e in examples if e["sequence"] == [1, 0, 1, 1, 0]]
+        assert not target, (
+            "ordering [1,0,1,1,0] must NOT be a breaching example at "
+            "daily_loss_limit=35.0 under the fixed streak-relative scheme "
+            f"(worst=30 < 35) — got it flagged as a breach: {target}"
+        )
 
 
 # ─── 7. Governance / authority boundary ──────────────────────────────────────

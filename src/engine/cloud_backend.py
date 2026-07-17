@@ -20,7 +20,7 @@ import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal, Optional, TypedDict
+from typing import Any, Callable, Literal, Optional, TypedDict
 
 from filelock import FileLock
 from pydantic import BaseModel
@@ -152,48 +152,119 @@ class CloudBudgetTracker:
             "runs": [],
         }
 
-    def _save(self) -> None:
-        """Atomically persist budget data.
-
-        Pattern:
-          1. Acquire a file-level lock (filelock — cross-platform).
-          2. Write to a sibling .tmp file in the same directory.
-          3. os.replace() — atomic on both POSIX and Windows (same FS).
-          4. On any failure, log a warning but do NOT corrupt the existing file.
+    def _write_atomic_unlocked(self) -> None:
+        """Write self._data to disk atomically. Caller MUST already hold the
+        file lock (or accept the tiny non-atomic-write race of the legacy
+        `_save()` wrapper below) — this method does not lock by itself so it
+        can be composed inside a single already-held lock in `_locked_op()`.
         """
-        lock_path = self._path.with_suffix(".lock")
         tmp_path = self._path.with_suffix(".tmp")
         try:
+            with open(tmp_path, "w") as fh:
+                json.dump(self._data, fh, indent=2)
+            os.replace(tmp_path, self._path)
+        except OSError as exc:
+            logger.warning("cloud_budget: atomic write failed: %s", exc)
+            # Best-effort cleanup of orphaned tmp
+            try:
+                tmp_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+    def _save(self) -> None:
+        """Atomically persist budget data (acquires its own lock).
+
+        Kept for any direct callers, but the CHECK-THEN-RECORD primitives
+        below (`can_run_ibm`/`can_run_braket`/`record_*_usage`/
+        `reconcile_ibm_usage`) use `_locked_op()` instead, which holds ONE
+        lock across a fresh re-read + mutate + write — do not call `_save()`
+        from inside a `_locked_op()` callback, it would re-acquire the same
+        lock file from a second `FileLock` instance and can deadlock/timeout
+        on Windows, where file locks are per-handle rather than reentrant
+        across instances.
+        """
+        lock_path = self._path.with_suffix(".lock")
+        try:
             with FileLock(str(lock_path), timeout=5):
-                try:
-                    with open(tmp_path, "w") as fh:
-                        json.dump(self._data, fh, indent=2)
-                    os.replace(tmp_path, self._path)
-                except OSError as exc:
-                    logger.warning("cloud_budget: atomic write failed: %s", exc)
-                    # Best-effort cleanup of orphaned tmp
-                    try:
-                        tmp_path.unlink(missing_ok=True)
-                    except OSError:
-                        pass
+                self._write_atomic_unlocked()
         except Exception as exc:
             logger.warning("cloud_budget: could not acquire lock or save: %s", exc)
 
-    # ── Guard checks (pessimistic) ───────────────────────────────────────────
+    def _locked_op(self, fn: Callable[[dict[str, Any]], tuple[Any, bool]]) -> Any:
+        """Execute fn(self._data) as ONE atomic locked transaction.
+
+        Closes the cross-process TOCTOU / lost-update race (MED finding,
+        cloud_backend.py CloudBudgetTracker): every submission through
+        `submit_surface_code_iae()` runs as its own OS subprocess (spawned
+        per cloud-qmc-service.ts poll cycle), so two concurrent
+        CloudBudgetTracker() instances each hold their OWN in-memory
+        `self._data` snapshot taken at __init__ time. The prior
+        implementation had `can_run_ibm()` read that stale snapshot (a
+        check that could pass on data another process had already
+        superseded) and `record_ibm_usage()` do a read-modify-write against
+        that SAME stale snapshot before saving — so two concurrent records
+        could each compute `used + seconds` off the same base and the
+        second `_save()` would silently clobber the first, under-reporting
+        true spend (or, symmetrically, a check could reject a submission
+        the true fresh budget would have allowed).
+
+        This holds ONE file lock across: re-read fresh state from disk
+        (never the possibly-stale self._data from __init__) → let fn decide
+        and/or mutate → write once if fn signals a mutation occurred — a
+        single locked/transactional operation instead of two separate
+        (check, then much-later record) steps that each trusted memory.
+
+        fn receives the freshly-loaded data dict and must return
+        (result, dirty) where dirty=True triggers a persist before the lock
+        is released. Re-raises on lock-acquisition failure so callers can
+        decide their own fail-open/fail-closed policy.
+        """
+        lock_path = self._path.with_suffix(".lock")
+        with FileLock(str(lock_path), timeout=10):
+            self._data = self._load()
+            result, dirty = fn(self._data)
+            if dirty:
+                self._write_atomic_unlocked()
+            return result
+
+    # ── Guard checks (pessimistic, atomic fresh-read) ────────────────────────
 
     def can_run_ibm(self, estimated_seconds: float, limit_seconds: int) -> bool:
-        """Return True only if pessimistic estimate fits within the monthly cap."""
-        pessimistic = estimated_seconds * _PESSIMISM_FACTOR
-        used = self._data.get("ibm_seconds_used", 0)
-        return (used + pessimistic) <= limit_seconds
+        """Return True only if pessimistic estimate fits within the monthly cap.
+
+        Reads FRESH on-disk state under a file lock rather than the
+        possibly-stale `self._data` captured at __init__ — see `_locked_op`.
+        Fails CLOSED (returns False) if the lock cannot be acquired: an
+        unverifiable budget check must never silently permit spend.
+        """
+        def _check(data: dict[str, Any]) -> tuple[bool, bool]:
+            pessimistic = estimated_seconds * _PESSIMISM_FACTOR
+            used = data.get("ibm_seconds_used", 0)
+            return (used + pessimistic) <= limit_seconds, False  # read-only, never dirty
+
+        try:
+            return self._locked_op(_check)
+        except Exception as exc:
+            logger.warning("cloud_budget: could not acquire lock for can_run_ibm: %s", exc)
+            return False
 
     def can_run_braket(self, estimated_cost: float, limit_dollars: float) -> bool:
-        """Return True only if pessimistic estimate fits within the monthly cap."""
-        pessimistic = estimated_cost * _PESSIMISM_FACTOR
-        used = self._data.get("braket_dollars_used", 0.0)
-        return (used + pessimistic) <= limit_dollars
+        """Return True only if pessimistic estimate fits within the monthly cap.
 
-    # ── Usage recording (truthful) ───────────────────────────────────────────
+        Same atomic fresh-read contract as can_run_ibm() — see `_locked_op`.
+        """
+        def _check(data: dict[str, Any]) -> tuple[bool, bool]:
+            pessimistic = estimated_cost * _PESSIMISM_FACTOR
+            used = data.get("braket_dollars_used", 0.0)
+            return (used + pessimistic) <= limit_dollars, False
+
+        try:
+            return self._locked_op(_check)
+        except Exception as exc:
+            logger.warning("cloud_budget: could not acquire lock for can_run_braket: %s", exc)
+            return False
+
+    # ── Usage recording (truthful, atomic read-modify-write) ─────────────────
 
     def record_ibm_usage(
         self,
@@ -208,21 +279,50 @@ class CloudBudgetTracker:
         that will be corrected by reconcile_ibm_usage() once the job
         completes and actual QPU seconds are known. The budget counter is
         still debited immediately so guard checks remain pessimistic.
+
+        Atomic read-modify-write under one lock (see `_locked_op`) — the
+        increment is computed against freshly-read on-disk state, not the
+        possibly-stale `self._data` from __init__, so two concurrent
+        record_ibm_usage() calls (e.g. two subprocess submissions racing)
+        can never lose one another's update.
         """
-        self._data["ibm_seconds_used"] = (
-            self._data.get("ibm_seconds_used", 0) + seconds
-        )
-        self._data.setdefault("runs", []).append(
-            {
-                "provider": "ibm",
-                "ts": datetime.now(timezone.utc).isoformat(),
-                "job_id": job_id,
-                "backend_name": backend_name,
-                "seconds": seconds,
-                "pending_reconcile": pending_reconcile,
-            }
-        )
-        self._save()
+        def _mutate(data: dict[str, Any]) -> tuple[None, bool]:
+            data["ibm_seconds_used"] = data.get("ibm_seconds_used", 0) + seconds
+            data.setdefault("runs", []).append(
+                {
+                    "provider": "ibm",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "job_id": job_id,
+                    "backend_name": backend_name,
+                    "seconds": seconds,
+                    "pending_reconcile": pending_reconcile,
+                }
+            )
+            return None, True
+
+        try:
+            self._locked_op(_mutate)
+        except Exception as exc:
+            # Real IBM spend already happened (this is called only after a
+            # submission attempt) — usage must be recorded truthfully even
+            # if the atomic path is unavailable, so fall back to a
+            # best-effort non-atomic write rather than silently dropping it.
+            logger.warning(
+                "cloud_budget: could not acquire lock for record_ibm_usage (job_id=%s) — "
+                "falling back to non-atomic best-effort write: %s", job_id, exc,
+            )
+            self._data["ibm_seconds_used"] = self._data.get("ibm_seconds_used", 0) + seconds
+            self._data.setdefault("runs", []).append(
+                {
+                    "provider": "ibm",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "job_id": job_id,
+                    "backend_name": backend_name,
+                    "seconds": seconds,
+                    "pending_reconcile": pending_reconcile,
+                }
+            )
+            self._save()
 
     def reconcile_ibm_usage(
         self, job_id: str, actual_seconds: float, delta: float
@@ -239,32 +339,47 @@ class CloudBudgetTracker:
         If no pending row is found for job_id, logs a warning and returns
         without error — this is safe because the estimated cost was already
         recorded conservatively.
+
+        Atomic read-modify-write under one lock (see `_locked_op`) — same
+        lost-update hazard as record_ibm_usage() applies here (the delta
+        must be applied against fresh state, not a stale __init__ snapshot).
         """
-        runs = self._data.setdefault("runs", [])
-        reconciled = False
-        for run in reversed(runs):
-            if (
-                run.get("provider") == "ibm"
-                and run.get("job_id") == job_id
-                and run.get("pending_reconcile", False)
-            ):
-                run["seconds"] = actual_seconds
-                run["pending_reconcile"] = False
-                run["reconciled_ts"] = datetime.now(timezone.utc).isoformat()
-                run["reconcile_delta"] = delta
-                reconciled = True
-                break
+        def _mutate(data: dict[str, Any]) -> tuple[bool, bool]:
+            runs = data.setdefault("runs", [])
+            reconciled = False
+            for run in reversed(runs):
+                if (
+                    run.get("provider") == "ibm"
+                    and run.get("job_id") == job_id
+                    and run.get("pending_reconcile", False)
+                ):
+                    run["seconds"] = actual_seconds
+                    run["pending_reconcile"] = False
+                    run["reconciled_ts"] = datetime.now(timezone.utc).isoformat()
+                    run["reconcile_delta"] = delta
+                    reconciled = True
+                    break
+            if reconciled:
+                current = data.get("ibm_seconds_used", 0)
+                data["ibm_seconds_used"] = max(0, current + delta)
+            return reconciled, reconciled
+
+        try:
+            reconciled = self._locked_op(_mutate)
+        except Exception as exc:
+            logger.warning(
+                "cloud_budget: could not acquire lock for reconcile_ibm_usage (job_id=%s): %s",
+                job_id, exc,
+            )
+            return
 
         if reconciled:
-            current = self._data.get("ibm_seconds_used", 0)
-            self._data["ibm_seconds_used"] = max(0, current + delta)
-            self._save()
             logger.info(
                 "cloud_budget: reconciled job_id=%s actual=%.2fs delta=%.2fs new_total=%.2fs",
                 job_id,
                 actual_seconds,
                 delta,
-                self._data["ibm_seconds_used"],
+                self._data.get("ibm_seconds_used", 0),
             )
         else:
             logger.warning(
@@ -276,20 +391,42 @@ class CloudBudgetTracker:
     def record_braket_usage(
         self, cost: float, task_arn: str, device_name: str
     ) -> None:
-        """Record actual Braket dollar cost consumed."""
-        self._data["braket_dollars_used"] = (
-            self._data.get("braket_dollars_used", 0.0) + cost
-        )
-        self._data.setdefault("runs", []).append(
-            {
-                "provider": "braket",
-                "ts": datetime.now(timezone.utc).isoformat(),
-                "task_arn": task_arn,
-                "device_name": device_name,
-                "cost_usd": cost,
-            }
-        )
-        self._save()
+        """Record actual Braket dollar cost consumed.
+
+        Atomic read-modify-write under one lock — same lost-update fix as
+        record_ibm_usage() (see `_locked_op`).
+        """
+        def _mutate(data: dict[str, Any]) -> tuple[None, bool]:
+            data["braket_dollars_used"] = data.get("braket_dollars_used", 0.0) + cost
+            data.setdefault("runs", []).append(
+                {
+                    "provider": "braket",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "task_arn": task_arn,
+                    "device_name": device_name,
+                    "cost_usd": cost,
+                }
+            )
+            return None, True
+
+        try:
+            self._locked_op(_mutate)
+        except Exception as exc:
+            logger.warning(
+                "cloud_budget: could not acquire lock for record_braket_usage (task_arn=%s) — "
+                "falling back to non-atomic best-effort write: %s", task_arn, exc,
+            )
+            self._data["braket_dollars_used"] = self._data.get("braket_dollars_used", 0.0) + cost
+            self._data.setdefault("runs", []).append(
+                {
+                    "provider": "braket",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                    "task_arn": task_arn,
+                    "device_name": device_name,
+                    "cost_usd": cost,
+                }
+            )
+            self._save()
 
     def get_remaining(self) -> dict[str, Any]:
         """Return remaining budget for both providers and reset metadata."""
@@ -1254,6 +1391,7 @@ def poll_ibm_job(
                     "pymatching_estimate": None,
                     "uncorrected_estimate": 0.0,
                     "raw_syndrome_count": len(syndrome_counts),
+                    "ising_model_loaded": False,
                 }
 
             # Get actual QPU time from metadata if available
@@ -1286,6 +1424,12 @@ def poll_ibm_job(
                 "ising_corrected_estimate": decode_result.get("ising_corrected_estimate"),
                 "pymatching_estimate": decode_result.get("pymatching_estimate"),
                 "uncorrected_estimate": decode_result.get("uncorrected_estimate"),
+                # Whether a REAL Ising ONNX decode occurred (vs the PyMatching
+                # identity-matrix placeholder fallback backfilling
+                # ising_corrected_estimate). Must not be inferred from
+                # ising_corrected_estimate being non-null — the fallback also
+                # populates that field. See ising_decoder_wrapper.py::is_ising_loaded.
+                "ising_model_loaded": bool(decode_result.get("ising_model_loaded", False)),
                 "n_logical_qubits": 5,
                 "n_physical_qubits": 85,
                 "surface_code_distance": 3,
@@ -1303,6 +1447,7 @@ def poll_ibm_job(
                 "ising_corrected_estimate": None,
                 "pymatching_estimate": None,
                 "uncorrected_estimate": None,
+                "ising_model_loaded": False,
                 "n_logical_qubits": 5,
                 "n_physical_qubits": 85,
                 "surface_code_distance": 3,
@@ -1320,6 +1465,7 @@ def poll_ibm_job(
                 "ising_corrected_estimate": None,
                 "pymatching_estimate": None,
                 "uncorrected_estimate": None,
+                "ising_model_loaded": False,
                 "n_logical_qubits": 5,
                 "n_physical_qubits": 85,
                 "surface_code_distance": 3,
@@ -1338,6 +1484,7 @@ def poll_ibm_job(
             "ising_corrected_estimate": None,
             "pymatching_estimate": None,
             "uncorrected_estimate": None,
+            "ising_model_loaded": False,
             "n_logical_qubits": 5,
             "n_physical_qubits": 85,
             "surface_code_distance": 3,

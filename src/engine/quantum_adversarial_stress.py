@@ -28,11 +28,9 @@ import json
 import math
 import os
 import random
-import signal
-import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
-from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -60,8 +58,7 @@ try:
 except ImportError:
     PENNYLANE_AVAILABLE = False
 
-from src.engine.quantum_device_selector import select_quantum_device
-
+from src.engine.quantum_device_selector import select_quantum_device  # noqa: E402
 
 # ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -78,7 +75,7 @@ class PropFirmRules(BaseModel):
     """Prop firm rule set for breach detection."""
     daily_loss_limit: float       # Max single-day loss before account breach ($)
     max_consecutive_losers: int = 4  # Max consecutive losing trades before CLAUDE.md gate fires
-    trailing_drawdown: Optional[float] = None  # Trailing drawdown limit (optional)
+    trailing_drawdown: float | None = None  # Trailing drawdown limit (optional)
 
 
 class AdversarialStressResult(BaseModel):
@@ -88,15 +85,15 @@ class AdversarialStressResult(BaseModel):
     lifecycle_transitions. Governance labels always present.
     """
     schema_version: str = "v1_challenger"  # F-4 (2026-05-21): schema version for downstream critic
-    worst_case_breach_prob: Optional[float] = None   # [0, 1] — None on failure
-    breach_minimal_n_trades: Optional[int] = None    # Smallest N consecutive that can breach
+    worst_case_breach_prob: float | None = None   # [0, 1] — None on failure
+    breach_minimal_n_trades: int | None = None    # Smallest N consecutive that can breach
     worst_sequence_examples: list[dict] = Field(default_factory=list)  # top-K orderings
     n_qubits: int = 0
     n_trades: int = 0
     daily_loss_limit: float = 0.0
     method: str = "grover_quantum"  # grover_quantum | brute_force_classical | random_sample_classical
     status: str = "pending"         # pending | completed | failed | aborted
-    error_message: Optional[str] = None
+    error_message: str | None = None
     wall_clock_ms: int = 0
     qpu_seconds: float = 0.0        # 0 for local sim; nonzero only for cloud (future)
     governance_labels: dict = Field(default_factory=lambda: GOVERNANCE_LABELS.copy())
@@ -111,7 +108,7 @@ def _compute_breach_prob_classical(
     daily_loss_limit: float,
     n_orderings_sampled: int,
     rng: random.Random,
-) -> tuple[float, list[dict], Optional[int]]:
+) -> tuple[float, list[dict], int | None]:
     """Classical breach-probability estimator.
 
     For N <= 12: enumerate all 2**N loss/win assignments.
@@ -121,7 +118,6 @@ def _compute_breach_prob_classical(
     """
     n = len(trade_pnls)
     loss_amounts = [abs(p) for p in trade_pnls if p < 0]
-    win_amounts = [abs(p) for p in trade_pnls if p >= 0]
 
     # Guarantee at least one loss amount for oracle to test
     if not loss_amounts:
@@ -129,28 +125,41 @@ def _compute_breach_prob_classical(
 
     breach_count = 0
     breach_examples: list[tuple[float, list[int]]] = []  # (loss_sum, ordering)
-    breach_minimal_n: Optional[int] = None
+    breach_minimal_n: int | None = None
 
-    def _check_ordering(ordering: list[int]) -> Optional[float]:
+    def _check_ordering(ordering: list[int]) -> float | None:
         """Return worst rolling loss sum for this trade ordering (loss=1, win=0).
 
-        F-8 fix (2026-05-20): bit position is now the index into loss_amounts
-        (positional). Previously we sampled a random loss per bit via
-        rng.randint, which diverged from the Grover oracle in _grover_circuit
-        (which uses positional `loss_amounts[i]` per bit b[i]=1). Parity
-        between classical fallback and quantum path is mandatory — the
-        breach probabilities must be comparable for governance.
+        F-8 fix (2026-05-20) + fixwave (2026-07-17) parity correction: loss
+        amounts are indexed by CONSECUTIVE-LOSS-STREAK position (resets to 0
+        on every win), matching the Grover oracle's marked-state precompute
+        in `_grover_circuit` (its `consecutive_loss_idx` counter). The F-8
+        fix's original "positional... i % len(loss_amounts)" scheme indexed
+        by the trade's ABSOLUTE ordering position instead — that silently
+        diverges from the Grover scheme whenever a loss streak doesn't start
+        at ordering index 0 (e.g. ordering=[1,0,1,1,0] with loss_amounts
+        [10,20,30]: the old scheme summed loss_amounts[0]+loss_amounts[2]+
+        loss_amounts[0]=40 for the two-loss streak at positions 2-3, while
+        Grover — and this corrected version — resets to loss_amounts[0] at
+        the START of that streak and sums loss_amounts[0]+loss_amounts[1]=30).
+        Parity between classical fallback and quantum path is mandatory —
+        the breach probabilities must be comparable for governance; the old
+        scheme violated that despite claiming to satisfy it.
         """
         worst = 0.0
         running = 0.0
-        for i, bit in enumerate(ordering):
+        consecutive_loss_idx = 0
+        for bit in ordering:
             if bit == 1:
-                # Positional indexing (parity with Grover oracle).
-                # Bound by len(loss_amounts) when ordering has more bits than losses.
-                loss_idx = i % len(loss_amounts)
+                # Consecutive-streak indexing (parity with Grover oracle).
+                # Bound by len(loss_amounts) when a streak outruns the
+                # observed distinct loss amounts.
+                loss_idx = min(len(loss_amounts) - 1, consecutive_loss_idx)
                 running += loss_amounts[loss_idx]
+                consecutive_loss_idx += 1
             else:
                 running = 0.0  # day resets on a win (simplified model)
+                consecutive_loss_idx = 0
             worst = max(worst, running)
         return worst
 
@@ -204,8 +213,8 @@ def _grover_circuit(
     daily_loss_limit: float,
     loss_amounts: list[float],
     iterations: int,
-    dev: "qml.Device",
-) -> "np.ndarray":
+    dev: qml.Device,
+) -> np.ndarray:
     """Run Grover search and return measurement bitstring samples.
 
     Oracle: marks computational basis states where any single qubit that is |1>
@@ -269,7 +278,6 @@ def _grover_circuit(
                 # Build control string for this state
                 bits = [(state_idx >> q) & 1 for q in range(n_qubits)]
                 zero_wires = [q for q, b in enumerate(bits) if b == 0]
-                all_wires = list(range(n_qubits))
 
                 # Flip zero-control wires so we can use all-control (one wire at a time)
                 for w in zero_wires:
@@ -322,7 +330,7 @@ def _run_grover(
     n_samples: int,
     seed: int,
     top_k: int = 5,
-) -> tuple[Optional[float], list[dict], Optional[int], int, str]:
+) -> tuple[float | None, list[dict], int | None, int, str]:
     """Run Grover adversarial stress.
 
     Returns:
@@ -409,7 +417,7 @@ def _run_grover(
     )
 
     examples: list[dict] = []
-    breach_minimal_n: Optional[int] = None
+    breach_minimal_n: int | None = None
 
     for state_idx, prob in breach_states_with_prob[:top_k]:
         bits = [(state_idx >> q) & 1 for q in range(n_qubits)]
@@ -498,59 +506,71 @@ def run_adversarial_stress(
 
     trade_pnls = [t.pnl for t in trades]
 
-    base_result = AdversarialStressResult(
-        n_trades=n,
-        daily_loss_limit=rules.daily_loss_limit,
-        reproducibility_hash=repro_hash,
-        governance_labels=GOVERNANCE_LABELS.copy(),
-    )
-
     # ── Grover quantum path ────────────────────────────────────────────────────
+    # fixwave (2026-07-17): do NOT use `with ThreadPoolExecutor(...) as executor:`
+    # here. concurrent.futures.Executor.__exit__ calls shutdown(wait=True)
+    # unconditionally, which BLOCKS until the submitted worker thread actually
+    # finishes -- even after future.result(timeout=...) has already raised
+    # TimeoutError. That silently defeats WALL_CLOCK_LIMIT_S: the function
+    # would report status="aborted" but not actually RETURN to the caller
+    # until the underlying (uncancellable) Grover/classical call completed on
+    # its own, so a pathologically slow call blows straight through the
+    # documented 30s bound. A qml circuit call cannot be force-cancelled
+    # mid-flight by any Python threading mechanism (true kill would need
+    # multiprocessing.terminate()), so this fix bounds CALLER-RETURN latency
+    # (what the docstring's "aborts... if wall clock exceeded" actually
+    # promises) via an explicit non-blocking shutdown(wait=False) instead of
+    # the implicit blocking one — the orphaned worker thread is left to
+    # finish (or get reaped by the subprocess-level SIGTERM watchdog in
+    # adversarial-stress-service.ts, which kills the whole OS process ~5s
+    # after this bound as a hard backstop).
     if PENNYLANE_AVAILABLE and n >= 2 and n <= 15:
         try:
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(
-                    _run_grover,
-                    trade_pnls,
-                    rules.daily_loss_limit,
-                    n_random_samples,
-                    seed,
-                    top_k,
+            executor = ThreadPoolExecutor(max_workers=1)
+            future = executor.submit(
+                _run_grover,
+                trade_pnls,
+                rules.daily_loss_limit,
+                n_random_samples,
+                seed,
+                top_k,
+            )
+            try:
+                breach_prob, examples, breach_minimal_n, n_qubits, hardware = future.result(
+                    timeout=WALL_CLOCK_LIMIT_S
                 )
-                try:
-                    breach_prob, examples, breach_minimal_n, n_qubits, hardware = future.result(
-                        timeout=WALL_CLOCK_LIMIT_S
-                    )
-                    wall_clock_ms = int(time.time() * 1000) - start_ms
-                    return AdversarialStressResult(
-                        worst_case_breach_prob=breach_prob,
-                        breach_minimal_n_trades=breach_minimal_n,
-                        worst_sequence_examples=examples,
-                        n_qubits=n_qubits,
-                        n_trades=n,
-                        daily_loss_limit=rules.daily_loss_limit,
-                        method="grover_quantum",
-                        status="completed",
-                        wall_clock_ms=wall_clock_ms,
-                        qpu_seconds=0.0,
-                        governance_labels=GOVERNANCE_LABELS.copy(),
-                        reproducibility_hash=repro_hash,
-                        hardware=hardware,
-                    )
-                except FuturesTimeoutError:
-                    wall_clock_ms = int(time.time() * 1000) - start_ms
-                    return AdversarialStressResult(
-                        n_trades=n,
-                        daily_loss_limit=rules.daily_loss_limit,
-                        method="grover_quantum",
-                        status="aborted",
-                        error_message=f"Grover circuit exceeded {WALL_CLOCK_LIMIT_S}s wall-clock limit",
-                        wall_clock_ms=wall_clock_ms,
-                        governance_labels=GOVERNANCE_LABELS.copy(),
-                        reproducibility_hash=repro_hash,
-                        hardware="local_simulator",
-                    )
-        except Exception as exc:
+                wall_clock_ms = int(time.time() * 1000) - start_ms
+                executor.shutdown(wait=False)
+                return AdversarialStressResult(
+                    worst_case_breach_prob=breach_prob,
+                    breach_minimal_n_trades=breach_minimal_n,
+                    worst_sequence_examples=examples,
+                    n_qubits=n_qubits,
+                    n_trades=n,
+                    daily_loss_limit=rules.daily_loss_limit,
+                    method="grover_quantum",
+                    status="completed",
+                    wall_clock_ms=wall_clock_ms,
+                    qpu_seconds=0.0,
+                    governance_labels=GOVERNANCE_LABELS.copy(),
+                    reproducibility_hash=repro_hash,
+                    hardware=hardware,
+                )
+            except FuturesTimeoutError:
+                wall_clock_ms = int(time.time() * 1000) - start_ms
+                executor.shutdown(wait=False)
+                return AdversarialStressResult(
+                    n_trades=n,
+                    daily_loss_limit=rules.daily_loss_limit,
+                    method="grover_quantum",
+                    status="aborted",
+                    error_message=f"Grover circuit exceeded {WALL_CLOCK_LIMIT_S}s wall-clock limit",
+                    wall_clock_ms=wall_clock_ms,
+                    governance_labels=GOVERNANCE_LABELS.copy(),
+                    reproducibility_hash=repro_hash,
+                    hardware="local_simulator",
+                )
+        except Exception:
             # PennyLane path failed — fall through to classical
             pass
 
@@ -567,39 +587,43 @@ def run_adversarial_stress(
             rng,
         )
 
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(_run_classical)
-        try:
-            breach_prob, examples, breach_minimal_n = future.result(timeout=WALL_CLOCK_LIMIT_S)
-            wall_clock_ms = int(time.time() * 1000) - start_ms
-            return AdversarialStressResult(
-                worst_case_breach_prob=breach_prob,
-                breach_minimal_n_trades=breach_minimal_n,
-                worst_sequence_examples=examples,
-                n_qubits=0,
-                n_trades=n,
-                daily_loss_limit=rules.daily_loss_limit,
-                method=method,
-                status="completed",
-                wall_clock_ms=wall_clock_ms,
-                qpu_seconds=0.0,
-                governance_labels=GOVERNANCE_LABELS.copy(),
-                reproducibility_hash=repro_hash,
-                hardware="local_simulator",
-            )
-        except FuturesTimeoutError:
-            wall_clock_ms = int(time.time() * 1000) - start_ms
-            return AdversarialStressResult(
-                n_trades=n,
-                daily_loss_limit=rules.daily_loss_limit,
-                method=method,
-                status="aborted",
-                error_message=f"Classical fallback exceeded {WALL_CLOCK_LIMIT_S}s wall-clock limit",
-                wall_clock_ms=wall_clock_ms,
-                governance_labels=GOVERNANCE_LABELS.copy(),
-                reproducibility_hash=repro_hash,
-                hardware="local_simulator",
-            )
+    # Same non-blocking-shutdown fix as the Grover path above — see the
+    # comment there for the full rationale.
+    executor = ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(_run_classical)
+    try:
+        breach_prob, examples, breach_minimal_n = future.result(timeout=WALL_CLOCK_LIMIT_S)
+        wall_clock_ms = int(time.time() * 1000) - start_ms
+        executor.shutdown(wait=False)
+        return AdversarialStressResult(
+            worst_case_breach_prob=breach_prob,
+            breach_minimal_n_trades=breach_minimal_n,
+            worst_sequence_examples=examples,
+            n_qubits=0,
+            n_trades=n,
+            daily_loss_limit=rules.daily_loss_limit,
+            method=method,
+            status="completed",
+            wall_clock_ms=wall_clock_ms,
+            qpu_seconds=0.0,
+            governance_labels=GOVERNANCE_LABELS.copy(),
+            reproducibility_hash=repro_hash,
+            hardware="local_simulator",
+        )
+    except FuturesTimeoutError:
+        wall_clock_ms = int(time.time() * 1000) - start_ms
+        executor.shutdown(wait=False)
+        return AdversarialStressResult(
+            n_trades=n,
+            daily_loss_limit=rules.daily_loss_limit,
+            method=method,
+            status="aborted",
+            error_message=f"Classical fallback exceeded {WALL_CLOCK_LIMIT_S}s wall-clock limit",
+            wall_clock_ms=wall_clock_ms,
+            governance_labels=GOVERNANCE_LABELS.copy(),
+            reproducibility_hash=repro_hash,
+            hardware="local_simulator",
+        )
 
 
 # ─── CLI entry point ──────────────────────────────────────────────────────────

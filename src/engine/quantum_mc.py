@@ -143,6 +143,23 @@ def _run_iae_with_watchdog(
     t = threading.Thread(target=_iae_thread, daemon=True, name="iae-estimate")
     t.start()
 
+    # fixwave (2026-07-17): max_wait was DECORATIVE — this loop had no
+    # elapsed-time check of its own and ran until stop_event was set, which
+    # only happens from inside _iae_thread's `finally` clause i.e. only after
+    # the (possibly hung-forever) IAE call already returned. By the time
+    # control reached `t.join(timeout=max_wait)` below, the thread had
+    # necessarily already finished, so `t.is_alive()` was always False and
+    # the TimeoutError branch was unreachable — a genuinely hung IAE circuit
+    # blocked this function (and its caller) forever, silently defeating the
+    # documented "Raises: TimeoutError... max_wait seconds" contract. Confirmed
+    # via TestIAEWatchdogRunner::test_raises_timeout_if_iae_hangs, which itself
+    # hung (rather than raising) on the pre-fix code. Fixed by tracking a real
+    # deadline and breaking out of the wait loop once max_wait elapses, so the
+    # join()/is_alive() check below actually observes a still-running thread
+    # and raises. The daemon=True thread itself is not force-killed (Qiskit
+    # IAE has no cancel API, per this function's docstring) — but the CALLER
+    # is no longer blocked past max_wait, which is what the contract promises.
+    deadline = time.monotonic() + max_wait
     while not stop_event.is_set():
         # Tick watchdog: checks all in-flight cloud jobs against budget caps.
         # Returns list of cancelled job_ids (empty for local-only runs).
@@ -159,9 +176,12 @@ def _run_iae_with_watchdog(
                     )
             except Exception as tick_exc:  # noqa: BLE001
                 _log.debug("quantum_mc: watchdog tick() raised (non-fatal): %s", tick_exc)
-        stop_event.wait(watchdog_interval)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        stop_event.wait(min(watchdog_interval, remaining))
 
-    t.join(timeout=max_wait)
+    t.join(timeout=max(0.0, deadline - time.monotonic()))
     if t.is_alive():
         raise TimeoutError(
             f"IAE estimate() did not complete within {max_wait}s — "

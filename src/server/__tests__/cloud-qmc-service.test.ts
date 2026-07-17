@@ -270,11 +270,12 @@ describe("Cloud QMC — Lifecycle Integration (Phase 0 Shadow)", () => {
 describe("Cloud QMC — Pipeline isActive Guard", () => {
   it("poll cron description: exits when pipeline is not ACTIVE", () => {
     // This is tested indirectly: pollPendingJobs() calls isPipelineActive() and
-    // returns early with { processed: 0, completed: 0, failed: 0, skipped: 0 }
-    // when pipeline is paused. The count is verifiable.
-    const emptyResult = { processed: 0, completed: 0, failed: 0, skipped: 0 };
+    // returns early with { processed: 0, completed: 0, failed: 0, skipped: 0,
+    // staleSwept: 0 } when pipeline is paused. The count is verifiable.
+    const emptyResult = { processed: 0, completed: 0, failed: 0, skipped: 0, staleSwept: 0 };
     expect(emptyResult.processed).toBe(0);
     expect(emptyResult.completed).toBe(0);
+    expect(emptyResult.staleSwept).toBe(0);
   });
 
   it("cloud-qmc-poll cron interval is 5 minutes", () => {
@@ -345,25 +346,56 @@ describe("Cloud QMC — Cost Telemetry Row Contract", () => {
     expect(costStatus).toBe("failed");
   });
 
-  it("ising_decoder cost row: status transitions pending → completed when ising_corrected_estimate is non-null", () => {
-    // Ising decoder succeeded path: isingDecoderSucceeded=true → status="completed"
-    const isingEstimate = 0.03; // non-null
-    const isingDecoderSucceeded = isingEstimate != null;
+  it("ising_decoder cost row: status transitions pending → completed when ising_model_loaded is true", () => {
+    // Ising decoder succeeded path: a REAL Ising ONNX decode ran.
+    // isingDecoderSucceeded must be derived from ising_model_loaded, NOT from
+    // ising_corrected_estimate != null (the PyMatching fallback also populates
+    // that field — see the regression test below).
+    const isingModelLoaded = true;
+    const isingEstimate = 0.03; // non-null, from a real ONNX decode
+    const isingDecoderSucceeded = isingModelLoaded === true;
+    expect(isingEstimate).not.toBeNull();
     expect(isingDecoderSucceeded).toBe(true);
     const costStatus = isingDecoderSucceeded ? "completed" : "failed";
     expect(costStatus).toBe("completed");
   });
 
   it("ising_decoder cost row: status transitions pending → failed when PyMatching fallback used", () => {
-    // PyMatching fallback: pyResult.ising_corrected_estimate === null
+    // PyMatching fallback: pyResult.ising_model_loaded === false
     // isingDecoderSucceeded=false → completeCost status="failed", errorMessage="ising_fallback_to_pymatching"
-    const isingEstimate: number | null = null;
-    const isingDecoderSucceeded = isingEstimate != null;
+    // even though ising_corrected_estimate is NON-null here (backfilled from pymatching_estimate).
+    const isingModelLoaded = false;
+    const isingEstimate: number | null = 0.11; // non-null — fallback still produced a number
+    const isingDecoderSucceeded = (isingModelLoaded as boolean) === true;
+    expect(isingEstimate).not.toBeNull();
     expect(isingDecoderSucceeded).toBe(false);
     const costStatus = isingDecoderSucceeded ? "completed" : "failed";
     expect(costStatus).toBe("failed");
     const errorMsg = "ising_fallback_to_pymatching";
     expect(errorMsg).toBe("ising_fallback_to_pymatching");
+  });
+
+  it("REGRESSION (HIGH): isingDecoderSucceeded must NOT be inferred from ising_corrected_estimate != null alone", () => {
+    // This is the exact bug shape: ising_decoder_wrapper.py's identity-matrix
+    // PyMatching placeholder fallback ALWAYS backfills ising_corrected_estimate
+    // (effective_ising = ising_result ?? pymatching_result), so a naive
+    // `pyResult.ising_corrected_estimate != null` check reports success even
+    // when no real quantum/ONNX decode happened.
+    const pyResultFromPlaceholderFallback = {
+      ising_corrected_estimate: 0.07, // non-null via PyMatching fallback
+      pymatching_estimate: 0.07,
+      ising_model_loaded: false, // no real ONNX decode ran
+    };
+
+    // The buggy formula (pre-fix) would say "succeeded":
+    const buggyIsingDecoderSucceeded =
+      pyResultFromPlaceholderFallback.ising_corrected_estimate != null;
+    expect(buggyIsingDecoderSucceeded).toBe(true); // demonstrates why the old check was wrong
+
+    // The fixed formula must say "did NOT succeed" for this exact input:
+    const fixedIsingDecoderSucceeded =
+      pyResultFromPlaceholderFallback.ising_model_loaded === true;
+    expect(fixedIsingDecoderSucceeded).toBe(false);
   });
 
   it("ising_decoder cost row: qpu_seconds is populated from pyResult.qpu_seconds_used", () => {
