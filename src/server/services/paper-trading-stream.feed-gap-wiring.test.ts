@@ -36,6 +36,10 @@ vi.mock("./paper-signal-service.js", () => ({
   evaluateSignals: vi.fn().mockResolvedValue(undefined),
   updateStateOnly: vi.fn().mockResolvedValue(undefined),
   ATR: vi.fn().mockReturnValue(2.5),
+  // M1c (2026-07-17): handleBar now resolves each session's timeframe before
+  // fanning out to feed the timeframe-bar-aggregator. Default "1m" keeps this
+  // file's existing tests on the pre-M1c byte-identical path (aggregator bypassed).
+  getSessionTimeframe: vi.fn().mockResolvedValue("1m"),
 }));
 vi.mock("./paper-risk-gate.js", () => ({
   toEasternDateString: (d: Date) => d.toISOString().split("T")[0],
@@ -345,6 +349,10 @@ describe("evaluateFeedGap wiring — PROVIDER_GAP never gates real bar processin
       expect.objectContaining({ symbol: "MES" }),
       expect.any(Array),
       expect.anything(),
+      // M1c (2026-07-17): this session's mocked getSessionTimeframe() returns
+      // "1m" (see the paper-signal-service.js mock above), so the aggregator
+      // is bypassed and mtfContext is undefined — the byte-identical 1m path.
+      undefined,
     );
   });
 });

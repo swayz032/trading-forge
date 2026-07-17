@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { createMassiveFetcher } from "../../data/fetchers/massive.js";
 import { updatePositionPrices, type StyleExitBarContext } from "./paper-execution-service.js";
-import { evaluateSignals, updateStateOnly, ATR } from "./paper-signal-service.js";
+import { evaluateSignals, updateStateOnly, ATR, getSessionTimeframe } from "./paper-signal-service.js";
 import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import { logger } from "../index.js";
 import { toEasternDateString } from "./paper-risk-gate.js";
@@ -13,6 +13,7 @@ import { paperStreamLifecycleTotal, auditWriteFailuresTotal } from "../lib/metri
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { classifyFeedGap } from "../lib/feed-gap-classifier.js";
+import { feedBar as feedTimeframeAggregator, parseTimeframeMinutes, resetAggregatorForSymbol } from "../lib/timeframe-bar-aggregator.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -344,6 +345,13 @@ function pushBar(symbol: string, bar: Bar) {
   const prevSessionKey = lastBarDate.get(symbol);
   if (prevSessionKey && barSessionKey !== prevSessionKey) {
     buf.length = 0; // Reset buffer on new Globex trading session (18:00 ET boundary)
+    // M1c (2026-07-17): mirror the same reset for the aggregated N-minute bar
+    // history so a stale prior session's bars don't bleed into the new
+    // session's indicator warmup — consistent with how the raw 1-minute
+    // buffer above already resets (pre-existing behavior for 1m strategies;
+    // this keeps non-1m strategies on the same session-boundary contract
+    // rather than introducing a new divergence between the two).
+    resetAggregatorForSymbol(symbol);
   }
   lastBarDate.set(symbol, barSessionKey);
 
@@ -500,7 +508,11 @@ export async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext
  * Each bar gets a NEW UUID — no carryover between bars — so individual bars are
  * independently traceable and not conflated in audit queries.
  */
-async function processSessionBar(sessionId: string, bar: Bar) {
+async function processSessionBar(
+  sessionId: string,
+  bar: Bar,
+  mtfContext?: { isBucketClose: boolean; aggregatedBuffer: Bar[] },
+) {
   // Mint a per-bar correlationId at the Massive-WS entry point.
   // Every downstream call that accepts a correlationId receives this value.
   //
@@ -539,7 +551,17 @@ async function processSessionBar(sessionId: string, bar: Bar) {
   }
 
   try {
-    await evaluateSignals(sessionId, bar.symbol, bar, getBarBuffer(bar.symbol), { correlationId });
+    // M1c (2026-07-17): mtfContext is computed ONCE per distinct timeframe per
+    // raw bar by handleBar (see its docstring) and passed in here — never
+    // re-derived per-session, since two sessions sharing the same symbol+
+    // timeframe must observe the exact same aggregator bucket. 1m sessions
+    // (the regression anchor, 9 of 120 strategies) receive mtfContext=undefined
+    // -> evaluateSignals behaves byte-identically to before this wave.
+    // updatePositionPrices above is deliberately UNTHROTTLED regardless — see
+    // evaluateSignals's own mtfContext docstring for the full rationale
+    // (wall-clock flatten + stop/TP touch-detection must never delay to
+    // bucket-close cadence).
+    await evaluateSignals(sessionId, bar.symbol, bar, getBarBuffer(bar.symbol), { correlationId }, mtfContext);
   } catch (err) {
     logger.error({ err, sessionId, symbol: bar.symbol, correlationId }, "Failed to evaluate signals");
   }
@@ -584,10 +606,36 @@ async function handleBar(bar: Bar) {
   const sessions = sessionsForSymbol(bar.symbol);
   if (sessions.length === 0) return;
 
+  // M1c (2026-07-17): resolve each session's timeframe, then feed the shared
+  // timeframe-bar-aggregator EXACTLY ONCE per DISTINCT timeframe among these
+  // sessions for THIS bar — never once per session. Two sessions trading the
+  // same symbol at the same timeframe must observe the identical aggregator
+  // bucket; feeding it once per session would double-count volume and corrupt
+  // bucket-close detection for that shared bucket. This happens synchronously
+  // here, before any per-session lock-queued processing begins, so ordering
+  // across sessions' own lock chains can never cause a double-feed.
+  const sessionTimeframes = await Promise.all(
+    sessions.map(async (sessionId) => [sessionId, await getSessionTimeframe(sessionId)] as const),
+  );
+  const mtfContextByTimeframe = new Map<string, ReturnType<typeof feedTimeframeAggregator> | undefined>();
+  for (const [, timeframe] of sessionTimeframes) {
+    if (mtfContextByTimeframe.has(timeframe)) continue; // already fed this bar for this timeframe
+    const timeframeMinutes = parseTimeframeMinutes(timeframe);
+    mtfContextByTimeframe.set(
+      timeframe,
+      (timeframeMinutes !== null && timeframeMinutes > 1)
+        ? feedTimeframeAggregator(bar.symbol, timeframeMinutes, bar)
+        : undefined, // 1m (or unparseable) sessions: byte-identical pre-M1c behavior
+    );
+  }
+  const mtfContextBySession = new Map(
+    sessionTimeframes.map(([sessionId, timeframe]) => [sessionId, mtfContextByTimeframe.get(timeframe)]),
+  );
+
   const promises = sessions.map((sessionId) => {
     // Chain onto the existing lock for this session (or start fresh)
     const prev = sessionLocks.get(sessionId) ?? Promise.resolve();
-    const next = prev.then(() => processSessionBar(sessionId, bar)).catch((err) => {
+    const next = prev.then(() => processSessionBar(sessionId, bar, mtfContextBySession.get(sessionId))).catch((err) => {
       logger.error({ err, sessionId, symbol: bar.symbol }, "Session bar processing failed");
     });
     sessionLocks.set(sessionId, next);
@@ -758,6 +806,11 @@ function releaseSocket(symbol: string, sessionId: string) {
     // subscription later re-seeds via ensureSocket's "disconnected" baseline.
     feedGapConnectionState.delete(symbol);
     lastBarWallClockTime.delete(symbol);
+    // M1c (2026-07-17): same bound for the timeframe-bar-aggregator's state —
+    // no reason to keep in-progress buckets / completed-bar history for a
+    // symbol nothing subscribes to anymore. A fresh subscription later
+    // bootstraps cleanly (feedBar's own first-bar-ever handling).
+    resetAggregatorForSymbol(symbol);
     logger.info({ symbol }, "Disconnected shared WebSocket (no remaining sessions)");
   } else {
     logger.info(

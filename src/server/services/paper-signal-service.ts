@@ -997,6 +997,18 @@ const priceLockGateInactiveTelemetryLastFired = new Map<string, string>();
 
 const sessionCache = new Map<string, CachedSession>();
 
+/**
+ * M1c (2026-07-17): expose a session's configured timeframe for the live bar
+ * aggregator (paper-trading-stream.ts) without duplicating the DSL-translation
+ * + DB-fetch logic getSessionConfig already owns. Reuses the same cache.
+ * Defaults to "1m" on a cache miss / missing session, matching getSessionConfig's
+ * own `strategy.timeframe ?? "1m"` fallback.
+ */
+export async function getSessionTimeframe(sessionId: string): Promise<string> {
+  const cfg = await getSessionConfig(sessionId);
+  return cfg?.timeframe ?? "1m";
+}
+
 async function getSessionConfig(sessionId: string): Promise<CachedSession | null> {
   const cached = sessionCache.get(sessionId);
   if (cached) return cached;
@@ -2092,6 +2104,31 @@ async function setCooldown(sessionId: string, sessionConfig: CachedSession, cool
 /**
  * Called on each new bar for an active paper session.
  * Evaluates strategy signals and auto-executes via paper engine.
+ *
+ * M1c (2026-07-17) `mtfContext`: for non-1m-timeframe sessions, the caller
+ * (paper-trading-stream.ts) feeds raw 1-minute bars through
+ * timeframe-bar-aggregator.ts and passes the result here. When provided:
+ *   - `indicators` are computed from the AGGREGATED (real-timeframe) buffer
+ *     instead of the raw 1-minute `barBuffer`, fixing the >4x lookback-unit
+ *     distortion the M1c packet documented (docs/ratify-packets/
+ *     m1b-multi-tf-aggregation-parity-2026-07-17.md).
+ *   - The entry-signal branch and the `max_hold_bars` bar-counter only ACT
+ *     when `isBucketClose` is true — i.e. once per real N-minute bar close,
+ *     not once per raw 1-minute tick.
+ * Deliberately UNCHANGED regardless of mtfContext: the 15:55 ET hard
+ * time-stop, TP1 BE-stop crossing detection, checkStopLoss, checkTrailStop's
+ * per-bar invocation, and every DLL/lunch/consistency gate's underlying
+ * mechanics — all continue reading the RAW `bar` param and running every
+ * raw bar, matching updatePositionPrices's own unthrottled cadence. This is
+ * a deliberate scope cut (advisor-consulted 2026-07-17): those are wall-clock
+ * account-risk controls (flatten) or a residual, genuinely two-way, finer-
+ * grained-vs-backtest-parity tradeoff (stop/TP touch-detection) — throttling
+ * either to bucket-close cadence would risk delaying a real capital-risk
+ * control, which is worse than the parity gap it would close. `bar`/`barBuffer`
+ * are passed exactly as before mtfContext existed; only `indicators`'
+ * source and the two named gates change. When `mtfContext` is omitted (every
+ * 1m-timeframe session), behavior is 100% unchanged from pre-M1c — the
+ * regression anchor for the 9 of 120 strategies that are genuinely 1-minute.
  */
 export async function evaluateSignals(
   sessionId: string,
@@ -2099,6 +2136,7 @@ export async function evaluateSignals(
   bar: Bar,
   barBuffer: Bar[],
   context?: { correlationId?: string },
+  mtfContext?: { isBucketClose: boolean; aggregatedBuffer: Bar[] },
 ): Promise<void> {
   // FIX MED-2 (2026-06-29): self-generate correlationId when caller omits it.
   // Previously: context?.correlationId was always undefined → paper_trades.correlation_id
@@ -2423,7 +2461,14 @@ export async function evaluateSignals(
   }
 
   const config = sessionConfig.config;
-  const indicators = computeIndicators(barBuffer);
+  // M1c (2026-07-17): non-1m sessions compute indicators from the real-timeframe
+  // AGGREGATED buffer (fed by paper-trading-stream.ts's timeframe-bar-aggregator),
+  // not the raw 1-minute barBuffer — this is the actual fix for the >4x
+  // lookback-unit distortion the packet documented. 1m sessions (mtfContext
+  // undefined) are byte-identical to pre-M1c behavior.
+  const indicators = mtfContext
+    ? computeIndicators(mtfContext.aggregatedBuffer)
+    : computeIndicators(barBuffer);
   const prevKey = `${sessionId}:${symbol}`;
   const prevIndicators = previousIndicators.get(prevKey) ?? null;
 
@@ -3348,8 +3393,16 @@ export async function evaluateSignals(
     // ─── 2.4: Time-based exit — max hold bars ───────────────
     // Increment bars-held counter.  Force-close when limit reached.
     // H2: persist the new value to DB so restarts don't reset the counter.
+    // M1c (2026-07-17): the counter must count real N-minute bars, not raw
+    // 1-minute ticks — a `max_hold_bars: 10` on a "5m" strategy previously held
+    // for only 10 minutes instead of the intended 50 (10 x 5m bars). Only
+    // increment on an actual bucket close (or every raw bar for 1m sessions,
+    // where mtfContext is undefined and this condition is always true).
     let timeExit = false;
-    if (config.max_hold_bars !== undefined && config.max_hold_bars > 0) {
+    if (
+      config.max_hold_bars !== undefined && config.max_hold_bars > 0 &&
+      (!mtfContext || mtfContext.isBucketClose)
+    ) {
       const prevBarsHeld = positionBarsHeld.get(openPos.id) ?? 0;
       const newBarsHeld = prevBarsHeld + 1;
       positionBarsHeld.set(openPos.id, newBarsHeld);
@@ -3450,6 +3503,21 @@ export async function evaluateSignals(
     // Position still open: bars-held counter updated above; HWM updated inside checkTrailStop.
   } else if (entrySignal && !sessionFiltered && !windowFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
     // ─── No position: check for entry ────────────────────────
+
+    // M1c (2026-07-17): non-1m sessions only ACT on a new entry once a real
+    // N-minute bar has actually closed — not on every raw 1-minute tick that
+    // merely extends the still-forming bucket. This is the fix for "a live 5m
+    // strategy fires entries 5x more often than intended" the packet documented
+    // (docs/ratify-packets/m1b-multi-tf-aggregation-parity-2026-07-17.md).
+    // `indicators` above is already computed from the correctly-aggregated
+    // buffer; this gate only throttles WHEN the (correct) entry condition is
+    // allowed to act, mirroring how the backtest only ever evaluates entries
+    // on its own native bar close.
+    if (mtfContext && !mtfContext.isBucketClose) {
+      previousIndicators.set(prevKey, indicators);
+      span.end();
+      return;
+    }
 
     // ─── FIX 4 (Track M): Kill-switch halt check at bar-N signal time ────────
     // Management paths (position close, trail-stop, bar-to-bar price updates)
