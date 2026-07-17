@@ -4,7 +4,7 @@
 
 ---
 
-### Session Log — 2026-07-17 CAMPAIGN M3-core — PAPER Authority Flip, VERIFIED BAND 7, zero carry-forwards
+### Session Log — 2026-07-17 CAMPAIGN M3-core — PAPER Authority Flip LANDED `91e1870f`, VERIFIED BAND 7, zero carry-forwards
 
 **Mission:** M3 — flip PAPER lifecycle-state promotion evidence from TradersPost-authoritative to internal-engine-only (D6/D7 operator decisions). Pinned base `255b503af2dac2f9682fcb4e9ab508fb2651186c` (post-W3A). Advisor-derived MVP design: ship as ONE atomic "PAPER = internal-engine-only" change (no new canonical/observer schema field — single-authority becomes structural by removing every external path for PAPER).
 
