@@ -772,7 +772,9 @@ def validate_bars(
     # operator/caller decides. Opt in to hard-fail via DATA_TRUNCATION_HARD_FAIL=true.
     if requested_start and requested_end and "ts_event" in df.columns and df.height > 0:
         try:
-            from datetime import date as _date, datetime as _dt, timezone as _tz
+            from datetime import date as _date
+            from datetime import datetime as _dt
+            from datetime import timezone as _tz
 
             def _to_date(v: object) -> Optional[_date]:
                 if hasattr(v, "date"):
@@ -1612,5 +1614,68 @@ def flag_rollover_days(
             f"Flagged {rollover_count} bars on {len(rollover_dates)} rollover days for {symbol}",
             file=sys.stderr,
         )
-
     return df
+
+
+# ─── CLI: JSON bars fetch (backs Node GET /api/bars/:symbol) ──────────────
+#   python -m src.engine.data_loader --symbol <SYM> --timeframe <TF> --start <YYYY-MM-DD> --end <YYYY-MM-DD>
+# Emits one JSON object on stdout: {"bars": [{ts_event, open, high, low, close, volume}, ...]}
+# ascending by ts_event (UTC ISO-8601 with trailing Z — the same ts_event load_ohlcv reads,
+# no ET conversion here; the Node caller owns ET-window filtering).
+#
+# "No data for this symbol/timeframe/window" (load_ohlcv's ValueError) is a legitimate
+# empty result, not a failure — e.g. DXY/ZN have no S3-backed data yet. That case emits
+# {"bars": []} at exit 0 so the route can return an honest empty array instead of
+# fabricating a value or masking the gap as an infra error. Any OTHER exception
+# (missing S3 creds, DuckDB read failure, corrupted Parquet) propagates uncaught —
+# non-zero exit + real stderr traceback — so the Node caller can tell "no data for
+# this symbol" apart from "something is actually broken."
+def _bars_cli_main() -> int:
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(description="Fetch OHLCV bars as JSON (backs GET /api/bars/:symbol).")
+    parser.add_argument("--symbol", required=True)
+    parser.add_argument("--timeframe", required=True)
+    parser.add_argument("--start", required=True, help="YYYY-MM-DD")
+    parser.add_argument("--end", required=True, help="YYYY-MM-DD")
+    parser.add_argument("--local-path", default=None, help="Test-only: read a specific local Parquet file instead of S3/cache.")
+    args = parser.parse_args()
+
+    try:
+        df = load_ohlcv(
+            symbol=args.symbol,
+            timeframe=args.timeframe,
+            start=args.start,
+            end=args.end,
+            local_path=args.local_path,
+        )
+    except ValueError as exc:
+        if "No data found for" not in str(exc):
+            raise
+        sys.stdout.write(json.dumps({"bars": []}))
+        sys.stdout.flush()
+        return 0
+
+    bars = []
+    for row in df.sort("ts_event").iter_rows(named=True):
+        ts = row["ts_event"]
+        ts_iso = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
+        if "+" not in ts_iso and not ts_iso.endswith("Z"):
+            ts_iso = ts_iso + "Z"
+        bars.append({
+            "ts_event": ts_iso,
+            "open": float(row["open"]),
+            "high": float(row["high"]),
+            "low": float(row["low"]),
+            "close": float(row["close"]),
+            "volume": float(row["volume"]) if row["volume"] is not None else None,
+        })
+
+    sys.stdout.write(json.dumps({"bars": bars}))
+    sys.stdout.flush()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_bars_cli_main())

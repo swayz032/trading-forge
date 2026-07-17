@@ -424,7 +424,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "gate",
-    "automation_scope": "B15 Parameter Robustness Battery (Wave 25 Item 5): runs \u00b120% jitter on each parameter, computes Stability-Dependence Ratio (SDR), Population Stability Index (PSI), and Robustness-Weighted Score (RWS). Hard gate on PAPER->DEPLOY_READY when SDR < 0.85 OR PSI > 0.05 OR RWS > 0.20 (QuantForgeAnalytics 2026-05-16 institutional spec). Advisory-only when B15_BATTERY_ENABLED=false (30-day grandfather period). Required because perturbation-fragility kills strategies that survive WF/CPCV/PBO/DSR.",
+    "automation_scope": "B15 Parameter Robustness Battery (Wave 25 Item 5): runs ±20% jitter on each parameter, computes Stability-Dependence Ratio (SDR), Population Stability Index (PSI), and Robustness-Weighted Score (RWS). Hard gate on PAPER->DEPLOY_READY when SDR < 0.85 OR PSI > 0.05 OR RWS > 0.20 (QuantForgeAnalytics 2026-05-16 institutional spec). Advisory-only when B15_BATTERY_ENABLED=false (30-day grandfather period). Required because perturbation-fragility kills strategies that survive WF/CPCV/PBO/DSR.",
     "data_sources": [
       "backtest b15_battery JSONB",
       "strategy parameters"
@@ -567,7 +567,7 @@
     "manual_gate": "none",
     "runtime_state": "experimental",
     "decision_authority": "challenger_only",
-    "automation_scope": "Synthetic Black Swan Survival check (A14 W19) \u2014 Phase 0 SHADOW ONLY (Day 0-60). Trains a VAE generator on real OHLCV and produces statistically-realistic novel regimes that didn't happen but plausibly could; tests every PAPER-promotable strategy against thousands of these synthetic regimes before PAPER->DEPLOY_READY. Phase 0 logs WARN + writes audit_log advisory when survival_rate < 0.60; promotion proceeds regardless. Phase 1 (Day 60+, requires explicit env flag flip) becomes a hard gate blocking PAPER->DEPLOY_READY when survival_rate < 0.60. Closes the gap A4 Frankenstein and B10 MRP cannot \u2014 fragility to UNSEEN regimes.",
+    "automation_scope": "Synthetic Black Swan Survival check (A14 W19) — Phase 0 SHADOW ONLY (Day 0-60). Trains a VAE generator on real OHLCV and produces statistically-realistic novel regimes that didn't happen but plausibly could; tests every PAPER-promotable strategy against thousands of these synthetic regimes before PAPER->DEPLOY_READY. Phase 0 logs WARN + writes audit_log advisory when survival_rate < 0.60; promotion proceeds regardless. Phase 1 (Day 60+, requires explicit env flag flip) becomes a hard gate blocking PAPER->DEPLOY_READY when survival_rate < 0.60. Closes the gap A4 Frankenstein and B10 MRP cannot — fragility to UNSEEN regimes.",
     "data_sources": [
       "real OHLCV (S3) for generator training",
       "synthetic regime bank (S3) for evaluation",
@@ -649,7 +649,7 @@
     "manual_gate": "none",
     "runtime_state": "experimental",
     "decision_authority": "challenger_only",
-    "automation_scope": "Prop-Firm Survival Twin (B14 W20) \u2014 Phase 0 ADVISORY ONLY (Day 0-60). Bayesian + Monte Carlo survival probability per (strategy, firm) over a 180-day challenge horizon. Combines per-firm adversarial priors (suspension, VPN detection, payout denial, fund freeze, profitable-trader ban) with strategy modulators (payout-request size HIGH/EXTREME bands, payout-frequency cap, VPN coefficient driven by 1-automation_friendly). READ paths bypass pipelinePauseGate; admin refit endpoint is pause-gated (423). Per-firm error isolation in /rank and /simulate augmentation. Phase 0 surfaces survival probability + 180-day curve + evidence weight on every response and the /prop-firm UI but NEVER affects bestFirm selection or any lifecycle gate. Phase 1 (Day 60+, requires explicit B14_PHASE_1=true env flag flip) becomes a hard gate at PAPER->DEPLOY_READY when survival_probability < 0.50 and a tiebreaker in bestFirm selection. Answers the question B5 ROI ranking cannot \u2014 which firm will actually let the operator collect the payout (Apex banned profitable traders May 2025; MFFU froze funds 2023-2025; VPN-denied payouts unresolved 6+ months).",
+    "automation_scope": "Prop-Firm Survival Twin (B14 W20) — Phase 0 ADVISORY ONLY (Day 0-60). Bayesian + Monte Carlo survival probability per (strategy, firm) over a 180-day challenge horizon. Combines per-firm adversarial priors (suspension, VPN detection, payout denial, fund freeze, profitable-trader ban) with strategy modulators (payout-request size HIGH/EXTREME bands, payout-frequency cap, VPN coefficient driven by 1-automation_friendly). READ paths bypass pipelinePauseGate; admin refit endpoint is pause-gated (423). Per-firm error isolation in /rank and /simulate augmentation. Phase 0 surfaces survival probability + 180-day curve + evidence weight on every response and the /prop-firm UI but NEVER affects bestFirm selection or any lifecycle gate. Phase 1 (Day 60+, requires explicit B14_PHASE_1=true env flag flip) becomes a hard gate at PAPER->DEPLOY_READY when survival_probability < 0.50 and a tiebreaker in bestFirm selection. Answers the question B5 ROI ranking cannot — which firm will actually let the operator collect the payout (Apex banned profitable traders May 2025; MFFU froze funds 2023-2025; VPN-denied payouts unresolved 6+ months).",
     "data_sources": [
       "compliance_rulesets.parsedRules.allowsAutomation",
       "prop_firm_health_checks (last 90 days)",
@@ -808,19 +808,20 @@
       "mcl-pre-eia-stop-tighten"
     ],
     "routes": [
+      "/api/bars",
+      "/api/bias-decisions",
+      "/api/bias-state",
       "/api/context",
       "/api/data",
       "/api/indicators",
+      "/api/library-diversity",
       "/api/macro",
+      "/api/nemo-scenarios",
       "/api/paper",
       "/api/portfolio",
       "/api/pre-market",
       "/api/risk",
       "/api/signals",
-      "/api/bias-decisions",
-      "/api/bias-state",
-      "/api/library-diversity",
-      "/api/nemo-scenarios",
       "/api/skip",
       "/api/volume-profile"
     ],
@@ -918,7 +919,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "engine",
-    "automation_scope": "Wave 25 Pass 2 \u2014 N-timeframe MTF loader + multi-HTF indicator computation + N-TF join-to-exec. Replaces 2-TF (exec + daily) with full institutional top-down hierarchy: daily / HTF / ITF / trigger / exec. Backward-compat: strategies without 5-TF declaration default to 2-TF behavior.",
+    "automation_scope": "Wave 25 Pass 2 — N-timeframe MTF loader + multi-HTF indicator computation + N-TF join-to-exec. Replaces 2-TF (exec + daily) with full institutional top-down hierarchy: daily / HTF / ITF / trigger / exec. Backward-compat: strategies without 5-TF declaration default to 2-TF behavior.",
     "data_sources": [
       "ratio-adjusted continuous bar data (Polars)",
       "strategies.daily_tf",
@@ -985,7 +986,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "engine",
-    "automation_scope": "Wave 25 Pass 2 \u2014 per-session HTF narrative state computation. compute_htf_narrative() emits 4 dataclasses (AsianRange, LondonBias, NYBias, DailyDealing) from multi-TF data. Pure function (no DB, no time.now), replay-deterministic. Persisted to bias_state.htf_narrative JSONB (mig 0137) and exposed to TS via bias-state-service.ts typed interfaces. Fail-open: null narrative never blocks signal flow.",
+    "automation_scope": "Wave 25 Pass 2 — per-session HTF narrative state computation. compute_htf_narrative() emits 4 dataclasses (AsianRange, LondonBias, NYBias, DailyDealing) from multi-TF data. Pure function (no DB, no time.now), replay-deterministic. Persisted to bias_state.htf_narrative JSONB (mig 0137) and exposed to TS via bias-state-service.ts typed interfaces. Fail-open: null narrative never blocks signal flow.",
     "data_sources": [
       "intraday bars (DataFrame, UTC timestamps)",
       "daily bars (DataFrame, UTC)",
@@ -1055,7 +1056,7 @@
     "manual_gate": "operator-halt-only",
     "runtime_state": "active",
     "decision_authority": "gate",
-    "automation_scope": "Production carve-out: kill switch (9-layer), daily reconciliation (4-source), weekly drift detection (auto-HALT on >2\u03c3). Hard isolation from research-side modules enforced by CI lint.",
+    "automation_scope": "Production carve-out: kill switch (9-layer), daily reconciliation (4-source), weekly drift detection (auto-HALT on >2σ). Hard isolation from research-side modules enforced by CI lint.",
     "data_sources": [
       "production_trades",
       "paper_trades",
@@ -1548,7 +1549,7 @@
     "automation_mode": "autonomous",
     "runtime_state": "experimental",
     "decision_authority": "advisory",
-    "automation_scope": "Daily 8:00 AM ET pre-market scan scoring MES/MNQ/MCL via volatility audit, quantum MC, entropy filter (W3a), and 4-qubit cross-market lead-lag VQC. Emits OBSERVATION_MODE when no market is A+. Challenger-only output \u00e2\u20ac\u201d no execution authority.",
+    "automation_scope": "Daily 8:00 AM ET pre-market scan scoring MES/MNQ/MCL via volatility audit, quantum MC, entropy filter (W3a), and 4-qubit cross-market lead-lag VQC. Emits OBSERVATION_MODE when no market is A+. Challenger-only output â€” no execution authority.",
     "data_sources": [
       "pre-market ATR data",
       "VIX",
@@ -1689,7 +1690,7 @@
     "automation_mode": "autonomous",
     "runtime_state": "experimental",
     "decision_authority": "advisory",
-    "automation_scope": "Tier 4.5 W4: Ising-encoded IBM QPU enrichment. SHADOW ONLY \u00e2\u20ac\u201d async best-effort enrichment after classical TESTING\u00e2\u2020\u2019PAPER promotion. Never a gate. d=3 rotated surface code encoder + Ising decoder + PyMatching baseline. Budget: 600s/month IBM QPU, all reserved for Ising runs.",
+    "automation_scope": "Tier 4.5 W4: Ising-encoded IBM QPU enrichment. SHADOW ONLY â€” async best-effort enrichment after classical TESTINGâ†’PAPER promotion. Never a gate. d=3 rotated surface code encoder + Ising decoder + PyMatching baseline. Budget: 600s/month IBM QPU, all reserved for Ising runs.",
     "data_sources": [
       "IBM Quantum Platform (ibm_fez, ibm_kingston, ibm_marrakesh)",
       "quantum_mc_runs"
@@ -2265,7 +2266,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "engine",
-    "automation_scope": "Wave 25 Pass 2.5 \u2014 pre-market routine field expansion. Adds 18 institutional fields (TICK/ADD/VOLD/TRIN at open, DXY/10Y direction, cross_asset_aligned, bond_auction_today, extended_calendar_events, nearby_naked_pocs, london_range_high/low/points, pmh/pml, pwh_iso/pwl_iso, first_30min_volume_ratio) via migration 0139. Closes 'trading without written bias' failure mode (Steenbarger/Topstep 2025 funded-trader survival research). Honest deferrals: first_30min_volume_ratio always null pending 5-day RTH window DAL; nearby_naked_pocs uses simplified extraction.",
+    "automation_scope": "Wave 25 Pass 2.5 — pre-market routine field expansion. Adds 18 institutional fields (TICK/ADD/VOLD/TRIN at open, DXY/10Y direction, cross_asset_aligned, bond_auction_today, extended_calendar_events, nearby_naked_pocs, london_range_high/low/points, pmh/pml, pwh_iso/pwl_iso, first_30min_volume_ratio) via migration 0139. Closes 'trading without written bias' failure mode (Steenbarger/Topstep 2025 funded-trader survival research). Honest deferrals: first_30min_volume_ratio always null pending 5-day RTH window DAL; nearby_naked_pocs uses simplified extraction.",
     "data_sources": [
       "databento daily bars",
       "databento 5m bars (London range, first-30min vol)",
@@ -2338,7 +2339,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "engine",
-    "automation_scope": "Wave 25 Pass 2.5 \u2014 Massive WS subscription for NYSE breadth indices ($TICK, $ADD, $VOLD, $TRIN). Singleton cache exposes getInternalsSnapshot() with staleness flag (5-min threshold). Consumed by pre-market-routine.ts (tick_open/add_open/vold_open/trin_open at 09:30 ET) and confluence-score.ts (internals_aligned factor for MES/MNQ; MCL skipped \u2014 stock breadth irrelevant for crude). Fail-soft: when MASSIVE_API_KEY unset or WS disconnects, returns all-null snapshot \u2014 never blocks signal flow.",
+    "automation_scope": "Wave 25 Pass 2.5 — Massive WS subscription for NYSE breadth indices ($TICK, $ADD, $VOLD, $TRIN). Singleton cache exposes getInternalsSnapshot() with staleness flag (5-min threshold). Consumed by pre-market-routine.ts (tick_open/add_open/vold_open/trin_open at 09:30 ET) and confluence-score.ts (internals_aligned factor for MES/MNQ; MCL skipped — stock breadth irrelevant for crude). Fail-soft: when MASSIVE_API_KEY unset or WS disconnects, returns all-null snapshot — never blocks signal flow.",
     "data_sources": [
       "Massive WebSocket (Indices Basic tier)"
     ],
@@ -2395,7 +2396,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "scheduler",
-    "automation_scope": "Wave 25 Pass 2.5 \u2014 daily Discord briefing at 09:00 ET (13:00 UTC). Idempotent (W23F.U pattern \u2014 audit_log dedupe by UTC date). Fail-soft (Discord errors logged + audited, never thrown). PIPELINE-GATE EXEMPT \u2014 operator wants bias on phone before market open regardless of pipeline state. Closes 'trading without written bias' failure mode (Steenbarger/Topstep 2025 podcast #1 funded-trader blowup cause).",
+    "automation_scope": "Wave 25 Pass 2.5 — daily Discord briefing at 09:00 ET (13:00 UTC). Idempotent (W23F.U pattern — audit_log dedupe by UTC date). Fail-soft (Discord errors logged + audited, never thrown). PIPELINE-GATE EXEMPT — operator wants bias on phone before market open regardless of pipeline state. Closes 'trading without written bias' failure mode (Steenbarger/Topstep 2025 podcast #1 funded-trader blowup cause).",
     "data_sources": [
       "pre_market_sessions (today's row per symbol)"
     ],
@@ -2459,7 +2460,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "scheduler",
-    "automation_scope": "Wave 25 Pass 3 \u00e2\u20ac\u201d persistent ranked institutional liquidity engine. Promotes liquidity tracking from per-bar lookup to persistent ranked map across 17 canonical LevelTypes (PDH/PDL/PWH_ISO/PWL_ISO/PMH/PML/Asian/London/HOD/LOD/naked_poc/untouched_fvg/untouched_ob/EQH/EQL). Sweep probability heuristic (age decay + touch decay + distance attenuation + HTF significance) + composite rank scoring. Stage 2 liquidity_target_clear factor (weight 0.13) now real (was stub). Refresh cron every 30 min RTH; pipeline-gate exempt. LevelType enum is FROZEN as Pass 7 adaptive-exit-engine contract.",
+    "automation_scope": "Wave 25 Pass 3 â€” persistent ranked institutional liquidity engine. Promotes liquidity tracking from per-bar lookup to persistent ranked map across 17 canonical LevelTypes (PDH/PDL/PWH_ISO/PWL_ISO/PMH/PML/Asian/London/HOD/LOD/naked_poc/untouched_fvg/untouched_ob/EQH/EQL). Sweep probability heuristic (age decay + touch decay + distance attenuation + HTF significance) + composite rank scoring. Stage 2 liquidity_target_clear factor (weight 0.13) now real (was stub). Refresh cron every 30 min RTH; pipeline-gate exempt. LevelType enum is FROZEN as Pass 7 adaptive-exit-engine contract.",
     "data_sources": [
       "pre_market_sessions",
       "bias_state.structure_state"
@@ -2530,7 +2531,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "scheduler",
-    "automation_scope": "Wave 25 Pass 3 \u00e2\u20ac\u201d Python\u00e2\u2020\u2019TS bridge that detects naked POCs from 30-day daily+5m history (extract_naked_pocs_for_persistence in volume_profile.py) and persists them into liquidity_levels table via POST /api/admin/liquidity-map/naked-pocs-batch. Runs daily at 16:30 ET via cron naked-poc-sync-daily; pipeline-gate exempt. Idempotent (UPSERT bucketed at \u00c2\u00b10.25 MES tick). Maintains correlation_id chain Python \u00e2\u2020\u2019 TS endpoint \u00e2\u2020\u2019 audit_log.",
+    "automation_scope": "Wave 25 Pass 3 â€” Pythonâ†’TS bridge that detects naked POCs from 30-day daily+5m history (extract_naked_pocs_for_persistence in volume_profile.py) and persists them into liquidity_levels table via POST /api/admin/liquidity-map/naked-pocs-batch. Runs daily at 16:30 ET via cron naked-poc-sync-daily; pipeline-gate exempt. Idempotent (UPSERT bucketed at Â±0.25 MES tick). Maintains correlation_id chain Python â†’ TS endpoint â†’ audit_log.",
     "data_sources": [
       "S3 ratio_adj/{symbol}/daily",
       "S3 ratio_adj/{symbol}/5min"
@@ -2597,7 +2598,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 4 (W25.7) \u00e2\u20ac\u201d pure-functional confluence decay/staleness engine. 7 pure decay functions (fvgDecay/obDecay/chochDecay/mssDecay/smtDecay/vpLevelDecay/genericDecay) with named half-lives (FVG 200 bars, OB 150, CHoCH 100, MSS 80, SMT 60, VP 5 sessions, generic 200). deriveFactorDecay() aggregate maps canonical factor names \u00e2\u2020\u2019 decay result. Anti-double-decay guard: NO_DECAY_FACTORS set skips 5 factors (liquidity_target_clear/internals_aligned/macro_alignment/regime_match/killzone_active). Mitigated flag = hard_killed=true \u00e2\u2020\u2019 satisfied forced false. Stage 2 weighted scoring multiplies factor.contribution by decay confidence. Replay-deterministic \u00e2\u20ac\u201d no Date.now(), no I/O, callers compute age and pass it in. DECAY_TELEMETRY_THRESHOLD (default 0.7) gates the signal.confluence_factor_decayed audit row in paper-signal-service.ts.",
+    "automation_scope": "Wave 25 Pass 4 (W25.7) â€” pure-functional confluence decay/staleness engine. 7 pure decay functions (fvgDecay/obDecay/chochDecay/mssDecay/smtDecay/vpLevelDecay/genericDecay) with named half-lives (FVG 200 bars, OB 150, CHoCH 100, MSS 80, SMT 60, VP 5 sessions, generic 200). deriveFactorDecay() aggregate maps canonical factor names â†’ decay result. Anti-double-decay guard: NO_DECAY_FACTORS set skips 5 factors (liquidity_target_clear/internals_aligned/macro_alignment/regime_match/killzone_active). Mitigated flag = hard_killed=true â†’ satisfied forced false. Stage 2 weighted scoring multiplies factor.contribution by decay confidence. Replay-deterministic â€” no Date.now(), no I/O, callers compute age and pass it in. DECAY_TELEMETRY_THRESHOLD (default 0.7) gates the signal.confluence_factor_decayed audit row in paper-signal-service.ts.",
     "data_sources": [
       "structure_state",
       "signal_context"
@@ -2649,7 +2650,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 5 (P5.A1) \u00e2\u20ac\u201d VWAP with 1\u00cf\u0192 + 2\u00cf\u0192 bands plus anchored VWAP. compute_vwap_with_bands() in src/engine/indicators/core.py returns 5 columns (vwap, vwap_band_1s_upper/lower, vwap_band_2s_upper/lower) with Globex 18:00 ET session-resetting variance accumulation. compute_anchored_vwap() returns deterministic column name anchored_vwap_<iso> for per-strategy anchor timestamps (IndicatorConfig.anchor_ts). Powers 2 new DSL archetypes: vwap_band_reject (1\u00cf\u0192 band fade) and anchored_vwap_retest (event-anchored confluence). Backtest engine populates VWAP band columns into bar context; paper-signal-service feeds same columns to confluence-score evalVwapAlignment. Failure surface proxied through confluence_score_engine audit events (a_plus_factor_evaluated emits per-factor decision rows naming this engine as the source for vwap_alignment factor).",
+    "automation_scope": "Wave 25 Pass 5 (P5.A1) â€” VWAP with 1Ïƒ + 2Ïƒ bands plus anchored VWAP. compute_vwap_with_bands() in src/engine/indicators/core.py returns 5 columns (vwap, vwap_band_1s_upper/lower, vwap_band_2s_upper/lower) with Globex 18:00 ET session-resetting variance accumulation. compute_anchored_vwap() returns deterministic column name anchored_vwap_<iso> for per-strategy anchor timestamps (IndicatorConfig.anchor_ts). Powers 2 new DSL archetypes: vwap_band_reject (1Ïƒ band fade) and anchored_vwap_retest (event-anchored confluence). Backtest engine populates VWAP band columns into bar context; paper-signal-service feeds same columns to confluence-score evalVwapAlignment. Failure surface proxied through confluence_score_engine audit events (a_plus_factor_evaluated emits per-factor decision rows naming this engine as the source for vwap_alignment factor).",
     "data_sources": [
       "ratio_adj_parquet_bars"
     ],
@@ -2704,7 +2705,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 5 (P5.A2) \u00e2\u20ac\u201d continuous [0,1] SMT (Smart Money Tool) ES\u00e2\u2020\u201dNQ divergence score. compute_smt_divergence(es_bars, nq_bars) in src/engine/indicators/smt_divergence.py produces 4-component weighted formula (magnitude \u00c3\u2014 time_synced \u00c3\u2014 structure_quality \u00c3\u2014 displacement_confirmation) with smt_score + smt_direction (bullish_es_strong/bullish_nq_strong/bearish_es_strong/bearish_nq_strong) per bar. Closes GPT critique #7 (binary SMT \u00e2\u2020\u2019 continuous). Confluence decay engine (Pass 4) consumes smt_age_bars on top (multiplied). Backtest engine populates ctx.smt_score directly; live paper bridge DEFERRED to Wave 26 (paper-signal-service.ts continues fail-open with reason='smt_unavailable' for live signals). Failure surface proxied through confluence_score_engine audit events (a_plus_factor_evaluated emits per-factor decision rows naming this engine as the source for smt_confirmation factor).",
+    "automation_scope": "Wave 25 Pass 5 (P5.A2) â€” continuous [0,1] SMT (Smart Money Tool) ESâ†”NQ divergence score. compute_smt_divergence(es_bars, nq_bars) in src/engine/indicators/smt_divergence.py produces 4-component weighted formula (magnitude Ã— time_synced Ã— structure_quality Ã— displacement_confirmation) with smt_score + smt_direction (bullish_es_strong/bullish_nq_strong/bearish_es_strong/bearish_nq_strong) per bar. Closes GPT critique #7 (binary SMT â†’ continuous). Confluence decay engine (Pass 4) consumes smt_age_bars on top (multiplied). Backtest engine populates ctx.smt_score directly; live paper bridge DEFERRED to Wave 26 (paper-signal-service.ts continues fail-open with reason='smt_unavailable' for live signals). Failure surface proxied through confluence_score_engine audit events (a_plus_factor_evaluated emits per-factor decision rows naming this engine as the source for smt_confirmation factor).",
     "data_sources": [
       "ratio_adj_parquet_bars_es",
       "ratio_adj_parquet_bars_nq"
@@ -2758,7 +2759,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 1 + Pass 2.5 + Pass 3 + Pass 4 + Pass 5 \u00e2\u20ac\u201d institutional 11-factor weighted confluence scoring (Path C). evaluateWeightedConfluence() in src/server/services/confluence-score.ts. Per-factor evaluators: evalMarketStructureAligned (0.20), evalLiquidityTargetClear (0.13 \u00e2\u20ac\u201d LIVE since Pass 3), evalSmtConfirmation (0.10 \u00e2\u20ac\u201d LIVE since Pass 5: reads ctx.smt_score + ctx.smt_direction from compute_smt_divergence; backtest path fully live, paper live-bridge deferred Wave 26), evalVwapAlignment (0.10 \u00e2\u20ac\u201d LIVE since Pass 5: institutional discount/premium model, long satisfied when close below VWAP, 1\u00cf\u0192 band reject + anchored VWAP retest priority order), evalKillzoneActive (0.08), evalDeltaOrVolumeSignature (0.08), evalVpLevelProximity (0.08), evalMacroAlignment (0.08 HARD-BLOCK), evalInternalsAligned (0.05 MES/MNQ only), evalCrossAssetAligned (0.05), evalRegimeMatch (0.05). MCL redistribution: internals weight zeroed \u00e2\u2020\u2019 +0.05 to cross_asset. Threshold 0.72 default. Decay engine multiplies 6/11 factor contributions by time-based confidence. Hard-block bypass: macro_alignment unsatisfied \u00e2\u2020\u2019 score=0.",
+    "automation_scope": "Wave 25 Pass 1 + Pass 2.5 + Pass 3 + Pass 4 + Pass 5 â€” institutional 11-factor weighted confluence scoring (Path C). evaluateWeightedConfluence() in src/server/services/confluence-score.ts. Per-factor evaluators: evalMarketStructureAligned (0.20), evalLiquidityTargetClear (0.13 â€” LIVE since Pass 3), evalSmtConfirmation (0.10 â€” LIVE since Pass 5: reads ctx.smt_score + ctx.smt_direction from compute_smt_divergence; backtest path fully live, paper live-bridge deferred Wave 26), evalVwapAlignment (0.10 â€” LIVE since Pass 5: institutional discount/premium model, long satisfied when close below VWAP, 1Ïƒ band reject + anchored VWAP retest priority order), evalKillzoneActive (0.08), evalDeltaOrVolumeSignature (0.08), evalVpLevelProximity (0.08), evalMacroAlignment (0.08 HARD-BLOCK), evalInternalsAligned (0.05 MES/MNQ only), evalCrossAssetAligned (0.05), evalRegimeMatch (0.05). MCL redistribution: internals weight zeroed â†’ +0.05 to cross_asset. Threshold 0.72 default. Decay engine multiplies 6/11 factor contributions by time-based confidence. Hard-block bypass: macro_alignment unsatisfied â†’ score=0.",
     "data_sources": [
       "bar_context",
       "indicators",
@@ -2820,7 +2821,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 6 W25.10 \u00e2\u20ac\u201d 5-regime institutional expansion. classify_institutional_regime() in src/engine/context/bias_engine.py runs BEFORE classic 3-regime logic with 4-arm priority classifier (HIGH_VOL_MACRO \u00e2\u2020\u2019 LOW_LIQ_CHOP \u00e2\u2020\u2019 EXPANSION \u00e2\u2020\u2019 COMPRESSION \u00e2\u2020\u2019 _PASS_THROUGH). 4 new playbook arms in src/engine/context/playbook_router.py (DISPLACEMENT_CONTINUATION / BREAKOUT_PREP / REDUCED_SIZING / NO_TRADE). RegimeEvidence dataclass captures ATR percentile / volume ratio / range vs ATR / macro event / session health / primary driver \u00e2\u20ac\u201d persisted to bias_state.regime_evidence JSONB via bias-state-service.ts (migration 0142 idx 144). Forensic replay: any historical regime decision can be reconstructed without re-running the engine. HIGH_VOL_MACRO + LOW_LIQ_CHOP force playbook = NO_TRADE.",
+    "automation_scope": "Wave 25 Pass 6 W25.10 â€” 5-regime institutional expansion. classify_institutional_regime() in src/engine/context/bias_engine.py runs BEFORE classic 3-regime logic with 4-arm priority classifier (HIGH_VOL_MACRO â†’ LOW_LIQ_CHOP â†’ EXPANSION â†’ COMPRESSION â†’ _PASS_THROUGH). 4 new playbook arms in src/engine/context/playbook_router.py (DISPLACEMENT_CONTINUATION / BREAKOUT_PREP / REDUCED_SIZING / NO_TRADE). RegimeEvidence dataclass captures ATR percentile / volume ratio / range vs ATR / macro event / session health / primary driver â€” persisted to bias_state.regime_evidence JSONB via bias-state-service.ts (migration 0142 idx 144). Forensic replay: any historical regime decision can be reconstructed without re-running the engine. HIGH_VOL_MACRO + LOW_LIQ_CHOP force playbook = NO_TRADE.",
     "data_sources": [
       "htf_context",
       "session_context",
@@ -2887,7 +2888,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 6 W25.11 \u00e2\u20ac\u201d A/M/E narrative continuity state machine. computeNarrativeState() + persistNarrativeState() + loadLatestNarrativeState() in src/server/services/narrative-state-service.ts. 5-phase pure-functional state machine: NEUTRAL \u00e2\u2020\u2019 ACCUMULATION \u00e2\u2020\u2019 MANIPULATION \u00e2\u2020\u2019 DISTRIBUTION \u00e2\u2020\u2019 REVERSAL_FORMING. Deterministic for replay (no Date.now, no I/O in compute). Persists into bias_state.narrative_state JSONB (migration 0143 idx 145) via UPDATE on the latest row for the (session_date, symbol) pair. narrative-state-tracker cron fires every 5 min during RTH (pipeline-gate exempt). audit event narrative.phase_transition fires ONLY on phase change (idempotent). confluence-score.ts evalMarketStructureAligned extended with CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE env gate (default OFF \u00e2\u20ac\u201d backward compat: institutional desks only enter during DISTRIBUTION when toggled ON).",
+    "automation_scope": "Wave 25 Pass 6 W25.11 â€” A/M/E narrative continuity state machine. computeNarrativeState() + persistNarrativeState() + loadLatestNarrativeState() in src/server/services/narrative-state-service.ts. 5-phase pure-functional state machine: NEUTRAL â†’ ACCUMULATION â†’ MANIPULATION â†’ DISTRIBUTION â†’ REVERSAL_FORMING. Deterministic for replay (no Date.now, no I/O in compute). Persists into bias_state.narrative_state JSONB (migration 0143 idx 145) via UPDATE on the latest row for the (session_date, symbol) pair. narrative-state-tracker cron fires every 5 min during RTH (pipeline-gate exempt). audit event narrative.phase_transition fires ONLY on phase change (idempotent). confluence-score.ts evalMarketStructureAligned extended with CONFLUENCE_REQUIRE_DISTRIBUTION_PHASE env gate (default OFF â€” backward compat: institutional desks only enter during DISTRIBUTION when toggled ON).",
     "data_sources": [
       "htf_narrative",
       "structure_state",
@@ -2951,7 +2952,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 26 Phase 1 Pass 1 \u00e2\u20ac\u201d event-driven trade critique service. Fires on every paper_position close via GPT-5.4 strict dual-output schema (plain-English block + technical attribution block). 250-line institutional rubric. 3-strike Ollama fallback. MAX_CONCURRENT=3 backpressure. Idempotent per position_id (trade_critique.idempotent_skip). Wave 25 missingness handling: when smt_score / institutional context unavailable, data_completeness='minimal' with missingFields[] populated rather than blocking. Persisted to trade_critique table (migration 0141 idx 143).",
+    "automation_scope": "Wave 26 Phase 1 Pass 1 â€” event-driven trade critique service. Fires on every paper_position close via GPT-5.4 strict dual-output schema (plain-English block + technical attribution block). 250-line institutional rubric. 3-strike Ollama fallback. MAX_CONCURRENT=3 backpressure. Idempotent per position_id (trade_critique.idempotent_skip). Wave 25 missingness handling: when smt_score / institutional context unavailable, data_completeness='minimal' with missingFields[] populated rather than blocking. Persisted to trade_critique table (migration 0141 idx 143).",
     "data_sources": [
       "paper_positions",
       "bias_state",
@@ -3029,7 +3030,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 26 Phase 1 Pass 6 \u00e2\u20ac\u201d Topstep concentration tracker + 40/50% gates. shouldBlockNewEntry() evaluates projected single-day P&L vs Topstep 50% consistency ceiling. \u00e2\u2030\u00a550% BLOCK / \u00e2\u2030\u00a540% WARN. False-positive guard downgrades 50% block to WARN when offending strategy has clean recent history in trending regime. Daily 17:00 ET digest cron consistency-tracker-daily-digest. NOT YET wired into paper-signal-service.ts entry-gate \u00e2\u20ac\u201d deferred to coordination pass after Wave 25 Pass 7 merge.",
+    "automation_scope": "Wave 26 Phase 1 Pass 6 â€” Topstep concentration tracker + 40/50% gates. shouldBlockNewEntry() evaluates projected single-day P&L vs Topstep 50% consistency ceiling. â‰¥50% BLOCK / â‰¥40% WARN. False-positive guard downgrades 50% block to WARN when offending strategy has clean recent history in trending regime. Daily 17:00 ET digest cron consistency-tracker-daily-digest. NOT YET wired into paper-signal-service.ts entry-gate â€” deferred to coordination pass after Wave 25 Pass 7 merge.",
     "data_sources": [
       "paper_positions",
       "broker_accounts"
@@ -3095,7 +3096,7 @@
     "manual_gate": "kill_switch",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 26 Phase 1 Pass 4 \u00e2\u20ac\u201d closes the trade-critique feedback loop. 4h pattern-aggregator cron aggregates last-N trade_critique rows into strategy_proposer appendix updates via prompt_versions A/B test gate. MIN_CRITIQUES_FOR_AGGREGATION=10 (pattern_aggregator.insufficient_samples). auto_patch_loop_enabled flag (default true) gates LLM call \u00e2\u20ac\u201d when false emits auto_patch.loop_halted_skip. Architectural fix: buildPromptSync retains synchronous contract via appendixCache pre-warm pattern. Successful appendix application emits pattern_evolution.applied; no-op runs emit pattern_aggregator.no_change.",
+    "automation_scope": "Wave 26 Phase 1 Pass 4 â€” closes the trade-critique feedback loop. 4h pattern-aggregator cron aggregates last-N trade_critique rows into strategy_proposer appendix updates via prompt_versions A/B test gate. MIN_CRITIQUES_FOR_AGGREGATION=10 (pattern_aggregator.insufficient_samples). auto_patch_loop_enabled flag (default true) gates LLM call â€” when false emits auto_patch.loop_halted_skip. Architectural fix: buildPromptSync retains synchronous contract via appendixCache pre-warm pattern. Successful appendix application emits pattern_evolution.applied; no-op runs emit pattern_aggregator.no_change.",
     "data_sources": [
       "trade_critique",
       "prompt_versions"
@@ -3166,7 +3167,7 @@
     "manual_gate": "operator_opt_in_per_strategy",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 25 Pass 7 + Wave 25.5 wiring LIVE 2026-05-24. computeExitPlan() composes 5 sub-tracks: W25.12 liquidity-mapped TP (intraday DOL only \u00e2\u20ac\u201d PWH/PWL/PMH/PML excluded per day-trader mandate; +1R/+2R fallback), W25.13 regime-dependent scaling (TRENDING 20/30/50, RANGE 50/30/20, MACRO 60/30/10, CHOP 50/50/0), W25.14 delta-divergence early-exit (\u00e2\u2030\u00a50.6 cumulative-delta div + \u00e2\u2030\u00a50.5R favor \u00e2\u2020\u2019 25% partial; prop-firm-safe, never flips), W25.15 AVWAP runner trail selection (anchored_vwap / developing_poc / chandelier / structure_trail), W25.16 pre-lunch harvest (RANGE/CHOP/COMPRESSION at 11:30 ET \u00e2\u2030\u00a50.3R \u00e2\u2020\u2019 50% partial + BE+0.5R). Wave 25.5 closed 3 wiring gaps: (Gap A) paper-execution-service.ts openPosition wires computeExitPlan + paper_positions.exit_plan JSONB persistence via migration 0145 idx 147 + fail-soft fallback to static_styleC, (Gap B) backtester._apply_trade_management() routes to _apply_adaptive_management when exit_engine='adaptive' + adaptive_ctx provided via src/engine/exits/adaptive_exits.py Python mirror, (Gap C) updatePositionPrices branches on runner_trail_method for 4 methods (anchored_vwap with unit-vol fallback / developing_poc preserved / chandelier preserved / structure_trail per-position swing). framework-overlay.ts exit_plan_config.exit_style switch operator-controlled (default 'static_styleC' backward-compat; 'adaptive' opt-in per strategy via scripts/wave25-pass7-adaptive-opt-in.ts --apply). 15:55 ET hard flatten + BE+1 TP1 INVARIANTS preserved in BOTH engines. 123 new tests green across Wave 25.5 (18 paper-parity + 105 backtest-core). TS canonical, Python mirror; parity contract documented in src/engine/exits/adaptive_exits.py module docstring.",
+    "automation_scope": "Wave 25 Pass 7 + Wave 25.5 wiring LIVE 2026-05-24. computeExitPlan() composes 5 sub-tracks: W25.12 liquidity-mapped TP (intraday DOL only â€” PWH/PWL/PMH/PML excluded per day-trader mandate; +1R/+2R fallback), W25.13 regime-dependent scaling (TRENDING 20/30/50, RANGE 50/30/20, MACRO 60/30/10, CHOP 50/50/0), W25.14 delta-divergence early-exit (â‰¥0.6 cumulative-delta div + â‰¥0.5R favor â†’ 25% partial; prop-firm-safe, never flips), W25.15 AVWAP runner trail selection (anchored_vwap / developing_poc / chandelier / structure_trail), W25.16 pre-lunch harvest (RANGE/CHOP/COMPRESSION at 11:30 ET â‰¥0.3R â†’ 50% partial + BE+0.5R). Wave 25.5 closed 3 wiring gaps: (Gap A) paper-execution-service.ts openPosition wires computeExitPlan + paper_positions.exit_plan JSONB persistence via migration 0145 idx 147 + fail-soft fallback to static_styleC, (Gap B) backtester._apply_trade_management() routes to _apply_adaptive_management when exit_engine='adaptive' + adaptive_ctx provided via src/engine/exits/adaptive_exits.py Python mirror, (Gap C) updatePositionPrices branches on runner_trail_method for 4 methods (anchored_vwap with unit-vol fallback / developing_poc preserved / chandelier preserved / structure_trail per-position swing). framework-overlay.ts exit_plan_config.exit_style switch operator-controlled (default 'static_styleC' backward-compat; 'adaptive' opt-in per strategy via scripts/wave25-pass7-adaptive-opt-in.ts --apply). 15:55 ET hard flatten + BE+1 TP1 INVARIANTS preserved in BOTH engines. 123 new tests green across Wave 25.5 (18 paper-parity + 105 backtest-core). TS canonical, Python mirror; parity contract documented in src/engine/exits/adaptive_exits.py module docstring.",
     "data_sources": [
       "liquidity_levels",
       "bias_state.regime",
@@ -3358,7 +3359,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 26 Group B deliverable. Bridges Python compute_smt_divergence() to live paper-signal-service.ts so smt_score / smt_direction / smt_age_bars populate WeightedSignalContext for evalSmtConfirmation in Path C confluence scoring. smt-live-service.ts.getSmtLiveSnapshot() spawns python -m src.engine.indicators.smt_divergence with --config JSON (paired ES/NQ bars + timestamp); 30s in-process cache to keep per-bar latency low; fail-soft (returns null on subprocess/parse error \u00e2\u2020\u2019 factor returns 'smt_unavailable' fail-open). Python __main__ CLI in smt_divergence.py emits stdout JSON { score, direction, age_bars }. Wired in paper-signal-service.ts Promise.all alongside getNearestLiquidity for parallelized per-bar lookups. Audit rows: smt.snapshot_captured (info) / smt.snapshot_stale_skipped (info on cache hit).",
+    "automation_scope": "Wave 26 Group B deliverable. Bridges Python compute_smt_divergence() to live paper-signal-service.ts so smt_score / smt_direction / smt_age_bars populate WeightedSignalContext for evalSmtConfirmation in Path C confluence scoring. smt-live-service.ts.getSmtLiveSnapshot() spawns python -m src.engine.indicators.smt_divergence with --config JSON (paired ES/NQ bars + timestamp); 30s in-process cache to keep per-bar latency low; fail-soft (returns null on subprocess/parse error â†’ factor returns 'smt_unavailable' fail-open). Python __main__ CLI in smt_divergence.py emits stdout JSON { score, direction, age_bars }. Wired in paper-signal-service.ts Promise.all alongside getNearestLiquidity for parallelized per-bar lookups. Audit rows: smt.snapshot_captured (info) / smt.snapshot_stale_skipped (info on cache hit).",
     "data_sources": [
       "paired_es_nq_bars",
       "src/engine/indicators/smt_divergence.py"
@@ -3418,7 +3419,7 @@
     "manual_gate": "ci_gate",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 26 Group A deliverable. CI hard gate (npm run check:ts-python-exit-parity \u00e2\u2020\u2019 scripts/wave26-ts-python-exit-parity.ts). Asserts TS computeExitPlan() and Python compute_exit_plan_python() produce identical tp1.price (\u00c2\u00b10.01), tp2.price (\u00c2\u00b10.01), runner_trail_method, scaling tuple, pre-lunch threshold across 5 regime fixtures (TRENDING / RANGE_BOUND / HIGH_VOL_MACRO / LOW_LIQ_CHOP / COMPRESSION). Any drift = fail-CLOSED (non-zero exit). Informational subsystem \u00e2\u20ac\u201d no runtime state, no DB writes; the gate IS the freshness signal.",
+    "automation_scope": "Wave 26 Group A deliverable. CI hard gate (npm run check:ts-python-exit-parity â†’ scripts/wave26-ts-python-exit-parity.ts). Asserts TS computeExitPlan() and Python compute_exit_plan_python() produce identical tp1.price (Â±0.01), tp2.price (Â±0.01), runner_trail_method, scaling tuple, pre-lunch threshold across 5 regime fixtures (TRENDING / RANGE_BOUND / HIGH_VOL_MACRO / LOW_LIQ_CHOP / COMPRESSION). Any drift = fail-CLOSED (non-zero exit). Informational subsystem â€” no runtime state, no DB writes; the gate IS the freshness signal.",
     "data_sources": [
       "5_regime_fixtures"
     ],
@@ -3470,7 +3471,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "scheduler",
-    "automation_scope": "Wave 26 Group A deliverable. Extends naked_poc_persistence_bridge with HOD/LOD level extraction. extract_hod_lod_for_persistence() in volume_profile.py emits intraday HOD + LOD levels keyed to the prior session; same daily 16:30 ET cron (naked-poc-sync-daily) batches them through the existing POST /api/admin/liquidity-map/naked-pocs-batch endpoint which now also accepts level_type \u00e2\u02c6\u02c6 {HOD, LOD}. Closes the level_type='HOD' / level_type='LOD' population gap so paper-signal-service liquidity injection sees a fuller intraday DOL menu. Idempotent (same UPSERT bucketing as naked_poc bridge).",
+    "automation_scope": "Wave 26 Group A deliverable. Extends naked_poc_persistence_bridge with HOD/LOD level extraction. extract_hod_lod_for_persistence() in volume_profile.py emits intraday HOD + LOD levels keyed to the prior session; same daily 16:30 ET cron (naked-poc-sync-daily) batches them through the existing POST /api/admin/liquidity-map/naked-pocs-batch endpoint which now also accepts level_type âˆˆ {HOD, LOD}. Closes the level_type='HOD' / level_type='LOD' population gap so paper-signal-service liquidity injection sees a fuller intraday DOL menu. Idempotent (same UPSERT bucketing as naked_poc bridge).",
     "data_sources": [
       "S3 ratio_adj/{symbol}/5min"
     ],
@@ -3535,7 +3536,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 26 Pass A \u00e2\u20ac\u201d local-first routing for the transcript_extractor LLM role. Direct Ollama gemma4:e2b primary with cloud gpt-5-mini fallback. callScoutExtractLlm() in src/server/services/model-router.ts: 2-phase boot health check (/api/tags + test-inference probe in checkTranscriptExtractorOllamaHealth) sets module-level OLLAMA_HEALTHY flag; runtime gates isForceCloud() + OLLAMA_HEALTHY decide primary. 30s per-attempt timeout via OllamaClient(undefined, 30_000); 3-attempt retry with exponential backoff + jitter; JSON validation gate (JSON.parse(raw)) attaches fallbackReason='ollama_invalid_json' on parse failure. Fallback fires once per call (not per failure-mode) to cloud retry path. Per-call audit row llm.transcript_extractor_call captures {model, provider, fellback, fallback_reason, durationMs}. Operator panic-revert: TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true flips primary to cloud without code change. Local-model override: TRANSCRIPT_EXTRACTOR_LOCAL_MODEL env (default gemma4:e2b). Infrastructure dependency: Ollama >= 0.4.x for gemma4 execution; older Ollama lists model in tags but fails at test-inference (boot probe catches this and routes to cloud). Cloud budget cap: OPENAI_DAILY_BUDGET_TOKENS (alias TRADING_FORGE_DAILY_TOKEN_BUDGET), default 500_000 (tightened from leaky 1M) \u00e2\u20ac\u201d enforced via isOverBudget() gate returning HTTP 429 to model-router.",
+    "automation_scope": "Wave 26 Pass A â€” local-first routing for the transcript_extractor LLM role. Direct Ollama gemma4:e2b primary with cloud gpt-5-mini fallback. callScoutExtractLlm() in src/server/services/model-router.ts: 2-phase boot health check (/api/tags + test-inference probe in checkTranscriptExtractorOllamaHealth) sets module-level OLLAMA_HEALTHY flag; runtime gates isForceCloud() + OLLAMA_HEALTHY decide primary. 30s per-attempt timeout via OllamaClient(undefined, 30_000); 3-attempt retry with exponential backoff + jitter; JSON validation gate (JSON.parse(raw)) attaches fallbackReason='ollama_invalid_json' on parse failure. Fallback fires once per call (not per failure-mode) to cloud retry path. Per-call audit row llm.transcript_extractor_call captures {model, provider, fellback, fallback_reason, durationMs}. Operator panic-revert: TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true flips primary to cloud without code change. Local-model override: TRANSCRIPT_EXTRACTOR_LOCAL_MODEL env (default gemma4:e2b). Infrastructure dependency: Ollama >= 0.4.x for gemma4 execution; older Ollama lists model in tags but fails at test-inference (boot probe catches this and routes to cloud). Cloud budget cap: OPENAI_DAILY_BUDGET_TOKENS (alias TRADING_FORGE_DAILY_TOKEN_BUDGET), default 500_000 (tightened from leaky 1M) â€” enforced via isOverBudget() gate returning HTTP 429 to model-router.",
     "data_sources": [
       "YouTube transcripts (operator-ingest path)",
       "Ollama local inference at OLLAMA_HOST"
@@ -3604,7 +3605,7 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 1 \u00e2\u20ac\u201d deterministic replay harness for backtest reconstruction. quantum_replay.py + db_loader.py in src/engine/replay/. Loads historical bar context + schema-version gate + CPCV purge enforcement to reproduce any 90-day-old trade decision from audit_log + system_journal seeds. 19 pytest pass. Registry entry added 2026-05-24 by Wave 26 Pass A closeout (resolves pre-existing system-map drift item 'Registry is missing 1 engine subsystem mappings').",
+    "automation_scope": "Wave 27 Pass 1 â€” deterministic replay harness for backtest reconstruction. quantum_replay.py + db_loader.py in src/engine/replay/. Loads historical bar context + schema-version gate + CPCV purge enforcement to reproduce any 90-day-old trade decision from audit_log + system_journal seeds. 19 pytest pass. Registry entry added 2026-05-24 by Wave 26 Pass A closeout (resolves pre-existing system-map drift item 'Registry is missing 1 engine subsystem mappings').",
     "data_sources": [
       "audit_log",
       "system_journal",
@@ -3805,7 +3806,7 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 2 carry-forward \u00e2\u20ac\u201d replay-grading harness for trade_critique grade signal disagreement. scripts/replay-grade-critique.ts + src/server/lib/replay/critique-disagreement.ts (Mann-Whitney U + parameter hint application tracking). 14 vitest GREEN. Advisory-only.",
+    "automation_scope": "Wave 27 Pass 2 carry-forward â€” replay-grading harness for trade_critique grade signal disagreement. scripts/replay-grade-critique.ts + src/server/lib/replay/critique-disagreement.ts (Mann-Whitney U + parameter hint application tracking). 14 vitest GREEN. Advisory-only.",
     "data_sources": [
       "trade_critique",
       "backtests",
@@ -3864,7 +3865,7 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 2 carry-forward \u00e2\u20ac\u201d replay-grading harness for B15 parameter-robustness battery as OOS failure predictor. scripts/replay-grade-robustness.ts + src/server/lib/replay/robustness-disagreement.ts (confusion matrix + threshold sensitivity sweep). 46 vitest GREEN. Advisory-only.",
+    "automation_scope": "Wave 27 Pass 2 carry-forward â€” replay-grading harness for B15 parameter-robustness battery as OOS failure predictor. scripts/replay-grade-robustness.ts + src/server/lib/replay/robustness-disagreement.ts (confusion matrix + threshold sensitivity sweep). 46 vitest GREEN. Advisory-only.",
     "data_sources": [
       "b15_robustness_runs",
       "backtests",
@@ -3922,7 +3923,7 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 4 carry-forward \u00e2\u20ac\u201d B14 Survival Twin replay-grading harness. Python compute leaf src/engine/replay/survival_twin_replay.py (35 pytest) + TS analysis layer scripts/replay-grade-survival-twin.ts + src/server/lib/replay/survival-twin-disagreement.ts (Pearson r, MAD, Mann-Whitney U per-firm Topstep vs MFFU, Spearman cross-method agreement vs Pass A ci_high). 32 vitest GREEN. survival_scorer.py audit cleared PASS (write-free contract). Reuses quantum_mc_runs with survival_twin=true governance labels. Advisory-only.",
+    "automation_scope": "Wave 27 Pass 4 carry-forward â€” B14 Survival Twin replay-grading harness. Python compute leaf src/engine/replay/survival_twin_replay.py (35 pytest) + TS analysis layer scripts/replay-grade-survival-twin.ts + src/server/lib/replay/survival-twin-disagreement.ts (Pearson r, MAD, Mann-Whitney U per-firm Topstep vs MFFU, Spearman cross-method agreement vs Pass A ci_high). 32 vitest GREEN. survival_scorer.py audit cleared PASS (write-free contract). Reuses quantum_mc_runs with survival_twin=true governance labels. Advisory-only.",
     "data_sources": [
       "quantum_mc_runs",
       "walk_forward_windows",
@@ -3988,7 +3989,7 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 3 carry-forward \u00e2\u20ac\u201d replay-grading harness for Wave 26 pattern-aggregator appendix mutations vs OOS Sharpe delta. scripts/replay-grade-pattern-aggregator.ts + src/server/lib/replay/pattern-aggregator-disagreement.ts + threshold sensitivity sweep. Advisory-only.",
+    "automation_scope": "Wave 27 Pass 3 carry-forward â€” replay-grading harness for Wave 26 pattern-aggregator appendix mutations vs OOS Sharpe delta. scripts/replay-grade-pattern-aggregator.ts + src/server/lib/replay/pattern-aggregator-disagreement.ts + threshold sensitivity sweep. Advisory-only.",
     "data_sources": [
       "prompt_versions",
       "backtests",
@@ -4047,7 +4048,7 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 3 carry-forward \u00e2\u20ac\u201d replay-grading harness for Wave 26 consistency-tracker 40/50% Topstep gates as OOS payout-denial predictor. scripts/replay-grade-consistency.ts + src/server/lib/replay/consistency-disagreement.ts + threshold sensitivity sweep. Advisory-only.",
+    "automation_scope": "Wave 27 Pass 3 carry-forward â€” replay-grading harness for Wave 26 consistency-tracker 40/50% Topstep gates as OOS payout-denial predictor. scripts/replay-grade-consistency.ts + src/server/lib/replay/consistency-disagreement.ts + threshold sensitivity sweep. Advisory-only.",
     "data_sources": [
       "backtests",
       "backtest_trades"
@@ -4173,7 +4174,7 @@
     "manual_gate": "operator-approve",
     "runtime_state": "scaffold",
     "decision_authority": "operator",
-    "automation_scope": "Wave 27 Pass 3 carry-forward \u00e2\u20ac\u201d Phase 5 true-mini ContractSpec scaffold (ES/NQ/CL) gated by TF_PHASE_5_ENABLED env (default false). resolve_contract_spec() safety helper routes symbols by contract_class with explicit refusal when scaffold is off. Activation gated on operator funded balance \u00e2\u2030\u00a5 $200K + explicit env flip + per-strategy contract_class='mini' declaration. Prevents 10\u00c3\u2014 silent risk inflation from ambiguous ES/MES symbol routing.",
+    "automation_scope": "Wave 27 Pass 3 carry-forward â€” Phase 5 true-mini ContractSpec scaffold (ES/NQ/CL) gated by TF_PHASE_5_ENABLED env (default false). resolve_contract_spec() safety helper routes symbols by contract_class with explicit refusal when scaffold is off. Activation gated on operator funded balance â‰¥ $200K + explicit env flip + per-strategy contract_class='mini' declaration. Prevents 10Ã— silent risk inflation from ambiguous ES/MES symbol routing.",
     "data_sources": [
       "strategies"
     ],
@@ -4224,7 +4225,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 28 Pass A composite-health observability bus + aggregator. PURE OBSERVABILITY MODE \u00e2\u20ac\u201d writes one immutable row per strategy per cycle to strategy_health_scores. Composite scores DO NOT GATE promotion; Wave 27.5 hard gates retain independent veto power.",
+    "automation_scope": "Wave 28 Pass A composite-health observability bus + aggregator. PURE OBSERVABILITY MODE â€” writes one immutable row per strategy per cycle to strategy_health_scores. Composite scores DO NOT GATE promotion; Wave 27.5 hard gates retain independent veto power.",
     "data_sources": [
       "strategy_health_aggregator",
       "12 canonical subsystems",
@@ -4298,7 +4299,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 28 Pass B SHADOW GATE MODE. Pure-function composite-health shadow gate wired into lifecycle-service.ts alongside Wave 27.5 hard gates. OBSERVABILITY ONLY \u00e2\u20ac\u201d never blocks promotion. Reads latest strategy_health_scores row and derives WOULD_PROMOTE/WOULD_WARN/WOULD_BLOCK. Companion Discord router emits P2 disagreement alerts (24h per-strategy\u00c3\u2014agreement-type dedup). Companion analyzer recommends Pass C activation when \u00e2\u2030\u00a585% agreement over 14 days.",
+    "automation_scope": "Wave 28 Pass B SHADOW GATE MODE. Pure-function composite-health shadow gate wired into lifecycle-service.ts alongside Wave 27.5 hard gates. OBSERVABILITY ONLY â€” never blocks promotion. Reads latest strategy_health_scores row and derives WOULD_PROMOTE/WOULD_WARN/WOULD_BLOCK. Companion Discord router emits P2 disagreement alerts (24h per-strategyÃ—agreement-type dedup). Companion analyzer recommends Pass C activation when â‰¥85% agreement over 14 days.",
     "data_sources": [
       "strategy_health_scores",
       "audit_log"
@@ -4424,7 +4425,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 26 Pass G Pass F. 8th institutional regime (7th non-NO_TRADE). Detected when all 4 conditions hold: ATR > 2.5x 30d avg AND volume > 2x 30d avg AND VIX-proxy ATR percentile > 80th pct AND multi-day melt-up > 5% in last 5 sessions. Routes to LATE_CYCLE_MEAN_REVERSION playbook (mean-reversion + reversal strategies ONLY, NOT continuation/breakout). Sizing multiplier 0.5x via confidence_modifier=0.5. Does NOT force NO_TRADE \u00e2\u20ac\u201d mean-reversion strategies allowed.",
+    "automation_scope": "Wave 26 Pass G Pass F. 8th institutional regime (7th non-NO_TRADE). Detected when all 4 conditions hold: ATR > 2.5x 30d avg AND volume > 2x 30d avg AND VIX-proxy ATR percentile > 80th pct AND multi-day melt-up > 5% in last 5 sessions. Routes to LATE_CYCLE_MEAN_REVERSION playbook (mean-reversion + reversal strategies ONLY, NOT continuation/breakout). Sizing multiplier 0.5x via confidence_modifier=0.5. Does NOT force NO_TRADE â€” mean-reversion strategies allowed.",
     "data_sources": [
       "HTFContext.atr_percentile",
       "OHLCV bars (Polars DataFrame)"
@@ -4483,7 +4484,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 29 Pass C. Quantum RL agent bridge to production state \u00e2\u20ac\u201d extends TradingEnv to 25-feature production state vector (5-TF MTF + structure + narrative + killzones + 11-factor confluence + regime + liquidity + optional QCNN noise_score) + LONG/FLAT 2-action enforcement (n_actions=3 raises ValueError) + reward shaping R = realized_R - alpha*max(0, ci_high - 0.40) - beta*drawdown_penalty. Regime-conditioned policy-gradient training loop (4 institutional regimes). Auto-fire fire-and-forget from backtest-service when entry_quality.train_rl_policy=true via quantum-rl-training-runner.ts. Off-RTH hourly cron quantum-rl-training-window ({6,7,8,16,17 ET}, _PIPELINE_GATE_EXEMPT, DST-safe). Writes to NEW quantum_rl_runs namespace (migration 0152) \u00e2\u20ac\u201d namespace-separate from quantum_mc_runs to prevent circular IAE-vs-RL feedback. IBM cloud opt-in two-gate (QUANTUM_RL_IBM_CLOUD_OPT_IN=true AND QUANTUM_CLOUD_ENABLED=true AND IBM_QUANTUM_TOKEN). Advisory Sharpe-gap kill switch + DSR>=0.5 floor (QuantBeckman 2025 + arXiv 2512.12924). first-100-trades confidence dampening + first-200-trades static router epsilon-greedy exploration. Composite-health 13th subsystem feeder + A/B paper routing (slumdawg-baseline vs slumdawg-rl-challenger) per migration 0159. CHALLENGER-ONLY governance: NEVER gates promotion \u00e2\u20ac\u201d Wave 27.5 + Wave 28 gates retain authoritative veto.",
+    "automation_scope": "Wave 29 Pass C. Quantum RL agent bridge to production state â€” extends TradingEnv to 25-feature production state vector (5-TF MTF + structure + narrative + killzones + 11-factor confluence + regime + liquidity + optional QCNN noise_score) + LONG/FLAT 2-action enforcement (n_actions=3 raises ValueError) + reward shaping R = realized_R - alpha*max(0, ci_high - 0.40) - beta*drawdown_penalty. Regime-conditioned policy-gradient training loop (4 institutional regimes). Auto-fire fire-and-forget from backtest-service when entry_quality.train_rl_policy=true via quantum-rl-training-runner.ts. Off-RTH hourly cron quantum-rl-training-window ({6,7,8,16,17 ET}, _PIPELINE_GATE_EXEMPT, DST-safe). Writes to NEW quantum_rl_runs namespace (migration 0152) â€” namespace-separate from quantum_mc_runs to prevent circular IAE-vs-RL feedback. IBM cloud opt-in two-gate (QUANTUM_RL_IBM_CLOUD_OPT_IN=true AND QUANTUM_CLOUD_ENABLED=true AND IBM_QUANTUM_TOKEN). Advisory Sharpe-gap kill switch + DSR>=0.5 floor (QuantBeckman 2025 + arXiv 2512.12924). first-100-trades confidence dampening + first-200-trades static router epsilon-greedy exploration. Composite-health 13th subsystem feeder + A/B paper routing (slumdawg-baseline vs slumdawg-rl-challenger) per migration 0159. CHALLENGER-ONLY governance: NEVER gates promotion â€” Wave 27.5 + Wave 28 gates retain authoritative veto.",
     "data_sources": [
       "quantum_rl_agent (TradingEnv production state)",
       "backtest_bar_data (CPCV-purged)",
@@ -4579,7 +4580,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 29 Pass A.1 + A.3. SHADOW lifecycle stage sits between TESTING and PAPER \u00e2\u20ac\u201d TradingView Pine alerts fire but TradersPost webhook is OFF (paper invariant: traderspost_webhook_called=false enforced at lifecycle_shadow_signals table level). paper-signal-service.ts shadow intercept block skips TradersPost + emits lifecycle.shadow_signal_logged + SSE signal:shadow_logged. Shadow-signal divergence checker (shadow-signal-divergence-checker.ts pure function + shadow-signal-divergence-loader.ts DB helper) wired into lifecycle-service.ts at SHADOW -> PAPER (Gate 2.5): >=5% divergence across >=20 signals BLOCKS promotion. Catches training-serving skew \u00e2\u20ac\u201d institutional grade #1 failure mode (15-25% of all institutional model failures per AltStreet Quant 2.0 Dec 2025). Fail-soft contract: legacy/missing shadow_signals table -> lifecycle.shadow_divergence_check_unavailable_legacy + PROCEED.",
+    "automation_scope": "Wave 29 Pass A.1 + A.3. SHADOW lifecycle stage sits between TESTING and PAPER â€” TradingView Pine alerts fire but TradersPost webhook is OFF (paper invariant: traderspost_webhook_called=false enforced at lifecycle_shadow_signals table level). paper-signal-service.ts shadow intercept block skips TradersPost + emits lifecycle.shadow_signal_logged + SSE signal:shadow_logged. Shadow-signal divergence checker (shadow-signal-divergence-checker.ts pure function + shadow-signal-divergence-loader.ts DB helper) wired into lifecycle-service.ts at SHADOW -> PAPER (Gate 2.5): >=5% divergence across >=20 signals BLOCKS promotion. Catches training-serving skew â€” institutional grade #1 failure mode (15-25% of all institutional model failures per AltStreet Quant 2.0 Dec 2025). Fail-soft contract: legacy/missing shadow_signals table -> lifecycle.shadow_divergence_check_unavailable_legacy + PROCEED.",
     "data_sources": [
       "lifecycle_shadow_signals",
       "backtests"
@@ -4654,7 +4655,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "gate",
-    "automation_scope": "Wave 29 Pass A.2. Probability of Backtest Overfitting hard gate at TESTING -> SHADOW and TESTING -> PAPER lifecycle transitions. Bailey et al. rank-based PBO via src/engine/pbo_gate.py (Python pure-functional rank correlation) + src/server/lib/pbo-gate.ts (lifecycle wrapper). Threshold via PBO_OVERFIT_THRESHOLD_PCT (default 0.15 \u00e2\u20ac\u201d institutional 2026 standard, stricter than Wave 27.5 PBO_OVERFIT_THRESHOLD=0.5). walk_forward.py extended to emit pbo_overall + pbo_overall_p_value in output dict. Lifecycle blocks promotion when pbo_overall > threshold + emits lifecycle.pbo_overfit_block + lifecycle:pbo_evaluated SSE. Legacy backtests without pbo_overall -> PROCEED + lifecycle.pbo_unavailable_legacy warn (grandfather window).",
+    "automation_scope": "Wave 29 Pass A.2. Probability of Backtest Overfitting hard gate at TESTING -> SHADOW and TESTING -> PAPER lifecycle transitions. Bailey et al. rank-based PBO via src/engine/pbo_gate.py (Python pure-functional rank correlation) + src/server/lib/pbo-gate.ts (lifecycle wrapper). Threshold via PBO_OVERFIT_THRESHOLD_PCT (default 0.15 â€” institutional 2026 standard, stricter than Wave 27.5 PBO_OVERFIT_THRESHOLD=0.5). walk_forward.py extended to emit pbo_overall + pbo_overall_p_value in output dict. Lifecycle blocks promotion when pbo_overall > threshold + emits lifecycle.pbo_overfit_block + lifecycle:pbo_evaluated SSE. Legacy backtests without pbo_overall -> PROCEED + lifecycle.pbo_unavailable_legacy warn (grandfather window).",
     "data_sources": [
       "backtests.walk_forward_results"
     ],
@@ -4879,7 +4880,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Deep-Scan #16 Wave 3. Daily 17:00 ET cron (DST-safe double-fire at 21,22 UTC minute :43 with ET-hour==17 guard, mirrors regime-drift-detector + strategy-age-revalidation patterns) that restores the demotion the live n8n 'Daily Portfolio Monitor' workflow (node 'Log Drift Alert and Transition') was SUPPOSED to do but silently did NOT \u2014 its PATCH /api/strategies/:id/lifecycle sent no HMAC timestamp+signature so every call 401'd (or 503 with secret unset) and onError:continueRegularOutput swallowed it into a false-green. Scans every DEPLOYED strategy; any whose persisted strategies.rolling_sharpe_30d (refreshed 4-hourly by the rolling-sharpe cron via metrics-aggregator) is below PORTFOLIO_DRIFT_SHARPE_FLOOR (default 1.0) is auto-demoted DEPLOYED -> DECLINING -> TESTING (two-step preserves transition observability). FAIL-SAFE on NULL rolling Sharpe (skip via portfolio_drift_demotion.no_sharpe_data_skipped info audit, NEVER demote) \u2014 the dead n8n node's ||0 default would have demoted everything. DEFAULT-OFF: with PORTFOLIO_DRIFT_DEMOTION_ENABLED unset/false the sweep runs in effective dry-run (detect + tf_portfolio_drift_demotions_total telemetry + advisory Discord + portfolio_drift_demotion.dry_run audit, NO lifecycle mutation) so the operator validates the rolling-Sharpe scale on real DEPLOYED strategies before flipping to live demotion. Zombie DECLINING (step2 DECLINING->TESTING fails) is recovered by the regime-drift-detector's existing zombie-DECLINING compensating sweep (not duplicated). _PIPELINE_GATE_EXEMPT (runs even when pipeline paused); _tryAcquireJobLock prevents overlap re-entry. Closes the silent-dead-auto-demotion failure mode where the n8n portfolio-drift demotion showed GREEN while no demotion ever occurred.",
+    "automation_scope": "Deep-Scan #16 Wave 3. Daily 17:00 ET cron (DST-safe double-fire at 21,22 UTC minute :43 with ET-hour==17 guard, mirrors regime-drift-detector + strategy-age-revalidation patterns) that restores the demotion the live n8n 'Daily Portfolio Monitor' workflow (node 'Log Drift Alert and Transition') was SUPPOSED to do but silently did NOT — its PATCH /api/strategies/:id/lifecycle sent no HMAC timestamp+signature so every call 401'd (or 503 with secret unset) and onError:continueRegularOutput swallowed it into a false-green. Scans every DEPLOYED strategy; any whose persisted strategies.rolling_sharpe_30d (refreshed 4-hourly by the rolling-sharpe cron via metrics-aggregator) is below PORTFOLIO_DRIFT_SHARPE_FLOOR (default 1.0) is auto-demoted DEPLOYED -> DECLINING -> TESTING (two-step preserves transition observability). FAIL-SAFE on NULL rolling Sharpe (skip via portfolio_drift_demotion.no_sharpe_data_skipped info audit, NEVER demote) — the dead n8n node's ||0 default would have demoted everything. DEFAULT-OFF: with PORTFOLIO_DRIFT_DEMOTION_ENABLED unset/false the sweep runs in effective dry-run (detect + tf_portfolio_drift_demotions_total telemetry + advisory Discord + portfolio_drift_demotion.dry_run audit, NO lifecycle mutation) so the operator validates the rolling-Sharpe scale on real DEPLOYED strategies before flipping to live demotion. Zombie DECLINING (step2 DECLINING->TESTING fails) is recovered by the regime-drift-detector's existing zombie-DECLINING compensating sweep (not duplicated). _PIPELINE_GATE_EXEMPT (runs even when pipeline paused); _tryAcquireJobLock prevents overlap re-entry. Closes the silent-dead-auto-demotion failure mode where the n8n portfolio-drift demotion showed GREEN while no demotion ever occurred.",
     "data_sources": [
       "strategies.rolling_sharpe_30d"
     ],
@@ -5153,7 +5154,7 @@
     "failure_visibility": "audit_log",
     "recovery_mode": "fail-soft",
     "health_check": "src/server/__tests__/slumhouse/admin-mapping-route.test.ts",
-    "_freshness_note": "Mapping-row + audit-action freshness \u00e2\u20ac\u201d operator-driven mapping writes emit slumhouse.user_mapped; table writes are the canonical observable.",
+    "_freshness_note": "Mapping-row + audit-action freshness â€” operator-driven mapping writes emit slumhouse.user_mapped; table writes are the canonical observable.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
@@ -5177,7 +5178,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "agent",
-    "automation_scope": "Discord OAuth 2.0 token exchange + user fetch + HMAC-signed session cookie helpers. Pure auth \u00e2\u20ac\u201d no governance writes, no broker calls. Session cookie format: <discord_user_id>:<exp_unix_sec>:<HMAC-SHA256-base64url(secret, payload)>. 14-day TTL. Cookie name: slumhouse_sid. Requires env: DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_REDIRECT_URI, SLUMHOUSE_SESSION_SECRET (>=32 chars).",
+    "automation_scope": "Discord OAuth 2.0 token exchange + user fetch + HMAC-signed session cookie helpers. Pure auth â€” no governance writes, no broker calls. Session cookie format: <discord_user_id>:<exp_unix_sec>:<HMAC-SHA256-base64url(secret, payload)>. 14-day TTL. Cookie name: slumhouse_sid. Requires env: DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_REDIRECT_URI, SLUMHOUSE_SESSION_SECRET (>=32 chars).",
     "data_sources": [
       "discord.com/api/oauth2/token",
       "discord.com/api/users/@me"
@@ -5224,7 +5225,7 @@
     "failure_visibility": "audit_log",
     "recovery_mode": "fail-soft",
     "health_check": "src/server/__tests__/slumhouse/discord-oauth.test.ts",
-    "_freshness_note": "Audit-action-based freshness \u00e2\u20ac\u201d OAuth callback writes one of the 3 slumhouse.login_* actions per login attempt.",
+    "_freshness_note": "Audit-action-based freshness â€” OAuth callback writes one of the 3 slumhouse.login_* actions per login attempt.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
@@ -5249,7 +5250,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "agent",
-    "automation_scope": "Slumhouse portal read-only data routes: /slumhouse/api/crib, /slumhouse/api/kitchen, /slumhouse/api/kitchen/menu, /slumhouse/api/recipe/:id. All gated by requireSlumhouseUser middleware (401 no_session / 401 invalid_session / 403 user_not_mapped). Backend reads only \u00e2\u20ac\u201d no broker calls, no lifecycle writes, no kill switch. Data assemblers translate TF jargon (R-multiples, PF, MES) to street language (won big / pays / Mini-S&P) per the Slumdawg jargon table.",
+    "automation_scope": "Slumhouse portal read-only data routes: /slumhouse/api/crib, /slumhouse/api/kitchen, /slumhouse/api/kitchen/menu, /slumhouse/api/recipe/:id. All gated by requireSlumhouseUser middleware (401 no_session / 401 invalid_session / 403 user_not_mapped). Backend reads only â€” no broker calls, no lifecycle writes, no kill switch. Data assemblers translate TF jargon (R-multiples, PF, MES) to street language (won big / pays / Mini-S&P) per the Slumdawg jargon table.",
     "data_sources": [
       "paper_trades",
       "paper_positions",
@@ -5307,7 +5308,7 @@
     "failure_visibility": "audit_log",
     "recovery_mode": "fail-soft",
     "health_check": "src/server/__tests__/slumhouse/",
-    "_freshness_note": "Read-only data routes do not emit their own audit rows; freshness is upstream \u00e2\u20ac\u201d login success (slumhouse_discord_oauth) and last_seen_at writes update slumhouse_users every time a friend hits any /slumhouse/api/* endpoint. Indirect-by-design.",
+    "_freshness_note": "Read-only data routes do not emit their own audit rows; freshness is upstream â€” login success (slumhouse_discord_oauth) and last_seen_at writes update slumhouse_users every time a friend hits any /slumhouse/api/* endpoint. Indirect-by-design.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
@@ -5331,7 +5332,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "advisory",
-    "automation_scope": "Static HTML/CSS/JS friend-facing portal at public/slumhouse/. 4 pages (login, crib, kitchen, recipe) + 1 not-mapped fallback. Vanilla JS \u00e2\u20ac\u201d no React, no build step. Hydrates from /slumhouse/api/* JSON endpoints. Friends DM'd https://tf-relay-production.up.railway.app/slumhouse to enter. Brand: lime green (#a3ff12) accents on pure black, slim flat glassy cards, top-nav pill.",
+    "automation_scope": "Static HTML/CSS/JS friend-facing portal at public/slumhouse/. 4 pages (login, crib, kitchen, recipe) + 1 not-mapped fallback. Vanilla JS â€” no React, no build step. Hydrates from /slumhouse/api/* JSON endpoints. Friends DM'd https://tf-relay-production.up.railway.app/slumhouse to enter. Brand: lime green (#a3ff12) accents on pure black, slim flat glassy cards, top-nav pill.",
     "data_sources": [
       "/slumhouse/api/crib",
       "/slumhouse/api/kitchen",
@@ -5460,7 +5461,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "advisory",
-    "automation_scope": "Operator nerve-center voice agent (ElevenLabs WebRTC). REPORTS on every subsystem and RUNS capital-safe work only (backtests, Monte Carlo, scout discovery, research) via a registry-driven read+run tool dispatcher. May PROPOSE risky actions but NEVER bypasses a promotion, compliance, or risk gate \u2014 the gates remain authoritative. Operator-assist/advisory, not a lifecycle gate. Not in the live-trade path.",
+    "automation_scope": "Operator nerve-center voice agent (ElevenLabs WebRTC). REPORTS on every subsystem and RUNS capital-safe work only (backtests, Monte Carlo, scout discovery, research) via a registry-driven read+run tool dispatcher. May PROPOSE risky actions but NEVER bypasses a promotion, compliance, or risk gate — the gates remain authoritative. Operator-assist/advisory, not a lifecycle gate. Not in the live-trade path.",
     "data_sources": [
       "ElevenLabs post-call transcript webhook",
       "Carter tool registry (read+run tools)",

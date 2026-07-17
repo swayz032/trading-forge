@@ -85,6 +85,7 @@ import { searchRouterRoutes } from "./routes/search-router.js";
 import { prevalidatorRoutes } from "./routes/prevalidator.js";
 import { openclawDailyReportRoutes } from "./routes/openclaw-daily-report.js";
 import { volumeProfileRoutes } from "./routes/volume-profile.js";
+import { barsRoutes } from "./routes/bars.js";
 import { productionStatusRoutes } from "./routes/production-status.js";
 import { libraryDiversityRoutes } from "./routes/library-diversity.js";
 import { biasDecisionsRoutes } from "./routes/bias-decisions.js";
@@ -735,6 +736,8 @@ app.use("/api/shadow-rerun", strictRateLimit, shadowRerunRoutes);
 app.use("/api/scout", scoutHealthRoutes);
 // Track 2: Volume Profile EXPANDED — daily VP levels, operator morning glance
 app.use("/api/volume-profile", volumeProfileRoutes);
+// 2026-07-17: real OHLCV bars backing pre-market-routine.ts (was 404 for every symbol — see CLAUDE.md §2b)
+app.use("/api/bars", barsRoutes);
 app.use("/api/library-diversity", libraryDiversityRoutes);
 app.use("/api/bias-decisions", biasDecisionsRoutes);
 // Wave 23.C: Bias state per-session operator visibility

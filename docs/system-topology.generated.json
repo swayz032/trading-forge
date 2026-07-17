@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T19:37:35.060Z",
+  "generatedAt": "2026-07-17T19:20:25.958Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,7 +15,7 @@
     ]
   },
   "counts": {
-    "routes": 79,
+    "routes": 80,
     "schedulerJobs": 112,
     "workflowFiles": 20,
     "canonicalWorkflows": 20,
@@ -36,6 +36,7 @@
     "/api/auditor",
     "/api/b15-robustness",
     "/api/backtests",
+    "/api/bars",
     "/api/bias-decisions",
     "/api/bias-state",
     "/api/broker-accounts",
@@ -520,7 +521,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 334h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 333h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -818,7 +819,7 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 79,
+      "routes": 80,
       "schedulerJobs": 112,
       "engineSubsystems": 29,
       "databaseTables": 111
@@ -2594,19 +2595,20 @@
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
+          "/api/bars",
+          "/api/bias-decisions",
+          "/api/bias-state",
           "/api/context",
           "/api/data",
           "/api/indicators",
+          "/api/library-diversity",
           "/api/macro",
+          "/api/nemo-scenarios",
           "/api/paper",
           "/api/portfolio",
           "/api/pre-market",
           "/api/risk",
           "/api/signals",
-          "/api/bias-decisions",
-          "/api/bias-state",
-          "/api/library-diversity",
-          "/api/nemo-scenarios",
           "/api/skip",
           "/api/volume-profile"
         ],
@@ -9690,19 +9692,20 @@
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
+        "/api/bars",
+        "/api/bias-decisions",
+        "/api/bias-state",
         "/api/context",
         "/api/data",
         "/api/indicators",
+        "/api/library-diversity",
         "/api/macro",
+        "/api/nemo-scenarios",
         "/api/paper",
         "/api/portfolio",
         "/api/pre-market",
         "/api/risk",
         "/api/signals",
-        "/api/bias-decisions",
-        "/api/bias-state",
-        "/api/library-diversity",
-        "/api/nemo-scenarios",
         "/api/skip",
         "/api/volume-profile"
       ],
