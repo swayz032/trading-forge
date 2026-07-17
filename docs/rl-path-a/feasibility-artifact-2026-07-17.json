@@ -1,0 +1,79 @@
+{
+  "generated_at_note": "goalscan-r2 RL Path-A feasibility probe (advisor-required artifact)",
+  "window": {
+    "symbol": "MES",
+    "timeframe": "15min",
+    "start": "2026-01-02",
+    "end": "2026-03-06"
+  },
+  "provenance": {
+    "point_in_time": "labels computed per-bar from tail slice bars[:i+1] only; production classifier + production helper functions; no smoothing, no retro reclassification",
+    "inputs": {
+      "ohlcv_trailing_metrics": "S3 ratio-adjusted parquet via load_ohlcv (loaded 4176 bars)",
+      "session_label": "pure function of bar timestamp (session_context._get_session, ET)",
+      "macro_event_flag": "21 releases on 17 distinct dates from economic_release_dates",
+      "fall_through_note": "TRENDING/RANGE/NO_TRADE arms resolve in compute_bias from the same trailing-OHLCV input class; _PASS_THROUGH fraction below is what the full backfill job must additionally resolve"
+    }
+  },
+  "bars_loaded": 4176,
+  "bars_labeled_post_warmup": 4145,
+  "input_null_rates": {
+    "atr_percentile": {
+      "nulls": 0,
+      "rate": 0.0
+    },
+    "volume_ratio": {
+      "nulls": 0,
+      "rate": 0.0
+    },
+    "range_vs_atr": {
+      "nulls": 0,
+      "rate": 0.0
+    }
+  },
+  "label_cardinality": 5,
+  "label_distribution": {
+    "_PASS_THROUGH": 2079,
+    "LOW_LIQ_CHOP": 1266,
+    "COMPRESSION": 381,
+    "HIGH_VOL_MACRO": 222,
+    "EXPANSION": 197
+  },
+  "regime_x_session_cells": {
+    "COMPRESSION": {
+      "ny_pm": 169,
+      "pre_market": 91,
+      "asian": 77,
+      "london": 40,
+      "ny_am": 4
+    },
+    "EXPANSION": {
+      "ny_am": 86,
+      "london": 44,
+      "asian": 29,
+      "pre_market": 26,
+      "ny_pm": 12
+    },
+    "HIGH_VOL_MACRO": {
+      "pre_market": 74,
+      "ny_am": 70,
+      "london": 50,
+      "ny_pm": 13,
+      "asian": 12,
+      "overnight": 3
+    },
+    "LOW_LIQ_CHOP": {
+      "asian": 1093,
+      "overnight": 173
+    },
+    "_PASS_THROUGH": {
+      "pre_market": 626,
+      "ny_pm": 518,
+      "london": 406,
+      "ny_am": 300,
+      "asian": 229
+    }
+  },
+  "min_cell_n": 3,
+  "regime_transitions_observed": 1067
+}

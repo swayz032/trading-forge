@@ -538,6 +538,10 @@ const ALWAYS_RUN_JOBS = new Set([
   // pipelineGate() itself return true for this job, matching what the
   // handler's comment already (incorrectly) assumed was happening.
   "weekly-drift-2sigma-check",
+  // goalscan-r2 (2026-07-17): bias-state freshness canary is pure observability
+  // (detects the 0134-class silent writer death). It must fire even when the
+  // pipeline is paused — a pause is precisely when nobody is watching dashboards.
+  "bias-state-freshness-check",
 ]);
 
 // ─── Pipeline mode tracker (drives resume-drain) ─────────────
@@ -4063,6 +4067,99 @@ except Exception as e:
         { err, correlationId, sessionDate: today },
         "bias-engine-refresh-10am-et: refresh threw — 9:30 row preserved as authoritative (fail-open)",
       );
+    }
+  });
+
+  // ─── bias-state freshness canary (goalscan-r2, 2026-07-17 advisor ruling) ───
+  //
+  // Writer-side twin of the schema-contract canary. bias_state persistence was
+  // SILENTLY dead 2026-05-24 → 2026-07-17: migration 0134's DDL never executed
+  // live, the writer INSERT threw daily into a swallowed logger.warn, and
+  // bias_engine.refreshed_10am_et kept auditing SUCCESS — 2 months of
+  // institutional-regime history lost behind a green light. Second silent death
+  // in this class, so freshness alerting is POLICY, not garnish: "recording
+  // resumed" is a prediction until rows are OBSERVED; this canary observes.
+  //
+  // Logic: on ET weekdays 11:00–16:59 (bias rows write at 09:30 + 10:00 ET, so
+  // by 11:00 today's rows MUST exist), if bias_state's max(created_at) predates
+  // today's 09:30 ET → warn audit `bias_state.freshness_stale` + Discord WARN.
+  // Dedup: at most one alert per trading day (existing audit row for today
+  // short-circuits). CME-holiday weekdays may false-positive at WARN level —
+  // the message says so (accepted trade-off; ~9 days/yr, once each).
+  registerJob("bias-state-freshness-check", 60 * 60 * 1000, async () => {
+    const nowEt = new Date().toLocaleString("en-US", {
+      timeZone: "America/New_York", hour: "numeric", minute: "numeric", hour12: false, weekday: "short",
+    });
+    // e.g. "Thu 11:30" → ["Thu", "11:30"]
+    const [wd, hm] = nowEt.split(" ");
+    const etHour = parseInt(hm?.split(":")[0] ?? "0", 10);
+    if (["Sat", "Sun"].includes(wd) || etHour < 11 || etHour > 16) return;
+
+    const todayEt = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" }); // YYYY-MM-DD
+
+    // Dedup: one alert per trading day.
+    const already = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(and(eq(auditLog.action, "bias_state.freshness_stale"), eq(auditLog.entityId, todayEt)))
+      .limit(1);
+    if (already.length > 0) return;
+
+    const latest = await db.execute(sql`SELECT max(created_at) AS mx FROM bias_state`);
+    const rows = (latest as unknown as { rows?: Array<{ mx: string | Date | null }> }).rows
+      ?? (latest as unknown as Array<{ mx: string | Date | null }>);
+    const mx = rows?.[0]?.mx ? new Date(rows[0].mx as string | Date) : null;
+
+    // Today's 09:30 ET expressed as an instant: build from the ET date string.
+    // ET offset is -04 (EDT) or -05 (EST); using -04 in summer/-05 in winter via
+    // a cheap probe: format the same instant's ET hour vs UTC hour.
+    const probe = new Date();
+    const utcH = probe.getUTCHours();
+    const etH = parseInt(probe.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }), 10);
+    const offsetH = ((utcH - etH) + 24) % 24; // 4 (EDT) or 5 (EST)
+    const sessionStart = new Date(`${todayEt}T09:30:00Z`);
+    sessionStart.setUTCHours(sessionStart.getUTCHours() + offsetH);
+
+    if (mx !== null && mx.getTime() >= sessionStart.getTime()) return; // fresh — rows written this session
+
+    logger.error(
+      { lastBiasRow: mx?.toISOString() ?? null, sessionStart: sessionStart.toISOString(), todayEt },
+      "bias-state-freshness-check: NO bias_state row written this session — regime history is NOT accumulating (0134-class writer death?)",
+    );
+    await db.insert(auditLog).values({
+      action: "bias_state.freshness_stale",
+      entityType: "scheduler",
+      entityId: todayEt,
+      status: "warning",
+      result: {
+        last_bias_row: mx?.toISOString() ?? null,
+        expected_after: sessionStart.toISOString(),
+        note: "No bias_state row this session. If today is a CME holiday this is expected (no action). Otherwise: check bias_state.persist_failed audits + boot.schema_drift_detected — the writer may be throwing into its fail-open catch again.",
+      },
+    }).catch((auditErr: unknown) =>
+      logger.warn({ err: String(auditErr) }, "bias-state-freshness-check: audit write failed (non-blocking)"),
+    );
+    notifyWarning(
+      "Bias-state recording stale",
+      `No regime (bias_state) row has been saved for today's session (last row: ${mx?.toISOString() ?? "none ever"}). ` +
+        `Regime history is not accumulating. If today is a market holiday, ignore this. Otherwise check the persist_failed audits.`,
+      { todayEt, lastBiasRow: mx?.toISOString() ?? null },
+    );
+  });
+
+  // Hourly tick (UTC breadth; precise ET weekday+hour guard inside handler)
+  scheduleUtc("30 * * * *", async () => {
+    if (!_tryAcquireJobLock("bias-state-freshness-check")) return;
+    try {
+      // In ALWAYS_RUN_JOBS (observability canary — must fire during pauses; the
+      // R2FIX CRIT-2 lesson: an exempt-list entry alone does NOT bypass pipelineGate).
+      if (!(await pipelineGate("bias-state-freshness-check"))) return;
+      await SCHEDULER_JOBS["bias-state-freshness-check"]?.run();
+      markJobRun("bias-state-freshness-check");
+    } catch (err) {
+      logger.warn({ err: String(err) }, "bias-state-freshness-check: tick threw (non-blocking)");
+    } finally {
+      _releaseJobLock("bias-state-freshness-check");
     }
   });
 

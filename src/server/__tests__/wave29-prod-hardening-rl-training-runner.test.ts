@@ -38,6 +38,39 @@ vi.mock("fs", () => ({
   existsSync: vi.fn(() => false),
 }));
 
+// goalscan-r2 (2026-07-17, independent-grader finding, root-caused): 8-10 tests
+// in this file TIMED OUT whenever DATABASE_URL pointed at the remote Railway DB.
+// NOT latency — a 30s timeout bump was tried and refuted (they hang, they are
+// not slow): the fake-timer groups (`vi.useFakeTimers`) freeze the postgres
+// driver's internal timers, so the runner's awaited DB calls (pending-row
+// insert, breaker-state init/persist) never resolve. Confirmed PRE-EXISTING at
+// base 24664dc3 (same failures). Class fix: this UNIT test file mocks the DB
+// like it already mocks child_process and fs — a self-returning chainable
+// thenable stands in for drizzle's fluent API, every call resolves immediately
+// with []. _initRlBreakerStateFromDb() reads [] → safe defaults; audit/run-row
+// writes are fire-and-forget .catch() chains that resolve instantly.
+vi.mock("../db/index.js", () => {
+  const makeChain = (): any => {
+    const p: any = Promise.resolve([]);
+    for (const m of [
+      "values", "set", "where", "from", "limit", "orderBy", "returning",
+      "onConflictDoUpdate", "onConflictDoNothing", "leftJoin", "innerJoin", "groupBy",
+    ]) {
+      p[m] = () => makeChain();
+    }
+    return p;
+  };
+  return {
+    db: {
+      insert: () => makeChain(),
+      update: () => makeChain(),
+      select: () => makeChain(),
+      delete: () => makeChain(),
+      execute: async () => ({ rows: [] }),
+    },
+  };
+});
+
 // ── Import after mock registration ─────────────────────────────────────────────
 import {
   isOffRthTrainingWindow,
@@ -422,17 +455,22 @@ describe("Timeout — SIGKILL path", () => {
       process.env.QUANTUM_RL_TRAINING_TIMEOUT_MS = "100";
 
       const promise = runRlTrainingForStrategy("99", 2);
+      // Attach the rejection handler BEFORE advancing timers — the timeout
+      // reject fires mid-advance, and a late catch leaves a window where the
+      // rejection is unhandled (vitest flags it as an Unhandled Error).
+      const settled = promise.catch(() => { /* timeout rejects — expected */ });
 
-      // Advance fake timers past the 100ms timeout
-      vi.advanceTimersByTime(200);
+      // goalscan-r2 fix (pre-existing base failure): the runner awaits several
+      // microtasks (breaker-state init, pending-row insert) BEFORE registering
+      // its timeout setTimeout. A synchronous advanceTimersByTime here ran
+      // before that timer existed — nothing to advance, promise never settled,
+      // test timed out. The Async variant flushes microtasks between ticks so
+      // the runner reaches its setTimeout registration, then the timer fires.
+      await vi.advanceTimersByTimeAsync(200);
       // Give the SIGKILL follow-up 2s its own setTimeout
-      vi.advanceTimersByTime(3000);
+      await vi.advanceTimersByTimeAsync(3000);
 
-      try {
-        await promise;
-      } catch {
-        // Timeout rejects — expected
-      }
+      await settled;
 
       expect(neverExitsProc.kill).toHaveBeenCalled();
 

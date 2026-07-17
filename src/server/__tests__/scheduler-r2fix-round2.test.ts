@@ -199,3 +199,46 @@ describe("R2FIX MED-3 — prompt-ab-resolution fires at the documented Sunday 23
     expect(executableLines.join("\n")).not.toContain('scheduleUtc("0 23 * * 0"');
   });
 });
+
+describe("goalscan-r2 — bias-state-freshness-check canary (0134-class writer-death detector)", () => {
+  // Writer-side twin of the schema-contract canary: bias_state persistence was
+  // silently dead 2026-05-24 -> 2026-07-17 behind green engine audits. This
+  // canary alerts when no bias_state row lands for a trading session. It is
+  // pure observability, so it must fire during pipeline pauses (the CRIT-2
+  // lesson above: only ALWAYS_RUN_JOBS actually bypasses pipelineGate()).
+  beforeEach(() => {
+    isActiveMock.mockReset();
+  });
+
+  it("pipelineGate('bias-state-freshness-check') returns true even when pipeline is PAUSED", async () => {
+    isActiveMock.mockResolvedValue(false);
+    const result = await _testOnly.pipelineGateForTest("bias-state-freshness-check");
+    expect(result).toBe(true);
+  });
+
+  it("source-contract: bias-state-freshness-check is in ALWAYS_RUN_JOBS (the set pipelineGate() reads)", () => {
+    const startIdx = schedulerSource.indexOf("const ALWAYS_RUN_JOBS = new Set([");
+    expect(startIdx).toBeGreaterThan(-1);
+    const endIdx = schedulerSource.indexOf("]);", startIdx);
+    const block = schedulerSource.slice(startIdx, endIdx);
+    expect(block).toContain('"bias-state-freshness-check"');
+  });
+
+  it("source-contract: canary is registered, hourly-scheduled, day-deduped, and alerts via audit + Discord WARN", () => {
+    // Registered job exists
+    expect(schedulerSource).toContain('registerJob("bias-state-freshness-check"');
+    // Hourly cron wrapper exists and routes through the real registered handler
+    const wrapperIdx = schedulerSource.indexOf('SCHEDULER_JOBS["bias-state-freshness-check"]?.run()');
+    expect(wrapperIdx).toBeGreaterThan(-1);
+    // Slice the registered handler body for the contract assertions
+    const regIdx = schedulerSource.indexOf('registerJob("bias-state-freshness-check"');
+    const body = schedulerSource.slice(regIdx, regIdx + 5000);
+    // One-alert-per-trading-day dedup keyed on the audit action + entityId
+    expect(body).toContain('"bias_state.freshness_stale"');
+    expect(body).toContain("auditLog.entityId, todayEt");
+    // Alert surfaces: audit row (queryable) + Discord WARN (operator phone)
+    expect(body).toContain("notifyWarning(");
+    // Freshness reference: today's 09:30 ET session start, not a rolling window
+    expect(body).toContain("09:30:00");
+  });
+});
