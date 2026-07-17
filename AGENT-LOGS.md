@@ -4,6 +4,24 @@
 
 ---
 
+### Session Log — 2026-07-17 CAMPAIGN GATE3 — PAPER→DEPLOY_READY manual/cron precondition parity LANDED `c82ad4e6`, VERIFIED BAND 7, zero carry-forwards
+
+**Mission:** side-finding closure surfaced during M3 re-scope investigation, verified independently before acting on it, then closed as its own small autonomous wave per advisor guidance (a pre-live gate-integrity fix, independent of M3's doctrine flip — not folded into it).
+
+**Defect (verified by direct code read, not assumed):** the PAPER→DEPLOY_READY promotion gate has two callers — the cron sweep (`checkAutoPromotions`) computes `tradingDays`/`rollingSharpe` and only proceeds when `tradingDays>=30 && rollingSharpe>=1.5`; the manual PATCH path (`PATCH /api/strategies/:id/lifecycle` → `_promoteStrategyInner`) called the 9-gate evaluator directly with **zero precondition check** — the evaluator's own docstring says "the caller is responsible for checking this," and the manual caller never did. A correctly-HMAC-signed manual call could reach DEPLOY_READY with 0 trading days and Sharpe=0.
+
+**Landed:** new pure evaluator `paper-to-deploy-ready-precondition.ts` (shared named constants, `MIN_TRADING_DAYS=30`/`MIN_ROLLING_SHARPE=1.5`) + a new shared query function `countPaperTradingDaysSince()` (`lifecycle-service.ts`, module scope) now called by BOTH the cron and manual paths — threshold AND query can no longer drift apart between the two callers. Manual path blocks with a new audit action `lifecycle.paper_to_deploy_ready_precondition_blocked` before spending the 9-gate evaluator's on-demand survival-twin subprocess.
+
+**★ TWO independent-grade rounds:** Round 1 (accuracy-validator, doer≠grader) — **VERIFIED band 7, SAFE-TO-LAND**, every runtime-correctness claim independently reproduced (RED-proof via real revert, boundary conditions, scope-lock, a 126-file regression sweep matching the packet's self-reported numbers, a previously-uncited third caller — Carter's voice-driven promotion action — confirmed to be a correct widening, not a regression). Band capped at 7 by 2 evidence-quality findings, not runtime defects: the shipped query-parity test was **tautological** (`cronTradingDaysQuery`/`manualPathTradingDaysQuery` were both copy-pasted from the same source, so `expect(f(x)).toBe(f(x))` could never fail and could never catch real drift); the audit-row test only checked the action string, not the full row shape. **Closed same-wave, not accepted as "good enough":** eliminated the query duplication at its root (one shared exported function instead of two hand-copies — makes drift structurally impossible, not merely test-detectable) and strengthened the audit test to assert entityId/entityType/status/decisionAuthority/correlationId/result. Round 2 (narrow confirmatory re-check, not a full re-derivation) — both closures independently RED-proofed (inverted the shared query's filter, broke individual audit fields one at a time, confirmed the tests genuinely catch each) and restored; **band 7 stands, SAFE-TO-LAND confirmed.**
+
+**Verification:** tsc exit 0; 48/48 core test surface; `check-gate-parity.mjs` 12/12 hard gates on both cron and manual paths; `test:metrics` 145/145; 3 CI gates green; `system-map:sync`+`check` clean. Rebased onto a moving origin tip (6 concurrent liveness-audit commits landed mid-wave, zero file overlap); a 3-file generated-doc merge conflict (System Map + 2 generated JSONs, both sides had independently run `system-map:sync`) resolved by taking origin's version then regenerating fresh against the true combined tree before push.
+
+**Known-facts updates:** a hand-duplicated "parity" test that copies both sides of a comparison from the same source proves nothing about real independent agreement — the fix for duplicated logic is to eliminate the duplication (one shared function), not to add a test asserting the two copies match.
+
+**Carry-forward:** NONE (zero-carry-forward held). M3 (PAPER-authority flip, pinned to this SHA) proceeds next, autonomous per the standing launch protocol — no operator hold (see feedback memory `feedback_standing_launch_protocol_staged_not_started`, reconfirmed this session after a self-caught drift toward treating "doctrine-level" as its own hold criterion, which it isn't).
+
+---
+
 ### Session Log — 2026-07-17 DORMANT-ACTIVATION CLASS SWEEP — compute-failover FIXED, network-failover NEAR-MISS self-corrected via grading
 
 **Mission:** after the market-internals-service finding (the 4th instance this session of "built component, zero callers"), advisor's guidance was to stop hunting domains one at a time and instead sweep the whole recurring species in one bounded pass: grep every activation-shaped exported function (`start*`/`init*`/`subscribe*`/`connect*`/`launch*`/`boot*`/`open*`/`activate*`/`enable*`) across `src/server` and cross-check callers for all of them at once.
