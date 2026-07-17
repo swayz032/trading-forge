@@ -238,3 +238,13 @@ The frozen Wave-0 §4 schema stands EXCEPT `classifying_tier` ∈ {1 determinist
 **OPEN — the operator's §2 routing decision** (the pre-written branch is 2-pass iterate; the mechanism points at the ~25% condition-faithfulness/support drift of the frozen gemma extractor against the strict all-conditions-clean bar). The frozen bar is NOT loosened post-hoc (Law 4). Standing by.
 
 *Result stamped 2026-07-12, read once, verified. Vaulted FF to `corpus-v3-gate3-cert-2026-07-06`.*
+
+---
+
+## ADDENDUM — HISTORIOGRAPHY (2026-07-17, per ADVISOR-RULINGS R-022.4; awareness without re-litigation)
+
+A post-hoc defect was discovered in the FROZEN `blinding_leak_scan` used at this pilot read: check 2's lexical denylist substring-matched over the whole packet **including the trader's `quote_anchor.verbatim`**, and the 3-char token `"dri"` fires on the ordinary trader word **"drift"** — a demonstrated FALSE-POSITIVE that fail-closed-HALTs legitimate conditions on real trader vocabulary (confirmed on design-pool quotes; 2/7 rehearsal strategies falsely HALTed). It is therefore POSSIBLE this scan false-positive contributed to some of this pilot's misses.
+
+**The 0/16 verdict STANDS as measured under that instrument version — NO re-scoring** (the same law that governs every closed record: a result is scoped to the instrument snapshot that produced it; you do not retro-apply a later instrument to a sealed read). This addendum records the awareness only. The leak-scan is rebuilt going forward (`h1-leakscan-rebuild-ratify-2026-07-17.md`, R-022.1/2) so the sealed-12 terminal read is not exposed to the same artifact; the fix is a NEW instrument version, not a re-run of this one.
+
+*Addendum authored 2026-07-17 by the working agent under R-022.4; the ruling is the authority, this is the pointer. No numbers in the RESULT above changed.*

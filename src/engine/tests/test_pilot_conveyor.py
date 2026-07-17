@@ -59,7 +59,6 @@ from __future__ import annotations
 import inspect
 import json
 import os
-from typing import Optional
 
 import pytest
 
@@ -68,7 +67,7 @@ from src.engine.extraction import pilot_conveyor as pc
 from src.engine.extraction.cert_assembler import Tier3Verdict
 
 
-def _stub_propose_fn(transcript: str, condition_text: str) -> Optional[str]:
+def _stub_propose_fn(transcript: str, condition_text: str) -> str | None:
     """Birth-gate-safe, network-free stand-in for the real gemma locator:
     proposes the condition's own text verbatim. For every fixture strategy
     in this file, condition text is EITHER a genuine literal substring of
@@ -388,12 +387,14 @@ def test_leak_scan_does_not_self_trip_on_blinding_contract_meta_text():
 
 
 def test_leak_scan_fires_on_injected_forbidden_token_lexical():
+    # R-022.1 Layer 2: a machinery WORD planted in a spec-side field (as a
+    # proper word, not a sub-word fragment) fires `machinery_word:<word>`.
     prep = pc.prepare_strategy(pc.DRY_RUN_EXTRACTED_STRATEGY, pc.DRY_RUN_TRANSCRIPT, "v-poison-lex", extractor_version="e1", taxonomy_version="t1", propose_fn=_stub_propose_fn)
     poisoned = json.loads(json.dumps(prep["tier3_packet"]))
-    poisoned["sections"][-1]["items"][0]["extracted_object"] = "demotion_role was OPTIONAL"
+    poisoned["sections"][-1]["items"][0]["extracted_object"] = "a demotion was applied"
     scan = pc.blinding_leak_scan(poisoned)
     assert scan.clean is False
-    assert any(v.startswith("forbidden_token:demotion") for v in scan.violations)
+    assert any(v.startswith("machinery_word:demotion") for v in scan.violations)
 
 
 def test_leak_scan_fires_on_novel_out_of_allowlist_key_structural():
@@ -403,7 +404,8 @@ def test_leak_scan_fires_on_novel_out_of_allowlist_key_structural():
     scan = pc.blinding_leak_scan(poisoned)
     assert scan.clean is False
     assert any("forbidden_item_keys" in v for v in scan.violations)
-    assert not any(v.startswith("forbidden_token:") for v in scan.violations)
+    # ONLY the structural check fired -- no lexical (Layer-1/Layer-2) violation.
+    assert not any(v.startswith("machinery_") for v in scan.violations)
 
 
 def test_leak_scan_fires_on_prefilled_rater_response():
@@ -413,6 +415,149 @@ def test_leak_scan_fires_on_prefilled_rater_response():
     scan = pc.blinding_leak_scan(poisoned)
     assert scan.clean is False
     assert any("prefilled_rater_response" in v for v in scan.violations)
+
+
+# --------------------------------------------------------------------------- #
+# (e2) R-022 two-layer leak-scan rebuild + cross-item check — BOTH polarities.
+#      Threat model: OUR OWN builder copies bytes; the scan defends against
+#      builder bugs, never a paraphrasing adversary.
+# --------------------------------------------------------------------------- #
+
+
+def _real_2dx_prep(cid: str, strategy_index: int) -> dict:
+    """Build a REAL staging_v32 tier-3 packet through the frozen dual-read gate
+    (network-free: synthetic transcript + synthetic-dry-run locator). Returns
+    the prep dict — prepare_strategy runs `blinding_leak_scan` INTERNALLY and
+    RAISES `LeakScanFailure` on a leak, so a returned prep is itself proof the
+    scan passed."""
+    from src.engine.extraction import sealed_read_driver as srd
+    from src.engine.tests._a_packet_harness import build_inputs
+
+    with open(os.path.join(srd.DEFAULT_STAGING_DIR, f"{cid}.json"), encoding="utf-8") as fh:
+        strat = json.load(fh)["strategies"][0]
+    transcript, _t1, _e = build_inputs(strat)
+    return pc.prepare_strategy(
+        strat,
+        transcript,
+        cid.split("__")[0],
+        extractor_version="certified-reader-v3.2",
+        taxonomy_version="taxonomy-v2",
+        strategy_index=strategy_index,
+        propose_fn=pc._synthetic_dry_run_propose_fn,
+    )
+
+
+@pytest.mark.parametrize("cid,sidx", [("2DXQqwKSwJE__s1", 1), ("2DXQqwKSwJE__s2", 2)])
+def test_leak_scan_r022_false_positive_fixed_real_2dx_packets(cid, sidx):
+    # ★ AR-011 FALSE-POSITIVE FIXED. Both rehearsal strategies were FALSELY
+    # HALTed by the old scan because their trader quote contains the real word
+    # "drift"/"drifted" and the 3-char "dri" fragment fired inside the quote.
+    prep = _real_2dx_prep(cid, sidx)  # returns => prepare_strategy did NOT raise
+    packet = prep["tier3_packet"]
+    quotes = " ".join(
+        it["quote_anchor"]["verbatim"]
+        for sec in packet["sections"]
+        for it in sec.get("items", [])
+    ).lower()
+    assert "drift" in quotes  # the exact byte that used to trip the scan is present
+    scan = pc.blinding_leak_scan(packet)
+    assert scan.clean is True, scan.violations
+    assert scan.violations == []
+
+
+def test_leak_scan_r022_machinery_key_in_quote_halts_layer1():
+    # (b) TRUE leak still HALTs: a machinery KEY planted INSIDE the quote ->
+    # Layer 1 scans the quote too (the compensating tightening).
+    prep = pc.prepare_strategy(pc.DRY_RUN_EXTRACTED_STRATEGY, pc.DRY_RUN_TRANSCRIPT, "v-key-quote", extractor_version="e1", taxonomy_version="t1", propose_fn=_stub_propose_fn)
+    poisoned = json.loads(json.dumps(prep["tier3_packet"]))
+    poisoned["sections"][-1]["items"][0]["quote_anchor"]["verbatim"] += " ground_truth"
+    scan = pc.blinding_leak_scan(poisoned)
+    assert scan.clean is False
+    assert any(v == "machinery_key:ground_truth" for v in scan.violations)
+
+
+def test_leak_scan_r022_machinery_word_specside_halts_but_quote_only_clean():
+    # (c) A machinery WORD spec-side -> Layer-2 HALT; the SAME word appearing
+    # ONLY inside the quote -> clean (Layer 2 excludes the quote).
+    prep = pc.prepare_strategy(pc.DRY_RUN_EXTRACTED_STRATEGY, pc.DRY_RUN_TRANSCRIPT, "v-word", extractor_version="e1", taxonomy_version="t1", propose_fn=_stub_propose_fn)
+    base = prep["tier3_packet"]
+
+    spec_poisoned = json.loads(json.dumps(base))
+    spec_poisoned["sections"][-1]["items"][0]["extracted_object"] = "final verdict recorded"
+    spec_scan = pc.blinding_leak_scan(spec_poisoned)
+    assert spec_scan.clean is False
+    assert any(v == "machinery_word:verdict" for v in spec_scan.violations)
+
+    quote_only = json.loads(json.dumps(base))
+    quote_only["sections"][-1]["items"][0]["quote_anchor"]["verbatim"] += " my verdict is it works"
+    quote_scan = pc.blinding_leak_scan(quote_only)
+    assert quote_scan.clean is True, quote_scan.violations
+
+
+def test_leak_scan_r022_word_boundary_no_subword_fragment():
+    # (d) Word-boundary: machinery-word forms as SUBSTRINGS of longer benign
+    # words never fire; the ELIMINATED "dri" fragment never fires either.
+    prep = pc.prepare_strategy(pc.DRY_RUN_EXTRACTED_STRATEGY, pc.DRY_RUN_TRANSCRIPT, "v-boundary", extractor_version="e1", taxonomy_version="t1", propose_fn=_stub_propose_fn)
+    poisoned = json.loads(json.dumps(prep["tier3_packet"]))
+    it = poisoned["sections"][-1]["items"][0]
+    # "totally" contains "tally"; "driven"/"drifting" contain the dropped "dri";
+    # "outcomes" contains "outcome" (no trailing boundary). None may fire.
+    it["extracted_object"] = "totally driven outcomes while drifting sideways"
+    scan = pc.blinding_leak_scan(poisoned)
+    assert scan.clean is True, scan.violations
+
+
+def _minimal_two_item_packet(cond_x: str, cond_y: str, x_specside: str = "", y_specside: str = "") -> dict:
+    """A minimal two-item Stage-1/Stage-2 packet (only the keys the scan reads)
+    for the cross-item leak check. `*_specside` inject content into each item's
+    Stage-1-visible `extracted_object` field."""
+    def _item(iid, obj):
+        return {
+            "item_id": iid, "video_id": "v", "family": None, "timeframe": None,
+            "extracted_condition_type": None, "extracted_object": obj,
+            "quote_anchor": {"language": "en", "verbatim": f"quote-{iid}"},
+            "rater_response": {"role": None, "notes": None},
+        }
+    return {
+        "sections": [{"section_id": "SET-B", "items": [_item("X", x_specside), _item("Y", y_specside)]}],
+        "stage2": {"items": [
+            {"item_id": "X", "extracted_condition_text": cond_x, "adjudication_response": {"support": None, "support_justification": None}},
+            {"item_id": "Y", "extracted_condition_text": cond_y, "adjudication_response": {"support": None, "support_justification": None}},
+        ]},
+    }
+
+
+def test_leak_scan_r022_cross_item_full_text_bleed_halts():
+    # ★ (e) cross-item: item X's FULL condition text bled into item Y's Stage-1
+    # field (an indexing/assembly builder bug) -> cross_item_leak HALT.
+    cond_x = "price closes above the twenty period moving average and holds for three full bars"
+    cond_y = "volume expands sharply on the breakout candle relative to the prior session range"
+    pkt = _minimal_two_item_packet(cond_x, cond_y, y_specside=cond_x)
+    scan = pc.blinding_leak_scan(pkt)
+    assert scan.clean is False
+    assert any(v == "cross_item_leak:X" for v in scan.violations)
+    assert not any(v == "cross_item_leak:Y" for v in scan.violations)
+
+
+def test_leak_scan_r022_cross_item_shared_phrase_is_clean():
+    # ★ (e) naturally-shared PHRASE across two DIFFERENT conditions -> no false-trip,
+    # because the cross-item check is FULL-STRING, never phrase/substring overlap.
+    # NON-VACUOUS: the shared phrase is placed in Y's Stage-1-visible spec-side field
+    # (the SAME field the full-text-bleed test HALTs on), so a substring-based check
+    # WOULD fire here -- the added negative-control below proves that reachability.
+    cond_x = "price closes above the twenty period moving average and holds"
+    cond_y = "the fifty period moving average is sloping upward on the higher timeframe"
+    shared = "moving average"
+    assert shared in cond_x and shared in cond_y  # genuine shared phrase
+    pkt = _minimal_two_item_packet(cond_x, cond_y, y_specside=f"note: watch the {shared} here")
+    scan = pc.blinding_leak_scan(pkt)
+    assert scan.clean is True, scan.violations  # partial overlap in a reachable field -> clean
+
+    # Non-vacuity control: X's FULL condition in the very same field DOES HALT,
+    # proving the field is reachable and the clean verdict above is a real full-string
+    # discrimination, not an unreached comparison.
+    leaky = _minimal_two_item_packet(cond_x, cond_y, y_specside=cond_x)
+    assert pc.blinding_leak_scan(leaky).clean is False
 
 
 # --------------------------------------------------------------------------- #
@@ -836,7 +981,7 @@ _FLATTER_MISGROUNDING = {
 }
 
 
-def _flatter_propose_fn(transcript: str, condition_text: str) -> Optional[str]:
+def _flatter_propose_fn(transcript: str, condition_text: str) -> str | None:
     return _FLATTER_MISGROUNDING.get(condition_text, condition_text)
 
 
@@ -1058,7 +1203,7 @@ _ZERO_OVERLAP_STOP_TEXT = _IMP_SPAN_TEXT  # "Set your stop at the low of the ham
 _ZERO_OVERLAP_ENTRY_TEXT = "Enter aggressively above the pivot high."
 
 
-def _zero_overlap_propose_fn(transcript: str, condition_text: str) -> Optional[str]:
+def _zero_overlap_propose_fn(transcript: str, condition_text: str) -> str | None:
     if condition_text == _ZERO_OVERLAP_STOP_TEXT:
         return _ZERO_OVERLAP_ENTRY_TEXT
     return condition_text
@@ -1099,7 +1244,7 @@ _RESIDUAL_STOP_TEXT = "Exit when price crosses below the 50 SMA level."
 _RESIDUAL_ENTRY_TEXT = "Enter when price crosses above the 50 SMA line."
 
 
-def _residual_propose_fn(transcript: str, condition_text: str) -> Optional[str]:
+def _residual_propose_fn(transcript: str, condition_text: str) -> str | None:
     if condition_text == _RESIDUAL_STOP_TEXT:
         return _RESIDUAL_ENTRY_TEXT
     return condition_text

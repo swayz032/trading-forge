@@ -250,8 +250,8 @@ import json
 import os
 import random
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional, Tuple
 
 from . import anchor_locator as al
 from . import compile_lints as cl
@@ -302,12 +302,12 @@ class SpineConditionText:
 
 def extract_spine_condition_texts(
     strategy: dict, strategy_index: int = 0
-) -> List[SpineConditionText]:
+) -> list[SpineConditionText]:
     """Pull every SPINE_CONDITION_FIELDS entry out of one extracted strategy
     object (the minimal-schema shape gemma emits). Pure, no I/O. Empty/None
     text fields are skipped (nothing to anchor); this is NOT a drop of a
     real condition -- an absent field never existed as a condition."""
-    out: List[SpineConditionText] = []
+    out: list[SpineConditionText] = []
 
     entry_seq = strategy.get("entry_sequence") or []
     if isinstance(entry_seq, list):
@@ -453,14 +453,14 @@ class UnanchoredCondition:
     condition_ref: str
     text: str
     strategy_index: int = 0
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 def locate_condition_anchors(
-    conditions: List[SpineConditionText],
+    conditions: list[SpineConditionText],
     full_transcript: str,
-    propose_fn: Optional[Callable[[str, str], Optional[str]]] = None,
-) -> Tuple[List[Tuple[SpineConditionText, al.AnchorResult]], List[UnanchoredCondition]]:
+    propose_fn: Callable[[str, str], str | None] | None = None,
+) -> tuple[list[tuple[SpineConditionText, al.AnchorResult]], list[UnanchoredCondition]]:
     """Partition every spine condition into (anchored, unanchored) using the
     ADDENDUM-3 anchor-locator (`anchor_locator.locate_anchor`) as the sole
     anchor source -- NOT an exact-substring search of the condition's OWN
@@ -480,8 +480,8 @@ def locate_condition_anchors(
     with the certificate's own anchors under gemma's non-determinism;
     `extractor_anchor_availability_report` below takes the already-computed
     (anchored, unanchored) partition for exactly this reason)."""
-    anchored: List[Tuple[SpineConditionText, al.AnchorResult]] = []
-    unanchored: List[UnanchoredCondition] = []
+    anchored: list[tuple[SpineConditionText, al.AnchorResult]] = []
+    unanchored: list[UnanchoredCondition] = []
     for cond in conditions:
         result = al.locate_anchor(full_transcript, cond.text, propose_fn=propose_fn)
         if result.located:
@@ -494,9 +494,9 @@ def locate_condition_anchors(
 
 
 def extractor_anchor_availability_report(
-    conditions: List[SpineConditionText],
-    anchored: List[Tuple[SpineConditionText, al.AnchorResult]],
-    unanchored: List[UnanchoredCondition],
+    conditions: list[SpineConditionText],
+    anchored: list[tuple[SpineConditionText, al.AnchorResult]],
+    unanchored: list[UnanchoredCondition],
 ) -> dict:
     """Diagnostic-only (never gates anything): reports what fraction of this
     strategy's spine conditions the anchor-locator actually grounds, split
@@ -506,14 +506,14 @@ def extractor_anchor_availability_report(
     `locate_condition_anchors`'s docstring for why a second locator call
     per condition would be both wasteful (real gemma cost) and unsound
     (non-determinism could desync this report from the certificate)."""
-    by_field: Dict[str, Dict[str, int]] = {}
+    by_field: dict[str, dict[str, int]] = {}
     for cond in conditions:
         field_name = re.sub(r"\[\d+\]", "[]", cond.condition_ref)
         by_field.setdefault(field_name, {"anchored": 0, "unanchored": 0})
     for cond, _result in anchored:
         field_name = re.sub(r"\[\d+\]", "[]", cond.condition_ref)
         by_field[field_name]["anchored"] += 1
-    unanchored_reason_breakdown: Dict[str, int] = {}
+    unanchored_reason_breakdown: dict[str, int] = {}
     for u in unanchored:
         field_name = re.sub(r"\[\d+\]", "[]", u.condition_ref)
         by_field[field_name]["unanchored"] += 1
@@ -598,33 +598,70 @@ _ALLOWED_ITEM_KEYS = {
 _ALLOWED_RATER_RESPONSE_KEYS = {"role", "notes"}
 _ALLOWED_QUOTE_ANCHOR_KEYS = {"language", "verbatim"}
 
-_FORBIDDEN_TOKENS = (
-    "demotion",
-    "dri",
-    "verdict",
-    "rationale",
-    "tally",
-    "outcome",
-    "class_distribution",
-    "is_control",
-    "control_answer",
-    "answer_key",
-    "ground_truth",
-    "gold_label",
-    "expected_role",
-    "correct_role",
-    "control_gate_item_ids",
+# --------------------------------------------------------------------------- #
+# Two-layer machinery denylist (R-022.1 rebuild -- replaces the flat, whole-
+# packet, substring `_FORBIDDEN_TOKENS`). THREAT MODEL (R-022): tier-3 packets
+# are byte-copied by OUR OWN deterministic builder (`_build_tier3_packet`) from
+# OUR OWN artifacts -- there is NO adversary. The scan defends against BUILDER
+# BUGS, and builders COPY bytes, never paraphrase. Exact-form matching is
+# therefore sufficient; the split below is about WHERE each form may legally
+# occur, which fixes the AR-011 false-positive without loosening the guard.
+#
+# LAYER 1 -- MACHINERY KEYS: snake_case grade/control identifiers. Underscores
+# cannot occur in natural transcript speech, so these are scanned EVERYWHERE the
+# Stage-1 `sections` content serializes, INCLUDING `quote_anchor.verbatim` (the
+# one place a key could otherwise hide), by case-insensitive SUBSTRING -- they
+# are distinctive enough that any substring hit is a real wrong-artifact
+# inclusion (a builder pulling grade files instead of staging files drags these
+# keys with it). Zero false-positive risk; scanning the quote here is a
+# TIGHTENING relative to a naive "exclude the quote for everything" fix.
+_MACHINERY_KEYS = (
+    "correct_role",           # grade key: the answer-key role -- never on a blind item
+    "gold_label",             # grade key: gold answer label
+    "answer_key",             # grade key: answer-key container
+    "ground_truth",           # grade key: ground-truth field
+    "expected_role",          # grade key: expected role answer
+    "is_control",             # control-manifest key: marks a control item
+    "control_answer",         # control-manifest key: a control's known answer
+    "control_gate_item_ids",  # control-manifest key: which items are the gate
+    "class_distribution",     # grade-stats key: label class distribution
+)
+
+# LAYER 2 -- MACHINERY WORDS: natural-language words naming grade artifacts.
+# Scanned SPEC-SIDE ONLY -- `quote_anchor.verbatim` is EXCLUDED, because the
+# trader's quote is source material the rater is SUPPOSED to see (check-3's
+# frozen rationale: "the anchor doing its job, not a leak"; that rationale
+# transfers to check 2 verbatim -- the inconsistency WAS the AR-011 defect).
+# WORD-BOUNDARY matched (`\bword\b`) so no sub-word fragment can fire on
+# legitimate vocabulary. The old 3-char fragment "dri" is ELIMINATED with NO
+# replacement: it fired on the real trader word "drift"/"drifted" (AR-011), and
+# "drift" is legitimate trading vocabulary (the support taxonomy itself uses
+# "drifts") with no distinctive machinery word-form to guard -- so it is
+# dropped, not re-formed.
+_MACHINERY_WORDS = (
+    "demotion",   # grade-verdict word; not natural trader speech spec-side; \b-safe
+    "verdict",    # rater/grade verdict word; distinctive; \b-safe
+    "rationale",  # grade rationale word; distinctive; \b-safe
+    "tally",      # control/class tally word; distinctive; \b-safe (\b stops "totally")
+    "outcome",    # classification outcome word; distinctive spec-side; \b-safe
+)
+
+# Pre-compiled Layer-2 word-boundary patterns (case-insensitive). `\b` on both
+# sides guarantees no sub-word fragment (e.g. "tally" inside "totally",
+# "outcome" as a substring of a longer token) can ever fire.
+_MACHINERY_WORD_PATTERNS = tuple(
+    (w, re.compile(r"\b" + re.escape(w) + r"\b", re.IGNORECASE)) for w in _MACHINERY_WORDS
 )
 
 
 @dataclass
 class LeakScanResult:
     clean: bool
-    violations: List[str] = field(default_factory=list)
+    violations: list[str] = field(default_factory=list)
 
 
 class LeakScanFailure(Exception):
-    def __init__(self, video_id: str, violations: List[str]):
+    def __init__(self, video_id: str, violations: list[str]):
         self.video_id = video_id
         self.violations = violations
         super().__init__(f"blinding leak-scan FAILED for video={video_id}: {violations}")
@@ -632,16 +669,27 @@ class LeakScanFailure(Exception):
 
 def blinding_leak_scan(packet: dict) -> LeakScanResult:
     """House-standard leak-scan, run BEFORE any tier-3 packet is dispatched
-    (pilot pre-reg §3). THREE independent checks, any of which can fire
-    (check 3 added by ADDENDUM 4 FIX 2 -- same scanner, extended, never
-    forked):
+    (pilot pre-reg §3). FOUR independent checks, any of which can fire
+    (check 3 added by ADDENDUM 4 FIX 2; check 2 rebuilt into two layers +
+    check 4 added by R-022 -- same scanner, extended, never forked):
 
       1. STRUCTURAL: every item in every `sections[*].items` entry, its
          `rater_response`, and its `quote_anchor` must use ONLY the
          allowlisted keys, and `rater_response.role`/`.notes` must both be
          null (a pre-filled answer is itself a leak).
-      2. LEXICAL: none of `_FORBIDDEN_TOKENS` may appear (case-insensitive)
-         anywhere in the serialized `sections` content.
+      2. LEXICAL, TWO-LAYER (R-022.1 rebuild -- see `_MACHINERY_KEYS` /
+         `_MACHINERY_WORDS`). Layer 1: no `_MACHINERY_KEYS` snake_case
+         identifier may appear (case-insensitive SUBSTRING) anywhere in the
+         serialized `sections` content, INCLUDING `quote_anchor.verbatim`
+         (violation `machinery_key:<key>`). Layer 2: no `_MACHINERY_WORDS`
+         word-form may appear (case-insensitive, WORD-BOUNDARY matched) in
+         the SPEC-SIDE `sections` content -- `quote_anchor.verbatim`
+         EXCLUDED, because the trader's quote is source material the rater is
+         supposed to see (check-3's frozen rationale, applied consistently);
+         violation `machinery_word:<word>`. This fixes the AR-011 false-
+         positive (the 3-char "dri" fragment firing on the real trader word
+         "drift" inside a quote) while TIGHTENING Layer 1 (keys are now hunted
+         inside the quote too).
       3. STAGE-2 LEAK (Addendum 4 FIX 2): the mechanical proof that the
          Stage-1 (blind) view is free of Stage-2 (revealed) condition
          CONTENT -- i.e. that a Set-B item never carries ITS OWN condition
@@ -666,19 +714,39 @@ def blinding_leak_scan(packet: dict) -> LeakScanResult:
          duplicated/leaked field on that same item). Also flags a
          pre-filled Stage-2 `adjudication_response` (mirrors check 1's
          rater_response leg).
+      4. CROSS-ITEM LEAK (R-022.2, AR-012 Bypass 1): no OTHER item's FULL
+         `extracted_condition_text` may appear in a DIFFERENT item's Stage-1-
+         visible serialized content. NORMALIZED FULL-STRING match (the whole
+         condition string, lowercased + whitespace-collapsed) -- NEVER a
+         phrase/substring of it -- so naturally-shared phrases across two
+         conditions do NOT trip (check 3's same-item rationale is CORRECT and
+         stands), but a full-condition-text bleed (an indexing/assembly bug
+         dragging item X's condition into item Y's field) HALTs. Violation
+         `cross_item_leak:<item_id>` (the SOURCE item whose condition leaked).
+         Complements check 3 (which is deliberately same-item-scoped); this
+         one covers the cross-item class the same-item scope cannot see.
 
     Silent (clean=True, violations=[]) on a packet with none. Fires
     (clean=False) on any. Never raises -- callers decide whether to refuse
     emission (`prepare_strategy` does)."""
-    violations: List[str] = []
+    violations: list[str] = []
     sections = packet.get("sections", [])
 
-    serialized = json.dumps(sections, default=str).lower()
-    for tok in _FORBIDDEN_TOKENS:
-        if tok in serialized:
-            violations.append(f"forbidden_token:{tok}")
+    # ---- Check 2 (R-022.1 two-layer rebuild) -------------------------------
+    # Layer 1 -- machinery KEYS: substring, case-insensitive, over the FULL
+    # serialized Stage-1 content INCLUDING quotes.
+    sections_serialized = json.dumps(sections, default=str).lower()
+    for key in _MACHINERY_KEYS:
+        if key in sections_serialized:
+            violations.append(f"machinery_key:{key}")
+    # Layer 2 -- machinery WORDS: word-boundary, case-insensitive, over the
+    # SPEC-SIDE content (every `quote_anchor.verbatim` blanked out).
+    spec_side_serialized = _sections_json_excluding_quotes(sections)
+    for word, pattern in _MACHINERY_WORD_PATTERNS:
+        if pattern.search(spec_side_serialized):
+            violations.append(f"machinery_word:{word}")
 
-    items_by_id: Dict[str, dict] = {}
+    items_by_id: dict[str, dict] = {}
     for section in sections:
         for item in section.get("items", []):
             item_id = item.get("item_id", "<unknown>")
@@ -714,6 +782,40 @@ def blinding_leak_scan(packet: dict) -> LeakScanResult:
         ):
             violations.append(f"prefilled_stage2_response:{item_id}")
 
+    # ---- Check 4 (R-022.2 cross-item leak, AR-012 Bypass 1) ----------------
+    # No OTHER item's FULL `extracted_condition_text` may appear in a DIFFERENT
+    # item's Stage-1-visible content. NORMALIZED FULL-STRING match (the whole
+    # condition string, lowercased + whitespace-collapsed), NEVER a phrase/
+    # substring of it: a full-condition bleed (indexing/assembly bug dragging
+    # item X's condition into item Y's field) HALTs, while naturally-shared
+    # phrases across two conditions don't.
+    #
+    # The OTHER item's `quote_anchor.verbatim` is EXCLUDED from the comparison
+    # target -- exactly as check 3 excludes the SAME item's quote, and for the
+    # SAME frozen reason (check-3 point (b), which AR-012 explicitly affirms):
+    # a condition's own text can LEGITIMATELY equal a DIFFERENT item's quote
+    # (the extractor grounding two conditions in nearby/identical transcript
+    # spans -- e.g. the mis-grounding "flatter" cases), and a blind rater never
+    # sees which item_ids share that extractor-side association. That is not a
+    # blinding compromise. The threat this check DOES cover (a builder bleeding
+    # condition text via an indexing/assembly bug) lands in the SPEC-SIDE fields
+    # (extracted_object, english_gloss, ...), never the mechanically-sliced
+    # transcript quote -- so excluding the quote loses no real coverage.
+    stage1_norm_by_id: dict[str, str] = {
+        iid: _normalize_ws(_item_json_excluding_quote(it)) for iid, it in items_by_id.items()
+    }
+    for item in packet.get("stage2", {}).get("items", []):
+        src_id = item.get("item_id", "<unknown>")
+        cond_norm = _normalize_ws(item.get("extracted_condition_text") or "")
+        if not cond_norm:
+            continue
+        for other_id, other_serialized in stage1_norm_by_id.items():
+            if other_id == src_id:
+                continue
+            if cond_norm in other_serialized:
+                violations.append(f"cross_item_leak:{src_id}")
+                break
+
     return LeakScanResult(clean=not violations, violations=violations)
 
 
@@ -731,6 +833,32 @@ def _item_json_excluding_quote(item: dict) -> str:
     return json.dumps(redacted, default=str).lower()
 
 
+def _sections_json_excluding_quotes(sections: list) -> str:
+    """Helper for leak-scan check 2 Layer 2: serialize the Stage-1 `sections`
+    with EVERY item's `quote_anchor.verbatim` blanked out -- the SPEC-SIDE
+    view. The trader's verbatim quote is source material the rater is supposed
+    to see (check-3's frozen rationale), so machinery WORDS are never hunted
+    inside it; machinery KEYS (Layer 1) still are, over the un-blanked
+    serialization."""
+    redacted = json.loads(json.dumps(sections, default=str))
+    for section in redacted:
+        if not isinstance(section, dict):
+            continue
+        for item in section.get("items", []):
+            qa = item.get("quote_anchor") if isinstance(item, dict) else None
+            if isinstance(qa, dict) and "verbatim" in qa:
+                qa["verbatim"] = ""
+    return json.dumps(redacted, default=str).lower()
+
+
+def _normalize_ws(text: str) -> str:
+    """Lowercase + collapse every run of whitespace to a single space + strip.
+    Used by leak-scan check 4 so full-condition-string matching is robust to
+    serialization/whitespace differences WITHOUT ever devolving to phrase or
+    substring overlap -- the WHOLE normalized condition string is required."""
+    return re.sub(r"\s+", " ", (text or "")).strip().lower()
+
+
 # --------------------------------------------------------------------------- #
 # Tier-3 packet assembly (Wave-1 shape, Set-A REUSED verbatim) -- item_id
 # namespacing extended with a strategy index (a video can now yield MULTIPLE
@@ -739,7 +867,7 @@ def _item_json_excluding_quote(item: dict) -> str:
 # --------------------------------------------------------------------------- #
 
 
-def _load_wave1_control_section() -> Tuple[dict, str, dict, dict]:
+def _load_wave1_control_section() -> tuple[dict, str, dict, dict]:
     """Load the REUSED Set-A control section + shared meta text from the
     real Wave-1 packets artifact. Never touches the answer key (verifier-
     only, per that file's own audience note)."""
@@ -788,7 +916,7 @@ def _axis3_seed(video_id: str, strategy_index: int) -> int:
     the identifiers (not Python's built-in `hash()`, which is randomized
     per-process via PYTHONHASHSEED unless explicitly disabled) keeps the
     seed reproducible across processes/machines, not just within one run."""
-    material = f"h1-pilot-axis3::{video_id}::{strategy_index}".encode("utf-8")
+    material = f"h1-pilot-axis3::{video_id}::{strategy_index}".encode()
     return int(hashlib.sha256(material).hexdigest(), 16)
 
 
@@ -796,9 +924,9 @@ def _select_axis3_audit_fire(
     video_id: str,
     strategy_index: int,
     fallthrough_count: int,
-    classified_spans: List[Tuple[int, int]],
+    classified_spans: list[tuple[int, int]],
     ceiling: int,
-) -> Optional[Tuple[int, int]]:
+) -> tuple[int, int] | None:
     """Selects ONE classified tier-1 fire (by char_span) to audit through
     the SAME two-stage packet a genuine fall-through gets. Budget
     accounting (pre-reg §1's affordability ceiling): fall-throughs/
@@ -833,11 +961,11 @@ _SUPPORT_TAXONOMY = {
 def _build_tier3_packet(
     full_transcript: str,
     video_id: str,
-    fallthroughs: List[Tier1FallThrough],
+    fallthroughs: list[Tier1FallThrough],
     strategy_index: int = 0,
-    condition_text_by_span: Optional[Dict[Tuple[int, int], str]] = None,
-    audit_target: Optional[Tuple[Tuple[int, int], str]] = None,
-) -> Tuple[dict, Dict[str, Tuple[int, int]]]:
+    condition_text_by_span: dict[tuple[int, int], str] | None = None,
+    audit_target: tuple[tuple[int, int], str] | None = None,
+) -> tuple[dict, dict[str, tuple[int, int]]]:
     """Build one TWO-STAGE tier-3 packet for `video_id`'s strategy
     #`strategy_index` (ADDENDUM 4 FIX 2). Returns (packet, item_span_map) --
     the span map is INTERNAL bookkeeping (join key for `finalize_certificate`),
@@ -881,9 +1009,9 @@ def _build_tier3_packet(
     set_a, blinding_contract, closed_taxonomy, instructions = _load_wave1_control_section()
     condition_text_by_span = condition_text_by_span or {}
 
-    target_items: List[dict] = []
-    stage2_items: List[dict] = []
-    item_span_map: Dict[str, Tuple[int, int]] = {}
+    target_items: list[dict] = []
+    stage2_items: list[dict] = []
+    item_span_map: dict[str, tuple[int, int]] = {}
     for i, ft in enumerate(fallthroughs):
         item_id = f"{video_id}-S{strategy_index}-B{i:03d}"
         s, e = ft.char_span
@@ -1009,9 +1137,9 @@ def prepare_strategy(
     extractor_version: str,
     taxonomy_version: str,
     strategy_index: int = 0,
-    full_transcript_sha256: Optional[str] = None,
-    propose_fn: Optional[Callable[[str, str], Optional[str]]] = None,
-    axis3_ceiling: Optional[int] = None,
+    full_transcript_sha256: str | None = None,
+    propose_fn: Callable[[str, str], str | None] | None = None,
+    axis3_ceiling: int | None = None,
 ) -> dict:
     """Phase 1 for ONE extracted strategy (never calls an LLM/agent
     ITSELF -- `propose_fn` is a seam threaded to `anchor_locator.
@@ -1048,11 +1176,11 @@ def prepare_strategy(
     spine_conditions = extract_spine_condition_texts(strategy, strategy_index)
     anchored, unanchored = locate_condition_anchors(spine_conditions, full_transcript, propose_fn=propose_fn)
 
-    tier1_detections: List[Tier1Detection] = []
-    tier1_fallthroughs: List[Tier1FallThrough] = []
-    condition_outcomes: List[dict] = []
-    fallthrough_condition_text: Dict[Tuple[int, int], str] = {}
-    classified_condition_text: Dict[Tuple[int, int], str] = {}
+    tier1_detections: list[Tier1Detection] = []
+    tier1_fallthroughs: list[Tier1FallThrough] = []
+    condition_outcomes: list[dict] = []
+    fallthrough_condition_text: dict[tuple[int, int], str] = {}
+    classified_condition_text: dict[tuple[int, int], str] = {}
     for cond, anchor_result in anchored:
         # ADDENDUM 4 FIX 1 -- dual-read agreement gate. The certificate's
         # eventual quote_anchor/char_span always come from the LOCATED quote
@@ -1190,9 +1318,9 @@ def prepare_video(
     video_id: str,
     extractor_version: str,
     taxonomy_version: str,
-    full_transcript_sha256: Optional[str] = None,
-    propose_fn: Optional[Callable[[str, str], Optional[str]]] = None,
-) -> List[dict]:
+    full_transcript_sha256: str | None = None,
+    propose_fn: Callable[[str, str], str | None] | None = None,
+) -> list[dict]:
     """Phase 1 for a WHOLE video's extraction output (`{"strategies": [...]}`,
     the production extractor's top-level shape -- see extractor_bridge.py /
     scripts/h1-extract-one.ts). Loops `prepare_strategy` over every extracted
@@ -1224,7 +1352,7 @@ def prepare_video(
 
 
 def verdict_from_rater_response(
-    char_span: Tuple[int, int],
+    char_span: tuple[int, int],
     quote_anchor: str,
     role: str,
     control_gate_passed: bool,
@@ -1262,13 +1390,13 @@ class Tier3SupportVerdict:
     2 -- "justification REQUIRED"), never optional the way Stage-1's
     `rater_response.notes` is."""
 
-    char_span: Tuple[int, int]
+    char_span: tuple[int, int]
     support: str
     support_justification: str
 
 
 def support_verdict_from_stage2_response(
-    char_span: Tuple[int, int],
+    char_span: tuple[int, int],
     support: str,
     support_justification: str,
 ) -> Tier3SupportVerdict:
@@ -1310,9 +1438,9 @@ _DIAGNOSIS_CATEGORIES = (
 
 def diagnose_certificate(
     cert: dict,
-    unanchored: List[UnanchoredCondition],
-    tier3_verdicts: List[Tier3Verdict],
-) -> Dict[str, int]:
+    unanchored: list[UnanchoredCondition],
+    tier3_verdicts: list[Tier3Verdict],
+) -> dict[str, int]:
     """Clause 5: per-condition failure attribution, rolled up to one
     certificate's diagnosis distribution. Reads `cert` + the runner-local
     `unanchored`/`tier3_verdicts` inputs as DATA -- never re-derives a
@@ -1342,7 +1470,7 @@ def diagnose_certificate(
     A single certificate can contribute to multiple categories (e.g. both
     unanchored conditions AND a coverage_miss) -- this is a distribution,
     not a partition."""
-    dist: Dict[str, int] = {k: 0 for k in _DIAGNOSIS_CATEGORIES}
+    dist: dict[str, int] = {k: 0 for k in _DIAGNOSIS_CATEGORIES}
     dist[DIAGNOSIS_UNANCHORED] = len(unanchored)
 
     for c in cert.get("conditions", []):
@@ -1373,14 +1501,14 @@ def diagnose_certificate(
 
 def finalize_certificate(
     prepare_output: dict,
-    tier3_verdicts: List[Tier3Verdict],
-    tier3_support: Optional[List[Tier3SupportVerdict]] = None,
-    topology: Optional[List[ConditionTopology]] = None,
-    or_branches: Optional[List[List[str]]] = None,
-    scope_line: Optional[str] = None,
+    tier3_verdicts: list[Tier3Verdict],
+    tier3_support: list[Tier3SupportVerdict] | None = None,
+    topology: list[ConditionTopology] | None = None,
+    or_branches: list[list[str]] | None = None,
+    scope_line: str | None = None,
     dry_run: bool = False,
-    conflation_verdict: Optional[str] = None,
-    enumeration_consistency_verdict: Optional[str] = None,
+    conflation_verdict: str | None = None,
+    enumeration_consistency_verdict: str | None = None,
 ) -> dict:
     """Phase 2 (never calls an LLM/agent -- `tier3_verdicts`/`tier3_support`/
     `conflation_verdict`/`enumeration_consistency_verdict` are all consumed as
@@ -1459,8 +1587,8 @@ def finalize_certificate(
         enumeration_consistency_verdict=enumeration_consistency_verdict,
     )
 
-    unanchored: List[UnanchoredCondition] = prepare_output.get("unanchored_conditions", [])
-    unanchored_reason_breakdown: Dict[str, int] = {}
+    unanchored: list[UnanchoredCondition] = prepare_output.get("unanchored_conditions", [])
+    unanchored_reason_breakdown: dict[str, int] = {}
     if unanchored:
         for u in unanchored:
             reason_key = u.reason or "unknown"
@@ -1547,7 +1675,7 @@ def finalize_certificate(
 # --------------------------------------------------------------------------- #
 
 
-def aggregate(certificates: List[dict]) -> dict:
+def aggregate(certificates: list[dict]) -> dict:
     """Pilot §1 read: cert-grade fraction (pilot_grade True / N) + mean
     tier-3 adjudications/video (against the §1 ~5-9 expected range / ~15
     affordability ceiling -- this function only measures, the ceiling
@@ -1571,7 +1699,7 @@ def aggregate(certificates: List[dict]) -> dict:
         sum(1 for cond in c["conditions"] if cond.get("classifying_tier") == 3)
         for c in certificates
     ]
-    diagnosis_distribution: Dict[str, int] = {k: 0 for k in _DIAGNOSIS_CATEGORIES}
+    diagnosis_distribution: dict[str, int] = {k: 0 for k in _DIAGNOSIS_CATEGORIES}
     for c in certificates:
         for k, v in (c.get("diagnosis") or {}).items():
             diagnosis_distribution[k] = diagnosis_distribution.get(k, 0) + v
@@ -1663,7 +1791,7 @@ DRY_RUN_EXTRACTED_STRATEGY = {
 }
 
 
-def _synthetic_dry_run_propose_fn(transcript: str, condition_text: str) -> Optional[str]:
+def _synthetic_dry_run_propose_fn(transcript: str, condition_text: str) -> str | None:
     """Network-free `propose_fn` stub for `run_dry_run_synthetic` ONLY --
     proposes the condition's OWN text verbatim, mirroring an idealized
     gemma locator that reproduces exactly what it was given. Every
@@ -1710,7 +1838,7 @@ def run_dry_run_synthetic() -> dict:
         assert not positive_scan.clean, "leak-scan birth-gate: FAILED to fire on an injected leak"
     assert prep["leak_scan"].clean, "leak-scan birth-gate: the real dry-run packet was not clean"
 
-    verdicts: List[Tier3Verdict] = []
+    verdicts: list[Tier3Verdict] = []
     for i, ft in enumerate(prep["tier1_fallthroughs"]):
         role = "context" if i % 2 == 0 else "gate-strength"
         verdicts.append(
