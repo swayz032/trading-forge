@@ -4,6 +4,22 @@
 
 ---
 
+### Session Log — 2026-07-17 fixwave2 scheduler-health-monitoring LANDED `6d0efd0e` (rebased from `c46c0a81`), zero carry-forwards
+
+**Mission:** Land the SAFE_TO_LAND "scheduler-health-monitoring" fix wave — 3 false-green observability gaps (scheduler.ts n8n-health-check reading an empty execution-log as "all healthy"; the n8n drift-detector cron conflating API-unreachable with genuine drift; `comparePaperToBacktest` skipping deviation whenever the backtest baseline coerced to 0) — onto `hardening/phase-0` via fast-forward, after rebasing over the origin tip that moved during the wave. Landing/integration session (trading-forge-architect); the 3 fixes were authored in a prior session and arrived SAFE_TO_LAND.
+
+**Work completed:**
+- **Diff-stat tripwire vs baseSha `2345ef4b`:** 12 files, +1017/-49, bounded to scheduler/n8n-health/paper-backtest observability — 3 new pure-leaf classifiers (`src/server/lib/n8n-health-classifier.ts`, `n8n-drift-audit-classifier.ts`, `paper-backtest-deviation.ts`, all following the established `scheduler-drift.ts` pure-leaf pattern) + wiring in `scheduler.ts` (+143/-…) + `n8n-execution-scraper-service.ts` (new `getLastN8nScrapeState()`) + `scripts/audit-n8n-workflows.mjs` (new `N8nApiUnreachableError`, exit code 2) + 6 test files. No scope creep outside the wave name — PASS.
+- **Rebase over moved origin:** origin `hardening/phase-0` had advanced 2 commits (`8411593d` M1a Massive WS protocol correction + `7cfa80bb` M1a docs) after the wave branched from `2345ef4b`. Rebased the wave onto `7cfa80bb` — clean (zero file overlap; wave touches scheduler/n8n surfaces, origin's M1a touches `src/data/fetchers/massive.ts` + fixtures). Wave diff-stat byte-identical pre/post-rebase. New wave SHA `6d0efd0e`, parent = origin tip, exactly 1 commit, no conflict markers.
+- **FF-only merge:** `git merge --ff-only` advanced `hardening/phase-0` `2345ef4b` → `6d0efd0e` in one fast-forward (pulling in origin's 2 M1a commits + the wave). Pushed to origin `7cfa80bb..6d0efd0e`; origin == local == `6d0efd0e`.
+- **Junction cleanup:** confirmed `node_modules` (→ shared `trading-forge/node_modules`) was the ONLY reparse point in the worktree, then deleted it non-recursively via `[System.IO.Directory]::Delete($path, $false)` — link removed, shared target verified still present (`TARGET_EXISTS_AFTER=True`) — then `git worktree remove --force`. Worktree dir gone, shared `node_modules/.bin` intact, no longer in `git worktree list`.
+
+**Verification (re-measured FROM ZERO in the worktree post-rebase — NOT inherited from the wave's commit-message claim, per grading-integrity re-measure discipline):** `tsc --noEmit` exit 0 / 0 TS errors (run against the real junction node_modules with `NODE_OPTIONS=--max-old-space-size=8192`, not a false-clean stub); vitest **63/63 across the 6 wave test files** (the commit's own claimed "109/13 relevant" is a broader set — 63/6 is the wave-touched surface freshly re-run); `check-production-isolation` CLEAN (0 violations); `verify-2026-rules-compliance` OK; `system-map.ts check` exit 0 with `driftItems: []`.
+
+**Carry-forward for next session:** NONE (zero-carry-forward held). **No post-M3 dismissals recorded in the wave artifact** — the commit landed all 3 identified observability gaps, each with a reverted-confirmed-failing-restored RED-proof regression test plus a source-contract test proving `scheduler.ts` wires the new classifier at the correct branch; no candidate findings were deferred or dismissed. Verdict SAFE_TO_LAND was assigned upstream; this session did not re-grade a band (landing operation, doer ≠ grader).
+
+---
+
 ### Session Log — 2026-07-17 CAMPAIGN M1a — Massive WebSocket protocol correction LANDED `8411593d` (fixture-first, $0)
 
 **Mission:** M1a — verify the REAL Massive Starter delayed-futures-feed protocol against Massive's own docs and rewrite `src/data/fetchers/massive.ts`'s WebSocket handling to match, before any operator payment. Corrected an earlier session characterization that mislabeled M1a as "blocked on operator subscribing to Massive" — the plan explicitly scopes M1a as "$0, fixture-first"; only the BUDGET GATE (actually paying for the subscription) needed the operator, not the protocol-verification/adapter work itself.
