@@ -607,8 +607,12 @@ export async function fetchBlackSwan(strategyId: string): Promise<SubsystemResul
 
     const survivalRate = run.survivalRate !== null ? Number(run.survivalRate) : null;
     if (survivalRate === null || isNaN(survivalRate)) {
-      // Black swan ran but no survival_rate — treat as neutral
-      return { name, score: 0.5, confidence: 0.5, available: true, computed_at: new Date(run.createdAt) };
+      // Black swan ran but survival_rate is missing/non-numeric — no real
+      // measurement exists. Matches every other fetcher's convention in this
+      // file (missing critical field → available:false, not a fabricated
+      // score) so this subsystem is correctly excluded from the composite
+      // instead of silently contributing an invented neutral value.
+      return { name, score: null, confidence: null, available: false, computed_at: new Date(run.createdAt) };
     }
 
     const score = Math.max(0, Math.min(1, survivalRate));

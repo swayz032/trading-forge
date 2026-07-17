@@ -227,6 +227,39 @@ describe("GET /api/composite-health/:strategyId/latest", () => {
     const body = res.body as any;
     expect(body.data).toBeNull();
   });
+
+  // Tier-C fix (2026-07-17): composite-health-daily-digest computes fresh
+  // evidence per run, but this route serves the last-WRITTEN row — the
+  // aggregator's own docs delegate COMPOSITE_MAX_AGE_HOURS enforcement to this
+  // consumer. Before this fix, a strategy whose aggregator cron stopped
+  // running kept its last verdict (e.g. HEALTHY) forever with no signal.
+  it("Test 7: stale row (aggregator stopped running) — stale:true, rowAgeHours exceeds default 48h", async () => {
+    const oldEvaluatedAt = new Date(Date.now() - 100 * 60 * 60 * 1000); // 100h ago
+    mockDbSelect.mockReturnValue(buildChain([{ ...SAMPLE_HEALTH_ROW, evaluatedAt: oldEvaluatedAt }]));
+
+    const req = mockReq({ strategyId: "42" });
+    const res = mockRes();
+    await latestHandler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const body = res.body as any;
+    expect(body.data.stale).toBe(true);
+    expect(body.data.rowAgeHours).toBeGreaterThan(48);
+  });
+
+  it("Test 8: fresh row — stale:false", async () => {
+    const freshEvaluatedAt = new Date(Date.now() - 1 * 60 * 60 * 1000); // 1h ago
+    mockDbSelect.mockReturnValue(buildChain([{ ...SAMPLE_HEALTH_ROW, evaluatedAt: freshEvaluatedAt }]));
+
+    const req = mockReq({ strategyId: "42" });
+    const res = mockRes();
+    await latestHandler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const body = res.body as any;
+    expect(body.data.stale).toBe(false);
+    expect(body.data.rowAgeHours).toBeLessThan(48);
+  });
 });
 
 // ─── /summary tests ───────────────────────────────────────────────────────────
@@ -283,5 +316,28 @@ describe("GET /api/composite-health/summary", () => {
     const body = res.body as any;
     expect(body.data.counts.SKIPPED).toBe(2);
     expect(body.data.totalActiveStrategies).toBe(2);
+  });
+
+  // Tier-C fix (2026-07-17): a stale row must fold into SKIPPED, not its stored
+  // (possibly ancient) verdict — an abandoned HEALTHY is not current evidence.
+  it("Test 9: stale HEALTHY row counts as SKIPPED, not HEALTHY — staleCount reflects it", async () => {
+    const oldEvaluatedAt = new Date(Date.now() - 100 * 60 * 60 * 1000); // 100h ago
+    mockDbSelect
+      .mockReturnValueOnce(buildChain([{ id: 42 }, { id: 43 }]))
+      .mockReturnValueOnce(buildChain([
+        { strategyId: 42, verdict: "HEALTHY", evaluatedAt: oldEvaluatedAt },
+        { strategyId: 43, verdict: "MARGINAL", evaluatedAt: new Date() },
+      ]));
+
+    const req = mockReq();
+    const res = mockRes();
+    await summaryHandler(req, res);
+
+    expect(res.statusCode).toBe(200);
+    const body = res.body as any;
+    expect(body.data.counts.HEALTHY).toBe(0);
+    expect(body.data.counts.MARGINAL).toBe(1);
+    expect(body.data.counts.SKIPPED).toBe(1);
+    expect(body.data.staleCount).toBe(1);
   });
 });

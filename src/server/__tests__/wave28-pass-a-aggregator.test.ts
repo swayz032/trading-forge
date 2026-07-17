@@ -620,6 +620,19 @@ describe("fetchBlackSwan", () => {
     const result = await fetchBlackSwan(STRATEGY_ID);
     expect(result.available).toBe(false);
   });
+
+  // Tier-C fix (2026-07-17): a completed run with a missing/non-numeric
+  // survival_rate must NOT fabricate a neutral 0.5 — that silently contributed
+  // an invented data point to the composite. Matches every other fetcher's
+  // convention: missing critical field → available:false, score:null.
+  it("returns available=false (not a fabricated 0.5) when survival_rate is null", async () => {
+    mockDbSelect.mockReturnValueOnce(buildSelectChain([{
+      survivalRate: null, numRegimesTested: 10, numRegimesSurvived: null, createdAt: new Date("2026-05-20"),
+    }]));
+    const result = await fetchBlackSwan(STRATEGY_ID);
+    expect(result.available).toBe(false);
+    expect(result.score).toBeNull();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

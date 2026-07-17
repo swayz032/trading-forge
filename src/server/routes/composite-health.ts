@@ -52,7 +52,36 @@ export interface LatestHealthPayload {
   computedFromNSubsystems: number;
   weightsVersionId: string;
   stalenessAgeHours: number | null;
+  /** Wall-clock hours since evaluatedAt, computed at request time. */
+  rowAgeHours: number;
+  /** True when rowAgeHours exceeds COMPOSITE_MAX_AGE_HOURS — the aggregator has
+   *  stopped running for this strategy and `verdict` reflects abandoned evidence,
+   *  not current health. */
+  stale: boolean;
   disagreements: unknown | null;
+}
+
+// ─── Consumer-side staleness guard ────────────────────────────────────────────
+// strategy-health-aggregator.ts's own header documents this: "aggregator stamps
+// the age only" — COMPOSITE_MAX_AGE_HOURS enforcement is this route's job. A
+// strategy whose aggregator cron stopped running keeps its last-written row
+// (e.g. HEALTHY) forever unless this consumer checks wall-clock age itself.
+
+const DEFAULT_COMPOSITE_MAX_AGE_HOURS = 48;
+
+function _getCompositeMaxAgeHours(): number {
+  const raw = process.env["COMPOSITE_MAX_AGE_HOURS"];
+  if (!raw) return DEFAULT_COMPOSITE_MAX_AGE_HOURS;
+  const n = parseInt(raw, 10);
+  if (isNaN(n) || n <= 0) {
+    logger.warn({ raw }, "COMPOSITE_MAX_AGE_HOURS invalid — using default 48");
+    return DEFAULT_COMPOSITE_MAX_AGE_HOURS;
+  }
+  return n;
+}
+
+function _rowAgeHours(evaluatedAt: Date): number {
+  return (Date.now() - evaluatedAt.getTime()) / (1000 * 60 * 60);
 }
 
 export interface SubsystemDetail {
@@ -68,6 +97,11 @@ export interface SummaryPayload {
   counts: Record<HealthVerdict, number>;
   totalActiveStrategies: number;
   computedAt: string;
+  /** Active strategies whose latest row exceeds COMPOSITE_MAX_AGE_HOURS — folded
+   *  into counts.SKIPPED (a stale verdict is not current evidence) but surfaced
+   *  separately so a dashboard doesn't mistake "never scored" for "stopped being
+   *  scored". */
+  staleCount: number;
 }
 
 // Active pipeline states whose health counts in the summary
@@ -102,6 +136,17 @@ compositeHealthRoutes.get(
       }
 
       const row = rows[0];
+      const rowAgeHours = _rowAgeHours(row.evaluatedAt);
+      const maxAgeHours = _getCompositeMaxAgeHours();
+      const stale = rowAgeHours > maxAgeHours;
+
+      if (stale) {
+        logger.warn(
+          { strategyId, rowAgeHours, maxAgeHours },
+          "composite-health: /latest row exceeds COMPOSITE_MAX_AGE_HOURS — verdict is stale (aggregator likely stopped running for this strategy)",
+        );
+      }
+
       const payload: LatestHealthPayload = {
         id: String(row.id),
         strategyId: row.strategyId,
@@ -112,6 +157,8 @@ compositeHealthRoutes.get(
         computedFromNSubsystems: row.computedFromNSubsystems,
         weightsVersionId: row.weightsVersionId,
         stalenessAgeHours: row.stalenessAgeHours ?? null,
+        rowAgeHours: Math.round(rowAgeHours * 100) / 100,
+        stale,
         disagreements: row.disagreements ?? null,
       };
 
@@ -144,7 +191,7 @@ export async function buildCompositeHealthSummary(): Promise<SummaryPayload> {
   const activeIds = activeRows.map((r) => Number(r.id));
 
   if (activeIds.length === 0) {
-    return { counts: emptyCounts, totalActiveStrategies: 0, computedAt: new Date().toISOString() };
+    return { counts: emptyCounts, totalActiveStrategies: 0, computedAt: new Date().toISOString(), staleCount: 0 };
   }
 
   // Step 2 — latest health row per active strategy via a correlated subquery.
@@ -152,6 +199,7 @@ export async function buildCompositeHealthSummary(): Promise<SummaryPayload> {
     .select({
       strategyId: strategyHealthScores.strategyId,
       verdict: strategyHealthScores.verdict,
+      evaluatedAt: strategyHealthScores.evaluatedAt,
     })
     .from(strategyHealthScores)
     .where(
@@ -165,8 +213,16 @@ export async function buildCompositeHealthSummary(): Promise<SummaryPayload> {
       )`
     );
 
+  const maxAgeHours = _getCompositeMaxAgeHours();
   const counts: Record<HealthVerdict, number> = { ...emptyCounts };
+  let staleCount = 0;
   for (const row of latestRows) {
+    const isStale = row.evaluatedAt ? _rowAgeHours(new Date(row.evaluatedAt)) > maxAgeHours : false;
+    if (isStale) {
+      staleCount++;
+      counts["SKIPPED"]++;
+      continue;
+    }
     const v = (row.verdict ?? "SKIPPED") as HealthVerdict;
     if (v in counts) {
       counts[v]++;
@@ -181,7 +237,7 @@ export async function buildCompositeHealthSummary(): Promise<SummaryPayload> {
     if (!scoredIds.has(id)) counts["SKIPPED"]++;
   }
 
-  return { counts, totalActiveStrategies: activeIds.length, computedAt: new Date().toISOString() };
+  return { counts, totalActiveStrategies: activeIds.length, computedAt: new Date().toISOString(), staleCount };
 }
 
 // ─── GET /api/composite-health/summary ───────────────────────────────────────

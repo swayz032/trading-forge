@@ -1769,17 +1769,46 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   // (provenance row, pipeline mode, latest mode-change ownership). No-op if the
   // pipeline was never paused by a reboot or was already operator-resumed.
   // NOT pipelineGated: must run even when pipeline is PAUSED so it can resume it.
-  scheduleUtc("0 * * * 0,6", async () => {
-    try {
-      const { maybeAutoResumeAfterReboot } = await import("./services/windows-health-check-service.js");
-      const result = await maybeAutoResumeAfterReboot();
-      if (result.resumed) {
-        logger.info({ outcome: result.outcome }, "Scheduler: weekend auto-resume check — pipeline resumed after reboot pause");
-      }
-    } catch (err) {
-      logger.error({ err }, "Scheduler: weekend auto-resume check failed (non-fatal)");
+  //
+  // Tier-C fix (2026-07-17): this cron previously ran entirely outside the
+  // scheduler's liveness machinery — no registerJob() (invisible to
+  // SCHEDULER_JOBS / findUnscheduledJobs() drift detection and to the
+  // job-health dashboard), no job lock (two overlapping hourly fires could
+  // race), no markJobRun/emitJobComplete (no lastRunAt visibility anywhere).
+  // A silently-broken weekend meant a continued trading halt with zero signal
+  // beyond a caught log line. Wired into the same registerJob+lock+
+  // markJobRun pattern every sibling cron in this file uses. The catch-and-log
+  // "non-fatal" behavior is intentionally preserved: this job is idempotent
+  // and re-fires hourly, so the next tick is the natural retry.
+  registerJob("weekend-auto-resume-check", 60 * 60 * 1000, async () => {
+    const { maybeAutoResumeAfterReboot } = await import("./services/windows-health-check-service.js");
+    const result = await maybeAutoResumeAfterReboot();
+    if (result.resumed) {
+      logger.info({ outcome: result.outcome }, "Scheduler: weekend auto-resume check — pipeline resumed after reboot pause");
     }
   });
+  // Registering this job makes it newly visible to reconcileMissedRuns(), which
+  // gates non-exempt jobs on pipelineGate() during boot catch-up. Without this
+  // exemption, a boot catch-up while the pipeline is PAUSED would skip the very
+  // check whose job is to resume it — circular. _PIPELINE_GATE_EXEMPT.has() is
+  // read directly by reconcileMissedRuns (line ~971); the regular hourly
+  // scheduleUtc tick below never called pipelineGate() either way.
+  _PIPELINE_GATE_EXEMPT.add("weekend-auto-resume-check");
+
+  scheduleUtc("0 * * * 0,6", async () => {
+    if (!_tryAcquireJobLock("weekend-auto-resume-check")) return;
+    const t0war = Date.now();
+    try {
+      await SCHEDULER_JOBS["weekend-auto-resume-check"].run();
+      markJobRun("weekend-auto-resume-check");
+      emitJobComplete("weekend-auto-resume-check", Date.now() - t0war);
+    } catch (err) {
+      logger.error({ err }, "Scheduler: weekend auto-resume check failed (non-fatal)");
+    } finally {
+      _releaseJobLock("weekend-auto-resume-check");
+    }
+  });
+  _scheduledJobs.add("weekend-auto-resume-check");
 
   // ─── W25 Gap 8: Every hour — Broker error budget check (RTH + post-market) ──
   // Aggregates route_rejected / compliance_rejected from audit_log over rolling
