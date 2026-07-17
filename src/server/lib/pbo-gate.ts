@@ -189,13 +189,36 @@ export function evaluatePboGate(
   // ── Legacy null path ───────────────────────────────────────────────────────
   // Pre-Wave-29 backtests do not have pbo_overall. We proceed with a warn.
   // This is the documented grandfather window — future backtests always emit the field.
+  //
+  // HIGH fix (capital-safety-compliance-gates wave, 2026-07-17): this branch
+  // previously returned `ok: false` (BLOCK) with `auditPayload.blocked: true`,
+  // directly contradicting this file's own module docstring ("Legacy null
+  // fallback ... → PROCEED + lifecycle.pbo_unavailable_legacy warn audit
+  // (grandfather window)") AND CLAUDE.md's documented "legacy backtests
+  // grandfather-PROCEED" contract for every sibling Wave 27.5/29 gate (WFE,
+  // BIF, B15, parameter-drift all PROCEED on legacy-null with a warn audit —
+  // PBO was the one outlier that silently BLOCKED instead). The log message
+  // itself said "blocking promotion" one line under a comment that said "We
+  // proceed with a warn" — the code and its own comment disagreed.
+  //
+  // Both lifecycle-service.ts call sites (`_promoteStrategyInner` TESTING/
+  // CANDIDATE → SHADOW/PAPER manual path, and the TESTING → PAPER cron
+  // fast-track) already have a correctly-implemented `if (pboGateResult.
+  // legacyNull) { ...write lifecycle.pbo_unavailable_legacy with status:
+  // "success"... }` PROCEED branch sitting immediately after the `if (!
+  // pboGateResult.ok) { ...BLOCK, return... }` check — that PROCEED branch
+  // was DEAD CODE (unreachable) because `ok` was always false for legacyNull.
+  // Flipping `ok` to true here is what activates it; verified both call
+  // sites handle the flip correctly (write the intended audit action with
+  // `status: "success"`, broadcast `blocked: false`, and fall through to
+  // continue the promotion) before making this change.
   if (pboRaw == null) {
     logger.warn(
       { threshold: effectiveThreshold },
-      "PBO gate: pbo_overall unavailable — blocking promotion until a fresh result is present (lifecycle.pbo_unavailable_legacy)",
+      "PBO gate: pbo_overall unavailable — PROCEEDING (grandfather window) with a warn audit (lifecycle.pbo_unavailable_legacy)",
     );
     return {
-      ok: false,
+      ok: true,
       pbo: null,
       threshold: effectiveThreshold,
       reason: "lifecycle.pbo_unavailable_legacy",
@@ -204,7 +227,7 @@ export function evaluatePboGate(
         pbo: null,
         pbo_p_value: pValueRaw,
         threshold: effectiveThreshold,
-        blocked: true,
+        blocked: false,
         legacy_null: true,
       },
     };

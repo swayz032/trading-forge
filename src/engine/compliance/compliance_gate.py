@@ -7,7 +7,8 @@ No AI judgment. Pure rule matching against verified rulesets.
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timezone
+import os as _os
+from datetime import UTC, datetime
 from typing import Any
 
 # ─── Freshness Thresholds ────────────────────────────────────────
@@ -55,9 +56,9 @@ def check_freshness(
         }
     # Ensure timezone-aware comparison
     if retrieved_at.tzinfo is None:
-        retrieved_at = retrieved_at.replace(tzinfo=timezone.utc)
+        retrieved_at = retrieved_at.replace(tzinfo=UTC)
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     age_hours = (now - retrieved_at).total_seconds() / 3600.0
 
     drift_detected = bool(ruleset.get("drift_detected", False))
@@ -357,7 +358,7 @@ def pre_session_gate(
         })
 
     return {
-        "date": datetime.now(timezone.utc).date().isoformat(),
+        "date": datetime.now(UTC).date().isoformat(),
         "decisions": decisions,
         "summary": summary,
     }
@@ -557,7 +558,6 @@ DEFAULT_CONSECUTIVE_LOSS_LIMIT = 4
 # Configurable via env vars DLL_HALT_PCT / DLL_FORCE_CLOSE_PCT.
 # Callers (paper-execution-service.ts) may also pass thresholds directly in config
 # so the Python layer and TypeScript layer stay in sync without process restart.
-import os as _os
 _DEFAULT_DLL_HALT_PCT        = float(_os.environ.get("DLL_HALT_PCT", "0.67"))
 _DEFAULT_DLL_FORCE_CLOSE_PCT = float(_os.environ.get("DLL_FORCE_CLOSE_PCT", "0.95"))
 
@@ -1102,10 +1102,29 @@ if __name__ == "__main__":
     ruleset = config.get("ruleset") or {}
     context = config.get("context", "active_trading")
 
+    # HIGH fix (capital-safety-compliance-gates wave, 2026-07-17): the
+    # no_ruleset short-circuit below must fire ONLY for actions that actually
+    # read `ruleset` — check_freshness (ruleset["retrieved_at"]),
+    # check_violation (ruleset.get("parsed_rules"/"rules")), and
+    # pre_session_gate (indexes the `rulesets` list by firm). Previously this
+    # guard ran unconditionally BEFORE the action dispatch below, so ANY
+    # action called with an empty/absent `ruleset` — including
+    # ruleset-INDEPENDENT actions such as check_kill_switch (the D6 kill
+    # switch check, which takes sessionId/haltPct/forceClosePct and never
+    # reads `ruleset` at all), check_two_percent_rule, check_hft_limit,
+    # check_simultaneous_limit_price, check_strategy_compliance (reads
+    # `firm_rules`, not `ruleset`), and detect_drift (reads
+    # stored_hash/new_content) — silently returned this no-op "no_ruleset"
+    # envelope instead of running the real check. Any caller of those
+    # actions that simply didn't pass a `ruleset` key (the normal case —
+    # they never needed one) got a fabricated "fresh: false" response
+    # instead of the real kill-switch/HFT/2%-rule/etc. evaluation.
+    RULESET_DEPENDENT_ACTIONS = {"check_freshness", "check_violation", "pre_session_gate"}
+
     # If ruleset is empty but session_id is provided, fall back to a
     # synthetic "stale" response so the Node-side guard fails open
     # (we log the gap but don't block trading on missing rule data).
-    if not ruleset and not config.get("ruleset"):
+    if action in RULESET_DEPENDENT_ACTIONS and not ruleset:
         # Without a ruleset we can't run a real check — emit a structured
         # "unknown" response.  The Node guard treats fresh=false as block,
         # so this is conservative-by-default.  Caller is expected to pass

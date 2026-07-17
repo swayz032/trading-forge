@@ -275,6 +275,53 @@ describe("Topstep branch — trailing-DD buffer math (Wave 22)", () => {
     expect(r.firm).toBe("topstep");
   });
 
+  // HIGH fix (capital-safety-compliance-gates wave, 2026-07-17): a NaN ATR
+  // (e.g. mid indicator warm-up, before enough bars exist for a real ATR
+  // value) previously sailed through `atrPoints <= 0` (NaN <= 0 is false in
+  // JS) and produced finalContracts=NaN with rejectionReason=null instead of
+  // a clean rejected/skipped trade. Assert NaN is now explicitly caught the
+  // same way atrPoints=0 is.
+  it("NaN ATR → zero_atr rejection, NOT a NaN finalContracts (firm=topstep)", () => {
+    const r = computeRiskDerivedContracts({
+      ...COMMON,
+      accountBalance: 50_000,
+      atrPoints: NaN,
+      firm: "topstep",
+      trailingDD: 2000,
+      highWaterBalance: 50_000,
+      accountStartingFloor: 50_000,
+    });
+    expect(r.rejectionReason).toBe("zero_atr");
+    expect(r.finalContracts).toBe(0);
+    expect(Number.isNaN(r.finalContracts)).toBe(false);
+  });
+
+  it("Infinity ATR → zero_atr rejection (firm=topstep)", () => {
+    const r = computeRiskDerivedContracts({
+      ...COMMON,
+      accountBalance: 50_000,
+      atrPoints: Infinity,
+      firm: "topstep",
+      trailingDD: 2000,
+      highWaterBalance: 50_000,
+      accountStartingFloor: 50_000,
+    });
+    expect(r.rejectionReason).toBe("zero_atr");
+    expect(r.finalContracts).toBe(0);
+  });
+
+  it("NaN ATR → zero_atr rejection (firm=mffu)", () => {
+    const r = computeRiskDerivedContracts({
+      ...COMMON,
+      accountBalance: 50_000,
+      atrPoints: NaN,
+      firm: "mffu",
+    });
+    expect(r.rejectionReason).toBe("zero_atr");
+    expect(r.finalContracts).toBe(0);
+    expect(Number.isNaN(r.finalContracts)).toBe(false);
+  });
+
   it("firm cap=15 applied to Topstep large account", () => {
     // buffer=20K, riskCap=13; firmCap=15 → 13 still wins (lower)
     const r = computeRiskDerivedContracts({

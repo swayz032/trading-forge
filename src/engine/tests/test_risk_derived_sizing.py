@@ -24,10 +24,8 @@ Math verification (MFFU branch):
 """
 
 import math
-import pytest
 
-from src.engine.sizing import compute_risk_derived_contracts, RiskSizingResult
-
+from src.engine.sizing import RiskSizingResult, compute_risk_derived_contracts
 
 # ── Standard parameters matching risk-sizing.ts tests ─────────────────────────
 ATR_POINTS = 4.0          # 4 MES points
@@ -163,6 +161,33 @@ class TestRiskDerivedContractsEdgeCases:
             atr_points=-1.0, stop_multiplier=1.5, point_dollar_value=5.0,
         )
         assert r.rejection_reason == "zero_atr"
+
+    def test_nan_atr_rejected(self):
+        """HIGH fix sibling (capital-safety-compliance-gates wave, 2026-07-17):
+        mirrors risk-sizing.ts's NaN-atrPoints fix. `atr_points <= 0` alone
+        does not catch NaN (`float("nan") <= 0` is False in Python too) — a
+        NaN ATR during indicator warm-up previously propagated all the way
+        through to a non-finite final_contracts / risk_derived_cap instead of
+        a clean zero_atr rejection."""
+        r = compute_risk_derived_contracts(
+            base_contracts=4, tier_increment=2, tier_threshold_dollars=3000,
+            max_risk_pct_per_trade=0.02, liquidity_comfort_cap=100,
+            account_balance=50_000, cumulative_profit=0,
+            atr_points=float("nan"), stop_multiplier=1.5, point_dollar_value=5.0,
+        )
+        assert r.rejection_reason == "zero_atr"
+        assert r.final_contracts == 0
+        assert not math.isnan(r.final_contracts)
+
+    def test_infinite_atr_rejected(self):
+        r = compute_risk_derived_contracts(
+            base_contracts=4, tier_increment=2, tier_threshold_dollars=3000,
+            max_risk_pct_per_trade=0.02, liquidity_comfort_cap=100,
+            account_balance=50_000, cumulative_profit=0,
+            atr_points=float("inf"), stop_multiplier=1.5, point_dollar_value=5.0,
+        )
+        assert r.rejection_reason == "zero_atr"
+        assert r.final_contracts == 0
 
     def test_zero_balance_rejected(self):
         r = compute_risk_derived_contracts(

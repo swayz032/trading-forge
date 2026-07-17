@@ -88,20 +88,27 @@ describe("evaluatePboGate — pbo_overall = 0.20 → ok: false", () => {
   });
 });
 
-describe("evaluatePboGate — missing PBO blocks promotion", () => {
-  it("blocks with legacyNull=true when pbo_overall is undefined", () => {
+// HIGH fix (capital-safety-compliance-gates wave, 2026-07-17): legacy null
+// PROCEEDS (grandfather window), matching this file's own docstring line 7
+// ("Legacy null / missing pbo_overall → PROCEED + legacy audit") and every
+// sibling Wave 27.5/29 gate (WFE, BIF, B15, parameter-drift). Previously
+// pbo-gate.ts contradicted its own docstring by blocking here — these tests
+// encoded that bug as the expected contract. See pbo-gate.ts legacy-null
+// path comment for the full incident writeup.
+describe("evaluatePboGate — missing PBO PROCEEDS (grandfather window)", () => {
+  it("PROCEEDS with legacyNull=true when pbo_overall is undefined", () => {
     const result = evaluatePboGate({});
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
     expect(result.pbo).toBeNull();
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
-    expect(result.auditPayload.blocked).toBe(true);
+    expect(result.auditPayload.blocked).toBe(false);
     expect(result.auditPayload.legacy_null).toBe(true);
   });
 
-  it("blocks with legacyNull=true when pbo_overall is explicitly null", () => {
+  it("PROCEEDS with legacyNull=true when pbo_overall is explicitly null", () => {
     const result = evaluatePboGate({ pbo_overall: null });
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
     expect(result.pbo).toBeNull();
     expect(result.legacyNull).toBe(true);
   });
@@ -168,13 +175,13 @@ describe("evaluatePboGate — audit payload completeness", () => {
     });
   });
 
-  it("audit payload has all required fields on legacy null", () => {
+  it("audit payload has all required fields on legacy null (PROCEEDS — blocked:false)", () => {
     const result = evaluatePboGate({});
     expect(result.auditPayload).toMatchObject({
       pbo: null,
       pbo_p_value: null,
       threshold: 0.15,
-      blocked: true,
+      blocked: false,
       legacy_null: true,
     });
   });
@@ -224,12 +231,13 @@ describe("evaluatePboGate — CPCV-exempt path (hardening/phase-0)", () => {
     expect(legacyResult.legacyNull).toBe(true);
   });
 
-  it("regression: genuine legacy null (no pbo_degenerate_reason) → legacyNull=true, pbo_unavailable_legacy", () => {
+  it("regression: genuine legacy null (no pbo_degenerate_reason) → legacyNull=true, pbo_unavailable_legacy, PROCEEDS", () => {
     const result = evaluatePboGate({ pbo_overall: null });
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
     expect(result.auditPayload.legacy_null).toBe(true);
+    expect(result.auditPayload.blocked).toBe(false);
     expect(result.auditPayload.cpcv_exempt).toBeUndefined();
   });
 
@@ -299,9 +307,9 @@ describe("lifecycle-service.ts integration contract", () => {
     expect(result.auditPayload.blocked).toBe(false);
   });
 
-  it("evaluatePboGate returns ok=false for missing pbo_overall", () => {
+  it("evaluatePboGate returns ok=true for missing pbo_overall (PROCEEDS, grandfather window)", () => {
     const result = evaluatePboGate({ pbo_overall: undefined });
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
   });

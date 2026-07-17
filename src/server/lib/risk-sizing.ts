@@ -637,8 +637,17 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
     };
   }
 
-  // Edge case: ATR = 0
-  if (input.atrPoints <= 0) {
+  // Edge case: ATR = 0 (or non-finite — NaN/Infinity). HIGH fix
+  // (capital-safety-compliance-gates wave, 2026-07-17): a NaN ATR (e.g. during
+  // indicator warm-up, before enough bars exist for a real ATR value) previously
+  // sailed through this guard — `NaN <= 0` is false, same class of hole as the
+  // accountBalance NaN bug fixed above (deep-scan sizing F-1). Every downstream
+  // multiplication (`effectiveStopMultiplier * input.atrPoints`, sizingStopPts,
+  // etc.) then propagates NaN, and `Math.max(0, NaN)` is NaN — not 0 — so a NaN
+  // contract count could reach routeOrder() as a "successful" sizing result
+  // instead of a rejected/skipped trade. Explicitly reject non-finite atrPoints
+  // the same way <=0 is rejected.
+  if (!Number.isFinite(input.atrPoints) || input.atrPoints <= 0) {
     return {
       finalContracts: 0,
       pyramidTier,

@@ -22,10 +22,23 @@ import { resolve } from "path";
 
 vi.mock("../db/index.js", () => ({
   db: {
+    // MED fix (capital-safety-compliance-gates wave, 2026-07-17): the
+    // broker-router F-5 gate now also queries `complianceRulesets` via
+    // `.where().orderBy().limit()` (to pass a real ruleset into
+    // check_violation). The pre-existing account lookup uses
+    // `.where().limit()` with NO `.orderBy()` — the mock distinguishes the
+    // two call shapes so both coexist without one clobbering the other.
+    // `.orderBy()` defaults to an empty ruleset (matches pre-fix behavior
+    // for every test that doesn't care about the ruleset payload); override
+    // via `mockSelectReturning(accounts, rulesetRows)` when a test needs a
+    // specific ruleset row.
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue([]),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
         }),
       }),
     }),
@@ -44,10 +57,20 @@ vi.mock("../db/schema.js", () => ({
   // throw a stray "no export" error in this file's broader routeOrder() coverage.
   productionTrades: { tableName: "production_trades", traderspostWebhookId: "traderspostWebhookId" },
   strategies: { tableName: "strategies", id: "id", config: "config" },
+  complianceRulesets: {
+    tableName: "compliance_rulesets",
+    firm: "firm",
+    parsedRules: "parsedRules",
+    retrievedAt: "retrievedAt",
+    driftDetected: "driftDetected",
+    contentHash: "contentHash",
+    status: "status",
+  },
 }));
 
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((col: unknown, val: unknown) => ({ col, val })),
+  desc: vi.fn((col: unknown) => ({ col, desc: true })),
 }));
 
 vi.mock("../lib/logger.js", () => ({
@@ -167,12 +190,19 @@ const TEST_SIGNAL = {
 
 // ─── Helper: set up db.select chain to return a specific account ──────────────
 
-function mockSelectReturning(accounts: unknown[]) {
+function mockSelectReturning(accounts: unknown[], rulesetRows: unknown[] = []) {
     // @ts-ignore — Drizzle builder mock: partial {from/values chain} can't satisfy full SelectBuilder/InsertBuilder return type (W0.3 2026-06-22)
   vi.mocked(db.select).mockReturnValue({
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
+        // Account lookup (`.where().limit()`, no orderBy) — unchanged.
         limit: vi.fn().mockResolvedValue(accounts),
+        // complianceRulesets lookup (`.where().orderBy().limit()`) — the
+        // broker-router F-5 ruleset fetch. Defaults to no ruleset row so
+        // pre-existing tests that don't care about it are unaffected.
+        orderBy: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue(rulesetRows),
+        }),
       }),
     }),
   } as ReturnType<typeof db.select>);
@@ -428,6 +458,64 @@ describe("broker-router", () => {
     };
     expect(callArg.config.strategy_state.intended_max_loss).toBeNull();
     expect(callArg.config.strategy_state.account_balance).toBeNull();
+  });
+
+  // ─── Test 13b: MED fix — check_violation is called WITH a real ruleset ────
+  // capital-safety-compliance-gates wave (2026-07-17): the route-level
+  // check_violation call previously omitted `ruleset` entirely from the
+  // config. check_violation IS a ruleset-dependent action in
+  // compliance_gate.py, so the Python CLI's no_ruleset short-circuit fired
+  // on every call — check_violation() never actually ran here. This test
+  // asserts the route now fetches the firm's latest compliance_rulesets row
+  // and passes a non-empty `ruleset` payload through to runPythonModule.
+
+  it("MED fix: check_violation call includes a real ruleset payload fetched from complianceRulesets", async () => {
+    const { runPythonModule } = await import("../lib/python-runner.js");
+    vi.mocked(runPythonModule).mockResolvedValue({ violation: false, status: "ok", message: "", violations: [] });
+
+    const RULESET_ROW = {
+      firm: "mffu",
+      parsedRules: { automation_banned: false, two_percent_rule: true },
+      retrievedAt: new Date("2026-07-01T00:00:00.000Z"),
+      driftDetected: false,
+      contentHash: "abc123hash",
+      status: "verified",
+    };
+    mockSelectReturning([TRADERSPOST_ACCOUNT], [RULESET_ROW]);
+
+    await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-ruleset-passthrough");
+
+    expect(runPythonModule).toHaveBeenCalledOnce();
+    const callArg = vi.mocked(runPythonModule).mock.calls[0][0] as {
+      config: { action: string; ruleset?: Record<string, unknown> };
+    };
+    expect(callArg.config.action).toBe("check_violation");
+    // The core assertion: `ruleset` must be a real, non-empty payload — not
+    // undefined/omitted (the pre-fix bug) and not an empty object.
+    expect(callArg.config.ruleset).toBeDefined();
+    expect(callArg.config.ruleset).toMatchObject({
+      firm: "mffu",
+      parsed_rules: { automation_banned: false, two_percent_rule: true },
+      content_hash: "abc123hash",
+      status: "verified",
+    });
+    expect(Object.keys(callArg.config.ruleset ?? {}).length).toBeGreaterThan(0);
+  });
+
+  it("MED fix: check_violation ruleset is undefined (not fabricated) when no ruleset row exists for the firm", async () => {
+    const { runPythonModule } = await import("../lib/python-runner.js");
+    vi.mocked(runPythonModule).mockResolvedValue({ violation: false, status: "ok", message: "", violations: [] });
+
+    // Default mockSelectReturning([TRADERSPOST_ACCOUNT]) from beforeEach already
+    // returns an empty ruleset-rows array — re-assert explicitly here for clarity.
+    mockSelectReturning([TRADERSPOST_ACCOUNT], []);
+
+    await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-ruleset-missing");
+
+    const callArg = vi.mocked(runPythonModule).mock.calls[0][0] as {
+      config: { ruleset?: Record<string, unknown> };
+    };
+    expect(callArg.config.ruleset).toBeUndefined();
   });
 
   // ─── Test 14 (F-3 invariant): firm↔broker_type mismatch is REFUSED ─────────

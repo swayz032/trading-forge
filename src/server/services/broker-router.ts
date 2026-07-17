@@ -20,10 +20,10 @@
  * one SSE event (broker:order_routed).
  */
 
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { db } from "../db/index.js";
-import { auditLog, brokerAccounts, productionTrades, strategies } from "../db/schema.js";
+import { auditLog, brokerAccounts, productionTrades, strategies, complianceRulesets } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
@@ -1273,6 +1273,44 @@ export async function routeOrder(
     try {
       const { runPythonModule } = await import("../lib/python-runner.js");
       const routeComplianceFirmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
+
+      // MED fix (capital-safety-compliance-gates wave, 2026-07-17): this call
+      // previously omitted `ruleset` entirely from the check_violation config.
+      // check_violation IS a ruleset-dependent action (reads
+      // ruleset.get("parsed_rules"/"rules")), so compliance_gate.py's
+      // no_ruleset CLI short-circuit fired on every route-level call —
+      // check_violation() never actually ran here; the route always got the
+      // no-op "no_ruleset" envelope back (violation=undefined, falsy) and
+      // silently proceeded as if no violation existed. Fetch the latest
+      // ruleset row for this firm (same query shape as
+      // lifecycle-service.ts::runComplianceGateForFirms) and pass it through.
+      const [routeRuleset] = await db
+        .select({
+          firm: complianceRulesets.firm,
+          parsedRules: complianceRulesets.parsedRules,
+          retrievedAt: complianceRulesets.retrievedAt,
+          driftDetected: complianceRulesets.driftDetected,
+          contentHash: complianceRulesets.contentHash,
+          status: complianceRulesets.status,
+        })
+        .from(complianceRulesets)
+        .where(eq(complianceRulesets.firm, routeComplianceFirmKey))
+        .orderBy(desc(complianceRulesets.retrievedAt))
+        .limit(1);
+
+      const routeRulesetPayload: Record<string, unknown> | undefined = routeRuleset
+        ? {
+            firm: routeRuleset.firm,
+            retrieved_at: routeRuleset.retrievedAt instanceof Date
+              ? routeRuleset.retrievedAt.toISOString()
+              : new Date(routeRuleset.retrievedAt as unknown as string).toISOString(),
+            drift_detected: !!routeRuleset.driftDetected,
+            status: routeRuleset.status,
+            parsed_rules: routeRuleset.parsedRules ?? {},
+            content_hash: routeRuleset.contentHash ?? null,
+          }
+        : undefined;
+
       const routeViolationResult = await runPythonModule<{
         violation: boolean;
         status: string;
@@ -1283,6 +1321,11 @@ export async function routeOrder(
         config: {
           action: "check_violation",
           firm: routeComplianceFirmKey,
+          // May be undefined if no ruleset row exists for this firm yet — the
+          // Python side's RULESET_DEPENDENT_ACTIONS guard then fails closed
+          // with the honest "no_ruleset" envelope (violation stays falsy but
+          // status/message are truthful) rather than silently faking a pass.
+          ruleset: routeRulesetPayload,
           // Minimal strategy_state available at route time.
           // NOTE: intended_max_loss and account_balance are intentionally null —
           // the 2% per-trade rule CANNOT be enforced here because account balance

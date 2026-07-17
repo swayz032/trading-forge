@@ -25,7 +25,6 @@ from src.engine.frankenstein_test import (
     run_frankenstein_test,
 )
 
-
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 
@@ -367,3 +366,81 @@ class TestSimulateShuffled:
         bars = make_bars(500)
         result = _simulate_shuffled({}, bars)
         assert result["profit_factor"] >= 0.0
+
+
+# ─── CRIT LOUD-signal fix (capital-safety-compliance-gates wave, 2026-07-17) ──
+#
+# CLAUDE.md §12 and this module's own historical docstring billed A4
+# Frankenstein as "the single highest-leverage bug-detection test in the
+# system", implying it runs the real backtester.py fill/management logic on
+# real market bars. It does not: _simulate_shuffled()/_build_signal() are a
+# hand-rolled, structurally-simplistic reimplementation, and the bars are
+# synthesized by interpolating each trade's own entry/exit price (a
+# frankenstein-service.ts concern, not tested here). Since the full real-
+# backtester fix is out of scope for this wave (named follow-up design lives
+# in the module docstring), this test class proves the fallback: the
+# limitation is now LOUD — every run emits a logger.warning() and every
+# JSON/dataclass result carries `engine_fidelity` — instead of the gate
+# silently continuing to claim false confidence.
+
+
+class TestEngineFidelityLoudSignal:
+    def test_result_carries_engine_fidelity_field(self):
+        """The dataclass result must carry the honest engine_fidelity marker
+        on every successful run — additive field, not overclaiming real-
+        backtester fidelity."""
+        bars = make_bars(400)
+        result = run_frankenstein_test({}, bars, n_shuffles=10, seed=0)
+        assert result.status == "completed"
+        assert result.engine_fidelity == "synthetic_reimplementation_not_real_backtester"
+
+    def test_engine_fidelity_field_present_on_default_construction(self):
+        """The dataclass field has a default so no existing keyword-only
+        construction site (all real call sites in this module) breaks."""
+        r = FrankensteinResult(
+            test_mode="full_shuffle",
+            n_shuffles=10,
+            p95_sharpe=0.1,
+            median_pf=1.0,
+            passed=True,
+            sharpe_distribution=[],
+            pf_distribution=[],
+            failure_examples=[],
+            wall_clock_ms=100,
+            status="completed",
+            error_message=None,
+        )
+        assert r.engine_fidelity == "synthetic_reimplementation_not_real_backtester"
+
+    def test_run_frankenstein_test_logs_a_loud_warning_every_run(self, caplog):
+        """A clear, greppable log signal must fire on EVERY invocation — not
+        just on failure — because the limitation applies regardless of
+        whether the strategy happens to pass or fail this run."""
+        import logging
+
+        bars = make_bars(400)
+        with caplog.at_level(logging.WARNING, logger="src.engine.frankenstein_test"):
+            run_frankenstein_test({}, bars, n_shuffles=10, seed=0)
+
+        warning_messages = [
+            rec.getMessage() for rec in caplog.records if rec.levelno == logging.WARNING
+        ]
+        assert any(
+            "synthetic_reimplementation_not_real_backtester" in msg
+            for msg in warning_messages
+        ), (
+            "Expected a logger.warning() naming the "
+            "'synthetic_reimplementation_not_real_backtester' engine_fidelity "
+            f"limitation on every run. Got warnings: {warning_messages!r}"
+        )
+
+    def test_module_docstring_documents_known_limitation(self):
+        """The module docstring must no longer make an unqualified claim of
+        catching real-backtester lookahead bugs without also documenting the
+        limitation — guards against a future edit silently dropping the
+        disclosure block."""
+        import src.engine.frankenstein_test as ft_module
+
+        doc = ft_module.__doc__ or ""
+        assert "KNOWN LIMITATION" in doc
+        assert "_apply_trade_management" in doc or "run_backtest" in doc

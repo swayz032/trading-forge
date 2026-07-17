@@ -75,13 +75,13 @@ import logging
 import math
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 import polars as pl
 
 from src.engine.config import TRACK3_CONFIG, ContractSpec, PositionSizeConfig
 from src.engine.firm_config import CONTRACT_CAP_MAX, CONTRACT_CAP_MIN
+
 # Wave 2 (2026-07-16): unified stop-geometry contract (stdlib-only; no engine pull).
 from src.engine.stop_geometry import (
     get_stop_ceiling_for_symbol,
@@ -122,7 +122,7 @@ _DRAWDOWN_ROOM_RISK_PCT = float(os.environ.get("DRAWDOWN_ROOM_RISK_PCT", "0.08")
 _PROVEN_TRADES_PER_TIER = max(1, int(os.environ.get("PROVEN_TRADES_PER_TIER", "10")))
 
 
-def compute_vol_scale(vix_now: Optional[float]) -> float:
+def compute_vol_scale(vix_now: float | None) -> float:
     """VIX-driven vol scale on max_risk_pct_per_trade — Python port of computeVolScale().
 
     scale = clamp(vixTarget / vixNow, VOL_SCALE_MIN, VOL_SCALE_MAX).
@@ -138,8 +138,8 @@ def compute_vol_scale(vix_now: Optional[float]) -> float:
 
 
 def compute_liquidity_haircut(
-    current_top3_depth: Optional[float],
-    baseline_20d_median_top3_depth: Optional[float],
+    current_top3_depth: float | None,
+    baseline_20d_median_top3_depth: float | None,
 ) -> float:
     """Dynamic liquidity haircut on per-symbol caps — Python port of computeLiquidityHaircut().
 
@@ -169,11 +169,9 @@ class RiskSizingResult:
     final_contracts: int
     pyramid_tier: int
     risk_derived_cap: int
-    firm_cap: Optional[int]
+    firm_cap: int | None
     liquidity_cap: int
-    rejection_reason: Optional[
-        str
-    ]  # None | "zero_atr" | "zero_balance" | "negative_cap" | "zero_buffer"
+    rejection_reason: str | None  # None | "zero_atr" | "zero_balance" | "negative_cap" | "zero_buffer"
     # Wave 22 additions
     firm: str = "topstep"  # "topstep" | "mffu"
     risk_cap_method: str = "topstep_trailing_dd"  # how riskDollars was derived
@@ -187,7 +185,7 @@ class RiskSizingResult:
     )
     evidence: dict = field(default_factory=dict)
     # Wave 25 Pass 2 Inst-10 additions
-    drawdown_room_cap: Optional[int] = (
+    drawdown_room_cap: int | None = (
         None  # Computed DD-room cap (Topstep only). None when not applied.
     )
     drawdown_room_cap_binding: bool = (
@@ -229,31 +227,31 @@ def compute_risk_derived_contracts(
     atr_points: float,
     stop_multiplier: float,
     point_dollar_value: float,
-    firm_contract_cap: Optional[int] = None,
-    topstep_account_cap_override: Optional[int] = None,
+    firm_contract_cap: int | None = None,
+    topstep_account_cap_override: int | None = None,
     # ── Wave 22: firm-aware parameters ──────────────────────────────────────
     firm: str = "topstep",
     trailing_dd: float = 2000.0,
-    high_water_balance: Optional[float] = None,
+    high_water_balance: float | None = None,
     account_starting_floor: float = 50_000.0,
     # ── Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep only) ────────────
-    current_drawdown_room: Optional[float] = None,
+    current_drawdown_room: float | None = None,
     # ── Wave 26 Pass K Phase 3: PM session size factor ──────────────────────
-    pm_size_factor: Optional[float] = None,
+    pm_size_factor: float | None = None,
     # ── Scaling-plan-baby-mode (2026-06-23): Proven-trades ramp ─────────────
     # When provided: tier = floor(proven_trades / _PROVEN_TRADES_PER_TIER).
     # When None: falls back to dollar mode (backward-compat, byte-identical).
     # Cumulative count of closed WINNING trades (net realized P&L > 0), monotonic,
     # survives withdrawals. Produced by the live paper layer; this function only
     # CONSUMES the value, never computes it.
-    proven_trades: Optional[int] = None,
+    proven_trades: int | None = None,
     # ── Wave 2 (2026-07-16): unified stop-geometry contract ─────────────────
     # When symbol is provided, the sizing stop distance is resolved via
     # stop_geometry.sizing_stop_pts (per-symbol floor widens, shared ceiling caps)
     # — the same geometry the paper sizer (risk-sizing.ts sizingStopPts) uses.
     # When None: byte-identical legacy bare `stop_multiplier × atr_points` (no
     # floor, no ceiling) — every pre-Wave-2 caller stays unchanged.
-    symbol: Optional[str] = None,
+    symbol: str | None = None,
 ) -> RiskSizingResult:
     """Compute risk-derived contract count at signal time.
 
@@ -355,7 +353,13 @@ def compute_risk_derived_contracts(
         if _starting_capital_for_health > 0
         else 1.0
     )
-    account_is_healthy = account_health_ratio >= 0.85
+    # NOTE (ruff F841 cleanup, capital-safety-compliance-gates wave 2026-07-17):
+    # the derived `account_is_healthy` boolean was unused dead code — the
+    # healthy-account pyramid-floor OVERRIDE it fed was removed per C-05/D9
+    # (2026-07-16, see CLAUDE.md §4 "lowest wins"). `account_health_ratio`
+    # itself is still used (persisted on RiskSizingResult below) — only the
+    # unused derived boolean is removed here. Pure lint cleanup, no behavior
+    # change.
 
     # Edge case: balance <= 0
     if account_balance <= 0:
@@ -388,8 +392,14 @@ def compute_risk_derived_contracts(
             },
         )
 
-    # Edge case: ATR = 0
-    if atr_points <= 0:
+    # Edge case: ATR = 0 (or non-finite — NaN/Infinity). HIGH fix sibling
+    # (capital-safety-compliance-gates wave, 2026-07-17): mirrors the identical
+    # fix in risk-sizing.ts::computeRiskDerivedContracts — `atr_points <= 0`
+    # alone does not catch NaN (a NaN ATR during indicator warm-up, before
+    # enough bars exist for a real ATR value, sails through `NaN <= 0 == False`
+    # and would otherwise propagate NaN into risk_derived_cap / final_contracts
+    # downstream instead of a clean rejected/skipped trade).
+    if not math.isfinite(atr_points) or atr_points <= 0:
         return RiskSizingResult(
             final_contracts=0,
             pyramid_tier=pyramid_tier,
@@ -420,8 +430,8 @@ def compute_risk_derived_contracts(
         )
 
     # ── Wave 22: Firm-aware risk dollar computation ──────────────────────────
-    trailing_floor: Optional[float] = None
-    buffer: Optional[float] = None
+    trailing_floor: float | None = None
+    buffer: float | None = None
 
     if firm == "topstep":
         trailing_floor = _compute_topstep_trailing_floor(
@@ -493,7 +503,7 @@ def compute_risk_derived_contracts(
         and current_drawdown_room is not None
         and float(current_drawdown_room) >= 0
     )
-    drawdown_room_cap: Optional[int] = (
+    drawdown_room_cap: int | None = (
         math.floor(
             float(current_drawdown_room)
             * _DRAWDOWN_ROOM_RISK_PCT
@@ -506,7 +516,7 @@ def compute_risk_derived_contracts(
     # Effective firm cap (computed early so it's available in all branch paths below).
     # DSL override takes priority over live firm cap (mirrors TS logic).
     if topstep_account_cap_override is not None:
-        effective_firm_cap: Optional[int] = int(topstep_account_cap_override)
+        effective_firm_cap: int | None = int(topstep_account_cap_override)
     elif firm_contract_cap is not None:
         effective_firm_cap = int(firm_contract_cap)
     else:
@@ -1057,7 +1067,7 @@ def compute_position_sizes(
         # Falls back to "topstep" (operator primary per directive 2026-05-18).
         _firm = "topstep"
         _trailing_dd = 2000.0
-        _high_water: Optional[float] = None
+        _high_water: float | None = None
         _account_starting_floor = 50_000.0
         if profit_scaling_tier is not None:
             _firm = str(profit_scaling_tier.get("firm", "topstep"))
@@ -1152,8 +1162,10 @@ def compute_position_sizes(
             effective_firm_cap_bar = 10**9
         liquidity_cap_bar = int(config.liquidity_comfort_cap)
         pyramid_tier_bar = int(sizing_result.pyramid_tier)
-        base_contr = int(config.base_contracts)
-        account_is_healthy_bar = sizing_result.account_health_ratio >= 0.85
+        # NOTE (ruff F841 cleanup, capital-safety-compliance-gates wave
+        # 2026-07-17): `base_contr` and `account_is_healthy_bar` were unused
+        # dead code (same C-05/D9 pyramid-floor-override removal as the
+        # scalar path above) — pure lint cleanup, no behavior change.
 
         _structural_reject = sizing_result.rejection_reason in (
             "zero_balance",

@@ -29,6 +29,7 @@ import { frankensteinTestRuns, backtests, backtestTrades } from "../db/schema.js
 import { logger } from "../index.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { parsePythonJson } from "../../shared/utils.js";
+import { seededUniformDraw } from "../lib/deterministic-rng.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 const FRANKENSTEIN_TIMEOUT_MS = 35_000; // 35s: 30s Python limit + 5s overhead
@@ -47,6 +48,13 @@ export interface FrankensteinPythonResult {
   wall_clock_ms: number;
   status: string;
   error_message: string | null;
+  // CRIT LOUD-signal fix (capital-safety-compliance-gates wave, 2026-07-17):
+  // additive/optional so it doesn't tighten validateFrankensteinResult()'s
+  // contract (a shape a caller trusts to gate promotion should only get
+  // STRICTER checks added deliberately, not accidentally via a new required
+  // field). See src/engine/frankenstein_test.py module docstring "KNOWN
+  // LIMITATION" for what this value means.
+  engine_fidelity?: string;
 }
 
 export interface FrankensteinRunOutput {
@@ -176,8 +184,24 @@ function runPythonFrankenstein(
  *
  * When trade records are sparse, we interpolate between entry/exit prices to
  * produce enough bars for the 50/200 SMA crossover to have signal.
+ *
+ * MED fix (capital-safety-compliance-gates wave, 2026-07-17): the OHLC-spread
+ * synthesis below previously drew from unseeded `Math.random()` — for a
+ * fail-closed capital-safety gate (A4 Frankenstein: passed=false blocks
+ * TESTING→PAPER), that meant re-running the SAME backtestId could produce a
+ * DIFFERENT synthesized bar series, and therefore a different pass/fail
+ * verdict, on identical inputs. Now uses `seededUniformDraw()` (same
+ * hash-seed pattern the M2 wave applied to paper-execution-service.ts's fill
+ * model) keyed off `backtestId` + bar index + a distinct siteTag per draw —
+ * same backtestId always synthesizes byte-identical bars, so the gate's
+ * verdict is replayable/auditable across re-runs.
+ *
+ * Exported (not otherwise part of the public API) so the determinism fix
+ * above can be tested directly without mocking the full spawn()/writeFileSync
+ * subprocess plumbing of runFrankensteinTest() — mirrors the same
+ * export-for-testability pattern used by pbo-gate.ts::getPboLifecycleThreshold.
  */
-async function fetchBarsFromTrades(backtestId: string): Promise<number[][]> {
+export async function fetchBarsFromTrades(backtestId: string): Promise<number[][]> {
   const trades = await db
     .select({
       entryPrice: backtestTrades.entryPrice,
@@ -216,11 +240,14 @@ async function fetchBarsFromTrades(backtestId: string): Promise<number[][]> {
     const frac = exactIdx - lo;
     const close = prices[lo] * (1 - frac) + prices[hi] * frac;
 
-    // Synthesize OHLC with small random spread (±0.1% of close)
+    // Synthesize OHLC with small deterministic pseudo-random spread (±0.1% of
+    // close). Seeded on (backtestId, bar index, siteTag) — see function
+    // docstring — so re-running this synthesis for the same backtestId is
+    // byte-identical, not just distributionally similar.
     const spread = close * 0.001;
-    const open = close + (Math.random() - 0.5) * spread;
-    const high = Math.max(open, close) + Math.random() * spread;
-    const low = Math.min(open, close) - Math.random() * spread;
+    const open = close + (seededUniformDraw([backtestId, i, "open"]) - 0.5) * spread;
+    const high = Math.max(open, close) + seededUniformDraw([backtestId, i, "high"]) * spread;
+    const low = Math.min(open, close) - seededUniformDraw([backtestId, i, "low"]) * spread;
 
     result.push([open, high, low, close]);
   }
@@ -369,6 +396,25 @@ export async function runFrankensteinTest(
         errorMessage: null,
       })
       .where(eq(frankensteinTestRuns.id, runId));
+
+    // CRIT LOUD-signal fix (capital-safety-compliance-gates wave, 2026-07-17):
+    // surface the gate's known synthetic-reimplementation limitation on
+    // EVERY completed run, not just in the Python subprocess's own stderr
+    // (which this success path never even inspects). Uses logger.warn (not
+    // .info) so it is not lost in routine log volume — this is a hard
+    // capital-safety gate's confidence caveat, not a debug note.
+    logger.warn(
+      {
+        backtestId,
+        strategyId,
+        runId,
+        engineFidelity: pythonResult.engine_fidelity ?? "synthetic_reimplementation_not_real_backtester",
+      },
+      "frankenstein: A4 gate result is gating promotion on a hand-rolled reimplementation " +
+        "run against trade-interpolated synthetic bars, NOT the real backtester.py fill/" +
+        "management logic on real market bars — see src/engine/frankenstein_test.py module " +
+        "docstring KNOWN LIMITATION block.",
+    );
 
     logger.info(
       {

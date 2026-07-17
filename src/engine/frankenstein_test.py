@@ -4,7 +4,8 @@ Detects path-dependent backtester bugs (lookahead, future-data leak).
 
 If a strategy shows edge on shuffled or synthetic GBM data, the backtester has
 a bug — because no real edge can survive data whose temporal structure has been
-destroyed. This is the single highest-leverage bug-detection test in the system.
+destroyed. THIS IS THE GATE'S DESIGN INTENT, NOT ITS CURRENT REALITY — see the
+"KNOWN LIMITATION" block below before trusting this docstring's claims.
 
 Design (locked from plan):
   Primary:   100 shuffles via full_shuffle
@@ -19,17 +20,83 @@ Shuffle modes:
   benchmark_relative   — excess returns above benchmark shuffled (long-only strategies)
   calendar_preserving  — shuffle within day-of-week buckets (calendar-effect strategies)
   synthetic_gbm        — replace bars with GBM random walk at matched mean/vol
+
+═══════════════════════════════════════════════════════════════════════════
+KNOWN LIMITATION — CRIT (capital-safety-compliance-gates wave, 2026-07-17)
+═══════════════════════════════════════════════════════════════════════════
+This module's docstring above (and its historical CLAUDE.md §12 billing as
+"the single highest-leverage bug-detection test in the system") describes what
+this A4 hard promotion gate is SUPPOSED to test: does the REAL backtester
+(src/engine/backtester.py — real fill-order, real stop/TP1/TP2/BE+1, real
+adaptive/structural exits, real partial fills) leak future information when
+run on REAL market bars.
+
+THAT IS NOT WHAT THIS MODULE CURRENTLY DOES:
+
+  1. `_simulate_shuffled()` below is a hand-rolled, structurally-simplistic
+     reimplementation: flat position-flip entries/exits on a raw signal array,
+     NO stops, NO TP1/TP2, NO BE+1, NO adaptive/structural exits, NO partial
+     fills. It does not call `backtester.py::run_backtest()` or
+     `generate_signals()`, and it never will merely by reading this file —
+     `_apply_static_styleC_management()` / `_apply_trade_management()` /
+     the DSL evaluation path in backtester.py are NEVER INVOKED by this test.
+  2. The bars this reimplementation runs on are NOT real market bars. The
+     caller (frankenstein-service.ts::fetchBarsFromTrades) synthesizes them
+     by linearly interpolating between each trade's OWN entry/exit price —
+     i.e. the "data" is derived FROM the very trades whose fill logic is
+     supposedly being probed, not independent market data.
+
+CONSEQUENCE: a real lookahead / future-data-leak bug living in backtester.py's
+fill-order or `_apply_trade_management` logic CANNOT be detected by this gate,
+because that code path is structurally never exercised. The gate can still
+catch bugs in `_build_signal()` itself (the DSL-crossover proxies below) and
+in gross distributional anomalies, but it is NOT currently the "real
+backtester on real bars" lookahead detector its own docstring and CLAUDE.md
+billing claim. `run_frankenstein_test()` below fires a `logger.warning()` on
+every invocation, and the JSON result carries `"engine_fidelity":
+"synthetic_reimplementation_not_real_backtester"` (see `FrankensteinResult`)
+so this limitation is loud in every log line and every audit trail —
+frankenstein-service.ts logs it at `logger.warn()` on every completed run —
+rather than continuing to silently claim confidence the gate does not have.
+
+NAMED FOLLOW-UP DESIGN (not built this wave — scope too large for a bundled
+fix-wave item per the wave's own instructions; ratify-packet required since
+this is instrument/gate code):
+  A. Bars: frankenstein-service.ts must fetch REAL OHLCV bars for the
+     backtest's symbol/timeframe/date-range (the same S3-backed loader path
+     `backtest-service.ts` already uses via the Python data_loader — see
+     CLAUDE.md §15 "Data Providers: Databento"), not synthesize them from
+     trade entry/exit prices. `fetchBarsFromTrades` should be renamed/
+     replaced by a real-bars fetch once this lands.
+  B. Signal + management: `_simulate_shuffled()` should drive the REAL DSL
+     evaluation path (`generate_signals()` in backtester.py) for entries, and
+     the REAL Style C / adaptive management (`_apply_static_styleC_management`
+     / `_apply_trade_management`) for exits — either by invoking
+     `run_backtest()` directly per shuffle (accepting the wall-clock cost;
+     the WALL_CLOCK_CEILING_S=30 budget and n_shuffles=100 would need
+     re-tuning, likely via a cheaper vectorized-shuffle harness rather than
+     100 full `run_backtest()` subprocess-equivalent calls), or by factoring
+     the fill/management logic into a directly-callable pure function the
+     shuffle loop can call in-process without the full walk-forward/gate
+     machinery `run_backtest()` also runs.
+  C. Given (B)'s cost, a phased approach is recommended: land (A) first
+     (real bars, still hand-rolled signal/management) as a strictly-more-
+     honest intermediate state, then (B) as its own ratified instrument
+     change once the performance envelope is measured.
+This block is the tracked, concrete owner-pointer for that follow-up — do not
+let it silently rot; the next agent picking up A4 hardening should start here.
+═══════════════════════════════════════════════════════════════════════════
 """
 
 from __future__ import annotations
 
 import json
 import logging
-import os
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeout
-from dataclasses import dataclass, field
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FuturesTimeout
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -65,6 +132,15 @@ class FrankensteinResult:
     wall_clock_ms: int
     status: str                # "completed" | "failed"
     error_message: str | None
+    # CRIT LOUD-signal fix (capital-safety-compliance-gates wave, 2026-07-17):
+    # additive field (default so no existing positional/keyword construction
+    # site breaks) that makes the module-docstring "KNOWN LIMITATION" visible
+    # in every JSON result and every audit row a caller derives from it —
+    # this gate currently runs a hand-rolled reimplementation on
+    # trade-interpolated synthetic bars, NOT the real backtester.py fill/
+    # management logic on real market bars. See the module docstring for the
+    # full explanation and the named follow-up design.
+    engine_fidelity: str = "synthetic_reimplementation_not_real_backtester"
 
 
 # ─── Shuffle / Synthetic Data Generators ─────────────────────────────────────
@@ -562,6 +638,24 @@ def run_frankenstein_test(
         FrankensteinResult with passed=True iff p95_sharpe < 0.3 AND
         median_pf in [0.85, 1.15]
     """
+    # CRIT LOUD-signal fix (capital-safety-compliance-gates wave, 2026-07-17):
+    # fire on every invocation — see the module docstring "KNOWN LIMITATION"
+    # block. This gate currently drives a hand-rolled reimplementation
+    # (_simulate_shuffled -> _build_signal, no real stops/TP1/TP2/BE+1/
+    # adaptive exits) on bars synthesized by interpolating each trade's own
+    # entry/exit price (frankenstein-service.ts::fetchBarsFromTrades) — NOT
+    # the real backtester.py fill/management logic on real market bars.
+    logger.warning(
+        "frankenstein_test: A4 gate is running with engine_fidelity="
+        "'synthetic_reimplementation_not_real_backtester' — this test cannot "
+        "detect lookahead/future-data-leak bugs living in backtester.py's "
+        "fill-order or _apply_trade_management logic, because that code path "
+        "is never invoked. See the module docstring KNOWN LIMITATION block "
+        "for the named follow-up design. This run's result still gates real "
+        "TESTING->PAPER promotion (frankenstein-service.ts) — it is a real "
+        "signal against the hand-rolled proxy + synthetic bars, just not the "
+        "full-fidelity check its own historical docstring claimed.",
+    )
     start_time = time.monotonic()
 
     contracts = int(strategy_config.get("max_contracts", 1) or 1)
@@ -744,6 +838,9 @@ if __name__ == "__main__":
             "wall_clock_ms": result.wall_clock_ms,
             "status": result.status,
             "error_message": result.error_message,
+            # CRIT LOUD-signal fix (capital-safety-compliance-gates wave,
+            # 2026-07-17) — additive field, see module docstring.
+            "engine_fidelity": result.engine_fidelity,
         }
         print(json.dumps(output))
 
@@ -760,6 +857,7 @@ if __name__ == "__main__":
             "wall_clock_ms": 0,
             "status": "failed",
             "error_message": str(exc),
+            "engine_fidelity": "synthetic_reimplementation_not_real_backtester",
         }
         print(json.dumps(error_output))
         sys.exit(1)
