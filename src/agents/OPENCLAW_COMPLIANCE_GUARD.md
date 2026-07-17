@@ -29,7 +29,7 @@ When a ruleset approaches staleness (within 4 hours of expiry), issue a warning.
 
 ### 2. Drift Detection
 
-Monitor prop firm documentation for content changes across all 8 firms.
+Monitor prop firm documentation for content changes across all configured firms (currently Topstep + MFFU).
 
 - Compare SHA-256 content hashes on every document fetch
 - If hashes differ: set `drift_detected = true`, log to `compliance_drift_log`
@@ -75,65 +75,21 @@ During active trading sessions:
 
 ## Firms You Monitor
 
-You are responsible for compliance across all 8 prop firms. Reference `docs/prop-firm-rules.md` for full rules.
+You are responsible for compliance across all configured prop firms — currently **2: Topstep (PRIMARY) + MFFU** per CLAUDE.md §6. The 6 legacy firms (TPT, Apex, FFN, Alpha Futures, Tradeify, Earn2Trade) were removed from production scope 2026-05-10 (migration 0097) and their sections were deleted from this charter 2026-07-17 (W3B doc-truth sweep). Reference `docs/prop-firm-rules-2026-topstep.md` + `docs/prop-firm-rules-2026-mffu.md` for full rules.
 
 ### MFFU (My Funded Futures)
-- Trailing drawdown EOD, locks at starting balance
-- Consistency: 50% eval, 40% funded
-- No daily loss limit
-- $0 activation fee, lowest monthly fees
-- Rithmic data feed
+- Trailing drawdown EOD (Builder: Max EOD Drawdown / MLL $2,000; MLL static once it reaches $0 on live)
+- Consistency: 50% at the SIM-FUNDED payout stage only (none eval, none live)
+- Daily loss limit: $1,000 (Builder — SOFT pause, account survives)
+- 80/20 split; bi-weekly payouts; $2,000 per-request payout cap
+- Collaborative-trading + same-device + same-underlying-hedging bans
 
 ### Topstep
-- Trailing drawdown EOD, locks at starting balance
-- No consistency rule
-- Daily loss limit: $1,000 (soft)
-- 90% profit split from dollar one
-- TopstepX platform required (proprietary)
-
-### Take Profit Trader (TPT)
-- Trailing drawdown EOD, does not lock
-- Consistency: 50% single-day cap (eval + PRO), removed at PRO+
-- No daily loss limit
-- Daily payouts (standout feature)
-- 80% split (PRO) -> 90% split (PRO+ after $5K withdrawn)
-
-### Apex Trader Funding
-- Trailing drawdown EOD, locks at starting balance
-- Consistency: 50% on funded payouts only
-- Daily loss limit: $1,000 (EOD accounts)
-- 100% of first $25K, then 90%
-- Max 6 payouts per account
-- $85/month ongoing funded fee
-
-### Funded Futures Network (FFN)
-- Two-step evaluation (Evaluation -> Exhibition -> Funded)
-- Trailing drawdown EOD, locks
-- Consistency: 40% single-day cap
-- No daily loss limit
-- $126/month data fee (significant ongoing cost)
-- News trading restricted
-
-### Alpha Futures
 - Trailing drawdown EOD
-- No consistency rule
-- No daily loss limit
-- $0 commissions (standout feature)
-- Smallest firm — watch for liquidity and payout reliability
-
-### Tradeify
-- Trailing drawdown EOD, locks
-- No consistency rule
-- No daily loss limit
-- $1.29/side commissions (highest of all firms)
-- Watch commission impact on net P&L
-
-### Earn2Trade
-- Trailing drawdown EOD
-- No consistency rule
-- No daily loss limit
-- 60-day time limit on evaluation (unique constraint)
-- Flag strategies that need >40 trading days to pass
+- Consistency: 50% best-day cap at Combine pass-request
+- Daily loss limit: $1,000
+- 90% profit split; XFA per-request payout caps (standard $2K/$4K with-DLL, consistency $3K/$6K); LFA uncapped
+- TopstepX platform required (2026-01-12 lockdown); no VPS/VPN/remote desktop
 
 ---
 

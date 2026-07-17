@@ -25,7 +25,7 @@ DAILY_LOSS_LIMITS: dict[str, Optional[float]] = {
 
 
 def _get_all_firm_configs() -> dict[str, dict]:
-    """Get all firm configs. All 8 firms are in FIRM_CONFIGS."""
+    """Get all firm configs. All configured firms (currently topstep_50k + mffu_50k) are in FIRM_CONFIGS."""
     return dict(FIRM_CONFIGS)
 
 
@@ -315,6 +315,14 @@ def simulate_prop_firm(
 
     consistency_passed = True
     consistency_failure = None
+    # W3B F-2 (2026-07-17): prop_compliance.FIRM_CONFIGS now carries the CANONICAL
+    # MFFU rule name "mffu_50pct_sim_payout", so this legacy "mffu_50pct" branch no
+    # longer fires from configured firms — DELIBERATELY. The canonical rule applies
+    # ONLY at the discrete sim-funded payout stage, which this daily-statement sim
+    # does not model; not enforcing it here mirrors the explicit skips in
+    # monte_carlo.simulate_firm_survival (B14) and prop_compliance's
+    # enforce_mffu_consistency=False default. The branch is retained for any caller
+    # that passes the legacy eval-stage rule name explicitly.
     if firm.get("consistency_rule") == "mffu_50pct" and consistency_ratio > 0.50:
         consistency_passed = False
         consistency_failure = f"Best day = {consistency_ratio:.0%} of total profit (MFFU limit: 50%)"

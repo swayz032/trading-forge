@@ -278,3 +278,81 @@ class TestMFFUConsistencyStageScoping:
                 f"Topstep consistency must be enforced ({label}). "
                 f"Failures were: {ts_failures}"
             )
+
+
+# ─── W3B F-2 (2026-07-17): cross-dict anti-drift lock ─────────────
+
+class TestFirmConfigsAgreeWithCanonical:
+    """prop_compliance.FIRM_CONFIGS must agree with canonical firm_config.FIRM_RULES.
+
+    prop_compliance.py carries a second hand-typed firm-rule dict that is NOT
+    covered by the firm-rules-version hash. W3B F-2 found it drifted (MFFU
+    min_trading_days 5 vs canonical 1 — LIVE-consumed by prop_sim.py's
+    eval_passed gate; consistency_rule "mffu_50pct" vs canonical
+    "mffu_50pct_sim_payout"; min_payout_days 5 vs 2). This test is the
+    anti-drift lock: every overlapping field must equal its canonical
+    counterpart. Fail-loud: lists EVERY mismatch, not just the first.
+
+    RED-proof: revert prop_compliance.py mffu_50k min_trading_days to 5 →
+    this test fails naming min_trading_days.
+    """
+
+    # prop_compliance field → firm_config.FIRM_RULES field (same name unless mapped)
+    _OVERLAPPING_FIELDS = {
+        "monthly_fee": "monthly_fee",
+        "activation_fee": "activation_fee",
+        "profit_target": "profit_target",
+        "max_drawdown": "max_drawdown",
+        "trailing": "trailing",
+        "consistency_rule": "consistency_rule",
+        "overnight_ok": "overnight_ok",
+        "payout_split": "payout_split",
+        "daily_loss_limit": "daily_loss_limit",
+        "min_payout_days": "min_payout_days",
+        "min_trading_days": "min_trading_days",
+        "ongoing_fee": "ongoing_monthly_fee",  # name differs between the dicts
+    }
+
+    def test_same_firm_keys(self):
+        from src.engine.firm_config import FIRM_RULES
+        assert sorted(FIRM_CONFIGS.keys()) == sorted(FIRM_RULES.keys()), (
+            f"Firm-key sets diverged: prop_compliance={sorted(FIRM_CONFIGS)} "
+            f"vs canonical firm_config={sorted(FIRM_RULES)}"
+        )
+
+    def test_every_overlapping_field_equals_canonical(self):
+        from src.engine.firm_config import FIRM_RULES
+
+        mismatches = []
+        for firm_key, cfg in FIRM_CONFIGS.items():
+            canonical = FIRM_RULES.get(firm_key)
+            assert canonical is not None, f"{firm_key} missing from canonical FIRM_RULES"
+            for pc_field, fc_field in self._OVERLAPPING_FIELDS.items():
+                if pc_field not in cfg or fc_field not in canonical:
+                    continue  # not overlapping for this firm
+                if cfg[pc_field] != canonical[fc_field]:
+                    mismatches.append(
+                        f"{firm_key}.{pc_field}: prop_compliance={cfg[pc_field]!r} "
+                        f"!= canonical firm_config.{fc_field}={canonical[fc_field]!r}"
+                    )
+
+        assert not mismatches, (
+            "prop_compliance.FIRM_CONFIGS drifted from canonical firm_config.FIRM_RULES "
+            "(sync prop_compliance.py to firm_config.py — canonical wins):\n  "
+            + "\n  ".join(mismatches)
+        )
+
+    def test_overlap_map_is_live(self):
+        """Guard the guard: the overlap map must actually cover fields present
+        in BOTH dicts for both firms (an empty intersection would make the
+        agreement test vacuously green)."""
+        from src.engine.firm_config import FIRM_RULES
+        for firm_key, cfg in FIRM_CONFIGS.items():
+            covered = [
+                pc for pc, fc in self._OVERLAPPING_FIELDS.items()
+                if pc in cfg and fc in FIRM_RULES[firm_key]
+            ]
+            assert len(covered) >= 10, (
+                f"{firm_key}: only {len(covered)} overlapping fields covered — "
+                f"expected >=10. Overlap map went stale: {covered}"
+            )

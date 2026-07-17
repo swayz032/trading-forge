@@ -96,11 +96,13 @@ survivalRoutes.get("/firm-profiles", async (_req, res) => {
     });
     res.json(result);
   } catch {
-    // Fallback: return firm list if python fails
+    // Fallback: return firm list if python fails.
+    // W3B 2026-07-17: was the stale 8-firm legacy list (TPT/Apex/FFN/Alpha/
+    // Tradeify/Earn2Trade removed 2026-05-19) — and it fired on EVERY request
+    // because firm_profiles.py had no __main__ CLI until W3B added one.
+    // Topstep + MFFU only per CLAUDE.md §6.
     res.json({
-      firms: [
-        "MFFU", "Topstep", "TPT", "Apex", "FFN", "Alpha", "Tradeify", "Earn2Trade",
-      ],
+      firms: ["MFFU", "Topstep"],
     });
   }
 });

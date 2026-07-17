@@ -2,9 +2,10 @@
  * Multi-Firm Promotion Service — B5 (W13 Team C Step 1)
  *
  * On PAPER → DEPLOY_READY promotion, iterate through all configured firms
- * (Topstep, Apex, MFFU, TPT, FFN, Alpha, Tradeify, Earn2Trade), run
- * compliance_gate.py per firm via check_strategy_compliance, and store one
- * per-firm deployment_eligibility row in strategy_firm_eligibility.
+ * (Object.keys(FIRMS) — currently 2: Topstep + MFFU per CLAUDE.md §6; the 6
+ * legacy firms were removed 2026-05-19), run compliance_gate.py per firm via
+ * check_strategy_compliance, and store one per-firm deployment_eligibility
+ * row in strategy_firm_eligibility.
  *
  * AUTHORITY BOUNDARY:
  *   This service is ADDITIVE and OBSERVATIONAL. It does NOT gate the
@@ -22,7 +23,7 @@
  *
  * Reuse:
  *   - compliance_gate.py check_strategy_compliance (existing, action="check_strategy_compliance")
- *   - firm-config.ts FIRMS (all 8 configured firms)
+ *   - firm-config.ts FIRMS (all configured firms — currently Topstep + MFFU)
  *   - pipeline-control-service.isActive()
  *
  * Parity notes (paper/backtest):
@@ -191,7 +192,7 @@ function buildFirmRules(firmId: string): Record<string, unknown> {
       MNQ: acct.maxContracts,
       MCL: acct.maxContracts,
     },
-    automation_banned: false, // All 8 firms allow automation during eval phase
+    automation_banned: false, // Both configured firms (Topstep + MFFU) allow automation during eval phase
     automation_banned_pa_live: false,
     commission_per_side: acct.commissionPerSide,
     profit_target: acct.profitTarget,
@@ -276,7 +277,7 @@ async function checkFirmEligibility(
  * Called fire-and-forget from lifecycle-service.ts after successful PAPER →
  * DEPLOY_READY promotion. Does NOT block the promotion.
  *
- * For each of the 8 configured firms:
+ * For each configured firm (Object.keys(FIRMS) — currently Topstep + MFFU):
  *   1. Build per-firm rules from firm-config.ts
  *   2. Run compliance_gate.py check_strategy_compliance
  *   3. Persist one strategy_firm_eligibility row
@@ -306,7 +307,7 @@ export async function evaluateMultiFirmEligibility(
     };
   }
 
-  const firmIds = Object.keys(FIRMS); // All 8 configured firms
+  const firmIds = Object.keys(FIRMS); // All configured firms (currently 2: Topstep + MFFU)
   const evaluatedAt = new Date();
 
   logger.info(
@@ -326,7 +327,7 @@ export async function evaluateMultiFirmEligibility(
   }
 
   // Run per-firm checks sequentially to avoid hammering Python subprocess pool.
-  // 8 firms × ~1s each = ~8s total — acceptable for a fire-and-forget.
+  // 2 firms × ~1s each = ~2s total — acceptable for a fire-and-forget.
   const firmResults: FirmEligibilityResult[] = [];
   for (const firmId of firmIds) {
     const result = await checkFirmEligibility(firmId, strategyInput, correlationId);

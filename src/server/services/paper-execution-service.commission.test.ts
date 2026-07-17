@@ -33,19 +33,13 @@ describe("getCommissionPerSide", () => {
     expect(getCommissionPerSide("mffu")).toBe(0.95);
   });
 
-  it("returns 0.62 for TPT", () => {
+  // W3B 2026-07-17: TPT/Apex/FFN/Earn2Trade were removed 2026-05-19 (migration
+  // 0097) — the four per-firm test cases below were retitled: they were passing
+  // only via the unknown-firm 0.62 fallback while claiming to test real firms.
+  it("returns the 0.62 fallback for removed legacy firm ids (tpt/apex/ffn/earn2trade)", () => {
     expect(getCommissionPerSide("tpt")).toBe(0.62);
-  });
-
-  it("returns 0.62 for Apex", () => {
     expect(getCommissionPerSide("apex")).toBe(0.62);
-  });
-
-  it("returns 0.62 for FFN", () => {
     expect(getCommissionPerSide("ffn")).toBe(0.62);
-  });
-
-  it("returns 0.62 for Earn2Trade", () => {
     expect(getCommissionPerSide("earn2trade")).toBe(0.62);
   });
 

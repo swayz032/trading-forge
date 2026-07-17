@@ -5664,7 +5664,7 @@ def run_backtest(
     sanity = run_sanity_checks(_prelim, symbol=config.symbol, timeframe=config.timeframe)
     cross_val = run_cross_validation(_prelim)
 
-    # ─── Prop firm simulation (all 8 firms) ─────────────────
+    # ─── Prop firm simulation (all configured firms — Topstep + MFFU) ───
     prop_compliance = simulate_all_firms(
         daily_pnl_records, trades_list,
         symbol=config.symbol, account_size=50_000,
@@ -7773,7 +7773,7 @@ def run_class_backtest(
     if fixed_contracts is not None:
         print("WARNING: Fixed position sizing detected. Use dynamic_atr for production.", file=sys.stderr)
 
-    # ─── Prop firm simulation (all 8 firms) ─────────────────
+    # ─── Prop firm simulation (all configured firms — Topstep + MFFU) ───
     # ─── Sanity checks + cross-validation ─────────────────────
     _prelim_class = {
         "total_return": round(total_return, 6), "sharpe_ratio": round(sharpe, 4),

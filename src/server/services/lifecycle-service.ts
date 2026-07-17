@@ -7556,7 +7556,7 @@ export class LifecycleService {
 
           // B5: Fire-and-forget multi-firm eligibility check.
           // Runs AFTER the promotion commits — does NOT block DEPLOY_READY.
-          // Iterates all 8 configured firms, stores one row per firm in
+          // Iterates all configured firms (currently 2: Topstep + MFFU), stores one row per firm in
           // strategy_firm_eligibility for human review and B7 Kelly sizing.
           this.triggerMultiFirmEligibility(s.id, correlationId ?? undefined).catch((mfErr) => {
             logger.warn(
@@ -7895,7 +7895,7 @@ export class LifecycleService {
    *
    * Called after PAPER → DEPLOY_READY promotion. Fetches the latest completed
    * backtest ID and delegates to evaluateMultiFirmEligibility() which runs
-   * compliance_gate.py for each of the 8 configured firms and persists one
+   * compliance_gate.py for each configured firm (currently Topstep + MFFU) and persists one
    * strategy_firm_eligibility row per firm.
    *
    * Does NOT gate or reverse the promotion — purely additive.

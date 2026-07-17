@@ -3,7 +3,7 @@
 > **Loaded by:** `critic_evaluator`, `tournament_prosecutor`, `tournament_promoter`.
 > **Purpose:** Compliance-aware critique. When a strategy is evaluated, the critic must ask "would this strategy survive each firm's rules?" without consulting a long full-text reference.
 > **Source-of-truth:** `docs/prop-firm-rules.md`. This card is a SHORT digest tuned for prompt context. If a value here conflicts with `docs/prop-firm-rules.md`, the docs file wins.
-> **Last updated:** 2026-05-10. Reflects 2026 plan changes. SUPPORTED FIRMS: MFFU + Topstep ONLY.
+> **Last updated:** 2026-07-17 (W3B firm-rule truth sweep — values re-synced to canonical `src/engine/firm_config.py` / `src/shared/firm-config.ts`: Topstep commission $0.37→$0.62, contract caps →50 micros Topstep / 40 micros MFFU Builder, Topstep consistency None→50% at Combine pass-request, MFFU re-based on the operator's BUILDER plan chosen 2026-06-23). SUPPORTED FIRMS: MFFU + Topstep ONLY.
 
 ## How `critic_evaluator` should use this
 
@@ -17,32 +17,31 @@
 
 ## Topstep
 
-- **50K eval:** $49/mo fee, $3,000 target, $2,000 EOD trailing drawdown (locks at start), 15 micros max
-- **Funded:** $0 activation, $0 monthly, 90% split from dollar one, $200 min payout, on-demand payouts (1–3 days)
-- **Drawdown style:** EOD trailing — locks at starting balance once HWM reaches it
-- **Consistency rule:** None
+- **50K eval:** $49/mo fee, $3,000 target, $2,000 EOD trailing drawdown, 50 micros max (5 minis × 10:1)
+- **Funded:** $0 activation, $0 monthly, 90% split from dollar one, $200 min payout; XFA per-request payout caps (standard $2K / $4K with-DLL, consistency $3K / $6K); LFA uncapped
+- **Drawdown style:** EOD trailing
+- **Consistency rule:** 50% best-day cap at Combine pass-request (canonical `topstep_50pct`)
 - **Min trading days:** 5
-- **Daily loss limit:** $1,000 soft (opt-in at checkout per Apr 14 2026 update)
+- **Daily loss limit:** $1,000 (voluntary-DLL opt-in doubles XFA payout caps per Jun 2 2026 promo)
 - **Automation policy:** TopstepX API allowed, webhooks allowed, bots allowed; **VPS/VPN/remote BANNED** — must run on personal device (Skytech tower per Trading Forge ATS)
 - **Platform:** TopstepX-only (as of Jan 12 2026 platform lockdown; NinjaTrader/Tradovate banned for new accounts)
 - **Multi-account within one user:** Allowed (single Topstep subscription)
 - **Copy trades within Topstep accounts:** Allowed (does NOT trigger collaborative-trading flag)
 - **Overnight:** Not allowed (user constraint applies anyway)
-- **Commission:** $0.37/side (TopstepX clearing)
+- **Commission:** $0.62/side MES/MNQ, $0.77 MCL (TopstepX all-in RT ÷ 2 — corrected 2026-06-23; $0.37 was stale)
 - **Best for:** Cheapest eval, no consistency rule, fully automatable from local. **Trading Forge's primary ATS deployment.**
 - **Avoid if:** Strategy needs > $2K drawdown; strategy routes through VPS/VPN
 - **Automation friendliness:** 1.0 (most algo-permissive of any firm)
 
 ## MFFU (My Funded Futures)
 
-- **50K Core eval:** $77/mo, $3,000 target, $2,000 EOD drawdown, 15 micros, 80% split
-- **50K Rapid eval:** $97/mo, $3,000 target, intraday-trailing drawdown, 90% split (effective Jan 12 2026)
-- **Funded:** $0 activation, $0 monthly, $250 min payout, bi-weekly payouts (14-day cycle)
-- **Drawdown style:** EOD locks at starting balance (Core) / intraday trailing (Rapid)
-- **Consistency rule:** 50% single-day cap (eval), 40% (funded)
-- **Min trading days:** 5 (updated Mar 2026)
-- **Daily loss limit:** None
-- **Commission:** $0.62/side
+- **Operator plan: BUILDER 50K (chosen 2026-06-23):** $77/mo, $3,000 target, $2,000 EOD trailing drawdown (Max EOD Drawdown / MLL; eval floor $48,000; MLL goes STATIC at $0 on live), **40 micros max** (4 minis / 40 micros), 80/20 split
+- **Funded:** $0 activation, $0 monthly, $500 min payout, $2,000 per-request payout cap, bi-weekly payouts (Builder pays every 48h after the $2,100 buffer clears)
+- **Drawdown style:** EOD trailing, locks at starting balance
+- **Consistency rule:** 50% at the SIM-FUNDED payout stage only (canonical `mffu_50pct_sim_payout` — none at eval, none live)
+- **Min trading days:** 1 (Builder eval)
+- **Daily loss limit:** $1,000 (Builder — SOFT pause, account survives; not a breach)
+- **Commission:** $0.95/side MES/MNQ, $0.58 MCL (MFFU all-in RT ÷ 2 — corrected 2026-06-29; the old flat $0.62 was TopstepX's value)
 - **Automation policy:** ATS via TradersPost / PickMyTrade — fully permissive
 - **2026 MFFU-specific rules (enforced in code):**
   - **Collaborative trading BANNED:** identical or opposite strategies across unconnected accounts triggers compliance flag
@@ -76,10 +75,10 @@ These apply regardless of firm choice:
 
 `buffer_required = profit_target + max_drawdown` — the total profit needed before first payout.
 
-| Firm (50K) | Profit Target | Buffer (= maxDD) | Total Before 1st Payout | Split |
+| Firm (50K) | Profit Target | Buffer | Total Before 1st Payout | Split |
 |---|---|---|---|---|
-| Topstep 50K | $3,000 | $2,000 | **$5,000** | 90% |
-| MFFU 50K Core | $3,000 | $2,000 | **$5,000** | 80% |
+| Topstep 50K | $3,000 | $2,000 (= maxDD) | **$5,000** | 90% |
+| MFFU 50K Builder | $3,000 | $2,100 (canonical `payout_buffer`) | **$5,100** | 80% |
 
 Days to first payout: at $500/day → 10 trading days. At $1,000/day → 5 days.
 

@@ -47,7 +47,7 @@ const RELATIVE_CHANGE_THRESHOLD = 0.10; // 10% relative difference triggers a re
 
 // ─── refitPriorsForAllFirms ───────────────────────────────────────────────────
 /**
- * Run monthly recalibration across all 8 firms.
+ * Run monthly recalibration across all configured firms (currently 2: Topstep + MFFU).
  *
  * For each firm:
  *   1. Read last 90 days of prop_firm_health_checks

@@ -353,8 +353,18 @@ class TestMffuParityUnchanged:
     Both must correctly flag spiky distributions.
     """
 
-    def test_mffu_spiky_paths_still_fail_consistency(self):
-        """MFFU must still fail on spiky paths after Topstep fix."""
+    def test_mffu_consistency_explicitly_skipped_in_b14_sim(self):
+        """MFFU consistency is an EXPLICIT skip in B14 (deepscan5 2026-06-29).
+
+        W3B 2026-07-17 test-truth fix: this test previously asserted cfr > 0.50
+        on spiky paths and had been RED since deepscan5 landed. Canonical
+        behavior (monte_carlo.py + firm_config.py): mffu_50pct_sim_payout
+        applies ONLY at the discrete SIM-FUNDED payout stage — NONE at eval,
+        NONE live — and the B14 eval+funded sim does not model that stage, so
+        simulate_firm_survival intentionally sets consistency_ratio=None for
+        mffu_50k. Pin the documented skip (cfr == 0.0), so an accidental
+        re-enable OR a silent map-miss regression both surface here.
+        """
         from src.engine.monte_carlo import simulate_firm_survival
 
         n_sims, n_steps = 300, 30
@@ -363,9 +373,10 @@ class TestMffuParityUnchanged:
 
         assert "error" not in result
         cfr = result["consistency_fail_rate"]
-        assert cfr > 0.50, (
-            f"MFFU consistency_fail_rate={cfr:.3f} on spiky paths. "
-            "Expected > 0.50. MFFU parity must not be broken by the Topstep fix."
+        assert cfr == 0.0, (
+            f"MFFU consistency_fail_rate={cfr:.3f} on spiky paths. Expected 0.0 — "
+            "B14 explicitly skips MFFU consistency (sim-payout-stage only, deepscan5 "
+            "2026-06-29). Re-enabling requires modeling the sim-payout stage."
         )
 
     def test_mffu_flat_paths_pass_consistency(self):
@@ -462,10 +473,16 @@ class TestBothFirmsParityOnSamePaths:
     """Both Topstep and MFFU must enforce the 50% rule on the same spiky paths."""
 
     def test_both_firms_flag_spiky_distribution(self, monkeypatch):
-        """[FAILING BEFORE FIX] Both Topstep and MFFU must report consistency breaches.
+        """Topstep (consistency lane) flags spiky paths; MFFU is an explicit skip.
 
         FINDING-4 note: Topstep standard lane (default) disables consistency.
         This test explicitly verifies consistency-lane behavior — force the lane.
+
+        W3B 2026-07-17 test-truth fix: the MFFU half previously asserted
+        cfr > 0.50 and had been RED since deepscan5 (2026-06-29) made MFFU
+        consistency an EXPLICIT skip in B14 (mffu_50pct_sim_payout applies only
+        at the discrete sim-funded payout stage, which this sim does not model).
+        The MFFU expectation now pins the documented skip.
         """
         monkeypatch.setenv("TOPSTEP_PAYOUT_LANE", "consistency")
 
@@ -477,14 +494,13 @@ class TestBothFirmsParityOnSamePaths:
         topstep = simulate_firm_survival(paths, "topstep_50k", account_size=50000)
         mffu = simulate_firm_survival(paths, "mffu_50k", account_size=50000)
 
-        # Both must have consistency_fail_rate > 0.5
         assert topstep["consistency_fail_rate"] > 0.50, (
             f"[GAP 1 UNFIXED] Topstep consistency_fail_rate={topstep['consistency_fail_rate']:.3f}. "
             "Should be high on spiky paths."
         )
-        assert mffu["consistency_fail_rate"] > 0.50, (
+        assert mffu["consistency_fail_rate"] == 0.0, (
             f"MFFU consistency_fail_rate={mffu['consistency_fail_rate']:.3f}. "
-            "MFFU should still flag spiky paths."
+            "Expected 0.0 — B14 explicitly skips MFFU consistency (deepscan5 2026-06-29)."
         )
 
     def test_both_firms_pass_flat_distribution(self):

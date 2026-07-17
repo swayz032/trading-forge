@@ -551,7 +551,10 @@ class TestProductionIsolation:
         backtester_path = (
             Path(__file__).parent.parent / "backtester.py"
         )
-        content = backtester_path.read_text()
+        # W3B 2026-07-17: encoding pinned — bare read_text() uses cp1252 on
+        # Windows and crashed (UnicodeDecodeError) on backtester.py's UTF-8
+        # content (pre-existing at base 17ae16dd; the check never ran locally).
+        content = backtester_path.read_text(encoding="utf-8")
         assert "import backtrader" not in content, (
             "backtester.py must not import backtrader — parity engine is test-only"
         )
@@ -561,7 +564,7 @@ class TestProductionIsolation:
 
     def test_backtrader_not_in_signals(self):
         signals_path = Path(__file__).parent.parent / "signals.py"
-        content = signals_path.read_text()
+        content = signals_path.read_text(encoding="utf-8")
         assert "backtrader" not in content
 
     def test_backtrader_not_in_fill_model(self):

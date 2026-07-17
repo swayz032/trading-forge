@@ -50,22 +50,30 @@ FIRM_CONFIGS = {
         "min_payout_days": 5,
         "min_trading_days": 5,
     },
+    # W3B F-2 (2026-07-17): MFFU values re-synced to canonical firm_config.py
+    # FIRM_RULES["mffu_50k"] (operator's BUILDER plan, chosen 2026-06-23). This
+    # dict had drifted: min_trading_days 5→1 (LIVE-consumed by prop_sim.py's
+    # eval_passed/days_to_pass_eval gate — simulated evals now pass earlier,
+    # matching the real Builder 1-day minimum), consistency_rule "mffu_50pct"→
+    # "mffu_50pct_sim_payout", min_payout_days 5→2. Anti-drift lock:
+    # test_prop_compliance.py::TestFirmConfigsAgreeWithCanonical asserts every
+    # overlapping field here equals its firm_config.py counterpart.
     "mffu_50k": {
-        "name": "MFFU 50K (Core)",
+        "name": "MFFU 50K (Builder)",
         "monthly_fee": 77,
         "activation_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
         "trailing": "eod",
         "locks_at_start": True,
-        "consistency_rule": "mffu_50pct",
+        "consistency_rule": "mffu_50pct_sim_payout",  # canonical: 50% at SIM-FUNDED payout stage only
         "overnight_ok": False,
         "payout_split": 0.80,
         "payout_split_tiers": None,
         "ongoing_fee": 0,
-        "daily_loss_limit": 1000,  # firm_config.py:148 — $1K daily limit (matches Topstep)
-        "min_payout_days": 5,
-        "min_trading_days": 5,
+        "daily_loss_limit": 1000,  # firm_config.py — Builder $1K DLL (SOFT pause)
+        "min_payout_days": 2,   # canonical: Builder 2 qualifying days/cycle
+        "min_trading_days": 1,  # canonical: Builder eval 1-day minimum
     },
     # Legacy firms (TPT, Apex, Tradeify, Alpha, FFN, Earn2Trade) removed
     # 2026-05-19 per CLAUDE.md §6 production scope (Topstep + MFFU only).
@@ -317,9 +325,9 @@ def run_prop_compliance(
         # Check consistency rules (using net PnLs).
         # Active rules: any firm whose consistency_rule contains "50pct".
         # Topstep ("topstep_50pct"): always enforced — eval pass-request gate.
-        # MFFU ("mffu_50pct"): SIM-PAYOUT stage only (firm_config.py §MFFU);
-        #   MC survival sim skips it intentionally. The caller must pass
-        #   enforce_mffu_consistency=True to activate the MFFU check.
+        # MFFU ("mffu_50pct_sim_payout" — canonical name, W3B F-2 sync): SIM-PAYOUT
+        #   stage only (firm_config.py §MFFU); MC survival sim skips it intentionally.
+        #   The caller must pass enforce_mffu_consistency=True to activate the MFFU check.
         if isinstance(firm.get("consistency_rule"), str) and "50pct" in firm["consistency_rule"]:
             if firm_key == "mffu_50k" and not enforce_mffu_consistency:
                 pass  # Skip — MFFU consistency is SIM-PAYOUT-stage-only
@@ -327,7 +335,9 @@ def run_prop_compliance(
                 cons_passed, worst_pct = check_tpt_consistency(net_pnls)
                 if not cons_passed:
                     passed = False
-                    firm_label = "MFFU" if firm["consistency_rule"] == "mffu_50pct" else "Topstep"
+                    # W3B F-2: label derived from firm_key (the old rule-name equality
+                    # check would mislabel MFFU as "Topstep" after the canonical rename).
+                    firm_label = "MFFU" if firm_key == "mffu_50k" else "Topstep"
                     failures.append(
                         f"{firm_label} 50% consistency violation: "
                         f"best day = {worst_pct:.0%} of total profit"

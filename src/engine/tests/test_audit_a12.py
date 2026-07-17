@@ -452,8 +452,10 @@ def test_cat05_pnl_math():
            MNQ point_value = 2.00, tick_size = 0.25, tick_value = 0.50
            MCL point_value = 100.00, tick_size = 0.01, tick_value = 1.00
       b) TS CONTRACT_SPECS in src/shared/firm-config.ts match Python exactly
-      c) Commission per side: per-firm dict matches docs/prop-firm-rules.md
-         Topstep: $0.37, MFFU/Apex/TPT/FFN/Earn2Trade: $0.62, Tradeify: $1.29, Alpha: $0.00
+      c) Commission per side: per-firm dict matches docs/prop-firm-rules-2026-*.md
+         (W3B 2026-07-17 docstring truth fix — was the stale 8-firm/$0.37 list:
+         current canonical is Topstep $0.62 MES/MNQ + $0.77 MCL, MFFU $0.95
+         MES/MNQ + $0.58 MCL; legacy firms removed 2026-05-19)
       d) PnL math in backtester multiplies by point_value (NOT tick_value)
          pnl = (exit - entry) * point_value * contracts
       e) Slippage is SUBTRACTED from gross PnL (cost), never added
@@ -905,8 +907,9 @@ def test_cat10_compliance_accuracy():
     max position aware of correlated positions.
 
     Checks:
-      a) FIRM_RULES sets daily_loss_limit per firm: Topstep $1000, MFFU/TPT/FFN/Tradeify/Alpha None,
-         Apex $1000, Earn2Trade $1100
+      a) FIRM_RULES sets daily_loss_limit per firm: Topstep $1000, MFFU $1000
+         (Builder — SOFT pause). (W3B 2026-07-17 docstring truth fix — was the
+         stale 8-firm list; legacy firms removed 2026-05-19)
       b) trailing_drawdown_locks (locks_at_start) is implemented in monte_carlo / prop_compliance
       c) Correlation matrix loads via correlated-position-guard with threshold 0.70
       d) compliance_gate.check_kill_switch checks consecutive_losses, daily_loss_limit, max_trades_per_day

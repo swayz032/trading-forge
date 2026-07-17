@@ -4,8 +4,10 @@ Tests:
 - Survival score calculation with known P&Ls
 - Daily breach probability with and without daily limit
 - MC drawdown breach returns reasonable probabilities
-- Concentration analysis catches FFN Express 15% threshold
+- Concentration analysis catches tight (15%) and loose (50%) thresholds
 - Firm profiles all have required fields
+- Firm profiles DERIVE from canonical firm_config.py (W3B 2026-07-17 —
+  drift-impossible-by-construction; reverting to hand-typed literals goes RED)
 - Grade assignment (A/B/C/D/F) boundaries
 - Comparator ranks strategies correctly
 """
@@ -57,10 +59,12 @@ def spiky_daily_pnls():
 
 class TestFirmProfiles:
     def test_all_firms_present(self):
+        # Topstep (PRIMARY) + MFFU only per CLAUDE.md §6. Legacy firms
+        # (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade) removed 2026-05-19
+        # (migration 0097). W3B 2026-07-17: test updated to the 2-firm reality —
+        # it had expected the removed 8-firm set and was failing.
         firms = list_firms()
-        expected = ["MFFU", "Topstep", "TPT", "Apex", "FFN", "Alpha", "Tradeify", "Earn2Trade"]
-        for f in expected:
-            assert f in firms, f"Missing firm: {f}"
+        assert sorted(firms) == ["MFFU", "Topstep"]
 
     def test_all_profiles_have_required_fields(self):
         for firm_key, firm_data in FIRM_PROFILES.items():
@@ -96,6 +100,65 @@ class TestFirmProfiles:
                 assert 0.0 < acct_data["payout_split"] <= 1.0, (
                     f"{firm_key}/{acct_key} payout_split out of range: {acct_data['payout_split']}"
                 )
+
+
+class TestFirmProfilesDerivedFromCanonical:
+    """W3B (2026-07-17): FIRM_PROFILES is a DERIVED VIEW over firm_config.py.
+
+    Every firm-rule value must equal the canonical struct it derives from.
+    RED-proof: reverting firm_profiles.py to any hand-typed literal (e.g. the
+    pre-W3B drifted MFFU max_contracts=50) makes these tests fail, because the
+    expectation side is read from firm_config.py at test time — not hand-typed
+    here. These pins guard the C4 TESTING→PAPER survival gate's inputs.
+    """
+
+    def test_mffu_max_contracts_equals_canonical(self):
+        from src.engine.firm_config import FIRM_CONTRACT_CAPS
+        profile = get_firm_profile("MFFU", "50K")
+        # Pre-W3B drift: hand-typed 50; canonical MFFU Builder = 40 micros.
+        assert profile["max_contracts"] == FIRM_CONTRACT_CAPS["mffu_50k"]
+
+    def test_topstep_max_contracts_equals_canonical(self):
+        from src.engine.firm_config import FIRM_CONTRACT_CAPS
+        profile = get_firm_profile("Topstep", "50K")
+        assert profile["max_contracts"] == FIRM_CONTRACT_CAPS["topstep_50k"]
+
+    def test_commission_per_side_equals_canonical(self):
+        from src.engine.firm_config import get_commission_per_side
+        # MES is the representative symbol (MES == MNQ at both firms).
+        assert get_firm_profile("MFFU", "50K")["commission_per_side"] == (
+            get_commission_per_side("mffu_50k", "MES")
+        )
+        assert get_firm_profile("Topstep", "50K")["commission_per_side"] == (
+            get_commission_per_side("topstep_50k", "MES")
+        )
+
+    def test_consistency_threshold_equals_canonical_rule(self):
+        from src.engine.firm_config import FIRM_RULES
+        # Both canonical 2026 consistency rules map to 50% best-day.
+        assert FIRM_RULES["topstep_50k"]["consistency_rule"] == "topstep_50pct"
+        assert get_firm_profile("Topstep", "50K")["consistency_threshold"] == 0.50
+        assert FIRM_RULES["mffu_50k"]["consistency_rule"] == "mffu_50pct_sim_payout"
+        assert get_firm_profile("MFFU", "50K")["consistency_threshold"] == 0.50
+
+    def test_core_rule_fields_equal_canonical(self):
+        from src.engine.firm_config import FIRM_RULES
+        for firm, key in (("MFFU", "mffu_50k"), ("Topstep", "topstep_50k")):
+            profile = get_firm_profile(firm, "50K")
+            rules = FIRM_RULES[key]
+            assert profile["max_drawdown"] == rules["max_drawdown"]
+            assert profile["drawdown_type"] == rules["trailing"].upper()
+            assert profile["daily_loss_limit"] == rules["daily_loss_limit"]
+            assert profile["payout_split"] == rules["payout_split"]
+            assert profile["eval_cost_monthly"] == rules["monthly_fee"]
+
+    def test_profile_shape_unchanged_for_consumers(self):
+        # survival_scorer.py reads exactly these keys — shape contract.
+        profile = get_firm_profile("MFFU", "50K")
+        for field in REQUIRED_FIELDS:
+            assert field in profile
+        assert isinstance(profile["max_contracts"], dict)
+        assert set(profile["max_contracts"].keys()) == {"MES", "MNQ", "MCL"}
 
 
 # ─── Daily Breach Probability ────────────────────────────────────
@@ -178,13 +241,17 @@ class TestConcentrationAnalysis:
         assert result["best_day_pct"] >= 0.0
         assert result["total_pnl"] > 0
 
-    def test_ffn_express_15_percent_threshold_spiky(self, spiky_daily_pnls):
+    def test_tight_15_percent_threshold_spiky(self, spiky_daily_pnls):
+        # 15% is a tight synthetic threshold (formerly labeled "FFN Express" —
+        # FFN removed 2026-05-19; the math being tested is firm-agnostic).
         result = concentration_analysis(spiky_daily_pnls, consistency_threshold=0.15)
         # The $5000 day is ~63% of total P&L — should fail 15% threshold
         assert result["passes_threshold"] is False
         assert result["best_day_pct"] > 0.15
 
-    def test_tpt_50_percent_threshold_spiky(self, spiky_daily_pnls):
+    def test_canonical_50_percent_threshold_spiky(self, spiky_daily_pnls):
+        # 50% is the canonical 2026 Topstep/MFFU consistency threshold
+        # (formerly labeled "TPT" — TPT removed 2026-05-19).
         result = concentration_analysis(spiky_daily_pnls, consistency_threshold=0.50)
         # The $5000 day is ~63% of total P&L — should fail 50% threshold too
         assert result["passes_threshold"] is False
@@ -248,11 +315,14 @@ class TestSurvivalScore:
         assert "error" in result
 
     def test_topstep_daily_limit_affects_score(self, good_daily_pnls):
-        # Topstep has $1000 daily limit, MFFU has none
+        # W3B 2026-07-17: both firms now derive daily_loss_limit=$1000 from
+        # canonical FIRM_RULES (the old hand-typed profile wrongly gave MFFU
+        # None — MFFU Builder has a $1,000 DLL, canonically a SOFT pause;
+        # scoring it as breach-able is the conservative direction). Same
+        # limit + same P&Ls ⇒ identical daily_breach_prob scores.
         mffu = survival_score(good_daily_pnls, firm="MFFU", num_mc_sims=500)
         topstep = survival_score(good_daily_pnls, firm="Topstep", num_mc_sims=500)
-        # MFFU should score higher on daily_breach_prob (no limit = 100)
-        assert mffu["metrics"]["daily_breach_prob"] >= topstep["metrics"]["daily_breach_prob"]
+        assert mffu["metrics"]["daily_breach_prob"] == topstep["metrics"]["daily_breach_prob"]
 
     def test_custom_weights(self, good_daily_pnls):
         # All weight on DD breach
@@ -334,5 +404,6 @@ class TestSurvivalComparator:
     def test_compare_default_all_firms(self, good_daily_pnls):
         strategies = [{"name": "TestStrat", "daily_pnls": good_daily_pnls}]
         result = compare_strategies(strategies, firms=None, num_mc_sims=200)
-        # Should test against all 8 firms
-        assert result["firms_tested"] == 8
+        # Should test against all configured firms — Topstep + MFFU only
+        # per CLAUDE.md §6 (W3B 2026-07-17: was a stale 8-firm expectation).
+        assert result["firms_tested"] == len(FIRM_PROFILES) == 2

@@ -75,10 +75,31 @@ class TestComputeProfitTier:
 
     # --- Cap behavior ---
 
-    def test_large_pnl_capped_at_firm_max(self):
-        """$50,000 pnl would produce many tiers but result is clamped to firm_max=20."""
+    def test_large_pnl_50k_uncapped_below_firm_max(self):
+        """$50,000 pnl -> floor(50000/3000)=16 tiers -> +32 -> 42, UNCAPPED (42 < 60).
+
+        W3B 2026-07-17 test-truth fix: this test asserted `== CONTRACT_CAP_MAX`
+        with a docstring claiming "clamped to firm_max=20" — calibrated when the
+        cap was 20 and never updated when CONTRACT_CAP_MAX moved to 60 (MFFU Pro
+        range). The CODE's 42 is correct; at $50K PnL the tier math never reaches
+        the 60-clamp, so no clamp engages.
+        """
         result = self.fn(50000.0, 10)
-        assert result == CONTRACT_CAP_MAX
+        assert result == 42
+        assert result < CONTRACT_CAP_MAX  # clamp genuinely NOT engaged at $50K
+
+    def test_clamp_boundary_at_75k(self):
+        """$75,000 pnl -> floor(75000/3000)=25 tiers -> 10+50 = 60 exactly = cap boundary."""
+        assert self.fn(75000.0, 10) == CONTRACT_CAP_MAX  # == 60, uncapped value equals cap
+
+    def test_large_pnl_genuinely_clamped_at_firm_max(self):
+        """$90,000 pnl -> floor(90000/3000)=30 tiers -> 10+60 = 70 uncapped -> CLAMPED to 60.
+
+        First PnL where the clamp genuinely engages (uncapped > cap) is $78,000
+        (26 tiers -> 62 > 60); $90K exercises it with clear margin.
+        """
+        result = self.fn(90000.0, 10)
+        assert result == CONTRACT_CAP_MAX  # 60 — the clamp actually engaged (70 -> 60)
 
     def test_result_never_below_base(self):
         """Result must never be less than base_contracts."""

@@ -13,7 +13,8 @@
  * Parity notes:
  *   - Mock runPythonModule to verify it's called with check_strategy_compliance
  *   - Mock DB to avoid real Postgres dependency
- *   - All 8 firms from FIRMS are exercised in the count assertion
+ *   - All configured firms from FIRMS (currently 2: Topstep + MFFU per
+ *     CLAUDE.md §6) are exercised in the count assertion
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -303,17 +304,23 @@ describe("evaluateMultiFirmEligibility", () => {
     expect(firstCall.correlationId).toBe(correlationId);
   });
 
-  it("firm_rules include max_drawdown_limit from firm-config for all 8 firms", async () => {
+  it("firm_rules include max_drawdown_limit + canonical contract_limits for all configured firms", async () => {
+    // W3B 2026-07-17: was "all 8 firms" with a hand-typed maxContracts=50 for
+    // every firm — stale twice over (6 firms removed 2026-05-19, and MFFU
+    // Builder is 40 micros, not 50, since 2026-06-23). Expectation now reads
+    // the canonical FIRMS config so it can't drift again.
     mockIsActive.mockResolvedValue(true);
     mockRunPython.mockResolvedValue(PASS_RESULT as any);
 
     await evaluateMultiFirmEligibility(STRATEGY_ID, BACKTEST_ID);
 
+    expect(mockRunPython.mock.calls.length).toBe(Object.keys(FIRMS).length);
     for (const call of mockRunPython.mock.calls) {
-      const firmRules = (call[0].config as any).firm_rules;
+      const config = call[0].config as any;
+      const firmRules = config.firm_rules;
+      const acct = FIRMS[config.firm as string]!.accountTypes["50k"]!;
       expect(firmRules.max_drawdown_limit).toBeGreaterThan(0);
-      // All 50K accounts in firm-config have maxContracts=50 (50 micros = 5 minis × 10:1 ratio)
-      expect(firmRules.contract_limits?.MES).toBe(50);
+      expect(firmRules.contract_limits?.MES).toBe(acct.maxContracts); // topstep 50 / mffu 40
     }
   });
 

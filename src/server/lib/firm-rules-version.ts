@@ -52,24 +52,29 @@ export const FIRM_CONFIGS_TS = {
     min_trading_days: 5,
   },
   mffu_50k: {
-    name: "MFFU 50K (Core)",
+    // W3B F-2 (2026-07-17): mirrors the prop_compliance.py sync to canonical
+    // firm_config.py Builder values — name Core→Builder, consistency_rule
+    // "mffu_50pct"→"mffu_50pct_sim_payout", min_payout_days 5→2,
+    // min_trading_days 5→1. Version hash bump is BY DESIGN (the MC drift gate
+    // exists to refuse grading against stale rules).
+    name: "MFFU 50K (Builder)",
     monthly_fee: 77,
     activation_fee: 0,
     profit_target: 3000,
     max_drawdown: 2000,
     trailing: "eod",
     locks_at_start: true,
-    consistency_rule: "mffu_50pct",
+    consistency_rule: "mffu_50pct_sim_payout",
     overnight_ok: false,
     payout_split: 0.80,
     payout_split_tiers: null,
     ongoing_fee: 0,
-    // deep-scan Architecture re-cert HIGH: mirror Python prop_compliance.py:66 / firm_config.py:148
+    // deep-scan Architecture re-cert HIGH: mirror Python prop_compliance.py / firm_config.py
     // ($1,000 MFFU Builder DLL — SOFT pause). Was stale null after the 2026-07-02 Python data-fix
     // (9f9b555) landed without updating this mirror → the ts-python-firm-rules-version CI gate went RED.
     daily_loss_limit: 1000,
-    min_payout_days: 5,
-    min_trading_days: 5,
+    min_payout_days: 2,
+    min_trading_days: 1,
   },
 } as const;
 

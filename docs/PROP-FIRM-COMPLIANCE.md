@@ -18,7 +18,7 @@ Layer 3: Human Approves            (trader validates drift, overrides gates)
 
 - System prompt: `src/agents/OPENCLAW_COMPLIANCE_GUARD.md`
 - Runs as a sidecar agent alongside the strategy pipeline
-- Monitors prop firm documentation for rule changes across all 8 firms
+- Monitors prop firm documentation for rule changes across all configured firms (Object.keys(FIRMS) — currently 2: Topstep + MFFU per CLAUDE.md §6)
 - Flags ambiguities, contradictions, and undocumented edge cases
 - Produces structured compliance reviews stored via `POST /api/compliance/review`
 - Has zero execution authority — it recommends, the gate decides
@@ -251,18 +251,12 @@ Audit trail of every drift event detected.
 
 ## Covered Firms
 
-The compliance system tracks all 8 prop firms with their specific rule variations. Full rules are documented in `docs/prop-firm-rules.md`.
+The compliance system tracks all configured prop firms (`Object.keys(FIRMS)` in `src/shared/firm-config.ts` — currently **2: Topstep + MFFU** per CLAUDE.md §6; the 6 legacy firms TPT/Apex/FFN/Alpha/Tradeify/Earn2Trade were removed 2026-05-10, migration 0097; table pruned 2026-07-17 W3B doc-truth sweep). Full rules: `docs/prop-firm-rules-2026-topstep.md` + `docs/prop-firm-rules-2026-mffu.md`.
 
 | Firm | Drawdown Type | Consistency Rule | Daily Loss Limit | Key Constraint |
 |------|--------------|------------------|-------------------|----------------|
-| **Topstep** | Trailing EOD, locks | None | $1,000 soft | No overnight; TopstepX platform required |
-| **Take Profit Trader (TPT)** | Trailing EOD | 50% single-day cap (eval + PRO) | None | Consistency removed at PRO+ |
-| **My Funded Futures (MFFU)** | Trailing EOD, locks | 50% eval / 40% funded | None | Lowest fees; $0 activation |
-| **Apex Trader Funding** | Trailing EOD, locks | 50% on funded payouts | $1,000 (EOD only) | 6 max payouts per account; $85/mo funded fee |
-| **Funded Futures Network (FFN)** | Trailing EOD, locks | 40% single-day cap | None | Two-step eval; $126/mo data fee |
-| **Alpha Futures** | Trailing EOD | None | None | $0 commissions; smallest firm |
-| **Tradeify** | Trailing EOD, locks | None | None | $1.29/side commissions (highest) |
-| **Earn2Trade** | Trailing EOD | None | None | 60-day time limit on evaluation |
+| **Topstep** | Trailing EOD | 50% best-day cap at Combine pass-request (`topstep_50pct`) | $1,000 | No overnight; TopstepX platform required; XFA per-request payout caps ($2K/$4K with-DLL std, $3K/$6K consistency), LFA uncapped |
+| **My Funded Futures (MFFU)** | Trailing EOD, locks (Builder MLL; static at $0 on live) | 50% at SIM-FUNDED payout stage only (`mffu_50pct_sim_payout`) | $1,000 SOFT pause | Builder plan: 40 micros; $2K per-request payout cap, bi-weekly; collaborative/same-device bans |
 
 ---
 
@@ -275,7 +269,7 @@ Strategy Proposed (by OpenClaw/Ollama)
 Backtest Engine runs walk-forward + Monte Carlo
     │
     ▼
-Compliance Gate checks against ALL 8 firms
+Compliance Gate checks against ALL configured firms (currently Topstep + MFFU)
     │
     ├── For each firm: freshness check → compliance check → gate decision
     │
@@ -299,4 +293,4 @@ Pre-Session Gate at 9:15 AM ET checks all active strategies
 3. **Freshness is non-negotiable.** 24h for active trading, 72h for research, 0h after drift. No exceptions.
 4. **The gate is deterministic.** Layer 2 uses pure rule matching. No AI judgment, no probabilistic overrides.
 5. **Human is the final authority.** Only a human can verify rulesets, resolve drift, and unblock strategies after drift events.
-6. **All 8 firms are always checked.** When a strategy is proposed, it is evaluated against every firm's rules to find the best fit.
+6. **All configured firms are always checked.** When a strategy is proposed, it is evaluated against every configured firm's rules (`Object.keys(FIRMS)` — currently Topstep + MFFU) to find the best fit.

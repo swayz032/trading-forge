@@ -11,6 +11,10 @@ import {
   getAllFirms,
 } from "../../shared/firm-config.js";
 import {
+  resolvePayoutCapContext,
+  applyMonthlyPayoutCap,
+} from "../lib/payout-cap-projection.js";
+import {
   simulateSurvivalCurve,
   deriveStrategyProfile,
   type StrategyProfile,
@@ -303,8 +307,17 @@ propFirmRoutes.post("/rank", async (req, res) => {
 
       // Monthly gross from funded account (after buffer phase)
       const monthlyGross = avgDailyPnl * tradingDaysPerMonth;
-      // monthlyNet = true take-home after split AND ongoing fees
-      const monthlyNet = (monthlyGross * acct.payoutSplit) - acct.ongoingMonthlyFee;
+      // W3B: this block previously projected payouts UNCAPPED too (same class
+      // as /payout). Withdrawable payout is capped per request — cap at
+      // N_req × getPayoutCap before subtracting ongoing fees. Rank has no
+      // stage/path inputs, so it uses the same defaults as /payout:
+      // XFA + standard + dllOptedIn=true (broker_accounts default, mig 0168).
+      const payoutCapCtx = resolvePayoutCapContext(firm.name, "xfa", "standard", true);
+      const monthlyNetUncapped = (monthlyGross * acct.payoutSplit) - acct.ongoingMonthlyFee;
+      // monthlyNet = true take-home after per-request payout cap, split AND ongoing fees
+      const monthlyNet =
+        applyMonthlyPayoutCap(monthlyGross * acct.payoutSplit, payoutCapCtx) -
+        acct.ongoingMonthlyFee;
 
       // Funded months available for payouts (subtract eval + buffer months)
       const totalPrePayoutMonths = evalMonths + bufferMonths;
@@ -347,6 +360,10 @@ propFirmRoutes.post("/rank", async (req, res) => {
         bufferOngoingFees: Math.round(bufferOngoingFees),
         monthlyGross: Math.round(monthlyGross),
         monthlyNet: Math.round(monthlyNet),
+        monthlyNetUncapped: Math.round(monthlyNetUncapped),
+        payoutCapped: monthlyNet < monthlyNetUncapped,
+        // W3B: stamp the cap assumption per firm row.
+        payout_cap_applied: payoutCapCtx,
         payoutSplit: acct.payoutSplit,
         fundedPayoutMonths,
         totalPayouts: Math.round(totalPayouts),
@@ -382,6 +399,12 @@ const payoutSchema = z.object({
   avgDailyPnl: z.number().positive(),
   numAccounts: z.number().int().min(1).max(20).default(1),
   months: z.number().int().min(1).max(36).default(12),
+  // W3B payout-cap wiring (2026-07-17). Defaults: XFA + standard path;
+  // dllOptedIn=true mirrors broker_accounts.dll_opted_in DEFAULT true
+  // (migration 0168 — the operator's accounts run with the voluntary DLL).
+  accountStage: z.enum(["xfa", "lfa"]).default("xfa"),
+  payoutPath: z.enum(["standard", "consistency"]).default("standard"),
+  dllOptedIn: z.boolean().default(true),
 });
 
 propFirmRoutes.post("/payout", (req, res) => {
@@ -391,7 +414,7 @@ propFirmRoutes.post("/payout", (req, res) => {
     return;
   }
 
-  const { firm, avgDailyPnl, numAccounts, months } = parsed.data;
+  const { firm, avgDailyPnl, numAccounts, months, accountStage, payoutPath, dllOptedIn } = parsed.data;
   const firmConfig = FIRMS[firm];
   if (!firmConfig) {
     res.status(400).json({ error: `Unknown firm: ${firm}. Available: ${Object.keys(FIRMS).join(", ")}` });
@@ -403,6 +426,11 @@ propFirmRoutes.post("/payout", (req, res) => {
     res.status(400).json({ error: `No 50K config for firm: ${firm}` });
     return;
   }
+
+  // W3B: per-request payout caps (getPayoutCap) converted to a monthly ceiling
+  // via the pinned requests-per-month cadence (MFFU 2/mo bi-weekly, Topstep 1/mo).
+  // LFA returns a null cap = uncapped.
+  const payoutCapCtx = resolvePayoutCapContext(firm, accountStage, payoutPath, dllOptedIn);
 
   const tradingDaysPerMonth = 20;
   const daysToTarget = Math.ceil(acct.profitTarget / avgDailyPnl);
@@ -427,7 +455,12 @@ propFirmRoutes.post("/payout", (req, res) => {
     const costs = evalFee + ongoingFee;
 
     const monthlyGross = isEval ? 0 : avgDailyPnl * tradingDaysPerMonth * numAccounts;
-    const monthlyNet = isFunded ? monthlyGross * acct.payoutSplit : 0;
+    // W3B: withdrawable payout is capped per request — cap the funded-month net
+    // at N_req × cap × numAccounts (null cap = LFA uncapped).
+    const monthlyNetUncapped = isFunded ? monthlyGross * acct.payoutSplit : 0;
+    const monthlyNet = isFunded
+      ? applyMonthlyPayoutCap(monthlyNetUncapped, payoutCapCtx, numAccounts)
+      : 0;
 
     cumulativeCost += costs;
     cumulativePayout += monthlyNet;
@@ -442,6 +475,8 @@ propFirmRoutes.post("/payout", (req, res) => {
       phase,
       grossPnl: Math.round(monthlyGross),
       netPayout: Math.round(monthlyNet),
+      netPayoutUncapped: Math.round(monthlyNetUncapped),
+      payoutCapped: isFunded && monthlyNet < monthlyNetUncapped,
       costs: Math.round(costs),
       cumulativePayout: Math.round(cumulativePayout),
       cumulativeCost: Math.round(cumulativeCost),
@@ -465,6 +500,8 @@ propFirmRoutes.post("/payout", (req, res) => {
     totalPayout: Math.round(cumulativePayout),
     totalCosts: Math.round(cumulativeCost),
     totalProfit: Math.round(cumulativePayout - cumulativeCost),
+    // W3B: stamp the cap assumption so consumers see exactly what was assumed.
+    payout_cap_applied: payoutCapCtx,
     monthlyProjection,
   });
 });
