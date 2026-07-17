@@ -1,4 +1,5 @@
 {
+  "_DO_NOT_RESTORE": "SUPERSEDED 2026-06-29 live snapshot — DO NOT restore any workflow from this file. It contains the dead inline-require HMAC pattern: require('crypto') inside n8n {{ }} expression fields (unavailable in the expression sandbox, so the HMAC signature is never produced) plus the || 'unset' bogus-secret fallback. Kept ONLY as a historical operator backup record. To restore a workflow, use the per-workflow export files in workflows/n8n/ or live Postgres — never this snapshot.",
   "captured_at": "2026-06-29T00:31Z",
   "source": "live n8n (Railway)",
   "count": 32,
