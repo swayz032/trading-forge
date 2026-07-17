@@ -378,12 +378,19 @@ describe("check-violation strategy_state wiring — MFFU compliance fields", () 
     buildDbConn({ tradesTodayFirm: 0, openPositions: [] });
 
     // openPosition Python call order: kill_switch → freshness → violation
+    // W3A ratify-packet (2026-07-17) item 1 grader-finding: this fixture is an
+    // env-default-only session (no daily_loss_limit, no max_trades_per_day) —
+    // the kill-switch call now correctly ARMS for it (that's the fix), so it
+    // must be queued first or it consumes the freshness mock and shifts every
+    // downstream call off by one.
     mockRunPythonModule
+      .mockResolvedValueOnce({ tripped: false, reason: null, force_close: false, daily_pnl_pct: 0, halt_pct_used: 0.67, force_close_pct_used: 0.95 }) // kill_switch
       .mockResolvedValueOnce({ fresh: true, status: "ok", message: "fresh", drift_detected: false }) // freshness
       .mockResolvedValueOnce({ violation: true, status: "blocked", message: "MFFU 2% per-trade rule violated", violations: ["mffu: MFFU 2% per-trade rule violated — max_loss=$1500.00 exceeds 2% of account=$50000.00 (limit=$1000.00)."] }); // violation
 
-    const { openPosition, clearComplianceCache } = await import("../services/paper-execution-service.js");
+    const { openPosition, clearComplianceCache, clearKillSwitchCache } = await import("../services/paper-execution-service.js");
     clearComplianceCache();
+    clearKillSwitchCache();
 
     // ATR = 40pt → stopDistancePts = min(1.5 × 40, 14) = 14
     // But test intent is 60pt stop: pass no ATR so fallback to ceiling(14pt) × 5 × $5 = $350
@@ -440,12 +447,15 @@ describe("check-violation strategy_state wiring — MFFU compliance fields", () 
     buildDbConn({ tradesTodayFirm: 0, openPositions: [] });
 
     // openPosition Python call order: kill_switch → freshness → violation
+    // W3A item 1 grader-finding: env-default-only session now arms the kill switch first.
     mockRunPythonModule
+      .mockResolvedValueOnce({ tripped: false, reason: null, force_close: false, daily_pnl_pct: 0, halt_pct_used: 0.67, force_close_pct_used: 0.95 }) // kill_switch
       .mockResolvedValueOnce({ fresh: true, status: "ok", message: "fresh", drift_detected: false })
       .mockResolvedValueOnce({ violation: false, status: "ok", message: "ok", violations: [] });
 
-    const { openPosition, clearComplianceCache } = await import("../services/paper-execution-service.js");
+    const { openPosition, clearComplianceCache, clearKillSwitchCache } = await import("../services/paper-execution-service.js");
     clearComplianceCache();
+    clearKillSwitchCache();
 
     // ATR=9.33 → 1.5×9.33≈14pt (ceiling) → $350 risk (0.7% of $50K → allowed)
     await openPosition("sess-1", {
@@ -476,7 +486,9 @@ describe("check-violation strategy_state wiring — MFFU compliance fields", () 
       openPositions: [{ symbol: "MNQ", side: "long", contracts: 2 }],
     });
 
+    // W3A item 1 grader-finding: env-default-only session now arms the kill switch first.
     mockRunPythonModule
+      .mockResolvedValueOnce({ tripped: false, reason: null, force_close: false, daily_pnl_pct: 0, halt_pct_used: 0.67, force_close_pct_used: 0.95 }) // kill_switch
       .mockResolvedValueOnce({ fresh: true, status: "ok", message: "fresh", drift_detected: false })
       .mockResolvedValueOnce({
         violation: true,
@@ -485,8 +497,9 @@ describe("check-violation strategy_state wiring — MFFU compliance fields", () 
         violations: ["mffu: MFFU hedging ban — cannot open NQ while MNQ position is open (same underlying, Rule §hedging_ban)."],
       });
 
-    const { openPosition, clearComplianceCache } = await import("../services/paper-execution-service.js");
+    const { openPosition, clearComplianceCache, clearKillSwitchCache } = await import("../services/paper-execution-service.js");
     clearComplianceCache();
+    clearKillSwitchCache();
 
     const result = await openPosition("sess-1", {
       symbol: "NQ",
@@ -516,7 +529,9 @@ describe("check-violation strategy_state wiring — MFFU compliance fields", () 
   it("Test 4: 501 trades today on MFFU → HFT limit → BLOCK", async () => {
     buildDbConn({ tradesTodayFirm: 501, openPositions: [] });
 
+    // W3A item 1 grader-finding: env-default-only session now arms the kill switch first.
     mockRunPythonModule
+      .mockResolvedValueOnce({ tripped: false, reason: null, force_close: false, daily_pnl_pct: 0, halt_pct_used: 0.67, force_close_pct_used: 0.95 }) // kill_switch
       .mockResolvedValueOnce({ fresh: true, status: "ok", message: "fresh", drift_detected: false })
       .mockResolvedValueOnce({
         violation: true,
@@ -525,8 +540,9 @@ describe("check-violation strategy_state wiring — MFFU compliance fields", () 
         violations: ["mffu: MFFU HFT limit reached — 501 trades taken today (cap=500)."],
       });
 
-    const { openPosition, clearComplianceCache } = await import("../services/paper-execution-service.js");
+    const { openPosition, clearComplianceCache, clearKillSwitchCache } = await import("../services/paper-execution-service.js");
     clearComplianceCache();
+    clearKillSwitchCache();
 
     const result = await openPosition("sess-1", {
       symbol: "MES",
@@ -549,12 +565,15 @@ describe("check-violation strategy_state wiring — MFFU compliance fields", () 
   it("Test 5: 499 trades today on MFFU → under HFT limit → PASS", async () => {
     buildDbConn({ tradesTodayFirm: 499, openPositions: [] });
 
+    // W3A item 1 grader-finding: env-default-only session now arms the kill switch first.
     mockRunPythonModule
+      .mockResolvedValueOnce({ tripped: false, reason: null, force_close: false, daily_pnl_pct: 0, halt_pct_used: 0.67, force_close_pct_used: 0.95 }) // kill_switch
       .mockResolvedValueOnce({ fresh: true, status: "ok", message: "fresh", drift_detected: false })
       .mockResolvedValueOnce({ violation: false, status: "ok", message: "ok", violations: [] });
 
-    const { openPosition, clearComplianceCache } = await import("../services/paper-execution-service.js");
+    const { openPosition, clearComplianceCache, clearKillSwitchCache } = await import("../services/paper-execution-service.js");
     clearComplianceCache();
+    clearKillSwitchCache();
 
     await openPosition("sess-1", {
       symbol: "MES",
@@ -575,12 +594,15 @@ describe("check-violation strategy_state wiring — MFFU compliance fields", () 
   it("trades_today query uses firm-level innerJoin (not single-session filter)", async () => {
     buildDbConn({ tradesTodayFirm: 42, openPositions: [] });
 
+    // W3A item 1 grader-finding: env-default-only session now arms the kill switch first.
     mockRunPythonModule
+      .mockResolvedValueOnce({ tripped: false, reason: null, force_close: false, daily_pnl_pct: 0, halt_pct_used: 0.67, force_close_pct_used: 0.95 }) // kill_switch
       .mockResolvedValueOnce({ fresh: true, status: "ok", message: "fresh", drift_detected: false })
       .mockResolvedValueOnce({ violation: false, status: "ok", message: "ok", violations: [] });
 
-    const { openPosition, clearComplianceCache } = await import("../services/paper-execution-service.js");
+    const { openPosition, clearComplianceCache, clearKillSwitchCache } = await import("../services/paper-execution-service.js");
     clearComplianceCache();
+    clearKillSwitchCache();
 
     await openPosition("sess-1", {
       symbol: "MES",

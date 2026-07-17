@@ -71,6 +71,17 @@ vi.mock("../services/strategy-assignment-service.js", () => ({
 vi.mock("../../shared/firm-config.js", () => ({
   getFirmLimit: vi.fn().mockReturnValue({ maxContracts: 50 }),
   CONTRACT_CAP_MAX: 60,
+  // W3A ratify-packet (2026-07-17) item 2: the M5 2%-per-trade block now
+  // fail-CLOSED on a thrown check (was fail-open). This mock previously
+  // omitted getFirmAccount/CONTRACT_SPECS/DEFAULT_ACCOUNT_SIZE entirely, which
+  // used to throw silently inside the (then fail-open) M5 try block on every
+  // entry signal and get masked. getFirmAccount returning null + empty
+  // CONTRACT_SPECS makes the M5 guard condition evaluate false (graceful
+  // skip) instead of throwing — same net effect as before, without relying on
+  // an unrelated exception being swallowed.
+  getFirmAccount: vi.fn().mockReturnValue(null),
+  CONTRACT_SPECS: {},
+  DEFAULT_ACCOUNT_SIZE: 50_000,
 }));
 
 vi.mock("../lib/python-runner.js", () => ({

@@ -43,6 +43,10 @@ import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-
 import { deriveEvidenceBackedConfluenceCount, type FactorSource } from "../lib/confluence-provenance.js";
 // W23H.4: audit row writer for sizing.confluence_multiplier_applied
 import { insertAuditRow } from "../lib/audit-log-helper.js";
+// W3A ratify-packet (2026-07-17) item 3: fallback-visibility for the 6
+// risk_derived_pyramid sizing fields that silently fall back to hardcoded
+// defaults when a strategy config bypasses framework-overlay.ts.
+import { detectPositionSizeFallbacks, POSITION_SIZE_FALLBACK_DEFAULTS } from "../lib/position-size-fallback.js";
 // W23H.3: per-strategy allowed_entry_windows time gates
 import { parseEntryWindows, isBarInAnyWindow } from "../lib/entry-windows.js";
 import { evaluateDailyTradeCap, getDailyTradeCapEnvDefault } from "../lib/daily-trade-cap.js";
@@ -5550,19 +5554,53 @@ export async function evaluateSignals(
         // Full risk-derived path: build positionSizeConfig from the compiled strategy config.
         // Fields that may be absent on older strategy rows use framework-canonical defaults
         // (see CLAUDE.md §4 sizing spec and framework-overlay.ts).
+        //
+        // W3A ratify-packet (2026-07-17) item 3: detect BEFORE construction which of the
+        // 6 fields below are about to silently fall back, so a fallback-visibility audit
+        // row can fire when ANY of them engage (see insertAuditRow call just below this
+        // object). detectPositionSizeFallbacks() uses the SAME POSITION_SIZE_FALLBACK_DEFAULTS
+        // constants referenced here — detection and construction can never drift apart.
+        const positionSizeFallbacks = detectPositionSizeFallbacks(rawPositionSize, symbol);
         const positionSizeConfig: RiskSizingInputs["positionSizeConfig"] = {
           type: "risk_derived_pyramid",
-          base_contracts: typeof rawPositionSize.base_contracts === "number" ? rawPositionSize.base_contracts : 6,
-          tier_increment: typeof rawPositionSize.tier_increment === "number" ? rawPositionSize.tier_increment : 3,
-          tier_threshold_dollars: typeof rawPositionSize.tier_threshold_dollars === "number" ? rawPositionSize.tier_threshold_dollars : 3000,
-          personal_dll_pct: typeof rawPositionSize.personal_dll_pct === "number" ? rawPositionSize.personal_dll_pct : 0.67,
-          max_risk_pct_per_trade: typeof rawPositionSize.max_risk_pct_per_trade === "number" ? rawPositionSize.max_risk_pct_per_trade : 0.02,
+          base_contracts: typeof rawPositionSize.base_contracts === "number" ? rawPositionSize.base_contracts : POSITION_SIZE_FALLBACK_DEFAULTS.base_contracts,
+          tier_increment: typeof rawPositionSize.tier_increment === "number" ? rawPositionSize.tier_increment : POSITION_SIZE_FALLBACK_DEFAULTS.tier_increment,
+          tier_threshold_dollars: typeof rawPositionSize.tier_threshold_dollars === "number" ? rawPositionSize.tier_threshold_dollars : POSITION_SIZE_FALLBACK_DEFAULTS.tier_threshold_dollars,
+          personal_dll_pct: typeof rawPositionSize.personal_dll_pct === "number" ? rawPositionSize.personal_dll_pct : POSITION_SIZE_FALLBACK_DEFAULTS.personal_dll_pct,
+          max_risk_pct_per_trade: typeof rawPositionSize.max_risk_pct_per_trade === "number" ? rawPositionSize.max_risk_pct_per_trade : POSITION_SIZE_FALLBACK_DEFAULTS.max_risk_pct_per_trade,
           liquidity_comfort_cap: typeof rawPositionSize.liquidity_comfort_cap === "number"
             ? rawPositionSize.liquidity_comfort_cap
             : (LIQUIDITY_COMFORT_CAPS[symbol.toUpperCase()] ?? LIQUIDITY_COMFORT_CAP_DEFAULT),
           topstep_account_cap_override: typeof rawPositionSize.topstep_account_cap_override === "number" ? rawPositionSize.topstep_account_cap_override : null,
           computed_at_signal_time: true,
         };
+
+        // W3A ratify-packet (2026-07-17) item 3: fallback-visibility audit. Fires ONLY
+        // when at least one of the 6 fields above fell back to its hardcoded default —
+        // a fully-overlaid config (the normal graduation path; framework-overlay.ts
+        // always stamps these fields) produces an empty positionSizeFallbacks array and
+        // this block is a no-op, so there is no false-positive noise on the expected
+        // path. When it DOES fire, it means a strategy/session config bypassed the
+        // overlay entirely (hand-created row, pre-overlay legacy row, corrupted
+        // config) — previously invisible. This is visibility only: none of the 6
+        // fallback VALUES are changed here.
+        if (positionSizeFallbacks.length > 0) {
+          insertAuditRow({
+            action: "sizing.position_size_fallback_applied",
+            entityType: "strategy",
+            entityId: sessionConfig.strategyId ?? "unknown",
+            decisionAuthority: "system",
+            status: "info",
+            input: { sessionId, symbol } as Record<string, unknown>,
+            result: {
+              fallbackFields: positionSizeFallbacks.map((f) => f.field),
+              fallbacks: positionSizeFallbacks,
+            } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) => {
+            logger.warn({ err, sessionId, action: "sizing.position_size_fallback_applied" }, "sizing.position_size_fallback_applied audit write failed — non-blocking");
+          });
+        }
 
         const sizingInputs: RiskSizingInputs = {
           positionSizeConfig,

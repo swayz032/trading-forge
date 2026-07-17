@@ -24,6 +24,10 @@ import { getCommissionPerSide as getCommissionPerSideBySymbol, getStopCeilingPts
 import { managedStopPts } from "../lib/stop-geometry.js";
 import { avwapTypicalPrice, shouldAdvanceRunnerTrail } from "../lib/runner-trail-ratchet.js";
 import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCache } from "./paper-risk-gate.js";
+// W3A ratify-packet (2026-07-17) item 1: reuse the SAME DB-override > env-default
+// precedence the signal-time daily-trade-cap gate already uses for the execution-time
+// kill-switch backstop's maxTradesPerSession derivation — see resolveKillSwitchMaxTradesPerSession().
+import { resolveEffectiveCap, getDailyTradeCapEnvDefault } from "../lib/daily-trade-cap.js";
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 import { tracer } from "../lib/tracing.js";
 import { withSessionLock } from "../lib/db-locks.js";
@@ -237,6 +241,50 @@ const killSwitchCache = new Map<string, KillSwitchCacheEntry>();
 /** Test/admin hook — clear kill switch cache (force re-evaluation). */
 export function clearKillSwitchCache(): void {
   killSwitchCache.clear();
+}
+
+// ─── W3A ratify-packet (2026-07-17) item 1: kill-switch trade-cap backstop ──
+// Resolves the execution-time Python check_kill_switch() invocation's
+// `maxTradesPerSession` input through the SAME resolveEffectiveCap() precedence
+// (DB session override > env default) the signal-time daily-trade-cap gate
+// (daily-trade-cap.ts) already uses — so the two enforcement layers can never
+// drift apart.
+//
+// BEFORE this fix, the derivation was a bare
+// `sessionCfg?.max_trades_per_day != null ? Number(...) : undefined` with NO env
+// fallback. A session relying purely on TF_MAX_TRADES_PER_DAY (no per-session
+// override, no daily_loss_limit) never armed the kill-switch's Python call at
+// all — silently skipping trade-cap AND daily-loss AND consecutive-loss
+// enforcement bundled into that same invocation.
+//
+// A naive fix (`... : getDailyTradeCapEnvDefault()`) would have introduced a
+// NEW regression: TF_MAX_TRADES_PER_DAY=0 (the documented debug-disable value)
+// combined with a session that ALSO has daily_loss_limit set would produce
+// maxTradesPerSession=0 (not undefined); the payload site's `?? null` does NOT
+// intercept 0 (`0 ?? null` === 0); Python's `max_trades_per_session is not None
+// and trades_today >= max_trades_per_session` then trips on the very FIRST
+// trade of the day (`0 >= 0`).
+//
+// This function's `effectiveCap > 0 ? effectiveCap : undefined` guard closes
+// BOTH gaps in one shot: it also fixes a dormant pre-existing bug where an
+// EXPLICIT session-level `max_trades_per_day: 0` tipped through the same `??
+// null` gap (resolveEffectiveCap treats a non-positive perSessionCap as "not
+// meaningfully set" and falls through to the env default — same contract the
+// signal-time gate already relies on).
+//
+// Pure + DB-free (no process.env read inside — caller supplies envDefault via
+// getDailyTradeCapEnvDefault()) so it is directly unit-testable without a DB
+// bootstrap, matching this file's existing exported-pure-helper convention
+// (applyLatency, computeFillProbabilityByVolume, classifySessionType, etc.).
+export function resolveKillSwitchMaxTradesPerSession(
+  perSessionCap: number | null | undefined,
+  envDefault: number,
+): number | undefined {
+  const effectiveCap = resolveEffectiveCap({
+    perSessionCap: perSessionCap ?? null,
+    envDefault,
+  });
+  return effectiveCap > 0 ? effectiveCap : undefined;
 }
 
 // ─── GAP-2 FIX: Session-level stuck-position registry ────────────────────────
@@ -1275,10 +1323,16 @@ export async function openPosition(sessionId: string, params: {
           else break; // streak broken
         }
 
-        // Max trades per day from session config
-        const maxTradesPerSession = sessionCfg?.max_trades_per_day != null
-          ? Number(sessionCfg.max_trades_per_day)
-          : undefined;
+        // Max trades per day — W3A ratify-packet (2026-07-17) item 1: resolved via
+        // the SAME DB-override > env-default precedence as the signal-time
+        // daily-trade-cap gate, so an env-default-only session (no per-session
+        // override) still arms this belt-and-suspenders kill switch. See
+        // resolveKillSwitchMaxTradesPerSession() docstring for the naive-fix
+        // regression this avoids and the dormant explicit-0 bug it also closes.
+        const maxTradesPerSession = resolveKillSwitchMaxTradesPerSession(
+          sessionCfg?.max_trades_per_day as number | null | undefined,
+          getDailyTradeCapEnvDefault(),
+        );
 
         // Trades taken today — separate COUNT query so sessions with >10 trades are not undercounted.
         // recentTrades (limit 10) is only used for consecutive-loss detection above.

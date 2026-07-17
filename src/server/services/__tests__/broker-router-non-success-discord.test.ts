@@ -94,6 +94,20 @@ vi.mock("../../services/strategy-assignment-service.js", () => ({
 vi.mock("../../../shared/firm-config.js", () => ({
   getFirmLimit: vi.fn().mockReturnValue({ maxContracts: 50 }),
   CONTRACT_CAP_MAX: 60,
+  // W3A ratify-packet (2026-07-17) item 2: the M5 2%-per-trade block now
+  // fail-CLOSED on a thrown check (was fail-open) — this file's mock previously
+  // omitted getFirmAccount/CONTRACT_SPECS/DEFAULT_ACCOUNT_SIZE entirely, which
+  // used to throw silently inside the (then fail-open) M5 try block on every
+  // TEST_SIGNAL (enter_long) call and get masked. Now that the same catch
+  // blocks entries, the missing mock surfaces as a hard block unrelated to
+  // this file's actual subject (TradersPost non-success Discord routing).
+  // getFirmAccount returning null + empty CONTRACT_SPECS makes the M5 block's
+  // guard condition (`acct && typeof twoPctRule === "number" && ...`) evaluate
+  // false — same net effect as the old accidental-throw-then-fail-open path,
+  // but via a real graceful skip instead of an unrelated exception.
+  getFirmAccount: vi.fn().mockReturnValue(null),
+  CONTRACT_SPECS: {},
+  DEFAULT_ACCOUNT_SIZE: 50_000,
 }));
 
 vi.mock("../../lib/python-runner.js", () => ({

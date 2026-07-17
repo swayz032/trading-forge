@@ -350,6 +350,14 @@ export type BrokerResultReason =
   | "topstepx_not_configured"
   | "traderspost_circuit_open"
   | "internal_error"
+  // W3A ratify-packet (2026-07-17) item 2: an entry-risk check (route-time firm-cap
+  // clamp OR the FIX M5 2%-per-trade check) threw and could not be evaluated. The
+  // order is BLOCKED (fail-CLOSED) rather than silently proceeding unchecked — this
+  // reason is distinct from "compliance_violation" (a check RAN and found a
+  // violation) because here the check itself never completed. Deliberately maps to
+  // HTTP 503 in live-order.ts (service unavailable), not 403 (forbidden) — the risk
+  // posture is "unknown," not "known-bad."
+  | "entry_risk_check_unavailable"
   | "routed";
 
 export interface BrokerResult {
@@ -1018,7 +1026,58 @@ export async function routeOrder(
         });
       }
     } catch (clampErr) {
-      // Firm-cap clamp failure is non-fatal — log and proceed
+      // W3A ratify-packet (2026-07-17) item 2: this try block is NOT scoped to
+      // entries — it runs for ANY signal carrying a numeric quantity, including
+      // every exit variant (exit_long/exit_short/exit). So unlike the M5 catch
+      // below (already entry-gated), we must NOT blindly flip this one to
+      // fail-closed — doing so would also block flatten/exit signals, violating
+      // the hard invariant "flatten must never block" (CLAUDE.md).
+      //
+      // Explicit branch: an entry whose firm-cap clamp could not be evaluated is
+      // a real risk-control gap (the last-line contract-cap defense silently
+      // absent for a NEW position) — fail-CLOSED. Any other action (all exit
+      // variants) preserves the EXACT pre-fix fail-open behavior unchanged.
+      if (signal.action === "enter_long" || signal.action === "enter_short") {
+        const result: BrokerResult = {
+          success: false,
+          reason: "entry_risk_check_unavailable",
+          accountId,
+          firmId: account.firmId,
+          brokerType: account.brokerType,
+          error: `entry_risk_check_unavailable: route-time firm-cap clamp threw — ${clampErr instanceof Error ? clampErr.message : String(clampErr)}`,
+        };
+        logger.error(
+          { err: clampErr, accountId, firmId: account.firmId, correlationId },
+          "broker-router: route-time cap clamp failed — BLOCKING entry (fail-CLOSED, W3A item 2)",
+        );
+        await db.insert(auditLog).values({
+          action: "broker_router.entry_risk_check_unavailable",
+          entityType: "broker_account",
+          entityId: null,
+          decisionAuthority: "system",
+          input: {
+            accountId,
+            firmId: account.firmId,
+            ticker: signal.ticker,
+            action: signal.action,
+            quantity: signal.quantity,
+          } as Record<string, unknown>,
+          result: {
+            error: clampErr instanceof Error ? clampErr.message : String(clampErr),
+            checkName: "route_time_firm_cap_clamp",
+            blocked: true,
+          } as Record<string, unknown>,
+          status: "blocked",
+          correlationId: correlationId ?? null,
+        }).catch((auditErr: unknown) => {
+          logger.error({ err: auditErr, accountId, correlationId }, "broker-router: entry_risk_check_unavailable audit write failed (non-blocking)");
+        });
+        broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+        await writeAuditLog(accountId, signal, result, correlationId);
+        return result;
+      }
+      // Non-entry (exit variants): firm-cap clamp failure is non-fatal — log and
+      // proceed. Preserves "flatten must never block" (CLAUDE.md hard invariant).
       logger.error({ err: clampErr, accountId, correlationId }, "broker-router: route-time cap clamp failed — proceeding without clamp");
     }
   }
@@ -1134,18 +1193,34 @@ export async function routeOrder(
         }
       }
     } catch (twoPctErr) {
-      // Fail-OPEN: this is a route-level defense-in-depth guard. A bug here must
-      // not block legitimate orders — paper-execution-service remains the primary
-      // 2% enforcement path. Log so the skipped check is visible.
+      // W3A ratify-packet (2026-07-17) item 2: this catch is ALREADY entry-scoped
+      // (the enclosing `if (signal.action === "enter_long" || "enter_short")`
+      // above) — flip unconditionally to fail-CLOSED. Before this fix, an entry
+      // whose 2%-per-trade check errored got NO risk enforcement at all for that
+      // trade (the exact opposite of a "belt-and-suspenders" defense-in-depth
+      // guard): it silently proceeded with only a diagnostic warn audit row.
+      //
+      // CONSOLIDATED (not kept alongside the old `two_percent_rule_check_error`
+      // action): nothing downstream reads that action name (verified via
+      // repo-wide grep, 2026-07-17), and its payload/log text — "proceeding
+      // (fail-open)" — would be actively FALSE now that this catch always
+      // blocks. Keeping it verbatim would leave a misleading audit trail on the
+      // live-money path; a single accurate row is safer than two rows where one
+      // lies about the outcome.
+      const result: BrokerResult = {
+        success: false,
+        reason: "entry_risk_check_unavailable",
+        accountId,
+        firmId: account.firmId,
+        brokerType: account.brokerType,
+        error: `entry_risk_check_unavailable: 2%-per-trade check threw — ${twoPctErr instanceof Error ? twoPctErr.message : String(twoPctErr)}`,
+      };
       logger.error(
         { err: twoPctErr, accountId, firmId: account.firmId, correlationId },
-        "broker-router: route-level 2% check threw — proceeding (fail-open; paper-execution-service is primary)",
+        "broker-router: route-level 2% check threw — BLOCKING entry (fail-CLOSED, W3A item 2)",
       );
-      // deepscan15 L2: a silently-skipped compliance check must be reconstructable —
-      // write an audit row like every other skip/decision in this file (log-only left
-      // the fail-open invisible to a post-incident audit_log trace).
       await db.insert(auditLog).values({
-        action: "broker_router.two_percent_rule_check_error",
+        action: "broker_router.entry_risk_check_unavailable",
         entityType: "broker_account",
         entityId: null,
         decisionAuthority: "system",
@@ -1156,12 +1231,19 @@ export async function routeOrder(
           action: signal.action,
           quantity: signal.quantity,
         } as Record<string, unknown>,
-        result: { error: String(twoPctErr), failOpen: true, primaryEnforcer: "paper-execution-service" } as Record<string, unknown>,
-        status: "warn",
+        result: {
+          error: twoPctErr instanceof Error ? twoPctErr.message : String(twoPctErr),
+          checkName: "two_percent_rule",
+          blocked: true,
+        } as Record<string, unknown>,
+        status: "blocked",
         correlationId: correlationId ?? null,
       }).catch((auditErr: unknown) => {
-        logger.error({ err: auditErr, accountId, correlationId }, "broker-router: two_percent_rule_check_error audit write failed (non-blocking)");
+        logger.error({ err: auditErr, accountId, correlationId }, "broker-router: entry_risk_check_unavailable audit write failed (non-blocking)");
       });
+      broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+      await writeAuditLog(accountId, signal, result, correlationId);
+      return result;
     }
   }
 
