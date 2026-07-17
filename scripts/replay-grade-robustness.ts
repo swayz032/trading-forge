@@ -24,7 +24,18 @@
  *   - DOES NOT modify robustness-service.ts
  *   - DOES NOT modify optimizer.py or robustness/
  *   - DOES NOT modify lifecycle-service.ts
- *   - Passes dryRun=true on every robustness-service invocation
+ *   - Read-only by construction, not by a dryRun flag: this harness imports NO
+ *     production service (see imports below — only the pure-function
+ *     src/server/lib/replay/robustness-disagreement.ts library, plus logger/fs/postgres).
+ *     It reads PERSISTED `b15_battery` JSONB + `lifecycle_transitions` columns
+ *     and correlates historical outcomes; it does NOT invoke or re-execute
+ *     robustness-service.ts / optimizer.py's CURRENT gate logic. (deep-scan
+ *     Replay-F3, 2026-07-17 — a prior revision of this doc overstated a
+ *     "passes dryRun=true through to the service" behavior that does not
+ *     exist in this file; corrected here. Practical effect: if the live SDR/
+ *     PSI/RWS thresholds or gate formula changed after a graded backtest ran,
+ *     this harness's history reflects the OLD formula, not today's — it
+ *     cannot detect that kind of logic-vs-history drift.)
  *   - audit_log INSERTs merge into result jsonb only
  *   - Exit 0 on success; exit 1 only on DB error
  */

@@ -36,7 +36,7 @@ import { db } from "../db/index.js";
 import { paperSessions, deadLetterQueue, backtests } from "../db/schema.js";
 import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import { checkSystemMapDrift, type RegistrySubsystemSummary } from "../lib/system-topology.js";
-import { getDeepARRuntimeStatus } from "../services/deepar-service.js";
+import { getDeepARRuntimeStatus, type DeepARRuntimeStatus } from "../services/deepar-service.js";
 import { getQuantumRuntimeStatus } from "../services/quantum-mc-service.js";
 import { getPythonSubprocessStats } from "../lib/python-runner.js";
 
@@ -63,6 +63,40 @@ function settledToStatus(
   }
   const err = result.reason instanceof Error ? result.reason.message : String(result.reason);
   return { status: "error", latencyMs: 0, error: err };
+}
+
+/**
+ * deep-scan (DeepAR HIGH-2, 2026-07-17) — derives the dashboard-facing DeepAR
+ * status from the freshness fields getDeepARRuntimeStatus() already computes,
+ * instead of the RPC merely resolving. getDeepARRuntimeStatus() never rejects
+ * (it fails-open internally), so the old `deeparResult.status === "fulfilled"
+ * ? {status:"ok", ...} : {status:"error", ...}` branch reported "ok" even when
+ * trainingFresh=false / forecastFresh=false / daysTracked=0 and the model had
+ * been silent for ~2.5 months — a false-green on the operator dashboard.
+ *
+ * Uses only fields the payload already computes (trainingFresh, forecastFresh)
+ * — no new thresholds invented. Reason codes are enumerated, not free-text.
+ */
+export type DeepARDashboardStaleReason =
+  | "training_stale"
+  | "forecast_stale"
+  | "both_stale"
+  | null;
+
+export function deriveDeepARDashboardStatus(
+  runtimeStatus: Pick<DeepARRuntimeStatus, "trainingFresh" | "forecastFresh">,
+): { status: "ok" | "degraded" | "stale"; staleReason: DeepARDashboardStaleReason } {
+  const { trainingFresh, forecastFresh } = runtimeStatus;
+  if (trainingFresh && forecastFresh) {
+    return { status: "ok", staleReason: null };
+  }
+  if (!trainingFresh && !forecastFresh) {
+    return { status: "stale", staleReason: "both_stale" };
+  }
+  return {
+    status: "degraded",
+    staleReason: trainingFresh ? "forecast_stale" : "training_stale",
+  };
 }
 
 // ─── Individual subsystem checks ──────────────────────────────
@@ -580,7 +614,7 @@ router.get("/dashboard", async (req: Request, res: Response) => {
     advancedModels: {
       deepar:
         deeparResult.status === "fulfilled"
-          ? { status: "ok", ...deeparResult.value }
+          ? { ...deeparResult.value, ...deriveDeepARDashboardStatus(deeparResult.value) }
           : { status: "error", error: deeparResult.reason instanceof Error ? deeparResult.reason.message : String(deeparResult.reason) },
       quantum:
         quantumResult.status === "fulfilled"

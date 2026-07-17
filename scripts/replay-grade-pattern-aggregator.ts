@@ -24,7 +24,19 @@
  *   - DOES NOT modify pattern-aggregator-service.ts
  *   - DOES NOT modify prompt_versions rows
  *   - DOES NOT modify lifecycle_transitions
- *   - Passes dryRun=true on every service invocation
+ *   - Read-only by construction, not by a dryRun flag: this harness imports NO
+ *     production service (see imports below — only the pure-function
+ *     src/server/lib/replay/pattern-aggregator-disagreement.ts library, plus
+ *     logger/fs/postgres). It reads PERSISTED `prompt_versions` +
+ *     `lifecycle_transitions` + `paper_trades` columns and correlates
+ *     historical outcomes; it does NOT invoke or re-execute
+ *     pattern-aggregator-service.ts's CURRENT aggregation logic. (deep-scan
+ *     Replay-F3, 2026-07-17 — a prior revision of this doc overstated a
+ *     "passes dryRun=true through to the service" behavior that does not
+ *     exist in this file; corrected here. Practical effect: if the live
+ *     appendix-aggregation logic changed after a graded generation ran, this
+ *     harness's history reflects the OLD logic, not today's — it cannot
+ *     detect that kind of logic-vs-history drift.)
  *   - audit_log INSERTs merge into result jsonb only
  *   - Exit 0 on success; exit 1 only on DB error
  */

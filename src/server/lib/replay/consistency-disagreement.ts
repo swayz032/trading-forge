@@ -6,10 +6,47 @@
  * payout denials on historical Topstep accounts?
  *
  * Statistical methodology:
- *   - Confusion matrix: blocked/warned vs payout-denied in subsequent 14-day window
+ *   - Confusion matrix: gate-fired vs payout-denied (proxy) in the subsequent
+ *     14-day window
  *   - Precision/Recall/F1 of the consistency gate as a payout-denial predictor
- *   - Threshold sensitivity sweep: vary warn (35-45%) + block (45-55%) thresholds ±5%
- *     in 2.5% increments → 5×5 = 25 grid points
+ *   - Single-threshold sensitivity sweep: vary the ONE threshold the gate
+ *     predictor actually fires on (see STRUCTURAL LIMITATION below for why
+ *     this is a 1D sweep, not the 5×5 warn×block grid this lane shipped with
+ *     originally)
+ *
+ * ── STRUCTURAL LIMITATION (deep-scan Replay-F1, 2026-07-17) ──────────────────
+ * Two honesty fixes landed here after an adversarial finding:
+ *
+ * (1) DEAD PARAMETER (fixed): `gateFiresAtThreshold` used to take a `blockPct`
+ *     argument it never referenced, so the old 5×5 (warn × block) threshold
+ *     sweep produced byte-identical confusion matrices for every row sharing
+ *     the same warn value — the "optimal block threshold" the report used to
+ *     recommend was noise. There is no honest way to make block a distinct
+ *     prediction level here: the ground-truth label (below) is binary, so a
+ *     second "block-band vs warn-band" axis has nothing independent to
+ *     predict against. Fixed by dropping the fabricated parameter and
+ *     collapsing to the single threshold this lane actually grades.
+ *
+ * (2) CIRCULAR GROUND TRUTH (structural, NOT fixable by more data): the
+ *     ground-truth label this lane evaluates against
+ *     (scripts/replay-grade-consistency.ts::inferPayoutDenied) is proxied as
+ *     `concentrationPct >= DEFAULT_BLOCK_THRESHOLD_PCT` (50%) because real
+ *     Topstep payout-denial outcomes are not stored anywhere in this DB. The
+ *     predictor (`gateFiresAtThreshold`) fires at `concentrationPct >=
+ *     DEFAULT_WARN_THRESHOLD_PCT` (40%) — a STRICTLY LOWER threshold on the
+ *     SAME underlying feature. Since 50% implies 40%, every truth-positive
+ *     observation is mathematically ALSO a predictor-positive observation:
+ *     FN is always 0, so recall can only ever be exactly 0 (zero denials
+ *     observed) or exactly 1.0 (any denials observed) — never a real
+ *     in-between value reflecting actual predictive skill. Precision here
+ *     measures how much the two concentration thresholds' populations
+ *     overlap, NOT whether the gate predicts a real independent outcome.
+ *     This is a permanent structural fact of the proxy design, NOT a
+ *     sample-size problem — n=1,000,000 observations would not fix it.
+ *     Until a real, independent Topstep payout-denial outcome label exists,
+ *     `applyConsistencyDecisionRule` is capped at INCONCLUSIVE (or
+ *     PRELIMINARY below the sample floor) — it can never honestly emit
+ *     SIGNAL or NO_SIGNAL. See `GROUND_TRUTH_LABEL_STRUCTURALLY_CIRCULAR`.
  *
  * No I/O. No DB. No side effects.
  *
@@ -37,12 +74,24 @@ export const MIN_OBSERVATIONS_FOR_FULL_ANALYSIS = 50;
 
 /**
  * Threshold grid step size (percentage points).
- * Sweep: warn in [35, 37.5, 40, 42.5, 45], block in [45, 47.5, 50, 52.5, 55].
+ * Single-axis sweep over the ONE threshold the predictor fires on — see the
+ * module doc comment's "DEAD PARAMETER" note for why this is 1D, not 5×5.
+ * Range spans the union of the lane's original warn (35-45) and block
+ * (45-55) bounds so the descriptive sensitivity table still covers the same
+ * concentration-percentage territory operators are used to seeing.
  */
 export const THRESHOLD_STEP_PCT = 2.5;
 
-export const WARN_SWEEP_VALUES = [35, 37.5, 40, 42.5, 45] as const;
-export const BLOCK_SWEEP_VALUES = [45, 47.5, 50, 52.5, 55] as const;
+export const THRESHOLD_SWEEP_VALUES = [35, 37.5, 40, 42.5, 45, 47.5, 50, 52.5, 55] as const;
+
+/**
+ * Structural fact of the current proxy design (see module doc comment,
+ * "CIRCULAR GROUND TRUTH") — always true until the ground-truth label in
+ * scripts/replay-grade-consistency.ts::inferPayoutDenied is replaced with a
+ * real, independent Topstep payout-denial outcome. NOT a runtime measurement;
+ * exported so callers/tests can assert the honesty cap is wired up.
+ */
+export const GROUND_TRUTH_LABEL_STRUCTURALLY_CIRCULAR = true;
 
 export type ConsistencyVerdict =
   | "SIGNAL"
@@ -91,12 +140,14 @@ export interface ConsistencyConfusionMatrix {
 }
 
 /**
- * Result for one threshold variant in the sensitivity sweep.
+ * Result for one threshold in the single-axis sensitivity sweep.
+ * (Was a warn×block 5×5 grid pre-Replay-F1 fix — see module doc comment.
+ * `blockThresholdPct` was removed, not renamed: there is no honest second
+ * axis to report against a binary ground-truth label.)
  */
 export interface ThresholdSweepResult {
-  warnThresholdPct: number;
-  blockThresholdPct: number;
-  /** Count of observations where gate fired at these thresholds */
+  thresholdPct: number;
+  /** Count of observations where gate fired at this threshold */
   gatedCount: number;
   /** Count of observations where gate did not fire */
   passedCount: number;
@@ -116,21 +167,29 @@ export interface ConsistencyAnalysisResult {
   /** Baseline payout denial rate (denials / total with outcome) */
   baselinePayoutRate: number;
 
-  /** Confusion matrix at default thresholds (warn=40%, block=50%) */
+  /** Confusion matrix at the default threshold (warn=40%) */
   confusion: ConsistencyConfusionMatrix;
   precision: number;
   recall: number;
   f1: number;
 
-  /** Full 5×5 threshold sensitivity grid (25 rows) */
+  /**
+   * Single-axis threshold sensitivity table (descriptive — how the
+   * concentration distribution overlaps the ground-truth proxy at nearby
+   * thresholds). NOT an "optimal threshold" search — see
+   * groundTruthLabelCircular for why no threshold here can be honestly
+   * called "optimal" against this proxy label.
+   */
   thresholdSweep: ThresholdSweepResult[];
 
-  /** Optimal threshold found by maximizing F1 */
-  optimalWarnPct: number;
-  optimalBlockPct: number;
-  optimalF1: number;
+  /**
+   * Always true (see GROUND_TRUTH_LABEL_STRUCTURALLY_CIRCULAR module doc
+   * comment). Surfaced on the result object so downstream report/dashboard
+   * consumers can render the caveat without re-deriving it themselves.
+   */
+  groundTruthLabelCircular: boolean;
 
-  /** Verdict */
+  /** Verdict — capped at INCONCLUSIVE/PRELIMINARY while groundTruthLabelCircular is true */
   verdict: ConsistencyVerdict;
   isPreliminary: boolean;
 
@@ -141,30 +200,33 @@ export interface ConsistencyAnalysisResult {
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 
 /**
- * Determine if an observation's gate "fired" at given thresholds.
- * Gate fires when concentrationPct >= blockThresholdPct (block)
- *     OR concentrationPct >= warnThresholdPct (warn).
- * We treat both warn and block as "gate fired" for the binary predictor model.
+ * Determine if an observation's gate "fired" at the given threshold.
+ * Gate fires when concentrationPct >= thresholdPct.
+ *
+ * deep-scan Replay-F1 (2026-07-17): this function used to also accept a
+ * `blockPct` argument it never referenced (a dead parameter — see module doc
+ * comment). There is no honest second prediction level to model here: the
+ * ground-truth proxy is binary, so a "block-band vs warn-band" distinction
+ * has nothing independent to predict against. Dropped the parameter instead
+ * of faking a use for it.
  *
  * When falsePositiveSuspected is true, the gate was downgraded to WARN;
  * we still count it as fired (conservative — the gate DID signal something).
  */
 export function gateFiresAtThreshold(
   obs: DayAccountState,
-  warnPct: number,
-  blockPct: number,
+  thresholdPct: number,
 ): boolean {
-  return obs.concentrationPct >= warnPct;
+  return obs.concentrationPct >= thresholdPct;
 }
 
 /**
- * Build confusion matrix from observations at given thresholds.
+ * Build confusion matrix from observations at the given threshold.
  * Observations with payoutDenied === null are skipped.
  */
 export function buildConsistencyMatrix(
   observations: DayAccountState[],
-  warnPct: number = DEFAULT_WARN_THRESHOLD_PCT,
-  blockPct: number = DEFAULT_BLOCK_THRESHOLD_PCT,
+  thresholdPct: number = DEFAULT_WARN_THRESHOLD_PCT,
 ): ConsistencyConfusionMatrix & { skipped: number } {
   let tp = 0, fp = 0, tn = 0, fn = 0, skipped = 0;
 
@@ -174,7 +236,7 @@ export function buildConsistencyMatrix(
       continue;
     }
 
-    const fired = gateFiresAtThreshold(obs, warnPct, blockPct);
+    const fired = gateFiresAtThreshold(obs, thresholdPct);
     const denied = obs.payoutDenied;
 
     if (fired && denied) tp++;
@@ -216,81 +278,44 @@ export function computeF1(precision: number, recall: number): number {
 // ─── Threshold sensitivity sweep ─────────────────────────────────────────────
 
 /**
- * Run the full 5×5 threshold sensitivity grid.
- * warn_pct in [35, 37.5, 40, 42.5, 45] × block_pct in [45, 47.5, 50, 52.5, 55].
- * Total = 25 grid points.
+ * Run the single-axis threshold sensitivity table over THRESHOLD_SWEEP_VALUES.
  *
- * CRITICAL: only valid threshold pairs (warn < block) are included.
+ * deep-scan Replay-F1 (2026-07-17): this used to be a warn×block 5×5 grid
+ * (25 rows) where varying `blockPct` never changed the result — every row
+ * sharing a warn value was byte-identical (dead parameter). Collapsed to the
+ * single threshold the predictor actually fires on. This table is
+ * DESCRIPTIVE ONLY (how the concentration distribution shifts near the
+ * default threshold) — it is not, and must never be presented as, an
+ * "optimal threshold" search; see GROUND_TRUTH_LABEL_STRUCTURALLY_CIRCULAR.
+ * `selectOptimalThresholds()` was removed rather than adapted to 1D — no
+ * threshold selected against this proxy label is honestly "optimal."
  */
 export function computeThresholdSensitivity(
   observations: DayAccountState[],
 ): ThresholdSweepResult[] {
   const results: ThresholdSweepResult[] = [];
 
-  for (const warnPct of WARN_SWEEP_VALUES) {
-    for (const blockPct of BLOCK_SWEEP_VALUES) {
-      if (warnPct >= blockPct) continue; // invalid pair
+  for (const thresholdPct of THRESHOLD_SWEEP_VALUES) {
+    const { tp, fp, tn, fn } = buildConsistencyMatrix(observations, thresholdPct);
 
-      const { tp, fp, tn, fn } = buildConsistencyMatrix(
-        observations,
-        warnPct,
-        blockPct,
-      );
+    const gatedCount = tp + fp;
+    const passedCount = tn + fn;
+    const precision = computePrecision({ tp, fp, tn, fn });
+    const recall = computeRecall({ tp, fp, tn, fn });
+    const f1 = computeF1(precision, recall);
 
-      const gatedCount = tp + fp;
-      const passedCount = tn + fn;
-      const precision = computePrecision({ tp, fp, tn, fn });
-      const recall = computeRecall({ tp, fp, tn, fn });
-      const f1 = computeF1(precision, recall);
-
-      results.push({
-        warnThresholdPct: warnPct,
-        blockThresholdPct: blockPct,
-        gatedCount,
-        passedCount,
-        confusion: { tp, fp, tn, fn },
-        precision,
-        recall,
-        f1,
-      });
-    }
+    results.push({
+      thresholdPct,
+      gatedCount,
+      passedCount,
+      confusion: { tp, fp, tn, fn },
+      precision,
+      recall,
+      f1,
+    });
   }
 
   return results;
-}
-
-/**
- * Select optimal thresholds from sensitivity sweep by maximizing F1.
- * Tie-breaks toward defaults.
- */
-export function selectOptimalThresholds(
-  sweep: ThresholdSweepResult[],
-): { warnPct: number; blockPct: number; f1: number } {
-  if (sweep.length === 0) {
-    return {
-      warnPct: DEFAULT_WARN_THRESHOLD_PCT,
-      blockPct: DEFAULT_BLOCK_THRESHOLD_PCT,
-      f1: 0,
-    };
-  }
-
-  const sorted = [...sweep].sort((a, b) => {
-    if (Math.abs(b.f1 - a.f1) > 1e-6) return b.f1 - a.f1;
-    // Tie-break: prefer defaults
-    const distA =
-      Math.abs(a.warnThresholdPct - DEFAULT_WARN_THRESHOLD_PCT) +
-      Math.abs(a.blockThresholdPct - DEFAULT_BLOCK_THRESHOLD_PCT);
-    const distB =
-      Math.abs(b.warnThresholdPct - DEFAULT_WARN_THRESHOLD_PCT) +
-      Math.abs(b.blockThresholdPct - DEFAULT_BLOCK_THRESHOLD_PCT);
-    return distA - distB;
-  });
-
-  return {
-    warnPct: sorted[0].warnThresholdPct,
-    blockPct: sorted[0].blockThresholdPct,
-    f1: sorted[0].f1,
-  };
 }
 
 // ─── Decision rule ────────────────────────────────────────────────────────────
@@ -298,23 +323,38 @@ export function selectOptimalThresholds(
 /**
  * Apply Wave 27 Pass 3 consistency gate decision rule.
  *
- * SIGNAL:        precision >= 0.65 AND recall >= 0.50 AND n >= 50
- *             OR F1 >= 0.55 AND n >= 50
- * INCONCLUSIVE:  0.35 <= precision < 0.65 OR 0.30 <= recall < 0.50
- * NO_SIGNAL:     precision < 0.35 AND recall < 0.30 AND n >= 50
  * PRELIMINARY:   n < 50
+ * INCONCLUSIVE:  n >= 50 (STRUCTURAL CAP — see below)
+ *
+ * deep-scan Replay-F1 (2026-07-17): this rule USED TO be a normal
+ * precision/recall/F1 threshold ladder (SIGNAL when precision>=0.65 AND
+ * recall>=0.50, etc.) exactly like the other 6 replay lanes. That is no
+ * longer honest for THIS lane specifically: recall here is mathematically
+ * forced to exactly 0 or 1 by the ground-truth proxy's construction (see
+ * GROUND_TRUTH_LABEL_STRUCTURALLY_CIRCULAR / the module doc comment) — it
+ * never reflects real predictive skill, so a rule that keys off recall (or
+ * F1, which is recall-dependent) would launder a mathematical artifact into
+ * an apparent "SIGNAL detected, wire this gate into production" claim.
+ *
+ * The verdict is therefore capped at INCONCLUSIVE for any sample large
+ * enough to leave PRELIMINARY — this lane can NEVER emit SIGNAL or NO_SIGNAL
+ * until scripts/replay-grade-consistency.ts::inferPayoutDenied is replaced
+ * with a real, independent Topstep payout-denial outcome (not a proxy
+ * derived from the same concentrationPct feature the gate predicts on).
+ * precision/recall/f1/n are kept as parameters (rather than deleted) so the
+ * function signature stays stable for callers and so a future fix that
+ * replaces the ground-truth proxy can re-enable the full ladder without an
+ * API break — they are intentionally NOT used to select SIGNAL/NO_SIGNAL
+ * while the cap is active.
  */
 export function applyConsistencyDecisionRule(
-  precision: number,
-  recall: number,
-  f1: number,
+  _precision: number,
+  _recall: number,
+  _f1: number,
   n: number,
 ): ConsistencyVerdict {
   if (n < MIN_OBSERVATIONS_FOR_FULL_ANALYSIS) return "PRELIMINARY";
-
-  if ((precision >= 0.65 && recall >= 0.50) || f1 >= 0.55) return "SIGNAL";
-  if (precision >= 0.35 || recall >= 0.30) return "INCONCLUSIVE";
-  return "NO_SIGNAL";
+  return "INCONCLUSIVE";
 }
 
 // ─── Main evaluator ───────────────────────────────────────────────────────────
@@ -376,22 +416,17 @@ export function evaluateConsistencyGateSignal(
     return emptyAnalysis(enriched.length, auditEntries);
   }
 
-  // Default threshold matrix
-  const defaultMatrix = buildConsistencyMatrix(
-    enriched,
-    DEFAULT_WARN_THRESHOLD_PCT,
-    DEFAULT_BLOCK_THRESHOLD_PCT,
-  );
+  // Default threshold matrix (single threshold — see module doc comment for
+  // why there is no separate block-threshold matrix here anymore).
+  const defaultMatrix = buildConsistencyMatrix(enriched, DEFAULT_WARN_THRESHOLD_PCT);
   const precision = computePrecision(defaultMatrix);
   const recall = computeRecall(defaultMatrix);
   const f1 = computeF1(precision, recall);
 
   const n = withOutcome.length;
 
-  // Threshold sweep
+  // Descriptive single-axis sensitivity table (NOT an optimal-threshold search).
   const sweep = computeThresholdSensitivity(enriched);
-  const { warnPct: optimalWarnPct, blockPct: optimalBlockPct, f1: optimalF1 } =
-    selectOptimalThresholds(sweep);
 
   const verdict = applyConsistencyDecisionRule(precision, recall, f1, n);
   const isPreliminary = n < MIN_OBSERVATIONS_FOR_FULL_ANALYSIS;
@@ -400,6 +435,16 @@ export function evaluateConsistencyGateSignal(
     auditEntries.push({
       level: "warn",
       message: `PRELIMINARY: only ${n} observations with outcome (need ${MIN_OBSERVATIONS_FOR_FULL_ANALYSIS})`,
+    });
+  } else {
+    auditEntries.push({
+      level: "warn",
+      message:
+        "INCONCLUSIVE (structural cap): the ground-truth payout-denial label is a proxy " +
+        "derived from the SAME concentrationPct feature the gate predicts on " +
+        "(concentrationPct >= 50% vs the gate's >= 40%), so recall is definitionally 0 or " +
+        "1 and cannot reflect real predictive skill. This verdict cannot become SIGNAL or " +
+        "NO_SIGNAL until a real, independent Topstep payout-denial outcome exists in the DB.",
     });
   }
 
@@ -418,9 +463,7 @@ export function evaluateConsistencyGateSignal(
     recall,
     f1,
     thresholdSweep: sweep,
-    optimalWarnPct,
-    optimalBlockPct,
-    optimalF1,
+    groundTruthLabelCircular: GROUND_TRUTH_LABEL_STRUCTURALLY_CIRCULAR,
     verdict,
     isPreliminary,
     auditEntries,
@@ -453,6 +496,20 @@ export function buildConsistencyMarkdownReport(
       `**Statistical conclusions below should not drive threshold-wiring decisions.**`,
     );
     lines.push(``);
+  } else if (result.groundTruthLabelCircular) {
+    lines.push(
+      `**INCONCLUSIVE — STRUCTURALLY NON-INFORMATIVE GROUND TRUTH.** ` +
+        `The payout-denial label this lane grades against is a proxy derived from the SAME ` +
+        `\`concentrationPct\` feature the gate predicts on (label fires at ≥${DEFAULT_BLOCK_THRESHOLD_PCT}%, ` +
+        `predictor fires at ≥${DEFAULT_WARN_THRESHOLD_PCT}%) — every label-positive is mathematically ` +
+        `also a predictor-positive, so Recall is definitionally 0 or 1 and never reflects real ` +
+        `predictive skill. Precision below measures how much the two thresholds' concentration ` +
+        `populations overlap, NOT whether the gate predicts a real independent outcome. ` +
+        `**This is a permanent structural fact, not a sample-size problem — this lane cannot ` +
+        `honestly emit SIGNAL or NO_SIGNAL until a real, independent Topstep payout-denial ` +
+        `outcome label exists in the DB.**`,
+    );
+    lines.push(``);
   }
 
   lines.push(`**Date:** ${isoDate}`);
@@ -483,69 +540,29 @@ export function buildConsistencyMarkdownReport(
   );
   lines.push(``);
   lines.push(`- Precision = TP / (TP + FP) = ${result.precision.toFixed(4)}`);
-  lines.push(`- Recall = TP / (TP + FN) = ${result.recall.toFixed(4)}`);
+  lines.push(`- Recall = TP / (TP + FN) = ${result.recall.toFixed(4)} (definitionally 0 or 1 — see caveat above)`);
   lines.push(`- F1 = 2·P·R / (P+R) = ${result.f1.toFixed(4)}`);
   lines.push(``);
 
-  // Threshold sensitivity
-  lines.push(`## Threshold Sensitivity Sweep (5×5 grid)`);
+  // Threshold sensitivity — descriptive only, NOT an optimal-threshold search.
+  lines.push(`## Threshold Sensitivity Table (single-axis, descriptive only)`);
   lines.push(``);
   lines.push(
-    `| Warn% | Block% | Gated | Passed | Precision | Recall | F1 |`,
+    `Shows how the confusion matrix shifts as the ONE threshold this lane grades ` +
+      `(concentrationPct) moves near the default. This is NOT a recommendation engine — ` +
+      `see the ground-truth caveat above for why no threshold here can be called "optimal."`,
   );
-  lines.push(`|---|---|---|---|---|---|---|`);
+  lines.push(``);
+  lines.push(`| Threshold% | Gated | Passed | Precision | Recall | F1 |`);
+  lines.push(`|---|---|---|---|---|---|`);
 
-  // Show a representative subset: vary one threshold at a time at defaults
-  const representative = result.thresholdSweep.filter((r) => {
-    const warnDefault = Math.abs(r.warnThresholdPct - DEFAULT_WARN_THRESHOLD_PCT) < 0.01;
-    const blockDefault =
-      Math.abs(r.blockThresholdPct - DEFAULT_BLOCK_THRESHOLD_PCT) < 0.01;
-    const diffCount = (warnDefault ? 0 : 1) + (blockDefault ? 0 : 1);
-    return diffCount <= 1;
-  });
-
-  for (const r of representative) {
-    const isDefault =
-      Math.abs(r.warnThresholdPct - DEFAULT_WARN_THRESHOLD_PCT) < 0.01 &&
-      Math.abs(r.blockThresholdPct - DEFAULT_BLOCK_THRESHOLD_PCT) < 0.01;
+  for (const r of result.thresholdSweep) {
+    const isDefault = Math.abs(r.thresholdPct - DEFAULT_WARN_THRESHOLD_PCT) < 0.01;
     lines.push(
-      `| ${r.warnThresholdPct.toFixed(1)}% | ${r.blockThresholdPct.toFixed(1)}%` +
+      `| ${r.thresholdPct.toFixed(1)}%` +
         ` | ${r.gatedCount} | ${r.passedCount}` +
         ` | ${r.precision.toFixed(4)} | ${r.recall.toFixed(4)} | ${r.f1.toFixed(4)}` +
         `${isDefault ? " ← default" : ""} |`,
-    );
-  }
-  lines.push(``);
-
-  // Optimal threshold
-  lines.push(`## Threshold Optimization`);
-  lines.push(``);
-  lines.push(
-    `- Current defaults: warn ≥ ${DEFAULT_WARN_THRESHOLD_PCT}%, block ≥ ${DEFAULT_BLOCK_THRESHOLD_PCT}%`,
-  );
-  lines.push(
-    `- Optimal observed: warn ≥ ${result.optimalWarnPct.toFixed(1)}%, block ≥ ${result.optimalBlockPct.toFixed(1)}% (F1 = ${result.optimalF1.toFixed(4)})`,
-  );
-
-  const defaultSweepRow = result.thresholdSweep.find(
-    (r) =>
-      Math.abs(r.warnThresholdPct - DEFAULT_WARN_THRESHOLD_PCT) < 0.01 &&
-      Math.abs(r.blockThresholdPct - DEFAULT_BLOCK_THRESHOLD_PCT) < 0.01,
-  );
-  const defaultF1 = defaultSweepRow?.f1 ?? result.f1;
-  const improvement = result.optimalF1 - defaultF1;
-
-  if (Math.abs(improvement) < 0.05) {
-    lines.push(
-      `- Recommendation: retain defaults — optimal within 5% F1 of current spec`,
-    );
-  } else if (result.optimalWarnPct < DEFAULT_WARN_THRESHOLD_PCT) {
-    lines.push(
-      `- Recommendation: lower warn threshold — earlier signaling improves recall by >5% F1`,
-    );
-  } else {
-    lines.push(
-      `- Recommendation: raise warn threshold — fewer false alarms improves precision by >5% F1`,
     );
   }
   lines.push(``);
@@ -556,28 +573,31 @@ export function buildConsistencyMarkdownReport(
 
   switch (result.verdict) {
     case "SIGNAL":
+    case "NO_SIGNAL":
+      // Structurally unreachable while groundTruthLabelCircular is true — see
+      // applyConsistencyDecisionRule. Kept as an exhaustive switch case so a
+      // future ground-truth fix that re-enables these branches doesn't need
+      // to touch this switch statement, only the decision-rule function.
       lines.push(
-        `**SIGNAL detected.** Precision ≥ 0.65 and Recall ≥ 0.50 (or F1 ≥ 0.55) on n=${result.observationsWithOutcome} observations. ` +
-          `The consistency gate demonstrates predictive value as a forward payout-denial predictor. ` +
-          `Wire shouldBlockNewEntry() into paper-signal-service entry gate at the coordination pass.`,
+        `**${result.verdict}.** Unexpected — this verdict should be structurally unreachable ` +
+          `while the ground-truth label remains circular. Investigate applyConsistencyDecisionRule().`,
       );
       break;
     case "INCONCLUSIVE":
       lines.push(
-        `**INCONCLUSIVE.** Partial predictive signal but precision/recall do not meet SIGNAL thresholds. ` +
-          `Retain gate as advisory. Collect more historical payout outcome data before wiring as a hard block.`,
-      );
-      break;
-    case "NO_SIGNAL":
-      lines.push(
-        `**NO SIGNAL.** Gate does not demonstrate predictive value on current data. ` +
-          `Review threshold calibration against Topstep cycle documentation. Document negative result.`,
+        `**INCONCLUSIVE (structural cap).** The ground-truth payout-denial label is a proxy ` +
+          `derived from the same feature the gate predicts on, so Recall is definitionally 0 or 1 ` +
+          `and this lane cannot honestly claim predictive validity either way. ` +
+          `Retain the consistency gate as advisory only. Do NOT wire shouldBlockNewEntry() into a ` +
+          `hard block on the strength of this report. Re-evaluate only after a real, independent ` +
+          `Topstep payout-denial outcome label exists.`,
       );
       break;
     case "PRELIMINARY":
       lines.push(
         `**PRELIMINARY.** n=${result.observationsWithOutcome} < ${MIN_OBSERVATIONS_FOR_FULL_ANALYSIS} observations with known outcome. ` +
-          `Cannot draw conclusions. Re-run after more payout cycle data is available.`,
+          `Cannot draw conclusions. Re-run after more payout cycle data is available. ` +
+          `(Note: even with n ≥ ${MIN_OBSERVATIONS_FOR_FULL_ANALYSIS}, the verdict is capped at INCONCLUSIVE — see above.)`,
       );
       break;
   }
@@ -598,7 +618,7 @@ export function buildConsistencyMarkdownReport(
     `- Default thresholds: warn ≥ ${DEFAULT_WARN_THRESHOLD_PCT}%, block ≥ ${DEFAULT_BLOCK_THRESHOLD_PCT}%`,
   );
   lines.push(
-    `- Sweep grid: warn ${WARN_SWEEP_VALUES.join("/")}%, block ${BLOCK_SWEEP_VALUES.join("/")}%`,
+    `- Sweep grid (single-axis, descriptive only): ${THRESHOLD_SWEEP_VALUES.join("/")}%`,
   );
   lines.push(``);
 
@@ -621,9 +641,7 @@ function emptyAnalysis(
     recall: 0,
     f1: 0,
     thresholdSweep: [],
-    optimalWarnPct: DEFAULT_WARN_THRESHOLD_PCT,
-    optimalBlockPct: DEFAULT_BLOCK_THRESHOLD_PCT,
-    optimalF1: 0,
+    groundTruthLabelCircular: GROUND_TRUTH_LABEL_STRUCTURALLY_CIRCULAR,
     verdict: "PRELIMINARY",
     isPreliminary: true,
     auditEntries,

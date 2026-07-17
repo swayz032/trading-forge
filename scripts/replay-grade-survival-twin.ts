@@ -27,6 +27,20 @@
  * Exit 1 ONLY on purge violation or DB error.
  * Exit 0 on successful analysis regardless of verdict.
  *
+ * Read-only by construction: this harness imports NO production service (see
+ * imports below — only the pure-function
+ * src/server/lib/replay/survival-twin-disagreement.ts library, plus
+ * logger/fs/postgres). It reads PERSISTED `quantum_mc_runs` (survival_twin
+ * replay rows) / `walk_forward_windows` / `backtest_trades` columns and
+ * correlates historical OOS outcomes; it does NOT invoke or re-execute the
+ * B14 Survival Twin service's CURRENT breach-probability logic. (deep-scan
+ * Replay-F3, 2026-07-17 — clarifying scope after a sibling harness's
+ * docstring was found overstating a "reanalyze via dryRun" behavior;
+ * corrected across all 4 non-service-invoking harnesses for consistency.)
+ * Practical effect: if the live survival-twin model changed after a graded
+ * MC run executed, this harness's history reflects the OLD model, not
+ * today's — it cannot detect that kind of logic-vs-history drift.
+ *
  * Wave 27 Pass 4 — parallel-safe with Pass 2.F1/F2/F3 (zero file overlap).
  */
 

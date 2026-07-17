@@ -26,6 +26,20 @@
  * Exit 1 ONLY on purge violation (oos_start <= is_end) or DB error.
  * Exit 0 on successful analysis regardless of verdict.
  *
+ * Read-only by construction: this harness imports NO production service (see
+ * imports below — only the pure-function
+ * src/server/lib/replay/confluence-disagreement.ts library, plus
+ * logger/fs/postgres). It reads PERSISTED `confluence_score` /
+ * `backtest_trades` / `walk_forward_windows` columns and correlates
+ * historical realized_R outcomes; it does NOT invoke or re-execute
+ * confluence-score.ts's CURRENT weighted-scoring logic. (deep-scan Replay-F3,
+ * 2026-07-17 — this line clarifies scope after a sibling harness's docstring
+ * was found overstating a "reanalyze via dryRun" behavior; corrected across
+ * all 4 non-service-invoking harnesses for consistency.) Practical effect: if
+ * the live 11-factor weights or threshold changed after a graded backtest
+ * ran, this harness's history reflects the OLD formula, not today's — it
+ * cannot detect that kind of logic-vs-history drift.
+ *
  * Source commits: Wave 27.5 master = 8bc4cb1 (Pass 2.F1 = this commit)
  *
  * Constraint: DO NOT import from src/engine (pure TS sub-track).

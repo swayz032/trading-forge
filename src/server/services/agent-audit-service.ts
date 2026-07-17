@@ -17,6 +17,7 @@ import {
   complianceDriftLog,
   criticOptimizationRuns,
   deeparForecasts,
+  deeparTrainingRuns,
   agentHealthReports,
 } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
@@ -42,7 +43,7 @@ const AGENT_DOMAINS = [
 
 type AgentDomain = (typeof AGENT_DOMAINS)[number];
 
-interface DomainHealth {
+export interface DomainHealth {
   domain: AgentDomain;
   status: "healthy" | "degraded" | "down" | "unknown";
   latencyMs: number;
@@ -174,7 +175,18 @@ async function probeCritic(): Promise<DomainHealth> {
   }
 }
 
-async function probeDeepAR(): Promise<DomainHealth> {
+// deep-scan (DeepAR HIGH-2 sibling finding, 2026-07-17): mirrors
+// deepar-service.ts::TRAINING_FRESHNESS_MS. Duplicated as a literal (not
+// imported) rather than pulling in deepar-service.ts here — that module
+// pulls in the Express bootstrap module for its own logger (see the F-5
+// comment above this file's own logger import), and this file deliberately
+// avoids that edge so agent-audit-service.ts stays safe to import in isolation.
+const DEEPAR_TRAINING_FRESHNESS_MS = 8 * 24 * 60 * 60 * 1000;
+
+// Exported (in addition to the PROBE_MAP registration below) so tests can
+// exercise the DeepAR liveness beacon in isolation without mocking the other
+// 8 domain probes' db.select() call sequence in runAgentHealthSweep().
+export async function probeDeepAR(): Promise<DomainHealth> {
   const start = Date.now();
   try {
     const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
@@ -185,17 +197,43 @@ async function probeDeepAR(): Promise<DomainHealth> {
       .orderBy(desc(deeparForecasts.generatedAt))
       .limit(5);
 
+    // deep-scan (DeepAR HIGH-2 sibling finding, 2026-07-17): the forecast-recency
+    // check above reads "healthy" as long as SOME forecast row landed in the last
+    // 3 days — even if the underlying model has not retrained in months. This is
+    // the same false-green window health-dashboard.ts::deriveDeepARDashboardStatus()
+    // closed for the live /api/health/dashboard endpoint; this persisted
+    // agent_health_reports beacon (the durable, historical liveness trail — the
+    // live dashboard has no history) gets the same honest training-freshness check
+    // so a future silent-stop can't read "healthy" here either.
+    const [latestTraining] = await db
+      .select({ trainedAt: deeparTrainingRuns.trainedAt })
+      .from(deeparTrainingRuns)
+      .orderBy(desc(deeparTrainingRuns.trainedAt))
+      .limit(1);
+    const trainingFresh = latestTraining?.trainedAt
+      ? Date.now() - latestTraining.trainedAt.getTime() <= DEEPAR_TRAINING_FRESHNESS_MS
+      : false;
+
     const recommendations: string[] = [];
     if (recent.length === 0) {
       recommendations.push("No DeepAR forecasts in last 3 days — check training pipeline");
     }
+    if (!trainingFresh) {
+      recommendations.push("DeepAR model has not retrained within the freshness window — forecasts (if any) may be fed by a stale model");
+    }
+
+    const healthy = recent.length > 0 && trainingFresh;
 
     return {
       domain: "deepar",
-      status: recent.length > 0 ? "healthy" : "degraded",
+      status: healthy ? "healthy" : "degraded",
       latencyMs: Date.now() - start,
       errorCount: 0,
-      details: { recentForecasts: recent.length },
+      details: {
+        recentForecasts: recent.length,
+        trainingFresh,
+        latestTrainingAt: latestTraining?.trainedAt?.toISOString() ?? null,
+      },
       recommendations,
     };
   } catch {

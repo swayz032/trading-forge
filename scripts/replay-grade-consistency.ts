@@ -16,8 +16,18 @@
  *   1. Query paper_positions (closed) grouped by account (session) × day
  *   2. For each day-account pair: invoke getConsistencyState(accountId, asOf=date, dryRun=true)
  *   3. Build confusion matrix vs payout denial forward-look window (14 days)
- *   4. Run precision/recall/F1 + threshold sweep
+ *   4. Run precision/recall/F1 + a descriptive single-threshold sensitivity table
  *   5. Emit verdict SIGNAL / INCONCLUSIVE / NO_SIGNAL / PRELIMINARY
+ *
+ * ── HONEST DISPOSITION (deep-scan Replay-F1, 2026-07-17) ────────────────────
+ * The verdict this harness emits is currently CAPPED at INCONCLUSIVE (or
+ * PRELIMINARY below n=50) — it can never emit SIGNAL or NO_SIGNAL. This is
+ * because `inferPayoutDenied()` below proxies a real payout-denial outcome
+ * with a threshold on the SAME feature the gate predicts on, which makes
+ * recall definitionally 0 or 1 regardless of data volume. See the doc
+ * comments on `inferPayoutDenied()` and
+ * `consistency-disagreement.ts::applyConsistencyDecisionRule` for the full
+ * reasoning. Do not wire this lane's output into a production gate.
  *
  * Pure-function library: src/server/lib/replay/consistency-disagreement.ts
  *
@@ -80,6 +90,21 @@ async function getConsistencyServiceFn(): Promise<ConsistencyStateGetter> {
  * This is the best available proxy without TopstepX API access.
  * Conservative assumption: if concentration was already ≥ 50% when the
  * observation was taken, we assume a denial would have been triggered.
+ *
+ * ── CIRCULAR-LABEL WARNING (deep-scan Replay-F1, 2026-07-17) ────────────────
+ * This proxy fires on `concentrationPct >= DEFAULT_BLOCK_THRESHOLD_PCT` (50%)
+ * — the SAME underlying feature the consistency gate's predictor
+ * (`gateFiresAtThreshold`, fires at DEFAULT_WARN_THRESHOLD_PCT=40%) grades
+ * against. Since 50% implies 40%, every "denial" this function reports is
+ * mathematically also a predictor-positive observation: the resulting
+ * confusion matrix's recall is definitionally 0 or 1, never a real measure
+ * of predictive skill. `consistency-disagreement.ts::applyConsistencyDecisionRule`
+ * is capped at INCONCLUSIVE/PRELIMINARY BECAUSE of this proxy — it cannot be
+ * uncapped by changing anything in that file. The only real fix is replacing
+ * this function's return value with a genuine, independent Topstep
+ * payout-denial outcome (e.g., from the TopstepX API) once that data source
+ * exists. Do not "improve" this proxy by tweaking its threshold — any proxy
+ * built purely from concentrationPct inherits the same circularity.
  */
 function inferPayoutDenied(
   gateState: "ok" | "warn_40" | "block_50",
@@ -352,13 +377,13 @@ async function main(): Promise<void> {
     `Confusion matrix                   : TP=${confusion.tp} FP=${confusion.fp} TN=${confusion.tn} FN=${confusion.fn}`,
   );
   console.log(`Precision                          : ${analysis.precision.toFixed(4)}`);
-  console.log(`Recall                             : ${analysis.recall.toFixed(4)}`);
+  console.log(`Recall (definitionally 0 or 1)     : ${analysis.recall.toFixed(4)}`);
   console.log(`F1                                 : ${analysis.f1.toFixed(4)}`);
   console.log(
-    `Threshold sensitivity rows         : ${analysis.thresholdSweep.length}`,
+    `Threshold sensitivity rows (descriptive only) : ${analysis.thresholdSweep.length}`,
   );
   console.log(
-    `Optimal thresholds                 : warn=${analysis.optimalWarnPct.toFixed(1)}% block=${analysis.optimalBlockPct.toFixed(1)}%`,
+    `Ground-truth label structurally circular      : ${analysis.groundTruthLabelCircular}`,
   );
   console.log(`Verdict                            : ${analysis.verdict}`);
   console.log(

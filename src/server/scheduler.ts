@@ -34,6 +34,7 @@ import { cronJobsConcurrent } from "./lib/metrics-registry.js";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, agentJobs, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
+import type { monteCarloRuns as MonteCarloRunsTable, sqaOptimizationRuns as SqaOptimizationRunsTable, quboTimingRuns as QuboTimingRunsTable, tensorPredictions as TensorPredictionsTable, rlTrainingRuns as RlTrainingRunsTable, quantumMcRuns as QuantumMcRunsTable, deeparTrainingRuns as DeeparTrainingRunsTable } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
 import { isSundayAtEtHour } from "./lib/weekly-cron-et-guard.js";
@@ -423,6 +424,95 @@ export function getSchedulerJobs(): Readonly<Record<string, SchedulerJobMeta>> {
     snapshot[name] = { lastRunAt: meta.lastRunAt, intervalMs: meta.intervalMs };
   }
   return snapshot;
+}
+
+// ─── Stale-pending-row sweeper table config (deep-scan DeepAR MED-1, 2026-07-17) ──
+// Extracted as a pure, exported, DB-free function so the per-table
+// "which column marks row creation" mapping is unit-testable without importing
+// the whole scheduler module (which registers cron jobs + DB connections on init).
+//
+// ROOT CAUSE this fixes: 662 `deepar_training_runs` rows stuck status='running'
+// since 2026-04/05, never swept. The sweeper loop used to hardcode
+// `(sweep.table as any).createdAt` for every table — but `deeparTrainingRuns`
+// has NO `createdAt` column (schema.ts defines only `trainedAt`, populated via
+// defaultNow() at INSERT time in trainDeepAR()). `.createdAt` silently resolved
+// to `undefined` for that one table, so `lt(undefined, cutoff)` never matched
+// any row. Every other table in this sweep (monte_carlo_runs,
+// sqa_optimization_runs, qubo_timing_runs, tensor_predictions,
+// rl_training_runs, quantum_mc_runs) genuinely has `createdAt` and swept fine —
+// only deepar_training_runs silently never swept. Fixed by resolving each
+// table's real creation-timestamp column explicitly instead of assuming a
+// shared column name.
+export interface StalePendingSweepTableConfig {
+  name: string;
+  table: unknown;
+  timestampColumn: unknown;
+  thresholdMin: number;
+}
+
+export interface StalePendingSweepSchema {
+  monteCarloRuns: typeof MonteCarloRunsTable;
+  sqaOptimizationRuns: typeof SqaOptimizationRunsTable;
+  quboTimingRuns: typeof QuboTimingRunsTable;
+  tensorPredictions: typeof TensorPredictionsTable;
+  rlTrainingRuns: typeof RlTrainingRunsTable;
+  quantumMcRuns: typeof QuantumMcRunsTable;
+  deeparTrainingRuns: typeof DeeparTrainingRunsTable;
+}
+
+export function buildStalePendingSweepTableConfig(
+  schema: StalePendingSweepSchema,
+): StalePendingSweepTableConfig[] {
+  return [
+    { name: "monte_carlo_runs", table: schema.monteCarloRuns, timestampColumn: schema.monteCarloRuns.createdAt, thresholdMin: 90 },
+    { name: "sqa_optimization_runs", table: schema.sqaOptimizationRuns, timestampColumn: schema.sqaOptimizationRuns.createdAt, thresholdMin: 30 },
+    { name: "qubo_timing_runs", table: schema.quboTimingRuns, timestampColumn: schema.quboTimingRuns.createdAt, thresholdMin: 30 },
+    { name: "tensor_predictions", table: schema.tensorPredictions, timestampColumn: schema.tensorPredictions.createdAt, thresholdMin: 30 },
+    { name: "rl_training_runs", table: schema.rlTrainingRuns, timestampColumn: schema.rlTrainingRuns.createdAt, thresholdMin: 30 },
+    { name: "quantum_mc_runs", table: schema.quantumMcRuns, timestampColumn: schema.quantumMcRuns.createdAt, thresholdMin: 60 },
+    // deeparTrainingRuns intentionally uses `trainedAt`, NOT `createdAt` — see
+    // module comment above. This is the one line the original bug got wrong.
+    { name: "deepar_training_runs", table: schema.deeparTrainingRuns, timestampColumn: schema.deeparTrainingRuns.trainedAt, thresholdMin: 30 },
+  ];
+}
+
+// ─── Stale-pending-sweeper unconditional tick beacon (deep-scan DeepAR MED-1 liveness follow-up, 2026-07-17) ──
+// Pure payload-builder, unit-tested without a DB. Written EVERY tick regardless
+// of totalSwept — unlike the per-table `.swept` audit rows (only fire when
+// swept > 0). Closes the "0 genuinely orphaned rows" vs "sweep silently
+// stopped matching a table again" ambiguity: both used to produce zero audit
+// rows, indistinguishable from each other and from the job never having run
+// at all. Now every tick leaves a durable `stale-pending-sweeper.tick_completed`
+// row with the full per-table swept breakdown (0s included), so a future
+// regression on any one table is visible as a persistent 0 in that table's
+// slot across many ticks — cross-checkable against the table's actual
+// accumulating running-row count, not just inferred from an absence of
+// Discord noise.
+export interface StalePendingSweeperTickBeacon {
+  action: "stale-pending-sweeper.tick_completed";
+  entityType: "scheduler_job";
+  input: { tablesChecked: string[] };
+  result: { totalSwept: number; perTableSwept: Record<string, number> };
+  status: "success";
+}
+
+export function buildStalePendingSweeperTickBeacon(
+  configuredTableNames: string[],
+  perTableSwept: Record<string, number>,
+  totalSwept: number,
+): StalePendingSweeperTickBeacon {
+  return {
+    action: "stale-pending-sweeper.tick_completed",
+    entityType: "scheduler_job",
+    input: {
+      // The 4 critic/backtest/agent_jobs sweeps are hardcoded outside the
+      // configurable `sweeps` array (different in-flight status columns/values
+      // per table) — listed explicitly here so tablesChecked stays complete.
+      tablesChecked: [...configuredTableNames, "critic_optimization_runs", "critic_candidates", "backtests", "agent_jobs"],
+    },
+    result: { totalSwept, perTableSwept },
+    status: "success",
+  };
 }
 
 // ─── withRetry — exponential backoff for cron jobs ────────────
@@ -2675,24 +2765,31 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     const cutoff30 = new Date(Date.now() - 30 * 60 * 1000);
     const cutoff60 = new Date(Date.now() - 60 * 60 * 1000);
     const cutoff90 = new Date(Date.now() - 90 * 60 * 1000);
+    const cutoffByThresholdMin: Record<number, Date> = { 30: cutoff30, 60: cutoff60, 90: cutoff90 };
 
-    const sweeps = [
-      { name: "monte_carlo_runs", table: monteCarloRuns, cutoff: cutoff90, thresholdMin: 90 },
-      { name: "sqa_optimization_runs", table: sqaOptimizationRuns, cutoff: cutoff30, thresholdMin: 30 },
-      { name: "qubo_timing_runs", table: quboTimingRuns, cutoff: cutoff30, thresholdMin: 30 },
-      { name: "tensor_predictions", table: tensorPredictions, cutoff: cutoff30, thresholdMin: 30 },
-      { name: "rl_training_runs", table: rlTrainingRuns, cutoff: cutoff30, thresholdMin: 30 },
-      { name: "quantum_mc_runs", table: quantumMcRuns, cutoff: cutoff60, thresholdMin: 60 },
-      { name: "deepar_training_runs", table: deeparTrainingRuns, cutoff: cutoff30, thresholdMin: 30 },
-    ];
+    // deep-scan (DeepAR MED-1, 2026-07-17): table→timestamp-column mapping moved
+    // to the exported, unit-tested buildStalePendingSweepTableConfig() — see its
+    // doc comment for the root-cause explanation of why deepar_training_runs was
+    // never actually swept.
+    const sweeps = buildStalePendingSweepTableConfig({
+      monteCarloRuns, sqaOptimizationRuns, quboTimingRuns,
+      tensorPredictions, rlTrainingRuns, quantumMcRuns, deeparTrainingRuns,
+    }).map((cfg) => ({ ...cfg, cutoff: cutoffByThresholdMin[cfg.thresholdMin] }));
     let totalSwept = 0;
+    // deep-scan (DeepAR MED-1 liveness follow-up, 2026-07-17): per-table swept
+    // counts, captured regardless of whether they're > 0, so the unconditional
+    // tick beacon below can show "deepar_training_runs: 0" on every healthy tick
+    // — distinguishing "genuinely nothing to sweep" from "silently stopped
+    // matching again" via the audit_log history, not just inference from silence.
+    const perTableSwept: Record<string, number> = {};
     for (const sweep of sweeps) {
       try {
         const result = await db
           .update(sweep.table as any)
           .set({ status: "failed" })
-          .where(_and(_eq((sweep.table as any).status, "running"), lt((sweep.table as any).createdAt, sweep.cutoff)));
+          .where(_and(_eq((sweep.table as any).status, "running"), lt(sweep.timestampColumn as any, sweep.cutoff)));
         const swept = (result as any)?.rowCount ?? 0;
+        perTableSwept[sweep.name] = swept;
         if (swept > 0) {
           totalSwept += swept;
           logger.warn({ table: sweep.name, swept, thresholdMin: sweep.thresholdMin }, "stale-pending-sweeper: marked orphaned rows as failed");
@@ -2731,6 +2828,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
           ),
         );
       const criticRunsSwept = (criticRunsResult as any)?.rowCount ?? 0;
+      perTableSwept.critic_optimization_runs = criticRunsSwept;
       if (criticRunsSwept > 0) {
         totalSwept += criticRunsSwept;
         logger.warn({ table: "critic_optimization_runs", swept: criticRunsSwept }, "stale-pending-sweeper: marked orphaned rows as failed");
@@ -2760,6 +2858,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
           ),
         );
       const criticCandSwept = (criticCandResult as any)?.rowCount ?? 0;
+      perTableSwept.critic_candidates = criticCandSwept;
       if (criticCandSwept > 0) {
         totalSwept += criticCandSwept;
         logger.warn({ table: "critic_candidates", swept: criticCandSwept }, "stale-pending-sweeper: marked orphaned rows as failed");
@@ -2788,6 +2887,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
         .set({ status: "failed", errorMessage: "stale-pending-sweeper: marked failed after 90min running (Python OOM/SIGKILL guard)" })
         .where(_and(_eq(backtests.status, "running"), lt(backtests.createdAt, cutoff90)));
       const backtestsSwept = (backtestsResult as any)?.rowCount ?? 0;
+      perTableSwept.backtests = backtestsSwept;
       if (backtestsSwept > 0) {
         totalSwept += backtestsSwept;
         logger.warn({ table: "backtests", swept: backtestsSwept, thresholdMin: 90 }, "stale-pending-sweeper: marked stale running backtests as failed");
@@ -2819,6 +2919,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
           sql`COALESCE(${agentJobs.startedAt}, ${agentJobs.createdAt}) < ${cutoff90}`,
         ));
       const agentJobsSwept = (agentJobsResult as any)?.rowCount ?? 0;
+      perTableSwept.agent_jobs = agentJobsSwept;
       if (agentJobsSwept > 0) {
         totalSwept += agentJobsSwept;
         logger.warn({ table: "agent_jobs", swept: agentJobsSwept, thresholdMin: 90, keyed_on: "coalesce_started_at_created_at" }, "stale-pending-sweeper: marked stale agent_jobs as failure");
@@ -2839,6 +2940,34 @@ export function initScheduler(bootCorrelationId: string | null = null) {
 
     if (totalSwept === 0) {
       logger.debug("stale-pending-sweeper: no orphaned rows");
+    }
+
+    // deep-scan (DeepAR MED-1 liveness follow-up, 2026-07-17): unconditional
+    // per-tick execution beacon — written EVERY tick regardless of totalSwept,
+    // unlike the per-table `.swept` rows above which only fire when swept > 0.
+    // Root problem this closes: before this beacon existed, "0 genuinely
+    // orphaned rows this tick" and "the sweep silently stopped matching a
+    // table again" were audit-log-indistinguishable — both produced zero rows.
+    // Now every tick leaves a durable `stale-pending-sweeper.tick_completed`
+    // audit row with the FULL per-table swept breakdown (0s included), so a
+    // future regression on any one table (e.g. deepar_training_runs reverting
+    // to the wrong timestamp column) is visible as a persistent "0" in that
+    // table's slot across many ticks, cross-checkable against the table's
+    // actual accumulating running-row count — not just inferred from an
+    // absence of Discord noise.
+    try {
+      await db.insert(auditLog).values({
+        ...buildStalePendingSweeperTickBeacon(
+          sweeps.map((s) => s.name),
+          perTableSwept,
+          totalSwept,
+        ),
+        entityId: null,
+        correlationId,
+      });
+    } catch (err) {
+      // Never let the beacon write itself take down the sweeper tick.
+      logger.error({ err }, "stale-pending-sweeper: failed to write tick_completed beacon audit row (non-blocking)");
     }
   });
 
