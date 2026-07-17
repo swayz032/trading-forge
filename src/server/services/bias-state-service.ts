@@ -1086,6 +1086,32 @@ except Exception as e:
     );
   } catch (dbWriteErr) {
     logger.warn({ err: dbWriteErr, sessionDate, symbol: sym }, "bias-state: DB persist failed (fail-open, trading continues)");
+    // 2026-07-17 (goalscan-r2 / Fable advisor ruling): this catch silently ate
+    // EVERY bias_state INSERT from 2026-05-24 to 2026-07-17 (~2 months) — the
+    // live DB was missing the structure_state column (migration 0134 journal-
+    // marked applied but its DDL never executed there), so the INSERT above
+    // threw daily while bias_engine.refreshed_10am_et kept emitting SUCCESS
+    // audits (594 green rows over a dead table). A logger.warn is not a
+    // production failure surface. Persist an audit row so persistence death is
+    // VISIBLE in audit_log / dashboards; still fail-open (trading continues),
+    // no Discord page per-occurrence (the daily-cron cadence self-limits noise).
+    try {
+      await insertAuditRow({
+        action: "bias_state.persist_failed",
+        entityType: "paper_session",
+        entityId: `${sessionDate}-${sym}`,
+        decisionAuthority: "system",
+        status: "warning",
+        input: { sessionDate, symbol: sym, correlationId },
+        result: {
+          error: String(dbWriteErr).slice(0, 500),
+          note: "bias_state row NOT persisted — in-memory bias still served; institutional regime history is NOT accumulating while this fires",
+        },
+        correlationId,
+      });
+    } catch (auditErr) {
+      logger.warn({ err: auditErr, sessionDate, symbol: sym }, "bias-state: persist_failed audit write also failed (non-blocking)");
+    }
   }
 
   // W25.2: emit audit event when structure_state is populated

@@ -115,6 +115,7 @@ import { fillCallbackRoutes } from "./routes/fill-callback.js";
 import { leakDetectionRoutes } from "./routes/leak-detection.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 import { checkStartupSecrets, startBootConfigReminderMonitor } from "./lib/startup-config-check.js";
+import { runBootSchemaDriftCanary } from "./lib/schema-drift-check.js";
 import { insertAuditRowSafe } from "./lib/audit-log-helper.js";
 
 // ─── Boot correlation (deepscan7 D2 / obs-M5, 2026-07-02) ─────────
@@ -164,6 +165,16 @@ await checkStartupSecrets();
 // This starts a 24h repeat that re-fires Discord only while each gap persists.
 // Idempotent + fail-soft — safe to call once here regardless of NODE_ENV/platform.
 startBootConfigReminderMonitor();
+
+// goalscan-r2 (2026-07-17, Fable advisor ruling): boot-time live-schema drift
+// canary. Compares every schema.ts (table, column) against information_schema
+// and writes boot.schema_drift_detected (warning) / boot.schema_drift_clean
+// audit rows. Exists because migration 0134's DDL never executed on the
+// production DB while the journal said applied — the bias_state INSERT then
+// threw on every call for ~2 months into a swallowed logger.warn. Fire-and-
+// forget, never throws, never blocks boot (the boot-migration runner remains
+// the fail-closed enforcement layer; this is the detection layer).
+void runBootSchemaDriftCanary();
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard

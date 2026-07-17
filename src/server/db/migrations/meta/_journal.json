@@ -1437,6 +1437,13 @@
       "when": 1783392618900,
       "tag": "0202_rails_nightly_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 206,
+      "version": "7",
+      "when": 1783392619000,
+      "tag": "0203_live_schema_drift_forward_fix",
+      "breakpoints": true
     }
   ]
 }
