@@ -369,6 +369,13 @@ export function makeProductionDAL(): LiquidityMapDAL {
  *
  * Audit: liquidity_map.level_added per inserted row.
  *
+ * Telemetry honesty (2026-07-17 liveness audit): when the upstream bars-derived
+ * fields on pre_market_sessions are unavailable (e.g. /api/bars/:symbol 404s),
+ * every insertLevel() call for those fields silently no-ops on price===null —
+ * previously indistinguishable from a healthy tick with nothing new to add.
+ * See liquidity_map.insert_skipped_null_price / liquidity_map.refresh_no_premarket_data
+ * below. This does NOT fix the upstream data gap — it makes the failure loud.
+ *
  * @param dal  Injected DAL (defaults to production Drizzle DAL)
  */
 export async function refreshSessionLevels(
@@ -381,19 +388,46 @@ export async function refreshSessionLevels(
     swing_high: number | null;
     swing_low: number | null;
   } | null,
-): Promise<{ added: number; expired: number }> {
+): Promise<{ added: number; expired: number; nullPriceSkips: number }> {
   let added = 0;
 
   // ── Pull pre_market_sessions row ─────────────────────────────────────────
   const pmRow = await dal.getPreMarketSession(symbol, sessionDate);
+
+  // Loud-signal tracking for the null-price-no-op class of bug. Populated only
+  // for levels whose price SHOULD be present when the source data is healthy
+  // (bars-derived pre_market_sessions fields). EQH/EQL are heuristic-derived
+  // and legitimately null whenever no equal high/low is found this session —
+  // that is NOT a data-availability problem, so those calls pass
+  // opts.nullIsExpected=true below and never enter this list.
+  const skippedLevels: Array<{
+    levelType: LevelType;
+    reason: "null_price" | "non_finite_price" | "non_positive_price";
+  }> = [];
 
   /** Helper: insert a level and audit it if new */
   const insertLevel = async (
     levelType: LevelType,
     price: number | null,
     sourceMeta: Record<string, unknown> = {},
+    opts: { nullIsExpected?: boolean } = {},
   ): Promise<void> => {
-    if (price === null || !Number.isFinite(price) || price <= 0) return;
+    if (price === null || !Number.isFinite(price) || price <= 0) {
+      if (!opts.nullIsExpected) {
+        const reason: "null_price" | "non_finite_price" | "non_positive_price" =
+          price === null
+            ? "null_price"
+            : !Number.isFinite(price)
+              ? "non_finite_price"
+              : "non_positive_price";
+        skippedLevels.push({ levelType, reason });
+        logger.warn(
+          { symbol, sessionDate, correlationId, levelType, price, reason },
+          "liquidity-map: insertLevel skipped — source price unavailable (possible upstream data gap, e.g. /api/bars/:symbol)",
+        );
+      }
+      return;
+    }
 
     const significance = HTF_SIGNIFICANCE[levelType];
 
@@ -464,30 +498,85 @@ export async function refreshSessionLevels(
       }
     }
 
-    // EQH/EQL detection (daily — htf_significance=3)
+    // EQH/EQL detection (daily — htf_significance=3). null here means "no
+    // equal high/low found this session" (a normal, expected outcome of the
+    // heuristic) — NOT a data-availability problem, so nullIsExpected=true
+    // keeps it out of the loud null-price-skip signal below.
     const swingH = structureState?.swing_high ?? null;
     const swingL = structureState?.swing_low ?? null;
     const { eqh, eql } = detectEqhEql(swingH, swingL, pmRow.pdh, pmRow.pdl, symbol);
-    await insertLevel("eqh", eqh, {
-      source: "structure_state_heuristic",
-      swing_high: swingH,
-      pdh: pmRow.pdh,
+    await insertLevel(
+      "eqh",
+      eqh,
+      { source: "structure_state_heuristic", swing_high: swingH, pdh: pmRow.pdh },
+      { nullIsExpected: true },
+    );
+    await insertLevel(
+      "eql",
+      eql,
+      { source: "structure_state_heuristic", swing_low: swingL, pdl: pmRow.pdl },
+      { nullIsExpected: true },
+    );
+  } else {
+    // No pre_market_sessions row at all for this symbol/session — a stronger
+    // signal than a per-field null: the entire market-data source never
+    // populated for this session. Distinct action so it can never be read as
+    // "nothing new to add" on a healthy tick.
+    await insertAuditRow({
+      action: "liquidity_map.refresh_no_premarket_data",
+      entityType: "liquidity_map",
+      entityId: `${symbol}:${sessionDate}`,
+      correlationId,
+      status: "warning",
+      result: { symbol, sessionDate },
+    }).catch((err) => {
+      logger.warn(
+        { err, symbol, sessionDate },
+        "liquidity-map: refresh_no_premarket_data audit insert failed (non-blocking)",
+      );
     });
-    await insertLevel("eql", eql, {
-      source: "structure_state_heuristic",
-      swing_low: swingL,
-      pdl: pmRow.pdl,
+    logger.warn(
+      { symbol, sessionDate, correlationId },
+      "liquidity-map: refreshSessionLevels — no pre_market_sessions row found (upstream data gap?)",
+    );
+  }
+
+  // Loud, AGGREGATED per-tick signal (one row per symbol per tick, not one per
+  // skipped level — proportionate volume) when one or more bars-derived
+  // levels were skipped because their source price was null/invalid. This is
+  // what makes a "source data entirely unavailable" tick distinguishable from
+  // a genuinely healthy tick that simply had nothing new to add — the prior
+  // behavior wrote an identical {added:0, expired:0} success row for both.
+  if (skippedLevels.length > 0) {
+    await insertAuditRow({
+      action: "liquidity_map.insert_skipped_null_price",
+      entityType: "liquidity_map",
+      entityId: `${symbol}:${sessionDate}`,
+      correlationId,
+      status: "warning",
+      result: {
+        symbol,
+        sessionDate,
+        skippedCount: skippedLevels.length,
+        skippedLevelTypes: skippedLevels.map((s) => s.levelType),
+        skippedReasons: skippedLevels.map((s) => s.reason),
+      },
+    }).catch((err) => {
+      logger.warn(
+        { err, symbol, sessionDate },
+        "liquidity-map: insert_skipped_null_price audit insert failed (non-blocking)",
+      );
     });
   }
 
   const expiredCount = 0; // expiry runs separately via expireOldLevels()
 
   logger.info(
-    { symbol, sessionDate, correlationId, added, expired: expiredCount },
+    { symbol, sessionDate, correlationId, added, expired: expiredCount, nullPriceSkips: skippedLevels.length },
     "liquidity-map: refreshSessionLevels complete",
   );
 
-  return { added, expired: expiredCount };
+  return { added, expired: expiredCount, nullPriceSkips: skippedLevels.length };
 }
 
 // ─── getNearestLiquidity ──────────────────────────────────────────────────────

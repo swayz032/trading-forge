@@ -394,12 +394,33 @@ openaiProxyRoutes.get("/usage", (_req, res) => {
   });
 });
 
+// Health status is DERIVED from the real CircuitBreakerRegistry state for the
+// "openai-proxy" breaker (the same breaker /v1/chat/completions calls through
+// at line ~228) — never hardcoded. A hardcoded "ok" here would manufacture a
+// verdict true by construction, exactly the pattern this project is hardening
+// against: an operator (or an automated health check) hitting this endpoint
+// while the breaker is OPEN would see "ok" even though every real call is
+// failing fast with 503. `.get()` on a key that hasn't been touched yet
+// returns a fresh CLOSED breaker, which is the honest answer ("no evidence of
+// failure yet") for a cold-started process.
+const OPENAI_BREAKER_STATUS_MAP: Record<string, "ok" | "degraded" | "unavailable"> = {
+  CLOSED: "ok",
+  HALF_OPEN: "degraded",
+  OPEN: "unavailable",
+};
+
 openaiProxyRoutes.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
+  const cb = CircuitBreakerRegistry.get("openai-proxy", { failureThreshold: 5, cooldownMs: 30_000 });
+  const breakerStatus = cb.status();
+  const status = OPENAI_BREAKER_STATUS_MAP[breakerStatus.state] ?? "unavailable";
+  const httpStatus = breakerStatus.state === "OPEN" ? 503 : 200;
+
+  res.status(httpStatus).json({
+    status,
     service: "openai-proxy",
     openaiConfigured: !!process.env.OPENAI_API_KEY,
     dailyBudget: DAILY_BUDGET,
     tokensUsedToday: dailyUsage.tokensUsed,
+    circuitBreaker: breakerStatus,
   });
 });
