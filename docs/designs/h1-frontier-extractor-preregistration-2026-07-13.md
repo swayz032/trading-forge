@@ -70,3 +70,17 @@ Fixtures are re-minted under the 3-rule standard (two-path 6/6). Now the extract
 - **Role-split CONTINGENCY (licensed, not default):** if the exams reveal the mini is strong at the MECHANICAL half (Phase-B condition copying) but weak at the JUDGMENT half (Phase-A enumeration — where tonight's ontology subtlety lives), the pre-registered split fires: **gpt-5.4 does Phase-A enumeration** (~15K/video → 250K pool ≈ 15 videos/day), **mini does Phase-B copying** (2.5M pool). This is a licensed contingency the EVIDENCE must indicate, and it **requires its OWN birth re-check** (the split pipeline re-passes the 6-fixture gate). Default stays: one brain (mini), whole job.
 - **Governor walls BOTH pools (built + PROVEN 2026-07-13, 22/22 fail-closed checks, `extraction-token-governor.ts` + `h1-governor-trip-test.ts`):** mini 1M/day; **gpt-5.4 200K/day with 50K HELD BACK** as a critique-system reserve (when live trading starts, trade-critique draws on the big pool; extraction must NEVER starve a production consumer). Same fail-closed rule both pools: hit the wall, stop, resume tomorrow, card untouchable. An override that tries to claim the reserve is clamped.
 - **INTEGRITY LINE — OpenAI NEVER grades OpenAI:** the big GPT can READ (extraction seat) but never GRADES an OpenAI extraction. Cross-vendor checking is what made this stronger (OpenAI copies → mechanical word-checker verifies → Claude judges). OpenAI-grades-OpenAI would recreate the student-grades-classmate risk just engineered out. **Grading stays Claude's seat, period.**
+
+---
+
+## ADDENDUM — SUPERSESSION: §6(b) A-packet-as-terminal-read-precondition is RETIRED (dated 2026-07-16, per ADVISOR-RULINGS R-014 + R-016 §5)
+
+> House pattern: frozen docs are corrected by dated addenda, never silent edits. The original §6(b) text stands unedited in the record as the superseded claim.
+
+**What changed:** §6(b) of this pre-reg listed the A-packet (compiled-topology producer) as a **terminal-read PRECONDITION** — required so the 3 mechanical structural lints (direction-conflation / unsat-sat / or-alternatives) could EVALUATE instead of returning NOT_EVALUATED. That framing is **RETIRED.**
+
+**By what, and why:** ADVISOR-RULINGS **R-014** (2026-07-15, path-(d)) moved the terminal read's structural guarantees to **SEMANTIC CROSS-VENDOR checks** (conflation axis + enumeration-consistency axis in `terminal_read_grade`), under the minted law "on prose-format artifacts, structural guarantees are semantic cross-vendor; mechanical/lexical checks are reserved for structured formats — the H2 compiled-spec layer." Consequently the **3 mechanical lints are re-stationed to the H2 layer** and the **A-packet reverts to its original H2-battery charter — OFF the terminal-read critical path** (`ADVISOR-RULINGS:54`). The A-packet's own ratify-packet was independently graded NOT-SAFE as a trivial-pass terminal gate, corroborating the move.
+
+**Current authority for the terminal read:** the sealed-12 terminal-read driver spec = ADVISOR-RULINGS **R-015 §6-CONSOLIDATED as corrected by R-016**. The A-packet is NOT among its preconditions. Any future reader must NOT re-inherit §6(b)'s topology-precondition requirement for the terminal read.
+
+*Addendum authored 2026-07-16 by the working agent under R-016 §5; the ruling is the authority, this addendum is the pointer.*

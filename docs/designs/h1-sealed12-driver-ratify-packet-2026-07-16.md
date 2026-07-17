@@ -1,0 +1,28 @@
+# H1 SEALED-12 TERMINAL-READ DRIVER — RATIFY PACKET (2026-07-16)
+
+> Instrument code, GO per ADVISOR-RULINGS **R-015 §6-CONSOLIDATED as corrected by R-016**. Autonomous under independent grade; run-on-12 operator-trigger-only (mechanical `SEAL-GO.token` gate). Built in scope-locked passes, each independently graded (doer≠grader), vaulted as it lands. This packet is the receipt.
+
+## 1. WHAT & WHY NOW
+The terminal-read fence (`terminal_read_grade`, both semantic axes) is armed at the instrument layer + proven in rehearsal, but **no driver reads the sealed 12 with it enforcing** (AR-001/R-015). `terminal_read_clean_fraction` has zero production consumers; the only conductor+raters script (`h1_pilot_phase3_finalize.py`) is the FROZEN pilot driver (gates on `pilot_grade`, must not be touched). GREEN requires the sealed-12 driver to EXIST. Repro: `grep -rn terminal_read_clean_fraction --include=*.py` → only the rehearsal harness + the instrument that exposes it.
+
+## 2. BLAST RADIUS
+- ADDS a new driver (orchestration). CONSUMES read-only: certified reader v3.2 (`efa377d6`), `finalize_certificate`/`terminal_read_grade`/`aggregate`, the semantic panels. INVALIDATES nothing frozen.
+- Does NOT touch `h1_pilot_phase3_finalize.py` (frozen sealed-pilot record) or `pilot_grade`/`full_grade` math. The sealed 12 (`4d7b3c29`) + 77 (`701c3edb`) are never opened until `SEAL-GO.token` exists.
+
+## 3. THE EXACT CHANGE, SCOPE-LOCKED — module decomposition (build order)
+Spec = R-015 §6-CONSOLIDATED items 0-11 as corrected by R-016. Built as separable modules; each is a scope-locked pass + independent grade before the next depends on it.
+
+- **A · Seal-verification + operator-gate (items 0, 9) — FOUNDATIONAL, built first.** Reads the sealed manifest **directly from the frozen JSON** (`h1-wave6-sealed-fresh-set-2026-07-12.json`; IDs + `sealed_sha256` = `4d7b3c29`; NO hardcoded hash — R-016 law). Recomputes the sha over the sorted newline-joined video_id list; verifies live-fetched transcripts' existence against the record. REJECTS the spent-16 manifest (`h1-sealed-fresh-set-2026-07-12.json` / `8e39ffe1`) BY NAME. Mechanical operator gate: driver REFUSES a sealed manifest unless `docs/designs/SEAL-GO.token` exists (Tonio authors; advisor/agent never); staging/rehearsal mode accepts ONLY spent-video manifests. Any mismatch → HALT + escalate, no read.
+- **B · Extraction orchestration (item 1).** Certified reader v3.2 `efa377d6` exactly: enumerator-v1.2 Phase-A k=5 modal (stability ≥4/5; unstable → ONE blind adjudication to settle count) + frontier-v3.2 Phase-B single-draw + pinned params. Extractors persist byte-exact; all artifacts on disk before grading.
+- **C · Mechanical floor + panels + certificate (items 2-4).** Band-8 locator + F-2 content floor every condition; gpt-5.4 cross-vendor panels (completeness grader-v3 + conflation + enum axes, high-effort, flex/batch, mid-run hard-cap, budget pre-flight ~$0.30-0.60); merged call OK but per-axis calibration + fail-closed (either structural verdict alone ⇒ not-clean); `finalize_certificate → terminal_read_grade` (NE/INDETERMINATE ≠ clean).
+- **D · Human-blind layer (item 5).** Fresh clean-room conductor (receives ONLY the runbook). Dual-read agreement gate routes divergent items to tier-3. Two blind control-gated raters, **two-stage tier-3 packet** (pilot ADDENDUM 4 verbatim): Stage-1 blind role-from-quote {gate-strength/context/cannot-determine} committed BEFORE Stage-2 revealed-condition support {confirmed/partial/denied}+justification; read-order locked, leak-scanned; controls-first (target judgments count only if controls pass); raters blind to reader identity + to each other.
+- **E · Verdict math (items 6-8).** cert→video rollup (video clean iff ≥1 strategy certificate-grade, pilot ADDENDUM 6) → ≥60% of the 12; economics rider (mean per-video-aggregate tier-3 adjudications ≤ ~15); validity block BEFORE verdict (registration/engagement pre-checks, instrument SHA stamps, seal-verification record, epoch table); **read ONCE** from persisted artifacts; scope lines carried verbatim on the verdict.
+- **F · Independent re-verify + rehearsal + drift guard (items 7, 10, 11).** Fresh-eyes recomputation from primary artifacts before reporting (0.5-exam pattern). **Rehearsal = the driver itself, full-dress** on ≥3 spent videos (2DX, DLwVqc, R5L890) + adversarial fused witness, exercising EVERY stage; independent grade + mutation-test. Drift guard: pin certified SHAs; any instrument-surface commit between green and read-day ⇒ re-run the witness pair.
+
+**OUT OF SCOPE (amber):** the certified reader/extractor/enumerator prompts; `terminal_read_grade` grade logic; the semantic judge agents; `pilot_grade`/`full_grade`; `h1_pilot_phase3_finalize.py`. The driver ORCHESTRATES frozen instruments; it does not modify them.
+
+## 4. VERIFICATION PLAN
+Per module: scope-locked implementer → fresh-context independent grade (mutation-test where a gate is claimed). Module A first-class targets: (a) rejects the spent-16 manifest by name; (b) HALTs on any ID/hash mismatch; (c) REFUSES without `SEAL-GO.token`; (d) staging accepts only spent manifests; (e) no hash hardcoded — value comes from the frozen JSON. End-to-end: item-10 full-dress rehearsal on the 3 spent videos + fused witness must exercise every stage and reproduce the fence catches (IyF enum REJECT, R5L890 conflation REJECT), video-unit ≥60% rollup correct, economics ≤~15, read-once + independent re-verify. Receipt vaulted per module.
+
+## 5. ROLLBACK
+New module(s) + a driver entrypoint; no live default touched (pre-live). Revert = drop the modules. Zero effect on the certified reader or the frozen pilot record. `SEAL-GO.token` absence means the sealed path is inert by construction.
