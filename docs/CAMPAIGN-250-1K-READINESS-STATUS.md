@@ -2,7 +2,7 @@
 
 > **Durable handoff doc — updated in place at each stopping point.** Full plan: `~/.claude/plans/i-want-you-to-luminous-parnas.md`. Session journal: `AGENT-LOGS.md`. This file = the scannable current state.
 
-**Last updated:** 2026-07-16 (after W2b) · **Branch:** `hardening/phase-0` · **Tip:** `bd47b8a8`+ (goalscan advances it continuously) · **Campaign base:** `61bb20a3` · **Landed: W0, W1, W2, W2b**
+**Last updated:** 2026-07-16 (after W2b) · **Branch:** `hardening/phase-0` · **Tip:** `bd47b8a8`+ (goalscan advances it continuously) · **Campaign base:** `61bb20a3` · **Landed: W0, W1, W2, W2b, W3B, W4, W5-indep** · Next: engine test-debt closure (6 pre-existing failures) → M2/M3 re-scope
 **★ Concurrent session active:** a "goalscan-authpine" session is landing the Go-Live-Register auth/pine/obs audit fixes to the SAME branch (deconflicted — it treats the campaign's instrument surface as hand-off). Shared `node_modules` got partially wiped once (junction rm-rf); `npm install` restores it. Each wave: rebase onto current origin tip → verify COMBINED tree → then FF-push.
 
 ## What this campaign is
@@ -26,7 +26,7 @@ Plus: daily upside is UNCAPPED (no fixed TP) → §5 doc $250-500 → $250-1000+
 | **M2** determinism + durability | ⏳ | pin to W2 SHA; persist pendingEntryQueue + deterministic fills + evidence labels |
 | **M3** PAPER authority + 5-10d gate | ⏳ **RE-SCOPE** | goalscan (op-auth `0896aaca`) ALREADY did the manual `_promoteStrategyInner` gate parity + SHADOW→PAPER enforcement. M3 shrinks to the UN-done parts: PAPER-authority `stopStream` inversion (lifecycle :2912-2968) + `paper.start_refused_paper_state` removal (routes/paper.ts) + the 5-10-qualifying-day gate + §8 doctrine docs. Re-read goalscan's lifecycle-service.ts diff before dispatching to avoid duplication/conflict. |
 | **W3A** execution hardening | ⏳ | pin to W2 SHA |
-| **W3B** prop-firm hygiene | ⏳ disjoint/parallel | firm_profiles packet (feeds C4 gate), payout-cap wiring, comment sweep |
+| **W3B** prop-firm hygiene | ✅ **LANDED `6415dac5`** | firm_profiles = derived view (4 drifts incl. MFFU 50→40); payout caps wired (/payout + /rank); F-2 prop_compliance 2nd-duplicate synced + cross-dict agreement lock; grade band 7, receipt reproduced bit-for-bit; test:metrics now 145/0 |
 | **W4** evidence artifacts | ✅ **LANDED `cef0402d`** | h5 A/B ×3 (MES/MCL re-baseline heavily, MNQ ~unchanged — D2 evidence, flag stays OFF); exit-style inventory: **adaptive cohort EMPTY**, 120 strategies all static_styleC |
 | **W5** doc-rot + daily-uncapped | ✅ **LANDED `713d8f88`** (indep. items) | §12 consistency un-staled; §2b 9/9/18; **§5 → $250–$1,000+/day, figures = observed outcomes never quotas/ceilings**; AGENTS ceilings/base fixed. §8 rewrite = M3-gated |
 | **W6** shadow profit governor | ⏳ | pin to M2 SHA; observability-only |

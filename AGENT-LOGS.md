@@ -24,6 +24,16 @@
 
 ---
 
+### Session Log — 2026-07-17 CAMPAIGN W3B — prop-firm hygiene LANDED `6415dac5`, VERIFIED BAND 7, zero carry-forwards
+
+**Mission:** W3B — firm_profiles subordination (instrument, feeds C4 gate) + payout-cap wiring + 8-firm drift-class sweep.
+
+**Landed:** (1) `src/engine/survival/firm_profiles.py` = DERIVED VIEW over canonical `firm_config.py` (was hand-typed, 4 drifts: MFFU max_contracts 50→40 Builder, commissions MFFU 0.62→0.95/Topstep 0.37→0.62, Topstep consistency None→0.50, + derivation-surfaced MFFU DLL None→1000). A/B receipt (real survival_scorer, seeded): all deltas stricter-direction — **reproduced BIT-FOR-BIT by the independent grade**. (2) `/payout` + `/rank` projections now cap monthly net via `getPayoutCap` (new `payout-cap-projection.ts`; MFFU 2/mo bi-weekly, Topstep 1/mo; response stamps assumptions; LFA uncapped; dllOptedIn default TRUE per mig 0168). (3) Grade closures IN-WAVE (zero-carry-forward): F-1 PROP-FIRM-COMPLIANCE.md 8-firm doc rot + Covered-Firms-table sibling; **F-2 `prop_compliance.py::FIRM_CONFIGS` (a SECOND hand-typed duplicate) synced to canonical** — MFFU min_trading_days 5→1 (LIVE eval-gate input in every backtest's prop sim), consistency_rule renamed, + the cross-language `firm-rules-version.ts::FIRM_CONFIGS_TS` sibling (hash `547b454b5da2450d`, by-design bump) + a **12-field cross-dict AGREEMENT test** (the anti-drift lock the rules-version hash doesn't provide — it hashes mutations, not cross-dict agreement) + a mislabel fix on the newly-reached label path (additive-fix rule applied); stale profit_tier test rewritten (code's 42 correct; genuine 60-clamp cases added, first true clamp $78K). Also: `GET /firm-profiles` route had NO `__main__` — failing EVERY request into an 8-legacy-firm fallback (fixed); the perennial test:metrics cp1252 failure fixed (encoding="utf-8") → **test:metrics now 145/0**.
+
+**Verification:** independent accuracy-validator (doer≠grader) **BAND 7 VERIFIED SAFE-TO-LAND** — A/B receipt reproduced bit-for-bit (6/6 cells), RED-proofs re-executed genuine, hot files (backtester/prop_sim/lifecycle/firm-priors) confirmed COMMENT-ONLY, DLL semantic RULED conservative-and-correct (old None→score-100 was actively wrong), payout math cross-checked vs migration 0168. Parent verify: agreement 23/23, firm-rules parity PASS, tsc 0, test:metrics 145/0, stop-geometry 216/216. Combined-tree verified BEFORE push. Packet CLOSED (`w3b-firm-profiles-subordination-2026-07-17.md`).
+
+**Hand-off ledger → NEXT WAVE (pre-existing engine-test debt, provably outside W3B's diff; W7's full-suite gate requires them closed):** `test_a_plus_gate_parity.py` ×3 (volume-confirmation), `test_accuracy_fixes.py` ×2 (H4 commission no-op expectation; 1380-vs-EMPIRICAL-860 bars — test predates deep-scan #10 F-11), `test_apply_trade_management_branching.py::TestBEOnTP1` ×1.
+
 ### Session Log — 2026-07-17 CAMPAIGN W4+W5 — evidence artifacts LANDED `cef0402d` + doc-rot sweep LANDED `713d8f88`
 
 **Mission:** W4 (evidence, read-only) + W5's independent doc-rot items, continuing autonomously per operator directive.
