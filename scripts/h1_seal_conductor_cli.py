@@ -476,23 +476,37 @@ def _seam_system_prompt_text(seam: str) -> str:
     raise ValueError(f"unknown dispatch seam: {seam!r}")
 
 
-def _seam_source_text(work_dir: str, seam: str, video_id: str | None) -> str:
+def _seam_source_text(work_dir: str, seam: str, video_id: str | None, rater_stage: str | None = None) -> str:
     """The CONTENT the CLI embeds for a dispatch (R-030 §3) — read by the CLI
     machinery, NEVER by the subagent. Phase-A/Phase-B embed the fetched transcript
-    body; a rater embeds the driver-emitted rater-packet JSON (which carries its own
-    instructions + items + allowed values). Missing => HALT (never fabricated)."""
+    body. A rater dispatch is STAGE-SCOPED (R-031 §2): the two-stage read-order lock
+    (Stage-1 blind role-from-quote committed BEFORE Stage-2's revealed conditions are
+    seen) only holds if the Stage-1 prompt PHYSICALLY excludes ``stage2_items``. So a
+    rater embed projects each packet down to ONLY the requested stage's view + that
+    stage's ``output_contract`` — the other stage never enters the prompt. Missing =>
+    HALT (never fabricated)."""
     if seam in ("phase_a", "phase_b"):
         path = os.path.join(work_dir, _TRANSCRIPTS_SUBDIR, f"{video_id}.txt")
         if not os.path.exists(path):
             raise ConductorArtifactMissing(f"transcript to embed not found: {path}")
         with open(path, encoding="utf-8") as fh:
             return fh.read()
-    # rater
+    # rater — STAGE-SCOPED projection (physically excludes the other stage).
+    if rater_stage not in ("stage1", "stage2"):
+        raise ValueError("rater dispatch requires --rater-stage stage1|stage2")
     path = _emit_path(work_dir, _RATER_PKT_EMIT)
     if not os.path.exists(path):
         raise ConductorArtifactMissing(f"rater packets emit to embed not found: {path}")
     with open(path, encoding="utf-8") as fh:
-        return fh.read()
+        packets = (json.load(fh) or {}).get("packets") or []
+    projected = []
+    for p in packets:
+        contract = (p.get("output_contract") or {}).get(rater_stage)
+        if rater_stage == "stage1":
+            projected.append({"cid": p.get("cid"), "stage1_view": p.get("stage1_view"), "output_contract": contract})
+        else:
+            projected.append({"cid": p.get("cid"), "stage2_items": p.get("stage2_items"), "output_contract": contract})
+    return json.dumps({"stage": rater_stage, "packets": projected}, ensure_ascii=False, sort_keys=True, indent=2)
 
 
 def _run_claude_p(model_id: str, system_prompt_text: str, user_prompt_text: str, timeout: int = 300) -> str:
@@ -561,33 +575,77 @@ def _ensure_dispatch_record(work_dir: str, identity: dict) -> None:
     )
 
 
-def _dispatch_key(seam: str, video_id: str | None, index) -> str:
+def _dispatch_key(seam: str, video_id: str | None, index, rater_stage: str | None = None) -> str:
     """A filesystem-safe per-dispatch identity used for raw/quarantine/attempts paths."""
     if seam == "phase_a":
         return f"phase_a__{video_id}__d{index}"
     if seam == "phase_b":
         return f"phase_b__{video_id}__s{index}"
     if seam == "rater":
-        return f"rater__{index}"
+        return f"rater__{index}__{rater_stage}"
     raise ValueError(f"unknown dispatch seam: {seam!r}")
 
 
-def _wrap_rater_parsed(work_dir: str, parsed: dict, rater_id) -> str:
-    """Write a parsed rater answer store to ``raters/<rater_id>.json``. Validates the
-    two-stage shape (``stage1`` + ``stage2`` objects) — a well-formed JSON object of
-    the WRONG shape HALTs via :class:`DispatchWrapShapeError` (R-030 §2(a): a property
-    of parsed content is never retried). The item-id / wrong-packet guard remains at
-    the verdict stage (R-026.2); this only asserts the coarse container shape."""
-    stage1 = parsed.get("stage1")
-    stage2 = parsed.get("stage2")
-    if not isinstance(stage1, dict) or not isinstance(stage2, dict):
+def _rater_allowed_values(work_dir: str, rater_stage: str) -> set:
+    """The closed vocabulary a rater stage may answer with (R-031 §a4), read from the
+    EMITTED packet's own ``output_contract`` — the same contract the rater was given,
+    whose values were DERIVED from the frozen ingesters (never retyped). Single-source:
+    the enforcement set is exactly what the rater was told, so it cannot drift."""
+    path = _emit_path(work_dir, _RATER_PKT_EMIT)
+    with open(path, encoding="utf-8") as fh:
+        packets = (json.load(fh) or {}).get("packets") or []
+    key = "allowed_role" if rater_stage == "stage1" else "allowed_support"
+    allowed: set = set()
+    for p in packets:
+        allowed.update(((p.get("output_contract") or {}).get(rater_stage) or {}).get(key) or [])
+    return allowed
+
+
+def _wrap_rater_parsed(work_dir: str, parsed: dict, rater_id, rater_stage: str) -> str:
+    """Merge ONE stage of a rater's answer into ``raters/<rater_id>.json`` (R-031 §2).
+    The rater answers in TWO sequential dispatches: Stage-1 -> ``{"stage1": {item_id:
+    role}}``, Stage-2 -> ``{"stage2": {item_id: {support, support_justification}}}``.
+    Each wrap validates ONLY its own stage's object (a well-formed JSON object of the
+    WRONG shape HALTs via :class:`DispatchWrapShapeError` — R-030 §2(a), never retried)
+    AND enforces the closed vocabulary the packet's output_contract declares (R-031
+    §a4 — an out-of-vocabulary role/support, or a blank Stage-2 justification, HALTs;
+    NEVER coerced/ingested), then MERGES its stage into the store, leaving the other
+    stage untouched. The item-id / wrong-packet guard remains at the verdict stage."""
+    stage_val = parsed.get(rater_stage)
+    if not isinstance(stage_val, dict):
         raise DispatchWrapShapeError(
-            "rater answer store must be a JSON object with `stage1` and `stage2` "
-            "objects (the packet's output contract); wrong-shape HALTs, never retried"
+            f"rater {rater_stage} answer must be a JSON object "
+            f'{{"{rater_stage}": {{item_id: ...}}}} (the packet output_contract); '
+            "wrong-shape HALTs, never retried"
         )
+    allowed = _rater_allowed_values(work_dir, rater_stage)
+    for iid, ans in stage_val.items():
+        if rater_stage == "stage1":
+            if ans not in allowed:
+                raise DispatchWrapShapeError(
+                    f"stage1 role {ans!r} for item {iid!r} is out-of-vocabulary "
+                    f"(allowed {sorted(allowed)}) — HALT, never coerced (R-031 §a4)"
+                )
+        else:
+            support = ans.get("support") if isinstance(ans, dict) else None
+            if support not in allowed:
+                raise DispatchWrapShapeError(
+                    f"stage2 support {support!r} for item {iid!r} is out-of-vocabulary "
+                    f"(allowed {sorted(allowed)}) — HALT, never coerced (R-031 §a4)"
+                )
+            if not str(ans.get("support_justification") or "").strip():
+                raise DispatchWrapShapeError(
+                    f"stage2 item {iid!r} missing REQUIRED support_justification "
+                    "(Addendum 4 FIX 2) — HALT, never coerced"
+                )
     out_path = os.path.join(work_dir, "raters", f"{rater_id}.json")
+    store: dict = {}
+    if os.path.exists(out_path):
+        with open(out_path, encoding="utf-8") as fh:
+            store = json.load(fh) or {}
+    store[rater_stage] = stage_val
     _atomic_write_text(
-        out_path, json.dumps(parsed, ensure_ascii=False, sort_keys=True, indent=2)
+        out_path, json.dumps(store, ensure_ascii=False, sort_keys=True, indent=2)
     )
     return out_path
 
@@ -638,6 +696,7 @@ def run_dispatch(
     index,
     claude_fn=None,
     timeout: int = 300,
+    rater_stage: str | None = None,
 ) -> tuple[int, str]:
     """R-030 §2/§3 — the CLI-OWNED single-dispatch operation the conductor invokes as
     ONE named command per seam. Composes the no-tools embedded-content invocation,
@@ -645,7 +704,12 @@ def run_dispatch(
     RawJsonNonCompliant up to the cap (quarantining each non-compliant raw), and on
     the first compliant raw WRAPS it into the canonical ingested artifact. Exhausted
     retries => HALT NON-COMPLIANT (option (c)). An infra failure => HALT immediately
-    (never a format retry). ``claude_fn`` is injected in tests (no live model)."""
+    (never a format retry). ``claude_fn`` is injected in tests (no live model).
+
+    R-031 §2: a ``rater`` dispatch is STAGE-SCOPED — ``rater_stage`` ∈ {stage1,
+    stage2} selects which stage's blind view + contract is embedded (the other stage
+    is physically excluded from the prompt, preserving the two-stage read-order lock);
+    the wrap MERGES that stage into ``raters/<id>.json``."""
     claude_fn = claude_fn or _run_claude_p
     identity = certified_reader_identity()
     model_id = identity["model_id"]
@@ -654,11 +718,11 @@ def run_dispatch(
     _ensure_dispatch_record(work_dir, identity)
     try:
         system_text = _seam_system_prompt_text(seam)
-        source_text = _seam_source_text(work_dir, seam, video_id)
+        source_text = _seam_source_text(work_dir, seam, video_id, rater_stage)
     except (ConductorArtifactMissing, ValueError) as exc:
         return 1, f"HALT: {type(exc).__name__}: {exc}"
     user_text = _compose_user_prompt(source_text)
-    key = _dispatch_key(seam, video_id, index)
+    key = _dispatch_key(seam, video_id, index, rater_stage)
     raw_dir = os.path.join(work_dir, "raw_dispatch", key)
     q_dir = os.path.join(work_dir, "quarantine", key)
 
@@ -711,8 +775,8 @@ def run_dispatch(
 
     try:
         if seam == "rater":
-            out_path = _wrap_rater_parsed(work_dir, parsed, index)
-            tail = "rater-answers"
+            out_path = _wrap_rater_parsed(work_dir, parsed, index, rater_stage)
+            tail = f"rater-{rater_stage}"
         else:
             out_path, count = _wrap_phase_parsed(work_dir, seam, parsed, video_id, index)
             tail = f"count={count}"
@@ -1180,7 +1244,7 @@ def _abs_slash(path: str) -> str:
 _THIS_CLI = _abs_slash(__file__)
 
 
-def _dispatch_command(work_dir_abs: str, seam: str, video_id: str | None, index) -> str:
+def _dispatch_command(work_dir_abs: str, seam: str, video_id: str | None, index, rater_stage: str | None = None) -> str:
     """The SINGLE named command the plan emits per dispatch (R-030 §2/§3). Running it
     makes the CLI: embed the transcript / rater-packet CONTENT into a no-tools
     `claude -p` invocation (physical blindness — the subagent gets NO Read tool and
@@ -1189,7 +1253,8 @@ def _dispatch_command(work_dir_abs: str, seam: str, video_id: str | None, index)
     non-compliant raw), and WRAP the first compliant raw into the ingested artifact.
     The conductor never shells `claude -p` itself and never opens the transcript —
     the CLI machinery does both. No `--allowedTools`, no `> raw` redirect, no wrap
-    step: all folded into the CLI-owned dispatch."""
+    step: all folded into the CLI-owned dispatch. R-031 §2: a rater dispatch is
+    stage-scoped — ``--rater-stage stage1|stage2`` (two sequential dispatches/rater)."""
     if seam == "phase_a":
         idx_flag = "--draw-index"
     elif seam == "phase_b":
@@ -1197,9 +1262,10 @@ def _dispatch_command(work_dir_abs: str, seam: str, video_id: str | None, index)
     else:  # rater
         idx_flag = "--rater-id"
     vid_part = f"--video-id {video_id} " if video_id is not None else ""
+    stage_part = f" --rater-stage {rater_stage}" if rater_stage is not None else ""
     return (
         f"python {_THIS_CLI} --mode sealed --work-dir {work_dir_abs} "
-        f"--dispatch {seam} {vid_part}{idx_flag} {index}"
+        f"--dispatch {seam} {vid_part}{idx_flag} {index}{stage_part}"
     )
 
 
@@ -1292,9 +1358,15 @@ def _build_dispatch_plan(work_dir: str, readable_ids: list, identity: dict, attr
             "emitted_by_stage": "certify (emit/rater_packets.json; two blind raters)",
             "output_path_template": "raters/<rater_id>.json",
             "raters": ["A", "B"],
-            # R-030 §3: raters swept the SAME way — no tools, the emitted rater packet
-            # embedded (it carries its own instructions). ONE command per rater.
-            "dispatch_command_template": _dispatch_command(wd_abs, "rater", None, "<rater_id>"),
+            # R-030 §3 + R-031 §2: raters swept no-tools with the emitted packet
+            # embedded, but STAGE-SCOPED — TWO sequential dispatches per rater so the
+            # Stage-1 blind role read commits BEFORE Stage-2's revealed conditions are
+            # ever in a prompt (the packet's output_contract carries the answer shape).
+            "dispatch_command_templates": {
+                "stage1": _dispatch_command(wd_abs, "rater", None, "<rater_id>", "stage1"),
+                "stage2": _dispatch_command(wd_abs, "rater", None, "<rater_id>", "stage2"),
+            },
+            "dispatch_order": "per rater: run stage1 (ingest roles) THEN stage2 (ingest support)",
             "expected_schema": {
                 "stage1": {"<item_id>": "gate-strength|context|cannot-determine"},
                 "stage2": {"<item_id>": {"support": "confirmed|partial|denied",
@@ -1800,6 +1872,13 @@ def main(argv: list[str] | None = None) -> int:
         "each), and wraps the first compliant raw into the ingested artifact.",
     )
     parser.add_argument("--rater-id", default=None, help="--dispatch rater: the rater id (e.g. A / B).")
+    parser.add_argument(
+        "--rater-stage",
+        default=None,
+        choices=("stage1", "stage2"),
+        help="--dispatch rater: which stage to dispatch (R-031 §2 — two sequential "
+        "stage-scoped dispatches per rater; stage1 blind roles THEN stage2 support).",
+    )
     args = parser.parse_args(argv)
 
     if args.mode == "staging":
@@ -1814,12 +1893,19 @@ def main(argv: list[str] | None = None) -> int:
             index = args.strategy_index
         else:
             index = args.rater_id
-        if index is None or (args.dispatch in ("phase_a", "phase_b") and args.video_id is None):
+        missing = (
+            index is None
+            or (args.dispatch in ("phase_a", "phase_b") and args.video_id is None)
+            or (args.dispatch == "rater" and args.rater_stage is None)
+        )
+        if missing:
             need = {"phase_a": "--video-id + --draw-index", "phase_b": "--video-id + --strategy-index",
-                    "rater": "--rater-id"}[args.dispatch]
+                    "rater": "--rater-id + --rater-stage"}[args.dispatch]
             print(f"HALT: --dispatch {args.dispatch} requires {need}", file=sys.stderr)
             return 2
-        code, text = run_dispatch(args.work_dir, args.dispatch, args.video_id, index)
+        code, text = run_dispatch(
+            args.work_dir, args.dispatch, args.video_id, index, rater_stage=args.rater_stage
+        )
     elif args.wrap:
         if not args.work_dir:
             print("HALT: --work-dir is required for --wrap", file=sys.stderr)

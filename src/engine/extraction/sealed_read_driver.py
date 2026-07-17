@@ -2593,18 +2593,68 @@ def build_rater_packets(
                         iid = item.get("item_id")
                         if iid is not None:
                             control_item_ids.append(iid)
+            stage1_view = _stage1_view(packet)
             packets.append(
                 {
                     "cid": cid,
                     "video_id": video_id,
                     "strategy_index": idx,
-                    "stage1_view": _stage1_view(packet),
+                    "stage1_view": stage1_view,
                     "stage2_items": (packet.get("stage2") or {}).get("items", []),
+                    # R-031 §1: the packet carries its own stage-scoped answer-store
+                    # contract so a blind no-tools rater knows the EXACT output shape +
+                    # allowed values. Values DERIVED from the frozen ingesters, never
+                    # retyped (§a1); shape + values + commitment ONLY, no judging
+                    # criteria (§a2 — the criteria live in stage1_view.instructions +
+                    # closed_taxonomy already in the packet).
+                    "output_contract": _rater_output_contract(stage1_view),
                     "target_item_ids": target_item_ids,
                     "control_item_ids": control_item_ids,
                 }
             )
     return packets
+
+
+def _rater_output_contract(stage1_view: dict) -> dict:
+    """R-031 §1/§a1 — the stage-scoped answer-store contract the packet carries.
+
+    Values are DERIVED, never retyped: the allowed ROLE values are the keys of the
+    packet's own ``closed_taxonomy`` (the frozen Wave-1 role vocabulary the Stage-1
+    rater is blinded to — the same taxonomy embedded in ``stage1_view``); the allowed
+    SUPPORT values are ``pilot_conveyor.SUPPORT_VALUES`` — the EXACT set
+    ``support_verdict_from_stage2_response`` accepts (pilot_conveyor.py:1382, enforced
+    :1408). A hand-typed set that drifted from the ingester's accept-set would
+    reintroduce the exact non-ingestible / HALT class this fixes.
+
+    Shape + values + commitment ONLY (§a2): the judging criteria are the frozen
+    ``stage1_view.instructions`` + the ``closed_taxonomy`` descriptions already in the
+    packet; this contract adds NO new criteria, examples, or hints."""
+    from . import pilot_conveyor as pc
+
+    role_values = sorted((stage1_view.get("closed_taxonomy") or {}).keys())
+    return {
+        "stage1": {
+            "answer_store_shape": {"stage1": {"<item_id>": "<role>"}},
+            "allowed_role": list(role_values),
+            "commitment": (
+                'Output ONLY the JSON object {"stage1": {item_id: role}} — one role '
+                "per item_id shown, each role assigned from that item's quote_anchor "
+                "ALONE. Do NOT echo the packet or fill items in place. The extractor's "
+                "revealed conditions are NOT part of this dispatch."
+            ),
+        },
+        "stage2": {
+            "answer_store_shape": {
+                "stage2": {"<item_id>": {"support": "<support>", "support_justification": "<str>"}}
+            },
+            "allowed_support": list(pc.SUPPORT_VALUES),
+            "commitment": (
+                'Output ONLY the JSON object {"stage2": {item_id: {support, '
+                'support_justification}}} — one entry per item_id shown. '
+                "support_justification is REQUIRED (never blank)."
+            ),
+        },
+    }
 
 
 # =========================================================================== #

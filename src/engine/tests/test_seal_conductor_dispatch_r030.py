@@ -225,34 +225,128 @@ def test_r030_exhaust_path_logs_true_retry_count(tmp_path):
     assert rec["resolved"] is False and rec["retry_count"] == 2  # 2 retries, not 0
 
 
-def test_r030_rater_dispatch_embeds_packet_no_system_prompt(tmp_path):
-    wd = str(tmp_path / "workdir")
+def _write_rater_packets(wd):
+    """A minimal but real-shaped rater packet emit (R-031): stage1_view (blind — carries
+    the closed_taxonomy + a STAGE1-MARKER, NO revealed conditions), stage2_items (the
+    REVEALED conditions with a STAGE2-MARKER), and the stage-scoped output_contract."""
     os.makedirs(os.path.join(wd, "emit"), exist_ok=True)
-    packet_blob = {"stage": "certify", "packets": [{"cid": "V__s0", "instructions": "RATE-ME-MARKER"}]}
+    packet = {
+        "cid": "V__s0",
+        "stage1_view": {"closed_taxonomy": {"gate-strength": "d", "context": "d", "cannot-determine": "d"},
+                        "sections": [{"items": [{"item_id": "i1", "quote_anchor": "STAGE1-MARKER-QUOTE"}]}]},
+        "stage2_items": [{"item_id": "i1", "extracted_condition_text": "STAGE2-MARKER-REVEALED"}],
+        "output_contract": {
+            "stage1": {"answer_store_shape": {"stage1": {"<item_id>": "<role>"}},
+                       "allowed_role": ["cannot-determine", "context", "gate-strength"], "commitment": "roles from quote alone"},
+            "stage2": {"answer_store_shape": {"stage2": {"<item_id>": {"support": "<support>", "support_justification": "<str>"}}},
+                       "allowed_support": ["confirmed", "partial", "denied"], "commitment": "justification required"},
+        },
+    }
     with open(cli._emit_path(wd, cli._RATER_PKT_EMIT), "w", encoding="utf-8") as fh:
-        json.dump(packet_blob, fh)
-    answer = (
-        '{"stage1": {"i1": "context"}, '
-        '"stage2": {"i1": {"support": "confirmed", "support_justification": "x"}}}'
-    )
-    stub = _ScriptedClaude([answer])
-    code, text = cli.run_dispatch(wd, "rater", None, "A", claude_fn=stub)
+        json.dump({"stage": "certify", "packets": [packet]}, fh)
+
+
+def test_r031_rater_stage1_blind_excludes_stage2_from_prompt(tmp_path):
+    """★ The read-order lock: a Stage-1 dispatch embeds stage1_view + the stage1
+    contract ONLY — the revealed Stage-2 conditions are PHYSICALLY absent from the
+    prompt, so the blind role read cannot see them."""
+    wd = str(tmp_path / "workdir")
+    _write_rater_packets(wd)
+    stub = _ScriptedClaude(['{"stage1": {"i1": "context"}}'])
+    code, text = cli.run_dispatch(wd, "rater", None, "A", claude_fn=stub, rater_stage="stage1")
     assert code == 0, text
-    assert stub.calls[0]["system_text"] == ""  # packet carries its own instructions
-    assert "RATE-ME-MARKER" in stub.calls[0]["user_text"]  # packet embedded, not read
+    assert stub.calls[0]["system_text"] == ""  # no frozen system prompt for raters
+    up = stub.calls[0]["user_text"]
+    assert "STAGE1-MARKER-QUOTE" in up  # blind view embedded
+    assert "STAGE2-MARKER-REVEALED" not in up  # ★ Stage-2 physically excluded
+    assert '"allowed_role"' in up  # the stage1 output_contract is embedded
+    assert '"allowed_support"' not in up  # only the stage1 contract, not stage2's
     written = json.load(open(os.path.join(wd, "raters", "A.json"), encoding="utf-8"))
-    assert written["stage1"] == {"i1": "context"}
+    assert written["stage1"] == {"i1": "context"} and "stage2" not in written
 
 
-def test_r030_rater_wrong_shape_halts_not_retried(tmp_path):
+def test_r031_rater_stage2_embeds_revealed_and_merges(tmp_path):
+    """Stage-2 dispatch embeds the revealed conditions + stage2 contract and MERGES
+    into the same store, leaving the Stage-1 answer intact."""
     wd = str(tmp_path / "workdir")
-    os.makedirs(os.path.join(wd, "emit"), exist_ok=True)
-    with open(cli._emit_path(wd, cli._RATER_PKT_EMIT), "w", encoding="utf-8") as fh:
-        json.dump({"packets": []}, fh)
-    stub = _ScriptedClaude(['{"stage1": {"i": "x"}}'])  # missing stage2 -> shape HALT
-    code, text = cli.run_dispatch(wd, "rater", None, "B", claude_fn=stub)
+    _write_rater_packets(wd)
+    # stage1 first, then stage2 — two sequential dispatches, one store.
+    cli.run_dispatch(wd, "rater", None, "A", claude_fn=_ScriptedClaude(['{"stage1": {"i1": "gate-strength"}}']), rater_stage="stage1")
+    stub2 = _ScriptedClaude(['{"stage2": {"i1": {"support": "confirmed", "support_justification": "y"}}}'])
+    code, text = cli.run_dispatch(wd, "rater", None, "A", claude_fn=stub2, rater_stage="stage2")
+    assert code == 0, text
+    up = stub2.calls[0]["user_text"]
+    assert "STAGE2-MARKER-REVEALED" in up and "STAGE1-MARKER-QUOTE" not in up
+    store = json.load(open(os.path.join(wd, "raters", "A.json"), encoding="utf-8"))
+    assert store["stage1"] == {"i1": "gate-strength"}  # merged, not clobbered
+    assert store["stage2"]["i1"]["support"] == "confirmed"
+
+
+def test_r031_rater_stage_wrong_shape_halts_not_retried(tmp_path):
+    wd = str(tmp_path / "workdir")
+    _write_rater_packets(wd)
+    # a stage2-shaped answer returned to a stage1 dispatch -> wrong shape for stage1.
+    stub = _ScriptedClaude(['{"stage2": {"i1": {"support": "confirmed", "support_justification": "y"}}}'])
+    code, text = cli.run_dispatch(wd, "rater", None, "B", claude_fn=stub, rater_stage="stage1")
     assert code == 1 and "wrap shape" in text
     assert len(stub.calls) == 1  # content shape is never a retry trigger
+
+
+def test_r031_rater_requires_stage(tmp_path):
+    wd = str(tmp_path / "workdir")
+    _write_rater_packets(wd)
+    code, text = cli.run_dispatch(wd, "rater", None, "A", claude_fn=_ScriptedClaude(["{}"]), rater_stage=None)
+    assert code == 1 and "stage1|stage2" in text
+
+
+def test_r031_derived_contract_flows_to_cli_enforcement(tmp_path):
+    """Integration: build the emit's output_contract with the REAL driver
+    `_rater_output_contract` (derived vocab), then dispatch through the CLI and confirm
+    the CLI enforcement reads THAT derived contract — a role outside the derived
+    closed_taxonomy keys HALTs; an in-derived-vocab role ingests."""
+    from src.engine.extraction.sealed_read_driver import _rater_output_contract
+
+    wd = str(tmp_path / "workdir")
+    os.makedirs(os.path.join(wd, "emit"), exist_ok=True)
+    taxo = {"gate-strength": "d", "context": "d", "cannot-determine": "d"}
+    stage1_view = {"closed_taxonomy": taxo,
+                   "sections": [{"items": [{"item_id": "i1", "quote_anchor": "Q"}]}]}
+    packet = {"cid": "V__s0", "stage1_view": stage1_view,
+              "stage2_items": [{"item_id": "i1", "extracted_condition_text": "C"}],
+              "output_contract": _rater_output_contract(stage1_view)}
+    with open(cli._emit_path(wd, cli._RATER_PKT_EMIT), "w", encoding="utf-8") as fh:
+        json.dump({"stage": "certify", "packets": [packet]}, fh)
+    # a role NOT in the derived closed_taxonomy keys -> HALT (enforcement read the
+    # derived contract, not a hardcoded copy).
+    bad = _ScriptedClaude(['{"stage1": {"i1": "not-a-real-role"}}'])
+    code, text = cli.run_dispatch(wd, "rater", None, "A", claude_fn=bad, rater_stage="stage1")
+    assert code == 1 and "out-of-vocabulary" in text
+    # an in-derived-vocab role ingests.
+    good = _ScriptedClaude(['{"stage1": {"i1": "gate-strength"}}'])
+    code2, _ = cli.run_dispatch(wd, "rater", None, "A", claude_fn=good, rater_stage="stage1")
+    assert code2 == 0
+    assert cli._rater_allowed_values(wd, "stage1") == set(taxo.keys())
+
+
+def test_r031_rater_out_of_vocab_role_halts(tmp_path):
+    """R-031 §a4: an out-of-vocabulary role HALTs at the wrap, never coerced/ingested."""
+    wd = str(tmp_path / "workdir")
+    _write_rater_packets(wd)
+    stub = _ScriptedClaude(['{"stage1": {"i1": "totally-made-up-role"}}'])
+    code, text = cli.run_dispatch(wd, "rater", None, "A", claude_fn=stub, rater_stage="stage1")
+    assert code == 1 and "out-of-vocabulary" in text
+    assert not os.path.exists(os.path.join(wd, "raters", "A.json"))  # never ingested
+
+
+def test_r031_rater_out_of_vocab_support_and_blank_justification_halt(tmp_path):
+    wd = str(tmp_path / "workdir")
+    _write_rater_packets(wd)
+    bad_support = _ScriptedClaude(['{"stage2": {"i1": {"support": "maybe", "support_justification": "x"}}}'])
+    code, text = cli.run_dispatch(wd, "rater", None, "A", claude_fn=bad_support, rater_stage="stage2")
+    assert code == 1 and "out-of-vocabulary" in text
+    blank_just = _ScriptedClaude(['{"stage2": {"i1": {"support": "confirmed", "support_justification": "  "}}}'])
+    code2, text2 = cli.run_dispatch(wd, "rater", None, "B", claude_fn=blank_just, rater_stage="stage2")
+    assert code2 == 1 and "support_justification" in text2
 
 
 def test_r030_dispatch_writes_dispatch_record(tmp_path):

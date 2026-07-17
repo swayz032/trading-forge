@@ -18,6 +18,7 @@ import re
 import pytest
 
 from src.engine.extraction import sealed_read_driver as srd
+from src.engine.extraction.pilot_conveyor import SUPPORT_VALUES  # noqa: E402
 from src.engine.extraction.sealed_read_driver import (
     ECONOMICS_CEILING,
     FUSED_WITNESS_CID,
@@ -35,6 +36,7 @@ from src.engine.extraction.sealed_read_driver import (
     VerdictNotReady,
     _dispatch_two_stage_packet,
     _enum_stability,
+    _rater_output_contract,  # noqa: E402
     _stage1_view,
     _write_spent_rehearsal_manifest,
     assert_dispatch_identity,
@@ -49,6 +51,24 @@ from src.engine.extraction.sealed_read_driver import (
     run_rater_layer_stage,
     run_verdict_stage,
 )
+
+
+def test_r031_rater_output_contract_values_are_derived_not_retyped():
+    """R-031 §a1: the packet's output_contract vocabulary is DERIVED from the frozen
+    ingesters — role values are the closed_taxonomy keys the rater is blinded to;
+    support values are pilot_conveyor.SUPPORT_VALUES (the exact set
+    support_verdict_from_stage2_response accepts). A drift here would reintroduce the
+    out-of-vocab HALT class R-031 fixes. Uses SYNTHETIC taxonomy keys so the test
+    catches a hardcoded/retyped role literal (not merely a drifted one) — a hand-typed
+    `["gate-strength", ...]` set would fail against these synthetic keys."""
+    taxo = {"alpha-role": "d", "beta-role": "d", "gamma-role": "d"}
+    contract = _rater_output_contract({"closed_taxonomy": taxo})
+    assert sorted(contract["stage1"]["allowed_role"]) == ["alpha-role", "beta-role", "gamma-role"]
+    assert tuple(contract["stage2"]["allowed_support"]) == tuple(SUPPORT_VALUES)
+    # shape-and-values only: no examples / criteria hidden in the contract.
+    assert set(contract) == {"stage1", "stage2"}
+    assert set(contract["stage1"]) == {"answer_store_shape", "allowed_role", "commitment"}
+    assert set(contract["stage2"]) == {"answer_store_shape", "allowed_support", "commitment"}
 
 
 def _certified_dispatch_record():

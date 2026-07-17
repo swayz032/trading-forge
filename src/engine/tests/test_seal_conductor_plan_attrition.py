@@ -177,7 +177,11 @@ def test_a_plan_emits_wellformed_dispatch_plan(tmp_path):
     assert "--dispatch phase_b" in pb["dispatch_command_template"]
     assert "claude_p_template" not in pb and "--allowedTools" not in pb["dispatch_command_template"]
     rt = plan["later_seam_instruction_shapes"]["rater"]
-    assert "--dispatch rater" in rt["dispatch_command_template"] and "--rater-id" in rt["dispatch_command_template"]
+    # R-031 §2: TWO stage-scoped rater dispatch commands per rater (stage1 then stage2).
+    rtc = rt["dispatch_command_templates"]
+    assert "--dispatch rater" in rtc["stage1"] and "--rater-stage stage1" in rtc["stage1"]
+    assert "--rater-stage stage2" in rtc["stage2"] and "--rater-id" in rtc["stage1"]
+    assert "--allowedTools" not in rtc["stage1"]
 
     # later-seam instruction shapes present (single source of "how to dispatch").
     shapes = plan["later_seam_instruction_shapes"]
