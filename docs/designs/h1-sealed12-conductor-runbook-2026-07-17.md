@@ -1,6 +1,6 @@
 # H1 SEALED-12 TERMINAL-READ — CONDUCTOR RUNBOOK (2026-07-17)
 
-> **STATUS: RE-FROZEN (R-026.4, 2026-07-17).** STEP 1 rewritten to the STAGED (emit-and-stop) sequence after the live Phase-A→consensus→Phase-B ordering gap was found + fixed (R-026 / staged CLI `e0e5dccc`, independently graded Band 7 SAFE): the sealed read is a stage loop (phase_a → fulfil Phase-B → certify → fulfil panels+raters → verdict), each stage emitting what to dispatch next. **Comprehension RE-PROBED on the amended staged steps (2026-07-17): a fresh reader answered the full staged sequence, "the DRIVER computes the consensus; you only READ its emit," and the HALT/no-retry/read-once rule — all verbatim from the steps.** Prior standing: ratified R-024 (amendments 1-3), staging-rehearsed zero-hints (R-023.1c). This is the ONLY document the seal-day clean-room conductor receives; self-contained on purpose. Do not edit — amend by dated addendum only.
+> **STATUS: RE-FROZEN (R-030, 2026-07-17 — see ADDENDUM A at the end).** The CLI now OWNS each dispatch: it shells a no-tools (`--tools ""`, physically blind) `claude -p` with the transcript / rater-packet CONTENT embedded, strict-parses, and re-dispatches on non-compliant JSON up to a cap of 2 — the conductor runs ONE `--dispatch` command per seam and never shells `claude -p` or hands a transcript path to a subagent. Prior standing: RE-FROZEN (R-026.4, 2026-07-17). STEP 1 rewritten to the STAGED (emit-and-stop) sequence after the live Phase-A→consensus→Phase-B ordering gap was found + fixed (R-026 / staged CLI `e0e5dccc`, independently graded Band 7 SAFE): the sealed read is a stage loop (phase_a → fulfil Phase-B → certify → fulfil panels+raters → verdict), each stage emitting what to dispatch next. **Comprehension RE-PROBED on the amended staged steps (2026-07-17): a fresh reader answered the full staged sequence, "the DRIVER computes the consensus; you only READ its emit," and the HALT/no-retry/read-once rule — all verbatim from the steps.** Prior standing: ratified R-024 (amendments 1-3), staging-rehearsed zero-hints (R-023.1c). This is the ONLY document the seal-day clean-room conductor receives; self-contained on purpose. Do not edit — amend by dated addendum only.
 
 ---
 
@@ -72,4 +72,28 @@ When the CLI prints the final verdict block, report it **exactly as printed** �
 2. **A HALT** (no token / seal mismatch / identity mismatch / leak-scan / validity INVALID), reported verbatim.
 Nothing else. You never add a judgment, a fix, or a retry.
 
-*Runbook DRAFT authored 2026-07-17 by the working agent under R-023.1a; awaiting advisor ratification (R-024) + a staging runbook-rehearsal by a fresh clean-room conductor (R-023.1c) before it is frozen.*
+---
+
+## ADDENDUM A — 2026-07-17 (R-030): the CLI now OWNS each dispatch (no-tools, embedded content, bounded format-retry)
+
+**This addendum SUPERSEDES the dispatch MECHANICS of STEP 2 (lines describing "dispatch a fresh `claude -p` subagent … give it the transcript PATH … the subagent reads that file itself") and the parallel dispatch mechanics of STEP 3.** The SEQUENCE (5 blind Phase-A draws/video, driver computes consensus, one Phase-B per strategy, two blind raters), the BLINDNESS / HALT / READ-ONCE disciplines, and STEPS 0/1/4/5 are UNCHANGED. What changes is HOW a single dispatch is performed.
+
+**You no longer shell `claude -p` yourself, and you never hand a transcript path to a subagent.** For every dispatch, the CLI's emit (the `plan` stage's `phase_a_dispatches[].dispatch_command`, the `certify` stage's Phase-B and rater `dispatch_command_template`) names **ONE command**:
+
+```
+python <this CLI> --mode sealed --work-dir <wd> --dispatch <seam> [--video-id <V>] [--draw-index <i> | --strategy-index <i> | --rater-id <A|B>]
+```
+
+**You run that one command, verbatim, exactly as emitted.** Running it makes the CLI do all of the following itself (you do none of it):
+- Read the fetched transcript (Phase-A/Phase-B) or the emitted rater packet (rater) from disk and **EMBED its CONTENT** into the model prompt. You never open, cat, or paste it — and now neither does the subagent.
+- Shell a **fresh Claude subagent on the subscription channel** (`claude -p`, model set explicitly from the frozen identity) run with **`--tools ""` — NO tools at all.** The subagent is **physically blind**: with no Read tool it cannot open the transcript path, a cached answer, the manifest, or any file. It sees ONLY the embedded content. (Verified live: a `--tools ""` subagent asked to read a planted secret returned `NOTOOLS_CONFIRMED`.)
+- Strict-parse the subagent's stdout. If it is not a single clean JSON object, the CLI **re-dispatches automatically up to 2 times (3 attempts total)**, quarantining each non-compliant output. **This bounded, format-only re-dispatch is the CLI's own mechanism — it is NOT a read-once violation and NOT something you initiate:** you still run the ONE command once; the CLI yields exactly ONE ingested draw. If the CLI prints **`HALT: dispatch NON-COMPLIANT … exhausted`** (the model never emitted clean JSON in 3 attempts), you **STOP and report it verbatim** (HALT discipline — you never re-run it).
+- Wrap the compliant output into the ingested artifact (identity from the frozen record, dispatch record embedded) at the path the emit names. **You no longer hand-record the dispatch record** — the CLI fills `resolved_model` from the actual dispatch and asserts it against the frozen identity itself; a mismatch HALTs, and you report it.
+
+**STEP 3 raters, the same way:** run the emitted `--dispatch rater --rater-id <A|B>` command per rater. The CLI embeds the emitted rater packet (which carries its own instructions) with `--tools ""` and writes `raters/<id>.json`. You never open the packet or hand it to a subagent by path.
+
+The instrument-surface wrapper text + the exact invocation are recorded in `docs/designs/h1-dispatch-wrapper-params-addendum-2026-07-17.md`. Independently graded BAND 8 SAFE (doer≠grader, all mutations RED). Everything else in this runbook stands.
+
+---
+
+*Runbook authored 2026-07-17 by the working agent under R-023.1a; ratified R-024, staging-rehearsed by a fresh clean-room conductor (R-023.1c), re-frozen R-026.4, and amended + re-frozen R-030 (Addendum A). Amend by dated addendum only.*
