@@ -43,7 +43,7 @@
  * and confirming both assertions fail by the exact expected magnitude.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Shared capture state ───────────────────────────────────────────────────
 const capturedTxSessionUpdates: Array<Record<string, unknown>> = [];
@@ -245,6 +245,10 @@ function makePos(overrides: Record<string, unknown> = {}) {
 function makeBarCtx(overrides: Partial<StyleExitBarContext> = {}): StyleExitBarContext {
   return {
     currentTimeEt: "10:30", atr14: { MES: 5.0 }, barHigh: { MES: 5012.0 }, barLow: { MES: 5012.0 },
+    // F-3 (freshscan11 2026-07-12, amended 2026-07-16): a fixed RTH instant (2026-07-13 10:30 ET,
+    // a Monday during DST) so exit-slippage session classification is now DETERMINISTIC — this is
+    // what makes the netPnl > 0 assertion below safe to restore (see its doc comment).
+    barTimestamp: new Date("2026-07-13T14:30:00.000Z"),
     ...overrides,
   };
 }
@@ -269,6 +273,22 @@ beforeEach(() => {
   mockRunPythonModuleImpl = () =>
     Promise.resolve({ decision: "HOLD", new_stop: null, evidence: {}, handler_version: "style_c_v1.0.0" });
   vi.clearAllMocks();
+  // F-3 hardening (coordinator MEDIUM finding, 2026-07-16): pin wall-clock to a fixed
+  // ADVERSARIAL instant (16:30 ET, inside the 16:00-17:00 ET CME_HALT window) — deliberately
+  // DIFFERENT from the bar's RTH time (10:30 ET, set via `barTimestamp` in makeBarCtx). This
+  // is the pin that actually forces divergence: the FIXED code reads the bar's 10:30 ET time
+  // and computes RTH-scale slippage regardless of wall-clock; if the F-3 fix regresses (reverts
+  // to reading bare `new Date()`), it would pick up THIS pinned 16:30 ET wall-clock and compute
+  // CME_HALT 100x-scaled slippage instead — flipping the restored `netPnl > 0` assertion RED.
+  // (Pinning wall-clock to the SAME RTH instant as the bar — the mistake this replaces — makes
+  // base and fixed code coincidentally agree, since both would land in RTH; that defeats the
+  // RED-proof. Only an adversarial wall-clock pin actually catches a regression.)
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-07-13T20:30:00.000Z")); // 16:30 ET (CME_HALT)
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("bookPartialClose — TP1 equity double-count fix (grader worked example, MES 3 contracts)", () => {
@@ -287,12 +307,13 @@ describe("bookPartialClose — TP1 equity double-count fix (grader worked exampl
     expect(capturedTradeInserts).toHaveLength(1);
     expect(capturedTradeInserts[0].contracts).toBe(1); // TP1 closes 1 of 3
     const netPnl = Number(capturedTradeInserts[0].pnl);
-    // freshscan11 post-outage fix: do NOT assert netPnl > 0 — the realized net carries a
-    // session/volatility-perturbed slippage component whose SIGN is environment-dependent (it
-    // flipped negative on a later-session wall-clock run). The equity-double-count invariant
-    // below is slippage-independent (it feeds the measured netPnl straight back in) and is what
-    // this test actually verifies. The trade is already asserted booked (contracts=1) above.
-    expect(Number.isFinite(netPnl)).toBe(true);
+    // RESTORED (F-3 fix, 2026-07-16): the freshscan11 post-outage waiver is gone. close=5012 vs
+    // entry=5000 on 1 of 3 MES contracts ($5/pt, zero commission) = $60 gross, dwarfing the
+    // ~$0.29/contract RTH slippage this test's now-fixed `barTimestamp` (10:30 ET) produces. The
+    // previously-observed negative netPnl was the F-3 bug itself (real wall-clock landing in the
+    // 16:00-17:00 ET CME_HALT window applied a 100x slippage multiplier); with barTimestamp
+    // threaded through bookPartialClose, this is deterministic regardless of when the test runs.
+    expect(netPnl).toBeGreaterThan(0);
 
     expect(capturedTxSessionUpdates).toHaveLength(1);
     const currentEquityDelta = extractNumberParams(capturedTxSessionUpdates[0].currentEquity)[0];

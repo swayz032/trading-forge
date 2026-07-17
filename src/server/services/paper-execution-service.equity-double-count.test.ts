@@ -40,7 +40,7 @@
  * seeds previousUnrealizedPnl=0 and never accumulates, so this gap was real.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Shared capture state ───────────────────────────────────────────────────
 let tradeInserts: Array<Record<string, unknown>> = [];
@@ -183,6 +183,18 @@ beforeEach(() => {
   mtmReturningRows = [];
   setSelectRows([]);
   vi.clearAllMocks();
+  // F-3 (freshscan11 2026-07-12, amended 2026-07-16): pin wall-clock to a fixed RTH instant
+  // (2026-07-13 10:30 ET, a Monday during DST) instead of adding `barTimestamp` — these tests
+  // call `closePosition` with NO context object at all (the genuine direct-caller shape:
+  // forceCloseAllPositions/checkRollAndFlatten never pass barTimestamp either), so closePosition
+  // correctly falls back to wall-clock. Pinning that wall-clock makes exit-slippage session
+  // classification deterministic without changing the call shape under test.
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-07-13T14:30:00.000Z"));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("closePosition — direct-caller equity double-count fix (forceCloseAllPositions/checkRollAndFlatten shape)", () => {
@@ -200,11 +212,14 @@ describe("closePosition — direct-caller equity double-count fix (forceCloseAll
 
     expect(tradeInserts).toHaveLength(1);
     const netPnl = Number(tradeInserts[0].pnl);
-    // freshscan11 post-outage fix: do NOT assert netPnl > 0 — the realized net carries a
-    // session/volatility-perturbed slippage component whose SIGN is environment-dependent. The
-    // equity-double-count invariant below (currentEquityDelta ≈ netPnl - bakedIn) is
-    // slippage-independent and is what this test actually verifies.
-    expect(Number.isFinite(netPnl)).toBe(true);
+    // RESTORED (F-3 fix, 2026-07-16): the freshscan11 post-outage waiver is gone. With wall-clock
+    // now pinned to a fixed RTH instant (see beforeEach), netPnl is deterministic (~$47.51: a 10pt
+    // MES move at $5/pt minus real commission minus RTH-scale slippage) and reliably positive. The
+    // previously-observed negative netPnl was the F-3 bug itself: closePosition's `new Date()`
+    // fallback picked up whatever the REAL wall-clock was at test-run time, and a run landing in
+    // the 16:00-17:00 ET CME_HALT window applied a 100x slippage multiplier large enough to flip
+    // the sign on this small a gross move.
+    expect(netPnl).toBeGreaterThan(0);
 
     expect(sessionEquityUpdates).toHaveLength(1);
     const currentEquityDelta = extractNumberParams(sessionEquityUpdates[0].currentEquity)[0];

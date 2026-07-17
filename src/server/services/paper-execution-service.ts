@@ -2533,6 +2533,12 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   const slippage = calculateSlippage(pos.symbol, 1, atr, medianAtrEstimate, "stop_limit", exitSlippageSession);
   closeSpan.setAttribute("exitSlippage", slippage);
   closeSpan.setAttribute("atrProvided", atr !== undefined);
+  // F-3: per-trade engagement evidence for the exit-slippage time-source — "bar" when the caller
+  // threaded the market bar's timestamp (bar-driven paths), "wallclock" when it fell back to
+  // real time (genuinely real-time callers: kill-switch, manual/external close, feed-silence,
+  // the 16:30 ET roll-sweep cron). Lets a per-trade audit query distinguish the two without
+  // guessing from the call site.
+  closeSpan.setAttribute("exitSlippageTimeSource", context?.barTimestamp ? "bar" : "wallclock");
   const actualExit = pos.side === "long"
     ? exitSignalPrice - slippage
     : exitSignalPrice + slippage;
@@ -2558,7 +2564,16 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
 
   // closedAt is declared here (before roll cost and enrichment) so it serves as the
   // authoritative close timestamp for both the roll window check and the DB writes.
-  const closedAt = new Date();
+  // F-3 RIDER (freshscan11 2026-07-12, amended 2026-07-16): prefer the threaded bar time on
+  // bar-driven paths (same context.barTimestamp already used for exit-slippage session
+  // classification above) so the CME trading-day attribution (dailyPnlBreakdown key below, via
+  // toFuturesTradingDayString(closedAt)) reflects the BAR's day, not the wall-clock's. On a
+  // delayed feed, a bar stamped 16:55 ET can arrive ~17:05 wall-clock — past the 17:00 ET CME
+  // day-roll cutoff — which would otherwise misattribute the close to the WRONG (next) trading
+  // day for daily-cap counting + daily P&L breakdown. Genuinely real-time callers (kill-switch
+  // force-flatten, manual/external close routes, feed-silence auto-close, the 16:30 ET roll-sweep
+  // cron) correctly fall back to wall-clock since they never pass barTimestamp.
+  const closedAt = context?.barTimestamp ?? new Date();
 
   // Roll spread cost — if the position held across one or more CME contract
   // roll dates, deduct the estimated calendar spread cost (front→back-month
@@ -2813,7 +2828,10 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
       //    M1 fix (deepscan-6): was written outside the tx via checkConsistencyRule (non-blocking).
       //    checkConsistencyRule now only re-reads the already-committed value for its consistency check.
       {
-        const todayKey = toFuturesTradingDayString();
+        // F-3 RIDER: derive the trading-day key from `closedAt` (bar time on bar-driven paths,
+        // wall-clock on genuinely real-time paths — see the closedAt declaration above) instead of
+        // an implicit `new Date()` that silently ignored the local `closedAt` value entirely.
+        const todayKey = toFuturesTradingDayString(closedAt);
         const jsonPath = `{${todayKey}}`;
         await tx.update(paperSessions).set({
           dailyPnlBreakdown: sql`jsonb_set(
@@ -3390,6 +3408,20 @@ export interface StyleExitBarContext {
    */
   currentBarHigh?: Record<string, number>;
   currentBarLow?: Record<string, number>;
+  /**
+   * F-3 (freshscan11 2026-07-12, amended 2026-07-16): the actual timestamp of the market bar
+   * being processed, as computed once by `buildExitBarContext` in paper-trading-stream.ts
+   * (`new Date(bar.timestamp)`). Threaded through applyExitDecision -> bookPartialClose /
+   * closePosition so exit-slippage session classification (classifySessionType -> CME_HALT 100x
+   * multiplier) uses the BAR's time, not the wall clock at code-execution time. Without this,
+   * post-outage backlog catch-up (or any close landing for real inside 16:00-17:00 ET) applies
+   * up to a 100x slippage multiplier regardless of what the bar actually says.
+   * VERIFIED: this field is never wholesale-serialized to the Python bridge — callExitHandler
+   * builds the subprocess `config.state` via explicit field picks, so adding this field here has
+   * NO effect on the Python contract.
+   * Absent for legacy callers (pre-F-3) — those fall back to wall-clock, unchanged behavior.
+   */
+  barTimestamp?: Date;
 }
 
 interface ExitHandlerResult {
@@ -3819,6 +3851,14 @@ async function bookPartialClose(
   // left tp1Filled=false with the partial already booked, so the next bar re-fired the partial
   // → DUPLICATE paper_trades row + wrong contract count + distorted promotion-gate inputs.
   positionStateUpdate?: Partial<typeof paperPositions.$inferInsert>,
+  // F-3 (freshscan11 2026-07-12, amended 2026-07-16): the market bar's timestamp, threaded from
+  // applyExitDecision -> exitBarContext.barTimestamp, so exit-slippage session classification uses
+  // the BAR's time, not the wall clock. This function is ALWAYS bar-driven (only reachable via
+  // applyExitDecision, only reachable from updatePositionPrices' per-position loop) — absence is
+  // an anomaly (a caller wiring gap), not a normal legacy-callsite fallback, so it fails LOUD with
+  // a warn (falls back to wall-clock rather than throwing — better to book the partial with
+  // possibly-wrong session slippage than to silently drop the exit and leave the position stuck).
+  barTimestamp?: Date,
 ): Promise<void> {
   try {
     const spec = CONTRACT_SPECS[pos.symbol];
@@ -3830,8 +3870,17 @@ async function bookPartialClose(
     const entryPrice = Number(pos.entryPrice);
     const direction = pos.side === "long" ? 1 : -1;
 
-    // Exit slippage on the partial close (same session-aware formula as closePosition)
-    const closeTimestamp = new Date();
+    // Exit slippage on the partial close (same session-aware formula as closePosition).
+    // F-3: prefer the threaded bar time; fall back to wall-clock ONLY as an anomaly guard.
+    if (barTimestamp == null) {
+      logger.warn(
+        { positionId: pos.id, exitReason },
+        "bookPartialClose: barTimestamp absent — falling back to wall-clock for exit-slippage session classification. " +
+        "This function is always bar-driven (reached only via applyExitDecision from the per-position bar loop), so " +
+        "absence indicates a caller wiring gap, not a legitimate legacy call site — investigate the caller.",
+      );
+    }
+    const closeTimestamp = barTimestamp ?? new Date();
     const sessionAtClose = classifySessionType(closeTimestamp);
     const exitSlippageSession = toSlippageSession(sessionAtClose); // F10: centralized remap
     // FINDING #4 FIX: prefer the passed-in rolling median (from exitBarContext.medianAtr14)
@@ -4022,8 +4071,12 @@ async function bookPartialClose(
       // M1 (deepscan-6): dailyPnlBreakdown inside tx so kill-switch sees accurate partial-close
       // P&L even on a crash between trade commit and a follow-up update.
       // Was a non-blocking try/catch OUTSIDE the tx — a crash left the DLL gate reading a stale value.
+      // F-3 (freshscan11 2026-07-12, amended 2026-07-16 — coordinator fix-the-class extension):
+      // same day-misattribution class as closePosition's RIDER fix above — derive the trading-day
+      // key from the threaded bar time on bar-driven paths (wall-clock fallback preserved for any
+      // genuinely-real-time caller of bookPartialClose, mirroring the closePosition pattern exactly).
       {
-        const todayKey = toFuturesTradingDayString();
+        const todayKey = toFuturesTradingDayString(barTimestamp ?? new Date());
         const jsonPath = `{${todayKey}}`;
         await tx.update(paperSessions).set({
           dailyPnlBreakdown: sql`jsonb_set(
@@ -4131,6 +4184,10 @@ async function applyExitDecision(
   atr?: number,
   correlationId?: string | null,
   medianAtr?: number,   // BL-8 fix: rolling median ATR for realistic exit slippage
+  // F-3 (freshscan11 2026-07-12, amended 2026-07-16): the market bar's timestamp — threaded from
+  // both call sites' exitBarContext.barTimestamp into every bookPartialClose/closePosition call
+  // below so exit-slippage session classification uses the bar's time, not the wall clock.
+  barTimestamp?: Date,
 ): Promise<boolean> {
   const { decision, new_stop, evidence } = result;
 
@@ -4191,7 +4248,7 @@ async function applyExitDecision(
             tp1Filled: true,
             contracts: pos.contracts - contractsToClose,
             lastHandlerEvalAt: new Date(),
-          });
+          }, barTimestamp);
         } catch (bookErr) {
           const bookErrMsg = bookErr instanceof Error ? bookErr.message : String(bookErr);
           logger.error(
@@ -4251,7 +4308,7 @@ async function applyExitDecision(
         // is the loop-iteration object captured BEFORE this bar's MTM row UPDATE advanced
         // previousUnrealizedPnl, so pos.previousUnrealizedPnl is exactly what's still reflected
         // in currentEquity right now (see closePosition's precedingUnrealizedPnlOverride doc).
-        await closePosition(pos.id, currentPrice, atr, { medianAtr, precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0) });
+        await closePosition(pos.id, currentPrice, atr, { medianAtr, precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0), barTimestamp });
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice, tp1Price,
@@ -4302,7 +4359,7 @@ async function applyExitDecision(
             tp2Filled: true,
             contracts: pos.contracts - contractsToClose,
             lastHandlerEvalAt: new Date(),
-          });
+          }, barTimestamp);
         } catch (bookErr) {
           const bookErrMsg = bookErr instanceof Error ? bookErr.message : String(bookErr);
           logger.error(
@@ -4361,7 +4418,7 @@ async function applyExitDecision(
         // is the loop-iteration object captured BEFORE this bar's MTM row UPDATE advanced
         // previousUnrealizedPnl, so pos.previousUnrealizedPnl is exactly what's still reflected
         // in currentEquity right now (see closePosition's precedingUnrealizedPnlOverride doc).
-        await closePosition(pos.id, currentPrice, atr, { medianAtr, precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0) });
+        await closePosition(pos.id, currentPrice, atr, { medianAtr, precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0), barTimestamp });
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice,
@@ -4484,7 +4541,7 @@ async function applyExitDecision(
       // second time here — this call site was double-counting every time-stop close.
       // MED (freshscan6 2026-07-12): see doc comment above — pos.previousUnrealizedPnl is the
       // pre-bar value still reflected in currentEquity at this point in the loop.
-      await closePosition(pos.id, currentPrice, atr, { medianAtr, outcomeOverride: "time_stop", precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0) });
+      await closePosition(pos.id, currentPrice, atr, { medianAtr, outcomeOverride: "time_stop", precedingUnrealizedPnl: Number(pos.previousUnrealizedPnl ?? 0), barTimestamp });
       logger.info(
         {
           positionId: pos.id, strategyId, exitStyle, currentPrice, pnlAtFlatten,
@@ -4732,7 +4789,9 @@ export async function updatePositionPrices(
             // MED (freshscan6 2026-07-12): prevUnrealized (captured above, before this bar's MTM
             // row UPDATE) is exactly what's still baked into currentEquity at this point in the
             // loop — see closePosition's precedingUnrealizedPnlOverride doc comment.
-            await closePosition(pos.id, stopFillPrice, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: stopExitOutcome, precedingUnrealizedPnl: prevUnrealized });
+            // F-3: optional-chain preserves wall-clock fallback for the bare `/prices` route
+            // (routes/paper.ts, ~line 566) which calls updatePositionPrices with no exitBarContext.
+            await closePosition(pos.id, stopFillPrice, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose, outcomeOverride: stopExitOutcome, precedingUnrealizedPnl: prevUnrealized, barTimestamp: exitBarContext?.barTimestamp });
             closedByExitHandler.add(pos.id);
             totalUnrealizedDelta -= unrealizedDelta;
             totalUnrealizedPnl   -= unrealizedPnl;
@@ -4990,6 +5049,7 @@ export async function updatePositionPrices(
           pos, handlerResult,
           (pos.currentExitStyle ?? "C") as "D" | "C",  // Wave 24: Style D dead — default C
           stratId, currentPrice, atr14ForClose, correlationId, medianAtr14ForClose,
+          exitBarContext.barTimestamp, // F-3: thread the bar's time, not wall-clock
         );
 
         // F4: same-bar TP1+TP2 sequential evaluation for Style C within-bar sweeps.
@@ -5083,6 +5143,7 @@ export async function updatePositionPrices(
                   updatedPos, tp2Result,
                   (updatedPos.currentExitStyle ?? "C") as "D" | "C",
                   stratId, currentPrice, atr14ForClose, correlationId, medianAtr14ForClose,
+                  exitBarContext.barTimestamp, // F-3: same bar's time as the TP1 leg above
                 );
                 if (tp2Closed) positionClosed = true;
               }
@@ -5292,7 +5353,11 @@ export interface RollCheckResult {
 export async function checkRollAndFlatten(
   sessionId: string,
   exitPrices?: Record<string, number>,
-  context?: { correlationId?: string },
+  // F-3: `barTimestamp` added for CLASS CLOSURE only (StyleExitBarContext / bookPartialClose /
+  // applyExitDecision all gained this param) — its sole production caller is the 16:30 ET
+  // scheduler cron, which is genuinely real-time, so the closePosition call below intentionally
+  // STAYS wall-clock and does NOT thread this field.
+  context?: { correlationId?: string; barTimestamp?: Date },
 ): Promise<RollCheckResult[]> {
   const correlationId = context?.correlationId ?? null;
   const rollSpan = tracer.startSpan("paper.roll_check");
@@ -5380,6 +5445,8 @@ export async function checkRollAndFlatten(
         let pnlAtClose: number | undefined;
 
         try {
+          // F-3: wall-clock CORRECT here (16:30 ET scheduler cron — genuinely real-time; no bar
+          // is being replayed, so there is no bar time to thread).
           const closeResult = await closePosition(pos.id, exitPrice, undefined, { correlationId: correlationId ?? undefined });
           pnlAtClose = closeResult.pnl;
         } catch (closeErr) {
@@ -5732,6 +5799,8 @@ export async function forceCloseAllPositions(
           // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="force_close" is
           // now passed INTO closePosition() instead of incrementing paperTradesCounter a
           // second time here — this call site was double-counting every force-close.
+          // F-3: wall-clock CORRECT here (kill-switch force-flatten — genuinely real-time halt,
+          // no bar being replayed).
           await closePosition(pos.id, rawEntry, derivedAtr, { correlationId: batchCorrelationId, forceClosePriceUnconfirmed: true, outcomeOverride: "force_close" });
           closedCount++;
         } catch (err) {
@@ -5790,6 +5859,8 @@ export async function forceCloseAllPositions(
       // HIGH E-2 fix (deep-scan #16 wave-1 track-3): outcomeOverride="force_close" is
       // now passed INTO closePosition() instead of incrementing paperTradesCounter a
       // second time here — this call site was double-counting every force-close.
+      // F-3: wall-clock CORRECT here (kill-switch force-flatten — genuinely real-time halt,
+      // no bar being replayed).
       await closePosition(pos.id, rawCurrent, derivedAtr, { correlationId: batchCorrelationId, outcomeOverride: "force_close" });
       closedCount++;
     } catch (err) {

@@ -1,6 +1,6 @@
 # Ratify-Packet — freshscan11 F-3 (2026-07-12): exit-slippage session uses WALL-CLOCK, not the bar
 
-**STATUS: STAGED, NOT STARTED. Zero code written. CRITICAL capital-safety — instrument surface (fill/P&L/slippage). Independent-grader-found.**
+**STATUS: CLOSED — LANDED 2026-07-16 (campaign W1). Implemented + class-extended (bookPartialClose day-key sibling) + hardened (2 time-fragile regression guards pinned) + INDEPENDENTLY GRADED band 7 VERIFIED SAFE-TO-LAND (accuracy-validator, doer≠grader, 2 non-overlapping re-derivation paths, genuine RED-proof, scope-lock byte-clean, independent class-sweep found no missed sibling) + parent final-verify (tsc exit 0, 223/223 vitest). CRITICAL capital-safety — instrument surface (fill/P&L/slippage). Scope was re-verified against `hardening/phase-0` @ `61bb20a3` (unchanged from stage-time).**
 
 Base: origin/hardening/phase-0 (found while grading `98d87367`/`edfa7edf`). Subsystem: paper-execution fill/slippage.
 Pre-existing since `13247bcc1` (2026-06-28) — NOT introduced by any freshscan11 commit.
@@ -34,7 +34,28 @@ Pre-existing since `13247bcc1` (2026-06-28) — NOT introduced by any freshscan1
 
 **4. Verification plan:** A/B on a fixture where the same bar is processed at two different wall-clocks — must produce IDENTICAL slippage/P&L after the fix (currently differs by up to 100×). Unit test: `bookPartialClose` + each internal `closePosition` caller classifies session from bar time, not `new Date()`. Replay-determinism test: reprocessing backlogged bars yields identical P&L regardless of when run. Independent grade (doer≠grader).
 
-**5. Rollback:** single-commit revert. Consider gating behind `PAPER_EXIT_SLIPPAGE_BARTIME_ENABLED` (default ON once graded, mirroring the parity-flag pattern) so the re-baseline is auditable, since it alters realized paper P&L on affected exits.
+**5. Rollback:** single-commit revert.
+
+---
+
+## AMENDMENT (2026-07-16, campaign W1 — scope re-verified + design-refined; supersedes the "consider gating" suggestion in part 5)
+
+**Re-anchored @ `61bb20a3` (unchanged from stage-time): `classifySessionType` :677, CME_HALT :684, `sessionMult = 100.0` :542, `bookPartialClose` `new Date()` :3834.**
+
+**A. NO env flag (supersedes part-5's `PAPER_EXIT_SLIPPAGE_BARTIME_ENABLED` suggestion).** Nothing is live; the internal simulator is pre-PAPER evidence only; the "legacy behavior" is nondeterministic-w.r.t.-processing-time, so there is no baseline worth preserving. A flag would be a one-env-edit knob that RESTORES a known CRITICAL, doubling the test matrix for negative value. Auditability is delivered per-trade instead: add a `exitSlippageTimeSource: "bar"|"wallclock"` span attribute at the `closePosition` slippage site + the landing SHA marks the boundary. (If the independent grader rules a flag mandatory, implement default-ON module-scope read isolated to the two `closeTimestamp` lines.)
+
+**B. Corrected site disposition (design-agent, receipts-verified).** The stage-time "8 internal callers" list is refined:
+- THREAD bar time (bar-driven): `bookPartialClose` gains `barTimestamp?: Date` (last param); `applyExitDecision` gains `barTimestamp?: Date`, threaded to its bookPartialClose(tp1/tp2) + closePosition(tp1-full/tp2-full/time-stop) sites; both `applyExitDecision` invocations pass `exitBarContext.barTimestamp`; the in-loop stop-breach `closePosition` passes `exitBarContext?.barTimestamp` (optional-chain preserves wall-clock for the bare `/prices` route).
+- `StyleExitBarContext` gains `barTimestamp?: Date` — **verified NO Python-bridge impact** (`callExitHandler` builds subprocess state by explicit field picks, never serializes the interface). `paper-trading-stream.ts buildExitBarContext` already computes `new Date(bar.timestamp)` → add it to the ctx literal.
+- **DOCUMENTED wall-clock-CORRECT (comment, no thread) — `:5383` roll handler is the CORRECTION to the stage-time list: its sole production caller is the 16:30 ET scheduler cron (real-time), so wall-clock is correct; it gets the optional `barTimestamp` param for class-closure only.** Also documented-correct: `forceCloseAllPositions` (kill-switch real-time), `routes/paper.ts` manual/external close, `feed-silence-service.ts` (feed silent → no bar exists).
+
+**C. Rider added to scope — `closedAt = new Date()` (~:2561) trading-day attribution.** On the D5 delayed feed, a bar stamped 16:55 ET arrives ~17:05 wall-clock and books its close to the WRONG CME trading day (daily-cap counting + daily P&L breakdown). Derive `closedAt`'s trading-day from the same threaded bar time on bar-driven paths (wall-clock on genuinely-real-time paths, same disposition table). Adds a unit test (bar 16:55 ET arriving 17:05 wall → books to the BAR's trading day).
+
+**D. D5 escalation (why this is the hard prerequisite for the Massive $29 switch):** on a 10-min-delayed feed, bars stamped 15:50–16:00 ET arrive 16:00–16:10 wall-clock — INSIDE the CME_HALT window — so the wall-clock bug would 100× essentially EVERY end-of-day exit, EVERY day, not just post-outage. No Massive subscription payment until this lands.
+
+**E. Restore the 3 neutered assertions:** the freshscan11 `netPnl > 0` waivers (f4-samebar, bookpartialclose-equity, equity-double-count) become deterministic again post-fix and are restored as standing F-3 regression guards (fixture gross P&L dwarfs RTH slippage ~$1.47/contract).
+
+**Adjacent class flagged, NOT in scope (future packet candidate):** the 16:30 ET roll sweep intentionally prices flattens inside the 100× CME_HALT window (product decision: move sweep pre-16:00?).
 
 ## Plain-English summary for the operator
 

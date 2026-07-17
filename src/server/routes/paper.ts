@@ -554,6 +554,8 @@ router.post("/execute/close", idempotencyMiddleware, async (req, res) => {  // d
     if (!positionId || !exitSignalPrice) {
       return res.status(400).json({ error: "positionId, exitSignalPrice required" });
     }
+    // F-3: wall-clock CORRECT here (manual close via external signal — genuinely real-time,
+    // no bar being replayed).
     const result = await closePosition(positionId, Number(exitSignalPrice));
     res.json(result);
   } catch (err: any) {
@@ -867,6 +869,8 @@ router.post("/kill/:sessionId", async (req, res) => {
       for (const pos of openPositions) {
         const exitPrice = pos.currentPrice != null ? Number(pos.currentPrice) : Number(pos.entryPrice);
         try {
+          // F-3: wall-clock CORRECT here (manual/kill-switch close via the kill route —
+          // genuinely real-time, no bar being replayed).
           await closePosition(pos.id, exitPrice, undefined, { correlationId: req.id ?? undefined });
           req.log.info({ sessionId, positionId: pos.id, exitPrice }, "kill: position closed at last-known MtM price");
         } catch (posCloseErr) {

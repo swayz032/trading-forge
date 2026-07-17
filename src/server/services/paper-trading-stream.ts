@@ -315,6 +315,11 @@ export async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext
       // backtester.py:1248/1260. Bar.high/Bar.low are always numbers per the Bar interface.
       currentBarHigh: { [bar.symbol]: bar.high },
       currentBarLow:  { [bar.symbol]: bar.low  },
+      // F-3 (freshscan11 2026-07-12, amended 2026-07-16): the actual market bar time (already
+      // computed above as `barDate` for the ET time-of-day string) — threaded through to
+      // applyExitDecision/bookPartialClose/closePosition so exit-slippage session classification
+      // uses the bar's time, not the wall clock at code-execution time.
+      barTimestamp: barDate,
     };
     return ctx;
   } catch (err) {

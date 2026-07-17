@@ -356,6 +356,8 @@ async function attemptEmergencyCloseForStrategy(
       // We pass 0 as exitSignalPrice; closePosition's internal logic uses currentPrice
       // when the signal price is 0/null (same as the force-flatten fallback path).
       // The kill-switch / production-halt gates inside closePosition are fully respected.
+      // F-3: wall-clock CORRECT here — the feed is silent, so there is no bar to thread; the
+      // close genuinely happens at real-time detection.
       await closePosition(row.position_id, 0, undefined, { correlationId });
       closedCount++;
       logger.warn(
