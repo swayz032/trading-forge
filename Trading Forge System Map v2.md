@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-17T01:32:18.887Z`.
+Updated automatically from the repo on `2026-07-17T05:01:03.711Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-07-17T01:32:18.887Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `79`
-- Scheduler jobs tracked: `110`
+- Scheduler jobs tracked: `111`
 - Current live Trading Forge n8n workflows tracked: `20`
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
@@ -55,7 +55,7 @@ Updated automatically from the repo on `2026-07-17T01:32:18.887Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `73`
 - Route coverage: `79/79`
-- Scheduler coverage: `110/110`
+- Scheduler coverage: `111/111`
 - Engine coverage: `29/29`
 - Database coverage: `110/110`
 - Autonomous subsystems with audit coverage: `64/64`
@@ -322,6 +322,7 @@ Updated automatically from the repo on `2026-07-17T01:32:18.887Z`.
 - `autonomous-scout-discovery`
 - `bias-engine-refresh-10am-et`
 - `bias-engine-session-start`
+- `bias-state-freshness-check`
 - `broker-error-budget-check`
 - `bw-session-refresh`
 - `c11-bls-release`

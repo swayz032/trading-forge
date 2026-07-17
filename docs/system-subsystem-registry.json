@@ -784,6 +784,7 @@
       "archetype-daily-classify",
       "bias-engine-refresh-10am-et",
       "bias-engine-session-start",
+      "bias-state-freshness-check",
       "c11-bls-release",
       "c11-fred-daily",
       "c11-h41-weekly",
@@ -4869,7 +4870,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Deep-Scan #16 Wave 3. Daily 17:00 ET cron (DST-safe double-fire at 21,22 UTC minute :43 with ET-hour==17 guard, mirrors regime-drift-detector + strategy-age-revalidation patterns) that restores the demotion the live n8n 'Daily Portfolio Monitor' workflow (node 'Log Drift Alert and Transition') was SUPPOSED to do but silently did NOT — its PATCH /api/strategies/:id/lifecycle sent no HMAC timestamp+signature so every call 401'd (or 503 with secret unset) and onError:continueRegularOutput swallowed it into a false-green. Scans every DEPLOYED strategy; any whose persisted strategies.rolling_sharpe_30d (refreshed 4-hourly by the rolling-sharpe cron via metrics-aggregator) is below PORTFOLIO_DRIFT_SHARPE_FLOOR (default 1.0) is auto-demoted DEPLOYED -> DECLINING -> TESTING (two-step preserves transition observability). FAIL-SAFE on NULL rolling Sharpe (skip via portfolio_drift_demotion.no_sharpe_data_skipped info audit, NEVER demote) — the dead n8n node's ||0 default would have demoted everything. DEFAULT-OFF: with PORTFOLIO_DRIFT_DEMOTION_ENABLED unset/false the sweep runs in effective dry-run (detect + tf_portfolio_drift_demotions_total telemetry + advisory Discord + portfolio_drift_demotion.dry_run audit, NO lifecycle mutation) so the operator validates the rolling-Sharpe scale on real DEPLOYED strategies before flipping to live demotion. Zombie DECLINING (step2 DECLINING->TESTING fails) is recovered by the regime-drift-detector's existing zombie-DECLINING compensating sweep (not duplicated). _PIPELINE_GATE_EXEMPT (runs even when pipeline paused); _tryAcquireJobLock prevents overlap re-entry. Closes the silent-dead-auto-demotion failure mode where the n8n portfolio-drift demotion showed GREEN while no demotion ever occurred.",
+    "automation_scope": "Deep-Scan #16 Wave 3. Daily 17:00 ET cron (DST-safe double-fire at 21,22 UTC minute :43 with ET-hour==17 guard, mirrors regime-drift-detector + strategy-age-revalidation patterns) that restores the demotion the live n8n 'Daily Portfolio Monitor' workflow (node 'Log Drift Alert and Transition') was SUPPOSED to do but silently did NOT \u2014 its PATCH /api/strategies/:id/lifecycle sent no HMAC timestamp+signature so every call 401'd (or 503 with secret unset) and onError:continueRegularOutput swallowed it into a false-green. Scans every DEPLOYED strategy; any whose persisted strategies.rolling_sharpe_30d (refreshed 4-hourly by the rolling-sharpe cron via metrics-aggregator) is below PORTFOLIO_DRIFT_SHARPE_FLOOR (default 1.0) is auto-demoted DEPLOYED -> DECLINING -> TESTING (two-step preserves transition observability). FAIL-SAFE on NULL rolling Sharpe (skip via portfolio_drift_demotion.no_sharpe_data_skipped info audit, NEVER demote) \u2014 the dead n8n node's ||0 default would have demoted everything. DEFAULT-OFF: with PORTFOLIO_DRIFT_DEMOTION_ENABLED unset/false the sweep runs in effective dry-run (detect + tf_portfolio_drift_demotions_total telemetry + advisory Discord + portfolio_drift_demotion.dry_run audit, NO lifecycle mutation) so the operator validates the rolling-Sharpe scale on real DEPLOYED strategies before flipping to live demotion. Zombie DECLINING (step2 DECLINING->TESTING fails) is recovered by the regime-drift-detector's existing zombie-DECLINING compensating sweep (not duplicated). _PIPELINE_GATE_EXEMPT (runs even when pipeline paused); _tryAcquireJobLock prevents overlap re-entry. Closes the silent-dead-auto-demotion failure mode where the n8n portfolio-drift demotion showed GREEN while no demotion ever occurred.",
     "data_sources": [
       "strategies.rolling_sharpe_30d"
     ],
@@ -5430,7 +5431,11 @@
     "evidence_queries": [
       "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
     ],
-    "failure_visibility": ["scheduler logs", "tf_candidate_conveyor_enqueued_total Prometheus", "audit_log:lifecycle.candidate_conveyor_enqueued"],
+    "failure_visibility": [
+      "scheduler logs",
+      "tf_candidate_conveyor_enqueued_total Prometheus",
+      "audit_log:lifecycle.candidate_conveyor_enqueued"
+    ],
     "recovery_mode": "scheduler-retry-with-per-strategy-isolation",
     "health_check": "SELECT COUNT(*) FROM audit_log WHERE action='lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '1 hour'",
     "ownership_boundary": "internal-only",
@@ -5446,7 +5451,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "advisory",
-    "automation_scope": "Operator nerve-center voice agent (ElevenLabs WebRTC). REPORTS on every subsystem and RUNS capital-safe work only (backtests, Monte Carlo, scout discovery, research) via a registry-driven read+run tool dispatcher. May PROPOSE risky actions but NEVER bypasses a promotion, compliance, or risk gate — the gates remain authoritative. Operator-assist/advisory, not a lifecycle gate. Not in the live-trade path.",
+    "automation_scope": "Operator nerve-center voice agent (ElevenLabs WebRTC). REPORTS on every subsystem and RUNS capital-safe work only (backtests, Monte Carlo, scout discovery, research) via a registry-driven read+run tool dispatcher. May PROPOSE risky actions but NEVER bypasses a promotion, compliance, or risk gate \u2014 the gates remain authoritative. Operator-assist/advisory, not a lifecycle gate. Not in the live-trade path.",
     "data_sources": [
       "ElevenLabs post-call transcript webhook",
       "Carter tool registry (read+run tools)",
