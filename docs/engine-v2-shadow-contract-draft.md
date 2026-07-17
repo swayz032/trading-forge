@@ -255,6 +255,49 @@ is made on whether Layer 4 should truly be an unscoped global halt or per-accoun
 its siblings — that scoping question needs an explicit answer, not an assumption, before
 this monitor is ever safe to start. Until both exist, this stays reserved.
 
+## Sixth coordination-packet entry: pre-market DXY/10Y producer never populated (long-standing informal deferral, now formally reserved)
+
+**Added 2026-07-17 during 73-domain band-ledger disposition-survey synthesis.** Surfaced not as
+a fresh finding but as a stale informal deferral discovered while cross-checking the survey
+agents' COVERED verdicts against CLAUDE.md's own text: Wave 25 Pass 2.5 (2026-05-24) shipped
+`pre_market_sessions`'s DXY/10Y cross-asset fields with an honest "Wave 26 candidate" deferral
+note ("live session-start Python doesn't pass `intraday_bars` yet") — but that deferral was never
+converted into an owned reservation, and 14 months of calendar time (through the 2026-07-09
+deep-scan HIGH-1 census and the 2026-07-17 liveness audit) confirm it never got picked up.
+
+**Root cause (already diagnosed, not new):** `pre-market-routine.ts`'s `getDailyBars()` calls
+`GET /api/bars/:symbol`, which **does not exist server-side** — confirmed 404 on every attempt
+(`AGENT-LOGS.md:1922`). The route was never built. `pre_market_sessions`'s bars-derived DXY/10Y
+direction fields have delivered **0/39 non-null values ever** in production (2026-07-17 liveness
+audit finding, cited verbatim in `CLAUDE.md` §2b's decay footnote).
+
+**Consequence:** `cross_asset_aligned` (confluence factor, weight 0.05, redistributed to 0.10 for
+MCL) and its decay-age companion `cross_asset_age_hours` are correctly READ by
+`cross-asset-context.ts` when present — that consumer side is genuinely cert-band-9 verified
+end-to-end (2026-07-09 deep-scan HIGH-1) — but the field is never genuinely populated, so every
+MES/MNQ/MCL signal's `cross_asset_aligned` factor has silently evaluated on an always-empty input
+since Wave 25 Pass 2.5 shipped. CLAUDE.md's own text already carries the explicit warning: "do
+not cite 'cert band 9' as end-to-end confirmation until the bars endpoint ships and a real
+non-null value is observed" — this entry exists to make that warning an owned, falsifiable
+reservation instead of a doc footnote nobody is accountable for closing.
+
+**Why this is coordination-gated, not a solo fix:** building `GET /api/bars/:symbol` is a genuine
+new server route (not a bounded bug fix), and wiring it live is the same re-baseline species as
+entries 1, 2, and 4 above — the first time this endpoint serves real data, `cross_asset_aligned`
+stops being permanently-unsatisfied for every signal, changing weighted confluence scores
+going forward for three symbols simultaneously (MES, MNQ, and MCL at the redistributed 0.10
+weight). Same discipline as entry 4 (market-internals): the missing-endpoint fix and the live
+first-activation are the same action, no separable telemetry-only slice.
+
+**Named owner + concrete unblock condition:** owner = whoever owns the market-data/bars-serving
+surface under the live campaign (a distinct territory from entries 1/2/3's engine-context
+ownership and entry 5's kill-switch ownership — this is server-side data-plumbing, closer to
+entry 4's signal-generation territory but a different specific file). Unblocks when (1) a real
+`GET /api/bars/:symbol` implementation exists (even a minimal S3/Databento-backed one), and (2) a
+before/after replay comparison exists showing the `cross_asset_aligned` confluence-score delta
+once real DXY/10Y direction is available — mirrors entry 4's measurement bar exactly, since this
+is also a soft, non-hard-block factor.
+
 ## Sequencing
 
 1. This draft gets sign-off (advisor + whichever agent owns `backtester.py` under the
