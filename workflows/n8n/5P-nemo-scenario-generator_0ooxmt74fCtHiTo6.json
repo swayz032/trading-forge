@@ -38,6 +38,8 @@
       "parameters": {
         "method": "POST",
         "url": "https://tf-relay-production.up.railway.app/api/nemo-scenarios/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -58,6 +60,12 @@
         },
         "options": {
           "timeout": 14400000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "toPhkc55VihQCGN4",
+          "name": "TF API Bearer (deepscan13)"
         }
       },
       "onError": "continueRegularOutput",
@@ -213,7 +221,7 @@
             "interval": [
               {
                 "field": "cronExpression",
-                "expression": "0 9,10 * * 0"
+                "expression": "0 5 * * 0"
               }
             ]
           }
@@ -231,6 +239,8 @@
         "parameters": {
           "method": "POST",
           "url": "https://tf-relay-production.up.railway.app/api/nemo-scenarios/generate",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [
@@ -251,6 +261,12 @@
           },
           "options": {
             "timeout": 14400000
+          }
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "toPhkc55VihQCGN4",
+            "name": "TF API Bearer (deepscan13)"
           }
         },
         "onError": "continueRegularOutput",

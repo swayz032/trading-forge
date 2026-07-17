@@ -127,6 +127,19 @@ describe("goalscan 2026-07-16 — O1/O3 prop-firm-health telemetry + authority",
   });
 });
 
+describe("goalscan 2026-07-16 — C1 compliance CI lint covers contract caps", () => {
+  it("verify-2026-rules-compliance.mjs pins FIRM_CONTRACT_CAPS against canonical values", () => {
+    const lint = readFileSync(resolve(__dirname, "..", "..", "..", "scripts", "verify-2026-rules-compliance.mjs"), "utf8");
+    expect(lint).toContain("function checkContractCaps()");
+    expect(lint).toContain("CANONICAL_CONTRACT_CAPS");
+    // caps guard must be wired into the drift accumulation
+    expect(lint).toContain("drift.push(...checkContractCaps())");
+    // canonical values pinned
+    expect(lint).toMatch(/topstep_50k:\s*\{\s*MES:\s*50,\s*MNQ:\s*50,\s*MCL:\s*50\s*\}/);
+    expect(lint).toMatch(/mffu_50k:\s*\{\s*MES:\s*40,\s*MNQ:\s*40,\s*MCL:\s*40\s*\}/);
+  });
+});
+
 describe("goalscan 2026-07-16 — O3 exchange-status authority", () => {
   it("no non-canonical human_admin authority value remains", () => {
     expect(srv("services/exchange-status-service.ts")).not.toContain('decisionAuthority: "human_admin"');

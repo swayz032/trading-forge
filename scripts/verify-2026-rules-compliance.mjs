@@ -338,6 +338,47 @@ function equiv(a, b) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────
 
+// goalscan 2026-07-16 (C1): the scalar FIELD_MAP checks above did NOT cover the per-symbol
+// FIRM_CONTRACT_CAPS — the sizing firmCap ceiling the docs advertise this gate to guard. A silent
+// edit (e.g. an MFFU cap to 80) passed CI green. Pin the caps against the canonical 2026 values so a
+// drift reds the gate. Topstep 50K = 50 micros/symbol; MFFU Builder 50K = 40 micros/symbol
+// (docs/prop-firm-rules-2026-*.md). This reads firm_config.py directly (the sizing source of truth).
+const CANONICAL_CONTRACT_CAPS = {
+  topstep_50k: { MES: 50, MNQ: 50, MCL: 50 },
+  mffu_50k:    { MES: 40, MNQ: 40, MCL: 40 },
+};
+
+function checkContractCaps() {
+  const out = [];
+  let src;
+  try {
+    src = fs.readFileSync(PY_CONFIG, "utf8");
+  } catch {
+    return [{ firm: "ALL", field: "FIRM_CONTRACT_CAPS", layer: "python", expected: "readable firm_config.py", found: "unreadable" }];
+  }
+  const blockMatch = src.match(/FIRM_CONTRACT_CAPS[^=]*=\s*\{([\s\S]*?)\n\}/);
+  if (!blockMatch) {
+    return [{ firm: "ALL", field: "FIRM_CONTRACT_CAPS", layer: "python", expected: "present", found: "not found" }];
+  }
+  const block = blockMatch[1];
+  for (const [firmKey, expectedCaps] of Object.entries(CANONICAL_CONTRACT_CAPS)) {
+    const rowMatch = block.match(new RegExp(`"${firmKey}"\\s*:\\s*\\{([^}]*)\\}`));
+    if (!rowMatch) {
+      out.push({ firm: firmKey, field: "FIRM_CONTRACT_CAPS", layer: "python", expected: expectedCaps, found: "row missing" });
+      continue;
+    }
+    const row = rowMatch[1];
+    for (const [sym, expVal] of Object.entries(expectedCaps)) {
+      const symMatch = row.match(new RegExp(`"${sym}"\\s*:\\s*(\\d+)`));
+      const found = symMatch ? Number(symMatch[1]) : null;
+      if (found !== expVal) {
+        out.push({ firm: firmKey, field: `FIRM_CONTRACT_CAPS.${sym}`, layer: "python", expected: expVal, found });
+      }
+    }
+  }
+  return out;
+}
+
 function main() {
   // Non-fatal staleness warnings — fires before drift checks so they always
   // surface even when the CI gate itself is green.
@@ -345,6 +386,8 @@ function main() {
   warnIfStale(TOPSTEP_DOC);
 
   let drift = [];
+
+  drift.push(...checkContractCaps());
 
   drift.push(...compareFirm({
     docKey: MFFU_DOC,
