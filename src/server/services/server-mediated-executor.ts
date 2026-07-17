@@ -66,6 +66,23 @@ import {
  * DEPLOYED and PILOT are "live" — all other states (SHADOW, PAPER, TESTING,
  * CANDIDATE, DEPLOY_READY, DECLINING, RETIRED, GRAVEYARD, etc.) are
  * simulation-only and must never call routeOrder().
+ *
+ * M3 (2026-07-17) PAPER Authority Flip — considered whether this should derive
+ * from `BROKER_AUTHORITATIVE_STATES` (paper-authority-states.ts, ={DEPLOY_READY,
+ * PILOT, DEPLOYED} as of M3) since it's a strict subset (excludes DEPLOY_READY —
+ * broker-authoritative for PAPER-journal purposes, but NOT yet live-execution-
+ * eligible; a strategy must clear human PILOT approval first). DECIDED to keep
+ * this as its OWN independent literal rather than derive it: a subtractive
+ * derivation (e.g. "every broker-authoritative state except DEPLOY_READY") would
+ * fail-OPEN on the live-CAPITAL boundary — if a future edit ever widened
+ * BROKER_AUTHORITATIVE_STATES, this set would silently widen too unless someone
+ * remembered to also update the subtraction filter. An independent literal here
+ * means a change to the paper-authority boundary can NEVER silently touch the
+ * live-execution boundary without an explicit, reviewed edit to this line.
+ * `server-mediated-executor.test.ts` asserts LIVE_EXECUTION_STATES is always a
+ * strict subset of BROKER_AUTHORITATIVE_STATES so the two can still never
+ * silently diverge in the dangerous direction (this set containing a state the
+ * paper-authority set does NOT).
  */
 export const LIVE_EXECUTION_STATES: ReadonlySet<string> = new Set(["DEPLOYED", "PILOT"]);
 

@@ -17,6 +17,9 @@
  */
 
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { isBrokerAuthoritativeState } from "../lib/paper-authority-states.js";
 
 // ─── Lifecycle state machine (pure-function mirror of lifecycle-service.ts) ────
 
@@ -66,8 +69,24 @@ interface ShadowInterceptDecision {
 }
 
 /**
- * Pure mirror of the Wave 29 Pass A.1 shadow intercept decision.
- * Does NOT touch DB, SSE, or audit log — those are side-effects in the service.
+ * Pure mirror of the Wave 29 Pass A.1 shadow intercept decision, INVERTED for
+ * M3 PAPER Authority Flip (2026-07-17).
+ *
+ * OLD doctrine (pre-M3): lifecycleState==='PAPER' was an "operator override" —
+ * the signal fell through to the normal path, which (per the OLD
+ * PAPER_PLUS_STATES broker-eligible set) COULD reach a real TradersPost order
+ * via the A/B rl-challenger routeOrder() branch further down in
+ * paper-signal-service.ts.
+ *
+ * NEW doctrine (M3): PAPER is internal-engine-only. The control-flow shape at
+ * this exact branch is UNCHANGED (still falls through, still logs the
+ * inconsistency warn) — what changed is item 3's shared
+ * BROKER_AUTHORITATIVE_STATES constant, which structurally REMOVED "PAPER"
+ * from the broker-eligible set used by that SAME rl-challenger branch. So
+ * "falling through" now can NEVER reach routeOrder() for a PAPER-state
+ * strategy — it only ever reaches the internal fill path (pendingEntryQueue
+ * -> openPosition()). Does NOT touch DB, SSE, or audit log — those are
+ * side-effects in the service.
  */
 function decideShadowIntercept(
   shadowModeEnabled: boolean,
@@ -83,11 +102,12 @@ function decideShadowIntercept(
   }
   // shadow_mode_enabled=true
   if (lifecycleState === "PAPER") {
-    // Operator override: already promoted, route through
+    // Operator override: already promoted, falls through to the internal
+    // fill path — NEVER TradersPost as of M3 (PAPER is internal-engine-only).
     return {
       shouldIntercept: false,
       shouldEmitInconsistencyWarn: true,
-      shouldRouteToTradersPost: true,
+      shouldRouteToTradersPost: false,
       reason: "operator_override_lifecycle_paper",
     };
   }
@@ -587,42 +607,76 @@ describe("Pine alert emission — preserved by shadow intercept", () => {
 });
 
 // ─── 12. Operator override: shadow_mode_enabled=true AND lifecycle_state='PAPER' ─
+// INVERTED for M3 PAPER Authority Flip (2026-07-17): "routes through" now means
+// "reaches the internal engine fill path", never TradersPost.
 
-describe("Operator override — shadow_mode_enabled=true with lifecycle_state=PAPER", () => {
-  it("does NOT intercept when lifecycle_state=PAPER (operator override)", () => {
+describe("Operator override — shadow_mode_enabled=true with lifecycle_state=PAPER (M3-inverted)", () => {
+  it("does NOT intercept when lifecycle_state=PAPER (operator override) — unchanged by M3", () => {
     const decision = decideShadowIntercept(true, "PAPER");
     expect(decision.shouldIntercept).toBe(false);
   });
 
-  it("emits inconsistency warn when shadow_mode_enabled AND lifecycle_state=PAPER", () => {
+  it("emits inconsistency warn when shadow_mode_enabled AND lifecycle_state=PAPER — unchanged by M3", () => {
     const decision = decideShadowIntercept(true, "PAPER");
     expect(decision.shouldEmitInconsistencyWarn).toBe(true);
   });
 
-  it("routes to TradersPost when lifecycle_state=PAPER (operator override)", () => {
+  it("does NOT route to TradersPost when lifecycle_state=PAPER (M3 doctrine-pinning RED-proof — was true pre-M3)", () => {
     const decision = decideShadowIntercept(true, "PAPER");
-    expect(decision.shouldRouteToTradersPost).toBe(true);
+    expect(decision.shouldRouteToTradersPost).toBe(false);
   });
 
-  it("reason is operator_override_lifecycle_paper", () => {
+  it("reason is operator_override_lifecycle_paper — unchanged by M3 (only the routing consequence inverted)", () => {
     const decision = decideShadowIntercept(true, "PAPER");
     expect(decision.reason).toBe("operator_override_lifecycle_paper");
   });
 
-  it("audit action for inconsistency warn is lifecycle.shadow_mode_inconsistency_warn", () => {
+  it("audit action for inconsistency warn is lifecycle.shadow_mode_inconsistency_warn — unchanged by M3", () => {
     // Document the action name for monitoring/alerting wiring.
     const INCONSISTENCY_WARN_ACTION = "lifecycle.shadow_mode_inconsistency_warn";
     expect(INCONSISTENCY_WARN_ACTION).toBe("lifecycle.shadow_mode_inconsistency_warn");
   });
 
-  it("inconsistency warn audit result contains shadow_mode_enabled and lifecycle_state", () => {
+  it("inconsistency warn audit result decision field is truth-corrected to override_route_to_internal_engine (M3 2026-07-17)", () => {
+    // Pre-M3 this field read "override_route_to_traderspost" — which was
+    // already a misleading description of what the code literally did (it
+    // fell through to pendingEntryQueue -> openPosition(), never routeOrder(),
+    // even before M3 — see paper-signal-service.ts's item 4 comment for the
+    // full truth-in-labeling correction). M3 fixes the field to accurately
+    // name the internal-fill path this branch has always actually reached.
     const warnResult = {
       shadow_mode_enabled: true,
       lifecycle_state: "PAPER",
-      decision: "override_route_to_traderspost",
+      decision: "override_route_to_internal_engine",
     };
     expect(warnResult.shadow_mode_enabled).toBe(true);
     expect(warnResult.lifecycle_state).toBe("PAPER");
-    expect(warnResult.decision).toBe("override_route_to_traderspost");
+    expect(warnResult.decision).toBe("override_route_to_internal_engine");
+  });
+
+  it("real paper-signal-service.ts source uses the corrected decision field + no longer claims TradersPost routing", () => {
+    const src = readFileSync(
+      resolve(process.cwd(), "src/server/services/paper-signal-service.ts"),
+      "utf8",
+    );
+    const idx = src.indexOf("lifecycle.shadow_mode_inconsistency_warn");
+    expect(idx).toBeGreaterThan(-1);
+    const block = src.slice(idx, idx + 800);
+    expect(block).toContain('decision: "override_route_to_internal_engine"');
+    expect(block).not.toContain('decision: "override_route_to_traderspost"');
+  });
+
+  it("real paper-signal-service.ts's RL A/B routeOrder() guard excludes PAPER — the structural mechanism that makes this override safe", () => {
+    // This is item 3's constant doing the real work: even though this branch
+    // "falls through", the shared BROKER_AUTHORITATIVE_STATES set (imported,
+    // not re-declared) no longer contains PAPER, so the downstream
+    // routeOrder() call this fallthrough could otherwise reach is
+    // structurally skipped for a PAPER-state strategy.
+    const src = readFileSync(
+      resolve(process.cwd(), "src/server/services/paper-signal-service.ts"),
+      "utf8",
+    );
+    expect(isBrokerAuthoritativeState("PAPER")).toBe(false);
+    expect(src).toContain("BROKER_AUTHORITATIVE_STATES.includes(lcStateForRouting");
   });
 });

@@ -13,13 +13,22 @@
  *   FIX: fail-CLOSED when env unset — block promotion + write
  *   lifecycle.archetype_gateway_env_missing audit + Discord WARN.
  *
- * B6 — TESTING→PAPER stopStream race.
- *   Original: stopStream was inside a fire-and-forget IIFE. transitionState() returned
- *   {success:true} BEFORE stop completed. A bar arriving in that gap emitted internal-
- *   simulator fills under a now-PAPER-state strategy → dual-stream corruption.
+ * B6 — TESTING→PAPER stopStream race (2026-06-23) — INVERTED for M3 PAPER
+ * Authority Flip (2026-07-17). The ORIGINAL bug + fix (documented here for
+ * history): stopStream was inside a fire-and-forget IIFE. transitionState()
+ * returned {success:true} BEFORE stop completed. A bar arriving in that gap
+ * emitted internal-simulator fills under a now-PAPER-state strategy →
+ * dual-stream corruption. FIX: await stopStream before returning; on throw,
+ * swallow + audit paper.stop_stream_failed_on_transition (warn), never
+ * blocking the transition.
  *
- *   FIX: await stopStream before returning. If stopStream throws, swallow + audit
- *   paper.stop_stream_failed_on_transition (warn) but do NOT block the transition.
+ * M3 (2026-07-17) inverted the DIRECTION of the action at this exact site:
+ * PAPER is now internal-engine-only, so the block STARTS/CONTINUES the stream
+ * on toState==="PAPER" instead of stopping it. The B6 discipline (await
+ * synchronously, swallow-but-audit on throw, never block the transition) is
+ * UNCHANGED — only "stopStream" became "startStream"/"isStreaming". A NEW
+ * sibling block (fromState==="PAPER" leaving to a broker-authoritative state)
+ * now owns the stopStream call this describe block used to test.
  *
  * Source-code inspection pattern (same as lifecycle-gauntlet-hardening.test.ts and
  * lifecycle-f1-shadow-cache-invalidation.test.ts).
@@ -94,80 +103,79 @@ describe("B3 — archetype gateway env-missing block", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// B6 — TESTING→PAPER stopStream must be awaited (no race)
+// B6 / M3 — internal stream START must be awaited-equivalent (no race);
+// INVERTED 2026-07-17 (M3 PAPER Authority Flip)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("B6 — await stopStream before returning from TESTING→PAPER transition", () => {
-  it("stopStream call is awaited (not inside a fire-and-forget IIFE)", () => {
-    // The fix replaces `(async () => { ... })()` with a direct `await stopStream(...)`.
-    // Verify the await keyword precedes stopStream.
-    expect(src).toContain("await stopStream(");
+describe("B6/M3 — start/continue the internal stream (not stop it) on toState===PAPER, same no-race discipline", () => {
+  const m3Idx = src.indexOf("M3 FIX (2026-07-17)");
+
+  it("M3 FIX marker exists at the site the old B6 FIX comment used to occupy", () => {
+    expect(m3Idx).toBeGreaterThan(-1);
   });
 
-  it("no fire-and-forget IIFE wraps the stopStream call", () => {
-    // The old pattern was `(async () => { try { ... stopStream(...); ... } catch {}})();`
-    // After B6 fix, the IIFE is removed from the TESTING→PAPER block.
-    // We verify by checking that stopStream does NOT appear only inside `(async () => {`.
-    // Specifically: the iife pattern `(async () => {` should NOT appear immediately before
-    // the `stopStream` call in the TESTING→PAPER block.
-    const testingToPaperIdx = src.indexOf("B6 FIX");
-    expect(testingToPaperIdx).toBeGreaterThan(-1);
-    // Grab the TESTING→PAPER block (up to 3000 chars)
-    const block = src.slice(testingToPaperIdx, testingToPaperIdx + 3000);
-    // The IIFE pattern should NOT be in this block
+  it("startStream call exists in the toState===PAPER block (not a fire-and-forget IIFE)", () => {
+    // The B6 discipline (no `(async () => {...})()` wrapper) carries forward —
+    // only the STREAM ACTION inverted from stopStream to startStream.
+    const block = src.slice(m3Idx, m3Idx + 4500);
+    expect(block).toContain("startStream(activeSessId, symbols)");
+  });
+
+  it("no fire-and-forget IIFE wraps the startStream call", () => {
+    // The pre-B6 pattern was `(async () => { try { ... stopStream(...); ... } catch {}})();`
+    // — B6 removed the IIFE; M3 preserves that removal for the inverted action.
+    const block = src.slice(m3Idx, m3Idx + 4500);
     expect(block).not.toContain("(async () => {");
   });
 
-  it("awaits stopStream before the strategyPromotions.labels() call (in the same transition block)", () => {
-    // After B6 fix: stopStream is awaited synchronously, then strategyPromotions.labels() fires.
-    // Both are inside the TESTING→PAPER post-transition block.
-    // Anchor on the B6 FIX comment to get local indices within that block.
-    const b6Start = src.indexOf("B6 FIX");
-    expect(b6Start).toBeGreaterThan(-1);
-    // Grab a window large enough to span from B6 FIX to just past strategyPromotions.labels
-    const block = src.slice(b6Start, b6Start + 5000);
-    const stopLocalIdx = block.indexOf("await stopStream(");
+  it("the startStream attempt happens before the strategyPromotions.labels() call (in the same transition block)", () => {
+    // Both are inside the toState===PAPER post-transition block; startStream's
+    // try/catch (success or swallowed failure) must resolve before the
+    // strategyPromotions counter fires — same ordering B6 established for stopStream.
+    const block = src.slice(m3Idx, m3Idx + 10500);
+    const startLocalIdx = block.indexOf("startStream(activeSessId, symbols)");
     const promLocalIdx = block.indexOf("strategyPromotions.labels(");
-    expect(stopLocalIdx).toBeGreaterThan(-1);
+    expect(startLocalIdx).toBeGreaterThan(-1);
     expect(promLocalIdx).toBeGreaterThan(-1);
-    expect(stopLocalIdx).toBeLessThan(promLocalIdx);
+    expect(startLocalIdx).toBeLessThan(promLocalIdx);
   });
 
-  it("writes paper.stop_stream_failed_on_transition audit if stopStream throws but does not block transition", () => {
-    // The catch block around stopStream must write this action and NOT return early.
-    expect(src).toContain("paper.stop_stream_failed_on_transition");
-    // Find the catch block containing this audit action.
-    const auditIdx = src.indexOf("paper.stop_stream_failed_on_transition");
+  it("writes paper.start_stream_failed_on_transition audit if startStream throws but does not block transition", () => {
+    // The catch block around startStream must write this action and NOT return early.
+    expect(src).toContain("paper.start_stream_failed_on_transition");
+    const auditIdx = src.indexOf("paper.start_stream_failed_on_transition");
     expect(auditIdx).toBeGreaterThan(-1);
     // Verify it does NOT contain `return { success: false }` inside this catch block.
-    // Grab ~500 chars after the audit action to inspect the catch block.
     const catchRegion = src.slice(auditIdx, auditIdx + 500);
-    // The catch block should NOT have a failing return.
     expect(catchRegion).not.toContain("return { success: false");
   });
 
-  it("paper.engine_authority_declared audit fires after stop (observability not state)", () => {
-    // The audit must appear AFTER the stopStream try/catch block in source order.
-    const stopFailedIdx = src.indexOf("paper.stop_stream_failed_on_transition");
+  it("paper.engine_authority_declared audit fires after the start attempt (observability not state)", () => {
+    // The audit must appear AFTER the startStream try/catch block in source order.
+    const startFailedIdx = src.indexOf("paper.start_stream_failed_on_transition");
     const authorityIdx = src.indexOf("paper.engine_authority_declared");
-    expect(stopFailedIdx).toBeGreaterThan(-1);
+    expect(startFailedIdx).toBeGreaterThan(-1);
     expect(authorityIdx).toBeGreaterThan(-1);
-    // engine_authority_declared appears AFTER the stop-failed audit action.
-    expect(authorityIdx).toBeGreaterThan(stopFailedIdx);
+    expect(authorityIdx).toBeGreaterThan(startFailedIdx);
   });
 
-  it("calls stopStream for ANY transition into PAPER (deepscan14 A1 — includes SHADOW→PAPER)", () => {
-    // deepscan14 A1: the guard was generalized from
-    // `fromState === "TESTING" && toState === "PAPER"` to `toState === "PAPER"`
-    // because the Wave 29 default ladder reaches PAPER via SHADOW→PAPER, and the
-    // internal sim stream must stop on that edge too (dual-stream P&L corruption fix).
-    const b6BlockIdx = src.indexOf("B6 FIX");
-    expect(b6BlockIdx).toBeGreaterThan(-1);
-    // The if-guard sits after the verbose deepscan14 A1 comment; use a generous window
-    const block = src.slice(b6BlockIdx, b6BlockIdx + 3000);
+  it("starts/continues the stream for ANY transition into PAPER (deepscan14 A1 guard shape preserved — includes SHADOW→PAPER)", () => {
+    // deepscan14 A1's guard generalization (fromState==="TESTING" && toState==="PAPER"
+    // -> toState==="PAPER" alone) is UNCHANGED by M3 — only the action inside inverted.
+    const block = src.slice(m3Idx, m3Idx + 4500);
     expect(block).toContain('if (toState === "PAPER")');
-    // And it must NOT have reverted to the old fromState-restricted guard as the live condition.
     expect(block).not.toContain('if (fromState === "TESTING" && toState === "PAPER")');
+  });
+
+  it("a NEW sibling block stops the stream when LEAVING PAPER for a broker-authoritative state (the M3 zero-carry-forward fix)", () => {
+    // This is where the OLD stopStream-on-PAPER call effectively moved to —
+    // PAPER's internal stream is now genuinely alive, so something must stop it
+    // on the way OUT of PAPER into DEPLOY_READY/PILOT/DEPLOYED, or the internal
+    // engine would keep writing fills for a TradersPost-authoritative strategy.
+    expect(src).toContain('if (fromState === "PAPER" && isBrokerAuthoritativeState(toState)) {');
+    const siblingIdx = src.indexOf('if (fromState === "PAPER" && isBrokerAuthoritativeState(toState)) {');
+    const siblingBlock = src.slice(siblingIdx, siblingIdx + 2000);
+    expect(siblingBlock).toContain("await stopStream(leavingSessId)");
   });
 });
 

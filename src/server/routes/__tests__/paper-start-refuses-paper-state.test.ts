@@ -1,36 +1,60 @@
 /**
- * paper-start-refuses-paper-state.test.ts — Pass 5 Track D
+ * paper-start-refuses-paper-state.test.ts — Pass 5 Track D (2026-06-23),
+ * INVERTED for M3 PAPER Authority Flip (2026-07-17).
  *
- * Source-code analysis tests verifying that POST /api/paper/start rejects
- * PAPER+ strategies with a 409 and paper.start_refused_paper_state audit.
- * No DB or service calls — pure static analysis of the route source.
+ * OLD doctrine (pre-M3): POST /api/paper/start rejected PAPER+ strategies
+ * (PAPER, DEPLOY_READY, PILOT, DEPLOYED) with a 409 and
+ * paper.start_refused_paper_state audit — TradersPost was canonical for PAPER
+ * and beyond.
+ *
+ * NEW doctrine (M3): PAPER is internal-engine-only. This route now ALLOWS a
+ * PAPER-state strategy to start an internal paper session. Only DEPLOY_READY /
+ * PILOT / DEPLOYED remain rejected (those stay TradersPost-authoritative,
+ * untouched by this wave). The 409 + audit action name are preserved for the
+ * narrowed set.
+ *
+ * Source-code analysis tests — no DB or service calls, consistent with the
+ * original file's convention.
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { BROKER_AUTHORITATIVE_STATES, isBrokerAuthoritativeState } from "../../lib/paper-authority-states.js";
 
 const PAPER_PATH = resolve(process.cwd(), "src/server/routes/paper.ts");
+const AUTHORITY_STATES_PATH = resolve(process.cwd(), "src/server/lib/paper-authority-states.ts");
 
-describe("Pass 5 Track D.3 — POST /api/paper/start refuses PAPER+ strategies", () => {
-  it("contains paper.start_refused_paper_state audit action", () => {
+describe("M3 — POST /api/paper/start refuses only broker-authoritative (DEPLOY_READY/PILOT/DEPLOYED) strategies", () => {
+  it("imports BROKER_AUTHORITATIVE_STATES from the shared paper-authority-states module (not a local literal)", () => {
     const src = readFileSync(PAPER_PATH, "utf8");
-    expect(src).toContain("paper.start_refused_paper_state");
+    expect(src).toContain('from "../lib/paper-authority-states.js"');
+    expect(src).toContain("BROKER_AUTHORITATIVE_STATES");
   });
 
-  it("defines PAPER_PLUS_STATES array including PAPER, DEPLOY_READY, PILOT, DEPLOYED", () => {
+  it("does NOT re-declare a local PAPER_PLUS_STATES-shaped literal array (drift-guard)", () => {
     const src = readFileSync(PAPER_PATH, "utf8");
-    expect(src).toContain("PAPER_PLUS_STATES");
-    expect(src).toContain('"PAPER"');
-    expect(src).toContain('"DEPLOY_READY"');
-    expect(src).toContain('"PILOT"');
-    expect(src).toContain('"DEPLOYED"');
+    // The old local declaration shape — if this reappears, someone reintroduced
+    // an independent literal instead of using the shared module.
+    expect(src).not.toContain('const PAPER_PLUS_STATES = ["PAPER"');
+    expect(src).not.toContain('["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"]');
   });
 
-  it("returns HTTP 409 when strategy is in a PAPER+ state", () => {
+  it("the shared module's BROKER_AUTHORITATIVE_STATES value does NOT include PAPER", () => {
+    const src = readFileSync(AUTHORITY_STATES_PATH, "utf8");
+    const idx = src.indexOf("export const BROKER_AUTHORITATIVE_STATES");
+    expect(idx).toBeGreaterThan(-1);
+    const decl = src.slice(idx, idx + 120);
+    expect(decl).not.toContain('"PAPER"');
+    expect(decl).toContain("DEPLOY_READY");
+    expect(decl).toContain("PILOT");
+    expect(decl).toContain("DEPLOYED");
+  });
+
+  it("still returns HTTP 409 for the (narrowed) broker-authoritative set", () => {
     const src = readFileSync(PAPER_PATH, "utf8");
     expect(src).toContain("paper_start_refused_paper_state");
-    // Check that 409 is used in the PAPER_PLUS_STATES block
-    const idx = src.indexOf("PAPER_PLUS_STATES");
+    const idx = src.indexOf("BROKER_AUTHORITATIVE_STATES.includes");
+    expect(idx).toBeGreaterThan(-1);
     const block = src.slice(idx, idx + 1000);
     expect(block).toContain("status(409)");
   });
@@ -43,24 +67,39 @@ describe("Pass 5 Track D.3 — POST /api/paper/start refuses PAPER+ strategies",
     expect(block).toContain("blocked_at");
   });
 
-  it("inserts audit row before returning 409", () => {
+  it("still emits paper.start_refused_paper_state audit row before returning 409", () => {
     const src = readFileSync(PAPER_PATH, "utf8");
-    const idx = src.indexOf("PAPER_PLUS_STATES.includes");
+    const idx = src.indexOf("BROKER_AUTHORITATIVE_STATES.includes");
     const block = src.slice(idx, idx + 800);
     expect(block).toContain("db.insert(auditLog)");
+    expect(block).toContain('action: "paper.start_refused_paper_state"');
   });
 
-  it("TESTING state is NOT in PAPER_PLUS_STATES (allowed through)", () => {
+  it("TESTING state is NOT broker-authoritative (allowed through, regression)", () => {
     const src = readFileSync(PAPER_PATH, "utf8");
-    // ALLOWED_LIFECYCLE_STATES includes TESTING
     expect(src).toContain('"TESTING"');
-    // PAPER_PLUS_STATES check comes AFTER the ALLOWED_LIFECYCLE_STATES check
     const allowedIdx = src.indexOf("ALLOWED_LIFECYCLE_STATES");
-    const paperPlusIdx = src.indexOf("PAPER_PLUS_STATES");
-    expect(paperPlusIdx).toBeGreaterThan(allowedIdx);
+    const guardIdx = src.indexOf("BROKER_AUTHORITATIVE_STATES.includes");
+    expect(guardIdx).toBeGreaterThan(allowedIdx);
   });
 
-  it("uses decisionAuthority system in audit row", () => {
+  it("PAPER state is NO LONGER rejected (M3 inversion — the doctrine-pinning RED-proof)", () => {
+    // Behavioral proof against the REAL, live-imported constant the route itself
+    // uses (confirmed by the import + drift-guard tests above to be the SAME
+    // object `routes/paper.ts` checks at its `.includes()` call site) — not a
+    // re-implemented mirror. Reverting BROKER_AUTHORITATIVE_STATES to the old
+    // 4-state value (re-adding "PAPER") flips this RED.
+    expect(isBrokerAuthoritativeState("PAPER")).toBe(false);
+    expect(BROKER_AUTHORITATIVE_STATES).not.toContain("PAPER");
+  });
+
+  it("DEPLOY_READY / PILOT / DEPLOYED remain rejected (regression — untouched by this wave)", () => {
+    expect(isBrokerAuthoritativeState("DEPLOY_READY")).toBe(true);
+    expect(isBrokerAuthoritativeState("PILOT")).toBe(true);
+    expect(isBrokerAuthoritativeState("DEPLOYED")).toBe(true);
+  });
+
+  it("uses decisionAuthority system in the refusal audit row", () => {
     const src = readFileSync(PAPER_PATH, "utf8");
     const idx = src.indexOf("paper.start_refused_paper_state");
     const block = src.slice(idx, idx + 500);
@@ -71,8 +110,8 @@ describe("Pass 5 Track D.3 — POST /api/paper/start refuses PAPER+ strategies",
   it("guard is placed after the ALLOWED_LIFECYCLE_STATES check", () => {
     const src = readFileSync(PAPER_PATH, "utf8");
     const allowedCheck = src.indexOf("!ALLOWED_LIFECYCLE_STATES.includes");
-    const paperPlusCheck = src.indexOf("PAPER_PLUS_STATES.includes");
+    const guardCheck = src.indexOf("BROKER_AUTHORITATIVE_STATES.includes");
     expect(allowedCheck).toBeGreaterThan(-1);
-    expect(paperPlusCheck).toBeGreaterThan(allowedCheck);
+    expect(guardCheck).toBeGreaterThan(allowedCheck);
   });
 });

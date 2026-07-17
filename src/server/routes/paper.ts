@@ -19,6 +19,9 @@ import { trackG2SilentFailuresTotal } from "../lib/metrics-registry.js";
 // M2 (2026-07-17), Item 3: claim-scoping evidence labels stamped at session
 // start — additive metadata only, never gates.
 import { buildPaperEvidenceLabels } from "../lib/paper-evidence-labels.js";
+// M3 (2026-07-17): PAPER Authority Flip — shared broker-authoritative-states
+// source. See paper-authority-states.ts for the full rationale.
+import { BROKER_AUTHORITATIVE_STATES } from "../lib/paper-authority-states.js";
 
 const router = Router();
 
@@ -86,23 +89,27 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
       return;
     }
 
-    // Pass 5 Track D.3: PAPER+ strategies must use TradersPost (paper-engine authority)
-    // The internal Massive-WS simulator is pre-PAPER only (CANDIDATE/TESTING)
-    const PAPER_PLUS_STATES = ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"];
-    if (PAPER_PLUS_STATES.includes(stratRow.lifecycleState)) {
+    // M3 (2026-07-17) PAPER Authority Flip: PAPER is now internal-engine-only —
+    // TradersPost authority begins at DEPLOY_READY. A PAPER-state strategy is
+    // now ALLOWED to start an internal paper session (falls through below).
+    // DEPLOY_READY/PILOT/DEPLOYED remain rejected — those stay TradersPost-
+    // authoritative, untouched by this wave. Previously this rejected PAPER
+    // too ("Pass 5 Track D.3: PAPER+ strategies must use TradersPost" — that
+    // doctrine is inverted as of M3; see paper-authority-states.ts).
+    if (BROKER_AUTHORITATIVE_STATES.includes(stratRow.lifecycleState as typeof BROKER_AUTHORITATIVE_STATES[number])) {
       await db.insert(auditLog).values({
         action: "paper.start_refused_paper_state",
         entityType: "strategy",
         entityId: strategyId,
         input: { strategyId, mode, lifecycleState: stratRow.lifecycleState, blocked_at: "POST /api/paper/start" },
-        result: { reason: "PAPER+ strategies use TradersPost as canonical journal — internal simulator is pre-PAPER only" },
+        result: { reason: "DEPLOY_READY/PILOT/DEPLOYED strategies use TradersPost as canonical journal — internal simulator is PAPER and below only (M3 2026-07-17)" },
         status: "warn",
         decisionAuthority: "system",
         correlationId: req.id ?? null,
       });
       res.status(409).json({
         error: "paper_start_refused_paper_state",
-        message: `Strategy is in ${stratRow.lifecycleState} state. PAPER+ strategies use TradersPost as the canonical paper journal. The internal simulator is for CANDIDATE/TESTING only.`,
+        message: `Strategy is in ${stratRow.lifecycleState} state. DEPLOY_READY/PILOT/DEPLOYED strategies use TradersPost as the canonical paper journal. The internal simulator is for PAPER and below only.`,
         lifecycleState: stratRow.lifecycleState,
         blocked_at: "POST /api/paper/start",
       });

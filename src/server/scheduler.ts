@@ -89,6 +89,9 @@ import { runCarterAnalystSweep } from "./services/carter-analyst-service.js";
 import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js";
 // W29 Pass C.2: Quantum RL training window cron
 import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
+// M3 (2026-07-17) PAPER Authority Flip — shared broker-authoritative-states
+// source. See paper-authority-states.ts for the full rationale.
+import { isBrokerAuthoritativeState } from "./lib/paper-authority-states.js";
 // W29 Pass B.3: Regime drift detector — daily 18:00 ET sweep
 import { runRegimeDriftDetector } from "./services/regime-drift-detector-service.js";
 import { runStrategyAgeRevalidation } from "./services/strategy-revalidation-service.js";
@@ -918,6 +921,14 @@ export const _testOnly = {
    * requiring a server boot or cron tick.
    */
   resumeActivePaperSessions,
+  /**
+   * M3 (2026-07-17): Expose detectStalePaperSessions + stopPaperSession for
+   * unit tests. The packet's item 6 explicitly flagged detectStalePaperSessions
+   * as previously untested for the broker-authoritative-state boundary — these
+   * seams let tests drive the REAL cron function (not a mirror) directly.
+   */
+  detectStalePaperSessions,
+  stopPaperSession,
   // deepscan7 DS7-H3 2026-07-02: scout consecutive-failure tracker test seams.
   recordScoutRunFailure,
   recordScoutRunSuccess,
@@ -7086,24 +7097,25 @@ async function checkTournamentStaleness(): Promise<void> {
  * Queries DB for active sessions, reconnects WebSocket streams,
  * and restores in-memory position state (trail HWM, bars held).
  *
- * PAPER-ENGINE AUTHORITY (B5 — scheduler-b5):
- * For strategies in PAPER+ state (PAPER, DEPLOY_READY, PILOT, DEPLOYED), the
+ * PAPER-ENGINE AUTHORITY (B5 — scheduler-b5; M3 2026-07-17 shrunk the skip-set):
+ * For strategies in a broker-authoritative state (DEPLOY_READY, PILOT, DEPLOYED —
+ * PAPER moved OUT of this set as of M3, see paper-authority-states.ts), the
  * canonical journal is TradersPost's broker tape — NOT the internal Massive-WS
- * simulator. The internal simulator is pre-PAPER only (CANDIDATE/TESTING).
- * On TESTING→PAPER, stopStream() is called in-process but never persists
- * `paper_sessions.status='stopped'` to the DB, leaving stale 'active' rows.
- * Without this guard, every server restart would resurrect a fresh internal-
- * simulator stream for PAPER+ strategies while TradersPost is simultaneously
- * firing real paper orders — causing dual-stream P&L drift.
+ * simulator. PAPER and below (CANDIDATE/TESTING/SHADOW/PAPER) all use the
+ * internal simulator. On PAPER→DEPLOY_READY, stopStream() is called in-process
+ * but never persists `paper_sessions.status='stopped'` to the DB, leaving stale
+ * 'active' rows. Without this guard, every server restart would resurrect a
+ * fresh internal-simulator stream for a broker-authoritative strategy while
+ * TradersPost is simultaneously the canonical journal — causing dual-stream
+ * P&L drift.
  *
  * Fix: skip stream resume for any session whose associated strategy is in
- * PAPER / DEPLOY_READY / PILOT / DEPLOYED lifecycle state. Emit an info audit
- * row before skipping so the boot log surface shows exactly which stale rows
- * exist and how many. Do NOT write paper_sessions.status — that is B6 deferred.
+ * DEPLOY_READY / PILOT / DEPLOYED lifecycle state. PAPER now resumes/reconnects
+ * exactly like CANDIDATE/TESTING/SHADOW (no special-casing needed — it is
+ * simply no longer in the skip-set). Emit an info audit row before skipping so
+ * the boot log surface shows exactly which stale rows exist and how many. Do
+ * NOT write paper_sessions.status — that is B6 deferred.
  */
-
-/** Lifecycle states for which the internal simulator must NEVER be resurrected. */
-const PAPER_PLUS_STATES = new Set(["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"]);
 
 async function resumeActivePaperSessions(): Promise<void> {
   const activeSessions = await db
@@ -7131,12 +7143,15 @@ async function resumeActivePaperSessions(): Promise<void> {
         : [];
 
       // ── B5: PAPER-ENGINE AUTHORITY GUARD ─────────────────────────────────
-      // If the strategy is in PAPER+ state, the internal simulator must not
-      // run. TradersPost owns the canonical journal from PAPER onward.
+      // If the strategy is in a broker-authoritative state (DEPLOY_READY /
+      // PILOT / DEPLOYED), the internal simulator must not run. TradersPost
+      // owns the canonical journal from DEPLOY_READY onward (M3: PAPER moved
+      // OUT of this set — PAPER now resumes normally, no guard needed).
       // NULL lifecycleState (orphaned / legacy session with no strategy FK)
-      // is treated as pre-PAPER (safe to resume) — fail-open on missing FK.
+      // is treated as non-broker-authoritative (safe to resume) — fail-open
+      // on missing FK.
       const lifecycleState = strat[0]?.lifecycleState ?? null;
-      if (lifecycleState !== null && PAPER_PLUS_STATES.has(lifecycleState)) {
+      if (lifecycleState !== null && isBrokerAuthoritativeState(lifecycleState)) {
         skipCount++;
         skippedSessionIds.push(session.id);
         logger.info(
@@ -7145,7 +7160,7 @@ async function resumeActivePaperSessions(): Promise<void> {
             strategyId: session.strategyId,
             lifecycleState,
           },
-          "B5: skipping internal-stream resume for PAPER+ strategy — TradersPost owns canonical journal",
+          "B5: skipping internal-stream resume for broker-authoritative strategy — TradersPost owns canonical journal",
         );
         await insertAuditRowSafe({
           action: "paper.session_resume_skipped_paper_plus",
@@ -7156,7 +7171,7 @@ async function resumeActivePaperSessions(): Promise<void> {
           result: {
             lifecycleState,
             strategyId: session.strategyId,
-            reason: "internal-simulator must not run for PAPER+ strategies; TradersPost is canonical journal",
+            reason: "internal-simulator must not run for broker-authoritative strategies (DEPLOY_READY/PILOT/DEPLOYED); TradersPost is canonical journal",
           },
         });
         continue;
@@ -7849,6 +7864,14 @@ async function runDailyDecayMonitor(): Promise<void> {
  *   6. Broadcast SSE
  *
  * Returns the updated session row, or null if the session was not found / already stopped.
+ *
+ * M3 (2026-07-17) verification (packet item 6, sub-item 3): audited this function
+ * for lifecycle-state special-casing that might silently assume the old PAPER=
+ * broker-authoritative doctrine. Found none — every step here (stream stop, cache
+ * cleanup, DB status update, analytics, audit, SSE) operates purely on
+ * `sessionId`/`symbols` and is correct for "this session is genuinely stopping"
+ * regardless of the underlying strategy's lifecycle state. No change made; this
+ * function needed none.
  */
 async function stopPaperSession(
   sessionId: string,
@@ -8082,11 +8105,45 @@ async function detectStalePaperSessions(): Promise<void> {
       // ─── Attempt restart ────────────────────────────────────────
       // Resolve strategy symbols (mirrors POST /api/paper/start symbol resolution)
       const strat = session.strategyId
-        ? await db.select({ symbol: strategies.symbol, config: strategies.config })
+        ? await db.select({ symbol: strategies.symbol, config: strategies.config, lifecycleState: strategies.lifecycleState })
             .from(strategies)
             .where(eq(strategies.id, session.strategyId))
             .limit(1)
         : [];
+
+      // M3 (2026-07-17): FIX-1's auto-restart had NO lifecycle-state guard at all —
+      // untested for the broker-authoritative boundary this wave introduces (packet
+      // item 6's "detectStalePaperSessions has NO lifecycle-state guard today"
+      // flag — this is the sibling gap in the OTHER of the two loops that function
+      // owns). A `failed_to_stream` row can genuinely belong to a strategy that has
+      // SINCE been promoted PAPER→DEPLOY_READY (the internal stream failed to start
+      // while the strategy was still PAPER; the promotion gates ran independently
+      // and moved it onward regardless). Without this guard, this cron would
+      // resurrect an internal-engine stream for a now-broker-authoritative strategy
+      // — the exact double-writer hazard this wave exists to prevent. Mirrors B5's
+      // resumeActivePaperSessions guard: skip (never restart), audit, and leave the
+      // session in `failed_to_stream` for the operator/lifecycle layer to reconcile.
+      const failedStreamLifecycleState = strat[0]?.lifecycleState ?? null;
+      if (failedStreamLifecycleState !== null && isBrokerAuthoritativeState(failedStreamLifecycleState)) {
+        logger.info(
+          { sessionId: session.id, strategyId: session.strategyId, lifecycleState: failedStreamLifecycleState },
+          "M3: skipping failed_to_stream auto-restart for broker-authoritative strategy — TradersPost owns canonical journal",
+        );
+        await insertAuditRowSafe({
+          action: "paper.session_restart_skipped_broker_authoritative",
+          entityType: "paper_session",
+          entityId: session.id as `${string}-${string}-${string}-${string}-${string}`,
+          status: "success",
+          decisionAuthority: "scheduler",
+          result: {
+            lifecycleState: failedStreamLifecycleState,
+            strategyId: session.strategyId,
+            reason: "internal-simulator must not run for broker-authoritative strategies (DEPLOY_READY/PILOT/DEPLOYED); TradersPost is canonical journal",
+          },
+          correlationId,
+        });
+        continue;
+      }
 
       const symbols: string[] = [];
       if (strat[0]?.symbol) symbols.push(strat[0].symbol);
@@ -8163,6 +8220,69 @@ async function detectStalePaperSessions(): Promise<void> {
 
   for (const session of activeSessions) {
     try {
+      // ── M3 (2026-07-17): explicit, tested lifecycle-state disposition ──────
+      // The packet's item 6 flagged this loop as having NO lifecycle-state guard
+      // at all (unlike B5's resumeActivePaperSessions), untested for the
+      // broker-authoritative boundary. Under the OLD doctrine this "coincidentally"
+      // self-healed: a broker-authoritative-state session's stream was always
+      // already stopped by lifecycle-service.ts before reaching this cron, so
+      // `isStreaming()` was false and the stale-inactivity path (below) would
+      // eventually auto-stop the zombie 'active' DB row within 2h anyway —
+      // correct outcome, wrong reason, slow. Under M3 the danger case is a
+      // stream that IS still genuinely running (e.g. this wave's new
+      // PAPER→DEPLOY_READY stopStream call in lifecycle-service.ts failed and
+      // was swallowed, non-blocking by design) for a now-broker-authoritative
+      // strategy: `isStreaming()===true && connected===true` bypasses BOTH the
+      // crashed-stream recovery branch below (which requires disconnected) AND
+      // the stale-inactivity branch (a live stream keeps producing signals, so
+      // "last activity" never goes stale) — without this guard a leaked stream
+      // for DEPLOY_READY/PILOT/DEPLOYED could run FOREVER, undetected. Actively
+      // stop it here instead of passively waiting on staleness. PAPER itself
+      // needs NO special case — it now falls through to the exact same
+      // auto-recovery/stale-timeout treatment as CANDIDATE/TESTING/SHADOW below.
+      const activeLoopStrategyId = session.strategyId;
+      const activeLoopStrategyRow = activeLoopStrategyId
+        ? await db.select({ lifecycleState: strategies.lifecycleState })
+            .from(strategies)
+            .where(eq(strategies.id, activeLoopStrategyId))
+            .limit(1)
+        : [];
+      const activeLoopLifecycleState = activeLoopStrategyRow[0]?.lifecycleState ?? null;
+      if (activeLoopLifecycleState !== null && isBrokerAuthoritativeState(activeLoopLifecycleState)) {
+        logger.warn(
+          { sessionId: session.id, strategyId: session.strategyId, lifecycleState: activeLoopLifecycleState, wasStreaming: isStreaming(session.id) },
+          "M3: 'active' paper_sessions row for broker-authoritative strategy — auto-stopping defensively (broker-authoritative leak, regardless of staleness)",
+        );
+        try {
+          const stopped = await stopPaperSession(session.id, "broker_authoritative_leak", correlationId);
+          if (stopped) {
+            broadcastSSE("paper:auto_stopped", {
+              sessionId: session.id,
+              strategyId: session.strategyId,
+              reason: "broker_authoritative_leak",
+            });
+          }
+        } catch (stopErr) {
+          logger.error({ sessionId: session.id, err: stopErr }, "M3: failed to auto-stop broker-authoritative-leak session");
+        }
+        await insertAuditRowSafe({
+          action: "paper.session_auto_stop_broker_authoritative_leak",
+          entityType: "paper_session",
+          entityId: session.id as `${string}-${string}-${string}-${string}-${string}`,
+          status: "success",
+          decisionAuthority: "scheduler",
+          result: {
+            lifecycleState: activeLoopLifecycleState,
+            strategyId: session.strategyId,
+            reason: "internal simulator must not run for broker-authoritative strategies (DEPLOY_READY/PILOT/DEPLOYED); stopped defensively regardless of staleness",
+          },
+          correlationId,
+        });
+        recoveryAttempts.delete(session.id);
+        continue; // session is stopped (or stop attempted) — skip auto-recovery/stale checks
+      }
+      // ── END M3 GUARD ─────────────────────────────────────────────────────
+
       // ─── Auto-recovery: detect crashed WebSocket streams ─────
       // If the session is registered in-memory but the socket is disconnected,
       // attempt to reconnect before falling through to the stale-time checks.

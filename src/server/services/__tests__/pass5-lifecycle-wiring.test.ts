@@ -137,7 +137,10 @@ describe("Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity", () =
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const pdrIdx = src.indexOf("pdrInput");
     expect(pdrIdx).toBeGreaterThan(-1);
-    const pdrBlock = src.slice(pdrIdx, pdrIdx + 2000);
+    // Window widened 2000→5000 (pre-existing test fragility, unrelated to M3 —
+    // orchGates/frozenPolicy sit ~3-4.2K chars past the anchor; confirmed via
+    // base@255b503a comparison this was already too small before M3 landed).
+    const pdrBlock = src.slice(pdrIdx, pdrIdx + 5000);
     expect(pdrBlock).toContain("b14SurvivalTwin");
     expect(pdrBlock).toContain("mcRuinCi");
     expect(pdrBlock).toContain("b15Battery");
@@ -153,11 +156,14 @@ describe("Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity", () =
 
   it("blocks with return { success: false } on gate block", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    // Search from pdrInput declaration — closer to the block/return check than the import site
-    const pdrInputIdx = src.indexOf("const pdrInput:");
-    expect(pdrInputIdx).toBeGreaterThan(-1);
-    const afterCall = src.slice(pdrInputIdx, pdrInputIdx + 4000);
-    expect(afterCall).toContain("!gatePdrResult.passed");
+    // Anchor on the gate-check itself (matches the pattern the neighboring
+    // "inserts audit row" test already uses successfully) — the pdrInput
+    // object grew large enough across later waves that anchoring from its
+    // declaration no longer reaches this block within a reasonable window
+    // (pre-existing fragility, unrelated to M3; confirmed via base@255b503a).
+    const idx = src.indexOf("!gatePdrResult.passed");
+    expect(idx).toBeGreaterThan(-1);
+    const afterCall = src.slice(idx, idx + 1500);
     expect(afterCall).toContain("return { success: false");
   });
 
@@ -171,7 +177,12 @@ describe("Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity", () =
 
   it("broadcasts SSE event on block", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    expect(src).toContain("lifecycle:paper_to_deploy_ready_blocked");
+    // lifecycle-service.ts broadcasts via the named LIFECYCLE_GATE_EVENTS
+    // constant (sse.ts), not the raw "lifecycle:..." string literal — the
+    // literal never appears in this file (pre-existing test-fragility,
+    // unrelated to M3; confirmed the raw literal was never here on
+    // base@255b503a either, and the SSE genuinely fires via the constant).
+    expect(src).toContain("LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED");
   });
 
   it("increments strategyPromotions counter on block", () => {
@@ -183,10 +194,12 @@ describe("Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity", () =
 
   it("wraps evaluator call in try/catch with fail-CLOSED behavior (F-1 hardening 2026-06-23)", () => {
     // F-1 changed catch from fail-open to fail-closed — test updated to reflect new contract.
+    // Anchor re-based on the gate-check (same rationale as the "blocks with
+    // return" test above — pre-existing fragility, unrelated to M3).
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    const pdrInputIdx = src.indexOf("const pdrInput:");
+    const pdrInputIdx = src.indexOf("!gatePdrResult.passed");
     expect(pdrInputIdx).toBeGreaterThan(-1);
-    const block = src.slice(pdrInputIdx, pdrInputIdx + 6000);
+    const block = src.slice(pdrInputIdx, pdrInputIdx + 10000);
     expect(block).toContain("catch (pdrGateErr)");
     // Must return fail-closed on error
     const catchIdx = src.indexOf("catch (pdrGateErr)");
@@ -233,7 +246,9 @@ describe("Pass 5 Track C — SHADOW→PAPER evaluator wiring parity", () => {
 
   it("broadcasts SSE event lifecycle:shadow_to_paper_blocked on block", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    expect(src).toContain("lifecycle:shadow_to_paper_blocked");
+    // Same named-constant pattern as the PDR SSE test above (pre-existing
+    // test-fragility, unrelated to M3 — the raw literal never appears here).
+    expect(src).toContain("LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED");
   });
 
   it("wraps evaluator call in try/catch with fail-CLOSED behavior (F-2a hardening 2026-06-23)", () => {
@@ -253,22 +268,29 @@ describe("Pass 5 Track C — SHADOW→PAPER evaluator wiring parity", () => {
 // 5. POST /api/paper/start — PAPER-state rejection (source-code + behavioural)
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe("Pass 5 Track D — POST /api/paper/start PAPER-state rejection", () => {
-  it("defines PAPER_PLUS_STATES array including PAPER, DEPLOY_READY, PILOT, DEPLOYED", () => {
+describe("Pass 5 Track D — POST /api/paper/start broker-authoritative rejection (M3 2026-07-17 inverted)", () => {
+  it("imports BROKER_AUTHORITATIVE_STATES from the shared paper-authority-states module (not a local literal)", () => {
     const src = readFileSync(PAPER_ROUTE_PATH, "utf8");
-    expect(src).toContain('PAPER_PLUS_STATES');
-    expect(src).toContain('"PAPER"');
-    expect(src).toContain('"DEPLOY_READY"');
-    expect(src).toContain('"PILOT"');
-    expect(src).toContain('"DEPLOYED"');
+    expect(src).toContain('from "../lib/paper-authority-states.js"');
+    expect(src).toContain("BROKER_AUTHORITATIVE_STATES");
   });
 
-  it("returns 409 for PAPER-state strategies", () => {
+  it("the shared module excludes PAPER but includes DEPLOY_READY/PILOT/DEPLOYED (M3 doctrine-pinning RED-proof)", () => {
+    const src = readFileSync(resolve(process.cwd(), "src/server/lib/paper-authority-states.ts"), "utf8");
+    const idx = src.indexOf("export const BROKER_AUTHORITATIVE_STATES");
+    expect(idx).toBeGreaterThan(-1);
+    const decl = src.slice(idx, idx + 120);
+    expect(decl).not.toContain('"PAPER"');
+    expect(decl).toContain("DEPLOY_READY");
+    expect(decl).toContain("PILOT");
+    expect(decl).toContain("DEPLOYED");
+  });
+
+  it("still returns 409 for the (narrowed) broker-authoritative set", () => {
     const src = readFileSync(PAPER_ROUTE_PATH, "utf8");
     const idx = src.indexOf("paper.start_refused_paper_state");
     expect(idx).toBeGreaterThan(-1);
-    // 409 must appear in context of the PAPER-state block
-    const block = src.slice(Math.max(0, idx - 500), idx + 500);
+    const block = src.slice(Math.max(0, idx - 500), idx + 800);
     expect(block).toContain("409");
   });
 
@@ -287,48 +309,50 @@ describe("Pass 5 Track D — POST /api/paper/start PAPER-state rejection", () =>
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
-// 6. TESTING→PAPER: stopStream + engine_authority_declared (source-code)
+// 6. toState===PAPER: startStream + engine_authority_declared (source-code)
+// INVERTED for M3 PAPER Authority Flip (2026-07-17) — was "TESTING→PAPER stream
+// stop"; PAPER is now internal-engine-only, so this block STARTS/CONTINUES the
+// stream instead of stopping it.
 // ──────────────────────────────────────────────────────────────────────────────
 
-describe("Pass 5 Track D — TESTING→PAPER stream stop + authority declaration", () => {
-  it("calls stopStream from paper-trading-stream.js on TESTING→PAPER", () => {
+describe("Pass 5 Track D — toState===PAPER stream start/continue + authority declaration (M3-inverted)", () => {
+  it("calls startStream from paper-trading-stream.js inside the toState===PAPER block", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    const idx = src.indexOf('fromState === "TESTING" && toState === "PAPER"');
-    // There may be multiple occurrences; find the one that contains stopStream
-    let found = false;
-    let searchFrom = 0;
-    while (true) {
-      const i = src.indexOf('fromState === "TESTING" && toState === "PAPER"', searchFrom);
-      if (i === -1) break;
-      const block = src.slice(i, i + 1500);
-      if (block.includes("stopStream")) { found = true; break; }
-      searchFrom = i + 1;
-    }
-    expect(found).toBe(true);
+    const m3Idx = src.indexOf("M3 FIX (2026-07-17)");
+    expect(m3Idx).toBeGreaterThan(-1);
+    const block = src.slice(m3Idx, m3Idx + 4500);
+    expect(block).toContain("startStream(activeSessId, symbols)");
   });
 
-  it("imports paper-trading-stream.js dynamically for stopStream", () => {
+  it("imports paper-trading-stream.js dynamically for startStream/isStreaming", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     expect(src).toContain("paper-trading-stream.js");
-    expect(src).toContain("stopStream");
+    expect(src).toContain("startStream");
+    expect(src).toContain("isStreaming");
   });
 
-  it("emits paper.engine_authority_declared audit row on TESTING→PAPER", () => {
+  it("emits paper.engine_authority_declared audit row on toState===PAPER, with an unambiguous authoritative field", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     expect(src).toContain("paper.engine_authority_declared");
     const idx = src.indexOf("paper.engine_authority_declared");
-    const block = src.slice(Math.max(0, idx - 2000), idx + 500);
-    // Must be in the TESTING→PAPER block
-    expect(block).toContain("TESTING");
+    const block = src.slice(Math.max(0, idx - 3000), idx + 500);
+    // Must be in the toState===PAPER block, and the payload must say WHICH
+    // authority (not just an inverted boolean an old-doctrine reader would
+    // misinterpret).
     expect(block).toContain("PAPER");
+    const forwardBlock = src.slice(idx, idx + 500);
+    expect(forwardBlock).toContain('authoritative: "internal_engine"');
   });
 
-  it("stopStream call is fire-and-forget (async IIFE, non-blocking)", () => {
+  it("startStream call is non-blocking on failure (try/catch, audit-then-continue — B6 discipline preserved, direction inverted)", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const idx = src.indexOf("paper.engine_authority_declared");
-    const block = src.slice(Math.max(0, idx - 2000), idx + 500);
-    // Wrapped in async IIFE to avoid blocking main lifecycle commit
-    expect(block).toContain("(async ()");
+    const block = src.slice(Math.max(0, idx - 3000), idx + 500);
+    // The B6/M3 discipline is a plain try/catch around the start attempt (not a
+    // fire-and-forget IIFE) that swallows a throw, audits it, and proceeds to
+    // fire paper.engine_authority_declared regardless of success or failure.
+    expect(block).toContain("paper.start_stream_failed_on_transition");
+    expect(block).not.toContain("(async () => {");
   });
 });
 
@@ -347,12 +371,16 @@ describe("Pass 5 Track C — Cron sweep / PATCH parity (structural)", () => {
     const pdrIdx = src.indexOf("evaluatePaperToDeployReadyGates");
     expect(pdrIdx).toBeGreaterThan(-1);
 
-    // pdrInput declaration is closer to the audit row write — anchor from there
-    const pdrInputIdx = src.indexOf("const pdrInput:");
+    // Anchor on the gate-check itself, not the pdrInput declaration — the
+    // pdrInput object has grown large enough across later waves that the
+    // declaration-based anchor no longer reaches this block within a
+    // reasonable window (pre-existing fragility, unrelated to M3; confirmed
+    // via base@255b503a).
+    const pdrInputIdx = src.indexOf("!gatePdrResult.passed");
     expect(pdrInputIdx).toBeGreaterThan(-1);
 
     // Audit insert with auditAction must appear in the block
-    const block = src.slice(pdrInputIdx, pdrInputIdx + 4000);
+    const block = src.slice(pdrInputIdx, pdrInputIdx + 1500);
     expect(block).toContain("gatePdrResult.auditAction");
     expect(block).toContain("db.insert(auditLog)");
   });
@@ -428,6 +456,8 @@ describe("Pass 5 Track C — SHADOW→PAPER audit action parity", () => {
 
   it("lifecycle:shadow_to_paper_blocked SSE event is emitted on block", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    expect(src).toContain("lifecycle:shadow_to_paper_blocked");
+    // Same named-constant pattern as the earlier SSE tests (pre-existing
+    // test-fragility, unrelated to M3 — the raw literal never appears here).
+    expect(src).toContain("LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED");
   });
 });

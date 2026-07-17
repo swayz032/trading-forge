@@ -82,6 +82,10 @@ import {
   evaluateFrozenPolicyDriftAtPromotion,
   freezePolicyForStrategy,
 } from "../lib/frozen-policy-contract.js";
+// M3 (2026-07-17) PAPER Authority Flip — shared broker-authoritative-states
+// source (see paper-authority-states.ts). Used below to invert the internal-
+// stream stop/start decision at the PAPER boundary.
+import { isBrokerAuthoritativeState } from "../lib/paper-authority-states.js";
 // Wave 3 Track 3B — BIF (Backtest Inflation Factor) promotion gate (PAPER → DEPLOY_READY).
 // Reads backtests.bif / backtests.kEff stamped from Python WF result fields `bif` / `k_eff`.
 // Hard-blocks when bif > BIF_BLOCK_THRESHOLD (default 4.0). Grandfather-passes on null.
@@ -3315,36 +3319,44 @@ export class LifecycleService {
       }
     }
 
-    // B6 FIX — Pass 5 Track D.2: Stop internal stream on TESTING→PAPER (paper-engine authority)
-    // The canonical paper-trade journal for PAPER+ strategies is TradersPost's broker tape.
-    // The internal Massive-WS simulator is pre-PAPER only (CANDIDATE/TESTING).
+    // M3 FIX (2026-07-17) — PAPER Authority Flip: INVERT the B6/A1/H2 stop-on-PAPER
+    // doctrine. This exact block already carries 2 prior documented fixes ("deepscan14
+    // A1" generalized the guard from fromState==="TESTING" to toState==="PAPER"; "H2
+    // 2026-06-28" mirrored that generalization at the sibling archetype-gateway gate
+    // above, line ~1780). This is the 3rd fix at this site and follows the SAME
+    // "never block the transition on a stream failure" discipline as the prior two —
+    // only the DIRECTION of the action inverts.
     //
-    // RACE FIX (B6): stopStream MUST complete before transitionState() returns.
-    // The old fire-and-forget IIFE let a bar arrive between DB-commit and stream-stop,
-    // emitting internal-simulator fills under a now-PAPER-state strategy → dual-stream
-    // corruption with TradersPost. B5 (scheduler resume guard) prevents the stream from
-    // restarting, but the gap before stop was still live.
+    // OLD doctrine (pre-M3, "Pass 5 Track D.2"): TradersPost's broker tape was
+    // canonical for PAPER+ (PAPER/DEPLOY_READY/PILOT/DEPLOYED) — the internal
+    // Massive-WS stream STOPPED here.
+    // NEW doctrine (M3): PAPER is internal-engine-only — TradersPost authority now
+    // begins at DEPLOY_READY (see paper-authority-states.ts). So on transition INTO
+    // PAPER, the internal stream must CONTINUE running (SHADOW → PAPER — the stream
+    // is already alive through SHADOW, untouched by this block) or START (TESTING →
+    // PAPER legacy direct path, or any case where no stream is currently running for
+    // this session) — never stop.
     //
-    // Contract post-B6:
-    //   1. await stopStream — synchronous in the transition path, guarantees no new fills
-    //   2. Audit + Discord notifications fire AFTER stop (observability, not state)
-    //   3. If stopStream throws → audit paper.stop_stream_failed_on_transition (warn) but
-    //      DO NOT block the transition — strategy IS in PAPER state in DB; the stream
-    //      not stopping is smaller than dual-stream corruption from not awaiting.
-    //
-    // deepscan14 A1 FIX: was `fromState === "TESTING" && toState === "PAPER"` — the
-    // default ladder now reaches PAPER via SHADOW → PAPER too (Wave 29), and the
-    // internal Massive-WS sim stream stays alive through SHADOW (it's how shadow
-    // signals get generated). Gating this on fromState==="TESTING" only meant
-    // SHADOW → PAPER never stopped the stream, so it kept writing fills into
-    // paper_positions/paper_trades after TradersPost became the live journal —
-    // dual-stream P&L corruption. Generalized to toState==="PAPER" to mirror the
-    // sibling H2 fix already at the archetype-gateway gate above (line ~1780).
+    // Contract (unchanged discipline from B6/A1, direction inverted):
+    //   1. Resolve the active internal paper_sessions row for this strategy, if any.
+    //      If none exists, there is nothing to start here — POST /api/paper/start
+    //      (item 1 of this same wave) is the entry point that creates one; this
+    //      transition does not fabricate a new session (no startingCapital /
+    //      daily_loss_limit available at this call site).
+    //   2. If one exists and is not already streaming, START it (mirrors POST
+    //      /api/paper/start's own symbol-resolution logic).
+    //   3. Audit + Discord notifications fire AFTER the start attempt (observability,
+    //      not state).
+    //   4. If startStream throws → audit paper.start_stream_failed_on_transition
+    //      (warn) but DO NOT block the transition — the strategy IS in PAPER state in
+    //      DB; a stream failing to start is recoverable (the scheduler's stale-session
+    //      detector — see scheduler.ts detectStalePaperSessions — will retry) and is a
+    //      smaller risk than blocking the promotion itself.
     if (toState === "PAPER") {
       let activeSessId: string | null = null;
-      let streamStopped = false;
+      let streamRunning = false;
       try {
-        const { stopStream } = await import("./paper-trading-stream.js");
+        const { startStream, isStreaming } = await import("./paper-trading-stream.js");
         // Find any active session for this strategy
         const [activeSess] = await db.select({ id: paperSessions.id })
           .from(paperSessions)
@@ -3354,34 +3366,103 @@ export class LifecycleService {
 
         activeSessId = activeSess?.id ?? null;
         if (activeSessId) {
-          // B6: await stopStream — must complete before returning to caller
-          await stopStream(activeSessId);
-          streamStopped = true;
-          logger.info({ strategyId: id, sessionId: activeSessId }, "TESTING→PAPER: stopped internal stream (paper-engine authority declared)");
+          if (isStreaming(activeSessId)) {
+            // Stream already running (e.g. alive through SHADOW → PAPER) — continue, no-op.
+            streamRunning = true;
+            logger.info({ strategyId: id, sessionId: activeSessId }, "→PAPER: internal stream already running — continuing (internal-engine authority)");
+          } else {
+            const symbols: string[] = [];
+            if (strategy.symbol) symbols.push(strategy.symbol);
+            const stratConfigForStream = (strategy.config ?? {}) as Record<string, unknown>;
+            if (stratConfigForStream.symbol && !symbols.includes(String(stratConfigForStream.symbol))) {
+              symbols.push(String(stratConfigForStream.symbol));
+            }
+            if (symbols.length > 0) {
+              startStream(activeSessId, symbols);
+              streamRunning = true;
+              logger.info({ strategyId: id, sessionId: activeSessId, symbols }, "→PAPER: started internal stream (internal-engine authority declared)");
+            } else {
+              logger.warn({ strategyId: id, sessionId: activeSessId }, "→PAPER: cannot start internal stream — no symbol resolvable for strategy");
+            }
+          }
         }
-      } catch (streamStopErr) {
-        // B6: swallow stop failure but audit it — strategy IS already PAPER in DB.
-        // Dual-stream may still occur if the simulator is alive, but this is a smaller
-        // risk than blocking the lifecycle transition for the caller.
-        const stopErrMsg = streamStopErr instanceof Error ? streamStopErr.message : String(streamStopErr);
-        logger.warn({ strategyId: id, sessionId: activeSessId, err: streamStopErr }, "TESTING→PAPER: stopStream threw — stream may still be running (paper.stop_stream_failed_on_transition)");
+      } catch (streamStartErr) {
+        // M3: swallow start failure but audit it — strategy IS already PAPER in DB.
+        // A missing internal stream is recoverable (scheduler's stale-session detector
+        // will pick it up) and is a smaller risk than blocking the lifecycle transition
+        // for the caller.
+        const startErrMsg = streamStartErr instanceof Error ? streamStartErr.message : String(streamStartErr);
+        logger.warn({ strategyId: id, sessionId: activeSessId, err: streamStartErr }, "→PAPER: startStream threw — stream may not be running (paper.start_stream_failed_on_transition)");
         // Audit write is fire-and-forget (observability only)
         db.insert(auditLog).values({
-          action: "paper.stop_stream_failed_on_transition",
+          action: "paper.start_stream_failed_on_transition",
           entityId: id, entityType: "strategy", status: "warn",
           decisionAuthority: "system",
           input: { fromState, toState, sessionId: activeSessId },
-          result: { error: stopErrMsg, transitioned_to: "PAPER", stream_stopped: false },
+          result: { error: startErrMsg, transitioned_to: "PAPER", stream_running: false },
           correlationId: options.correlationId ?? null,
-        }).catch((e) => { logger.warn({ err: e }, "paper.stop_stream_failed_on_transition audit failed (non-blocking)"); });
+        }).catch((e) => { logger.warn({ err: e }, "paper.start_stream_failed_on_transition audit failed (non-blocking)"); });
       }
-      // Audit + observability notifications are fire-and-forget (after stopStream completes)
+      // Audit + observability notifications are fire-and-forget (after the start attempt completes)
       db.insert(auditLog).values({
         action: "paper.engine_authority_declared",
         entityId: id, entityType: "strategy", status: "info",
         decisionAuthority: "system",
         input: { fromState, toState },
-        result: { strategyId: id, transitioned_to: "PAPER", stream_stopped: streamStopped, session_id: activeSessId },
+        result: { strategyId: id, transitioned_to: "PAPER", authoritative: "internal_engine", stream_running: streamRunning, session_id: activeSessId },
+        correlationId: options.correlationId ?? null,
+      }).catch((e) => { logger.warn({ err: e }, "paper.engine_authority_declared audit failed (non-blocking)"); });
+    }
+
+    // M3 (2026-07-17) — Sibling fix (symmetric stop, found while implementing the
+    // block above): PAPER's internal stream is now genuinely alive. The only valid
+    // direct target from PAPER into a broker-authoritative state is DEPLOY_READY (see
+    // VALID_TRANSITIONS). Without this block, the internal stream would keep writing
+    // fills into paper_trades/paper_positions for a strategy TradersPost now owns
+    // exclusively — the exact double-writer hazard this wave closes at the PAPER
+    // boundary, just relocated to the DEPLOY_READY boundary. There was no need for
+    // this before M3 because the internal stream was already stopped (by the old
+    // stop-on-PAPER doctrine above) long before a strategy could reach DEPLOY_READY.
+    // Written generically against BROKER_AUTHORITATIVE_STATES (not hardcoded to
+    // "DEPLOY_READY") so a future VALID_TRANSITIONS edge reaching PILOT/DEPLOYED
+    // directly from PAPER is covered without a follow-up edit. Same "never block the
+    // transition" discipline as the block above. Does NOT extend to
+    // PAPER→DECLINING/NEEDS_REVISION/GRAVEYARD — none of those targets are broker-
+    // authoritative, so no single-authority invariant is at risk on those edges, and
+    // GRAVEYARD teardown is a separate, pre-existing concern this wave does not touch.
+    if (fromState === "PAPER" && isBrokerAuthoritativeState(toState)) {
+      let leavingSessId: string | null = null;
+      try {
+        const { stopStream } = await import("./paper-trading-stream.js");
+        const [activeSess] = await db.select({ id: paperSessions.id })
+          .from(paperSessions)
+          .where(and(eq(paperSessions.strategyId, id), eq(paperSessions.status as unknown as typeof paperSessions.status, "active" as any)))
+          .limit(1)
+          .catch(() => [] as { id: string }[]);
+
+        leavingSessId = activeSess?.id ?? null;
+        if (leavingSessId) {
+          await stopStream(leavingSessId);
+          logger.info({ strategyId: id, sessionId: leavingSessId, fromState, toState }, "PAPER→broker-authoritative: stopped internal stream (TradersPost authority declared)");
+        }
+      } catch (streamStopErr) {
+        const stopErrMsg = streamStopErr instanceof Error ? streamStopErr.message : String(streamStopErr);
+        logger.warn({ strategyId: id, sessionId: leavingSessId, fromState, toState, err: streamStopErr }, "PAPER→broker-authoritative: stopStream threw — stream may still be running (paper.stop_stream_failed_on_transition)");
+        db.insert(auditLog).values({
+          action: "paper.stop_stream_failed_on_transition",
+          entityId: id, entityType: "strategy", status: "warn",
+          decisionAuthority: "system",
+          input: { fromState, toState, sessionId: leavingSessId },
+          result: { error: stopErrMsg, transitioned_to: toState, stream_stopped: false },
+          correlationId: options.correlationId ?? null,
+        }).catch((e) => { logger.warn({ err: e }, "paper.stop_stream_failed_on_transition audit failed (non-blocking)"); });
+      }
+      db.insert(auditLog).values({
+        action: "paper.engine_authority_declared",
+        entityId: id, entityType: "strategy", status: "info",
+        decisionAuthority: "system",
+        input: { fromState, toState },
+        result: { strategyId: id, transitioned_to: toState, authoritative: "traderspost", session_id: leavingSessId },
         correlationId: options.correlationId ?? null,
       }).catch((e) => { logger.warn({ err: e }, "paper.engine_authority_declared audit failed (non-blocking)"); });
     }

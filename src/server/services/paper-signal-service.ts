@@ -121,6 +121,9 @@ import { killSwitch } from "../production/kill-switch.js";
 // M2 (2026-06-23): divergence_vs_backtest inline writer — updates the shadow signal row
 // immediately after INSERT so the SHADOW→PAPER gate has a fresh value.
 import { writeShadowDivergence } from "../lib/shadow-divergence-writer.js";
+// M3 (2026-07-17) PAPER Authority Flip — shared broker-authoritative-states
+// source. See paper-authority-states.ts for the full rationale.
+import { BROKER_AUTHORITATIVE_STATES } from "../lib/paper-authority-states.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -5988,15 +5991,33 @@ export async function evaluateSignals(
         // queue.  The shadow invariant (never route to TradersPost) is inviolable.
         //
         // Special case: strategy with shadow_mode_enabled=true AND
-        // lifecycleState='PAPER' → operator override.  Log inconsistency warn +
-        // route to TradersPost (proceed through normal path below).
+        // lifecycleState='PAPER' → operator override. Log inconsistency warn +
+        // fall through to the normal PAPER path below (internal-engine fill —
+        // see M3 note).
+        //
+        // M3 (2026-07-17) re-disposition: pre-M3 this comment (and the log
+        // message / audit "decision" field below) said "routing to TradersPost" —
+        // that phrasing described the OLD doctrine's intent, not what this code
+        // ever literally did: "falling through" here has ALWAYS meant "reach the
+        // normal pendingEntryQueue → openPosition() internal-fill path a few
+        // lines below" (paper-execution-service.ts never calls routeOrder() /
+        // TradersPost). Under the old doctrine the only way this fallthrough
+        // could ALSO reach a real broker order was via the A/B rl-challenger
+        // branch further down (paper_account_routing='rl-challenger'), which
+        // gated on the OLD PAPER_PLUS_STATES set that included PAPER. Now that
+        // PAPER is removed from BROKER_AUTHORITATIVE_STATES (item 3's shared
+        // constant), that branch structurally can no longer reach routeOrder()
+        // for a PAPER-state strategy either — so "falls through" now means
+        // "internal fill, unconditionally" with no exception. The warn-audit for
+        // the inconsistency itself (shadow flag set on an already-PAPER strategy)
+        // is still worth surfacing — that part is preserved verbatim below.
         if (sessionConfig.shadowModeEnabled) {
           if (sessionConfig.lifecycleState === "PAPER") {
             // Operator override: shadow flag set but strategy already in PAPER.
-            // Log the inconsistency and allow normal execution.
+            // Log the inconsistency and allow normal (internal-engine) execution.
             logger.warn(
               { sessionId, symbol, strategyId: sessionConfig.strategyId },
-              "Wave 29 Pass A.1: shadow_mode_enabled=true but lifecycle_state=PAPER — operator override, routing to TradersPost",
+              "Wave 29 Pass A.1: shadow_mode_enabled=true but lifecycle_state=PAPER — operator override, routing to internal engine fill path (M3: PAPER is internal-engine-only)",
             );
             insertAuditRow({
               action: "lifecycle.shadow_mode_inconsistency_warn",
@@ -6006,7 +6027,7 @@ export async function evaluateSignals(
               result: {
                 shadow_mode_enabled: true,
                 lifecycle_state: "PAPER",
-                decision: "override_route_to_traderspost",
+                decision: "override_route_to_internal_engine",
                 symbol,
                 direction: config.side,
                 bar_timestamp: bar.timestamp,
@@ -6349,18 +6370,25 @@ export async function evaluateSignals(
           //   Pine alert → /api/live-order → routeOrder() (wired in Pass 4 Track B)
           // SHADOW strategies are gated out earlier (SHADOW intercept block above).
           //
-          // B1 capital-safety guard (2026-06-23): routeOrder() places an EXTERNAL
-          // broker order (TradersPost). Per §8 paper-engine authority, ONLY PAPER+
-          // strategies (PAPER / DEPLOY_READY / PILOT / DEPLOYED) interact with the
-          // broker — CANDIDATE / TESTING use the internal simulator ONLY. Before this
-          // guard, the A/B rl-challenger branch fired routeOrder() for pre-PAPER states
-          // (the old comment here even said "For CANDIDATE/TESTING ... we call
-          // routeOrder() directly here"), publishing a real broker order from a wrong
+          // B1 capital-safety guard (2026-06-23; M3 2026-07-17 re-disposition): routeOrder()
+          // places an EXTERNAL broker order (TradersPost). Per §8 paper-engine authority,
+          // ONLY broker-authoritative strategies (DEPLOY_READY / PILOT / DEPLOYED — PAPER
+          // moved OUT of this set as of M3, see paper-authority-states.ts) interact with the
+          // broker — CANDIDATE / TESTING / PAPER all use the internal simulator ONLY. Before
+          // the original B1 guard, the A/B rl-challenger branch fired routeOrder() for
+          // pre-PAPER states (the old comment here even said "For CANDIDATE/TESTING ... we
+          // call routeOrder() directly here"), publishing a real broker order from a wrong
           // lifecycle state. Skip (not throw) so the bar-eval loop + audit row continue.
-          const PAPER_PLUS_STATES = ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"];
+          // M3 note: this is the SAME literal PAPER_PLUS_STATES the packet's item 3 flags as
+          // one of 3 independent duplicated-constant sites — now a shared import so it can
+          // never drift from routes/paper.ts or scheduler.ts's copies again. Because PAPER no
+          // longer satisfies this check, this is also what structurally closes item 4's
+          // shadow-override branch: even when that branch "falls through" to the normal path
+          // below, a PAPER-state strategy routed to rl-challenger can no longer reach
+          // routeOrder() here — it only ever reaches the internal fill path (pendingEntryQueue).
           const lcStateForRouting = sessionConfig.lifecycleState ?? "";
           if (effectiveRoutingDecision === "rl-challenger" && resolvedAccountId !== null) {
-            if (!PAPER_PLUS_STATES.includes(lcStateForRouting)) {
+            if (!BROKER_AUTHORITATIVE_STATES.includes(lcStateForRouting as typeof BROKER_AUTHORITATIVE_STATES[number])) {
               logger.warn(
                 {
                   strategyId: sessionConfig.strategyId,
@@ -6368,7 +6396,7 @@ export async function evaluateSignals(
                   symbol,
                   correlationId: correlationId ?? null,
                 },
-                "B1: routeOrder skipped — non-PAPER+ lifecycle state may not place external broker orders (capital safety)",
+                "B1: routeOrder skipped — non-broker-authoritative lifecycle state may not place external broker orders (capital safety)",
               );
             } else {
               routingCalled = true;

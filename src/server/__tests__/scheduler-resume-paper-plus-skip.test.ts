@@ -2,21 +2,28 @@
  * scheduler-resume-paper-plus-skip.test.ts
  *
  * B5 — scheduler-b5: Verifies that resumeActivePaperSessions() never starts an
- * internal Massive-WS simulator stream for strategies that are in PAPER+ lifecycle
- * state (PAPER / DEPLOY_READY / PILOT / DEPLOYED).
+ * internal Massive-WS simulator stream for strategies that are in a
+ * broker-authoritative lifecycle state (DEPLOY_READY / PILOT / DEPLOYED).
+ *
+ * INVERTED for M3 PAPER Authority Flip (2026-07-17): PAPER moved OUT of the
+ * skip-set. PAPER is now internal-engine-only, so a PAPER-state session must
+ * RESUME its internal stream on restart exactly like CANDIDATE/TESTING/SHADOW —
+ * it is simply no longer special-cased here.
  *
  * Background:
- *   On TESTING→PAPER transition, stopStream() is called in-process but
+ *   On PAPER→DEPLOY_READY transition (M3's new sibling-stop block in
+ *   lifecycle-service.ts), stopStream() is called in-process but
  *   paper_sessions.status is NEVER written back to 'stopped'. On restart,
  *   every active-status session would get a fresh internal stream even if
- *   TradersPost is already the canonical journal — causing dual-stream P&L drift.
+ *   TradersPost is already the canonical journal for that (now broker-
+ *   authoritative) strategy — causing dual-stream P&L drift.
  *
  * This test suite covers:
- *   1. PAPER state → no startStream call, audit row emitted
- *   2. DEPLOY_READY / PILOT / DEPLOYED → same (parametric)
- *   3. CANDIDATE / TESTING → still resumes (regression)
- *   4. NULL lifecycleState (orphaned session) → still resumes (fail-open regression)
- *   5. Audit row action and fields are correct before skip
+ *   1. PAPER state → RESUMES (startStream called) — M3 inversion (was: skip)
+ *   2. DEPLOY_READY / PILOT / DEPLOYED → skip, audit row emitted (parametric, unchanged)
+ *   3. CANDIDATE / TESTING → still resumes (regression, unchanged)
+ *   4. NULL lifecycleState (orphaned session) → still resumes (fail-open regression, unchanged)
+ *   5. Audit row action and fields are correct before skip (unchanged)
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -250,7 +257,7 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
     selectCallCount = 0;
   });
 
-  it("skips sessions whose strategy is in PAPER state — no startStream call", async () => {
+  it("M3: RESUMES sessions whose strategy is in PAPER state — startStream IS called (was: skip, pre-M3)", async () => {
     const session = {
       id: "aaaaaaaa-0000-0000-0000-000000000001",
       strategyId: "bbbbbbbb-0000-0000-0000-000000000001",
@@ -272,29 +279,9 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
     const { _testOnly } = await import("../scheduler.js");
     await _testOnly.resumeActivePaperSessions();
 
-    expect(mockStartStream).not.toHaveBeenCalled();
-  });
-
-  it("emits paper.session_resume_skipped_paper_plus audit row before skip", async () => {
-    const sessionId = "aaaaaaaa-0000-0000-0000-000000000002";
-    const strategyId = "bbbbbbbb-0000-0000-0000-000000000002";
-    const session = { id: sessionId, strategyId, status: "active", governorState: null };
-    const strategy = { id: strategyId, lifecycleState: "PAPER", symbol: "MES", config: {} };
-
-    const { db } = await import("../db/index.js");
-    Object.assign(db, buildDbMock([session], [strategy]));
-
-    const { _testOnly } = await import("../scheduler.js");
-    await _testOnly.resumeActivePaperSessions();
-
-    expect(mockInsertAuditRowSafe).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: "paper.session_resume_skipped_paper_plus",
-        entityType: "paper_session",
-        entityId: sessionId,
-        status: "success",
-        decisionAuthority: "scheduler",
-      }),
+    expect(mockStartStream).toHaveBeenCalledWith(session.id, ["MES"]);
+    expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
+      expect.objectContaining({ action: "paper.session_resume_skipped_paper_plus" }),
     );
   });
 
@@ -406,7 +393,7 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
     );
   });
 
-  it("skips PAPER+ session and still resumes a TESTING session in the same batch", async () => {
+  it("M3: skips a DEPLOY_READY session but resumes PAPER and TESTING sessions in the same batch (the M3 boundary, exercised together)", async () => {
     const paperSession = {
       id: "aaaaaaaa-0000-0000-0000-000000000007",
       strategyId: "bbbbbbbb-0000-0000-0000-000000000007",
@@ -419,31 +406,52 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
       status: "active",
       governorState: null,
     };
+    const deployReadySession = {
+      id: "aaaaaaaa-0000-0000-0000-000000000009",
+      strategyId: "bbbbbbbb-0000-0000-0000-000000000009",
+      status: "active",
+      governorState: null,
+    };
 
-    // For the mixed batch we need the DB to alternate between two strategy rows.
-    // Simulate by making select call 2 → PAPER strategy, select call 4 → TESTING strategy.
+    // For the mixed batch we dispatch by QUERY SHAPE rather than call-ordinal —
+    // PAPER and TESTING now both resume (strategy lookup + position lookup),
+    // while DEPLOY_READY skips right after its strategy lookup (no position
+    // lookup at all). Counting call numbers naively would silently mis-route
+    // once the number of DB round-trips differs per session (exactly the
+    // fragility M3 introduces by letting PAPER resume). Dispatch on the
+    // position-query's distinctive shape (`trailHwm` key) instead for THAT
+    // case, and drive strategy lookups off a FIFO queue matching the sessions
+    // array's processing order (resumeActivePaperSessions iterates sessions
+    // sequentially, one strategy lookup per session, so a queue popped in
+    // order is robust regardless of how many position lookups interleave).
     selectCallCount = 0;
-    let innerSelectCount = 0;
+    const strategyRowsById: Record<string, { id: string; lifecycleState: string; symbol: string; config: Record<string, unknown> }> = {
+      [paperSession.strategyId]: { id: paperSession.strategyId, lifecycleState: "PAPER", symbol: "MES", config: {} },
+      [testingSession.strategyId]: { id: testingSession.strategyId, lifecycleState: "TESTING", symbol: "MNQ", config: {} },
+      [deployReadySession.strategyId]: { id: deployReadySession.strategyId, lifecycleState: "DEPLOY_READY", symbol: "MCL", config: {} },
+    };
+    const strategyLookupQueue = [paperSession.strategyId, testingSession.strategyId, deployReadySession.strategyId];
+    let strategyLookupIdx = 0;
     const mixedDb = {
-      select: vi.fn((_shape?: unknown) => {
+      select: vi.fn((shape?: Record<string, unknown>) => {
         const callNum = ++selectCallCount;
+        const isPositionsShape = !!shape && "trailHwm" in shape;
         return {
           from: vi.fn(() => ({
             where: vi.fn(() => {
               if (callNum === 1) {
-                // paperSessions query — two active sessions
-                return Promise.resolve([paperSession, testingSession]);
+                // paperSessions query — three active sessions
+                return Promise.resolve([paperSession, testingSession, deployReadySession]);
               }
-              // Strategy queries alternate: PAPER then TESTING
-              innerSelectCount++;
-              if (innerSelectCount === 1) {
-                return { limit: vi.fn(() => Promise.resolve([{ id: paperSession.strategyId, lifecycleState: "PAPER", symbol: "MES", config: {} }])) };
+              if (isPositionsShape) {
+                // paperPositions query — no open positions in this test
+                return Promise.resolve([]);
               }
-              if (innerSelectCount === 2) {
-                return { limit: vi.fn(() => Promise.resolve([{ id: testingSession.strategyId, lifecycleState: "TESTING", symbol: "MNQ", config: {} }])) };
-              }
-              // paperPositions queries
-              return Promise.resolve([]);
+              // Strategy lookup — pop the next expected strategyId off the queue.
+              const strategyId = strategyLookupQueue[strategyLookupIdx];
+              strategyLookupIdx++;
+              const row = strategyId ? strategyRowsById[strategyId] : undefined;
+              return { limit: vi.fn(() => Promise.resolve(row ? [row] : [])) };
             }),
           })),
         };
@@ -457,16 +465,21 @@ describe("resumeActivePaperSessions — B5 PAPER+ skip guard", () => {
     const { _testOnly } = await import("../scheduler.js");
     await _testOnly.resumeActivePaperSessions();
 
-    // PAPER session → no stream
-    expect(mockStartStream).not.toHaveBeenCalledWith(paperSession.id, expect.anything());
-    // TESTING session → stream started
+    // PAPER session → stream started (M3 inversion)
+    expect(mockStartStream).toHaveBeenCalledWith(paperSession.id, ["MES"]);
+    // TESTING session → stream started (unchanged)
     expect(mockStartStream).toHaveBeenCalledWith(testingSession.id, ["MNQ"]);
-    // Exactly one skip audit row for the PAPER session
+    // DEPLOY_READY session → NO stream (still broker-authoritative, untouched by this wave)
+    expect(mockStartStream).not.toHaveBeenCalledWith(deployReadySession.id, expect.anything());
+    // Exactly one skip audit row, for the DEPLOY_READY session only
     expect(mockInsertAuditRowSafe).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "paper.session_resume_skipped_paper_plus",
-        entityId: paperSession.id,
+        entityId: deployReadySession.id,
       }),
+    );
+    expect(mockInsertAuditRowSafe).not.toHaveBeenCalledWith(
+      expect.objectContaining({ entityId: paperSession.id }),
     );
   });
 });

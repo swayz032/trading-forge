@@ -549,6 +549,19 @@ liveOrderRoutes.post(
     // are NOT eligible for live capital — reject 409.
     // Strategies without a strategy_id (programmatic HMAC callers) are exempt from this
     // gate because they have no lifecycle row to look up (backward-compat).
+    //
+    // M3 (2026-07-17) verification (packet item 5): this gate already hard-rejects
+    // PAPER-state strategies today — LIVE_EXECUTION_STATES = {DEPLOYED, PILOT} never
+    // included PAPER, before or after the PAPER Authority Flip. Under the NEW
+    // "PAPER = internal engine only" doctrine this route is ALREADY correct —
+    // PAPER must never reach a live broker order via /api/live-order either, and it
+    // still can't. VERIFIED no code change needed. Also checked the strategy_id-less
+    // static/HMAC-programmatic-caller carve-out just above this block (line ~550):
+    // it is an orthogonal AUTH-CLASS distinction (no strategy FK to look up at all),
+    // not a PAPER-specific loophole — confirmed pre-existing + tested by
+    // live-order-lifecycle-gate.test.ts's "F-1.6: No strategy_id in HMAC payload"
+    // case, unrelated to this wave. Closed as verified-correct-by-existing-design,
+    // not implemented.
     if (strategy_id) {
       let lifecycleGatePassed = false;
       let lifecycleState: string | null = null;

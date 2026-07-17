@@ -58,38 +58,62 @@ const src = readFileSync(LIFECYCLE_PATH, "utf8");
 // A1 — stopStream fires on SHADOW → PAPER (not just TESTING → PAPER)
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("deepscan14 A1 — stopStream fires on ANY toState===PAPER transition", () => {
-  it("the B6/A1 stopStream block guard is toState===\"PAPER\" (fromState requirement removed)", () => {
-    const b6Idx = src.indexOf("B6 FIX");
-    expect(b6Idx).toBeGreaterThan(-1);
-    // The actual `if (...)` guard immediately precedes the stopStream try/catch —
-    // find it within a window starting at the A1 fix comment.
-    const a1Idx = src.indexOf("deepscan14 A1 FIX", b6Idx);
-    expect(a1Idx).toBeGreaterThan(-1);
-    const region = src.slice(a1Idx, a1Idx + 1600);
-    // The live guard must be the narrowed toState-only condition...
+describe("deepscan14 A1 / M3 — internal stream CONTINUES/STARTS on ANY toState===PAPER transition (INVERTED 2026-07-17)", () => {
+  // M3 (2026-07-17) PAPER Authority Flip inverted the deepscan14 A1 doctrine:
+  // the internal stream now STARTS/CONTINUES on toState==="PAPER" instead of
+  // stopping — PAPER is internal-engine-only as of M3. The guard condition
+  // itself (toState==="PAPER", generalized from the old fromState==="TESTING"
+  // requirement) is UNCHANGED — only the ACTION inside the guard inverted.
+  it("the B6/A1/M3 block guard is still toState===\"PAPER\" (fromState requirement stays removed)", () => {
+    const m3Idx = src.indexOf("M3 FIX (2026-07-17)");
+    expect(m3Idx).toBeGreaterThan(-1);
+    const region = src.slice(m3Idx, m3Idx + 4500);
+    // The live guard is still the narrowed toState-only condition...
     expect(region).toContain('if (toState === "PAPER") {');
-    // ...and must appear BEFORE the stopStream() call it guards.
+    // ...and must appear BEFORE the startStream() call it now guards.
     const guardIdx = region.indexOf('if (toState === "PAPER") {');
-    const stopStreamIdx = region.indexOf("stopStream(");
+    const startStreamIdx = region.indexOf("startStream(");
     expect(guardIdx).toBeGreaterThan(-1);
-    expect(stopStreamIdx).toBeGreaterThan(-1);
-    expect(guardIdx).toBeLessThan(stopStreamIdx);
+    expect(startStreamIdx).toBeGreaterThan(-1);
+    expect(guardIdx).toBeLessThan(startStreamIdx);
   });
 
-  it("stopStream is still awaited (B6 race-fix invariant preserved)", () => {
-    expect(src).toContain("await stopStream(");
+  it("startStream (not stopStream) is called inside the toState===PAPER block", () => {
+    const m3Idx = src.indexOf("M3 FIX (2026-07-17)");
+    expect(m3Idx).toBeGreaterThan(-1);
+    const region = src.slice(m3Idx, m3Idx + 4500);
+    expect(region).toContain("startStream(activeSessId, symbols)");
+    // The OLD stopStream-on-PAPER call must be gone from THIS block (item 3's
+    // sibling-stop block elsewhere in the file still legitimately calls
+    // stopStream — that's for fromState==="PAPER" leaving to a broker-
+    // authoritative state, a different guard entirely).
+    expect(region).not.toContain("await stopStream(activeSessId)");
   });
 
-  it("the SHADOW→PAPER edge is documented as the reason for the widened guard", () => {
-    const a1Idx = src.indexOf("deepscan14 A1 FIX");
-    expect(a1Idx).toBeGreaterThan(-1);
-    const region = src.slice(a1Idx, a1Idx + 600);
+  it("isStreaming is checked before starting (avoids a redundant restart when the stream is already alive through SHADOW)", () => {
+    const m3Idx = src.indexOf("M3 FIX (2026-07-17)");
+    const region = src.slice(m3Idx, m3Idx + 4500);
+    expect(region).toContain("isStreaming(activeSessId)");
+  });
+
+  it("the SHADOW→PAPER edge is documented as staying alive (not stopped) at this site", () => {
+    const m3Idx = src.indexOf("M3 FIX (2026-07-17)");
+    expect(m3Idx).toBeGreaterThan(-1);
+    const region = src.slice(m3Idx, m3Idx + 2000);
     expect(region).toContain("SHADOW");
   });
 
-  it("paper.stop_stream_failed_on_transition audit path is preserved (non-blocking on stopStream throw)", () => {
-    expect(src).toContain("paper.stop_stream_failed_on_transition");
+  it("paper.start_stream_failed_on_transition audit path exists (non-blocking on startStream throw — B6 discipline preserved, direction inverted)", () => {
+    expect(src).toContain("paper.start_stream_failed_on_transition");
+  });
+
+  it("a NEW sibling stop-stream block exists for PAPER leaving to a broker-authoritative state (M3 zero-carry-forward fix)", () => {
+    // PAPER's stream is now genuinely alive (this describe block proves that).
+    // Without a symmetric stop on the way OUT of PAPER into DEPLOY_READY/PILOT/
+    // DEPLOYED, the internal engine would keep writing fills for a strategy
+    // TradersPost now owns exclusively — the same double-writer hazard,
+    // relocated to the other boundary.
+    expect(src).toContain('fromState === "PAPER" && isBrokerAuthoritativeState(toState)');
   });
 });
 
@@ -205,9 +229,14 @@ describe("deepscan14 H1 — Gate 2.5 (SHADOW → PAPER) reuses the SAME pure eva
   });
 
   it("all new gate blocks precede the pre-existing shadow-signal divergence check (Wave 29 Pass A.3)", () => {
-    const region = src.slice(gate25Idx, gate25Idx + 40000);
+    // Window widened 40000→46000 and the divergence-call literal updated:
+    // freshscan6 (2026-07-12, predates M3) replaced the hardcoded `20`
+    // min-sample argument with a resolved `_shadowMinSample` var, and
+    // subsequent waves grew the gate stack past the old window (pre-existing
+    // fragility, unrelated to M3 — confirmed via base@255b503a comparison).
+    const region = src.slice(gate25Idx, gate25Idx + 46000);
     const h1EndIdx = region.indexOf("end deepscan14 H1 full pre-paper gate stack");
-    const divergenceIdx = region.indexOf("loadDivergenceInputs(s.id, 20)");
+    const divergenceIdx = region.indexOf("loadDivergenceInputs(s.id, _shadowMinSample)");
     expect(h1EndIdx).toBeGreaterThan(-1);
     expect(divergenceIdx).toBeGreaterThan(-1);
     expect(h1EndIdx).toBeLessThan(divergenceIdx);
@@ -333,7 +362,10 @@ describe("deepscan14 H3 — 3-strike auto-graveyard counters engage on the SHADO
   it("the gate-name strings are IDENTICAL to the ones Gate 2 (legacy TESTING→PAPER) uses — same counter key", () => {
     const gate2Idx = src.indexOf("Gate 2: TESTING → PAPER  (LEGACY path");
     expect(gate2Idx).toBeGreaterThan(-1);
-    const gate2Region = src.slice(gate2Idx, gate2Idx + 47000);
+    // Window widened 47000→52000 — dsr_blocked_floor now sits ~50.5K chars
+    // past the anchor as later waves grew Gate 2's body (pre-existing
+    // fragility, unrelated to M3; confirmed via base@255b503a comparison).
+    const gate2Region = src.slice(gate2Idx, gate2Idx + 52000);
     for (const gateName of gateNames) {
       expect(gate2Region).toContain(`"${gateName}"`);
       expect(region).toContain(`"${gateName}"`);
