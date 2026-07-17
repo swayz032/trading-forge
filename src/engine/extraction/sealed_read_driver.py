@@ -1568,6 +1568,83 @@ class SealedReadDriver:
             "panels": panels,
         }
 
+    def run_verdict(
+        self,
+        manifest_path: str,
+        mode: str,
+        out_dir: str,
+        token_path: str = DEFAULT_TOKEN_PATH,
+        fetched: dict | None = None,
+        live_extract_fn: Callable[[str, dict], object] | None = None,
+        live_panel_fn: Callable[[str, dict, str], object] | None = None,
+        panel_cache_dir: str | None = None,
+        dispatch_record: dict | None = None,
+        rater_fn: Callable[[str, str, dict], dict] | None = None,
+        rater_answers_dir: str | None = None,
+        propose_fn: Callable[[str, str], str | None] | None = None,
+        registration_pre_check: dict | None = None,
+        engagement_pre_check: dict | None = None,
+        frozen_scan_commit: str | None = None,
+        driver_commit: str | None = None,
+        epoch: object | None = None,
+    ) -> dict:
+        """FULL composition THROUGH MODULE E: gate (A) -> extraction (B) ->
+        panels+certificate (C) -> rater layer (D) -> VERDICT MATH (E).
+
+        Compose-order is structural, inherited from :meth:`run_with_raters`: on
+        ANY gate refusal this short-circuits with ``stage="seal_gate"``,
+        ``rater_layer=None``, ``verdict=None`` — Module E is NEVER reached.
+        :func:`run_verdict_stage` itself re-asserts (compose-order, fail-closed)
+        that Module D produced ready certificates before it runs the rollup.
+
+        The VALIDITY block's instrument SHA stamps + seal-verification record are
+        assembled from the composed result (``extraction.reader_identity`` +
+        ``gate.record.verify``); the registration/engagement pre-checks, the
+        frozen-scan/driver commits, and the read-once epoch are dependency-injected
+        (seal-day inputs). A missing/unverified REQUIRED element => the verdict is
+        INVALID (fail-closed, not a silent pass) — that is correct behavior, not a
+        bug: the seal-day conductor supplies these.
+
+        Leaves the F seam (full-dress rehearsal orchestration + drift guard)
+        clean — no re-verify, no drift guard computed here."""
+        composed = self.run_with_raters(
+            manifest_path,
+            mode,
+            out_dir,
+            token_path=token_path,
+            fetched=fetched,
+            live_extract_fn=live_extract_fn,
+            live_panel_fn=live_panel_fn,
+            panel_cache_dir=panel_cache_dir,
+            dispatch_record=dispatch_record,
+            rater_fn=rater_fn,
+            rater_answers_dir=rater_answers_dir,
+            propose_fn=propose_fn,
+        )
+        if not composed.get("ok"):
+            # Gate refused -> Module E UNREACHABLE (compose-order short-circuit).
+            return {**composed, "verdict": None}
+
+        instrument_stamps = _assemble_instrument_stamps(
+            composed,
+            registration_pre_check=registration_pre_check,
+            engagement_pre_check=engagement_pre_check,
+            frozen_scan_commit=frozen_scan_commit,
+            driver_commit=driver_commit,
+            epoch=epoch,
+        )
+        verdict = run_verdict_stage(composed["rater_layer"], instrument_stamps, mode)
+        return {
+            "ok": True,
+            "allowed": True,
+            "stage": "verdict",
+            "gate": composed["gate"],
+            "extraction": composed["extraction"],
+            "panels": composed["panels"],
+            "rater_layer": composed["rater_layer"],
+            "verdict": verdict,
+        }
+
 
 # --------------------------------------------------------------------------- #
 # MODULE D — HUMAN-BLIND TWO-STAGE RATER LAYER (ratify-packet item 5).
@@ -2085,5 +2162,451 @@ def run_rater_layer_stage(
             "E=verdict math (cert->video rollup, >=60% bar, economics/validity "
             "block); F=independent re-verify + drift guard — NONE computed here "
             "(Module D returns per-strategy rater-adjudicated certificates only)"
+        ),
+    }
+
+
+# =========================================================================== #
+# MODULE E — VERDICT MATH (ratify-packet items 6-8).
+#
+# Spec: docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md (Module E) +
+# ADVISOR-RULINGS R-015 items 6-8 / R-016.3 (cert->video rollup absorption) /
+# R-021.3 (completeness-not-gated content boundary, stated twice) / R-017 pin-2
+# (rollup-on-mixed-video: a video with >=2 strategies where exactly one is clean
+# grades CLEAN via the >=1 rule).
+#
+# Consumes MODULE D's per-strategy rater-adjudicated certificates (grouped by
+# video) and computes the ONE terminal verdict:
+#
+#   1. cert->VIDEO ROLLUP (item 6, pilot ADDENDUM 6, operator-authored + pinned
+#      BLIND 2026-07-12, h1-pilot-preregistration-2026-07-12.md:172): a VIDEO is
+#      CLEAN iff AT LEAST ONE of its strategies is certificate-grade. HERE the
+#      certificate-grade axis is the terminal read's STRUCTURAL fence —
+#      ``terminal_read_grade == "CLEAN"`` — NOT ``pilot_grade`` (pilot_conveyor.
+#      aggregate:1689-1696 pins that the sealed-12 driver MUST gate on
+#      ``terminal_read_clean``, never ``pilot_grade``, because a merge-silenced
+#      cert has ``pilot_grade`` True but ``terminal_read_clean`` False). The
+#      video-UNIT clean fraction = clean videos / total videos (NOT the raw
+#      per-cert ``terminal_read_clean_fraction`` from ``aggregate``, which is
+#      per-strategy). R-017 pin-2 is the >=1 rule verbatim.
+#   2. >=60% BAR (item 6): ``meets_bar = video_clean_fraction >= 0.60``, gated on
+#      the STRUCTURAL video-unit fraction (the ``terminal_read_grade`` rollup).
+#   3. ECONOMICS RIDER (item 6, pilot ADDENDUM 7, operator-authored + pinned
+#      BLIND, :184 + h1_pilot_phase3_finalize.py:139-154,166-175): mean
+#      PER-VIDEO-AGGREGATE tier-3 adjudications (fallthroughs + axis-3 audits,
+#      summed across a video's strategies, exactly as Addendum 7 fixed the unit),
+#      recorded + FLAGGED against the ~15 affordability ceiling. A MEASUREMENT +
+#      ceiling flag, NEVER a gate that flips ``meets_bar``.
+#   4. CONTENT axis (R-021.3, the ruled boundary): completeness/content is
+#      RECORDED (carried as a scope line + a recorded summary) but does NOT gate
+#      the terminal read. The rollup reads ONLY the structural fence, so a
+#      content_clean=False strategy that is structurally CLEAN still counts CLEAN.
+#   5. VALIDITY BLOCK computed BEFORE the verdict (item 6): registration/
+#      engagement pre-checks + instrument SHA stamps (certified reader efa377d6 +
+#      prompt/enumerator SHAs + frozen-scan/driver commit) + the Module-A
+#      seal-verification record + an epoch/read-once table. A missing/unverified
+#      REQUIRED element => verdict INVALID (fail-closed, never a silent pass).
+#   6. READ ONCE (item 6): the verdict is computed ONCE from the persisted
+#      certificates Module D carried — deterministic, replayable; NO recomputation
+#      of extraction/panels here.
+#   7. SCOPE LINES carried VERBATIM on the verdict (item 8).
+#
+# FROZEN INSTRUMENTS: ``pilot_conveyor.aggregate`` (pilot_conveyor.py:1678) is the
+# read-only reference for the per-cert ``terminal_read_clean_fraction`` shape (NOT
+# re-implemented or modified here — Module E computes the VIDEO-unit rollup on top
+# of Module D's per-strategy ``terminal_read_grade``, which is the same field
+# ``aggregate`` counts). ``h1_pilot_phase3_finalize.py`` (the frozen pilot
+# conductor: R6 cert->video rollup :139-149, Addendum-7 economics :150-175) is the
+# read-only reference for the rollup + economics shape; NEVER imported/modified.
+# The F seam (full-dress rehearsal orchestration + drift guard) is left CLEAN.
+# --------------------------------------------------------------------------- #
+
+#: The >=60% video-unit fidelity bar (R-015 item 6 / pilot §1 QUALITY bar,
+#: h1-pilot-preregistration-2026-07-12.md:11).
+VIDEO_CLEAN_BAR = 0.60
+#: The ~15 per-video-aggregate adjudications affordability ceiling (pilot
+#: ADDENDUM 7 / h1_pilot_phase3_finalize.py:30 CEILING=15). A MEASUREMENT flag,
+#: never a gate on the >=60% verdict.
+ECONOMICS_CEILING = 15
+
+#: The scope lines carried VERBATIM on every terminal verdict (R-015 item 8).
+SCOPE_LINES = (
+    "enumeration mis-packaging lower-bound 1/16 (design pool)",
+    "variant re-promotion lower-bound 1/22 (axis armed at read)",
+    "content axis measured at design-pool layer, RECORDED not gated on the twelve",
+    "result scoped to corpus + instrument SHAs + snapshot",
+)
+
+#: The REQUIRED validity elements (item 6). A missing/unverified one => INVALID.
+_REQUIRED_VALIDITY_ELEMENTS = (
+    "instrument_sha_stamps",
+    "seal_verification",
+    "registration_pre_check",
+    "engagement_pre_check",
+    "epoch_read_once",
+)
+
+
+class VerdictNotReady(RuntimeError):
+    """Raised (fail-closed, compose-order) when the verdict stage (E) is asked to
+    run without Module D having produced ready rater-adjudicated certificates
+    (and hence C, B, and the A gate having succeeded). Structurally proves
+    Module E is UNREACHABLE without Module D's certificates (ratify-packet §4 /
+    test (h))."""
+
+
+# --------------------------------------------------------------------------- #
+# Input normalization + per-row readers (read-only; never mutate Module D rows).
+# --------------------------------------------------------------------------- #
+
+
+def _normalize_verdict_input(video_certificates) -> dict:
+    """Accept EITHER a Module-D stage result (``module == "D"`` /
+    ``stage == "rater_layer"``, carrying ``per_video_rater_verdicts``) OR a full
+    composed ``run_verdict``/``run_with_raters`` result (carries ``rater_layer``).
+    Returns the ready Module-D stage dict. NEVER guesses a bare mapping into a
+    valid stage — an unrecognized / not-ready shape falls to the compose-order
+    gate in the caller (fail-closed)."""
+    obj = video_certificates
+    if isinstance(obj, dict) and isinstance(obj.get("rater_layer"), dict):
+        return obj["rater_layer"]
+    return obj if isinstance(obj, dict) else {}
+
+
+def _row_is_clean(row: dict) -> bool:
+    """A strategy row is certificate-grade for the rollup iff it was NOT halted
+    (a leak-scan HALT is fail-closed not-clean) AND its terminal read graded
+    CLEAN. Gates on the STRUCTURAL ``terminal_read_grade`` fence (R-015 item 6 /
+    aggregate:1689-1696), NEVER ``pilot_grade``."""
+    if row.get("rater_layer_halted"):
+        return False
+    return row.get("terminal_read_grade") == "CLEAN"
+
+
+def _row_adjudications(row: dict) -> int:
+    """Per-strategy tier-3 ADJUDICATION LOAD = fall-through targets + the axis-3
+    audit rider (pilot conductor's ``adjudications = n_fallthrough + n_audit``,
+    h1_pilot_phase3_finalize.py:132). Prefers an explicit ``tier3_adjudications``
+    integer if a caller supplies one; else derives it from Module D's
+    ``n_fallthrough_targets`` + (1 if the adjudicated certificate carries a fired
+    ``axis3_audit`` monitor, else 0). A halted / undispatched packet cost 0."""
+    if isinstance(row.get("tier3_adjudications"), int):
+        return row["tier3_adjudications"]
+    n = row.get("n_fallthrough_targets") or 0
+    cert = row.get("adjudicated_certificate") or {}
+    if cert.get("axis3_audit"):
+        n += 1
+    return int(n)
+
+
+def _row_content_clean(row: dict):
+    """RECORD-ONLY read of a row's content (completeness) signal for the content
+    axis (R-021.3 — recorded, NEVER gated). Looks in the tolerant places a
+    content signal may ride (an explicit ``content_clean``, or a threaded Module-C
+    completeness panel). Returns True/False/None (None = not measured on this
+    row; the content axis is measured at the design-pool layer, not the twelve)."""
+    if isinstance(row.get("content_clean"), bool):
+        return row["content_clean"]
+    panels = row.get("panels")
+    if isinstance(panels, dict):
+        comp = panels.get("completeness_grader_v3")
+        if isinstance(comp, dict) and isinstance(comp.get("content_clean"), bool):
+            return comp["content_clean"]
+    return None
+
+
+# --------------------------------------------------------------------------- #
+# cert->video rollup + economics + content record (deterministic, pure).
+# --------------------------------------------------------------------------- #
+
+
+def _cert_to_video_rollup(per_video: dict) -> dict:
+    """cert->VIDEO rollup (R-015 item 6, pilot ADDENDUM 6, R-017 pin-2): a VIDEO
+    is CLEAN iff >=1 of its strategies is certificate-grade
+    (``terminal_read_grade == "CLEAN"``). Computes the VIDEO-UNIT clean fraction
+    (clean videos / total videos). Deterministic: videos read in sorted id
+    order."""
+    rows_per_video = []
+    clean_videos = 0
+    for video_id in sorted(per_video):
+        rows = per_video[video_id] or []
+        clean_cids = [r.get("cid") for r in rows if _row_is_clean(r)]
+        is_clean = len(clean_cids) >= 1  # the >=1 rule (ADDENDUM 6 / R-017 pin-2).
+        if is_clean:
+            clean_videos += 1
+        rows_per_video.append(
+            {
+                "video_id": video_id,
+                "n_strategies": len(rows),
+                "n_clean_strategies": len(clean_cids),
+                "clean": is_clean,
+                "clean_cids": clean_cids,
+            }
+        )
+    n_videos = len(rows_per_video)
+    fraction = round(clean_videos / n_videos, 4) if n_videos else None
+    return {
+        "n_videos": n_videos,
+        "clean_videos": clean_videos,
+        "video_clean_fraction": fraction,
+        "bar": VIDEO_CLEAN_BAR,
+        "rule": "video CLEAN iff >=1 strategy terminal_read_grade==CLEAN (ADDENDUM 6 / R-017 pin-2)",
+        "per_video": rows_per_video,
+    }
+
+
+def _economics_rider(per_video: dict) -> dict:
+    """ECONOMICS RIDER (R-015 item 6, pilot ADDENDUM 7): mean PER-VIDEO-AGGREGATE
+    tier-3 adjudications (summed across each video's strategies, then meaned over
+    videos — the unit Addendum 7 fixed). Recorded + flagged against the ~15
+    ceiling. A MEASUREMENT + ceiling flag, NEVER a gate on the >=60% verdict.
+    Deterministic: sorted video order."""
+    per_video_aggregate = {}
+    for video_id in sorted(per_video):
+        per_video_aggregate[video_id] = sum(
+            _row_adjudications(r) for r in (per_video[video_id] or [])
+        )
+    n_videos = len(per_video_aggregate)
+    agg_list = list(per_video_aggregate.values())
+    mean_adj = round(sum(agg_list) / n_videos, 4) if n_videos else None
+    return {
+        "statistic": (
+            "mean per-video-AGGREGATE tier-3 adjudications (fallthroughs + axis-3 "
+            "audits, summed across a video's strategies) vs the ~15 ceiling "
+            "(ADDENDUM 7); MEASUREMENT + ceiling flag, NOT a gate on meets_bar"
+        ),
+        "mean_per_video_aggregate_adjudications": mean_adj,
+        "ceiling": ECONOMICS_CEILING,
+        "ceiling_flag": bool(mean_adj is not None and mean_adj > ECONOMICS_CEILING),
+        "per_video_adjudications": per_video_aggregate,
+        "annotation_videos_over_ceiling": sum(1 for a in agg_list if a > ECONOMICS_CEILING),
+        "annotation_max_video_aggregate": max(agg_list) if agg_list else None,
+        "gates_verdict": False,
+    }
+
+
+def _content_axis_record(per_video: dict) -> dict:
+    """RECORD-ONLY content-axis summary (R-021.3 ruled boundary — content is
+    RECORDED, never gated on the twelve). Tallies the content_clean signals
+    present on Module D rows (usually None here: content is measured at the
+    design-pool layer, not the terminal read). ``gated`` is HARD-FALSE — this
+    summary can never move ``meets_bar``."""
+    true_n = false_n = unknown_n = 0
+    for video_id in sorted(per_video):
+        for r in (per_video[video_id] or []):
+            cc = _row_content_clean(r)
+            if cc is True:
+                true_n += 1
+            elif cc is False:
+                false_n += 1
+            else:
+                unknown_n += 1
+    return {
+        "content_clean_true": true_n,
+        "content_clean_false": false_n,
+        "content_unmeasured_on_twelve": unknown_n,
+        "gated": False,
+        "note": (
+            "content/completeness measured at the design-pool layer + RECORDED "
+            "here; per R-021.3 it does NOT gate the terminal read (structural "
+            "fence only). A content_clean=False strategy still counts CLEAN if "
+            "its terminal_read_grade is CLEAN."
+        ),
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Validity block (computed BEFORE the verdict; fail-closed).
+# --------------------------------------------------------------------------- #
+
+
+def _instrument_sha_stamps_verified(stamps) -> bool:
+    """The instrument SHA stamps are verified iff the certified-reader identity
+    carries its real prompt/enumerator SHAs + model id + the certified-reader tag
+    (efa377d6), AND the frozen-scan + driver commits are present. Any missing leg
+    fails closed."""
+    if not isinstance(stamps, dict):
+        return False
+    ri = stamps.get("reader_identity")
+    if not isinstance(ri, dict):
+        return False
+    if not (ri.get("model_id") and ri.get("prompt_sha") and ri.get("enumerator_sha")):
+        return False
+    if not (ri.get("source_refs") or {}).get("certified_reader_tag"):
+        return False
+    if not (isinstance(stamps.get("frozen_scan_commit"), str) and stamps["frozen_scan_commit"]):
+        return False
+    if not (isinstance(stamps.get("driver_commit"), str) and stamps["driver_commit"]):
+        return False
+    return True
+
+
+def _element_verified(name: str, value) -> bool:
+    """Fail-closed per-element verification predicate for the validity block."""
+    if name == "instrument_sha_stamps":
+        return _instrument_sha_stamps_verified(value)
+    if name == "seal_verification":
+        # Module A's verify record must be present AND report ok (tamper-clean).
+        return isinstance(value, dict) and bool(value.get("ok"))
+    if name in ("registration_pre_check", "engagement_pre_check"):
+        return isinstance(value, dict) and bool(value.get("ok"))
+    if name == "epoch_read_once":
+        return (
+            isinstance(value, dict)
+            and value.get("epoch") is not None
+            and bool(value.get("read_once"))
+        )
+    return False
+
+
+def _validity_block(instrument_stamps: dict, mode: str) -> dict:
+    """Assemble + verify the VALIDITY block BEFORE the verdict (R-015 item 6).
+    Every REQUIRED element (instrument SHA stamps, seal-verification record,
+    registration + engagement pre-checks, epoch/read-once table) is checked
+    fail-closed; ``valid`` is True iff ALL required elements verify. A missing /
+    unverified element => the verdict is INVALID (never a silent pass)."""
+    stamps = instrument_stamps if isinstance(instrument_stamps, dict) else {}
+    elements = {}
+    missing_or_unverified = []
+    for name in _REQUIRED_VALIDITY_ELEMENTS:
+        value = stamps.get(name)
+        ok = _element_verified(name, value)
+        elements[name] = {"present": value is not None, "verified": ok, "value": value}
+        if not ok:
+            missing_or_unverified.append(name)
+    return {
+        "valid": not missing_or_unverified,
+        "mode": mode,
+        "required_elements": list(_REQUIRED_VALIDITY_ELEMENTS),
+        "missing_or_unverified": missing_or_unverified,
+        "elements": elements,
+    }
+
+
+def _assemble_instrument_stamps(
+    composed: dict,
+    registration_pre_check: dict | None = None,
+    engagement_pre_check: dict | None = None,
+    frozen_scan_commit: str | None = None,
+    driver_commit: str | None = None,
+    epoch: object | None = None,
+) -> dict:
+    """Build the VALIDITY-block ``instrument_stamps`` from a composed A->D result:
+    the instrument SHA stamps from ``extraction.reader_identity`` (carrying the
+    certified reader tag efa377d6 + prompt/enumerator SHAs) + the injected
+    frozen-scan/driver commits; the Module-A seal-verification record from
+    ``gate.record.verify``; and the injected registration/engagement pre-checks +
+    read-once epoch. Injected seal-day inputs left as ``None`` stay None so the
+    validity block fails them closed (never fabricated)."""
+    extraction = composed.get("extraction") if isinstance(composed, dict) else None
+    reader_identity = extraction.get("reader_identity") if isinstance(extraction, dict) else None
+    gate = composed.get("gate") if isinstance(composed, dict) else None
+    verify = ((gate or {}).get("record") or {}).get("verify") if isinstance(gate, dict) else None
+    return {
+        "instrument_sha_stamps": {
+            "reader_identity": reader_identity,
+            "frozen_scan_commit": frozen_scan_commit,
+            "driver_commit": driver_commit,
+        },
+        "seal_verification": verify,
+        "registration_pre_check": registration_pre_check,
+        "engagement_pre_check": engagement_pre_check,
+        "epoch_read_once": (
+            {"epoch": epoch, "read_once": True} if epoch is not None else None
+        ),
+    }
+
+
+# --------------------------------------------------------------------------- #
+# The verdict stage.
+# --------------------------------------------------------------------------- #
+
+
+def run_verdict_stage(video_certificates, instrument_stamps: dict, mode: str) -> dict:
+    """MODULE E stage: the ONE terminal verdict over Module D's per-strategy
+    rater-adjudicated certificates.
+
+    ``video_certificates``: Module D's stage result (``module == "D"`` /
+    ``stage == "rater_layer"``, ``ready`` True, carrying ``per_video_rater_verdicts``)
+    OR a full composed ``run_verdict``/``run_with_raters`` result (carries
+    ``rater_layer``). Fail-closed (:class:`VerdictNotReady`) on any not-ready /
+    unrecognized shape — Module E is UNREACHABLE without Module D's certificates.
+
+    ``instrument_stamps``: the VALIDITY-block inputs (instrument SHA stamps,
+    seal-verification record, registration/engagement pre-checks, epoch/read-once
+    table). Assembled by :func:`_assemble_instrument_stamps` in the compose path.
+
+    Computes, in order: the VALIDITY block (BEFORE the verdict); the cert->VIDEO
+    rollup (video CLEAN iff >=1 strategy ``terminal_read_grade==CLEAN``); the
+    >=60% video-unit bar; the economics rider (recorded + ceiling-flagged, NOT a
+    gate); the content-axis record (recorded, NOT gated); the verbatim scope
+    lines. READ ONCE — computed once from the persisted certificates Module D
+    carried, deterministic (no wall-clock / recomputation of extraction/panels).
+
+    Verdict: INVALID if the validity block fails (fail-closed, ``meets_bar``
+    None); else FIDELITY_PASS iff the video-unit fraction >= 0.60, else
+    FIDELITY_MISS. Leaves the F seam (re-verify + drift guard) clean."""
+    if mode not in _REHEARSAL_MODES and mode != "sealed":
+        raise ValueError(f"unknown verdict mode: {mode!r}")
+
+    stage = _normalize_verdict_input(video_certificates)
+
+    # COMPOSE-ORDER GATE (ratify-packet §4 / test (h)): Module E is UNREACHABLE
+    # unless Module D produced READY certificates. Fail-closed on every bad shape.
+    if (
+        not isinstance(stage, dict)
+        or not stage.get("ready")
+        or stage.get("stage") != "rater_layer"
+    ):
+        raise VerdictNotReady(
+            "verdict stage requires a READY Module-D rater-layer stage "
+            "(compose-order: E cannot run before D produced certificates)"
+        )
+    per_video = stage.get("per_video_rater_verdicts")
+    if not isinstance(per_video, dict) or not per_video:
+        raise VerdictNotReady("Module-D stage carries no per-video certificates to roll up")
+
+    # VALIDITY BLOCK — computed BEFORE the verdict (item 6). A missing/unverified
+    # required element => verdict INVALID (fail-closed, never a silent pass).
+    validity = _validity_block(instrument_stamps, mode)
+
+    # cert->VIDEO rollup + >=60% BAR (structural fence only). Content is NOT gated.
+    rollup = _cert_to_video_rollup(per_video)
+    fraction = rollup["video_clean_fraction"]
+    meets_bar = bool(fraction is not None and fraction >= VIDEO_CLEAN_BAR)
+
+    # ECONOMICS + CONTENT — recorded measurements, neither gates meets_bar.
+    economics = _economics_rider(per_video)
+    content_axis = _content_axis_record(per_video)
+
+    # THE VERDICT: INVALID if validity failed (fail-closed); else the >=60% read.
+    if not validity["valid"]:
+        verdict = "INVALID"
+        verdict_meets_bar = None
+    else:
+        verdict = "FIDELITY_PASS" if meets_bar else "FIDELITY_MISS"
+        verdict_meets_bar = meets_bar
+
+    return {
+        "stage": "verdict",
+        "module": "E",
+        "mode": mode,
+        "ready": bool(validity["valid"]),
+        "read_once": True,
+        "verdict": verdict,
+        "meets_bar": verdict_meets_bar,
+        # The measured structural read (recorded even when INVALID, so the
+        # operator sees what would-have-been — but the top-line verdict is the
+        # fail-closed INVALID and meets_bar is None, never a silent pass).
+        "video_unit": rollup,
+        "measured_meets_bar": meets_bar,
+        "economics": economics,
+        "content_axis_recorded": content_axis,
+        "validity": validity,
+        "scope_lines": list(SCOPE_LINES),
+        "downstream_seams": (
+            "F=full-dress rehearsal orchestration + independent re-verify + drift "
+            "guard — NONE computed here (Module E returns the terminal verdict math "
+            "only, read once from Module D's persisted certificates)"
         ),
     }

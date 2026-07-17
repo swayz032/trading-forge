@@ -19,12 +19,16 @@ import pytest
 
 from src.engine.extraction import sealed_read_driver as srd
 from src.engine.extraction.sealed_read_driver import (
+    ECONOMICS_CEILING,
+    SCOPE_LINES,
+    VIDEO_CLEAN_BAR,
     ArtifactsMissingError,
     ExtractionNotReady,
     ExtractionSourceMissing,
     RaterLayerNotReady,
     ReaderIdentityMismatch,
     SealedReadDriver,
+    VerdictNotReady,
     _dispatch_two_stage_packet,
     _enum_stability,
     _stage1_view,
@@ -35,6 +39,7 @@ from src.engine.extraction.sealed_read_driver import (
     run_extraction_stage,
     run_panels_and_certify_stage,
     run_rater_layer_stage,
+    run_verdict_stage,
 )
 
 
@@ -1475,3 +1480,394 @@ def test_d_raters_are_independent_no_shared_state():
     # A's Stage-2 view carries A's OWN committed stage1, never B's.
     a2 = views[("A", "stage2")]
     assert "committed_stage1" in a2 and "stage2" in a2
+
+
+# =========================================================================== #
+# MODULE E — VERDICT MATH (ratify-packet items 6-8) tests.
+#
+# Spec: docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md (Module E) +
+# ADVISOR-RULINGS R-015 items 6-8 / R-016.3 / R-021.3 / R-017 pin-2. No live
+# LLM/network: verdict math is computed from Module D's persisted certificates.
+# =========================================================================== #
+
+
+def _d_row(cid, video_id, *, grade="CLEAN", halted=False, n_fallthrough=0, audit=False, content_clean=None):
+    """A synthetic Module-D per-strategy rater-adjudicated row (the exact shape
+    run_rater_layer_stage emits: terminal_read_grade + adjudication counts + the
+    adjudicated certificate carrying the axis-3 audit monitor)."""
+    row = {
+        "cid": cid,
+        "video_id": video_id,
+        "strategy_index": int(cid.split("__s")[-1]) if "__s" in cid else 0,
+        "rater_layer_halted": halted,
+    }
+    if halted:
+        row["adjudicated_certificate"] = None
+        return row
+    row["dispatched"] = True
+    row["n_fallthrough_targets"] = n_fallthrough
+    row["terminal_read_grade"] = grade
+    row["terminal_read_clean"] = grade == "CLEAN"
+    row["adjudicated_certificate"] = {
+        "terminal_read_grade": grade,
+        "terminal_read_clean": grade == "CLEAN",
+        "axis3_audit": {"item_id": f"{cid}-audit"} if audit else None,
+    }
+    if content_clean is not None:
+        row["content_clean"] = content_clean
+    return row
+
+
+def _d_result(per_video, *, mode="rehearsal", ready=True):
+    """A synthetic Module-D stage result carrying per-video rater verdicts —
+    exactly what run_rater_layer_stage returns and run_verdict_stage consumes."""
+    flat = [r for rows in per_video.values() for r in rows]
+    return {
+        "stage": "rater_layer",
+        "module": "D",
+        "mode": mode,
+        "ready": ready,
+        "n_strategies": len(flat),
+        "rater_verdicts": flat,
+        "per_video_rater_verdicts": per_video,
+    }
+
+
+def _valid_stamps():
+    """A COMPLETE, verified validity-block instrument_stamps bundle: the certified
+    reader identity (real prompt/enumerator SHAs + efa377d6 tag) from the frozen
+    files, seal-verification ok, registration/engagement pre-checks ok, epoch."""
+    ri = certified_reader_identity()
+    return {
+        "instrument_sha_stamps": {
+            "reader_identity": ri,
+            "frozen_scan_commit": "8a0fff65",
+            "driver_commit": "8a0fff65",
+        },
+        "seal_verification": {"ok": True, "video_ids": ["a", "b"], "declared_sha256": "deadbeef"},
+        "registration_pre_check": {"ok": True, "n_registered": 12},
+        "engagement_pre_check": {"ok": True, "min_views": 1000},
+        "epoch_read_once": {"epoch": "2026-07-16T00:00:00Z", "read_once": True},
+    }
+
+
+# --------------------------------------------------------------------------- #
+# (a) ★ cert->video rollup: >=1 clean strategy => video CLEAN (R-017 pin-2).
+# --------------------------------------------------------------------------- #
+
+
+def test_e_rollup_mixed_video_one_clean_counts_clean():
+    """A video with 2 strategies, EXACTLY ONE clean -> video CLEAN (>=1 rule);
+    a video with 0 clean strategies -> NOT clean. Video-unit fraction correct."""
+    per_video = {
+        # exactly-one-clean video (R-017 pin-2): must roll up CLEAN.
+        "VID_MIX": [
+            _d_row("VID_MIX__s0", "VID_MIX", grade="CLEAN"),
+            _d_row("VID_MIX__s1", "VID_MIX", grade="REJECTED"),
+        ],
+        # zero-clean video: must NOT be clean.
+        "VID_BAD": [
+            _d_row("VID_BAD__s0", "VID_BAD", grade="REJECTED"),
+            _d_row("VID_BAD__s1", "VID_BAD", grade="INDETERMINATE"),
+        ],
+    }
+    res = run_verdict_stage(_d_result(per_video), _valid_stamps(), "rehearsal")
+    vu = res["video_unit"]
+    per = {v["video_id"]: v for v in vu["per_video"]}
+    assert per["VID_MIX"]["clean"] is True
+    assert per["VID_MIX"]["n_clean_strategies"] == 1
+    assert per["VID_BAD"]["clean"] is False
+    assert per["VID_BAD"]["n_clean_strategies"] == 0
+    # video-unit fraction = 1 clean / 2 videos = 0.5 (NOT the per-cert 1/4).
+    assert vu["n_videos"] == 2
+    assert vu["clean_videos"] == 1
+    assert vu["video_clean_fraction"] == 0.5
+
+
+def test_e_rollup_gates_on_structural_fence_not_pilot_grade():
+    """Regression witness (grader F-1): a MERGE-SILENCED strategy has
+    pilot_grade=True but terminal_read_grade=REJECTED (aggregate's docstring:
+    pilot_grade True + terminal_read_clean False is exactly the merge-silenced
+    shape the fence exists to catch). The video-unit rollup MUST gate on the
+    STRUCTURAL fence -> this video is NOT clean. If a refactor ever swaps
+    _row_is_clean to read pilot_grade, this test goes RED."""
+    row = _d_row("MS__s0", "VID_MS", grade="REJECTED")
+    # Inject the merge-silenced divergence: pilot_grade True on a REJECTED cert.
+    row["adjudicated_certificate"]["pilot_grade"] = True
+    row["adjudicated_certificate"]["full_grade"] = True
+    per_video = {"VID_MS": [row]}
+    res = run_verdict_stage(_d_result(per_video), _valid_stamps(), "rehearsal")
+    per = {v["video_id"]: v for v in res["video_unit"]["per_video"]}
+    assert per["VID_MS"]["clean"] is False, "pilot_grade=True must NOT count as clean"
+    assert per["VID_MS"]["n_clean_strategies"] == 0
+    assert res["video_unit"]["video_clean_fraction"] == 0.0
+
+
+def test_e_halted_strategy_is_not_clean():
+    """A leak-scan HALTED strategy is fail-closed not-clean; a video with only a
+    halted strategy is NOT clean."""
+    per_video = {"VID_H": [_d_row("VID_H__s0", "VID_H", halted=True)]}
+    res = run_verdict_stage(_d_result(per_video), _valid_stamps(), "rehearsal")
+    per = {v["video_id"]: v for v in res["video_unit"]["per_video"]}
+    assert per["VID_H"]["clean"] is False
+    assert res["video_unit"]["clean_videos"] == 0
+
+
+# --------------------------------------------------------------------------- #
+# (b) >=60% bar on the video-unit STRUCTURAL fraction.
+# --------------------------------------------------------------------------- #
+
+
+def _n_clean_videos(n_clean, n_total):
+    per_video = {}
+    for i in range(n_total):
+        vid = f"V{i:02d}"
+        grade = "CLEAN" if i < n_clean else "REJECTED"
+        per_video[vid] = [_d_row(f"{vid}__s0", vid, grade=grade)]
+    return per_video
+
+
+def test_e_bar_8_of_12_meets_7_of_12_misses():
+    """8/12 clean videos -> meets_bar True (0.6667 >= 0.60); 7/12 -> False
+    (0.5833 < 0.60). Gated on the video-unit STRUCTURAL fraction."""
+    pass_res = run_verdict_stage(_d_result(_n_clean_videos(8, 12)), _valid_stamps(), "rehearsal")
+    assert pass_res["video_unit"]["video_clean_fraction"] == 0.6667
+    assert pass_res["meets_bar"] is True
+    assert pass_res["verdict"] == "FIDELITY_PASS"
+
+    miss_res = run_verdict_stage(_d_result(_n_clean_videos(7, 12)), _valid_stamps(), "rehearsal")
+    assert miss_res["video_unit"]["video_clean_fraction"] == 0.5833
+    assert miss_res["meets_bar"] is False
+    assert miss_res["verdict"] == "FIDELITY_MISS"
+    assert VIDEO_CLEAN_BAR == 0.60
+
+
+# --------------------------------------------------------------------------- #
+# (c) content NOT gated (R-021.3): content_clean=False still counts CLEAN.
+# --------------------------------------------------------------------------- #
+
+
+def test_e_content_false_does_not_gate_still_clean():
+    """A video whose strategy is structurally CLEAN but content_clean=False still
+    counts CLEAN (R-021.3 — content recorded, never gated); content recorded."""
+    per_video = {
+        "VID_C": [_d_row("VID_C__s0", "VID_C", grade="CLEAN", content_clean=False)],
+    }
+    res = run_verdict_stage(_d_result(per_video), _valid_stamps(), "rehearsal")
+    per = {v["video_id"]: v for v in res["video_unit"]["per_video"]}
+    # structurally CLEAN despite content_clean=False (content did NOT gate).
+    assert per["VID_C"]["clean"] is True
+    assert res["meets_bar"] is True
+    # content is RECORDED, never gated.
+    content = res["content_axis_recorded"]
+    assert content["content_clean_false"] == 1
+    assert content["gated"] is False
+    # the content scope line is present verbatim.
+    assert "content axis measured at design-pool layer, RECORDED not gated on the twelve" in res["scope_lines"]
+
+
+# --------------------------------------------------------------------------- #
+# (d) economics: mean per-video aggregate; >15 flags ceiling (NOT a gate).
+# --------------------------------------------------------------------------- #
+
+
+def test_e_economics_mean_and_ceiling_flag_does_not_flip_meets_bar():
+    """Mean per-video AGGREGATE adjudications is summed across a video's
+    strategies then meaned over videos; >15 flags the ceiling as a MEASUREMENT,
+    never flipping meets_bar."""
+    per_video = {
+        # aggregate = 10 (fallthrough) + 1 (audit) + 9 = 20 for this 2-strategy video.
+        "VID_HI": [
+            _d_row("VID_HI__s0", "VID_HI", grade="CLEAN", n_fallthrough=10, audit=True),
+            _d_row("VID_HI__s1", "VID_HI", grade="REJECTED", n_fallthrough=9),
+        ],
+        # aggregate = 12 for this single-strategy video.
+        "VID_LO": [_d_row("VID_LO__s0", "VID_LO", grade="CLEAN", n_fallthrough=12)],
+    }
+    res = run_verdict_stage(_d_result(per_video), _valid_stamps(), "rehearsal")
+    econ = res["economics"]
+    assert econ["per_video_adjudications"] == {"VID_HI": 20, "VID_LO": 12}
+    # mean = (20 + 12) / 2 = 16.0 > 15 ceiling -> flagged.
+    assert econ["mean_per_video_aggregate_adjudications"] == 16.0
+    assert econ["ceiling"] == ECONOMICS_CEILING == 15
+    assert econ["ceiling_flag"] is True
+    assert econ["gates_verdict"] is False
+    # both videos clean -> fraction 1.0 -> meets_bar True DESPITE the ceiling flag.
+    assert res["video_unit"]["video_clean_fraction"] == 1.0
+    assert res["meets_bar"] is True
+    assert res["verdict"] == "FIDELITY_PASS"
+
+
+def test_e_economics_within_ceiling_not_flagged():
+    per_video = {"V0": [_d_row("V0__s0", "V0", grade="CLEAN", n_fallthrough=5)]}
+    res = run_verdict_stage(_d_result(per_video), _valid_stamps(), "rehearsal")
+    assert res["economics"]["mean_per_video_aggregate_adjudications"] == 5.0
+    assert res["economics"]["ceiling_flag"] is False
+
+
+# --------------------------------------------------------------------------- #
+# (e) validity block fail-closed: missing SHA stamp / seal record => INVALID.
+# --------------------------------------------------------------------------- #
+
+
+def test_e_missing_instrument_sha_stamp_invalid():
+    """A missing instrument SHA stamp (no prompt_sha) => verdict INVALID, meets_bar
+    None — fail-closed, never a silent pass, even on an all-clean rollup."""
+    stamps = _valid_stamps()
+    stamps["instrument_sha_stamps"]["reader_identity"].pop("prompt_sha")
+    per_video = _n_clean_videos(12, 12)  # would otherwise be a PASS.
+    res = run_verdict_stage(_d_result(per_video), stamps, "rehearsal")
+    assert res["verdict"] == "INVALID"
+    assert res["meets_bar"] is None
+    assert res["ready"] is False
+    assert res["validity"]["valid"] is False
+    assert "instrument_sha_stamps" in res["validity"]["missing_or_unverified"]
+    # the structural read is still recorded (would-have-been), but NOT the verdict.
+    assert res["measured_meets_bar"] is True
+
+
+def test_e_missing_seal_verification_invalid():
+    stamps = _valid_stamps()
+    stamps["seal_verification"] = None
+    res = run_verdict_stage(_d_result(_n_clean_videos(12, 12)), stamps, "rehearsal")
+    assert res["verdict"] == "INVALID"
+    assert res["meets_bar"] is None
+    assert "seal_verification" in res["validity"]["missing_or_unverified"]
+
+
+def test_e_seal_verification_not_ok_invalid():
+    """A PRESENT but tamper-failed seal-verification record (ok=False) => INVALID."""
+    stamps = _valid_stamps()
+    stamps["seal_verification"] = {"ok": False, "mismatch_reason": "sha_mismatch"}
+    res = run_verdict_stage(_d_result(_n_clean_videos(12, 12)), stamps, "rehearsal")
+    assert res["verdict"] == "INVALID"
+    assert "seal_verification" in res["validity"]["missing_or_unverified"]
+
+
+def test_e_all_valid_elements_pass_validity():
+    res = run_verdict_stage(_d_result(_n_clean_videos(12, 12)), _valid_stamps(), "rehearsal")
+    assert res["validity"]["valid"] is True
+    assert res["validity"]["missing_or_unverified"] == []
+    assert res["ready"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (f) read-once determinism: same persisted certs => identical verdict twice.
+# --------------------------------------------------------------------------- #
+
+
+def test_e_read_once_deterministic():
+    per_video = {
+        "V1": [_d_row("V1__s0", "V1", grade="CLEAN", n_fallthrough=4, audit=True)],
+        "V0": [_d_row("V0__s0", "V0", grade="REJECTED", n_fallthrough=7)],
+    }
+    a = run_verdict_stage(_d_result(per_video), _valid_stamps(), "rehearsal")
+    b = run_verdict_stage(_d_result(per_video), _valid_stamps(), "rehearsal")
+    assert json.dumps(a, sort_keys=True, default=str) == json.dumps(b, sort_keys=True, default=str)
+    assert a["read_once"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (g) scope lines carried VERBATIM on the verdict (item 8).
+# --------------------------------------------------------------------------- #
+
+
+def test_e_scope_lines_present_verbatim():
+    res = run_verdict_stage(_d_result(_n_clean_videos(8, 12)), _valid_stamps(), "rehearsal")
+    assert res["scope_lines"] == list(SCOPE_LINES)
+    assert res["scope_lines"] == [
+        "enumeration mis-packaging lower-bound 1/16 (design pool)",
+        "variant re-promotion lower-bound 1/22 (axis armed at read)",
+        "content axis measured at design-pool layer, RECORDED not gated on the twelve",
+        "result scoped to corpus + instrument SHAs + snapshot",
+    ]
+
+
+# --------------------------------------------------------------------------- #
+# (h) compose-order: verdict stage unreachable without D's certificates.
+# --------------------------------------------------------------------------- #
+
+
+def test_e_unreachable_without_ready_module_d():
+    # a Module-C stage (not the rater layer) is refused.
+    module_c_shape = {"stage": "panels_and_certificate", "module": "C", "ready": True}
+    with pytest.raises(VerdictNotReady):
+        run_verdict_stage(module_c_shape, _valid_stamps(), "rehearsal")
+    # a not-ready Module-D stage is refused.
+    with pytest.raises(VerdictNotReady):
+        run_verdict_stage(_d_result(_n_clean_videos(1, 1), ready=False), _valid_stamps(), "rehearsal")
+    # an empty per-video map is refused.
+    with pytest.raises(VerdictNotReady):
+        run_verdict_stage(_d_result({}), _valid_stamps(), "rehearsal")
+
+
+def test_e_gate_deny_short_circuits_verdict(tmp_path):
+    """sealed with NO SEAL-GO.token -> gate refuses -> Module E never reached."""
+    res = SealedReadDriver().run_verdict(
+        _write_rehearsal_manifest(str(tmp_path / "m.json"), REHEARSAL_VIDEOS),
+        mode="sealed",
+        out_dir=str(tmp_path / "out"),
+        token_path=str(tmp_path / "NO-SEAL-GO.token"),
+        live_extract_fn=lambda v, m: {"video_id": v, "strategies": []},
+    )
+    assert res["ok"] is False
+    assert res["stage"] == "seal_gate"
+    assert res["verdict"] is None
+
+
+# --------------------------------------------------------------------------- #
+# (i) END-TO-END full-dress: A->E over the 3 spent rehearsal videos + the
+#     mixed-video >=1 rollup, through the REAL composed driver (no network).
+# --------------------------------------------------------------------------- #
+
+
+def test_e_full_compose_over_three_spent_videos(tmp_path):
+    """run_verdict A->E over the 3 spent videos: instrument stamps assembled from
+    the composed result, validity valid, video-unit rollup + economics + scope
+    lines produced. All 3 spent videos have >=1 clean strategy -> fraction 1.0."""
+    manifest = _write_rehearsal_manifest(str(tmp_path / "m.json"), REHEARSAL_VIDEOS)
+    res = SealedReadDriver().run_verdict(
+        manifest,
+        mode="staging",
+        out_dir=str(tmp_path / "out"),
+        registration_pre_check={"ok": True, "n_registered": 3},
+        engagement_pre_check={"ok": True},
+        frozen_scan_commit="8a0fff65",
+        driver_commit="8a0fff65",
+        epoch="2026-07-16T00:00:00Z",
+    )
+    assert res["ok"] is True
+    assert res["stage"] == "verdict"
+    verdict = res["verdict"]
+    assert verdict["module"] == "E"
+    assert verdict["validity"]["valid"] is True
+    # the 3 spent videos each yield >=1 CLEAN strategy -> all clean, fraction 1.0.
+    assert verdict["video_unit"]["n_videos"] == 3
+    assert verdict["video_unit"]["clean_videos"] == 3
+    assert verdict["video_unit"]["video_clean_fraction"] == 1.0
+    assert verdict["meets_bar"] is True
+    assert verdict["verdict"] == "FIDELITY_PASS"
+    # economics recorded within the ~15 ceiling for the clean spent set.
+    assert verdict["economics"]["ceiling"] == 15
+    assert verdict["economics"]["gates_verdict"] is False
+    # scope lines verbatim; instrument stamps carried the certified reader tag.
+    assert verdict["scope_lines"] == list(SCOPE_LINES)
+    ri = verdict["validity"]["elements"]["instrument_sha_stamps"]["value"]["reader_identity"]
+    assert ri["source_refs"]["certified_reader_tag"] == "efa377d6"
+
+
+def test_e_full_compose_missing_validity_input_is_invalid(tmp_path):
+    """run_verdict without the injected registration/epoch validity inputs =>
+    verdict INVALID (fail-closed) even though the rollup would pass — the seal-day
+    conductor MUST supply them; a silent pass is structurally impossible."""
+    manifest = _write_rehearsal_manifest(str(tmp_path / "m.json"), REHEARSAL_VIDEOS)
+    res = SealedReadDriver().run_verdict(
+        manifest, mode="staging", out_dir=str(tmp_path / "out"),
+        # no registration/engagement/epoch/commits injected.
+    )
+    assert res["ok"] is True
+    assert res["verdict"]["verdict"] == "INVALID"
+    assert res["verdict"]["meets_bar"] is None
+    assert set(res["verdict"]["validity"]["missing_or_unverified"]) >= {
+        "registration_pre_check", "engagement_pre_check", "epoch_read_once", "instrument_sha_stamps",
+    }
