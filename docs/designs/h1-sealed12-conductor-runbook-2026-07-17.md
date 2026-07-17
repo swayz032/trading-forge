@@ -1,6 +1,6 @@
 # H1 SEALED-12 TERMINAL-READ — CONDUCTOR RUNBOOK (2026-07-17)
 
-> **STATUS: DRAFT for advisor ratification** (R-023.1). Frozen once ratified (R-024) + runbook-rehearsed (R-023.1c). This is the ONLY document the seal-day clean-room conductor receives. It is self-contained on purpose.
+> **STATUS: FROZEN** — ratified R-024 (with amendments 1-3 folded in), staging-rehearsed by a fresh clean-room conductor (zero hints, R-023.1c), and comprehension-probed on the amended sealed steps (a fresh reader answered "five Phase-A subagents; each gets the prompt + a transcript PATH; Phase-B one per strategy; never combine" — verbatim from the steps). This is the ONLY document the seal-day clean-room conductor receives. It is self-contained on purpose. Do not edit — amend by dated addendum only.
 
 ---
 
