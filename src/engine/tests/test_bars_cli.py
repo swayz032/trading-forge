@@ -8,6 +8,7 @@ import json
 import sys
 from datetime import datetime
 
+import duckdb
 import polars as pl
 import pytest
 
@@ -131,6 +132,89 @@ class TestBarsCliHonestEmpty:
             sys.argv = old_argv
 
 
+class TestBarsCliRuntimeErrorNotFound:
+    """A symbol with no S3 file at either the primary or legacy path (never onboarded
+    to the data lake — e.g. DXY, ZN/10Y) fails at file-RESOLUTION time and load_ohlcv
+    wraps that into a RuntimeError, NOT the "No data found for" ValueError covered by
+    TestBarsCliHonestEmpty above. This class RED-proofs that distinct path.
+    """
+
+    def _run_with_load_ohlcv_raising(self, exc, bars_fixture, capsys, monkeypatch):
+        import src.engine.data_loader as data_loader_module
+
+        def _raise(*args, **kwargs):
+            raise exc
+
+        monkeypatch.setattr(data_loader_module, "load_ohlcv", _raise)
+        return _run_cli(
+            ["--symbol", "DXY", "--timeframe", "1d", "--start", "2026-06-01",
+             "--end", "2026-06-03", "--local-path", bars_fixture],
+            capsys,
+        )
+
+    def test_no_files_found_runtimeerror_is_honest_empty(self, bars_fixture, capsys, monkeypatch):
+        exit_code, out = self._run_with_load_ohlcv_raising(
+            RuntimeError("Failed to load DXY daily from S3 (legacy path): IO Error: No files found that match the pattern"),
+            bars_fixture, capsys, monkeypatch,
+        )
+        assert exit_code == 0
+        assert json.loads(out) == {"bars": []}
+
+    def test_does_not_exist_runtimeerror_is_honest_empty(self, bars_fixture, capsys, monkeypatch):
+        exit_code, out = self._run_with_load_ohlcv_raising(
+            RuntimeError("Failed to load DXY daily from S3 (legacy path): IO Error: [bucket]/futures/DXY/... does not exist"),
+            bars_fixture, capsys, monkeypatch,
+        )
+        assert exit_code == 0
+        assert json.loads(out) == {"bars": []}
+
+    def test_unrelated_runtimeerror_message_still_propagates(self, bars_fixture, capsys, monkeypatch):
+        # RED-proof for the marker guard: a RuntimeError that is NOT a "file/glob not
+        # found" shape (e.g. permissions, corrupted Parquet) must NOT be swallowed.
+        import src.engine.data_loader as data_loader_module
+
+        def _raise(*args, **kwargs):
+            raise RuntimeError("Failed to load DXY daily from S3 (legacy path): IO Error: Access Denied")
+
+        monkeypatch.setattr(data_loader_module, "load_ohlcv", _raise)
+        old_argv = sys.argv
+        sys.argv = [
+            "fetch_bars", "--symbol", "DXY", "--timeframe", "1d",
+            "--start", "2026-06-01", "--end", "2026-06-03", "--local-path", bars_fixture,
+        ]
+        try:
+            with pytest.raises(RuntimeError, match="Access Denied"):
+                data_loader_module._bars_cli_main()
+        finally:
+            sys.argv = old_argv
+
+    def test_dataloadconfigerror_missing_creds_still_propagates_not_swallowed(
+        self, bars_fixture, capsys, monkeypatch,
+    ):
+        # DataLoadConfigError IS a RuntimeError subclass (missing AWS creds) — its
+        # message never contains the not-found markers, so it must propagate as a
+        # real infra failure, never masquerade as "DXY just has no data."
+        import src.engine.data_loader as data_loader_module
+
+        def _raise(*args, **kwargs):
+            raise data_loader_module.DataLoadConfigError(
+                "S3 read for 's3://bucket/futures/DXY/consolidated/daily.parquet' "
+                "aborted before DuckDB: missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY."
+            )
+
+        monkeypatch.setattr(data_loader_module, "load_ohlcv", _raise)
+        old_argv = sys.argv
+        sys.argv = [
+            "fetch_bars", "--symbol", "DXY", "--timeframe", "1d",
+            "--start", "2026-06-01", "--end", "2026-06-03", "--local-path", bars_fixture,
+        ]
+        try:
+            with pytest.raises(data_loader_module.DataLoadConfigError, match="missing AWS_ACCESS_KEY_ID"):
+                data_loader_module._bars_cli_main()
+        finally:
+            sys.argv = old_argv
+
+
 class TestBarsCliGenuineFailure:
     def test_missing_local_file_propagates_as_real_error_not_empty(self, tmp_path, capsys):
         # A genuinely broken read (bad path) must NOT be swallowed as honest-empty —
@@ -144,7 +228,11 @@ class TestBarsCliGenuineFailure:
             "--start", "2026-06-01", "--end", "2026-06-03", "--local-path", missing,
         ]
         try:
-            with pytest.raises(Exception):
+            # A missing local file (test-only --local-path escape hatch, never used
+            # in production) raises DuckDB's native IOException UNWRAPPED — it never
+            # reaches the RuntimeError-wrapping fallback (that only fires for the
+            # real S3 primary+legacy path resolution, not local_path reads).
+            with pytest.raises(duckdb.IOException, match="No files found"):
                 _bars_cli_main()
         finally:
             sys.argv = old_argv

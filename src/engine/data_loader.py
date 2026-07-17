@@ -1656,6 +1656,28 @@ def _bars_cli_main() -> int:
         sys.stdout.write(json.dumps({"bars": []}))
         sys.stdout.flush()
         return 0
+    except RuntimeError as exc:
+        # A symbol with NO S3 file at either the primary consolidated path or the
+        # legacy glob (never onboarded to the data lake — e.g. DXY, ZN/10Y have no
+        # producer anywhere in this codebase) fails at file-RESOLUTION time, before
+        # any successful read — load_ohlcv wraps that into a RuntimeError (see the
+        # `except Exception as _leg_err: raise RuntimeError(...)` fallback above),
+        # not the "No data found for" ValueError caught above (that one fires only
+        # after a successful read whose date-range filter yields zero rows). This is
+        # exactly as legitimately empty as that case; treat it the same way.
+        #
+        # DataLoadConfigError (missing AWS creds — a RuntimeError subclass) and any
+        # other real infra failure (permissions, corrupted Parquet, network timeout)
+        # must NOT match here — those are genuine failures the caller needs to see
+        # as an error, not a masked data gap. DuckDB signals "no file/glob match"
+        # specifically via these phrases; anything else re-raises.
+        msg = str(exc)
+        _NOT_FOUND_MARKERS = ("No files found", "does not exist", "HTTP 404")
+        if not any(marker in msg for marker in _NOT_FOUND_MARKERS):
+            raise
+        sys.stdout.write(json.dumps({"bars": []}))
+        sys.stdout.flush()
+        return 0
 
     bars = []
     for row in df.sort("ts_event").iter_rows(named=True):
