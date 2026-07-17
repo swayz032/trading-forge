@@ -204,13 +204,18 @@ export default function MonteCarlo() {
     return mcRun.riskMetrics.ruinByDay;
   }, [mcRun]);
 
-  const probabilityOfRuin = mcRun ? num(mcRun.probabilityOfRuin) : 0;
+  // probabilityOfRuin is a 0-1 FRACTION end-to-end (engine mean(terminal<=0);
+  // codebase convention — see Dashboard.tsx, mcTranslate.ts, MonteCarloFan.tsx,
+  // MonteCarloScreen.tsx, StrategyDetail KPI block). Pre-fix this page rendered
+  // the fraction as an already-percent value: a 5% ruin (0.05) displayed as
+  // "0.05%" inside a GREEN "safe" pill — a 100x visual understatement of risk.
+  const probabilityOfRuinPct = mcRun ? num(mcRun.probabilityOfRuin) * 100 : 0;
 
   const kpis = mcRun && terminalStats ? [
     { icon: Target, label: "Median Terminal", value: `$${(terminalStats.medianTerminal / 1000).toFixed(1)}k`, variant: "foreground" },
     { icon: TrendingUp, label: "Mean Terminal", value: `$${(terminalStats.meanTerminal / 1000).toFixed(1)}k`, variant: "foreground" },
     { icon: Percent, label: "5th / 95th Pct", value: `$${(terminalStats.p5Terminal / 1000).toFixed(0)}k / $${(terminalStats.p95Terminal / 1000).toFixed(0)}k`, variant: "foreground" },
-    { icon: AlertTriangle, label: "Risk of Ruin", value: `${probabilityOfRuin.toFixed(2)}%`, variant: probabilityOfRuin > 5 ? "loss" : "profit" },
+    { icon: AlertTriangle, label: "Risk of Ruin", value: `${probabilityOfRuinPct.toFixed(2)}%`, variant: probabilityOfRuinPct > 5 ? "loss" : "profit" },
   ] : [];
 
   // Determine initial equity for ruin line (from fan data day 0)
@@ -277,7 +282,9 @@ export default function MonteCarlo() {
             {recentMCRuns.map((run: any) => {
               const bt = backtestMap.get(run.backtestId);
               const strat = bt ? strategyMap.get(bt.strategyId) : null;
-              const survivalRate = run.probabilityOfRuin != null ? (100 - num(run.probabilityOfRuin)).toFixed(1) : null;
+              // ruin is a 0-1 fraction: survival% = (1 - ruin) * 100. Pre-fix
+              // `100 - fraction` showed 0.05 ruin as "99.95%" survival (true: 95.0%).
+              const survivalRate = run.probabilityOfRuin != null ? ((1 - num(run.probabilityOfRuin)) * 100).toFixed(1) : null;
               const maxDDP50 = run.maxDrawdownP50 != null ? num(run.maxDrawdownP50).toFixed(1) : null;
 
               return (

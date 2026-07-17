@@ -518,7 +518,12 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       qc.invalidateQueries({ queryKey: ["strategies"] });
       qc.invalidateQueries({ queryKey: ["pine"] });
       const data = event.data as SSEEventData<"pine:export-completed">;
-      const score = (data as { score?: number })?.score;
+      // Backend emits `exportabilityScore` (pine-export-service.ts broadcastSSE
+      // payload) — the old `data.score` read was always undefined, so the toast
+      // never showed the score. Accept both for forward/backward compat.
+      const score =
+        (data as { exportabilityScore?: number; score?: number })?.exportabilityScore ??
+        (data as { score?: number })?.score;
       toast.success(`Pine export ready${score != null ? ` (score ${score})` : ""}`);
       break;
     }
