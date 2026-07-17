@@ -1,30 +1,48 @@
 /**
  * pine-export-same-origin-auth-order.test.ts — CRIT/HIGH (security-auth-hardening
- * 2026-07-17): dead auth-ordering in pine-export.ts.
+ * 2026-07-17): dead auth-ordering in pine-export.ts, and the Origin-spoofing
+ * bypass a naive fix would have introduced.
  *
- * pine-export.ts mounts `requireOperatorApiKey` as a blanket router-level
- * `.use()` BEFORE any route is registered (see the module docstring at the
- * top of pine-export.ts). The download route additionally lists
- * `injectApiKeyForSameOriginBrowser` as route-specific middleware, with an
- * inline comment claiming it "injects OPERATOR_API_KEY for browser-originated
- * requests before requireOperatorApiKey validates" (A3, Pass 3 Track A).
+ * ── Finding 1 (dead code, harmless) ──────────────────────────────────────────
+ * pine-export.ts used to mount `requireOperatorApiKey` as a blanket
+ * router-level `.use()` BEFORE any route was registered, while the download
+ * route additionally listed a since-removed `injectApiKeyForSameOriginBrowser`
+ * middleware with an inline comment claiming it "injects OPERATOR_API_KEY for
+ * browser-originated requests before requireOperatorApiKey validates" (A3,
+ * Pass 3 Track A). That claim was false by construction — Express runs
+ * middleware in registration order regardless of `.use()` vs per-route
+ * registration, so requireOperatorApiKey always ran first and the injection
+ * never executed. Net effect in production: harmless (same-origin browser
+ * downloads simply always got 401; the feature was dead, not exploitable).
  *
- * That claim was FALSE by construction: Express executes middleware in
- * registration order regardless of `.use()` vs per-route registration. Since
- * `requireOperatorApiKey` was registered via `.use()` BEFORE the download
- * route was ever defined, it always runs FIRST for every request on this
- * router — including the download route — and `injectApiKeyForSameOriginBrowser`
- * never gets a chance to inject anything: a legitimate same-origin browser
- * request with no Authorization header is already rejected 401 before the
- * injection middleware runs. The entire A3 same-origin proxy feature was
- * dead code.
+ * ── Finding 2 (the trap: reordering "fixes" the dead code by ACTIVATING a
+ *    real auth bypass) ────────────────────────────────────────────────────────
+ * The obvious "cleanup" — reorder so the injection middleware runs BEFORE
+ * requireOperatorApiKey, restoring the documented intent — was attempted and
+ * caught on review before landing. `Origin` is a client-supplied HTTP header;
+ * the same-origin restriction it satisfies for genuine browsers is enforced
+ * by the BROWSER via CORS, not by the server, and carries no authority for a
+ * non-browser caller (curl, a script, `fetch` from Node). `FRONTEND_ORIGIN` is
+ * a public URL, not a secret. Reordering meant: any caller who simply sets
+ * `Origin: <FRONTEND_ORIGIN>` and omits Authorization gets the real
+ * OPERATOR_API_KEY injected server-side and a 200 — full unauthenticated
+ * access to Pine artifacts (which "contain per-recipient HMAC secret
+ * references and routing metadata" per the module docstring), with ZERO
+ * knowledge of the actual key. Verified empirically with an isolated Express
+ * harness before this was caught.
  *
- * This test mounts the REAL `pineExportRoutes` router (no route-level
- * reimplementation) and issues a real HTTP request matching the exact
- * same-origin-browser scenario the injection middleware exists for: matching
- * Origin header, NO Authorization header, valid OPERATOR_API_KEY configured
- * server-side. Pre-fix this returns 401 (bug); post-fix it must NOT return
- * 401 (the injected key lets it reach the real handler / DB-backed 404).
+ * ── The actual fix ────────────────────────────────────────────────────────────
+ * Remove the Origin-trust mechanism entirely rather than reorder it. This
+ * preserves the behavior real production traffic already had (per Finding 1,
+ * the injection was already dead — nothing changes for genuine callers) while
+ * deleting the exploitable code path. Every route on this router is now
+ * uniformly gated by the single blanket `requireOperatorApiKey` `.use()`,
+ * with no origin-conditional bypass anywhere.
+ *
+ * This suite proves BOTH properties: the ordinary auth gate still works
+ * (positive/negative controls), AND the specific attack this wave found and
+ * almost shipped — a spoofed same-origin Origin header with no real
+ * credential — is rejected.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -122,7 +140,7 @@ async function getDownload(
   });
 }
 
-describe("pine-export.ts same-origin auth-ordering (CRIT/HIGH security-auth-hardening 2026-07-17)", () => {
+describe("pine-export.ts auth gate — same-origin trust removed, not reordered (CRIT/HIGH security-auth-hardening 2026-07-17)", () => {
   let servers: Server[] = [];
   const originalEnv = { ...process.env };
 
@@ -133,7 +151,7 @@ describe("pine-export.ts same-origin auth-ordering (CRIT/HIGH security-auth-hard
     process.env.OPERATOR_API_KEY = OPERATOR_API_KEY;
     process.env.FRONTEND_ORIGIN = FRONTEND_ORIGIN;
     delete process.env.TRADING_FORGE_PUBLIC_URL;
-    mocks.getArtifact.mockResolvedValue(null); // 404 downstream is fine — we only care whether we REACH the handler
+    mocks.getArtifact.mockResolvedValue(null); // 404 downstream is fine — we only care whether auth passed
   });
 
   afterEach(() => {
@@ -141,24 +159,23 @@ describe("pine-export.ts same-origin auth-ordering (CRIT/HIGH security-auth-hard
     for (const s of servers) s.close();
   });
 
-  it("a same-origin browser request with NO Authorization header must NOT be rejected 401 " +
-     "— the injection middleware must run BEFORE the API-key gate", async () => {
+  it("CRIT regression guard: a request with a SPOOFED Origin header matching " +
+     "FRONTEND_ORIGIN and NO Authorization header is REJECTED 401 — this is the " +
+     "exact Origin-spoofing bypass an incorrect 'fix' introduced and this test " +
+     "would catch a regression back to it", async () => {
     const app = buildApp();
-    const { status, server } = await getDownload(app, { Origin: FRONTEND_ORIGIN });
+    const { status, body, server } = await getDownload(app, { Origin: FRONTEND_ORIGIN });
     servers.push(server);
 
-    // Pre-fix: requireOperatorApiKey (mounted via blanket router.use() before any
-    // route existed) always runs first and rejects 401 before
-    // injectApiKeyForSameOriginBrowser ever executes — the whole point of the A3
-    // same-origin proxy feature is defeated. Post-fix: the injected key lets the
-    // request reach the real handler, which 404s on the (mocked, nonexistent)
-    // artifact — proving auth passed and downstream logic ran.
-    expect(status).not.toBe(401);
-    expect(mocks.getArtifact).toHaveBeenCalled();
+    expect(status).toBe(401);
+    expect(body["error"]).toBe("unauthorized");
+    // Must never reach the handler / touch the artifact lookup without real auth.
+    expect(mocks.getArtifact).not.toHaveBeenCalled();
   });
 
-  it("positive control: a request WITH a valid Authorization header always succeeds past auth " +
-     "(sanity check that the harness itself is wired correctly)", async () => {
+  it("positive control: a request WITH a valid Authorization header succeeds past auth " +
+     "(sanity check that the harness itself is wired correctly, and that removing the " +
+     "same-origin mechanism did not also break the real gate)", async () => {
     const app = buildApp();
     const { status, server } = await getDownload(app, {
       Authorization: `Bearer ${OPERATOR_API_KEY}`,
@@ -169,9 +186,22 @@ describe("pine-export.ts same-origin auth-ordering (CRIT/HIGH security-auth-hard
     expect(mocks.getArtifact).toHaveBeenCalled();
   });
 
-  it("negative control: a CROSS-origin request (Origin does not match FRONTEND_ORIGIN) with no " +
-     "Authorization header is still correctly rejected 401 — the fix must not broaden the gate " +
-     "beyond the documented same-origin scope", async () => {
+  it("a request with a valid Authorization header but a spoofed/mismatched Origin still " +
+     "succeeds — Origin is not part of the auth decision at all anymore, in either " +
+     "direction", async () => {
+    const app = buildApp();
+    const { status, server } = await getDownload(app, {
+      Authorization: `Bearer ${OPERATOR_API_KEY}`,
+      Origin: "https://evil.test",
+    });
+    servers.push(server);
+
+    expect(status).not.toBe(401);
+    expect(mocks.getArtifact).toHaveBeenCalled();
+  });
+
+  it("a CROSS-origin request (Origin does not match FRONTEND_ORIGIN) with no " +
+     "Authorization header is rejected 401", async () => {
     const app = buildApp();
     const { status, server } = await getDownload(app, { Origin: "https://evil.test" });
     servers.push(server);
@@ -180,9 +210,22 @@ describe("pine-export.ts same-origin auth-ordering (CRIT/HIGH security-auth-hard
     expect(mocks.getArtifact).not.toHaveBeenCalled();
   });
 
-  it("negative control: no Origin header and no Authorization header is still rejected 401", async () => {
+  it("no Origin header and no Authorization header is rejected 401", async () => {
     const app = buildApp();
     const { status, server } = await getDownload(app, {});
+    servers.push(server);
+
+    expect(status).toBe(401);
+    expect(mocks.getArtifact).not.toHaveBeenCalled();
+  });
+
+  it("a bogus Authorization bearer token is rejected 401 even with a matching Origin " +
+     "header (Origin cannot substitute for or weaken the credential check)", async () => {
+    const app = buildApp();
+    const { status, server } = await getDownload(app, {
+      Origin: FRONTEND_ORIGIN,
+      Authorization: "Bearer not-the-real-key",
+    });
     servers.push(server);
 
     expect(status).toBe(401);

@@ -21,54 +21,51 @@ import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 export const pineExportRoutes = Router();
 
-// ─── A3 (Pass 3 Track A): Same-origin proxy middleware ───────────────────────
+// ─── A3 (Pass 3 Track A) same-origin proxy middleware — REMOVED (CRIT
+// security-auth-hardening 2026-07-17) ───────────────────────────────────────
 //
-// Browser-originated GETs to the artifact-download endpoint cannot carry an
-// Authorization header (browsers strip it on cross-origin requests, and the
-// OPERATOR_API_KEY is a server-side secret the browser never has).
+// A `injectApiKeyForSameOriginBrowser` middleware used to live here. Intent:
+// browser-originated GETs to the artifact-download endpoint cannot carry an
+// Authorization header (browsers strip it cross-origin, and OPERATOR_API_KEY
+// is a server-side secret the browser never has), so for requests whose
+// `Origin` header matched `FRONTEND_ORIGIN` it injected OPERATOR_API_KEY
+// server-side before requireOperatorApiKey validated.
 //
-// For requests whose Origin header matches FRONTEND_ORIGIN (or
-// TRADING_FORGE_PUBLIC_URL), we inject the OPERATOR_API_KEY server-side into
-// the Authorization header so that requireOperatorApiKey below can validate it
-// normally.  Requests from any other origin are left untouched — if they lack a
-// valid Authorization header they will receive 401 from requireOperatorApiKey.
+// Two bugs, found and fixed in the SAME wave:
 //
-// SECURITY NOTE: only inject for the download sub-route to minimise surface area.
-// The injection is done on a cloned request header object — it does NOT mutate
-// the original req.headers for logging purposes.
-function injectApiKeyForSameOriginBrowser(req: Request, _res: Response, next: NextFunction): void {
-  const frontendOrigin =
-    process.env.FRONTEND_ORIGIN ?? process.env.TRADING_FORGE_PUBLIC_URL ?? "";
-  // req.headers["origin"] is string | string[] | undefined; normalize to string.
-  const rawOrigin = req.headers["origin"];
-  const requestOrigin = Array.isArray(rawOrigin) ? rawOrigin[0] ?? "" : rawOrigin ?? "";
-
-  // Only inject when Origin matches AND no Authorization header is already set.
-  if (
-    frontendOrigin &&
-    requestOrigin &&
-    requestOrigin === frontendOrigin &&
-    !req.headers["authorization"]
-  ) {
-    const apiKey = process.env.OPERATOR_API_KEY;
-    if (apiKey && apiKey.length >= 16) {
-      // Mutate the incoming header map so requireOperatorApiKey sees a valid bearer.
-      // Safe: Express parses headers once; we modify before the next middleware runs.
-      (req.headers as Record<string, string>)["authorization"] = `Bearer ${apiKey}`;
-    } else {
-      // API key not configured on server — 403, not 401, because the Origin is
-      // correct but server is misconfigured.
-      logger.error(
-        { requestOrigin },
-        "pine-export: same-origin proxy: OPERATOR_API_KEY not set, rejecting browser download",
-      );
-      _res.status(403).json({ error: "operator_api_key_not_configured_for_proxy" });
-      return;
-    }
-  }
-
-  next();
-}
+// 1. DEAD-ORDERING (as originally found): requireOperatorApiKey was mounted
+//    as a blanket `router.use()` BEFORE the download route was ever
+//    registered, so it always ran first regardless of the per-route
+//    middleware list — the injection never executed. Net effect: harmless
+//    but non-functional (same-origin browser downloads always got 401).
+//
+// 2. ORIGIN-SPOOFING BYPASS (introduced by the first attempted fix, caught
+//    on advisor review before landing): reordering so the injection ran
+//    BEFORE requireOperatorApiKey does NOT restore the intended behavior —
+//    it activates a real vulnerability. `Origin` is a client-supplied HTTP
+//    header; the same-origin restriction it normally satisfies is enforced
+//    by BROWSERS via CORS, not by the server, and is not authoritative for
+//    non-browser callers. `FRONTEND_ORIGIN` is a public URL, not a secret.
+//    Verified empirically: a plain `fetch`/`curl` request with
+//    `Origin: <FRONTEND_ORIGIN>` and NO Authorization header, from a caller
+//    with zero knowledge of OPERATOR_API_KEY, got the real key injected and
+//    a 200 — full unauthenticated access to Pine artifacts, which (per the
+//    module docstring below) "contain per-recipient HMAC secret references
+//    and routing metadata."
+//
+// Fix: REMOVE the mechanism entirely rather than reorder it. This preserves
+// the ALREADY-LIVE production behavior (per bug 1, the injection was already
+// dead in production — nothing behavioral changes for real traffic) while
+// deleting both the dead code and the latent bypass path. The underlying
+// product need — letting the frontend's own browser UI trigger an
+// authenticated download despite the cross-origin Authorization-header
+// restriction — is a real, separate problem, but Origin-header trust is not
+// a valid solution to it; any fix needs a purpose-built secure token
+// (e.g. a short-lived signed download URL/cookie), which is a new design,
+// not a "cleanup," and is out of scope for this wave.
+//
+// See src/server/__tests__/pine-export-same-origin-auth-order.test.ts for
+// the regression coverage (including the explicit anti-spoofing case).
 
 // F-2 (Pass 6 / Track A 2026-05-20): operator API-key gate.
 // Previous code derived `principal` from `req.headers.authorization ? "operator" : "unauthenticated"`
@@ -147,31 +144,10 @@ function requireOperatorApiKey(req: Request, res: Response, next: NextFunction):
   next();
 }
 
-// CRIT/HIGH (security-auth-hardening 2026-07-17): requireOperatorApiKey was
-// PREVIOUSLY mounted as a blanket router-level `.use(requireOperatorApiKey)`
-// registered BEFORE any route on this router was defined. Express executes
-// middleware/handlers in registration order regardless of `.use()` vs
-// per-route registration — so requireOperatorApiKey ALWAYS ran first for
-// every request on this router, including the download route below, which
-// lists `injectApiKeyForSameOriginBrowser` as route-specific middleware with
-// an inline comment claiming it "injects OPERATOR_API_KEY for
-// browser-originated requests before requireOperatorApiKey validates" (A3,
-// Pass 3 Track A). That claim was FALSE by construction: by the time
-// injectApiKeyForSameOriginBrowser ran, requireOperatorApiKey had already
-// rejected the request 401 for lacking an Authorization header — the entire
-// A3 same-origin proxy feature was dead code, and legitimate same-origin
-// browser downloads were (and, until this fix, remained) broken.
-//
-// Fix: apply requireOperatorApiKey per-route instead of as a blanket
-// router-level `.use()`, so the download route can list
-// injectApiKeyForSameOriginBrowser BEFORE it — restoring the intended
-// injection-then-validate order documented at that middleware's definition
-// above. Every route retains the identical requireOperatorApiKey gate;
-// only the download route's middleware ORDER changes. See
-// src/server/__tests__/pine-export-same-origin-auth-order.test.ts.
+pineExportRoutes.use(requireOperatorApiKey);
 
 // POST /api/pine-export/compile — Compile strategy to Pine artifacts
-pineExportRoutes.post("/compile", requireOperatorApiKey, async (req, res) => {
+pineExportRoutes.post("/compile", async (req, res) => {
   const parsed = pineCompileRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -198,13 +174,8 @@ pineExportRoutes.post("/compile", requireOperatorApiKey, async (req, res) => {
 });
 
 // GET /api/pine-export/:id — Fetch export metadata
-//
-// Cast to string: adding requireOperatorApiKey as a second (untyped-params)
-// middleware widens Express 5's inferred req.params type to
-// ParamsDictionary's `string | string[]` union (same quirk documented on the
-// download handler below). URL params are always single strings.
-pineExportRoutes.get("/:id", requireOperatorApiKey, async (req, res) => {
-  const exportRow = await getExport(req.params.id as string);
+pineExportRoutes.get("/:id", async (req, res) => {
+  const exportRow = await getExport(req.params.id);
   if (!exportRow) {
     res.status(404).json({ error: "Export not found" });
     return;
@@ -213,8 +184,8 @@ pineExportRoutes.get("/:id", requireOperatorApiKey, async (req, res) => {
 });
 
 // GET /api/pine-export/:id/artifacts — Fetch artifact list
-pineExportRoutes.get("/:id/artifacts", requireOperatorApiKey, async (req, res) => {
-  const artifacts = await getExportArtifacts(req.params.id as string);
+pineExportRoutes.get("/:id/artifacts", async (req, res) => {
+  const artifacts = await getExportArtifacts(req.params.id);
   res.json(artifacts);
 });
 
@@ -226,19 +197,13 @@ pineExportRoutes.get("/:id/artifacts", requireOperatorApiKey, async (req, res) =
 // Mismatch → 403 (not 404 — avoids leaking whether the artifact exists at all).
 // Every download (success AND rejection) is written to audit_log.
 //
-// A3 (Pass 3 Track A) + CRIT/HIGH auth-ordering fix (security-auth-hardening
-// 2026-07-17): injectApiKeyForSameOriginBrowser now runs BEFORE
-// requireOperatorApiKey (previously requireOperatorApiKey was mounted via a
-// blanket router.use() ahead of every route, so it always ran first and this
-// injection middleware was dead code — see the fix note above the router's
-// first route registration).
+// (security-auth-hardening 2026-07-17: the A3 same-origin proxy middleware
+// that used to run ahead of this handler was REMOVED, not reordered — see
+// the block comment above requireOperatorApiKey's definition for why
+// reordering it would have opened an Origin-header-spoofing auth bypass.)
 //
 // C2 (Pass 3 Track C): SHADOW guard runs BEFORE ownership + content checks.
-pineExportRoutes.get(
-  "/:id/artifacts/:artifactId/download",
-  injectApiKeyForSameOriginBrowser,
-  requireOperatorApiKey,
-  async (req, res) => {
+pineExportRoutes.get("/:id/artifacts/:artifactId/download", async (req, res) => {
   // Cast to string: @types/express-serve-static-core ParamsDictionary indexes to
   // string | string[] (Express 5 type). URL params are always single strings —
   // only query-string and header values can be string[].
