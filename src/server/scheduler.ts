@@ -4297,6 +4297,7 @@ except Exception as e:
       _releaseJobLock("bias-state-freshness-check");
     }
   });
+  _scheduledJobs.add("bias-state-freshness-check");
 
   // 10:00 AM ET = 14:00 UTC (EDT) or 15:00 UTC (EST) — fire both, filter on ET
   scheduleUtc("0 14,15 * * 1-5", async () => {
@@ -5052,6 +5053,7 @@ except Exception as e:
             sessionDate,
             added: result.added,
             expired: result.expired,
+            nullPriceSkips: result.nullPriceSkips,
           },
         }).catch((err) =>
           logger.warn({ err, symbol }, "liquidity-map-refresh: audit insert failed (non-blocking)"),
