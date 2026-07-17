@@ -141,6 +141,50 @@ _KNOWN_DSL_FALLBACK_ARCHETYPES = {
 
 logger = logging.getLogger(__name__)
 
+
+# ─── Audit helper (mirrors quantum_rl_agent.py::_emit_audit_row) ─────────────
+
+
+def _emit_audit_row(
+    action: str,
+    entity_type: str,
+    entity_id: str,
+    status: str,
+    result: dict,
+    db_url: Optional[str] = None,
+) -> None:
+    """Insert a row into audit_log via psycopg2. Fail-soft — never raises.
+
+    Same shape as the established pattern in quantum_rl_agent.py::_emit_audit_row
+    (reused deliberately rather than re-invented): audit_log has no metadata
+    column on Railway prod, so extra context is merged into the `result` JSONB.
+    """
+    _url = db_url or os.environ.get("DATABASE_URL")
+    if not _url:
+        logger.debug("_emit_audit_row: DATABASE_URL not set — skipping audit for %s", action)
+        return
+    try:
+        import psycopg2
+
+        conn = psycopg2.connect(_url)
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO audit_log (action, entity_type, entity_id, status, result, created_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    """,
+                    (action, entity_type, entity_id, status, json.dumps(result)),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception as exc:
+        # WARN (not DEBUG) so a persistently-broken audit_log path is visible
+        # in normal log output, matching the quantum_rl_agent.py Band-E fix.
+        logger.warning("_emit_audit_row: failed to insert audit row for %s: %s", action, exc)
+
+
 # ─── Constants ────────────────────────────────────────────────────────────────
 
 # Default prop-firm drawdown cap (tightest firm: Topstep 50K = $2,000)
@@ -931,11 +975,34 @@ def _load_strategy_config_from_db(strategy_id: str) -> tuple[dict, str, str]:
                 nested = config.get("strategy")
                 nested = nested if isinstance(nested, dict) else {}
 
+                # Track WHICH precedence tier actually resolved each field —
+                # class-prevention fix (2026-07-17, advisor ruling): the CRIT-1a
+                # root cause was resolution silently falling through to the
+                # hardcoded MES/daily default with zero visibility. Landing the
+                # correct precedence order (this wave's fix) is not enough on
+                # its own — if a FUTURE row ever has blank DB columns AND blank
+                # config.strategy.* AND blank top-level config (e.g. a bad
+                # writer, a migration gap, a new strategy source that doesn't
+                # populate these fields), that strategy would silently repeat
+                # the exact CRIT-1a failure mode with no signal. So the
+                # last-resort tier is now LOUD, not silent.
+                symbol_source = (
+                    "db_column" if row["symbol"]
+                    else "nested_config" if nested.get("symbol")
+                    else "top_level_config" if config.get("symbol")
+                    else "hardcoded_default"
+                )
                 symbol = (
                     row["symbol"]
                     or nested.get("symbol")
                     or config.get("symbol")
                     or "MES"
+                )
+                timeframe_source = (
+                    "db_column" if row["timeframe"]
+                    else "nested_config" if nested.get("timeframe")
+                    else "top_level_config" if config.get("timeframe")
+                    else "hardcoded_default"
                 )
                 timeframe = (
                     row["timeframe"]
@@ -943,6 +1010,42 @@ def _load_strategy_config_from_db(strategy_id: str) -> tuple[dict, str, str]:
                     or config.get("timeframe")
                     or "daily"
                 )
+
+                defaulted_fields = [
+                    field
+                    for field, source in (
+                        ("symbol", symbol_source),
+                        ("timeframe", timeframe_source),
+                    )
+                    if source == "hardcoded_default"
+                ]
+                if defaulted_fields:
+                    logger.warning(
+                        "black_swan_evaluator: strategy %s resolved %s via the "
+                        "HARDCODED LAST-RESORT default — strategies.symbol/"
+                        "timeframe DB columns, config.strategy.*, AND top-level "
+                        "config were all blank. This is the exact silent-degrade "
+                        "class that made every real strategy invisibly resolve "
+                        "to MES/daily pre-CRIT-1a (2026-07-17). resolved "
+                        "symbol=%r (source=%s) timeframe=%r (source=%s)",
+                        strategy_id, defaulted_fields, symbol, symbol_source,
+                        timeframe, timeframe_source,
+                    )
+                    _emit_audit_row(
+                        action="black_swan.strategy_config_defaulted",
+                        entity_type="strategy",
+                        entity_id=strategy_id,
+                        status="warning",
+                        result={
+                            "defaulted_fields": defaulted_fields,
+                            "resolved_symbol": str(symbol),
+                            "resolved_timeframe": str(timeframe),
+                            "symbol_source": symbol_source,
+                            "timeframe_source": timeframe_source,
+                        },
+                        db_url=db_url,
+                    )
+
                 return config, str(symbol), str(timeframe)
         finally:
             conn.close()

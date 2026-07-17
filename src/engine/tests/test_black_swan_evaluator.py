@@ -1161,6 +1161,135 @@ class TestLoadStrategyConfigFromDbPrecedence:
         assert cfg == config
 
 
+class TestLoudLastResortFallbackAudit:
+    """Class-prevention fix (2026-07-17 advisor ruling): the CRIT-1a root cause
+    was resolution silently falling through to the hardcoded MES/daily
+    default with zero visibility — the precedence-order fix above closes the
+    KNOWN instance, but nothing stopped a FUTURE row (bad writer, migration
+    gap, new strategy source) from silently repeating the exact same failure
+    mode. The last-resort tier must now be LOUD: a `black_swan.strategy_
+    config_defaulted` audit row + a WARNING log line, never silent.
+
+    These tests patch `_emit_audit_row` directly (rather than asserting on a
+    live DB write) so they exercise the real decision logic without needing
+    a Postgres connection.
+    """
+
+    def _load(self, monkeypatch, *, db_symbol, db_timeframe, config):
+        monkeypatch.setenv("DATABASE_URL", "postgres://user:pass@localhost/db")
+
+        mock_cursor = MagicMock()
+        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_cursor.__exit__ = MagicMock(return_value=False)
+        mock_cursor.fetchone.return_value = {
+            "symbol": db_symbol,
+            "timeframe": db_timeframe,
+            "config": config,
+        }
+
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+
+        with patch("psycopg2.connect", return_value=mock_conn):
+            from src.engine.black_swan_evaluator import _load_strategy_config_from_db
+
+            return _load_strategy_config_from_db("strategy-under-test")
+
+    def test_last_resort_default_fires_loud_audit_and_warning(self, monkeypatch, caplog):
+        """ALL sources blank (DB columns, nested config, top-level config) —
+        the exact CRIT-1a silent-degrade shape. Must now be LOUD: an audit row
+        AND a WARNING log line, never a silent MES/daily resolution."""
+        import logging as _logging
+
+        with patch(
+            "src.engine.black_swan_evaluator._emit_audit_row"
+        ) as mock_emit_audit:
+            with caplog.at_level(_logging.WARNING, logger="src.engine.black_swan_evaluator"):
+                symbol, timeframe = self._load(
+                    monkeypatch, db_symbol=None, db_timeframe=None, config={}
+                )[1:]
+
+        assert symbol == "MES"
+        assert timeframe == "daily"
+
+        # Audit row fired exactly once, with the class-prevention action name.
+        mock_emit_audit.assert_called_once()
+        call_kwargs = mock_emit_audit.call_args.kwargs
+        assert call_kwargs["action"] == "black_swan.strategy_config_defaulted"
+        assert call_kwargs["entity_type"] == "strategy"
+        assert call_kwargs["entity_id"] == "strategy-under-test"
+        assert call_kwargs["status"] == "warning"
+        assert set(call_kwargs["result"]["defaulted_fields"]) == {"symbol", "timeframe"}
+        assert call_kwargs["result"]["resolved_symbol"] == "MES"
+        assert call_kwargs["result"]["resolved_timeframe"] == "daily"
+        assert call_kwargs["result"]["symbol_source"] == "hardcoded_default"
+        assert call_kwargs["result"]["timeframe_source"] == "hardcoded_default"
+
+        # A WARNING log line was ALSO emitted — not audit-row-only silence.
+        warning_records = [r for r in caplog.records if r.levelno == _logging.WARNING]
+        assert any("LAST-RESORT default" in r.message for r in warning_records), (
+            "expected a WARNING log line calling out the last-resort default — "
+            "got: " + repr([r.message for r in caplog.records])
+        )
+
+    def test_db_column_resolution_does_not_fire_the_defaulted_audit(self, monkeypatch):
+        """The normal case (real DB columns populated) must NOT fire the
+        defaulted-config audit — no false-positive noise on every strategy."""
+        with patch(
+            "src.engine.black_swan_evaluator._emit_audit_row"
+        ) as mock_emit_audit:
+            symbol, timeframe = self._load(
+                monkeypatch,
+                db_symbol="MNQ",
+                db_timeframe="5m",
+                config={"strategy": {"timeframe": "5m"}},
+            )[1:]
+
+        assert symbol == "MNQ"
+        assert timeframe == "5m"
+        mock_emit_audit.assert_not_called()
+
+    def test_nested_config_fallback_does_not_fire_the_defaulted_audit(self, monkeypatch):
+        """Tier 2 (nested config.strategy.*) resolving is NOT the hardcoded
+        last resort — it's a legitimate fallback tier and must stay quiet."""
+        with patch(
+            "src.engine.black_swan_evaluator._emit_audit_row"
+        ) as mock_emit_audit:
+            symbol, timeframe = self._load(
+                monkeypatch,
+                db_symbol=None,
+                db_timeframe=None,
+                config={"strategy": {"symbol": "MNQ", "timeframe": "30m"}},
+            )[1:]
+
+        assert symbol == "MNQ"
+        assert timeframe == "30m"
+        mock_emit_audit.assert_not_called()
+
+    def test_partial_default_flags_only_the_actually_defaulted_field(self, monkeypatch):
+        """When symbol resolves from a real source but timeframe has nothing
+        anywhere, only "timeframe" should appear in defaulted_fields — a
+        correctly-resolved symbol must not be falsely flagged."""
+        with patch(
+            "src.engine.black_swan_evaluator._emit_audit_row"
+        ) as mock_emit_audit:
+            symbol, timeframe = self._load(
+                monkeypatch,
+                db_symbol="MCL",       # resolves via db_column — real value
+                db_timeframe=None,
+                config={},              # no nested/top-level timeframe anywhere
+            )[1:]
+
+        assert symbol == "MCL"
+        assert timeframe == "daily"
+
+        mock_emit_audit.assert_called_once()
+        result = mock_emit_audit.call_args.kwargs["result"]
+        assert result["defaulted_fields"] == ["timeframe"]
+        assert result["symbol_source"] == "db_column"
+        assert result["timeframe_source"] == "hardcoded_default"
+
+
 class TestQueryRegimeBankTimeframeNormalizationEndToEnd:
     """CRIT-1b end-to-end: _query_regime_bank resolves the bank's literal
     timeframe alias via _resolve_bank_timeframe before running the label/

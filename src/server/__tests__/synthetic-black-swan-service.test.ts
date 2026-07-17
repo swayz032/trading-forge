@@ -18,6 +18,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { getTableConfig, PgTable } from "drizzle-orm/pg-core";
+import * as schema from "../db/schema.js";
+
+const REPO_ROOT = resolve(__dirname, "../../..");
 
 // ─── Hoisted mock state ───────────────────────────────────────────────────────
 // vi.mock factories run at hoisted-time, BEFORE any module-scope const can
@@ -483,5 +489,80 @@ describe("runBlackSwanTest — idempotency safety", () => {
       backtestId: "backtest-dup",
       status: "pending",
     });
+  });
+});
+
+// ─── Schema-anchored contract: CRIT-1a writer-side canary (2026-07-17) ───────
+//
+// Class-prevention fix (advisor ruling, mid-flight 2026-07-17): the 17
+// pytest precedence tests above prove `_load_strategy_config_from_db`
+// resolves symbol/timeframe correctly TODAY, using hand-built fixtures. But
+// fixtures can't catch a future schema drift — if `strategies.symbol` or
+// `strategies.timeframe` were ever renamed in schema.ts without updating the
+// Python reader's raw SQL, every fixture-based test would keep passing
+// (they mock the DB row shape directly) while production silently
+// resurrected the exact CRIT-1a defect (reading a column that no longer
+// means what the code assumes).
+//
+// This is the writer-side twin of the reader canary pattern established in
+// schema-contract-canary.test.ts (same `getTableConfig`/`PgTable` reflection
+// technique, reading the REAL Drizzle schema — not a hand-maintained
+// fixture) — anchoring black_swan_evaluator.py's raw SQL SELECT to schema.ts
+// instead of to a test's own assumptions about what columns exist.
+
+function declaredColumns(tableName: string): Set<string> {
+  for (const exported of Object.values(schema)) {
+    if (!(exported instanceof PgTable)) continue;
+    const cfg = getTableConfig(exported as PgTable);
+    if (cfg.name === tableName) return new Set(cfg.columns.map((c) => c.name));
+  }
+  throw new Error(`table ${tableName} not found in schema.ts`);
+}
+
+describe("A14 schema contract — black_swan_evaluator.py strategies SELECT vs schema.ts (CRIT-1a writer-side canary)", () => {
+  const strategiesCols = declaredColumns("strategies");
+
+  it("strategies.symbol and strategies.timeframe are real declared columns in schema.ts", () => {
+    // This is the ground-truth assertion the whole CRIT-1a fix depends on:
+    // if a future rename ever drops these, THIS fails first, loudly, in CI —
+    // not silently in production via a resurrected MES/daily fallback.
+    expect(strategiesCols.has("symbol")).toBe(true);
+    expect(strategiesCols.has("timeframe")).toBe(true);
+  });
+
+  it("_load_strategy_config_from_db's strategies SELECT column list exists in schema.ts (the CRIT-1a writer contract)", () => {
+    const src = readFileSync(
+      resolve(REPO_ROOT, "src/engine/black_swan_evaluator.py"),
+      "utf8",
+    );
+    // Anchored on `\bsql\s*=` (the exact variable name
+    // _load_strategy_config_from_db uses) rather than a bare `SELECT ... FROM
+    // strategies` scan — the module also has `sql_labels`/`sql_sample`
+    // queries in _query_regime_bank earlier in the file whose FROM clause
+    // targets synthetic_regime_bank, not strategies; a non-anchored greedy
+    // scan would walk clean past those (no `FROM strategies` to stop it)
+    // and capture a huge unrelated span. `\b` requires sql_labels/sql_sample
+    // to NOT match (underscore is a word char, so \bsql\b excludes them).
+    const m = src.match(/\bsql\s*=\s*"""\s*SELECT\s+([\s\S]*?)\s+FROM strategies/);
+    expect(
+      m,
+      "expected _load_strategy_config_from_db's strategies SELECT to be present",
+    ).toBeTruthy();
+    const selectCols = m![1]
+      .split(",")
+      .map((c) => c.trim())
+      .filter((c) => c.length > 0 && !c.startsWith("--"));
+    expect(selectCols.length).toBeGreaterThanOrEqual(2);
+
+    const newDrift: string[] = [];
+    for (const col of selectCols) {
+      if (!strategiesCols.has(col)) newDrift.push(col);
+    }
+    expect(
+      newDrift,
+      `black_swan_evaluator.py's strategies SELECT names columns not declared in schema.ts's ` +
+        `strategies table: ${newDrift.join(", ")} — this is the exact CRIT-1a defect class: a ` +
+        `reader silently resolving off a column that doesn't exist / isn't what it assumes`,
+    ).toEqual([]);
   });
 });
