@@ -4,8 +4,10 @@ accident, grader-falsified). The terminal read consumes the SEMANTIC cross-vendo
 enumeration-consistency verdict instead (src/agents/enumeration-consistency-semantic.md).
 This lint is RETAINED only for the STRUCTURED (compiled-spec/H2) layer where key/field
 signal natively exists. Do NOT arm it as the prose terminal-read axis.
-"""
-"""H1 enumeration-consistency lint (ratify-packet
+
+---
+
+H1 enumeration-consistency lint (ratify-packet
 `docs/designs/h1-enumeration-consistency-lint-ratify-2026-07-15.md`).
 
 Defends a defect class INVISIBLE to every existing net: Phase-B re-promotes an

@@ -413,6 +413,77 @@ def test_assemble_certificate_deterministic_repeat_call():
 # --------------------------------------------------------------------------- #
 
 
+# --------------------------------------------------------------------------- #
+# enumeration-consistency axis FORWARDING through assemble_certificate (F-3,
+# ratify-packet enum-consistency wiring). These call the REAL assemble_
+# certificate (not terminal_read_grade directly) to prove assemble forwards
+# the enum verdict to terminal_read_grade's second structural axis. The clean
+# transcript keeps f2_coverage_gate + causality's regex leg PASSing so the enum
+# axis is the sole discriminator between REJECTED / CLEAN / INDETERMINATE.
+# --------------------------------------------------------------------------- #
+
+
+def _clean_tier1_kwargs():
+    """Minimal assemble_certificate kwargs whose live lints (f2_coverage_gate +
+    causality regex leg) PASS -- so the terminal read's grade is driven purely
+    by the conflation/enumeration verdicts we thread in."""
+    transcript = "buy from the demand zone when it is retested"
+    res = run_tier1(transcript)
+    return dict(
+        full_transcript=transcript,
+        full_transcript_sha256="sha1",
+        source_video_id="v1",
+        extractor_version="e1",
+        taxonomy_version="t1",
+        tier1_detections=res.detections,
+        tier1_fallthroughs=[],
+    )
+
+
+def test_assemble_forwards_enum_fail_to_terminal_read_rejected():
+    """(F-3a) assemble_certificate(..., enumeration_consistency_verdict="FAIL",
+    conflation_verdict="PASS") -> terminal_read_grade REJECTED. Proves assemble
+    forwards the enum verdict (the FAIL comes ONLY from the enum axis: conflation
+    is PASS and the live lints are clean)."""
+    cert = assemble_certificate(
+        **_clean_tier1_kwargs(),
+        conflation_verdict="PASS",
+        enumeration_consistency_verdict="FAIL",
+    )
+    assert cert["terminal_read_grade"] == "REJECTED"
+    assert cert["terminal_read_clean"] is False
+    assert cert["terminal_read_disposition"]["enumeration_consistency"] == "FAIL"
+    assert cert["terminal_read_disposition"]["conflation_check"] == "PASS"
+
+
+def test_assemble_forwards_enum_pass_to_terminal_read_clean():
+    """(F-3c) The PASS counterpart -> CLEAN, proving the FAIL test above is not
+    trivially always-REJECT: with enum PASS (and conflation PASS + clean live
+    lints) the same certificate grades CLEAN."""
+    cert = assemble_certificate(
+        **_clean_tier1_kwargs(),
+        conflation_verdict="PASS",
+        enumeration_consistency_verdict="PASS",
+    )
+    assert cert["terminal_read_grade"] == "CLEAN"
+    assert cert["terminal_read_clean"] is True
+    assert cert["terminal_read_disposition"]["enumeration_consistency"] == "PASS"
+
+
+def test_assemble_forwards_enum_not_evaluated_to_terminal_read_indeterminate():
+    """(F-3d) The fail-closed forwarding: enumeration_consistency_verdict=
+    "NOT_EVALUATED" (with conflation PASS, no FAIL anywhere) -> INDETERMINATE,
+    never CLEAN. A live enum axis that could not be evaluated must not pass."""
+    cert = assemble_certificate(
+        **_clean_tier1_kwargs(),
+        conflation_verdict="PASS",
+        enumeration_consistency_verdict="NOT_EVALUATED",
+    )
+    assert cert["terminal_read_grade"] == "INDETERMINATE"
+    assert cert["terminal_read_clean"] is False
+    assert cert["terminal_read_disposition"]["enumeration_consistency"] == "NOT_EVALUATED"
+
+
 def test_or_alternatives_honored_flows_through_assembler(monkeypatch):
     monkeypatch.delenv("TF_OR_BRANCHES_ENABLED", raising=False)
     transcript = "take puts on a VWOP retest or take puts on a pre-market low retest"

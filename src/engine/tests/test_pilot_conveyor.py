@@ -596,6 +596,77 @@ def test_diagnose_certificate_ok_only_when_fully_resolved():
 
 
 # --------------------------------------------------------------------------- #
+# (h2) enumeration-consistency axis FORWARDING through finalize_certificate
+# (F-3, ratify-packet enum-consistency wiring). These call the REAL
+# finalize_certificate (not terminal_read_grade directly) to prove the FULL
+# runner-level forwarding chain threads the enum verdict all the way to the
+# terminal read. The fully-anchored/resolved strategy keeps f2_coverage_gate +
+# causality's regex leg PASSing so the enum verdict is the sole discriminator.
+# --------------------------------------------------------------------------- #
+
+
+def _clean_finalize_prep(video_id: str):
+    """A fully-anchored, fully-resolved prep whose live lints PASS -- so the
+    terminal read's grade is driven purely by the threaded conflation/enum
+    verdicts. Mirrors test_finalize_certificate_pilot_grade_true_when_fully_
+    anchored_and_resolved's fixture."""
+    strategy = {
+        "entry_sequence": [
+            {"step": 1, "action": "Buy from the demand zone when it is retested.", "rationale": None},
+            {"step": 2, "action": "Set your stop at the low of the hammer.", "rationale": None},
+        ]
+    }
+    return pc.prepare_strategy(
+        strategy, pc.DRY_RUN_TRANSCRIPT, video_id,
+        extractor_version="e1", taxonomy_version="t1", propose_fn=_stub_propose_fn,
+    )
+
+
+def test_finalize_forwards_enum_fail_to_terminal_read_rejected():
+    """(F-3b) finalize_certificate(..., enumeration_consistency_verdict="FAIL",
+    conflation_verdict="PASS") -> terminal_read_grade REJECTED, through the REAL
+    runner. Proves finalize forwards the enum verdict (the FAIL comes ONLY from
+    the enum axis: conflation PASS, live lints clean)."""
+    prep = _clean_finalize_prep("v-enum-fail")
+    cert = pc.finalize_certificate(
+        prep, tier3_verdicts=[], dry_run=True,
+        conflation_verdict="PASS", enumeration_consistency_verdict="FAIL",
+    )
+    assert cert["terminal_read_grade"] == "REJECTED"
+    assert cert["terminal_read_clean"] is False
+    assert cert["terminal_read_disposition"]["enumeration_consistency"] == "FAIL"
+    assert cert["terminal_read_disposition"]["conflation_check"] == "PASS"
+
+
+def test_finalize_forwards_enum_pass_to_terminal_read_clean():
+    """(F-3c) The PASS counterpart -> CLEAN, proving the FAIL test above is not
+    trivially always-REJECT: enum PASS + conflation PASS + clean live lints ->
+    CLEAN through the real runner."""
+    prep = _clean_finalize_prep("v-enum-pass")
+    cert = pc.finalize_certificate(
+        prep, tier3_verdicts=[], dry_run=True,
+        conflation_verdict="PASS", enumeration_consistency_verdict="PASS",
+    )
+    assert cert["terminal_read_grade"] == "CLEAN"
+    assert cert["terminal_read_clean"] is True
+    assert cert["terminal_read_disposition"]["enumeration_consistency"] == "PASS"
+
+
+def test_finalize_forwards_enum_not_evaluated_to_terminal_read_indeterminate():
+    """(F-3d) The fail-closed forwarding through the real runner: enum verdict
+    "NOT_EVALUATED" (conflation PASS, no FAIL anywhere) -> INDETERMINATE, never
+    CLEAN."""
+    prep = _clean_finalize_prep("v-enum-noteval")
+    cert = pc.finalize_certificate(
+        prep, tier3_verdicts=[], dry_run=True,
+        conflation_verdict="PASS", enumeration_consistency_verdict="NOT_EVALUATED",
+    )
+    assert cert["terminal_read_grade"] == "INDETERMINATE"
+    assert cert["terminal_read_clean"] is False
+    assert cert["terminal_read_disposition"]["enumeration_consistency"] == "NOT_EVALUATED"
+
+
+# --------------------------------------------------------------------------- #
 # (i) aggregate arithmetic + diagnosis roll-up
 # --------------------------------------------------------------------------- #
 

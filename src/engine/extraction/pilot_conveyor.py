@@ -1379,10 +1379,15 @@ def finalize_certificate(
     or_branches: Optional[List[List[str]]] = None,
     scope_line: Optional[str] = None,
     dry_run: bool = False,
+    conflation_verdict: Optional[str] = None,
+    enumeration_consistency_verdict: Optional[str] = None,
 ) -> dict:
-    """Phase 2 (never calls an LLM/agent -- `tier3_verdicts`/`tier3_support`
-    are consumed as DATA, same contract as `cert_assembler.assemble_
-    certificate` itself). Joins verdicts to fall-through spans by char_span
+    """Phase 2 (never calls an LLM/agent -- `tier3_verdicts`/`tier3_support`/
+    `conflation_verdict`/`enumeration_consistency_verdict` are all consumed as
+    DATA, same contract as
+    `cert_assembler.assemble_certificate` itself; the live conflation call is
+    the seal-day caller's job, out of this pure function). Joins verdicts to
+    fall-through spans by char_span
     (via `Tier3Verdict.char_span`, exactly as `assemble_certificate` already
     does internally) and returns the pilot-grade certificate.
 
@@ -1433,6 +1438,25 @@ def finalize_certificate(
         topology=topology,
         or_branches=or_branches,
         scope_line=scope_line,
+        # THE FENCE (ratify-packet h1-conflation-wiring-ratify-2026-07-15 §3):
+        # thread the strategy's calibrated semantic conflation verdict
+        # ("PASS"|"REJECT"|None) into assemble_certificate, which routes it to
+        # terminal_read_grade's STRUCTURAL AXIS. None (verdict absent/errored)
+        # is fail-closed -> INDETERMINATE (not clean). The verdict is supplied
+        # by the caller as DATA (same consume-only contract as tier3_verdicts):
+        # the rehearsal reads it from the persisted conflation_grades/*.json;
+        # the seal-day path makes the live conflation call. This function never
+        # calls an LLM.
+        conflation_verdict=conflation_verdict,
+        # ENUMERATION-CONSISTENCY AXIS (ratify-packet h1-enumeration-consistency-
+        # lint-ratify-2026-07-15): mirror of the conflation line above. Thread the
+        # strategy's semantic enumeration verdict ("PASS"|"FAIL"|"NOT_EVALUATED"|
+        # None) into assemble_certificate, which routes it to terminal_read_grade's
+        # SECOND structural axis. None = axis absent (backward-compatible). Supplied
+        # by the caller as DATA (same consume-only contract): the rehearsal reads it
+        # from the persisted enum_semantic_grades/*.json; the seal-day path makes
+        # the live enumeration-lint call. This function never calls an LLM.
+        enumeration_consistency_verdict=enumeration_consistency_verdict,
     )
 
     unanchored: List[UnanchoredCondition] = prepare_output.get("unanchored_conditions", [])

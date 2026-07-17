@@ -309,6 +309,7 @@ def assemble_certificate(
     or_branches: Optional[List[List[str]]] = None,
     scope_line: Optional[str] = None,
     conflation_verdict: Optional[str] = None,
+    enumeration_consistency_verdict: Optional[str] = None,
 ) -> dict:
     """Assemble one fidelity certificate. Pure function: no I/O, no LLM call
     (tier-3 verdicts are consumed as data, per the Wave-4 brief), no
@@ -426,7 +427,19 @@ def assemble_certificate(
     # supplied (fail-closed) -- never CLEAN. pilot_grade itself is UNCHANGED
     # (pilot-era artifact); this is additive. The read harness (pilot_conveyor
     # finalize) supplies `conflation_verdict` per strategy.
-    terminal_read = terminal_read_grade(lint_results, conflation_verdict)
+    #
+    # ENUMERATION-CONSISTENCY AXIS (ratify-packet h1-enumeration-consistency-
+    # lint-ratify-2026-07-15): thread the strategy's semantic enumeration verdict
+    # ("PASS"|"FAIL"|"NOT_EVALUATED"|None) to terminal_read_grade's SECOND
+    # structural axis, EXACTLY as `conflation_verdict` above. `None` = axis absent
+    # (backward-compatible: callers that do not run this post-processing lint are
+    # unaffected). The read harness supplies it as DATA (consume-only contract,
+    # same as conflation); this function makes no LLM call.
+    terminal_read = terminal_read_grade(
+        lint_results,
+        conflation_verdict,
+        enumeration_consistency_verdict=enumeration_consistency_verdict,
+    )
 
     return {
         "conditions": condition_entries,
