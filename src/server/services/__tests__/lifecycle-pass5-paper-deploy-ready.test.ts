@@ -71,7 +71,12 @@ describe("Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring in lifecycle-
   it("loads latestBtP2D, latestMcP2D, frozenShadowRow as gate inputs", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const idx = src.indexOf('fromState === "PAPER" && toState === "DEPLOY_READY"');
-    const block = src.slice(idx, idx + 3000);
+    // Window widened 3000 -> 21000 (gate3-manual-cron-parity-2026-07-17): the new
+    // Gate 3 precondition-parity block now sits between the guard and latestBtP2D
+    // (BEFORE it, by design — the precondition must run before the evaluator and
+    // every other gate), pushing latestMcP2D/frozenShadowRow further from the
+    // guard than the old fixed window covered. Same intent, larger window.
+    const block = src.slice(idx, idx + 21000);
     expect(block).toContain("latestBtP2D");
     expect(block).toContain("latestMcP2D");
     expect(block).toContain("frozenShadowRow");

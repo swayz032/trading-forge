@@ -185,6 +185,15 @@ import { LifecycleService } from "../services/lifecycle-service.js";
 
 const STRAT_ID = "dddd0001-0000-0000-0000-000000000001";
 
+// Gate 3 manual/cron precondition parity (ratify-packet gate3-manual-cron-parity-2026-07-17):
+// _promoteStrategyInner now checks tradingDays >= 30 && rollingSharpe >= 1.5 BEFORE reaching
+// any of the gates this file exercises (compliance-drift / freeze / evidence-governor). The
+// fixture must satisfy that precondition so these tests still reach their target gate.
+const QUALIFYING_LIFECYCLE_CHANGED_AT = new Date("2026-01-01T00:00:00.000Z");
+const QUALIFYING_ROLLING_SHARPE = "2.0";
+/** 30 distinct-day rows for the new trading-days precondition query (see queueStandardSelects). */
+const THIRTY_TRADING_DAYS = Array.from({ length: 30 }, (_, i) => ({ day: `2026-01-${String(i + 2).padStart(2, "0")}` }));
+
 const strategyRow = (overrides: Record<string, unknown> = {}) => ({
   id: STRAT_ID,
   name: "manual-path-strategy",
@@ -192,6 +201,8 @@ const strategyRow = (overrides: Record<string, unknown> = {}) => ({
   lifecycleState: "PAPER",
   config: {},
   frozenPolicyHash: null,
+  lifecycleChangedAt: QUALIFYING_LIFECYCLE_CHANGED_AT,
+  rollingSharpe30d: QUALIFYING_ROLLING_SHARPE,
   ...overrides,
 });
 
@@ -225,25 +236,31 @@ function auditActions(): string[] {
 /**
  * Queue the standard manual PAPER→DEPLOY_READY select sequence:
  *   1. strategy pre-read
- *   2. latest completed backtest
- *   3. (only when propCompliance passes a firm) complianceRulesets latest row
- *   4. latest MC run
- *   5. frozen-shadow strategy row
- *   6. biasState regime lookup (only consumed when the freeze path runs)
+ *   2. Gate 3 precondition trading-days query (paperTrades ⋈ paperSessions) — new
+ *      as of the gate3-manual-cron-parity-2026-07-17 fix; runs BEFORE latestBtP2D.
+ *      Defaults to 30 distinct days so the precondition passes and every OTHER
+ *      test in this file still reaches the gate it actually targets.
+ *   3. latest completed backtest
+ *   4. (only when propCompliance passes a firm) complianceRulesets latest row
+ *   5. latest MC run
+ *   6. frozen-shadow strategy row
+ *   7. biasState regime lookup (only consumed when the freeze path runs)
  */
 function queueStandardSelects(opts: {
   strategy?: Record<string, unknown>;
   backtest?: Record<string, unknown>;
   rulesetRows?: unknown; // array result or Error for the complianceRulesets select
   regimeRows?: unknown[];
+  tradingDayRows?: unknown[]; // override the Gate 3 precondition query result
 } = {}) {
   const strat = opts.strategy ?? strategyRow();
   selectQueue.push([strat]);                                  // 1 strategy pre-read
-  selectQueue.push([opts.backtest ?? backtestRow()]);         // 2 latest backtest
-  if (opts.rulesetRows !== undefined) selectQueue.push(opts.rulesetRows); // 3 drift lookup
-  selectQueue.push([]);                                       // 4 latest MC (none)
-  selectQueue.push([{ id: STRAT_ID, config: strat.config ?? {}, frozenPolicyHash: strat.frozenPolicyHash ?? null }]); // 5 frozen shadow
-  selectQueue.push(opts.regimeRows ?? [{ regimeLabel: "TRENDING" }]); // 6 biasState (freeze path only)
+  selectQueue.push(opts.tradingDayRows ?? THIRTY_TRADING_DAYS); // 2 Gate 3 precondition trading-days query
+  selectQueue.push([opts.backtest ?? backtestRow()]);         // 3 latest backtest
+  if (opts.rulesetRows !== undefined) selectQueue.push(opts.rulesetRows); // 4 drift lookup
+  selectQueue.push([]);                                       // 5 latest MC (none)
+  selectQueue.push([{ id: STRAT_ID, config: strat.config ?? {}, frozenPolicyHash: strat.frozenPolicyHash ?? null }]); // 6 frozen shadow
+  selectQueue.push(opts.regimeRows ?? [{ regimeLabel: "TRENDING" }]); // 7 biasState (freeze path only)
 }
 
 beforeEach(() => {

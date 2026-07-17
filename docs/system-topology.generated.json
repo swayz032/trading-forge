@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T09:03:46.025Z",
+  "generatedAt": "2026-07-17T09:56:25.842Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -393,7 +393,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 289h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 290h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -520,7 +520,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 323h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 324h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -538,7 +538,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 331h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 332h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -593,7 +593,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 270h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 271h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {

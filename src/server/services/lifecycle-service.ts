@@ -60,6 +60,15 @@ import { evaluatePromotionGates, getWfePromotionFloor, getCpcvMinPaths } from ".
 // Wave 29 Pass A.2 — PBO lifecycle gate (TESTING → SHADOW/PAPER hard gate).
 // PBO_OVERFIT_THRESHOLD_PCT (default 0.15) — stricter than W27.5 PBO_OVERFIT_THRESHOLD (0.5).
 import { evaluatePboGate } from "../lib/pbo-gate.js";
+// Gate 3 manual/cron precondition parity (ratify-packet gate3-manual-cron-parity-2026-07-17):
+// shared constants + pure evaluator so the cron sweep (checkAutoPromotions, ~:5601/:7595)
+// and the manual PATCH path (_promoteStrategyInner, PAPER → DEPLOY_READY branch below)
+// reference the SAME tradingDays/rollingSharpe threshold — never a second copy of the literals.
+import {
+  PAPER_TO_DEPLOY_READY_MIN_TRADING_DAYS,
+  PAPER_TO_DEPLOY_READY_MIN_ROLLING_SHARPE,
+  evaluatePaperToDeployReadyPrecondition,
+} from "../lib/paper-to-deploy-ready-precondition.js";
 // Wave 29 Pass A.3 — shadow-signal divergence gate (SHADOW → PAPER).
 // TODO (A.4 architect): Once A.1's SHADOW lifecycle state lands and the
 // shadow_signals schema is extended with direction/intended_size/killzone/
@@ -551,6 +560,29 @@ export async function runComplianceGateForFirms(
   return { firmsFailing, details };
 }
 
+// ── Gate 3 manual/cron precondition parity (ratify-packet gate3-manual-cron-parity-2026-07-17) ──
+// Grader-surfaced hardening (2026-07-17): the trading-days query was originally hand-duplicated
+// at both call sites (cron sweep + manual _promoteStrategyInner), with a test asserting the two
+// copies matched — but a duplicated-and-then-compared test can only prove two copies of the SAME
+// mistake agree with each other, not that either is correct, and it can never catch a future edit
+// to one copy without the other. Extracting ONE shared function that both call sites invoke
+// makes query drift structurally impossible instead of merely test-detectable — the query has
+// exactly one place to live now.
+export async function countPaperTradingDaysSince(strategyId: string, sinceDate: Date): Promise<number> {
+  const tradeDays = await db
+    .select({ day: sql<string>`DATE(${paperTrades.exitTime})` })
+    .from(paperTrades)
+    .innerJoin(paperSessions, eq(paperSessions.id, paperTrades.sessionId))
+    .where(
+      and(
+        eq(paperSessions.strategyId, strategyId),
+        gte(paperTrades.exitTime, sinceDate),
+      ),
+    )
+    .groupBy(sql`DATE(${paperTrades.exitTime})`);
+  return tradeDays.length;
+}
+
 export class LifecycleService {
   /**
    * Promote or demote a strategy to a new lifecycle state.
@@ -671,6 +703,110 @@ export class LifecycleService {
         const { evaluatePaperToDeployReadyGates } = await import("../lib/paper-to-deploy-ready-gates.js");
         // Load gate inputs
         const correlationId = options.correlationId ?? randomUUID();
+
+        // ── Gate 3 manual/cron precondition parity (ratify-packet gate3-manual-cron-parity-2026-07-17) ──
+        // evaluatePaperToDeployReadyGates()'s own docstring (paper-to-deploy-ready-gates.ts:33) states:
+        // "The caller is responsible for: Checking the pre-conditions (tradingDays >= 30,
+        // rollingSharpe >= 1.5)". The cron sweep (checkAutoPromotions, ~:5601) enforces this
+        // BEFORE calling the evaluator; this manual path never did — a correctly-HMAC-signed
+        // manual PATCH could reach DEPLOY_READY with 0 trading days and Sharpe=0 as long as the
+        // 9-gate evaluator happened to pass. Mirrors the cron's EXACT query shape (same join,
+        // same DATE()-distinct group-by, same lifecycleChangedAt filter — see
+        // gate3-manual-cron-query-parity.test.ts for the empirical proof the two are identical)
+        // so the manual path enforces the IDENTICAL precondition. Runs BEFORE the latestBtP2D
+        // read and every other gate below so a failing precondition never spends the 9-gate
+        // evaluator's on-demand survival-twin Python subprocess.
+        //
+        // Scoping note: this block sits inside the enclosing
+        // `!options.skipPaperToDeployReadyEvaluator` guard (line ~678), which the cron's OWN
+        // call into this same function already sets to `true` (checkAutoPromotions →
+        // promoteStrategy(..., { skipPaperToDeployReadyEvaluator: true }), ~:7604) because it
+        // already ran its own precondition + the full inline gate stack. So this new check is
+        // structurally unreachable from the cron's call path — it fires ONLY for the manual
+        // PATCH path, exactly where the evaluator's docstring says the caller-responsibility
+        // gap exists, and can never double-block (or re-block) a promotion the cron already
+        // qualified.
+        {
+          if (!strategy.lifecycleChangedAt) {
+            // Mirrors the cron's `if (!s.lifecycleChangedAt) continue;` — the cron sweep never
+            // promotes (or even evaluates) a strategy with no lifecycleChangedAt stamp. The
+            // manual path reaches the identical outcome via an explicit block rather than an
+            // ambiguous 0-day reading.
+            const precondMissing = evaluatePaperToDeployReadyPrecondition({
+              tradingDays: 0,
+              rollingSharpe: strategy.rollingSharpe30d ? parseFloat(String(strategy.rollingSharpe30d)) : 0,
+              lifecycleChangedAtMissing: true,
+            });
+            logger.warn(
+              { strategyId: id, transition: "PAPER→DEPLOY_READY" },
+              "PAPER → DEPLOY_READY blocked (manual path): lifecycleChangedAt not set — cannot verify trading-day precondition (cron-parity gate)",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.paper_to_deploy_ready_precondition_blocked",
+              entityId: id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: {
+                reason: precondMissing.reason,
+                trading_days: precondMissing.tradingDays,
+                rolling_sharpe: precondMissing.rollingSharpe,
+                min_trading_days: precondMissing.minTradingDays,
+                min_rolling_sharpe: precondMissing.minRollingSharpe,
+                note: "strategy.lifecycleChangedAt is null — the cron sweep never promotes such a strategy either (same precondition, same semantics)",
+              },
+              correlationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: id, err: auditErr }, "lifecycle.paper_to_deploy_ready_precondition_blocked audit insert failed (non-blocking)");
+            });
+            return {
+              success: false,
+              error: `PAPER → DEPLOY_READY precondition not met: lifecycleChangedAt is not set (tradingDays=0, rollingSharpe=${precondMissing.rollingSharpe})`,
+            };
+          }
+
+          // Shared query (countPaperTradingDaysSince, module scope above) — the cron sweep below
+          // calls the SAME function, so the two call sites cannot drift apart (grader hardening
+          // 2026-07-17: previously two hand-duplicated copies of this query existed).
+          const precondTradingDays = await countPaperTradingDaysSince(id, strategy.lifecycleChangedAt);
+          const precondRollingSharpe = strategy.rollingSharpe30d ? parseFloat(String(strategy.rollingSharpe30d)) : 0;
+
+          const precondResult = evaluatePaperToDeployReadyPrecondition({
+            tradingDays: precondTradingDays,
+            rollingSharpe: precondRollingSharpe,
+          });
+
+          if (!precondResult.passed) {
+            logger.warn(
+              { strategyId: id, tradingDays: precondTradingDays, rollingSharpe: precondRollingSharpe, transition: "PAPER→DEPLOY_READY" },
+              "PAPER → DEPLOY_READY blocked (manual path): trading-day/Sharpe precondition not met (cron-parity gate)",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.paper_to_deploy_ready_precondition_blocked",
+              entityId: id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: {
+                reason: precondResult.reason,
+                trading_days: precondResult.tradingDays,
+                rolling_sharpe: precondResult.rollingSharpe,
+                min_trading_days: precondResult.minTradingDays,
+                min_rolling_sharpe: precondResult.minRollingSharpe,
+              },
+              correlationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: id, err: auditErr }, "lifecycle.paper_to_deploy_ready_precondition_blocked audit insert failed (non-blocking)");
+            });
+            return {
+              success: false,
+              error: `PAPER → DEPLOY_READY precondition not met: tradingDays=${precondTradingDays} (need >= ${precondResult.minTradingDays}), rollingSharpe=${precondRollingSharpe.toFixed(2)} (need >= ${precondResult.minRollingSharpe})`,
+            };
+          }
+        }
+
         const [latestBtP2D] = await db.select({
           id: backtests.id, walkForwardResults: backtests.walkForwardResults,
           gateResult: backtests.gateResult, b15Battery: backtests.b15Battery,
@@ -5583,22 +5719,13 @@ export class LifecycleService {
       if (!s.lifecycleChangedAt) continue;
 
       // Count distinct trading days (paper_trades.exitTime dates) since this strategy
-      // entered PAPER. paperTrades has sessionId not strategyId, so join via paperSessions.
-      const tradeDays = await db
-        .select({ day: sql<string>`DATE(${paperTrades.exitTime})` })
-        .from(paperTrades)
-        .innerJoin(paperSessions, eq(paperSessions.id, paperTrades.sessionId))
-        .where(
-          and(
-            eq(paperSessions.strategyId, s.id),
-            gte(paperTrades.exitTime, s.lifecycleChangedAt),
-          ),
-        )
-        .groupBy(sql`DATE(${paperTrades.exitTime})`);
-      const tradingDays = tradeDays.length;
+      // entered PAPER. Shared with the manual PATCH path (countPaperTradingDaysSince,
+      // module scope above the class) — grader hardening 2026-07-17: previously
+      // hand-duplicated at both call sites, now one function, structurally can't drift.
+      const tradingDays = await countPaperTradingDaysSince(s.id, s.lifecycleChangedAt);
 
       const rollingSharpe = s.rollingSharpe30d ? parseFloat(String(s.rollingSharpe30d)) : 0;
-      if (tradingDays >= 30 && rollingSharpe >= 1.5) {
+      if (tradingDays >= PAPER_TO_DEPLOY_READY_MIN_TRADING_DAYS && rollingSharpe >= PAPER_TO_DEPLOY_READY_MIN_ROLLING_SHARPE) {
         // Track A.2: composite evidence-completeness tracker.
         // Records whether each major gate had complete data or fell back to a
         // legacy/unavailable status. Used after all gates pass to compute
@@ -7592,7 +7719,7 @@ export class LifecycleService {
             });
           }
         }
-      } else if (tradingDays >= 30 && rollingSharpe < 1.5) {
+      } else if (tradingDays >= PAPER_TO_DEPLOY_READY_MIN_TRADING_DAYS && rollingSharpe < PAPER_TO_DEPLOY_READY_MIN_ROLLING_SHARPE) {
         logger.warn({ id: s.id, rollingSharpe, tradingDays }, "DEPLOY_READY blocked: rolling Sharpe < 1.5");
       }
     }

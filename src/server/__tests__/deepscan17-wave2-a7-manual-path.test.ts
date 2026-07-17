@@ -198,6 +198,15 @@ import { LifecycleService } from "../services/lifecycle-service.js";
 
 const STRAT_ID = "eeee0002-0000-0000-0000-000000000002";
 
+// Gate 3 manual/cron precondition parity (ratify-packet gate3-manual-cron-parity-2026-07-17):
+// _promoteStrategyInner now checks tradingDays >= 30 && rollingSharpe >= 1.5 BEFORE reaching
+// the A7 signal-correlation gate on the PAPER→DEPLOY_READY branch. The fixture must satisfy
+// that precondition so these tests still reach the A7 gate they target.
+const QUALIFYING_LIFECYCLE_CHANGED_AT = new Date("2026-01-01T00:00:00.000Z");
+const QUALIFYING_ROLLING_SHARPE = "2.0";
+/** 30 distinct-day rows for the new trading-days precondition query. */
+const THIRTY_TRADING_DAYS = Array.from({ length: 30 }, (_, i) => ({ day: `2026-01-${String(i + 2).padStart(2, "0")}` }));
+
 const strategyRow = (overrides: Record<string, unknown> = {}) => ({
   id: STRAT_ID,
   name: "a7-manual-strategy",
@@ -205,6 +214,8 @@ const strategyRow = (overrides: Record<string, unknown> = {}) => ({
   lifecycleState: "PAPER",
   config: {},
   frozenPolicyHash: null,
+  lifecycleChangedAt: QUALIFYING_LIFECYCLE_CHANGED_AT,
+  rollingSharpe30d: QUALIFYING_ROLLING_SHARPE,
   ...overrides,
 });
 
@@ -261,7 +272,8 @@ const svc = () => new LifecycleService();
 describe("A7 — manual PAPER→DEPLOY_READY signal correlation gate", () => {
   it("BLOCKS a signal-duplicate strategy before the evaluator / survival replay", async () => {
     selectQueue.push([strategyRow({ lifecycleState: "PAPER" })]);   // 1 strategy pre-read
-    selectQueue.push([backtestRow()]);                              // 2 latest completed backtest
+    selectQueue.push(THIRTY_TRADING_DAYS);                          // 2 Gate 3 precondition trading-days query
+    selectQueue.push([backtestRow()]);                              // 3 latest completed backtest
     mockA7.mockResolvedValue({
       allowed: false,
       reason: "signal_correlation_too_high",
@@ -288,6 +300,7 @@ describe("A7 — manual PAPER→DEPLOY_READY signal correlation gate", () => {
 
   it("FAILS CLOSED (blocks) when the A7 gate throws an infrastructure error", async () => {
     selectQueue.push([strategyRow({ lifecycleState: "PAPER" })]);
+    selectQueue.push(THIRTY_TRADING_DAYS); // Gate 3 precondition trading-days query
     selectQueue.push([backtestRow()]);
     mockA7.mockRejectedValue(new Error("signal-correlation DB unavailable"));
 
@@ -303,9 +316,10 @@ describe("A7 — manual PAPER→DEPLOY_READY signal correlation gate", () => {
 
   it("PASSES a non-duplicate strategy through to the shared evaluator", async () => {
     selectQueue.push([strategyRow({ lifecycleState: "PAPER" })]);   // 1 strategy pre-read
-    selectQueue.push([backtestRow()]);                              // 2 latest completed backtest
-    selectQueue.push([]);                                          // 3 latest MC (none)
-    selectQueue.push([{ id: STRAT_ID, config: {}, frozenPolicyHash: null }]); // 4 frozen shadow
+    selectQueue.push(THIRTY_TRADING_DAYS);                          // 2 Gate 3 precondition trading-days query
+    selectQueue.push([backtestRow()]);                              // 3 latest completed backtest
+    selectQueue.push([]);                                          // 4 latest MC (none)
+    selectQueue.push([{ id: STRAT_ID, config: {}, frozenPolicyHash: null }]); // 5 frozen shadow
     // mockA7 default: allowed=true
 
     const res = await svc().promoteStrategy(STRAT_ID, "PAPER", "DEPLOY_READY", {});
