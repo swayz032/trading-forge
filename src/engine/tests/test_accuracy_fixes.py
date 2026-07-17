@@ -441,19 +441,56 @@ class TestH4DoubleCommissionFix:
     """H4: _compute_net_daily_pnls must only apply the DELTA, not the full commission."""
 
     def test_no_double_deduction_same_rate(self):
-        """When firm rate == backtester rate, no adjustment should be applied."""
+        """When firm rate == backtester rate, no adjustment should be applied.
+
+        REALIGNED 2026-07-17 (test-debt close-out): the original test hardcoded
+        the Topstep MES rate as $0.37/side. That rate was CORRECTED to $0.62/side
+        on 2026-06-23 (firm_config.py header: "Topstep rates were $0.37/side (too
+        low — under-costed every backtest)"). So passing 0.37 as the backtester
+        rate now produces a real, INTENDED delta ($0.62 - $0.37 = $0.25/side →
+        $0.25 × 2 sides × 2 trades = $1.00/day), which is exactly the observed
+        $1/day. The old no-op expectation was stale against the corrected rate,
+        NOT a code bug. Read the current canonical rate from firm_config instead
+        of hardcoding it, so the "rates match → no adjustment" invariant is tested
+        against whatever the canonical rate actually is (regression-proof to future
+        rate recalibrations).
+        """
+        from src.engine.firm_config import FIRM_COMMISSIONS
         from src.engine.prop_compliance import _compute_net_daily_pnls
 
         daily_pnls = [500.0, -200.0, 350.0]
-        # Both rates are the same → delta = 0 → no adjustment
+        canonical_topstep_mes = FIRM_COMMISSIONS["topstep_50k"]["MES"]  # 0.62 as of 2026-06-23
+        # Backtester rate == firm rate → delta = 0 → no adjustment (the real invariant).
         result = _compute_net_daily_pnls(
             daily_pnls, "topstep_50k", symbol="MES",
             avg_trades_per_day=2.0,
-            backtester_commission_per_side=0.37,  # Topstep rate
+            backtester_commission_per_side=canonical_topstep_mes,
         )
-        # Topstep rate = $0.37/side. If delta = 0.37 - 0.37 = 0 → no adjustment
         assert result == daily_pnls, \
             f"No adjustment expected when rates match. Got {result}"
+
+    def test_stale_037_rate_now_produces_intended_delta(self):
+        """Regression lock: the OLD $0.37 Topstep rate now yields the documented $1/day delta.
+
+        Guards the 2026-06-23 firm_config correction ($0.37 → $0.62/side). If a
+        future change reverted the Topstep MES rate back toward $0.37, this delta
+        would collapse toward zero and the test would fail — surfacing the
+        regression instead of silently under-costing every Topstep backtest.
+        """
+        from src.engine.firm_config import FIRM_COMMISSIONS
+        from src.engine.prop_compliance import _compute_net_daily_pnls
+
+        daily_pnls = [500.0, -200.0, 350.0]
+        canonical = FIRM_COMMISSIONS["topstep_50k"]["MES"]
+        stale_rate = 0.37
+        result = _compute_net_daily_pnls(
+            daily_pnls, "topstep_50k", symbol="MES",
+            avg_trades_per_day=2.0,
+            backtester_commission_per_side=stale_rate,
+        )
+        expected_daily_delta = (canonical - stale_rate) * 2 * 2.0  # per-side delta × 2 sides × 2 trades
+        assert expected_daily_delta > 0, "canonical Topstep rate must exceed the stale 0.37"
+        assert result == [p - expected_daily_delta for p in daily_pnls]
 
     def test_delta_only_applied_when_firm_more_expensive(self):
         """When firm charges more than backtester, only the delta is deducted."""
@@ -680,11 +717,24 @@ class TestL1BarsPerDay:
         assert BARS_PER_DAY["5min"] == 172, \
             f"Expected 172 (Globex) for 5min, got {BARS_PER_DAY['5min']}"
 
-    def test_1min_bars_is_globex(self):
-        """1-minute bars: Globex = 1380 bars/day (not 390 RTH)."""
+    def test_1min_bars_is_empirical_not_theoretical(self):
+        """1-minute bars: EMPIRICAL 860 bars/day (deep-scan #10 F-11), not the theoretical 1380.
+
+        REALIGNED 2026-07-17 (test-debt close-out): the original test expected the
+        THEORETICAL Globex maximum (23h × 60 = 1380). Deep-scan #10 F-11 replaced
+        BARS_PER_DAY with `data_loader.EMPIRICAL_BARS_PER_DAY` — observed medians on
+        real CME ratio-adjusted data (weekend maintenance gaps, holidays, half-days
+        remove ~520 bars/day), so 1min is empirically 860, not 1380. See
+        backtester.py "FIX 4 (deep-scan #10 F-11): use EMPIRICAL_BARS_PER_DAY from
+        data_loader as single source" and data_loader.py:157. The 1380 expectation
+        predates F-11 and was stale, NOT a code bug — a 1380 divisor would fire
+        false ~62%-coverage bar-count alarms on otherwise-clean data. Assert the
+        canonical empirical source directly so the two consumers stay in lock-step.
+        """
         from src.engine.backtester import BARS_PER_DAY
-        assert BARS_PER_DAY["1min"] == 1380, \
-            f"Expected 1380 (Globex) for 1min, got {BARS_PER_DAY['1min']}"
+        from src.engine.data_loader import EMPIRICAL_BARS_PER_DAY
+        assert BARS_PER_DAY["1min"] == EMPIRICAL_BARS_PER_DAY["1min"] == 860, \
+            f"Expected empirical 860 (deep-scan #10 F-11) for 1min, got {BARS_PER_DAY['1min']}"
 
 
 # ──────────────────────────────────────────────────────────────────────────

@@ -386,15 +386,28 @@ class TestBEOnTP1:
     """BE+1 tick after TP1 in _apply_adaptive_management."""
 
     def test_trail_stop_moves_to_be_on_tp1_hit(self):
-        """After TP1 is hit, trail_stop_final must be >= entry_price."""
+        """After TP1 is hit, trail_stop_final must be >= entry_price (BE+1 invariant, CLAUDE.md §4).
+
+        REALIGNED 2026-07-17 (test-debt close-out): this test previously hardcoded
+        the assumption that the managed stop was 6pt (1×ATR) with TP1 at 4006, and
+        only spiked the high to 4007. But the managed stop is `min(ceiling, ATR ×
+        atr_stop_multiplier)` = min(14, 6 × 1.5) = 9pt (`managed_stop_pts`), so the
+        r-multiple TP1 sits at entry + 1R = 4009, which 4007 never reaches. TP1
+        therefore never filled, the stop stayed at the initial 3991, and the test
+        red-flagged a "broken invariant" that is in fact intact. The BE+1-on-TP1
+        invariant (`backtester.py:2068-2073`) fires correctly the moment TP1 is
+        actually hit — verified here by spiking well past any plausible TP1 and
+        asserting BOTH that TP1 filled (non-vacuous) AND that the stop moved to
+        break-even or better. NOT a code bug; a stale stop-distance assumption.
+        """
         fn = _get_adaptive_fn()
         n = 50
         entry_p = 4000.0
-        # stop_p documented as 3994.0 (6pt stop → 1R = 6pt, TP1 = 4006) — Trade row uses default stop
 
-        # Bar 2 touches TP1 (high >= entry + 1R = 4006)
+        # Spike bar 2 far above any plausible TP1 (entry + 40pt >> ceiling 14pt)
+        # so TP1 fills regardless of the exact ATR×mult managed-stop distance.
         high = np.full(n, entry_p + 1.0)
-        high[2] = 4007.0       # TP1 hit on bar 2 (1R = 6pt from entry 4000 → TP1=4006)
+        high[2] = entry_p + 40.0
         low = np.full(n, entry_p - 1.0)
         close = np.full(n, entry_p)
         open_ = np.full(n, entry_p)
@@ -424,9 +437,13 @@ class TestBEOnTP1:
 
         assert len(result) == 1
         t = result[0]
-        # trail_stop_final must be at or above entry after TP1 fired
-        assert t["trail_stop_final"] >= entry_p - 0.5, (
-            f"Expected trail_stop >= BE ({entry_p}), got {t['trail_stop_final']}"
+        # Prove the invariant path actually executed (non-vacuous): TP1 filled.
+        assert t["adaptive_tp1_filled"] is True, (
+            f"TP1 must fill with a 40pt spike; got tp1_price={t.get('adaptive_tp1_price')}"
+        )
+        # BE+1 invariant: once TP1 fills, the stop is at break-even or better.
+        assert t["trail_stop_final"] >= entry_p, (
+            f"Expected trail_stop >= BE ({entry_p}) after TP1 fill, got {t['trail_stop_final']}"
         )
 
 
