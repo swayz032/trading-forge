@@ -96,13 +96,17 @@ Every strategy that graduates MUST satisfy these invariants:
 
 ## §4. Stop/TP/Sizing Framework
 
-### Stop = structural with ATR bounds
+### Stop = structural with ATR bounds (TWO-ROLE contract, W2 2026-07-16)
 ```
 stop_distance = invalidation_swing + sweep_buffer (per-symbol ticks: MES=3t, MNQ=5t, MCL=2t)
-floor   = 1.5 × current-timeframe ATR
-ceiling = 14pts MES / 40pts MNQ / 25 ticks MCL
+MANAGED stop (position stop + Style C TP R-basis; backtest manages on this): min(ceiling, configMult × ATR)  ← NO floor
+SIZING stop  (budgets $/contract only):                                       min(max(configMult × ATR, floor), ceiling)
+floor   = 6pt MES (STOP_FLOOR_PTS_MES; MNQ/MCL env opt-in)   configMult = stop_loss.multiplier (default 1.5, ∈[1.5,5])
+ceiling = 14pts MES / 62pts MNQ / 100 ticks (1.00pt) MCL     (Wave 1 2026-06-27 recal)
+INVARIANT: sizingStopPts ≥ managedStopPts  ⇒  $-risk-at-stop ≤ 2% budget
 If structural > ceiling → SKIP TRADE
 ```
+Canonical helpers: `src/server/lib/stop-geometry.ts` + `src/engine/stop_geometry.py`, parity-gated (`check:ts-python-stop-geometry-parity`, fail-CLOSED). The floor is SIZING-role + DSL-admission only — never on the managed stop (would break paper↔backtest parity). See CLAUDE.md §4.
 W24-P2 (2026-05-23): +1pt replaced by tick-aware buffer. Override via env:
 STOP_BUFFER_TICKS_MES / _MNQ / _MCL.
 

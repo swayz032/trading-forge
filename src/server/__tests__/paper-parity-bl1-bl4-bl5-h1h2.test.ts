@@ -266,21 +266,20 @@ describe("BL-1: Intrabar stop-breach detection logic", () => {
 // ─── BL-1: initialStopPrice set at openPosition ───────────────────────────────
 
 describe("BL-1: initialStopPrice computation at openPosition", () => {
-  it("initialStopPrice = entry - 2*ATR for long when adaptiveExitInput is absent", () => {
+  it("initialStopPrice = entry - managedStopPts (Wave 2: min(ceiling, mult×ATR), no floor)", () => {
     const actualEntry = 4500;
     const atr = 14;
     const side = "long";
+    const stopMult = 1.5;
 
-    // Replicate the BL-1 fix computation from openPosition
-    const initialStopPriceForInsert = (() => {
-      if (atr != null && atr > 0) {
-        const stopPts = atr * 2.0;
-        return side === "long" ? actualEntry - stopPts : actualEntry + stopPts;
-      }
-      return null;
-    })();
+    // Wave 2 stop-geometry contract (2026-07-16): openPosition now derives the managed stop from
+    // managedStopPts = min(ceiling, mult×atr) — NOT the legacy atr×2.0. At MES ceiling 14, ATR 14,
+    // mult 1.5 → min(14, 21) = 14 (ceiling binds) → stop = 4500 − 14 = 4486.
+    const stopPts = Math.min(/* MES ceiling */ 14, stopMult * atr); // = 14
+    const initialStopPriceForInsert = side === "long" ? actualEntry - stopPts : actualEntry + stopPts;
 
-    expect(initialStopPriceForInsert).toBe(4472);  // 4500 - 28
+    expect(stopPts).toBe(14);
+    expect(initialStopPriceForInsert).toBe(4486);
   });
 
   it("initialStopPrice uses adaptiveExitInput.entry.stop when provided", () => {

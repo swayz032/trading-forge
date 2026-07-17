@@ -51,6 +51,16 @@ from src.engine.config import (
 )
 from src.engine.cross_validation import run_cross_validation
 from src.engine.data_loader import EMPIRICAL_BARS_PER_DAY, compute_dataset_hash, flag_rollover_days, load_ohlcv
+# Wave 2 (2026-07-16): per-symbol stop geometry moved to the stdlib-only
+# src/engine/stop_geometry.py so the TS↔Python parity gate can import it without
+# pulling the JIT backtester. Thin `_get_*` aliases are defined below (where the
+# old function bodies were) so existing imports/tests keep resolving.
+from src.engine.stop_geometry import (
+    get_stop_ceiling_for_symbol,
+    get_stop_floor_for_symbol,
+    managed_stop_pts,
+    sizing_stop_pts,
+)
 from src.engine.decay.half_life import fit_decay
 from src.engine.decay.sub_signals import composite_decay_score
 from src.engine.firm_config import (
@@ -1006,7 +1016,9 @@ def _apply_naked_management(
         is_short = "Short" in direction_str
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # Wave 2 (2026-07-16): managed stop = min(ceiling, atr×mult) via the shared helper
+        # (byte-identical to the prior inline formula). ONE formula site for the whole system.
+        _atr_fallback_points = managed_stop_pts(_symbol_of_spec(spec), atr_at_entry, atr_stop_multiplier)
         # H5 fix (deep-scan #15, 2026-07-03): prefer the structural admission
         # stop over the ATR clamp (see _resolve_stop_risk_points docstring).
         # Policy A never actually places a stop (time-exit only) — risk_points
@@ -1113,7 +1125,9 @@ def _apply_stop_only_management(
         is_short = "Short" in direction_str
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # Wave 2 (2026-07-16): managed stop = min(ceiling, atr×mult) via the shared helper
+        # (byte-identical to the prior inline formula). ONE formula site for the whole system.
+        _atr_fallback_points = managed_stop_pts(_symbol_of_spec(spec), atr_at_entry, atr_stop_multiplier)
         # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
         # (see _resolve_stop_risk_points docstring) instead of the raw ATR clamp.
         risk_points, stop_basis = _resolve_stop_risk_points(
@@ -1406,7 +1420,9 @@ def _apply_static_styleC_management(
         # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
         # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # Wave 2 (2026-07-16): managed stop = min(ceiling, atr×mult) via the shared helper
+        # (byte-identical to the prior inline formula). ONE formula site for the whole system.
+        _atr_fallback_points = managed_stop_pts(_symbol_of_spec(spec), atr_at_entry, atr_stop_multiplier)
         # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
         # (the one that actually justified this trade passing the ceiling check
         # in apply_eligibility_gate) instead of independently recomputing an
@@ -1941,7 +1957,9 @@ def _apply_adaptive_management(
         # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
         # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # Wave 2 (2026-07-16): managed stop = min(ceiling, atr×mult) via the shared helper
+        # (byte-identical to the prior inline formula). ONE formula site for the whole system.
+        _atr_fallback_points = managed_stop_pts(_symbol_of_spec(spec), atr_at_entry, atr_stop_multiplier)
         # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
         # instead of the raw ATR clamp. See _resolve_stop_risk_points() docstring.
         risk_points, stop_basis = _resolve_stop_risk_points(
@@ -2893,28 +2911,12 @@ def _apply_max_trades_per_day(
         return filtered_long, filtered_short
 
 
-# ─── Wave 21 E.3 — Stop ceiling per symbol ───────────────────────────────────
-# Per CLAUDE.md §4: structural stops have a CEILING per instrument.
-# If stop_distance > ceiling → SKIP THE TRADE (never clamp).
-#
-# Wave 1 Track 1A 2026-06-27 recalibration:
-#   MNQ / NQ: 40 → 62  (MNQ ATR in normal/high-vol can reach 50-60pt; 40 over-skipped)
-#   MCL / CL: 0.25 → 1.00  (1pt = 100 ticks; old 0.25 = 25 ticks was far too tight)
-#   MES / ES: 14.0 (unchanged)
-#
-# IMPORTANT: reads the SAME env vars as gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS
-# so the two tables can NEVER diverge.  Any change here must also update the defaults
-# in gate_block_analyzer.py (env var keys: STOP_CEILING_PTS_MES / _MNQ / _MCL).
-_STOP_CEILING_DEFAULTS: dict[str, tuple[str, float]] = {
-    # symbol → (env_var_key, default_value)
-    "MES": ("STOP_CEILING_PTS_MES", 14.0),
-    "ES":  ("STOP_CEILING_PTS_MES", 14.0),   # micro alias — shares MES env var
-    "MNQ": ("STOP_CEILING_PTS_MNQ", 62.0),
-    "NQ":  ("STOP_CEILING_PTS_MNQ", 62.0),   # mini alias — shares MNQ env var
-    "MCL": ("STOP_CEILING_PTS_MCL", 1.00),
-    "CL":  ("STOP_CEILING_PTS_MCL", 1.00),   # mini alias — shares MCL env var
-}
-_STOP_CEILING_DEFAULT: float = 14.0  # fallback for unknown symbols (MES default)
+# ─── Wave 21 E.3 — Stop ceiling per symbol (MOVED to stop_geometry.py Wave 2) ──
+# The _STOP_CEILING_DEFAULTS table + get_stop_ceiling_for_symbol() now live in the
+# stdlib-only src/engine/stop_geometry.py (imported at the top of this file) so the
+# TS↔Python stop-geometry parity gate can import them without pulling the JIT
+# backtester. The `_get_stop_ceiling_for_symbol` thin alias below preserves the
+# private name for existing imports/tests.
 
 
 def _symbol_of_spec(spec) -> str:
@@ -2929,31 +2931,8 @@ def _symbol_of_spec(spec) -> str:
     return "MES"
 
 
-def _get_stop_ceiling_for_symbol(symbol: str) -> float:
-    """Return the maximum allowed stop distance (in points) for a given symbol.
-
-    Reads env vars (STOP_CEILING_PTS_MES / _MNQ / _MCL) so this function and
-    gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS share a single source of truth
-    and can never diverge.
-
-    Wave 1 Track 1A 2026-06-27 defaults:
-        MES / ES  → 14.0 points (STOP_CEILING_PTS_MES, unchanged)
-        MNQ / NQ  → 62.0 points (STOP_CEILING_PTS_MNQ, was 40)
-        MCL / CL  →  1.0 points (STOP_CEILING_PTS_MCL, was 0.25)
-
-    Unknown symbols fall back to the MES default (14.0 points).
-    """
-    sym = symbol.upper()
-    if sym not in _STOP_CEILING_DEFAULTS:
-        return _STOP_CEILING_DEFAULT
-    env_key, default = _STOP_CEILING_DEFAULTS[sym]
-    raw = os.environ.get(env_key)
-    if raw is not None:
-        try:
-            return float(raw)
-        except ValueError:
-            return default
-    return default
+# Wave 2 (2026-07-16): thin alias — body now lives in stop_geometry.py.
+_get_stop_ceiling_for_symbol = get_stop_ceiling_for_symbol
 
 
 # ─── H5 fix — admission-stop parity (deep-scan #15, 2026-07-03) ─────────────
@@ -3035,44 +3014,12 @@ def _resolve_stop_risk_points(
     return atr_fallback_points, "atr_fallback"
 
 
-# ─── Wave 1 Track 1A — Stop floor per symbol ─────────────────────────────────
-# A floor widens a stop that is too tight (prevents trivial fills from noise).
-# Floor is applied BEFORE the ceiling check.  Precedence:
-#   compute structural/ATR stop → apply floor (widen up) → apply ceiling (skip if over).
-# Only MES has a default floor (6.0 pt).  MNQ/MCL floors are opt-in via env.
-# A floor widens — it never skips (that is the ceiling's job).
-_STOP_FLOOR_ENV_MAP: dict[str, tuple[str, Optional[float]]] = {
-    "MES": ("STOP_FLOOR_PTS_MES", 6.0),
-    "ES":  ("STOP_FLOOR_PTS_MES", 6.0),   # micro alias
-    "MNQ": ("STOP_FLOOR_PTS_MNQ", None),   # no default — opt-in via env
-    "NQ":  ("STOP_FLOOR_PTS_MNQ", None),
-    "MCL": ("STOP_FLOOR_PTS_MCL", None),   # no default — opt-in via env
-    "CL":  ("STOP_FLOOR_PTS_MCL", None),
-}
-
-
-def _get_stop_floor_for_symbol(symbol: str) -> Optional[float]:
-    """Return the minimum stop distance (floor) in points for a given symbol.
-
-    Returns None when no floor applies (unknown symbol or opt-in env unset for MNQ/MCL).
-
-    Wave 1 Track 1A 2026-06-27 defaults:
-        MES / ES  → 6.0 points (STOP_FLOOR_PTS_MES)
-        MNQ / NQ  → None unless STOP_FLOOR_PTS_MNQ is set
-        MCL / CL  → None unless STOP_FLOOR_PTS_MCL is set
-    """
-    sym = symbol.upper()
-    if sym not in _STOP_FLOOR_ENV_MAP:
-        return None
-    env_key, default = _STOP_FLOOR_ENV_MAP[sym]
-    raw = os.environ.get(env_key)
-    if raw is not None:
-        try:
-            v = float(raw)
-            return v if v > 0.0 else None  # 0 or negative = no floor
-        except ValueError:
-            return default
-    return default
+# ─── Wave 1 Track 1A — Stop floor per symbol (MOVED to stop_geometry.py Wave 2) ─
+# The _STOP_FLOOR_ENV_MAP table + get_stop_floor_for_symbol() now live in the
+# stdlib-only src/engine/stop_geometry.py (imported at the top of this file). The
+# `_get_stop_floor_for_symbol` thin alias below preserves the private name.
+# Wave 2 (2026-07-16): thin alias — body now lives in stop_geometry.py.
+_get_stop_floor_for_symbol = get_stop_floor_for_symbol
 
 
 # ── Slippage-Survival Gate (Wave A, 2026-07-03) — engine producer ──────────
@@ -4296,9 +4243,15 @@ def run_backtest(
         _parity_metadata["adjusted_max_risk_pct"] = _sized_config.max_risk_pct_per_trade
         _parity_metadata["adjusted_liquidity_cap"] = _sized_config.liquidity_comfort_cap
 
+    # Wave 2 (2026-07-16): thread the config stop multiplier + symbol so the vectorized
+    # sizing budgets against the SAME unified stop geometry (sizing_stop_pts) the paper
+    # sizer uses — instead of a hardcoded 1.5, floor-free, ceiling-free bare mult×atr.
+    _sizing_stop_mult = float(getattr(config.stop_loss, "multiplier", 1.5)) if hasattr(config, "stop_loss") and config.stop_loss else 1.5
     sizes, over_risk = compute_position_sizes(
         df, _sized_config, spec, atr_period,
         max_contracts=max_contracts,
+        stop_multiplier=_sizing_stop_mult,
+        symbol=config.symbol,
     )
     # Defense-in-depth: replace any inf/nan sizes with 1 contract
     sizes = np.where(np.isfinite(sizes), sizes, 1.0)
@@ -5314,7 +5267,8 @@ def run_backtest(
                 atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
                 sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
                 # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not flat 6.0pt (see mgmt loops above).
-                risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(_symbol_of_spec(spec)))
+                # Wave 2 (2026-07-16): managed stop via the shared helper (byte-identical to min(atr×mult, ceiling)).
+                risk_points = managed_stop_pts(_symbol_of_spec(spec), atr_at_entry, sl_mult)
             trade["stop_basis"] = _mgmt_stop_basis
             risk_dollars = risk_points * spec.point_value
             if risk_dollars > 0 and size > 0:
@@ -7364,7 +7318,9 @@ def run_class_backtest(
                 # config stop multiplier _cls_stop_mult (was hardcoded 2.0, overstating risk 33%
                 # for the Slumdawg 1.5× default — understated R:R on the class path).
                 _cls_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-                risk_pts = min(float(atr_np[entry_idx]) * _cls_stop_mult, _cls_ceiling) if entry_idx < len(atr_np) else _cls_ceiling
+                # Wave 2 (2026-07-16): managed stop via the shared helper (byte-identical to
+                # min(atr×mult, ceiling)) — the reporting site the "33% overstatement" comment flagged.
+                risk_pts = managed_stop_pts(_symbol_of_spec(spec), float(atr_np[entry_idx]), _cls_stop_mult) if entry_idx < len(atr_np) else _cls_ceiling
 
             # H2 FIX (class path): Floor size to integer contracts — brokers charge
             # per integer contract only. FLOOR is conservative (can't trade 0.3 contracts).

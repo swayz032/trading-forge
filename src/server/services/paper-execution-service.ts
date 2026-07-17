@@ -18,6 +18,10 @@ import { CONSISTENCY_RULE_FIRMS, getConsistencyState } from "./consistency-track
 // Wave 27.5 Pass D.2: symbol-aware commission — replaces the legacy symbol-agnostic
 // getCommissionPerSide(firmId) for position-close P&L calculations.
 import { getCommissionPerSide as getCommissionPerSideBySymbol, getStopCeilingPts } from "../lib/contract-class.js";
+// Wave 2 (2026-07-16): unified stop-geometry contract — the managed stop the position is
+// traded against (min(ceiling, mult×atr), NO floor) is the SAME geometry the backtester
+// manages and the sizer budgets. See src/server/lib/stop-geometry.ts.
+import { managedStopPts } from "../lib/stop-geometry.js";
 import { avwapTypicalPrice, shouldAdvanceRunnerTrail } from "../lib/runner-trail-ratchet.js";
 import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCache } from "./paper-risk-gate.js";
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
@@ -706,6 +710,12 @@ export async function openPosition(sessionId: string, params: {
   barTimestamp?: Date;
   rsi?: number;
   atr?: number;
+  /** Wave 2 (2026-07-16): config stop-ATR multiple (framework overlay guarantees
+   *  {type:"atr", multiplier ∈ [1.5,5]}). Default 1.5. Feeds the MANAGED stop
+   *  managedStopPts(symbol, atr, stopMultiplier) = min(ceiling, mult×atr) — the same
+   *  geometry the backtester manages + the sizer budgets against. Adaptive strategies
+   *  pin 1.5 (mirrors the backtester's atr_stop_multiplier=1.5 adaptive basis). */
+  stopMultiplier?: number;
   /** FINDING #4 FIX: rolling median ATR (np.nanmedian equivalent) for entry slippage parity.
    *  When provided, replaces the constant 0.85× ATR estimate used before this fix.
    *  Paper-signal-service passes this from evaluateSignals() via the bar ATR series. */
@@ -2035,11 +2045,18 @@ export async function openPosition(sessionId: string, params: {
   // validated on (33% wider R on MES; far wider, uncapped, on MNQ) — the exact parity gap #2 set out
   // to close. static_styleC strategies keep the legacy atr×2.0 managed stop (unchanged). null only when
   // neither an explicit stop nor ATR exists → both exit-plan branches fall through to fail-soft.
+  // Wave 2 (2026-07-16): unified stop-geometry contract. BOTH branches now derive the managed
+  // stop from managedStopPts = min(ceiling, mult×atr) (NO floor — the managed stop is floor-free;
+  // the MES floor lives only in the DSL admission + sizing layers). Adaptive pins mult 1.5 (mirrors
+  // the backtester's _apply_adaptive_management atr_stop_multiplier=1.5); static uses the strategy's
+  // resolved config multiplier (default 1.5). This replaces the legacy static `atr × 2.0` basis that
+  // made paper manage a 33%-wider stop than the backtest that graded the strategy.
+  const resolvedStopMult: number = params.stopMultiplier ?? 1.5;
   const _stopDistancePts: number | null =
     params.atr != null && params.atr > 0
       ? (exitStyle === "adaptive"
-          ? Math.min(getStopCeilingPts(params.symbol), params.atr * 1.5)
-          : params.atr * 2.0)
+          ? managedStopPts(params.symbol, params.atr, 1.5)
+          : managedStopPts(params.symbol, params.atr, resolvedStopMult))
       : null;
   const resolvedExitBasisStop: number | null =
     adaptiveInput?.entry?.stop
@@ -2215,7 +2232,12 @@ export async function openPosition(sessionId: string, params: {
       return resolvedExitBasisStop;
     }
     if (params.atr != null && params.atr > 0) {
-      const stopPts = params.atr * 2.0;
+      // Wave 2 (2026-07-16): managed stop via managedStopPts (min(ceiling, mult×atr), NO floor) —
+      // same helper + multiplier as _stopDistancePts precedence-1 above. (In practice this
+      // precedence-2 branch is only reached when resolvedExitBasisStop is null, which can't happen
+      // when atr>0 — but it is rerouted for consistency so the geometry can never drift between the
+      // two derivations.)
+      const stopPts = managedStopPts(params.symbol, params.atr, resolvedStopMult);
       return params.side === "long" ? actualEntry - stopPts : actualEntry + stopPts;
     }
     // Fallback: derive stop from contract tick size when ATR is not yet available.
@@ -2353,6 +2375,11 @@ export async function openPosition(sessionId: string, params: {
         fillPrice: actualEntry,
         slippage,
         implementationShortfall,
+        // Wave 2 (2026-07-16): stamp the managed stop basis + multiplier so pre/post-Wave-2
+        // TESTING evidence windows are queryable (the operator restarts in-flight windows).
+        stop_basis: "managed_stop_pts",
+        stop_multiplier: exitStyle === "adaptive" ? 1.5 : resolvedStopMult,
+        initial_stop_price: initialStopPriceForInsert,
       },
       status: "success",
       decisionAuthority: "agent",
@@ -5705,6 +5732,11 @@ export async function forceCloseAllPositions(
       // for realistic exit slippage on forced closes. Without ATR, closePosition used
       // base-tick slippage (optimistic vs Python which ATR-scales all fills including halts).
       initialStopPrice: paperPositions.initialStopPrice,
+      // Wave 2 (2026-07-16): fetch the exit_plan JSONB so we can prefer the PERSISTED
+      // entryContext.atrAtEntry over the |entry−stop|/2.0 back-derivation. The /2.0
+      // derivation assumed stop = entry ± atr×2.0, which is no longer true once the managed
+      // stop is min(ceiling, atr×mult) — so it under/over-estimates ATR on new rows.
+      exitPlan: paperPositions.exitPlan,
     })
     .from(paperPositions)
     .where(isNull(paperPositions.closedAt));
@@ -5752,12 +5784,20 @@ export async function forceCloseAllPositions(
     // reflects the last known market price for the position's symbol.
     const rawCurrent = Number(pos.currentPrice ?? 0);
 
-    // FINDING #5 FIX: back-derive an approximate ATR from the stored initialStopPrice so
-    // forced-exit slippage is ATR-scaled (matching Python which ATR-scales all fills).
-    // Formula mirrors openPosition: stopPrice = entryPrice ± atr×2.0  →  atr = |entry-stop|/2.
-    // When initialStopPrice is absent (positions opened before BL-1 fix), atr stays undefined
-    // and closePosition falls back to base-tick slippage (prior conservative behaviour).
+    // Wave 2 (2026-07-16): prefer the PERSISTED entry-time ATR (exit_plan.entryContext.atrAtEntry,
+    // captured by paper-signal-service at signal time) over the legacy back-derivation. Once the
+    // managed stop is min(ceiling, atr×mult) rather than atr×2.0, the |entry−stop|/2.0 formula no
+    // longer recovers the true ATR (it assumed the ×2.0 basis, and is wrong entirely when the
+    // ceiling binds). Legacy pre-0179 rows (no persisted atr) keep the /2.0 fallback — approximate,
+    // but better than base-tick slippage. When neither is available, atr stays undefined and
+    // closePosition uses base-tick slippage (prior conservative behaviour).
     const derivedAtr = (() => {
+      const persistedAtr = Number(
+        (pos.exitPlan as { entryContext?: { atrAtEntry?: number | null } } | null | undefined)
+          ?.entryContext?.atrAtEntry ?? NaN,
+      );
+      if (isFinite(persistedAtr) && persistedAtr > 0) return persistedAtr;
+      // Legacy-row fallback: back-derive from the stored stop distance.
       const stopNum = Number(pos.initialStopPrice ?? 0);
       const entryNum = Number(pos.entryPrice ?? 0);
       if (!stopNum || !entryNum || !isFinite(stopNum) || !isFinite(entryNum)) return undefined;

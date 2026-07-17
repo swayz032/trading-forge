@@ -58,6 +58,11 @@
  *   NEVER confuse mini and micro values — 10x difference silently inflates risk.
  */
 
+// Wave 2 (2026-07-16): unified stop-geometry contract. The sizing stop distance is
+// resolved via sizingStopPts (per-symbol floor widens, shared ceiling caps) — the same
+// geometry the Python sizer (sizing.py sizing_stop_pts) and the managed stop share.
+import { sizingStopPts } from "./stop-geometry.js";
+
 /** Firm identifier — only Topstep + MFFU supported (legacy firms removed 2026-05-10). */
 export type FirmId = "topstep" | "mffu";
 
@@ -398,12 +403,13 @@ const _VIX_ATR_TIER_LOW  = parseFloat(process.env.VIX_ATR_TIER_LOW  ?? "1.5");
 const _VIX_ATR_TIER_MID  = parseFloat(process.env.VIX_ATR_TIER_MID  ?? "2.0");
 const _VIX_ATR_TIER_HIGH = parseFloat(process.env.VIX_ATR_TIER_HIGH ?? "2.5");
 
-// ── Wave 1 Track 1B: MES stop floor ──────────────────────────────────────────
-// Widen-up floor for MES: if computed stop distance < floor, use floor instead.
-// NEVER skip the trade on a narrow stop — widen to the floor (parity with Python).
-// Only applied when RiskSizingInputs.symbol === "MES".
-// Env: STOP_FLOOR_PTS_MES default 6.0
-const _STOP_FLOOR_PTS_MES = parseFloat(process.env.STOP_FLOOR_PTS_MES ?? "6.0");
+// ── Wave 1 Track 1B: MES stop floor (SUPERSEDED by Wave 2 stop-geometry) ──────
+// The MES widen-up floor (STOP_FLOOR_PTS_MES, default 6.0) + the shared per-symbol
+// ceiling now live in the unified sizingStopPts contract (src/server/lib/stop-geometry.ts,
+// mirrored by src/engine/stop_geometry.py). computeRiskDerivedContracts resolves the
+// sizing stop distance via sizingStopPts(symbol, atr, mult) — floor widens, ceiling caps —
+// so the TS + Python sizers and the managed stop all share ONE geometry. The old
+// MES-only `Math.max(raw, 6)` inline floor (no ceiling, no MNQ/MCL env opt-in) is retired.
 
 /**
  * Wave 24 Item 16 — VIX-driven vol scale on max_risk_pct_per_trade.
@@ -760,11 +766,17 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // When flag ON: multiplier is replaced by the VIX-tiered value via computeVixAtrMultiplier().
   // MES floor: widened stop distance ensures a minimum 6pt stop (widen-up, never skip).
   // With both flags OFF: byte-identical to the pre-Track-1B computation.
+  // Wave 2 (2026-07-16): VIX-tiering still applies to the MULTIPLIER first (flag-OFF →
+  // effectiveStopMultiplier === input.stopMultiplier, byte-identical). Then the sizing stop
+  // distance is resolved via the shared sizingStopPts contract (min(max(mult×atr, floor), ceiling)):
+  //   - symbol provided → per-symbol floor widens (MES 6pt default; MNQ/MCL env opt-in) + shared
+  //     ceiling caps (MES 14 / MNQ 62 / MCL 1.00). This also fixes the TS-side missing MNQ/MCL env
+  //     floor opt-in and the previously-absent sizing ceiling.
+  //   - symbol absent → byte-identical legacy bare mult×atr (no floor/ceiling).
   const effectiveStopMultiplier = computeVixAtrMultiplier(input.vixNow ?? null, input.stopMultiplier);
   const rawStopDistancePts = effectiveStopMultiplier * input.atrPoints;
-  const isMES = (input.symbol ?? "").toUpperCase() === "MES";
-  const effectiveStopDistancePts = isMES
-    ? Math.max(rawStopDistancePts, _STOP_FLOOR_PTS_MES)
+  const effectiveStopDistancePts = input.symbol != null
+    ? sizingStopPts(input.symbol, input.atrPoints, effectiveStopMultiplier)
     : rawStopDistancePts;
   const stopDollarsPerContract = effectiveStopDistancePts * input.pointDollarValue;
   const riskDerivedCap = Math.floor(riskDollars / stopDollarsPerContract);

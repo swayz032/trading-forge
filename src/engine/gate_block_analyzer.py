@@ -59,6 +59,12 @@ from typing import Optional
 import numpy as np
 import polars as pl
 
+# Wave 2 (2026-07-16): the per-symbol stop ceiling table + the managed-stop formula are the
+# CANONICAL src/engine/stop_geometry.py (stdlib-only, no engine pull). This module used to keep
+# its OWN copy of both — the third un-rerouted copy of `min(ceiling, atr×1.5)` and the third
+# hand-maintained {14,62,1.00} table — which was the exact silent-drift class Wave 2 closed.
+from src.engine.stop_geometry import get_stop_ceiling_for_symbol, managed_stop_pts
+
 logger = logging.getLogger(__name__)
 
 # ─── Env-configurable thresholds (NO magic numbers) ──────────────────────────
@@ -74,18 +80,17 @@ BIG_MOVE_MIN_R: float = float(os.environ.get("GATE_BLOCK_BIG_MOVE_MIN_R", "2.0")
 # 14pt MES / 62pt MNQ / 1.00pt MCL). The live bot trades these, so the counterfactual MUST
 # too — a flat 6pt cap would falsely stop out the operator's BIG-MOVE trades (a 14pt-stop trade
 # held through an 8pt pullback to catch an 18pt move would look like a loser under a 6pt stop),
-# inverting gate verdicts. Env-overridable per symbol.
-# Wave 1 Track 1A 2026-06-27 recalibration:
-#   MNQ: 40 → 62  (MNQ ATR in normal/high-vol can reach 50-60pt; 40 was over-skipping)
-#   MCL: 0.25 → 1.00  (1pt = 100 ticks; 0.25 = 25 ticks was far too tight for crude micro)
-# MUST stay in sync with backtester._STOP_CEILING_DEFAULTS — both read the same env vars.
+# inverting gate verdicts.
+# Wave 2 (2026-07-16): the ceiling values + the managed-stop formula now live ONLY in the canonical
+# src/engine/stop_geometry.py. This dict no longer holds independent literals — it is a DERIVED VIEW
+# over get_stop_ceiling_for_symbol() (snapshotting the same env vars at import, exactly as the old
+# literal table did), retained solely because two parity-guard tests import and index it
+# (test_wave1_track1a / test_wave21_stop_dll). The old "stay in sync with backtester._STOP_CEILING_DEFAULTS"
+# contract is now enforced BY CONSTRUCTION — there is nothing left to drift.
 STRUCTURAL_STOP_CEILING_PTS: dict[str, float] = {
-    "MES": float(os.environ.get("STOP_CEILING_PTS_MES", "14")),
-    "MNQ": float(os.environ.get("STOP_CEILING_PTS_MNQ", "62")),
-    "MCL": float(os.environ.get("STOP_CEILING_PTS_MCL", "1.00")),  # 100 ticks * $0.01
+    sym: get_stop_ceiling_for_symbol(sym) for sym in ("MES", "MNQ", "MCL")
 }
-STRUCTURAL_STOP_CEILING_DEFAULT_PTS: float = 14.0
-STATIC_STYLE_C_ATR_STOP_MULTIPLIER: float = 1.5
+STATIC_STYLE_C_ATR_STOP_MULTIPLIER: float = 1.5  # static Style C managed-stop ATR multiple
 
 # Maximum bars to walk forward for a single counterfactual (matches MAX_HOLD_BARS)
 MAX_HOLD_BARS: int = 200
@@ -334,10 +339,15 @@ def simulate_counterfactual(
     if math.isnan(atr_at_entry) or atr_at_entry <= 0:
         return _indet("atr_unavailable_at_entry")
 
-    # ── Stop: min(per-symbol framework ceiling, 1.5×ATR) — matches the LIVE overlay (NOT the
-    #    backtester's 6pt fallback), so the counterfactual reflects the operator's big-move stops ──
-    stop_ceiling = STRUCTURAL_STOP_CEILING_PTS.get(symbol.upper(), STRUCTURAL_STOP_CEILING_DEFAULT_PTS)
-    risk_points = min(stop_ceiling, atr_at_entry * STATIC_STYLE_C_ATR_STOP_MULTIPLIER)
+    # ── Stop: managed_stop_pts(symbol, atr, 1.5) = min(per-symbol framework ceiling, 1.5×ATR) —
+    #    matches the LIVE overlay (NOT the backtester's 6pt fallback), so the counterfactual reflects
+    #    the operator's big-move stops. Wave 2 (2026-07-16): rerouted to the CANONICAL
+    #    stop_geometry.managed_stop_pts — this was the THIRD inline copy of `min(ceiling, atr×1.5)`
+    #    (plus its own ceiling dict). Byte-identical for the production micro set {MES,MNQ,MCL}
+    #    (the alias case ES/NQ/CL now resolves the canonical mini-alias ceiling instead of defaulting
+    #    to 14 — more correct, and unreachable while Phase 5 minis are gated off). This is the MANAGED
+    #    stop (NO floor — "what stop would this trade have carried"), never the sizing stop. ──
+    risk_points = managed_stop_pts(symbol, atr_at_entry, STATIC_STYLE_C_ATR_STOP_MULTIPLIER)
     min_trail = max(2.0, tick_size * 8)
 
     if is_short:

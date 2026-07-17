@@ -236,14 +236,24 @@ Persisted to `bias_state.htf_narrative` JSONB (migration 0137 idx 139). Wired in
 
 Data sources: Raschke, Grimes, Bellafiore, SMB consensus; Topstep funded-trader case studies; QuantifiedStrategies / Edgeful backtests; Lopez de Prado, Carver, Hurst-Ooi-Pedersen, Kaminski-Lo.
 
-### Stop Loss — structural, NEVER fixed-point
+### Stop Loss — structural, NEVER fixed-point (TWO-ROLE geometry contract, W2 2026-07-16)
+
+The ATR stop distance has **two roles with two formulas** — unified into canonical helpers `src/server/lib/stop-geometry.ts` + `src/engine/stop_geometry.py`, parity-gated by `check:ts-python-stop-geometry-parity` (fail-CLOSED). `configMult` = the strategy's `stop_loss.multiplier` (framework-overlay guarantees ∈ [1.5, 5], default 1.5).
 ```
 stop_distance = invalidation_swing + sweep_buffer (per-symbol tick count)
-floor   = 1.5 × current-timeframe ATR  (+ 6pt MES min floor — STOP_FLOOR_PTS_MES)
-        optional VIX-tiered ATR mult (VIX_TIERED_ATR_ENABLED, default OFF): <20=1.5/20-30=2.0/>30=2.5
-ceiling = 14pts MES, 62pts MNQ, 100 ticks (1.00pt) MCL   (Wave 1 2026-06-27 recal to 2026 ATR; env STOP_CEILING_PTS_*)
-If structural distance > ceiling → SKIP TRADE (widen to floor first, never clamp down)
+
+MANAGED stop  (position's actual stop price + Style C TP1/TP2 R-basis; what the backtest manages on):
+  managedStopPts = min(ceiling, configMult × ATR)          ← NO floor
+SIZING stop   (budgets $/contract for position sizing only):
+  sizingStopPts  = min(max(configMult × ATR, floor), ceiling)   ← floor applies HERE
+
+floor   = 6pt MES min (STOP_FLOOR_PTS_MES); MNQ/MCL env opt-in (STOP_FLOOR_PTS_MNQ/_MCL); 0 disables
+          optional VIX-tiered ATR mult (VIX_TIERED_ATR_ENABLED, default OFF): <20=1.5/20-30=2.0/>30=2.5
+ceiling = 14pts MES, 62pts MNQ, 100 ticks (1.00pt) MCL   (Wave 1 2026-06-27 recal; env STOP_CEILING_PTS_*)
+INVARIANT (parity-gated per cell): sizingStopPts ≥ managedStopPts  ⇒  $-risk-at-managed-stop ≤ 2% budget, always
+If structural distance > ceiling → SKIP TRADE (never clamp down)
 ```
+**The floor lives in the SIZING role + the DSL admission layer ONLY — the managed stop is deliberately floor-free** so it equals the backtest's management geometry (which has no floor); flooring the managed stop would make paper wider than backtest when MES ATR < 4. Before W2 the paper path hardcoded `2.0×ATR` (uncapped, floor-free, ignoring configMult) while backtest+sizing used `1.5×ATR` — a 3-way divergence (paper risked 33% more per contract than budgeted). Do NOT re-add a floor to `managedStopPts` or a hardcoded multiplier to the paper stop; both re-open the divergence. The `×2.0` legacy-null-`initialStopPrice` fallback (pre-migration-0179 rows only) and the `tickSize×16` cold-ATR fallback are intentionally untouched.
 
 **H5 admission-stop parity (deepscan15, 2026-07-03) — the backtest now MANAGES each trade on the SAME structural stop that justified its admission**, instead of recomputing an ATR `min(ceiling, atr×1.5)` clamp the strategy's risk model never validated. `apply_eligibility_gate` captures a per-signal `structural_stop_map`; all 5 management/reporting sites resolve `risk_points` from it (per-symbol ceiling still caps; byte-identical fallback when unavailable). Env `BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED` **default FALSE** (operator decision 2026-07-03): the fix is correct + shipped but defaults OFF so it does NOT silently re-baseline every backtest — behavior stays byte-identical to legacy until the operator opts in. Set `true` to activate (stops then fire tighter/earlier where structure was tighter than ATR×1.5 — more honest/conservative). **When you flip it ON, historical backtests become NON-comparable — re-run the flagged 15m/30m/1h/4h DSL backtests before comparing metrics or trusting them for promotion.** A/B harness: `scripts/h5_structural_stop_parity_ab_report.py` (run flag ON vs OFF on real strategies to see the true magnitude first).
 

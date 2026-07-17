@@ -82,6 +82,12 @@ import polars as pl
 
 from src.engine.config import TRACK3_CONFIG, ContractSpec, PositionSizeConfig
 from src.engine.firm_config import CONTRACT_CAP_MAX, CONTRACT_CAP_MIN
+# Wave 2 (2026-07-16): unified stop-geometry contract (stdlib-only; no engine pull).
+from src.engine.stop_geometry import (
+    get_stop_ceiling_for_symbol,
+    get_stop_floor_for_symbol,
+    sizing_stop_pts,
+)
 
 # Track 3: MES-specific pyramid cap (overrides CONTRACT_CAP_MAX for MES only).
 MES_PYRAMID_CAP: int = TRACK3_CONFIG.MES_PYRAMID_CAP  # 30 micros
@@ -241,6 +247,13 @@ def compute_risk_derived_contracts(
     # survives withdrawals. Produced by the live paper layer; this function only
     # CONSUMES the value, never computes it.
     proven_trades: Optional[int] = None,
+    # ── Wave 2 (2026-07-16): unified stop-geometry contract ─────────────────
+    # When symbol is provided, the sizing stop distance is resolved via
+    # stop_geometry.sizing_stop_pts (per-symbol floor widens, shared ceiling caps)
+    # — the same geometry the paper sizer (risk-sizing.ts sizingStopPts) uses.
+    # When None: byte-identical legacy bare `stop_multiplier × atr_points` (no
+    # floor, no ceiling) — every pre-Wave-2 caller stays unchanged.
+    symbol: Optional[str] = None,
 ) -> RiskSizingResult:
     """Compute risk-derived contract count at signal time.
 
@@ -459,7 +472,16 @@ def compute_risk_derived_contracts(
         risk_dollars = account_balance * max_risk_pct_per_trade
 
     # Risk-derived ceiling (common to both firms)
-    stop_dollars_per_contract = stop_multiplier * atr_points * point_dollar_value
+    # Wave 2 (2026-07-16): when symbol is provided, budget the size against the SIZING stop
+    # (per-symbol floor widens, shared ceiling caps) — the exact geometry risk-sizing.ts
+    # sizingStopPts uses, so paper and backtest size against one distance. symbol=None keeps
+    # the byte-identical legacy bare stop_multiplier×atr (no floor/ceiling).
+    _sizing_stop_pts = (
+        sizing_stop_pts(symbol, atr_points, stop_multiplier)
+        if symbol is not None
+        else stop_multiplier * atr_points
+    )
+    stop_dollars_per_contract = _sizing_stop_pts * point_dollar_value
     risk_derived_cap = math.floor(risk_dollars / stop_dollars_per_contract)
 
     # Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep only when current_drawdown_room provided).
@@ -996,6 +1018,16 @@ def compute_position_sizes(
     profit_scaling_tier: dict | None = None,
     kelly_params: dict | None = None,
     fomc_proximity: int | None = None,
+    # ── Wave 2 (2026-07-16): unified stop-geometry contract ─────────────────
+    # stop_multiplier: config stop-ATR multiple (framework overlay guarantees
+    #   {type:"atr", multiplier ∈ [1.5,5]}). None → 1.5 (byte-identical legacy).
+    # symbol: when provided the risk-derived stop distance is resolved via
+    #   stop_geometry.sizing_stop_pts (floor widens, ceiling caps). None → the
+    #   byte-identical legacy bare `mult × atr` (no floor/ceiling).
+    # Both are threaded from the backtester call sites (which already resolve
+    # config.stop_loss.multiplier and config.symbol).
+    stop_multiplier: float | None = None,
+    symbol: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute position sizes for each bar.
 
@@ -1156,6 +1188,9 @@ def compute_position_sizes(
                 profit_scaling_tier.get("account_starting_floor", 50_000.0)
             )
 
+        # Wave 2 (2026-07-16): thread the config stop multiplier + symbol (None → 1.5 /
+        # legacy bare mult×atr, byte-identical to pre-Wave-2 behavior).
+        _resolved_stop_mult = stop_multiplier if stop_multiplier is not None else 1.5
         sizing_result = compute_risk_derived_contracts(
             base_contracts=config.base_contracts,
             tier_increment=config.tier_increment,
@@ -1165,7 +1200,7 @@ def compute_position_sizes(
             account_balance=account_balance,
             cumulative_profit=cumulative_profit,
             atr_points=atr_for_sizing,
-            stop_multiplier=1.5,  # CLAUDE.md §4 default stop multiplier
+            stop_multiplier=_resolved_stop_mult,
             point_dollar_value=contract_spec.point_value,
             firm_contract_cap=config.firm_contract_cap
             if config.firm_contract_cap
@@ -1175,6 +1210,7 @@ def compute_position_sizes(
             trailing_dd=_trailing_dd,
             high_water_balance=_high_water,
             account_starting_floor=_account_starting_floor,
+            symbol=symbol,
         )
 
         if sizing_result.rejection_reason is not None:
@@ -1208,7 +1244,10 @@ def compute_position_sizes(
         # F-6: Per-bar risk-derived cap using bar-level ATR (not mean).
         # Uses the firm-aware buffer computed by compute_risk_derived_contracts() above.
         # risk_dollars is the per-trade risk budget (Topstep: buffer × pct; MFFU: balance × pct).
-        stop_mult = 1.5  # CLAUDE.md §4 default
+        # Wave 2 (2026-07-16): use the threaded config mult (None → 1.5, legacy). The per-bar
+        # stop distance is resolved via sizing_stop_pts (floor widens, ceiling caps) when symbol
+        # is provided; symbol=None keeps the byte-identical legacy bare mult×atr.
+        stop_mult = _resolved_stop_mult
         pv = contract_spec.point_value
         # risk_dollars extracted from evidence (set by compute_risk_derived_contracts)
         risk_dollars_scalar = float(
@@ -1235,10 +1274,22 @@ def compute_position_sizes(
             # Global rejection (zero buffer, zero balance) — 1 contract fallback for all bars
             sizes = np.full(n, 1.0, dtype=np.float64)
         else:
-            # Per-bar risk-derived cap: floor(risk_dollars / (stop_mult * atr[i] * pv))
+            # Per-bar risk-derived cap: floor(risk_dollars / (sizing_stop_pts[i] * pv))
+            # Wave 2 (2026-07-16): when symbol is provided, the per-bar stop distance mirrors
+            # stop_geometry.sizing_stop_pts element-wise (clamp(mult×atr, floor, ceiling)); when
+            # None it is the byte-identical legacy bare mult×atr (no floor/ceiling).
+            if symbol is not None:
+                _floor_v = get_stop_floor_for_symbol(symbol)
+                _floor_v = _floor_v if _floor_v is not None else 0.0
+                _ceiling_v = get_stop_ceiling_for_symbol(symbol)
+                _stop_dist_arr = np.minimum(
+                    np.maximum(stop_mult * atr_arr, _floor_v), _ceiling_v
+                )
+            else:
+                _stop_dist_arr = stop_mult * atr_arr
             with np.errstate(divide="ignore", invalid="ignore"):
                 risk_derived_caps = np.floor(
-                    risk_dollars_scalar / (stop_mult * atr_arr * pv)
+                    risk_dollars_scalar / (_stop_dist_arr * pv)
                 )
             # Clamp negative / NaN → 0
             risk_derived_caps = np.where(

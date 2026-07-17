@@ -48,10 +48,12 @@ describe("deep-scan #2 — adaptive exit paper wiring", () => {
     expect(EXEC).toContain("resolvedExitBasisStop");
     // explicit caller stop wins; else derive from ATR
     expect(EXEC).toMatch(/adaptiveInput\?\.entry\?\.stop/);
-    // fresh-scan HIGH#2 (2026-07-12): ADAPTIVE strategies derive min(ceiling, atr*1.5) to match the
-    // backtester's _apply_adaptive_management; static_styleC keeps atr*2.0. (Was atr*2.0 for both.)
-    expect(EXEC).toMatch(/Math\.min\(getStopCeilingPts\(params\.symbol\),\s*params\.atr\s*\*\s*1\.5\)/);
-    expect(EXEC).toMatch(/params\.atr\s*\*\s*2\.0/); // static_styleC branch still present
+    // Wave 2 stop-geometry contract (2026-07-16): BOTH paper branches now route through the shared
+    // managedStopPts helper (min(ceiling, mult×atr), NO floor) — the exact geometry the backtester
+    // manages + the sizer budgets against. Adaptive pins mult 1.5; static uses the strategy's
+    // resolved stopMultiplier. The legacy inline `params.atr * 2.0` static basis is GONE.
+    expect(EXEC).toContain("managedStopPts(");
+    expect(EXEC).not.toContain("params.atr * 2.0");
   });
 
   it("(B) the managed initialStopPrice uses the SAME resolved basis (zero drift)", () => {

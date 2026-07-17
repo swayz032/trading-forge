@@ -267,15 +267,29 @@ describe("backward compatibility — symbol absent, flags off", () => {
     expect(withSymbol.finalContracts).toBe(withoutSymbol.finalContracts);
   });
 
-  it("symbol present but floor above computed stop: same result as without symbol", () => {
-    // When ATR is large enough that floor doesn't bind, no difference
+  it("symbol present, mid-range ATR (neither floor nor ceiling binds): same as without symbol", () => {
+    // atr 6 → 1.5×6=9pt, strictly between the MES floor (6) and ceiling (14) → sizingStopPts = 9
+    // = the raw mult×atr, so the symbol-aware path is identical to the legacy no-symbol path.
+    const rMES = computeRiskDerivedContracts({
+      ...MES_BASE, symbol: "MES", atrPoints: 6.0,
+    });
+    const rNoSym = computeRiskDerivedContracts({
+      ...MES_BASE, atrPoints: 6.0,
+    });
+    expect(rMES.riskDerivedCap).toBe(rNoSym.riskDerivedCap);
+  });
+
+  it("Wave 2: symbol present + high ATR → shared MES ceiling caps the sizing stop (was uncapped)", () => {
+    // atr 10 → 1.5×10=15pt > MES ceiling 14 → sizingStopPts = 14 (tighter than the legacy uncapped
+    // 15pt no-symbol path). Budgeting against the tighter 14pt stop yields >= the contracts the
+    // uncapped path allows. This is the intended Wave 2 shared-ceiling behavior (~unreachable in
+    // practice — admission SKIPs a trade whose structural stop exceeds the ceiling first).
     const rMES = computeRiskDerivedContracts({
       ...MES_BASE, symbol: "MES", atrPoints: 10.0,
     });
     const rNoSym = computeRiskDerivedContracts({
       ...MES_BASE, atrPoints: 10.0,
     });
-    // Both: stopDollars = 1.5×10×5=$75
-    expect(rMES.riskDerivedCap).toBe(rNoSym.riskDerivedCap);
+    expect(rMES.riskDerivedCap).toBeGreaterThanOrEqual(rNoSym.riskDerivedCap);
   });
 });

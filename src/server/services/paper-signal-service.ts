@@ -654,6 +654,10 @@ interface PendingEntry {
   medianBarVolume: number | undefined;
   signalBarTimestamp: string; // bar N timestamp (for audit trail)
   correlationId: string | undefined;
+  // Wave 2 (2026-07-16): config stop-ATR multiple (config.stop_loss?.multiplier ?? 1.5),
+  // threaded to openPosition so the paper managed stop = managedStopPts(symbol, atr, stopMultiplier)
+  // = min(ceiling, mult×atr) — the SAME multiplier the sizer used at signal time.
+  stopMultiplier: number;
   // Trade-critique data bridge (2026-07-05): entry-time decision context captured
   // at signal time (bar N), carried across the deferred fill to bar N+1's
   // openPosition() call. Absent/undefined when nothing was known at signal time —
@@ -2847,6 +2851,8 @@ export async function evaluateSignals(
       barTimestamp: new Date(bar.timestamp), // bar N+1 timestamp for session classification
       rsi: pendingEntry.rsi,
       atr: pendingEntry.atr,
+      // Wave 2 (2026-07-16): thread the config stop multiplier into the managed-stop geometry.
+      stopMultiplier: pendingEntry.stopMultiplier,
       barVolume: bar.volume,            // use bar N+1's volume for fill probability
       medianBarVolume: pendingEntry.medianBarVolume,
       // Trade-critique data bridge (2026-07-05): entry-time decision context captured
@@ -6053,6 +6059,9 @@ export async function evaluateSignals(
           medianBarVolume,
           signalBarTimestamp: bar.timestamp,
           correlationId,
+          // Wave 2 (2026-07-16): thread the config stop multiplier (default 1.5) so the deferred
+          // fill's managed stop uses the SAME multiplier the sizer budgeted against at signal time.
+          stopMultiplier: typeof config.stop_loss?.multiplier === "number" ? config.stop_loss.multiplier : 1.5,
           // deep-scan 2026-07-11 MED fix (#9): record whether signal-time sizing already applied the
           // Tier-1 news reduce factor (newsReduceSizeFactor < 1 ⟺ signal fired inside the T1 window) so
           // fill-time Gate 4 does not double-reduce.
