@@ -1698,10 +1698,20 @@ export class LifecycleService {
     }
 
     // ── CRITICAL #6: Truthiness gate: resultExtras invariants + parity shadow ─
-    // Applies to TESTING → PAPER only (the trust boundary before paper trading).
+    // Applies to the trust boundary before paper trading — TESTING → PAPER (legacy
+    // direct edge) AND SHADOW → PAPER (the canonical Wave 29 ladder).
     // invariants.overall_passed=false → BLOCK (hard gate: curvefitting invariant harness)
     // parity_shadow.passed=false     → ADVISORY WARN (env-gated; not all backtests have it)
-    if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
+    //
+    // GOALSCAN-CRIT Defect 1 (CRIT, 2026-07-16): this condition previously matched ONLY
+    // fromState==="TESTING", so the invariant harness NEVER ran on the canonical
+    // CANDIDATE→TESTING→SHADOW→PAPER ladder (every strategy since Wave 29's
+    // shadowModeEnabled=true default). A strategy the backtest's own truthiness harness
+    // flagged as curve-fit/look-ahead could reach PAPER via SHADOW→PAPER untouched. The
+    // sibling A4 Frankenstein gate (~line 2219 below) was already fixed for this exact
+    // scoping bug (deepscan14 bonus fix added fromState==="SHADOW"); this gate was not.
+    // Adding fromState==="SHADOW" here closes the parity gap — fail-CLOSED, additive only.
+    if ((fromState === "TESTING" || fromState === "SHADOW") && toState === "PAPER" && promotionEvidence.backtestId) {
       try {
         const [btExtras] = await (tx ?? db)
           .select({ resultExtras: backtests.resultExtras })
@@ -1792,7 +1802,23 @@ export class LifecycleService {
     // Style C runner can span many bars. Plain walk-forward leaks future info
     // via overlapping runner holds at the IS/OOS boundary. Require purged_embargo
     // or cpcv mode for any Style C strategy. (Item 10, Wave 24 Pass 1, 2026-05-23)
-    if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
+    //
+    // GOALSCAN-CRIT Defect 2 (CRIT/HIGH, 2026-07-16): this condition previously matched
+    // ONLY fromState==="TESTING" — a Style-C (or any) strategy whose latest backtest
+    // carries a non-cpcv wf_metadata.mode (a pre-2026-06-22 backtest still sitting in the
+    // DB, or a fresh run with WF_MODE explicitly overridden to "plain"/"purged_embargo")
+    // could reach PAPER via the canonical SHADOW→PAPER edge with zero look-ahead check.
+    // NOTE (latent-vs-live per ratify-packet instructions): walk_forward.py's run_walk_forward()
+    // and the class-path _run_walk_forward_cpcv() both default WF_MODE to "cpcv" as of the
+    // 2026-06-22 FIX 3 / deep-scan #22 FIX 2 hardening passes, so FRESH backtests taken with
+    // no override are cpcv by default and this gate is largely latent for them going forward.
+    // It remains LIVE (not purely latent) for: (a) any backtest row persisted BEFORE that
+    // default flip whose wf_metadata.mode is still "plain"/"purged_embargo"/absent and which
+    // has not been re-run since, and (b) any caller that explicitly sets WF_MODE=plain env or
+    // passes wf_mode="plain" to override the default. Adding fromState==="SHADOW" closes the
+    // gap on the SHADOW→PAPER edge for both cases — fail-CLOSED, additive only, no threshold
+    // change (still requires exactly "cpcv", matching the pre-existing TESTING→PAPER check).
+    if ((fromState === "TESTING" || fromState === "SHADOW") && toState === "PAPER" && promotionEvidence.backtestId) {
       try {
         const [btExtrasWf] = await (tx ?? db)
           .select({ resultExtras: backtests.resultExtras })
@@ -1847,6 +1873,254 @@ export class LifecycleService {
         const error = `lifecycle.wf_mode_gate_read_failed: ${wfModeErr instanceof Error ? wfModeErr.message : String(wfModeErr)}`;
         logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: wfModeErr }, error);
         return { success: false, error };
+      }
+    }
+
+    // GOALSCAN-CRIT DEFECT 3 (CRIT, 2026-07-16): manual-path hard-gate parity block
+    // (B14 ci_high / WFE / parameter-drift / DSR walk-forward + the plain MC-survival>0.70
+    // floor) — TESTING → PAPER AND SHADOW → PAPER.
+    //
+    // The autonomous cron (checkAutoPromotions) enforces all five of these on BOTH edges:
+    // Gate 2 "TESTING → PAPER" (~3767-4260, TESTING_TO_PAPER labels) and Gate 2.5
+    // "SHADOW → PAPER" (~4727-4995, SHADOW_TO_PAPER labels). This manual/API path
+    // (_promoteStrategyInner backs `PATCH /:id/lifecycle`, whose HMAC secret is shared
+    // with n8n/Carter automation — NOT a human-only route) previously ran ZERO of them:
+    // an operator click or an automated HMAC-signed call could push a strategy straight
+    // to PAPER real-broker capital past every one of the cron's five hard gates.
+    //
+    // Fix: call the IDENTICAL pure evaluator functions the cron calls (evaluateB14CiGate /
+    // evaluateWfeGate / evaluateParameterDriftGate / evaluateDsrWalkForwardGate — all
+    // already imported at the top of this file and used by the PAPER→DEPLOY_READY gates
+    // above) with the same DB reads and the same block/no-block decision logic the cron
+    // uses (verbatim-mirrored below, including the non-obvious cron behaviors: WFE blocks
+    // on status==="blocked"||"degenerate_is_block" — NOT on `.passed`, since legacy_null
+    // and cpcv_exempt both carry passed:false but do NOT block; parameter-drift blocks on
+    // status==="blocked"||"blocked_classifier_error"; DSR blocks on plain `!passed`).
+    // Reusing the SAME evaluator functions (rather than re-deriving thresholds inline) is
+    // what keeps the two paths from drifting apart again — per the ratify-packet mandate
+    // to extract/reuse the cron's gate logic. Every branch below can only BLOCK a
+    // promotion that previously would have proceeded — no existing threshold is loosened,
+    // no existing gate is weakened. check-gate-parity.mjs asserts this block's presence.
+    if ((fromState === "TESTING" || fromState === "SHADOW") && toState === "PAPER" && promotionEvidence.backtestId) {
+      let wfResultsManual: Record<string, unknown> | null = null;
+      try {
+        const [btForHardGatesManual] = await (tx ?? db)
+          .select({ walkForwardResults: backtests.walkForwardResults })
+          .from(backtests)
+          .where(eq(backtests.id, promotionEvidence.backtestId))
+          .limit(1);
+        wfResultsManual = (btForHardGatesManual?.walkForwardResults as Record<string, unknown> | null) ?? null;
+      } catch (wfReadErr) {
+        logger.warn({ strategyId: id, err: wfReadErr }, "lifecycle hard-gate parity block (manual path): walkForwardResults read failed (non-blocking — WFE/paramDrift/DSR below fail-open on read errors exactly as the cron does)");
+      }
+
+      // MC survival rate > 0.70 — mirrors checkAutoPromotions Gate 2 / Gate 2.5's coarse
+      // survival check (a SEPARATE, simpler floor than the B14 ci_high gate below). Absence
+      // of an MC run is non-blocking here (matches cron's `if (!mcRun) continue` posture) —
+      // the STRICTER B14 CI gate immediately below fail-CLOSES on the identical absence.
+      try {
+        const [mcRunManual] = await (tx ?? db)
+          .select({ probabilityOfRuin: monteCarloRuns.probabilityOfRuin })
+          .from(monteCarloRuns)
+          .where(eq(monteCarloRuns.backtestId, promotionEvidence.backtestId))
+          .orderBy(desc(monteCarloRuns.createdAt))
+          .limit(1);
+
+        if (mcRunManual?.probabilityOfRuin != null) {
+          const ruinProbManual = parseFloat(String(mcRunManual.probabilityOfRuin));
+          const survivalRateManual = 1 - ruinProbManual;
+          if (survivalRateManual <= 0.70) {
+            const error = `lifecycle.mc_survival_below_floor: strategy ${id} has MC survival rate ${survivalRateManual.toFixed(3)} <= 0.70 floor (manual ${fromState}→PAPER promotion).`;
+            logger.warn({ strategyId: id, fromState, toState, survivalRate: survivalRateManual }, error);
+            insertAuditRow({
+              action: "lifecycle.mc_survival_below_floor",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: { reason: "mc_survival_below_floor", survivalRate: survivalRateManual, floor: 0.70 } as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.mc_survival_below_floor audit row write failed"));
+            return { success: false, error };
+          }
+        }
+      } catch (mcSurvErr) {
+        logger.warn({ strategyId: id, err: mcSurvErr }, "lifecycle.mc_survival_below_floor (manual path): read failed (non-blocking — promotion continues; B14 CI gate below fail-closes on the same underlying data)");
+      }
+
+      // B14 CI gate — fail-CLOSED on missing/errored MC (evaluateB14CiGate(null,null)
+      // itself returns passed:false, so a missing MC run naturally fail-closes here).
+      try {
+        const [mcRunForB14Manual] = await (tx ?? db)
+          .select({ probabilityOfRuin: monteCarloRuns.probabilityOfRuin, riskMetrics: monteCarloRuns.riskMetrics })
+          .from(monteCarloRuns)
+          .where(and(eq(monteCarloRuns.backtestId, promotionEvidence.backtestId), eq(monteCarloRuns.status, "completed")))
+          .orderBy(desc(monteCarloRuns.createdAt))
+          .limit(1);
+
+        const rmManual = (mcRunForB14Manual?.riskMetrics as Record<string, unknown> | null) ?? {};
+        const ruinCiManual = (rmManual.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
+        const pointEstimateManual = mcRunForB14Manual?.probabilityOfRuin != null ? Number(mcRunForB14Manual.probabilityOfRuin) : null;
+
+        const b14ResultManual = evaluateB14CiGate(ruinCiManual, pointEstimateManual);
+
+        insertAuditRow({
+          action: "b14.gate_evaluated",
+          entityType: "strategy",
+          entityId: id,
+          decisionAuthority: "gate",
+          status: b14ResultManual.passed ? "success" : "failure",
+          input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+          result: (mcRunForB14Manual ? b14ResultManual.auditPayload : { ...b14ResultManual.auditPayload, note: "no completed MC run for latest backtest — fail-closed (manual-path parity fix, mirrors cron)" }) as Record<string, unknown>,
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "b14.gate_evaluated (manual path) audit row write failed"));
+
+        broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+          correlationId: options.correlationId ?? null,
+          strategyId: id,
+          ...b14ResultManual.auditPayload,
+          passed: b14ResultManual.passed,
+          reason: b14ResultManual.reason,
+          legacyFallback: b14ResultManual.legacyFallback,
+        });
+
+        if (!b14ResultManual.passed) {
+          const error = `lifecycle.b14_ci_high_blocked: strategy ${id} B14 CI gate failed on manual ${fromState}→PAPER promotion (reason=${b14ResultManual.reason}, ci_high=${b14ResultManual.auditPayload.ci_high ?? "unavailable"}).`;
+          logger.warn({ strategyId: id, fromState, toState, ciHigh: b14ResultManual.auditPayload.ci_high, reason: b14ResultManual.reason }, error);
+          return { success: false, error };
+        }
+      } catch (b14ManualErr) {
+        // Fail-CLOSED — matches the cron's B14 posture exactly (a hard gate that cannot
+        // evaluate must block, not silently pass).
+        const msg = b14ManualErr instanceof Error ? b14ManualErr.message : String(b14ManualErr);
+        logger.warn({ strategyId: id, err: b14ManualErr }, "B14 CI gate (manual path): read failed — blocking promotion (fail-closed, matches cron)");
+        insertAuditRow({
+          action: "b14.gate_error_fail_closed",
+          entityType: "strategy",
+          entityId: id,
+          decisionAuthority: "gate",
+          status: "failure",
+          input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+          result: { reason: "b14.gate_error_fail_closed", error: msg } as Record<string, unknown>,
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "b14.gate_error_fail_closed (manual path) audit row write failed"));
+        return { success: false, error: "b14.gate_error_fail_closed" };
+      }
+
+      // WFE gate — fail-OPEN on read error (matches cron's documented non-blocking WFE
+      // posture exactly). Block condition mirrors the cron's isBlock check verbatim:
+      // status==="blocked" OR status==="degenerate_is_block" — NOT the raw `.passed` flag,
+      // because legacy_null and cpcv_exempt both carry passed:false yet must NOT block.
+      try {
+        const wfeOverallManual = wfResultsManual?.wfe_overall != null ? Number(wfResultsManual.wfe_overall) : null;
+        const wfeStatusManual = wfResultsManual?.wfe_status != null ? String(wfResultsManual.wfe_status) : null;
+        const wfeResultManual = evaluateWfeGate(wfeOverallManual, undefined, undefined, wfeStatusManual);
+
+        broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
+          correlationId: options.correlationId ?? null,
+          strategyId: id,
+          wfe_overall: wfeResultManual.wfeOverall,
+          status: wfeResultManual.status,
+          hard_floor: wfeResultManual.hardFloor,
+          warn_floor: wfeResultManual.warnFloor,
+          passed: wfeResultManual.passed,
+        });
+
+        if (wfeResultManual.auditAction) {
+          const isBlockWfeManual = wfeResultManual.status === "blocked" || wfeResultManual.status === "degenerate_is_block";
+          insertAuditRow({
+            action: wfeResultManual.auditAction,
+            entityType: "strategy",
+            entityId: id,
+            decisionAuthority: "gate",
+            status: isBlockWfeManual ? "failure" : (wfeResultManual.status === "cpcv_exempt" ? "success" : "warning"),
+            input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+            result: { wfe_overall: wfeResultManual.wfeOverall, hard_floor: wfeResultManual.hardFloor, warn_floor: wfeResultManual.warnFloor, status: wfeResultManual.status } as Record<string, unknown>,
+            correlationId: options.correlationId ?? null,
+          }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "WFE gate (manual path) audit row write failed"));
+
+          if (isBlockWfeManual) {
+            const error = `lifecycle.wfe_hard_floor_block: strategy ${id} wfe_overall=${wfeResultManual.wfeOverall ?? "unavailable"} below hard floor on manual ${fromState}→PAPER promotion.`;
+            logger.warn({ strategyId: id, fromState, toState, wfeOverall: wfeResultManual.wfeOverall, status: wfeResultManual.status }, error);
+            return { success: false, error };
+          }
+        }
+      } catch (wfeManualErr) {
+        logger.warn({ strategyId: id, err: wfeManualErr }, "WFE gate (manual path): read failed (non-blocking — promotion continues, matches cron's documented WFE fail-open posture)");
+      }
+
+      // Parameter drift gate — fail-OPEN on read error (matches cron). Block condition
+      // mirrors cron verbatim: status==="blocked" OR status==="blocked_classifier_error".
+      try {
+        const paramStabilityManual = (wfResultsManual?.param_stability as Record<string, unknown> | null) ?? null;
+        const driftClassificationManual = (paramStabilityManual?.drift_classification as string | null) ?? null;
+        const driftConfidenceManual = paramStabilityManual?.drift_confidence != null ? Number(paramStabilityManual.drift_confidence) : null;
+        const paramStabilityStatusManual = (wfResultsManual?.param_stability_status as string | null | undefined) ?? null;
+
+        const driftResultManual = evaluateParameterDriftGate(driftClassificationManual, driftConfidenceManual, paramStabilityStatusManual);
+
+        broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
+          correlationId: options.correlationId ?? null,
+          strategyId: id,
+          classification: driftResultManual.classification,
+          confidence: driftResultManual.confidence,
+          status: driftResultManual.status,
+          passed: driftResultManual.passed,
+        });
+
+        if (driftResultManual.auditAction) {
+          const isBlockDriftManual = driftResultManual.status === "blocked" || driftResultManual.status === "blocked_classifier_error";
+          insertAuditRow({
+            action: driftResultManual.auditAction,
+            entityType: "strategy",
+            entityId: id,
+            decisionAuthority: "gate",
+            status: isBlockDriftManual ? "failure" : "warning",
+            input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+            result: { classification: driftResultManual.classification, confidence: driftResultManual.confidence, status: driftResultManual.status } as Record<string, unknown>,
+            correlationId: options.correlationId ?? null,
+          }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "Parameter drift gate (manual path) audit row write failed"));
+
+          if (isBlockDriftManual) {
+            const error = `lifecycle.parameter_overfit_drift_block: strategy ${id} classification=${driftResultManual.classification} on manual ${fromState}→PAPER promotion.`;
+            logger.warn({ strategyId: id, fromState, toState, classification: driftResultManual.classification, confidence: driftResultManual.confidence }, error);
+            return { success: false, error };
+          }
+        }
+      } catch (driftManualErr) {
+        logger.warn({ strategyId: id, err: driftManualErr }, "Parameter drift gate (manual path): read failed (non-blocking — promotion continues, matches cron's documented fail-open posture)");
+      }
+
+      // DSR walk-forward gate — blocks on plain `!passed` (matches cron verbatim, including
+      // the cron's actual runtime behavior that legacy_proceed also blocks despite its name —
+      // a pre-existing cron characteristic mirrored here for parity, not altered).
+      try {
+        const wfMetaObjManual = (wfResultsManual?.wf_metadata as Record<string, unknown> | null) ?? null;
+        const dsrResultManual = evaluateDsrWalkForwardGate(
+          wfMetaObjManual as { dsr_pass?: boolean | null; dsr_unavailable?: boolean | null; dsr?: number | null } | null,
+        );
+
+        if (dsrResultManual.auditAction) {
+          insertAuditRow({
+            action: dsrResultManual.auditAction,
+            entityType: "strategy",
+            entityId: id,
+            decisionAuthority: "gate",
+            status: dsrResultManual.passed ? "warning" : "failure",
+            input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+            result: dsrResultManual.auditPayload as Record<string, unknown>,
+            correlationId: options.correlationId ?? null,
+          }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "DSR gate (manual path) audit row write failed"));
+        }
+
+        if (!dsrResultManual.passed) {
+          const error = `lifecycle.dsr_gate_blocked: ${dsrResultManual.reason} on manual ${fromState}→PAPER promotion for strategy ${id}.`;
+          logger.warn({ strategyId: id, fromState, toState, status: dsrResultManual.status }, error);
+          return { success: false, error };
+        }
+      } catch (dsrManualErr) {
+        logger.warn({ strategyId: id, err: dsrManualErr }, "DSR gate (manual path): read failed (non-blocking — promotion continues, matches cron's documented fail-open posture)");
       }
     }
 

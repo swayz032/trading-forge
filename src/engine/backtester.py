@@ -48,9 +48,16 @@ from src.engine.config import (
     IndicatorConfig,
     LiquidityLevelSnapshot,
     StrategyConfig,
+    get_contract_spec,
 )
 from src.engine.cross_validation import run_cross_validation
-from src.engine.data_loader import EMPIRICAL_BARS_PER_DAY, compute_dataset_hash, flag_rollover_days, load_ohlcv
+from src.engine.data_loader import (
+    EMPIRICAL_BARS_PER_DAY,
+    ZeroVolumeOnTradeCriticalBar,
+    compute_dataset_hash,
+    flag_rollover_days,
+    load_ohlcv,
+)
 # Wave 2 (2026-07-16): per-symbol stop geometry moved to the stdlib-only
 # src/engine/stop_geometry.py so the TS↔Python parity gate can import it without
 # pulling the JIT backtester. Thin `_get_*` aliases are defined below (where the
@@ -3608,7 +3615,16 @@ def run_backtest(
     """
     start_time = time.time()
     config = request.strategy
-    spec = CONTRACT_SPECS[config.symbol]
+    # DEFECT-2 FIX (goalscan-crit 2026-07-16): route spec resolution through
+    # get_contract_spec() instead of a raw CONTRACT_SPECS[symbol] dict index.
+    # A raw index silently accepts full-size ES/NQ/CL and resolves them to MICRO
+    # point values ($5/$2/$100 per point) with no operator-visible signal — the
+    # strategy is then labeled full-size ES/NQ/CL to every downstream consumer
+    # while actually backtesting at MES/MNQ/MCL economics (10x risk mislabel).
+    # get_contract_spec() emits a UserWarning for the 3 micro-alias symbols
+    # (ES/NQ/CL) and is a byte-identical no-op for MES/MNQ/MCL (and any other
+    # non-alias symbol) — same values, same KeyError-on-unknown-symbol behavior.
+    spec = get_contract_spec(config.symbol)
     atr_period = _extract_atr_period(config)
 
     # ─── Auto-wire fill_rate / spread_multiplier from StrategyConfig ─────
@@ -5067,6 +5083,21 @@ def run_backtest(
                     f"[C4] vectorbt path: {vbt_gap_through_count} gap-through-stop fills overridden",
                     file=sys.stderr,
                 )
+        except ZeroVolumeOnTradeCriticalBar:
+            # DEFECT-1 FIX (goalscan-crit 2026-07-16): a zero-volume trade-critical
+            # bar (holiday / data-gap bar under an active stop/TP) is a deliberate
+            # fail-loud data-integrity signal per BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_
+            # FAIL_LOUD (default true — see check_zero_volume_trade_critical() in
+            # data_loader.py). The bare `except Exception` below previously swallowed
+            # this RuntimeError subclass along with everything else, silently
+            # reverting the ENTIRE run to unmanaged vectorbt raw-close exits (no
+            # Style C, no stops/TP/BE/runner) with no audit row and no result-level
+            # flag distinguishing managed from unmanaged-fallback trades. The class
+            # path (run_class_backtest, _apply_trade_management call ~line 7283) has
+            # no such try/except and already lets this exception propagate/crash —
+            # re-raising here makes the two engine paths behave consistently for the
+            # identical trigger, and restores the documented fail-loud contract.
+            raise
         except Exception as _c4_err:
             print(f"[C4] _apply_trade_management failed (non-fatal, using vectorbt prices): {_c4_err}", file=sys.stderr)
             vbt_managed_trades = []
@@ -6623,7 +6654,11 @@ def run_class_backtest(
     start_time = time.time()
     symbol = strategy.symbol
     timeframe = strategy.timeframe
-    spec = CONTRACT_SPECS[symbol]
+    # DEFECT-2 FIX (goalscan-crit 2026-07-16): see matching comment in run_backtest()
+    # — route through get_contract_spec() so full-size ES/NQ/CL emit a UserWarning
+    # instead of silently resolving to MICRO point values. Byte-identical for
+    # MES/MNQ/MCL and any non-alias symbol.
+    spec = get_contract_spec(symbol)
 
     # ─── P1-A: Warmup data prepend (IS context for indicator initialization) ──
     # Mirror run_backtest warmup_data logic. Prepend IS rows so strategy.compute()

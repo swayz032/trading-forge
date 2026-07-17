@@ -3511,12 +3511,33 @@ export async function evaluateSignals(
     // Aggregate realized + open MTM P&L across ALL symbols on this firmId.
     // HALT new entries at 67% of personal DLL; FORCE-CLOSE all at 95%.
     // Fail-open: query errors return zero P&L so trading is never blocked.
-    let dllHaltBlocked = blackoutBlocked;   // short-circuit if already blackout-blocked
+    //
+    // goalscan-crit-20260716 CAPITAL-SAFETY FIX: this evaluator (including the
+    // 95%-DLL force_close branch) previously ran INSIDE `if (!blackoutBlocked)`,
+    // which meant the entire cross-symbol DLL check — force-close included —
+    // never ran during the 60-minute FOMC/CPI/NFP news-blackout window. No other
+    // mechanism compensates: dd-velocity-cron only autopauses new entries, and
+    // kill-switch.ts's L2/L3 force-close only fires from inside openPosition(),
+    // which is never reached during a blackout (no new entries are attempted).
+    // Net effect: during the highest-volatility window of the day, the one
+    // mechanism that flattens an account already past 95% DLL was disabled by
+    // an optimization that conflated "block a new entry" with "force-close a
+    // bleeding position." The evaluator (and its force_close action) now runs
+    // UNCONDITIONALLY. Only the entry-gating semantics inherit the blackout
+    // short-circuit: `dllHaltBlocked` still initializes to `blackoutBlocked`
+    // (so a blackout alone still blocks new entries via `lockoutBlocked` at the
+    // signal-time gate below, independent of the DLL result), and — since
+    // `blackoutBlocked` already ORs directly into `lockoutBlocked` — a "halt" or
+    // "reduce_size" DLL verdict computed during a blackout changes nothing about
+    // whether a new entry is allowed; it can ONLY ever make dllHaltBlocked MORE
+    // restrictive, never less. force_close, uniquely, has a real effect during a
+    // blackout: it closes ALREADY-OPEN positions, which no other gate does here.
+    let dllHaltBlocked = blackoutBlocked;   // still gates new-entry blocking-side default
     let dllForceCloseTriggered = false;
     // 60%-DLL reduce-size band: when in the soft band (below the 67% halt), new entries are
     // sized DOWN by this factor (NOT blocked). 1 = no reduction. Applied at the sizing site.
     let dllReduceSizeFactor = 1;
-    if (!blackoutBlocked) {
+    {
       try {
         // HIGH C-1 fix (deep-scan #16 wave-1 track-3): scope by the resolved
         // per-account key (config.account_key, falling back to firmId) instead

@@ -315,10 +315,59 @@ for (const g of TESTING_TO_PAPER_HARD_GATES) {
   }
 }
 
+// ─── MANUAL path — TESTING→PAPER AND SHADOW→PAPER HARD-gate coverage ──────────
+// GOALSCAN-CRIT Defect 3 (CRIT, 2026-07-16): the check above only asserted the CRON side
+// of the TESTING→PAPER edge. The MANUAL/API path (_promoteStrategyInner — backs
+// `PATCH /:id/lifecycle`, HMAC secret shared with n8n/Carter automation, NOT human-only)
+// previously ran ZERO of the B14/WFE/parameter-drift/DSR hard gates on either the
+// TESTING→PAPER or SHADOW→PAPER edge into PAPER — a correctly-signed manual (or automated
+// HMAC) promotion could push a strategy straight to real-broker PAPER capital past every
+// one of the cron's five hard gates. The fix added ONE inline block in
+// _promoteStrategyInner, gated on (fromState==="TESTING"||fromState==="SHADOW") &&
+// toState==="PAPER", that calls the SAME shared pure evaluators the cron calls. This
+// asserts that block's presence so the two paths can never silently re-diverge.
+// PBO is intentionally NOT in this list: by design it is only re-checked at the
+// TESTING→SHADOW entry gate (Wave 29 Pass A.2) — a strategy already in SHADOW state has
+// already cleared PBO to get there, so neither the cron's SHADOW→PAPER Gate 2.5 nor the
+// manual path re-checks it on that edge. Registering it here would produce a false failure.
+const regionManualTestingShadowToPaper = stripComments(
+  sliceBetween(
+    lifecycleRaw,
+    "GOALSCAN-CRIT DEFECT 3 (CRIT, 2026-07-16): manual-path hard-gate parity block",
+    "Wave 24 Pass 1 — Item 18: PBO overfit gate",
+    "MANUAL path — _promoteStrategyInner TESTING/SHADOW→PAPER hard-gate parity block",
+  ),
+);
+const foundManualTestingShadowToPaper = gateTokensIn(regionManualTestingShadowToPaper);
+const MANUAL_TESTING_SHADOW_TO_PAPER_HARD_GATES = [
+  { id: "m_ts2p_b14_ci", token: "evaluateB14CiGate" },
+  { id: "m_ts2p_wfe", token: "evaluateWfeGate" },
+  { id: "m_ts2p_parameter_drift", token: "evaluateParameterDriftGate" },
+  { id: "m_ts2p_dsr_walk_forward", token: "evaluateDsrWalkForwardGate" },
+  // MC survival floor has no dedicated evaluator helper (inline check on both paths) —
+  // identity is its canonical block audit-action string, same convention as b15 above.
+  { id: "m_ts2p_mc_survival_floor", token: "lifecycle.mc_survival_below_floor", audit: true },
+];
+for (const g of MANUAL_TESTING_SHADOW_TO_PAPER_HARD_GATES) {
+  if (!presentIn(g, foundManualTestingShadowToPaper, regionManualTestingShadowToPaper)) {
+    fail(
+      `MANUAL-path TESTING/SHADOW→PAPER gate coverage BROKEN: '${g.id}' ` +
+        `(identity ${JSON.stringify(g.token)}) is MISSING from the _promoteStrategyInner ` +
+        `hard-gate parity block.\n` +
+        `  The manual/API PATCH path (HMAC-shared with n8n/Carter automation) reimplements ` +
+        `this gate stack inline; an absent HARD gate here lets a correctly-signed manual or ` +
+        `automated promotion reach PAPER real-broker capital past a gate the cron enforces ` +
+        `on the identical edge (the goalscan-crit Defect 3 incident). Mirror the gate into ` +
+        `the _promoteStrategyInner TESTING/SHADOW→PAPER block.`,
+    );
+  }
+}
+
 // ─── Report ───────────────────────────────────────────────────────────────────
 const hardCount = HARD_GATES.length;
 const divCount = DIVERGENCES.length;
 const t2pCount = TESTING_TO_PAPER_HARD_GATES.length;
+const mt2pCount = MANUAL_TESTING_SHADOW_TO_PAPER_HARD_GATES.length;
 
 if (errors.length > 0) {
   console.error("\n❌ check:gate-parity — PAPER→DEPLOY_READY cron-vs-manual gate parity BROKEN\n");
@@ -338,11 +387,13 @@ console.log(
   `✅ check:gate-parity — PAPER→DEPLOY_READY parity OK: all ${hardCount} HARD gates fire on ` +
     `BOTH the cron sweep and the manual PATCH path; ${divCount} documented divergences hold; ` +
     `no unregistered gate tokens. TESTING→PAPER: all ${t2pCount} TESTING-stage HARD gates ` +
-    `present in the cron legacy fast-track.`,
+    `present in the cron legacy fast-track. MANUAL TESTING/SHADOW→PAPER: all ${mt2pCount} ` +
+    `HARD gates present in the _promoteStrategyInner parity block.`,
 );
 console.log(
   `   HARD: ${HARD_GATES.map((g) => g.id).join(", ")}\n` +
     `   DIVERGENCE: ${DIVERGENCES.map((d) => `${d.id}(${d.onPath})`).join(", ")}\n` +
-    `   TESTING→PAPER: ${TESTING_TO_PAPER_HARD_GATES.map((g) => g.id).join(", ")}`,
+    `   TESTING→PAPER (cron): ${TESTING_TO_PAPER_HARD_GATES.map((g) => g.id).join(", ")}\n` +
+    `   TESTING/SHADOW→PAPER (manual): ${MANUAL_TESTING_SHADOW_TO_PAPER_HARD_GATES.map((g) => g.id).join(", ")}`,
 );
 process.exit(0);
