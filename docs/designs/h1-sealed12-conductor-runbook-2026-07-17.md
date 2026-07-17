@@ -1,6 +1,6 @@
 # H1 SEALED-12 TERMINAL-READ — CONDUCTOR RUNBOOK (2026-07-17)
 
-> **STATUS: RE-FROZEN (R-030, 2026-07-17 — see ADDENDUM A at the end).** The CLI now OWNS each dispatch: it shells a no-tools (`--tools ""`, physically blind) `claude -p` with the transcript / rater-packet CONTENT embedded, strict-parses, and re-dispatches on non-compliant JSON up to a cap of 2 — the conductor runs ONE `--dispatch` command per seam and never shells `claude -p` or hands a transcript path to a subagent. Prior standing: RE-FROZEN (R-026.4, 2026-07-17). STEP 1 rewritten to the STAGED (emit-and-stop) sequence after the live Phase-A→consensus→Phase-B ordering gap was found + fixed (R-026 / staged CLI `e0e5dccc`, independently graded Band 7 SAFE): the sealed read is a stage loop (phase_a → fulfil Phase-B → certify → fulfil panels+raters → verdict), each stage emitting what to dispatch next. **Comprehension RE-PROBED on the amended staged steps (2026-07-17): a fresh reader answered the full staged sequence, "the DRIVER computes the consensus; you only READ its emit," and the HALT/no-retry/read-once rule — all verbatim from the steps.** Prior standing: ratified R-024 (amendments 1-3), staging-rehearsed zero-hints (R-023.1c). This is the ONLY document the seal-day clean-room conductor receives; self-contained on purpose. Do not edit — amend by dated addendum only.
+> **STATUS: RE-FROZEN (R-031, 2026-07-17 — see ADDENDUM A + ADDENDUM B at the end).** R-031: raters are now TWO sequential stage-scoped dispatches per rater (Stage-1 blind roles committed BEFORE Stage-2's revealed conditions are ever in a prompt); the packet carries its own answer-store output_contract (values derived from the frozen ingesters); out-of-vocabulary answers HALT. Prior R-030: the CLI now OWNS each dispatch: it shells a no-tools (`--tools ""`, physically blind) `claude -p` with the transcript / rater-packet CONTENT embedded, strict-parses, and re-dispatches on non-compliant JSON up to a cap of 2 — the conductor runs ONE `--dispatch` command per seam and never shells `claude -p` or hands a transcript path to a subagent. Prior standing: RE-FROZEN (R-026.4, 2026-07-17). STEP 1 rewritten to the STAGED (emit-and-stop) sequence after the live Phase-A→consensus→Phase-B ordering gap was found + fixed (R-026 / staged CLI `e0e5dccc`, independently graded Band 7 SAFE): the sealed read is a stage loop (phase_a → fulfil Phase-B → certify → fulfil panels+raters → verdict), each stage emitting what to dispatch next. **Comprehension RE-PROBED on the amended staged steps (2026-07-17): a fresh reader answered the full staged sequence, "the DRIVER computes the consensus; you only READ its emit," and the HALT/no-retry/read-once rule — all verbatim from the steps.** Prior standing: ratified R-024 (amendments 1-3), staging-rehearsed zero-hints (R-023.1c). This is the ONLY document the seal-day clean-room conductor receives; self-contained on purpose. Do not edit — amend by dated addendum only.
 
 ---
 
@@ -96,4 +96,17 @@ The instrument-surface wrapper text + the exact invocation are recorded in `docs
 
 ---
 
-*Runbook authored 2026-07-17 by the working agent under R-023.1a; ratified R-024, staging-rehearsed by a fresh clean-room conductor (R-023.1c), re-frozen R-026.4, and amended + re-frozen R-030 (Addendum A). Amend by dated addendum only.*
+## ADDENDUM B — 2026-07-17 (R-031): raters are TWO sequential stage-scoped dispatches
+
+**This addendum SUPERSEDES the rater dispatch in STEP 3 / Addendum A ("run the emitted `--dispatch rater --rater-id <A|B>` command per rater").** The R-030 §4 live rehearsal showed a single rater dispatch embedded BOTH the blind Stage-1 view AND the revealed Stage-2 conditions in one prompt — breaking the two-stage read-order lock (Stage-1 blind role-from-quote must be committed BEFORE Stage-2's revealed conditions are seen). R-031 ruled: split into two sequential dispatches per rater.
+
+**For each rater (A, B), run TWO commands the certify emit names, IN ORDER:**
+```
+python <this CLI> --mode sealed --work-dir <wd> --dispatch rater --rater-id <A|B> --rater-stage stage1
+python <this CLI> --mode sealed --work-dir <wd> --dispatch rater --rater-id <A|B> --rater-stage stage2
+```
+Running each command makes the CLI embed ONLY that stage's blind view + the packet's own output_contract into a no-tools `claude -p` (the Stage-1 prompt PHYSICALLY excludes the revealed Stage-2 conditions), strict-parse, retry-on-non-compliant up to the cap, enforce the packet's closed vocabulary (an out-of-vocabulary role/support — or a blank Stage-2 `support_justification` — HALTs), and MERGE the stage into `raters/<id>.json`. You still never open the packet or shell `claude -p` yourself. If either stage prints a HALT, STOP and report it verbatim. Everything else in this runbook stands.
+
+---
+
+*Runbook authored 2026-07-17 by the working agent under R-023.1a; ratified R-024, staging-rehearsed by a fresh clean-room conductor (R-023.1c), re-frozen R-026.4, amended + re-frozen R-030 (Addendum A), and amended R-031 (Addendum B). Amend by dated addendum only.*
