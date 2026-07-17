@@ -1,6 +1,6 @@
 # H1 SEALED-12 TERMINAL-READ — CONDUCTOR RUNBOOK (2026-07-17)
 
-> **STATUS: FROZEN** — ratified R-024 (with amendments 1-3 folded in), staging-rehearsed by a fresh clean-room conductor (zero hints, R-023.1c), and comprehension-probed on the amended sealed steps (a fresh reader answered "five Phase-A subagents; each gets the prompt + a transcript PATH; Phase-B one per strategy; never combine" — verbatim from the steps). This is the ONLY document the seal-day clean-room conductor receives. It is self-contained on purpose. Do not edit — amend by dated addendum only.
+> **STATUS: RE-FROZEN (R-026.4, 2026-07-17).** STEP 1 rewritten to the STAGED (emit-and-stop) sequence after the live Phase-A→consensus→Phase-B ordering gap was found + fixed (R-026 / staged CLI `e0e5dccc`, independently graded Band 7 SAFE): the sealed read is a stage loop (phase_a → fulfil Phase-B → certify → fulfil panels+raters → verdict), each stage emitting what to dispatch next. **Comprehension RE-PROBED on the amended staged steps (2026-07-17): a fresh reader answered the full staged sequence, "the DRIVER computes the consensus; you only READ its emit," and the HALT/no-retry/read-once rule — all verbatim from the steps.** Prior standing: ratified R-024 (amendments 1-3), staging-rehearsed zero-hints (R-023.1c). This is the ONLY document the seal-day clean-room conductor receives; self-contained on purpose. Do not edit — amend by dated addendum only.
 
 ---
 
@@ -25,12 +25,21 @@ ls docs/designs/SEAL-GO.token
 
 *(For a STAGING RUNBOOK REHEARSAL only — no token, spent videos: skip STEP 0 and run STEP 1 with `--mode staging`. Staging NEVER touches the sealed 12.)*
 
-## STEP 1 — INVOKE THE DRIVER
-Run the driver CLI:
-- **Sealed read (token present):** `python scripts/h1_seal_conductor_cli.py --mode sealed`
-- **Staging rehearsal (no token, spent videos):** `python scripts/h1_seal_conductor_cli.py --mode staging`
+## STEP 1 — INVOKE THE DRIVER (sealed = a STAGED loop; staging = one shot)
+The CLI pins the sealed-12 manifest (`docs/designs/h1-wave6-sealed-fresh-set-2026-07-12.json`, read from disk — never typed) and verifies the seal.
 
-The CLI pins the sealed-12 manifest (`docs/designs/h1-wave6-sealed-fresh-set-2026-07-12.json`, read from disk — never typed), verifies the seal, and drives the pipeline. It will tell you, per video, when it needs a live EXTRACTION or a live RATER judgment (sealed mode only — staging is fully cached).
+**Staging rehearsal (no token, spent videos):** one command, fully cached —
+`python scripts/h1_seal_conductor_cli.py --mode staging` → it prints the verdict; go to STEP 5.
+
+**Sealed read (token present):** the read runs in STAGES. You dispatch subagents, then invoke the next stage; each stage EMITS what you must fulfil next, then STOPS. Pick a fresh empty `<dir>` for `--work-dir` and use the SAME one every stage. The loop:
+1. **Dispatch Phase-A (STEP 2):** for each of the twelve videos, dispatch FIVE blind Phase-A draws to the file paths the CLI's emit will name (`phase_a/<vid>/draw_<0..4>.json`).
+2. **Run stage phase_a:** `python scripts/h1_seal_conductor_cli.py --mode sealed --stage phase_a --work-dir <dir>` → the DRIVER computes the consensus and emits, per video, the strategy list to extract (`emit/phase_a_consensus.json`), then STOPS. You do NOT compute the consensus — you only READ the driver's emit to know what to dispatch next.
+3. **Dispatch Phase-B (STEP 2):** for each strategy the emit names, dispatch ONE Phase-B subagent → write the named `phase_b/<cid>.json`.
+4. **Run stage certify:** `… --stage certify --work-dir <dir>` → it emits the panel requests + the two-stage rater packets (`emit/panel_requests.json`, `emit/rater_packets.json`), then STOPS.
+5. **Dispatch panels + raters (STEP 3):** for each emitted cid, dispatch its panel → `panels/<cid>.json`; for each emitted packet, dispatch the TWO blind raters → the named `raters/…` files.
+6. **Run stage verdict:** `… --stage verdict --work-dir <dir>` → it drives the read to the end, re-verifies, and prints the verdict. Go to STEP 5.
+
+At ANY stage, a guard HALT (seal / identity / hash-mismatch / leak-scan / missing artifact) ⇒ STOP and report it verbatim (STEP 5). You NEVER re-run a stage to "get past" a HALT, and you never re-dispatch a draw already written (re-running a stage only re-reads files — read-once).
 
 ## STEP 2 — WHEN THE DRIVER ASKS FOR A LIVE EXTRACTION (sealed mode)
 The CLI names **each required dispatch INDIVIDUALLY** — you never decide the granularity, and you **NEVER combine dispatches**. Each is a **fresh Claude subagent on the subscription channel** (Claude Code dispatch, interactive or headless `claude -p` — same subscription runtime; NEVER the API):
