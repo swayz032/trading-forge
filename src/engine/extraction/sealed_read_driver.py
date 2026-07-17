@@ -2371,6 +2371,212 @@ def run_rater_layer_stage(
 
 
 # =========================================================================== #
+# STAGED SEALED READ — EMIT-AND-STOP HANDSHAKE (ADVISOR-RULINGS R-026 / AR-017).
+#
+# The single-shot sealed run_verdict INTERLEAVES the live seams: it dispatches the
+# five Phase-A draws/video, computes the consensus ITSELF, then dispatches Phase-B
+# PER CONSENSUS STRATEGY, then Module C panels PER CID, then Module D raters PER
+# DRIVER-BUILT PACKET.  A BLIND conductor cannot pre-write Phase-B / panels / rater
+# answers before it has SEEN the driver's emitted consensus / cids / packets — so a
+# one-shot CLI HALTs mid-read on the first unwritten file.  R-026 ratifies the fix:
+# a STAGED handshake where the driver EMITS what the conductor must fulfil next,
+# STOPS; the conductor fulfils; a resume invocation continues.
+#
+# These are the DRIVER-SIDE brains of the three stages (the CLI marshals the files):
+#   * compute_phase_a_consensus  — stage `phase_a`: ingest the k blind draws/video,
+#     compute the modal consensus + stability the driver's own way (reuses
+#     _enum_stability/_mode_of/_consensus_strategy_refs UNCHANGED), and return the
+#     per-video consensus + a HASH STAMP over the ingested draws.  NO Phase-B.
+#   * build_panel_requests / build_rater_packets — stage `certify`: from the
+#     assembled Module-B extraction, emit the per-cid panel requests + the two-stage
+#     tier-3 rater PACKETS the driver would dispatch (leak-scanned — a leak HALTs,
+#     never emitted), so the conductor can fulfil panels + rater answers.
+#
+# READ-ONCE (R-026.1): these functions only READ conductor artifacts; they NEVER
+# dispatch.  A re-invocation on the same files is a deterministic re-ingest/re-emit
+# (byte-identical), never a re-dispatch.  The SEALED path only — no rehearsal call
+# reaches here (the rehearsal capstone run_full_dress_rehearsal is byte-unchanged).
+# =========================================================================== #
+
+
+def _hash_phase_a_draws(draws_by_video: dict[str, list]) -> str:
+    """Deterministic sha256 HASH STAMP over the INGESTED Phase-A draws (the parsed
+    per-draw payloads), keyed by sorted video_id, draws in dispatch order. Stage
+    `phase_a` emits it; stages `certify`/`verdict` re-hash the SAME draw files and
+    HALT on any mismatch (an accidental second Phase-A that drew again would change
+    the hash — R-026.1 read-once pin). Pure; no wall-clock."""
+    canon = json.dumps(
+        {v: draws_by_video[v] for v in sorted(draws_by_video)},
+        sort_keys=True,
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(canon.encode("utf-8")).hexdigest()
+
+
+def compute_phase_a_consensus(
+    manifest_verified: dict,
+    live_phase_a_draw_fn: Callable[[str, int, dict], object],
+    *,
+    dispatch_record: dict | None = None,
+    adjudicate_fn: Callable[[str, dict], dict] | None = None,
+    k: int = K_DEFAULT,
+    stability_min: int = STABILITY_MIN,
+    pinned: dict | None = None,
+) -> dict:
+    """STAGE `phase_a` brains (R-026.1): for each verified video, ingest its ``k``
+    blind Phase-A enumeration draws (each a SEPARATE read of a conductor-written
+    draw artifact — the conductor already dispatched; this only READS), assert
+    identity PER DRAW (via :func:`_collect_phase_a_draws`, unchanged), and compute
+    the modal consensus + stability the DRIVER's own way (reusing
+    :func:`_enum_stability` / :func:`_consensus_strategy_refs`, unchanged). Routes an
+    UNSTABLE video to ONE blind adjudication (the existing hook). Does NOT dispatch
+    Phase-B.
+
+    Returns ``{per_video: {video_id: {strategy_refs, n_strategies, stable, mode,
+    mode_n, counts, adjudication_needed}}, draws_hash, k, stability_min}`` — the
+    per-video consensus the conductor fulfils Phase-B against, plus a hash stamp over
+    the ingested draws. Deterministic re-emit on the same draw files."""
+    pinned = pinned or certified_reader_identity()
+    adjudicate_fn = adjudicate_fn or _default_adjudicate
+    video_ids = _video_ids_from_verified(manifest_verified)
+    if not video_ids:
+        raise ValueError("no video_ids for Phase-A consensus")
+    per_video: dict[str, dict] = {}
+    draws_by_video: dict[str, list] = {}
+    for video_id in video_ids:
+        draws, counts = _collect_phase_a_draws(
+            video_id, manifest_verified, live_phase_a_draw_fn, pinned, k, dispatch_record
+        )
+        enum = _enum_stability({"counts": counts}, k=k, stability_min=stability_min)
+        adjudication_needed = not enum["stable"]
+        adjudication = adjudicate_fn(video_id, enum) if adjudication_needed else None
+        strategy_refs = _consensus_strategy_refs(draws, counts, enum, adjudication)
+        per_video[video_id] = {
+            "strategy_refs": list(strategy_refs),
+            "n_strategies": len(strategy_refs),
+            "stable": bool(enum.get("stable")),
+            "mode": enum.get("mode"),
+            "mode_n": enum.get("mode_n"),
+            "counts": list(counts),
+            "adjudication_needed": adjudication_needed,
+        }
+        draws_by_video[video_id] = draws
+    return {
+        "per_video": per_video,
+        "draws_hash": _hash_phase_a_draws(draws_by_video),
+        "k": k,
+        "stability_min": stability_min,
+    }
+
+
+def build_panel_requests(extraction_result: dict) -> list[dict]:
+    """STAGE `certify` emit (panels): from the assembled Module-B extraction, list
+    the per-cid cross-vendor panel requests the conductor must fulfil (``panels/<cid>
+    .json``). One entry per certified strategy — ``{cid, video_id, strategy_index,
+    strategy_name}`` — reusing :func:`_strategy_pairs` (the SAME cid derivation Module
+    C consumes). Pure read of the on-disk extraction artifacts."""
+    if not isinstance(extraction_result, dict) or not extraction_result.get("ready"):
+        raise ExtractionNotReady(
+            "panel-request emit requires a READY extraction result "
+            "(compose-order: certify cannot emit before Module B assembled)"
+        )
+    artifact_paths = extraction_result.get("artifact_paths") or []
+    require_artifacts_on_disk(artifact_paths)
+    requests: list[dict] = []
+    for path in artifact_paths:
+        with open(path, encoding="utf-8") as fh:
+            art = json.load(fh)
+        video_id = art.get("video_id")
+        for idx, (cid, strategy) in enumerate(_strategy_pairs(art)):
+            requests.append(
+                {
+                    "cid": cid,
+                    "video_id": video_id,
+                    "strategy_index": idx,
+                    "strategy_name": strategy.get("name"),
+                }
+            )
+    return requests
+
+
+def build_rater_packets(
+    extraction_result: dict,
+    *,
+    propose_fn: Callable[[str, str], str | None] | None = None,
+) -> list[dict]:
+    """STAGE `certify` emit (raters) — the R-026.2 SWEEP of the identical
+    driver-must-emit-first gap on the rater seam. From the assembled Module-B
+    extraction, build the TWO-STAGE tier-3 rater packets the driver would dispatch in
+    Module D — WITHOUT dispatching any rater. Runs the SAME frozen dual-read gate
+    (``pilot_conveyor.prepare_strategy``, which leak-scans internally) per certified
+    strategy as :func:`run_rater_layer_stage`; a leak raises ``LeakScanFailure``
+    (fail-closed — the packet is NEVER emitted, the raters NEVER see it).
+
+    Returns, per certified strategy: ``{cid, video_id, strategy_index, stage1_view
+    (BLIND — Stage-2 structurally absent), stage2_items (revealed conditions),
+    target_item_ids (Set-B + AUDIT — what the raters answer), control_item_ids
+    (Set-A)}``. The ``target_item_ids`` are the load-bearing handshake payload: stage
+    `verdict` HALTs if the conductor's rater answers reference any item_id NOT in this
+    emitted set (R-026.2 rater-match guard)."""
+    from src.engine.tests._a_packet_harness import build_inputs
+
+    from . import pilot_conveyor as pc
+
+    if not isinstance(extraction_result, dict) or not extraction_result.get("ready"):
+        raise ExtractionNotReady(
+            "rater-packet emit requires a READY extraction result "
+            "(compose-order: certify cannot emit before Module B assembled)"
+        )
+    artifact_paths = extraction_result.get("artifact_paths") or []
+    require_artifacts_on_disk(artifact_paths)
+
+    # SEALED: real anchor locator unless injected (tests inject the network-free
+    # synthetic stub). This is the SAME propose_fn stage `verdict` threads into
+    # run_rater_layer_stage, so the rebuilt packets carry IDENTICAL item_ids.
+    packets: list[dict] = []
+    for path in artifact_paths:
+        with open(path, encoding="utf-8") as fh:
+            art = json.load(fh)
+        video_id = art.get("video_id")
+        for idx, (cid, strategy) in enumerate(_strategy_pairs(art)):
+            transcript, _tier1, _entries = build_inputs(strategy)
+            # prepare_strategy leak-scans and raises LeakScanFailure on a leak — NOT
+            # caught here: a leaky packet must HALT the whole emit (fail-closed).
+            prep = pc.prepare_strategy(
+                strategy,
+                transcript,
+                video_id,
+                extractor_version="certified-reader-v3.2",
+                taxonomy_version="taxonomy-v2",
+                strategy_index=idx,
+                propose_fn=propose_fn,
+            )
+            packet = prep["tier3_packet"]
+            # Set-B + AUDIT item_ids (the join keys the raters answer) come from the
+            # driver-built span map — never a re-derivation.
+            target_item_ids = list(prep["item_span_map"].keys())
+            control_item_ids: list[str] = []
+            for section in packet.get("sections", []):
+                if section.get("section_id") != "SET-B":
+                    for item in section.get("items", []):
+                        iid = item.get("item_id")
+                        if iid is not None:
+                            control_item_ids.append(iid)
+            packets.append(
+                {
+                    "cid": cid,
+                    "video_id": video_id,
+                    "strategy_index": idx,
+                    "stage1_view": _stage1_view(packet),
+                    "stage2_items": (packet.get("stage2") or {}).get("items", []),
+                    "target_item_ids": target_item_ids,
+                    "control_item_ids": control_item_ids,
+                }
+            )
+    return packets
+
+
+# =========================================================================== #
 # MODULE E — VERDICT MATH (ratify-packet items 6-8).
 #
 # Spec: docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md (Module E) +

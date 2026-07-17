@@ -185,8 +185,28 @@ def no_live_locator(monkeypatch):
     monkeypatch.setattr(anchor_locator, "_default_propose_fn", _boom)
 
 
+def _token_state():
+    """Existence+content fingerprint of the real SEAL-GO.token (None if absent)."""
+    p = cli.PINNED_TOKEN_PATH
+    if not os.path.exists(p):
+        return None
+    with open(p, "rb") as fh:
+        return hashlib.sha256(fh.read()).hexdigest()
+
+
+# Snapshot at IMPORT (before any test/CLI runs). Robust to a legitimate
+# operator-created token already existing in the worktree (R-025): the assertion
+# below is UNCHANGED-since-import, not absent.
+_TOKEN_STATE_AT_IMPORT = _token_state()
+
+
 def _assert_no_token_created():
-    assert not os.path.exists(cli.PINNED_TOKEN_PATH), "CLI must NEVER create SEAL-GO.token"
+    # The CLI must NEVER create OR modify SEAL-GO.token. Whether the token was
+    # absent (must stay absent) or already present by the operator's hand (must
+    # stay the operator's exact bytes), the CLI must leave it UNCHANGED.
+    assert _token_state() == _TOKEN_STATE_AT_IMPORT, (
+        "CLI must NEVER create or modify SEAL-GO.token (state changed since import)"
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -382,7 +402,9 @@ def test_d_sealed_wrong_model_dispatch_halts(tmp_path, no_live_locator):
 
 
 def test_e_cli_never_creates_seal_go_token(tmp_path, capsys, no_live_locator):
-    assert not os.path.exists(cli.PINNED_TOKEN_PATH)
+    # The pinned token may legitimately already exist by the operator's hand (R-025);
+    # the invariant is that the CLI never CREATES or MODIFIES it.
+    before = _token_state()
     # staging path
     cli.main(["--mode", "staging"])
     capsys.readouterr()
@@ -401,8 +423,8 @@ def test_e_cli_never_creates_seal_go_token(tmp_path, capsys, no_live_locator):
         )
     finally:
         os.remove(token)
-    # the pinned operator-token path was NEVER created by the CLI.
-    assert not os.path.exists(cli.PINNED_TOKEN_PATH)
+    # the pinned operator-token path was NEVER created OR modified by the CLI.
+    assert _token_state() == before, "CLI created or modified the pinned SEAL-GO.token"
 
 
 # --------------------------------------------------------------------------- #
