@@ -67,7 +67,14 @@ function parseCreateTables(src: string): Array<{ table: string; cols: Set<string
   let m: RegExpExecArray | null;
   while ((m = re.exec(src)) !== null) {
     const table = m[1];
-    const body = m[2];
+    // Strip `-- ...` line comments BEFORE comma-splitting. A comment's own
+    // prose commas (e.g. "...must fail like prod, not silently default...")
+    // otherwise get treated as real column-definition boundaries, which both
+    // fabricates phantom "columns" from comment words AND silently swallows
+    // the real column definition that follows into the same bogus part —
+    // a false DRIFT report that also masks the swallowed column from being
+    // checked at all (deep-scan/W7 finding, 2026-07-17).
+    const body = m[2].replace(/--[^\n]*/g, "");
     const cols = new Set<string>();
     // split on commas that are not inside parentheses (CHECK (...), numeric(10,2), etc.)
     let depth = 0;
