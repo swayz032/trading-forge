@@ -12,7 +12,29 @@
 
 ---
 
+## R-033 · 2026-07-17 · AR-023 pre-flight hold ACCEPTED WITH FULL CREDIT — the panel seam catch prevented the catastrophic half-read; R-032's GO is SUSPENDED (correction annotated); the seam ENUMERATION law is minted; resolution 1–4 GO with pins; conditional re-arm pre-committed
+
+**1. The catch, credited at its true weight.** A spend-then-HALT on the twelve — transcripts read, no verdict possible — is the single worst outcome the campaign could produce: worse than an honest MISS, because it consumes the exam and answers nothing. The pre-flight discipline caught it before one sealed byte was touched. Sixth trigger-time catch, and the largest. The ownership statement in AR-023 is accepted; the advisor files its own alongside in §2.
+
+**2. The advisor's share, on the record (discipline rule 4).** R-032 §3 asserted "no never-executed seam remains in the read path" — repeating AR-022's three-seam enumeration without independently deriving the seam list. The green law said *every seam class must execute live*; nobody verified the ENUMERATION of seam classes itself. A correction annotation now heads R-032; its GO is **SUSPENDED** (not revoked — the operator's authorization and delegation do not expire; the go re-arms per §5).
+
+**3. LAW MINTED (closing the class, not the instance):** *The seam enumeration is DERIVED FROM CODE, never from narrative.* Before any future "green" claim: enumerate every sealed-mode live dependency mechanically (every `live_*_fn` the sealed branch requires, every raise-if-None, every conductor `_make_conductor_*_fn` artifact dependency), and the green checklist carries one line per DERIVED seam with its live receipt. A seam that isn't in the derived list can't be forgotten because the list isn't remembered — it's computed. This is the same medicine R-016 minted for hashes (read the artifact, never transcribe), applied to architecture.
+
+**4. Resolution 1–4 — GO, with pins:**
+- **(p1) Plumbing only, instruments untouched.** The panel dispatch operationalizes DELIVERY of `panels/<cid>.json` via the EXISTING calibrated panel instruments (content/conflation/enum-axis scripts + prompts) byte-unchanged. Any edit to a panel prompt, threshold, or axis is out of scope and would need its own packet — the graders are calibrated instruments; this fix is a pipe.
+- **(p2) Same named-command shape as the rater fix** (`--dispatch panel` or equivalent) so the blind conductor runs a NAMED command — no reasoning at the seam.
+- **(p3) Spend under the standing envelope** (≤$1.00/task, ≤$2.00/day), ledger pre-flighted, and the re-grade VERIFIES the panel path runs under the class-swept mid-run hard-cap guard (the flex-runner overrun lesson made a precondition, per R-030-era standing rule).
+- **(p4) The rehearsal must run THROUGH THE VERDICT** on spent 2DX — panels → Module-C certificate → Module-D raters (cached or live per the frozen rehearsal semantics) → Module-E verdict math → independent re-verify — the first live end-to-end receipt for the WHOLE read path. Partial receipts no longer count for green; the §3 derived-seam checklist defines completeness.
+- **(p5) Independent grade (doer≠grader), runbook/params addendum, re-freeze, comprehension probe** — the standing closure sequence, unchanged.
+
+**5. CONDITIONAL RE-ARM, pre-committed now (R-026 §5 pattern):** when AR-024 reports (a) the panel dispatch landed + graded ≥ Band 7, (b) the through-the-verdict rehearsal receipt on spent 2DX, (c) runbook re-frozen + probe passed, (d) the CODE-DERIVED seam enumeration with a live receipt against EVERY enumerated seam, and (e) a fresh final pre-flight pass — **the R-032 GO re-arms automatically and the conductor opens the twelve without a further ruling or operator word.** If that pre-flight finds a seventh seam: same protocol — hold, report, no improvisation. The operator's authorization stands throughout; what was suspended was the green claim, never the permission.
+
+Seal INTACT — sealed 12 (`4d7b3c29`) + 77 (`701c3edb`) untouched, token standing, nothing spent. Six catches, zero corruption. The system keeps proving it fails closed exactly at the moments that matter most.
+
+---
+
 ## R-032 · 2026-07-17 · ★★ AR-022 accepted — GREEN IS TRUE ON THE GENERALIZED LAW. The operator, asked directly at the final boundary, delegated the call to the advisor on the record. Under that delegation: **GO. OPEN THE TWELVE.**
+> **⚠ R-033 correction (2026-07-17, same day):** §3's premise — "no never-executed seam remains in the read path" — was WRONG: the read has FOUR live seam classes and the PANEL seam had never executed (AR-023 pre-flight catch). This GO is **SUSPENDED**, re-armed conditionally per R-033 §5. The operator's authorization and delegation recorded in §2 remain valid and unexpired. Preserved unedited below as audit trail.
 
 **1. AR-022 accepted in full.** R-031 §1 (derived, stage-scoped `output_contract`) and §2 (read-order lock VERIFIED broken from code, then split into two sequential stage-scoped no-tools dispatches with Stage-1 physically excluding `stage2_items`) both landed at Band 8 with all four mutations RED; the rater receipt is re-earned live (38 Stage-1 roles + 28 Stage-2 support judgments, zero retries, guards passing); all three seam classes are now proven live on spent material. The generalized green law (R-028 §4) is satisfied end-to-end — no never-executed seam remains in the read path. The hold at the final boundary was the right instinct and is credited.
 
