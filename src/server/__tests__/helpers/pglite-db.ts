@@ -65,7 +65,8 @@ const CORE_DDL = `
 -- 10 core tables: strategies, backtests, monte_carlo_runs,
 -- strategy_health_scores, lifecycle_shadow_signals, audit_log, lifecycle_transitions,
 -- paper_sessions, paper_positions, paper_trades
--- Plus quantum_rl_runs (deepscan16 W1 T4) and broker_accounts (deepscan15 M3).
+-- Plus quantum_rl_runs (deepscan16 W1 T4), broker_accounts (deepscan15 M3),
+-- strategy_pending_buckets + trade_critique (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17).
 -- DDL mirrors schema.ts column-for-column so Drizzle INSERT statements match.
 
 CREATE TABLE IF NOT EXISTS strategies (
@@ -436,6 +437,49 @@ CREATE TABLE IF NOT EXISTS quantum_rl_runs (
 -- exercise the DB-level invariant (topstep MUST route topstepx, never traderspost;
 -- mffu/others MUST route traderspost). CORE_DDL creates the table fresh so the CHECK
 -- validates immediately (production migration uses NOT VALID for existing-row safety).
+-- Fix-wave telemetry-honesty-registry-dashboards (2026-07-17): strategy_pending_buckets
+-- + trade_critique, mirrored column-for-column from schema.ts, added so the
+-- slumhouse recipe-data.ts / kitchen-data.ts CRIT fix (both queries previously
+-- referenced nonexistent tables: scout_audit and a broken monte_carlo_runs shape)
+-- can be regression-tested against a real schema instead of a structurally-blind
+-- mock. See src/server/__tests__/slumhouse/kitchen-data.test.ts +
+-- src/server/__tests__/slumhouse/recipe-data.test.ts for the pglite consumers.
+CREATE TABLE IF NOT EXISTS strategy_pending_buckets (
+  id                      UUID PRIMARY KEY,
+  fingerprint_hash        TEXT NOT NULL,
+  market                  TEXT NOT NULL,
+  entry_archetype         TEXT NOT NULL,
+  exit_type               TEXT NOT NULL,
+  source_count            INTEGER NOT NULL DEFAULT 0,
+  distinct_providers      INTEGER NOT NULL DEFAULT 0,
+  status                  TEXT NOT NULL DEFAULT 'pending',
+  first_seen_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  graduated_at            TIMESTAMPTZ,
+  graduated_strategy_id   UUID,
+  concept_name            TEXT,
+  layer_coverage_json     JSONB,
+  wide_fingerprint_hash   TEXT
+);
+
+CREATE TABLE IF NOT EXISTS trade_critique (
+  id                      UUID PRIMARY KEY,
+  position_id             UUID NOT NULL,
+  session_id              UUID,
+  account_id              UUID,
+  strategy_id             UUID,
+  critiqued_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  grade                   TEXT NOT NULL,
+  technical_diagnosis     JSONB NOT NULL,
+  plain_english_summary   JSONB NOT NULL,
+  data_completeness       TEXT NOT NULL DEFAULT 'full',
+  missing_fields          TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+  provider                TEXT NOT NULL,
+  model                   TEXT NOT NULL,
+  correlation_id          TEXT,
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS broker_accounts (
   account_id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   firm_id             TEXT NOT NULL,

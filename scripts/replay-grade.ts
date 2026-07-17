@@ -59,6 +59,7 @@ import {
   buildCombinedMarkdownReport,
   writeMarkdownReport,
   extractToolSummary,
+  resolveReportOutputPath,
 } from "../src/server/lib/replay/harness-base.js";
 
 // ─── Re-export harness-base for test consumers ────────────────────────────────
@@ -77,26 +78,20 @@ export {
 /**
  * Each entry maps a tool name to a lazy importer.
  *
- * Dynamic imports are used so that:
- *   1. A missing G1 module (pattern-aggregator, consistency) does not cause a
- *      compile-time error — those scripts land in Pass 3.G1.
- *   2. Only the required tool's code is loaded at runtime when --tool=<single>.
+ * Dynamic imports are used so that only the required tool's code (and its DB
+ * client construction) is loaded at runtime when --tool=<single> is passed,
+ * rather than eagerly importing all 7 tools' dependency trees on every run.
+ * All 7 Pass-3 tool scripts (including pattern-aggregator + consistency,
+ * Pass 3.G1) have landed — every entry below is unconditional.
  *
- * Each imported module MUST export a `run<Name>Analysis(sql, opts?)` function
- * and a `build<Name>MarkdownReport(result, isoDate, ...)` function matching the
- * patterns established in Pass 1 / Pass 2.
+ * Each imported module MUST export a `run<Name>Analysis(sql, opts?)` function.
+ * Report builders are pure functions imported from
+ * `src/server/lib/replay/*-disagreement.ts` (never from the script itself,
+ * which typically does not re-export them) — see the fix-wave
+ * telemetry-honesty-registry-dashboards (2026-07-17) comments on
+ * `runPatternAggregatorTool` / `runConsistencyTool` for the concrete bug this
+ * convention closes.
  */
-
-interface ToolDispatchResult {
-  verdict: string;
-  validFolds?: number;
-  spearmanRho?: number;
-  spearmanPValue?: number;
-  critiquesAnalyzed?: number;
-  totalB15Rows?: number;
-  mannWhitneyPValue?: number;
-  n?: number;
-}
 
 interface ToolDispatchOpts {
   sql: ReturnType<typeof postgres>;
@@ -107,6 +102,16 @@ interface ToolDispatchOpts {
   // critique-specific
   strategyId?: string;
   lookbackDays?: number;
+  /**
+   * --output <path> override for a SINGLE tool's report (see
+   * resolveReportOutputPath docstring in harness-base.ts). Deliberately left
+   * unset on the shared `dispatchOpts` object constructed in main() — only
+   * the single-tool dispatch call site fills it in, so a `--tool=all
+   * --output <path>` invocation cannot leak the same path into all 7 tools
+   * and clobber each other (customOutput for --tool=all instead routes into
+   * runAllTools's separate `combinedOutputPath`).
+   */
+  customOutput?: string;
 }
 
 /**
@@ -120,9 +125,14 @@ async function runQuantumTool(opts: ToolDispatchOpts): Promise<ToolSummary> {
   const result = await runAnalysis(opts.sql, opts.limit);
   const report = buildMarkdownReport(result, opts.isoDate);
 
-  let outputFile: string | undefined;
-  if (opts.apply) {
-    outputFile = buildOutputPath(opts.repoRoot, opts.isoDate, "quantum-disagreement.md");
+  const outputFile = resolveReportOutputPath({
+    apply: opts.apply,
+    customOutput: opts.customOutput,
+    repoRoot: opts.repoRoot,
+    isoDate: opts.isoDate,
+    suffix: "quantum-disagreement.md",
+  });
+  if (outputFile) {
     writeMarkdownReport(outputFile, report);
     console.log(`[APPLY] quantum report written to: ${outputFile}`);
   }
@@ -173,9 +183,14 @@ async function runConfluenceTool(opts: ToolDispatchOpts): Promise<ToolSummary> {
     sqlWhereClause,
   );
 
-  let outputFile: string | undefined;
-  if (opts.apply) {
-    outputFile = buildOutputPath(opts.repoRoot, opts.isoDate, "confluence-disagreement.md");
+  const outputFile = resolveReportOutputPath({
+    apply: opts.apply,
+    customOutput: opts.customOutput,
+    repoRoot: opts.repoRoot,
+    isoDate: opts.isoDate,
+    suffix: "confluence-disagreement.md",
+  });
+  if (outputFile) {
     writeMarkdownReport(outputFile, report);
     console.log(`[APPLY] confluence report written to: ${outputFile}`);
   }
@@ -230,9 +245,14 @@ async function runCritiqueTool(opts: ToolDispatchOpts): Promise<ToolSummary> {
       `AND closed_at >= NOW() - INTERVAL '${lookbackDays} days'`,
   });
 
-  let outputFile: string | undefined;
-  if (opts.apply) {
-    outputFile = buildOutputPath(opts.repoRoot, opts.isoDate, "critique-disagreement.md");
+  const outputFile = resolveReportOutputPath({
+    apply: opts.apply,
+    customOutput: opts.customOutput,
+    repoRoot: opts.repoRoot,
+    isoDate: opts.isoDate,
+    suffix: "critique-disagreement.md",
+  });
+  if (outputFile) {
     writeMarkdownReport(outputFile, report);
     console.log(`[APPLY] critique report written to: ${outputFile}`);
   }
@@ -261,9 +281,14 @@ async function runRobustnessTool(opts: ToolDispatchOpts): Promise<ToolSummary> {
   const result = await runRobustnessAnalysis(opts.sql, opts.limit);
   const report = buildRobustnessMarkdownReport(result, opts.isoDate);
 
-  let outputFile: string | undefined;
-  if (opts.apply) {
-    outputFile = buildOutputPath(opts.repoRoot, opts.isoDate, "robustness-disagreement.md");
+  const outputFile = resolveReportOutputPath({
+    apply: opts.apply,
+    customOutput: opts.customOutput,
+    repoRoot: opts.repoRoot,
+    isoDate: opts.isoDate,
+    suffix: "robustness-disagreement.md",
+  });
+  if (outputFile) {
     writeMarkdownReport(outputFile, report);
     console.log(`[APPLY] robustness report written to: ${outputFile}`);
   }
@@ -290,13 +315,14 @@ async function runSurvivalTwinTool(opts: ToolDispatchOpts): Promise<ToolSummary>
   const result = await runSurvivalTwinAnalysis(opts.sql, opts.limit);
   const report = buildSurvivalTwinReport(result, opts.isoDate);
 
-  let outputFile: string | undefined;
-  if (opts.apply) {
-    outputFile = buildOutputPath(
-      opts.repoRoot,
-      opts.isoDate,
-      "survival-twin-disagreement.md",
-    );
+  const outputFile = resolveReportOutputPath({
+    apply: opts.apply,
+    customOutput: opts.customOutput,
+    repoRoot: opts.repoRoot,
+    isoDate: opts.isoDate,
+    suffix: "survival-twin-disagreement.md",
+  });
+  if (outputFile) {
     writeMarkdownReport(outputFile, report);
     console.log(`[APPLY] survival-twin report written to: ${outputFile}`);
   }
@@ -314,83 +340,116 @@ async function runSurvivalTwinTool(opts: ToolDispatchOpts): Promise<ToolSummary>
 }
 
 /**
- * Run the pattern-aggregator signal tool (Pass 3.G1 — lands soon).
- * Dynamic import degrades gracefully if the script is not yet present.
+ * Run the pattern-aggregator signal tool.
+ *
+ * FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — HIGH
+ * finding): Pass 3.G1 landed `scripts/replay-grade-pattern-aggregator.ts` +
+ * `src/server/lib/replay/pattern-aggregator-disagreement.ts` long ago, but
+ * this dispatcher was never updated off its pre-landing placeholder — it
+ * still (a) wrapped the import in a try/catch that mislabeled ANY import-time
+ * failure as "script not yet available (Pass 3.G1 pending)" (a stale
+ * fallback that would have silently swallowed a genuine future regression
+ * in either module, not just a missing file), and (b) called
+ * `mod.runPatternAggregatorAnalysis(...)` correctly but then
+ * `mod.buildPatternAggregatorReport(...)` — a function that has NEVER
+ * existed on that module; the real export (imported by the script itself
+ * but never re-exported) is `buildPatternAggregatorMarkdownReport` in the
+ * pure-function library `pattern-aggregator-disagreement.ts`. Every
+ * `--tool=pattern-aggregator` invocation (dry-run or --apply, single-tool or
+ * inside --tool=all) has been throwing `TypeError: mod.buildPatternAggregatorReport
+ * is not a function` since Pass 3.G1 landed — this tool has never
+ * successfully produced a report. Now imports the run+report functions
+ * directly by name, matching the pattern every other tool in this file uses
+ * (critique/robustness/survival-twin all import their report builder
+ * straight from the `src/server/lib/replay/*` pure-function library).
  */
 async function runPatternAggregatorTool(
   opts: ToolDispatchOpts,
 ): Promise<ToolSummary> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let mod: any;
+  const { runPatternAggregatorAnalysis } = await import(
+    "./replay-grade-pattern-aggregator.js"
+  );
+  const { buildPatternAggregatorMarkdownReport } = await import(
+    "../src/server/lib/replay/pattern-aggregator-disagreement.js"
+  );
 
-  try {
-    mod = await import("./replay-grade-pattern-aggregator.js");
-  } catch {
-    logger.warn("replay-grade: pattern-aggregator script not found (Pass 3.G1 pending)");
-    return {
-      tool: "pattern-aggregator",
-      verdict: "PRELIMINARY",
-      error: "Script not yet available (Pass 3.G1 pending)",
-    };
-  }
+  const result = await runPatternAggregatorAnalysis(opts.sql, opts.limit);
+  const report = buildPatternAggregatorMarkdownReport(result, opts.isoDate);
 
-  const result = await mod.runPatternAggregatorAnalysis(opts.sql, opts.limit);
-  const report = mod.buildPatternAggregatorReport(result, opts.isoDate);
-
-  let outputFile: string | undefined;
-  if (opts.apply) {
-    outputFile = buildOutputPath(
-      opts.repoRoot,
-      opts.isoDate,
-      "pattern-aggregator-disagreement.md",
-    );
+  const outputFile = resolveReportOutputPath({
+    apply: opts.apply,
+    customOutput: opts.customOutput,
+    repoRoot: opts.repoRoot,
+    isoDate: opts.isoDate,
+    suffix: "pattern-aggregator-disagreement.md",
+  });
+  if (outputFile) {
     writeMarkdownReport(outputFile, report);
     console.log(`[APPLY] pattern-aggregator report written to: ${outputFile}`);
   }
 
   return extractToolSummary(
     "pattern-aggregator",
-    result as ToolDispatchResult,
+    {
+      verdict: result.verdict,
+      spearmanRho: result.spearmanRho,
+      spearmanPValue: result.spearmanPValue,
+      n: result.totalStrategiesAttributed,
+    },
     outputFile,
   );
 }
 
 /**
- * Run the consistency signal tool (Pass 3.G1 — lands soon).
- * Dynamic import degrades gracefully if the script is not yet present.
+ * Run the consistency signal tool.
+ *
+ * FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — HIGH
+ * finding): same class of bug as `runPatternAggregatorTool` above — the
+ * stale "script not yet available (Pass 3.G1 pending)" fallback mislabeled
+ * ANY import-time failure, and the actual call (`mod.buildConsistencyReport`)
+ * referenced a function that has never existed; the real export is
+ * `buildConsistencyMarkdownReport` in `consistency-disagreement.ts`. A SECOND,
+ * independent bug on top of that: `runConsistencyAnalysis`'s real signature
+ * is `(sql, daysReplayed = 90, limitObservations?)` — the old call
+ * `mod.runConsistencyAnalysis(opts.sql, opts.limit)` passed `opts.limit`
+ * positionally into the `daysReplayed` slot, silently replaying over the
+ * wrong day-window (e.g. `--limit 5` replayed 5 DAYS of history, not 5
+ * observations) while `limitObservations` stayed permanently unbounded.
+ * Every `--tool=consistency` invocation was simultaneously (a) always
+ * throwing on the report-builder call and (b) would have replayed the wrong
+ * horizon even if it hadn't. Now threads `opts.lookbackDays` (the `--days`
+ * flag `parseCLIArgs` already parses repo-wide, default 90 — matching this
+ * tool's own default) into `daysReplayed` and `opts.limit` into
+ * `limitObservations`, and imports both real functions directly.
  */
 async function runConsistencyTool(opts: ToolDispatchOpts): Promise<ToolSummary> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let mod: any;
+  const { runConsistencyAnalysis } = await import("./replay-grade-consistency.js");
+  const { buildConsistencyMarkdownReport } = await import(
+    "../src/server/lib/replay/consistency-disagreement.js"
+  );
 
-  try {
-    mod = await import("./replay-grade-consistency.js");
-  } catch {
-    logger.warn("replay-grade: consistency script not found (Pass 3.G1 pending)");
-    return {
-      tool: "consistency",
-      verdict: "PRELIMINARY",
-      error: "Script not yet available (Pass 3.G1 pending)",
-    };
-  }
+  const daysReplayed = opts.lookbackDays ?? 90;
+  const result = await runConsistencyAnalysis(opts.sql, daysReplayed, opts.limit);
+  const report = buildConsistencyMarkdownReport(result, opts.isoDate, daysReplayed);
 
-  const result = await mod.runConsistencyAnalysis(opts.sql, opts.limit);
-  const report = mod.buildConsistencyReport(result, opts.isoDate);
-
-  let outputFile: string | undefined;
-  if (opts.apply) {
-    outputFile = buildOutputPath(
-      opts.repoRoot,
-      opts.isoDate,
-      "consistency-disagreement.md",
-    );
+  const outputFile = resolveReportOutputPath({
+    apply: opts.apply,
+    customOutput: opts.customOutput,
+    repoRoot: opts.repoRoot,
+    isoDate: opts.isoDate,
+    suffix: "consistency-disagreement.md",
+  });
+  if (outputFile) {
     writeMarkdownReport(outputFile, report);
     console.log(`[APPLY] consistency report written to: ${outputFile}`);
   }
 
   return extractToolSummary(
     "consistency",
-    result as ToolDispatchResult,
+    {
+      verdict: result.verdict,
+      n: result.observationsWithOutcome,
+    },
     outputFile,
   );
 }
@@ -558,8 +617,15 @@ async function main(): Promise<void> {
       try {
         summary = await dispatchTool(tool as ToolName, {
           ...dispatchOpts,
-          // For single-tool apply, honour --output path override
-          ...(customOutput ? {} : {}),
+          // FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17):
+          // this used to be `...(customOutput ? {} : {})` — both branches of
+          // that ternary are `{}`, so --output was parsed by parseCLIArgs and
+          // then silently discarded on every single-tool invocation. Now
+          // actually threads it through; resolveReportOutputPath() (see
+          // harness-base.ts) honors it per-tool, and is deliberately NOT
+          // applied on the --tool=all path above (that path routes
+          // customOutput into combinedOutputPath only).
+          customOutput,
         });
       } catch (err) {
         logger.error({ err, tool }, "replay-grade: tool dispatch failed");

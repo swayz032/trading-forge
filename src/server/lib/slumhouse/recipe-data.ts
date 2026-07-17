@@ -75,8 +75,24 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   if (!strat) throw new Error(`strategy_not_found:${args.strategyId}`);
 
   // 2. Latest backtest result (fail-soft to empty)
+  //
+  // FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — CRIT
+  // finding): this SELECT previously referenced `total_pnl` and `trade_count`,
+  // neither of which exists on the `backtests` table (verified against
+  // src/server/db/schema.ts — the real columns are `total_trades` (count) and
+  // no scalar total-P&L column at all; `avg_trade_pnl`/`avg_daily_pnl` are
+  // averages, not totals). Because the whole query was wrapped in
+  // `.catch(() => [])`, the column-does-not-exist Postgres error was silently
+  // swallowed on EVERY call — `bt` was always undefined, so the entire
+  // Backtest panel (totalMade, perPlay, worstDay, winningDays, tradesCount,
+  // equityCurve, sharpeRatio, riskReward, profitFactor, maxDrawdownPct) always
+  // rendered zeros/defaults for every strategy, forever, with no error
+  // surfaced anywhere. `total_trades` now maps directly to tradesCount;
+  // totalPnl is derived below from summing the real `daily_pnls` JSONB array
+  // (already being fetched and parsed for the Calendar panel) rather than
+  // reading a scalar column that was never persisted.
   const [bt] = (await db.execute(sql`
-    SELECT total_pnl, trade_count, daily_pnls, equity_curve, result_extras
+    SELECT total_trades, daily_pnls, equity_curve, result_extras
     FROM backtests
     WHERE strategy_id = ${args.strategyId}::uuid
     ORDER BY created_at DESC
@@ -84,11 +100,25 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   `).catch(() => [] as any[])) as any[];
 
   // 3. Latest Monte Carlo run (fail-soft)
+  //
+  // FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — CRIT
+  // finding): this SELECT previously read a `result_json` column and filtered
+  // on `strategy_id`, but `monte_carlo_runs` has NEITHER — it has
+  // `risk_metrics` (jsonb) / `paths` (jsonb) / `probability_of_ruin` (numeric)
+  // and is scoped to a strategy only indirectly via `backtest_id -> backtests.
+  // strategy_id` (confirmed against schema.ts + the real query pattern in
+  // src/server/routes/strategies.ts::getMcSummary). Wrapped in `.catch(() =>
+  // [])`, this ALSO always threw and was always silently swallowed — the
+  // entire Monte Carlo panel (blowUpOdds, worstYear, bestYear, medianYear,
+  // verdictGreen, survivalScore, distribution, ruinPct) and the "Worst Day
+  // Test" otherTests entry always rendered as "not run yet" / zero for every
+  // strategy, regardless of how many real MC runs existed for it.
   const [mc] = (await db.execute(sql`
-    SELECT result_json
-    FROM monte_carlo_runs
-    WHERE strategy_id = ${args.strategyId}::uuid
-    ORDER BY created_at DESC LIMIT 1
+    SELECT mc.risk_metrics, mc.paths, mc.probability_of_ruin
+    FROM monte_carlo_runs mc
+    JOIN backtests bt2 ON bt2.id = mc.backtest_id
+    WHERE bt2.strategy_id = ${args.strategyId}::uuid
+    ORDER BY mc.created_at DESC LIMIT 1
   `).catch(() => [] as any[])) as any[];
 
   // 4. Recent paper P&L for Preseason status
@@ -117,11 +147,11 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   // Parse JSON safely
   const dailyPnls = parseJSON(bt?.daily_pnls);
   const equityCurve = parseJSON(bt?.equity_curve);
-  const mcOut = parseJSON(mc?.result_json);
+  const riskMetrics = parseJSON(mc?.risk_metrics);
+  const mcPaths = parseJSON(mc?.paths);
   const extras = parseJSON(bt?.result_extras);
 
-  const totalPnl = Number(bt?.total_pnl ?? 0);
-  const trades = Number(bt?.trade_count ?? 0);
+  const trades = Number(bt?.total_trades ?? 0);
 
   // Quant metrics from result_extras (backtests stamp these on completion;
   // older rows may omit some — every read is defensive with sane fallbacks).
@@ -145,37 +175,59 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     : [];
   const worstDay = dailyList.length > 0 ? Math.min(...dailyList.map((d) => d.pnl)) : 0;
   const winningDays = dailyList.filter((d) => d.pnl > 0).length;
+  // `backtests` has no scalar total-P&L column — derive it from the same
+  // daily_pnls JSONB array the Calendar panel already reads (see the fix
+  // comment on the backtests query above).
+  const totalPnl = dailyList.reduce((sum, d) => sum + d.pnl, 0);
 
-  // Monte Carlo extraction (defensive — different MC versions emit different keys).
+  // Monte Carlo extraction.
+  //
+  // FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — CRIT
+  // finding): the old key-guessing chain (percentile_5/percentile_95/
+  // percentile_50, worst_year/best_year/median_year, and a 6-key distribution
+  // fallback list including "final_pnl_distribution"/"outcome_distribution"/
+  // etc.) never matched anything the real MC engine writes — none of those
+  // keys appear anywhere in src/engine/monte_carlo.py or risk_metrics.py
+  // (verified by repo-wide grep). The real, persisted shape is:
+  //   - risk_metrics.probability_of_ruin_ci.ci_high  (BCa CI, Wave 27.5 Pass A —
+  //     same field b14-ci-gate.ts / lifecycle-service.ts read for the real gate)
+  //   - probability_of_ruin (scalar column, legacy/no-CI fallback)
+  //   - paths: number[][] — up to `max_paths_to_store` (default 100) sampled
+  //     equity CURVES, each starting at path[0]=initial_capital
+  //     (src/engine/monte_carlo.py::_sample_paths). Per-path terminal P&L is
+  //     path[last] - path[0]; percentiles across those terminal P&Ls are the
+  //     real "worst/median/best year" outcome distribution this panel wants.
   //
   // ciHighRaw tracks whether MC has run at all (null = no MC run, gates fail-closed).
   // ciHigh (numeric, default 0) is kept for downstream display math that needs a number
   // (blowUpOdds, survivalScore, ruinPct).  verdictGreen MUST use ciHighRaw to avoid
   // showing green when MC simply hasn't been run yet (0 would pass the < threshold check).
-  const ciHighRaw: number | null = mcOut != null
-    ? (mcOut?.probability_of_ruin_ci?.ci_high != null
-        ? Number(mcOut.probability_of_ruin_ci.ci_high)
-        : mcOut?.probability_of_ruin != null
-          ? Number(mcOut.probability_of_ruin)
-          : null)
-    : null;
+  const ciHighRaw: number | null =
+    riskMetrics?.probability_of_ruin_ci?.ci_high != null
+      ? Number(riskMetrics.probability_of_ruin_ci.ci_high)
+      : mc?.probability_of_ruin != null
+        ? Number(mc.probability_of_ruin)
+        : null;
   const ciHigh = ciHighRaw ?? 0;
   const b14Threshold = getB14CiHighThreshold();
-  const worstYear = Number(mcOut?.percentile_5 ?? mcOut?.worst_year ?? 0);
-  const bestYear = Number(mcOut?.percentile_95 ?? mcOut?.best_year ?? 0);
-  const medianYear = Number(mcOut?.percentile_50 ?? mcOut?.median_year ?? 0);
 
-  // Extract distribution if MC emitted one (different engine versions use
-  // different keys — we try the common shapes, fall back to empty so the UI
-  // synthesizes a bell from worst/median/best).
+  // Per-path terminal P&L = last equity point minus the starting point
+  // (path[0]) — self-contained, no separate initial_capital lookup needed.
   let distribution: number[] = [];
-  for (const key of ["final_pnl_distribution", "outcome_distribution", "pnl_distribution", "year_end_pnls", "paths", "samples"]) {
-    const v = (mcOut as any)?.[key];
-    if (Array.isArray(v) && v.length > 0) {
-      distribution = v.map((x: any) => Number(x)).filter((x: number) => Number.isFinite(x));
-      if (distribution.length > 0) break;
-    }
+  if (Array.isArray(mcPaths) && mcPaths.length > 0) {
+    distribution = mcPaths
+      .map((path: unknown): number | null => {
+        if (!Array.isArray(path) || path.length < 2) return null;
+        const start = Number(path[0]);
+        const end = Number(path[path.length - 1]);
+        return Number.isFinite(start) && Number.isFinite(end) ? end - start : null;
+      })
+      .filter((x): x is number => x !== null)
+      .sort((a, b) => a - b);
   }
+  const worstYear = distribution.length > 0 ? percentile(distribution, 5) : 0;
+  const bestYear = distribution.length > 0 ? percentile(distribution, 95) : 0;
+  const medianYear = distribution.length > 0 ? percentile(distribution, 50) : 0;
   // No real MC path array → any histogram the UI draws is synthesized, not observed.
   const distributionIsSynthetic = distribution.length === 0;
 
@@ -398,6 +450,18 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
 function round2(n: number): number {
   if (!Number.isFinite(n)) return 0;
   return Math.round(n * 100) / 100;
+}
+
+/**
+ * Nearest-rank percentile over an ALREADY-SORTED-ASCENDING array. Used for the
+ * MC terminal-P&L distribution (see assembleRecipeData's Monte Carlo section)
+ * — ~100 sampled paths per run makes nearest-rank an appropriate, simple
+ * choice over linear interpolation (the sampling itself is already coarse).
+ */
+export function percentile(sortedAsc: number[], p: number): number {
+  if (sortedAsc.length === 0) return 0;
+  const idx = Math.min(sortedAsc.length - 1, Math.max(0, Math.round((p / 100) * (sortedAsc.length - 1))));
+  return sortedAsc[idx];
 }
 
 function parseJSON(v: unknown): any {

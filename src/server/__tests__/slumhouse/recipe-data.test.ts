@@ -5,11 +5,33 @@ vi.mock("../../db/index.js", () => ({ db: { execute: mocks.execute } }));
 
 const ORDER = ["strategy", "backtest", "mc", "paper", "shadow", "health"] as const;
 
+// FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — CRIT
+// finding): these fixtures previously used `total_pnl` / `trade_count` /
+// `result_json` / `percentile_5` / `percentile_50` / `percentile_95` — NONE
+// of which exist on the real `backtests` / `monte_carlo_runs` tables
+// (verified against schema.ts). Because this suite mocks `db.execute`
+// unconditionally (it never validates the SQL text against a real schema),
+// the fixtures could drift arbitrarily far from reality while staying green
+// — the exact "fabricated mock masks a real bug" failure class. Corrected to
+// the real column shapes; see src/server/__tests__/slumhouse/
+// recipe-data-pglite.test.ts for the schema-validating regression test that
+// would have (and did) catch the original mismatch.
+//
+// `total_trades` is the real column (was `trade_count`). There is no scalar
+// total-P&L column at all — recipe-data.ts now derives totalMade by summing
+// daily_pnls, so `totalMade` in these fixtures is whatever daily_pnls sums to
+// (+28 for the default 118+340-430 daily_pnls below), not an independently
+// stamped number.
+//
+// Monte Carlo: `risk_metrics` (jsonb, carries `probability_of_ruin_ci.
+// ci_high`) + `paths` (jsonb, `number[][]` of sampled equity curves per
+// src/engine/monte_carlo.py::_sample_paths — [initial_capital, ...equity];
+// terminal P&L = last - first) are the real columns (were `result_json`).
 function setupQueries(custom: Partial<Record<typeof ORDER[number], unknown[]>> = {}) {
   const responses: Record<string, unknown[]> = {
     strategy: [{ id: "s1", name: "vwap-band-mes", symbol: "MES", lifecycle_state: "DEPLOY_READY" }],
     backtest: [{
-      total_pnl: 118420, trade_count: 1283,
+      total_trades: 1283,
       daily_pnls: JSON.stringify([
         { date: "2026-05-01", pnl: 118 }, { date: "2026-05-02", pnl: 340 }, { date: "2026-05-03", pnl: -430 },
       ]),
@@ -19,10 +41,11 @@ function setupQueries(custom: Partial<Record<typeof ORDER[number], unknown[]>> =
         b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1.0,
       }),
     }],
-    mc: [{ result_json: JSON.stringify({
-      probability_of_ruin_ci: { ci_high: 0.03 },
-      percentile_5: -2840, percentile_50: 42500, percentile_95: 94200,
-    }) }],
+    mc: [{
+      risk_metrics: JSON.stringify({ probability_of_ruin_ci: { ci_high: 0.03 } }),
+      paths: JSON.stringify([[50000, 47160], [50000, 92500], [50000, 144200]]), // terminal P&L: -2840, 42500, 94200
+      probability_of_ruin: 0.03,
+    }],
     paper: [{ paper_total: 3840 }],
     shadow: [{ divergence_pct: 0.018 }],
     health: [{ composite_score: 0.84 }],
@@ -45,7 +68,7 @@ describe("recipe-data", () => {
     expect(r.identity.stationStreet).toBe("Small Plates");
     expect(r.slumdawgScore).toBe(84);
 
-    expect(r.backtest.totalMade).toBe("+$118,420");
+    expect(r.backtest.totalMade).toBe("+$28"); // derived: sum of daily_pnls (118 + 340 - 430)
     expect(r.backtest.tradesCount).toBe(1283);
     expect(r.backtest.worstDay).toBe("−$430");
     expect(r.backtest.winningDays).toBe(2);
@@ -70,7 +93,7 @@ describe("recipe-data", () => {
     setupQueries({
       strategy: [{ id: "s1", name: "dead-strat", symbol: "MES", lifecycle_state: "GRAVEYARD" }],
       backtest: [{
-        total_pnl: 5000, trade_count: 200, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 200, daily_pnls: "[]", equity_curve: "[]",
         result_extras: JSON.stringify({
           wfe_overall: 0.78, b15_passed: true, a14_severity: "pass",
           b10_pass: true, frankenstein_pass: false, compliance_pass_rate: 1.0,
@@ -117,7 +140,7 @@ describe("recipe-data", () => {
   it("marks Sloppy Bot Test as fail when b15 not passed", async () => {
     setupQueries({
       backtest: [{
-        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         result_extras: JSON.stringify({ b15_passed: false, wfe_overall: 0.8, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
       }],
     });
@@ -132,9 +155,8 @@ describe("recipe-data", () => {
 
   it("verdictGreen=false when ci_high=0.30 (was TRUE under old 0.40 hardcode, gate BLOCKS)", async () => {
     setupQueries({
-      mc: [{ result_json: JSON.stringify({
+      mc: [{ risk_metrics: JSON.stringify({
         probability_of_ruin_ci: { ci_high: 0.30 },
-        percentile_5: -1000, percentile_50: 20000, percentile_95: 50000,
       }) }],
     });
     const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
@@ -145,9 +167,8 @@ describe("recipe-data", () => {
   it("verdictGreen=true at boundary ci_high=0.20 (gate passes: NOT blocked)", async () => {
     // Gate uses strict > so ci_high exactly equal to threshold is NOT blocked.
     setupQueries({
-      mc: [{ result_json: JSON.stringify({
+      mc: [{ risk_metrics: JSON.stringify({
         probability_of_ruin_ci: { ci_high: 0.20 },
-        percentile_5: -500, percentile_50: 18000, percentile_95: 42000,
       }) }],
     });
     const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
@@ -157,7 +178,7 @@ describe("recipe-data", () => {
 
   it("verdictGreen=false when ci_high=0.21 (just over the 0.20 threshold)", async () => {
     setupQueries({
-      mc: [{ result_json: JSON.stringify({
+      mc: [{ risk_metrics: JSON.stringify({
         probability_of_ruin_ci: { ci_high: 0.21 },
       }) }],
     });
@@ -180,7 +201,7 @@ describe("recipe-data", () => {
     process.env.B14_RUIN_CI_HIGH_THRESHOLD = "0.30";
     try {
       setupQueries({
-        mc: [{ result_json: JSON.stringify({
+        mc: [{ risk_metrics: JSON.stringify({
           probability_of_ruin_ci: { ci_high: 0.25 },
         }) }],
       });
@@ -198,7 +219,7 @@ describe("recipe-data", () => {
   it("Surprise Test=pass when WFE at hard floor 0.70 (gate boundary: >= floor)", async () => {
     setupQueries({
       backtest: [{
-        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         result_extras: JSON.stringify({ wfe_overall: 0.70, b15_passed: true, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
       }],
     });
@@ -210,7 +231,7 @@ describe("recipe-data", () => {
   it("Surprise Test=warn when WFE=0.69 (below floor — gate would block, display shows warn)", async () => {
     setupQueries({
       backtest: [{
-        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         result_extras: JSON.stringify({ wfe_overall: 0.69, b15_passed: true, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
       }],
     });
@@ -224,7 +245,7 @@ describe("recipe-data", () => {
   it("Sloppy Bot Test sentence does NOT claim success when b15 failed", async () => {
     setupQueries({
       backtest: [{
-        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         result_extras: JSON.stringify({ b15_passed: false, wfe_overall: 0.8, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
       }],
     });
@@ -238,7 +259,7 @@ describe("recipe-data", () => {
   it("Every Mood Test is warn+untested when b10_pass is absent (not fabricated pass)", async () => {
     setupQueries({
       backtest: [{
-        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         // b10_pass intentionally omitted — untested, must NOT default to pass
         result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
       }],
@@ -254,7 +275,7 @@ describe("recipe-data", () => {
   it("Every Mood Test is fail with a losing sentence when b10_pass is false", async () => {
     setupQueries({
       backtest: [{
-        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, b10_pass: false, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
       }],
     });
@@ -268,7 +289,7 @@ describe("recipe-data", () => {
   it("Real or Lucky is warn+untested when frankenstein_pass is absent (not fabricated pass)", async () => {
     setupQueries({
       backtest: [{
-        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         // frankenstein_pass intentionally omitted — untested, must NOT default to pass
         result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, b10_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
       }],
@@ -285,7 +306,7 @@ describe("recipe-data", () => {
   it("Plays Clean sentence does NOT claim clean when compliance is below 1.0", async () => {
     setupQueries({
       backtest: [{
-        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        total_trades: 0, daily_pnls: "[]", equity_curve: "[]",
         result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 0.90, a14_severity: "pass" }),
       }],
     });

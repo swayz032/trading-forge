@@ -3600,7 +3600,7 @@
     "id": "replay_harness_engine",
     "domain": "validation",
     "owner_surface": "python",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual_invoke",
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
@@ -3615,19 +3615,13 @@
       "system_journal"
     ],
     "writes_to": [],
-    "audit_tables": [
-      "audit_log"
-    ],
-    "audit_actions": [
-      "replay.harness_executed"
-    ],
+    "audit_tables": [],
+    "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [
       "stdout-json-summary"
     ],
-    "scheduler_jobs": [
-      "quantum-replay-weekly-analysis"
-    ],
+    "scheduler_jobs": [],
     "routes": [],
     "engine_subsystems": [
       "replay"
@@ -3644,12 +3638,12 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "tests/python/replay/test_quantum_replay.py",
-    "_freshness_note": "Audit-action-based freshness \u00e2\u20ac\u201d Python harness writes replay.harness_executed per quantum_replay.py / db_loader.py CLI run; weekly cron quantum-replay-weekly-analysis depends on row presence.",
+    "_freshness_note": "CORRECTED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): this entry previously claimed 'Python harness writes replay.harness_executed per quantum_replay.py / db_loader.py CLI run' with audit_tables=[audit_log] and scheduler_jobs=[quantum-replay-weekly-analysis] -- both false. `replay.harness_executed` does not appear anywhere in src/engine/replay/ (verified by full-directory grep); db_loader.py:920 explicitly documents that these Python subprocesses CANNOT write audit_log (the calling TS process must, and none currently does on this harness's behalf). Separately, the quantum-replay-weekly-analysis cron does NOT invoke quantum_replay.py / db_loader.py at all -- quantum-replay-weekly-service.ts spawns `npx tsx scripts/replay-grade-quantum.ts --apply` (a different, TS-side tool), which is now correctly attributed to the new replay_grade_quantum entry instead. This engine is read-only-by-design (deterministic replay reconstruction from persisted audit_log/system_journal seeds, invoked ad hoc for incident reconstruction, not by any cron) -- real freshness evidence is the pytest suite only.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
-      "audit_log:replay.harness_executed"
+      "pytest-invocation:tests/python/replay/test_quantum_replay.py"
     ],
     "evidence_queries": [
       "tests/python/replay/test_quantum_replay.py"
@@ -3660,15 +3654,97 @@
     "criticality": "important"
   },
   {
-    "id": "replay_grade_confluence",
+    "id": "replay_grade_quantum",
     "domain": "validation",
     "owner_surface": "node",
     "automation_mode": "autonomous",
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "_freshness_note": "Audit-action-based freshness \u2014 script writes audit_log row tagged with one of the 4 listed actions per replay run; absence of any in last 7d signals stale.",
-    "automation_scope": "Wave 27 Pass 2 carry-forward \u00e2\u20ac\u201d replay-grading harness for Stage 2 weighted confluence-score disagreement vs OOS Sharpe degradation. scripts/replay-grade-confluence.ts + src/server/lib/replay/confluence-disagreement.ts (Pearson r, MAD, Mann-Whitney U, Spearman cross-method). Reuses quantum_mc_runs with governance_labels.replay_mode=true marker. 47 vitest GREEN. Advisory-only \u00e2\u20ac\u201d no hard-gate wiring.",
+    "_freshness_note": "ADDED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): the quantum tool -- 1 of the 7 replay-grading harnesses (CLAUDE.md Wave 27 unified replay grading table) -- had NO registry entry of its own; the real cron that runs it (quantum-replay-weekly-analysis) was instead mis-attributed to the unrelated replay_harness_engine entry (a different Python deterministic-replay-reconstruction subsystem that this cron never invokes -- see that entry's corrected _freshness_note). This entry closes both gaps. IMPORTANT: unlike its 6 sibling replay_grade_* entries, this one's audit_actions ARE real -- but they belong to the CRON WRAPPER (quantum-replay-weekly-service.ts), not to scripts/replay-grade-quantum.ts itself, which (like every other tool in the family) writes no audit_log rows on its own (read-only-by-governance, 'No production table writes' per its own docstring). Verified via direct grep of quantum-replay-weekly-service.ts for every `action: \"quantum_replay.*\"` literal.",
+    "automation_scope": "Wave 27 Pass 1 -- replay-grading harness for backtest-vs-quantum-MC IS-disagreement vs OOS Sharpe degradation (the original replay-grade tool; 6 siblings followed in Pass 2/3). scripts/replay-grade-quantum.ts + src/server/lib/replay/quantum-disagreement.ts (Spearman, binomial test, IS-only threshold selection across 5 candidates, CPCV purge + embargo enforcement). Invoked weekly (Sunday 19:00 ET, DST-safe) by quantum-replay-weekly-analysis cron via quantum-replay-weekly-service.ts, which spawns `npx tsx scripts/replay-grade-quantum.ts --apply` as a subprocess and parses its stdout JSON summary into a Discord verdict + docs/replay-results/<ISO>-quantum-disagreement.md. Reuses quantum_mc_runs with governance_labels.replay_mode=true marker. 40 vitest GREEN. Advisory-only -- no hard-gate wiring; kill switch shared with Wave 26 pattern-aggregator via system_parameters.auto_patch_loop_enabled (mode >= 2 AUTOPILOT required to run).",
+    "data_sources": [
+      "quantum_mc_runs",
+      "walk_forward_windows",
+      "backtests",
+      "backtest_trades"
+    ],
+    "reads_from": [
+      "quantum_mc_runs",
+      "walk_forward_windows",
+      "backtests",
+      "backtest_trades"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "quantum_replay.weekly_verdict_emitted",
+      "quantum_replay.weekly_analysis_skipped_no_data",
+      "quantum_replay.weekly_analysis_timeout",
+      "quantum_replay.weekly_analysis_failed",
+      "quantum_replay.weekly_analysis_loop_halted_skip",
+      "quantum_replay.kill_switch_read_failed"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
+    "scheduler_jobs": [
+      "quantum-replay-weekly-analysis"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "replay"
+    ],
+    "database_tables": [
+      "quantum_mc_runs",
+      "backtests",
+      "backtest_trades",
+      "walk_forward_windows",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "stdout-json-summary",
+      "audit_log:quantum_replay.weekly_analysis_failed",
+      "audit_log:quantum_replay.weekly_analysis_timeout"
+    ],
+    "recovery_mode": "operator-rerun",
+    "health_check": "src/server/__tests__/replay/replay-grade-quantum.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:quantum_replay.weekly_verdict_emitted",
+      "audit_log:quantum_replay.weekly_analysis_skipped_no_data",
+      "audit_log:quantum_replay.weekly_analysis_failed"
+    ],
+    "evidence_queries": [
+      "src/server/__tests__/replay/replay-grade-quantum.test.ts",
+      "src/server/__tests__/wave27-pass1-5-quantum-replay-auto-fire.test.ts",
+      "src/server/__tests__/wave27-pass1-5-weekly-replay-cron.test.ts"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "engine_only",
+    "deployment_authority": "autonomous_pre_deploy",
+    "criticality": "important"
+  },
+  {
+    "id": "replay_grade_confluence",
+    "domain": "validation",
+    "owner_surface": "node",
+    "automation_mode": "manual_invoke",
+    "manual_gate": "operator-approve",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "_freshness_note": "CORRECTED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): this previously claimed 'script writes audit_log row tagged with one of the 4 listed actions per replay run' -- false. scripts/replay-grade-confluence.ts (and every harness it delegates to) is read-only by governance design ('No production table writes' per its own docstring); none of replay_grade_confluence.{signal_detected,no_signal,inconclusive,preliminary} exists anywhere in the codebase (verified by repo-wide grep). Real evidence of a run: the --apply markdown report under docs/replay-results/<ISO>-confluence-disagreement.md (written only when --apply is passed -- absent on dry-run by design), and the regression test suite below.",
+    "automation_scope": "Wave 27 Pass 2 carry-forward -- replay-grading harness for Stage 2 weighted confluence-score disagreement vs OOS Sharpe degradation. scripts/replay-grade-confluence.ts + src/server/lib/replay/confluence-disagreement.ts (Pearson r, MAD, Mann-Whitney U, Spearman cross-method). Reuses quantum_mc_runs with governance_labels.replay_mode=true marker. 47 vitest GREEN. Advisory-only -- no hard-gate wiring.",
     "data_sources": [
       "quantum_mc_runs",
       "walk_forward_windows",
@@ -3682,15 +3758,8 @@
       "backtest_trades"
     ],
     "writes_to": [],
-    "audit_tables": [
-      "audit_log"
-    ],
-    "audit_actions": [
-      "replay_grade_confluence.signal_detected",
-      "replay_grade_confluence.no_signal",
-      "replay_grade_confluence.inconclusive",
-      "replay_grade_confluence.preliminary"
-    ],
+    "audit_tables": [],
+    "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [
       "stdout-json-summary"
@@ -3718,10 +3787,7 @@
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
-      "audit_log:replay_grade_confluence.signal_detected",
-      "audit_log:replay_grade_confluence.no_signal",
-      "audit_log:replay_grade_confluence.inconclusive",
-      "audit_log:replay_grade_confluence.preliminary"
+      "docs/replay-results/*-confluence-disagreement.md (written only on --apply)"
     ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-confluence.test.ts"
@@ -3735,7 +3801,7 @@
     "id": "replay_grade_critique",
     "domain": "validation",
     "owner_surface": "node",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual_invoke",
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
@@ -3751,15 +3817,8 @@
       "backtest_trades"
     ],
     "writes_to": [],
-    "audit_tables": [
-      "audit_log"
-    ],
-    "audit_actions": [
-      "replay_grade_critique.signal_detected",
-      "replay_grade_critique.no_signal",
-      "replay_grade_critique.inconclusive",
-      "replay_grade_critique.preliminary"
-    ],
+    "audit_tables": [],
+    "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [
       "stdout-json-summary"
@@ -3782,15 +3841,12 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-critique.test.ts",
-    "_freshness_note": "Audit-action-based freshness \u00e2\u20ac\u201d script writes audit_log row tagged with one of the 4 listed actions per replay run.",
+    "_freshness_note": "CORRECTED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): replaced the fabricated 'script writes audit_log row tagged with one of the 4 listed actions per replay run' claim -- none of replay_grade_critique.{signal_detected,no_signal,inconclusive,preliminary} exists in the codebase (repo-wide grep). scripts/replay-grade-critique.ts explicitly documents 'dryRun=true -- no writes to trade_critique, audit_log, system_parameters, Discord.' Real evidence of a run is the --apply markdown report + the regression test suite.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
-      "audit_log:replay_grade_critique.signal_detected",
-      "audit_log:replay_grade_critique.no_signal",
-      "audit_log:replay_grade_critique.inconclusive",
-      "audit_log:replay_grade_critique.preliminary"
+      "docs/replay-results/*-critique-disagreement.md (written only on --apply)"
     ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-critique.test.ts"
@@ -3804,7 +3860,7 @@
     "id": "replay_grade_robustness",
     "domain": "validation",
     "owner_surface": "node",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual_invoke",
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
@@ -3820,15 +3876,8 @@
       "backtest_trades"
     ],
     "writes_to": [],
-    "audit_tables": [
-      "audit_log"
-    ],
-    "audit_actions": [
-      "replay_grade_robustness.signal_detected",
-      "replay_grade_robustness.no_signal",
-      "replay_grade_robustness.inconclusive",
-      "replay_grade_robustness.preliminary"
-    ],
+    "audit_tables": [],
+    "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [
       "stdout-json-summary"
@@ -3850,15 +3899,12 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-robustness.test.ts",
-    "_freshness_note": "Audit-action-based freshness \u00e2\u20ac\u201d script writes audit_log row tagged with one of the 4 listed actions per replay run.",
+    "_freshness_note": "CORRECTED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): replaced the fabricated 'script writes audit_log row tagged with one of the 4 listed actions per replay run' claim -- none of replay_grade_robustness.{signal_detected,no_signal,inconclusive,preliminary} exists in the codebase (repo-wide grep); this harness merges audit_log info INTO its own result jsonb (read-only), it does not INSERT rows. Real evidence of a run is the --apply markdown report + the regression test suite.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
-      "audit_log:replay_grade_robustness.signal_detected",
-      "audit_log:replay_grade_robustness.no_signal",
-      "audit_log:replay_grade_robustness.inconclusive",
-      "audit_log:replay_grade_robustness.preliminary"
+      "docs/replay-results/*-robustness-disagreement.md (written only on --apply)"
     ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-robustness.test.ts"
@@ -3872,7 +3918,7 @@
     "id": "replay_grade_survival_twin",
     "domain": "validation",
     "owner_surface": "python",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual_invoke",
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
@@ -3892,17 +3938,8 @@
     "writes_to": [
       "quantum_mc_runs"
     ],
-    "audit_tables": [
-      "audit_log"
-    ],
-    "audit_actions": [
-      "survival_twin_replay.completed",
-      "survival_twin_replay.failed",
-      "replay_grade_survival_twin.signal_detected",
-      "replay_grade_survival_twin.no_signal",
-      "replay_grade_survival_twin.inconclusive",
-      "replay_grade_survival_twin.preliminary"
-    ],
+    "audit_tables": [],
+    "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [
       "stdout-json-summary"
@@ -3927,17 +3964,12 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "tests/python/replay/test_survival_twin_replay.py",
-    "_freshness_note": "Audit-action-based freshness \u00e2\u20ac\u201d Python compute leaf writes survival_twin_replay.completed/failed; TS grader writes replay_grade_survival_twin.* verdict actions.",
+    "_freshness_note": "CORRECTED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): replaced the fabricated claim that this writes survival_twin_replay.completed/failed + replay_grade_survival_twin.* audit_log rows -- none of those 6 action strings exists anywhere in the codebase (repo-wide grep); db_loader.py explicitly documents that these Python subprocesses cannot write audit_log. The `writes_to: [quantum_mc_runs]` claim IS real, though (verified: write_replay_row() in db_loader.py, called from survival_twin_replay.py under --apply, genuinely INSERTs into quantum_mc_runs) -- that is the real, honest freshness signal below, not a fabricated audit action.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
-      "audit_log:survival_twin_replay.completed",
-      "audit_log:survival_twin_replay.failed",
-      "audit_log:replay_grade_survival_twin.signal_detected",
-      "audit_log:replay_grade_survival_twin.no_signal",
-      "audit_log:replay_grade_survival_twin.inconclusive",
-      "audit_log:replay_grade_survival_twin.preliminary"
+      "quantum_mc_runs:governance_labels.survival_twin=true (recent row, written only on --apply)"
     ],
     "evidence_queries": [
       "tests/python/replay/test_survival_twin_replay.py",
@@ -3952,7 +3984,7 @@
     "id": "replay_grade_pattern_aggregator",
     "domain": "validation",
     "owner_surface": "node",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual_invoke",
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
@@ -3968,15 +4000,8 @@
       "backtest_trades"
     ],
     "writes_to": [],
-    "audit_tables": [
-      "audit_log"
-    ],
-    "audit_actions": [
-      "replay_grade_pattern_aggregator.signal_detected",
-      "replay_grade_pattern_aggregator.no_signal",
-      "replay_grade_pattern_aggregator.inconclusive",
-      "replay_grade_pattern_aggregator.preliminary"
-    ],
+    "audit_tables": [],
+    "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [
       "stdout-json-summary"
@@ -3999,15 +4024,12 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
-    "_freshness_note": "Audit-action-based freshness \u00e2\u20ac\u201d script writes audit_log row tagged with one of the 4 listed actions per replay run.",
+    "_freshness_note": "CORRECTED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): replaced the fabricated 'script writes audit_log row tagged with one of the 4 listed actions per replay run' claim -- none of replay_grade_pattern_aggregator.{signal_detected,no_signal,inconclusive,preliminary} exists in the codebase. Same fix-wave also repaired a real dispatcher bug: scripts/replay-grade.ts's unified --tool=pattern-aggregator dispatch called a report-builder function name that never existed on this module (mod.buildPatternAggregatorReport), throwing on every invocation since Pass 3.G1 landed -- now correctly imports buildPatternAggregatorMarkdownReport from src/server/lib/replay/pattern-aggregator-disagreement.ts. Real evidence of a run is the --apply markdown report + the regression test suite.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
-      "audit_log:replay_grade_pattern_aggregator.signal_detected",
-      "audit_log:replay_grade_pattern_aggregator.no_signal",
-      "audit_log:replay_grade_pattern_aggregator.inconclusive",
-      "audit_log:replay_grade_pattern_aggregator.preliminary"
+      "docs/replay-results/*-pattern-aggregator-disagreement.md (written only on --apply)"
     ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
@@ -4021,7 +4043,7 @@
     "id": "replay_grade_consistency",
     "domain": "validation",
     "owner_surface": "node",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual_invoke",
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
@@ -4035,15 +4057,8 @@
       "backtest_trades"
     ],
     "writes_to": [],
-    "audit_tables": [
-      "audit_log"
-    ],
-    "audit_actions": [
-      "replay_grade_consistency.signal_detected",
-      "replay_grade_consistency.no_signal",
-      "replay_grade_consistency.inconclusive",
-      "replay_grade_consistency.preliminary"
-    ],
+    "audit_tables": [],
+    "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [
       "stdout-json-summary"
@@ -4065,15 +4080,12 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
-    "_freshness_note": "Audit-action-based freshness \u00e2\u20ac\u201d script writes audit_log row tagged with one of the 4 listed actions per replay run.",
+    "_freshness_note": "CORRECTED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): replaced the fabricated 'script writes audit_log row tagged with one of the 4 listed actions per replay run' claim -- none of replay_grade_consistency.{signal_detected,no_signal,inconclusive,preliminary} exists in the codebase. Same fix-wave also repaired two real dispatcher bugs: scripts/replay-grade.ts's unified --tool=consistency dispatch called a report-builder function name that never existed (mod.buildConsistencyReport, now buildConsistencyMarkdownReport from src/server/lib/replay/consistency-disagreement.ts), and separately passed --limit positionally into runConsistencyAnalysis's daysReplayed slot instead of its own limitObservations slot (silently replaying the wrong day-window with no observation cap). This harness's own verdict is permanently capped at INCONCLUSIVE/PRELIMINARY by design -- see the 'HONEST DISPOSITION' docstring in scripts/replay-grade-consistency.ts (circular ground-truth proxy) -- unrelated to this registry fix. Real evidence of a run is the --apply markdown report + the regression test suite.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
-      "audit_log:replay_grade_consistency.signal_detected",
-      "audit_log:replay_grade_consistency.no_signal",
-      "audit_log:replay_grade_consistency.inconclusive",
-      "audit_log:replay_grade_consistency.preliminary"
+      "docs/replay-results/*-consistency-disagreement.md (written only on --apply)"
     ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-consistency.test.ts"
@@ -4087,11 +4099,11 @@
     "id": "replay_grade_unified_dispatcher",
     "domain": "validation",
     "owner_surface": "node",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual_invoke",
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 3 carry-forward \u00e2\u20ac\u201d unified replay-grade.ts --tool=<name> dispatcher additive over the 7 individual per-tool harnesses (quantum/confluence/critique/robustness/survival_twin/pattern_aggregator/consistency). harness-base.ts shared infrastructure. --tool=all weekly-roundup mode reads each per-tool latest verdict and aggregates \u00e2\u2030\u00a53 SIGNAL \u00e2\u2020\u2019 operator-review-candidate. Future Wave 27 Pass 1.5 cron integration replaces --tool=quantum solo with --tool=all.",
+    "automation_scope": "Wave 27 Pass 3 carry-forward -- unified replay-grade.ts --tool=<name> dispatcher additive over the 7 individual per-tool harnesses (quantum/confluence/critique/robustness/survival_twin/pattern_aggregator/consistency). harness-base.ts shared infrastructure. --tool=all weekly-roundup mode reads each per-tool latest verdict and aggregates >=3 SIGNAL -> operator-review-candidate. Future Wave 27 Pass 1.5 cron integration replaces --tool=quantum solo with --tool=all (still pending as of 2026-07-17 -- the weekly cron continues to spawn scripts/replay-grade-quantum.ts directly per quantum-replay-weekly-service.ts, not this dispatcher; see the new replay_grade_quantum entry).",
     "data_sources": [
       "quantum_mc_runs",
       "trade_critique",
@@ -4109,13 +4121,8 @@
       "walk_forward_windows"
     ],
     "writes_to": [],
-    "audit_tables": [
-      "audit_log"
-    ],
-    "audit_actions": [
-      "replay_grade.dispatcher_invoked",
-      "replay_grade.aggregate_verdict_emitted"
-    ],
+    "audit_tables": [],
+    "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [
       "stdout-json-summary"
@@ -4140,17 +4147,17 @@
       "stdout-json-summary"
     ],
     "recovery_mode": "operator-rerun",
-    "health_check": "scripts/replay-grade.ts",
-    "_freshness_note": "Audit-action-based freshness \u00e2\u20ac\u201d dispatcher writes replay_grade.dispatcher_invoked per --tool=<name> run and replay_grade.aggregate_verdict_emitted on --tool=all aggregation.",
+    "health_check": "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
+    "_freshness_note": "CORRECTED 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards, HIGH finding): replaced the fabricated 'dispatcher writes replay_grade.dispatcher_invoked / replay_grade.aggregate_verdict_emitted' claim -- neither action exists in the codebase (repo-wide grep); the dispatcher is a pure pass-through CLI that delegates to each per-tool script and never itself inserts audit_log rows. Same fix-wave also repaired three real dispatcher bugs (see replay-grade-dispatcher-wiring.test.ts, a static source-contract regression test): (1) --output <path> was parsed but silently discarded on single-tool dispatch (`...(customOutput ? {} : {})` -- both branches empty); (2) --tool=pattern-aggregator / --tool=consistency called report-builder function names that never existed on either module, throwing on every invocation since Pass 3.G1 landed; (3) --tool=consistency passed --limit into the wrong positional argument slot (daysReplayed instead of limitObservations). Real evidence of a run is the per-tool --apply markdown reports + this dispatcher's own static-contract test suite.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
-      "audit_log:replay_grade.dispatcher_invoked",
-      "audit_log:replay_grade.aggregate_verdict_emitted"
+      "docs/replay-results/*-weekly-roundup.md (written only on --tool=all --apply)"
     ],
     "evidence_queries": [
-      "scripts/replay-grade.ts",
+      "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
+      "src/server/__tests__/replay/replay-grade-unified.test.ts",
       "src/server/lib/replay/harness-base.ts"
     ],
     "ownership_boundary": "internal-only",

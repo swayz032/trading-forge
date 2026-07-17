@@ -1,5 +1,4 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import { readFileSync as fsReadFileSync } from "node:fs";
 import path from "node:path";
 
 export type WorkflowState =
@@ -2288,34 +2287,142 @@ function buildDriftItems(snapshot: SystemTopologySnapshot, existingSection: stri
  * this section — system-map:sync regen doesn't touch the manual section.
  *
  * This checker parses both surfaces and flags drift:
- *   - SOURCE: `Trading_forge_frontend/amber-vision-main/src/types/sse-events.ts`
- *     extracting every `| { type: "X"; data: Y }` discriminated-union arm.
+ *   - SOURCE: every `broadcastSSE(...)` call site under `src/server` (see
+ *     `extractEmittedSseEventNames` below).
  *   - INVENTORY: `### eventname` headers under `## §SSE Events Canonical Inventory`,
  *     handling slash-separated multi-event headers (`### paper:tp1 / paper:tp2 / ...`).
  *
  * Failure modes:
- *   1. Event in union but NOT in inventory → operator dashboards out of sync with code.
- *   2. Event in inventory but NOT in union → dead doc / removed event still documented.
+ *   1. Event emitted but NOT in inventory → operator dashboards out of sync with code.
+ *   2. Event in inventory but NOT emitted → dead doc / removed event still documented.
+ *
+ * REPOINT (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17): the prior
+ * source — `Trading_forge_frontend/amber-vision-main/src/types/sse-events.ts` — was
+ * deleted 2026-07-06 when the old React SPA was removed (Slumhouse is the only
+ * frontend and consumes SSE as untyped JS). The old `extractSseUnionTypes()` caught
+ * the read failure and returned an EMPTY set, which silently disabled the entire
+ * union-vs-inventory drift arm (empty-set short-circuit below) — it always reported
+ * zero drift regardless of real drift. There is no typed frontend union anymore, so
+ * this repoints at the actual backend-side SSE registration mechanism: every
+ * `broadcastSSE(event, payload)` call site under `src/server`, resolving both a
+ * literal quoted-string event argument and named-constant/catalog references
+ * (e.g. `WAVE29_EVENTS.PBO_EVALUATED`, `BROKER_ORDER_ROUTED_EVENT`) back to their
+ * literal string values. (Deliberately NOT written as a real `broadcastSSE(...)`
+ * call in this comment — the literal-call scanner below has no way to tell
+ * documentation prose from an actual emission site, so an example call here would
+ * self-pollute the emitted-events set the very first time this file is scanned.)
+ * This is genuinely live — it is re-derived from source on every run, not cached —
+ * and unlike the deleted frontend union, it can never silently go stale by file
+ * deletion elsewhere in the repo (the scan target is the server tree that emits the
+ * events, not a downstream consumer). If the scan ever finds zero call sites, that is
+ * itself flagged as drift (see `extractEmittedSseEventNames` empty-result guard),
+ * closing the "silently return empty ⇒ always ok" failure mode this replaces.
  */
-function extractSseUnionTypes(rootDir: string): Set<string> {
-  // 2026-07-06: the old amber-vision-main React SPA (and its typed sse-events.ts union) was DELETED —
-  // Slumhouse is the only frontend and consumes SSE as untyped JS. The catch below now always fires (file
-  // absent) → empty set, which disables the union-vs-inventory SSE drift arm of the topology check (the
-  // inventory-side documentation checks still run). Repoint this path if a typed Slumhouse catalog is added.
-  const ssePath = path.join(rootDir, "Trading_forge_frontend", "amber-vision-main", "src", "types", "sse-events.ts");
-  let source: string;
-  try {
-    source = fsReadFileSync(ssePath, "utf-8");
-  } catch {
-    return new Set();
+
+interface SseConstantIndex {
+  /** "CATALOG_NAME.KEY" -> event name, from `export const X = { KEY: "v", ... } as const;` blocks. */
+  catalogEntries: Map<string, string>;
+  /** "CONST_NAME" -> event name, from `export const CONST_NAME = "v";` standalone string consts. */
+  standaloneConsts: Map<string, string>;
+}
+
+const SSE_SCAN_EXCLUDED_DIR_NAMES = new Set(["node_modules", "__tests__", "tests"]);
+
+async function collectServerTsFiles(rootDir: string): Promise<string[]> {
+  const serverDir = path.join(rootDir, "src", "server");
+  const results: string[] = [];
+  async function walk(dir: string): Promise<void> {
+    let entries;
+    try {
+      entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        if (SSE_SCAN_EXCLUDED_DIR_NAMES.has(entry.name)) continue;
+        await walk(path.join(dir, entry.name));
+        continue;
+      }
+      if (
+        entry.isFile() &&
+        entry.name.endsWith(".ts") &&
+        !entry.name.endsWith(".test.ts") &&
+        !entry.name.endsWith(".spec.ts")
+      ) {
+        results.push(path.join(dir, entry.name));
+      }
+    }
   }
-  const types = new Set<string>();
-  const re = /\|\s*\{\s*type:\s*"([a-zA-Z][a-zA-Z0-9_:.-]*)";/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(source)) !== null) {
-    types.add(m[1]);
+  await walk(serverDir);
+  return results;
+}
+
+const SSE_CATALOG_DEF_RE = /export const ([A-Za-z][A-Za-z0-9_]*)\s*=\s*\{([\s\S]*?)\}\s*as const;/g;
+const SSE_CATALOG_ENTRY_RE = /([A-Z][A-Z0-9_]*)\s*:\s*"([^"]+)"/g;
+const SSE_STANDALONE_CONST_RE =
+  /export const ([A-Z][A-Z0-9_]*)\s*(?::\s*string)?\s*=\s*"([a-zA-Z][a-zA-Z0-9_:.-]*)"\s*;/g;
+const SSE_LITERAL_CALL_RE = /broadcastSSE\(\s*["'`]([a-zA-Z][a-zA-Z0-9_:.-]*)["'`]/g;
+const SSE_CATALOG_CALL_RE = /broadcastSSE\(\s*([A-Za-z][A-Za-z0-9_]*)\.([A-Z][A-Z0-9_]*)/g;
+const SSE_CONST_CALL_RE = /broadcastSSE\(\s*([A-Z][A-Z0-9_]*)\s*[,)]/g;
+
+function indexSseConstants(source: string, index: SseConstantIndex): void {
+  for (const catalogMatch of source.matchAll(SSE_CATALOG_DEF_RE)) {
+    const catalogName = catalogMatch[1];
+    const body = catalogMatch[2];
+    for (const entryMatch of body.matchAll(SSE_CATALOG_ENTRY_RE)) {
+      index.catalogEntries.set(`${catalogName}.${entryMatch[1]}`, entryMatch[2]);
+    }
   }
-  return types;
+  for (const constMatch of source.matchAll(SSE_STANDALONE_CONST_RE)) {
+    index.standaloneConsts.set(constMatch[1], constMatch[2]);
+  }
+}
+
+function findBroadcastEvents(source: string, index: SseConstantIndex, out: Set<string>): void {
+  for (const m of source.matchAll(SSE_LITERAL_CALL_RE)) {
+    out.add(m[1]);
+  }
+  for (const m of source.matchAll(SSE_CATALOG_CALL_RE)) {
+    const resolved = index.catalogEntries.get(`${m[1]}.${m[2]}`);
+    if (resolved) out.add(resolved);
+  }
+  for (const m of source.matchAll(SSE_CONST_CALL_RE)) {
+    const resolved = index.standaloneConsts.get(m[1]);
+    if (resolved) out.add(resolved);
+  }
+}
+
+/**
+ * Scans every `.ts` file under `src/server` (excluding `__tests__`/`tests` dirs and
+ * `*.test.ts`/`*.spec.ts` files) for `broadcastSSE(...)` call sites and returns the
+ * set of event names actually emitted at runtime. Resolves three call shapes:
+ * literal strings, `CATALOG.KEY` references into an `export const X = {...} as const`
+ * block, and bare `CONST_NAME` references into a standalone `export const NAME = "..."`.
+ * Dynamic event names (template literals, plain variables) cannot be resolved
+ * statically and are skipped — the same inherent limitation the deleted frontend
+ * type-union approach had (it could only see literal discriminant strings too).
+ */
+export async function extractEmittedSseEventNames(rootDir: string): Promise<Set<string>> {
+  const files = await collectServerTsFiles(rootDir);
+  const index: SseConstantIndex = { catalogEntries: new Map(), standaloneConsts: new Map() };
+  const sources: string[] = [];
+  for (const file of files) {
+    try {
+      const src = await readFile(file, "utf-8");
+      sources.push(src);
+      indexSseConstants(src, index);
+    } catch {
+      // Unreadable file (permissions, race with concurrent write) — skip it rather
+      // than fail the whole scan; a handful of unreadable files degrades coverage,
+      // it doesn't invalidate the events found in every other file.
+    }
+  }
+  const emitted = new Set<string>();
+  for (const src of sources) {
+    findBroadcastEvents(src, index, emitted);
+  }
+  return emitted;
 }
 
 function extractSseInventoryEvents(mapText: string): Set<string> {
@@ -2336,10 +2443,17 @@ function extractSseInventoryEvents(mapText: string): Set<string> {
   return events;
 }
 
-function buildSseInventoryDriftItems(rootDir: string, mapText: string): string[] {
+export async function buildSseInventoryDriftItems(rootDir: string, mapText: string): Promise<string[]> {
   const driftItems: string[] = [];
-  const unionTypes = extractSseUnionTypes(rootDir);
-  if (unionTypes.size === 0) {
+  const emittedEvents = await extractEmittedSseEventNames(rootDir);
+  if (emittedEvents.size === 0) {
+    // A live src/server tree emits hundreds of broadcastSSE(...) calls — zero found
+    // means the scanner itself is broken (wrong rootDir, src/server moved/deleted,
+    // regexes stopped matching), not that the system emits nothing. Flag it as drift
+    // instead of silently disabling the check the way the deleted-file catch used to.
+    driftItems.push(
+      "SSE emission scan found zero broadcastSSE(...) call sites under src/server — scanner is broken, not the system"
+    );
     return driftItems;
   }
   const inventoryEvents = extractSseInventoryEvents(mapText);
@@ -2348,21 +2462,21 @@ function buildSseInventoryDriftItems(rootDir: string, mapText: string): string[]
     return driftItems;
   }
   const missingFromInventory: string[] = [];
-  for (const t of unionTypes) {
+  for (const t of emittedEvents) {
     if (!inventoryEvents.has(t)) missingFromInventory.push(t);
   }
   if (missingFromInventory.length > 0) {
     driftItems.push(
-      `SSE events in union but missing from System Map inventory: ${missingFromInventory.sort().join(", ")}`
+      `SSE events emitted but missing from System Map inventory: ${missingFromInventory.sort().join(", ")}`
     );
   }
   const orphanInInventory: string[] = [];
   for (const e of inventoryEvents) {
-    if (!unionTypes.has(e)) orphanInInventory.push(e);
+    if (!emittedEvents.has(e)) orphanInInventory.push(e);
   }
   if (orphanInInventory.length > 0) {
     driftItems.push(
-      `SSE events in inventory but not in union (dead doc?): ${orphanInInventory.sort().join(", ")}`
+      `SSE events in inventory but never emitted (dead doc?): ${orphanInInventory.sort().join(", ")}`
     );
   }
   return driftItems;
@@ -2379,7 +2493,7 @@ export async function syncSystemMapArtifacts(rootDir = getProjectRoot()): Promis
   const nextDocument = upsertGeneratedSection(existingDocument, generatedSection);
   const driftItems = [
     ...buildDriftItems(snapshot, generatedSection, generatedSection),
-    ...buildSseInventoryDriftItems(rootDir, nextDocument),
+    ...(await buildSseInventoryDriftItems(rootDir, nextDocument)),
   ];
 
   await writeFile(mapPath, nextDocument, "utf8");
@@ -2409,7 +2523,7 @@ export async function checkSystemMapDrift(rootDir = getProjectRoot()): Promise<S
     const existingSection = extractExistingGeneratedSection(existingDocument);
     const driftItems = [
       ...buildDriftItems(snapshot, existingSection, generatedSection),
-      ...buildSseInventoryDriftItems(rootDir, existingDocument),
+      ...(await buildSseInventoryDriftItems(rootDir, existingDocument)),
     ];
 
     return {

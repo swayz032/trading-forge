@@ -148,6 +148,42 @@ export function buildOutputPath(
   return path.join(repoRoot, "docs", "replay-results", `${isoDate}-${suffix}.md`);
 }
 
+/**
+ * Resolve the markdown output path for a SINGLE tool's report.
+ *
+ * FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — HIGH
+ * finding): scripts/replay-grade.ts's single-tool CLI dispatch previously
+ * discarded the parsed `--output <path>` flag entirely — `parseCLIArgs`
+ * correctly parsed it into `customOutput` (docstring: "custom output path
+ * (single-tool only)"), but the dispatch call site spread
+ * `...(customOutput ? {} : {})`, which is `{}` on BOTH branches and never
+ * threaded the value anywhere. Every `--tool=<x> --apply --output <path>`
+ * invocation silently ignored the operator's path and always wrote to the
+ * standard `buildOutputPath()` location instead — a discarded-flag class of
+ * silent failure (the CLI accepted the flag, printed no error, and just did
+ * something else).
+ *
+ * This helper is the single source of truth both scripts/replay-grade.ts and
+ * its tests reason about: apply=false always means "no file" (dry-run
+ * contract preserved); apply=true honors an explicit override when given,
+ * otherwise falls back to the standard `<isoDate>-<suffix>.md` convention.
+ *
+ * NOT used for `--tool=all` — the combined weekly-roundup report is the only
+ * consumer of `customOutput` in that mode (each of the 7 per-tool sub-reports
+ * still writes to its own standard path; routing the same custom path into
+ * per-tool dispatch would make all 7 collide on one file).
+ */
+export function resolveReportOutputPath(opts: {
+  apply: boolean;
+  customOutput?: string;
+  repoRoot: string;
+  isoDate: string;
+  suffix: string;
+}): string | undefined {
+  if (!opts.apply) return undefined;
+  return opts.customOutput ?? buildOutputPath(opts.repoRoot, opts.isoDate, opts.suffix);
+}
+
 // ─── CPCV purge enforcement ────────────────────────────────────────────────────
 
 /**

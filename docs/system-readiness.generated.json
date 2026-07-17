@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T13:15:20.677Z",
+  "generatedAt": "2026-07-17T16:29:39.127Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -15,6 +15,7 @@
     "replay_grade_consistency:manual_gate:operator-approve",
     "replay_grade_critique:manual_gate:operator-approve",
     "replay_grade_pattern_aggregator:manual_gate:operator-approve",
+    "replay_grade_quantum:manual_gate:operator-approve",
     "replay_grade_robustness:manual_gate:operator-approve",
     "replay_grade_survival_twin:manual_gate:operator-approve",
     "replay_grade_unified_dispatcher:manual_gate:operator-approve",
@@ -42,9 +43,9 @@
     "workflow-stale:Weekly_Compliance_Re_Parse_rNcIEbpUQkm3p4Jp"
   ],
   "subsystemCounts": {
-    "total": 73,
+    "total": 74,
     "ready": 48,
-    "blocked": 18,
+    "blocked": 19,
     "manualGated": 2,
     "experimental": 5
   },
@@ -1155,14 +1156,7 @@
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
-        "audit_log:replay_grade_confluence.inconclusive",
-        "audit_log:replay_grade_confluence.no_signal",
-        "audit_log:replay_grade_confluence.preliminary",
-        "audit_log:replay_grade_confluence.signal_detected",
-        "replay_grade_confluence.inconclusive",
-        "replay_grade_confluence.no_signal",
-        "replay_grade_confluence.preliminary",
-        "replay_grade_confluence.signal_detected",
+        "docs/replay-results/*-confluence-disagreement.md (written only on --apply)",
         "src/server/__tests__/replay/replay-grade-confluence.test.ts",
         "stdout-json-summary"
       ]
@@ -1180,14 +1174,7 @@
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
-        "audit_log:replay_grade_consistency.inconclusive",
-        "audit_log:replay_grade_consistency.no_signal",
-        "audit_log:replay_grade_consistency.preliminary",
-        "audit_log:replay_grade_consistency.signal_detected",
-        "replay_grade_consistency.inconclusive",
-        "replay_grade_consistency.no_signal",
-        "replay_grade_consistency.preliminary",
-        "replay_grade_consistency.signal_detected",
+        "docs/replay-results/*-consistency-disagreement.md (written only on --apply)",
         "src/server/__tests__/replay/replay-grade-consistency.test.ts",
         "stdout-json-summary"
       ]
@@ -1205,14 +1192,7 @@
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
-        "audit_log:replay_grade_critique.inconclusive",
-        "audit_log:replay_grade_critique.no_signal",
-        "audit_log:replay_grade_critique.preliminary",
-        "audit_log:replay_grade_critique.signal_detected",
-        "replay_grade_critique.inconclusive",
-        "replay_grade_critique.no_signal",
-        "replay_grade_critique.preliminary",
-        "replay_grade_critique.signal_detected",
+        "docs/replay-results/*-critique-disagreement.md (written only on --apply)",
         "src/server/__tests__/replay/replay-grade-critique.test.ts",
         "stdout-json-summary"
       ]
@@ -1230,15 +1210,36 @@
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
-        "audit_log:replay_grade_pattern_aggregator.inconclusive",
-        "audit_log:replay_grade_pattern_aggregator.no_signal",
-        "audit_log:replay_grade_pattern_aggregator.preliminary",
-        "audit_log:replay_grade_pattern_aggregator.signal_detected",
-        "replay_grade_pattern_aggregator.inconclusive",
-        "replay_grade_pattern_aggregator.no_signal",
-        "replay_grade_pattern_aggregator.preliminary",
-        "replay_grade_pattern_aggregator.signal_detected",
+        "docs/replay-results/*-pattern-aggregator-disagreement.md (written only on --apply)",
         "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
+        "stdout-json-summary"
+      ]
+    },
+    {
+      "id": "replay_grade_quantum",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "audit_log:quantum_replay.weekly_analysis_failed",
+        "audit_log:quantum_replay.weekly_analysis_skipped_no_data",
+        "audit_log:quantum_replay.weekly_verdict_emitted",
+        "quantum_replay.kill_switch_read_failed",
+        "quantum_replay.weekly_analysis_failed",
+        "quantum_replay.weekly_analysis_loop_halted_skip",
+        "quantum_replay.weekly_analysis_skipped_no_data",
+        "quantum_replay.weekly_analysis_timeout",
+        "quantum_replay.weekly_verdict_emitted",
+        "src/server/__tests__/replay/replay-grade-quantum.test.ts",
+        "src/server/__tests__/wave27-pass1-5-quantum-replay-auto-fire.test.ts",
+        "src/server/__tests__/wave27-pass1-5-weekly-replay-cron.test.ts",
         "stdout-json-summary"
       ]
     },
@@ -1255,14 +1256,7 @@
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
-        "audit_log:replay_grade_robustness.inconclusive",
-        "audit_log:replay_grade_robustness.no_signal",
-        "audit_log:replay_grade_robustness.preliminary",
-        "audit_log:replay_grade_robustness.signal_detected",
-        "replay_grade_robustness.inconclusive",
-        "replay_grade_robustness.no_signal",
-        "replay_grade_robustness.preliminary",
-        "replay_grade_robustness.signal_detected",
+        "docs/replay-results/*-robustness-disagreement.md (written only on --apply)",
         "src/server/__tests__/replay/replay-grade-robustness.test.ts",
         "stdout-json-summary"
       ]
@@ -1280,20 +1274,9 @@
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
-        "audit_log:replay_grade_survival_twin.inconclusive",
-        "audit_log:replay_grade_survival_twin.no_signal",
-        "audit_log:replay_grade_survival_twin.preliminary",
-        "audit_log:replay_grade_survival_twin.signal_detected",
-        "audit_log:survival_twin_replay.completed",
-        "audit_log:survival_twin_replay.failed",
-        "replay_grade_survival_twin.inconclusive",
-        "replay_grade_survival_twin.no_signal",
-        "replay_grade_survival_twin.preliminary",
-        "replay_grade_survival_twin.signal_detected",
+        "quantum_mc_runs:governance_labels.survival_twin=true (recent row, written only on --apply)",
         "src/server/__tests__/replay/replay-grade-survival-twin.test.ts",
         "stdout-json-summary",
-        "survival_twin_replay.completed",
-        "survival_twin_replay.failed",
         "tests/python/replay/test_survival_twin_replay.py"
       ]
     },
@@ -1310,11 +1293,9 @@
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
-        "audit_log:replay_grade.aggregate_verdict_emitted",
-        "audit_log:replay_grade.dispatcher_invoked",
-        "replay_grade.aggregate_verdict_emitted",
-        "replay_grade.dispatcher_invoked",
-        "scripts/replay-grade.ts",
+        "docs/replay-results/*-weekly-roundup.md (written only on --tool=all --apply)",
+        "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
+        "src/server/__tests__/replay/replay-grade-unified.test.ts",
         "src/server/lib/replay/harness-base.ts",
         "stdout-json-summary"
       ]
@@ -1332,8 +1313,7 @@
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
-        "audit_log:replay.harness_executed",
-        "replay.harness_executed",
+        "pytest-invocation:tests/python/replay/test_quantum_replay.py",
         "stdout-json-summary",
         "tests/python/replay/test_quantum_replay.py"
       ]

@@ -48,9 +48,19 @@ export async function assembleKitchenData(): Promise<KitchenData> {
   const byState: Record<string, number> = {};
   for (const r of groupRows) byState[String(r.lifecycle_state)] = Number(r.count);
 
+  // FIX (fix-wave telemetry-honesty-registry-dashboards, 2026-07-17 — HIGH
+  // finding): `scout_audit` does not exist anywhere in schema.ts or any
+  // migration (verified by repo-wide grep) — this SELECT always threw and was
+  // silently swallowed by the .catch() below, so the "Ingredients" stage
+  // always rendered 0 regardless of real scout activity. The real table
+  // tracking freshly-scouted, not-yet-graduated ideas is
+  // `strategy_pending_buckets` (status='pending' before graduation to
+  // 'graduated', or terminal 'killed' — see direct-bucket-graduator.ts /
+  // routes/agent.ts, the only two writers). first_seen_at is the bucket's
+  // scout-discovery timestamp, matching the original 7-day freshness window.
   const ingestRow = await firstRow(db.execute(sql`
-    SELECT COUNT(*)::int AS ingest_count FROM scout_audit
-    WHERE status IN ('queued','extracting') AND created_at >= NOW() - INTERVAL '7 days'
+    SELECT COUNT(*)::int AS ingest_count FROM strategy_pending_buckets
+    WHERE status = 'pending' AND first_seen_at >= NOW() - INTERVAL '7 days'
   `).catch(() => [] as unknown[]));
 
   const stages: KitchenStage[] = STAGE_MAP.map((s) => {

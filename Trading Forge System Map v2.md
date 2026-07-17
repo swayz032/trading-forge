@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
+Updated automatically from the repo on `2026-07-17T16:29:39.127Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -20,55 +20,55 @@ Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
 - Database tables tracked: `111`
 
 ### Subsystem Runtime States
-- `active`: `67`
+- `active`: `68`
 - `experimental`: `5`
 - `scaffold`: `1`
 
 ### Current Pre-Production States
-- `active_preprod`: `68`
+- `active_preprod`: `69`
 - `experimental_preprod`: `5`
 - `inactive_preprod`: `0`
 - `partially_active_preprod`: `0`
 
 ### Launch Target States
 - `experimental_challenger`: `5`
-- `runtime_proven_autonomous`: `66`
+- `runtime_proven_autonomous`: `67`
 - `runtime_proven_manual_gate`: `2`
 
 ### Production Target States
-- `production_autonomous`: `66`
+- `production_autonomous`: `67`
 - `production_experimental`: `5`
 - `production_manual_gate`: `2`
 - `production_not_intended`: `0`
 
 ### Subsystem Operating Classes
 - `adaptive`: `7`
-- `deterministic_instrumented`: `64`
+- `deterministic_instrumented`: `65`
 - `manual_gated`: `2`
 
 ### Learning Modes
 - `active_learning`: `7`
-- `deterministic_instrumented`: `59`
+- `deterministic_instrumented`: `60`
 - `manual_gate_only`: `2`
 - `shadow_experimental`: `5`
 
 ### Registry Coverage
-- Registry subsystems tracked: `73`
+- Registry subsystems tracked: `74`
 - Route coverage: `79/79`
 - Scheduler coverage: `112/112`
 - Engine coverage: `29/29`
 - Database coverage: `111/111`
-- Autonomous subsystems with audit coverage: `64/64`
-- Autonomous subsystems with audit actions: `64/64`
-- Autonomous subsystems with telemetry evidence: `64/64`
-- Active-runtime subsystems with freshness signals: `73/73`
-- Runtime/experimental subsystems with evidence queries: `73/73`
+- Autonomous subsystems with audit coverage: `57/57`
+- Autonomous subsystems with audit actions: `57/57`
+- Autonomous subsystems with telemetry evidence: `57/57`
+- Active-runtime subsystems with freshness signals: `74/74`
+- Runtime/experimental subsystems with evidence queries: `74/74`
 - Self-evolving subsystems with learning inputs: `9/9`
 - Self-evolving subsystems with learning persistence: `9/9`
-- Failure visibility complete: `73/73`
+- Failure visibility complete: `74/74`
 
 ### Proof Status
-- `runtime-proven`: `67`
+- `runtime-proven`: `68`
 - `partially-proven`: `1`
 - `offline-by-design`: `0`
 - `experimental`: `5`
@@ -76,18 +76,18 @@ Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
 
 ### Pre-Production Integrity
 - Integrity status: `incomplete`
-- Automation complete: `59/73`
-- Data collection complete: `73/73`
-- Auditability complete: `73/73`
-- Failure visibility complete: `73/73`
-- Authority correct: `73/73`
+- Automation complete: `52/74`
+- Data collection complete: `74/74`
+- Auditability complete: `74/74`
+- Failure visibility complete: `74/74`
+- Authority correct: `74/74`
 - Learning active: `8/9`
-- Incomplete subsystems: `9`
+- Incomplete subsystems: `17`
 
 ### Production Convergence
 - Convergence status: `blocked`
 - Ready subsystem targets: `50`
-- Blocked subsystem targets: `18`
+- Blocked subsystem targets: `19`
 - Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
 - Inactive workflow candidates: `0`
@@ -101,7 +101,7 @@ Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
 ### Readiness Summary
 - Launch ready: `false`
 - Only TradingView manual at launch: `true`
-- Launch-blocked subsystems: `23`
+- Launch-blocked subsystems: `24`
 - Inactive by design: `0`
 - Collecting only: `0`
 - Learning blocked: `0`
@@ -111,7 +111,7 @@ Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
 - `collecting_only`: `0`
 - `learning_active`: `8`
 - `learning_blocked`: `0`
-- `not_collecting`: `60`
+- `not_collecting`: `61`
 - `shadow_experimental`: `5`
 
 ### Workflow States
@@ -172,14 +172,15 @@ Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
 - `quantum_experimental` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `quantum_rl_challenger` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `regime_drift_detector` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
-- `replay_grade_confluence` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_consistency` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_critique` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_pattern_aggregator` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_robustness` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_survival_twin` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_unified_dispatcher` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_harness_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_confluence` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_consistency` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_critique` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_pattern_aggregator` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_quantum` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_robustness` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_survival_twin` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_unified_dispatcher` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_harness_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
 - `research_orchestration` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `shadow_stage` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `signal_correlation_gate` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
@@ -759,11 +760,11 @@ Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
 
 ---
 
-### compliance:collaborative_trading_warning
-- **Emitter:** `src/server/services/strategy-assignment-service.ts:328`
-- **Payload shape:** `{ strategyId, accountIds }`
-- **Listeners:** `useSSE.ts` → 12-second error toast + invalidates compliance+alerts.
-- **Purpose:** MFFU collaborative-trading ban triggered — 2+ family members on same strategy.
+### compliance:collaborative_trading_blocked
+- **Emitter:** `src/server/services/strategy-assignment-service.ts:421` (`assignStrategyToAccount()`, before-insert collaborative-trading check)
+- **Payload shape:** `{ strategyId, firmId, affectedAccountIds: string[], familyMemberLabels: string[], rule, blocked: true, timestamp }`
+- **Listeners:** `useSSE.ts` → error toast + invalidates compliance+alerts.
+- **Purpose:** MFFU collaborative-trading ban risk detected — 2+ family members would run the same strategy on MFFU. Corrected 2026-07-17 (fix-wave telemetry-honesty-registry-dashboards): this entry previously documented `compliance:collaborative_trading_warning` with an "insert-and-warn" `{ strategyId, accountIds }` payload — that behavior was replaced by a fail-closed BLOCK (assignment refused, not just warned) at an unrecorded point before this wave; the `_warning` event has zero emitters anywhere in the codebase today. The audit_log action is `strategy_assignment.collaborative_trading_blocked` (severity=critical); a Discord CRITICAL also fires (`notifyCritical`).
 
 ### compliance:drift_detected (W9-3, 2026-05-17)
 - **Emitter:** `src/server/services/compliance-refresh-service.ts:153` (after Discord notification).
@@ -1026,14 +1027,6 @@ Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
 - **Emitter:** `src/server/services/pine-export-recipient-service.ts` + `src/server/routes/pine-export.ts` (Wave 9 W9-2)
 - **Purpose:** Pine export failed; typed errorCode (pipeline_paused, strategy_not_found, account_not_found, compilation_failed, hmac_persist_failed, internal_error).
 
-### strategy:analysis-error
-- **Emitter:** `src/server/services/agent-service.ts`
-- **Purpose:** Strategy deep-analysis pipeline raised an error during run.
-
-### strategy:analyzed
-- **Emitter:** `src/server/services/agent-service.ts`
-- **Purpose:** Strategy deep-analysis pipeline completed; results persisted.
-
 ### strategy:paper-vs-backtest-alert
 - **Emitter:** `src/server/scheduler.ts` (paper-vs-backtest cron)
 - **Purpose:** Live paper P&L diverged from backtest expectation beyond threshold.
@@ -1183,13 +1176,154 @@ Updated automatically from the repo on `2026-07-17T13:15:20.677Z`.
 
 ---
 
-> **Coverage summary (Wave 4, 2026-05-16):**
-> Backend emitters: ~120 unique broadcastSSE calls across 28 files.
-> Distinct event names: 70+.
-> All events typed in `src/types/sse-events.ts` discriminated union.
-> All events handled in `useSSE.ts` dispatchSideEffects switch (exhaustiveness enforced by TypeScript).
-> Frontend subscriptions: 7 pages + 2 banner components.
-> Key Wire-up this wave: `lifecycle:gate_evaluated` subscribed on `DeployReady.tsx`; toasts on FAIL/KILL/A7-ramp-up.
+> **Fix-wave telemetry-honesty-registry-dashboards (2026-07-17) — 25 entries added below, 1 renamed, 2 dead entries removed.**
+> The SSE-inventory drift arm of `system-map:check` had been permanently dead since the
+> old `amber-vision-main` frontend (and its typed `sse-events.ts` union — the source this
+> check used to read) was deleted 2026-07-06; the read failure was silently swallowed into
+> an empty set, so the check always reported zero drift. It is now repointed at the actual
+> backend-side source of truth — every `broadcastSSE(...)` call site under `src/server` —
+> and re-derives live on every run instead of depending on a frontend artifact. Running it
+> for the first time surfaced 25 genuinely-undocumented emitted events (added below) and 3
+> stale doc-only entries: `compliance:collaborative_trading_warning` was renamed to
+> `compliance:collaborative_trading_blocked` (the actual current emitter — a prior
+> fail-open→fail-closed hardening pass changed the behavior without updating this doc), and
+> `strategy:analysis-error` / `strategy:analyzed` were removed (the deep-analysis pipeline
+> that emitted them no longer does — zero emitters found anywhere in `src/server`).
+
+### archetype:signal_received
+- **Emitter:** `src/server/lib/archetype-routing-observability.ts` (`emitArchetypeSignalReceived()`), called from the `/api/live-order` `action:"archetype_signal"` handler before the evaluator subprocess dispatches.
+- **Payload shape:** `{ strategy_id, archetype, account_id, correlation_id, bar_timestamp }`
+- **Purpose:** Stage 1 of the archetype routing lifecycle — signal accepted, evaluator not yet dispatched.
+
+### archetype:signal_resolved
+- **Emitter:** `src/server/lib/archetype-routing-observability.ts` (`emitArchetypeSignalResolved()`), called after `archetype_evaluator` returns a valid verdict.
+- **Payload shape:** `{ strategy_id, archetype, resolved_action, account_id, correlation_id, reason }` — `resolved_action` is a closed enum: `enter_long | enter_short | exit_long | exit_short | hold | evaluator_failed`.
+- **Purpose:** Stage 2 — evaluator verdict resolved. Also increments Prometheus `tf_archetype_signals_routed_total{archetype,resolved_action}`.
+
+### archetype:evaluator_failed
+- **Emitter:** `src/server/lib/archetype-routing-observability.ts` (`emitArchetypeEvaluatorFailed()`), called when the archetype evaluator subprocess fails or times out.
+- **Payload shape:** `{ strategy_id, archetype, error_class, correlation_id }` — `error_class` is typically the thrown error's constructor name (e.g. `"TimeoutError"`).
+- **Purpose:** Stage 3 — evaluator subprocess failure, so dashboards can group failure modes by `error_class`.
+
+### factory:archetype_signal_fired
+- **Emitter:** `src/server/lib/archetype-signal-audit.ts:107` (`FACTORY_EVENTS.ARCHETYPE_SIGNAL_FIRED`)
+- **Payload shape:** `{ strategy_id, correlation_id, direction, archetype, bar_timestamp, ... }` (plus archetype-specific fields).
+- **Purpose:** Broadcast on every signal fired from the two Wave 26 engine archetypes (`bounce_off_level`, `ict_bias_aligned_continuation`) — real-time archetype activity for dashboard consumers.
+
+### factory:bidirectional_rejected
+- **Emitter:** `src/server/lib/confluence-quality-audit.ts:214` (`FACTORY_EVENTS.BIDIRECTIONAL_REJECTED`), fired when graduation Gate 1 rejects a `direction=both` bucket with one side empty/sentinel.
+- **Payload shape:** `{ strategy_name, correlation_id, rejection_reason, direction }`
+- **Purpose:** Dashboard visibility that a graduation was rejected before a strategy row was ever written (`graduation.rejected_incomplete_bidirectional` audit companion).
+
+### factory:thin_confluence_graduated
+- **Emitter:** `src/server/lib/confluence-quality-audit.ts:331` (`FACTORY_EVENTS.THIN_CONFLUENCE_GRADUATED`), fired when Gate 3 completes a graduation with `factor_quality="fallback_only"`.
+- **Payload shape:** `{ strategy_id, strategy_name, correlation_id, factor_quality, confluence_factors, source_url }`
+- **Purpose:** Library-debt indicator — flags a strategy that graduated with no real extracted confluence factors, for the next re-extract cycle.
+
+### factory:scout_idea_extracted
+- **Emitter:** `src/server/services/autonomous-scout-runner.ts:880` (`FACTORY_EVENTS.SCOUT_IDEA_EXTRACTED`), fired from `postLayerMention()` — the single choke point every layer (web/youtube/reddit) flows through — gated on a real LLM-extracted `richIdea` (not a thin CV-only mention).
+- **Payload shape:** `{ concept_name, layer, source_provider, source_url, market, timeframe, entry_indicator, accepted, bucket_id, correlation_id }`
+- **Purpose:** Deep-scan #15 FIX-3 (2026-07-03) closed a documented-but-dead event — this catalog entry existed with full payload docs but had zero emitters until that fix wired it in.
+
+### factory:strategy_created
+- **Emitter:** `src/server/services/direct-bucket-graduator.ts:3324` (`FACTORY_EVENTS.STRATEGY_CREATED`) — the real strategy-row-created completion point (leader row + fan-out variants for the bucket).
+- **Payload shape:** `{ strategy_id, name, symbol, symbols, source, bucket_id, concept_name, fan_out_strategy_ids, entry_quality_provenance, correlation_id }`
+- **Purpose:** Deep-scan #15 FIX-3 (2026-07-03) closed a documented-but-dead event — see `factory:scout_idea_extracted` above for the same class of fix.
+
+### factory:framework_overlay_applied
+- **Emitter:** `src/server/services/direct-bucket-graduator.ts:2360` (`FACTORY_EVENTS.FRAMEWORK_OVERLAY_APPLIED`) — fires once per overlay application (leader row only; per-market variants re-apply the same overlay and are not separately broadcast).
+- **Payload shape:** `{ concept_name, symbol, source, bucket_id, applied_rules, ... }`
+- **Purpose:** Deep-scan #15 FIX-3 (2026-07-03) closed a documented-but-dead event — `applyFrameworkOverlay()` itself stays a pure function; the caller turns its return value into an observable event.
+
+### kill_switch:trailing_dd_force_close
+- **Emitter:** `src/server/production/kill-switch.ts:913` (Layer 3 — trailing-drawdown force-close at 95% of firm DLL).
+- **Payload shape:** `{ account_key, firm_id, drawdown, max_dd, buffer_remaining, correlationId, forced_at }`
+- **Purpose:** Kill-switch Layer 3 triggered a trailing-DD force-close; companion `sizing.trailing_dd_force_close` audit row precedes it.
+
+### pine:refused_shadow_strategy
+- **Emitter:** `src/server/lib/pine-shadow-observability.ts` (`emitPineShadowRefused()`), called from the four Pine export refusal sites (`compileDualPineExport`, `compilePineExport`, recipient-build, artifact-download) when the target strategy is in SHADOW lifecycle state.
+- **Payload shape:** `{ strategy_id, lifecycle_state, shadow_mode_enabled, blocked_at, correlation_id }` — `blocked_at` is a closed enum naming the refusal call site.
+- **Purpose:** Dashboard tile shows the SHADOW-refusal rate for Pine exports without querying `audit_log`. Also increments Prometheus `tf_pine_shadow_refusals_total{blocked_at}`.
+
+### lifecycle:wfe_evaluated
+- **Emitter:** `src/server/services/lifecycle-service.ts` via `wfe-gate.ts`, evaluated at PAPER → DEPLOY_READY.
+- **Payload shape:** `{ strategyId, wfe_overall, status, passed, correlation_id }`
+- **Purpose:** Walk-Forward Efficiency hard-gate evaluation (§12 WFE > 0.70 gate) — operator visibility into every evaluation, pass or block.
+
+### lifecycle:b14_evaluated
+- **Emitter:** `src/server/services/lifecycle-service.ts` via `b14-ci-gate.ts`, evaluated at PAPER → DEPLOY_READY on any backtest with Monte Carlo output.
+- **Payload shape:** `{ strategyId, ci_high, threshold, passed, correlation_id }`
+- **Purpose:** B14 Survival Twin CI hard-gate evaluation (§12) — reads the BCa-bootstrap `probability_of_ruin_ci.ci_high` conservative bound.
+
+### lifecycle:parameter_drift_evaluated
+- **Emitter:** `src/server/services/lifecycle-service.ts` via `parameter-drift-gate.ts`, evaluated at PAPER → DEPLOY_READY.
+- **Payload shape:** `{ strategyId, classification, confidence, passed, correlation_id }`
+- **Purpose:** Parameter drift `overfit_drift` hard-gate evaluation (§12).
+
+### lifecycle:frozen_policy_drift_blocked
+- **Emitter:** `src/server/lib/frozen-policy-contract.ts`, invoked from `lifecycle-service.ts` after all Wave 27.5 hard gates clear at PAPER → DEPLOY_READY.
+- **Payload shape:** `{ strategyId, current_hash, frozen_hash, correlation_id }`
+- **Purpose:** Frozen-policy SHA-256 hash mismatch blocked promotion (§12) — requires an operator HMAC override to proceed.
+
+### lifecycle:compliance_drift_blocked
+- **Emitter:** `src/server/services/lifecycle-service.ts` via `findFirmsWithComplianceDrift()`, PAPER → DEPLOY_READY block path.
+- **Payload shape:** `{ strategyId, drift_firms, correlation_id }`
+- **Purpose:** A firm's compliance ruleset drifted from the canonical 2026 docs, blocking promotion until re-synced.
+
+### lifecycle:backtest_stale
+- **Emitter:** `src/server/services/lifecycle-service.ts`, stale-backtest staleness-check block path (TESTING→PAPER and PAPER→DEPLOY_READY).
+- **Payload shape:** `{ strategyId, age_days, limit_days, correlation_id }`
+- **Purpose:** Latest backtest is older than `BACKTEST_STALENESS_DAYS` (§14b) — promotion blocked until re-run.
+
+### lifecycle:promotion_evidence_incomplete
+- **Emitter:** `src/server/services/lifecycle-service.ts`, Pass 7 Track A.2 evidence-completeness gate block path (≥3 of 8 tracked gates lack institutional-quality data).
+- **Payload shape:** `{ strategyId, incomplete_count, total_gates, gate_evidence_statuses, correlation_id }`
+- **Purpose:** Promotion blocked because too many gate evaluations lack sufficient evidence quality to trust the decision.
+
+### lifecycle:bif_evaluated
+- **Emitter:** `src/server/services/lifecycle-service.ts:6827` via `bif-gate.ts`, evaluated at PAPER → DEPLOY_READY promotions with walk-forward output.
+- **Payload shape:** `{ strategyId, correlationId, ...bifResult.auditPayload, passed, reason }` — `auditPayload` carries `bif` (Backtest Inflation Factor) + `k_eff` + `block_threshold`.
+- **Purpose:** BIF gate evaluation (§12, Slumdawg Wave 3) — guards against selection-inflated strategies from the autonomous scout.
+
+### lifecycle:slippage_survival_evaluated
+- **Emitter:** `src/server/services/lifecycle-service.ts:1197,6914` via the Slippage-Survival gate (Wave A), evaluated on both the manual promotion path and the cron path.
+- **Payload shape:** `{ strategyId, ...slippageSurvivalResultP2D.auditPayload, passed, reason, correlationId }`
+- **Purpose:** Slippage-survival gate evaluation — operator visibility into every evaluation, pass or block.
+
+### lifecycle:auto_graveyard
+- **Emitter:** `src/server/services/lifecycle-service.ts`, auto-graveyard path (N consecutive hard-gate failures → archived to GRAVEYARD).
+- **Payload shape:** `{ strategyId, gate, consecutiveFailures, threshold, fromState, metrics, correlationId }`
+- **Purpose:** Non-reversible auto-burial after repeated hard-gate failures, distinct from `strategy:graveyard_burial`'s manual/alpha-decay burial path above.
+
+### lifecycle:paper_to_deploy_ready_blocked
+- **Emitter:** `src/server/services/lifecycle-service.ts`, `evaluatePaperToDeployReadyGates()` composite-gate block path.
+- **Payload shape:** `{ strategyId, reason, passed: false }`
+- **Purpose:** Composite summary event when any PAPER → DEPLOY_READY hard gate blocks — fires alongside the specific gate's own event (e.g. `lifecycle:wfe_evaluated`) so a dashboard can subscribe to one event for "did this promotion attempt fail."
+
+### lifecycle:shadow_to_paper_blocked
+- **Emitter:** `src/server/services/lifecycle-service.ts`, shadow-signal divergence gate block path (SHADOW → PAPER).
+- **Payload shape:** `{ strategyId, reason, passed: false }`
+- **Purpose:** Composite summary event mirroring `lifecycle:paper_to_deploy_ready_blocked` for the SHADOW → PAPER transition.
+
+### lifecycle:portfolio_drift_demoted
+- **Emitter:** `src/server/services/portfolio-drift-demotion-service.ts`, Deep-Scan #16 Wave 3 portfolio-drift auto-demotion (DEPLOYED → DECLINING → TESTING) when a DEPLOYED strategy's `rolling_sharpe_30d` falls below floor.
+- **Payload shape:** `{ strategyId, strategyName, rollingSharpe30d, floor, from, to, correlationId }`
+- **Purpose:** Auto-demotion for portfolio-level Sharpe drift, distinct from the single-strategy `strategy:drift-demotion` event above.
+
+---
+
+> **Coverage summary (re-derived 2026-07-17, fix-wave telemetry-honesty-registry-dashboards):**
+> Source of truth: every `broadcastSSE(...)` call site under `src/server` (literal-string and
+> catalog/const-resolved), scanned live by `extractEmittedSseEventNames()` in
+> `src/server/lib/system-topology.ts` on every `system-map:check` / `system-map:sync` run.
+> Backend emitters: 400+ broadcastSSE call sites across ~490 server-side `.ts` files.
+> Distinct resolvable event names: ~210 (dynamic template-literal/variable event names are not
+> statically resolvable and are excluded from both the scan and this inventory — same inherent
+> limitation the deleted frontend type-union approach had).
+> Frontend: Slumhouse (the only frontend since 2026-07-06) consumes SSE as untyped JS — there is
+> no typed frontend union to cross-check against anymore; this inventory is the sole documented
+> contract. The stale "All events typed in `src/types/sse-events.ts`..." / "handled in `useSSE.ts`"
+> claims below described the deleted `amber-vision-main` React SPA and have been removed.
 
 ---
 
