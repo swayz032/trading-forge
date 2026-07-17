@@ -39,6 +39,35 @@ export function buildExportCanonical(
 }
 
 /**
+ * HIGH (security-auth-hardening 2026-07-17): `buildExportCanonical` above signs
+ * a FIXED string independent of `signal` — the SAME `secret_check` literal is
+ * embedded once and reused across ALL THREE alertcondition branches (long/short/
+ * exit) in the emitted Pine (see pine_compiler.py `_build_marker_alertcondition`).
+ * Because that literal is plaintext in a family-distributed .pine file, anyone
+ * who has seen the exported Pine text can forge a POST to
+ * /api/tradingview/marker with an ARBITRARY `signal` value (the field the
+ * signature never covered) and a fresh `bar_timestamp`, indefinitely — the
+ * signature never proved WHICH signal it was originally computed for.
+ *
+ * This variant binds `signal` into the canonical so the compiler can derive a
+ * DISTINCT `secret_check` literal per signal branch (Pine already selects among
+ * 3 possibilities via a ternary for the `signal` field itself — this mirrors
+ * that same compile-time-fixed-set pattern; Pine still cannot sign
+ * `bar_timestamp` at runtime — see the module docstring — so replay protection
+ * remains the existing 10-minute bar_timestamp window + unique-index dedupe in
+ * tradingview-webhook.ts, unchanged by this addition).
+ *
+ * Canonical form: "{strategyId}|{accountId}|{signal}|marker_export"
+ */
+export function buildExportCanonicalV2(
+  strategyId: string,
+  accountId: string,
+  signal: number,
+): string {
+  return `${strategyId}|${accountId}|${signal}|marker_export`;
+}
+
+/**
  * Canonical string signed by the per-account HMAC secret for each live bar
  * marker webhook. Recomputed in `validateHmac()` in tradingview-marker-service.
  */

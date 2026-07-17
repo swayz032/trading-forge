@@ -148,21 +148,31 @@ async function call(
   });
 }
 
+// security-auth-hardening 2026-07-17 (HIGH #2): canonical now includes
+// quantity/price/stop_price so a captured signature cannot be replayed with
+// substituted order size/price. Optional fields serialize as "" when absent —
+// mirrors verifyLiveOrderHmac() in live-order.ts exactly.
 function signPayload(
   accountId: string,
   ticker: string,
   action: string,
   timestampMs: number,
   secret: string,
+  quantity?: number,
+  price?: number,
+  stopPrice?: number,
 ): string {
-  const message = `${accountId}|${ticker}|${action}|${timestampMs}`;
+  const message = `${accountId}|${ticker}|${action}|${quantity ?? ""}|${price ?? ""}|${stopPrice ?? ""}|${timestampMs}`;
   return createHmac("sha256", secret).update(message, "utf8").digest("hex");
 }
 
 /** Build a valid HMAC-mode payload */
 function makeHmacPayload(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
   const timestampMs = Date.now();
-  const hmac = signPayload(TEST_ACCOUNT_ID, TEST_TICKER, TEST_ACTION, timestampMs, TEST_SECRET);
+  const quantity = overrides.quantity as number | undefined;
+  const price = overrides.price as number | undefined;
+  const stop_price = overrides.stop_price as number | undefined;
+  const hmac = signPayload(TEST_ACCOUNT_ID, TEST_TICKER, TEST_ACTION, timestampMs, TEST_SECRET, quantity, price, stop_price);
   return {
     account_id: TEST_ACCOUNT_ID,
     ticker: TEST_TICKER,
@@ -348,6 +358,52 @@ describe("POST /api/live-order — W1 CORE + Pine static-token", () => {
 
     expect(mocks.routeOrder).toHaveBeenCalled();
     expect(res.status).toBe(200);
+  });
+
+  it("Test 8b (security-auth-hardening 2026-07-17, HIGH #2): an OLD-canonical signature " +
+     "(account|ticker|action|timestamp only — no qty/price) that was VALID pre-fix is now " +
+     "REJECTED when submitted with a tampered/oversized quantity — proves qty/price/stop_price " +
+     "are now load-bearing in the signed canonical, not just account/ticker/action/time. " +
+     "(Computed inline, independent of signPayload(), so this test stays a true fixed-vs-vulnerable " +
+     "oracle even if the shared test helper is later updated to track production.)", async () => {
+    const timestampMs = Date.now();
+    // Inline OLD (pre-fix) canonical: `${accountId}|${ticker}|${action}|${timestampMs}` — the
+    // exact formula verifyLiveOrderHmac() used BEFORE this fix. This signature carries no
+    // information about order size/price at all.
+    const oldCanonicalMessage = `${TEST_ACCOUNT_ID}|${TEST_TICKER}|${TEST_ACTION}|${timestampMs}`;
+    const oldStyleHmac = createHmac("sha256", TEST_SECRET).update(oldCanonicalMessage, "utf8").digest("hex");
+
+    const app = buildApp();
+    // Attacker who captured (or derived) the old-style signature attempts to submit an order
+    // with an arbitrary, oversized quantity and a different price. Pre-fix, verifyLiveOrderHmac()
+    // never looked at quantity/price at all, so this would have validated (200). Post-fix, the
+    // server recomputes the EXPECTED hmac including quantity/price/stop_price and gets a
+    // different digest than oldStyleHmac — mismatch — 401.
+    const res = await call(app, {
+      account_id: TEST_ACCOUNT_ID,
+      ticker: TEST_TICKER,
+      action: TEST_ACTION,
+      quantity: 50,
+      price: 6000,
+      timestamp_ms: timestampMs,
+      live_order_hmac: oldStyleHmac,
+    });
+    server = res.server;
+
+    expect(res.status).toBe(401);
+    expect(res.body).toMatchObject({ error: "hmac_invalid" });
+    expect(mocks.routeOrder).not.toHaveBeenCalled();
+  });
+
+  it("Test 8c (security-auth-hardening 2026-07-17, HIGH #2): a signature computed correctly " +
+     "over the SAME quantity/price/stop_price validates (positive control for Test 8b)", async () => {
+    mocks.routeOrder.mockResolvedValueOnce({ success: true, reason: "routed", accountId: TEST_ACCOUNT_ID });
+    const app = buildApp();
+    const res = await call(app, makeHmacPayload({ quantity: 6, price: 5000.25, stop_price: 4990.5 }));
+    server = res.server;
+
+    expect(res.status).toBe(200);
+    expect(mocks.routeOrder).toHaveBeenCalledOnce();
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

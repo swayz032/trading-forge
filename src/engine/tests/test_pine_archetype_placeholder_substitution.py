@@ -18,6 +18,10 @@ Fix:
   4. compile_dual_artifacts() raises PineCompileError when credentials were provided
      but the compiled Pine still contains either placeholder string.
 """
+import hashlib
+import hmac as hmac_mod
+
+from src.engine.live_order_token_scope import build_archetype_gateway_scope_canonical
 from src.engine.pine_compiler import (
     _build_archetype_alert_pine,
     compile_dual_artifacts,
@@ -54,7 +58,16 @@ def _archetype_strategy(
 # ─── 1. Placeholders are substituted when gatewayOptions / credentials are set ──
 
 def test_placeholders_substituted_when_gateway_options_set():
-    """When account_id and live_order_token are provided, no literal placeholders remain."""
+    """When account_id and live_order_token are provided, no literal placeholders remain.
+
+    CRIT (security-auth-hardening 2026-07-17): the embedded token is now a SCOPED
+    subtoken — HMAC-SHA256(live_order_token, "{account_id}|archetype_signal|
+    live_order_archetype_scope") — NOT the raw live_order_token value verbatim.
+    Embedding the raw secret let a leaked/captured Pine export authenticate ANY
+    /api/live-order action (enter_long/enter_short/exit_long/exit_short with
+    attacker-chosen ticker/quantity/price), not just the intended archetype_signal
+    flow. See src/shared/live-order-token-scope.ts for the full rationale.
+    """
     pine = _build_archetype_alert_pine(
         "ict_silver_bullet_ny_am",
         "Ict Silver Bullet Ny Am",
@@ -69,7 +82,21 @@ def test_placeholders_substituted_when_gateway_options_set():
         "live_order_token placeholder was NOT substituted despite live_order_token being provided"
     )
     assert "acct-uuid-1234" in pine, "Expected account_id value to appear in emitted Pine"
-    assert "tok-secret-5678" in pine, "Expected live_order_token value to appear in emitted Pine"
+
+    expected_scoped_token = hmac_mod.new(
+        "tok-secret-5678".encode("utf-8"),
+        build_archetype_gateway_scope_canonical("acct-uuid-1234", "archetype_signal").encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    assert expected_scoped_token in pine, (
+        "Expected the SCOPED subtoken (bound to account_id + action=archetype_signal), "
+        "not the raw live_order_token, to appear in the emitted Pine"
+    )
+    assert "tok-secret-5678" not in pine, (
+        "CRIT regression: the raw live_order_token secret must NEVER appear verbatim in the "
+        "emitted Pine — only the action-scoped derived subtoken. A raw secret embedded here "
+        "authenticates ANY /api/live-order action, not just archetype_signal."
+    )
     assert "archetype_signal" in pine, "tf_gateway alertcondition action must remain 'archetype_signal'"
     assert "ict_silver_bullet_ny_am" in pine, "Archetype key must appear in Pine alertcondition"
 

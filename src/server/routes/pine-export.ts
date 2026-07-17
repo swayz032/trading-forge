@@ -147,10 +147,31 @@ function requireOperatorApiKey(req: Request, res: Response, next: NextFunction):
   next();
 }
 
-pineExportRoutes.use(requireOperatorApiKey);
+// CRIT/HIGH (security-auth-hardening 2026-07-17): requireOperatorApiKey was
+// PREVIOUSLY mounted as a blanket router-level `.use(requireOperatorApiKey)`
+// registered BEFORE any route on this router was defined. Express executes
+// middleware/handlers in registration order regardless of `.use()` vs
+// per-route registration — so requireOperatorApiKey ALWAYS ran first for
+// every request on this router, including the download route below, which
+// lists `injectApiKeyForSameOriginBrowser` as route-specific middleware with
+// an inline comment claiming it "injects OPERATOR_API_KEY for
+// browser-originated requests before requireOperatorApiKey validates" (A3,
+// Pass 3 Track A). That claim was FALSE by construction: by the time
+// injectApiKeyForSameOriginBrowser ran, requireOperatorApiKey had already
+// rejected the request 401 for lacking an Authorization header — the entire
+// A3 same-origin proxy feature was dead code, and legitimate same-origin
+// browser downloads were (and, until this fix, remained) broken.
+//
+// Fix: apply requireOperatorApiKey per-route instead of as a blanket
+// router-level `.use()`, so the download route can list
+// injectApiKeyForSameOriginBrowser BEFORE it — restoring the intended
+// injection-then-validate order documented at that middleware's definition
+// above. Every route retains the identical requireOperatorApiKey gate;
+// only the download route's middleware ORDER changes. See
+// src/server/__tests__/pine-export-same-origin-auth-order.test.ts.
 
 // POST /api/pine-export/compile — Compile strategy to Pine artifacts
-pineExportRoutes.post("/compile", async (req, res) => {
+pineExportRoutes.post("/compile", requireOperatorApiKey, async (req, res) => {
   const parsed = pineCompileRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -177,8 +198,13 @@ pineExportRoutes.post("/compile", async (req, res) => {
 });
 
 // GET /api/pine-export/:id — Fetch export metadata
-pineExportRoutes.get("/:id", async (req, res) => {
-  const exportRow = await getExport(req.params.id);
+//
+// Cast to string: adding requireOperatorApiKey as a second (untyped-params)
+// middleware widens Express 5's inferred req.params type to
+// ParamsDictionary's `string | string[]` union (same quirk documented on the
+// download handler below). URL params are always single strings.
+pineExportRoutes.get("/:id", requireOperatorApiKey, async (req, res) => {
+  const exportRow = await getExport(req.params.id as string);
   if (!exportRow) {
     res.status(404).json({ error: "Export not found" });
     return;
@@ -187,8 +213,8 @@ pineExportRoutes.get("/:id", async (req, res) => {
 });
 
 // GET /api/pine-export/:id/artifacts — Fetch artifact list
-pineExportRoutes.get("/:id/artifacts", async (req, res) => {
-  const artifacts = await getExportArtifacts(req.params.id);
+pineExportRoutes.get("/:id/artifacts", requireOperatorApiKey, async (req, res) => {
+  const artifacts = await getExportArtifacts(req.params.id as string);
   res.json(artifacts);
 });
 
@@ -200,11 +226,19 @@ pineExportRoutes.get("/:id/artifacts", async (req, res) => {
 // Mismatch → 403 (not 404 — avoids leaking whether the artifact exists at all).
 // Every download (success AND rejection) is written to audit_log.
 //
-// A3 (Pass 3 Track A): same-origin proxy middleware injects OPERATOR_API_KEY
-// for browser-originated requests before requireOperatorApiKey validates.
+// A3 (Pass 3 Track A) + CRIT/HIGH auth-ordering fix (security-auth-hardening
+// 2026-07-17): injectApiKeyForSameOriginBrowser now runs BEFORE
+// requireOperatorApiKey (previously requireOperatorApiKey was mounted via a
+// blanket router.use() ahead of every route, so it always ran first and this
+// injection middleware was dead code — see the fix note above the router's
+// first route registration).
 //
 // C2 (Pass 3 Track C): SHADOW guard runs BEFORE ownership + content checks.
-pineExportRoutes.get("/:id/artifacts/:artifactId/download", injectApiKeyForSameOriginBrowser, async (req, res) => {
+pineExportRoutes.get(
+  "/:id/artifacts/:artifactId/download",
+  injectApiKeyForSameOriginBrowser,
+  requireOperatorApiKey,
+  async (req, res) => {
   // Cast to string: @types/express-serve-static-core ParamsDictionary indexes to
   // string | string[] (Express 5 type). URL params are always single strings —
   // only query-string and header values can be string[].

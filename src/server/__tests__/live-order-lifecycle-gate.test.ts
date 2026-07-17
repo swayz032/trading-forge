@@ -144,6 +144,10 @@ async function call(
   });
 }
 
+// security-auth-hardening 2026-07-17 (HIGH #2): canonical now includes
+// quantity/price/stop_price (empty string when absent) — mirrors
+// verifyLiveOrderHmac() in live-order.ts exactly. This suite never sets
+// those fields, so they serialize as "".
 function signPayload(
   accountId: string,
   ticker: string,
@@ -151,7 +155,10 @@ function signPayload(
   timestampMs: number,
   secret: string,
 ): string {
-  const message = `${accountId}|${ticker}|${action}|${timestampMs}`;
+  const quantity: number | undefined = undefined;
+  const price: number | undefined = undefined;
+  const stopPrice: number | undefined = undefined;
+  const message = `${accountId}|${ticker}|${action}|${quantity ?? ""}|${price ?? ""}|${stopPrice ?? ""}|${timestampMs}`;
   return createHmac("sha256", secret).update(message, "utf8").digest("hex");
 }
 

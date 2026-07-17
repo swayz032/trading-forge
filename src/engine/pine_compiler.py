@@ -39,10 +39,22 @@ from pydantic import BaseModel, Field
 from src.engine.exportability import ExportabilityResult, score_exportability
 from src.engine.firm_config import FIRM_COMMISSIONS, FIRM_CONTRACT_CAPS, FIRM_RULES
 
+# CRIT (security-auth-hardening 2026-07-17): canonical scope string for the
+# archetype tf_gateway live-order token. TypeScript mirror at
+# src/shared/live-order-token-scope.ts. See that file's docstring for the
+# full rationale — this binds the compile-time-substituted archetype token to
+# action="archetype_signal" so a leaked archetype export cannot be replayed
+# as a raw enter_long/enter_short/exit order.
+from src.engine.live_order_token_scope import (
+    build_archetype_gateway_scope_canonical as _live_order_build_archetype_scope_canonical,
+)
+
 # F-10: canonical marker HMAC strings — single source of truth for the
 # Pine→backend contract. TypeScript mirror at src/shared/marker-contract.ts.
+# HIGH (security-auth-hardening 2026-07-17): only the signal-bound v2 canonical
+# is used now — see _build_marker_alertcondition below.
 from src.engine.marker_contract import (
-    build_export_canonical as _marker_build_export_canonical,
+    build_export_canonical_v2 as _marker_build_export_canonical_v2,
 )
 
 # ─── DSL → Pine Indicator Mapping ──────────────────────────────────
@@ -180,10 +192,34 @@ def _build_archetype_alert_pine(
         # Operator substitutes <account-id-placeholder> and <live-order-token-placeholder>
         # at TradingView alert-message-field deploy time (Settings panel).
         _acct_val = account_id if account_id is not None else "<account-id-placeholder>"
-        _token_val = live_order_token if live_order_token is not None else "<live-order-token-placeholder>"
+        # CRIT (security-auth-hardening 2026-07-17): when account_id + live_order_token are
+        # both compile-time-known, embed a SCOPED subtoken — HMAC-SHA256(live_order_token,
+        # "{account_id}|archetype_signal|live_order_archetype_scope") — instead of the raw
+        # per-(account,strategy) secret verbatim. The raw secret is a bearer credential valid
+        # for ANY action on POST /api/live-order (enter_long/enter_short/exit_long/exit_short
+        # with attacker-chosen ticker/quantity/price), not just the intended archetype_signal
+        # flow — a leaked/captured token from this distributed .pine artifact previously
+        # authorized bypassing the server-side archetype evaluator entirely. The scoped
+        # subtoken is bound to action="archetype_signal" (the one field this path locks at
+        # compile time) — live-order.ts re-derives the same value from the DB-stored raw
+        # secret and rejects any other action for this token. See
+        # src/shared/live-order-token-scope.ts for the full rationale + the documented
+        # standard-directional-path residual this does NOT cover.
+        if account_id is not None and live_order_token is not None:
+            import hmac as _hmac_mod  # local import — keep top-of-file imports unchanged
+            _token_val = _hmac_mod.new(
+                live_order_token.encode("utf-8"),
+                _live_order_build_archetype_scope_canonical(account_id, "archetype_signal").encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+        else:
+            _token_val = "<live-order-token-placeholder>"
         # Determine whether credentials were compile-time substituted for the header comment.
         _cred_note = (
-            "COMPILE-TIME SUBSTITUTED — credentials embedded by Trading Forge at export time."
+            "COMPILE-TIME SUBSTITUTED — credentials embedded by Trading Forge at export time.\n"
+            "//   live_order_token is a SCOPED subtoken bound to action=\"archetype_signal\" (CRIT\n"
+            "//   security-auth-hardening 2026-07-17) — it is NOT the raw account_strategy_assignments\n"
+            "//   secret and cannot authenticate any other /api/live-order action."
             if (account_id is not None and live_order_token is not None)
             else "OPERATOR-MANUAL — substitute <account-id-placeholder> and <live-order-token-placeholder>\n//   at TradingView alert-message-field deploy time (Settings panel, same UX as HMAC secret)."
         )
@@ -1615,14 +1651,29 @@ alertcondition(risk_lockout and not risk_lockout[1], title="Risk Lockout",
 #
 # Pine cannot compute HMAC-SHA256 natively. Instead of trying to inject a
 # per-bar HMAC (impossible without a server roundtrip), the compiler embeds
-# `secret_check` — a static export-time signature of a FIXED payload:
-#   secret_check = HMAC_SHA256(per_account_secret, "{strategy_id}|{account_id}|marker_export")
+# `secret_check` — a static export-time signature.
+#
+# HIGH (security-auth-hardening 2026-07-17): `secret_check` was ORIGINALLY one
+# FIXED literal — HMAC_SHA256(per_account_secret, "{strategy_id}|{account_id}|
+# marker_export") — reused verbatim across all 3 signal branches (long/short/
+# exit). Since the literal is plaintext in a family-distributed .pine file,
+# anyone who has seen the exported text held a value that authenticated ANY
+# signal at ANY time (the signature never covered `signal`) — pure forgery
+# surface. Now the compiler derives THREE distinct literals, one per signal
+# value, each over "{strategy_id}|{account_id}|{signal}|marker_export"
+# (src/engine/marker_contract.py::build_export_canonical_v2 / TypeScript
+# mirror src/shared/marker-contract.ts::buildExportCanonicalV2), and the
+# emitted Pine selects the matching literal via the SAME ternary pattern
+# already used for the `signal` field itself. A captured/leaked secret_check
+# for signal=1 no longer validates a forged request claiming signal=-1 or
+# signal=0. Pine still cannot sign `bar_timestamp` at runtime (documented
+# limitation, unchanged) — replay protection remains the existing 10-minute
+# bar_timestamp window + unique-index dedupe in tradingview-webhook.ts.
+#
 # This proves the Pine file came from a trusted compile and ties it to a
-# specific (account, strategy) pair. The backend (tradingview-webhook.ts) accepts
-# the payload, looks up the same secret server-side, recomputes the signature
-# and compares constant-time. Replay attacks are bounded by the existing
-# 10-minute bar_timestamp window and the unique-index dedupe on
-# (account_id, strategy_id, bar_timestamp, signal).
+# specific (account, strategy, signal) triple. The backend (tradingview-webhook.ts)
+# accepts the payload, looks up the same secret server-side, recomputes the
+# signature using the REQUEST's own signal value, and compares constant-time.
 #
 # CONTRACT POINTS (any change here MUST update tradingview-webhook.ts in lock-step):
 #   - Field names: strategy_id, account_id, bar_timestamp, signal, secret_check
@@ -1635,30 +1686,40 @@ alertcondition(risk_lockout and not risk_lockout[1], title="Risk Lockout",
 def _build_marker_alertcondition(
     strategy_id: str,
     account_id: Optional[str],
-    secret_check: Optional[str],
+    secret_check_long: Optional[str],
+    secret_check_short: Optional[str],
+    secret_check_exit: Optional[str],
 ) -> str:
     """Emit the Track 8 marker alertcondition() block.
 
-    Returns "" when account_id or secret_check are absent (legacy compile path —
-    the per-recipient export pipeline supplies both). The block is appended to
-    the strategy artifact only; INDICATOR artifacts do not feed the marker
-    collector because they require manual approval and have no machine-driven
-    fill timing to reconcile against.
+    Returns "" when account_id or any secret_check_* is absent (legacy compile
+    path — the per-recipient export pipeline supplies all of them together).
+    The block is appended to the strategy artifact only; INDICATOR artifacts
+    do not feed the marker collector because they require manual approval and
+    have no machine-driven fill timing to reconcile against.
+
+    HIGH (security-auth-hardening 2026-07-17): three DISTINCT signal-scoped
+    secret_check literals (one per signal value) replace the single fixed
+    literal previously reused across all 3 branches. See the module docstring
+    above `_build_marker_alertcondition` for the full rationale.
     """
-    if not account_id or not secret_check:
+    if not account_id or not secret_check_long or not secret_check_short or not secret_check_exit:
         return ""
     return f"""
 // ─── Marker Alert (Track 8 — POST /api/tradingview/marker) ──────────
 // F-1: SEPARATE alertcondition from TradersPost — fires the marker payload
-// for the reconciliation collector. secret_check is the export-time signature
-// of "{strategy_id}|{account_id}|marker_export" using the per-account HMAC
-// secret; backend re-computes it server-side. DO NOT modify message JSON.
+// for the reconciliation collector. secret_check is a SIGNAL-SCOPED export-time
+// signature — HIGH security-auth-hardening 2026-07-17 — of
+// "{strategy_id}|{account_id}|{{signal}}|marker_export" using the per-account HMAC
+// secret; the compiler embeds a distinct literal per signal value (selected below
+// via the same ternary the `signal` field itself uses) and the backend re-derives
+// the matching value server-side from the REQUEST's own signal. DO NOT modify message JSON.
 alertcondition(
     (strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked) or
     (strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked) or
     (barstate.isconfirmed and strategy.position_size != 0 and (time_to_close or risk_lockout)),
     title="TF Marker",
-    message='{{"strategy_id":"{strategy_id}","account_id":"{account_id}","bar_timestamp":' + str.tostring(time) + ',"signal":' + (long_signal ? "1" : short_signal ? "-1" : "0") + ',"secret_check":"{secret_check}"}}'
+    message='{{"strategy_id":"{strategy_id}","account_id":"{account_id}","bar_timestamp":' + str.tostring(time) + ',"signal":' + (long_signal ? "1" : short_signal ? "-1" : "0") + ',"secret_check":"' + (long_signal ? "{secret_check_long}" : short_signal ? "{secret_check_short}" : "{secret_check_exit}") + '"}}'
 )
 // BUG-5 fix: str.format_time() does not exist in Pine v5. Using str.tostring(time) which
 // returns Unix milliseconds (integer). Backend markerPayloadSchema must accept numeric millis
@@ -2752,17 +2813,31 @@ qty_final := {recipient_qty}
     # unchanged for non-recipient compiles.
     if account_id and hmac_secret:
         import hmac as _hmac_mod  # local import — keep top-of-file imports unchanged
-        # F-10: canonical export string sourced from src/engine/marker_contract.py
-        # (mirrored in src/shared/marker-contract.ts). NEVER inline the format here.
-        _secret_check = _hmac_mod.new(
+        # F-10 / HIGH security-auth-hardening 2026-07-17: canonical export strings
+        # sourced from src/engine/marker_contract.py (mirrored in
+        # src/shared/marker-contract.ts). NEVER inline the format here.
+        # Three DISTINCT signal-scoped literals — signal encoding: 1=long, -1=short, 0=exit.
+        _secret_check_long = _hmac_mod.new(
             hmac_secret.encode("utf-8"),
-            _marker_build_export_canonical(sid, account_id).encode("utf-8"),
+            _marker_build_export_canonical_v2(sid, account_id, 1).encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        _secret_check_short = _hmac_mod.new(
+            hmac_secret.encode("utf-8"),
+            _marker_build_export_canonical_v2(sid, account_id, -1).encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        _secret_check_exit = _hmac_mod.new(
+            hmac_secret.encode("utf-8"),
+            _marker_build_export_canonical_v2(sid, account_id, 0).encode("utf-8"),
             hashlib.sha256,
         ).hexdigest()
         _marker_block = _build_marker_alertcondition(
             strategy_id=sid,
             account_id=account_id,
-            secret_check=_secret_check,
+            secret_check_long=_secret_check_long,
+            secret_check_short=_secret_check_short,
+            secret_check_exit=_secret_check_exit,
         )
         if _marker_block:
             strategy_code += _marker_block

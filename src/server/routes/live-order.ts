@@ -17,14 +17,18 @@
  *
  *   A) HMAC mode (programmatic callers):
  *      Payload includes `live_order_hmac` (HMAC-SHA256 over canonical message
- *      `${account_id}|${ticker}|${action}|${timestamp_ms}` signed with
+ *      `${account_id}|${ticker}|${action}|${quantity}|${price}|${stop_price}|${timestamp_ms}`
+ *      — optional fields serialize as "" when absent — signed with
  *      LIVE_ORDER_HMAC_SECRET env var). Replay guard: 2-minute timestamp_ms window.
+ *      (security-auth-hardening 2026-07-17: quantity/price/stop_price added to the
+ *      canonical — previously omitted, so a captured signature could be replayed
+ *      with substituted size/price.)
  *
  *   B) Static-token mode (Pine / TradingView alert callers):
  *      Pine Script v5 has no crypto library — per-payload HMAC is physically
  *      impossible at alert fire time. Instead, the exported Pine script carries
- *      the per-account `account_strategy_assignments.hmac_secret` value as a
- *      static bearer token embedded at export compile-time.
+ *      a bearer token derived from the per-account `account_strategy_assignments.
+ *      hmac_secret` value, embedded at export compile-time.
  *      Auth: `Authorization: Bearer <token>` header OR `live_order_token` body field.
  *      DB lookup: account_strategy_assignments WHERE account_id + strategy_id.
  *      Replay guard: same 2-minute timestamp_ms window as HMAC mode.
@@ -33,6 +37,13 @@
  *        tradingview-webhook.ts uses ON CONFLICT DO NOTHING.
  *      Replayability compensated by: 2-min window + DB dedup on bar close timestamp.
  *      `strategy_id` REQUIRED for static-token path (dedup key + DB lookup).
+ *      CRIT (security-auth-hardening 2026-07-17): for action="archetype_signal",
+ *        the token is SCOPED — HMAC-SHA256(hmac_secret, "{account_id}|archetype_signal|
+ *        live_order_archetype_scope"), see src/shared/live-order-token-scope.ts — so a
+ *        leaked archetype .pine export cannot be replayed to inject a raw
+ *        enter_long/enter_short/exit order with attacker-chosen ticker/quantity/price.
+ *        The 4 directional actions still validate against the raw hmac_secret (documented
+ *        residual — that path is operator-pasted, not embedded in any distributed file).
  *
  *   Fail-CLOSED: bad/missing token → 401; LIVE_ORDER_HMAC_SECRET missing → 503
  *   (HMAC mode); secret not found in DB → 401 (static-token mode).
@@ -84,6 +95,7 @@ import { logger } from "../lib/logger.js";
 import { routeOrder } from "../services/broker-router.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
 import { lookupHmacSecret } from "../services/tradingview-marker-service.js";
+import { buildArchetypeGatewayScopeCanonical } from "../../shared/live-order-token-scope.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { notifyWarning } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
@@ -112,19 +124,31 @@ function getLiveOrderSecret(): string | null {
 }
 
 // ─── HMAC verification ────────────────────────────────────────────────────────
-// Canonical message: `{account_id}|{ticker}|{action}|{timestamp_ms}`
-// Same as what Pine would compute at alert fire time.
+// Canonical message: `{account_id}|{ticker}|{action}|{quantity}|{price}|{stop_price}|{timestamp_ms}`
+// Same as what a programmatic caller would compute at request time.
+//
+// HIGH (security-auth-hardening 2026-07-17): quantity/price/stop_price were
+// previously OMITTED from the signed canonical string, so a captured valid
+// HMAC for one order could be replayed with substituted size/price — the
+// signature only proved account/ticker/action/time, not the economically
+// meaningful fields. Optional fields serialize to the empty string when
+// absent so signer and verifier agree byte-for-byte regardless of which
+// optional fields a given order includes (mirrors the tradingview-webhook
+// fixed-field canonical pattern in buildWebhookCanonical()).
 
 function verifyLiveOrderHmac(
   accountId: string,
   ticker: string,
   action: string,
+  quantity: number | undefined,
+  price: number | undefined,
+  stopPrice: number | undefined,
   timestampMs: number,
   providedHmac: string,
   secret: string,
 ): boolean {
   try {
-    const message = `${accountId}|${ticker}|${action}|${timestampMs}`;
+    const message = `${accountId}|${ticker}|${action}|${quantity ?? ""}|${price ?? ""}|${stopPrice ?? ""}|${timestampMs}`;
     const expected = createHmac("sha256", secret)
       .update(message, "utf8")
       .digest("hex");
@@ -386,6 +410,9 @@ liveOrderRoutes.post(
         account_id,
         ticker,
         action,
+        quantity,
+        price,
+        stop_price,
         timestamp_ms,
         live_order_hmac as string,
         secret,
@@ -465,11 +492,41 @@ liveOrderRoutes.post(
         return;
       }
 
-      // 3b. Constant-time comparison of provided token vs stored secret.
+      // 3b. Constant-time comparison of provided token vs the expected value.
       //     timingSafeEqual requires equal-length buffers.
+      //
+      // CRIT (security-auth-hardening 2026-07-17): for action === "archetype_signal",
+      // the expected value is a SCOPED subtoken — HMAC-SHA256(dbSecret,
+      // "{account_id}|archetype_signal|live_order_archetype_scope") — not the raw
+      // dbSecret. pine_compiler.py's archetype tf_gateway compile-time-substitution
+      // path (`_build_archetype_alert_pine`) now embeds this same derived value
+      // instead of the raw per-(account,strategy) secret. Previously the raw secret
+      // was a bearer credential valid for ANY action on this endpoint — a leaked
+      // archetype .pine export (the token is embedded in plaintext in that specific
+      // artifact class) could be replayed as action="enter_long"/"enter_short"/
+      // "exit_long"/"exit_short" with attacker-chosen ticker/quantity/price,
+      // bypassing the server-side archetype evaluator entirely. Binding to `action`
+      // closes that escalation: an archetype-scoped token now only authenticates
+      // action="archetype_signal" requests.
+      //
+      // All 4 directional actions (enter_long/enter_short/exit_long/exit_short) —
+      // the STANDARD (non-archetype) tf_gateway path — still validate against the
+      // raw dbSecret directly. That path shares ONE operator-pasted input.string()
+      // token across all 4 actions at TradingView deploy time (not embedded in any
+      // distributed file), so it is unaffected by the archetype-export-leak vector
+      // this fix closes; per-action scoping there would require restructuring the
+      // TradingView deploy UX to 4 separate inputs — out of scope for this fix
+      // (touches pine-export-service.ts, held back this wave). See
+      // src/shared/live-order-token-scope.ts for the full rationale.
       let tokenValid = false;
       try {
-        const a = Buffer.from(dbSecret, "utf8");
+        const expectedTokenHex =
+          action === "archetype_signal"
+            ? createHmac("sha256", dbSecret)
+                .update(buildArchetypeGatewayScopeCanonical(account_id, action), "utf8")
+                .digest("hex")
+            : dbSecret;
+        const a = Buffer.from(expectedTokenHex, "utf8");
         const b = Buffer.from(resolvedToken as string, "utf8");
         tokenValid = a.length === b.length && timingSafeEqual(a, b);
       } catch {

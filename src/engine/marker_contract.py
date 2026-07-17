@@ -27,6 +27,21 @@ def build_export_canonical(strategy_id: str, account_id: str) -> str:
     return f"{strategy_id}{MARKER_FIELD_SEPARATOR}{account_id}{MARKER_FIELD_SEPARATOR}{MARKER_EXPORT_SUFFIX}"
 
 
+def build_export_canonical_v2(strategy_id: str, account_id: str, signal: int) -> str:
+    """HIGH (security-auth-hardening 2026-07-17): signal-bound export canonical.
+
+    MUST stay byte-for-byte identical to ``buildExportCanonicalV2`` in
+    ``src/shared/marker-contract.ts`` — see that function's docstring for the
+    full rationale (the un-bound ``build_export_canonical`` above signs a FIXED
+    string reused across all 3 signal branches, forgeable by anyone who has
+    seen the exported Pine text).
+    """
+    return (
+        f"{strategy_id}{MARKER_FIELD_SEPARATOR}{account_id}"
+        f"{MARKER_FIELD_SEPARATOR}{signal}{MARKER_FIELD_SEPARATOR}{MARKER_EXPORT_SUFFIX}"
+    )
+
+
 def build_webhook_canonical(
     strategy_id: str,
     account_id: str,

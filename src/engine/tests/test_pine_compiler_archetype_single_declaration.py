@@ -28,8 +28,11 @@ Export path: src/engine/pine_compiler.py
 """
 from __future__ import annotations
 
+import hashlib
+import hmac as hmac_mod
 import re
 
+from src.engine.live_order_token_scope import build_archetype_gateway_scope_canonical
 from src.engine.pine_compiler import compile_dual_artifacts, compile_strategy
 
 DECLARATION_LINE_RE = re.compile(r"^(indicator|strategy|library)\s*\(")
@@ -206,7 +209,12 @@ class TestCompileDualArtifactsArchetypeSingleDeclaration:
     def test_archetype_dual_artifacts_with_tf_gateway_and_credentials(self):
         """The live production path: gateway_mode=tf_gateway + compile-time
         credential substitution, exercised through compile_dual_artifacts()
-        exactly as pine-export-service.ts invokes it."""
+        exactly as pine-export-service.ts invokes it.
+
+        CRIT (security-auth-hardening 2026-07-17): the embedded live_order_token
+        is a SCOPED subtoken (bound to account_id + action="archetype_signal"),
+        not the raw secret verbatim — see live-order-token-scope.ts.
+        """
         strategy = _archetype_strategy(gateway_mode="tf_gateway")
         result = compile_dual_artifacts(
             strategy,
@@ -218,7 +226,17 @@ class TestCompileDualArtifactsArchetypeSingleDeclaration:
         pine = result.indicator_artifact.content
         assert _count_declarations(pine) == 1
         assert "acct-test-123" in pine
-        assert "tok-test-456" in pine
+
+        expected_scoped_token = hmac_mod.new(
+            "tok-test-456".encode("utf-8"),
+            build_archetype_gateway_scope_canonical("acct-test-123", "archetype_signal").encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+        assert expected_scoped_token in pine
+        assert "tok-test-456" not in pine, (
+            "CRIT regression: the raw live_order_token secret must NEVER appear verbatim — "
+            "only the action-scoped derived subtoken."
+        )
         assert "<account-id-placeholder>" not in pine
         assert "<live-order-token-placeholder>" not in pine
 

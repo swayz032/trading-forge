@@ -28,6 +28,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import express from "express";
 import { createHmac } from "node:crypto";
 import type { Server } from "http";
+import { buildArchetypeGatewayScopeCanonical } from "../../shared/live-order-token-scope.js";
 
 // ─── Hoisted mock state ───────────────────────────────────────────────────────
 
@@ -144,9 +145,16 @@ async function call(
   });
 }
 
+// security-auth-hardening 2026-07-17 (HIGH #2): canonical now includes
+// quantity/price/stop_price (empty string when absent) — mirrors
+// verifyLiveOrderHmac() in live-order.ts exactly. This suite never sets
+// those fields, so they serialize as "".
 function signPayload(action: string, timestampMs: number): string {
+  const quantity: number | undefined = undefined;
+  const price: number | undefined = undefined;
+  const stopPrice: number | undefined = undefined;
   return createHmac("sha256", HMAC_SECRET)
-    .update(`${ACCOUNT_ID}|${TICKER}|${action}|${timestampMs}`)
+    .update(`${ACCOUNT_ID}|${TICKER}|${action}|${quantity ?? ""}|${price ?? ""}|${stopPrice ?? ""}|${timestampMs}`)
     .digest("hex");
 }
 
@@ -416,6 +424,107 @@ describe("Pass 4.5 Track B — /api/live-order archetype_signal dispatch", () =>
       // Should pass Zod schema and reach routeOrder (200 — not 400/401)
       expect(status).not.toBe(400);
       expect(status).not.toBe(401);
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CASE 7 (CRIT security-auth-hardening 2026-07-17): static-token mode
+  // archetype_signal scoping — a leaked archetype tf_gateway .pine export's
+  // token must NOT authenticate a raw enter_long/enter_short/exit order.
+  // ═══════════════════════════════════════════════════════════════════════════
+  describe("CASE 7: static-token archetype scoping (CRIT security-auth-hardening 2026-07-17)", () => {
+    const RAW_SECRET = "raw-per-account-strategy-secret-at-least-32-chars!";
+
+    function scopedArchetypeToken(): string {
+      return createHmac("sha256", RAW_SECRET)
+        .update(buildArchetypeGatewayScopeCanonical(ACCOUNT_ID, "archetype_signal"), "utf8")
+        .digest("hex");
+    }
+
+    it("a correctly-SCOPED token (as pine_compiler.py now emits) validates for archetype_signal", async () => {
+      mocks.lookupHmacSecret.mockResolvedValue(RAW_SECRET);
+      mocks.runPythonModule.mockResolvedValueOnce({ action: "hold", reason: "test" });
+
+      const app = buildApp();
+      const { status, server } = await call(app, {
+        account_id: ACCOUNT_ID,
+        ticker: TICKER,
+        action: "archetype_signal",
+        archetype: ARCHETYPE_KEY,
+        strategy_id: STRATEGY_ID,
+        bar_timestamp: new Date().toISOString(),
+        timestamp_ms: Date.now(),
+        live_order_token: scopedArchetypeToken(),
+      });
+      servers.push(server);
+
+      expect(status).toBe(200);
+    });
+
+    it("CRIT: the RAW (unscoped) per-(account,strategy) secret is REJECTED for archetype_signal " +
+       "— only the derived scoped subtoken authenticates this action", async () => {
+      mocks.lookupHmacSecret.mockResolvedValue(RAW_SECRET);
+
+      const app = buildApp();
+      const { status, body, server } = await call(app, {
+        account_id: ACCOUNT_ID,
+        ticker: TICKER,
+        action: "archetype_signal",
+        archetype: ARCHETYPE_KEY,
+        strategy_id: STRATEGY_ID,
+        bar_timestamp: new Date().toISOString(),
+        timestamp_ms: Date.now(),
+        live_order_token: RAW_SECRET, // the OLD (pre-fix) embedded value
+      });
+      servers.push(server);
+
+      expect(status).toBe(401);
+      expect(body.error).toBe("token_invalid");
+      expect(mocks.runPythonModule).not.toHaveBeenCalled();
+    });
+
+    it("CRIT: an archetype-scoped token CANNOT be replayed to inject a raw enter_long order " +
+       "with attacker-chosen ticker/quantity — this is the exact escalation the fix closes", async () => {
+      mocks.lookupHmacSecret.mockResolvedValue(RAW_SECRET);
+
+      const app = buildApp();
+      const { status, body, server } = await call(app, {
+        account_id: ACCOUNT_ID,
+        ticker: "ANY_TICKER_ATTACKER_WANTS",
+        action: "enter_long", // NOT archetype_signal — direct order injection attempt
+        quantity: 999,
+        strategy_id: STRATEGY_ID,
+        bar_timestamp: new Date().toISOString(),
+        timestamp_ms: Date.now(),
+        live_order_token: scopedArchetypeToken(), // captured from a leaked archetype export
+      });
+      servers.push(server);
+
+      expect(status).toBe(401);
+      expect(body.error).toBe("token_invalid");
+      expect(mocks.routeOrder).not.toHaveBeenCalled();
+    });
+
+    it("a scoped token derived for a DIFFERENT account_id does not validate (account binding holds)", async () => {
+      mocks.lookupHmacSecret.mockResolvedValue(RAW_SECRET);
+      const otherAccountScopedToken = createHmac("sha256", RAW_SECRET)
+        .update(buildArchetypeGatewayScopeCanonical("ffffffff-0000-4000-a000-000000000099", "archetype_signal"), "utf8")
+        .digest("hex");
+
+      const app = buildApp();
+      const { status, server } = await call(app, {
+        account_id: ACCOUNT_ID,
+        ticker: TICKER,
+        action: "archetype_signal",
+        archetype: ARCHETYPE_KEY,
+        strategy_id: STRATEGY_ID,
+        bar_timestamp: new Date().toISOString(),
+        timestamp_ms: Date.now(),
+        live_order_token: otherAccountScopedToken,
+      });
+      servers.push(server);
+
+      expect(status).toBe(401);
     });
   });
 });

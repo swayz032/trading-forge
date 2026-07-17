@@ -19,6 +19,7 @@ import { createHmac } from "crypto";
 import { describe, it, expect } from "vitest";
 import {
   buildExportCanonical,
+  buildExportCanonicalV2,
   buildWebhookCanonical,
   MARKER_CONTRACT_VERSION,
   MARKER_EXPORT_SUFFIX,
@@ -69,6 +70,40 @@ describe("marker-contract: format invariants (F-10)", () => {
         FIXTURE.signal,
       ),
     ).toBe(EXPECTED_WEBHOOK_CANONICAL);
+  });
+});
+
+describe("marker-contract: buildExportCanonicalV2 signal binding (HIGH security-auth-hardening 2026-07-17)", () => {
+  it("produces the documented signal-bound format", () => {
+    expect(buildExportCanonicalV2(FIXTURE.strategyId, FIXTURE.accountId, 1)).toBe(
+      `${FIXTURE.strategyId}|${FIXTURE.accountId}|1|marker_export`,
+    );
+  });
+
+  it("differs across the 3 signal values (long/short/exit) — no collision", () => {
+    const long = buildExportCanonicalV2(FIXTURE.strategyId, FIXTURE.accountId, 1);
+    const short = buildExportCanonicalV2(FIXTURE.strategyId, FIXTURE.accountId, -1);
+    const exit = buildExportCanonicalV2(FIXTURE.strategyId, FIXTURE.accountId, 0);
+    expect(new Set([long, short, exit]).size).toBe(3);
+  });
+
+  it("differs from the un-bound v1 canonical for the same (strategyId, accountId)", () => {
+    const v1 = buildExportCanonical(FIXTURE.strategyId, FIXTURE.accountId);
+    const v2 = buildExportCanonicalV2(FIXTURE.strategyId, FIXTURE.accountId, 1);
+    expect(v2).not.toBe(v1);
+  });
+
+  it("HMAC over a v2 canonical for one signal does not validate against a different signal", () => {
+    const hmacForLong = createHmac("sha256", FIXTURE.secret)
+      .update(buildExportCanonicalV2(FIXTURE.strategyId, FIXTURE.accountId, 1), "utf8")
+      .digest("hex");
+    const expectedForShort = createHmac("sha256", FIXTURE.secret)
+      .update(buildExportCanonicalV2(FIXTURE.strategyId, FIXTURE.accountId, -1), "utf8")
+      .digest("hex");
+    // A secret_check literal computed for signal=1 must NOT equal the value the
+    // server would recompute for a request claiming signal=-1 — this is the
+    // property that closes the forgeable-fixed-string HIGH finding.
+    expect(hmacForLong).not.toBe(expectedForShort);
   });
 });
 

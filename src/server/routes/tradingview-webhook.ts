@@ -38,6 +38,7 @@ import {
   validateHmac,
   lookupHmacSecret,
 } from "../services/tradingview-marker-service.js";
+import { buildExportCanonicalV2 } from "../../shared/marker-contract.js";
 import { broadcastSSE } from "./sse.js";
 import { logger } from "../index.js";
 
@@ -95,13 +96,15 @@ setInterval(() => {
 //     is rejected 401 hmac_invalid (fail-closed). Both Zod-optional by design — you
 //     cannot make either mandatory without breaking one client class.
 //   - `secret_check` is the REQUIRED mechanism for Pine clients — export-time signature emitted by pine_compiler
-//     proving the Pine file came from a trusted artifact. Computed over a FIXED
-//     payload at compile-time (e.g. "{strategy_id}|{account_id}|export") and
-//     embedded as a Pine string literal. The backend re-computes the same
-//     signature using the per-(account, strategy) secret and compares with
-//     constant-time equality. Replay-resistance is provided by the existing
-//     10-minute bar_timestamp window (line ~259) plus the unique-index dedupe
-//     on (account_id, strategy_id, bar_timestamp, signal).
+//     proving the Pine file came from a trusted artifact. Computed at compile-time
+//     over a SIGNAL-SCOPED payload (e.g. "{strategy_id}|{account_id}|{signal}|marker_export"
+//     — security-auth-hardening 2026-07-17; previously signal-independent, which let a
+//     leaked/observed Pine text forge ANY signal value) and embedded as one of THREE
+//     Pine string literals selected at alert-fire time by signal branch. The backend
+//     re-computes the same signature using the per-(account, strategy) secret AND the
+//     request's own `signal` value, and compares with constant-time equality.
+//     Replay-resistance is provided by the existing 10-minute bar_timestamp window
+//     (line ~259) plus the unique-index dedupe on (account_id, strategy_id, bar_timestamp, signal).
 // BUG-5 fix: bar_timestamp accepts either ISO-8601 string OR numeric Unix milliseconds integer.
 // Pine v5 str.tostring(time) returns Unix millis (integer series); str.format_time() does not
 // exist in Pine v5. The schema coerces numeric millis to ISO-8601 string via transform so
@@ -277,23 +280,41 @@ tradingViewWebhookRoutes.post(
     //   (a) Legacy: payload includes `hmac` covering canonical fields. We still
     //       honor it for backwards-compat with previously-exported Pine files
     //       that pasted a pre-computed HMAC string. Validates via validateHmac().
-    //   (b) Preferred: payload includes `secret_check` — the export-time
-    //       signature of a FIXED payload computed by pine_compiler. We
-    //       re-compute the same signature on the server with the stored
-    //       per-account secret and compare in constant time.
+    //   (b) Preferred: payload includes `secret_check` — a SIGNAL-SCOPED
+    //       export-time signature computed by pine_compiler. We re-compute the
+    //       same signature on the server, using the REQUEST's own `signal`
+    //       value, with the stored per-account secret and compare in constant
+    //       time.
     // At least ONE of the two MUST be present and valid, else 401.
+    //
+    // HIGH (security-auth-hardening 2026-07-17): `secret_check` was ORIGINALLY
+    // a single FIXED literal independent of `signal` — the compiler emitted the
+    // SAME value regardless of which of the 3 signal branches (long/short/exit)
+    // fired, so anyone who had seen the exported Pine text (family-distributed)
+    // held a value that authenticated ANY signal, indefinitely (bounded only by
+    // the separate, non-cryptographic 10-minute bar_timestamp replay window
+    // below). The compiler (pine_compiler.py::_build_marker_alertcondition) now
+    // embeds THREE distinct literals, one per signal value, selected at
+    // alert-fire time via the same ternary the `signal` field itself uses. The
+    // server recomputes the expected value from the REQUEST's own `signal`
+    // (buildExportCanonicalV2) — a secret_check captured for signal=1 no longer
+    // validates a forged request claiming signal=-1 or signal=0.
+    // Pine still cannot sign `bar_timestamp` at runtime (no crypto library) —
+    // replay protection remains the existing 10-minute bar_timestamp window +
+    // unique-index dedupe below, unchanged by this fix.
     let isValid = false;
     let proofMode: "hmac_canonical" | "secret_check" | "none" = "none";
     if (typeof hmac === "string" && hmac.length > 0) {
       isValid = validateHmac(req.body as Record<string, unknown>, hmac, secret);
       proofMode = "hmac_canonical";
     } else if (typeof secret_check === "string" && secret_check.length > 0) {
-      // Export-time signature over the fixed marker payload. MUST match the
-      // value emitted by pine_compiler's `_build_marker_alert()`. Format:
-      // expected = HMAC_SHA256(secret, "{strategy_id}|{account_id}|marker_export").
+      // Signal-scoped signature over the marker payload. MUST match the value
+      // emitted by pine_compiler's `_build_marker_alertcondition()`. Format:
+      // expected = HMAC_SHA256(secret, buildExportCanonicalV2(strategy_id, account_id, signal))
+      //          = HMAC_SHA256(secret, "{strategy_id}|{account_id}|{signal}|marker_export").
       const { createHmac, timingSafeEqual } = await import("crypto");
       const expected = createHmac("sha256", secret)
-        .update(`${strategy_id}|${account_id}|marker_export`, "utf8")
+        .update(buildExportCanonicalV2(strategy_id, account_id, signal), "utf8")
         .digest("hex");
       const a = Buffer.from(expected, "utf8");
       const b = Buffer.from(secret_check, "utf8");

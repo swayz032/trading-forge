@@ -350,4 +350,67 @@ describe("POST /api/tradingview/marker — route handler", () => {
     expect(res.body["idempotent"]).toBe(true);
     expect(res.body["markerId"]).toBeNull();
   });
+
+  // ── HIGH (security-auth-hardening 2026-07-17): secret_check signal binding ──
+  //
+  // secret_check was ORIGINALLY signed over a FIXED string independent of
+  // `signal` — the same literal validated ANY signal value. Now it is signed
+  // over a canonical that includes `signal`
+  // (buildExportCanonicalV2 = "{strategy_id}|{account_id}|{signal}|marker_export"),
+  // mirroring pine_compiler.py's 3 distinct per-signal literals.
+
+  function buildSecretCheckPayload(
+    overrides: Record<string, unknown> = {},
+    secret: string = "a".repeat(64),
+  ): Record<string, unknown> {
+    const base: Record<string, unknown> = {
+      strategy_id: "00000000-0000-0000-0000-000000000001",
+      account_id: "00000000-0000-0000-0000-000000000002",
+      bar_timestamp: new Date().toISOString(),
+      signal: 1,
+      ...overrides,
+    };
+    const canonical = `${String(base["strategy_id"])}|${String(base["account_id"])}|${Number(base["signal"])}|marker_export`;
+    const secretCheck = createHmac("sha256", secret).update(canonical, "utf8").digest("hex");
+    return { ...base, secret_check: secretCheck };
+  }
+
+  it("10. a signal-scoped secret_check (signal=1) validates for signal=1", async () => {
+    const payload = buildSecretCheckPayload({ signal: 1 });
+    const res = await callMarkerRoute(payload);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body["ok"]).toBe(true);
+  });
+
+  it("11. HIGH: a secret_check computed for signal=1 is REJECTED when the request claims " +
+     "signal=-1 — proves signal is now cryptographically bound, not a fixed reusable literal", async () => {
+    const base = buildSecretCheckPayload({ signal: 1 });
+    // Attacker (who has only ever seen a signal=1 secret_check — e.g. from the
+    // plaintext exported Pine text) tampers the signal field to -1 while
+    // replaying the SAME secret_check.
+    const forged = { ...base, signal: -1 };
+    const res = await callMarkerRoute(forged);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body["error"]).toBe("hmac_invalid");
+  });
+
+  it("12. HIGH: a secret_check computed for signal=-1 is REJECTED when the request claims signal=0", async () => {
+    const base = buildSecretCheckPayload({ signal: -1 });
+    const forged = { ...base, signal: 0 };
+    const res = await callMarkerRoute(forged);
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body["error"]).toBe("hmac_invalid");
+  });
+
+  it("13. signal-scoped secret_check validates independently for all 3 signal values (positive control)", async () => {
+    for (const signal of [1, -1, 0]) {
+      setupExecuteMocks();
+      const payload = buildSecretCheckPayload({ signal });
+      const res = await callMarkerRoute(payload);
+      expect(res.statusCode).toBe(200);
+    }
+  });
 });
