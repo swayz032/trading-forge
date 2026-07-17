@@ -184,6 +184,12 @@ function recordFeedGapConnectionState(symbol: string, state: FeedGapConnState): 
  * @internal exported for tests — production entry point is handleBar().
  */
 export function evaluateFeedGap(symbol: string, previousBar: Bar | undefined, bar: Bar): void {
+  // F-1 (independent accuracy-validator grade, 2026-07-17): mint a correlationId so every
+  // audit row + SSE this function emits is linkable to the SAME classification event —
+  // mirrors processSessionBar's own per-bar correlationId minting one function away.
+  // Without this, insertAuditRow's own helper logs "written without correlation_id —
+  // context propagation gap" on every single feed-gap row (§2 90-day reconstruction mandate).
+  const correlationId = randomUUID();
   try {
     if (!previousBar) return; // no baseline for this symbol yet — nothing to compare
 
@@ -225,6 +231,7 @@ export function evaluateFeedGap(symbol: string, previousBar: Bar | undefined, ba
           classification: result.classification,
           reason: result.reason,
         } as Record<string, unknown>,
+        correlationId,
       }).catch((e: unknown) => {
         logger.warn({ e, symbol, action: "feed_gap.classified" }, "feed-gap-classifier: audit write failed — non-blocking");
         auditWriteFailuresTotal.labels({ action: "feed_gap.classified" }).inc();
@@ -236,6 +243,7 @@ export function evaluateFeedGap(symbol: string, previousBar: Bar | undefined, ba
           symbol,
           gapMinutes: result.gapMinutes,
           classification: result.classification,
+          correlationId,
         });
       }
     }
@@ -249,6 +257,7 @@ export function evaluateFeedGap(symbol: string, previousBar: Bar | undefined, ba
       status: "warning",
       input: { symbol } as Record<string, unknown>,
       result: { error: err instanceof Error ? err.message : String(err) } as Record<string, unknown>,
+      correlationId,
     }).catch((e: unknown) => {
       logger.warn(
         { e, symbol, action: "feed_gap.classifier_failed" },

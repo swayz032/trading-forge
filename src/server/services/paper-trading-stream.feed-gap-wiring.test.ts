@@ -40,9 +40,25 @@ vi.mock("./paper-signal-service.js", () => ({
 vi.mock("./paper-risk-gate.js", () => ({
   toEasternDateString: (d: Date) => d.toISOString().split("T")[0],
 }));
+// F-2 (independent accuracy-validator grade, 2026-07-17): capture the onBar
+// callback passed to createWebSocket so the "never gates real bar processing"
+// describe block below can drive the REAL handleBar()/processSessionBar() path
+// end-to-end (via startStream -> ensureSocket -> this captured callback),
+// instead of only unit-testing evaluateFeedGap() in isolation. A fake WS needs
+// .on()/.connect()/.disconnect() since ensureSocket registers 4 event handlers
+// and calls .connect() before any bar can flow.
+let capturedOnBar: ((bar: Bar) => void) | undefined;
 vi.mock("../../data/fetchers/massive.js", () => ({
   createMassiveFetcher: vi.fn().mockReturnValue({
-    createWebSocket: vi.fn().mockReturnValue({ close: vi.fn() }),
+    createWebSocket: vi.fn((_symbols: string[], onBar: (bar: Bar) => void) => {
+      capturedOnBar = onBar;
+      return {
+        on: vi.fn(),
+        connect: vi.fn(),
+        disconnect: vi.fn(),
+        close: vi.fn(),
+      };
+    }),
   }),
 }));
 vi.mock("../lib/circuit-breaker.js", () => ({
@@ -86,9 +102,13 @@ import {
   _testGetFeedGapConnectionState,
   _testSetLastBarWallClockTime,
   _testClearFeedGapState,
+  _testSetBarBuffer,
+  startStream,
+  stopAllStreams,
   type Bar,
 } from "./paper-trading-stream.js";
 import { classifyFeedGap } from "../lib/feed-gap-classifier.js";
+import { evaluateSignals } from "./paper-signal-service.js";
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -118,6 +138,8 @@ const CURR_BAR_SUN_REOPEN = makeBar("2026-07-19T22:00:00.000Z"); // Sun 18:00 ET
 beforeEach(() => {
   vi.clearAllMocks();
   _testClearFeedGapState();
+  capturedOnBar = undefined;
+  stopAllStreams();
 });
 
 // ─── Wiring: PROVIDER_GAP → audit (warning) + SSE ────────────────────────────
@@ -265,5 +287,64 @@ describe("feed-gap connection-state tracker test seams", () => {
     _testClearFeedGapState();
     expect(_testGetFeedGapConnectionState("MES")).toBeUndefined();
     expect(_testGetFeedGapConnectionState("MNQ")).toBeUndefined();
+  });
+});
+
+// ─── F-2 (independent accuracy-validator grade, 2026-07-17) ──────────────────
+// The describe blocks above only exercise evaluateFeedGap() in isolation — they
+// prove NOTHING about whether a PROVIDER_GAP classification could ever be wired
+// into a gating decision inside the real handleBar()/processSessionBar() path,
+// because that path is never invoked here. The grader empirically demonstrated
+// (via a throwaway harness, not shipped) that a mutation gating session
+// processing on PROVIDER_GAP would sail through every test above undetected.
+// This block closes that gap: it drives the REAL handleBar() via
+// startStream() -> ensureSocket() -> the captured WS onBar callback, and
+// asserts evaluateSignals (the real downstream consumer) still fires after a
+// PROVIDER_GAP classification — the exact negative claim the wave's docstring
+// makes ("PURE OBSERVABILITY — never blocks, pauses, or gates bar processing").
+describe("evaluateFeedGap wiring — PROVIDER_GAP never gates real bar processing (handleBar E2E)", () => {
+  it("a PROVIDER_GAP-classified bar still reaches evaluateSignals via the real startStream->handleBar path", async () => {
+    // Prime a prior bar directly into the module's real barBuffer so handleBar's
+    // gap comparison has a baseline (mirrors what a real preceding live bar would
+    // have left behind).
+    _testSetBarBuffer("MES", [PREV_BAR]);
+
+    // Force PROVIDER_GAP: connection was NOT continuously connected across the gap.
+    _testSetLastBarWallClockTime("MES", 1_000_000);
+    _testSetFeedGapConnectionState("MES", "reconnecting", 2_000_000);
+
+    // getMassiveFetcher() reads this env var before reaching the mocked
+    // createMassiveFetcher factory — unrelated to feed-gap logic, just the
+    // module's real config-check gate.
+    vi.stubEnv("MASSIVE_API_KEY", "test-key");
+    startStream("wiring-e2e-session", ["MES"]);
+    expect(capturedOnBar).toBeDefined();
+
+    // Drive the REAL handleBar() (private, unexported — reached only through the
+    // captured WS callback exactly as production does).
+    capturedOnBar!(CURR_BAR_5MIN_GAP);
+
+    // handleBar is fire-and-forget async (chained via sessionLocks) — wait for
+    // the real downstream consumer to actually be called rather than assuming
+    // a fixed number of microtask ticks is enough.
+    await vi.waitFor(() => {
+      expect(vi.mocked(evaluateSignals)).toHaveBeenCalled();
+    });
+
+    // Both must be true: the gap WAS classified as PROVIDER_GAP (proving this
+    // test actually exercised the interesting branch, not a vacuous no-gap
+    // path), AND evaluateSignals still ran (proving the classification never
+    // gated it). A mutation that skips session processing on PROVIDER_GAP
+    // would make the evaluateSignals assertion above fail.
+    expect(mockInsertAuditRow).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "feed_gap.classified", result: expect.objectContaining({ classification: "PROVIDER_GAP" }) }),
+    );
+    expect(vi.mocked(evaluateSignals)).toHaveBeenCalledWith(
+      "wiring-e2e-session",
+      "MES",
+      expect.objectContaining({ symbol: "MES" }),
+      expect.any(Array),
+      expect.anything(),
+    );
   });
 });
