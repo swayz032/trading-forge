@@ -9,7 +9,10 @@ import { getDevelopingSessionPoc } from "./volume-profile-service.js";
 import { initSmtBarBufferProvider } from "./smt-live-service.js";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
-import { paperStreamLifecycleTotal } from "../lib/metrics-registry.js";
+import { paperStreamLifecycleTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { broadcastSSE } from "../routes/sse.js";
+import { classifyFeedGap } from "../lib/feed-gap-classifier.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -126,6 +129,156 @@ const isBackfilling = new Map<string, boolean>();
 
 /** Symbol → bars received while backfilling */
 const pendingRealtimeBars = new Map<string, Bar[]>();
+
+// ── Wave M1b (2026-07-17): feed-gap classification connection tracker ────────
+// See src/server/lib/feed-gap-classifier.ts for the full classification
+// contract (MARKET_CLOSED / PROVIDER_GAP / EXPECTED_NO_TRADE) and the
+// "never gates anything" invariant this observability-only feature must hold.
+
+type FeedGapConnState = "connected" | "disconnected" | "reconnecting";
+
+/**
+ * symbol -> current WS connection state + the wall-clock ms timestamp of the
+ * last transition INTO that state. Updated exclusively by the ws.on(...)
+ * handlers registered in ensureSocket() below (the only place that observes
+ * real connection-state transitions). Consumed by evaluateFeedGap() to
+ * determine "was the connection continuously 'connected' for the entire gap
+ * window" — see that function's docstring for the comparison basis.
+ */
+const feedGapConnectionState = new Map<string, { state: FeedGapConnState; since: number }>();
+
+/**
+ * symbol -> wall-clock ms timestamp when a bar was last processed for this
+ * symbol (set in evaluateFeedGap's `finally`, so it always advances even when
+ * classification itself fails). Used ONLY as the "since" comparison baseline
+ * for connection continuity — deliberately wall-clock-vs-wall-clock (not
+ * bar-timestamp-vs-wall-clock) so a delayed feed's bar timestamps are never
+ * conflated with real-time WS transition timestamps.
+ */
+const lastBarWallClockTime = new Map<string, number>();
+
+function recordFeedGapConnectionState(symbol: string, state: FeedGapConnState): void {
+  feedGapConnectionState.set(symbol, { state, since: Date.now() });
+}
+
+/**
+ * Wave M1b: classify the gap (if any) between `previousBar` and the
+ * just-arrived `bar` for `symbol`, and emit the resulting observability
+ * signals. PURE OBSERVABILITY — never blocks, pauses, or gates bar
+ * processing; every branch is wrapped so a thrown error here can NEVER
+ * propagate into handleBar()/the signal-evaluation critical path (fail-open,
+ * matching the "classifier must fail open" contract in
+ * feed-gap-classifier.ts's docstring).
+ *
+ * Audit row: `feed_gap.classified` (status "warning" for PROVIDER_GAP,
+ * "info" for MARKET_CLOSED/EXPECTED_NO_TRADE). SSE `feed:gap_classified` is
+ * fired ONLY for PROVIDER_GAP (the operationally actionable case) — routine
+ * EXPECTED_NO_TRADE events are frequent (esp. overnight) and would spam the
+ * dashboard if broadcast.
+ *
+ * On internal failure: logs a warning, writes a `feed_gap.classifier_failed`
+ * warning audit row documenting the classifier's OWN failure, and fires no
+ * SSE. Bar processing (handleBar) is entirely unaffected either way — this
+ * function is called fire-and-forget (never awaited) from handleBar.
+ *
+ * @internal exported for tests — production entry point is handleBar().
+ */
+export function evaluateFeedGap(symbol: string, previousBar: Bar | undefined, bar: Bar): void {
+  try {
+    if (!previousBar) return; // no baseline for this symbol yet — nothing to compare
+
+    const lastSeenWallClock = lastBarWallClockTime.get(symbol);
+    const conn = feedGapConnectionState.get(symbol);
+    // Continuously connected iff the CURRENT state is "connected" AND that
+    // connected streak began at or before the last time we saw a bar for this
+    // symbol — i.e. no disconnected/reconnecting transition happened in
+    // between. See feed-gap-classifier.ts docstring for why this is the
+    // caller's responsibility (kept out of the pure module).
+    const continuouslyConnected =
+      conn?.state === "connected" &&
+      lastSeenWallClock !== undefined &&
+      conn.since <= lastSeenWallClock;
+
+    const result = classifyFeedGap({
+      previousBarTimestamp: new Date(previousBar.timestamp),
+      currentBarTimestamp: new Date(bar.timestamp),
+      continuouslyConnected,
+    });
+
+    if (result.classified && result.classification) {
+      const status = result.classification === "PROVIDER_GAP" ? "warning" : "info";
+      insertAuditRow({
+        action: "feed_gap.classified",
+        entityType: "symbol",
+        entityId: symbol,
+        decisionAuthority: "system",
+        status,
+        input: {
+          symbol,
+          previousBarTimestamp: previousBar.timestamp,
+          currentBarTimestamp: bar.timestamp,
+          continuouslyConnected,
+        } as Record<string, unknown>,
+        result: {
+          symbol,
+          gapMinutes: result.gapMinutes,
+          classification: result.classification,
+          reason: result.reason,
+        } as Record<string, unknown>,
+      }).catch((e: unknown) => {
+        logger.warn({ e, symbol, action: "feed_gap.classified" }, "feed-gap-classifier: audit write failed — non-blocking");
+        auditWriteFailuresTotal.labels({ action: "feed_gap.classified" }).inc();
+      });
+
+      // SSE only for the operationally actionable case — see docstring.
+      if (result.classification === "PROVIDER_GAP") {
+        broadcastSSE("feed:gap_classified", {
+          symbol,
+          gapMinutes: result.gapMinutes,
+          classification: result.classification,
+        });
+      }
+    }
+  } catch (err) {
+    logger.warn({ err, symbol }, "feed-gap-classifier: classification threw — fail-open, bar processing unaffected");
+    insertAuditRow({
+      action: "feed_gap.classifier_failed",
+      entityType: "symbol",
+      entityId: symbol,
+      decisionAuthority: "system",
+      status: "warning",
+      input: { symbol } as Record<string, unknown>,
+      result: { error: err instanceof Error ? err.message : String(err) } as Record<string, unknown>,
+    }).catch((e: unknown) => {
+      logger.warn(
+        { e, symbol, action: "feed_gap.classifier_failed" },
+        "feed-gap-classifier: failure-audit write also failed — non-blocking",
+      );
+      auditWriteFailuresTotal.labels({ action: "feed_gap.classifier_failed" }).inc();
+    });
+  } finally {
+    // Always advance the wall-clock baseline, even on failure — otherwise a
+    // classifier bug would leave a stale baseline that skews the NEXT gap's
+    // continuity check.
+    lastBarWallClockTime.set(symbol, Date.now());
+  }
+}
+
+// ── Feed-gap test seams ─────────────────────────────────────────────────────
+// @internal exported for tests only — production code never calls these.
+export function _testSetFeedGapConnectionState(symbol: string, state: FeedGapConnState, since = Date.now()): void {
+  feedGapConnectionState.set(symbol, { state, since });
+}
+export function _testGetFeedGapConnectionState(symbol: string): { state: FeedGapConnState; since: number } | undefined {
+  return feedGapConnectionState.get(symbol);
+}
+export function _testSetLastBarWallClockTime(symbol: string, ms: number): void {
+  lastBarWallClockTime.set(symbol, ms);
+}
+export function _testClearFeedGapState(): void {
+  feedGapConnectionState.clear();
+  lastBarWallClockTime.clear();
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -401,7 +554,23 @@ async function handleBar(bar: Bar) {
     return;
   }
 
+  // Wave M1b: capture the previous last bar BEFORE pushBar mutates the buffer,
+  // so evaluateFeedGap can compare against the true prior bar. Fire-and-forget
+  // (never awaited) — pure observability, must never delay bar processing.
+  const priorBars = barBuffer.get(bar.symbol);
+  const previousBar = priorBars && priorBars.length > 0 ? priorBars[priorBars.length - 1] : undefined;
+
   pushBar(bar.symbol, bar);
+
+  try {
+    evaluateFeedGap(bar.symbol, previousBar, bar);
+  } catch (err) {
+    // Defense-in-depth only — evaluateFeedGap already wraps its entire body in
+    // try/catch/finally and should never throw synchronously. This outer
+    // catch exists so a change inside evaluateFeedGap can never regress the
+    // fail-open contract for the bar-processing critical path.
+    logger.warn({ err, symbol: bar.symbol }, "feed-gap-classifier: evaluateFeedGap threw unexpectedly outside its own guard (fail-open)");
+  }
 
   const sessions = sessionsForSymbol(bar.symbol);
   if (sessions.length === 0) return;
@@ -506,9 +675,16 @@ function ensureSocket(symbol: string, sessionId: string) {
   shared = { ws, sessions: new Set([sessionId]) };
   sharedSockets.set(symbol, shared);
 
+  // Wave M1b: seed the feed-gap connection tracker as "disconnected" the
+  // instant the socket object is created (before ws.connect() below) — a
+  // conservative baseline so a bar that somehow arrived before the first
+  // "connected" event would correctly read as NOT continuously connected.
+  recordFeedGapConnectionState(symbol, "disconnected");
+
   ws.on("connected", () => {
     logger.info({ symbol }, "Massive WebSocket connected");
-    
+    recordFeedGapConnectionState(symbol, "connected"); // Wave M1b
+
     // Check if we need to backfill (do we have existing bars?)
     const buffer = barBuffer.get(symbol);
     if (buffer && buffer.length > 0) {
@@ -530,10 +706,12 @@ function ensureSocket(symbol: string, sessionId: string) {
 
   ws.on("disconnected", () => {
     logger.warn({ symbol }, "Massive WebSocket disconnected");
+    recordFeedGapConnectionState(symbol, "disconnected"); // Wave M1b
   });
 
   ws.on("reconnecting", (info: { attempt: number; delayMs: number }) => {
     logger.info({ symbol, ...info }, "Massive WebSocket reconnecting");
+    recordFeedGapConnectionState(symbol, "reconnecting"); // Wave M1b
   });
 
   ws.on("error", (err: Error) => {
@@ -566,6 +744,11 @@ function releaseSocket(symbol: string, sessionId: string) {
     shared.ws.disconnect();
     sharedSockets.delete(symbol);
     barBuffer.delete(symbol);
+    // Wave M1b: bound the feed-gap tracker maps — no reason to keep tracking
+    // connection state for a symbol nothing subscribes to anymore. A fresh
+    // subscription later re-seeds via ensureSocket's "disconnected" baseline.
+    feedGapConnectionState.delete(symbol);
+    lastBarWallClockTime.delete(symbol);
     logger.info({ symbol }, "Disconnected shared WebSocket (no remaining sessions)");
   } else {
     logger.info(

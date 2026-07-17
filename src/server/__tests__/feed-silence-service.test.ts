@@ -563,3 +563,53 @@ describe("A-3 sustained feed silence — emergency close", () => {
     expect(emergencyCall).toBeUndefined();
   });
 });
+
+// ─── ACTIVE_LIFECYCLE_STATES — Wave M1b coupling test ────────────────────────
+// Locks the Wave M1b fix (2026-07-17): ACTIVE_LIFECYCLE_STATES must be
+// composed from the M3 single source of truth (paper-authority-states.ts's
+// BROKER_AUTHORITATIVE_STATES), not a second hand-typed literal that can
+// silently drift from it. The first test below checks today's real composed
+// value; the second is the RED-PROOF that this is genuine import coupling,
+// not a duplicate that merely happens to currently match — it injects a
+// mocked BROKER_AUTHORITATIVE_STATES with an extra sentinel state and asserts
+// the service's ACTIVE_LIFECYCLE_STATES picks it up live. If a future edit
+// reverts to a hardcoded literal, this second test fails immediately (a
+// hardcoded array can never contain a value injected purely by mocking the
+// OTHER module).
+describe("ACTIVE_LIFECYCLE_STATES composition (Wave M1b fix)", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+  });
+
+  it("today's real composed value is PAPER + BROKER_AUTHORITATIVE_STATES (DEPLOY_READY, PILOT, DEPLOYED)", async () => {
+    const { BROKER_AUTHORITATIVE_STATES } = await import("../../server/lib/paper-authority-states.js");
+    const { __test__ } = await import("../../server/services/feed-silence-service.js");
+
+    expect(new Set(__test__.ACTIVE_LIFECYCLE_STATES)).toEqual(
+      new Set(["PAPER", ...BROKER_AUTHORITATIVE_STATES]),
+    );
+    // Pin today's concrete expected value too (belt-and-suspenders — catches
+    // an accidental Set-equality false-pass from a degenerate empty array).
+    expect(__test__.ACTIVE_LIFECYCLE_STATES).toContain("PAPER");
+    expect(__test__.ACTIVE_LIFECYCLE_STATES).toContain("DEPLOY_READY");
+    expect(__test__.ACTIVE_LIFECYCLE_STATES).toContain("PILOT");
+    expect(__test__.ACTIVE_LIFECYCLE_STATES).toContain("DEPLOYED");
+    expect(__test__.ACTIVE_LIFECYCLE_STATES).toHaveLength(4);
+  });
+
+  it("RED-PROOF: genuinely imports live from paper-authority-states.ts — changing its export changes this service's list too", async () => {
+    vi.doMock("../../server/lib/paper-authority-states.js", () => ({
+      BROKER_AUTHORITATIVE_STATES: ["DEPLOY_READY", "PILOT", "DEPLOYED", "__SENTINEL_TEST_STATE__"],
+    }));
+
+    const { __test__ } = await import("../../server/services/feed-silence-service.js");
+
+    // The sentinel can ONLY appear here if the service is a live re-export of
+    // BROKER_AUTHORITATIVE_STATES — a hardcoded duplicate literal would never
+    // pick up a value injected purely via mocking the OTHER module.
+    expect(__test__.ACTIVE_LIFECYCLE_STATES).toContain("__SENTINEL_TEST_STATE__");
+    expect(__test__.ACTIVE_LIFECYCLE_STATES).toContain("PAPER");
+    expect(__test__.ACTIVE_LIFECYCLE_STATES).toHaveLength(5);
+  });
+});

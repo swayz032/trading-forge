@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-17T16:36:28.653Z`.
+Updated automatically from the repo on `2026-07-17T17:27:04.331Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-07-17T16:36:28.653Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `79`
-- Scheduler jobs tracked: `111`
+- Scheduler jobs tracked: `112`
 - Current live Trading Forge n8n workflows tracked: `20`
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
@@ -55,7 +55,7 @@ Updated automatically from the repo on `2026-07-17T16:36:28.653Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `73`
 - Route coverage: `79/79`
-- Scheduler coverage: `111/111`
+- Scheduler coverage: `112/112`
 - Engine coverage: `29/29`
 - Database coverage: `111/111`
 - Autonomous subsystems with audit coverage: `64/64`
@@ -421,6 +421,7 @@ Updated automatically from the repo on `2026-07-17T16:36:28.653Z`.
 - `w19-statistics-pull`
 - `wave26-cohort-daily-audit-report`
 - `webhook-latency-check`
+- `weekend-auto-resume-check`
 - `weekly-drift-2sigma-check`
 - `weekly-drift-detection`
 
@@ -1180,11 +1181,12 @@ Updated automatically from the repo on `2026-07-17T16:36:28.653Z`.
 - **Emitter:** `src/server/services/windows-health-check-service.ts:489`
 - **Purpose:** Pipeline auto-resumed after a reboot-pending pause cleared on a later health-check pass.
 
-### Wave 6 ($250-1K campaign) Batch Additions (2026-07-17)
+### Wave M1b Addition (2026-07-17) — feed-gap classification
 
-### profit_governor:shadow_milestone
-- **Emitter:** `src/server/services/paper-signal-service.ts:4097`
-- **Purpose:** Shadow (observability-only, never-enforcing) profit-milestone governor logged a session's transition into the STRONG or EXCEPTIONAL realized-P&L zone. Fires ONLY on the transition into that zone (de-duped via `governorStateCache`'s per-session `lastProfitMilestoneZone` marker), not on every bar/signal. Pure bucketing — NEVER blocks a trade, NEVER touches an exit; daily upside stays UNCAPPED by operator directive (CLAUDE.md §5). See `src/server/lib/profit-milestone-shadow.ts`.
+### feed:gap_classified
+- **Emitter:** `src/server/services/paper-trading-stream.ts::evaluateFeedGap()`
+- **Payload shape:** `{ symbol: string, gapMinutes: number, classification: "PROVIDER_GAP" }`
+- **Purpose:** Fired ONLY for `PROVIDER_GAP` classifications (the operationally actionable case — see `src/server/lib/feed-gap-classifier.ts`). Routine `MARKET_CLOSED`/`EXPECTED_NO_TRADE` classifications are audit-row-only (no SSE) to avoid spamming the dashboard, especially overnight. PURE OBSERVABILITY — never gates, blocks, or pauses signal evaluation, order lifecycle, or any promotion input. Listeners: none yet (Future dashboard panel — operator-visible feed-health tile).
 
 ---
 

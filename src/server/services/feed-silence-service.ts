@@ -20,12 +20,47 @@
  *      feed.silence_detected audit row.
  *   4. In-process per-strategy dedup prevents alert spam across ticks.
  *
- * SIGNAL SOURCE:
+ * SIGNAL SOURCE (corrected Wave M1b, 2026-07-17 — see below for what was wrong):
  *   paper_signal_logs.created_at — most recent row per strategy_id (joined
- *   through paper_sessions). This table is written on EVERY inbound signal
- *   regardless of whether a position was opened (acted=true/false). It is the
- *   authoritative last-received-signal record for any strategy receiving live
- *   TradingView/Pine alerts.
+ *   through paper_sessions). The ONLY writer of this table is `logSignal()`
+ *   in paper-signal-service.ts (~line 1878+), called from `evaluateSignals()`
+ *   — the internal, Massive-WS-bar-driven signal-evaluation loop
+ *   (paper-trading-stream.ts's handleBar → processSessionBar →
+ *   evaluateSignals), NOT Pine/TradingView webhook alerts. Pine alerts land
+ *   in a COMPLETELY DIFFERENT table, `tradingview_markers`, via
+ *   `routes/tradingview-webhook.ts`, and NEVER touch `paper_signal_logs`.
+ *   `logSignal()` only PERSISTS a row when
+ *   `entry.entrySignal || entry.exitSignal || entry.stopHit` is true
+ *   (paper-signal-service.ts ~line 1883) — i.e. this is a SPARSE
+ *   trade-trigger-event log (fires on entries/exits/stop-hits only), NOT a
+ *   per-bar heartbeat and NOT tied to TradingView/Pine activity at all.
+ *
+ *   PRE-CORRECTION TEXT (WRONG, kept here only as a historical pointer so a
+ *   future reader who finds an old comment/doc referencing "every inbound
+ *   signal" or "TradingView alert status" for this table knows it was a
+ *   documentation bug, not a second, differently-behaved code path): the
+ *   original docstring here claimed this table was written on "EVERY
+ *   inbound signal regardless of whether a position was opened" and
+ *   described the monitoring as tied to "TradingView alert status, Pine
+ *   script execution, and TradersPost routing." Both claims were false — the
+ *   monitoring LOGIC below (threshold math, RTH gate, emergency-close) is
+ *   correct and UNCHANGED by this correction; only the doc's description of
+ *   its own data source was wrong.
+ *
+ *   Practical consequence of the sparse-log reality: a strategy that is
+ *   genuinely healthy but simply hasn't had an entry/exit/stop-hit signal
+ *   fire recently (e.g. a low-frequency structural-setup strategy with no
+ *   A+ setup in the window) will show the SAME "no recent row" signature as a
+ *   strategy whose feed genuinely died. This detector cannot distinguish
+ *   "healthy but quiet" from "feed silently dead" purely from
+ *   paper_signal_logs — see the new, complementary
+ *   src/server/lib/feed-gap-classifier.ts (Wave M1b) for a bar-level
+ *   observability layer that DOES see every raw bar arrival + WS
+ *   connection-state transition, wired directly into
+ *   paper-trading-stream.ts's handleBar(). The two are deliberately separate
+ *   subsystems at different granularities (bar-level real-time vs.
+ *   cron-driven per-strategy silence-alarm) — this correction does not merge
+ *   them.
  *
  *   Assumption documented: if paper_signal_logs has NO rows for a strategy that
  *   should be receiving signals, that itself is considered silence as of the
@@ -52,14 +87,51 @@ import { logger } from "../lib/logger.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { BROKER_AUTHORITATIVE_STATES } from "../lib/paper-authority-states.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const RTH_START_ET_HOUR = 9;   // 09:30 AM ET (we check >= 9 for safety margin)
 const RTH_END_ET_HOUR   = 16;  // 04:00 PM ET
 
-/** Lifecycle states considered "active" for silence monitoring */
-const ACTIVE_LIFECYCLE_STATES = ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"] as const;
+/**
+ * Lifecycle states considered "active" for silence monitoring.
+ *
+ * FIXED Wave M1b (2026-07-17): this was previously a hand-typed literal
+ * `["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"]` that duplicated — and
+ * could silently drift from — the M3-core single source of truth
+ * `BROKER_AUTHORITATIVE_STATES` in paper-authority-states.ts
+ * (`{DEPLOY_READY, PILOT, DEPLOYED}`, post-M3 2026-07-17). Confirmed drift
+ * consequence: when a strategy transitions PAPER→DEPLOY_READY/PILOT/DEPLOYED,
+ * the internal Massive-fed stream is stopped (lifecycle-service.ts's
+ * "sibling-stop" block, ~lines 3417-3459) but any still-open internal
+ * `paper_positions` row is NOT flattened at the transition — left dangling.
+ * With the OLD hardcoded list, this service kept treating
+ * DEPLOY_READY/PILOT/DEPLOYED as "active" and monitoring `paper_signal_logs`
+ * staleness for them too; since the internal stream is stopped, that table
+ * goes silent, and after the 2h emergency-close threshold
+ * `attemptEmergencyCloseForStrategy()` fired a spurious, confusing
+ * "emergency close" against an internal-only phantom position for a
+ * strategy where TradersPost is now the sole real authority. (Verified
+ * NOT a live-capital-risk: `closePosition()` here only touches internal
+ * `paper_positions`/`paper_trades` bookkeeping — it never routes through
+ * broker-router.ts/TradersPost/TopstepX. It IS a real hygiene/audit-log-
+ * confusion bug, now closed by importing the single source of truth instead
+ * of re-typing it.)
+ *
+ * PAPER genuinely IS still active-and-worth-monitoring here (M3 kept the
+ * internal Massive-WS stream running for PAPER, so `paper_signal_logs`
+ * staleness remains a real, valid signal for PAPER strategies) — it is NOT
+ * one of the `BROKER_AUTHORITATIVE_STATES` (which start at DEPLOY_READY), so
+ * it must be listed explicitly alongside the imported set, not derived from
+ * it. Composing this way means the two lists can never silently diverge
+ * again: any future change to BROKER_AUTHORITATIVE_STATES automatically
+ * flows through here (locked by a coupling test in
+ * feed-silence-service.test.ts — changing paper-authority-states.ts's export
+ * would break that test, proving real import coupling rather than a second
+ * hand-copy).
+ */
+const ACTIVE_LIFECYCLE_STATES = ["PAPER", ...BROKER_AUTHORITATIVE_STATES] as const;
 
 /** Default: 3 × bar-interval before firing a silence alert */
 const DEFAULT_THRESHOLD_MULTIPLIER = 3;
