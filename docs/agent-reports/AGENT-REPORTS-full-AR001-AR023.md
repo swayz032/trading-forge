@@ -4,6 +4,29 @@
 
 ---
 
+## AR-023 · 2026-07-17 · ★ PRE-FLIGHT HOLD (this is NOT the verdict — the read did NOT run). R-032 GO received + operator's direct "yes" received; at the final pre-flight I caught a CRITICAL never-executed seam that would have SPENT the exam with no verdict: the PANEL seam is not operationalized and has never run live. Correcting AR-022. Holding. Requesting R-033. Seal INTACT.
+
+**I did NOT open the twelve.** R-032 ruled GO and the operator, asked directly in-session, answered "yes" — authorization complete. Before dispatching ANY sealed phase_a, I ran the pre-flight checks that don't touch the twelve. One failed, hard.
+
+**★ THE CATCH — the read has FOUR live seams, not three; the 4th (panels) is a never-executed, non-operationalized seam.** My R-030/R-031 receipts proved Phase-A + Phase-B + rater live, but every micro-rehearsal STOPPED before panels + verdict. Verified from code:
+- **No operationalized panel dispatch.** phase_a/phase_b/rater each emit a `--dispatch` command; the panel seam emits NONE (cli.py plan: only those three have `dispatch_command`; the panel shape carries only an `output_path_template`). The runbook (STEP 4/§39) says "dispatch its panel" with no mechanism — the same self-not-describing gap the rater seam had before R-031.
+- **Required on the sealed path + REAL live spend.** `run_panels_and_certify_stage` raises if `live_panel_fn` is None in sealed mode (driver:1490); the sealed branch calls `live_panel_fn(cid, strategy, video_id)` — annotated "REAL cross-vendor spend seam" (driver:1357) — returning `{conflation, enumeration_consistency, completeness}` (gpt-5.4). The conductor's `_make_conductor_panel_fn` reads `panels/<cid>.json` and HALTs if missing.
+- **Never run live.** The rehearsal/staging branch LOADS CACHED panels ("no live call", driver:1341-1347). So `live_panel_fn` has NEVER been exercised on seal-day format — the panel→certify→verdict path is unproven live.
+
+**Consequence if I had opened it:** phase_a (60 draws) + phase_b would READ and SPEND the twelve sealed transcripts, certify would emit panel_requests, then the conductor would have NO command + NO proven mechanism to produce `panels/<cid>.json` → HALT → NO verdict. The once-only exam burned for nothing — the exact catastrophic half-read the whole fail-closed design exists to prevent.
+
+**★ I OWN THIS MISS.** AR-022 claimed "all three seam classes proven live … the generalized green law is satisfied end-to-end." That was WRONG — there are FOUR seams; I omitted panels. R-032's "no never-executed seam remains in the read path" rested on that incomplete claim. The green law (R-028 §4) is NOT yet satisfied: the panel→verdict path never executed. This is a sixth trigger-time catch — fail-closed holding at the last inch, before the irreversible spend, not after.
+
+**Proposed resolution (R-033 — I implement + independently grade + prove live on SPENT 2DX before any re-approval):**
+1. **Operationalize a panel dispatch** producing `panels/<cid>.json = {conflation, enumeration_consistency, completeness}` per cid via the existing gpt-5.4 path (`h1_flex_content_panel_v32.py` content axis + `h1_conflation_check.py` conflation + the enum axis; OPENAI_API_KEY IS present in `.env`) — a `--dispatch panel` (or equivalent named command) so the blind conductor has a runbook-named mechanism, same shape as the rater seam fix.
+2. **Run the FULL micro-rehearsal THROUGH THE VERDICT on spent 2DX** — the first live exercise of panels + Module-C certificate + Module-D + Module-E verdict math end-to-end (the genuine green-law receipt for the whole read path, not just the three claude seams).
+3. Independent grade (doer≠grader); runbook/params addendum + re-freeze; comprehension probe.
+4. Corrected green claim + re-approval, then the operator's go stands and the conductor opens the twelve.
+
+**HOLD. Seal INTACT** — sealed 12 (`4d7b3c29`) + 77 (`701c3edb`) UNTOUCHED, token standing, no sealed transcript opened, nothing spent. The verdict AR-023 R-032 reserved will be a later AR once a real read runs; this AR-023 is the pre-flight hold that precedes it. Requesting R-033.
+
+---
+
 ## AR-022 · 2026-07-17 · R-031 LANDED + independently graded BAND 8 + runbook re-frozen + probed. The RATER receipt is RE-EARNED LIVE — ALL THREE seam classes now proven live on spent 2DX. The read is BUILD-COMPLETE and FULLY GREEN. Holding ONLY on the operator's open-the-twelve go. Seal INTACT.
 
 **R-031 both gaps closed (committed on `h1-wave4-sealed12-driver`):**
