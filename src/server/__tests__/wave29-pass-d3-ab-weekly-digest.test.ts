@@ -13,13 +13,26 @@
  *  7.  Lock contention: skip + skipped_lock_contention audit
  *  8.  Pipeline PAUSED: digest still fires (exempt registration verified — service has no pipeline gate)
  *  9.  Sharpe gap computation: known fixture returns expected delta
- * 10.  Regime breakdown computation: positions grouped by institutional_regime correctly
+ * 10.  Regime breakdown computation: positions grouped by macro_regime correctly
  * 11.  Kill switch engage count: counts quantum_rl.kill_switch_engaged audit rows in past 7 days
  * 12.  RL training epoch count: counts quantum_rl.training_completed audit rows in past 7 days
  * 13.  Family-grade postscript appended to Discord body
  * 14.  Discord post failure → caught + discord_failed warn audit + does NOT throw
  * 15.  Empty data (no positions): emit digest with "No A/B data yet" body + still posts Discord
  * 16.  dryRun=true: lock contention also skips audit row (dry-run + contention combined)
+ *
+ * CORRECTED (fixwave-critic-replay-lifecycle-misc round-2, 2026-07-17): the production
+ * HIGH fix moved P&L/regime computation from audit_log (db.select) reads to raw SQL
+ * (db.execute) queries against paper_trades/paper_sessions/strategies — see
+ * ab-comparison-weekly-digest-service.ts's _queryAccountMetrics doc comment. This test
+ * file's DB mock previously stubbed db.execute as a static always-[] resolver while its
+ * mockDbSelect ordinal queue was still keyed to the OLD call sequence (6 db.select calls),
+ * which silently broke every assertion downstream of the shifted ordinals (kill-switch
+ * count, epoch count, Sharpe gap, regime breakdown) even though the file reported green.
+ * Fixed: db.execute is now a controllable per-test queue (3 calls: baseline daily rows,
+ * challenger daily rows, regime rows) and db.select is a separate 3-call queue (kill_switch_
+ * engaged count, kill_switch_evaluated armed-idle rows, training_completed count) — matching
+ * the real Promise.all dispatch order in runAbComparisonWeeklyDigest.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -59,16 +72,33 @@ vi.mock("../lib/notification-helpers.js", () => ({
 }));
 
 // ── DB mock ────────────────────────────────────────────────────────────────────
+//
+// _queryAccountMetrics (baseline + challenger) and _computeRegimeBreakdown all go
+// through db.execute(sql`...`) — 3 calls per run, in this order:
+//   1. baseline daily P&L rows   (DailyRow[]: { day, pnl })
+//   2. challenger daily P&L rows (DailyRow[]: { day, pnl })
+//   3. regime breakdown rows     (TradeRegimeRow[]: { regime, routing, pnl })
+//
+// _countAuditAction (x2) + _countKillSwitchArmedIdle still go through db.select —
+// 3 calls per run, in this order:
+//   1. kill_switch_engaged count rows
+//   2. kill_switch_evaluated armed-idle rows
+//   3. training_completed count rows
+//
+// Promise.all evaluates the array left-to-right synchronously up to each function's
+// first await, so this ordinal ordering is deterministic (see production code comment
+// at runAbComparisonWeeklyDigest step 3).
 
-const { mockDbSelect } = vi.hoisted(() => ({
+const { mockDbSelect, mockDbExecute } = vi.hoisted(() => ({
   mockDbSelect: vi.fn(),
+  mockDbExecute: vi.fn(),
 }));
 
 vi.mock("../db/index.js", () => ({
   db: {
     select: mockDbSelect,
     insert: vi.fn(),
-    execute: vi.fn().mockResolvedValue([]),
+    execute: mockDbExecute,
     update: vi.fn(),
   },
 }));
@@ -140,7 +170,7 @@ const FRI_ET18 = makeAsOf(9, 18); // Friday 18:00 ET
 const THU_ET17 = makeAsOf(8, 17); // Thursday 17:00 ET
 const SAT_ET17 = makeAsOf(10, 17); // Saturday 17:00 ET
 
-/** Build a Drizzle-style query chain resolving to given rows */
+/** Build a Drizzle-style select() query chain resolving to given rows (db.select path). */
 function buildSelectChain(rows: unknown[]) {
   return {
     from: vi.fn().mockReturnThis(),
@@ -150,54 +180,44 @@ function buildSelectChain(rows: unknown[]) {
   };
 }
 
-/** Build a signal.rl_ab_routed result row */
-function buildAbRow(
-  routing: "baseline" | "rl-challenger",
-  regime: string,
-  pnl: number,
-) {
-  return {
-    resultJson: {
-      account_routing: routing,
-      institutional_regime: regime,
-      realized_pnl: pnl,
-    },
-  };
+/** Build a DailyRow ({ day, pnl }) — the shape _queryAccountMetrics's db.execute() resolves to. */
+function buildDailyRow(day: string, pnl: number) {
+  return { day, pnl };
+}
+
+/** Build a TradeRegimeRow ({ regime, routing, pnl }) — the shape _computeRegimeBreakdown's db.execute() resolves to. */
+function buildRegimeRow(regime: string | null, routing: "baseline" | "rl-challenger", pnl: number) {
+  return { regime, routing, pnl };
 }
 
 /**
- * Setup mockDbSelect to return:
- * 1st call  → baseline signal.rl_ab_routed rows
- * 2nd call  → challenger signal.rl_ab_routed rows
- * 3rd call  → kill_switch_engaged count rows
- * 4th call  → kill_switch_evaluated armed-idle rows
- * 5th call  → training_completed count rows
- * 6th call  → regime breakdown rows (signal.rl_ab_routed for all)
- *
- * In the service, Promise.all fires 6 concurrent queries.
- * mockDbSelect is called 6 times via the select() entry point.
+ * Set up mockDbExecute (3 calls: baseline daily rows, challenger daily rows, regime rows)
+ * and mockDbSelect (3 calls: kill_switch_engaged count, kill_switch armed-idle, training count)
+ * to match one full runAbComparisonWeeklyDigest Promise.all dispatch.
  */
 function setupHappyPath(
-  baselineRows: unknown[],
-  challengerRows: unknown[],
+  baselineDailyRows: ReturnType<typeof buildDailyRow>[],
+  challengerDailyRows: ReturnType<typeof buildDailyRow>[],
   killEngageCount: number,
   killArmedCount: number,
   trainingCount: number,
-  regimeRows: unknown[],
+  regimeRows: ReturnType<typeof buildRegimeRow>[],
 ) {
+  mockDbExecute
+    // 1. baseline daily P&L rows
+    .mockResolvedValueOnce(baselineDailyRows)
+    // 2. challenger daily P&L rows
+    .mockResolvedValueOnce(challengerDailyRows)
+    // 3. regime breakdown rows
+    .mockResolvedValueOnce(regimeRows);
+
   mockDbSelect
-    // baseline metrics: select → from → where
-    .mockReturnValueOnce(buildSelectChain(baselineRows))
-    // challenger metrics
-    .mockReturnValueOnce(buildSelectChain(challengerRows))
-    // kill_switch_engaged count
+    // 1. kill_switch_engaged count
     .mockReturnValueOnce(buildSelectChain(Array(killEngageCount).fill({ id: "x" })))
-    // kill_switch armed-idle count
-    .mockReturnValueOnce(buildSelectChain(Array(killArmedCount).fill({ resultJson: { decision: "idle" } })))
-    // training_completed count
-    .mockReturnValueOnce(buildSelectChain(Array(trainingCount).fill({ id: "x" })))
-    // regime breakdown
-    .mockReturnValueOnce(buildSelectChain(regimeRows));
+    // 2. kill_switch armed-idle count
+    .mockReturnValueOnce(buildSelectChain(Array(killArmedCount).fill({ resultJson: { should_dormant: false, reason: null } })))
+    // 3. training_completed count
+    .mockReturnValueOnce(buildSelectChain(Array(trainingCount).fill({ id: "x" })));
 }
 
 // ── Setup ──────────────────────────────────────────────────────────────────────
@@ -207,6 +227,8 @@ beforeEach(() => {
   mockInsertAuditRowSafe.mockClear();
   mockNotifyInfo.mockClear();
   mockDbSelect.mockReset();
+  mockDbExecute.mockReset();
+  mockDbExecute.mockResolvedValue([]); // default fallback for calls beyond a test's explicit queue
   (appendFamilyGradePostscript as ReturnType<typeof vi.fn>).mockClear();
 });
 
@@ -214,9 +236,15 @@ beforeEach(() => {
 
 describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
   it("1. Happy path: data in both sub-accounts → Discord post emitted + audit row written", async () => {
-    const baselineRows = [buildAbRow("baseline", "TRENDING", 500), buildAbRow("baseline", "TRENDING", 300)];
-    const challengerRows = [buildAbRow("rl-challenger", "TRENDING", 600), buildAbRow("rl-challenger", "TRENDING", 400)];
-    setupHappyPath(baselineRows, challengerRows, 0, 2, 5, [...baselineRows, ...challengerRows]);
+    const baselineDaily = [buildDailyRow("2026-01-05", 500), buildDailyRow("2026-01-06", 300)];
+    const challengerDaily = [buildDailyRow("2026-01-05", 600), buildDailyRow("2026-01-06", 400)];
+    const regimeRows = [
+      buildRegimeRow("TRENDING", "baseline", 500),
+      buildRegimeRow("TRENDING", "baseline", 300),
+      buildRegimeRow("TRENDING", "rl-challenger", 600),
+      buildRegimeRow("TRENDING", "rl-challenger", 400),
+    ];
+    setupHappyPath(baselineDaily, challengerDaily, 0, 2, 5, regimeRows);
 
     const result = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17 });
 
@@ -240,9 +268,13 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
   });
 
   it("2. dryRun=true: no Discord post, no audit row, computation proceeds and returns metrics", async () => {
-    const baselineRows = [buildAbRow("baseline", "RANGE_BOUND", 100)];
-    const challengerRows = [buildAbRow("rl-challenger", "RANGE_BOUND", 150)];
-    setupHappyPath(baselineRows, challengerRows, 0, 0, 2, [...baselineRows, ...challengerRows]);
+    const baselineDaily = [buildDailyRow("2026-01-05", 100)];
+    const challengerDaily = [buildDailyRow("2026-01-05", 150)];
+    const regimeRows = [
+      buildRegimeRow("RANGE_BOUND", "baseline", 100),
+      buildRegimeRow("RANGE_BOUND", "rl-challenger", 150),
+    ];
+    setupHappyPath(baselineDaily, challengerDaily, 0, 0, 2, regimeRows);
 
     const result = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17, dryRun: true });
 
@@ -263,6 +295,7 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
     expect(result.status).toBe("skipped_dst_guard");
     expect(mockNotifyInfo).not.toHaveBeenCalled();
     expect(mockDbSelect).not.toHaveBeenCalled();
+    expect(mockDbExecute).not.toHaveBeenCalled();
 
     const auditCalls = mockInsertAuditRowSafe.mock.calls;
     const guardAudit = auditCalls.find(
@@ -313,47 +346,22 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
   });
 
   it("7. Lock contention: skip + skipped_lock_contention audit", async () => {
-    // Simulate in-flight by calling first time without releasing
-    // We directly set the lock via calling once and mocking DB to hang
-    // Instead: call once with dryRun to pass the guard, then manually test contention
-    // by calling twice — first will acquire, second won't
-
-    // First call: acquire lock + complete (we mock DB for a minimal pass)
+    // First call: acquire lock + complete (minimal empty pass).
     setupHappyPath([], [], 0, 0, 0, []);
     const first = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17 });
     expect(first.status).toBe("completed");
 
-    // Reset mocks but NOT the lock (don't call _resetDigestLockForTest)
+    // Reset for the contention half of this test.
+    _resetDigestLockForTest();
     mockInsertAuditRowSafe.mockClear();
     mockNotifyInfo.mockClear();
     mockDbSelect.mockReset();
+    mockDbExecute.mockReset();
+    // Execute-based calls (baseline/challenger/regime) resolve immediately —
+    // only the select-based calls (kill_switch/training counts) hang below,
+    // which is enough to hold the lock open for the contention assertion.
+    mockDbExecute.mockResolvedValue([]);
 
-    // Second call: lock is still held from first call? No — first call released in finally.
-    // We need to test contention by simulating: manually set the lock then call.
-    // The exported lock helpers allow us to test this by calling with dryRun twice quickly.
-    // Actually the lock is released after first call completes. We can test contention
-    // by calling the private lock helper directly via a different approach:
-    // wrap the service to hold the lock, then call again.
-
-    // Simplest: re-import the module and use the _resetDigestLockForTest negation approach:
-    // Set lock in-flight manually by calling once without mockDbSelect causing it to hang.
-    // Since we can't easily force in-flight without real async, test via the exported reset:
-    // Do NOT reset lock → simulate it was already acquired externally:
-    // This is the canonical pattern from the B3 test file.
-
-    // NOTE: Since _resetDigestLockForTest() clears the lock and we DON'T call it here,
-    // the lock should still be free. We need to force it to be taken.
-    // The approach: make mockDbSelect never resolve so the first call stays in-flight
-    // ... but that blocks the test. Instead we verify the contention path logic works
-    // by checking the audit action is registered correctly:
-
-    // Re-test: don't reset lock between calls. Call once (fast), call again before it finishes.
-    // Since the service is async, we can call both and the second will hit contention.
-    _resetDigestLockForTest(); // Reset for this test
-    mockInsertAuditRowSafe.mockClear();
-    mockDbSelect.mockReset();
-
-    // Make the first call never release (hang DB)
     let resolveFirst!: () => void;
     const hangingPromise = new Promise<unknown[]>((r) => { resolveFirst = () => r([]); });
     mockDbSelect.mockReturnValue({
@@ -361,10 +369,10 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
       where: vi.fn().mockReturnValue(hangingPromise),
     });
 
-    // Start first call (will hang at DB) but don't await
+    // Start first call (will hang at the select-based DB calls) but don't await.
     const firstPending = runAbComparisonWeeklyDigest({ asOf: FRI_ET17 });
 
-    // Immediately call second — should hit lock contention
+    // Immediately call second — should hit lock contention.
     mockInsertAuditRowSafe.mockClear();
     const second = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17 });
     expect(second.status).toBe("skipped_lock_contention");
@@ -374,7 +382,7 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
     );
     expect(contentionAudit).toBeDefined();
 
-    // Resolve the hang to let the first call complete and release the lock
+    // Resolve the hang to let the first call complete and release the lock.
     resolveFirst();
     await firstPending;
   });
@@ -393,19 +401,29 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
     // Baseline: 4 sessions with P&Ls [100, 200, 100, 200] → mean=150, std=57.74 → Sharpe≈2.598
     // Challenger: 4 sessions with P&Ls [300, 400, 300, 400] → mean=350, std=57.74 → Sharpe≈6.062
     // Gap ≈ 3.46 (challenger is improving)
-    const baselineRows = [
-      buildAbRow("baseline", "TRENDING", 100),
-      buildAbRow("baseline", "TRENDING", 200),
-      buildAbRow("baseline", "TRENDING", 100),
-      buildAbRow("baseline", "TRENDING", 200),
+    const baselineDaily = [
+      buildDailyRow("2026-01-02", 100),
+      buildDailyRow("2026-01-03", 200),
+      buildDailyRow("2026-01-04", 100),
+      buildDailyRow("2026-01-05", 200),
     ];
-    const challengerRows = [
-      buildAbRow("rl-challenger", "TRENDING", 300),
-      buildAbRow("rl-challenger", "TRENDING", 400),
-      buildAbRow("rl-challenger", "TRENDING", 300),
-      buildAbRow("rl-challenger", "TRENDING", 400),
+    const challengerDaily = [
+      buildDailyRow("2026-01-02", 300),
+      buildDailyRow("2026-01-03", 400),
+      buildDailyRow("2026-01-04", 300),
+      buildDailyRow("2026-01-05", 400),
     ];
-    setupHappyPath(baselineRows, challengerRows, 0, 0, 0, [...baselineRows, ...challengerRows]);
+    const regimeRows = [
+      buildRegimeRow("TRENDING", "baseline", 100),
+      buildRegimeRow("TRENDING", "baseline", 200),
+      buildRegimeRow("TRENDING", "baseline", 100),
+      buildRegimeRow("TRENDING", "baseline", 200),
+      buildRegimeRow("TRENDING", "rl-challenger", 300),
+      buildRegimeRow("TRENDING", "rl-challenger", 400),
+      buildRegimeRow("TRENDING", "rl-challenger", 300),
+      buildRegimeRow("TRENDING", "rl-challenger", 400),
+    ];
+    setupHappyPath(baselineDaily, challengerDaily, 0, 0, 0, regimeRows);
 
     const result = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17, dryRun: true });
 
@@ -423,19 +441,19 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
     expect(sharpeTrend).toBe("improving");
   });
 
-  it("10. Regime breakdown computation: positions grouped by institutional_regime correctly", async () => {
-    const rows = [
-      buildAbRow("baseline", "TRENDING", 100),
-      buildAbRow("rl-challenger", "TRENDING", 200),
-      buildAbRow("rl-challenger", "TRENDING", 200),
-      buildAbRow("baseline", "RANGE_BOUND", -50),
-      buildAbRow("rl-challenger", "RANGE_BOUND", -30),
+  it("10. Regime breakdown computation: positions grouped by macro_regime correctly", async () => {
+    const regimeRows = [
+      buildRegimeRow("TRENDING", "baseline", 100),
+      buildRegimeRow("TRENDING", "rl-challenger", 200),
+      buildRegimeRow("TRENDING", "rl-challenger", 200),
+      buildRegimeRow("RANGE_BOUND", "baseline", -50),
+      buildRegimeRow("RANGE_BOUND", "rl-challenger", -30),
     ];
     setupHappyPath(
-      [rows[0], rows[3]], // baseline rows
-      [rows[1], rows[2], rows[4]], // challenger rows
+      [buildDailyRow("2026-01-05", 100), buildDailyRow("2026-01-06", -50)],
+      [buildDailyRow("2026-01-05", 200), buildDailyRow("2026-01-06", 200), buildDailyRow("2026-01-07", -30)],
       0, 0, 0,
-      rows, // regime breakdown uses all
+      regimeRows, // regime breakdown uses all per-trade rows
     );
 
     const result = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17, dryRun: true });
@@ -456,12 +474,12 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
 
   it("11. Kill switch engage count: counts quantum_rl.kill_switch_engaged rows in past 7 days", async () => {
     setupHappyPath(
-      [buildAbRow("baseline", "TRENDING", 100)],
-      [buildAbRow("rl-challenger", "TRENDING", 200)],
+      [buildDailyRow("2026-01-05", 100)],
+      [buildDailyRow("2026-01-05", 200)],
       3, // killEngageCount = 3
       0,
       0,
-      [buildAbRow("baseline", "TRENDING", 100), buildAbRow("rl-challenger", "TRENDING", 200)],
+      [buildRegimeRow("TRENDING", "baseline", 100), buildRegimeRow("TRENDING", "rl-challenger", 200)],
     );
 
     const result = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17, dryRun: true });
@@ -494,10 +512,10 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
 
   it("13. Family-grade postscript appended to Discord body", async () => {
     setupHappyPath(
-      [buildAbRow("baseline", "TRENDING", 200)],
-      [buildAbRow("rl-challenger", "TRENDING", 300)],
+      [buildDailyRow("2026-01-05", 200)],
+      [buildDailyRow("2026-01-05", 300)],
       0, 1, 3,
-      [buildAbRow("baseline", "TRENDING", 200), buildAbRow("rl-challenger", "TRENDING", 300)],
+      [buildRegimeRow("TRENDING", "baseline", 200), buildRegimeRow("TRENDING", "rl-challenger", 300)],
     );
 
     const result = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17 });
@@ -514,10 +532,10 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
 
   it("14. Discord post failure → caught + discord_failed warn audit + does NOT throw", async () => {
     setupHappyPath(
-      [buildAbRow("baseline", "TRENDING", 100)],
-      [buildAbRow("rl-challenger", "TRENDING", 200)],
+      [buildDailyRow("2026-01-05", 100)],
+      [buildDailyRow("2026-01-05", 200)],
       0, 0, 0,
-      [buildAbRow("baseline", "TRENDING", 100), buildAbRow("rl-challenger", "TRENDING", 200)],
+      [buildRegimeRow("TRENDING", "baseline", 100), buildRegimeRow("TRENDING", "rl-challenger", 200)],
     );
 
     // Simulate Discord throwing
@@ -545,7 +563,7 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
   });
 
   it("15. Empty data (no positions): emit digest with 'No A/B data yet' body + still posts Discord", async () => {
-    // No signal.rl_ab_routed rows, no training, no kill switch events
+    // No daily P&L rows, no training, no kill switch events
     setupHappyPath([], [], 0, 0, 0, []);
 
     const result = await runAbComparisonWeeklyDigest({ asOf: FRI_ET17 });
@@ -562,7 +580,8 @@ describe("runAbComparisonWeeklyDigest — A/B weekly digest", () => {
   });
 
   it("16. dryRun=true + lock contention: skipped_lock_contention skips audit row when dryRun", async () => {
-    // Set up first call to hang so lock remains held
+    // Set up first call to hang so lock remains held (select-based calls hang;
+    // execute-based calls fall back to the beforeEach default of []).
     let resolveFirst!: () => void;
     const hangPromise = new Promise<unknown[]>((r) => { resolveFirst = () => r([]); });
     mockDbSelect.mockReturnValue({
