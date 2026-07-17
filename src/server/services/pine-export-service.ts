@@ -1068,6 +1068,25 @@ export async function compileDualPineExport(
     // P2-4: persist=false → skip all DB writes, return in-memory result only
     const artifactRows: { id: string; artifactType: string; fileName: string; sizeBytes: number | null }[] = [];
 
+    // goalscan 2026-07-16 (phantom-success export, HIGH — dual path sibling of the single path):
+    // under a faithful hard-block on a full-Slumdawg strategy all three artifacts are null, so the
+    // export produced nothing deliverable. Compute the artifact list FIRST and mark the row "failed"
+    // (not "completed") when it is empty, so the recipient path's status==="failed" branch fires and
+    // no phantom "success" is reported for a nonexistent .pine.
+    const dualArtifacts = [
+      result.indicator_artifact,
+      result.strategy_artifact,
+      result.alerts_artifact,
+    ].filter(Boolean) as NonNullable<DualCompilerOutput["indicator_artifact"]>[];
+    const dualProducedNoArtifacts = dualArtifacts.length === 0;
+    const dualExportStatus = dualProducedNoArtifacts ? "failed" : "completed";
+    if (dualProducedNoArtifacts) {
+      logger.warn(
+        { strategyId, exportId, exportabilityScore: result.exportability.score, faithful: result.exportability.faithful },
+        "pine-export(dual): compiler produced zero artifacts (faithful hard-block) — marking export failed, not completed",
+      );
+    }
+
     if (persist && exportId) {
       // 5. Update export row — FIX 3: write contentHash, configSnapshot, backtestId
       await db
@@ -1075,7 +1094,7 @@ export async function compileDualPineExport(
         .set({
           exportabilityScore: String(result.exportability.score),
           exportabilityDetails: result.exportability,
-          status: "completed",
+          status: dualExportStatus,
           pineVersion: result.pine_version,
           // FIX 3: persist content_hash so re-export drift is detectable
           contentHash: result.content_hash ?? null,
@@ -1087,12 +1106,6 @@ export async function compileDualPineExport(
         .where(eq(strategyExports.id, exportId));
 
       // 6. Insert artifacts — FIX 3: include contentHash per artifact
-      const dualArtifacts = [
-        result.indicator_artifact,
-        result.strategy_artifact,
-        result.alerts_artifact,
-      ].filter(Boolean) as NonNullable<DualCompilerOutput["indicator_artifact"]>[];
-
       for (const artifact of dualArtifacts) {
         // FIX 3: compute per-artifact SHA-256 content hash
         const { createHash } = await import("crypto");
@@ -1129,20 +1142,33 @@ export async function compileDualPineExport(
           artifactCount: artifactRows.length,
           // FIX 4: track duration for performance monitoring
           durationMs,
-          status: "success",
+          // goalscan 2026-07-16: reflect the faithful-block no-artifact case honestly.
+          status: dualProducedNoArtifacts ? "no_artifacts_faithful_block" : "success",
         },
-        status: "success",
+        status: dualProducedNoArtifacts ? "warning" : "success",
         decisionAuthority: authority,
       });
 
-      // 8. SSE broadcast — pine:export-completed (hyphen, frontend discriminated union)
-      broadcastSSE("pine:export-completed", {
-        strategyId,
-        exportId,
-        contentHash: result.content_hash,
-        exportabilityScore: result.exportability.score,
-        durationMs,
-      });
+      // 8. SSE broadcast — goalscan 2026-07-16: emit the completed event only when a real
+      // artifact exists; a zero-artifact faithful block broadcasts pine:export-failed instead
+      // so no dashboard shows a phantom "export completed" for a nonexistent .pine.
+      if (dualProducedNoArtifacts) {
+        broadcastSSE("pine:export-failed", {
+          strategyId,
+          exportId,
+          reason: "faithful_hard_block_no_artifacts",
+          exportabilityScore: result.exportability.score,
+          durationMs,
+        });
+      } else {
+        broadcastSSE("pine:export-completed", {
+          strategyId,
+          exportId,
+          contentHash: result.content_hash,
+          exportabilityScore: result.exportability.score,
+          durationMs,
+        });
+      }
 
       if (result.exportability.score < 70) {
         broadcastSSE("alert:triggered", {
@@ -1571,13 +1597,30 @@ export async function compilePineExport(
 
     const durationMs = Date.now() - startMs;
 
+    // goalscan 2026-07-16 (phantom-success export, HIGH): the compiler correctly hard-returns
+    // ZERO artifacts when the faithful flag blocks a full-Slumdawg strategy (Style C / adaptive
+    // multi-exit / 11-factor confluence / multi-TF). But this persistence layer unconditionally
+    // wrote status:"completed" — so a strategy with no deliverable .pine reported success, and the
+    // recipient path (which branches on status==="failed") then returned HTTP 200 + a "success"
+    // audit + a setup README for a file that does not exist. Set status:"failed" when no artifact
+    // was produced so both layers surface the block as a delivery failure (the enum has no
+    // "degraded" value; "failed" is the honest signal — the exportabilityDetails carry the reason).
+    const producedNoArtifacts = result.artifacts.length === 0;
+    const exportStatus = producedNoArtifacts ? "failed" : "completed";
+    if (producedNoArtifacts) {
+      logger.warn(
+        { strategyId, exportId, exportabilityScore: result.exportability.score, faithful: result.exportability.faithful },
+        "pine-export: compiler produced zero artifacts (faithful hard-block) — marking export failed, not completed",
+      );
+    }
+
     // 5. Update export row — FIX 3: write contentHash, configSnapshot
     await db
       .update(strategyExports)
       .set({
         exportabilityScore: String(result.exportability.score),
         exportabilityDetails: result.exportability,
-        status: "completed",
+        status: exportStatus,
         pineVersion: result.pine_version,
         // FIX 3: persist content_hash so re-export drift is detectable
         contentHash: result.content_hash ?? null,
@@ -1620,20 +1663,32 @@ export async function compilePineExport(
         artifactCount: result.artifacts.length,
         // FIX 4: track duration for performance monitoring
         durationMs,
-        status: "success",
+        // goalscan 2026-07-16: reflect faithful-block no-artifact case (see status logic above).
+        status: producedNoArtifacts ? "no_artifacts_faithful_block" : "success",
       },
-      status: "success",
+      status: producedNoArtifacts ? "warning" : "success",
       decisionAuthority: authority,
     });
 
-    // 8. Broadcast export completion SSE — pine:export-completed (hyphen, frontend discriminated union)
-    broadcastSSE("pine:export-completed", {
-      strategyId,
-      exportId,
-      contentHash: result.content_hash,
-      exportabilityScore: result.exportability.score,
-      durationMs,
-    });
+    // 8. Broadcast export SSE — goalscan 2026-07-16: emit completed only when an artifact exists;
+    // a zero-artifact faithful block emits pine:export-failed so no phantom "completed" shows.
+    if (producedNoArtifacts) {
+      broadcastSSE("pine:export-failed", {
+        strategyId,
+        exportId,
+        errorCode: "faithful_hard_block_no_artifacts",
+        message: `Pine export blocked: strategy is not faithfully expressible in Pine (score ${result.exportability.score}/100) — no artifact produced.`,
+        durationMs,
+      });
+    } else {
+      broadcastSSE("pine:export-completed", {
+        strategyId,
+        exportId,
+        contentHash: result.content_hash,
+        exportabilityScore: result.exportability.score,
+        durationMs,
+      });
+    }
 
     // Broadcast SSE alert if exportability score is low
     if (result.exportability.score < 70) {
@@ -1651,7 +1706,7 @@ export async function compilePineExport(
       exportType,
       exportabilityScore: result.exportability.score,
       exportabilityBand: result.exportability.band,
-      status: "completed",
+      status: exportStatus,
       contentHash: result.content_hash,
       artifacts: artifactRows.map((r) => ({
         id: r.id,

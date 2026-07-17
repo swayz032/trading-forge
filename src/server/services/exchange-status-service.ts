@@ -331,18 +331,23 @@ export async function pollCmeStatus(): Promise<void> {
       correlationId: cronCorrelationId,
     }).catch((err) => logger.error({ err }, "exchange-status: audit log write failed (non-blocking)"));
 
-    // SSE broadcast
+    // SSE broadcast — goalscan 2026-07-16: thread correlationId so a dashboard consumer can
+    // join this event to its audit_log / exchange_outages row without timestamp-matching
+    // (ds21 established this for kill-switch's production:mode-changed; it was never carried here).
     broadcastSSE("exchange:outage-detected", {
       exchange: "CME",
       reason: result.reason,
       affectedSymbols: CME_GLOBEX_SYMBOLS,
       outageId,
+      correlationId: cronCorrelationId,
     });
 
-    // Alert (critical — directly actionable)
+    // Alert (critical — directly actionable). goalscan 2026-07-16: pass cronCorrelationId so the
+    // Discord CRITICAL + alerts.metadata carry it (phone triage → audit_log grep).
     AlertFactory.systemError(
       "cme-outage-detected",
       new Error(`CME exchange outage detected: ${result.reason ?? "probe failed"}. New entries blocked. Open positions held. DO NOT auto-reissue orders on resume — manual review required.`),
+      cronCorrelationId,
     );
 
   } else if (result.operational && isOutageActive) {
@@ -388,11 +393,12 @@ export async function pollCmeStatus(): Promise<void> {
       correlationId: cronCorrelationId,
     }).catch((err) => logger.error({ err }, "exchange-status: audit log write failed (non-blocking)"));
 
-    // SSE broadcast
+    // SSE broadcast — goalscan 2026-07-16: correlationId for audit-trail join (see outage-detected above).
     broadcastSSE("exchange:outage-resolved", {
       exchange: "CME",
       outageId,
       note: "Entry block lifted. Open positions held. Orders NOT auto-reissued — manual review required.",
+      correlationId: cronCorrelationId,
     });
 
   } else if (!result.operational && isOutageActive) {

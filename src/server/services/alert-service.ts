@@ -135,13 +135,21 @@ export const AlertFactory = {
       metadata: { strategyId, level },
     }),
 
-  systemError: (component: string, error: string | Error) =>
+  // goalscan 2026-07-16 (correlationId forensic gap, HIGH): systemError() had no way to
+  // carry a correlationId, so every fail-closed capital-safety alert routed through it
+  // (CME outage, firm suspension, kill-switch force-flatten) reached Discord + alerts.metadata
+  // with correlationId=null — an operator/family member paged on their phone could not grep the
+  // audit_log/SSE trail from the alert. Some call sites had string-interpolated it into the free-text
+  // message as a per-instance workaround, but that is not machine-readable. Optional param, threaded
+  // into metadata.correlationId — the canonical key createAlert() forwards to the Discord payload +
+  // the DB row. Backward-compatible: existing callers pass nothing and behave identically.
+  systemError: (component: string, error: string | Error, correlationId?: string | null) =>
     createAlert({
       type: "system",
       severity: "critical",
       title: `System error: ${component}`,
       message: error instanceof Error ? error.message : error,
-      metadata: { component },
+      metadata: { component, ...(correlationId != null ? { correlationId } : {}) },
     }),
 
   deployReady: (strategyId: string, message: string) =>

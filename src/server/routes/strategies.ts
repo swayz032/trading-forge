@@ -638,6 +638,40 @@ strategyRoutes.patch("/:id", async (req, res) => {
     return;
   }
   const { name, description, symbol, timeframe, config, tags, symbols } = parsedPatch.data;
+
+  // goalscan 2026-07-16 (frozen-policy PATCH bypass, HIGH): the generic PATCH freely
+  // rewrote `config` (sizing / stop_loss / take_profit / entry_quality / exit_plan_config)
+  // and `symbols` on ANY strategy, including live/frozen ones. The frozen-policy SHA-256
+  // gate (frozen-policy-contract.ts) only re-checks at PAPER→DEPLOY_READY promotion, so an
+  // in-place config PATCH on an already-frozen/DEPLOYED strategy silently staled the hash and
+  // the next live signal used mutated params — a documented "Don't" (never hand-mutate a
+  // frozen strategy's config; re-run CPCV+PBO+WFE or use the HMAC override). Block the
+  // trading-substance fields on a frozen/live strategy; cosmetic edits (name/description/tags)
+  // stay free. Fetch current state first.
+  if (config !== undefined || symbols !== undefined || symbol !== undefined) {
+    const [current] = await db
+      .select({ lifecycleState: strategies.lifecycleState, frozenPolicyHash: strategies.frozenPolicyHash })
+      .from(strategies)
+      .where(eq(strategies.id, req.params.id))
+      .limit(1);
+    if (!current) {
+      res.status(404).json({ error: "Strategy not found" });
+      return;
+    }
+    const LIVE_OR_FROZEN_STATES: ReadonlyArray<string> = ["DEPLOYED", "PILOT", "DEPLOY_READY"];
+    const isFrozen = current.frozenPolicyHash != null || LIVE_OR_FROZEN_STATES.includes(current.lifecycleState);
+    if (isFrozen) {
+      res.status(409).json({
+        error: "frozen_policy_patch_blocked",
+        message:
+          "This strategy is frozen/live — its config, symbols, and routing cannot be changed via the generic PATCH (it would bypass the frozen-policy hash gate). Re-run CPCV+PBO+WFE to re-freeze, or use POST /api/admin/frozen-policy-override with an HMAC-signed rationale.",
+        lifecycleState: current.lifecycleState,
+        frozen: current.frozenPolicyHash != null,
+      });
+      return;
+    }
+  }
+
   const [row] = await db
     .update(strategies)
     .set({
@@ -994,7 +1028,11 @@ strategyRoutes.post("/lifecycle/check", async (req, res) => {
 //                 stay queryable for future scout/critic comparisons)
 // CRITICAL #3: PILOT is a live 1-contract canary — deleting it leaves the account
 // with an open position and no controlling record. It MUST be in this set.
-const PROTECTED_LIFECYCLE_STATES: ReadonlyArray<string> = ["DEPLOYED", "PAPER", "DEPLOY_READY", "PILOT"];
+// goalscan 2026-07-16: SHADOW added — it is a mid-lifecycle Wave-29 stage that accumulates
+// shadow-signal-divergence promotion evidence; a silent DELETE destroys that evidence (and its
+// lifecycle_shadow_signals rows) with only the shared Bearer key. Route SHADOW retirement through
+// the lifecycle service like the other non-terminal live/deploy-track states.
+const PROTECTED_LIFECYCLE_STATES: ReadonlyArray<string> = ["DEPLOYED", "PAPER", "DEPLOY_READY", "PILOT", "SHADOW"];
 const BURY_BEFORE_DELETE_STATES: ReadonlyArray<string> = ["RETIRED", "DECLINING"];
 
 strategyRoutes.delete("/:id", async (req, res) => {
