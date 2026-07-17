@@ -2475,10 +2475,24 @@ export async function evaluateSignals(
   // ─── 2.7: ICT Indicator Bridge ──────────────────────────────
   // If strategy references indicators not in the TS set, fetch them from Python
   // before evaluating rules.  Merged into the indicator map so expressions resolve.
+  //
+  // M1c follow-up (2026-07-17, post-landing accuracy-validator finding): the ICT
+  // bridge (src/engine/indicators/paper_bridge.py) imports the SAME core/market-
+  // structure/order-flow functions the backtest itself uses — the backtest
+  // computes them from its own N-minute-bar frame (its only granularity). M1c
+  // already rerouted `computeIndicators` to the aggregated buffer but left this
+  // bridge on the raw 1-minute barBuffer, so any non-1m strategy referencing an
+  // unknown/ICT indicator got it computed on the wrong timeframe and merged
+  // straight into the same `indicators` dict the entry expression evaluates —
+  // this was a hole in the entry-side parity claim itself, not a side concern.
   const unknownInds = findUnknownIndicators(config);
   let ictBridgeBlocked = false;
   if (unknownInds.size > 0) {
-    const ictBridge = await fetchICTIndicators(sessionId, symbol, bar.timestamp, barBuffer, unknownInds);
+    const ictBridge = await fetchICTIndicators(
+      sessionId, symbol, bar.timestamp,
+      mtfContext ? mtfContext.aggregatedBuffer : barBuffer,
+      unknownInds,
+    );
     Object.assign(indicators, ictBridge.values);
     if (!ictBridge.bridgeHealthy && FAIL_CLOSED_EXECUTION) {
       ictBridgeBlocked = true;
@@ -2742,6 +2756,18 @@ export async function evaluateSignals(
   let riskGatePassed: boolean | null = null;
   let stopHit = false;
   let fillMiss = false;
+  // M1c follow-up (4th independent grade, F-8; corrected by the 5th): the
+  // function-final logSignal() call persists/broadcasts whatever price+
+  // timestamp this bar's decision was made at. Exit/stop paths are correctly
+  // tick-level (raw `bar` is right there by M1c design) so this defaults to
+  // the raw bar. Only the entry-signal branch's `action = "open"` site (the
+  // one that queues a new pending entry) reassigns it to closedBucketBar, so
+  // the value survives past closedBucketBar's own block scope to reach
+  // logSignal() below. The pending-entry FILL-consumption branch also sets
+  // `action = "open"`, but that block unconditionally `return`s before
+  // logSignal() ever runs (see the note at that site) — it does not, and
+  // cannot, feed this local.
+  let loggedBar: Bar = bar;
 
   // Convenience: current ATR for passing to closePosition (2.6 exit slippage)
   const currentAtr = indicators["atr_14"];
@@ -2750,21 +2776,56 @@ export async function evaluateSignals(
   const isShadow = sessionRow.mode === "shadow";
 
   // ─── FIX 1 (B2 PARITY CRITICAL): Execute deferred entry from previous bar ──
-  // backtester.py:1305 rolls signals forward 1 bar (np.roll); fills happen at
-  // the open of bar N+1.  Paper fills at bar N's close — 1 bar early.
+  // backtester.py:1305 rolls signals forward 1 bar (np.roll); vbt.Portfolio.from_signals
+  // is called with ONLY `close` as the price series (backtester.py:5026-5035, no
+  // separate open/price arg) — so the rolled signal fills at bar N+1's CLOSE, not
+  // its open (verified against the oracle 2026-07-17 — this comment previously said
+  // "open," which contradicted the "N+1's close" convention documented at the
+  // pendingEntry.medianBarVolume call site further down; close is correct).
+  // Paper filled at bar N's close pre-fix — 1 bar early.
   // Fix: a signal fired on bar N stores a pending entry.  On bar N+1 we execute
   // it here, before any position-management checks, using bar N+1's close price.
   //
   // This block only fires when no position is open AND the session is not in shadow
   // mode AND no position was just opened (openPos check above is fresh).
+  //
+  // M1c follow-up (2026-07-17, post-landing accuracy-validator finding): for a
+  // non-1m session "bar N+1" must mean the NEXT REAL N-minute bar, not the next
+  // raw 1-minute tick — the queueing side (further down this function) already
+  // only fires `entrySignal` on `mtfContext.isBucketClose`, but this consumption
+  // side had no matching gate, so a queued 5m signal was filling on the very next
+  // raw bar (as little as 1 minute later) instead of the next real 5m bar close —
+  // up to 4 minutes early, at a materially different close price, for every
+  // non-1m strategy. Gating consumption the same way keeps queue and fill
+  // symmetric: queue at bucket B_k's close, fill at bucket B_{k+1}'s close. The
+  // pendingEntry simply survives the intervening raw bars (this `if` just
+  // doesn't match) — the H3 gate re-check below still fires at the true fill
+  // moment. 1m sessions (mtfContext undefined) are byte-identical to before.
   const pendingKey = `${sessionId}:${symbol}`;
   const pendingEntry = pendingEntryQueue.get(pendingKey);
-  if (pendingEntry && !openPos && !isShadow) {
+  if (pendingEntry && !openPos && !isShadow && (!mtfContext || mtfContext.isBucketClose)) {
     pendingEntryQueue.delete(pendingKey); // consume the pending entry
     // M2 (2026-07-17): mirror the consume in the durability backstop — covers
     // BOTH the fill path and every drop path below (H3 gate re-check failures),
     // since this delete runs before either outcome is decided. Fire-and-forget.
     void deletePendingEntryRow(sessionId, symbol);
+
+    // M1c follow-up (2026-07-17, independent accuracy-validator finding): the
+    // FILL PRICE must be the just-closed bucket's own close, not `bar.close` —
+    // at this point `bar` is the raw bar that STARTS the NEXT bucket per
+    // timeframe-bar-aggregator.ts's documented contract (isBucketClose already
+    // confirmed true above, so aggregatedBuffer's last entry is non-empty and
+    // correct). `barTimestamp`/session-classification purposes deliberately stay
+    // on the raw current `bar` further down — those are genuinely wall-clock
+    // (when did this fill actually execute, for slippage-session purposes), not
+    // a price/decision value. 1m sessions fall back to `bar` unchanged.
+    //
+    // Same CLASSIFICATION RULE as closedBucketBar above (entry-signal branch):
+    // decision input / audit-of-a-decision → closedFillBucketBar; wall-clock
+    // gate condition / documentary skip-annotation → raw `bar`.
+    const closedFillBucketBar: Bar = mtfContext
+      ? mtfContext.aggregatedBuffer[mtfContext.aggregatedBuffer.length - 1]
+      : bar;
 
     // ─── H3 (2026-06-23): Re-evaluate all entry gates at fill time (bar N+1) ──
     //
@@ -3063,9 +3124,13 @@ export async function evaluateSignals(
         sessionId, symbol,
         side: pendingEntry.side,
         contracts: pendingEntry.contracts,
-        executionPrice: bar.close,
+        executionPrice: closedFillBucketBar.close,
         signalBarTimestamp: pendingEntry.signalBarTimestamp,
-        executionBarTimestamp: bar.timestamp,
+        // M1c follow-up (4th independent grade, F-11): closedFillBucketBar,
+        // matching executionPrice right above — this documents the SAME fill
+        // decision, not the wall-clock session-classification use openPosition
+        // makes of raw `bar.timestamp` further below.
+        executionBarTimestamp: closedFillBucketBar.timestamp,
       },
       "FIX 1: Executing deferred entry from previous bar (next-bar fill parity)",
     );
@@ -3073,7 +3138,7 @@ export async function evaluateSignals(
     const deferredResult = await openPosition(sessionId, {
       symbol,
       side: pendingEntry.side,
-      signalPrice: bar.close,          // bar N+1's close — matching backtest convention
+      signalPrice: closedFillBucketBar.close,          // bar N+1's close — matching backtest convention
       contracts: pendingEntry.contracts,
       orderType: pendingEntry.orderType,
       stopLimitOffset: pendingEntry.stopLimitOffset,
@@ -3082,7 +3147,13 @@ export async function evaluateSignals(
       atr: pendingEntry.atr,
       // Wave 2 (2026-07-16): thread the config stop multiplier into the managed-stop geometry.
       stopMultiplier: pendingEntry.stopMultiplier,
-      barVolume: bar.volume,            // use bar N+1's volume for fill probability
+      // M1c follow-up (2026-07-17): for non-1m sessions, raw `bar`'s own .volume
+      // is only ONE constituent 1-minute bar's volume, not the real N-minute
+      // bar's total (summed) volume the backtest's fill-probability model reads.
+      // closedFillBucketBar.volume is the just-closed aggregated bucket's true
+      // total volume; 1m sessions (mtfContext undefined, closedFillBucketBar===
+      // bar) are byte-identical to before.
+      barVolume: closedFillBucketBar.volume,            // use bar N+1's volume for fill probability
       medianBarVolume: pendingEntry.medianBarVolume,
       // Trade-critique data bridge (2026-07-05): entry-time decision context captured
       // at signal time (bar N) — see PendingEntry.entryContext.
@@ -3101,7 +3172,9 @@ export async function evaluateSignals(
         sessionConfig.exitPlanConfig?.exit_style === "adaptive"
           ? {
               strategy: { id: sessionConfig.strategyId, exit_plan_config: sessionConfig.exitPlanConfig },
-              bar: { close: bar.close, high: bar.high, low: bar.low, volume: bar.volume },
+              // M1c follow-up (F-6): closedFillBucketBar, not raw `bar` — this feeds
+              // computeExitPlan()'s TP1/TP2/runner-trail level selection at position open.
+              bar: { close: closedFillBucketBar.close, high: closedFillBucketBar.high, low: closedFillBucketBar.low, volume: closedFillBucketBar.volume },
               marketState: {
                 regime: pendingEntry.entryContext?.regimeAtEntry ?? "UNKNOWN",
                 narrativePhase: null,
@@ -3119,11 +3192,24 @@ export async function evaluateSignals(
 
     if (deferredResult.position) {
       action = "open";
+      // NOTE (5th independent grade, correcting an F-8 overclaim): this block
+      // unconditionally `return`s at the bottom of the enclosing pendingEntry
+      // consumption block (below), before the function-final logSignal() call
+      // ever runs — so a `loggedBar` reassignment here would be dead code, not
+      // a real fix. This path's own audit trail already correctly uses
+      // closedFillBucketBar (the fill_miss row above on the miss branch, and
+      // "FIX 1: Deferred entry filled"'s executionPrice below on this branch);
+      // it does not go through logSignal()/paper_signal_logs/paper:signal at
+      // all. That's a pre-existing, unrelated completeness gap (no audit row
+      // for a SUCCESSFUL deferred fill via the generic signal-log mechanism),
+      // not an M1c bar-source-timing bug — out of this wave's scope.
       positionBarsHeld.set(deferredResult.position.id, 0);
       span.setAttribute("deferred_fill", true);
       span.setAttribute("signal_bar", pendingEntry.signalBarTimestamp);
       logger.info(
-        { sessionId, symbol, side: pendingEntry.side, executionPrice: bar.close, contracts: pendingEntry.contracts },
+        // M1c follow-up (F-7): closedFillBucketBar, not raw `bar` — this log must
+        // show the SAME price actually recorded (openPosition's signalPrice above).
+        { sessionId, symbol, side: pendingEntry.side, executionPrice: closedFillBucketBar.close, contracts: pendingEntry.contracts },
         "FIX 1: Deferred entry filled — position opened at bar N+1 close",
       );
 
@@ -3193,7 +3279,7 @@ export async function evaluateSignals(
         symbol,
         direction: pendingEntry.side,
         signalType: "fill_miss",
-        price: String(bar.close),
+        price: String(closedFillBucketBar.close), // M1c follow-up (F-7): audit trail must match the decision's own bar
         indicatorSnapshot: { _deferred_fill: true, _signal_bar: pendingEntry.signalBarTimestamp },
         acted: false,
         reason: `Deferred fill miss (bar N+1 fill, fillRatio: ${deferredResult.executionResult.fillRatio ?? 0})`,
@@ -3518,6 +3604,37 @@ export async function evaluateSignals(
       span.end();
       return;
     }
+
+    // M1c follow-up (2026-07-17, independent accuracy-validator finding): every
+    // decision-recording value below this point (signal price, signal bar
+    // timestamp, signal-time volume — as opposed to genuinely wall-clock checks
+    // like blackout-window/DLL/news gates, which correctly use the actual
+    // current bar for real-time freshness) must represent the bar THIS
+    // DECISION IS ABOUT. Per timeframe-bar-aggregator.ts's documented contract,
+    // `isBucketClose: true` fires on the raw bar that STARTS the NEXT bucket —
+    // so at this exact point `bar` is NOT the bar that just closed; it is
+    // already up to N-1 minutes into the following bucket. `aggregatedBuffer`'s
+    // last entry is guaranteed non-empty and correct here (a bucket just
+    // closed to make isBucketClose true). Use `closedBucketBar` for every such
+    // recording site instead of `bar` directly. 1m sessions (mtfContext
+    // undefined) fall back to `bar` unchanged — byte-identical to before.
+    //
+    // CLASSIFICATION RULE (pins the recurring doer/grader back-and-forth on this
+    // surface to one test instead of case-by-case judgment calls):
+    //   - decision input (feeds a computed value, factor, or sizing decision) OR
+    //     audit-of-a-decision (records/mirrors a value some OTHER site already
+    //     computed from closedBucketBar) → MUST use closedBucketBar.
+    //   - wall-clock gate condition (blackout windows, calendar/holiday lookups,
+    //     kill-switch/DLL, price-lock real-time limit checks, session/day-boundary
+    //     classification) OR a documentary annotation of a wall-clock-gated skip
+    //     → correctly uses the raw current `bar` — substituting closedBucketBar
+    //     there would make the record LESS truthful (the gate fired at real time,
+    //     not at the closed-bucket time), an over-correction bug in its own right.
+    // Every raw `bar.*` reference below this point in the entry-signal branch is
+    // a deliberate application of this rule, not an unaudited gap.
+    const closedBucketBar: Bar = mtfContext
+      ? mtfContext.aggregatedBuffer[mtfContext.aggregatedBuffer.length - 1]
+      : bar;
 
     // ─── FIX 4 (Track M): Kill-switch halt check at bar-N signal time ────────
     // Management paths (position close, trail-stop, bar-to-bar price updates)
@@ -4563,13 +4680,19 @@ export async function evaluateSignals(
     let antiSetupBlocked = lockoutBlocked || correlatedBlocked || crossAccountHedgeBlocked || priceLockBlocked;
     let antiSetupResult: AntiSetupGateResult | null = null;
     try {
+      // M1c follow-up (2026-07-17, 2nd independent accuracy-validator finding,
+      // F-5): closedBucketBar, not raw `bar` — anti-setup patterns are mined
+      // from historical paper trades' own entry_time/volume (see
+      // src/engine/anti_setups/miner.py), so a live check must evaluate
+      // against the SAME bar this signal decision is about, for
+      // self-consistency with what gets mined from it later.
       antiSetupResult = await checkAntiSetupGate(
         sessionConfig.strategyId,
         {
-          time: bar.timestamp,
-          hour: new Date(bar.timestamp).getHours(),
+          time: closedBucketBar.timestamp,
+          hour: new Date(closedBucketBar.timestamp).getHours(),
           atr: indicators["atr_14"],
-          volume: bar.volume,
+          volume: closedBucketBar.volume,
           regime: indicators["regime"] as unknown as string | undefined,
           // FG-3: anti-setup day_of_week rules are mined under Python's
           // datetime.weekday() convention (Mon=0..Sun=6, see
@@ -4577,7 +4700,7 @@ export async function evaluateSignals(
           // is Sun=0..Sat=6, which shifted every day-of-week rule by one weekday.
           // Convert to the Python weekday convention (matching the sibling skip
           // path at ~line 286 which already uses getUTCDay()).
-          day_of_week: toPythonWeekday(bar.timestamp),
+          day_of_week: toPythonWeekday(closedBucketBar.timestamp),
         },
       );
       if (antiSetupResult.blocked) {
@@ -4589,12 +4712,16 @@ export async function evaluateSignals(
           "Anti-setup gate BLOCKED entry — logging shadow signal for effectiveness tracking",
         );
         // Log to paper_signal_logs for auditability
+        // F-5-follow-up: closedBucketBar, matching the antiSetupResult check itself
+        // (F-5) which already evaluates against the closed bucket for self-
+        // consistency with the mined historical entry_time/volume basis — this
+        // audit trail must record the SAME bar the decision was about.
         db.insert(paperSignalLogs).values({
           sessionId,
           symbol,
           direction: config.side,
           signalType: "anti_setup_blocked",
-          price: String(bar.close),
+          price: String(closedBucketBar.close),
           indicatorSnapshot: {
             ...indicators,
             _anti_setup_rule: antiSetupResult.matchedRule,
@@ -4610,10 +4737,10 @@ export async function evaluateSignals(
         // theoreticalPnl will be computed by the weekly effectiveness job
         db.insert(shadowSignals).values({
           sessionId,
-          signalTime: new Date(bar.timestamp),
+          signalTime: new Date(closedBucketBar.timestamp),
           direction: config.side,
-          expectedEntry: String(bar.close),
-          actualMarketPrice: String(bar.close),
+          expectedEntry: String(closedBucketBar.close),
+          actualMarketPrice: String(closedBucketBar.close),
           wouldHaveFilled: true, // assume market order would fill
         }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist anti-setup shadow signal"));
 
@@ -4622,8 +4749,8 @@ export async function evaluateSignals(
           symbol,
           rule: antiSetupResult.matchedRule,
           confidence: antiSetupResult.confidence,
-          price: bar.close,
-          timestamp: bar.timestamp,
+          price: closedBucketBar.close,
+          timestamp: closedBucketBar.timestamp,
         });
       }
     } catch (antiSetupErr) {
@@ -4818,7 +4945,10 @@ export async function evaluateSignals(
             symbol,
             direction: config.side,
             signalType: "a_plus_bypassed_legacy",
-            price: String(bar.close),
+            // M1c follow-up (4th independent grade, F-9): closedBucketBar,
+            // matching every sibling a_plus_* audit action (passed/rejected/
+            // factor_evaluated across Paths A/B/C).
+            price: String(closedBucketBar.close),
             indicatorSnapshot: { ...indicators, _bypass_reason: "legacy_no_confluence" },
             acted: true,
             reason: "signal.a_plus_bypassed_legacy: no entry_quality block or legacy_no_confluence provenance",
@@ -4880,11 +5010,15 @@ export async function evaluateSignals(
             // Fail-soft: null snapshot → evalSmtConfirmation returns "smt_unavailable"
             // (same fail-open as pre-Wave-26 — no regression in the live paper path).
             // Parallelized alongside liquidity fetch to keep per-bar latency minimal.
+            // M1c follow-up (2026-07-17, 2nd independent accuracy-validator finding,
+            // F-4): these all feed the Path C weighted-confluence pipeline (entry
+            // admission itself) — must use closedBucketBar, not the raw current bar
+            // (see closedBucketBar's docstring near the isBucketClose gate above).
             const [liquidityNearestAbove, liquidityNearestBelow, smtSnapshot] = await Promise.all([
-              getNearestLiquidity(symbol, bar.close, "above").catch(() => null),
-              getNearestLiquidity(symbol, bar.close, "below").catch(() => null),
+              getNearestLiquidity(symbol, closedBucketBar.close, "above").catch(() => null),
+              getNearestLiquidity(symbol, closedBucketBar.close, "below").catch(() => null),
               getSmtLiveSnapshot(
-                new Date(bar.timestamp),
+                new Date(closedBucketBar.timestamp),
                 correlationId ?? undefined,
               ).catch(() => null),
             ]);
@@ -4928,21 +5062,24 @@ export async function evaluateSignals(
                 smt_data_source: smtDataSource,
                 smt_snapshot_null: smtSnapshot === null,
                 stale: smtSnapshot?.stale ?? false,
-                price: bar.close,
-                timestamp: bar.timestamp,
+                price: closedBucketBar.close,
+                timestamp: closedBucketBar.timestamp,
                 correlationId: correlationId ?? null,
               });
             }
 
             const weightedCtx: WeightedSignalContext = {
               strategyId: sessionConfig.strategyId,
+              // M1c follow-up (F-4): closedBucketBar, not raw `bar` — this feeds
+              // confluence-score.ts's evalVwapAlignment/evalDeltaOrVolumeSignature/
+              // evalVpLevelProximity/evalKillzoneActive, all entry-admission inputs.
               bar: {
-                open: bar.open,
-                high: bar.high,
-                low: bar.low,
-                close: bar.close,
-                volume: bar.volume ?? 0,
-                timestamp: typeof bar.timestamp === "number" ? bar.timestamp : undefined,
+                open: closedBucketBar.open,
+                high: closedBucketBar.high,
+                low: closedBucketBar.low,
+                close: closedBucketBar.close,
+                volume: closedBucketBar.volume ?? 0,
+                timestamp: typeof closedBucketBar.timestamp === "number" ? closedBucketBar.timestamp : undefined,
               },
               indicators: indicators as Record<string, number | undefined>,
               direction: signalDir,
@@ -5001,14 +5138,19 @@ export async function evaluateSignals(
                 : null;
             }
 
-            // Per-factor audit rows (fire-and-forget)
+            // Per-factor audit rows (fire-and-forget).
+            // M1c follow-up (4th independent grade, F-10): closedBucketBar —
+            // this loop's own reject/pass rows (weightedResult.passed above)
+            // already use closedBucketBar; this per-factor sibling loop, using
+            // the same a_plus_factor_evaluated action Path A/B's per-factor
+            // rows use, was missed by the earlier F-4 fix pass.
             for (const fc of weightedResult.factorContributions) {
               db.insert(paperSignalLogs).values({
                 sessionId,
                 symbol,
                 direction: config.side,
                 signalType: "a_plus_factor_evaluated",
-                price: String(bar.close),
+                price: String(closedBucketBar.close),
                 indicatorSnapshot: {
                   ...indicators,
                   _factor: fc.factor,
@@ -5152,8 +5294,11 @@ export async function evaluateSignals(
                   .sort((a, b) => b.weight - a.weight)
                   .slice(0, 3)
                   .map((fc) => ({ factor: fc.factor, weight: fc.weight, reason: fc.reason })),
-                price: bar.close,
-                timestamp: bar.timestamp,
+                // F-4-follow-up: closedBucketBar — weightedResult.score was itself
+                // computed from closedBucketBar-sourced weightedCtx.bar (F-4); this
+                // audit of that decision must record the same bar.
+                price: closedBucketBar.close,
+                timestamp: closedBucketBar.timestamp,
                 correlationId: correlationId ?? null,
               });
               db.insert(paperSignalLogs).values({
@@ -5161,7 +5306,7 @@ export async function evaluateSignals(
                 symbol,
                 direction: config.side,
                 signalType: "a_plus_rejected",
-                price: String(bar.close),
+                price: String(closedBucketBar.close),
                 indicatorSnapshot: {
                   ...indicators,
                   _weighted_score: weightedResult.score,
@@ -5191,7 +5336,7 @@ export async function evaluateSignals(
                 symbol,
                 direction: config.side,
                 signalType: "a_plus_passed",
-                price: String(bar.close),
+                price: String(closedBucketBar.close),
                 indicatorSnapshot: {
                   ...indicators,
                   _weighted_score: weightedResult.score,
@@ -5272,22 +5417,29 @@ export async function evaluateSignals(
             // Pure function — never throws. Unknown indicators → satisfied=false.
             const minRequired = entryQuality.min_factors_satisfied ?? customIndicators.length;
 
+            // M1c follow-up (F-4): closedBucketBar, not raw `bar` — Path A is the
+            // extractor's default graduation output (§2b), so this is the
+            // default confluence path once a strategy graduates with
+            // confirming_indicators[] populated, not an edge case.
             const rawResults = evaluateConfirmingIndicators(
               customIndicators,
-              { open: bar.open, high: bar.high, low: bar.low, close: bar.close, volume: bar.volume ?? 0 },
+              { open: closedBucketBar.open, high: closedBucketBar.high, low: closedBucketBar.low, close: closedBucketBar.close, volume: closedBucketBar.volume ?? 0 },
               indicators as Record<string, number | undefined>,
               signalDir,
             );
 
             for (const r of rawResults) {
               factorResults.push(r);
-              // Per-factor audit row (W23H.D requirement)
+              // Per-factor audit row (W23H.D requirement).
+              // F-4-follow-up: closedBucketBar — rawResults were computed from the
+              // closedBucketBar-sourced object literal (F-4 evaluateConfirmingIndicators
+              // fix); this audit of that decision must record the same bar.
               db.insert(paperSignalLogs).values({
                 sessionId,
                 symbol,
                 direction: config.side,
                 signalType: "a_plus_factor_evaluated",
-                price: String(bar.close),
+                price: String(closedBucketBar.close),
                 indicatorSnapshot: {
                   ...indicators,
                   _factor: r.factor,
@@ -5323,8 +5475,8 @@ export async function evaluateSignals(
                 minRequired,
                 factorResults,
                 factorSource,
-                price: bar.close,
-                timestamp: bar.timestamp,
+                price: closedBucketBar.close,
+                timestamp: closedBucketBar.timestamp,
                 correlationId: correlationId ?? null,
               });
               db.insert(paperSignalLogs).values({
@@ -5332,7 +5484,7 @@ export async function evaluateSignals(
                 symbol,
                 direction: config.side,
                 signalType: "a_plus_rejected",
-                price: String(bar.close),
+                price: String(closedBucketBar.close),
                 indicatorSnapshot: {
                   ...indicators,
                   _a_plus_satisfied_count: satisfiedCount,
@@ -5354,7 +5506,7 @@ export async function evaluateSignals(
                 symbol,
                 direction: config.side,
                 signalType: "a_plus_passed",
-                price: String(bar.close),
+                price: String(closedBucketBar.close),
                 indicatorSnapshot: {
                   ...indicators,
                   _a_plus_satisfied_count: satisfiedCount,
@@ -5387,10 +5539,23 @@ export async function evaluateSignals(
                   satisfied = true;
                   reason = "entry_expression_true";
                 } else if (factor === "volume_confirmation") {
-                  const volumeSeries = barBuffer.map((b) => b.volume).filter((v): v is number => Number.isFinite(v));
+                  // M1c follow-up (2026-07-17, internal-consistency fix — not a backtest-
+                  // parity fix; this Path B factor has no backtest counterpart at all,
+                  // confirmed via grep). M1c already rerouted `indicators` to the
+                  // aggregated buffer for non-1m sessions; leaving this check on the raw
+                  // 1-minute buffer/bar meant a single entry decision mixed an aggregated
+                  // indicator set with a raw-bar volume factor — comparing one 1-minute
+                  // tick's volume against a rolling mean of 1-minute volumes, when the
+                  // strategy's own bar is N-minute. Source from the aggregated buffer
+                  // (and its last completed bucket's volume) for non-1m sessions.
+                  const volumeSourceBuffer = mtfContext ? mtfContext.aggregatedBuffer : barBuffer;
+                  const volumeSeries = volumeSourceBuffer.map((b) => b.volume).filter((v): v is number => Number.isFinite(v));
+                  const currentBarVolume = mtfContext
+                    ? volumeSourceBuffer[volumeSourceBuffer.length - 1]?.volume
+                    : bar.volume;
                   if (volumeSeries.length >= 20) {
                     const rollingMean = volumeSeries.slice(-20).reduce((s, v) => s + v, 0) / 20;
-                    satisfied = bar.volume !== undefined && bar.volume > rollingMean * 1.2;
+                    satisfied = currentBarVolume !== undefined && currentBarVolume > rollingMean * 1.2;
                     reason = satisfied ? "volume_above_threshold" : "volume_insufficient";
                   } else {
                     satisfied = false; // fail-CLOSED when insufficient history (cannot verify volume → not confirmed)
@@ -5430,13 +5595,16 @@ export async function evaluateSignals(
 
                 factorResults.push({ factor, satisfied, reason });
 
-                // Per-factor audit row — canonical_5 source tag
+                // Per-factor audit row — canonical_5 source tag.
+                // F-4-follow-up: closedBucketBar for consistency with the
+                // volume_confirmation factor above (Fix #4), which is itself
+                // already sourced from the aggregated buffer.
                 db.insert(paperSignalLogs).values({
                   sessionId,
                   symbol,
                   direction: config.side,
                   signalType: "a_plus_factor_evaluated",
-                  price: String(bar.close),
+                  price: String(closedBucketBar.close),
                   indicatorSnapshot: {
                     ...indicators,
                     _factor: factor,
@@ -5476,8 +5644,8 @@ export async function evaluateSignals(
                 minRequired,
                 factorResults,
                 factorSource,
-                price: bar.close,
-                timestamp: bar.timestamp,
+                price: closedBucketBar.close,
+                timestamp: closedBucketBar.timestamp,
                 correlationId: correlationId ?? null,
               });
               db.insert(paperSignalLogs).values({
@@ -5485,7 +5653,7 @@ export async function evaluateSignals(
                 symbol,
                 direction: config.side,
                 signalType: "a_plus_rejected",
-                price: String(bar.close),
+                price: String(closedBucketBar.close),
                 indicatorSnapshot: {
                   ...indicators,
                   _a_plus_satisfied_count: satisfiedCount,
@@ -5507,7 +5675,7 @@ export async function evaluateSignals(
                 symbol,
                 direction: config.side,
                 signalType: "a_plus_passed",
-                price: String(bar.close),
+                price: String(closedBucketBar.close),
                 indicatorSnapshot: {
                   ...indicators,
                   _a_plus_satisfied_count: satisfiedCount,
@@ -5931,8 +6099,13 @@ export async function evaluateSignals(
           // #22 (2026-07-11): × the STRONGER of {news-caution, C11 FOMC ±1-day} taper via
           // min() — never the product — so a signal inside the tight FOMC window (both < 1)
           // is not double-halved, while the ±1-day-outside-window case still gets the FOMC cut.
+          // F-4-follow-up: this is a SIZING decision input (the PM taper multiplier
+          // is keyed to time-of-day thresholds at 13:30/15:00 ET) — must use the
+          // closed-bucket bar time like every other decision-recording value, not
+          // the raw current bar, which can straddle a taper boundary the closed
+          // bucket hasn't reached yet.
           pmSizeFactor:
-            computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor *
+            computePmSizeFactor({ barTsUtc: new Date(closedBucketBar.timestamp) }).factor *
             Math.min(newsReduceSizeFactor, fomcSizeFactor),
           // Balanced scaling plan: pass proven-trades count so live sizing can apply
           // the proven-trades ramp gate. Backtests do not pass this field and keep
@@ -6092,8 +6265,17 @@ export async function evaluateSignals(
         const ctxGate = await evaluateContextGate(
           // deep-scan C-1: pass the concept name, NOT strategyId (UUID) — the gate
           // name-matches against playbook allowed_strategies; a UUID never matches → SKIP.
-          symbol, config.side, bar.close,
-          sessionConfig.name, barBuffer, indicators,
+          //
+          // M1c follow-up (2026-07-17): pass mtfContext through so evaluateContextGate
+          // sources intraday_bars from the aggregated buffer for non-1m sessions (see
+          // context-gate-service.ts). entryPrice ALSO needs the closed-bucket's own
+          // close, not `bar.close` — at this point (isBucketClose gate already passed
+          // further up), `bar` is the raw bar that STARTS the NEXT bucket per
+          // timeframe-bar-aggregator.ts's documented contract, so `bar.close` is up to
+          // N-1 minutes later than the bar this entry decision is actually about.
+          symbol, config.side,
+          mtfContext ? mtfContext.aggregatedBuffer[mtfContext.aggregatedBuffer.length - 1].close : bar.close,
+          sessionConfig.name, barBuffer, indicators, mtfContext,
         );
         if (ctxGate.action === "SKIP") {
           riskGatePassed = false;
@@ -6112,7 +6294,7 @@ export async function evaluateSignals(
               symbol,
               direction: config.side,
               signalType: "context_gate_skip",
-              price: String(bar.close),
+              price: String(closedBucketBar.close), // M1c follow-up (F-7): audit trail must match the decision's own bar
               indicatorSnapshot: indicators,
               acted: false,
               reason: skipReason,
@@ -6136,7 +6318,7 @@ export async function evaluateSignals(
               symbol,
               direction: config.side,
               signalType: "context_gate_reduce",
-              price: String(bar.close),
+              price: String(closedBucketBar.close), // M1c follow-up (F-7): audit trail must match the decision's own bar
               indicatorSnapshot: {
                 ...indicators,
                 _contracts_original: baseContracts,
@@ -6183,7 +6365,7 @@ export async function evaluateSignals(
             symbol,
             direction: config.side,
             signalType: "governor_blocked",
-            price: String(bar.close),
+            price: String(closedBucketBar.close), // M1c follow-up (F-7): audit trail must match the decision's own bar
             indicatorSnapshot: { ...indicators, _governor_state: govResult.governorState },
             acted: false,
             reason: govResult.reason,
@@ -6203,7 +6385,7 @@ export async function evaluateSignals(
             symbol,
             direction: config.side,
             signalType: "governor_reduced",
-            price: String(bar.close),
+            price: String(closedBucketBar.close), // M1c follow-up (F-7): audit trail must match the decision's own bar
             indicatorSnapshot: {
               ...indicators,
               _governor_state: govResult.governorState,
@@ -6244,7 +6426,14 @@ export async function evaluateSignals(
         // Paper was executing at bar N's close — 1 bar early, systematically better
         // entry prices.  We enqueue the entry here and execute on the NEXT bar's close.
         action = "open"; // log as "open" pending — the actual fill happens on bar N+1
-        const volumeSeries = barBuffer
+        loggedBar = closedBucketBar; // F-8: function-final logSignal() must log the queued signal's own bar
+        // M1c follow-up (2026-07-17): median bar volume feeds openPosition's fill-
+        // probability model (matching backtest.py's bar_volume-based partial-fill
+        // degradation, which reads its own N-minute frame). Source from the
+        // aggregated buffer for non-1m sessions — the raw 1-minute buffer's median
+        // volume is a ~1/N-scaled proxy for the real N-minute bar volume.
+        const volumeSourceBuffer = mtfContext ? mtfContext.aggregatedBuffer : barBuffer;
+        const volumeSeries = volumeSourceBuffer
           .map((bufferBar) => bufferBar.volume)
           .filter((volume): volume is number => Number.isFinite(volume));
         const sortedVolumes = [...volumeSeries].sort((left, right) => left - right);
@@ -6318,17 +6507,23 @@ export async function evaluateSignals(
           } else {
             // Normal SHADOW stage: intercept signal, log, skip TradersPost.
             span.setAttribute("shadow_mode_intercepted", true);
+            // F-7-follow-up: closedBucketBar — the lifecycleShadowSignals row inserted
+            // below already uses closedBucketBar.close/.timestamp; this log documents
+            // the same interception decision and must match.
             logger.info(
-              { sessionId, symbol, strategyId: sessionConfig.strategyId, side: config.side, contracts: contextContracts, price: bar.close },
+              { sessionId, symbol, strategyId: sessionConfig.strategyId, side: config.side, contracts: contextContracts, price: closedBucketBar.close },
               "Wave 29 Pass A.1: SHADOW stage signal intercepted — logging to lifecycle_shadow_signals, skipping TradersPost",
             );
 
-            // Derive killzone from bar timestamp for shadow signal context.
+            // Derive killzone from the closed-bucket bar timestamp for shadow signal
+            // context — must match the same bar the lifecycleShadowSignals row below
+            // records (signalTs/entryPrice), so the persisted killzone corresponds to
+            // the persisted price/time rather than a bar up to N-1 minutes later.
             // Inline detection: London 03-08 ET, NY AM 08-12 ET, NY PM 12-16 ET.
             // Fail-soft: null on any error.
             let detectedKillzone: string | null = null;
             try {
-              const barDate = bar.timestamp ? new Date(bar.timestamp) : new Date();
+              const barDate = closedBucketBar.timestamp ? new Date(closedBucketBar.timestamp) : new Date();
               const etHour = Number(
                 barDate.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false })
               );
@@ -6352,9 +6547,12 @@ export async function evaluateSignals(
             db.insert(lifecycleShadowSignals)
               .values({
                 strategyId: sessionConfig.strategyId,
-                signalTs: bar.timestamp ? new Date(bar.timestamp) : new Date(),
+                // M1c follow-up: this row feeds divergenceVsBacktest — must be the
+                // closed bucket's own price/time, not the raw `bar` (see
+                // closedBucketBar's docstring above).
+                signalTs: closedBucketBar.timestamp ? new Date(closedBucketBar.timestamp) : new Date(),
                 direction: config.side,
-                entryPrice: bar.close,
+                entryPrice: closedBucketBar.close,
                 intendedSize: contextContracts,
                 killzone: detectedKillzone,
                 regime: (biasState as Record<string, unknown> | null)?.regimeLabel as string | undefined ?? null,
@@ -6395,7 +6593,7 @@ export async function evaluateSignals(
               decisionAuthority: "system",
               result: {
                 direction: config.side,
-                entry_price: bar.close,
+                entry_price: closedBucketBar.close,
                 intended_size: contextContracts,
                 killzone: detectedKillzone,
                 regime: (biasState as Record<string, unknown> | null)?.regimeLabel ?? null,
@@ -6403,7 +6601,7 @@ export async function evaluateSignals(
                 lifecycle_state: "SHADOW",
                 traderspost_webhook_called: false,
                 symbol,
-                bar_timestamp: bar.timestamp,
+                bar_timestamp: closedBucketBar.timestamp,
                 correlation_id: shadowCorrelationId,
               } as Record<string, unknown>,
               status: "info",
@@ -6418,13 +6616,13 @@ export async function evaluateSignals(
               strategyId: sessionConfig.strategyId,
               symbol,
               direction: config.side,
-              entryPrice: bar.close,
+              entryPrice: closedBucketBar.close,
               intendedSize: contextContracts,
               killzone: detectedKillzone,
               regime: (biasState as Record<string, unknown> | null)?.regimeLabel ?? null,
               lifecycleState: "SHADOW",
               traderspostWebhookCalled: false,
-              barTimestamp: bar.timestamp,
+              barTimestamp: closedBucketBar.timestamp,
               correlationId: shadowCorrelationId,
             });
 
@@ -6458,9 +6656,12 @@ export async function evaluateSignals(
           stopLimitOffset,
           rsi: indicators["rsi_14"],
           atr: currentAtrForEntry,
-          barVolume: bar.volume,        // bar N's volume — used as fallback medianBarVolume context
+          // M1c follow-up: closedBucketBar (not raw `bar`) for the same reason as
+          // medianBarVolume/signalBarTimestamp below — this is the bucket the
+          // signal decision is actually about.
+          barVolume: closedBucketBar.volume,        // bar N's volume — used as fallback medianBarVolume context
           medianBarVolume,
-          signalBarTimestamp: bar.timestamp,
+          signalBarTimestamp: closedBucketBar.timestamp,
           correlationId,
           // Wave 2 (2026-07-16): thread the config stop multiplier (default 1.5) so the deferred
           // fill's managed stop uses the SAME multiplier the sizer budgeted against at signal time.
@@ -6499,9 +6700,11 @@ export async function evaluateSignals(
           if (typeof entryIndicatorForAudit === "string" && entryIndicatorForAudit.startsWith("archetype:")) {
             const archetypeName = entryIndicatorForAudit.slice("archetype:".length);
             const entryParamsForAudit = (rawConfigForArchetype.entry_params ?? {}) as Record<string, unknown>;
-            const barTs = typeof bar.timestamp === "number"
-              ? new Date(bar.timestamp).toISOString()
-              : typeof bar.timestamp === "string" ? bar.timestamp : new Date().toISOString();
+            // M1c follow-up (F-7): closedBucketBar, not raw `bar` — audit trail must
+            // match the decision's own bar.
+            const barTs = typeof closedBucketBar.timestamp === "number"
+              ? new Date(closedBucketBar.timestamp).toISOString()
+              : typeof closedBucketBar.timestamp === "string" ? closedBucketBar.timestamp : new Date().toISOString();
             const signalDirection = (config.side === "short" ? "short" : "long") as "long" | "short";
 
             if (archetypeName === "bounce_off_level") {
@@ -6677,15 +6880,18 @@ export async function evaluateSignals(
             } else {
               routingCalled = true;
               const { routeOrder } = await import("./broker-router.js");
+              // F-7-follow-up: closedBucketBar — matches signal_bar/signalBar in the
+              // audit row + SSE broadcast just below, which already use
+              // closedBucketBar.timestamp for this same routed signal.
               const signal = {
                 action: (config.side === "short" ? "enter_short" : "enter_long") as
                   "enter_long" | "enter_short" | "exit_long" | "exit_short" | "exit",
                 ticker: symbol,
                 quantity: contextContracts,
                 strategyId: sessionConfig.strategyId,
-                barTimestamp: typeof bar.timestamp === "number"
-                  ? new Date(bar.timestamp).toISOString()
-                  : typeof bar.timestamp === "string" ? bar.timestamp : undefined,
+                barTimestamp: typeof closedBucketBar.timestamp === "number"
+                  ? new Date(closedBucketBar.timestamp).toISOString()
+                  : typeof closedBucketBar.timestamp === "string" ? closedBucketBar.timestamp : undefined,
               };
               const routeResult = await routeOrder(resolvedAccountId, signal, correlationId ?? null);
               routingSuccess = routeResult.success;
@@ -6708,7 +6914,7 @@ export async function evaluateSignals(
               symbol,
               side: config.side,
               contracts: contextContracts,
-              signal_bar: bar.timestamp,
+              signal_bar: closedBucketBar.timestamp,
               session_id: sessionId,
               correlation_id: correlationId ?? null,
             } as Record<string, unknown>,
@@ -6729,7 +6935,7 @@ export async function evaluateSignals(
             routingSuccess,
             side: config.side,
             contracts: contextContracts,
-            signalBar: bar.timestamp,
+            signalBar: closedBucketBar.timestamp,
           });
         } catch (abRoutingErr: unknown) {
           // Fail-soft: A/B routing audit failure MUST NOT block the entry path
@@ -6741,9 +6947,9 @@ export async function evaluateSignals(
         // ─── End Wave 29 Pass C.3 A/B routing ────────────────────────────────
 
         span.setAttribute("pending_entry_queued", true);
-        span.setAttribute("signal_bar", bar.timestamp);
+        span.setAttribute("signal_bar", closedBucketBar.timestamp);
         logger.info(
-          { sessionId, symbol, side: config.side, signalPrice: bar.close, contracts: contextContracts },
+          { sessionId, symbol, side: config.side, signalPrice: closedBucketBar.close, contracts: contextContracts },
           "FIX 1: Entry signal queued — will execute at next bar's close (next-bar fill parity with backtest)",
         );
       }
@@ -6753,11 +6959,16 @@ export async function evaluateSignals(
   // Store current indicators for next bar's crossover detection
   previousIndicators.set(prevKey, indicators);
 
-  // Log the signal evaluation
+  // Log the signal evaluation.
+  // M1c follow-up (4th independent grade, F-8; corrected by the 5th): loggedBar
+  // defaults to raw `bar` (correct for exit/stop/no-action paths, which are
+  // genuinely tick-level by M1c design) and is reassigned to closedBucketBar
+  // at the entry-signal branch's `action = "open"` site above — that is the
+  // only site that reaches this call (see loggedBar's declaration comment).
   await logSignal({
     sessionId,
     symbol,
-    timestamp: bar.timestamp,
+    timestamp: loggedBar.timestamp,
     entrySignal,
     exitSignal,
     stopHit,
@@ -6767,7 +6978,7 @@ export async function evaluateSignals(
     riskGatePassed,
     action,
     indicators,
-    barClose: bar.close,
+    barClose: loggedBar.close,
     strategySide: config.side,  // BUG 1 fix: pass actual strategy side
     fillMiss,
   });
@@ -6779,6 +6990,35 @@ export async function evaluateSignals(
 /**
  * Backfill state for a bar without executing trades or logging signals.
  * Used to repair indicator state after a connection drop.
+ *
+ * M1c disposition (2026-07-17, corrected after a second independent
+ * accuracy-validator pass — the first pass here understated this): this still
+ * computes `indicators` from the raw 1-minute buffer, unlike evaluateSignals's
+ * aggregated-buffer reroute. NOT a backtest-parity bug — the backtest has no
+ * backfill/reconnect concept to diverge from, so there's no oracle this could
+ * disagree with. But it is NOT merely "one-bucket-stale, self-healing" either:
+ * `backfillBars()`'s bulk historical-bar replay (paper-trading-stream.ts, the
+ * loop that calls this function) never feeds the timeframe aggregator at all —
+ * `feedTimeframeAggregator`'s only call site is `handleBar()`'s fan-out, which
+ * the bulk replay bypasses entirely. Left un-reset, a stale pre-disconnect
+ * in-progress bucket would sit in the aggregator's state and get finalized as
+ * a truncated, wrong-OHLCV "completed" bucket the moment the first genuinely-
+ * live bar arrived post-reconnect — corrupting every aggregated-buffer
+ * consumer (atr14/medianAtr14/indicators) for up to 100 buckets. Fixed by
+ * calling `resetAggregatorForSymbol(symbol)` at the top of `backfillBars()`,
+ * discarding the stale accumulator so the aggregator bootstraps cleanly on
+ * the first live bar post-reconnect — the same accepted cold-start semantics
+ * the wave already tolerates for a fresh session's empty aggregatedBuffer.
+ * Feeding the aggregator THROUGH the bulk backfill loop itself (to warm
+ * non-1m indicators during the gap, not just reset them) was considered and
+ * rejected: `backfillBars()`'s `finally` block separately replays any bars
+ * that arrived live DURING backfill (`pendingRealtimeBars`) through
+ * `handleBar()`, which re-feeds the aggregator for that boundary range —
+ * feeding it again in the bulk loop risks a double-feed at that boundary.
+ * `updateStateOnly`'s primed `previousIndicators` value remains one-bucket
+ * stale for the first live evaluateSignals call after a reconnect (self-heals
+ * at that same call, since previousIndicators is overwritten every bar) —
+ * that part of the original disposition was correct.
  */
 export async function updateStateOnly(
   sessionId: string,

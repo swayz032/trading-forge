@@ -223,6 +223,7 @@ export async function evaluateContextGate(
   strategyName: string,
   barBuffer: Bar[],
   indicators: Record<string, number>,
+  mtfContext?: { isBucketClose: boolean; aggregatedBuffer: Bar[] },
 ): Promise<ContextGateResult> {
   // Default: fail-open (TAKE) so context gate doesn't block trading if data unavailable
   const defaultResult: ContextGateResult = {
@@ -254,8 +255,23 @@ export async function evaluateContextGate(
         close: b.close,
         volume: b.volume,
       })),
-      // Intraday bars with timestamps for session context
-      intraday_bars: barBuffer.map((b) => ({
+      // Intraday bars with timestamps for session context.
+      //
+      // M1c follow-up (2026-07-17, independent accuracy-validator finding — CORRECTS
+      // the prior disposition comment that stood here, which claimed no backtest
+      // counterpart existed): `context_runner.py::run_evaluate()` (spawned by
+      // callContextEngine() below) calls the exact same seven functions —
+      // compute_session_context/compute_bias/route_playbook/compute_location_score/
+      // compute_structural_stop/compute_targets/eligibility_gate.evaluate_signal —
+      // that `backtester.py::apply_eligibility_gate()` also calls, on its OWN
+      // exec-timeframe `df` (confirmed by direct read of both files). This IS the
+      // backtest-mirrored 7-layer eligibility/WHERE-evaluator gate, and it is
+      // LIVE-ENFORCED: paper-signal-service.ts calls evaluateContextGate()
+      // unconditionally on every entry signal's sizing path — SKIP blocks the
+      // trade, REDUCE halves size. So this was a real hole in the parity claim,
+      // same class as buildExitBarContext/fetchICTIndicators/medianBarVolume.
+      // Source from the aggregated buffer for non-1m sessions.
+      intraday_bars: (mtfContext ? mtfContext.aggregatedBuffer : barBuffer).map((b) => ({
         open: b.open,
         high: b.high,
         low: b.low,

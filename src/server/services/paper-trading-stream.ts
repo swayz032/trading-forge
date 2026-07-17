@@ -399,13 +399,32 @@ function sessionsForSymbol(symbol: string): string[] {
  * All fields except atr14 are optional — handlers return HOLD when absent.
  * This function never throws — any error returns undefined so processSessionBar
  * can proceed without exitBarContext (falls back to legacy ATR-only exits).
+ *
+ * M1c follow-up (2026-07-17, post-landing accuracy-validator finding): atr14/
+ * medianAtr14/last2barSwingLow/High are INDICATOR-MAGNITUDE quantities (exit
+ * slippage ATR-scaling + Chandelier/adaptive trail distance) — the same class
+ * of bug the M1c wave fixed on the entry side. The backtest computes these
+ * from its own N-minute-bar frame (it has no other granularity); paper must
+ * match by sourcing them from `mtfContext.aggregatedBuffer` for non-1m
+ * sessions, not the raw 1-minute `barBuffer`. Left deliberately UNCHANGED:
+ * currentBarHigh/currentBarLow/barVol/barTimestamp/currentTimeEt — these are
+ * genuine wall-clock or intrabar touch-detection fields (checking a level
+ * against every raw bar's high/low is a conservative, more-frequent check,
+ * not a magnitude distortion) and stay on the raw current bar per the
+ * advisor-endorsed scope cut already documented in evaluateSignals's
+ * docstring.
  */
 /** @internal exported for tests — production entry point is processSessionBar */
-export async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | undefined> {
+export async function buildExitBarContext(
+  bar: Bar,
+  mtfContext?: { isBucketClose: boolean; aggregatedBuffer: Bar[] },
+): Promise<StyleExitBarContext | undefined> {
   try {
     // Use the local barBuffer map (paper-trading-stream.ts owns the streaming buffer).
     // This is the same buffer used by evaluateSignals (passed as getBarBuffer(symbol)).
-    const buf = barBuffer.get(bar.symbol) ?? [];
+    // M1c follow-up: non-1m sessions source the magnitude-computing fields below
+    // from the real-timeframe aggregated buffer instead — see docstring above.
+    const buf = mtfContext ? mtfContext.aggregatedBuffer : (barBuffer.get(bar.symbol) ?? []);
     const atr = ATR(buf, 14);
     // ATR returns NaN when buffer is too short — clamp to 0 (HOLD guard in handlers)
     const atr14 = Number.isFinite(atr) ? atr : 0;
@@ -438,14 +457,20 @@ export async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext
     const currentTimeEt = etFormatter.format(barDate);
 
     // H-2 fix: last2barSwingLow/High from the buffer — prior 2 bars before the current bar.
-    // buf[buf.length-1] = current bar (just pushed by pushBar before processSessionBar).
-    // buf[buf.length-2] = previous bar, buf[buf.length-3] = 2 bars ago.
+    // Raw-buffer indexing: buf[buf.length-1] = current bar (just pushed by pushBar before
+    // processSessionBar). buf[buf.length-2] = previous bar, buf[buf.length-3] = 2 bars ago.
     // "last 2-bar swing" = min/max low/high of those 2 prior bars (not the current bar).
+    //
+    // M1c follow-up: the aggregated buffer (`mtfContext.aggregatedBuffer`) contains ONLY
+    // completed buckets — the still-forming current bucket is never in it (feedBar never
+    // emits a partial bucket) — so there is no "current bar" entry to skip. The last 2
+    // COMPLETED N-minute bars are buf[buf.length-1] and buf[buf.length-2].
     let last2barSwingLow: number | undefined = undefined;
     let last2barSwingHigh: number | undefined = undefined;
-    if (buf.length >= 3) {
-      const prevBar1 = buf[buf.length - 2];
-      const prevBar2 = buf[buf.length - 3];
+    const swingMinLen = mtfContext ? 2 : 3;
+    if (buf.length >= swingMinLen) {
+      const prevBar1 = mtfContext ? buf[buf.length - 1] : buf[buf.length - 2];
+      const prevBar2 = mtfContext ? buf[buf.length - 2] : buf[buf.length - 3];
       // Both bars must have valid OHLC fields (backfill bars always do; unit test stubs may omit high/low)
       if (prevBar1.low != null && prevBar2.low != null) {
         last2barSwingLow  = Math.min(prevBar1.low,  prevBar2.low);
@@ -554,7 +579,10 @@ async function processSessionBar(
   // Build exit bar context for Track 3 Style C/adaptive runner trail dispatch.
   // Includes true bar volume (Wave 26 AVWAP wiring). Fail-soft: if context build
   // fails, updatePositionPrices still runs (legacy ATR-only path).
-  const exitBarContext = await buildExitBarContext(bar);
+  // M1c follow-up (2026-07-17): pass this session's own mtfContext so the
+  // magnitude fields (atr14/medianAtr14/swings) source from the real-timeframe
+  // aggregated buffer — see buildExitBarContext's docstring.
+  const exitBarContext = await buildExitBarContext(bar, mtfContext);
 
   try {
     // deepscan14 E1: thread the per-bar correlationId through so bookPartialClose/
@@ -685,6 +713,21 @@ async function backfillBars(symbol: string, lastTimestamp: string) {
 
   isBackfilling.set(symbol, true);
   logger.info({ symbol, lastTimestamp }, "Starting backfill for symbol");
+
+  // M1c follow-up (2026-07-17, independent accuracy-validator finding, F-2): the
+  // historical-bar replay below (pushBar + updateStateOnly) never feeds the
+  // timeframe aggregator — feedTimeframeAggregator's only call site is
+  // handleBar()'s fan-out. Left un-reset, a stale in-progress bucket
+  // accumulated BEFORE the disconnect would sit in the aggregator's state map
+  // across the whole backfill window, then get finalized as a truncated,
+  // wrong-OHLCV "completed" bucket the moment the first genuinely-live
+  // post-reconnect bar arrives (whenever its bucket start is later than the
+  // stale accumulator's) — corrupting atr14/medianAtr14/indicators for every
+  // non-1m session until that bad bucket ages out of the rolling window.
+  // Resetting here discards the stale accumulator instead: the aggregator
+  // bootstraps cleanly on the first live bar post-backfill, the same accepted
+  // cold-start semantics this wave already tolerates for a fresh session.
+  resetAggregatorForSymbol(symbol);
 
   try {
     const fetcher = getMassiveFetcher();
