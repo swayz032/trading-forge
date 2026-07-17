@@ -221,3 +221,41 @@ describe("Pass 6 Track B — pine-export-service.ts A/B injection block", () => 
     expect(s).toContain("config.account_id = resolvedId");
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// describe 5: post-m3-paper-execution-lifecycle wave (2026-07-17) HIGH fix —
+// the A/B routing account_id injection is no longer unconditional. It must be
+// scoped through shouldInjectAbRoutingAccountId() and must skip family-released
+// strategies. See src/server/lib/pine-export-ab-routing-guard.test.ts for the
+// pure-function behavioral coverage of the decision logic itself.
+// ─────────────────────────────────────────────────────────────────────────────
+describe("post-m3-paper-execution-lifecycle wave — A/B injection is no longer unconditional (family-invariant guard wired)", () => {
+  it("imports shouldInjectAbRoutingAccountId from the pine-export-ab-routing-guard module", () => {
+    const s = readFileSync(PINE_EXPORT_PATH, "utf8");
+    expect(s).toContain("shouldInjectAbRoutingAccountId");
+    expect(s).toContain("pine-export-ab-routing-guard.js");
+  });
+
+  it("queries accountStrategyAssignments.releasedToFamily before deciding whether to inject", () => {
+    const s = readFileSync(PINE_EXPORT_PATH, "utf8");
+    const injectionIdx = s.indexOf("pine_export.ab_routing_resolved");
+    expect(injectionIdx).toBeGreaterThan(-1);
+    const blockSlice = s.slice(injectionIdx - 2500, injectionIdx + 500);
+    expect(blockSlice).toContain("accountStrategyAssignments.releasedToFamily");
+    expect(blockSlice).toContain("isFamilyStrategy");
+  });
+
+  it("the family check fails CLOSED (isFamilyStrategy=true) on a DB error, not open", () => {
+    const s = readFileSync(PINE_EXPORT_PATH, "utf8");
+    const catchIdx = s.indexOf("familyCheckErr");
+    expect(catchIdx).toBeGreaterThan(-1);
+    const catchSlice = s.slice(catchIdx, catchIdx + 600);
+    expect(catchSlice).toContain("isFamilyStrategy = true");
+  });
+
+  it("the resolved shouldInject decision gates the account_id resolution+injection (not a bare account_id check alone)", () => {
+    const s = readFileSync(PINE_EXPORT_PATH, "utf8");
+    expect(s).toContain("shouldInjectAbRoutingAccountId({ hasExplicitAccountId, isFamilyStrategy })");
+    expect(s).toContain("if (!shouldInject)");
+  });
+});

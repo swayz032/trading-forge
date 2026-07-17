@@ -23,6 +23,12 @@ const mocks = vi.hoisted(() => ({
   dbSelectResult: vi.fn(),
   dbUpdateCalled: vi.fn(),
   dbInsertValues: vi.fn(),
+  // post-m3-paper-execution-lifecycle wave (2026-07-17) CRIT fix: freezePolicyForStrategy's
+  // update now ends in .returning({id}) as its CAS-guard success signal (mirrors
+  // lifecycle-service.ts's writeBlock pattern). Default non-empty so the 4 existing
+  // happy-path/error-path tests below (none of which exercise the race scenario) are
+  // unaffected; wave29-pass-b2-frozen-policy-cas-guard.test.ts covers the race itself.
+  dbUpdateReturningResult: vi.fn(() => [{ id: "matched-row" }]),
 }));
 
 vi.mock("../db/index.js", () => {
@@ -50,7 +56,15 @@ vi.mock("../db/index.js", () => {
         set: (vals: unknown) => ({
           where: (_cond: unknown) => {
             mocks.dbUpdateCalled(vals);
-            return Promise.resolve(undefined);
+            // post-m3-paper-execution-lifecycle wave (2026-07-17): dual-shape return — some
+            // callers (admin-frozen-policy-override.ts's operator-HMAC route, deliberately NOT
+            // CAS-guarded — an explicit single-strategy admin action, out of scope for the
+            // concurrent-promotion race this wave fixes) await `.where(...)` directly; others
+            // (freezePolicyForStrategy's new CAS guard) chain `.returning(...)`. A thenable with
+            // an extra `.returning` method satisfies both without needing two separate mocks.
+            const p: any = Promise.resolve(undefined);
+            p.returning = (_sel?: unknown) => Promise.resolve(mocks.dbUpdateReturningResult());
+            return p;
           },
         }),
       }),
@@ -243,6 +257,7 @@ describe("freezePolicyForStrategy", () => {
     const result = await freezePolicyForStrategy(
       "11111111-1111-1111-1111-111111111111",
       "TRENDING",
+      "PAPER",
     );
 
     expect(result.hash).toMatch(/^[0-9a-f]{64}$/);
@@ -263,7 +278,7 @@ describe("freezePolicyForStrategy", () => {
     mocks.dbSelectResult.mockReturnValue([]); // empty = not found
 
     await expect(
-      freezePolicyForStrategy("nonexistent-id", "RANGE_BOUND"),
+      freezePolicyForStrategy("nonexistent-id", "RANGE_BOUND", "PAPER"),
     ).rejects.toThrow("not found");
   });
 });
@@ -499,7 +514,7 @@ describe("Frozen-policy fail-CLOSED invariants (Wave hardening 2026-06-22)", () 
     mocks.dbSelectResult.mockReturnValue([]);
 
     await expect(
-      freezePolicyForStrategy("nonexistent-for-fail-closed", "UNKNOWN"),
+      freezePolicyForStrategy("nonexistent-for-fail-closed", "UNKNOWN", "PAPER"),
     ).rejects.toThrow("not found");
 
     // In lifecycle-service.ts the outer try/catch now sets frozenPolicyBlocked=true and
@@ -555,7 +570,7 @@ describe("Frozen-policy fail-CLOSED invariants (Wave hardening 2026-06-22)", () 
       },
     ]);
 
-    const result = await freezePolicyForStrategy("strat-override", "TRENDING");
+    const result = await freezePolicyForStrategy("strat-override", "TRENDING", "PAPER");
 
     expect(result.hash).toMatch(/^[0-9a-f]{64}$/);
     expect(result.frozen_at).toBeInstanceOf(Date);

@@ -1188,6 +1188,69 @@ export function VWAP(bars: Bar[]): number {
 }
 
 /**
+ * post-m3-paper-execution-lifecycle wave (2026-07-17) HIGH fix — session VWAP + 1σ/2σ bands,
+ * ported bit-for-bit from the running-population-variance formula in
+ * src/engine/indicators/core.py::compute_vwap_with_bands() (institutional formula, documented
+ * there verbatim):
+ *   cum_pv[i]  = Σ_{j<=i} tp[j]·vol[j]
+ *   cum_v[i]   = Σ_{j<=i} vol[j]
+ *   vwap[i]    = cum_pv[i] / cum_v[i]                     (running VWAP AT bar i)
+ *   cum_pv2[i] = Σ_{j<=i} (tp[j] - vwap[j])² · vol[j]      (uses the RUNNING vwap at EACH prior
+ *                                                            bar j, not the final bar's vwap —
+ *                                                            this is what makes it a running/
+ *                                                            population variance, not a static one)
+ *   sigma[i]   = sqrt(cum_pv2[i] / cum_v[i])
+ *   bands[i]   = vwap[i] ± 1·sigma[i], vwap[i] ± 2·sigma[i]
+ *
+ * We only need the values at the LAST bar (the caller always passes a session-filtered buffer
+ * ending at "now"), so this returns a single point rather than a per-bar series — the loop is the
+ * same O(N) single pass compute_vwap_with_bands() does per-session, just scalar instead of a
+ * Polars column. `vwap` here will equal VWAP(bars) bit-for-bit (same tp/vol math); callers that
+ * already have `vals["vwap"]` computed separately may ignore this function's `vwap` field and use
+ * only the band deltas — kept for completeness / standalone testability.
+ *
+ * Zero-cum-volume guard mirrors core.py's `fill_null(strategy="forward").fill_null(0.0)`: while
+ * cumulative volume is still 0 (leading zero-volume bars at session open), the running vwap holds
+ * at its last known value (0 before any volume has printed) instead of propagating NaN/Infinity
+ * into the variance accumulator.
+ */
+export function computeVwapWithBands(bars: Bar[]): {
+  vwap: number;
+  band1sUpper: number;
+  band1sLower: number;
+  band2sUpper: number;
+  band2sLower: number;
+} {
+  const NA = { vwap: NaN, band1sUpper: NaN, band1sLower: NaN, band2sUpper: NaN, band2sLower: NaN };
+  if (bars.length === 0) return NA;
+
+  let cumPv = 0;
+  let cumV = 0;
+  let cumPv2 = 0;
+  let runningVwap = 0;
+
+  for (const bar of bars) {
+    const tp = (bar.high + bar.low + bar.close) / 3;
+    cumPv += tp * bar.volume;
+    cumV += bar.volume;
+    runningVwap = cumV > 0 ? cumPv / cumV : runningVwap; // forward-fill-then-0.0 guard
+    cumPv2 += (tp - runningVwap) ** 2 * bar.volume;
+  }
+
+  if (cumV === 0) return NA;
+
+  const vwap = cumPv / cumV;
+  const sigma = Math.sqrt(cumPv2 / cumV);
+  return {
+    vwap,
+    band1sUpper: vwap + sigma,
+    band1sLower: vwap - sigma,
+    band2sUpper: vwap + 2.0 * sigma,
+    band2sLower: vwap - 2.0 * sigma,
+  };
+}
+
+/**
  * Filter a bar buffer to bars belonging to the SAME CME Globex trading session
  * as the last bar in the buffer.
  *
@@ -1279,6 +1342,49 @@ export function computeIndicators(barBuffer: Bar[]): IndicatorValues {
   // trading session, eliminating pre-session bars from contaminating the anchor.
   const sessionBarsForVwap = filterToGlobexSession(barBuffer);
   vals["vwap"] = sessionBarsForVwap.length > 0 ? VWAP(sessionBarsForVwap) : NaN;
+
+  // post-m3-paper-execution-lifecycle wave (2026-07-17) HIGH fix: this function's own comment
+  // above (and the "Order Flow Layer" doc, CLAUDE.md §2b) referenced compute_vwap_with_bands()
+  // as the parity target for VWAP itself, but the 1σ/2σ BAND columns it also produces were never
+  // actually computed or attached here — confluence-score.ts's evalVwapAlignment() reads
+  // vwap_band_1s_upper/lower (the "1-sigma band reject" branch) and scans for any key matching
+  // /^anchored_vwap_/ (the anchored-retest bonus branch), and both were permanently unreachable
+  // in live paper trading as a direct consequence. Wired via the new computeVwapWithBands()
+  // (bit-for-bit port of core.py's running-population-variance formula) over the SAME
+  // session-filtered bar set VWAP() already uses above, so vwap_band_* always agrees with vals.vwap.
+  if (sessionBarsForVwap.length > 0) {
+    const bands = computeVwapWithBands(sessionBarsForVwap);
+    vals["vwap_band_1s_upper"] = bands.band1sUpper;
+    vals["vwap_band_1s_lower"] = bands.band1sLower;
+    vals["vwap_band_2s_upper"] = bands.band2sUpper;
+    vals["vwap_band_2s_lower"] = bands.band2sLower;
+
+    // Anchored VWAP: the backtester's compute_anchored_vwap() takes an arbitrary
+    // caller-supplied anchor_ts (e.g. a specific ICT swing point) — that per-strategy DSL
+    // config is not available inside this pure indicator function, which only receives the raw
+    // bar buffer. The one anchor point this function CAN derive honestly (not fabricated) is the
+    // current CME Globex session's own open — by definition, session VWAP (computed above from
+    // sessionBarsForVwap, which already starts at the session's first bar) IS a VWAP anchored at
+    // session open. Exposing it under the documented anchored_vwap_<iso> key convention makes
+    // evalVwapAlignment's retest-scan branch genuinely reachable for the session-anchor case;
+    // a full arbitrary-swing-point anchor (matching the backtester's per-strategy anchor_ts) is a
+    // separate, larger DSL-wiring change and is NOT claimed here — see the wave's completion
+    // report for this scoping decision.
+    const sessionOpenTs = sessionBarsForVwap[0]?.timestamp;
+    if (sessionOpenTs) {
+      const iso = new Date(sessionOpenTs).toISOString().replace(/[:.]/g, "_");
+      vals[`anchored_vwap_${iso}`] = bands.vwap;
+    }
+  }
+
+  // Companion fix: confluence-score.ts's evalVwapAlignment() reads ctx.indicators["atr"] (a
+  // single unscoped key) to gate the anchored-VWAP retest bonus (0.5×ATR proximity check) — this
+  // function has only ever emitted atr_7/atr_14/atr_21 (period-suffixed), so that gate was ALSO
+  // permanently unreachable (atrHalf stayed null) independent of the vwap_band_*/anchored_vwap_*
+  // fix above. Alias the canonical 14-period ATR (the period used everywhere else in this
+  // codebase as "the" ATR — see CLAUDE.md §4 stop-geometry, all default to ATR-14) so the retest
+  // branch's ATR gate is finally satisfiable. Purely additive — no existing atr_* key is touched.
+  vals["atr"] = vals["atr_14"];
 
   // Bollinger Bands at common periods
   for (const p of [20]) {
@@ -1465,8 +1571,18 @@ const TS_INDICATOR_NAMES: ReadonlySet<string> = new Set([
   "rsi_7", "rsi_14", "rsi_21",
   // ATR
   "atr_7", "atr_14", "atr_21",
+  // post-m3-paper-execution-lifecycle wave (2026-07-17): bare "atr" alias (= atr_14) — see
+  // computeIndicators()'s companion fix comment for why confluence-score.ts needs this key.
+  "atr",
   // VWAP
   "vwap",
+  // post-m3-paper-execution-lifecycle wave (2026-07-17) HIGH fix: computeIndicators() now
+  // actually emits these (previously dead per confluence-score.ts's evalVwapAlignment finding) —
+  // listed here too so a strategy DSL rule literally referencing one of them resolves locally
+  // instead of being incorrectly flagged "unknown" and delegated to the Python ICT bridge.
+  // anchored_vwap_<iso> is intentionally excluded — its suffix is a dynamic per-session
+  // timestamp, not a static name this Set can enumerate.
+  "vwap_band_1s_upper", "vwap_band_1s_lower", "vwap_band_2s_upper", "vwap_band_2s_lower",
   // Bollinger Bands
   "bbands_20_upper", "bbands_20_middle", "bbands_20_lower",
   // Current bar OHLCV

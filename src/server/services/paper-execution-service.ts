@@ -52,7 +52,7 @@ import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
 // #24 (deep-scan 2026-07-11): pure 15:55 ET flatten-bar predicate (DB-free — see lib module).
 import { _isTimeStopFlattenBar } from "../lib/time-stop-flatten.js";
 // fresh-scan HIGH#5 (2026-07-12): Style C 33/33/34 scale-out split off the ORIGINAL entry size.
-import { styleCScaleOut } from "../lib/style-c-scaleout.js";
+import { styleCScaleOut, adaptiveScaleOut } from "../lib/style-c-scaleout.js";
 import type { ExitPlanWithRuntimeState, EntryDecisionContext } from "../db/jsonb-shapes.js";
 // Pass 6 Track D: per-call exit-handler Discord visibility
 import { notifyWarning, notifyCritical } from "./notification-service.js";
@@ -3751,6 +3751,90 @@ async function callExitHandler(
     }
   }
 
+  // ── post-m3-paper-execution-lifecycle wave (2026-07-17) — adaptive TP1/TP2 pre-check ──
+  // CRIT fix (re-verified against current code, confirmed still present post-M3): exit_style=
+  // "adaptive" positions had a real ExitPlan (liquidity-mapped tp1.price / tp2.price + a
+  // regime-dependent scaling.tp1_pct/tp2_pct/runner_pct, e.g. TRENDING 20/30/50) computed and
+  // persisted into pos.exitPlan at position-open (Wave 25.5 Gap A, openPosition ~line 2216-2264),
+  // but NOTHING at fill time ever read tp1.price/tp2.price/scaling back out. callExitHandler always
+  // fell straight through to the Python style_c_handler default (flat +1.0R / +2.0R off the
+  // managed-stop distance) and applyExitDecision always split contracts 33/33/34 via
+  // styleCScaleOut() — the adaptive plan's liquidity-mapped TPs and regime-scaled split were
+  // computed, persisted, and then silently discarded at every fill. The ONLY consumer of
+  // pos.exitPlan at management time was the runner-trail block (Gap C, ~line 5009+), which only
+  // affects the TRAIL STOP level for whatever remains after TP1+TP2 — it never touched TP1/TP2
+  // pricing or sizing. This block closes that gap the same way the static_styleC pre-check above
+  // closes its own analogous gap (F-b parity fix): a synchronous TS pre-check before the Python
+  // subprocess dispatch, using intrabar bar_high/bar_low touch detection to mirror the backtester's
+  // limit-fill semantics (bar.high >= tp for longs / bar.low <= tp for shorts).
+  //
+  // Discriminator: an adaptive plan has BOTH tp1.price and tp2.price (the real ExitTarget shape
+  // from adaptive-exit-engine.ts). The static_styleC plan uses different key names
+  // (static_styleC_tp2_price, no tp1/tp2 sub-objects) and legacy/pre-migration-0179 rows carry
+  // exitPlan=null — so this check is a no-op for every non-adaptive position, zero behavior change
+  // on the default path.
+  {
+    const adaptivePlan = pos.exitPlan as Record<string, unknown> | null;
+    const adaptiveTp1 = adaptivePlan?.["tp1"] as Record<string, unknown> | undefined;
+    const adaptiveTp2 = adaptivePlan?.["tp2"] as Record<string, unknown> | undefined;
+    const adaptiveTp1Price = typeof adaptiveTp1?.["price"] === "number" ? (adaptiveTp1["price"] as number) : null;
+    const adaptiveTp2Price = typeof adaptiveTp2?.["price"] === "number" ? (adaptiveTp2["price"] as number) : null;
+    const adaptiveScaling = adaptivePlan?.["scaling"] as
+      | { tp1_pct?: number; tp2_pct?: number }
+      | undefined;
+
+    if (adaptiveTp1Price != null && adaptiveTp2Price != null) {
+      const currentPriceNum = Number(pos.currentPrice ?? entryPrice);
+      const barHighForAdaptive = barCtx.currentBarHigh?.[pos.symbol] ?? null;
+      const barLowForAdaptive  = barCtx.currentBarLow?.[pos.symbol]  ?? null;
+
+      // Mirrors backtester.py:1248/1260 + the F-b/C2 static-styleC pre-check above:
+      //   long:  bar_high >= target (touch from below); short: bar_low <= target (touch from above)
+      const adaptivePriceReached = (target: number): boolean =>
+        pos.side === "long"
+          ? (barHighForAdaptive !== null ? barHighForAdaptive : currentPriceNum) >= target
+          : (barLowForAdaptive  !== null ? barLowForAdaptive  : currentPriceNum) <= target;
+
+      if (!(pos.tp1Filled ?? false) && adaptivePriceReached(adaptiveTp1Price)) {
+        logger.debug(
+          { positionId: pos.id, adaptiveTp1Price, side: pos.side },
+          "post-m3 fix: adaptive TP1 reached (pre-check firing)",
+        );
+        return {
+          decision: "FILL_TP1_50PCT",
+          new_stop: null,
+          evidence: {
+            trigger: "tp1_fill_adaptive",
+            tp1_price: adaptiveTp1Price,
+            tp1_fraction: adaptiveScaling?.tp1_pct ?? 0.33,
+            tp1_source: adaptiveTp1?.["source"] ?? null,
+            source: "adaptive",
+          },
+          handler_version: "adaptive_exit_plan_v1",
+        };
+      }
+
+      if ((pos.tp1Filled ?? false) && !(pos.tp2Filled ?? false) && adaptivePriceReached(adaptiveTp2Price)) {
+        logger.debug(
+          { positionId: pos.id, adaptiveTp2Price, side: pos.side },
+          "post-m3 fix: adaptive TP2 reached (pre-check firing)",
+        );
+        return {
+          decision: "FILL_TP2",
+          new_stop: null,
+          evidence: {
+            trigger: "tp2_fill_adaptive",
+            tp2_price: adaptiveTp2Price,
+            tp2_fraction: adaptiveScaling?.tp2_pct ?? 0.33,
+            tp2_source: adaptiveTp2?.["source"] ?? null,
+            source: "adaptive",
+          },
+          handler_version: "adaptive_exit_plan_v1",
+        };
+      }
+    }
+  }
+
   // ── 2026-06-29 Fix 2 (HIGH): TS-native Style C exit evaluator — DARK LAUNCH ──
   // Runs synchronously — no subprocess, no circuit-breaker risk, <1ms per call —
   // eliminating the per-bar Python spawn overhead and the 1h TP blackout that
@@ -4328,6 +4412,56 @@ async function bookPartialClose(
 }
 
 /**
+ * post-m3-paper-execution-lifecycle wave (2026-07-17) — single source of truth for the TP1 leg
+ * size, shared by applyExitDecision's FILL_TP1_50PCT branch AND the F4 same-bar-TP2 reconciliation
+ * fallback (~line 5300s below). Those two call sites MUST compute an identical value — the
+ * freshscan11 CAPITAL-SAFETY fix (styleCScaleOut HIGH#5) documents exactly what happens when they
+ * diverge: a stale/wrong tp1ClosedCount corrupts `paperPositions.contracts` for the runner leg
+ * permanently, overstating every later bar's MTM unrealizedPnl + trailing-DD HWM. Centralizing here
+ * prevents the adaptive-plan fix from reopening that same divergence class.
+ *
+ * Precedence: adaptive plan (evidence.source==="adaptive" + pos.exitPlan.scaling present) >
+ * Style C 33/33/34 (styleCScaleOut) > legacy Style D 50%-of-remainder.
+ */
+function resolveTp1ClosedCount(
+  pos: typeof paperPositions.$inferSelect,
+  exitStyle: "D" | "C",
+  evidence: Record<string, unknown>,
+  originalContracts: number,
+): number {
+  if (evidence["source"] === "adaptive") {
+    const scaling = (pos.exitPlan as Record<string, unknown> | null)?.["scaling"] as
+      | { tp1_pct?: number; tp2_pct?: number }
+      | undefined;
+    if (typeof scaling?.tp1_pct === "number" && typeof scaling?.tp2_pct === "number") {
+      return Math.max(1, adaptiveScaleOut(originalContracts, scaling.tp1_pct, scaling.tp2_pct).tp1);
+    }
+  }
+  return exitStyle === "C"
+    ? Math.max(1, styleCScaleOut(originalContracts).tp1)
+    : Math.max(1, Math.floor(pos.contracts * 0.50));
+}
+
+/** Sibling of resolveTp1ClosedCount for the TP2 leg — same precedence + divergence-prevention rationale. */
+function resolveTp2ClosedCount(
+  pos: typeof paperPositions.$inferSelect,
+  evidence: Record<string, unknown>,
+  originalContractsTp2: number | null,
+): number {
+  if (evidence["source"] === "adaptive" && originalContractsTp2 != null) {
+    const scaling = (pos.exitPlan as Record<string, unknown> | null)?.["scaling"] as
+      | { tp1_pct?: number; tp2_pct?: number }
+      | undefined;
+    if (typeof scaling?.tp1_pct === "number" && typeof scaling?.tp2_pct === "number") {
+      return Math.max(1, adaptiveScaleOut(originalContractsTp2, scaling.tp1_pct, scaling.tp2_pct).tp2);
+    }
+  }
+  return originalContractsTp2 != null
+    ? Math.max(1, styleCScaleOut(originalContractsTp2).tp2)
+    : Math.max(1, Math.floor(pos.contracts * 0.33));
+}
+
+/**
  * Apply an ExitDecision to an open position. Mutates DB state.
  * Returns true if the position was fully closed (TIME_STOP_FLATTEN).
  */
@@ -4381,11 +4515,14 @@ async function applyExitDecision(
       // (pos.entryContracts, migration 0201), NOT of the shrinking `contracts` remainder. At TP1
       // `contracts` still equals the original, so the null-fallback is exact here; the divergence
       // only bit at TP2 (remainder). Non-Style-C keeps the legacy 50%-of-remainder behavior.
+      // post-m3-paper-execution-lifecycle wave: adaptive positions (evidence.source==="adaptive")
+      // now split via the strategy's own regime-scaled tp1_pct/tp2_pct instead of the Style C
+      // 33/33/34 default — resolveTp1ClosedCount() is the single source of truth shared with the
+      // F4 same-bar-TP2 reconciliation fallback below (must never diverge — CAPITAL-SAFETY, see
+      // resolveTp1ClosedCount's docstring).
       const originalContractsTp1 = (pos as { entryContracts?: number | null }).entryContracts ?? pos.contracts;
-      const contractsToClose = exitStyle === "C"
-        ? Math.max(1, styleCScaleOut(originalContractsTp1).tp1)
-        : Math.max(1, Math.floor(pos.contracts * 0.50));
       const evidenceTyped = evidence as Record<string, unknown>;
+      const contractsToClose = resolveTp1ClosedCount(pos, exitStyle, evidenceTyped, originalContractsTp1);
       const tp1Price = evidenceTyped.tp1_price as number | undefined;
       const rMultiple = tp1Price != null && pos.entryPrice != null
         ? Math.abs((tp1Price - Number(pos.entryPrice)) / (evidenceTyped.stop_pts as number || 1))
@@ -4501,11 +4638,12 @@ async function applyExitDecision(
       // fresh-scan HIGH#5 (2026-07-12): close the ORIGINAL-size TP2 leg (33% of entry size), leaving
       // ~34% for the runner — NOT 33% of the already-decremented remainder (which left ~56% runner).
       // Legacy rows with a null entryContracts fall back to the pre-fix remainder behavior.
+      // post-m3-paper-execution-lifecycle wave: adaptive positions split via the strategy's own
+      // regime-scaled tp1_pct/tp2_pct — resolveTp2ClosedCount() is the shared source of truth
+      // (see resolveTp1ClosedCount's docstring above for the divergence hazard this avoids).
       const originalContractsTp2 = (pos as { entryContracts?: number | null }).entryContracts ?? null;
-      const contractsToClose = originalContractsTp2 != null
-        ? Math.max(1, styleCScaleOut(originalContractsTp2).tp2)
-        : Math.max(1, Math.floor(pos.contracts * 0.33));
       const tp2Evidence = evidence as Record<string, unknown>;
+      const contractsToClose = resolveTp2ClosedCount(pos, tp2Evidence, originalContractsTp2);
       if (contractsToClose < pos.contracts) {
         // 2026-06-29 Fix 1 (CRITICAL): await bookPartialClose BEFORE advancing state (same
         // as TP1 fix). On failure: CRITICAL audit + no state advance → re-evaluate next bar.
@@ -5246,10 +5384,14 @@ export async function updatePositionPrices(
             // a phantom contract written PERMANENTLY. Style D (dead, CLAUDE.md §2b) keeps its legacy
             // 50%-of-remainder behavior — its own contractsToClose calc (~line 4174) is unaffected by
             // the Style-C styleCScaleOut fix and matches what this fallback reproduces.
+            // post-m3-paper-execution-lifecycle wave: MUST also mirror the adaptive-plan branch
+            // applyExitDecision's FILL_TP1_50PCT case now takes (resolveTp1ClosedCount) — reusing
+            // the exact same shared helper here is what keeps the two in lockstep and prevents this
+            // fix from reopening the freshscan11 divergence class for adaptive positions specifically.
             const originalContractsTp1 = (pos as { entryContracts?: number | null }).entryContracts ?? pos.contracts;
-            const tp1ClosedCount = tp1ExitStyle === "C"
-              ? Math.max(1, styleCScaleOut(originalContractsTp1).tp1)
-              : Math.max(1, Math.floor(pos.contracts * 0.50));
+            const tp1ClosedCount = resolveTp1ClosedCount(
+              pos, tp1ExitStyle, handlerResult.evidence as Record<string, unknown>, originalContractsTp1,
+            );
             // Guard: tp1ClosedCount < pos.contracts is always true here (full close returns
             // positionClosed=true which prevents entering this block). Kept as a safety fence.
             if (tp1ClosedCount < pos.contracts) {

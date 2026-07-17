@@ -17,7 +17,7 @@
  * Import logger from ./logger.js (not ../index.js) per CLAUDE.md feedback rule.
  */
 
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, auditLog } from "../db/schema.js";
 import { logger } from "./logger.js";
@@ -51,13 +51,38 @@ export type { FrozenPolicySlice, FrozenPolicyDriftResult };
  *
  * Emits audit action: frozen_policy.set
  *
- * @param strategyId      Numeric strategy PK (from strategies.id — UUID string).
- * @param regimeAtFreeze  Institutional regime value (e.g. "TRENDING").
- * @returns               The hash written and the wall-clock freeze timestamp.
+ * post-m3-paper-execution-lifecycle wave (2026-07-17) CRIT fix: this write used to run as a
+ * bare `UPDATE ... WHERE id = ?` with NO relationship to the promotion's own CAS-protected
+ * transaction. Every one of this function's 5 call sites (all in lifecycle-service.ts) calls it
+ * BEFORE the promotion's own `writeBlock` — a `db.transaction()` whose lifecycle-state UPDATE is
+ * guarded by `WHERE id = ? AND lifecycleState = fromState` and rolls back (`lifecycle.race_blocked`)
+ * the instant a concurrent promotion has already moved the strategy out of `fromState`. Because the
+ * freeze write was unconditional, a promotion attempt that ultimately LOST that race (or was rolled
+ * back for any other reason) could still leave its frozen_policy_hash/frozen_policy_set_at/
+ * regime_trained_on stamped on the row — silently corrupting the very contract this subsystem exists
+ * to enforce (per CLAUDE.md: "closes the silent-retraining-drift failure mode"), because the stamped
+ * hash would no longer necessarily correspond to the config version the strategy was ACTUALLY
+ * promoted under. Fix: add the identical CAS guard `WHERE id = ? AND lifecycleState = expectedFromState`
+ * to THIS write — a concurrent promotion that has already changed the strategy's lifecycle state
+ * before this freeze write executes now causes this function to throw
+ * (frozen_policy_freeze_race_blocked) instead of silently overwriting. Every call site already wraps
+ * this call in a fail-CLOSED try/catch that blocks the promotion on ANY thrown error, so this
+ * integrates without further call-site changes beyond supplying the expected state.
+ *
+ * @param strategyId        Numeric strategy PK (from strategies.id — UUID string).
+ * @param regimeAtFreeze    Institutional regime value (e.g. "TRENDING").
+ * @param expectedFromState The lifecycle state the strategy MUST still be in for this freeze to
+ *                          apply (the promotion's own `fromState`, e.g. "PAPER" for PAPER→DEPLOY_READY).
+ *                          Required — every real caller has this value on hand at the point it
+ *                          calls freezePolicyForStrategy, immediately before its own promotion attempt.
+ * @returns                 The hash written and the wall-clock freeze timestamp.
+ * @throws                  frozen_policy_freeze_race_blocked when a concurrent promotion has
+ *                          already moved the strategy out of expectedFromState.
  */
 export async function freezePolicyForStrategy(
   strategyId: string,
   regimeAtFreeze: string,
+  expectedFromState: string,
 ): Promise<{ hash: string; frozen_at: Date }> {
   // Fetch current strategy config to compute the hash from the live config.
   const [strategy] = await db
@@ -72,7 +97,9 @@ export async function freezePolicyForStrategy(
   const hash = computeFrozenPolicyHash({ config: strategy.config });
   const frozenAt = new Date();
 
-  await db
+  // CAS guard: only stamp the freeze if the strategy is STILL in expectedFromState. Mirrors
+  // lifecycle-service.ts's writeBlock CAS pattern exactly (WHERE id AND lifecycleState = fromState).
+  const updatedRows = await db
     .update(strategies)
     .set({
       frozenPolicyHash: hash,
@@ -80,7 +107,17 @@ export async function freezePolicyForStrategy(
       regimeTrainedOn: regimeAtFreeze,
       updatedAt: frozenAt,
     })
-    .where(eq(strategies.id, strategyId));
+    .where(and(eq(strategies.id, strategyId), eq(strategies.lifecycleState, expectedFromState)))
+    .returning({ id: strategies.id });
+
+  if (!updatedRows || updatedRows.length === 0) {
+    throw new Error(
+      `frozen_policy_freeze_race_blocked: strategy ${strategyId} was no longer in ` +
+      `'${expectedFromState}' when the freeze write executed — a concurrent promotion changed ` +
+      `its lifecycle state first. Refusing to stamp a hash that would not correspond to the ` +
+      `config version actually being promoted.`,
+    );
+  }
 
   // Emit frozen_policy.set audit (non-blocking — DB write is the atomic contract).
   await db

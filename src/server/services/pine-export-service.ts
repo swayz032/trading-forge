@@ -16,6 +16,7 @@ import { notifyWarning, notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 // Pass 4 Track B: pure gateway-options helper — isolated from DB module for testability
 import { deriveGatewayOptions, type GatewayOptions } from "../lib/pine-gateway-options.js";
+import { shouldInjectAbRoutingAccountId } from "../lib/pine-export-ab-routing-guard.js";
 // Re-export so callers that previously imported from this module continue to work
 export type { GatewayOptions };
 export { deriveGatewayOptions };
@@ -799,50 +800,103 @@ export async function compileDualPineExport(
     // Pine compiler reads config.account_id to embed in the alertcondition block.
     //
     // Only inject when accountId was NOT already passed in (caller may override).
+    //
+    // post-m3-paper-execution-lifecycle wave (2026-07-17) HIGH fix: this injection was
+    // UNCONDITIONAL for any strategy where !config.account_id. strategies.paper_account_routing
+    // is NOT NULL DEFAULT 'baseline' at the schema level — EVERY strategy that never explicitly
+    // touched this column (i.e. the vast majority: anything that isn't the operator's own
+    // slumdawg A/B-test strategy) still reads "baseline" here, and this block treated that
+    // schema DEFAULT identically to a deliberate A/B-routing opt-in: it resolved and injected
+    // the OPERATOR's own slumdawg-baseline paper-account UUID into config.account_id for ANY
+    // strategy's Pine compile. Confirmed by direct read of src/engine/pine_compiler.py, that
+    // UUID is consumed in TWO places: (1) the tf_gateway archetype alertcondition embed
+    // (correctly gated on gateway_mode==="tf_gateway"), and (2) the "marker alertcondition"
+    // block (~pine_compiler.py:2753 `if account_id and hmac_secret:`) which fires REGARDLESS of
+    // gateway_mode whenever BOTH account_id AND hmac_secret are present — exactly the shape of a
+    // per-recipient FAMILY HMAC export (the "BUG-1 fix" a few lines above this block pairs
+    // accountId + hmac_secret for that exact path). So an unrelated family-distributed
+    // strategy's Pine artifact could silently carry the operator's own paper-trading account
+    // UUID baked into its marker block. Fix: reuse the SAME family invariant already
+    // established + tested for the identical "A/B routing is operator-only" concern in
+    // paper-signal-service.ts (feedback_family_not_part_of_operator_scaling / CLAUDE.md §13) —
+    // skip this injection entirely for any strategy released to a family member, regardless of
+    // what paper_account_routing happens to read.
     {
       const strategyPaperRouting = (strategy as unknown as { paperAccountRouting?: string }).paperAccountRouting
         ?? "baseline";
-      if (!config.account_id) {
-        const targetExternal = strategyPaperRouting === "rl-challenger"
-          ? "slumdawg-rl-challenger"
-          : "slumdawg-baseline";
+      const hasExplicitAccountId = !!config.account_id;
+      if (!hasExplicitAccountId) {
+        let isFamilyStrategy = false;
         try {
-          const subAccRows = await db
-            .select({ accountId: brokerAccounts.accountId })
-            .from(brokerAccounts)
-            .where(
-              and(
-                eq(brokerAccounts.accountIdExternal, targetExternal),
-                eq(brokerAccounts.firmId, "paper"),
-              ),
-            )
+          const familyAssignment = await db
+            .select({ releasedToFamily: accountStrategyAssignments.releasedToFamily })
+            .from(accountStrategyAssignments)
+            .where(eq(accountStrategyAssignments.strategyId, strategyId))
             .limit(1);
-          const resolvedId = subAccRows[0]?.accountId ?? null;
-          if (resolvedId) {
-            config.account_id = resolvedId;
-            // Audit: pine_export.ab_routing_resolved (info)
-            await db.insert(auditLog).values({
-              action: "pine_export.ab_routing_resolved",
-              entityType: "strategy",
-              entityId: strategyId,
-              decisionAuthority: "system",
-              input: { strategyId, paper_account_routing: strategyPaperRouting } as Record<string, unknown>,
-              result: {
-                strategy_id: strategyId,
-                paper_account_routing: strategyPaperRouting,
-                resolved_account_id: resolvedId,
-                sub_account: targetExternal,
-              } as Record<string, unknown>,
-              status: "info",
-              correlationId: correlationId ?? null,
-            });
-          }
-        } catch (abInjectErr) {
-          // Fail-soft: A/B injection failure does not block the export
+          isFamilyStrategy = familyAssignment[0]?.releasedToFamily === true;
+        } catch (familyCheckErr) {
+          // Fail-CLOSED on the family check itself: if we can't confirm this strategy is
+          // NOT family-distributed, do not risk leaking the operator's own account_id into it
+          // — skip injection (byte-identical outcome to "resolvedId not found" below).
           logger.warn(
-            { strategyId, err: abInjectErr },
-            "pine-export: A/B routing account_id injection failed (non-blocking)",
+            { strategyId, err: familyCheckErr },
+            "pine-export: A/B routing family-invariant check failed — skipping account_id injection (fail-closed)",
           );
+          isFamilyStrategy = true;
+        }
+
+        // Single source of truth for the scoping decision — unit-tested in isolation
+        // (pine-export-ab-routing-guard.ts) since compileDualPineExport itself is not
+        // cheaply reachable end-to-end for a behavioral test of this one decision point.
+        const shouldInject = shouldInjectAbRoutingAccountId({ hasExplicitAccountId, isFamilyStrategy });
+
+        if (!shouldInject) {
+          logger.debug(
+            { strategyId, paper_account_routing: strategyPaperRouting, isFamilyStrategy },
+            "pine-export: A/B routing account_id injection skipped — strategy is released to family (A/B routing is operator-only)",
+          );
+        } else {
+          const targetExternal = strategyPaperRouting === "rl-challenger"
+            ? "slumdawg-rl-challenger"
+            : "slumdawg-baseline";
+          try {
+            const subAccRows = await db
+              .select({ accountId: brokerAccounts.accountId })
+              .from(brokerAccounts)
+              .where(
+                and(
+                  eq(brokerAccounts.accountIdExternal, targetExternal),
+                  eq(brokerAccounts.firmId, "paper"),
+                ),
+              )
+              .limit(1);
+            const resolvedId = subAccRows[0]?.accountId ?? null;
+            if (resolvedId) {
+              config.account_id = resolvedId;
+              // Audit: pine_export.ab_routing_resolved (info)
+              await db.insert(auditLog).values({
+                action: "pine_export.ab_routing_resolved",
+                entityType: "strategy",
+                entityId: strategyId,
+                decisionAuthority: "system",
+                input: { strategyId, paper_account_routing: strategyPaperRouting } as Record<string, unknown>,
+                result: {
+                  strategy_id: strategyId,
+                  paper_account_routing: strategyPaperRouting,
+                  resolved_account_id: resolvedId,
+                  sub_account: targetExternal,
+                } as Record<string, unknown>,
+                status: "info",
+                correlationId: correlationId ?? null,
+              });
+            }
+          } catch (abInjectErr) {
+            // Fail-soft: A/B injection failure does not block the export
+            logger.warn(
+              { strategyId, err: abInjectErr },
+              "pine-export: A/B routing account_id injection failed (non-blocking)",
+            );
+          }
         }
       }
     }

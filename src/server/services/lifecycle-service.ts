@@ -1323,7 +1323,10 @@ export class LifecycleService {
           }
 
           try {
-            await freezePolicyForStrategy(id, currentRegime);
+            // post-m3-paper-execution-lifecycle wave (2026-07-17) CRIT fix: pass the promotion's
+            // own fromState so freezePolicyForStrategy's CAS guard can detect a concurrent
+            // promotion that already moved this strategy elsewhere before this write lands.
+            await freezePolicyForStrategy(id, currentRegime, fromState);
             logger.info(
               { strategyId: id, regime: currentRegime },
               "Frozen-policy first-time freeze: hash stamped successfully (manual path)",
@@ -3016,7 +3019,9 @@ export class LifecycleService {
       }
 
       try {
-        await freezePolicyForStrategy(id, currentRegimeTp);
+        // post-m3-paper-execution-lifecycle wave (2026-07-17) CRIT fix: pass fromState (here
+        // "TESTING") for the CAS guard — see freezePolicyForStrategy's docstring.
+        await freezePolicyForStrategy(id, currentRegimeTp, fromState);
         logger.info(
           { strategyId: id, regime: currentRegimeTp },
           "Frozen-policy T→P baseline stamp: hash stamped successfully (manual path)",
@@ -4799,7 +4804,9 @@ export class LifecycleService {
           }
 
           try {
-            await freezePolicyForStrategy(s.id, currentRegimeTpCron);
+            // post-m3-paper-execution-lifecycle wave (2026-07-17) CRIT fix: this cron branch
+            // promotes TESTING → PAPER — pass "TESTING" for the CAS guard.
+            await freezePolicyForStrategy(s.id, currentRegimeTpCron, "TESTING");
             logger.info(
               { strategyId: s.id, regime: currentRegimeTpCron },
               "Frozen-policy T→P baseline stamp: hash stamped successfully (cron path)",
@@ -5575,7 +5582,9 @@ export class LifecycleService {
             }
 
             try {
-              await freezePolicyForStrategy(s.id, currentRegimeShCron);
+              // post-m3-paper-execution-lifecycle wave (2026-07-17) CRIT fix: this cron branch
+              // promotes SHADOW → PAPER — pass "SHADOW" for the CAS guard.
+              await freezePolicyForStrategy(s.id, currentRegimeShCron, "SHADOW");
               logger.info(
                 { strategyId: s.id, regime: currentRegimeShCron },
                 "Frozen-policy SHADOW→PAPER baseline stamp: hash stamped successfully (cron path)",
@@ -7491,7 +7500,9 @@ export class LifecycleService {
             }
 
             try {
-              await freezePolicyForStrategy(s.id, currentRegime);
+              // post-m3-paper-execution-lifecycle wave (2026-07-17) CRIT fix: this cron branch
+              // promotes PAPER → DEPLOY_READY — pass "PAPER" for the CAS guard.
+              await freezePolicyForStrategy(s.id, currentRegime, "PAPER");
               logger.info(
                 { strategyId: s.id, regime: currentRegime },
                 "Frozen-policy first-time freeze: hash stamped successfully",
@@ -8086,6 +8097,49 @@ export class LifecycleService {
       ? ({ mode: "tf_gateway" } as const)
       : undefined;
     const result = await compileDualPineExport(strategyId, firmKey, riskIntelligence, true, undefined, undefined, undefined, undefined, undefined, gatewayOptionsForCompile, "system"); // freshscan10: autonomous DEPLOY_READY Pine compile → 'system' authority (not operator activity)
+
+    // post-m3-paper-execution-lifecycle wave (2026-07-17) HIGH fix: compileDualPineExport
+    // FAIL-SOFTS internally — a shadow-guard block, a DB write failure, or a pine_compiler.py
+    // subprocess error all resolve normally with {status: "failed", error: <msg>} rather than
+    // throwing. This function's only caller wraps it in `.catch(pineErr => logger.warn(...))`
+    // (~line 7758), which NEVER fires for a resolved failure — only for a genuine thrown
+    // exception. Pre-fix, this logger.info("Pine dual compile completed...") line fired
+    // UNCONDITIONALLY on any resolved result, including status="failed", so a strategy could
+    // reach DEPLOY_READY with zero TradingView artifact while every log line claimed success.
+    // Branch on the actual status instead of assuming success.
+    if ((result as Record<string, unknown> | undefined)?.status !== "completed") {
+      const errMsg = (result as Record<string, unknown> | undefined)?.error as string | undefined
+        ?? "compileDualPineExport resolved with a non-completed status and no error message";
+      logger.warn(
+        { strategyId, firmKey, status: (result as Record<string, unknown> | undefined)?.status, error: errMsg },
+        "Pine dual compile FAILED for DEPLOY_READY strategy — no TradingView artifact was produced",
+      );
+      await db.insert(auditLog).values({
+        action: "lifecycle.deploy_ready_pine_compile_failed",
+        entityId: strategyId,
+        entityType: "strategy",
+        status: "warning",
+        decisionAuthority: "system",
+        input: { strategyId, firmKey } as Record<string, unknown>,
+        result: { error: errMsg, resolvedStatus: (result as Record<string, unknown> | undefined)?.status ?? null } as Record<string, unknown>,
+        correlationId: null,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ err: auditErr, strategyId }, "deploy_ready_pine_compile_failed audit insert failed (non-blocking)");
+        auditWriteFailuresTotal.labels({ action: "lifecycle.deploy_ready_pine_compile_failed" }).inc();
+      });
+      notifyWarning(
+        `Pine Compile Failed: strategy reached DEPLOY_READY with no TradingView artifact`,
+        appendFamilyGradePostscript(
+          `Strategy ${strategyId.slice(0, 8)} reached DEPLOY_READY but Pine compile FAILED (status=${(result as Record<string, unknown> | undefined)?.status ?? "unknown"}). ` +
+          `TradingView artifact unavailable — check lifecycle.deploy_ready_pine_compile_failed in audit_log.\n` +
+          `Error: ${errMsg.slice(0, 200)}`,
+          "A strategy reached the DEPLOY_READY library but the TradingView chart file failed to generate.",
+          "Check the audit log for lifecycle.deploy_ready_pine_compile_failed and re-trigger Pine compile from the admin panel.",
+        ),
+      );
+      return;
+    }
+
     logger.info(
       {
         strategyId,
@@ -8402,7 +8456,24 @@ export class LifecycleService {
                   const sGatewayOpts = (sPaperRouting != null && sPaperRouting !== "")
                     ? ({ mode: "tf_gateway" } as const)
                     : undefined;
-                  await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined, undefined, undefined, undefined, undefined, sGatewayOpts, "system"); // freshscan10: PILOT→DEPLOYED auto-promote Pine compile → 'system' authority
+                  const pineResult = await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined, undefined, undefined, undefined, undefined, sGatewayOpts, "system"); // freshscan10: PILOT→DEPLOYED auto-promote Pine compile → 'system' authority
+                  // post-m3-paper-execution-lifecycle wave (2026-07-17) HIGH fix: compileDualPineExport
+                  // FAIL-SOFTS internally (shadow-guard block / DB write failure / subprocess error all
+                  // resolve normally with {status:"failed", error} rather than throwing) — the whole
+                  // point of this retry-with-backoff + audit + Discord CRITICAL mechanism below was to
+                  // catch exactly this class of failure, but `pineSuccess = true` was set unconditionally
+                  // right after the await resolved, regardless of the resolved status. That meant a
+                  // resolved failure was indistinguishable from success: no retry fired, no
+                  // lifecycle.deployed_pine_compile_failed audit row, no Discord alert — the strategy
+                  // went DEPLOYED with a silently-broken Pine artifact and the retry safety net never
+                  // engaged. Only a THROWN exception (network drop, DB connection loss) ever reached the
+                  // catch block below. Checking the resolved status explicitly closes that gap.
+                  if ((pineResult as Record<string, unknown> | undefined)?.status !== "completed") {
+                    throw new Error(
+                      `compileDualPineExport resolved with status=${(pineResult as Record<string, unknown> | undefined)?.status ?? "unknown"}: ` +
+                      `${((pineResult as Record<string, unknown> | undefined)?.error as string | undefined) ?? "no error message"}`,
+                    );
+                  }
                   pineSuccess = true;
                   break;
                 } catch (pineErr) {
