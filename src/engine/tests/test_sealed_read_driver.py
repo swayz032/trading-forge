@@ -20,6 +20,7 @@ import pytest
 from src.engine.extraction import sealed_read_driver as srd
 from src.engine.extraction.sealed_read_driver import (
     ArtifactsMissingError,
+    ExtractionNotReady,
     ExtractionSourceMissing,
     ReaderIdentityMismatch,
     SealedReadDriver,
@@ -28,6 +29,7 @@ from src.engine.extraction.sealed_read_driver import (
     certified_reader_identity,
     require_artifacts_on_disk,
     run_extraction_stage,
+    run_panels_and_certify_stage,
 )
 
 # The 3 spent design-pool rehearsal videos (ratify-packet §4 / Module F).
@@ -77,7 +79,7 @@ def test_rehearsal_produces_expected_artifacts_on_disk(tmp_path):
 
     # each artifact matches the certified staging_v32 shape: carries the
     # staging_v32 strategy objects, correct count per video.
-    for art, vid in zip(result["artifacts"], REHEARSAL_VIDEOS):
+    for art, vid in zip(result["artifacts"], REHEARSAL_VIDEOS, strict=False):
         assert art["video_id"] == vid
         assert art["artifact"] == "h1-sealed-read-extraction"
         assert art["n_strategies"] == EXPECTED_STAGING_COUNTS[vid]
@@ -481,3 +483,340 @@ def test_identity_fails_closed_on_missing_prompt_file(tmp_path):
         certified_reader_identity(prereg_path=bad)
     with pytest.raises(ReaderIdentityMismatch):
         certified_reader_identity(params_source_path=bad)
+
+
+# =========================================================================== #
+# MODULE C — mechanical floor + panels + certificate (ratify-packet items 2-4).
+#
+# No live LLM / network anywhere: the rehearsal/staging path loads the cached
+# CERTIFIED panel verdicts; the sealed path is exercised ONLY with an injected
+# fake live_panel_fn. The witnesses reproduce EXACTLY what run_dress_rehearsal.py
+# already proves (the committed, graded path).
+# =========================================================================== #
+
+
+def _real_strategy(cid: str = "2DXQqwKSwJE__s0") -> dict:
+    """Load a real staging_v32 strategy (staging_v32 shape build_inputs consumes)."""
+    with open(os.path.join(srd.DEFAULT_STAGING_DIR, f"{cid}.json"), encoding="utf-8") as fh:
+        return json.load(fh)["strategies"][0]
+
+
+def _fused_strategy() -> dict:
+    """The R5L890-FUSED merge-silencing adversarial fixture (conflation REJECT)."""
+    path = os.path.join(srd.DEFAULT_PANEL_CACHE_DIR, "conflation_fixtures", "R5L890_FUSED_reject.json")
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)["strategies"][0]
+
+
+def _write_extraction_artifact(out_dir, video_id, pairs):
+    """Write a minimal Module-B on-disk extraction artifact (per_strategy_artifacts
+    shape) so run_panels_and_certify_stage can consume it exactly as it consumes a
+    real Module-B artifact. `pairs` = list of (cid, strategy)."""
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f"{video_id}.extraction.json")
+    art = {
+        "artifact": "h1-sealed-read-extraction",
+        "video_id": video_id,
+        "per_strategy_artifacts": [
+            {"cid": cid, "extraction": {"strategies": [strat]}} for cid, strat in pairs
+        ],
+    }
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(art, fh)
+    return path
+
+
+def _extraction_result(paths):
+    return {"ready": True, "artifact_paths": list(paths)}
+
+
+def _write_panel_cache(root, cid, *, conflation=None, enum_consistent=None, content_clean=None):
+    """Write selected panel-grade files into a temp cache root (subdir layout
+    identical to the certified claude-rung-v32 tree), to control per-axis
+    presence/verdicts deterministically."""
+    if conflation is not None:
+        d = os.path.join(root, "conflation_grades")
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, f"{cid}.json"), "w", encoding="utf-8") as fh:
+            json.dump({"verdict": {"verdict": conflation}}, fh)
+    if enum_consistent is not None:
+        d = os.path.join(root, "enum_semantic_grades")
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, f"{cid}.json"), "w", encoding="utf-8") as fh:
+            json.dump({"verdict": {"enumeration_consistent": enum_consistent}}, fh)
+    if content_clean is not None:
+        d = os.path.join(root, "flex_grades_v32")
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, f"{cid}.json"), "w", encoding="utf-8") as fh:
+            json.dump({"grade": {"content_clean": content_clean}}, fh)
+
+
+# --------------------------------------------------------------------------- #
+# (a) rehearsal over the 3 spent videos through the FULL composed driver:
+#     every strategy gets a certificate w/ terminal_read_grade; the 7 CLEAN spent
+#     strategies grade CLEAN (matches run_dress_rehearsal's 7/7 all-clean).
+# --------------------------------------------------------------------------- #
+
+
+def test_module_c_rehearsal_three_videos_all_clean(tmp_path):
+    manifest = _write_rehearsal_manifest(str(tmp_path / "m.json"), REHEARSAL_VIDEOS)
+    res = SealedReadDriver().run_full(manifest, "staging", str(tmp_path / "out"))
+
+    assert res["ok"] is True
+    assert res["stage"] == "panels_and_certificate"
+    panels = res["panels"]
+    assert panels["n_strategies"] == 7
+    assert panels["module"] == "C"
+    # every strategy certified through the frozen fence, both structural axes live.
+    for row in panels["certificates"]:
+        assert row["terminal_read_grade"] == "CLEAN"
+        assert row["terminal_read_clean"] is True
+        disp = row["terminal_read_disposition"]
+        assert disp["conflation_check"] == "PASS"
+        assert disp["enumeration_consistency"] == "PASS"  # enum axis THREADED, not AXIS_ABSENT
+        # mechanical floor: F-2 content floor PASS by construction.
+        assert row["mechanical_floor"]["f2_content_floor"] == "PASS"
+        # all three panels recorded (completeness is evidence, not a gate).
+        assert row["panels"]["completeness_grader_v3"]["evaluated"] is True
+        assert row["panels"]["conflation_verdict"] == "PASS"
+        assert row["panels"]["enumeration_consistency_verdict"] == "PASS"
+        assert row["panels"]["source"] == "cached-certified-panel-verdicts"
+    # Module C leaves D/E/F seams clean: no rollup / fraction / >=60% bar here.
+    assert "terminal_read_clean_fraction" not in panels
+    assert "meets_bar" not in panels
+
+
+def test_module_c_completeness_false_does_not_gate(tmp_path):
+    """2DXQqwKSwJE__s2 has content_clean=False in the certified flex grade yet
+    grades CLEAN — completeness is RECORDED evidence, never a terminal_read_grade
+    axis (exactly run_dress_rehearsal's 7/7 all-clean behavior)."""
+    ext = run_extraction_stage(
+        {"video_ids": ["2DXQqwKSwJE"]}, mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    res = run_panels_and_certify_stage(ext, mode="rehearsal")
+    s2 = next(r for r in res["certificates"] if r["cid"] == "2DXQqwKSwJE__s2")
+    assert s2["panels"]["completeness_grader_v3"]["content_clean"] is False
+    assert s2["terminal_read_grade"] == "CLEAN"
+    assert s2["terminal_read_clean"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (a-witness) the known fence catches reproduce through the driver stage.
+# --------------------------------------------------------------------------- #
+
+
+def test_module_c_iyf_reproduces_enum_axis_reject(tmp_path):
+    """IyFioFkRgWo__s0: conflation PASS but SEMANTIC enum FAIL -> REJECTED on the
+    ENUM axis ALONE (proves the enum axis is independently load-bearing through
+    Module C), exactly as run_dress_rehearsal proves."""
+    ext = run_extraction_stage(
+        {"video_ids": ["IyFioFkRgWo"]}, mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    res = run_panels_and_certify_stage(ext, mode="rehearsal")
+    row = next(r for r in res["certificates"] if r["cid"] == "IyFioFkRgWo__s0")
+    assert row["panels"]["conflation_verdict"] == "PASS"
+    assert row["panels"]["enumeration_consistency_verdict"] == "FAIL"
+    disp = row["terminal_read_disposition"]
+    assert disp["conflation_check"] == "PASS"  # conflation axis isolated (PASS)
+    assert disp["enumeration_consistency"] == "FAIL"  # enum axis alone fails
+    assert row["terminal_read_grade"] == "REJECTED"
+    assert row["terminal_read_clean"] is False
+
+
+def test_module_c_fused_reproduces_conflation_axis_reject(tmp_path):
+    """R5L890-FUSED merge-silencing fixture: conflation REJECT -> REJECTED through
+    the driver stage (SAME path as run_dress_rehearsal's adversarial)."""
+    path = _write_extraction_artifact(
+        str(tmp_path / "out"), "CAL_R5L890_FUSED", [("CAL_R5L890_FUSED", _fused_strategy())]
+    )
+    res = run_panels_and_certify_stage(_extraction_result([path]), mode="rehearsal")
+    row = res["certificates"][0]
+    assert row["cid"] == "CAL_R5L890_FUSED"
+    assert row["panels"]["conflation_verdict"] == "REJECT"
+    assert row["terminal_read_disposition"]["conflation_check"] == "REJECT"
+    assert row["terminal_read_grade"] == "REJECTED"
+    assert row["terminal_read_clean"] is False
+
+
+# --------------------------------------------------------------------------- #
+# (b) fail-closed: a strategy missing its enum OR conflation verdict is
+#     INDETERMINATE / not-clean, NEVER silently CLEAN.
+# --------------------------------------------------------------------------- #
+
+
+def test_module_c_missing_conflation_verdict_fails_closed(tmp_path):
+    cache = str(tmp_path / "cache")
+    _write_panel_cache(cache, "vidX__s0", enum_consistent=True, content_clean=True)  # conflation ABSENT
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidX", [("vidX__s0", _real_strategy())])
+    res = run_panels_and_certify_stage(_extraction_result([path]), mode="staging", cache_dir=cache)
+    row = res["certificates"][0]
+    assert row["panels"]["conflation_verdict"] is None
+    assert row["terminal_read_disposition"]["conflation_check"] == "NOT_EVALUATED"
+    assert row["terminal_read_grade"] == "INDETERMINATE"
+    assert row["terminal_read_clean"] is False
+
+
+def test_module_c_missing_enum_verdict_fails_closed(tmp_path):
+    cache = str(tmp_path / "cache")
+    _write_panel_cache(cache, "vidY__s0", conflation="PASS", content_clean=True)  # enum ABSENT
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidY", [("vidY__s0", _real_strategy())])
+    res = run_panels_and_certify_stage(_extraction_result([path]), mode="staging", cache_dir=cache)
+    row = res["certificates"][0]
+    # in-scope enum axis fails CLOSED to NOT_EVALUATED, NEVER bare None / AXIS_ABSENT.
+    assert row["panels"]["enumeration_consistency_verdict"] == "NOT_EVALUATED"
+    assert row["terminal_read_disposition"]["enumeration_consistency"] == "NOT_EVALUATED"
+    assert row["terminal_read_grade"] == "INDETERMINATE"
+    assert row["terminal_read_clean"] is False
+
+
+# --------------------------------------------------------------------------- #
+# (c) per-axis gating: conflation PASS + enum FAIL -> not-clean, and vice-versa.
+# --------------------------------------------------------------------------- #
+
+
+def test_module_c_per_axis_conflation_pass_enum_fail(tmp_path):
+    cache = str(tmp_path / "cache")
+    _write_panel_cache(cache, "vidP__s0", conflation="PASS", enum_consistent=False, content_clean=True)
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidP", [("vidP__s0", _real_strategy())])
+    res = run_panels_and_certify_stage(_extraction_result([path]), mode="staging", cache_dir=cache)
+    disp = res["certificates"][0]["terminal_read_disposition"]
+    assert disp["conflation_check"] == "PASS"
+    assert disp["enumeration_consistency"] == "FAIL"
+    assert res["certificates"][0]["terminal_read_grade"] == "REJECTED"
+    assert res["certificates"][0]["terminal_read_clean"] is False
+
+
+def test_module_c_per_axis_conflation_reject_enum_pass(tmp_path):
+    cache = str(tmp_path / "cache")
+    _write_panel_cache(cache, "vidR__s0", conflation="REJECT", enum_consistent=True, content_clean=True)
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidR", [("vidR__s0", _real_strategy())])
+    res = run_panels_and_certify_stage(_extraction_result([path]), mode="staging", cache_dir=cache)
+    disp = res["certificates"][0]["terminal_read_disposition"]
+    assert disp["conflation_check"] == "REJECT"
+    assert disp["enumeration_consistency"] == "PASS"
+    assert res["certificates"][0]["terminal_read_grade"] == "REJECTED"
+    assert res["certificates"][0]["terminal_read_clean"] is False
+
+
+# --------------------------------------------------------------------------- #
+# (d) compose-order: Module C is UNREACHABLE unless Module B produced artifacts
+#     on disk (and gate refusal short-circuits the panels stage entirely).
+# --------------------------------------------------------------------------- #
+
+
+def test_module_c_unreachable_when_extraction_artifact_missing_on_disk(tmp_path):
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidD", [("vidD__s0", _real_strategy())])
+    ext = _extraction_result([path])
+    os.remove(path)  # the extraction artifact is gone from disk
+    with pytest.raises(ArtifactsMissingError):
+        run_panels_and_certify_stage(ext, mode="staging", cache_dir=str(tmp_path / "cache"))
+
+
+def test_module_c_not_ready_extraction_fails_closed(tmp_path):
+    with pytest.raises(ExtractionNotReady):
+        run_panels_and_certify_stage({"ready": False, "artifact_paths": []}, mode="staging")
+    with pytest.raises(ExtractionNotReady):
+        run_panels_and_certify_stage({"ready": True, "artifact_paths": []}, mode="staging")
+
+
+def test_module_c_gate_deny_short_circuits_panels_stage(tmp_path):
+    """run_full in sealed mode with NO SEAL-GO.token: gate refuses -> panels=None,
+    live_panel_fn NEVER called (Module C structurally unreachable)."""
+    panel_calls = []
+    extract_calls = []
+
+    def spy_panel_fn(cid, strategy, video_id):
+        panel_calls.append(cid)
+        return {"conflation": "PASS", "enumeration_consistency": "PASS", "completeness": True}
+
+    def spy_extract_fn(video_id, manifest_verified):
+        extract_calls.append(video_id)
+        return {"video_id": video_id, "reader_identity": certified_reader_identity(), "strategies": []}
+
+    manifest = _write_rehearsal_manifest(str(tmp_path / "m.json"), REHEARSAL_VIDEOS)
+    res = SealedReadDriver().run_full(
+        manifest,
+        "sealed",
+        str(tmp_path / "out"),
+        token_path=str(tmp_path / "NO-SEAL-GO.token"),
+        live_extract_fn=spy_extract_fn,
+        live_panel_fn=spy_panel_fn,
+    )
+    assert res["ok"] is False
+    assert res["panels"] is None
+    assert res["stage"] == "seal_gate"
+    assert panel_calls == []  # Module C never reached
+    assert extract_calls == []  # extraction never reached either
+
+
+# --------------------------------------------------------------------------- #
+# (e) sealed mode with an injected fake live_panel_fn — seam works, no real key.
+# --------------------------------------------------------------------------- #
+
+
+def test_module_c_sealed_calls_injected_panel_fn_no_cache(tmp_path):
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidS", [("vidS__s0", _real_strategy())])
+    calls = []
+
+    def fake_panel_fn(cid, strategy, video_id):
+        calls.append((cid, video_id))
+        # merged panel call (all three axes in one return) — permitted.
+        return {"conflation": "PASS", "enumeration_consistency": "PASS", "completeness": True}
+
+    res = run_panels_and_certify_stage(
+        _extraction_result([path]), mode="sealed", live_panel_fn=fake_panel_fn
+    )
+    row = res["certificates"][0]
+    assert calls == [("vidS__s0", "vidS")]
+    assert row["panels"]["source"] == "live_panel_fn"
+    assert row["terminal_read_grade"] == "CLEAN"
+    assert res["panel_cache_dir"] is None  # sealed reads no disk cache
+
+
+def test_module_c_sealed_per_axis_fail_closed_on_partial_panel(tmp_path):
+    """A merged sealed panel call that OMITS the enum axis fails CLOSED per-axis:
+    enum -> NOT_EVALUATED -> INDETERMINATE (even though conflation PASSed)."""
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidM", [("vidM__s0", _real_strategy())])
+
+    def partial_panel_fn(cid, strategy, video_id):
+        return {"conflation": "PASS", "completeness": True}  # enum omitted
+
+    res = run_panels_and_certify_stage(
+        _extraction_result([path]), mode="sealed", live_panel_fn=partial_panel_fn
+    )
+    row = res["certificates"][0]
+    assert row["panels"]["enumeration_consistency_verdict"] == "NOT_EVALUATED"
+    assert row["terminal_read_grade"] == "INDETERMINATE"
+    assert row["terminal_read_clean"] is False
+
+
+def test_module_c_sealed_requires_panel_fn():
+    with pytest.raises(ValueError):
+        run_panels_and_certify_stage(
+            {"ready": True, "artifact_paths": ["x"]}, mode="sealed", live_panel_fn=None
+        )
+
+
+# --------------------------------------------------------------------------- #
+# (f) determinism: same cached inputs -> identical certificates + grades.
+# --------------------------------------------------------------------------- #
+
+
+def test_module_c_deterministic(tmp_path):
+    ext1 = run_extraction_stage(
+        {"video_ids": list(REHEARSAL_VIDEOS)}, mode="rehearsal", out_dir=str(tmp_path / "o1")
+    )
+    ext2 = run_extraction_stage(
+        {"video_ids": list(REHEARSAL_VIDEOS)}, mode="rehearsal", out_dir=str(tmp_path / "o2")
+    )
+    r1 = run_panels_and_certify_stage(ext1, mode="rehearsal")
+    r2 = run_panels_and_certify_stage(ext2, mode="rehearsal")
+
+    def _grades(r):
+        return [(c["cid"], c["terminal_read_grade"], c["terminal_read_clean"]) for c in r["certificates"]]
+
+    assert _grades(r1) == _grades(r2)
+    # the full certificate bodies are byte-identical on replay.
+    assert json.dumps([c["certificate"] for c in r1["certificates"]], sort_keys=True) == json.dumps(
+        [c["certificate"] for c in r2["certificates"]], sort_keys=True
+    )

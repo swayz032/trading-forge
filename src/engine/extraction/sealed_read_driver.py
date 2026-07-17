@@ -773,19 +773,437 @@ def run_extraction_stage(
     }
 
 
+# =========================================================================== #
+# MODULE C — MECHANICAL FLOOR + PANELS + CERTIFICATE (ratify-packet items 2-4).
+#
+# Spec: docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md (Module C) +
+# ADVISOR-RULINGS R-015 items 2-4 / R-019.4.  Consumes Module B's on-disk
+# extraction artifacts and, per strategy, (1) applies the MECHANICAL FLOOR
+# (band-8 locator anchor authority + F-2 content floor), (2) obtains the THREE
+# gpt-5.4 cross-vendor panel verdicts, (3) assembles the certificate through the
+# FROZEN fence ``pilot_conveyor.finalize_certificate`` -> ``terminal_read_grade``
+# with BOTH semantic structural axes threaded.  This is the SAME committed,
+# graded path ``run_dress_rehearsal.py`` proves — promoted to a proper driver
+# stage that reads Module B's artifacts.
+#
+# FROZEN INSTRUMENTS REUSED READ-ONLY (never modified here — all amber):
+#   * ``pilot_conveyor.finalize_certificate`` (pilot_conveyor.py:1374) ->
+#     ``cert_assembler.assemble_certificate`` (cert_assembler.py:299) ->
+#     ``cert_assembler.terminal_read_grade`` (cert_assembler.py:186) — the fence.
+#   * MECHANICAL FLOOR: the BAND-8 LOCATOR anchor authority
+#     (``anchor_locator.locate_anchor``, anchor_locator.py:259, whose own
+#     ``_resolves_as_anchor`` reuses the REAL F-2 gate) + the F-2 CONTENT FLOOR
+#     (``compile_lints.f2_coverage_gate``, compile_lints.py:333, run inside
+#     ``assemble_certificate`` via ``run_all_lints`` and surfaced on
+#     ``terminal_read_disposition["f2_coverage_gate"]``).  The caller-side
+#     mechanical-floor seam is ``_a_packet_harness.build_inputs`` — the SAME
+#     synthesis ``run_dress_rehearsal.py`` + ``run_a_packet_22.py`` use, so every
+#     synthesized ``char_span`` resolves to its ``quote_anchor`` verbatim and
+#     ``f2_coverage_gate`` PASSes by construction (single source of truth, no
+#     drift).
+#
+# THE THREE PANELS (gpt-5.4 cross-vendor; loaded from disk in rehearsal/staging,
+# obtained via the injected ``live_panel_fn`` on seal day):
+#   * completeness grader-v3  — ``flex_grades_v32/<cid>.json`` -> ``grade.
+#     content_clean`` (silent-omission / inventory-overreach content panel).
+#     RECORDED as carried-forward evidence; it is NOT a ``terminal_read_grade``
+#     axis (the frozen fence has no completeness axis — threading one would be
+#     verdict-math, Module E, or a frozen-instrument edit, out of scope). Matches
+#     ``run_dress_rehearsal.py`` exactly (it threads only the two structural axes).
+#   * conflation axis (STRUCTURAL) — ``conflation_grades/<cid>.json`` ->
+#     ``verdict.verdict`` ("PASS"|"REJECT"); absent/errored -> None (fail-closed
+#     -> INDETERMINATE via ``terminal_read_grade``).
+#   * enumeration-consistency axis (STRUCTURAL) — ``enum_semantic_grades/<cid>.
+#     json`` -> ``verdict.enumeration_consistent`` (True->"PASS"/False->"FAIL");
+#     ANY absence/parse failure fails CLOSED to "NOT_EVALUATED" (-> INDETERMINATE),
+#     NEVER bare None (which would silently CLEAN). This is the EXACT fail-closed
+#     contract of ``run_dress_rehearsal._load_enum_verdict``.
+#
+# PER-AXIS FAIL-CLOSED GATING (both modes): the two STRUCTURAL verdicts gate
+# independently — either one REJECT/FAIL alone => not-clean; either one absent =>
+# INDETERMINATE (never silent CLEAN). A merged sealed panel call is permitted, but
+# each axis is coerced + gated SEPARATELY here.  NOT_EVALUATED / INDETERMINATE are
+# never clean (the frozen ``terminal_read_grade`` fail-closed law).
+#
+# SEAMS LEFT CLEAN for D/E/F: NO raters (D), NO cert->video rollup / >=60% bar /
+# verdict math (E), NO re-verify/drift guard (F).  This stage returns the raw
+# per-strategy certificates + dispositions ONLY.
 # --------------------------------------------------------------------------- #
-# Orchestration entry — Module A gate FIRST, then the extraction stage.
-# (Modules C-F append downstream; this leaves clean seams and builds no
-# panel / rater / verdict here.)
+
+#: Default panel-verdict cache root (the certified claude-rung-v32 grade tree —
+#: the SAME paths ``run_dress_rehearsal.py`` reads).
+DEFAULT_PANEL_CACHE_DIR = os.path.join(_H1_SCRIPTS, "claude-rung-v32")
+_CONFLATION_SUBDIR = "conflation_grades"
+_ENUM_SUBDIR = "enum_semantic_grades"
+_COMPLETENESS_SUBDIR = "flex_grades_v32"
+
+
+class ExtractionNotReady(RuntimeError):
+    """Raised (fail-closed, compose-order) when the panels+certificate stage is
+    handed an extraction result that is not READY / carries no on-disk artifacts.
+    Structurally proves Module C is UNREACHABLE unless Module B produced its
+    artifacts on disk (ratify-packet §4 / test (d))."""
+
+
+# --------------------------------------------------------------------------- #
+# Panel-verdict loaders (rehearsal/staging path) — reproduce the EXACT loading
+# logic + fail-closed contract of run_dress_rehearsal.py (READ-ONLY; the grade
+# files are the certified panels, never written here).
+# --------------------------------------------------------------------------- #
+
+
+def _load_conflation_verdict(conflation_dir: str, cid: str) -> str | None:
+    """Read ``verdict.verdict`` ("PASS"|"REJECT") from the persisted conflation
+    grade; None if the grade file is absent OR unreadable/malformed (fail-closed
+    -> NOT_EVALUATED -> INDETERMINATE at ``terminal_read_grade``). Mirrors
+    ``run_dress_rehearsal._load_verdict`` (extended to also fail-closed on a
+    corrupt/short grade file rather than raising)."""
+    path = os.path.join(conflation_dir, f"{cid}.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)["verdict"]["verdict"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def _load_enum_verdict(enum_dir: str, cid: str) -> str:
+    """Read ``verdict.enumeration_consistent`` from the persisted SEMANTIC enum
+    grade and map True->"PASS" / False->"FAIL".
+
+    CONTRACT (verbatim from ``run_dress_rehearsal._load_enum_verdict``): this is
+    an IN-SCOPE lookup — the caller has DECIDED to evaluate this cid on the enum
+    axis — so it NEVER returns bare None. ANY failure to produce a real verdict
+    (file missing, JSON parse error, or the verdict/enumeration_consistent key
+    absent) fails CLOSED to "NOT_EVALUATED" (-> INDETERMINATE), never to bare
+    None (which would feed AXIS_ABSENT and silently CLEAN)."""
+    path = os.path.join(enum_dir, f"{cid}.json")
+    if not os.path.exists(path):
+        return "NOT_EVALUATED"
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return "NOT_EVALUATED"
+    try:
+        consistent = data["verdict"]["enumeration_consistent"]
+    except (KeyError, TypeError):
+        return "NOT_EVALUATED"
+    return "PASS" if consistent else "FAIL"
+
+
+def _load_completeness_verdict(completeness_dir: str, cid: str) -> dict:
+    """Read ``grade.content_clean`` (bool) from the persisted completeness
+    grader-v3 (flex) grade. Returns ``{content_clean, evaluated, source}``.
+    Fail-closed: an absent/malformed grade records ``evaluated=False``,
+    ``content_clean=None`` (an unevaluated completeness panel never masquerades
+    as clean). RECORDED evidence only — not a ``terminal_read_grade`` axis."""
+    path = os.path.join(completeness_dir, f"{cid}.json")
+    if not os.path.exists(path):
+        return {"content_clean": None, "evaluated": False, "source": None}
+    try:
+        with open(path, encoding="utf-8") as fh:
+            clean = json.load(fh)["grade"]["content_clean"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"content_clean": None, "evaluated": False, "source": os.path.abspath(path)}
+    return {"content_clean": bool(clean), "evaluated": True, "source": os.path.abspath(path)}
+
+
+# --------------------------------------------------------------------------- #
+# Sealed live-panel seam — per-axis coercion + fail-closed (STRUCTURED, exercised
+# in tests ONLY with an injected fake; NO real key/network here).
+# --------------------------------------------------------------------------- #
+
+
+def _coerce_conflation(v) -> str | None:
+    """Per-axis fail-closed coercion of a live conflation verdict: only the
+    exact tokens "PASS"/"REJECT" are honored; anything else -> None (fail-closed
+    -> INDETERMINATE)."""
+    return v if v in ("PASS", "REJECT") else None
+
+
+def _coerce_enum(v) -> str:
+    """Per-axis fail-closed coercion of a live enum verdict: "PASS"/"FAIL"/
+    "NOT_EVALUATED" honored verbatim; a bare bool is mapped (True->PASS/
+    False->FAIL); anything else fails CLOSED to "NOT_EVALUATED" (never bare
+    None for this in-scope axis)."""
+    if v in ("PASS", "FAIL", "NOT_EVALUATED"):
+        return v
+    if v is True:
+        return "PASS"
+    if v is False:
+        return "FAIL"
+    return "NOT_EVALUATED"
+
+
+def _coerce_completeness(v) -> dict:
+    """Per-axis fail-closed coercion of a live completeness verdict to the same
+    ``{content_clean, evaluated, source}`` record the cached loader emits."""
+    if isinstance(v, bool):
+        return {"content_clean": v, "evaluated": True, "source": "live_panel_fn"}
+    if isinstance(v, dict) and isinstance(v.get("content_clean"), bool):
+        return {
+            "content_clean": v["content_clean"],
+            "evaluated": True,
+            "source": "live_panel_fn",
+        }
+    return {"content_clean": None, "evaluated": False, "source": "live_panel_fn"}
+
+
+def _obtain_panels(
+    mode: str,
+    cid: str,
+    strategy: dict,
+    video_id: str,
+    conflation_dir: str,
+    enum_dir: str,
+    completeness_dir: str,
+    live_panel_fn: Callable[[str, dict, str], object] | None,
+) -> dict:
+    """Obtain the three panel verdicts for one strategy.
+
+    * rehearsal/staging: LOAD the cached certified panels from disk (no live
+      call), exactly as ``run_dress_rehearsal.py`` does.
+    * sealed: call the injected ``live_panel_fn(cid, strategy, video_id)`` (a
+      merged panel call is permitted) and coerce EACH axis independently,
+      fail-closed. NOT invoked in tests except via an injected fake.
+
+    Returns ``{conflation, enumeration_consistency, completeness, source}`` where
+    the two structural verdicts are the exact strings ``terminal_read_grade``
+    consumes and ``completeness`` is the recorded evidence dict."""
+    if mode in _REHEARSAL_MODES:
+        return {
+            "conflation": _load_conflation_verdict(conflation_dir, cid),
+            "enumeration_consistency": _load_enum_verdict(enum_dir, cid),
+            "completeness": _load_completeness_verdict(completeness_dir, cid),
+            "source": "cached-certified-panel-verdicts",
+        }
+    # sealed
+    raw = live_panel_fn(cid, strategy, video_id)  # REAL cross-vendor spend seam
+    if not isinstance(raw, dict):
+        raw = {}
+    enum_raw = raw["enumeration_consistency"] if "enumeration_consistency" in raw else raw.get("enum")
+    return {
+        "conflation": _coerce_conflation(raw.get("conflation")),
+        "enumeration_consistency": _coerce_enum(enum_raw),
+        "completeness": _coerce_completeness(raw.get("completeness")),
+        "source": "live_panel_fn",
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Mechanical floor + certificate assembly (frozen fence, reused read-only).
+# --------------------------------------------------------------------------- #
+
+
+def _panel_prepare_output(strategy: dict, cid: str, strategy_index: int) -> dict:
+    """Build the minimal ``prepare_output`` ``finalize_certificate`` reads,
+    applying the MECHANICAL FLOOR via ``_a_packet_harness.build_inputs`` (the
+    SAME caller-side synthesis the certified rehearsal + all-22 A-packet runner
+    use: every condition's verbatim text is concatenated on non-word
+    boundaries, so the band-8 locator's anchor authority resolves each span
+    verbatim and ``f2_coverage_gate`` — the F-2 content floor — PASSes by
+    construction). Lazy import keeps the engine module free of an import-time
+    dependency on the shared harness."""
+    from src.engine.tests._a_packet_harness import build_inputs
+
+    transcript, tier1, _entries = build_inputs(strategy)
+    return {
+        "video_id": cid,
+        "strategy_index": strategy_index,
+        "full_transcript": transcript,
+        "unanchored_conditions": [],
+        "tier1_detections": tier1,
+        "tier1_fallthroughs": [],
+        "axis3_audit": None,
+        "provenance": {
+            "source_video_id": cid,
+            "full_transcript_sha256": "sha-sealed-read-v32",
+            "extractor_version": "certified-reader-v3.2",
+            "taxonomy_version": "taxonomy-v2",
+        },
+    }
+
+
+def _certify_one_strategy(strategy: dict, cid: str, strategy_index: int, panels: dict) -> dict:
+    """Assemble ONE certificate through the FROZEN fence with BOTH semantic
+    structural axes threaded — the EXACT wiring ``run_dress_rehearsal.py`` uses
+    (``finalize_certificate`` -> ``assemble_certificate`` -> ``terminal_read_grade``).
+    Fail-closed is inherited from the fence: conflation None -> INDETERMINATE;
+    enum "NOT_EVALUATED" -> INDETERMINATE; either structural axis REJECT/FAIL ->
+    REJECTED; only all-PASS -> CLEAN."""
+    from .pilot_conveyor import finalize_certificate
+
+    prepare_output = _panel_prepare_output(strategy, cid, strategy_index)
+    return finalize_certificate(
+        prepare_output,
+        tier3_verdicts=[],
+        conflation_verdict=panels["conflation"],
+        enumeration_consistency_verdict=panels["enumeration_consistency"],
+    )
+
+
+def _mechanical_floor_record(cert: dict) -> dict:
+    """Surface the MECHANICAL FLOOR evidence from the assembled certificate
+    (Law 7 — on the artifact): the F-2 content floor status + causality regex
+    leg (both from the terminal-read disposition, i.e. the live lint legs the
+    fence gates) and the count of anchor-resolved conditions (the band-8 locator
+    authority guarantee)."""
+    disp = cert.get("terminal_read_disposition", {})
+    conds = cert.get("conditions", [])
+    return {
+        "f2_content_floor": disp.get("f2_coverage_gate"),
+        "causality_regex_leg": disp.get("causality_lint.regex_leg"),
+        "anchor_authority": "band-8 locator (anchor_locator.locate_anchor) + f2_coverage_gate, reused read-only",
+        "n_conditions_classified": sum(1 for c in conds if c.get("classifying_tier") in (1, 3)),
+        "n_conditions_unanchored": sum(1 for c in conds if c.get("classifying_tier") is None),
+    }
+
+
+def _strategy_pairs(art: dict) -> list[tuple[str, dict]]:
+    """Extract ``(cid, strategy)`` pairs from a Module-B on-disk extraction
+    artifact. Prefers the rehearsal ``per_strategy_artifacts`` (carries the real
+    ``cid`` + the single staging strategy); falls back, for a byte-exact sealed
+    live payload, to the ``strategies`` list with ``cid = <video_id>__s<idx>``."""
+    psa = art.get("per_strategy_artifacts")
+    if isinstance(psa, list) and psa:
+        out: list[tuple[str, dict]] = []
+        for entry in psa:
+            cid = entry.get("cid")
+            strat_list = (entry.get("extraction") or {}).get("strategies") or []
+            strat = strat_list[0] if strat_list else None
+            if cid and isinstance(strat, dict):
+                out.append((cid, strat))
+        return out
+    video_id = art.get("video_id")
+    strategies = art.get("strategies") or []
+    return [
+        (f"{video_id}__s{i}", s) for i, s in enumerate(strategies) if isinstance(s, dict)
+    ]
+
+
+def run_panels_and_certify_stage(
+    extraction_artifacts: dict,
+    mode: str,
+    cache_dir: str = DEFAULT_PANEL_CACHE_DIR,
+    live_panel_fn: Callable[[str, dict, str], object] | None = None,
+    conflation_subdir: str = _CONFLATION_SUBDIR,
+    enum_subdir: str = _ENUM_SUBDIR,
+    completeness_subdir: str = _COMPLETENESS_SUBDIR,
+) -> dict:
+    """MODULE C stage: mechanical floor + panels + certificate over Module B's
+    extraction artifacts.
+
+    ``extraction_artifacts``: the :func:`run_extraction_stage` result (must be
+    ``ready=True`` with its ``artifact_paths`` present on disk — the COMPOSE-ORDER
+    gate; a not-ready / disk-missing extraction fails closed here).
+
+    ``mode``:
+      * ``"rehearsal"``/``"staging"`` — LOAD the cached certified panel verdicts
+        from ``cache_dir`` (no live call).
+      * ``"sealed"`` — obtain each strategy's panels via the injected
+        ``live_panel_fn`` (real cross-vendor spend; seal-day only). Per-axis
+        fail-closed. Never invoked by tests without an injected fake.
+
+    Per strategy: applies the mechanical floor, obtains the three panels, and
+    assembles the certificate through the frozen fence with BOTH structural axes
+    threaded. Returns the raw per-strategy certificates + dispositions ONLY — NO
+    rater layer (D), NO cert->video rollup / >=60% bar / verdict math (E), NO
+    re-verify/drift guard (F)."""
+    if mode not in _REHEARSAL_MODES and mode != "sealed":
+        raise ValueError(f"unknown panels+certificate mode: {mode!r}")
+    if mode == "sealed" and live_panel_fn is None:
+        raise ValueError("sealed mode requires an injected live_panel_fn")
+
+    # COMPOSE-ORDER GATE (ratify-packet §4 / test (d)): Module C is UNREACHABLE
+    # unless Module B produced READY artifacts on disk. Fail-closed both ways.
+    if not isinstance(extraction_artifacts, dict) or not extraction_artifacts.get("ready"):
+        raise ExtractionNotReady(
+            "panels+certificate stage requires a READY extraction result "
+            "(compose-order: Module C cannot run before Module B succeeds)"
+        )
+    artifact_paths = extraction_artifacts.get("artifact_paths") or []
+    if not artifact_paths:
+        raise ExtractionNotReady("extraction result carries no artifact_paths")
+    # Re-assert every extraction artifact is physically on disk (never grade an
+    # in-memory-only extraction) — raises ArtifactsMissingError if any is gone.
+    require_artifacts_on_disk(artifact_paths)
+
+    conflation_dir = os.path.join(cache_dir, conflation_subdir)
+    enum_dir = os.path.join(cache_dir, enum_subdir)
+    completeness_dir = os.path.join(cache_dir, completeness_subdir)
+
+    certificates: list[dict] = []
+    per_video: dict[str, list[dict]] = {}
+
+    for path in artifact_paths:
+        with open(path, encoding="utf-8") as fh:
+            art = json.load(fh)
+        video_id = art.get("video_id")
+        rows: list[dict] = []
+        for idx, (cid, strategy) in enumerate(_strategy_pairs(art)):
+            panels = _obtain_panels(
+                mode, cid, strategy, video_id,
+                conflation_dir, enum_dir, completeness_dir, live_panel_fn,
+            )
+            cert = _certify_one_strategy(strategy, cid, idx, panels)
+            row = {
+                "cid": cid,
+                "video_id": video_id,
+                "strategy_index": idx,
+                "strategy_name": strategy.get("name"),
+                "panels": {
+                    "completeness_grader_v3": panels["completeness"],
+                    "conflation_verdict": panels["conflation"],
+                    "enumeration_consistency_verdict": panels["enumeration_consistency"],
+                    "source": panels["source"],
+                },
+                "mechanical_floor": _mechanical_floor_record(cert),
+                "terminal_read_grade": cert["terminal_read_grade"],
+                "terminal_read_clean": cert["terminal_read_clean"],
+                "terminal_read_disposition": cert["terminal_read_disposition"],
+                "certificate": cert,
+            }
+            rows.append(row)
+            certificates.append(row)
+        per_video[video_id] = rows
+
+    return {
+        "stage": "panels_and_certificate",
+        "module": "C",
+        "mode": mode,
+        "ready": True,
+        "n_strategies": len(certificates),
+        "certificates": certificates,
+        "per_video_certificates": per_video,
+        "panel_cache_dir": cache_dir if mode in _REHEARSAL_MODES else None,
+        "downstream_seams": (
+            "D=human-blind raters; E=verdict math (cert->video rollup, >=60% bar, "
+            "economics/validity block); F=independent re-verify + drift guard — "
+            "NONE computed here (Module C returns per-strategy certificates only)"
+        ),
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Orchestration entry — Module A gate FIRST, then extraction (B), then
+# panels+certificate (C). Each stage is gated on the prior succeeding; seams
+# for D/E/F remain clean (no raters, no verdict math, no drift guard here).
 # --------------------------------------------------------------------------- #
 
 
 class SealedReadDriver:
-    """Thin orchestration entry composing Module A's ``gate_sealed_read`` ->
-    :func:`run_extraction_stage`. The extraction stage is structurally
-    UNREACHABLE unless the seal gate ALLOWED the read: :meth:`run` returns
-    early (``ok=False``, ``extraction=None``) on any gate refusal, so no cached
-    load and no ``live_extract_fn`` call can happen without a gate pass."""
+    """Orchestration entry composing Module A's ``gate_sealed_read`` ->
+    :func:`run_extraction_stage` (B) -> :func:`run_panels_and_certify_stage` (C).
+
+    :meth:`run` is the A->B slice (retained unchanged for Module B's contract):
+    the extraction stage is structurally UNREACHABLE unless the seal gate ALLOWED
+    the read. :meth:`run_full` is the FULL A->B->C composition — each stage gated
+    on the prior succeeding: a gate refusal short-circuits with ``panels=None``
+    (Module C never reached), and Module C itself re-asserts Module B's artifacts
+    are on disk before it runs (compose-order, both ways). Seams for D/E/F stay
+    clean (no raters, no verdict math, no drift guard here)."""
 
     def __init__(
         self,
@@ -793,11 +1211,13 @@ class SealedReadDriver:
         staging_dir: str | None = None,
         phase_a_vault_dir: str | None = None,
         adjudicate_fn: Callable[[str, dict], dict] | None = None,
+        panel_cache_dir: str = DEFAULT_PANEL_CACHE_DIR,
     ):
         self.cache_dir = cache_dir
         self.staging_dir = staging_dir or DEFAULT_STAGING_DIR
         self.phase_a_vault_dir = phase_a_vault_dir or DEFAULT_PHASE_A_VAULT_DIR
         self.adjudicate_fn = adjudicate_fn or _default_adjudicate
+        self.panel_cache_dir = panel_cache_dir
 
     def run(
         self,
@@ -841,4 +1261,55 @@ class SealedReadDriver:
             "stage": "extraction",
             "gate": gate,
             "extraction": extraction,
+        }
+
+    def run_full(
+        self,
+        manifest_path: str,
+        mode: str,
+        out_dir: str,
+        token_path: str = DEFAULT_TOKEN_PATH,
+        fetched: dict | None = None,
+        live_extract_fn: Callable[[str, dict], object] | None = None,
+        live_panel_fn: Callable[[str, dict, str], object] | None = None,
+        panel_cache_dir: str | None = None,
+    ) -> dict:
+        """FULL composition: gate (A) -> extraction (B) -> panels+certificate (C).
+
+        Compose-order is structural: :meth:`run` runs A then B; on ANY gate
+        refusal it returns ``ok=False``/``extraction=None`` and this method
+        short-circuits with ``stage="seal_gate"``, ``panels=None`` — Module C is
+        NEVER reached (no panel load, no ``live_panel_fn`` call). On a gate pass,
+        :func:`run_panels_and_certify_stage` runs Module C, which itself
+        re-asserts Module B's artifacts are on disk (fail-closed) before
+        certifying. Returns the base A->B result plus ``panels`` (the Module C
+        stage result) and ``stage="panels_and_certificate"``.
+
+        Seams for D/E/F remain OUT of this composition (no raters, no cert->video
+        rollup / >=60% bar / verdict math, no re-verify/drift guard)."""
+        base = self.run(
+            manifest_path,
+            mode,
+            out_dir,
+            token_path=token_path,
+            fetched=fetched,
+            live_extract_fn=live_extract_fn,
+        )
+        if not base.get("ok"):
+            # Gate refused -> Module C UNREACHABLE (compose-order short-circuit).
+            return {**base, "panels": None}
+
+        panels = run_panels_and_certify_stage(
+            base["extraction"],
+            mode,
+            cache_dir=panel_cache_dir or self.panel_cache_dir,
+            live_panel_fn=live_panel_fn,
+        )
+        return {
+            "ok": True,
+            "allowed": True,
+            "stage": "panels_and_certificate",
+            "gate": base["gate"],
+            "extraction": base["extraction"],
+            "panels": panels,
         }
