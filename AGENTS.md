@@ -68,11 +68,11 @@ Every strategy that graduates MUST satisfy these invariants:
 
 ### Stop
 - `strategy.stop_loss: {type: "atr", multiplier: 1.5}` (floor)
-- Structural stop ceiling: 14pt MES / 40pt MNQ / 25 tick MCL
+- Structural stop ceiling: 14pt MES / 62pt MNQ / 100 tick (1.00pt) MCL (2026-06-27 stop-ceiling recal, historical "Wave 1 Track 1A" — NOT the 2026-07 campaign's W1)
 
 ### Sizing (W23F.N canonical)
 - `position_size.type: "risk_derived_pyramid"`
-- `position_size.base_contracts`: 6 MES / 6 MNQ / 18 MCL
+- `position_size.base_contracts`: 9 MES / 9 MNQ / 18 MCL (2026-06-23 recal; base is the pyramid-tier slow-ramp floor ONLY — never overrides the risk cap, per C-05/D9 "lowest wins")
 - `position_size.tier_increment: 3`
 - `position_size.tier_threshold_dollars: 3000`
 - `position_size.max_risk_pct_per_trade: 0.02`
@@ -119,7 +119,7 @@ STOP_BUFFER_TICKS_MES / _MNQ / _MCL.
 ### Sizing = risk-derived pyramid
 ```
 finalContracts = min(
-  pyramidTier,            // base 6/6/18 +3 per +$3K
+  pyramidTier,            // base 9/9/18 +3 per tier (proven-trades live / +$3K backtest fallback)
   riskCap,                // balance × 2% ÷ (stop_mult × ATR × point_$)
   firmCap,                // Topstep tier or MFFU 2% rule
   liquidityCap            // MES 100 / MNQ 50 / MCL 30
