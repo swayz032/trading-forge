@@ -150,7 +150,18 @@ def _run_backtest_for_strategy(
             end_date=end_date,
             slippage_ticks=1.0,
             commission_per_side=0.62,
-            firm_key="topstep",
+            # FIX (fixwave adaptive-exit-engine-safe-surface, 2026-07-17): was
+            # firm_key="topstep" (bare, no suffix), which is NOT a key in
+            # FIRM_COMMISSIONS (src/engine/firm_config.py — valid keys are
+            # "topstep_50k" and "mffu_50k"). run_class_backtest() calls
+            # get_commission_per_side(firm_key, symbol) unconditionally
+            # whenever firm_key is truthy (backtester.py ~6844-6846),
+            # ignoring the commission_per_side=0.62 passed above, so this
+            # raised ValueError("Unknown firm 'topstep'...") on EVERY call —
+            # both arms, always — making the harness unable to run at all,
+            # let alone detect a regression. Discovered while proving the
+            # adaptive_ctx fix above actually produces divergence.
+            firm_key="topstep_50k",
             skip_eligibility_gate=True,   # Keep entry logic identical; only exits differ
             max_trades_per_day=2,
             use_performance_gate=False,    # Skip perf gate for A/B speed

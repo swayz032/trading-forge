@@ -23,6 +23,18 @@ from the run_class_backtest() call, or reverting the
 line) makes test_adaptive_arm_passes_non_none_adaptive_ctx fail (captured
 kwarg is None instead of an AdaptiveExitContext instance).
 
+ALSO CLOSED (discovered while proving the adaptive_ctx fix actually produces
+divergence, same file, same function): _run_backtest_for_strategy() passed
+firm_key="topstep" to run_class_backtest(), which is NOT a valid
+FIRM_COMMISSIONS key (src/engine/firm_config.py only has "topstep_50k" and
+"mffu_50k"). run_class_backtest() calls get_commission_per_side(firm_key,
+symbol) unconditionally whenever firm_key is truthy (backtester.py
+~6844-6846), ignoring the commission_per_side=0.62 also passed — so BOTH
+arms raised ValueError("Unknown firm 'topstep'...") on every call, meaning
+the harness could not run end-to-end at all, regardless of the adaptive_ctx
+fix. Fixed by changing the literal to "topstep_50k".
+See TestFirmKeyIsValid below.
+
 Run targeted:
     python -m pytest src/engine/tests/test_fixwave_ab_report_adaptive_ctx_wiring.py -v
 """
@@ -135,3 +147,34 @@ class TestAdaptiveCtxWiredIntoAbHarness:
             "The static arm must not receive a constructed adaptive_ctx — "
             "only the adaptive arm should build one."
         )
+
+
+class TestFirmKeyIsValid:
+    """The AB harness must pass a firm_key that actually exists in
+    FIRM_COMMISSIONS — otherwise run_class_backtest() raises on every call
+    (both arms), and the harness can never run at all, let alone detect a
+    regression. See module docstring for the full failure chain."""
+
+    def test_firm_key_is_a_real_firm_commissions_key(self):
+        from src.engine.firm_config import FIRM_COMMISSIONS
+
+        captured = TestAdaptiveCtxWiredIntoAbHarness()._call_with_captured_kwargs("adaptive")
+
+        assert "firm_key" in captured, "run_class_backtest() must receive a firm_key kwarg"
+        assert captured["firm_key"] in FIRM_COMMISSIONS, (
+            f"firm_key={captured['firm_key']!r} is not a valid FIRM_COMMISSIONS key "
+            f"(valid: {sorted(FIRM_COMMISSIONS.keys())}). run_class_backtest() calls "
+            "get_commission_per_side(firm_key, symbol) unconditionally whenever "
+            "firm_key is truthy — an invalid key raises ValueError on EVERY call, "
+            "so the harness cannot run end-to-end at all."
+        )
+
+    def test_firm_key_is_topstep_50k_not_bare_topstep(self):
+        """Regression pin: the specific invalid literal this fixwave found."""
+        captured = TestAdaptiveCtxWiredIntoAbHarness()._call_with_captured_kwargs("static_styleC")
+
+        assert captured.get("firm_key") != "topstep", (
+            'firm_key="topstep" is the exact invalid literal this fixwave fixed — '
+            'it is not a FIRM_COMMISSIONS key ("topstep_50k" is).'
+        )
+        assert captured.get("firm_key") == "topstep_50k"
