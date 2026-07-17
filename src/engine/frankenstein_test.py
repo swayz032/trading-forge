@@ -692,28 +692,39 @@ def run_frankenstein_test(
         }
         return metrics["sharpe"], metrics["profit_factor"], meta
 
+    # fixwave-fastfollow (2026-07-17): do NOT use `with ThreadPoolExecutor(...) as
+    # executor:` here. Executor.__exit__ calls shutdown(wait=True) unconditionally on
+    # block exit -- including on the FuturesTimeout path below, which logs "using
+    # partial results" and falls through -- so this HARD A4 promotion-gate check would
+    # still BLOCK the caller until every one of the n_shuffles worker threads finished
+    # on its own, defeating WALL_CLOCK_CEILING_S exactly the way the sibling
+    # quantum_adversarial_stress.py bug did (fixed same day, same wave:
+    # quantum-stack-honesty, 2026-07-17). Explicit non-blocking shutdown(wait=False)
+    # bounds CALLER-RETURN latency; orphaned worker threads finish independently.
+    executor = ThreadPoolExecutor(max_workers=n_workers)
     try:
-        with ThreadPoolExecutor(max_workers=n_workers) as executor:
-            futures = {executor.submit(_run_one, i): i for i in range(n_shuffles)}
-            try:
-                for fut in as_completed(
-                    futures,
-                    timeout=WALL_CLOCK_CEILING_S,
-                ):
-                    sharpe, pf, meta = fut.result()
-                    sharpe_vals.append(sharpe)
-                    pf_vals.append(pf)
-                    # Collect failure examples: runs with anomalously high |Sharpe|
-                    if abs(sharpe) > PASS_P95_SHARPE_THRESHOLD * 2:
-                        failure_examples.append(meta)
-            except FuturesTimeout:
-                logger.warning(
-                    "frankenstein_test: wall-clock ceiling %.1fs reached after %d/%d shuffles — using partial results",
-                    WALL_CLOCK_CEILING_S,
-                    len(sharpe_vals),
-                    n_shuffles,
-                )
+        futures = {executor.submit(_run_one, i): i for i in range(n_shuffles)}
+        try:
+            for fut in as_completed(
+                futures,
+                timeout=WALL_CLOCK_CEILING_S,
+            ):
+                sharpe, pf, meta = fut.result()
+                sharpe_vals.append(sharpe)
+                pf_vals.append(pf)
+                # Collect failure examples: runs with anomalously high |Sharpe|
+                if abs(sharpe) > PASS_P95_SHARPE_THRESHOLD * 2:
+                    failure_examples.append(meta)
+        except FuturesTimeout:
+            logger.warning(
+                "frankenstein_test: wall-clock ceiling %.1fs reached after %d/%d shuffles — using partial results",
+                WALL_CLOCK_CEILING_S,
+                len(sharpe_vals),
+                n_shuffles,
+            )
+        executor.shutdown(wait=False)
     except Exception as exc:
+        executor.shutdown(wait=False)
         wall_ms = int((time.monotonic() - start_time) * 1000)
         return FrankensteinResult(
             test_mode=test_mode,

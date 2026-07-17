@@ -444,3 +444,66 @@ class TestEngineFidelityLoudSignal:
         doc = ft_module.__doc__ or ""
         assert "KNOWN LIMITATION" in doc
         assert "_apply_trade_management" in doc or "run_backtest" in doc
+
+
+class TestWallClockCeilingBoundsCallerReturnLatency:
+    def test_wall_clock_ceiling_bounds_caller_return_not_executor_shutdown_join(self):
+        """REGRESSION (fixwave-fastfollow 2026-07-17): run_frankenstein_test()
+        must RETURN within roughly WALL_CLOCK_CEILING_S of hung shuffle
+        workers, not block on ThreadPoolExecutor's implicit
+        shutdown(wait=True) join.
+
+        `with ThreadPoolExecutor(...) as executor:` calls shutdown(wait=True)
+        on __exit__, which blocks until every submitted (uncancellable)
+        worker thread actually finishes — REGARDLESS of
+        as_completed(..., timeout=...) having already raised FuturesTimeout
+        inside the with-block and been logged as "using partial results".
+        So the pre-fix code would log a ceiling-reached warning but not
+        actually return to the caller — this A4 HARD promotion gate
+        (TESTING -> PAPER) could hang far past its documented wall-clock
+        bound whenever a shuffle worker stalled. Same bug class + same fix
+        as quantum_adversarial_stress.py (fixed same day, wave
+        quantum-stack-honesty, 2026-07-17).
+
+        Uses a cooperatively-stoppable mock (threading.Event) rather than a
+        long time.sleep() so a real failure here (still blocking) is bounded
+        at ~10s instead of hanging, and the passing case leaves no slow
+        background thread behind.
+        """
+        import threading
+        import time as time_module
+        from unittest.mock import patch
+
+        bars = make_bars(400)
+        release = threading.Event()
+
+        def slow_simulate(*args, **kwargs):
+            release.wait(timeout=10.0)
+            return {"sharpe": 0.0, "profit_factor": 1.0, "total_trades": 5, "total_pnl": 0.0}
+
+        try:
+            with patch(
+                "src.engine.frankenstein_test._simulate_shuffled",
+                side_effect=slow_simulate,
+            ), patch(
+                "src.engine.frankenstein_test.WALL_CLOCK_CEILING_S",
+                0.2,
+            ):
+                t0 = time_module.monotonic()
+                result = run_frankenstein_test(
+                    {}, bars, n_shuffles=5, n_workers=5, seed=0
+                )
+                elapsed = time_module.monotonic() - t0
+        finally:
+            release.set()
+
+        # Zero shuffles could complete inside the 0.2s ceiling given the mock
+        # blocks for up to 10s — the correct outcome is the "no shuffle
+        # results produced" failure path, not a hang.
+        assert result.status == "failed"
+        assert elapsed < 2.0, (
+            f"run_frankenstein_test took {elapsed:.2f}s to return after a "
+            "0.2s WALL_CLOCK_CEILING_S timeout — it is blocking on "
+            "ThreadPoolExecutor's default shutdown(wait=True) join instead "
+            "of returning as soon as as_completed() times out."
+        )

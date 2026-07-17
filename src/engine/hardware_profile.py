@@ -152,14 +152,26 @@ def detect_cloud_backends() -> dict:
                 )
                 return [b.name for b in svc.backends()]
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                future = pool.submit(_list_ibm)
-                try:
-                    backends = future.result(timeout=5)
-                    result["ibm_available"] = True
-                    result["ibm_backends"] = backends
-                except concurrent.futures.TimeoutError:
-                    pass
+            # fixwave-fastfollow (2026-07-17): do NOT use `with
+            # ThreadPoolExecutor(...) as pool:` here. Executor.__exit__ calls
+            # shutdown(wait=True) unconditionally on block exit, even after
+            # future.result(timeout=5) has already raised TimeoutError -- so this
+            # documented 5s hardware probe could still block far longer whenever
+            # the IBM API call itself hangs (e.g. a network stall). Same bug class
+            # + same fix as frankenstein_test.py / quantum_adversarial_stress.py
+            # (same wave, 2026-07-17): explicit non-blocking shutdown(wait=False)
+            # bounds CALLER-RETURN latency; an orphaned worker thread finishes
+            # independently.
+            pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            future = pool.submit(_list_ibm)
+            try:
+                backends = future.result(timeout=5)
+                result["ibm_available"] = True
+                result["ibm_backends"] = backends
+            except concurrent.futures.TimeoutError:
+                pass
+            finally:
+                pool.shutdown(wait=False)
         except Exception:
             pass
 
@@ -182,14 +194,18 @@ def detect_cloud_backends() -> dict:
                 devices = AwsDevice.get_devices(aws_session=aws_session)
                 return [d.name for d in devices]
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                future = pool.submit(_list_braket)
-                try:
-                    devices = future.result(timeout=5)
-                    result["braket_available"] = True
-                    result["braket_devices"] = devices
-                except concurrent.futures.TimeoutError:
-                    pass
+            # fixwave-fastfollow (2026-07-17): same non-blocking-shutdown fix as the
+            # IBM probe above -- see that comment for the full rationale.
+            pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            future = pool.submit(_list_braket)
+            try:
+                devices = future.result(timeout=5)
+                result["braket_available"] = True
+                result["braket_devices"] = devices
+            except concurrent.futures.TimeoutError:
+                pass
+            finally:
+                pool.shutdown(wait=False)
         except Exception:
             pass
 

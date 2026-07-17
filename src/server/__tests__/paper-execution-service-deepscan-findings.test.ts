@@ -86,10 +86,20 @@ describe("F5 — forceCloseAllPositions must pass derived ATR to closePosition",
   });
 
   it("returns undefined when initialStopPrice is null (legacy positions)", () => {
-    // derivedAtr IIFE must handle the null-stop case gracefully
+    // derivedAtr IIFE must handle the null-stop case gracefully.
+    // fixwave-fastfollow (2026-07-17): was a fixed-length SRC.slice(derivedIdx,
+    // derivedIdx + 400) window — a stale-test-window fragility bug (not a real
+    // capital-safety regression, see AGENT-LOGS correction this date): campaign
+    // wave W2 (d694c61a) legitimately grew this IIFE's preamble by adding a
+    // persistedAtr fast-path, which pushed the pre-existing, still-correct
+    // "return undefined" text past char 400 and made this assertion falsely RED.
+    // Slice to the IIFE's own closing `})();` instead of a fixed offset so any
+    // future preamble growth inside this one function cannot do that again.
     const derivedIdx = SRC.indexOf("const derivedAtr = (() => {");
     expect(derivedIdx).toBeGreaterThan(-1);
-    const body = SRC.slice(derivedIdx, derivedIdx + 400);
+    const closeIdx = SRC.indexOf("})();", derivedIdx);
+    expect(closeIdx).toBeGreaterThan(derivedIdx);
+    const body = SRC.slice(derivedIdx, closeIdx);
     expect(body).toContain("return undefined");
   });
 });
