@@ -6,9 +6,15 @@
  * cron. Root cause: the sweeper loop hardcoded `(table as any).createdAt` for every
  * table's cutoff comparison, but `deeparTrainingRuns` has no `createdAt` column
  * (schema.ts only defines `trainedAt`, populated via defaultNow() at INSERT time).
- * `.createdAt` silently resolved to `undefined`, so `lt(undefined, cutoff)` never
- * matched a row for that table — every other table in the sweep genuinely has
- * `createdAt` and swept fine.
+ * `.createdAt` resolved to `undefined`, and `lt(undefined, cutoff)` is NOT a silent
+ * no-op — independent execution against the real production DB confirmed it throws
+ * a genuine DrizzleQueryError (invalid SQL, empty left-hand operand). The per-table
+ * try/catch in the sweeper loop caught that exception (so the other 6 tables still
+ * swept correctly each tick), but deepar_training_runs itself never got past the
+ * throwing query, so its orphaned rows accumulated untouched. (Corrected 2026-07-17
+ * — an earlier revision of this comment claimed the query silently matched zero
+ * rows instead of throwing; that was factually wrong.) Every other table in the
+ * sweep genuinely has `createdAt` and swept fine.
  *
  * This test imports the real (side-effect-free) schema module directly — schema.ts
  * only defines Drizzle table metadata, it does not open a DB connection — and

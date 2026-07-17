@@ -435,14 +435,20 @@ export function getSchedulerJobs(): Readonly<Record<string, SchedulerJobMeta>> {
 // since 2026-04/05, never swept. The sweeper loop used to hardcode
 // `(sweep.table as any).createdAt` for every table — but `deeparTrainingRuns`
 // has NO `createdAt` column (schema.ts defines only `trainedAt`, populated via
-// defaultNow() at INSERT time in trainDeepAR()). `.createdAt` silently resolved
-// to `undefined` for that one table, so `lt(undefined, cutoff)` never matched
-// any row. Every other table in this sweep (monte_carlo_runs,
-// sqa_optimization_runs, qubo_timing_runs, tensor_predictions,
-// rl_training_runs, quantum_mc_runs) genuinely has `createdAt` and swept fine —
-// only deepar_training_runs silently never swept. Fixed by resolving each
-// table's real creation-timestamp column explicitly instead of assuming a
-// shared column name.
+// defaultNow() at INSERT time in trainDeepAR()). `.createdAt` resolved to
+// `undefined` for that one table, and `lt(undefined, cutoff)` is NOT a silent
+// no-op: it throws a genuine DrizzleQueryError (invalid SQL — empty left-hand
+// operand) on every tick that reached the deepar_training_runs iteration.
+// (Corrected 2026-07-17 after independent execution against the real
+// production DB proved the old code path throws, not silently skips — an
+// earlier revision of this comment claimed the wrong mechanism.) That
+// exception is caught by this loop's per-table try/catch (logger.error +
+// _recordStalePendingSweepFailure), so the tick still completes and the OTHER
+// 6 tables in this sweep still sweep correctly — but deepar_training_runs
+// itself never got past the throwing query, so its orphaned rows accumulated
+// untouched. Fixed by resolving each table's real creation-timestamp column
+// explicitly instead of assuming a shared column name, so the query is valid
+// SQL for every table.
 export interface StalePendingSweepTableConfig {
   name: string;
   table: unknown;
