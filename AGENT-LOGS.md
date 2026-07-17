@@ -4,6 +4,24 @@
 
 ---
 
+### Session Log — 2026-07-16 /goal DEEP-SCAN WAVE 2 (goalscan-crit) — 7 CAMPAIGN-FILE CRIT/HIGH fixed under OPERATOR AUTHORIZATION, VERIFIED BAND 8, LANDED `0896aaca`
+
+**Mission:** After the goalscan-authpine wave (band 7) handed off 7 CRIT/HIGH in campaign-owned instrument files, the operator was surfaced the conflict ("don't interfere" vs "every inch of bugs gone") and **explicitly authorized me to fix them** (band-8 target). Instrument-surface, so `ratify-packet` discipline: autonomous under independent grade (none in the irreversible/live-capital class — all fail-safe hardening; nothing live-trading).
+
+**Method:** 3 scope-locked instrument implementers on DISTINCT files (parallel-safe), each staging a 5-part ratify receipt + RED-proofing by REVERT, then one independent accuracy-validator (doer≠grader) re-derived from zero.
+
+**7 fixes (all fail-closed/fail-loud, stricter-only, no gate loosened, no threshold changed):**
+- **CRIT** `paper-signal-service.ts` — 95% cross-symbol DLL **force-close now runs during the FOMC/CPI/NFP news-blackout window** (removed the `if(!blackoutBlocked)` guard around the force_close branch; entry-gating provably unchanged — `lockoutBlocked` already ORs `blackoutBlocked`, so a blackout DLL verdict can only be stricter).
+- **CRIT** `lifecycle-service.ts` — B-2 invariant/truthiness gate + CPCV-Style-C WF-mode gate now enforce on the canonical **SHADOW→PAPER** path (added `fromState==="SHADOW"`, mirroring the deepscan14 A4/Frankenstein fix). Legacy-null grandfather preserved.
+- **CRIT** `lifecycle-service.ts` — the manual/API `_promoteStrategyInner` path (HMAC route shared w/ n8n/Carter) now runs the **SAME shared B14/WFE/param-drift/DSR/MC-survival evaluators the cron uses**, token-for-token block logic (WFE blocks on blocked||degenerate_is_block; param-drift on blocked||blocked_classifier_error; DSR on !passed; MC-survival ≤0.70). `check-gate-parity.mjs` gained a manual TESTING/SHADOW→PAPER region so the class is caught by CI. (CPCV Defect confirmed LIVE not latent — pre-2026-06-22 backtest rows + explicit WF_MODE overrides.)
+- **HIGH** `backtester.py` — DSL path **re-raises `ZeroVolumeOnTradeCriticalBar`** (specific-before-generic except) instead of the bare `except Exception` silently reverting the whole run to vectorbt raw-close exits; class-path parity confirmed. ES/NQ/CL spec resolution routed through `get_contract_spec()` (warns on the micro-alias 10× mislabel; MES/MNQ/MCL byte-identical; `resolve_contract_spec()` correctly NOT used — `StrategyConfig` has no `contract_class` field).
+
+**Verification:** independent accuracy-validator **VERIFIED BAND 8** (no inflation; 2 non-overlapping paths — static cron-vs-manual comparison + live test execution incl. a pinned-base-SHA regression diff proving the 1 known-bad test `deepscan17-dsl-guards` is pre-existing). tsc 0; 25/25 new tests (19 vitest + 6 pytest); `check-gate-parity` green; 118+ pre-existing tests green across 7 suites; 3 CI gates green. **Landed:** rebased onto the campaign's W2 stop-geometry (`d694c61a`) — one clean import-block conflict in `backtester.py` resolved keeping BOTH W2's `stop_geometry` import AND my `ZeroVolumeOnTradeCriticalBar`; post-rebase re-verified green (incl. W2's `check-ts-python-stop-geometry-parity`), FF-landed `0896aaca`.
+
+**Grader-surfaced follow-up (NOT introduced by this wave, file untouched):** `b14-ci-gate.ts::evaluateDsrWalkForwardGate` returns `passed:false` on the `legacy_proceed` status despite its docstring/name implying PROCEED — my manual-path code correctly MIRRORS the actual (surprising) cron behavior rather than silently "fixing" it. This is a pre-existing gate doc/code mismatch (a gate-loosening correction that would affect the cron too) → needs its own ratify-packet + independent grade + operator authorization, same flow as this wave's 7 items. Surfaced to operator, not rushed at marathon's end (per the F-3-staging discipline).
+
+**Carry-forward:** ZERO on the 7 authorized items (all closed + landed). The b14 legacy_proceed item is a NEW grader-surfaced finding awaiting operator authorization (same authorize-then-fix flow). authpine wave remains VERIFIED BAND 7; its 7→8 lift (runtime auth-guard integration tests + re-grade) is the documented next step.
+
 ### Session Log — 2026-07-16 /goal DEEP-SCAN (goalscan-authpine) — 9-finder scan @ `61bb20a3`, CONTROL-PLANE fix wave (auth/pine/obs/n8n/CI) LANDED, VERIFIED BAND 7, ZERO carry-forwards
 
 **Mission:** Full-codebase /goal deep-scan (find all HIGH/MED/LOW, institutional-grade, band 8) run CONCURRENTLY with the "$250–$1K/day Readiness" campaign — hard constraint: **do not interfere** with that agent's instrument/execution surface. Operator mid-session: target = band **8** (production-ready); **"no carry forwards at all."**
