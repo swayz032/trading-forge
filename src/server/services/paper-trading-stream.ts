@@ -63,6 +63,22 @@ const barBuffer = new Map<string, Bar[]>();
 const sessionLocks = new Map<string, Promise<void>>();
 
 /**
+ * M1c (2026-07-17, F-1 closure — independent accuracy-validator grade): per-
+ * symbol lock serializing the timeframe-resolution + aggregator-feed step in
+ * handleBar(). Without this, two overlapping handleBar() calls for the SAME
+ * symbol (the raw WS onBar callback is fire-and-forget — not awaited by its
+ * caller) could feed timeframe-bar-aggregator.ts OUT OF ARRIVAL ORDER: the
+ * step needs an async getSessionTimeframe() lookup before it can call
+ * feedBar(), and a cold cache-miss on bar N's lookup racing a warm cache hit
+ * on bar N+1's lookup could let bar N+1 reach feedBar() first. A dedicated
+ * lock (separate Map from sessionLocks — a symbol is not a sessionId, and
+ * sharing sessionLocks would conflate two different serialization scopes)
+ * guarantees the resolve+feed step runs in the SAME order handleBar() was
+ * called, regardless of which individual await settles first.
+ */
+const mtfFeedLocks = new Map<string, Promise<void>>();
+
+/**
  * F-2 (deep-scan re-scan 2026-07-10, MED): run `fn` serialized against all other
  * per-session work on THIS sessionId, chaining on the same `sessionLocks` map the WS
  * bar loop uses. PREVIOUS GAP: `POST /api/paper/prices` called `updatePositionPrices`
@@ -611,26 +627,45 @@ async function handleBar(bar: Bar) {
   // sessions for THIS bar — never once per session. Two sessions trading the
   // same symbol at the same timeframe must observe the identical aggregator
   // bucket; feeding it once per session would double-count volume and corrupt
-  // bucket-close detection for that shared bucket. This happens synchronously
-  // here, before any per-session lock-queued processing begins, so ordering
-  // across sessions' own lock chains can never cause a double-feed.
-  const sessionTimeframes = await Promise.all(
-    sessions.map(async (sessionId) => [sessionId, await getSessionTimeframe(sessionId)] as const),
-  );
-  const mtfContextByTimeframe = new Map<string, ReturnType<typeof feedTimeframeAggregator> | undefined>();
-  for (const [, timeframe] of sessionTimeframes) {
-    if (mtfContextByTimeframe.has(timeframe)) continue; // already fed this bar for this timeframe
-    const timeframeMinutes = parseTimeframeMinutes(timeframe);
-    mtfContextByTimeframe.set(
-      timeframe,
-      (timeframeMinutes !== null && timeframeMinutes > 1)
-        ? feedTimeframeAggregator(bar.symbol, timeframeMinutes, bar)
-        : undefined, // 1m (or unparseable) sessions: byte-identical pre-M1c behavior
+  // bucket-close detection for that shared bucket.
+  //
+  // F-1 closure (independent accuracy-validator grade, 2026-07-17): this whole
+  // step is routed through mtfFeedLocks, a per-symbol lock, so two overlapping
+  // handleBar() calls for the SAME symbol always feed the aggregator in the
+  // order handleBar() was called — not in whatever order their individual
+  // getSessionTimeframe() awaits happen to settle (a cold cache-miss on an
+  // earlier bar racing a warm cache-hit on a later one could otherwise let
+  // the later bar reach feedBar() first).
+  const mtfFeedPrev = mtfFeedLocks.get(bar.symbol) ?? Promise.resolve();
+  const mtfFeedResult = mtfFeedPrev.then(async () => {
+    const sessionTimeframes = await Promise.all(
+      sessions.map(async (sessionId) => [sessionId, await getSessionTimeframe(sessionId)] as const),
     );
-  }
-  const mtfContextBySession = new Map(
-    sessionTimeframes.map(([sessionId, timeframe]) => [sessionId, mtfContextByTimeframe.get(timeframe)]),
-  );
+    const mtfContextByTimeframe = new Map<string, ReturnType<typeof feedTimeframeAggregator> | undefined>();
+    for (const [, timeframe] of sessionTimeframes) {
+      if (mtfContextByTimeframe.has(timeframe)) continue; // already fed this bar for this timeframe
+      const timeframeMinutes = parseTimeframeMinutes(timeframe);
+      mtfContextByTimeframe.set(
+        timeframe,
+        (timeframeMinutes !== null && timeframeMinutes > 1)
+          ? feedTimeframeAggregator(bar.symbol, timeframeMinutes, bar)
+          : undefined, // 1m (or unparseable) sessions: byte-identical pre-M1c behavior
+      );
+    }
+    return new Map(
+      sessionTimeframes.map(([sessionId, timeframe]) => [sessionId, mtfContextByTimeframe.get(timeframe)]),
+    );
+  });
+  // Chain the lock forward regardless of outcome (mirrors sessionLocks' own
+  // pattern) so a failure here can never permanently wedge this symbol's lock.
+  mtfFeedLocks.set(bar.symbol, mtfFeedResult.then(() => undefined, () => undefined));
+  const mtfContextBySession = await mtfFeedResult.catch((err) => {
+    logger.error(
+      { err, symbol: bar.symbol },
+      "M1c: failed to resolve timeframe / feed aggregator for this bar — sessions in this fan-out proceed with mtfContext=undefined (1m-equivalent fail-open, never blocks bar processing)",
+    );
+    return new Map<string, ReturnType<typeof feedTimeframeAggregator> | undefined>();
+  });
 
   const promises = sessions.map((sessionId) => {
     // Chain onto the existing lock for this session (or start fresh)
