@@ -1,0 +1,3 @@
+[
+  { "ev": "status", "status": "auth_failed", "message": "invalid api key" }
+]

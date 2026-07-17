@@ -8,8 +8,19 @@ import WebSocket from "ws";
  * - WebSocket for live/paper trading (Phase 6)
  * - REST for on-demand historical bars
  *
- * API Docs: https://massive.io/docs (REST + WebSocket)
- * Dashboard: https://massive.io/dashboard/subscriptions
+ * API Docs: https://massive.com/docs (REST + WebSocket)
+ * Dashboard: https://massive.com/dashboard/subscriptions
+ *
+ * M1a (2026-07-17): "Massive" is Polygon.io, rebranded — the prior
+ * `massive.io` domain reference above was stale and 404s; the real service
+ * lives at massive.com. The WebSocket handling below was rewritten to match
+ * the REAL, independently-verified protocol (see
+ * src/data/fetchers/__fixtures__/massive/README.md for full source
+ * citations + confirmed-vs-inferred provenance per detail). Prior code
+ * guessed a Bearer-header auth + bare-object-per-message shape that does
+ * NOT match the real API on any of: auth flow, subscribe message format,
+ * message envelope (array-wrapped, not single objects), or field names
+ * (short keys `sym`/`o`/`h`/`l`/`c`/`v`/`s`/`e`, not `symbol`/`open`/etc).
  */
 
 interface MassiveConfig {
@@ -89,15 +100,73 @@ export function createMassiveFetcher(config: MassiveConfig) {
     return data.bars as Bar[];
   }
 
+  // M1a: minute aggregates (AM) are the canonical bar source per campaign
+  // scope — no second-aggregate (A.) bar-builder. See fixtures README.
+  const AM_CHANNEL = "AM";
+
+  /** One rejected/malformed inbound bar — surfaced via the "incident" event, never silently dropped. */
+  interface MassiveIncident {
+    reason: "non_numeric_price" | "invalid_ohlc" | "negative_volume";
+    raw: unknown;
+  }
+
+  function validateAmEvent(raw: Record<string, unknown>): { bar: Bar & { symbol: string } } | { incident: MassiveIncident } {
+    // Reject null/undefined/missing price fields explicitly BEFORE Number()
+    // coercion — Number(null) is 0 (a plausible-looking but wrong price),
+    // not NaN, so a missing field would otherwise silently masquerade as a
+    // real (and likely OHLC-invalid, for the wrong reported reason) price.
+    for (const field of ["o", "h", "l", "c"] as const) {
+      if (raw[field] === null || raw[field] === undefined) {
+        return { incident: { reason: "non_numeric_price", raw } };
+      }
+    }
+    const open = Number(raw.o);
+    const high = Number(raw.h);
+    const low = Number(raw.l);
+    const close = Number(raw.c);
+    const volume = Number(raw.v);
+
+    if (Number.isNaN(open) || Number.isNaN(high) || Number.isNaN(low) || Number.isNaN(close)) {
+      return { incident: { reason: "non_numeric_price", raw } };
+    }
+    if (!Number.isNaN(volume) && volume < 0) {
+      return { incident: { reason: "negative_volume", raw } };
+    }
+    // Invalid OHLC: high must be >= max(open,close,low); low must be <= min(open,close,high).
+    if (high < low || high < open || high < close || low > open || low > close) {
+      return { incident: { reason: "invalid_ohlc", raw } };
+    }
+
+    return {
+      bar: {
+        symbol: String(raw.sym),
+        // Trust the payload's own aggregation-window-start timestamp end-to-end
+        // (Unix milliseconds per the confirmed AM schema) — never wall-clock.
+        timestamp: new Date(Number(raw.s)).toISOString(),
+        open,
+        high,
+        low,
+        close,
+        volume: Number.isNaN(volume) ? 0 : volume,
+      },
+    };
+  }
+
   function createWebSocket(symbols: string[], onBar: (bar: Bar & { symbol: string }) => void) {
-    const wsUrl = config.baseUrl?.replace(/^https?/, "wss")?.replace(/\/v1$/, "/v1/stream")
-      ?? "wss://stream.massive.io/v1/stream";
+    // M1a: confirmed delayed-tier host is wss://delayed.massive.com (stocks
+    // cluster, per massive-com/client-js README) — the exact futures-cluster
+    // path is NOT independently confirmed (see fixtures README). Callers on
+    // a real futures subscription MUST pass the correct full URL via
+    // config.baseUrl until that's verified; this default is a documented
+    // best-guess placeholder, not a confirmed endpoint.
+    const wsUrl = config.baseUrl ?? "wss://delayed.massive.com/futures";
 
     // Fast lookup set — only process bars for symbols we actually subscribed to
     const symbolSet = new Set(symbols);
 
     let ws: WebSocket | null = null;
     let connected = false;
+    let authenticated = false;
     let reconnectAttempts = 0;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -138,49 +207,84 @@ export function createMassiveFetcher(config: MassiveConfig) {
       reconnectTimer = setTimeout(() => connect(), delay);
     }
 
+    function subscribeParams(): string {
+      return symbols.map((sym) => `${AM_CHANNEL}.${sym}`).join(",");
+    }
+
+    function handleEvent(evt: Record<string, unknown>) {
+      if (evt.ev === "status") {
+        const status = evt.status;
+        if (status === "auth_success") {
+          authenticated = true;
+          ws!.send(JSON.stringify({ action: "subscribe", params: subscribeParams() }));
+          return;
+        }
+        if (status === "auth_failed") {
+          authenticated = false;
+          emit("error", new Error(`Massive WS auth failed: ${String(evt.message ?? "unknown reason")}`));
+          return;
+        }
+        // Any other status (e.g. subscribe confirmation) is treated as the
+        // stream being genuinely ready — reset backoff and tell the caller.
+        reconnectAttempts = 0;
+        emit("connected");
+        return;
+      }
+
+      if (evt.ev === AM_CHANNEL) {
+        const sym = evt.sym;
+        if (typeof sym !== "string" || !symbolSet.has(sym)) return; // not a symbol we subscribed to
+        const result = validateAmEvent(evt);
+        if ("incident" in result) {
+          emit("incident", result.incident);
+          return;
+        }
+        onBar(result.bar);
+        return;
+      }
+      // Unrecognized event type — forward-compat no-op, not an error.
+    }
+
     function connect() {
       intentionalClose = false;
+      authenticated = false;
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;
       }
 
-      ws = new WebSocket(wsUrl, {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      });
+      // No Authorization header — the real protocol authenticates via a
+      // post-connect WS message (see handleEvent's "auth_success" branch).
+      ws = new WebSocket(wsUrl);
 
       ws.on("open", () => {
         connected = true;
-        reconnectAttempts = 0;
         startHeartbeat();
-
-        // Subscribe to symbols
-        ws!.send(JSON.stringify({ action: "subscribe", symbols }));
-        emit("connected");
+        // Auth is a message, not a header/query-string — sent immediately
+        // after the socket opens, before any subscribe attempt.
+        ws!.send(JSON.stringify({ action: "auth", params: apiKey }));
       });
 
       ws.on("message", (data: WebSocket.Data) => {
+        let parsed: unknown;
         try {
-          const msg = JSON.parse(data.toString());
-          // Handle bar data — expect { symbol, timestamp, open, high, low, close, volume }
-          // Filter to only subscribed symbols — Massive may send data for entire tier
-          if (msg.timestamp !== undefined && msg.symbol && symbolSet.has(msg.symbol)) {
-            const open = Number(msg.open);
-            const high = Number(msg.high);
-            const low = Number(msg.low);
-            const close = Number(msg.close);
-            const volume = Number(msg.volume);
-            // Drop bars with invalid/NaN prices — prevents NaN from propagating through the pipeline
-            if (isNaN(open) || isNaN(high) || isNaN(low) || isNaN(close)) return;
-            onBar({ symbol: msg.symbol, timestamp: msg.timestamp, open, high, low, close, volume: isNaN(volume) ? 0 : volume });
-          }
+          parsed = JSON.parse(data.toString());
         } catch {
-          // Ignore non-JSON messages (heartbeat acks, etc.)
+          // Ignore non-JSON frames.
+          return;
+        }
+        // Every real inbound frame is a JSON ARRAY of event objects — a
+        // bare object here would indicate either a protocol change or a
+        // malformed frame; either way, do not silently coerce it.
+        if (!Array.isArray(parsed)) return;
+        for (const evt of parsed) {
+          if (evt && typeof evt === "object") handleEvent(evt as Record<string, unknown>);
         }
       });
 
       ws.on("close", () => {
         connected = false;
+        authenticated = false;
         stopHeartbeat();
         emit("disconnected");
         scheduleReconnect();
@@ -207,10 +311,11 @@ export function createMassiveFetcher(config: MassiveConfig) {
         ws = null;
       }
       connected = false;
+      authenticated = false;
     }
 
     function isConnected(): boolean {
-      return connected;
+      return connected && authenticated;
     }
 
     function subscribedSymbols(): string[] {
