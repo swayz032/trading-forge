@@ -1,6 +1,6 @@
 # H1 CERTIFIED READER v3.2 — EFFECTIVE PARAMS RECORD (2026-07-16)
 
-> **STATUS: DRAFT for advisor ratification** (R-020.2). This is the frozen record R-019 required before `SEAL-GO.token`. The identity guard asserts what exists at runtime (model, prompt SHAs, k, channel class); this record documents the rest with provenance. Frozen once ratified (R-021).
+> **STATUS: FROZEN (ratified R-021, 2026-07-16).** This is the record R-019 required before `SEAL-GO.token`. The identity guard asserts what exists at runtime (model, prompt SHAs, k, channel class — from the DISPATCH record per R-021.2, self-report as corroboration only); this record documents the rest with provenance.
 >
 > Authority: ADVISOR-RULINGS R-019 (record required) + R-020 (effective table ratified, seal-day = Option A). Forensic basis: AGENT-REPORTS AR-007.
 

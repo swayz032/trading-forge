@@ -128,9 +128,29 @@ ENUMERATOR_PROMPT_PATH = os.path.join(_ROOT, "src", "agents", "strategy-enumerat
 #: Certified-reader tag/lineage pointer (provenance source_ref only — NOT an
 #: asserted identity value; the asserted SHAs are computed from the files).
 CERTIFIED_READER_TAG = "efa377d6"
+#: Frozen effective-params record (STATUS: FROZEN, ratified R-021) — §5/§6 pin
+#: the certified reader's CHANNEL class. The pinned channel-class VALUE is parsed
+#: from this record at runtime (R-016 no-transcription law: pointed-at, never
+#: copied into code — no channel string literal appears below).
+CERTIFIED_READER_EFFECTIVE_PARAMS = os.path.join(
+    _ROOT, "docs", "designs", "h1-certified-reader-effective-params-2026-07-16.md"
+)
+#: The FORBIDDEN dispatch channel-class (R-020.3: the API is REJECTED for the
+#: seal-day read — an unmeasured instrument change on a once-only read). This is
+#: the anti-value the guard HALTs on, NOT a certified identity value (the
+#: certified channel-class is parsed from the frozen record, never hardcoded).
+FORBIDDEN_API_CHANNEL = "api"
+#: The two dispatch modes the certified channel-class permits (effective-params
+#: record §4: interactive dispatch OR headless ``claude -p``, both the same
+#: certified-channel runtime). A dispatch_mode outside this set is unverified
+#: provenance and fails closed.
+_VALID_DISPATCH_MODES = frozenset({"interactive", "headless"})
 
 #: The fields compared by :func:`assert_reader_identity` (source_refs excluded —
-#: it is provenance metadata, not part of the asserted identity).
+#: it is provenance metadata, not part of the asserted identity). channel_class
+#: is DELIBERATELY NOT here: per R-021.2 a model's SELF-report of its channel is
+#: weak evidence, so channel-class is asserted from the DISPATCH RECORD
+#: (:func:`assert_dispatch_identity`), never from the artifact's self-report.
 _IDENTITY_FIELDS = ("model_id", "params", "k", "prompt_sha", "enumerator_sha")
 
 
@@ -235,21 +255,48 @@ def _read_frozen_params(params_source_path: str) -> dict:
     return {"designator": m.group(0), "enumerated_values": None}
 
 
+def _read_frozen_channel_class(channel_source_path: str) -> str:
+    """Parse the pinned CHANNEL-CLASS from the frozen effective-params record's
+    ``channel-class = <class>`` pin (§5 — "What the guard asserts"; corroborated
+    by the §1/§2 channel field and §4/§6 seal-day binding).
+
+    R-021.2 refinement: channel-class is asserted from HOW the seal-day dispatch
+    was made (the certified channel vs API), NEVER from what a reader
+    self-reports — so its pinned VALUE lives ONLY in this frozen record and is
+    read at runtime here, never hardcoded (R-016 no-transcription law; no channel
+    string literal exists in this module). Returns the lower-cased class token
+    (e.g. the certified-channel pin). Fail-closed if the record or pin is absent."""
+    text = _read_frozen_text(channel_source_path)
+    m = re.search(r"channel[-\s]?class\s*=\s*\*{0,2}\s*([A-Za-z]+)", text, re.IGNORECASE)
+    if not m:
+        raise ReaderIdentityMismatch(
+            f"frozen channel-class pin not found in {channel_source_path!r} "
+            "(expected a `channel-class = <class>` pin in the effective-params record)"
+        )
+    return m.group(1).strip().lower()
+
+
 def certified_reader_identity(
     prereg_path: str = CLAUDE_RUNG_PREREG,
     params_source_path: str = SEALED12_RATIFY_PACKET,
     frontier_prompt_path: str = FRONTIER_PROMPT_PATH,
     enumerator_prompt_path: str = ENUMERATOR_PROMPT_PATH,
+    channel_source_path: str = CERTIFIED_READER_EFFECTIVE_PARAMS,
 ) -> dict:
     """Compute the PINNED certified-reader identity AT RUNTIME by reading the
     frozen files (R-018 law: pointed-at, never copied into code).
 
-    Returns ``{model_id, params, k, prompt_sha, enumerator_sha, source_refs}``:
+    Returns ``{model_id, params, k, prompt_sha, enumerator_sha, channel_class,
+    source_refs}``:
       * ``model_id`` / ``k`` — parsed from the frozen Claude-rung pre-reg.
       * ``params`` — the frozen "pinned params" designator (values not
         enumerated in any frozen artifact; see :func:`_read_frozen_params`).
       * ``prompt_sha`` / ``enumerator_sha`` — sha256 of the ON-DISK frontier-v3.2
         and enumerator-v1.2 prompt files (their bytes ARE the prompt identity).
+      * ``channel_class`` — the pinned dispatch CHANNEL class parsed from the
+        frozen effective-params record (§5). Per R-021.2 this is asserted from
+        the DISPATCH RECORD (:func:`assert_dispatch_identity`), never from a
+        reader self-report — so it is NOT in ``_IDENTITY_FIELDS``.
       * ``source_refs`` — the frozen files/tag this identity was read from
         (provenance; NOT part of the asserted identity).
 
@@ -261,12 +308,14 @@ def certified_reader_identity(
     params = _read_frozen_params(params_source_path)
     prompt_sha = _sha256_file(frontier_prompt_path)
     enumerator_sha = _sha256_file(enumerator_prompt_path)
+    channel_class = _read_frozen_channel_class(channel_source_path)
     return {
         "model_id": model_id,
         "params": params,
         "k": k,
         "prompt_sha": prompt_sha,
         "enumerator_sha": enumerator_sha,
+        "channel_class": channel_class,
         "source_refs": {
             "model_id_and_k": os.path.relpath(prereg_path, _ROOT).replace("\\", "/"),
             "params_designator": os.path.relpath(params_source_path, _ROOT).replace(
@@ -276,6 +325,9 @@ def certified_reader_identity(
                 "\\", "/"
             ),
             "enumerator_sha": os.path.relpath(enumerator_prompt_path, _ROOT).replace(
+                "\\", "/"
+            ),
+            "channel_class": os.path.relpath(channel_source_path, _ROOT).replace(
                 "\\", "/"
             ),
             "certified_reader_tag": CERTIFIED_READER_TAG,
@@ -330,6 +382,106 @@ def _claimed_reader_identity(raw) -> dict:
             "name its own model/prompt/enumerator/params/k)"
         )
     return claimed
+
+
+def assert_dispatch_identity(
+    dispatch_record, pinned: dict, self_report=None
+) -> None:
+    """Fail-closed CHANNEL-CLASS + DISPATCH-RECORD assertion (R-020.3 + R-021.2).
+
+    THE REFINEMENT (R-021.2): a model's self-description of its own identity is
+    WEAK evidence. So the certified channel-class + model resolution are asserted
+    from the seal-day DISPATCH RECORD (HOW the conductor dispatched: which model
+    it explicitly requested, what the runtime resolved, and the channel it used —
+    the certified channel vs API), with the artifact's ``reader_identity``
+    self-report as CORROBORATION ONLY, never the sole source.
+
+    ``dispatch_record`` (dependency-injected by the seal-day conductor, NOT read
+    from the artifact): ``{requested_model, resolved_model, channel_class,
+    dispatch_mode}``.
+
+    Precedence — the DISPATCH RECORD is authoritative; ``self_report`` may
+    corroborate or contradict-→HALT, but NEVER overrides. Raises
+    :class:`ReaderIdentityMismatch` (HALT, no artifact accepted) when:
+      * ``dispatch_record`` is not a dict (no dispatch provenance to assert);
+      * ``channel_class`` is the FORBIDDEN api channel (R-020.3 — API rejected);
+      * ``channel_class`` != the pinned channel-class (parsed from the frozen
+        record);
+      * ``requested_model`` OR ``resolved_model`` != the pinned ``model_id``
+        (both legs must match — a requested-right/resolved-wrong dispatch is a
+        silent substitution);
+      * ``dispatch_mode`` is not one of the certified-channel dispatch modes;
+      * ``self_report`` is present AND its model CONTRADICTS the dispatch record's
+        resolved model (conflicting evidence fails closed).
+    A ``self_report`` that is absent leaves the dispatch record alone governing;
+    a ``self_report`` that agrees is accepted (corroboration)."""
+    if not isinstance(dispatch_record, dict):
+        raise ReaderIdentityMismatch(
+            "seal-day dispatch record is required and must be a dict "
+            f"(fail-closed HALT — channel-class + model resolution cannot be "
+            f"asserted without it): {dispatch_record!r}"
+        )
+
+    requested = dispatch_record.get("requested_model")
+    resolved = dispatch_record.get("resolved_model")
+    channel = dispatch_record.get("channel_class")
+    dispatch_mode = dispatch_record.get("dispatch_mode")
+
+    channel_norm = channel.strip().lower() if isinstance(channel, str) else channel
+    pinned_channel = pinned.get("channel_class")
+
+    # R-020.3: the API channel is FORBIDDEN for the seal-day read — explicit,
+    # named HALT (an unmeasured instrument change on a once-only read).
+    if channel_norm == FORBIDDEN_API_CHANNEL:
+        raise ReaderIdentityMismatch(
+            "dispatch channel_class is the FORBIDDEN api channel — HALT "
+            "(R-020.3: the API is rejected for the seal-day read; the certified "
+            "read is the certified-channel runtime pinned in the frozen record)"
+        )
+    # Channel-class must match the pinned (frozen-record) channel-class.
+    if channel_norm != pinned_channel:
+        raise ReaderIdentityMismatch(
+            f"dispatch channel_class {channel!r} != pinned channel-class "
+            f"{pinned_channel!r} (from the frozen effective-params record) — HALT"
+        )
+
+    # BOTH model legs (what the conductor requested AND what the runtime
+    # resolved) must equal the pinned model id — a requested-right but
+    # resolved-wrong dispatch is a silent model substitution.
+    pinned_model = pinned.get("model_id")
+    model_mismatches = [
+        (leg, val)
+        for leg, val in (("requested_model", requested), ("resolved_model", resolved))
+        if val != pinned_model
+    ]
+    if model_mismatches:
+        raise ReaderIdentityMismatch(
+            f"dispatch model_id mismatch on {[m[0] for m in model_mismatches]} — "
+            f"HALT; details (leg, dispatch, pinned): "
+            f"{[(leg, val, pinned_model) for leg, val in model_mismatches]}"
+        )
+
+    # dispatch_mode must be a certified-channel dispatch mode (fail-closed).
+    if dispatch_mode not in _VALID_DISPATCH_MODES:
+        raise ReaderIdentityMismatch(
+            f"dispatch_mode {dispatch_mode!r} is not a certified-channel "
+            f"dispatch mode {sorted(_VALID_DISPATCH_MODES)} — HALT"
+        )
+
+    # CORROBORATION (never override): a present self-report whose model
+    # CONTRADICTS the dispatch record's resolved model is conflicting evidence
+    # and fails closed. Absent/agreeing self-report -> dispatch record governs.
+    if self_report is not None:
+        claimed_model = (
+            self_report.get("model_id") if isinstance(self_report, dict) else None
+        )
+        if claimed_model is not None and claimed_model != resolved:
+            raise ReaderIdentityMismatch(
+                f"conflicting evidence: artifact self-report model {claimed_model!r} "
+                f"contradicts the dispatch record's resolved model {resolved!r} — HALT "
+                "(the self-report may corroborate or contradict-halt, never override "
+                "the authoritative dispatch record)"
+            )
 
 
 # --------------------------------------------------------------------------- #
@@ -665,6 +817,7 @@ def run_extraction_stage(
     adjudicate_fn: Callable[[str, dict], dict] | None = None,
     k: int = K_DEFAULT,
     stability_min: int = STABILITY_MIN,
+    dispatch_record: dict | None = None,
 ) -> dict:
     """Item-1 extraction stage. Produce, persist, and disk-gate one extraction
     artifact per verified video, via the certified reader v3.2 pipeline.
@@ -677,6 +830,15 @@ def run_extraction_stage(
         vault artifacts from disk. NO live call.
       * ``"sealed"`` — call ``live_extract_fn(video_id, manifest_verified)`` per
         video (real spend; seal-day only) and persist its payload byte-exact.
+
+    ``dispatch_record`` (R-020.3 + R-021.2): the seal-day conductor's
+    dependency-injected dispatch record ``{requested_model, resolved_model,
+    channel_class, dispatch_mode}`` describing HOW it dispatched the read. SEALED
+    mode REQUIRES it — :func:`assert_dispatch_identity` asserts it (channel-class
+    from the frozen record + both model legs, with each video's self-report as
+    corroboration) BEFORE any artifact is persisted; a missing dispatch_record in
+    sealed mode fails closed (HALT). It is NOT read from the artifact and is NOT
+    required for rehearsal/staging (see below).
 
     Every artifact is written to ``out_dir`` (default
     ``<cache_dir>/sealed-read-artifacts``) and :func:`require_artifacts_on_disk`
@@ -698,6 +860,16 @@ def run_extraction_stage(
         raise ValueError("sealed mode requires an injected live_extract_fn")
     if mode not in _REHEARSAL_MODES and mode != "sealed":
         raise ValueError(f"unknown extraction mode: {mode!r}")
+    # DISPATCH-RECORD requirement (R-020.3 + R-021.2): sealed mode cannot assert
+    # channel-class + model resolution without the conductor's dispatch record.
+    # Missing it => fail-closed HALT (never persist an un-provenanced live read).
+    if mode == "sealed" and dispatch_record is None:
+        raise ReaderIdentityMismatch(
+            "sealed mode requires a dispatch_record "
+            "{requested_model, resolved_model, channel_class, dispatch_mode} "
+            "(fail-closed HALT — channel-class + model resolution cannot be "
+            "asserted from the artifact; the conductor must inject it)"
+        )
 
     # READER-IDENTITY GUARD (R-018.1a/b): resolve the pinned certified-reader
     # identity AT RUNTIME from the frozen files. This also enforces fail-closed
@@ -720,7 +892,13 @@ def run_extraction_stage(
             )
             # STAMP the certified identity on the loaded staging_v32 artifact
             # (rehearsal reads the certified reader's own spent outputs, so the
-            # pinned identity is authoritative for them).
+            # pinned identity is authoritative for them). The pinned identity
+            # carries channel_class (parsed from the frozen record), so the
+            # rehearsal stamp records the certified channel-class too. Rehearsal
+            # needs NO dispatch_record: the cached staging_v32 IS the certified
+            # rung by construction (it was produced ON the certified channel — the
+            # very outputs the certification measured), so there is no live
+            # dispatch to assert; the pinned channel-class stamp suffices.
             artifact["reader_identity"] = pinned_identity
             _atomic_write(path, artifact)
             record = artifact
@@ -731,6 +909,15 @@ def run_extraction_stage(
             # ReaderIdentityMismatch => HALT, no artifact written for this video.
             claimed_identity = _claimed_reader_identity(raw)
             assert_reader_identity(claimed_identity, pinned_identity)
+            # DISPATCH-RECORD assertion (R-020.3 + R-021.2): the AUTHORITATIVE
+            # channel-class + model-resolution check, from HOW the conductor
+            # dispatched — with this video's self-report as CORROBORATION only.
+            # Also BEFORE persist: a forbidden/api channel, a wrong model leg, or a
+            # self-report that contradicts the dispatch record => HALT, nothing
+            # written for this video.
+            assert_dispatch_identity(
+                dispatch_record, pinned_identity, self_report=claimed_identity
+            )
             record, persist_payload = _wrap_live_artifact(
                 video_id, raw, mode, adjudicate_fn, k, stability_min
             )
@@ -1227,12 +1414,16 @@ class SealedReadDriver:
         token_path: str = DEFAULT_TOKEN_PATH,
         fetched: dict | None = None,
         live_extract_fn: Callable[[str, dict], object] | None = None,
+        dispatch_record: dict | None = None,
     ) -> dict:
         """Gate (Module A) THEN extract. On gate refusal returns
         ``{ok:False, allowed:False, stage:"seal_gate", halt_reason, gate,
         extraction:None}`` and NEVER touches the extraction stage. On a gate
         pass returns ``{ok:True, allowed:True, stage:"extraction", gate,
-        extraction:<run_extraction_stage result>}``."""
+        extraction:<run_extraction_stage result>}``.
+
+        ``dispatch_record`` is threaded to :func:`run_extraction_stage` (required
+        by its sealed path; ignored in rehearsal/staging)."""
         gate = gate_sealed_read(manifest_path, mode, token_path=token_path, fetched=fetched)
         if not gate["allowed"]:
             return {
@@ -1254,6 +1445,7 @@ class SealedReadDriver:
             staging_dir=self.staging_dir,
             phase_a_vault_dir=self.phase_a_vault_dir,
             adjudicate_fn=self.adjudicate_fn,
+            dispatch_record=dispatch_record,
         )
         return {
             "ok": True,
@@ -1273,6 +1465,7 @@ class SealedReadDriver:
         live_extract_fn: Callable[[str, dict], object] | None = None,
         live_panel_fn: Callable[[str, dict, str], object] | None = None,
         panel_cache_dir: str | None = None,
+        dispatch_record: dict | None = None,
     ) -> dict:
         """FULL composition: gate (A) -> extraction (B) -> panels+certificate (C).
 
@@ -1294,6 +1487,7 @@ class SealedReadDriver:
             token_path=token_path,
             fetched=fetched,
             live_extract_fn=live_extract_fn,
+            dispatch_record=dispatch_record,
         )
         if not base.get("ok"):
             # Gate refused -> Module C UNREACHABLE (compose-order short-circuit).

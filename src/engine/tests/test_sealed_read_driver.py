@@ -25,12 +25,27 @@ from src.engine.extraction.sealed_read_driver import (
     ReaderIdentityMismatch,
     SealedReadDriver,
     _enum_stability,
+    assert_dispatch_identity,
     assert_reader_identity,
     certified_reader_identity,
     require_artifacts_on_disk,
     run_extraction_stage,
     run_panels_and_certify_stage,
 )
+
+
+def _certified_dispatch_record():
+    """A seal-day DISPATCH record matching the certified pinned identity:
+    requested + resolved model == the pinned model_id, channel_class == the
+    pinned channel-class (both derived from the frozen record via
+    ``certified_reader_identity()`` — NOT hardcoded), headless dispatch."""
+    pinned = certified_reader_identity()
+    return {
+        "requested_model": pinned["model_id"],
+        "resolved_model": pinned["model_id"],
+        "channel_class": pinned["channel_class"],
+        "dispatch_mode": "headless",
+    }
 
 # The 3 spent design-pool rehearsal videos (ratify-packet §4 / Module F).
 REHEARSAL_VIDEOS = ["2DXQqwKSwJE", "DLwVqcLRcfw", "R5L890juvRw"]
@@ -223,7 +238,11 @@ def test_sealed_mode_calls_injected_fn_and_persists_byte_exact(tmp_path):
     verified = {"video_ids": ids}
     out_dir = str(tmp_path / "sealed-artifacts")
     result = run_extraction_stage(
-        verified, mode="sealed", out_dir=out_dir, live_extract_fn=fake_live_extract_fn
+        verified,
+        mode="sealed",
+        out_dir=out_dir,
+        live_extract_fn=fake_live_extract_fn,
+        dispatch_record=_certified_dispatch_record(),
     )
 
     assert result["ready"] is True
@@ -405,7 +424,11 @@ def test_sealed_mode_accepts_certified_identity_and_stamps(tmp_path):
     ids = ["VIDcertOK01"]
     out_dir = str(tmp_path / "sealed")
     result = run_extraction_stage(
-        {"video_ids": ids}, mode="sealed", out_dir=out_dir, live_extract_fn=certified_fn
+        {"video_ids": ids},
+        mode="sealed",
+        out_dir=out_dir,
+        live_extract_fn=certified_fn,
+        dispatch_record=_certified_dispatch_record(),
     )
     assert result["ready"] is True
     assert result["reader_identity"] == pinned
@@ -435,9 +458,15 @@ def test_sealed_mode_wrong_model_halts_and_persists_nothing(tmp_path):
 
     ids = ["VIDwrongMdl"]
     out_dir = str(tmp_path / "sealed-wrong")
+    # a certified dispatch_record is supplied; the WRONG identity is in the
+    # SELF-REPORT, so the self-report guard (assert_reader_identity) catches it.
     with pytest.raises(ReaderIdentityMismatch) as ei:
         run_extraction_stage(
-            {"video_ids": ids}, mode="sealed", out_dir=out_dir, live_extract_fn=wrong_fn
+            {"video_ids": ids},
+            mode="sealed",
+            out_dir=out_dir,
+            live_extract_fn=wrong_fn,
+            dispatch_record=_certified_dispatch_record(),
         )
     assert "model_id" in str(ei.value)
     # HALT means NO artifact was written for that video.
@@ -456,6 +485,7 @@ def test_sealed_mode_missing_self_report_halts(tmp_path):
             mode="sealed",
             out_dir=str(tmp_path / "o"),
             live_extract_fn=no_identity_fn,
+            dispatch_record=_certified_dispatch_record(),
         )
 
 
@@ -483,6 +513,209 @@ def test_identity_fails_closed_on_missing_prompt_file(tmp_path):
         certified_reader_identity(prereg_path=bad)
     with pytest.raises(ReaderIdentityMismatch):
         certified_reader_identity(params_source_path=bad)
+    # channel-class source record missing -> fail-closed too.
+    with pytest.raises(ReaderIdentityMismatch):
+        certified_reader_identity(channel_source_path=bad)
+
+
+# =========================================================================== #
+# CHANNEL-CLASS + DISPATCH-RECORD GUARD (R-020.3 + R-021.2) — channel-class is
+# asserted from the seal-day DISPATCH RECORD (how the conductor dispatched), with
+# the artifact self-report as CORROBORATION ONLY, never the sole source.
+# =========================================================================== #
+
+
+def _parse_channel_class_from_record():
+    """Independently parse the pinned channel-class from the frozen effective-
+    params record (same pin the module reads, but a SEPARATE parse here so the
+    test does not trust the module's own resolution)."""
+    text = open(srd.CERTIFIED_READER_EFFECTIVE_PARAMS, encoding="utf-8").read()
+    m = re.search(r"channel[-\s]?class\s*=\s*\*{0,2}\s*([A-Za-z]+)", text, re.IGNORECASE)
+    return m.group(1).strip().lower()
+
+
+# (a) certified_reader_identity() carries channel_class read from the frozen
+#     record — independently parsed here and asserted equal.
+def test_certified_identity_carries_channel_class_from_frozen_record():
+    ident = certified_reader_identity()
+    independent = _parse_channel_class_from_record()
+    assert ident["channel_class"] == independent
+    # the frozen record pins the subscription channel (not the API).
+    assert ident["channel_class"] != srd.FORBIDDEN_API_CHANNEL
+    # provenance source_ref points at the effective-params record.
+    assert ident["source_refs"]["channel_class"].endswith(
+        "h1-certified-reader-effective-params-2026-07-16.md"
+    )
+    # channel_class is NOT part of the self-report identity fields (R-021.2:
+    # asserted from the dispatch record, never from a self-report).
+    assert "channel_class" not in srd._IDENTITY_FIELDS
+
+
+def test_assert_dispatch_identity_accepts_certified_and_polarities():
+    pinned = certified_reader_identity()
+    good = _certified_dispatch_record()
+    # accepted: correct dispatch, no self-report -> dispatch record governs.
+    assert assert_dispatch_identity(good, pinned) is None
+    # accepted: correct dispatch + AGREEING self-report (corroboration).
+    assert assert_dispatch_identity(good, pinned, self_report=pinned) is None
+
+    # non-dict dispatch record -> HALT.
+    with pytest.raises(ReaderIdentityMismatch):
+        assert_dispatch_identity(None, pinned)
+    # unknown dispatch_mode -> HALT (fail-closed).
+    bad_mode = dict(good, dispatch_mode="api-console")
+    with pytest.raises(ReaderIdentityMismatch):
+        assert_dispatch_identity(bad_mode, pinned)
+    # interactive is the other certified subscription-runtime mode -> accepted.
+    assert assert_dispatch_identity(dict(good, dispatch_mode="interactive"), pinned) is None
+
+
+# (b) ★ sealed dispatch channel_class == api (everything else matching) -> HALT,
+#     NO artifact persisted.
+def test_sealed_dispatch_api_channel_halts_and_persists_nothing(tmp_path):
+    pinned = certified_reader_identity()
+
+    def certified_fn(video_id, manifest_verified):
+        return {
+            "video_id": video_id,
+            "reader_identity": pinned,  # self-report is certified/clean...
+            "phase_a": {"unstable": False},
+            "strategies": [{"name": "should_never_persist", "entry_sequence": []}],
+        }
+
+    # ...but the DISPATCH was made on the forbidden api channel.
+    api_dispatch = dict(_certified_dispatch_record(), channel_class=srd.FORBIDDEN_API_CHANNEL)
+    out_dir = str(tmp_path / "sealed-api")
+    with pytest.raises(ReaderIdentityMismatch) as ei:
+        run_extraction_stage(
+            {"video_ids": ["VIDapiChan0"]},
+            mode="sealed",
+            out_dir=out_dir,
+            live_extract_fn=certified_fn,
+            dispatch_record=api_dispatch,
+        )
+    assert "api" in str(ei.value).lower()
+    assert not os.path.exists(os.path.join(out_dir, "VIDapiChan0.extraction.json"))
+
+
+# (c) ★ dispatch requested_model OR resolved_model wrong -> HALT (self-report
+#     clean, so the DISPATCH RECORD leg is what fails).
+def test_sealed_dispatch_wrong_model_halts(tmp_path):
+    pinned = certified_reader_identity()
+    wrong = pinned["model_id"] + "__gpt-5.4-WRONG"
+
+    def certified_fn(video_id, manifest_verified):
+        return {
+            "video_id": video_id,
+            "reader_identity": pinned,  # self-report matches the certified identity
+            "phase_a": {"unstable": False},
+            "strategies": [{"name": "should_never_persist", "entry_sequence": []}],
+        }
+
+    for leg in ("requested_model", "resolved_model"):
+        bad_dispatch = dict(_certified_dispatch_record(), **{leg: wrong})
+        out_dir = str(tmp_path / f"sealed-{leg}")
+        with pytest.raises(ReaderIdentityMismatch) as ei:
+            run_extraction_stage(
+                {"video_ids": ["VIDwrongDsp"]},
+                mode="sealed",
+                out_dir=out_dir,
+                live_extract_fn=certified_fn,
+                dispatch_record=bad_dispatch,
+            )
+        assert leg in str(ei.value)
+        assert not os.path.exists(os.path.join(out_dir, "VIDwrongDsp.extraction.json"))
+
+
+# (d) ★ CONFLICTING EVIDENCE: dispatch record = certified model, artifact
+#     self-report claims a DIFFERENT model -> HALT (self-report may contradict-
+#     halt, never override the authoritative dispatch record).
+def test_dispatch_conflicting_self_report_halts():
+    pinned = certified_reader_identity()
+    good = _certified_dispatch_record()
+    contradicting = dict(pinned, model_id=pinned["model_id"] + "__DIFFERENT")
+    with pytest.raises(ReaderIdentityMismatch) as ei:
+        assert_dispatch_identity(good, pinned, self_report=contradicting)
+    assert "conflicting evidence" in str(ei.value).lower()
+
+
+# (e) dispatch_record correct + self-report agrees -> accepted + stamped
+#     (the certified channel-class rides on the stamped reader_identity).
+def test_sealed_dispatch_correct_accepts_and_stamps(tmp_path):
+    pinned = certified_reader_identity()
+
+    def certified_fn(video_id, manifest_verified):
+        return {
+            "video_id": video_id,
+            "reader_identity": pinned,
+            "phase_a": {"unstable": False},
+            "strategies": [{"name": f"ok_{video_id}", "entry_sequence": []}],
+        }
+
+    out_dir = str(tmp_path / "sealed-ok")
+    result = run_extraction_stage(
+        {"video_ids": ["VIDdspOK001"]},
+        mode="sealed",
+        out_dir=out_dir,
+        live_extract_fn=certified_fn,
+        dispatch_record=_certified_dispatch_record(),
+    )
+    assert result["ready"] is True
+    assert result["reader_identity"]["channel_class"] == _parse_channel_class_from_record()
+    assert os.path.exists(os.path.join(out_dir, "VIDdspOK001.extraction.json"))
+
+
+# (f) missing dispatch_record in sealed mode -> fail-closed HALT.
+def test_sealed_missing_dispatch_record_halts(tmp_path):
+    def certified_fn(video_id, manifest_verified):
+        return {
+            "video_id": video_id,
+            "reader_identity": certified_reader_identity(),
+            "strategies": [{"name": "x", "entry_sequence": []}],
+        }
+
+    out_dir = str(tmp_path / "sealed-nodsp")
+    with pytest.raises(ReaderIdentityMismatch):
+        run_extraction_stage(
+            {"video_ids": ["VIDnoDsp001"]},
+            mode="sealed",
+            out_dir=out_dir,
+            live_extract_fn=certified_fn,
+            dispatch_record=None,
+        )
+    assert not os.path.exists(os.path.join(out_dir, "VIDnoDsp001.extraction.json"))
+
+
+# (g) rehearsal mode still works with NO dispatch_record; the certified channel-
+#     class is stamped on every artifact (cached staging_v32 IS the certified
+#     rung by construction, so no live dispatch to assert).
+def test_rehearsal_stamps_channel_class_without_dispatch_record(tmp_path):
+    out_dir = str(tmp_path / "artifacts")
+    verified = {"video_ids": list(REHEARSAL_VIDEOS)}
+    result = run_extraction_stage(verified, mode="rehearsal", out_dir=out_dir)
+    channel = _parse_channel_class_from_record()
+    assert result["reader_identity"]["channel_class"] == channel
+    for vid in REHEARSAL_VIDEOS:
+        with open(os.path.join(out_dir, f"{vid}.extraction.json"), encoding="utf-8") as fh:
+            art = json.load(fh)
+        assert art["reader_identity"]["channel_class"] == channel
+
+
+# (h) grep: NO hardcoded model / channel-class / sha256 literals in the module
+#     (all read from frozen files at runtime — R-016 no-transcription law).
+def test_no_hardcoded_identity_literals_in_module():
+    src = open(srd.__file__, encoding="utf-8").read()
+    ident = certified_reader_identity()
+    # the certified model id is NOT baked into code (parsed from the frozen pre-reg).
+    assert ident["model_id"] not in src
+    # the certified channel-class VALUE is NOT baked into code (parsed from the
+    # frozen effective-params record).
+    assert ident["channel_class"] not in src
+    # neither prompt sha is baked in (computed from the on-disk prompt bytes).
+    assert ident["prompt_sha"] not in src
+    assert ident["enumerator_sha"] not in src
+    # no full sha256 (64-hex) literal anywhere in the module source.
+    assert re.search(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])", src) is None
 
 
 # =========================================================================== #
