@@ -56,8 +56,13 @@ export interface WalkForwardDsrInput {
  *                       Python DSR computation threw; fail-closed.
  *   "blocked_dsr_floor"       — dsr_pass=false (without dsr_unavailable);
  *                       DSR computed but below floor.
- *   "legacy_proceed"  — dsr_pass undefined/null; pre-Wave-A backtest;
- *                       grandfather window; one-time warn.
+ *   "legacy_proceed"  — dsr_pass undefined/null; pre-Wave-A backtest.
+ *                       ⚠ MISNOMER (name kept for consumer compat — cron, manual path,
+ *                       check-gate-parity.mjs all match on this string): despite "proceed",
+ *                       this BLOCKS (passed:false, auditPayload.blocked:true, fail-closed) —
+ *                       a fresh DSR must be computed (re-run required). DSR is deliberately
+ *                       NOT grandfathered the way WFE/B14/PBO legacy-null are (they → PROCEED);
+ *                       an overfitting-detection gate must not be skipped on stale backtests.
  */
 export type DsrGateStatus =
   | "pass"
@@ -106,10 +111,13 @@ export interface DsrWalkForwardGateResult {
  *     multiple-testing correction.)
  *
  * 3. dsr_pass=undefined | null
- *    → PROCEED with status "legacy_proceed"
- *    → audit "lifecycle.dsr_unavailable_legacy" (INFO warn; grandfather)
- *    (Pre-Wave-A backtest that never emitted dsr_pass. Grandfather window:
- *     every fresh WF run since 2026-06-22 emits the field.)
+ *    → BLOCK (passed:false) with status "legacy_proceed" — the string is a MISNOMER
+ *      (kept for consumer compat); the actual behavior is fail-CLOSED block.
+ *    → audit "lifecycle.dsr_unavailable_legacy" (WARN; "blocking promotion until a
+ *      fresh result is present")
+ *    (Pre-Wave-A backtest that never emitted dsr_pass. Unlike WFE/B14/PBO, DSR is NOT
+ *     grandfathered — the strategy must be re-run to compute a DSR. Every fresh WF run
+ *     since 2026-06-22 emits the field, so this only affects un-re-run legacy rows.)
  *
  * 4. dsr_pass=true
  *    → PROCEED with status "pass"
