@@ -4,7 +4,7 @@
 
 ---
 
-### Session Log — 2026-07-17 CAMPAIGN M1a — Massive WebSocket protocol correction (fixture-first, $0)
+### Session Log — 2026-07-17 CAMPAIGN M1a — Massive WebSocket protocol correction LANDED `8411593d` (fixture-first, $0)
 
 **Mission:** M1a — verify the REAL Massive Starter delayed-futures-feed protocol against Massive's own docs and rewrite `src/data/fetchers/massive.ts`'s WebSocket handling to match, before any operator payment. Corrected an earlier session characterization that mislabeled M1a as "blocked on operator subscribing to Massive" — the plan explicitly scopes M1a as "$0, fixture-first"; only the BUDGET GATE (actually paying for the subscription) needed the operator, not the protocol-verification/adapter work itself.
 
