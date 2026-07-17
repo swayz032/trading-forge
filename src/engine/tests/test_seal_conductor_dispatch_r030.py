@@ -166,6 +166,29 @@ def test_r030_run_claude_p_uses_no_tools_and_no_allowedtools(monkeypatch):
     assert not any(str(c) == ">" for c in cmd)
 
 
+def test_r030_run_claude_p_unsets_claudecode_for_child(monkeypatch):
+    """R-030 §4 live-found: the conductor is itself a Claude Code session, and a bare
+    `claude -p` child refuses to launch until CLAUDECODE is unset. `_run_claude_p`
+    must spawn the child with CLAUDECODE removed from its env."""
+    captured = {}
+
+    class _FakeProc:
+        returncode = 0
+        stdout = _CLEAN_PHASE_A
+        stderr = ""
+
+    def _spy(cmd, **kwargs):
+        captured["env"] = kwargs.get("env")
+        return _FakeProc()
+
+    import subprocess
+
+    monkeypatch.setenv("CLAUDECODE", "1")
+    monkeypatch.setattr(subprocess, "run", _spy)
+    cli._run_claude_p("m", "SYS", "USER")
+    assert captured["env"] is not None and "CLAUDECODE" not in captured["env"]
+
+
 def test_r030_run_claude_p_omits_system_flag_when_empty(monkeypatch):
     """A rater dispatch has no frozen system prompt -> no `--append-system-prompt`;
     the prompt still rides on STDIN so the variadic --tools can't eat it."""
@@ -230,6 +253,23 @@ def test_r030_rater_wrong_shape_halts_not_retried(tmp_path):
     code, text = cli.run_dispatch(wd, "rater", None, "B", claude_fn=stub)
     assert code == 1 and "wrap shape" in text
     assert len(stub.calls) == 1  # content shape is never a retry trigger
+
+
+def test_r030_dispatch_writes_dispatch_record(tmp_path):
+    """R-030 §3: the CLI fills the dispatch record itself so the stage identity guards
+    can assert it — written once, from the frozen identity, channel = subscription."""
+    vid = "VIDREC01"
+    wd = _wd_with_transcript(tmp_path, vid)
+    stub = _ScriptedClaude([_CLEAN_PHASE_A])
+    code, _ = cli.run_dispatch(wd, "phase_a", vid, 0, claude_fn=stub)
+    assert code == 0
+    rec = json.load(open(os.path.join(wd, "dispatch_record.json"), encoding="utf-8"))
+    ri = cli.certified_reader_identity()
+    assert rec["requested_model"] == ri["model_id"] == rec["resolved_model"]
+    assert rec["channel_class"] == ri["channel_class"] and rec["dispatch_mode"] == "headless"
+    # the wrapped draw embeds the record (self-describing).
+    draw = json.load(open(os.path.join(wd, "phase_a", vid, "draw_0.json"), encoding="utf-8"))
+    assert draw["dispatch_record"]["resolved_model"] == ri["model_id"]
 
 
 def test_r030_scan_retry_total_none_without_dir_then_sums(tmp_path):

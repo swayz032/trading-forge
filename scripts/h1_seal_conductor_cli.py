@@ -514,9 +514,17 @@ def _run_claude_p(model_id: str, system_prompt_text: str, user_prompt_text: str,
     cmd = ["claude", "-p", "--model", model_id, "--tools", ""]
     if system_prompt_text:
         cmd += ["--append-system-prompt", system_prompt_text]
+    # The seal-day conductor is itself a Claude Code session; a bare `claude -p` child
+    # refuses to launch ("cannot be launched inside another Claude Code session") until
+    # CLAUDECODE is unset — the documented bypass. We spawn the fresh subscription
+    # subagent with CLAUDECODE removed from its env so the dispatch runs regardless of
+    # whether the conductor is interactive Claude Code or a plain shell. (Found live in
+    # the R-030 §4 micro-rehearsal — stubbed unit tests can't surface it.)
+    child_env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
     try:
         proc = subprocess.run(
-            cmd, input=user_prompt_text, capture_output=True, text=True, cwd=_ROOT, timeout=timeout
+            cmd, input=user_prompt_text, capture_output=True, text=True,
+            cwd=_ROOT, timeout=timeout, env=child_env,
         )
     except (OSError, subprocess.SubprocessError) as exc:
         raise ClaudeDispatchError(f"claude -p failed to run: {exc}") from None
@@ -525,6 +533,32 @@ def _run_claude_p(model_id: str, system_prompt_text: str, user_prompt_text: str,
             f"claude -p exited {proc.returncode}: {(proc.stderr or '').strip()[:200]}"
         )
     return proc.stdout or ""
+
+
+def _ensure_dispatch_record(work_dir: str, identity: dict) -> None:
+    """R-030 §3: the CLI writes the run's dispatch record itself (idempotent — once
+    per work-dir). The CLI sets ``--model`` from the FROZEN identity and shells the
+    subscription ``claude`` CLI headless (there is NO API path in this CLI), so all
+    four fields are known by construction: requested == resolved == the frozen model,
+    channel_class from the frozen identity (subscription), mode headless. The
+    phase_a/certify/verdict stages assert this record against the frozen identity;
+    channel integrity now rests structurally on run_dispatch only ever shelling the
+    subscription ``claude`` CLI, never an API adapter."""
+    path = os.path.join(work_dir, "dispatch_record.json")
+    if os.path.exists(path):
+        return
+    _atomic_write_text(
+        path,
+        json.dumps(
+            {
+                "requested_model": identity["model_id"],
+                "resolved_model": identity["model_id"],
+                "channel_class": identity["channel_class"],
+                "dispatch_mode": "headless",
+            },
+            ensure_ascii=False, sort_keys=True, indent=2,
+        ),
+    )
 
 
 def _dispatch_key(seam: str, video_id: str | None, index) -> str:
@@ -615,6 +649,9 @@ def run_dispatch(
     claude_fn = claude_fn or _run_claude_p
     identity = certified_reader_identity()
     model_id = identity["model_id"]
+    # R-030 §3: the CLI fills the dispatch record itself (the conductor no longer
+    # hand-records it) so the phase_a/certify/verdict identity guards can assert it.
+    _ensure_dispatch_record(work_dir, identity)
     try:
         system_text = _seam_system_prompt_text(seam)
         source_text = _seam_source_text(work_dir, seam, video_id)
