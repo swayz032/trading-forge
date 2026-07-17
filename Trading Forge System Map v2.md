@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-17T17:52:30.942Z`.
+Updated automatically from the repo on `2026-07-17T17:53:39.294Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -20,55 +20,55 @@ Updated automatically from the repo on `2026-07-17T17:52:30.942Z`.
 - Database tables tracked: `111`
 
 ### Subsystem Runtime States
-- `active`: `67`
+- `active`: `68`
 - `experimental`: `5`
 - `scaffold`: `1`
 
 ### Current Pre-Production States
-- `active_preprod`: `68`
+- `active_preprod`: `69`
 - `experimental_preprod`: `5`
 - `inactive_preprod`: `0`
 - `partially_active_preprod`: `0`
 
 ### Launch Target States
 - `experimental_challenger`: `5`
-- `runtime_proven_autonomous`: `66`
+- `runtime_proven_autonomous`: `67`
 - `runtime_proven_manual_gate`: `2`
 
 ### Production Target States
-- `production_autonomous`: `66`
+- `production_autonomous`: `67`
 - `production_experimental`: `5`
 - `production_manual_gate`: `2`
 - `production_not_intended`: `0`
 
 ### Subsystem Operating Classes
 - `adaptive`: `7`
-- `deterministic_instrumented`: `64`
+- `deterministic_instrumented`: `65`
 - `manual_gated`: `2`
 
 ### Learning Modes
 - `active_learning`: `7`
-- `deterministic_instrumented`: `59`
+- `deterministic_instrumented`: `60`
 - `manual_gate_only`: `2`
 - `shadow_experimental`: `5`
 
 ### Registry Coverage
-- Registry subsystems tracked: `73`
+- Registry subsystems tracked: `74`
 - Route coverage: `79/79`
 - Scheduler coverage: `112/112`
 - Engine coverage: `29/29`
 - Database coverage: `111/111`
-- Autonomous subsystems with audit coverage: `64/64`
-- Autonomous subsystems with audit actions: `64/64`
-- Autonomous subsystems with telemetry evidence: `64/64`
-- Active-runtime subsystems with freshness signals: `73/73`
-- Runtime/experimental subsystems with evidence queries: `73/73`
+- Autonomous subsystems with audit coverage: `57/57`
+- Autonomous subsystems with audit actions: `57/57`
+- Autonomous subsystems with telemetry evidence: `57/57`
+- Active-runtime subsystems with freshness signals: `74/74`
+- Runtime/experimental subsystems with evidence queries: `74/74`
 - Self-evolving subsystems with learning inputs: `9/9`
 - Self-evolving subsystems with learning persistence: `9/9`
-- Failure visibility complete: `73/73`
+- Failure visibility complete: `74/74`
 
 ### Proof Status
-- `runtime-proven`: `67`
+- `runtime-proven`: `68`
 - `partially-proven`: `1`
 - `offline-by-design`: `0`
 - `experimental`: `5`
@@ -76,18 +76,18 @@ Updated automatically from the repo on `2026-07-17T17:52:30.942Z`.
 
 ### Pre-Production Integrity
 - Integrity status: `incomplete`
-- Automation complete: `59/73`
-- Data collection complete: `73/73`
-- Auditability complete: `73/73`
-- Failure visibility complete: `73/73`
-- Authority correct: `73/73`
+- Automation complete: `52/74`
+- Data collection complete: `74/74`
+- Auditability complete: `74/74`
+- Failure visibility complete: `74/74`
+- Authority correct: `74/74`
 - Learning active: `8/9`
-- Incomplete subsystems: `9`
+- Incomplete subsystems: `17`
 
 ### Production Convergence
 - Convergence status: `blocked`
 - Ready subsystem targets: `50`
-- Blocked subsystem targets: `18`
+- Blocked subsystem targets: `19`
 - Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
 - Inactive workflow candidates: `0`
@@ -101,7 +101,7 @@ Updated automatically from the repo on `2026-07-17T17:52:30.942Z`.
 ### Readiness Summary
 - Launch ready: `false`
 - Only TradingView manual at launch: `true`
-- Launch-blocked subsystems: `23`
+- Launch-blocked subsystems: `24`
 - Inactive by design: `0`
 - Collecting only: `0`
 - Learning blocked: `0`
@@ -111,7 +111,7 @@ Updated automatically from the repo on `2026-07-17T17:52:30.942Z`.
 - `collecting_only`: `0`
 - `learning_active`: `8`
 - `learning_blocked`: `0`
-- `not_collecting`: `60`
+- `not_collecting`: `61`
 - `shadow_experimental`: `5`
 
 ### Workflow States
@@ -172,14 +172,15 @@ Updated automatically from the repo on `2026-07-17T17:52:30.942Z`.
 - `quantum_experimental` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `quantum_rl_challenger` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `regime_drift_detector` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
-- `replay_grade_confluence` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_consistency` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_critique` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_pattern_aggregator` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_robustness` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_survival_twin` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_grade_unified_dispatcher` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
-- `replay_harness_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_confluence` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_consistency` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_critique` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_pattern_aggregator` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_quantum` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_robustness` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_survival_twin` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_grade_unified_dispatcher` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
+- `replay_harness_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator-approve productionBlockers=manual_gate:operator-approve gaps=none
 - `research_orchestration` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `shadow_stage` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `signal_correlation_gate` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
