@@ -561,6 +561,115 @@ class TestDetectCloudBackends:
         required = {"ibm_available", "ibm_backends", "braket_available", "braket_devices"}
         assert required.issubset(result.keys())
 
+    # ── fixwave-fastfollow (2026-07-17): wall-clock-bound regression coverage ──
+    # A grader independently verifying the fixwave-fastfollow ThreadPoolExecutor
+    # fix reverted hardware_profile.py's fix and found ALL existing tests still
+    # passed — zero test signal existed for the fix at all. These two tests close
+    # that gap: each mocks the underlying IBM/Braket call to hang past the
+    # documented 5s probe timeout and asserts detect_cloud_backends() still
+    # RETURNS promptly, proving it does not block on ThreadPoolExecutor's
+    # implicit shutdown(wait=True) join the way it did pre-fix. Same pattern as
+    # test_frankenstein.py::TestWallClockCeilingBoundsCallerReturnLatency.
+
+    def test_ibm_probe_returns_within_timeout_not_blocked_by_executor_join(self):
+        """REGRESSION: a hung IBM backends() call must not block
+        detect_cloud_backends() past its documented 5s probe timeout.
+
+        Pre-fix, `with concurrent.futures.ThreadPoolExecutor(...) as pool:`
+        called shutdown(wait=True) unconditionally on block exit -- even after
+        future.result(timeout=5) had already raised TimeoutError -- so a real
+        network stall on the IBM API call would block this probe indefinitely.
+        Uses a cooperatively-stoppable threading.Event mock (bounded at ~8s)
+        rather than a long sleep so a real failure here is bounded, not hung.
+        """
+        import threading
+        import time as time_module
+
+        release = threading.Event()
+
+        def slow_backends():
+            release.wait(timeout=8.0)
+            return []
+
+        mock_svc = MagicMock()
+        mock_svc.backends.side_effect = slow_backends
+        mock_qs_cls = MagicMock(return_value=mock_svc)
+        mock_qiskit_mod = MagicMock(QiskitRuntimeService=mock_qs_cls)
+
+        import sys
+
+        try:
+            with patch.dict(sys.modules, {"qiskit_ibm_runtime": mock_qiskit_mod}):
+                with patch.dict(
+                    os.environ,
+                    {"IBM_QUANTUM_TOKEN": "fake-token"},
+                    clear=False,
+                ):
+                    t0 = time_module.monotonic()
+                    result = detect_cloud_backends()
+                    elapsed = time_module.monotonic() - t0
+        finally:
+            release.set()
+
+        # The 5s future.result(timeout=5) fires first; ibm_available stays
+        # False (the TimeoutError path). The point of this test is elapsed
+        # time, not the boolean.
+        assert result["ibm_available"] is False
+        assert elapsed < 7.0, (
+            f"detect_cloud_backends() took {elapsed:.2f}s to return after the "
+            "IBM probe's documented 5s timeout -- it is blocking on "
+            "ThreadPoolExecutor's default shutdown(wait=True) join instead of "
+            "returning as soon as future.result() times out."
+        )
+
+    def test_braket_probe_returns_within_timeout_not_blocked_by_executor_join(self):
+        """REGRESSION: a hung Braket get_devices() call must not block
+        detect_cloud_backends() past its documented 5s probe timeout. Same
+        rationale as the IBM test above."""
+        import sys
+        import threading
+        import time as time_module
+
+        release = threading.Event()
+
+        def slow_get_devices(*args, **kwargs):
+            release.wait(timeout=8.0)
+            return []
+
+        mock_boto3_mod = MagicMock()
+        mock_boto3_mod.Session.return_value = MagicMock()
+
+        mock_aws_device_cls = MagicMock()
+        mock_aws_device_cls.get_devices.side_effect = slow_get_devices
+        mock_braket_aws_mod = MagicMock(
+            AwsDevice=mock_aws_device_cls,
+            AwsSession=MagicMock(return_value=MagicMock()),
+        )
+
+        try:
+            with patch.dict(
+                sys.modules,
+                {"boto3": mock_boto3_mod, "braket.aws": mock_braket_aws_mod},
+            ):
+                with patch.dict(
+                    os.environ,
+                    {"AWS_ACCESS_KEY_ID": "fake-key"},
+                    clear=False,
+                ):
+                    t0 = time_module.monotonic()
+                    result = detect_cloud_backends()
+                    elapsed = time_module.monotonic() - t0
+        finally:
+            release.set()
+
+        assert result["braket_available"] is False
+        assert elapsed < 7.0, (
+            f"detect_cloud_backends() took {elapsed:.2f}s to return after the "
+            "Braket probe's documented 5s timeout -- it is blocking on "
+            "ThreadPoolExecutor's default shutdown(wait=True) join instead of "
+            "returning as soon as future.result() times out."
+        )
+
 
 # ─── F-2: IBM budget reconciliation ──────────────────────────────────────────
 
