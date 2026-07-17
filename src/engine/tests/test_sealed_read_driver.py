@@ -13,14 +13,19 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 
 import pytest
 
+from src.engine.extraction import sealed_read_driver as srd
 from src.engine.extraction.sealed_read_driver import (
     ArtifactsMissingError,
     ExtractionSourceMissing,
+    ReaderIdentityMismatch,
     SealedReadDriver,
     _enum_stability,
+    assert_reader_identity,
+    certified_reader_identity,
     require_artifacts_on_disk,
     run_extraction_stage,
 )
@@ -204,6 +209,9 @@ def test_sealed_mode_calls_injected_fn_and_persists_byte_exact(tmp_path):
         return {
             "video_id": video_id,
             "reader": "certified-reader-v3.2",
+            # the seam now REQUIRES the live reader to self-report its identity;
+            # here it self-reports the CERTIFIED identity so the guard accepts it.
+            "reader_identity": certified_reader_identity(),
             "phase_a": {"counts": [2, 2, 2, 2, 2], "mode": 2, "mode_n": 5, "unstable": False},
             "strategies": [{"name": f"canned_{video_id}", "entry_sequence": []}],
             "instrument_classification": None,
@@ -322,3 +330,154 @@ def test_unstable_video_routes_to_adjudication_hook(tmp_path):
     with open(os.path.join(out_dir, "UNSTABLvid1.extraction.json"), encoding="utf-8") as fh:
         art = json.load(fh)
     assert art["adjudication"]["adjudication_needed"] is True
+
+
+# --------------------------------------------------------------------------- #
+# READER-IDENTITY GUARD (R-018.1a/b) — the seal-day WRONG-EXTRACTOR fence.
+# --------------------------------------------------------------------------- #
+
+
+def _independent_sha(path):
+    """Recompute a file's sha256 independently of the module under test."""
+    return hashlib.sha256(open(path, "rb").read()).hexdigest()
+
+
+# (a) certified_reader_identity() returns the REAL prompt/enumerator SHAs
+#     (recomputed here over the same files) + the model_id read from the frozen
+#     pre-reg record.
+def test_certified_reader_identity_reads_frozen_record_and_real_shas():
+    ident = certified_reader_identity()
+
+    # prompt_sha / enumerator_sha == an INDEPENDENT sha over the same on-disk
+    # prompt files (the file bytes ARE the identity — never hardcoded).
+    assert ident["prompt_sha"] == _independent_sha(srd.FRONTIER_PROMPT_PATH)
+    assert ident["enumerator_sha"] == _independent_sha(srd.ENUMERATOR_PROMPT_PATH)
+    assert re.fullmatch(r"[0-9a-f]{64}", ident["prompt_sha"])
+    assert re.fullmatch(r"[0-9a-f]{64}", ident["enumerator_sha"])
+    assert ident["prompt_sha"] != ident["enumerator_sha"]
+
+    # model_id + k == the values in the frozen Claude-rung pre-reg (read here
+    # straight from the doc, independent of the module's parse).
+    prereg = open(srd.CLAUDE_RUNG_PREREG, encoding="utf-8").read()
+    frozen_model = re.search(r"Model ID frozen[:*\s]*`([^`]+)`", prereg).group(1)
+    assert ident["model_id"] == frozen_model
+    assert ident["model_id"] in prereg  # genuinely the frozen string
+    assert ident["k"] == int(re.search(r"\bk=(\d+)\b", prereg).group(1))
+
+    # params: frozen designator, values not enumerated in any frozen artifact.
+    assert ident["params"]["designator"].lower() == "pinned params"
+    assert ident["params"]["enumerated_values"] is None
+
+    # deterministic.
+    assert certified_reader_identity() == ident
+
+
+# (b) rehearsal stamps reader_identity on each of the 3 artifacts; stamp ==
+#     certified_reader_identity().
+def test_rehearsal_stamps_certified_reader_identity(tmp_path):
+    out_dir = str(tmp_path / "artifacts")
+    verified = {"video_ids": list(REHEARSAL_VIDEOS)}
+    result = run_extraction_stage(verified, mode="rehearsal", out_dir=out_dir)
+    pinned = certified_reader_identity()
+
+    assert result["reader_identity"] == pinned
+    for vid in REHEARSAL_VIDEOS:
+        with open(os.path.join(out_dir, f"{vid}.extraction.json"), encoding="utf-8") as fh:
+            art = json.load(fh)
+        assert art["reader_identity"] == pinned
+
+
+# (c) sealed mode with an injected fn self-reporting the CERTIFIED identity ->
+#     accepted + stamped.
+def test_sealed_mode_accepts_certified_identity_and_stamps(tmp_path):
+    pinned = certified_reader_identity()
+
+    def certified_fn(video_id, manifest_verified):
+        return {
+            "video_id": video_id,
+            "reader_identity": pinned,
+            "phase_a": {"unstable": False},
+            "strategies": [{"name": f"ok_{video_id}", "entry_sequence": []}],
+        }
+
+    ids = ["VIDcertOK01"]
+    out_dir = str(tmp_path / "sealed")
+    result = run_extraction_stage(
+        {"video_ids": ids}, mode="sealed", out_dir=out_dir, live_extract_fn=certified_fn
+    )
+    assert result["ready"] is True
+    assert result["reader_identity"] == pinned
+    # persisted (byte-exact) artifact carries the self-reported certified identity.
+    with open(os.path.join(out_dir, "VIDcertOK01.extraction.json"), encoding="utf-8") as fh:
+        on_disk = json.load(fh)
+    assert on_disk["reader_identity"] == pinned
+    # stage summary record also stamped.
+    assert result["per_video"][0]["video_id"] == "VIDcertOK01"
+
+
+# (d) ★ CORE SAFETY PROPERTY: sealed mode, injected fn self-reports a WRONG
+#     model (gpt-5.4) -> ReaderIdentityMismatch, HALT, NO artifact persisted.
+def test_sealed_mode_wrong_model_halts_and_persists_nothing(tmp_path):
+    pinned = certified_reader_identity()
+    wrong_model = pinned["model_id"] + "__WRONG-BRAIN"  # e.g. the gpt-5.4 vault
+
+    def wrong_fn(video_id, manifest_verified):
+        ident = dict(pinned)
+        ident["model_id"] = wrong_model  # everything else matches; only the brain differs
+        return {
+            "video_id": video_id,
+            "reader_identity": ident,
+            "phase_a": {"unstable": False},
+            "strategies": [{"name": "should_never_persist", "entry_sequence": []}],
+        }
+
+    ids = ["VIDwrongMdl"]
+    out_dir = str(tmp_path / "sealed-wrong")
+    with pytest.raises(ReaderIdentityMismatch) as ei:
+        run_extraction_stage(
+            {"video_ids": ids}, mode="sealed", out_dir=out_dir, live_extract_fn=wrong_fn
+        )
+    assert "model_id" in str(ei.value)
+    # HALT means NO artifact was written for that video.
+    assert not os.path.exists(os.path.join(out_dir, "VIDwrongMdl.extraction.json"))
+
+
+def test_sealed_mode_missing_self_report_halts(tmp_path):
+    """A live payload that does NOT self-report a reader_identity is fail-closed."""
+
+    def no_identity_fn(video_id, manifest_verified):
+        return {"video_id": video_id, "strategies": []}  # no reader_identity block
+
+    with pytest.raises(ReaderIdentityMismatch):
+        run_extraction_stage(
+            {"video_ids": ["VIDnoident0"]},
+            mode="sealed",
+            out_dir=str(tmp_path / "o"),
+            live_extract_fn=no_identity_fn,
+        )
+
+
+def test_assert_reader_identity_polarities():
+    pinned = certified_reader_identity()
+    # exact match passes (source_refs is NOT compared).
+    claimed = {k: pinned[k] for k in ("model_id", "params", "k", "prompt_sha", "enumerator_sha")}
+    assert assert_reader_identity(claimed, pinned) is None
+    # each field, mutated in turn, must raise.
+    for field in ("model_id", "params", "k", "prompt_sha", "enumerator_sha"):
+        bad = dict(claimed)
+        bad[field] = "TAMPERED" if field != "k" else 999
+        with pytest.raises(ReaderIdentityMismatch):
+            assert_reader_identity(bad, pinned)
+
+
+# (f) fail-closed if a frozen prompt file is missing (point at a bad path).
+def test_identity_fails_closed_on_missing_prompt_file(tmp_path):
+    bad = str(tmp_path / "does-not-exist.md")
+    with pytest.raises(ReaderIdentityMismatch):
+        certified_reader_identity(frontier_prompt_path=bad)
+    with pytest.raises(ReaderIdentityMismatch):
+        certified_reader_identity(enumerator_prompt_path=bad)
+    with pytest.raises(ReaderIdentityMismatch):
+        certified_reader_identity(prereg_path=bad)
+    with pytest.raises(ReaderIdentityMismatch):
+        certified_reader_identity(params_source_path=bad)

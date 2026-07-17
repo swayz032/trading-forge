@@ -38,7 +38,7 @@ conveyor grade logic, all amber):
   * Phase-A stability flag source (aligned with staging_v32): the certified
     reader's own vault ``docs/replay-results/h1-scripts/claude-rung-v32/vault/
     <video_id>.json`` -> ``phase_a`` (``{"unstable": bool}``; the frontier
-    gpt-5.4 vault additionally carries the raw ``counts``/``mode``/``mode_n``).
+    candidate vault additionally carries the raw ``counts``/``mode``/``mode_n``).
 
 TWO EXECUTION MODES:
 
@@ -66,8 +66,10 @@ rehearsal/staging path; the sole live seam is the injected
 from __future__ import annotations
 
 import glob
+import hashlib
 import json
 import os
+import re
 from collections import Counter
 from collections.abc import Callable
 
@@ -92,6 +94,45 @@ STABILITY_MIN = 4
 
 _REHEARSAL_MODES = frozenset({"rehearsal", "staging"})
 
+# --------------------------------------------------------------------------- #
+# READER-IDENTITY GUARD (ADVISOR-RULINGS R-018.1a/b; ratify-packet Module B
+# clarifying note R-018.1c). Structurally prevents seal day from reading the
+# twelve with the WRONG (uncertified) extractor — the certified reader is the
+# CLAUDE rung (the frontier-v3.2 PROMPT run on the certified frozen model id +
+# enumerator-v1.2 + pinned params + k=5), the producer of staging_v32. The
+# uncertified frontier candidate vault (a different brain) must never be the
+# seal-day reader.
+#
+# R-018 LAW (non-negotiable): the pinned identity is READ AT RUNTIME from the
+# frozen record — pointed-at, NEVER copied into code. No model-id string, no
+# prompt SHA, no param value is hardcoded below; the model_id + k are parsed
+# from the frozen Claude-rung pre-registration, the pinned-params designator
+# from the ratify-packet Module B clarifying note, and prompt_sha /
+# enumerator_sha are sha256 of the on-disk prompt files (computed here).
+# --------------------------------------------------------------------------- #
+
+#: Frozen Claude-rung pre-registration (carries the frozen model id + k).
+CLAUDE_RUNG_PREREG = os.path.join(
+    _ROOT, "docs", "designs", "h1-claude-rung-preregistration-2026-07-13.md"
+)
+#: Ratify-packet whose Module B clarifying note pins the params designator.
+SEALED12_RATIFY_PACKET = os.path.join(
+    _ROOT, "docs", "designs", "h1-sealed12-driver-ratify-packet-2026-07-16.md"
+)
+#: frontier-v3.2 PROMPT file — its sha256 IS the prompt identity.
+FRONTIER_PROMPT_PATH = os.path.join(
+    _ROOT, "src", "agents", "transcript-extractor-frontier-v32.md"
+)
+#: enumerator-v1.2 PROMPT file — its sha256 IS the enumerator identity.
+ENUMERATOR_PROMPT_PATH = os.path.join(_ROOT, "src", "agents", "strategy-enumerator.md")
+#: Certified-reader tag/lineage pointer (provenance source_ref only — NOT an
+#: asserted identity value; the asserted SHAs are computed from the files).
+CERTIFIED_READER_TAG = "efa377d6"
+
+#: The fields compared by :func:`assert_reader_identity` (source_refs excluded —
+#: it is provenance metadata, not part of the asserted identity).
+_IDENTITY_FIELDS = ("model_id", "params", "k", "prompt_sha", "enumerator_sha")
+
 
 class ArtifactsMissingError(RuntimeError):
     """Raised by :func:`require_artifacts_on_disk` when an expected extraction
@@ -107,6 +148,188 @@ class ExtractionSourceMissing(RuntimeError):
     """Raised when a rehearsal/staging video has no cached Phase-B staging
     artifact on disk. Fail-closed: the rehearsal never fabricates a strategy
     for a video whose spent extraction cannot be located."""
+
+
+class ReaderIdentityMismatch(RuntimeError):
+    """Raised (fail-closed HALT) when a claimed reader identity does not match
+    the certified/pinned identity — e.g. a seal-day ``live_extract_fn`` that
+    self-reports a different model (the uncertified frontier brain) than the
+    certified CLAUDE rung, or
+    a live payload that fails to self-report a reader identity at all. Also
+    raised when the pinned identity cannot RESOLVE (a frozen prompt/pre-reg
+    file is missing), so a missing instrument fails closed rather than silently
+    passing."""
+
+
+# --------------------------------------------------------------------------- #
+# Reader-identity resolution (READ AT RUNTIME from frozen files — R-018 law).
+# --------------------------------------------------------------------------- #
+
+
+def _sha256_file(path: str) -> str:
+    """sha256 hex of a file's bytes. Raises :class:`ReaderIdentityMismatch`
+    (fail-closed) if the file is absent — a missing frozen prompt file must
+    HALT, never silently resolve to a default identity."""
+    if not os.path.exists(path):
+        raise ReaderIdentityMismatch(
+            f"frozen identity file missing (fail-closed): {path!r}"
+        )
+    with open(path, "rb") as fh:
+        return hashlib.sha256(fh.read()).hexdigest()
+
+
+def _read_frozen_text(path: str) -> str:
+    """Read a frozen record's text, or fail closed if it is absent."""
+    if not os.path.exists(path):
+        raise ReaderIdentityMismatch(
+            f"frozen identity record missing (fail-closed): {path!r}"
+        )
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def _read_frozen_model_id(prereg_path: str) -> str:
+    """Parse the frozen model id from the Claude-rung pre-registration's
+    ``Model ID frozen: `<id>` `` line. Pointed-at, never hardcoded — the value
+    lives ONLY in the frozen doc."""
+    text = _read_frozen_text(prereg_path)
+    m = re.search(r"Model ID frozen[:*\s]*`([^`]+)`", text)
+    if not m:
+        raise ReaderIdentityMismatch(
+            f"frozen model id not found in pre-reg {prereg_path!r} "
+            "(expected a `Model ID frozen: <id>` line)"
+        )
+    return m.group(1).strip()
+
+
+def _read_frozen_k(prereg_path: str) -> int:
+    """Parse the frozen k (``k=<n>`` modal consensus) from the Claude-rung
+    pre-registration. Pointed-at, never hardcoded."""
+    text = _read_frozen_text(prereg_path)
+    m = re.search(r"\bk=(\d+)\b", text)
+    if not m:
+        raise ReaderIdentityMismatch(
+            f"frozen k not found in pre-reg {prereg_path!r} (expected `k=<n>`)"
+        )
+    return int(m.group(1))
+
+
+def _read_frozen_params(params_source_path: str) -> dict:
+    """Read the frozen PARAMS designator for the Claude rung.
+
+    DISCOVERY NOTE (reported with the build): no frozen artifact ENUMERATES the
+    Claude rung's param VALUES — the pre-reg / R-018 / standing state / ratify
+    packet consistently pin them by the frozen designator phrase "pinned
+    params" (the frontier configpass pre-reg's enumerated values —
+    ``reasoning_effort=low`` / a fixed sampling temperature — are a DIFFERENT
+    brain and are deliberately NOT used here). So the params identity is the frozen
+    designator parsed from the record, with ``enumerated_values=None`` recorded
+    honestly. This is read at runtime, never invented."""
+    text = _read_frozen_text(params_source_path)
+    m = re.search(r"pinned params", text, re.IGNORECASE)
+    if not m:
+        raise ReaderIdentityMismatch(
+            f"frozen params designator not found in {params_source_path!r} "
+            "(expected the 'pinned params' pin)"
+        )
+    return {"designator": m.group(0), "enumerated_values": None}
+
+
+def certified_reader_identity(
+    prereg_path: str = CLAUDE_RUNG_PREREG,
+    params_source_path: str = SEALED12_RATIFY_PACKET,
+    frontier_prompt_path: str = FRONTIER_PROMPT_PATH,
+    enumerator_prompt_path: str = ENUMERATOR_PROMPT_PATH,
+) -> dict:
+    """Compute the PINNED certified-reader identity AT RUNTIME by reading the
+    frozen files (R-018 law: pointed-at, never copied into code).
+
+    Returns ``{model_id, params, k, prompt_sha, enumerator_sha, source_refs}``:
+      * ``model_id`` / ``k`` — parsed from the frozen Claude-rung pre-reg.
+      * ``params`` — the frozen "pinned params" designator (values not
+        enumerated in any frozen artifact; see :func:`_read_frozen_params`).
+      * ``prompt_sha`` / ``enumerator_sha`` — sha256 of the ON-DISK frontier-v3.2
+        and enumerator-v1.2 prompt files (their bytes ARE the prompt identity).
+      * ``source_refs`` — the frozen files/tag this identity was read from
+        (provenance; NOT part of the asserted identity).
+
+    Deterministic. Fail-closed: a missing frozen file raises
+    :class:`ReaderIdentityMismatch` (so a missing prompt file HALTs rather than
+    silently resolving)."""
+    model_id = _read_frozen_model_id(prereg_path)
+    k = _read_frozen_k(prereg_path)
+    params = _read_frozen_params(params_source_path)
+    prompt_sha = _sha256_file(frontier_prompt_path)
+    enumerator_sha = _sha256_file(enumerator_prompt_path)
+    return {
+        "model_id": model_id,
+        "params": params,
+        "k": k,
+        "prompt_sha": prompt_sha,
+        "enumerator_sha": enumerator_sha,
+        "source_refs": {
+            "model_id_and_k": os.path.relpath(prereg_path, _ROOT).replace("\\", "/"),
+            "params_designator": os.path.relpath(params_source_path, _ROOT).replace(
+                "\\", "/"
+            ),
+            "prompt_sha": os.path.relpath(frontier_prompt_path, _ROOT).replace(
+                "\\", "/"
+            ),
+            "enumerator_sha": os.path.relpath(enumerator_prompt_path, _ROOT).replace(
+                "\\", "/"
+            ),
+            "certified_reader_tag": CERTIFIED_READER_TAG,
+        },
+    }
+
+
+def assert_reader_identity(claimed: dict, pinned: dict) -> None:
+    """Fail-closed identity assertion. Raises :class:`ReaderIdentityMismatch`
+    on ANY mismatch across ``_IDENTITY_FIELDS`` (model_id, params, k,
+    prompt_sha, enumerator_sha); ``source_refs`` is provenance and is NOT
+    compared. A ``claimed`` that is not a dict is itself a mismatch (a live
+    payload that failed to self-report an identity)."""
+    if not isinstance(claimed, dict):
+        raise ReaderIdentityMismatch(
+            f"claimed reader identity is not a dict (self-report absent): {claimed!r}"
+        )
+    mismatches = [
+        (f, claimed.get(f), pinned.get(f))
+        for f in _IDENTITY_FIELDS
+        if claimed.get(f) != pinned.get(f)
+    ]
+    if mismatches:
+        fields = [m[0] for m in mismatches]
+        raise ReaderIdentityMismatch(
+            f"reader identity mismatch on {fields} — HALT, no artifact accepted; "
+            f"details (field, claimed, pinned): {mismatches}"
+        )
+
+
+def _claimed_reader_identity(raw) -> dict:
+    """Extract the reader identity a sealed ``live_extract_fn`` SELF-REPORTED on
+    its returned payload. The seal-day live artifact MUST carry a
+    ``reader_identity`` block; a payload that does not is fail-closed
+    (:class:`ReaderIdentityMismatch`) — a live reader that will not name itself
+    cannot read the twelve."""
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except ValueError:
+            raw = None
+    if not isinstance(raw, dict):
+        raise ReaderIdentityMismatch(
+            "sealed live_extract_fn payload is not a JSON object; it cannot "
+            "self-report a reader_identity (fail-closed HALT)"
+        )
+    claimed = raw.get("reader_identity")
+    if not isinstance(claimed, dict):
+        raise ReaderIdentityMismatch(
+            "sealed live_extract_fn did not self-report a `reader_identity` "
+            "block (fail-closed HALT — the seam requires the live reader to "
+            "name its own model/prompt/enumerator/params/k)"
+        )
+    return claimed
 
 
 # --------------------------------------------------------------------------- #
@@ -140,7 +363,7 @@ def _enum_stability(
     """Derive the enumeration-stability record from a Phase-A vault block.
 
     Handles BOTH cached shapes discovered in the design pool:
-      * frontier gpt-5.4 vault: ``{"counts":[...], "mode":M, "mode_n":N,
+      * frontier candidate vault: ``{"counts":[...], "mode":M, "mode_n":N,
         "unstable":bool, ...}`` -> stable iff ``mode_n >= stability_min``.
       * certified-reader (claude-rung) merge vault: ``{"unstable": bool}``
         (no raw counts) -> stable iff ``not unstable``.
@@ -476,6 +699,14 @@ def run_extraction_stage(
     if mode not in _REHEARSAL_MODES and mode != "sealed":
         raise ValueError(f"unknown extraction mode: {mode!r}")
 
+    # READER-IDENTITY GUARD (R-018.1a/b): resolve the pinned certified-reader
+    # identity AT RUNTIME from the frozen files. This also enforces fail-closed
+    # resolution for BOTH modes — if a frozen prompt/pre-reg file is missing,
+    # certified_reader_identity() raises ReaderIdentityMismatch and the whole
+    # stage HALTs before any artifact is produced (a missing instrument never
+    # silently passes).
+    pinned_identity = certified_reader_identity()
+
     os.makedirs(out_dir, exist_ok=True)
     artifacts: list[dict] = []
     artifact_paths: list[str] = []
@@ -487,13 +718,26 @@ def run_extraction_stage(
             artifact = _build_rehearsal_artifact(
                 video_id, mode, staging_dir, phase_a_vault_dir, adjudicate_fn, k, stability_min
             )
+            # STAMP the certified identity on the loaded staging_v32 artifact
+            # (rehearsal reads the certified reader's own spent outputs, so the
+            # pinned identity is authoritative for them).
+            artifact["reader_identity"] = pinned_identity
             _atomic_write(path, artifact)
             record = artifact
         else:  # sealed
             raw = live_extract_fn(video_id, manifest_verified)  # REAL spend seam
+            # ASSERT the live reader self-reported the CERTIFIED identity BEFORE
+            # persisting anything. A wrong-model (uncertified-brain) self-report =>
+            # ReaderIdentityMismatch => HALT, no artifact written for this video.
+            claimed_identity = _claimed_reader_identity(raw)
+            assert_reader_identity(claimed_identity, pinned_identity)
             record, persist_payload = _wrap_live_artifact(
                 video_id, raw, mode, adjudicate_fn, k, stability_min
             )
+            # The persisted payload is byte-exact (it already carries the live
+            # reader's self-reported, now-asserted reader_identity); stamp the
+            # stage summary record with the pinned identity too.
+            record["reader_identity"] = pinned_identity
             _atomic_write(path, persist_payload)  # byte-exact reader payload
             artifact = record
 
@@ -525,6 +769,7 @@ def run_extraction_stage(
             r["video_id"] for r in per_video if r["adjudication_needed"]
         ],
         "policy": POLICY,
+        "reader_identity": pinned_identity,
     }
 
 
