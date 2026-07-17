@@ -106,7 +106,12 @@ describe("goalscan 2026-07-16 — A4/A3/A6 admin.ts guards", () => {
     expect(body.indexOf("if (!hasValidSecret)")).toBeLessThan(body.indexOf("requirePipelineControlAuthority(req, res)"));
   });
   it("A6: the false 'tower-relay HMAC gateway' security claim is removed", () => {
-    // the doc-rot that rationalized the weak liquidity-batch auth must be gone
+    // Robust (line-wrap-proof, re-grade note 2026-07-16): assert the corrected SUBSTANCE is present —
+    // the comment must now explicitly NEGATE the gateway's existence, not merely lack an exact substring
+    // that a re-wrap could split. The correction states the gateway "DOES NOT EXIST".
+    expect(src).toContain("DOES NOT EXIST");
+    // and the false claim must not survive AS A NON-NEGATED assertion — the only occurrence of the
+    // phrase, if any, is inside the "prior comment claimed ... — that gateway DOES NOT EXIST" correction.
     expect(src).not.toContain("mounted behind the tower-relay HMAC gateway so");
   });
 });
