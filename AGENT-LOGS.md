@@ -4,6 +4,20 @@
 
 ---
 
+### Session Log — 2026-07-16 CAMPAIGN W2b — C-05 sizing "lowest wins" (D9) LANDED `bd47b8a8`, band 7 after 3 grade rounds, zero carry-forwards
+
+**Mission:** Wave 2b — fix C-05 (external audit): healthy-account (≥85%) sizing did `max(base_contracts, min(pyramidTier, riskCap, firmCap, liquidityCap, ddRoomCap))` — the `max(base, …)` floor OVERRODE the risk-derived 2% ceiling back up to base, contradicting CLAUDE.md §4 "risk math is the CEILING, lowest wins." Live in paper (dd-room-bounded ~5); UNBOUNDED in backtests (base 9 where risk said 1). **D9 (operator, 2026-07-16): risk math always wins.**
+
+**Landed:** `finalContracts = max(0, min(...))` pure lowest-wins in BOTH `risk-sizing.ts` + `sizing.py`, scalar AND vectorized; when <1 → skip (0), never a fabricated base floor. Reverses the `DRAWDOWN_ROOM_RISK_PCT` 0.01→0.08 anti-strangulation intent — deliberate operator tradeoff (A/B receipt `docs/replay-results/2026-07-16-c05-lowest-wins-ab.md` quantifies: Topstep combine 9/5/3/2/1→2/1/0/0/0, MFFU zero-change, backtest biggest bite, 6/15 cases now skip). CLAUDE.md §4 annotated (do-not-restore). TS↔Python negative_cap shape parity (firm_cap + drawdown_room_cap fields aligned).
+
+**★ THREE independent-grade rounds (accuracy-validator, doer≠grader) — each found real bugs in the promotion-evidence backtest path:** R1 core fix band 7 (RED-proof 27 TS + 15 Python on revert; A/B receipt independently recomputed honest). R2 grade found + RULED (b) + closed 2 HIGH: vectorized `min-1` fabrication (`sizing.py` per-bar `np.where(bar_sizes<=0…,1.0)`) + wholesale `np.full(n,1.0)` fallback (fired on prelim mean-ATR negative_cap) — BOTH recreated the exact backtest/live divergence D9 closes (fabricated 1-contract trades feeding WFE/PBO/B14 that can't happen live) → fixed to skip-to-0 (reason-split: structural→zeros, negative_cap→proceed-per-bar; reachability CONFIRMED by test). R3 grade found + closed 1 NEW sibling the R2 fix INTRODUCED: `sizing.py:553` negative_cap return hardcoded `firm_cap=None`, and the newly-activated per-bar path then dropped `topstep_account_cap_override` (override=1 → sizes.max()=2, cap exceeded on fresh narrow-buffer combines) → fixed to expose `effective_firm_cap`, RED-proofed override-respect.
+
+**Verification:** parent final-verify each round: tsc exit 0; sizing suites (204 TS + 164 py + new 7-test C-05 file); stop-geometry parity 216/216 (W2 not regressed); `test:metrics` 144/1-preexisting HELD (both golden cross-engine parity VALUE tests pass → no fixture shift → not a reserved-class HOLD). Verified combined tree (rebased onto goalscan's `24664dc3`) BEFORE push (the W2-landing lesson applied). Packet CLOSED.
+
+**★ LESSON (new):** an ADDITIVE-looking fix can ACTIVATE a latent bug in a previously-DEAD path — R2's "proceed-per-bar on negative_cap" turned on the `:553` firm_cap=None path that had never executed, surfacing R3's cap-drop. When a fix newly reaches code, grade that newly-reached code, not just the fix. [[feedback_doer_out_of_scope_is_grader_trigger]] fired again (doer's "separate decision" on the min-1 = grader re-derive trigger). Multi-session: rebased onto goalscan advances 3× during the wave; verify-combined-before-push held.
+
+**Carry-forward:** next clean/disjoint waves W3B (prop-firm hygiene)/W4 (evidence)/W5 (docs incl. §5 daily-uncapped). M2 (determinism) + M3 (PAPER authority — RE-SCOPE, goalscan pre-empted the lifecycle gate-parity) touch goalscan-co-edited files → coordinate. M1a gated on operator's Massive docs. Housekeeping: prune `wt-c05-sizing`.
+
 ### Session Log — 2026-07-16 /goal DEEP-SCAN WAVE 2 (goalscan-crit) — 7 CAMPAIGN-FILE CRIT/HIGH fixed under OPERATOR AUTHORIZATION, VERIFIED BAND 8, LANDED `0896aaca`
 
 **Mission:** After the goalscan-authpine wave (band 7) handed off 7 CRIT/HIGH in campaign-owned instrument files, the operator was surfaced the conflict ("don't interfere" vs "every inch of bugs gone") and **explicitly authorized me to fix them** (band-8 target). Instrument-surface, so `ratify-packet` discipline: autonomous under independent grade (none in the irreversible/live-capital class — all fail-safe hardening; nothing live-trading).
