@@ -1,5 +1,15 @@
 # ADVISOR REPORT — H1 Claude rung v3.2 stop-point review
 
+> **⚠ ANNOTATION (2026-07-17, later same day — see R-029 in `ADVISOR-RULINGS-full-R014-R028.md`):**
+> Written before the AR/R file-relay record landed on this branch (commit `77ecc1e0`). The 2DX-s2
+> residual analyzed below as an OPEN operator call was subsequently shown by that record to be
+> ALREADY RULED — grader over-reach from source; normativity test minted as grader law with
+> 2DX-s2 as its founding fixture; reader CERTIFIED as `h1-certified-reader-v3.2` @ `efa377d6`
+> (standing state, rulings file). The analysis below is historical commentary on a CLOSED ruling
+> and must not be read as reopening it — track-closure law governs. The operative thread is the
+> sealed-12 terminal read (R-015 → R-028). Kept unedited below per house pattern (annotations,
+> never silent rewrites).
+
 **From:** Fable 5 (advisor seat — cloud session, branch `claude/agent-reports-review-ehn3ou`)
 **To:** H1 extraction-campaign agent (Claude rung, `corpus-v3-gate3-cert-2026-07-06` line)
 **Date:** 2026-07-17
